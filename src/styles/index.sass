@@ -1,0 +1,189 @@
+@import 'variables'
+@import 'primetheme'
+
+*
+  box-sizing: border-box
+
+html
+  scroll-behavior: smooth
+  background-color: $op-background-main
+  color: $op-font-color
+  font-size: $op-font-size
+  font-family: $op-font-family
+
+::-webkit-scrollbar
+  width: 20px
+  height: 20px
+
+::-webkit-scrollbar-track
+  background-color: transparent
+
+::-webkit-scrollbar-thumb
+  background-color: $op-scrollbar-color
+  border-radius: 20px
+  border: 6px solid transparent
+  background-clip: content-box
+
+::-webkit-scrollbar-thumb:hover
+  background-color: lighten($op-scrollbar-color, 5)
+
+::-webkit-scrollbar-corner
+  background: transparent
+
+
+.color-primary
+  color: $op-primary
+
+.color-secondary
+  color: $op-secondary
+
+.color-ternary
+  color: $op-ternary
+
+@mixin primary-nav()
+  display: flex
+  flex-direction: row
+  align-items: center
+  justify-content: space-between
+  user-select: none
+  background-color: $op-background-dark
+  padding: 0
+
+  a, button
+    display: block
+    padding: 8px 12px
+    text-transform: uppercase
+    text-decoration: none
+    transition: text-shadow 0.2s
+    color: #bbb
+    -webkit-user-drag: none
+
+    &:hover
+      color: white
+      text-shadow: 0 0 5px #aaa
+      transition: text-shadow 0.2s
+
+
+    &.active
+      background-color: $op-background-main
+
+    &:focus
+      outline: none !important
+      box-shadow: none !important
+      
+    
+
+  .spacer
+    flex: 1
+
+
+
+#root
+  position: fixed
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  display: flex
+  flex-direction: column
+  min-height: 0
+
+  &>nav
+    @include primary-nav()
+
+  &>main
+    flex-grow: 1
+    display: flex
+    flex-direction: row
+    gap: 10px
+    padding: 10px
+
+    &.center
+      align-items: center
+      justify-content: center
+
+    &.rows
+      flex-direction: column
+
+section
+  position: relative
+  display: flex
+  align-items: center
+  flex-direction: column
+  gap: 5px
+  padding: 12px
+  border-radius: 5px
+  background-color: $op-background-dark
+
+  &>*
+    width: 100%
+
+  &.invisible
+    background: transparent
+    border: 0
+    padding: 0
+
+  &.row
+    flex-direction: row
+    &>*
+      width: auto
+
+  &.insplit
+    position: absolute
+    width: 100%
+    height: 100%
+
+.wrapper
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  padding: 0
+  margin: 0
+
+
+.breadcrumbs
+  list-style: none
+  display: flex
+  flex-direction: row
+  align-items: center
+  justify-content: flex-start
+  margin: 0
+  padding: 0
+
+  &>li
+    display: flex
+    align-items: center
+    justify-content: center
+    font-size: 1.4em
+
+    &:not(:last-child)
+      &::after
+        content: ' / '
+      
+.breadcrumbs-copy-button
+  color: #aaa !important
+  padding: 0
+  border: 0 !important
+  background: transparent !important
+  &:focus
+    outline: none !important
+    box-shadow: none !important    
+    margin: 0 10px
+
+.section-header
+  font-size: 1.3em
+  padding-left: 8px
+  
+  &::first-letter
+    text-transform: capitalize
+
+
+input:-webkit-autofill, input:-webkit-autofill:focus
+  transition: background-color 600000s 0s, color 600000s 0s
+
+.embed
+  border: 0
+  background-color: white
+

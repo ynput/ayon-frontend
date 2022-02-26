@@ -1,0 +1,114 @@
+$prime-input-background: $op-background-dark
+$prime-input-border: 2px solid #373d48 
+
+
+.p-component
+  font-family: $op-font-family
+
+.p-component-overlay
+  background: rgba($op-background-dark,.5)
+
+// input
+
+.p-inputtext, .p-multiselect
+  background-color: $prime-input-background
+  border: $prime-input-border
+  border-radius: 4px
+
+  &:enabled, &:not(.p-disabled)
+    &:focus, &:hover
+      box-shadow: 0 0 1px rgba(#47b7da, .3)
+      border-color: #47b7da
+
+// button
+
+.p-button:not(.p-button-link)
+  background: $op-button-primary-background
+  border: 2px solid #373d48 
+  color: $op-font-color
+
+  &:focus
+    border: 2px solid $op-button-primary-background
+
+  &:not(a):not(.p-disabled)
+    &:hover
+      background: lighten($op-button-primary-background, 6)
+      border: 2px solid $op-button-primary-background
+      color: $op-font-color
+
+    &:hover
+      background: lighten($op-button-primary-background, 8)
+      border: 2px solid $op-button-primary-background
+      color: $op-font-color
+
+.p-multiselect-panel
+  background: $op-background-light
+  .p-multiselect-header
+    background: $op-background-dark
+
+
+// Tables
+
+
+.p-treetable
+  td
+    padding: 1px !important
+
+.p-datatable
+  td
+    padding: 6px !important
+
+.p-datatable, .p-treetable
+  user-select: none
+  td
+    border: 0 !important
+    white-space: nowrap
+    border-bottom: 0 !important
+    overflow: hidden
+    text-overflow: ellipsis
+
+  .p-datatable-scrollable-header, .p-treetable-scrollable-header
+    background: $op-background-dark
+    user-select: none
+    --webkit-user-drag: none
+
+  .p-datatable-tbody > tr, .p-treetable-tbody > tr
+    background: $op-background-dark
+
+  .p-datatable-thead > tr > th, .p-treetable-thead > tr > th
+    border: 0
+    background: $op-background-dark
+    border-right: 2px solid $op-background-light
+
+
+// Splitter
+
+
+.p-splitter
+  background: transparent
+  border: 0
+
+  .p-splitter-panel
+    position: relative
+    background: transparent
+
+  .p-splitter-gutter, .p-splitter-gutter-resizing
+    background: transparent !important
+
+
+.p-breadcrumb
+  background: transparent
+  border: 0
+
+.p-fieldset
+  background: none
+  .p-fieldset-legend
+    background: none
+
+
+.p-button-link
+  display: inline
+  padding: 0
+  &:hover
+    boxShadow: 0
+    border: 0
