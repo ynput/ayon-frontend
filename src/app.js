@@ -16,6 +16,7 @@ import LoadingPage from './pages/loading'
 import ProjectsPage from './pages/projects'
 import BrowserPage from './pages/browser'
 import ManagerPage from './pages/manager'
+import SiteSyncPage from './pages/sitesync'
 import ExplorerPage from './pages/explorer'
 import APIDocsPage from './pages/doc/api'
 import Error from './pages/error'
@@ -77,6 +78,7 @@ const App = () => {
                 <Route path="/projects" exact component={ProjectsPage}/>
                 <Route path="/browser/:projectName" exact component={BrowserPage}/>
                 <Route path="/manager/:projectName" exact component={ManagerPage}/>
+                <Route path="/sitesync/:projectName" exact component={SiteSyncPage}/>
 
                 <Route path="/explorer" component={ExplorerPage} />
                 <Route path="/doc/api" component={APIDocsPage} />

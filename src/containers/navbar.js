@@ -65,6 +65,7 @@ const NavBar = () => {
             <>
             <NavLink to={`/browser/${projectName}`}>Browser</NavLink>
             <NavLink to={`/manager/${projectName}`}>Manager</NavLink>
+            <NavLink to={`/sitesync/${projectName}`}>Site Sync</NavLink>
             </>
 
             )}
