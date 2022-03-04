@@ -21,39 +21,36 @@ import './styles/index.sass'
 const store = createStore(reducer)
 
 const fetchOptions = {
-    cachePolicy: 'no-cache',
-    interceptors: {
-        request: ({ options, url, path, route }) => {
-          const token = localStorage.getItem('accessToken')
-          options.headers.Authorization = `Bearer ${token}`
-          return options
-        }
-    }
+  cachePolicy: 'no-cache',
+  interceptors: {
+    request: ({ options, url, path, route }) => {
+      const token = localStorage.getItem('accessToken')
+      options.headers.Authorization = `Bearer ${token}`
+      return options
+    },
+  },
 }
 
-
-document.addEventListener("DOMContentLoaded", (event) => {
-
-    ReactDOM.render(
-        <React.StrictMode>
-        <ReduxProvider store={store}>
+document.addEventListener('DOMContentLoaded', () => {
+  ReactDOM.render(
+    <React.StrictMode>
+      <ReduxProvider store={store}>
         <FetchProvider options={fetchOptions}>
-            <App />
-            <ToastContainer
-                position='bottom-right'
-                transition={Flip}
-                theme='dark'
-                pauseOnFocusLoss={false}
-                newestOnTop={true}
-                draggable={false}
-                closeOnClick={true}
-                autoClose={2000}
-                limit={5}
-            />
-
+          <App />
+          <ToastContainer
+            position="bottom-right"
+            transition={Flip}
+            theme="dark"
+            pauseOnFocusLoss={false}
+            newestOnTop={true}
+            draggable={false}
+            closeOnClick={true}
+            autoClose={2000}
+            limit={5}
+          />
         </FetchProvider>
-        </ReduxProvider>
-        </React.StrictMode>,
-        document.getElementById('root')
-    )
+      </ReduxProvider>
+    </React.StrictMode>,
+    document.getElementById('root')
+  )
 })

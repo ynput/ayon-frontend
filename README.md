@@ -1,14 +1,10 @@
-OpenPype server web interface
-=============================
+# OpenPype server web interface
 
+## Requirements
 
-Requirements
-------------
+- nodejs >= 17
+- yarn
 
- - nodejs >= 17
- - yarn
-
-Building
---------
+## Building
 
 Run `yarn install && yarn build`
