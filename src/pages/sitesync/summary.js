@@ -7,6 +7,7 @@ import { MultiSelect } from 'primereact/multiselect'
 import { FilterMatchMode } from 'primereact/api'
 
 import { formatStatus, SYNC_STATES } from './common'
+import SiteSyncDetail from './detail'
 
 const SiteSyncSummary = ({
   projectName,
@@ -124,8 +125,18 @@ const SiteSyncSummary = ({
     )
   }
 
+  console.log(selectedRepresentation)
+
   return (
     <section style={{ flexGrow: 1 }}>
+      {selectedRepresentation && <SiteSyncDetail 
+          projectName={projectName}
+          localSite={localSite}
+          remoteSite={remoteSite}
+          representationId={selectedRepresentation.representationId}
+          onHide={e=>{setSelectedRepresentation(null)}}
+        />
+      }
       <div className="wrapper">
         <DataTable
           value={representations}
