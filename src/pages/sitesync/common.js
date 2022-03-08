@@ -1,4 +1,4 @@
-import { ProgressBar } from "primereact/progressbar"
+import { ProgressBar } from 'primereact/progressbar'
 
 const SYNC_STATES = [
   { name: 'N/A', value: -1 },
@@ -9,8 +9,7 @@ const SYNC_STATES = [
   { name: 'Synced', value: 4 },
 ]
 
-const formatStatus = (rowData, site) => {
-  const value = rowData[`${site}Status`]
+const formatStatus = (statusObj) => {
   const cell = {
     '-1': { label: 'N/A', color: 'red' },
     0: { label: 'In progress', color: '#dddd11' },
@@ -18,18 +17,23 @@ const formatStatus = (rowData, site) => {
     2: { label: 'Failed', color: 'red' },
     3: { label: 'Paused', color: '#0012ff' },
     4: { label: 'Synced', color: '#00ffaa' },
-  }[value]
+  }[statusObj['status']]
 
   if (!cell) {
-    console.log("weird", rowData)
-    return <span>{value}</span>
+    console.log('weird', statusObj)
+    return <span>{JSON.stringify(statusObj)}</span>
   }
 
-  if (value === 0){
-    const progress = (rowData[`${site}Size`] / rowData.size) * 100
-    return <ProgressBar value={progress} showValue={false} style={{ width: "100%", height: "100%"}}/>
+  if (statusObj.status === 0) {
+    const progress = (statusObj.size / statusObj.totalSize) * 100
+    return (
+      <ProgressBar
+        value={progress}
+        showValue={false}
+        style={{ width: '100%', height: '100%' }}
+      />
+    )
   }
-
 
   return <span style={{ color: cell.color }}>{cell.label}</span>
 }

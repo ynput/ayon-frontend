@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useFetch } from 'use-http'
 
-import { Switch, Route, Redirect, BrowserRouter } from 'react-router-dom'
+import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 
 import NavBar from './containers/navbar'
 
@@ -44,7 +44,7 @@ const App = () => {
     return <LoadingPage />
   }
 
-  // TBD: at some moment, loading the last opened project seemed 
+  // TBD: at some moment, loading the last opened project seemed
   // to be a good idea, but it's weird, so we'll just use the projects page
 
   let homeScreen = '/projects'
@@ -55,21 +55,19 @@ const App = () => {
   return (
     <BrowserRouter>
       <NavBar />
-      <Switch>
-        <Route path="/" exact>
-          <Redirect to={homeScreen} />
-        </Route>
-        <Route path="/projects" exact component={ProjectsPage} />
-        <Route path="/browser/:projectName" exact component={BrowserPage} />
-        <Route path="/manager/:projectName" exact component={ManagerPage} />
-        <Route path="/sitesync/:projectName" exact component={SiteSyncPage} />
+      <Routes>
+        <Route path="/" exact element={<Navigate replace to={homeScreen} />} />
+        <Route path="/projects" exact element={<ProjectsPage />} />
+        <Route path="/browser/:projectName" exact element={<BrowserPage />} />
+        <Route path="/manager/:projectName" exact element={<ManagerPage />} />
+        <Route path="/sitesync/:projectName" exact element={<SiteSyncPage />} />
 
-        <Route path="/explorer" component={ExplorerPage} />
-        <Route path="/doc/api" component={APIDocsPage} />
-        <Route path="/profile" component={Profile} />
+        <Route path="/explorer" element={<ExplorerPage />} />
+        <Route path="/doc/api" element={<APIDocsPage />} />
+        <Route path="/profile" element={<Profile />} />
 
-        <Route component={() => <Error code="404" />} />
-      </Switch>
+        <Route element={<Error code="404" />} />
+      </Routes>
     </BrowserRouter>
   )
 }

@@ -1,6 +1,6 @@
 import { useFetch } from 'use-http'
 import { useMemo, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
@@ -32,7 +32,7 @@ const ProjectStats = ({ projectName }) => {
 const ProjectsPage = () => {
   const projectListRequest = useFetch('/api/projects', [])
   const [selectedProject, setSelectedProject] = useState(null)
-  const history = useHistory()
+  const navigate = useNavigate()
 
   const projectList = useMemo(() => {
     if (!projectListRequest.data) return []
@@ -88,7 +88,7 @@ const ProjectsPage = () => {
             label="Open selected project"
             icon="pi pi-folder-open"
             disabled={!selectedProject}
-            onClick={() => history.push(`/browser/${selectedProject.name}`)}
+            onClick={() => navigate(`/browser/${selectedProject.name}`)}
           />
           <Button
             label="Delete selected project"

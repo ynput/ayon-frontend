@@ -1,97 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useFetch } from 'use-http'
 import { useSelector, useDispatch } from 'react-redux'
-import { DateTime } from 'luxon'
+import { toast } from 'react-toastify'
 
 import { InputText, Spacer, Button, Shade } from '../../components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-const QUERY = `
-query Subsets($projectName: String!, $folders: [String!]!){
-    project(name: $projectName){
-        subsets(folderIds: $folders){
-            edges {
-                node {
-                    id
-                    name
-                    family
-                    createdAt
-                    latestVersion{
-                        id
-                        version
-                        name
-                        author
-                        createdAt
-                        attrib {
-                            fps
-                            resolutionWidth
-                            resolutionHeight
-                            frameStart
-                            frameEnd
-                        }
-                    }
-                    folder {
-                        id
-                        name
-                        parents
-                        attrib {
-                            fps
-                            resolutionWidth
-                            resolutionHeight
-                            frameStart
-                            frameEnd
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-`
-
-const parseSubsetFps = (subset) => {
-  const folderFps = subset.folder.attrib.fps || ''
-  if (!subset) return folderFps
-  if (!subset.latestVersion) return folderFps
-  if (!subset.latestVersion.attrib) return folderFps
-  return subset.latestVersion.attrib.fps || ''
-}
-
-const parseSubsetResolution = (subset) => {
-  /* 
-    Return the resolution of the latest version of the given subset, 
-    or resolution of the folder if the version has no resolution 
-    */
-  const folderWidth = subset.folder.attrib.resolutionWidth || null
-  const folderHeight = subset.folder.attrib.resolutionHeight || null
-  const folderResolution =
-    folderWidth && folderHeight ? `${folderWidth}x${folderHeight}` : ''
-
-  if (!subset) return folderResolution
-  if (!subset.latestVersion) return folderResolution
-  if (!subset.latestVersion.attrib) return folderResolution
-
-  const width = subset.latestVersion.attrib.resolutionWidth || null
-  const height = subset.latestVersion.attrib.resolutionHeight || null
-  const resolution = width && height ? `${width}x${height}` : ''
-  return resolution || folderResolution
-}
-
-const parseSubsetFrames = (subset) => {
-  const folderStart = subset.folder.attrib.frameStart || null
-  const folderEnd = subset.folder.attrib.frameEnd || null
-  const folderFrames =
-    folderStart && folderEnd ? `${folderStart}-${folderEnd}` : ''
-
-  if (!subset) return ''
-  if (!subset.latestVersion) return ''
-  if (!subset.latestVersion.attrib) return ''
-  const frameStart = subset.latestVersion.attrib.frameStart || ''
-  const frameEnd = subset.latestVersion.attrib.frameEnd || ''
-  const frames = frameStart && frameEnd ? `${frameStart}-${frameEnd}` : ''
-  return frames || folderFrames
-}
+import { DEFAULT_COLUMNS, SUBSET_QUERY, parseSubsetData } from './subset-utils'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -102,42 +18,22 @@ const Subsets = () => {
   const request = useFetch('/graphql')
   const [subsetData, setSubsetData] = useState([])
   const [selection, setSelection] = useState([])
+  //const [columns, setColumns] = useState(DEFAULT_COLUMNS)
+  const columns = DEFAULT_COLUMNS
 
   useEffect(() => {
     // useEffect and useState is used here, because of the async function
     // useMemo returns a promise, which we don't want
     async function fetchSubsets() {
-      if (folders.length === 0) return []
-
-      const data = await request.query(QUERY, { folders, projectName })
-      if (!data.data.project) {
-        return []
+      if (folders.length === 0) return
+      const data = await request.query(SUBSET_QUERY, { folders, projectName })
+      if (!(data.data && data.data.project)) {
+        toast.error('Ubable to fetch subsets')
+        return
       }
-
-      if (!data.data.project) return [] // no such project
-      let s = []
-      for (let subsetEdge of data.data.project.subsets.edges) {
-        let subset = subsetEdge.node
-        let vers = subset.latestVersion || null
-        let sub = {
-          id: subset.id,
-          name: subset.name,
-          family: subset.family,
-          fps: parseSubsetFps(subset),
-          resolution: parseSubsetResolution(subset),
-          folder: subset.folder.name,
-          author: vers ? vers.author : null,
-          parents: subset.folder.parents,
-          version: vers ? vers.version : null,
-          versionId: vers && vers.id ? vers.id : null,
-          versionName: vers && vers.name ? vers.name : '',
-          frames: parseSubsetFrames(subset),
-          createdAt: vers ? vers.createdAt : subset.createdAt,
-        }
-        s.push(sub)
-      }
-      setSubsetData(s)
+      setSubsetData(parseSubsetData(data.data))
     }
+
     fetchSubsets()
     // eslint-disable-next-line
   }, [folders, projectName])
@@ -209,7 +105,6 @@ const Subsets = () => {
         <div className="wrapper">
           {request.loading && <Shade />}
           <DataTable
-            value={subsetData}
             scrollable
             responsive
             resizableColumns
@@ -217,6 +112,7 @@ const Subsets = () => {
             scrollDirection="both"
             scrollHeight="flex"
             responsiveLayout="scroll"
+            value={subsetData}
             emptyMessage="No subset found"
             selectionMode="multiple"
             selection={selection}
@@ -240,24 +136,11 @@ const Subsets = () => {
               })
             }}
           >
-            <Column field="name" header="Subset" style={{ width: 200 }} />
-            <Column field="folder" header="Folder" style={{ width: 200 }} />
-            <Column field="family" header="Family" style={{ width: 120 }} />
-            <Column
-              field="versionName"
-              header="Version"
-              style={{ width: 70 }}
-            />
-            <Column
-              field="time"
-              header="Time"
-              style={{ width: 150 }}
-              body={(rowdata) =>
-                DateTime.fromSeconds(rowdata.createdAt).toRelative()
-              }
-            />
-            <Column field="author" header="Author" style={{ width: 120 }} />
-            <Column field="frames" header="Frames" style={{ width: 120 }} />
+            {columns.map((col) => {
+              return (
+                <Column {...col} key={col.field} style={{ width: col.width }} />
+              )
+            })}
           </DataTable>
         </div>
       </section>

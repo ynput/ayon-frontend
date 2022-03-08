@@ -9,6 +9,59 @@ import { FilterMatchMode } from 'primereact/api'
 import { formatStatus, SYNC_STATES } from './common'
 import SiteSyncDetail from './detail'
 
+/*
+ * Utils
+ */
+
+const defaultParams = {
+  first: 0,
+  rows: 25,
+  page: 0,
+  sortField: 'folder',
+  sortOrder: 1,
+  filters: {
+    folder: { value: '', matchMode: 'contains' },
+    subset: { value: '', matchMode: 'contains' },
+    representation: { value: null, matchMode: FilterMatchMode.IN },
+    localStatus: { value: null, matchMode: FilterMatchMode.IN },
+    remoteStatus: { value: null, matchMode: FilterMatchMode.IN },
+  },
+}
+
+const textMatchModes = [
+  { label: 'Contains', matchMode: FilterMatchMode.CONTAINS },
+]
+const selectMatchModes = [{ label: 'In', matchMode: FilterMatchMode.IN }]
+
+const buildQueryString = (localSite, remoteSite, lazyParams) => {
+  // TODO.... do this less ugly
+  let url = `?localSite=${localSite}&remoteSite=${remoteSite}`
+  url += `&pageLength=${lazyParams.rows}&page=${lazyParams.page + 1}`
+  url += `&sortBy=${lazyParams.sortField}`
+  url += `&sortDesc=${lazyParams.sortOrder === 1 ? 'true' : 'false'}`
+  if (lazyParams.filters.folder.value)
+    url += `&folderFilter=${lazyParams.filters.folder.value}`
+  if (lazyParams.filters.subset.value)
+    url += `&subsetFilter=${lazyParams.filters.subset.value}`
+  if (lazyParams.filters.representation.value) {
+    for (const val of lazyParams.filters.representation.value)
+      url += `&nameFilter=${val}`
+  }
+  if (lazyParams.filters.localStatus.value) {
+    for (const val of lazyParams.filters.localStatus.value)
+      url += `&localStatusFilter=${val}`
+  }
+  if (lazyParams.filters.remoteStatus.value) {
+    for (const val of lazyParams.filters.remoteStatus.value)
+      url += `&remoteStatusFilter=${val}`
+  }
+  return url
+}
+
+/*
+ * Main component
+ */
+
 const SiteSyncSummary = ({
   projectName,
   localSite,
@@ -16,64 +69,19 @@ const SiteSyncSummary = ({
   names,
   totalCount,
 }) => {
-  const recordsPerPage = 25
-
   const baseUrl = `/api/projects/${projectName}/sitesync/state`
   const { request, response } = useFetch(baseUrl)
-
   const [loading, setLoading] = useState(false)
   const [representations, setRepresentations] = useState([])
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
-
-  const [lazyParams, setLazyParams] = useState({
-    first: 0,
-    rows: recordsPerPage,
-    page: 0,
-    sortField: 'folder',
-    sortOrder: 1,
-    filters: {
-      folder: { value: '', matchMode: 'contains' },
-      subset: { value: '', matchMode: 'contains' },
-      representation: { value: null, matchMode: FilterMatchMode.IN },
-      localStatus: { value: null, matchMode: FilterMatchMode.IN },
-      remoteStatus: { value: null, matchMode: FilterMatchMode.IN },
-    },
-  })
-
-  const textMatchModes = [
-    { label: 'Contains', matchMode: FilterMatchMode.CONTAINS },
-  ]
-  const selectMatchModes = [{ label: 'In', matchMode: FilterMatchMode.IN }]
+  const [lazyParams, setLazyParams] = useState(defaultParams)
 
   const loadData = async () => {
     setLoading(true)
-    console.log(lazyParams)
-    let url = `?localSite=${localSite}&remoteSite=${remoteSite}`
-    url += `&pageLength=${recordsPerPage}&page=${lazyParams.page + 1}`
-    url += `&sortBy=${lazyParams.sortField}`
-    url += `&sortDesc=${lazyParams.sortOrder === 1 ? 'true' : 'false'}`
-    if (lazyParams.filters.folder.value)
-      url += `&folderFilter=${lazyParams.filters.folder.value}`
-    if (lazyParams.filters.subset.value)
-      url += `&subsetFilter=${lazyParams.filters.subset.value}`
-    if (lazyParams.filters.representation.value) {
-      for (const val of lazyParams.filters.representation.value)
-        url += `&nameFilter=${val}`
-    }
-    if (lazyParams.filters.localStatus.value) {
-      for (const val of lazyParams.filters.localStatus.value)
-        url += `&localStatusFilter=${val}`
-    }
-    if (lazyParams.filters.remoteStatus.value) {
-      for (const val of lazyParams.filters.remoteStatus.value)
-        url += `&remoteStatusFilter=${val}`
-    }
-
-    const newData = await request.get(url)
-    if (response.ok) {
-      console.log(newData.representations[0])
-      setRepresentations(newData.representations)
-    }
+    const newData = await request.get(
+      buildQueryString(localSite, remoteSite, lazyParams)
+    )
+    if (response.ok) setRepresentations(newData.representations)
     setLoading(false)
   }
 
@@ -126,39 +134,42 @@ const SiteSyncSummary = ({
     )
   }
 
-
   return (
     <section style={{ flexGrow: 1 }}>
-      {selectedRepresentation && <SiteSyncDetail 
+      {selectedRepresentation && (
+        <SiteSyncDetail
           projectName={projectName}
           localSite={localSite}
           remoteSite={remoteSite}
           representationId={selectedRepresentation.representationId}
-          onHide={()=>{setSelectedRepresentation(null)}}
+          onHide={() => {
+            setSelectedRepresentation(null)
+          }}
         />
-      }
+      )}
       <div className="wrapper">
         <DataTable
-          value={representations}
           scrollable
+          responsive
           scrollHeight="flex"
-          selectionMode="single"
-          responsive={true}
+          responsiveLayout="scroll"
+          value={representations}
           dataKey="representationId"
+          selectionMode="single"
           selection={selectedRepresentation}
           onSelectionChange={(e) => setSelectedRepresentation(e.value)}
           lazy
           paginator
           filterDisplay="row"
           first={lazyParams.first}
-          rows={recordsPerPage}
+          rows={lazyParams.rows}
           totalRecords={totalCount}
-          onPage={onPage}
-          onSort={onSort}
           sortField={lazyParams.sortField}
           sortOrder={lazyParams.sortOrder}
-          onFilter={onFilter}
           filters={lazyParams.filters}
+          onPage={onPage}
+          onSort={onSort}
+          onFilter={onFilter}
           loading={loading}
         >
           <Column
@@ -175,7 +186,7 @@ const SiteSyncSummary = ({
             filter
             filterMatchModeOptions={textMatchModes}
           />
-          <Column field="version" header="Version" />
+          <Column field="version" header="Version" style={{ maxWidth: 150 }} />
           <Column
             field="representation"
             header="Representation"
@@ -183,7 +194,11 @@ const SiteSyncSummary = ({
             filterElement={representationFilterTemplate}
             filterMatchModeOptions={selectMatchModes}
           />
-          <Column field="fileCount" header="File count" />
+          <Column
+            field="fileCount"
+            header="File count"
+            style={{ maxWidth: 100 }}
+          />
           <Column
             field="localStatus"
             header="Local status"
@@ -191,7 +206,8 @@ const SiteSyncSummary = ({
             filter
             filterElement={statusFilterTemplate}
             filterMatchModeOptions={selectMatchModes}
-            body={(val) => formatStatus(val, "local")}
+            body={(val) => formatStatus(val.localStatus)}
+            style={{ maxWidth: 250 }}
           />
           <Column
             field="remoteStatus"
@@ -200,7 +216,8 @@ const SiteSyncSummary = ({
             filter
             filterElement={statusFilterTemplate}
             filterMatchModeOptions={selectMatchModes}
-            body={(val) => formatStatus(val, "remote")}
+            body={(val) => formatStatus(val.remoteStatus)}
+            style={{ maxWidth: 250 }}
           />
         </DataTable>
       </div>

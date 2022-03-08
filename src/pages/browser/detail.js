@@ -59,9 +59,13 @@ const VERSION_QUERY = `
                                     fileCount
                                     localStatus{
                                         status
+                                        size
+                                        totalSize
                                     }
                                     remoteStatus{
                                         status
+                                        size
+                                        totalSize
                                     }
                                 }
                             }
@@ -162,8 +166,8 @@ const VersionDetail = () => {
             subsetName: subset.name,
             family: subset.family,
             fileCount: representation.fileCount,
-            localStatus: representation.localStatus.status,
-            remoteStatus: representation.remoteStatus.status,
+            localStatus: representation.localStatus,
+            remoteStatus: representation.remoteStatus,
           })
         }
       }

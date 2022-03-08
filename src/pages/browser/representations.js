@@ -1,18 +1,58 @@
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
-
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button, Spacer } from '../../components'
 
-import { formatStatus } from '../sitesync/common'
+import SiteSyncDetail from '../sitesync/detail'
 
+const columns = [
+  {
+    field: 'name',
+    header: 'Name',
+    width: 70,
+  },
+  {
+    field: 'folderName',
+    header: 'Folder',
+    width: 130,
+  },
+  {
+    field: 'subsetName',
+    header: 'Subset',
+    width: 130,
+  },
+  {
+    field: 'family',
+    header: 'Family',
+    width: 110,
+  },
+  {
+    field: 'fileCount',
+    header: 'Files',
+    width: 70,
+  },
+]
 
 const Representations = ({ representations }) => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
   const projectName = context.projectName
+  const [selectedRepresentation, setSelectedRepresentation] = useState(null)
 
   return (
     <>
+      {selectedRepresentation && (
+        <SiteSyncDetail
+          projectName={projectName}
+          localSite={null}
+          remoteSite={null}
+          representationId={selectedRepresentation.id}
+          onHide={() => {
+            setSelectedRepresentation(null)
+          }}
+        />
+      )}
+
       <section className="invisible row">
         <span className="section-header">Representations</span>
         <Spacer />
@@ -21,23 +61,24 @@ const Representations = ({ representations }) => {
       <section style={{ flexGrow: 1 }}>
         <div className="wrapper">
           <DataTable
-            value={representations}
             scrollable
             responsive
             resizableColumns
+            columnResizeMode="expand"
             scrollDirection="both"
             scrollHeight="flex"
             responsiveLayout="scroll"
+            value={representations}
             emptyMessage="No representation found"
-            selectionMode="multiple"
+            selectionMode="single"
+            selection={selectedRepresentation}
+            onSelectionChange={(e) => setSelectedRepresentation(e.value)}
           >
-            <Column field="name" header="Name" />
-            <Column field="folderName" header="Folder" style={{ width: 120 }} />
-            <Column field="subsetName" header="Subset" style={{ width: 120 }} />
-            <Column field="family" header="Family" style={{ width: 120 }} />
-            <Column field="fileCount" header="Files" style={{ width: 70 }} />
-            <Column field="localStatus" header="Local" body={(val) => formatStatus(val.localStatus)} style={{ width: 50 }} />
-            <Column field="remoteStatus" header="Remote" body={(val) => formatStatus(val.remoteStatus)} style={{ width: 50 }} />
+            {columns.map((col) => {
+              return (
+                <Column {...col} key={col.field} style={{ width: col.width }} />
+              )
+            })}
           </DataTable>
         </div>
       </section>
