@@ -57,10 +57,10 @@ const VERSION_QUERY = `
                                     id
                                     name
                                     fileCount
-                                    localState{
+                                    localStatus{
                                         status
                                     }
-                                    remoteState{
+                                    remoteStatus{
                                         status
                                     }
                                 }
@@ -162,8 +162,8 @@ const VersionDetail = () => {
             subsetName: subset.name,
             family: subset.family,
             fileCount: representation.fileCount,
-            localStatus: representation.localState.status,
-            remoteStatus: representation.remoteState.status,
+            localStatus: representation.localStatus.status,
+            remoteStatus: representation.remoteStatus.status,
           })
         }
       }

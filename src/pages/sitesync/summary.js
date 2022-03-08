@@ -71,6 +71,7 @@ const SiteSyncSummary = ({
 
     const newData = await request.get(url)
     if (response.ok) {
+      console.log(newData.representations[0])
       setRepresentations(newData.representations)
     }
     setLoading(false)
@@ -125,7 +126,6 @@ const SiteSyncSummary = ({
     )
   }
 
-  console.log(selectedRepresentation)
 
   return (
     <section style={{ flexGrow: 1 }}>
@@ -134,7 +134,7 @@ const SiteSyncSummary = ({
           localSite={localSite}
           remoteSite={remoteSite}
           representationId={selectedRepresentation.representationId}
-          onHide={e=>{setSelectedRepresentation(null)}}
+          onHide={()=>{setSelectedRepresentation(null)}}
         />
       }
       <div className="wrapper">
@@ -191,7 +191,7 @@ const SiteSyncSummary = ({
             filter
             filterElement={statusFilterTemplate}
             filterMatchModeOptions={selectMatchModes}
-            body={(val) => formatStatus(val.localStatus)}
+            body={(val) => formatStatus(val, "local")}
           />
           <Column
             field="remoteStatus"
@@ -200,7 +200,7 @@ const SiteSyncSummary = ({
             filter
             filterElement={statusFilterTemplate}
             filterMatchModeOptions={selectMatchModes}
-            body={(val) => formatStatus(val.remoteStatus)}
+            body={(val) => formatStatus(val, "remote")}
           />
         </DataTable>
       </div>

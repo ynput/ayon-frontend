@@ -1,3 +1,5 @@
+import { ProgressBar } from "primereact/progressbar"
+
 const SYNC_STATES = [
   { name: 'N/A', value: -1 },
   { name: 'In progress', value: 0 },
@@ -7,7 +9,8 @@ const SYNC_STATES = [
   { name: 'Synced', value: 4 },
 ]
 
-const formatStatus = (value) => {
+const formatStatus = (rowData, site) => {
+  const value = rowData[`${site}Status`]
   const cell = {
     '-1': { label: 'N/A', color: 'red' },
     0: { label: 'In progress', color: '#dddd11' },
@@ -16,7 +19,18 @@ const formatStatus = (value) => {
     3: { label: 'Paused', color: '#0012ff' },
     4: { label: 'Synced', color: '#00ffaa' },
   }[value]
-  if (!cell) return <span>{value}</span>
+
+  if (!cell) {
+    console.log("weird", rowData)
+    return <span>{value}</span>
+  }
+
+  if (value === 0){
+    const progress = (rowData[`${site}Size`] / rowData.size) * 100
+    return <ProgressBar value={progress} showValue={false} style={{ width: "100%", height: "100%"}}/>
+  }
+
+
   return <span style={{ color: cell.color }}>{cell.label}</span>
 }
 
