@@ -20,8 +20,34 @@ const Profile = () => {
   return <main className="center">Profile page</main>
 }
 
+
+const SettingsLoader = () => {
+  const user = useSelector((state) => ({ ...state.userReducer }))
+  const dispatch = useDispatch()
+
+  const { data, request } = useFetch('/api/settings')
+
+  useEffect(() => {
+    if (!user.name)
+      return
+    request.get()  
+  }, [user.name])
+
+  useEffect(() => {
+    if (!data)
+      return
+    dispatch({type: 'SET_SETTINGS', data: data})
+  }, [data])
+
+  return <LoadingPage />
+
+}
+
+
+
 const App = () => {
   const user = useSelector((state) => ({ ...state.userReducer }))
+  const settings = useSelector((state) => ({ ...state.settingsReducer }))
   const dispatch = useDispatch()
 
   const { loading, data } = useFetch('/api/users/me', [])
@@ -43,6 +69,11 @@ const App = () => {
     window.location.href = '/'
     return <LoadingPage />
   }
+
+
+  // Load settings
+  if (Object.keys(settings).length === 0)
+    return <SettingsLoader />
 
   // TBD: at some moment, loading the last opened project seemed
   // to be a good idea, but it's weird, so we'll just use the projects page

@@ -26,6 +26,16 @@ const DEFAULT_CONTEXT = {
   focusedVersions: [],
 }
 
+const settingsReducer = (state = {}, action) => {
+  switch (action.type) {
+    case 'SET_SETTINGS':
+      console.log("setting settings to ", action.data)
+      return action.data
+    default:
+      return state
+  }
+}
+
 const contextReducer = (state = DEFAULT_CONTEXT, action) => {
   switch (action.type) {
     case 'SELECT_PROJECT':
@@ -102,5 +112,5 @@ const contextReducer = (state = DEFAULT_CONTEXT, action) => {
   }
 }
 
-const reducer = combineReducers({ userReducer, contextReducer })
+const reducer = combineReducers({ userReducer, contextReducer, settingsReducer })
 export default reducer

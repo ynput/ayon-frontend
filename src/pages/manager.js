@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useFetch } from 'use-http'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
@@ -9,6 +9,8 @@ import { Shade } from '../components'
 import { Button } from 'primereact/button'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
+import { InputText } from 'primereact/inputtext'
+import { InputNumber } from 'primereact/inputnumber'
 
 const FOLDERS_QUERY = `
     query FolderTree($projectName: String!, $parent: String!) {
@@ -21,9 +23,7 @@ const FOLDERS_QUERY = `
                         hasChildren
                         childrenCount
                         attrib {
-                            resolutionWidth
-                            resolutionHeight
-                            fps
+                            #ATTRS#
                         }
                     }
                 }
@@ -32,40 +32,75 @@ const FOLDERS_QUERY = `
     }
 `
 
+const buildQuery = (baseQuery, settings, scope) => {
+  let attribs = ""
+  for (const attrib of settings.attributes){
+    if (attrib.scope.includes("folder"))
+      attribs += `${attrib.name}\n`
+  }
+  return baseQuery.replace("#ATTRS#", attribs)
+}
+
+const textEditor = (options) => {
+  return <InputText 
+    type="text" 
+    value={options.value} 
+    onChange={(e) => options.editorCallback(e.target.value)} 
+  />
+}
+
+const numberEditor = (options) => {
+  //console.log(options)
+  //  onChange={(e) => options.editorCallback(e.value)} 
+  return <InputNumber 
+    showButtons={true}
+    value={options.value} 
+    onChange={(e)=>{console.log(e)}}
+  />
+}
+
+
 const ManagerPage = () => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
+  const settings = useSelector((state) => ({ ...state.settingsReducer }))
   const projectName = context.projectName
   const [hierarchy, setHierarchy] = useState([])
   const [request, response, loading] = useFetch('/graphql')
+
+
+  const columns = useMemo(() => {
+    let cols = []
+    for (const attrib of settings.attributes){
+      if (attrib.scope.includes("folder"))
+        cols.push({
+          name: attrib.name,
+          title: attrib.title,
+          isAttrib: true
+        })
+    }
+    console.log("COLS", cols)
+    return cols
+  }, [])
+
 
   const loadHierarchy = async (parent, path = null) => {
     let nodes = []
     const params = { projectName, parent }
     const pathArr = path ? path : []
-    console.log('REQUESTING HIERARCHY', params)
-    const data = await request.query(FOLDERS_QUERY, params)
-    console.log(data)
+    const query = buildQuery(FOLDERS_QUERY, settings, "folder")
+    const data = await request.query(query, params)
     if (!response.ok) {
       toast.error('Unable to load hierarchy')
     }
 
     for (const edge of data.data.project.folders.edges) {
+      const node = edge.node
       nodes.push({
-        data: {
-          id: edge.node.id,
-          name: edge.node.name,
-          hasChildren: edge.node.hasChildren,
-          childrenCount: edge.node.childrenCount,
-          resolution:
-            edge.node.attrib.resolutionWidth +
-            'x' +
-            edge.node.attrib.resolutionHeight,
-          fps: edge.node.attrib.frameRate,
-        },
-        key: edge.node.id,
-        leaf: !edge.node.hasChildren,
+        data: node,
+        key: node.id,
+        leaf: !node.hasChildren,
         children: [],
-        path: [...pathArr, edge.node.id],
+        path: [...pathArr, node.id],
       })
     }
 
@@ -94,9 +129,7 @@ const ManagerPage = () => {
 
   useEffect(() => {
     if (!projectName) return
-
     loadHierarchy('root')
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectName])
 
@@ -119,19 +152,41 @@ const ManagerPage = () => {
         </section>
         <section className="column" style={{ flexGrow: 1 }}>
           {loading && <Shade />}
+          <div className="wrapper">
           <TreeTable
             responsive
             scrollable
             scrollHeight="100%"
             value={hierarchy}
             onExpand={onExpand}
+
+            resizableColumns
+            columnResizeMode="expand"
+            scrollDirection="both"
           >
-            <Column field="name" header="Name" expander></Column>
-            <Column field="childrenCount" header="ChildrenCount"></Column>
-            <Column field="id" header="ID"></Column>
-            <Column field="resolution" header="Resolution"></Column>
-            <Column field="fps" header="FPS"></Column>
+            <Column 
+              field="name" 
+              header="Name"     
+              expander
+              style={{ width: 200}}
+            />
+
+            { columns.map((col) => {
+
+              return (
+                <Column 
+                  key={col.name} 
+                  header={col.title}
+                  field={`attrib.${col.name}`}
+                  style={{ width: 100}}
+                  body={(row) => {return row.data.attrib[col.name]}}
+                  editor={(options) => numberEditor(options)} 
+                />
+              )
+
+            })}
           </TreeTable>
+          </div>
         </section>
       </main>
     </ProjectWrapper>
