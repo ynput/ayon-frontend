@@ -31,12 +31,14 @@ const SettingsLoader = () => {
     if (!user.name)
       return
     request.get()  
+    // eslint-disable-next-line
   }, [user.name])
 
   useEffect(() => {
     if (!data)
       return
     dispatch({type: 'SET_SETTINGS', data: data})
+    // eslint-disable-next-line
   }, [data])
 
   return <LoadingPage />

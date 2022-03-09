@@ -3,61 +3,15 @@ import { useFetch } from 'use-http'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import ProjectWrapper from '../containers/project-wrapper'
-import { Shade } from '../components'
+import ProjectWrapper from '../../containers/project-wrapper'
+import { Shade } from '../../components'
 
 import { Button } from 'primereact/button'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { InputText } from 'primereact/inputtext'
-import { InputNumber } from 'primereact/inputnumber'
 
-const FOLDERS_QUERY = `
-    query FolderTree($projectName: String!, $parent: String!) {
-        project(name: $projectName) {
-            folders(parentId: $parent) {
-                edges {
-                    node {
-                        id
-                        name
-                        hasChildren
-                        childrenCount
-                        attrib {
-                            #ATTRS#
-                        }
-                    }
-                }
-            }
-        }
-    }
-`
-
-const buildQuery = (baseQuery, settings, scope) => {
-  let attribs = ""
-  for (const attrib of settings.attributes){
-    if (attrib.scope.includes("folder"))
-      attribs += `${attrib.name}\n`
-  }
-  return baseQuery.replace("#ATTRS#", attribs)
-}
-
-const textEditor = (options) => {
-  return <InputText 
-    type="text" 
-    value={options.value} 
-    onChange={(e) => options.editorCallback(e.target.value)} 
-  />
-}
-
-const numberEditor = (options) => {
-  //console.log(options)
-  //  onChange={(e) => options.editorCallback(e.value)} 
-  return <InputNumber 
-    showButtons={true}
-    value={options.value} 
-    onChange={(e)=>{console.log(e)}}
-  />
-}
+import { buildQuery } from './queries'
+import { stringEditor, integerEditor, floatEditor } from './editors'
 
 
 const ManagerPage = () => {
@@ -71,28 +25,40 @@ const ManagerPage = () => {
   const columns = useMemo(() => {
     let cols = []
     for (const attrib of settings.attributes){
-      if (attrib.scope.includes("folder"))
+      if (attrib.scope.includes("folder")){
+        let editor
+        if (attrib.attribType === "integer"){
+            editor = integerEditor
+        }
+        else if (attrib.attribType === "float"){
+            editor = floatEditor
+        }
+        else {
+            editor = stringEditor
+        }
         cols.push({
           name: attrib.name,
           title: attrib.title,
-          isAttrib: true
+          editor: editor
         })
+      }
     }
-    console.log("COLS", cols)
+    console.log(cols)
     return cols
-  }, [])
+  }, [settings.attributes])
 
 
   const loadHierarchy = async (parent, path = null) => {
-    let nodes = []
     const params = { projectName, parent }
     const pathArr = path ? path : []
-    const query = buildQuery(FOLDERS_QUERY, settings, "folder")
+    const query = buildQuery("folder", settings)
     const data = await request.query(query, params)
     if (!response.ok) {
       toast.error('Unable to load hierarchy')
+      return
     }
 
+    let nodes = []
     for (const edge of data.data.project.folders.edges) {
       const node = edge.node
       nodes.push({
@@ -180,7 +146,7 @@ const ManagerPage = () => {
                   field={`attrib.${col.name}`}
                   style={{ width: 100}}
                   body={(row) => {return row.data.attrib[col.name]}}
-                  editor={(options) => numberEditor(options)} 
+                  editor={(options) => col.editor(options)} 
                 />
               )
 
