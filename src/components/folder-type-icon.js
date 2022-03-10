@@ -4,17 +4,19 @@ import {
   faFolder,
   faFileVideo,
   faImages,
-  faFile,
   faFileArchive,
   faSquare,
 } from '@fortawesome/free-regular-svg-icons'
 
 const FolderTypeIcon = ({ name }) => {
+  if (!name)
+    return <FontAwesomeIcon icon={faFolder} className="color-ternary" />
+
   const data = {
-    folder: faFolder,
     shot: faFileVideo,
     sequence: faImages,
     assetbuild: faSquare,
+    asset: faSquare,
     library: faFileArchive,
   }
   if (name.toLowerCase() in data)
@@ -24,7 +26,8 @@ const FolderTypeIcon = ({ name }) => {
         className="color-ternary"
       />
     )
-  return <FontAwesomeIcon icon={faFile} className="color-ternary" />
+  console.log("No icon for", name)
+  return <FontAwesomeIcon icon={faFolder} className="color-ternary" />
 }
 
 export default FolderTypeIcon

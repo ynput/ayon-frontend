@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import ProjectWrapper from '../../containers/project-wrapper'
-import { Shade } from '../../components'
+import { Shade, FolderTypeIcon } from '../../components'
 
 import { Button } from 'primereact/button'
 import { TreeTable } from 'primereact/treetable'
@@ -14,15 +14,33 @@ import { buildQuery } from './queries'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
 
-const ManagerPage = () => {
-  const context = useSelector((state) => ({ ...state.contextReducer }))
-  const settings = useSelector((state) => ({ ...state.settingsReducer }))
-  const projectName = context.projectName
+const formatName = (row) => {
+  if (row.data.entityType === "task")
+    return (
+      <span>
+        <i>{row.data.name}</i>
+      </span>
+    )
+  else
+    return (
+      <>
+        <FolderTypeIcon name={row.data.folderType}/>
+        <span style={{marginLeft: 10}}>
+          {row.data.name}
+        </span>
+      </>
+    )
+}
+
+
+const ManagerView = ({projectName, settings}) => {
   const [hierarchy, setHierarchy] = useState([])
   const [request, response, loading] = useFetch('/graphql')
 
 
   const columns = useMemo(() => {
+    if (!settings.attributes)
+      return []
     let cols = []
     for (const attrib of settings.attributes){
       if (attrib.scope.includes("folder")){
@@ -43,15 +61,23 @@ const ManagerPage = () => {
         })
       }
     }
-    console.log(cols)
     return cols
   }, [settings.attributes])
 
 
+  const query = useMemo(() => {
+    if (!settings.attributes)
+      return null
+    return buildQuery(settings.attributes)
+  }, [settings.attributes])
+
+
+
   const loadHierarchy = async (parent, path = null) => {
+    if (!query)
+      return
     const params = { projectName, parent }
     const pathArr = path ? path : []
-    const query = buildQuery("folder", settings)
     const data = await request.query(query, params)
     if (!response.ok) {
       toast.error('Unable to load hierarchy')
@@ -59,12 +85,25 @@ const ManagerPage = () => {
     }
 
     let nodes = []
+    // Add children
     for (const edge of data.data.project.folders.edges) {
       const node = edge.node
       nodes.push({
-        data: node,
+        data: {...node, entityType: "folder"},
         key: node.id,
-        leaf: !node.hasChildren,
+        leaf: !(node.hasChildren || node.hasTasks),
+        children: [],
+        path: [...pathArr, node.id],
+      })
+    }
+
+    // Add tasks
+    for (const edge of data.data.project.tasks.edges) {
+      const node = edge.node
+      nodes.push({
+        data: {...node, entityType: "task"},
+        key: node.id,
+        leaf: true,
         children: [],
         path: [...pathArr, node.id],
       })
@@ -100,63 +139,72 @@ const ManagerPage = () => {
   }, [projectName])
 
   const onExpand = (event) => {
-    // if (event.node.children.length)
-    //    return
+    // if (event.node.children.length) return
     loadHierarchy(event.node.key, event.node.path)
   }
 
   return (
+    <>
+      <section className="invisible row">
+        <Button icon="pi pi-plus" label="Add folder" disabled />
+        <Button icon="pi pi-plus" label="Add task" disabled />
+        <div style={{ flexGrow: 1 }} />
+      </section>
+      <section className="column" style={{ flexGrow: 1 }}>
+        {loading && <Shade />}
+        <TreeTable
+          responsive
+          scrollable
+          scrollHeight="100%"
+          value={hierarchy}
+          onExpand={onExpand}
+
+          resizableColumns
+          columnResizeMode="expand"
+          scrollDirection="both"
+        >
+          <Column 
+            field="name" 
+            header="Name"     
+            expander
+            body={(row) => formatName(row)}
+            style={{ width: 300}}
+          />
+
+          { columns.map((col) => {
+
+            return (
+              <Column 
+                key={col.name} 
+                header={col.title}
+                field={`attrib.${col.name}`}
+                style={{ width: 100}}
+                editor={(options) => col.editor(options)} 
+              />
+            )
+
+          })}
+        </TreeTable>
+      </section>
+    </>
+  )
+}
+
+
+//
+// Page wrapper
+//
+
+const ManagerPage = () => {
+  const context = useSelector((state) => ({ ...state.contextReducer }))
+  const settings = useSelector((state) => ({ ...state.settingsReducer }))
+  const projectName = context.projectName
+  return (
     <ProjectWrapper>
       <main className="rows">
-        <section className="invisible row">
-          <Button icon="pi pi-plus" label="This" disabled />
-          <Button icon="pi pi-plus" label="is" disabled />
-          <Button icon="pi pi-plus" label="a" disabled />
-          <Button icon="pi pi-plus" label="mockup" disabled />
-          <Button icon="pi pi-plus" label="toolbar" disabled />
-          <div style={{ flexGrow: 1 }} />
-        </section>
-        <section className="column" style={{ flexGrow: 1 }}>
-          {loading && <Shade />}
-          <div className="wrapper">
-          <TreeTable
-            responsive
-            scrollable
-            scrollHeight="100%"
-            value={hierarchy}
-            onExpand={onExpand}
-
-            resizableColumns
-            columnResizeMode="expand"
-            scrollDirection="both"
-          >
-            <Column 
-              field="name" 
-              header="Name"     
-              expander
-              style={{ width: 200}}
-            />
-
-            { columns.map((col) => {
-
-              return (
-                <Column 
-                  key={col.name} 
-                  header={col.title}
-                  field={`attrib.${col.name}`}
-                  style={{ width: 100}}
-                  body={(row) => {return row.data.attrib[col.name]}}
-                  editor={(options) => col.editor(options)} 
-                />
-              )
-
-            })}
-          </TreeTable>
-          </div>
-        </section>
+        <ManagerView projectName={projectName} settings={settings}/>
       </main>
     </ProjectWrapper>
   )
 }
-
 export default ManagerPage
