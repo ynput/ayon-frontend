@@ -7,7 +7,7 @@ import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 
-import { Shade } from '../../components'
+import { Shade, FolderTypeIcon } from '../../components'
 
 const filterHierarchy = (text, folder) => {
   /*
@@ -28,8 +28,9 @@ const filterHierarchy = (text, folder) => {
         children: newChildren,
         data: {
           name: item.name,
-          type: item.type,
-          subsetCount: item.subsetCount,
+          folderType: item.folderType,
+          hasSubsets: item.hasSubsets,
+          hasTasks: item.hasTasks,
           parents: item.parents,
         },
       })
@@ -41,8 +42,9 @@ const filterHierarchy = (text, folder) => {
           children: newChildren,
           data: {
             name: item.name,
-            type: item.type,
-            subsetCount: item.subsetCount,
+            folderType: item.folderType,
+            hasSubsets: item.hasSubsets,
+            hasTasks: item.hasTasks,
             parents: item.parents,
           },
         })
@@ -50,6 +52,17 @@ const filterHierarchy = (text, folder) => {
     }
   }
   return result
+}
+
+const formatName = (row) => {
+    return (
+      <>
+        <FolderTypeIcon name={row.data.folderType}/>
+        <span style={{marginLeft: 10}}>
+          {row.data.name}
+        </span>
+      </>
+    )
 }
 
 const Hierarchy = () => {
@@ -171,13 +184,28 @@ const Hierarchy = () => {
               parents: node.parents,
               folder: node.name,
             })
+  
+            console.log(node)
+            if (node.hasTasks){
+              dispatch({
+                type: 'SET_SHOW_TASKS',
+                folderId: e.node.key
+              })
+            }
+            else
+              dispatch({
+                type: 'SET_SHOW_TASKS',
+                folderId: null
+              })
+
+
           }}
         >
           <Column
-            field="name"
             header="Hierarchy"
             expander={true}
             style={{ width: '100%' }}
+            body={(row) => formatName(row)}
           />
         </TreeTable>
       </section>

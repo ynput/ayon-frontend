@@ -3,6 +3,7 @@ import Hierarchy from './hierarchy'
 import Subsets from './subsets'
 import Detail from './detail'
 import Breadcrumbs from './breadcrumbs'
+import TasksComponent from './tasks'
 
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
@@ -19,7 +20,18 @@ const BrowserPage = () => {
           style={{ width: '100%', height: '100%' }}
         >
           <SplitterPanel size={20} style={{ minWidth: 250 }}>
-            <Hierarchy />
+    
+            <section className="invisible insplit">
+              <section className="row invisible" style={{flexGrow:1}}>
+                <Hierarchy />
+              </section>
+              <section className="row invisible">
+                <TasksComponent />
+              </section>
+            </section>
+
+
+
           </SplitterPanel>
           <SplitterPanel size={60} style={{ minWidth: 500 }}>
             <Subsets />

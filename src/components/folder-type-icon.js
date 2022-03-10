@@ -18,6 +18,7 @@ const FolderTypeIcon = ({ name }) => {
     assetbuild: faSquare,
     asset: faSquare,
     library: faFileArchive,
+    episode: faFileVideo,
   }
   if (name.toLowerCase() in data)
     return (

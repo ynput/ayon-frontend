@@ -75,6 +75,12 @@ const contextReducer = (state = DEFAULT_CONTEXT, action) => {
         focusedType: null,
       }
 
+    case 'SET_SHOW_TASKS':
+      return {
+        ...state,
+        showTasks: action.folderId
+      }
+
     case 'SET_BREADCRUMBS':
       let bc = state.breadcrumbs || {}
       if (action.parents) {
