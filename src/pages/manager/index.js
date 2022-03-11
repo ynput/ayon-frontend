@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import ProjectWrapper from '../../containers/project-wrapper'
-import { Shade, FolderTypeIcon } from '../../components'
+import { Shade, Spacer, FolderTypeIcon } from '../../components'
 
 import { Button } from 'primereact/button'
 import { TreeTable } from 'primereact/treetable'
@@ -36,6 +36,7 @@ const formatName = (row) => {
 const ManagerView = ({projectName, settings}) => {
   const [hierarchy, setHierarchy] = useState([])
   const [request, response, loading] = useFetch('/graphql')
+  const [changes, setChanges] = useState({})
 
 
   const columns = useMemo(() => {
@@ -138,18 +139,54 @@ const ManagerView = ({projectName, settings}) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectName])
 
+
   const onExpand = (event) => {
     // if (event.node.children.length) return
     loadHierarchy(event.node.key, event.node.path)
   }
+
+  //
+  // Format / Edit
+  //
+
+  const onAttributeEdit = (options, value) => {
+    const id = options.rowData.id
+    const rowChanges = changes[id] || {_entityType: options.rowData.entityType}
+    rowChanges[options.field] = value
+    setChanges({...changes, [id]: rowChanges})
+  }
+
+  const formatAttribute = (node, fieldName, styled=true) => {
+    const chobj = changes[node.id]
+    if (chobj && chobj.hasOwnProperty(fieldName)){
+        const nval = chobj[fieldName]
+        if (styled)
+          return <span style={{ color: "red"}}>{nval}</span>
+        else
+          return nval
+    }
+    return node.attrib[fieldName]
+  }
+
+
+  const onCommit = () => {
+    console.log(changes)
+  }
+
+  //
+  // Display table
+  //
 
   return (
     <>
       <section className="invisible row">
         <Button icon="pi pi-plus" label="Add folder" disabled />
         <Button icon="pi pi-plus" label="Add task" disabled />
-        <div style={{ flexGrow: 1 }} />
+        <Spacer/>
+        <Button icon="pi pi-times" label="Revert Changes" onClick={() => setChanges({})} />
+        <Button icon="pi pi-check" label="Commit Changes" onClick={onCommit} />
       </section>
+
       <section className="column" style={{ flexGrow: 1 }}>
         {loading && <Shade />}
         <TreeTable
@@ -177,9 +214,18 @@ const ManagerView = ({projectName, settings}) => {
               <Column 
                 key={col.name} 
                 header={col.title}
-                field={`attrib.${col.name}`}
+                field={col.name}
                 style={{ width: 100}}
-                editor={(options) => col.editor(options)} 
+                body={rowData => formatAttribute(rowData.data, col.name)}
+                editor={
+                  options => {
+
+                    return col.editor(
+                      options, 
+                      onAttributeEdit, 
+                      formatAttribute(options.rowData, col.name, false)
+                    )
+                }} 
               />
             )
 

@@ -9,7 +9,7 @@ const stringEditor = (options) => {
   />
 }
 
-const integerEditor = (options) => {
+const integerEditor = (options, callback, value) => {
   //console.log(options)
   //  onChange={(e) => options.editorCallback(e.value)} 
   return (
@@ -21,8 +21,10 @@ const integerEditor = (options) => {
     >
     <InputNumber 
       showButtons={false}
-      value={options.value} 
-      onChange={(e)=>{console.log(e)}}
+      useGrouping={false}
+      allowEmpty={true}
+      value={value} 
+      onChange={(e)=>{callback(options, e.value)}}
       className="p-inputtext-sm"
   />
     </div>
