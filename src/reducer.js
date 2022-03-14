@@ -1,10 +1,14 @@
 import { combineReducers } from 'redux'
+import axios from 'axios'
 
 const userReducer = (state = {}, action) => {
   switch (action.type) {
     case 'LOGIN':
       if (action.accessToken) {
         localStorage.setItem('accessToken', action.accessToken)
+        axios.defaults.headers.common[
+          'Authorization'
+        ] = `Bearer ${action.accessToken}`
       }
       return action.user
 
@@ -29,7 +33,7 @@ const DEFAULT_CONTEXT = {
 const settingsReducer = (state = {}, action) => {
   switch (action.type) {
     case 'SET_SETTINGS':
-      console.log("setting settings to ", action.data)
+      console.log('setting settings to ', action.data)
       return action.data
     default:
       return state
@@ -78,7 +82,7 @@ const contextReducer = (state = DEFAULT_CONTEXT, action) => {
     case 'SET_SHOW_TASKS':
       return {
         ...state,
-        showTasks: action.folderId
+        showTasks: action.folderId,
       }
 
     case 'SET_BREADCRUMBS':
@@ -118,5 +122,9 @@ const contextReducer = (state = DEFAULT_CONTEXT, action) => {
   }
 }
 
-const reducer = combineReducers({ userReducer, contextReducer, settingsReducer })
+const reducer = combineReducers({
+  userReducer,
+  contextReducer,
+  settingsReducer,
+})
 export default reducer

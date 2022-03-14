@@ -30,20 +30,17 @@ const BASE_QUERY = `
   }
 `
 
-
-
-
 const buildQuery = (attributes) => {
-  let f_attribs = ""
-  let t_attribs = ""
-  for (const attrib of attributes){
-    if (attrib.scope.includes("folder"))
-      f_attribs += `${attrib.name}\n`
-    if (attrib.scope.includes("task"))
-      t_attribs += `${attrib.name}\n`
+  let f_attribs = ''
+  let t_attribs = ''
+  for (const attrib of attributes) {
+    if (attrib.scope.includes('folder')) f_attribs += `${attrib.name}\n`
+    if (attrib.scope.includes('task')) t_attribs += `${attrib.name}\n`
   }
-  return BASE_QUERY.replace("#FOLDER_ATTRS#", f_attribs).replace("#TASK_ATTRS#", t_attribs)
-
+  return BASE_QUERY.replace('#FOLDER_ATTRS#', f_attribs).replace(
+    '#TASK_ATTRS#',
+    t_attribs
+  )
 }
 
-export {buildQuery}
+export { buildQuery }

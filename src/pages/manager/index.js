@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useFetch } from 'use-http'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import axios from 'axios'
 
 import ProjectWrapper from '../../containers/project-wrapper'
 import { Shade, Spacer, FolderTypeIcon } from '../../components'
@@ -13,9 +12,8 @@ import { Column } from 'primereact/column'
 import { buildQuery } from './queries'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
-
 const formatName = (row) => {
-  if (row.data.entityType === "task")
+  if (row.data.entityType === 'task')
     return (
       <span>
         <i>{row.data.name}</i>
@@ -24,73 +22,70 @@ const formatName = (row) => {
   else
     return (
       <>
-        <FolderTypeIcon name={row.data.folderType}/>
-        <span style={{marginLeft: 10}}>
-          {row.data.name}
-        </span>
+        <FolderTypeIcon name={row.data.folderType} />
+        <span style={{ marginLeft: 10 }}>{row.data.name}</span>
       </>
     )
 }
 
-
-const ManagerView = ({projectName, settings}) => {
+const ManagerView = ({ projectName, settings }) => {
   const [hierarchy, setHierarchy] = useState([])
-  const [request, response, loading] = useFetch('/graphql')
   const [changes, setChanges] = useState({})
-
+  const [loading, setLoading] = useState(false)
 
   const columns = useMemo(() => {
-    if (!settings.attributes)
-      return []
+    if (!settings.attributes) return []
     let cols = []
-    for (const attrib of settings.attributes){
-      if (attrib.scope.includes("folder")){
+    for (const attrib of settings.attributes) {
+      if (attrib.scope.includes('folder')) {
         let editor
-        if (attrib.attribType === "integer"){
-            editor = integerEditor
-        }
-        else if (attrib.attribType === "float"){
-            editor = floatEditor
-        }
-        else {
-            editor = stringEditor
+        if (attrib.attribType === 'integer') {
+          editor = integerEditor
+        } else if (attrib.attribType === 'float') {
+          editor = floatEditor
+        } else {
+          editor = stringEditor
         }
         cols.push({
           name: attrib.name,
           title: attrib.title,
-          editor: editor
+          editor: editor,
         })
       }
     }
     return cols
   }, [settings.attributes])
 
-
   const query = useMemo(() => {
-    if (!settings.attributes)
-      return null
+    if (!settings.attributes) return null
     return buildQuery(settings.attributes)
   }, [settings.attributes])
 
+  const loadHierarchy = async (path = []) => {
+    if (!query) return
 
+    setLoading(true)
 
-  const loadHierarchy = async (parent, path = null) => {
-    if (!query)
-      return
-    const params = { projectName, parent }
-    const pathArr = path ? path : []
-    const data = await request.query(query, params)
-    if (!response.ok) {
-      toast.error('Unable to load hierarchy')
+    const parentId = path.length > 0 ? path[path.length - 1] : null
+
+    const variables = { projectName, parent: parentId || 'root' }
+    const response = await axios.post('/graphql', { query, variables })
+
+    if (response.status !== 200) {
+      console.log(response)
+      setLoading(false)
       return
     }
 
+    const data = response.data
+
+    const pathArr = path ? path : []
     let nodes = []
     // Add children
     for (const edge of data.data.project.folders.edges) {
       const node = edge.node
       nodes.push({
-        data: {...node, entityType: "folder"},
+        data: { ...node, entityType: 'folder' },
         key: node.id,
         leaf: !(node.hasChildren || node.hasTasks),
         children: [],
@@ -102,7 +97,7 @@ const ManagerView = ({projectName, settings}) => {
     for (const edge of data.data.project.tasks.edges) {
       const node = edge.node
       nodes.push({
-        data: {...node, entityType: "task"},
+        data: { ...node, entityType: 'task' },
         key: node.id,
         leaf: true,
         children: [],
@@ -110,8 +105,9 @@ const ManagerView = ({projectName, settings}) => {
       })
     }
 
-    if (parent === 'root') {
+    if (!parentId) {
       setHierarchy(nodes)
+      setLoading(false)
       return
     }
 
@@ -119,7 +115,7 @@ const ManagerView = ({projectName, settings}) => {
     let result = [...hierarchy]
     const updateHierarchy = (src) => {
       for (let node of src || result) {
-        if (node.data.id === parent) {
+        if (node.data.id === parentId) {
           node.children = nodes
           return
         } else {
@@ -131,18 +127,18 @@ const ManagerView = ({projectName, settings}) => {
     }
     updateHierarchy()
     setHierarchy(result)
+    setLoading(false)
   }
 
   useEffect(() => {
     if (!projectName) return
-    loadHierarchy('root')
+    loadHierarchy()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectName])
 
-
   const onExpand = (event) => {
     // if (event.node.children.length) return
-    loadHierarchy(event.node.key, event.node.path)
+    loadHierarchy(event.node.path)
   }
 
   //
@@ -151,26 +147,54 @@ const ManagerView = ({projectName, settings}) => {
 
   const onAttributeEdit = (options, value) => {
     const id = options.rowData.id
-    const rowChanges = changes[id] || {_entityType: options.rowData.entityType}
+    const rowChanges = changes[id] || {
+      _entityType: options.rowData.entityType,
+      _entityId: options.rowData.id,
+      _path: options.node.path,
+    }
     rowChanges[options.field] = value
-    setChanges({...changes, [id]: rowChanges})
+    setChanges({ ...changes, [id]: rowChanges })
   }
 
-  const formatAttribute = (node, fieldName, styled=true) => {
+  const formatAttribute = (node, fieldName, styled = true) => {
     const chobj = changes[node.id]
-    if (chobj && chobj.hasOwnProperty(fieldName)){
-        const nval = chobj[fieldName]
-        if (styled)
-          return <span style={{ color: "red"}}>{nval}</span>
-        else
-          return nval
+    if (chobj && chobj.hasOwnProperty(fieldName)) {
+      const nval = chobj[fieldName]
+      if (styled) return <span style={{ color: 'red' }}>{nval}</span>
+      else return nval
     }
     return node.attrib[fieldName]
   }
 
+  const onCommit = async () => {
+    let branchesToReload = []
 
-  const onCommit = () => {
-    console.log(changes)
+    for (const entityId in changes) {
+      const entityType = changes[entityId]._entityType
+      const parentPath = changes[entityId]._path.slice(0, -1)
+      const entityChanges = {}
+      for (const k in changes[entityId]) {
+        if (k.startsWith('_')) continue
+        entityChanges[k] = changes[entityId][k]
+      }
+
+      console.log('PATCH', entityType, entityId, entityChanges)
+
+      const response = await axios.patch(
+        `/api/projects/${projectName}/${entityType}s/${entityId}`,
+        { attrib: entityChanges }
+      )
+
+      if (!branchesToReload.includes(parentPath))
+        branchesToReload.push(parentPath)
+    }
+
+    for (const branch of branchesToReload) {
+      console.log('Reloading branch', branch)
+      loadHierarchy(branch)
+    }
+
+    setChanges({})
   }
 
   //
@@ -182,8 +206,12 @@ const ManagerView = ({projectName, settings}) => {
       <section className="invisible row">
         <Button icon="pi pi-plus" label="Add folder" disabled />
         <Button icon="pi pi-plus" label="Add task" disabled />
-        <Spacer/>
-        <Button icon="pi pi-times" label="Revert Changes" onClick={() => setChanges({})} />
+        <Spacer />
+        <Button
+          icon="pi pi-times"
+          label="Revert Changes"
+          onClick={() => setChanges({})}
+        />
         <Button icon="pi pi-check" label="Commit Changes" onClick={onCommit} />
       </section>
 
@@ -195,47 +223,41 @@ const ManagerView = ({projectName, settings}) => {
           scrollHeight="100%"
           value={hierarchy}
           onExpand={onExpand}
-
           resizableColumns
           columnResizeMode="expand"
           scrollDirection="both"
         >
-          <Column 
-            field="name" 
-            header="Name"     
+          <Column
+            field="name"
+            header="Name"
             expander
             body={(row) => formatName(row)}
-            style={{ width: 300}}
+            style={{ width: 300 }}
           />
 
-          { columns.map((col) => {
-
+          {columns.map((col) => {
             return (
-              <Column 
-                key={col.name} 
+              <Column
+                key={col.name}
                 header={col.title}
                 field={col.name}
-                style={{ width: 100}}
-                body={rowData => formatAttribute(rowData.data, col.name)}
-                editor={
-                  options => {
-
-                    return col.editor(
-                      options, 
-                      onAttributeEdit, 
-                      formatAttribute(options.rowData, col.name, false)
-                    )
-                }} 
+                style={{ width: 100 }}
+                body={(rowData) => formatAttribute(rowData.data, col.name)}
+                editor={(options) => {
+                  return col.editor(
+                    options,
+                    onAttributeEdit,
+                    formatAttribute(options.rowData, col.name, false)
+                  )
+                }}
               />
             )
-
           })}
         </TreeTable>
       </section>
     </>
   )
 }
-
 
 //
 // Page wrapper
@@ -248,7 +270,7 @@ const ManagerPage = () => {
   return (
     <ProjectWrapper>
       <main className="rows">
-        <ManagerView projectName={projectName} settings={settings}/>
+        <ManagerView projectName={projectName} settings={settings} />
       </main>
     </ProjectWrapper>
   )

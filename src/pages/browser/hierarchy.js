@@ -55,14 +55,12 @@ const filterHierarchy = (text, folder) => {
 }
 
 const formatName = (row) => {
-    return (
-      <>
-        <FolderTypeIcon name={row.data.folderType}/>
-        <span style={{marginLeft: 10}}>
-          {row.data.name}
-        </span>
-      </>
-    )
+  return (
+    <>
+      <FolderTypeIcon name={row.data.folderType} />
+      <span style={{ marginLeft: 10 }}>{row.data.name}</span>
+    </>
+  )
 }
 
 const Hierarchy = () => {
@@ -184,21 +182,18 @@ const Hierarchy = () => {
               parents: node.parents,
               folder: node.name,
             })
-  
+
             console.log(node)
-            if (node.hasTasks){
+            if (node.hasTasks) {
               dispatch({
                 type: 'SET_SHOW_TASKS',
-                folderId: e.node.key
+                folderId: e.node.key,
               })
-            }
-            else
+            } else
               dispatch({
                 type: 'SET_SHOW_TASKS',
-                folderId: null
+                folderId: null,
               })
-
-
           }}
         >
           <Column

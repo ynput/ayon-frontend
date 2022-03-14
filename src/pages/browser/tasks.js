@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { useFetch } from 'use-http'
 import { useSelector } from 'react-redux'
 
-
 const TASKS_QUERY = `
 query TasksByFolder($projectName: String!, $folderId: String!) {
   project(name: $projectName) {
@@ -18,7 +17,6 @@ query TasksByFolder($projectName: String!, $folderId: String!) {
 }
 `
 
-
 const TasksPanel = ({ folderId, projectName }) => {
   const { data, loading, request } = useFetch('graphql')
 
@@ -27,39 +25,35 @@ const TasksPanel = ({ folderId, projectName }) => {
     // eslint-disable-next-line
   }, [folderId])
 
-  if (!(data && data.data && data.data.project ))
-    return <></>
+  if (!(data && data.data && data.data.project)) return <></>
 
   const edges = data.data.project.tasks.edges
 
-
   return (
-    <section className="row" style={{ minHeight: 150, width: "100%"}}>
-      <div className="wrapper" style={{ overflowY: "scroll"}}>
+    <section className="row" style={{ minHeight: 150, width: '100%' }}>
+      <div className="wrapper" style={{ overflowY: 'scroll' }}>
         <ul>
-        { edges.map((edge, idx) => <li key={idx}>{edge.node.name} ({edge.node.taskType})</li> )}
+          {edges.map((edge, idx) => (
+            <li key={idx}>
+              {edge.node.name} ({edge.node.taskType})
+            </li>
+          ))}
         </ul>
       </div>
     </section>
   )
-
-
 }
-
-
 
 const TasksComponent = () => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
   const projectName = context.projectName
   const showTasks = context.showTasks || null
 
-  console.log("Show tasks", showTasks)
-  
-  if (!showTasks)
-    return <></>
+  console.log('Show tasks', showTasks)
+
+  if (!showTasks) return <></>
 
   return <TasksPanel projectName={projectName} folderId={showTasks} />
 }
-
 
 export default TasksComponent

@@ -27,7 +27,7 @@ const FolderTypeIcon = ({ name }) => {
         className="color-ternary"
       />
     )
-  console.log("No icon for", name)
+  console.log('No icon for', name)
   return <FontAwesomeIcon icon={faFolder} className="color-ternary" />
 }
 

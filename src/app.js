@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { useFetch } from 'use-http'
+import axios from 'axios'
 
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 
@@ -20,48 +20,48 @@ const Profile = () => {
   return <main className="center">Profile page</main>
 }
 
-
 const SettingsLoader = () => {
   const user = useSelector((state) => ({ ...state.userReducer }))
   const dispatch = useDispatch()
 
-  const { data, request } = useFetch('/api/settings')
-
   useEffect(() => {
-    if (!user.name)
-      return
-    request.get()  
+    if (!user.name) return
+    axios.get('/api/settings').then((response) => {
+      dispatch({ type: 'SET_SETTINGS', data: response.data })
+    })
     // eslint-disable-next-line
   }, [user.name])
 
-  useEffect(() => {
-    if (!data)
-      return
-    dispatch({type: 'SET_SETTINGS', data: data})
-    // eslint-disable-next-line
-  }, [data])
-
   return <LoadingPage />
-
 }
-
-
 
 const App = () => {
   const user = useSelector((state) => ({ ...state.userReducer }))
   const settings = useSelector((state) => ({ ...state.settingsReducer }))
   const dispatch = useDispatch()
+  const [loading, setLoading] = useState(false)
 
-  const { loading, data } = useFetch('/api/users/me', [])
+  const storedAccessToken = localStorage.getItem('accessToken')
+  if (storedAccessToken)
+    axios.defaults.headers.common[
+      'Authorization'
+    ] = `Bearer ${storedAccessToken}`
 
   useEffect(() => {
-    if (data) {
-      dispatch({
-        type: 'LOGIN',
-        user: data,
+    setLoading(true)
+    axios
+      .get('/api/users/me')
+      .then((response) => {
+        dispatch({
+          type: 'LOGIN',
+          user: response.data,
+        })
+        setLoading(false)
       })
-    }
-  }, [data, dispatch])
+      .catch(() => {
+        setLoading(false)
+      })
+  }, [])
 
   if (loading) return <LoadingPage />
   if (!user.name) return <LoginPage />
@@ -72,10 +72,8 @@ const App = () => {
     return <LoadingPage />
   }
 
-
   // Load settings
-  if (Object.keys(settings).length === 0)
-    return <SettingsLoader />
+  if (Object.keys(settings).length === 0) return <SettingsLoader />
 
   // TBD: at some moment, loading the last opened project seemed
   // to be a good idea, but it's weird, so we'll just use the projects page
