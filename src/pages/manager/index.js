@@ -12,6 +12,15 @@ import { Column } from 'primereact/column'
 import { buildQuery } from './queries'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
+
+const arrayEquals = (a, b) => {
+    return Array.isArray(a) &&
+        Array.isArray(b) &&
+        a.length === b.length &&
+        a.every((val, index) => val === b[index]);
+}
+
+
 const formatName = (row) => {
   if (row.data.entityType === 'task')
     return (
@@ -32,6 +41,7 @@ const ManagerView = ({ projectName, settings }) => {
   const [hierarchy, setHierarchy] = useState([])
   const [changes, setChanges] = useState({})
   const [loading, setLoading] = useState(false)
+  const [expandedKeys, setExpandedKeys] = useState({})
 
   const columns = useMemo(() => {
     if (!settings.attributes) return []
@@ -178,23 +188,39 @@ const ManagerView = ({ projectName, settings }) => {
         entityChanges[k] = changes[entityId][k]
       }
 
-      console.log('PATCH', entityType, entityId, entityChanges)
 
       const response = await axios.patch(
         `/api/projects/${projectName}/${entityType}s/${entityId}`,
         { attrib: entityChanges }
       )
 
-      if (!branchesToReload.includes(parentPath))
+      
+      if (branchesToReload.length === 0)
         branchesToReload.push(parentPath)
+
+      for (const branch of branchesToReload){
+        if (arrayEquals(branch, parentPath))
+          continue
+        branchesToReload.push(parentPath)
+      }
+
+    }
+
+
+    const newExpandedKeys = {}
+    for (const expandedKey in expandedKeys){
+      if (changes.hasOwnProperty(expandedKey))
+        continue
+      newExpandedKeys[expandedKey] = true
     }
 
     for (const branch of branchesToReload) {
-      console.log('Reloading branch', branch)
-      loadHierarchy(branch)
+      await loadHierarchy(branch)
     }
 
     setChanges({})
+    setExpandedKeys(newExpandedKeys)
+    
   }
 
   //
@@ -226,6 +252,8 @@ const ManagerView = ({ projectName, settings }) => {
           resizableColumns
           columnResizeMode="expand"
           scrollDirection="both"
+          expandedKeys={expandedKeys}
+          onToggle={e => setExpandedKeys(e.value)}
         >
           <Column
             field="name"

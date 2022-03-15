@@ -1,12 +1,12 @@
 import { InputText } from 'primereact/inputtext'
 import { InputNumber } from 'primereact/inputnumber'
 
-const stringEditor = (options) => {
+const stringEditor = (options, callback, value) => {
   return (
     <InputText
       type="text"
-      value={options.value}
-      onChange={(e) => options.editorCallback(e.value)}
+      value={value}
+      onChange={(e) => callback(e.value)}
     />
   )
 }
@@ -36,7 +36,7 @@ const integerEditor = (options, callback, value) => {
   )
 }
 
-const floatEditor = (options) => {
+const floatEditor = (options, callback, value) => {
   //console.log(options)
   //  onChange={(e) => options.editorCallback(e.value)}
   return (
@@ -49,11 +49,11 @@ const floatEditor = (options) => {
     >
       <InputNumber
         showButtons={false}
-        value={options.value}
+        value={value}
         minFractionDigits={3}
         maxFractionDigits={3}
         onChange={(e) => {
-          console.log(e)
+          callback(options, e.value)
         }}
         className="p-inputtext-sm"
       />
