@@ -1,6 +1,10 @@
-import { useEffect } from 'react'
-import { useFetch } from 'use-http'
+import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
+
+import { DataTable } from 'primereact/datatable'
+import { Column } from 'primereact/column'
+
+import axios from 'axios'
 
 const TASKS_QUERY = `
 query TasksByFolder($projectName: String!, $folderId: String!) {
@@ -10,6 +14,7 @@ query TasksByFolder($projectName: String!, $folderId: String!) {
         node {
           name
           taskType
+          assignees
         }
       }
     }
@@ -17,34 +22,56 @@ query TasksByFolder($projectName: String!, $folderId: String!) {
 }
 `
 
-const TasksPanel = ({ folderId, projectName }) => {
-  const { data, loading, request } = useFetch('graphql')
+const TasksPanel = ({ folderId, projectName, userName }) => {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+
 
   useEffect(() => {
-    request.query(TASKS_QUERY, { projectName, folderId })
+    setLoading(true)
+    let result = []
+    axios.post("/graphql", {query: TASKS_QUERY, variables: {projectName, folderId}})
+    .then((response) => {
+        if (!(response.data && response.data.data && response.data.data.project))
+          return
+
+        for (const edge of response.data.data.project.tasks.edges){
+          result.push({
+            name: edge.node.name,
+            taskType: edge.node.taskType,
+            isMine: edge.node.assignees.includes(userName) ? "yes" : "no"
+          })
+        }
+      }
+    )
+    .finally(() => {
+      setData(result)
+      setLoading(false)
+    })
     // eslint-disable-next-line
   }, [folderId])
 
-  if (!(data && data.data && data.data.project)) return <></>
 
-  const edges = data.data.project.tasks.edges
 
   return (
-    <section className="row" style={{ minHeight: 150, width: '100%' }}>
-      <div className="wrapper" style={{ overflowY: 'scroll' }}>
-        <ul>
-          {edges.map((edge, idx) => (
-            <li key={idx}>
-              {edge.node.name} ({edge.node.taskType})
-            </li>
-          ))}
-        </ul>
+    <section className="row" style={{ minHeight: 200, width: '100%' }}>
+      <div className="wrapper">
+        <DataTable 
+          value={data}
+          scrollable
+          scrollHeight={200}
+        >
+          <Column field="name" header="Name"/>
+          <Column field="taskType" header="Task type"/>
+          <Column field="isMine" header="Mine"/>
+        </DataTable>
       </div>
     </section>
   )
 }
 
 const TasksComponent = () => {
+  const user = useSelector((state) => ({ ...state.userReducer }))
   const context = useSelector((state) => ({ ...state.contextReducer }))
   const projectName = context.projectName
   const showTasks = context.showTasks || null
@@ -53,7 +80,7 @@ const TasksComponent = () => {
 
   if (!showTasks) return <></>
 
-  return <TasksPanel projectName={projectName} folderId={showTasks} />
+  return <TasksPanel projectName={projectName} folderId={showTasks} userName={user.name} />
 }
 
 export default TasksComponent
