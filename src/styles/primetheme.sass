@@ -67,10 +67,6 @@ $prime-input-border: 2px solid #373d48
     overflow: hidden
     text-overflow: ellipsis
 
-  .p-datatable-scrollable-header, .p-treetable-scrollable-header
-    background: $op-background-dark
-    user-select: none
-    --webkit-user-drag: none
 
   .p-datatable-tbody > tr, .p-treetable-tbody > tr
     background: $op-background-dark
@@ -80,6 +76,13 @@ $prime-input-border: 2px solid #373d48
     background: $op-background-dark
     border-right: 2px solid $op-background-light
 
+.p-datatable-thead > tr, .p-treetable-scrollable-header 
+    background: $op-background-dark !important
+    user-select: none
+    --webkit-user-drag: none
+
+.p-datatable .p-sortable-column.p-highlight
+  background: $op-background-dark
 
 // Splitter
 

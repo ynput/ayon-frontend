@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useFetch } from 'use-http'
 
-import { Button, Spacer } from '../../components'
+import axios from 'axios'
+
+import { Button, Spacer, FolderTypeIcon } from '../../components'
 
 import Representations from './representations'
 
@@ -15,18 +17,7 @@ const FOLDER_QUERY = `
                         name
                         folderType
                         attrib {
-                            fps
-                            resolutionWidth
-                            resolutionHeight
-                        }
-                        tasks {
-                            edges {
-                              node {
-                                name
-                                taskType
-                                assignees
-                              }
-                            }
+                          #FOLDER_ATTRS#
                         }
                     }
                 }
@@ -77,45 +68,66 @@ const VERSION_QUERY = `
     }
 `
 
+const buildFolderQuery = (attributes) => {
+  let f_attribs = ''
+  for (const attrib of attributes) {
+    if (attrib.scope.includes('folder')) f_attribs += `${attrib.name}\n`
+  }
+  return FOLDER_QUERY.replace('#FOLDER_ATTRS#', f_attribs)
+}
+
+
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
+  const settings = useSelector((state) => ({ ...state.settingsReducer }))
   const projectName = context.projectName
   const folders = context.focusedFolders
-  const [detailData, setDetailData] = useState(null)
-  const request = useFetch('/graphql')
-
   const folderId = folders.length > 0 ? folders[folders.length - 1] : null
+  const [data, setData] = useState({})
 
   useEffect(() => {
-    async function fetchData() {
-      const data = await request.query(FOLDER_QUERY, {
-        projectName,
-        folders: [folderId],
-      })
-      if (!(data.data && data.data.project)) {
+
+    const query = buildFolderQuery(settings.attributes)
+    const variables = {projectName, folders: [folderId] } 
+
+    axios.post("/graphql", {query, variables})
+    .then((response)=>{
+
+      if (!(response.data.data && response.data.data.project)) {
         console.log('ERROR', data.errors[0].message)
         return
       }
-      const projectData = data.data.project
 
-      setDetailData(projectData.folders.edges[0].node)
-    }
+      console.log(response.data.data.project)
+      const edges = response.data.data.project.folders.edges
+      if (!edges.length){
+        // TODO: log 404
+        return
+      }
 
-    fetchData()
+      setData(edges[0].node)
+    })
     //eslint-disable-next-line
   }, [projectName, folderId])
 
   return (
     <section style={{ flexGrow: 1 }}>
-      <pre
-        style={{
-          overflow: 'auto',
-          flex: '1 1 1px',
-          width: '100%',
-        }}
-      >
-        {JSON.stringify(detailData, null, 2)}
-      </pre>
+        <h3><FolderTypeIcon name={data.folderType}/><span style={{marginLeft: 15}}>{data.name}</span></h3>
+        <h4>Attributes</h4>
+        <table>
+        {
+          settings.attributes.map((attr) => {
+            if (!attr.scope.includes("folder")) return
+            if (!data.attrib) return
+            const value = data.attrib[attr.name]
+            if (!value) return
+
+            return <tr><td>{attr.title}</td><td>{value}</td></tr>
+
+          })
+        }
+
+        </table>
     </section>
   )
 }
