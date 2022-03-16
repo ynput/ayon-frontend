@@ -134,7 +134,6 @@ const LoginPage = () => {
         return
 
       for (const option of response.data.options) {
-        console.log('OPT', option)
         const redirectUri = `${window.location.origin}/login/${option.name}`
         result.push({
           name: option.name,

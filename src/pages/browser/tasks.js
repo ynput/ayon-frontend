@@ -76,8 +76,6 @@ const TasksComponent = () => {
   const projectName = context.projectName
   const showTasks = context.showTasks || null
 
-  console.log('Show tasks', showTasks)
-
   if (!showTasks) return <></>
 
   return (

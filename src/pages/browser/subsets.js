@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useFetch } from 'use-http'
-import { useSelector, useDispatch } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import { InputText, Spacer, Button, Shade } from '../../components'
@@ -9,13 +9,12 @@ import { Column } from 'primereact/column'
 
 import { DEFAULT_COLUMNS, SUBSET_QUERY, parseSubsetData } from './subset-utils'
 
-const Subsets = () => {
+const Subsets = ({projectName, folders, focusedVersions}) => {
   const dispatch = useDispatch()
-  const context = useSelector((state) => ({ ...state.contextReducer }))
-  const folders = context.focusedFolders
-  const projectName = context.projectName
 
   const request = useFetch('/graphql')
+
+
   const [subsetData, setSubsetData] = useState([])
   const [selection, setSelection] = useState([])
   //const [columns, setColumns] = useState(DEFAULT_COLUMNS)
@@ -41,10 +40,10 @@ const Subsets = () => {
   useEffect(() => {
     setSelection([
       ...subsetData.filter((s) =>
-        context.focusedVersions.includes(s.versionId)
+        focusedVersions.includes(s.versionId)
       ),
     ])
-  }, [subsetData, context.focusedVersions])
+  }, [subsetData, focusedVersions])
 
   return (
     <section className="invisible insplit">

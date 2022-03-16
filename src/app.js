@@ -47,8 +47,6 @@ const App = () => {
       'Authorization'
     ] = `Bearer ${storedAccessToken}`
 
-  console.log('ACCESS TOKEN', storedAccessToken)
-
   useEffect(() => {
     setLoading(true)
     axios

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import useFetch from 'use-http'
 
 import { InputText } from 'primereact/inputtext'
@@ -8,6 +8,16 @@ import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 
 import { Shade, FolderTypeIcon } from '../../components'
+
+
+const quickFormat = (name, type) => {
+  return (
+    <>
+      <FolderTypeIcon name={type} />
+      <span style={{ marginLeft: 10 }}>{name}</span>
+    </>
+  )
+}
 
 const filterHierarchy = (text, folder) => {
   /*
@@ -32,6 +42,7 @@ const filterHierarchy = (text, folder) => {
           hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
           parents: item.parents,
+          body: quickFormat(item.name, item.folderType)
         },
       })
     } else if (item.children) {
@@ -46,6 +57,7 @@ const filterHierarchy = (text, folder) => {
             hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
             parents: item.parents,
+            body: quickFormat(item.name, item.folderType)
           },
         })
       }
@@ -54,23 +66,12 @@ const filterHierarchy = (text, folder) => {
   return result
 }
 
-const formatName = (row) => {
-  return (
-    <>
-      <FolderTypeIcon name={row.data.folderType} />
-      <span style={{ marginLeft: 10 }}>{row.data.name}</span>
-    </>
-  )
-}
 
-const Hierarchy = () => {
+const Hierarchy = ({projectName, folderTypes}) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
-
-  const context = useSelector((state) => ({ ...state.contextReducer }))
-  const projectName = context.projectName
-  const folderTypes = context.project.folderTypes
+  const [selectedFolders, setSelectedFolders] = useState({})
 
   const [data, setData] = useState([])
 
@@ -107,19 +108,12 @@ const Hierarchy = () => {
     return filterHierarchy(query, data)
   }, [data, query])
 
+
   useEffect(() => {
     loadHierarchy()
-    // Tell the linter to shut up about missing hierarchyRequest dependency,
-    // which would cause infinite loop.
     // eslint-disable-next-line
   }, [projectName, selectedFolderTypes])
 
-  const folderSelection = useMemo(() => {
-    // TODO: OPTIMIZE!!!!!
-    let selection = {}
-    for (const folder of context.focusedFolders) selection[folder] = true
-    return selection
-  }, [context.focusedFolders])
 
   const selectedTypeTemplate = (option) => {
     if (option) {
@@ -166,9 +160,10 @@ const Hierarchy = () => {
           scrollable
           scrollHeight="100%"
           selectionMode="multiple"
-          selectionKeys={folderSelection}
-          emptyMessage={loading ? 'Loading folders...' : 'No folders foud.'}
+          selectionKeys={selectedFolders}
+          emptyMessage={loading ? 'Loading folders...' : 'No folders found.'}
           onSelectionChange={(e) => {
+            setSelectedFolders(e.value)
             const selection = Object.keys(e.value)
             dispatch({
               type: 'SET_FOCUSED_FOLDERS',
@@ -183,7 +178,6 @@ const Hierarchy = () => {
               folder: node.name,
             })
 
-            console.log(node)
             if (node.hasTasks) {
               dispatch({
                 type: 'SET_SHOW_TASKS',
@@ -198,9 +192,9 @@ const Hierarchy = () => {
         >
           <Column
             header="Hierarchy"
+            field="body"
             expander={true}
             style={{ width: '100%' }}
-            body={(row) => formatName(row)}
           />
         </TreeTable>
       </section>

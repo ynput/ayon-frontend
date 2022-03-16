@@ -34,7 +34,7 @@ const columns = [
   },
 ]
 
-const Representations = ({ representations }) => {
+const RepresentationDetail = ({ representations }) => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
   const projectName = context.projectName
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
@@ -86,4 +86,4 @@ const Representations = ({ representations }) => {
   )
 }
 
-export default Representations
+export default RepresentationDetail
