@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -45,6 +45,7 @@ const LoginPage = () => {
   const loginRef = useRef(null)
   const passwordRef = useRef(null)
   const [loading, setLoading] = useState(false)
+  const [oauthOptions, setOauthOptions] = useState([])
 
   // OAuth2 handler
 
@@ -53,68 +54,63 @@ const LoginPage = () => {
       // const error = new URLSearchParams(window.location.search).get('error')
       const provider = window.location.pathname.split('/')[2]
       const code = new URLSearchParams(window.location.search).get('code')
-      window.history.replaceState({}, document.title, "/" );
+      window.history.replaceState({}, document.title, '/')
 
-      if (!(provider && code))
-        return
+      if (!(provider && code)) return
 
       setLoading(true)
-      axios.get(
-          `/api/oauth2/login/${provider}`,
-          {params: {
+      axios
+        .get(`/api/oauth2/login/${provider}`, {
+          params: {
             code: code,
-            redirect_uri: `${window.location.origin}/login/${provider}`
-          }}
-      )
-      .then(response => {
-        const data = response.data
+            redirect_uri: `${window.location.origin}/login/${provider}`,
+          },
+        })
+        .then((response) => {
+          const data = response.data
 
-        if (data.user) {
-          // login successful
-          toast.info(data.detail)
-          console.log("OAUTH LOGIN:", data.user)
-          dispatch({
-            type: 'LOGIN',
-            user: data.user,
-            accesstoken: data.token,
-          })
-        } else {
-          toast.error("Unable to login using OAUTH")
-        }
-
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-
+          if (data.user) {
+            // login successful
+            toast.info(data.detail)
+            dispatch({
+              type: 'LOGIN',
+              user: data.user,
+              accessToken: data.token,
+            })
+          } else {
+            toast.error('Unable to login using OAUTH')
+          }
+        })
+        .finally(() => {
+          setLoading(false)
+        })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-
-
   // Login form
 
   const doLogin = () => {
-    axios.post('/api/auth/login', {name, password})
-    .then((response) =>{
-      if (response.data.user) {
-        toast.info(response.data.detail)
-        dispatch({
-          type: 'LOGIN',
-          user: response.data.user,
-          accessToken: response.data.token,
-        })
-      }
-
-    })
-    .catch((err) => {
-      toast.error(
-        err.response.data.detail || `Unable to login: Error ${err.response.status}`
-      )
-    })
+    axios
+      .post('/api/auth/login', { name, password })
+      .then((response) => {
+        if (response.data.user) {
+          toast.info(response.data.detail)
+          dispatch({
+            type: 'LOGIN',
+            user: response.data.user,
+            accessToken: response.data.token,
+          })
+        }
+      })
+      .catch((err) => {
+        toast.error(
+          err.response.data.detail ||
+            `Unable to login: Error ${err.response.status}`
+        )
+      })
   }
-  
+
   const onLoginKeyDown = (event) => {
     if (event.key === 'Enter') {
       doLogin()
@@ -125,17 +121,20 @@ const LoginPage = () => {
     if (loginRef.current) loginRef.current.focus()
   }, [loginRef])
 
-
-  const oauthOptions = useMemo(() => {
+  useEffect(() => {
     let result = []
-    axios.get('/api/oauth2/options')
-    .then((response) => {
-      if (!(response.data && response.data.options && response.data.options.length))
+    axios.get('/api/oauth2/options').then((response) => {
+      if (
+        !(
+          response.data &&
+          response.data.options &&
+          response.data.options.length
+        )
+      )
         return
 
-      console.log(response.data)
-
       for (const option of response.data.options) {
+        console.log('OPT', option)
         const redirectUri = `${window.location.origin}/login/${option.name}`
         result.push({
           name: option.name,
@@ -147,12 +146,9 @@ const LoginPage = () => {
           ),
         })
       }
-
+      setOauthOptions(result)
     })
-    return result
-
   }, [])
-
 
   if (loading) return <div>Loading...</div>
 
@@ -179,10 +175,7 @@ const LoginPage = () => {
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={onLoginKeyDown}
         />
-        <Button
-          label="Login"
-          onClick={doLogin}
-        />
+        <Button label="Login" onClick={doLogin} />
       </section>
       {oauthOptions && <OAuth2Links options={oauthOptions} />}
     </main>

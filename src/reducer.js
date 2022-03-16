@@ -4,6 +4,7 @@ import axios from 'axios'
 const userReducer = (state = {}, action) => {
   switch (action.type) {
     case 'LOGIN':
+      console.log(action)
       if (action.accessToken) {
         localStorage.setItem('accessToken', action.accessToken)
         axios.defaults.headers.common[

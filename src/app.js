@@ -47,6 +47,8 @@ const App = () => {
       'Authorization'
     ] = `Bearer ${storedAccessToken}`
 
+  console.log('ACCESS TOKEN', storedAccessToken)
+
   useEffect(() => {
     setLoading(true)
     axios
@@ -61,17 +63,16 @@ const App = () => {
       .catch(() => {
         setLoading(false)
       })
-  }, [])
+  }, [dispatch])
 
   if (loading) return <LoadingPage />
   if (!user.name) return <LoginPage />
 
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
-    window.history.replaceState({}, document.title, "/" );
+    window.history.replaceState({}, document.title, '/')
     return <LoadingPage />
   }
-
 
   // Load settings
   if (Object.keys(settings).length === 0) return <SettingsLoader />

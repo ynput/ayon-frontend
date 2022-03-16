@@ -76,7 +76,6 @@ const buildFolderQuery = (attributes) => {
   return FOLDER_QUERY.replace('#FOLDER_ATTRS#', f_attribs)
 }
 
-
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
   const settings = useSelector((state) => ({ ...state.settingsReducer }))
@@ -86,13 +85,10 @@ const FolderDetail = () => {
   const [data, setData] = useState({})
 
   useEffect(() => {
-
     const query = buildFolderQuery(settings.attributes)
-    const variables = {projectName, folders: [folderId] } 
+    const variables = { projectName, folders: [folderId] }
 
-    axios.post("/graphql", {query, variables})
-    .then((response)=>{
-
+    axios.post('/graphql', { query, variables }).then((response) => {
       if (!(response.data.data && response.data.data.project)) {
         console.log('ERROR', data.errors[0].message)
         return
@@ -100,7 +96,7 @@ const FolderDetail = () => {
 
       console.log(response.data.data.project)
       const edges = response.data.data.project.folders.edges
-      if (!edges.length){
+      if (!edges.length) {
         // TODO: log 404
         return
       }
@@ -112,22 +108,24 @@ const FolderDetail = () => {
 
   return (
     <section style={{ flexGrow: 1 }}>
-        <h3><FolderTypeIcon name={data.folderType}/><span style={{marginLeft: 15}}>{data.name}</span></h3>
-        <h4>Attributes</h4>
-        <table>
-        {
-          settings.attributes.map((attr) => {
-            if (!attr.scope.includes("folder")) return
-            if (!data.attrib) return
-            const value = data.attrib[attr.name]
-            if (!value) return
-
-            return <tr><td>{attr.title}</td><td>{value}</td></tr>
-
-          })
-        }
-
-        </table>
+      <h3>
+        <FolderTypeIcon name={data.folderType} />
+        <span style={{ marginLeft: 15 }}>{data.name}</span>
+      </h3>
+      <h4>Attributes</h4>
+      <table>
+        {data.attrib &&
+          settings.attributes
+            .filter(
+              (attr) => attr.scope.includes('folder') && data.attrib[attr.name]
+            )
+            .map((attr) => (
+              <tr>
+                <td>{attr.title}</td>
+                <td>{data.attrib[attr.name]}</td>
+              </tr>
+            ))}
+      </table>
     </section>
   )
 }
