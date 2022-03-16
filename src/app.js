@@ -68,9 +68,10 @@ const App = () => {
 
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
-    window.location.href = '/'
+    window.history.replaceState({}, document.title, "/" );
     return <LoadingPage />
   }
+
 
   // Load settings
   if (Object.keys(settings).length === 0) return <SettingsLoader />
