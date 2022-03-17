@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import useFetch from 'use-http'
+import { toast } from 'react-toastify'
+
+import axios from 'axios'
 
 import { InputText } from 'primereact/inputtext'
 import { Column } from 'primereact/column'
@@ -8,7 +10,6 @@ import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 
 import { Shade, FolderTypeIcon } from '../../components'
-
 
 const quickFormat = (name, type) => {
   return (
@@ -42,7 +43,7 @@ const filterHierarchy = (text, folder) => {
           hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: quickFormat(item.name, item.folderType)
+          body: quickFormat(item.name, item.folderType),
         },
       })
     } else if (item.children) {
@@ -57,7 +58,7 @@ const filterHierarchy = (text, folder) => {
             hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
             parents: item.parents,
-            body: quickFormat(item.name, item.folderType)
+            body: quickFormat(item.name, item.folderType),
           },
         })
       }
@@ -66,18 +67,14 @@ const filterHierarchy = (text, folder) => {
   return result
 }
 
-
-const Hierarchy = ({projectName, folderTypes}) => {
+const Hierarchy = ({ projectName, folderTypes }) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
   const [selectedFolders, setSelectedFolders] = useState({})
 
   const [data, setData] = useState([])
-
-  const [request, response, loading] = useFetch(
-    `/api/projects/${projectName}/hierarchy`
-  )
+  const [loading, setLoading] = useState(false)
 
   const folderTypeList = useMemo(() => {
     if (!folderTypes) return []
@@ -91,16 +88,26 @@ const Hierarchy = ({projectName, folderTypes}) => {
     return nlist
   }, [folderTypes])
 
-  const loadHierarchy = async () => {
-    if (projectName) {
-      let typeCond = ''
-      if (selectedFolderTypes)
-        typeCond = `?types=${selectedFolderTypes.join(',')}`
-      const hdata = await request.get(typeCond)
-      if (response.ok) {
-        setData([...hdata.hierarchy])
-      }
-    }
+  const loadHierarchy = () => {
+    setLoading(true)
+    let url = `/api/projects/${projectName}/hierarchy`
+
+    //TODO: use axios params here
+    if (selectedFolderTypes) url += `?types=${selectedFolderTypes.join(',')}`
+
+    axios
+      .get(url)
+      .then((response) => {
+        setData(response.data.hierarchy)
+      })
+      .catch((error) => {
+        const errMessage =
+          error.response.data.detail || `Error ${error.response.status}`
+        toast.error(`Unable to load hierarchy. ${errMessage}`)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
   const treeData = useMemo(() => {
@@ -108,12 +115,10 @@ const Hierarchy = ({projectName, folderTypes}) => {
     return filterHierarchy(query, data)
   }, [data, query])
 
-
   useEffect(() => {
     loadHierarchy()
     // eslint-disable-next-line
   }, [projectName, selectedFolderTypes])
-
 
   const selectedTypeTemplate = (option) => {
     if (option) {

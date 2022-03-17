@@ -4,7 +4,6 @@ import axios from 'axios'
 
 import { FolderTypeIcon } from '../../components'
 
-
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {
         project(name: $projectName) {
@@ -70,24 +69,22 @@ const FolderDetail = () => {
       <h4>Attributes</h4>
       <table>
         <tbody>
-        {data.attrib &&
-          settings.attributes
-            .filter(
-              (attr) => attr.scope.includes('folder') && data.attrib[attr.name]
-            )
-            .map((attr) => (
-              <tr key={attr.name}>
-                <td>{attr.title}</td>
-                <td>{data.attrib[attr.name]}</td>
-              </tr>
-            ))}
+          {data.attrib &&
+            settings.attributes
+              .filter(
+                (attr) =>
+                  attr.scope.includes('folder') && data.attrib[attr.name]
+              )
+              .map((attr) => (
+                <tr key={attr.name}>
+                  <td>{attr.title}</td>
+                  <td>{data.attrib[attr.name]}</td>
+                </tr>
+              ))}
         </tbody>
       </table>
     </section>
   )
 }
 
-
-
 export default FolderDetail
-

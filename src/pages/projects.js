@@ -1,16 +1,34 @@
-import { useFetch } from 'use-http'
-import { useMemo, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { DateTime } from 'luxon'
+import { toast } from 'react-toastify'
+
+import axios from 'axios'
+
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-
-import { DateTime } from 'luxon'
 import { Button } from 'primereact/button'
 import { Fieldset } from 'primereact/fieldset'
 
 const ProjectStats = ({ projectName }) => {
   const url = `/api/projects/${projectName}/stats`
-  const { data, loading } = useFetch(url, [url])
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState({})
+
+  useEffect(() => {
+    setLoading(true)
+    axios
+      .get(url)
+      .then((response) => {
+        setData(response.data)
+      })
+      .catch(() => {
+        toast.error('Unable to load project statistics')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [url])
 
   if (loading) return <></>
 
@@ -30,18 +48,20 @@ const ProjectStats = ({ projectName }) => {
 }
 
 const ProjectsPage = () => {
-  const projectListRequest = useFetch('/api/projects', [])
-  const [selectedProject, setSelectedProject] = useState(null)
   const navigate = useNavigate()
+  const [projectList, setProjectList] = useState([])
+  const [selectedProject, setSelectedProject] = useState(null)
 
-  const projectList = useMemo(() => {
-    if (!projectListRequest.data) return []
-    return projectListRequest.data.projects
-  }, [projectListRequest.data])
-
-  // const refreshProjectList = () => {
-  //     projectListRequest.get()
-  // }
+  useEffect(() => {
+    axios
+      .get('/api/projects')
+      .then((response) => {
+        setProjectList(response.data.projects || [])
+      })
+      .catch(() => {
+        toast.error('Unable to load projects')
+      })
+  }, [])
 
   const deleteProject = () => {}
 

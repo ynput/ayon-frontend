@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useFetch } from 'use-http'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
+
+import axios from 'axios'
 
 import { InputText, Spacer, Button, Shade } from '../../components'
 import { DataTable } from 'primereact/datatable'
@@ -9,39 +10,38 @@ import { Column } from 'primereact/column'
 
 import { DEFAULT_COLUMNS, SUBSET_QUERY, parseSubsetData } from './subset-utils'
 
-const Subsets = ({projectName, folders, focusedVersions}) => {
+const Subsets = ({ projectName, folders, focusedVersions }) => {
   const dispatch = useDispatch()
-
-  const request = useFetch('/graphql')
-
-
   const [subsetData, setSubsetData] = useState([])
   const [selection, setSelection] = useState([])
-  //const [columns, setColumns] = useState(DEFAULT_COLUMNS)
+  const [loading, setLoading] = useState(false)
   const columns = DEFAULT_COLUMNS
 
   useEffect(() => {
-    // useEffect and useState is used here, because of the async function
-    // useMemo returns a promise, which we don't want
-    async function fetchSubsets() {
-      if (folders.length === 0) return
-      const data = await request.query(SUBSET_QUERY, { folders, projectName })
-      if (!(data.data && data.data.project)) {
-        toast.error('Ubable to fetch subsets')
-        return
-      }
-      setSubsetData(parseSubsetData(data.data))
-    }
+    if (folders.length === 0) return
 
-    fetchSubsets()
+    setLoading(true)
+    axios
+      .post('/graphql', {
+        query: SUBSET_QUERY,
+        variables: { folders, projectName },
+      })
+      .then((response) => {
+        if (!(response.data.data && response.data.data.project)) {
+          toast.error('Ubable to fetch subsets')
+          return
+        }
+        setSubsetData(parseSubsetData(response.data.data))
+      })
+      .finally(() => {
+        setLoading(false)
+      })
     // eslint-disable-next-line
   }, [folders, projectName])
 
   useEffect(() => {
     setSelection([
-      ...subsetData.filter((s) =>
-        focusedVersions.includes(s.versionId)
-      ),
+      ...subsetData.filter((s) => focusedVersions.includes(s.versionId)),
     ])
   }, [subsetData, focusedVersions])
 
@@ -102,7 +102,7 @@ const Subsets = ({projectName, folders, focusedVersions}) => {
         }}
       >
         <div className="wrapper">
-          {request.loading && <Shade />}
+          {loading && <Shade />}
           <DataTable
             scrollable
             responsive

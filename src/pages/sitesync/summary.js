@@ -1,5 +1,6 @@
-import { useFetch } from 'use-http'
 import { useState, useEffect } from 'react'
+
+import axios from 'axios'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -70,23 +71,21 @@ const SiteSyncSummary = ({
   totalCount,
 }) => {
   const baseUrl = `/api/projects/${projectName}/sitesync/state`
-  const { request, response } = useFetch(baseUrl)
   const [loading, setLoading] = useState(false)
   const [representations, setRepresentations] = useState([])
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
   const [lazyParams, setLazyParams] = useState(defaultParams)
 
-  const loadData = async () => {
-    setLoading(true)
-    const newData = await request.get(
-      buildQueryString(localSite, remoteSite, lazyParams)
-    )
-    if (response.ok) setRepresentations(newData.representations)
-    setLoading(false)
-  }
-
   useEffect(() => {
-    loadData()
+    setLoading(true)
+    axios
+      .get(baseUrl + buildQueryString(localSite, remoteSite, lazyParams))
+      .then((response) => {
+        setRepresentations(response.data.representations)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
     // eslint-disable-next-line
   }, [lazyParams])
 

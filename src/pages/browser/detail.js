@@ -4,7 +4,6 @@ import { Button, Spacer } from '../../components'
 import FolderDetail from './detail-folder'
 import VersionDetail from './detail-version'
 
-
 const Detail = () => {
   //const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.contextReducer }))

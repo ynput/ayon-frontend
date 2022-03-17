@@ -1,9 +1,9 @@
-import { useFetch } from 'use-http'
+import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
+import axios from 'axios'
 
 import ProjectWrapper from '../../containers/project-wrapper'
 import LoadingPage from '../loading'
-import ErrorPage from '../error'
 
 import SiteSyncSummary from './summary'
 
@@ -14,15 +14,29 @@ const SiteSync = () => {
   const localSite = 'local'
   const remoteSite = 'remote'
 
-  const url = `/api/projects/${projectName}/sitesync/params`
-  const { loading, error, data = {} } = useFetch(url, [url])
+  const [loading, setLoading] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
+  const [repreNames, setRepreNames] = useState([])
 
-  if (error) return <ErrorPage />
+  useEffect(() => {
+    setLoading(true)
+    const url = `/api/projects/${projectName}/sitesync/params`
+    axios
+      .get(url)
+      .then((response) => {
+        let rnames = []
+        for (const name of response.data.names) {
+          rnames.push({ name: name, value: name })
+        }
+        setTotalCount(response.data.count)
+        setRepreNames(rnames)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [projectName])
 
   if (loading) return <LoadingPage />
-
-  let repreNames = []
-  for (const name of data.names) repreNames.push({ name: name, value: name })
 
   return (
     <main className="rows">
@@ -31,7 +45,7 @@ const SiteSync = () => {
         localSite={localSite}
         remoteSite={remoteSite}
         names={repreNames}
-        totalCount={data.count}
+        totalCount={totalCount}
       />
     </main>
   )

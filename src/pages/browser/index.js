@@ -21,25 +21,18 @@ const BrowserPage = () => {
   // Cache components
 
   const hierarchy = useMemo(() => {
-    return (
-      <Hierarchy 
-        projectName={projectName}
-        folderTypes={folderTypes}
-      />
-    )
+    return <Hierarchy projectName={projectName} folderTypes={folderTypes} />
   }, [projectName, folderTypes])
-
 
   const subsets = useMemo(() => {
     return (
-      <Subsets 
+      <Subsets
         projectName={projectName}
         folders={focusedFolders}
         focusedVersions={focusedVersions}
       />
     )
   }, [projectName, focusedFolders, focusedVersions])
-
 
   // Return the wrapper
 

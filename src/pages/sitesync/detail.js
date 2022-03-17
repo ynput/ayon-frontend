@@ -1,5 +1,5 @@
-import { useMemo, useEffect } from 'react'
-import { useFetch } from 'use-http'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
@@ -105,32 +105,46 @@ const SiteSyncDetail = ({
   remoteSite,
   onHide,
 }) => {
-  const { data, loading, request } = useFetch('graphql')
+  const [files, setFiles] = useState([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    request.query(FILES_QUERY, { projectName, representationId })
+    setLoading(true)
+
+    axios
+      .post('/graphql', {
+        query: FILES_QUERY,
+        variables: { projectName, representationId },
+      })
+      .then((response) => {
+        if (
+          !(response.data && response.data.data && response.data.data.project)
+        ) {
+          console.log('ERROR GETTING FILES')
+          setFiles([])
+        }
+
+        let result = []
+        for (const edge of response.data.data.project.representations.edges) {
+          const node = edge.node
+          for (const file of node.files) {
+            result.push({
+              hash: file.fileHash,
+              size: file.size,
+              baseName: file.baseName,
+              localStatus: file.localStatus,
+              remoteStatus: file.remoteStatus,
+            })
+          }
+        }
+        setFiles(result)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+
     // eslint-disable-next-line
   }, [projectName, representationId, localSite, remoteSite])
-
-  const files = useMemo(() => {
-    if (!(data && data.data && data.data.project)) return []
-
-    let result = []
-    for (const edge of data.data.project.representations.edges) {
-      const node = edge.node
-      for (const file of node.files) {
-        result.push({
-          hash: file.fileHash,
-          size: file.size,
-          baseName: file.baseName,
-          localStatus: file.localStatus,
-          remoteStatus: file.remoteStatus,
-        })
-      }
-    }
-
-    return result
-  }, [data])
 
   return (
     <Dialog visible onHide={onHide} style={{ minHeight: '40%', minWidth: 900 }}>
