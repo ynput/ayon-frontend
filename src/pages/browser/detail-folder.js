@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import axios from 'axios'
 
 import { FolderTypeIcon } from '../../components'
+import Thumbnail from '../../containers/thumbnail'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {
@@ -30,6 +31,7 @@ const buildFolderQuery = (attributes) => {
   }
   return FOLDER_QUERY.replace('#FOLDER_ATTRS#', f_attribs)
 }
+
 
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
@@ -66,7 +68,8 @@ const FolderDetail = () => {
         <FolderTypeIcon name={data.folderType} />
         <span style={{ marginLeft: 15 }}>{data.name}</span>
       </h3>
-      <h4>Attributes</h4>
+      <Thumbnail projectName={projectName} entityType="folder" entityId={folderId}/>
+      <h4 style={{marginTop: 10}}>Attributes</h4>
       <table>
         <tbody>
           {data.attrib &&
