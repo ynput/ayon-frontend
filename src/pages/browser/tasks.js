@@ -23,6 +23,14 @@ query TasksByFolder($projectName: String!, $folderId: String!) {
 }
 `
 
+const sortByKey = (array, key) => {
+  return array.sort(function (a, b) {
+    var x = a[key]
+    var y = b[key]
+    return x < y ? -1 : x > y ? 1 : 0
+  })
+}
+
 const TasksPanel = ({ folderId, projectName, userName }) => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
@@ -50,7 +58,7 @@ const TasksPanel = ({ folderId, projectName, userName }) => {
         }
       })
       .finally(() => {
-        setData(result)
+        setData(sortByKey(result, 'name'))
         setLoading(false)
       })
     // eslint-disable-next-line

@@ -32,7 +32,6 @@ const buildFolderQuery = (attributes) => {
   return FOLDER_QUERY.replace('#FOLDER_ATTRS#', f_attribs)
 }
 
-
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
   const settings = useSelector((state) => ({ ...state.settingsReducer }))
@@ -68,8 +67,12 @@ const FolderDetail = () => {
         <FolderTypeIcon name={data.folderType} />
         <span style={{ marginLeft: 15 }}>{data.name}</span>
       </h3>
-      <Thumbnail projectName={projectName} entityType="folder" entityId={folderId}/>
-      <h4 style={{marginTop: 10}}>Attributes</h4>
+      <Thumbnail
+        projectName={projectName}
+        entityType="folder"
+        entityId={folderId}
+      />
+      <h4 style={{ marginTop: 10 }}>Attributes</h4>
       <table>
         <tbody>
           {data.attrib &&
