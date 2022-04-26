@@ -1,10 +1,5 @@
-import {useState, useEffect} from 'react'
 import Form from "@rjsf/core"
 
-import { TabView, TabPanel } from 'primereact/tabview'
-import { Fieldset } from 'primereact/fieldset'
-import { Button } from 'primereact/button'
-import { Panel } from 'primereact/panel'
 import { Accordion, AccordionTab } from 'primereact/accordion'
 
 import compactListUiSchema from './compactList'
@@ -58,7 +53,7 @@ const SettingsFieldTemplate = (props) => {
 }
 
 
-const AnatomyEditor = (schema, values, onChange) => {
+const AnatomyEditor = ({schema, formData, onChange}) => {
   const topLevelFields = {
       "ui:ObjectFieldTemplate": TopLevelObjectFieldTemplate,
   }
@@ -90,16 +85,10 @@ const AnatomyEditor = (schema, values, onChange) => {
 }
 
   return (
-    <Panel 
-      header="Project anatomy template"
-      style={{
-        width: 900,
-        margin: "50px auto"
-      }}
-    >
-      {schema && <Form 
+    <>
+    {schema && <Form 
         schema={schema} 
-        formData={values} 
+        formData={formData}
         uiSchema={uischema}
         onChange={(evt) => onChange(evt.formData)}
         fields={customFields}
@@ -107,7 +96,7 @@ const AnatomyEditor = (schema, values, onChange) => {
         FieldTemplate={SettingsFieldTemplate}
         children={<></>}
       />}
-    </Panel>
+    </>
   )
 }
 

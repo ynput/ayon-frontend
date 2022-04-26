@@ -2,8 +2,6 @@ import {Button} from 'primereact/button';
 
 
 const CompactListArrayItem = (props) => {
-  const name = props.children.props.formData.name
-
   const rmButton = props.hasRemove && (<Button 
     onClick={props.onDropIndexClick(props.index)} 
     className="p-button-danger p-button-text" 

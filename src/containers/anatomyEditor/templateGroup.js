@@ -30,15 +30,6 @@ const panelHeaderTemplate = (options) => {
 const ArrayItem = (props) => {
   const name = props.children.props.formData.name
 
-  const rmButton = props.hasRemove && (<Button 
-    onClick={props.onDropIndexClick(props.index)} 
-    className="p-button-danger p-button-text" 
-    icon="pi pi-times"
-    style={{marginLeft: '.5em'}}
-  />)
-
-  const legend = <>{name} {rmButton}</>
-
   return (
     <Panel 
       toggleable

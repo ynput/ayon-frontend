@@ -14,6 +14,7 @@ import ManagerPage from './pages/manager'
 import SiteSyncPage from './pages/sitesync'
 import ExplorerPage from './pages/explorer'
 import APIDocsPage from './pages/doc/api'
+import AnatomyTemplateEditor from './pages/anatomyTemplate'
 import Error from './pages/error'
 
 const Profile = () => {
@@ -96,6 +97,7 @@ const App = () => {
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/doc/api" element={<APIDocsPage />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/anatomy" element={<AnatomyTemplateEditor />} />
 
         <Route element={<Error code="404" />} />
       </Routes>
