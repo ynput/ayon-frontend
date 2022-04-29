@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
-import ProjectWrapper from '../../containers/project-wrapper'
 import LoadingPage from '../loading'
 
 import SiteSyncSummary from './summary'
 
-const SiteSync = () => {
+const SiteSyncPage = () => {
   const context = useSelector((state) => ({ ...state.contextReducer }))
   const projectName = context.projectName
 
@@ -51,12 +50,5 @@ const SiteSync = () => {
   )
 }
 
-const SiteSyncPage = () => {
-  return (
-    <ProjectWrapper>
-      <SiteSync />
-    </ProjectWrapper>
-  )
-}
 
 export default SiteSyncPage

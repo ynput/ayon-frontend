@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
-import ProjectWrapper from '../../containers/project-wrapper'
 import { Shade, Spacer, FolderTypeIcon } from '../../components'
 
 import { Button } from 'primereact/button'
@@ -293,11 +292,9 @@ const ManagerPage = () => {
   const settings = useSelector((state) => ({ ...state.settingsReducer }))
   const projectName = context.projectName
   return (
-    <ProjectWrapper>
       <main className="rows">
         <ManagerView projectName={projectName} settings={settings} />
       </main>
-    </ProjectWrapper>
   )
 }
 export default ManagerPage

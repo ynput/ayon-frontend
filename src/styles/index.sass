@@ -1,6 +1,9 @@
 @import 'variables'
 @import 'primetheme'
 
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200;0,400;0,600;1,300;1,400&display=swap')
+
 *
   box-sizing: border-box
 
@@ -9,7 +12,7 @@ html
   background-color: $op-background-main
   color: $op-font-color
   font-size: $op-font-size
-  font-family: $op-font-family
+  font-family: 'Nunito Sans', sans-serif
 
 ::-webkit-scrollbar
   width: 20px
@@ -45,17 +48,18 @@ html
   flex-direction: row
   align-items: center
   justify-content: space-between
-  user-select: none
+  user-select: none !important
   background-color: $op-background-dark
   padding: 0
 
   a, button
     display: block
     padding: 8px 12px
-    text-transform: uppercase
     text-decoration: none
     transition: text-shadow 0.2s
-    color: #bbb
+    user-select: none !important
+    color: #fff
+    font-weight: 600
     -webkit-user-drag: none
 
     &:hover
@@ -77,6 +81,8 @@ html
     flex: 1
 
 
+#project-nav
+  @include primary-nav()
 
 #root
   position: fixed
@@ -88,8 +94,6 @@ html
   flex-direction: column
   min-height: 0
 
-  &>nav
-    @include primary-nav()
 
   &>main
     flex-grow: 1

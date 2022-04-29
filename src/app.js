@@ -4,17 +4,15 @@ import axios from 'axios'
 
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 
-import NavBar from './containers/navbar'
+import Header from './containers/header'
 
 import LoginPage from './pages/login'
 import LoadingPage from './pages/loading'
-import ProjectsPage from './pages/projects'
-import BrowserPage from './pages/browser'
-import ManagerPage from './pages/manager'
-import SiteSyncPage from './pages/sitesync'
+import ProjectPage from './pages/projectPage'
+import ProjectManager from './pages/projectManager'
 import ExplorerPage from './pages/explorer'
 import APIDocsPage from './pages/doc/api'
-import AnatomyTemplateEditor from './pages/anatomyTemplate'
+import Anatomy from './pages/anatomy'
 import Error from './pages/error'
 
 const Profile = () => {
@@ -86,18 +84,16 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <NavBar />
+      <Header />
       <Routes>
         <Route path="/" exact element={<Navigate replace to={homeScreen} />} />
-        <Route path="/projects" exact element={<ProjectsPage />} />
-        <Route path="/browser/:projectName" exact element={<BrowserPage />} />
-        <Route path="/manager/:projectName" exact element={<ManagerPage />} />
-        <Route path="/sitesync/:projectName" exact element={<SiteSyncPage />} />
+        <Route path="/projects" exact element={<ProjectManager />} />
+        <Route path="/projects/:projectName/:module" exact element={<ProjectPage />} />
 
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/doc/api" element={<APIDocsPage />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/anatomy" element={<AnatomyTemplateEditor />} />
+        <Route path="/anatomy" element={<Anatomy />} />
 
         <Route element={<Error code="404" />} />
       </Routes>

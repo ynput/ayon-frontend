@@ -124,5 +124,29 @@ $prime-input-border: 2px solid #373d48
     border:0
 
 
-.p-accordion-content
-  background: transparent !important
+.p-accordion
+  width: 100%
+  .p-accordion-header
+    .p-accordion-header-link
+      background: darken($op-background-dark,2)
+      border: 0
+      &:focus
+        box-shadow: none !important
+
+    &:not(.p-disabled).p-highlight .p-accordion-header-link
+        background: darken($op-background-dark,2)
+        border: 0
+        outline: none !important
+
+  .p-accordion-content
+    background: transparent !important
+    border: 0
+
+
+.p-sidebar, .p-dialog, .p-paginator
+  background: rgba($op-background-dark,.9)
+  border: 0
+
+  .p-dialog-header, .p-dialog-content
+    background: transparent
+    border: 0

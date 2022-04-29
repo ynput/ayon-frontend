@@ -47,7 +47,7 @@ const ProjectStats = ({ projectName }) => {
   )
 }
 
-const ProjectsPage = () => {
+const ProjectManager = () => {
   const navigate = useNavigate()
   const [projectList, setProjectList] = useState([])
   const [selectedProject, setSelectedProject] = useState(null)
@@ -74,7 +74,7 @@ const ProjectsPage = () => {
             scrollable
             scrollHeight="flex"
             selectionMode="single"
-            responsive={true}
+            responsive="true"
             dataKey="name"
             selection={selectedProject}
             onSelectionChange={(e) => setSelectedProject(e.value)}
@@ -108,7 +108,7 @@ const ProjectsPage = () => {
             label="Open selected project"
             icon="pi pi-folder-open"
             disabled={!selectedProject}
-            onClick={() => navigate(`/browser/${selectedProject.name}`)}
+            onClick={() => navigate(`/projects/${selectedProject.name}/browser`)}
           />
           <Button
             label="Delete selected project"
@@ -120,7 +120,7 @@ const ProjectsPage = () => {
           <Button
             label="Create a new project"
             icon="pi pi-plus"
-            disabled={true}
+            onClick={() => navigate('/anatomy')}
           />
           <div style={{ flexGrow: 1 }} />
         </section>
@@ -135,4 +135,4 @@ const ProjectsPage = () => {
   )
 }
 
-export default ProjectsPage
+export default ProjectManager
