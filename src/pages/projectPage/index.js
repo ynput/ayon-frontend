@@ -10,12 +10,11 @@ import ManagerPage from '../manager'
 import SiteSync from '../sitesync'
 import LoadingPage from '../loading'
 
-
+import { selectProject, setProjectData } from '../../features/context'
 
 const ProjectPage = () => {
-
   const [loading, setLoading] = useState(true)
-  const {projectName, module} = useParams()
+  const { projectName, module } = useParams()
   const dispatch = useDispatch()
 
   useEffect(() => {
@@ -23,16 +22,13 @@ const ProjectPage = () => {
     axios
       .get(`/api/projects/${projectName}`)
       .then((response) => {
-        dispatch({
-          type: 'SET_PROJECT_DATA',
-          data: response.data,
-        })
+        dispatch(setProjectData(response.data))
       })
       .finally(() => {
         setLoading(false)
       })
 
-    dispatch({ type: 'SELECT_PROJECT', name: projectName })
+    dispatch(selectProject(projectName))
   }, [dispatch, projectName])
 
   if (loading) {
@@ -40,12 +36,9 @@ const ProjectPage = () => {
   }
 
   let child = null
-  if (module === "manager")
-    child = <ManagerPage />
-  else if (module === "sitesync")
-    child = <SiteSync />
-  else
-    child = <BrowserPage />
+  if (module === 'manager') child = <ManagerPage />
+  else if (module === 'sitesync') child = <SiteSync />
+  else child = <BrowserPage />
 
   return (
     <>
@@ -58,7 +51,6 @@ const ProjectPage = () => {
       {child}
     </>
   )
-
 }
 
 export default ProjectPage

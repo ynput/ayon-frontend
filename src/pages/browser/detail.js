@@ -5,8 +5,7 @@ import FolderDetail from './detail-folder'
 import VersionDetail from './detail-version'
 
 const Detail = () => {
-  //const dispatch = useDispatch()
-  const context = useSelector((state) => ({ ...state.contextReducer }))
+  const context = useSelector((state) => ({ ...state.context }))
 
   let detailComponent = null
 

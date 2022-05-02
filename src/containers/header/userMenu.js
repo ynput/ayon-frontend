@@ -4,16 +4,17 @@ import { Menu } from 'primereact/menu'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 
+import { logout } from '../../features/user'
 
-const UserMenu = ({menuRef}) => {
+const UserMenu = ({ menuRef }) => {
   const dispatch = useDispatch()
 
-  const logout = () => {
+  const doLogout = () => {
     axios
       .post('/api/auth/logout')
       .then((response) => {
         toast.info(response.data.detail)
-        dispatch({ type: 'LOGOUT' })
+        dispatch(logout())
       })
       .catch(() => {
         toast.error('Unable to log out. Weird.')
@@ -52,7 +53,7 @@ const UserMenu = ({menuRef}) => {
           {
             label: 'Sign Out',
             icon: 'pi pi-fw pi-power-off',
-            command: logout,
+            command: doLogout,
           },
         ],
       },

@@ -79,8 +79,8 @@ const TasksPanel = ({ folderId, projectName, userName }) => {
 }
 
 const TasksComponent = () => {
-  const user = useSelector((state) => ({ ...state.userReducer }))
-  const context = useSelector((state) => ({ ...state.contextReducer }))
+  const user = useSelector((state) => ({ ...state.user }))
+  const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const showTasks = context.showTasks || null
 

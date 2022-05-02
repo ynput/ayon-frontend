@@ -288,13 +288,13 @@ const ManagerView = ({ projectName, settings }) => {
 //
 
 const ManagerPage = () => {
-  const context = useSelector((state) => ({ ...state.contextReducer }))
-  const settings = useSelector((state) => ({ ...state.settingsReducer }))
+  const context = useSelector((state) => ({ ...state.context }))
+  const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   return (
-      <main className="rows">
-        <ManagerView projectName={projectName} settings={settings} />
-      </main>
+    <main className="rows">
+      <ManagerView projectName={projectName} settings={settings} />
+    </main>
   )
 }
 export default ManagerPage

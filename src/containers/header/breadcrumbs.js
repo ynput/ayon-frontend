@@ -14,7 +14,7 @@ const Breadcrumbs = () => {
     op:// USD uri.
     */
 
-  const context = useSelector((state) => ({ ...state.contextReducer }))
+  const context = useSelector((state) => ({ ...state.context }))
   const crumbData = context.breadcrumbs || {}
   const projectName = context.projectName
 

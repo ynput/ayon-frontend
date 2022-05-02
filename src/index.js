@@ -1,11 +1,14 @@
-import ReactDOM from 'react-dom'
 import React from 'react'
+import { createRoot } from 'react-dom/client'
 
-import { createStore } from 'redux'
+import { configureStore } from '@reduxjs/toolkit'
 import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
 
-import reducer from './reducer'
+import userReducer from './features/user'
+import settingsReducer from './features/settings'
+import contextReducer from './features/context'
+
 import App from './app'
 
 import 'react-toastify/dist/ReactToastify.css'
@@ -14,10 +17,17 @@ import 'primereact/resources/primereact.min.css'
 import 'primeicons/primeicons.css'
 import './styles/index.sass'
 
-const store = createStore(reducer)
+const store = configureStore({
+  reducer: {
+    user: userReducer,
+    settings: settingsReducer,
+    context: contextReducer,
+  },
+})
 
 document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(
+  const root = createRoot(document.getElementById('root'))
+  root.render(
     <React.StrictMode>
       <ReduxProvider store={store}>
         <App />
@@ -33,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
           limit={5}
         />
       </ReduxProvider>
-    </React.StrictMode>,
-    document.getElementById('root')
+    </React.StrictMode>
   )
 })

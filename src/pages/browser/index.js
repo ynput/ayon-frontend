@@ -9,7 +9,7 @@ import TasksComponent from './tasks'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 const BrowserPage = () => {
-  const context = useSelector((state) => ({ ...state.contextReducer }))
+  const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const folderTypes = context.project.folderTypes
 
@@ -35,31 +35,29 @@ const BrowserPage = () => {
   // Return the wrapper
 
   return (
-      <main>
-        <Splitter
-          orientation="horizontal"
-          stateKey={'browserSplitter'}
-          stateStorage={'local'}
-          style={{ width: '100%', height: '100%' }}
-        >
-          <SplitterPanel size={20} style={{ minWidth: 250 }}>
-            <section className="invisible insplit">
-              <section className="row invisible" style={{ flexGrow: 1 }}>
-                {hierarchy}
-              </section>
-              <section className="row invisible">
-                <TasksComponent />
-              </section>
+    <main>
+      <Splitter
+        orientation="horizontal"
+        stateKey={'browserSplitter'}
+        stateStorage={'local'}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <SplitterPanel size={20} style={{ minWidth: 250 }}>
+          <section className="invisible insplit">
+            <section className="row invisible" style={{ flexGrow: 1 }}>
+              {hierarchy}
             </section>
-          </SplitterPanel>
-          <SplitterPanel style={{ minWidth: 500 }}>
-            {subsets}
-          </SplitterPanel>
-          <SplitterPanel size={20} style={{minWidth:250}}>
-            <Detail />
-          </SplitterPanel>
-        </Splitter>
-      </main>
+            <section className="row invisible">
+              <TasksComponent />
+            </section>
+          </section>
+        </SplitterPanel>
+        <SplitterPanel style={{ minWidth: 500 }}>{subsets}</SplitterPanel>
+        <SplitterPanel size={20} style={{ minWidth: 250 }}>
+          <Detail />
+        </SplitterPanel>
+      </Splitter>
+    </main>
   )
 }
 

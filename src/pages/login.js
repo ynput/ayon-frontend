@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import axios from 'axios'
+import { login } from '../features/user'
 
 import { InputText, Password, Button } from '../components'
 
@@ -72,11 +73,7 @@ const LoginPage = () => {
           if (data.user) {
             // login successful
             toast.info(data.detail)
-            dispatch({
-              type: 'LOGIN',
-              user: data.user,
-              accessToken: data.token,
-            })
+            dispatch(login({ user: data.user, accessToken: data.token }))
           } else {
             toast.error('Unable to login using OAUTH')
           }
@@ -96,11 +93,12 @@ const LoginPage = () => {
       .then((response) => {
         if (response.data.user) {
           toast.info(response.data.detail)
-          dispatch({
-            type: 'LOGIN',
-            user: response.data.user,
-            accessToken: response.data.token,
-          })
+          dispatch(
+            login({
+              user: response.data.user,
+              accessToken: response.data.token,
+            })
+          )
         }
       })
       .catch((err) => {

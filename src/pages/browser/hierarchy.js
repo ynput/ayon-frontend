@@ -11,6 +11,12 @@ import { MultiSelect } from 'primereact/multiselect'
 
 import { Shade, FolderTypeIcon } from '../../components'
 
+import {
+  setFocusedFolders,
+  setBreadcrumbs,
+  setShowTasks,
+} from '../../features/context'
+
 const quickFormat = (name, type) => {
   return (
     <>
@@ -170,29 +176,20 @@ const Hierarchy = ({ projectName, folderTypes }) => {
           onSelectionChange={(e) => {
             setSelectedFolders(e.value)
             const selection = Object.keys(e.value)
-            dispatch({
-              type: 'SET_FOCUSED_FOLDERS',
-              objects: selection,
-            })
+            dispatch(setFocusedFolders(selection))
           }}
           onRowClick={(e) => {
             const node = e.node.data
-            dispatch({
-              type: 'SET_BREADCRUMBS',
-              parents: node.parents,
-              folder: node.name,
-            })
+            dispatch(
+              setBreadcrumbs({
+                parents: node.parents,
+                folder: node.name,
+              })
+            )
 
             if (node.hasTasks) {
-              dispatch({
-                type: 'SET_SHOW_TASKS',
-                folderId: e.node.key,
-              })
-            } else
-              dispatch({
-                type: 'SET_SHOW_TASKS',
-                folderId: null,
-              })
+              dispatch(setShowTasks(e.node.key))
+            } else dispatch(setShowTasks(null))
           }}
         >
           <Column

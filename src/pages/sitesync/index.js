@@ -7,7 +7,7 @@ import LoadingPage from '../loading'
 import SiteSyncSummary from './summary'
 
 const SiteSyncPage = () => {
-  const context = useSelector((state) => ({ ...state.contextReducer }))
+  const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
 
   const localSite = 'local'
@@ -49,6 +49,5 @@ const SiteSyncPage = () => {
     </main>
   )
 }
-
 
 export default SiteSyncPage

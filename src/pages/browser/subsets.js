@@ -8,6 +8,8 @@ import { InputText, Spacer, Button, Shade } from '../../components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
+import { setFocusedVersions, setBreadcrumbs } from '../../features/context'
+
 import { DEFAULT_COLUMNS, SUBSET_QUERY, parseSubsetData } from './subset-utils'
 
 const Subsets = ({ projectName, folders, focusedVersions }) => {
@@ -120,19 +122,17 @@ const Subsets = ({ projectName, folders, focusedVersions }) => {
               for (let elm of e.value) {
                 if (elm.versionId) selection.push(elm.versionId)
               }
-              dispatch({
-                type: 'SET_FOCUSED_VERSIONS',
-                objects: selection,
-              })
+              dispatch(setFocusedVersions(selection))
             }}
             onRowClick={(e) => {
-              dispatch({
-                type: 'SET_BREADCRUMBS',
-                parents: e.data.parents,
-                folder: e.data.folder,
-                subset: e.data.name,
-                version: e.data.versionName,
-              })
+              dispatch(
+                setBreadcrumbs({
+                  parents: e.data.parents,
+                  folder: e.data.folder,
+                  subset: e.data.name,
+                  version: e.data.versionName,
+                })
+              )
             }}
           >
             {columns.map((col) => {

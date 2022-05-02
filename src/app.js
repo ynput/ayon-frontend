@@ -12,21 +12,21 @@ import ProjectPage from './pages/projectPage'
 import ProjectManager from './pages/projectManager'
 import ExplorerPage from './pages/explorer'
 import APIDocsPage from './pages/doc/api'
+import ProfilePage from './pages/profile'
 import Anatomy from './pages/anatomy'
 import Error from './pages/error'
 
-const Profile = () => {
-  return <main className="center">Profile page</main>
-}
+import { login } from './features/user'
+import { setSettings } from './features/settings'
 
 const SettingsLoader = () => {
-  const user = useSelector((state) => ({ ...state.userReducer }))
+  const user = useSelector((state) => ({ ...state.user }))
   const dispatch = useDispatch()
 
   useEffect(() => {
     if (!user.name) return
     axios.get('/api/settings').then((response) => {
-      dispatch({ type: 'SET_SETTINGS', data: response.data })
+      dispatch(setSettings(response.data))
     })
     // eslint-disable-next-line
   }, [user.name])
@@ -35,8 +35,8 @@ const SettingsLoader = () => {
 }
 
 const App = () => {
-  const user = useSelector((state) => ({ ...state.userReducer }))
-  const settings = useSelector((state) => ({ ...state.settingsReducer }))
+  const user = useSelector((state) => ({ ...state.user }))
+  const settings = useSelector((state) => ({ ...state.settings }))
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
 
@@ -51,16 +51,19 @@ const App = () => {
     axios
       .get('/api/users/me')
       .then((response) => {
-        dispatch({
-          type: 'LOGIN',
-          user: response.data,
-        })
+        console.log('Got ME')
+        dispatch(
+          login({
+            user: response.data,
+            accessToken: storedAccessToken,
+          })
+        )
         setLoading(false)
       })
       .catch(() => {
         setLoading(false)
       })
-  }, [dispatch])
+  }, [dispatch, storedAccessToken])
 
   if (loading) return <LoadingPage />
   if (!user.name) return <LoginPage />
@@ -74,25 +77,21 @@ const App = () => {
   // Load settings
   if (Object.keys(settings).length === 0) return <SettingsLoader />
 
-  // TBD: at some moment, loading the last opened project seemed
-  // to be a good idea, but it's weird, so we'll just use the projects page
-
-  let homeScreen = '/projects'
-  // const currentProject = window.localStorage.getItem('currentProject')
-  // if (currentProject)
-  //     homeScreen = `/browser/${currentProject}`
-
   return (
     <BrowserRouter>
       <Header />
       <Routes>
-        <Route path="/" exact element={<Navigate replace to={homeScreen} />} />
+        <Route path="/" exact element={<Navigate replace to="/projects" />} />
         <Route path="/projects" exact element={<ProjectManager />} />
-        <Route path="/projects/:projectName/:module" exact element={<ProjectPage />} />
+        <Route
+          path="/projects/:projectName/:module"
+          exact
+          element={<ProjectPage />}
+        />
 
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/doc/api" element={<APIDocsPage />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/anatomy" element={<Anatomy />} />
 
         <Route element={<Error code="404" />} />

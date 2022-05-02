@@ -35,7 +35,7 @@ const columns = [
 ]
 
 const RepresentationDetail = ({ representations }) => {
-  const context = useSelector((state) => ({ ...state.contextReducer }))
+  const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
 

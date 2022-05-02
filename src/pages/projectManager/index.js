@@ -108,7 +108,9 @@ const ProjectManager = () => {
             label="Open selected project"
             icon="pi pi-folder-open"
             disabled={!selectedProject}
-            onClick={() => navigate(`/projects/${selectedProject.name}/browser`)}
+            onClick={() =>
+              navigate(`/projects/${selectedProject.name}/browser`)
+            }
           />
           <Button
             label="Delete selected project"

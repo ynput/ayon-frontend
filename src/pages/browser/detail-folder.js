@@ -33,8 +33,8 @@ const buildFolderQuery = (attributes) => {
 }
 
 const FolderDetail = () => {
-  const context = useSelector((state) => ({ ...state.contextReducer }))
-  const settings = useSelector((state) => ({ ...state.settingsReducer }))
+  const context = useSelector((state) => ({ ...state.context }))
+  const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   const folders = context.focusedFolders
   const folderId = folders.length > 0 ? folders[folders.length - 1] : null

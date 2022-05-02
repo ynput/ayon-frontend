@@ -37,7 +37,7 @@ const VERSION_QUERY = `
 `
 
 const VersionDetail = () => {
-  const context = useSelector((state) => ({ ...state.contextReducer }))
+  const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const [versions, setVersions] = useState([])
   const [representations, setRepresentations] = useState([])
