@@ -38,8 +38,13 @@ const contextSlice = createSlice({
     },
 
     setFocusedVersions: (state, action) => {
-      state.focusedType = 'version'
-      state.focusedVersions = action.payload
+      if (action.payload === null) {
+        state.focusedType = 'folder'
+        state.focusedVersions = []
+      } else {
+        state.focusedType = 'version'
+        state.focusedVersions = action.payload
+      }
     },
 
     clearFocus: (state, action) => {

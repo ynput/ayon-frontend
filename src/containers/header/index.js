@@ -5,7 +5,6 @@ import Breadcrumbs from './breadcrumbs'
 import UserMenu from './userMenu'
 import SidebarMenu from './sidebar'
 
-
 const Header = () => {
   const menuRef = useRef()
   const [sidebarVisible, setSidebarVisible] = useState(false)

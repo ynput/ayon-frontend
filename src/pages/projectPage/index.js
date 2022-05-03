@@ -22,7 +22,7 @@ const ProjectPage = () => {
       // Set project data to null when leaving project page
       dispatch(selectProject(null))
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

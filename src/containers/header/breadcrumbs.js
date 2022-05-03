@@ -18,7 +18,6 @@ const Breadcrumbs = () => {
   const crumbData = context.breadcrumbs || {}
   const projectName = context.projectName
 
-
   const [breadcrumbs, uri] = useMemo(() => {
     let crumbs = [projectName]
     let uri = `op://${projectName}/`
@@ -56,9 +55,7 @@ const Breadcrumbs = () => {
     projectName,
   ])
 
-
-  if (!projectName)
-    return <></>
+  if (!projectName) return <></>
 
   return (
     <div

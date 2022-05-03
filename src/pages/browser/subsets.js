@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
+import { DateTime } from 'luxon'
 
 import axios from 'axios'
 
@@ -10,36 +11,95 @@ import { Column } from 'primereact/column'
 
 import { setFocusedVersions, setBreadcrumbs } from '../../features/context'
 
-import { DEFAULT_COLUMNS, SUBSET_QUERY, parseSubsetData } from './subset-utils'
+import { SUBSET_QUERY, parseSubsetData, VersionList } from './subset-utils'
 
 const Subsets = ({ projectName, folders, focusedVersions }) => {
   const dispatch = useDispatch()
   const [subsetData, setSubsetData] = useState([])
   const [selection, setSelection] = useState([])
   const [loading, setLoading] = useState(false)
-  const columns = DEFAULT_COLUMNS
+  const [selectedVersions, setSelectedVersions] = useState({})
+  const [focusOnReload, setFocusOnReload] = useState(null)
+
+  const columns = [
+    {
+      field: 'name',
+      header: 'Subset',
+      width: 200,
+    },
+    {
+      field: 'folder',
+      header: 'Folder',
+      width: 200,
+    },
+    {
+      field: 'family',
+      header: 'Family',
+      width: 120,
+    },
+    {
+      field: 'versionList',
+      header: 'Version',
+      width: 70,
+      body: (row) =>
+        VersionList(row, (subsetId, versionId) => {
+          setSelectedVersions({ ...selectedVersions, [subsetId]: versionId })
+          setFocusOnReload(versionId)
+        }),
+    },
+    {
+      field: 'time',
+      header: 'Time',
+      width: 150,
+      body: (row) => DateTime.fromSeconds(row.createdAt).toRelative(),
+    },
+    {
+      field: 'author',
+      header: 'Author',
+      width: 120,
+    },
+    {
+      field: 'frames',
+      header: 'Frames',
+      width: 120,
+    },
+  ]
 
   useEffect(() => {
     if (folders.length === 0) return
+
+    // version overrides
+    let versionOverrides = []
+    for (const subsetId in selectedVersions) {
+      versionOverrides.push(selectedVersions[subsetId])
+    }
+
+    if (versionOverrides.length === 0) {
+      versionOverrides = ['00000000000000000000000000000000']
+    }
 
     setLoading(true)
     axios
       .post('/graphql', {
         query: SUBSET_QUERY,
-        variables: { folders, projectName },
+        variables: { folders, projectName, versionOverrides },
       })
       .then((response) => {
         if (!(response.data.data && response.data.data.project)) {
-          toast.error('Ubable to fetch subsets')
+          toast.error('Unable to fetch subsets')
           return
         }
         setSubsetData(parseSubsetData(response.data.data))
       })
       .finally(() => {
         setLoading(false)
+        if (focusOnReload) {
+          dispatch(setFocusedVersions([focusOnReload]))
+          setFocusOnReload(null)
+        }
       })
     // eslint-disable-next-line
-  }, [folders, projectName])
+  }, [folders, projectName, selectedVersions])
 
   useEffect(() => {
     setSelection([

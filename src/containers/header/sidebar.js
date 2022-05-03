@@ -8,7 +8,6 @@ import { Sidebar } from 'primereact/sidebar'
 
 import axios from 'axios'
 
-
 const SidebarMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
   const [projectList, setProjectList] = useState([])
@@ -25,9 +24,9 @@ const SidebarMenu = ({ visible, onHide }) => {
   }, [])
 
   return (
-    <Sidebar 
+    <Sidebar
       position="left"
-      visible={visible} 
+      visible={visible}
       onHide={onHide}
       header="Projects"
     >
@@ -37,7 +36,7 @@ const SidebarMenu = ({ visible, onHide }) => {
           flexDirection: 'column',
           position: 'relative',
           width: '100%',
-          height: '100%'
+          height: '100%',
         }}
       >
         <TableWrapper>

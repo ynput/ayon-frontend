@@ -1,46 +1,38 @@
-import { DateTime } from 'luxon'
+import { useRef, useMemo, useState } from 'react'
+import { Button } from 'primereact/button'
+import { Menu } from 'primereact/menu'
 
-const DEFAULT_COLUMNS = [
-  {
-    field: 'name',
-    header: 'Subset',
-    width: 200,
-  },
-  {
-    field: 'folder',
-    header: 'Folder',
-    width: 200,
-  },
-  {
-    field: 'family',
-    header: 'Family',
-    width: 120,
-  },
-  {
-    field: 'versionName',
-    header: 'Version',
-    width: 70,
-  },
-  {
-    field: 'time',
-    header: 'Time',
-    width: 150,
-    body: (row) => DateTime.fromSeconds(row.createdAt).toRelative(),
-  },
-  {
-    field: 'author',
-    header: 'Author',
-    width: 120,
-  },
-  {
-    field: 'frames',
-    header: 'Frames',
-    width: 120,
-  },
-]
+const VersionList = (row, onSelectVersion) => {
+  const menu = useRef(null)
+  const [currentVersion, setCurrentVersion] = useState(null)
+
+  const versions = useMemo(() => {
+    return row.versionList.map((version) => {
+      if (version.id === row.versionId) setCurrentVersion(version.name)
+      return {
+        id: version.id,
+        label: version.name,
+        command: () => onSelectVersion(row.id, version.id),
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [row.versionList, row.versionId, row.id, menu])
+
+  return (
+    <>
+      <Menu model={versions} popup ref={menu} />
+      <Button
+        className="p-button-link"
+        style={{ margin: 0, padding: 0 }}
+        label={currentVersion}
+        onClick={(e) => menu.current.toggle(e)}
+      />
+    </>
+  )
+}
 
 const SUBSET_QUERY = `
-query Subsets($projectName: String!, $folders: [String!]!){
+query Subsets($projectName: String!, $folders: [String!]!, $versionOverrides: [String!]!) {
     project(name: $projectName){
         subsets(folderIds: $folders){
             edges {
@@ -52,7 +44,28 @@ query Subsets($projectName: String!, $folders: [String!]!){
                     versionList{
                       id
                       version
+                      name
                     }
+                    
+                    versions(ids: $versionOverrides){
+                      edges{
+                        node{
+                          id
+                          version
+                          name
+                          author
+                          createdAt
+                          attrib {
+                              fps
+                              resolutionWidth
+                              resolutionHeight
+                              frameStart
+                              frameEnd
+                          }
+                        }
+                      }
+                    }
+
                     latestVersion{
                         id
                         version
@@ -132,7 +145,11 @@ const parseSubsetData = (data) => {
   let s = []
   for (let subsetEdge of data.project.subsets.edges) {
     let subset = subsetEdge.node
-    let vers = subset.latestVersion || null
+
+    let vers
+    if (subset.versions.edges.length === 1) vers = subset.versions.edges[0].node
+    else if (subset.latestVersion) vers = subset.latestVersion
+    else vers = null
     let sub = {
       id: subset.id,
       name: subset.name,
@@ -142,6 +159,7 @@ const parseSubsetData = (data) => {
       folder: subset.folder.name,
       author: vers ? vers.author : null,
       parents: subset.folder.parents,
+      versionList: subset.versionList || [],
       version: vers ? vers.version : null,
       versionId: vers && vers.id ? vers.id : null,
       versionName: vers && vers.name ? vers.name : '',
@@ -153,4 +171,4 @@ const parseSubsetData = (data) => {
   return s
 }
 
-export { DEFAULT_COLUMNS, SUBSET_QUERY, parseSubsetData }
+export { VersionList, SUBSET_QUERY, parseSubsetData }

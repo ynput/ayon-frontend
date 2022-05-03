@@ -63,7 +63,7 @@ const RepresentationDetail = ({ representations }) => {
         <div className="wrapper">
           <DataTable
             scrollable
-            responsive
+            responsive="true"
             resizableColumns
             columnResizeMode="expand"
             scrollDirection="both"
