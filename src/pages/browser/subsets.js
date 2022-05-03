@@ -107,7 +107,7 @@ const Subsets = ({ projectName, folders, focusedVersions }) => {
           {loading && <Shade />}
           <DataTable
             scrollable
-            responsive
+            responsive="true"
             resizableColumns
             columnResizeMode="expand"
             scrollDirection="both"

@@ -40,19 +40,19 @@ const buildQueryString = (localSite, remoteSite, lazyParams) => {
   url += `&pageLength=${lazyParams.rows}&page=${lazyParams.page + 1}`
   url += `&sortBy=${lazyParams.sortField}`
   url += `&sortDesc=${lazyParams.sortOrder === 1 ? 'true' : 'false'}`
-  if (lazyParams.filters.folder.value)
+  if (lazyParams.filters.folder && lazyParams.filters.folder.value)
     url += `&folderFilter=${lazyParams.filters.folder.value}`
-  if (lazyParams.filters.subset.value)
+  if (lazyParams.filters.subset && lazyParams.filters.subset.value)
     url += `&subsetFilter=${lazyParams.filters.subset.value}`
-  if (lazyParams.filters.representation.value) {
+  if (lazyParams.filters.representation && lazyParams.filters.representation.value) {
     for (const val of lazyParams.filters.representation.value)
       url += `&nameFilter=${val}`
   }
-  if (lazyParams.filters.localStatus.value) {
+  if (lazyParams.filters.localStatus && lazyParams.filters.localStatus.value) {
     for (const val of lazyParams.filters.localStatus.value)
       url += `&localStatusFilter=${val}`
   }
-  if (lazyParams.filters.remoteStatus.value) {
+  if (lazyParams.filters.remoteStatus && lazyParams.filters.remoteStatus.value) {
     for (const val of lazyParams.filters.remoteStatus.value)
       url += `&remoteStatusFilter=${val}`
   }

@@ -49,6 +49,10 @@ query Subsets($projectName: String!, $folders: [String!]!){
                     name
                     family
                     createdAt
+                    versionList{
+                      id
+                      version
+                    }
                     latestVersion{
                         id
                         version

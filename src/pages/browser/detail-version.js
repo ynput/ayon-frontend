@@ -36,6 +36,14 @@ const VERSION_QUERY = `
     }
 `
 
+const VersionInfoWidget = ({data}) => {
+  return (<pre>
+    <code>{JSON.stringify(data, null, 2)}</code>
+  </pre>)
+
+}
+
+
 const VersionDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
@@ -100,7 +108,9 @@ const VersionDetail = () => {
 
   return (
     <>
-      <section className="row">{versions.length} versions selected.</section>
+      <section className="row">
+        {versions.length > 1 ? `${versions.length} versions selected` : <VersionInfoWidget data={versions[0]} />}
+      </section>
       {representations && (
         <RepresentationDetail representations={representations} />
       )}

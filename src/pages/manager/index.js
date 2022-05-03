@@ -240,14 +240,13 @@ const ManagerView = ({ projectName, settings }) => {
       <section className="column" style={{ flexGrow: 1 }}>
         {loading && <Shade />}
         <TreeTable
-          responsive
+          responsive="true"
           scrollable
           scrollHeight="100%"
           value={hierarchy}
           onExpand={onExpand}
           resizableColumns
           columnResizeMode="expand"
-          scrollDirection="both"
           expandedKeys={expandedKeys}
           onToggle={(e) => setExpandedKeys(e.value)}
         >

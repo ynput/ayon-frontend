@@ -167,7 +167,7 @@ const Hierarchy = ({ projectName, folderTypes }) => {
         {loading && <Shade />}
         <TreeTable
           value={treeData}
-          responsive
+          responsive="true"
           scrollable
           scrollHeight="100%"
           selectionMode="multiple"

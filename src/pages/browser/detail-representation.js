@@ -38,17 +38,18 @@ const RepresentationDetail = ({ representations }) => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
+  const [focusedRepresentation, setFocusedRepresentation] = useState(null)
 
   return (
     <>
-      {selectedRepresentation && (
+      {focusedRepresentation && (
         <SiteSyncDetail
           projectName={projectName}
           localSite={null}
           remoteSite={null}
           representationId={selectedRepresentation.id}
           onHide={() => {
-            setSelectedRepresentation(null)
+            setFocusedRepresentation(null)
           }}
         />
       )}
@@ -73,6 +74,7 @@ const RepresentationDetail = ({ representations }) => {
             selectionMode="single"
             selection={selectedRepresentation}
             onSelectionChange={(e) => setSelectedRepresentation(e.value)}
+            onRowDoubleClick={(e) => setFocusedRepresentation(e.data.id)}
           >
             {columns.map((col) => {
               return (

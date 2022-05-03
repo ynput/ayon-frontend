@@ -18,6 +18,14 @@ const ProjectPage = () => {
   const dispatch = useDispatch()
 
   useEffect(() => {
+    return () => {
+      // Set project data to null when leaving project page
+      dispatch(selectProject(null))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
     setLoading(true)
     axios
       .get(`/api/projects/${projectName}`)

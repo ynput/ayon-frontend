@@ -52,9 +52,21 @@ const BrowserPage = () => {
             </section>
           </section>
         </SplitterPanel>
-        <SplitterPanel style={{ minWidth: 500 }}>{subsets}</SplitterPanel>
-        <SplitterPanel size={20} style={{ minWidth: 250 }}>
-          <Detail />
+
+
+        <SplitterPanel size={80}>
+          <Splitter
+            orientation="horizontal"
+            stateKey={'detailSplitter'}
+            stateStorage={'local'}
+          >
+            <SplitterPanel style={{ minWidth: 500 }}>
+              {subsets}
+            </SplitterPanel>
+            <SplitterPanel  style={{ minWidth: 250 }}>
+              <Detail />
+            </SplitterPanel>
+          </Splitter>
         </SplitterPanel>
       </Splitter>
     </main>
