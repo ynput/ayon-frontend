@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
+import Thumbnail from '../../containers/thumbnail'
 
 import axios from 'axios'
 
@@ -12,7 +13,11 @@ const VERSION_QUERY = `
                 edges {
                     node {
                         version
+                        name
                         author
+                        attrib {
+                          #VERSION_ATTRS#
+                        }
                         subset {
                             name
                             family
@@ -36,16 +41,20 @@ const VERSION_QUERY = `
     }
 `
 
-const VersionInfoWidget = ({ data }) => {
-  return (
-    <pre>
-      <code>{JSON.stringify(data, null, 2)}</code>
-    </pre>
-  )
+
+
+const buildVersionQuery = (attributes) => {
+  let f_attribs = ''
+  for (const attrib of attributes) {
+    if (attrib.scope.includes('version')) f_attribs += `${attrib.name}\n`
+  }
+  return VERSION_QUERY.replace('#VERSION_ATTRS#', f_attribs)
 }
+
 
 const VersionDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
+  const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   const [versions, setVersions] = useState([])
   const [representations, setRepresentations] = useState([])
@@ -59,7 +68,7 @@ const VersionDetail = () => {
 
     axios
       .post('/graphql', {
-        query: VERSION_QUERY,
+        query: buildVersionQuery(settings.attributes),
         variables: { projectName, versions: context.focusedVersions },
       })
       .then((response) => {
@@ -80,6 +89,7 @@ const VersionDetail = () => {
           vArr.push({
             id: version.id,
             version: version.version,
+            name: version.name,
             author: version.author,
             attrib: version.attrib,
             family: subset.family,
@@ -99,6 +109,7 @@ const VersionDetail = () => {
           }
         }
 
+        console.log(vArr)
         setVersions(vArr)
         setRepresentations(rArr)
       })
@@ -108,13 +119,38 @@ const VersionDetail = () => {
 
   return (
     <>
-      <section className="row">
-        {versions.length > 1 ? (
+        {(versions.length > 1 || !versions.length) ? (
           `${versions.length} versions selected`
         ) : (
-          <VersionInfoWidget data={versions[0]} />
+        <section className="column">
+          <h3>
+            <span>{versions[0].subsetName} {versions[0].name}</span>
+          </h3>
+          <Thumbnail
+            projectName={projectName}
+            entityType="version"
+            entityId={versions[0].id}
+          />
+          <h4 style={{ marginTop: 10 }}>Attributes</h4>
+          <table>
+            <tbody>
+              {versions[0].attrib &&
+                settings.attributes
+                  .filter(
+                    (attr) =>
+                      attr.scope.includes('version') && versions[0].attrib[attr.name]
+                  )
+                  .map((attr) => (
+                    <tr key={attr.name}>
+                      <td>{attr.title}</td>
+                      <td>{versions[0].attrib[attr.name]}</td>
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
+        </section>
         )}
-      </section>
+
       {representations && (
         <RepresentationDetail representations={representations} />
       )}
