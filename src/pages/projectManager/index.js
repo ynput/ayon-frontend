@@ -33,10 +33,7 @@ const ProjectManager = () => {
 
   return (
     <main>
-      <NewProjectDialog
-        visible={showNewProject}
-        onHide={() => setShowNewProject(false)}
-      />
+     { showNewProject && <NewProjectDialog onHide={() => setShowNewProject(false)} />} 
 
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
         <div className="wrapper">

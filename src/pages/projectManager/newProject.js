@@ -5,44 +5,72 @@ import { Button } from 'primereact/button'
 import { Dropdown } from 'primereact/dropdown'
 import axios from 'axios'
 import AnatomyEditor from '../../containers/anatomyEditor'
+import { loadAnatomyPresets } from '../../utils'
 
-const NewProjectDialog = ({ visible, onHide }) => {
+
+const PresetDropdown = () => {
+  const [selectedPreset, setSelectedPreset] = useState('_')
+  const [presetList, setPresetList] = useState([])
+
+  useEffect(() => {
+    loadAnatomyPresets().then((r) => setPresetList(r))
+  }, [])
+
+  return (
+    <Dropdown
+      value={selectedPreset}
+      onChange={(e) => setSelectedPreset(e.value)}
+      options={presetList}
+      optionValue="name"
+      optionLabel="title"
+      tooltip="Preset"
+      tooltipOptions={{ position: 'bottom' }}
+    />
+  )
+}
+
+
+const NewProjectDialog = ({ onHide }) => {
   const [schema, setSchema] = useState(null)
   const [formData, setFormData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState('_')
 
   useEffect(() => {
-    axios.get('/api/anatomy/schema').then((res) => {
-      setSchema(res.data)
-    })
+    axios
+      .get('/api/anatomy/schema')
+      .then((res) => setSchema(res.data))
   }, [])
 
   useEffect(() => {
-    axios.get('/api/anatomy/presets/_').then((res) => {
-      console.log(res.data)
-      setFormData(res.data)
-    })
-  }, [])
+    axios
+      .get(`/api/anatomy/presets/${selectedPreset}`)
+      .then((res) => setFormData(res.data))
+  }, [selectedPreset])
 
-  if (!visible) {
-    return <></>
-  }
+  //
+  // Render
+  //
 
   const footer = (
-    <Button
-      icon="pi pi-plus"
-      label="Create"
-      className="p-button-info"
-      onClick={onHide}
-      style={{ width: 120 }}
-    />
+    <div
+      style={{
+      }}
+    >
+      <Button
+        icon="pi pi-plus"
+        label="Create"
+        className="p-button-info"
+        onClick={onHide}
+        style={{ width: 120, marginTop: 15 }}
+      />
+    </div>
   )
 
   return (
     <Dialog
       header="Create a new project"
       footer={footer}
-      visible={visible}
+      visible="true"
       onHide={onHide}
       style={{
         width: '50vw',
@@ -66,7 +94,7 @@ const NewProjectDialog = ({ visible, onHide }) => {
           }}
         >
           <InputText placeholder="Project Name" style={{ width: '100%' }} />
-          <Dropdown placeholder="Preset" />
+          <PresetDropdown />
         </div>
         <AnatomyEditor
           schema={schema}

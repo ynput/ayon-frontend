@@ -2,29 +2,19 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 
 import AnatomyEditor from '../../containers/anatomyEditor'
+
 import { Button } from 'primereact/button'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-const defaultPreset = { name: '_', title: '<default (built-in)>' }
+import { loadAnatomyPresets } from '../../utils'
+
 
 const PresetList = ({ selectedPreset, setSelectedPreset }) => {
   const [presetList, setPresetList] = useState([])
 
   useEffect(() => {
-    axios.get('/api/anatomy/presets').then((res) => {
-      let primaryPreset = defaultPreset
-
-      let presets = []
-      for (const tpl in res.data.presets) {
-        if (tpl.primary)
-          primaryPreset = { name: tpl.name, title: `<default (${tpl.name})>` }
-
-        presets.push({ name: tpl.name, title: tpl.title })
-      }
-
-      setPresetList([primaryPreset, ...presets])
-    })
+    loadAnatomyPresets().then((r) => setPresetList(r))
   }, [])
 
   return (
@@ -51,24 +41,27 @@ const AnatomyPresets = () => {
   const [selectedPreset, setSelectedPreset] = useState('_')
 
   useEffect(() => {
-    axios.get('/api/anatomy/schema').then((res) => {
-      setSchema(res.data)
-    })
+    axios
+      .get('/api/anatomy/schema')
+      .then((res) => setSchema(res.data))
   }, [])
 
   useEffect(() => {
-    axios.get('/api/anatomy/templates/_').then((res) => {
-      console.log(res.data)
-      setFormData(res.data)
-    })
-  }, [])
+    axios
+      .get(`/api/anatomy/presets/${selectedPreset}`)
+      .then((res) => setFormData(res.data))
+  }, [selectedPreset])
+
+  //
+  // Render
+  //
 
   return (
     <main>
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
         <PresetList
-          selectedTemplate={selectedPreset}
-          setSelectedTemplate={setSelectedPreset}
+          selectedPreset={selectedPreset}
+          setSelectedPreset={setSelectedPreset}
         />
       </section>
 
