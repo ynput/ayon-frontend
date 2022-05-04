@@ -8,7 +8,7 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
 
   useEffect(() => {
-    if (!entityId){
+    if (!entityId) {
       setBase64(null)
       return
     }
@@ -20,20 +20,22 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
   }, [url, entityId])
 
   if (!base64) {
-    return <div
-      style={{
-        width: '100%',
-        height: 'auto',
-        aspectRatio: '1.77',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#161616',
-        fontSize: '2em',
-      }}
-    >
-      <FontAwesomeIcon icon={faImage} className="color-ternary" />
-    </div>
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: 'auto',
+          aspectRatio: '1.77',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#161616',
+          fontSize: '2em',
+        }}
+      >
+        <FontAwesomeIcon icon={faImage} className="color-ternary" />
+      </div>
+    )
   }
 
   return (
@@ -41,7 +43,7 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
       alt={`Entity thumbnail ${entityId}`}
       src={`data:image/png;charset=utf-8;base64,${base64}`}
     />
-  ) 
+  )
 }
 
 export default Thumbnail

@@ -2,8 +2,6 @@ import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { Button } from '../../components'
 
-import './header.sass'
-
 const Breadcrumbs = () => {
   /*
     Breadcrums component used in the browser view.

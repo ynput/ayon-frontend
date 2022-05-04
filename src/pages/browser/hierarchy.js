@@ -172,7 +172,7 @@ const Hierarchy = ({ projectName, folderTypes }) => {
           scrollHeight="100%"
           selectionMode="multiple"
           selectionKeys={selectedFolders}
-          emptyMessage={loading ? 'Loading folders...' : 'No folders found.'}
+          emptyMessage=" "
           onSelectionChange={(e) => {
             setSelectedFolders(e.value)
             const selection = Object.keys(e.value)

@@ -8,12 +8,12 @@ import Header from './containers/header'
 
 import LoginPage from './pages/login'
 import LoadingPage from './pages/loading'
-import ProjectPage from './pages/projectPage'
+import ProjectPage from './pages/project'
 import ProjectManager from './pages/projectManager'
 import ExplorerPage from './pages/explorer'
 import APIDocsPage from './pages/doc/api'
 import ProfilePage from './pages/profile'
-import Anatomy from './pages/anatomy'
+import SettingsPage from './pages/settings'
 import Error from './pages/error'
 
 import { login } from './features/user'
@@ -88,10 +88,16 @@ const App = () => {
           element={<ProjectPage />}
         />
 
+        <Route
+          path="/settings"
+          exact
+          element={<Navigate replace to="/settings/anatomy" />}
+        />
+        <Route path="/settings/:module" exact element={<SettingsPage />} />
+
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/doc/api" element={<APIDocsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/anatomy" element={<Anatomy />} />
 
         <Route element={<Error code="404" />} />
       </Routes>

@@ -4,15 +4,14 @@ import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 
 import { Dialog } from 'primereact/dialog'
-import { Spacer, Button } from '../../components'
+import { Spacer, Button } from '../components'
 
-import BrowserPage from '../browser'
-import ManagerPage from '../manager'
-import SiteSync from '../sitesync'
-import LoadingPage from '../loading'
+import BrowserPage from './browser'
+import ManagerPage from './manager'
+import SiteSync from './sitesync'
+import LoadingPage from './loading'
 
-import { selectProject, setProjectData } from '../../features/context'
-
+import { selectProject, setProjectData } from '../features/context'
 
 const ProjectContexInfo = () => {
   /**
@@ -20,13 +19,8 @@ const ProjectContexInfo = () => {
    * this is for develompent only
    */
   const context = useSelector((state) => state.context)
-  return (
-    <pre>
-      {JSON.stringify(context, null, 2)}
-    </pre>
-  )
+  return <pre>{JSON.stringify(context, null, 2)}</pre>
 }
-
 
 const ProjectPage = () => {
   /**
@@ -38,8 +32,7 @@ const ProjectPage = () => {
   const [loading, setLoading] = useState(true)
   const { projectName, module } = useParams()
   const dispatch = useDispatch()
-  const [ showContextDialog, setShowContextDialog ] = useState(false)
-
+  const [showContextDialog, setShowContextDialog] = useState(false)
 
   // Set project data to null when leaving project page
   useEffect(() => {
@@ -74,24 +67,24 @@ const ProjectPage = () => {
 
   return (
     <>
-      <Dialog 
-        header="Project Context" 
-        visible={showContextDialog} 
+      <Dialog
+        header="Project Context"
+        visible={showContextDialog}
         onHide={() => setShowContextDialog(false)}
       >
         {showContextDialog && <ProjectContexInfo />}
       </Dialog>
-      <nav id="project-nav">
+      <nav>
         <NavLink to={`/projects/${projectName}/browser`}>Browser</NavLink>
         <NavLink to={`/projects/${projectName}/manager`}>Manager</NavLink>
         <NavLink to={`/projects/${projectName}/sitesync`}>SiteSync</NavLink>
         <Spacer />
-        <Button 
-          className="p-button-link" 
-          style={{ margin: 0, padding: 0}}
-          tooltip="Project Context (debug only)"
-          tooltipOptions={{ position: 'left' }}
-          onClick={() => {setShowContextDialog(true)}} icon="pi pi-cog"
+        <Button
+          className="p-button-link"
+          icon="pi pi-cog"
+          onClick={() => {
+            setShowContextDialog(true)
+          }}
         />
       </nav>
       {child}

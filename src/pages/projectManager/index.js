@@ -8,49 +8,15 @@ import axios from 'axios'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button } from 'primereact/button'
-import { Fieldset } from 'primereact/fieldset'
 
-const ProjectStats = ({ projectName }) => {
-  const url = `/api/projects/${projectName}/stats`
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState({})
-
-  useEffect(() => {
-    setLoading(true)
-    axios
-      .get(url)
-      .then((response) => {
-        setData(response.data)
-      })
-      .catch(() => {
-        toast.error('Unable to load project statistics')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [url])
-
-  if (loading) return <></>
-
-  if (!(data && data.counts)) return <></>
-
-  return (
-    <Fieldset legend="Project statistics">
-      <ul>
-        {Object.keys(data.counts).map((key) => (
-          <li key={key}>
-            {key} : {JSON.stringify(data.counts[key])}
-          </li>
-        ))}
-      </ul>
-    </Fieldset>
-  )
-}
+import ProjectStats from './stats'
+import NewProjectDialog from './newProject'
 
 const ProjectManager = () => {
   const navigate = useNavigate()
   const [projectList, setProjectList] = useState([])
   const [selectedProject, setSelectedProject] = useState(null)
+  const [showNewProject, setShowNewProject] = useState(false)
 
   useEffect(() => {
     axios
@@ -67,6 +33,11 @@ const ProjectManager = () => {
 
   return (
     <main>
+      <NewProjectDialog
+        visible={showNewProject}
+        onHide={() => setShowNewProject(false)}
+      />
+
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
         <div className="wrapper">
           <DataTable
@@ -122,7 +93,7 @@ const ProjectManager = () => {
           <Button
             label="Create a new project"
             icon="pi pi-plus"
-            onClick={() => navigate('/anatomy')}
+            onClick={() => setShowNewProject(true)}
           />
           <div style={{ flexGrow: 1 }} />
         </section>

@@ -34,7 +34,6 @@ const buildFolderQuery = (attributes) => {
   return FOLDER_QUERY.replace('#FOLDER_ATTRS#', f_attribs)
 }
 
-
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const settings = useSelector((state) => ({ ...state.settings }))
@@ -75,12 +74,12 @@ const FolderDetail = () => {
         entityType="folder"
         entityId={folderId}
       />
-      <AttributeTable 
-        entityType="folder" 
-        attribSettings={settings.attributes} 
-        data={data.attrib} 
+      <AttributeTable
+        entityType="folder"
+        attribSettings={settings.attributes}
+        data={data.attrib}
       />
-      </section>
+    </section>
   )
 }
 

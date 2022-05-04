@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import Hierarchy from './hierarchy'
 import Subsets from './subsets'
 import Detail from './detail'
-import TasksComponent from './tasks'
+import TasksPanel from './tasks'
 
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
@@ -47,9 +47,12 @@ const BrowserPage = () => {
             <section className="row invisible" style={{ flexGrow: 1 }}>
               {hierarchy}
             </section>
-            <section className="row invisible">
-              <TasksComponent />
-            </section>
+            {context.showTasks && (
+              <TasksPanel
+                projectName={projectName}
+                folderId={context.showTasks}
+              />
+            )}
           </section>
         </SplitterPanel>
 

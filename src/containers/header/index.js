@@ -10,7 +10,7 @@ const Header = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false)
 
   return (
-    <nav id="main-header">
+    <nav className="primary">
       <SidebarMenu
         visible={sidebarVisible}
         onHide={() => setSidebarVisible(false)}
@@ -18,20 +18,17 @@ const Header = () => {
       <Button
         icon="pi pi-bars"
         className="p-button-link"
-        onClick={(e) => setSidebarVisible(true)}
+        onClick={() => setSidebarVisible(true)}
       />
 
-      <Spacer />
-
-      <Breadcrumbs />
-
-      <Spacer />
+      <Spacer>
+        <Breadcrumbs />
+      </Spacer>
 
       <UserMenu menuRef={menuRef} />
 
       <Button
-        className="p-button-link p-button-info"
-        label={''}
+        className="p-button-link"
         icon="pi pi-user"
         onClick={(event) => menuRef.current.toggle(event)}
       />

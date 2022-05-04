@@ -6,7 +6,17 @@ import { ProgressSpinner } from 'primereact/progressspinner'
 
 import FolderTypeIcon from './folder-type-icon'
 
-const Spacer = () => <div style={{ flexGrow: 1 }} />
+const Spacer = (props) => (
+  <div
+    style={{
+      flexGrow: 1,
+      display: 'flex',
+      justifyContent: 'center',
+    }}
+  >
+    {props.children}
+  </div>
+)
 
 const Shade = (props) => {
   return (

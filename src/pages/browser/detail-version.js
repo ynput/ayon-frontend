@@ -6,7 +6,6 @@ import Thumbnail from '../../containers/thumbnail'
 import AttributeTable from '../../containers/attributeTable'
 import RepresentationDetail from './detail-representation'
 
-
 const VERSION_QUERY = `
     query Versions($projectName: String!, $versions: [String!]!) {
         project(name: $projectName) {
@@ -49,7 +48,6 @@ const buildVersionQuery = (attributes) => {
   }
   return VERSION_QUERY.replace('#VERSION_ATTRS#', f_attribs)
 }
-
 
 const VersionDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -115,20 +113,17 @@ const VersionDetail = () => {
     //eslint-disable-next-line
   }, [context.projectName, context.focusedVersions, projectName])
 
-
   //
   // Render
   //
 
-
   // No version selected. do not show the detail
-  if (!versions.length)
-    return <></>
+  if (!versions.length) return <></>
 
   let versionDetailWidget
 
   // Multiple versions selected. Show an info message
-  if (versions.length > 1){
+  if (versions.length > 1) {
     versionDetailWidget = (
       <section className="column">
         <span>{versions.length} versions selected</span>
@@ -141,7 +136,9 @@ const VersionDetail = () => {
     versionDetailWidget = (
       <section className="column">
         <h3>
-          <span>{versions[0].subsetName} {versions[0].name}</span>
+          <span>
+            {versions[0].subsetName} {versions[0].name}
+          </span>
         </h3>
         <Thumbnail
           projectName={projectName}
@@ -150,8 +147,8 @@ const VersionDetail = () => {
         />
         <AttributeTable
           entityType="version"
-          attribSettings={settings.attributes} 
-          data={versions[0].attrib} 
+          attribSettings={settings.attributes}
+          data={versions[0].attrib}
         />
       </section>
     )

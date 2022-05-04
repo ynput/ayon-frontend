@@ -31,9 +31,10 @@ const sortByKey = (array, key) => {
   })
 }
 
-const TasksPanel = ({ folderId, projectName, userName }) => {
+const TasksPanel = ({ folderId, projectName }) => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
+  const userName = useSelector((state) => state.user.name)
 
   useEffect(() => {
     setLoading(true)
@@ -78,21 +79,4 @@ const TasksPanel = ({ folderId, projectName, userName }) => {
   )
 }
 
-const TasksComponent = () => {
-  const user = useSelector((state) => ({ ...state.user }))
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
-  const showTasks = context.showTasks || null
-
-  if (!showTasks) return <></>
-
-  return (
-    <TasksPanel
-      projectName={projectName}
-      folderId={showTasks}
-      userName={user.name}
-    />
-  )
-}
-
-export default TasksComponent
+export default TasksPanel

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import { Menu } from 'primereact/menu'
 import { toast } from 'react-toastify'
 import axios from 'axios'
@@ -8,6 +9,7 @@ import { logout } from '../../features/user'
 
 const UserMenu = ({ menuRef }) => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   const doLogout = () => {
     axios
@@ -30,13 +32,23 @@ const UserMenu = ({ menuRef }) => {
             label: 'GraphQL explorer',
             icon: 'pi pi-sitemap',
             command: () => {
-              window.location.href = '/explorer'
+              navigate('/explorer')
             },
           },
           {
             label: 'REST API docs',
             icon: 'pi pi-book',
             url: '/doc/api',
+          },
+        ],
+      },
+      {
+        label: 'Admin',
+        items: [
+          {
+            label: 'Settings',
+            icon: 'pi pi-cog',
+            command: () => navigate('/settings'),
           },
         ],
       },
