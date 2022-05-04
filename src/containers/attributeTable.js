@@ -15,6 +15,7 @@ const AttributeTable = ({ entityType, attribSettings, data, style}) => {
           )
         .map((attr) => (
             <div 
+              key={attr.name}
               className="attribute-table-row"
               style={{
                 display: 'flex',

@@ -35,8 +35,8 @@ const SiteSyncDetailTable = ({ data, localSite, remoteSite }) => {
     >
       <DataTable
         value={data}
-        scrollable
-        responsive
+        scrollable="true"
+        responsive="true"
         responsiveLayout="scroll"
         scrollHeight="flex"
         selectionMode="single"

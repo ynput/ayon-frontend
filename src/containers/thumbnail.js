@@ -8,12 +8,16 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
 
   useEffect(() => {
+    if (!entityId){
+      setBase64(null)
+      return
+    }
     axios
       .get(url, { responseType: 'arraybuffer' })
       .then((response) =>
         setBase64(btoa(String.fromCharCode(...new Uint8Array(response.data))))
       )
-  }, [url])
+  }, [url, entityId])
 
   if (!base64) {
     return <div
