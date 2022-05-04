@@ -13,13 +13,11 @@ const contextSlice = createSlice({
   reducers: {
     selectProject: (state, action) => {
       window.localStorage.setItem('currentProject', action.name)
-      console.log('selectProject', action.name)
       state.projectName = action.payload
       return state
     },
 
     setProjectData: (state, action) => {
-      console.log('setProjectData', action.payload)
       state.project = action.payload
       return state
     },

@@ -6,7 +6,6 @@ const userSlice = createSlice({
   initialState: {},
   reducers: {
     login: (state, action) => {
-      console.log(action)
       if (action.payload.accessToken) {
         localStorage.setItem('accessToken', action.payload.accessToken)
         axios.defaults.headers.common[

@@ -51,7 +51,6 @@ const App = () => {
     axios
       .get('/api/users/me')
       .then((response) => {
-        console.log('Got ME')
         dispatch(
           login({
             user: response.data,

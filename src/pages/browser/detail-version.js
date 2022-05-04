@@ -108,8 +108,6 @@ const VersionDetail = () => {
             })
           }
         }
-
-        console.log(vArr)
         setVersions(vArr)
         setRepresentations(rArr)
       })
