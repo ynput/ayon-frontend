@@ -147,7 +147,12 @@ const SiteSyncDetail = ({
   }, [projectName, representationId, localSite, remoteSite])
 
   return (
-    <Dialog visible onHide={onHide} style={{ minHeight: '40%', minWidth: 900 }}>
+    <Dialog 
+      visible 
+      header="Site sync details"
+      onHide={onHide} 
+      style={{ minHeight: '40%', minWidth: 900 }}
+    >
       {loading ? (
         <span>loading</span>
       ) : (

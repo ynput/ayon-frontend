@@ -3,7 +3,9 @@ import { useSelector } from 'react-redux'
 import axios from 'axios'
 
 import { FolderTypeIcon } from '../../components'
+
 import Thumbnail from '../../containers/thumbnail'
+import AttributeTable from '../../containers/attributeTable'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {
@@ -31,6 +33,7 @@ const buildFolderQuery = (attributes) => {
   }
   return FOLDER_QUERY.replace('#FOLDER_ATTRS#', f_attribs)
 }
+
 
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -72,24 +75,12 @@ const FolderDetail = () => {
         entityType="folder"
         entityId={folderId}
       />
-      <h4 style={{ marginTop: 10 }}>Attributes</h4>
-      <table>
-        <tbody>
-          {data.attrib &&
-            settings.attributes
-              .filter(
-                (attr) =>
-                  attr.scope.includes('folder') && data.attrib[attr.name]
-              )
-              .map((attr) => (
-                <tr key={attr.name}>
-                  <td>{attr.title}</td>
-                  <td>{data.attrib[attr.name]}</td>
-                </tr>
-              ))}
-        </tbody>
-      </table>
-    </section>
+      <AttributeTable 
+        entityType="folder" 
+        attribSettings={settings.attributes} 
+        data={data.attrib} 
+      />
+      </section>
   )
 }
 

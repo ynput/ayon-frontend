@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import Thumbnail from '../../containers/thumbnail'
-
 import axios from 'axios'
 
+import Thumbnail from '../../containers/thumbnail'
+import AttributeTable from '../../containers/attributeTable'
 import RepresentationDetail from './detail-representation'
+
 
 const VERSION_QUERY = `
     query Versions($projectName: String!, $versions: [String!]!) {
@@ -41,8 +42,6 @@ const VERSION_QUERY = `
     }
 `
 
-
-
 const buildVersionQuery = (attributes) => {
   let f_attribs = ''
   for (const attrib of attributes) {
@@ -59,6 +58,7 @@ const VersionDetail = () => {
   const [versions, setVersions] = useState([])
   const [representations, setRepresentations] = useState([])
 
+  // Load versions and representations
   useEffect(() => {
     if (!(context.focusedVersions && context.focusedVersions.length)) {
       setVersions(null)
@@ -117,40 +117,52 @@ const VersionDetail = () => {
     //eslint-disable-next-line
   }, [context.projectName, context.focusedVersions, projectName])
 
+
+  //
+  // Render
+  //
+
+
+  // No version selected. do not show the detail
+  if (!versions.length)
+    return <></>
+
+  let versionDetailWidget
+
+  // Multiple versions selected. Show an info message
+  if (versions.length > 1){
+    versionDetailWidget = (
+      <section className="column">
+        <span>{versions.length} versions selected</span>
+      </section>
+    )
+  }
+
+  // One version selected. Show the detail
+  else {
+    versionDetailWidget = (
+      <section className="column">
+        <h3>
+          <span>{versions[0].subsetName} {versions[0].name}</span>
+        </h3>
+        <Thumbnail
+          projectName={projectName}
+          entityType="version"
+          entityId={versions[0].id}
+        />
+        <AttributeTable
+          entityType="version"
+          attribSettings={settings.attributes} 
+          data={versions[0].attrib} 
+        />
+      </section>
+    )
+  }
+
+  // Return Version and representation detail
   return (
     <>
-        {(versions.length > 1 || !versions.length) ? (
-          `${versions.length} versions selected`
-        ) : (
-        <section className="column">
-          <h3>
-            <span>{versions[0].subsetName} {versions[0].name}</span>
-          </h3>
-          <Thumbnail
-            projectName={projectName}
-            entityType="version"
-            entityId={versions[0].id}
-          />
-          <h4 style={{ marginTop: 10 }}>Attributes</h4>
-          <table>
-            <tbody>
-              {versions[0].attrib &&
-                settings.attributes
-                  .filter(
-                    (attr) =>
-                      attr.scope.includes('version') && versions[0].attrib[attr.name]
-                  )
-                  .map((attr) => (
-                    <tr key={attr.name}>
-                      <td>{attr.title}</td>
-                      <td>{versions[0].attrib[attr.name]}</td>
-                    </tr>
-                  ))}
-            </tbody>
-          </table>
-        </section>
-        )}
-
+      {versionDetailWidget}
       {representations && (
         <RepresentationDetail representations={representations} />
       )}

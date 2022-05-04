@@ -27,11 +27,6 @@ const columns = [
     header: 'Family',
     width: 110,
   },
-  {
-    field: 'fileCount',
-    header: 'Files',
-    width: 70,
-  },
 ]
 
 const RepresentationDetail = ({ representations }) => {
@@ -48,9 +43,7 @@ const RepresentationDetail = ({ representations }) => {
           localSite={null}
           remoteSite={null}
           representationId={selectedRepresentation.id}
-          onHide={() => {
-            setFocusedRepresentation(null)
-          }}
+          onHide={() => setFocusedRepresentation(null)}
         />
       )}
 
