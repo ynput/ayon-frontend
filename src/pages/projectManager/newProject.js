@@ -8,12 +8,17 @@ import AnatomyEditor from '../../containers/anatomyEditor'
 import { loadAnatomyPresets } from '../../utils'
 
 
-const PresetDropdown = () => {
-  const [selectedPreset, setSelectedPreset] = useState('_')
+const PresetDropdown = ({selectedPreset, setSelectedPreset}) => {
   const [presetList, setPresetList] = useState([])
 
   useEffect(() => {
-    loadAnatomyPresets().then((r) => setPresetList(r))
+    loadAnatomyPresets().then((r) => {
+      setPresetList(r)
+      if (!selectedPreset) {
+        setSelectedPreset(r[0].name)
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -25,6 +30,7 @@ const PresetDropdown = () => {
       optionLabel="title"
       tooltip="Preset"
       tooltipOptions={{ position: 'bottom' }}
+      style={{ minWidth: 200 }}
     />
   )
 }
@@ -33,7 +39,7 @@ const PresetDropdown = () => {
 const NewProjectDialog = ({ onHide }) => {
   const [schema, setSchema] = useState(null)
   const [formData, setFormData] = useState(null)
-  const [selectedPreset, setSelectedPreset] = useState('_')
+  const [selectedPreset, setSelectedPreset] = useState(null)
 
   useEffect(() => {
     axios
@@ -94,7 +100,7 @@ const NewProjectDialog = ({ onHide }) => {
           }}
         >
           <InputText placeholder="Project Name" style={{ width: '100%' }} />
-          <PresetDropdown />
+          <PresetDropdown selectedPreset={selectedPreset} setSelectedPreset={setSelectedPreset}/>
         </div>
         <AnatomyEditor
           schema={schema}

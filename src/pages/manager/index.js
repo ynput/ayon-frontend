@@ -8,17 +8,10 @@ import { Button } from 'primereact/button'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
+import { arrayEquals } from '../../utils'
 import { buildQuery } from './queries'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
-const arrayEquals = (a, b) => {
-  return (
-    Array.isArray(a) &&
-    Array.isArray(b) &&
-    a.length === b.length &&
-    a.every((val, index) => val === b[index])
-  )
-}
 
 const formatName = (row) => {
   if (row.data.entityType === 'task')

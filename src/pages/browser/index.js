@@ -12,7 +12,6 @@ const BrowserPage = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const folderTypes = context.project.folderTypes
-
   const focusedFolders = context.focusedFolders
   const focusedVersions = context.focusedVersions
 
