@@ -15,6 +15,7 @@ import NewProjectDialog from './newProject'
 const ProjectManager = () => {
   const navigate = useNavigate()
   const [projectList, setProjectList] = useState([])
+  const [projectListTimestamp, setProjectListTimestamp] = useState(0)
   const [selectedProject, setSelectedProject] = useState(null)
   const [showNewProject, setShowNewProject] = useState(false)
 
@@ -27,13 +28,19 @@ const ProjectManager = () => {
       .catch(() => {
         toast.error('Unable to load projects')
       })
-  }, [])
+  }, [projectListTimestamp])
 
   const deleteProject = () => {}
 
   return (
     <main>
-     { showNewProject && <NewProjectDialog onHide={() => setShowNewProject(false)} />} 
+     { showNewProject && (
+        <NewProjectDialog onHide={() => {
+          setProjectListTimestamp(projectListTimestamp + 1)
+          setShowNewProject(false)
+          }}
+       />
+     )}
 
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
         <div className="wrapper">

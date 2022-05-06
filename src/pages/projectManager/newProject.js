@@ -3,6 +3,7 @@ import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
 import { Dropdown } from 'primereact/dropdown'
+import { toast } from 'react-toastify'
 import axios from 'axios'
 import AnatomyEditor from '../../containers/anatomyEditor'
 import { loadAnatomyPresets } from '../../utils'
@@ -38,7 +39,8 @@ const PresetDropdown = ({selectedPreset, setSelectedPreset}) => {
 
 const NewProjectDialog = ({ onHide }) => {
   const [schema, setSchema] = useState(null)
-  const [formData, setFormData] = useState(null)
+  const [name, setName] = useState('')
+  const [anatomy, setAnatomy] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState(null)
 
   useEffect(() => {
@@ -48,10 +50,28 @@ const NewProjectDialog = ({ onHide }) => {
   }, [])
 
   useEffect(() => {
+    if (!selectedPreset) 
+      return
     axios
       .get(`/api/anatomy/presets/${selectedPreset}`)
-      .then((res) => setFormData(res.data))
+      .then((res) => setAnatomy(res.data))
   }, [selectedPreset])
+
+  // Logic
+  //
+
+  const handleSubmit = () => {
+    axios
+      .post('/api/projects', {name, anatomy})
+      .then(() => {
+        toast.success('Project created')
+        onHide()
+      })
+      .catch((error) => {
+        toast.error(`Unable to create project ${error.response.data.detail}`)
+      })
+  }
+
 
   //
   // Render
@@ -66,7 +86,7 @@ const NewProjectDialog = ({ onHide }) => {
         icon="pi pi-plus"
         label="Create"
         className="p-button-info"
-        onClick={onHide}
+        onClick={handleSubmit}
         style={{ width: 120, marginTop: 15 }}
       />
     </div>
@@ -99,13 +119,22 @@ const NewProjectDialog = ({ onHide }) => {
             marginBottom: 8,
           }}
         >
-          <InputText placeholder="Project Name" style={{ width: '100%' }} />
-          <PresetDropdown selectedPreset={selectedPreset} setSelectedPreset={setSelectedPreset}/>
+          <InputText 
+            placeholder="Project Name" 
+            style={{ width: '100%' }} 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <PresetDropdown 
+            selectedPreset={selectedPreset} 
+            setSelectedPreset={setSelectedPreset}
+            tooltip="Project anatomy preset"
+          />
         </div>
         <AnatomyEditor
           schema={schema}
-          formData={formData}
-          onChange={setFormData}
+          formData={anatomy}
+          onChange={setAnatomy}
         />
       </div>
     </Dialog>

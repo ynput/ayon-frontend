@@ -30,6 +30,9 @@ const PrimeInputNumber = (props) => {
       onBlur={props.onBlur}
       onFocus={props.onFocus}
       showButtons={true}
+      useGrouping={false}
+      mode="decimal"
+      maxFractionDigits={4}
       className={props.rawErrors ? 'p-invalid' : ''}
       tooltip={props.rawErrors ? props.rawErrors[0] : undefined}
       tooltipOptions={{ position: 'bottom' }}
