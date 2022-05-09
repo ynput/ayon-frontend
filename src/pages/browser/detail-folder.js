@@ -39,12 +39,16 @@ const FolderDetail = () => {
   const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   const folders = context.focusedFolders
-  const folderId = folders.length > 0 ? folders[folders.length - 1] : null
+  const folderId = folders.length === 1 ? folders[0] : null
   const [data, setData] = useState({})
 
   useEffect(() => {
     const query = buildFolderQuery(settings.attributes)
     const variables = { projectName, folders: [folderId] }
+
+    if (!folderId) {
+      setData({})
+    }
 
     axios.post('/graphql', { query, variables }).then((response) => {
       if (!(response.data.data && response.data.data.project)) {
@@ -62,6 +66,16 @@ const FolderDetail = () => {
     })
     //eslint-disable-next-line
   }, [projectName, folderId])
+
+
+  if (folders.length > 1){
+    return(
+      <section className="column">
+        <span>{folders.length} folders selected</span>
+      </section>
+    )
+  }
+
 
   return (
     <section style={{ flexGrow: 1 }}>
@@ -82,5 +96,6 @@ const FolderDetail = () => {
     </section>
   )
 }
+
 
 export default FolderDetail

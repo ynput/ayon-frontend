@@ -46,12 +46,7 @@ const BrowserPage = () => {
             <section className="row invisible" style={{ flexGrow: 1 }}>
               {hierarchy}
             </section>
-            {context.showTasks && (
-              <TasksPanel
-                projectName={projectName}
-                folderId={context.showTasks}
-              />
-            )}
+            <TasksPanel />
           </section>
         </SplitterPanel>
 

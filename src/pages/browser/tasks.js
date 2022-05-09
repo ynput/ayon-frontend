@@ -8,14 +8,17 @@ import { Shade } from '../../components'
 import axios from 'axios'
 
 const TASKS_QUERY = `
-query TasksByFolder($projectName: String!, $folderId: String!) {
+query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
   project(name: $projectName) {
-    tasks(folderIds:[$folderId]) {
+    tasks(folderIds:$folderIds) {
       edges {
         node {
           name
           taskType
           assignees
+          folder {
+            name
+          }
         }
       }
     }
@@ -31,7 +34,11 @@ const sortByKey = (array, key) => {
   })
 }
 
-const TasksPanel = ({ folderId, projectName }) => {
+const TasksPanel = () => {
+  const context = useSelector((state) => ({ ...state.context }))
+  const projectName = context.projectName
+  const folderIds = context.focusedFolders
+
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
   const userName = useSelector((state) => state.user.name)
@@ -42,7 +49,7 @@ const TasksPanel = ({ folderId, projectName }) => {
     axios
       .post('/graphql', {
         query: TASKS_QUERY,
-        variables: { projectName, folderId },
+        variables: { projectName, folderIds },
       })
       .then((response) => {
         if (
@@ -53,6 +60,7 @@ const TasksPanel = ({ folderId, projectName }) => {
         for (const edge of response.data.data.project.tasks.edges) {
           result.push({
             name: edge.node.name,
+            folderName: edge.node.folder.name,
             taskType: edge.node.taskType,
             isMine: edge.node.assignees.includes(userName) ? 'yes' : 'no',
           })
@@ -63,14 +71,17 @@ const TasksPanel = ({ folderId, projectName }) => {
         setLoading(false)
       })
     // eslint-disable-next-line
-  }, [folderId])
+  }, [folderIds, projectName])
+
+  if (!data.length) return <></>
 
   return (
     <section className="row" style={{ minHeight: 200, width: '100%' }}>
       <div className="wrapper">
         {loading && <Shade />}
         <DataTable value={data} scrollable scrollHeight={200}>
-          <Column field="name" header="Name" />
+          {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
+          <Column field="name" header="Task" />
           <Column field="taskType" header="Task type" />
           <Column field="isMine" header="Mine" />
         </DataTable>
