@@ -8,7 +8,7 @@ import { Sidebar } from 'primereact/sidebar'
 
 import axios from 'axios'
 
-const SidebarMenu = ({ visible, onHide }) => {
+const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
   const [projectList, setProjectList] = useState([])
 
@@ -28,7 +28,7 @@ const SidebarMenu = ({ visible, onHide }) => {
       position="left"
       visible={visible}
       onHide={onHide}
-      header="Projects"
+      icons={() => <h3>Project menu</h3>}
     >
       <div
         style={{
@@ -70,4 +70,4 @@ const SidebarMenu = ({ visible, onHide }) => {
   )
 }
 
-export default SidebarMenu
+export default ProjectMenu

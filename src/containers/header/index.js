@@ -1,36 +1,40 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Button, Spacer } from '../../components'
 
 import Breadcrumbs from './breadcrumbs'
 import UserMenu from './userMenu'
-import SidebarMenu from './sidebar'
+import ProjectMenu from './projectMenu'
 
 const Header = () => {
-  const menuRef = useRef()
-  const [sidebarVisible, setSidebarVisible] = useState(false)
+  const [projectMenuVisible, setProjectMenuVisible] = useState(false)
+  const [userMenuVisible, setUserMenuVisible] = useState(false)
 
   return (
     <nav className="primary">
-      <SidebarMenu
-        visible={sidebarVisible}
-        onHide={() => setSidebarVisible(false)}
+      <ProjectMenu
+        visible={projectMenuVisible}
+        onHide={() => setProjectMenuVisible(false)}
       />
+      <UserMenu
+        visible={userMenuVisible}
+        onHide={() => setUserMenuVisible(false)}
+      />
+
+
       <Button
         icon="pi pi-bars"
         className="p-button-link"
-        onClick={() => setSidebarVisible(true)}
+        onClick={() => setProjectMenuVisible(true)}
       />
 
       <Spacer>
         <Breadcrumbs />
       </Spacer>
 
-      <UserMenu menuRef={menuRef} />
-
       <Button
         className="p-button-link"
         icon="pi pi-user"
-        onClick={(event) => menuRef.current.toggle(event)}
+        onClick={() => setUserMenuVisible(true)}
       />
     </nav>
   )
