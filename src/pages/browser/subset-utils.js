@@ -55,6 +55,7 @@ query Subsets($projectName: String!, $folders: [String!]!, $versionOverrides: [S
                           name
                           author
                           createdAt
+                          taskId
                           attrib {
                               fps
                               resolutionWidth
@@ -72,6 +73,7 @@ query Subsets($projectName: String!, $folders: [String!]!, $versionOverrides: [S
                         name
                         author
                         createdAt
+                        taskId
                         attrib {
                             fps
                             resolutionWidth
@@ -163,9 +165,11 @@ const parseSubsetData = (data) => {
       version: vers ? vers.version : null,
       versionId: vers && vers.id ? vers.id : null,
       versionName: vers && vers.name ? vers.name : '',
+      taskId: vers && vers.taskId ? vers.taskId : null,
       frames: parseSubsetFrames(subset),
       createdAt: vers ? vers.createdAt : subset.createdAt,
     }
+    console.log(sub)
     s.push(sub)
   }
   return s

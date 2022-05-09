@@ -14,7 +14,6 @@ import { Shade, FolderTypeIcon } from '../../components'
 import {
   setFocusedFolders,
   setBreadcrumbs,
-  setShowTasks,
 } from '../../features/context'
 
 const quickFormat = (name, type) => {
@@ -163,7 +162,8 @@ const Hierarchy = ({ projectName, folderTypes }) => {
         />
       </section>
 
-      <section style={{ flexGrow: 1, padding: 0 }}>
+      <section style={{ flexGrow: 1}}>
+        <div className="wrapper">
         {loading && <Shade />}
         <TreeTable
           value={treeData}
@@ -186,10 +186,6 @@ const Hierarchy = ({ projectName, folderTypes }) => {
                 folder: node.name,
               })
             )
-
-            if (node.hasTasks) {
-              dispatch(setShowTasks(e.node.key))
-            } else dispatch(setShowTasks(null))
           }}
         >
           <Column
@@ -199,6 +195,7 @@ const Hierarchy = ({ projectName, folderTypes }) => {
             style={{ width: '100%' }}
           />
         </TreeTable>
+      </div>
       </section>
     </section>
   )

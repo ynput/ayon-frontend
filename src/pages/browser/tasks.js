@@ -13,6 +13,7 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
     tasks(folderIds:$folderIds) {
       edges {
         node {
+          id
           name
           taskType
           assignees
@@ -38,12 +39,19 @@ const TasksPanel = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const folderIds = context.focusedFolders
+  const pairing = context.pairing
 
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
   const userName = useSelector((state) => state.user.name)
 
+
   useEffect(() => {
+    if (!folderIds.length){
+      setData([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     let result = []
     axios
@@ -59,6 +67,7 @@ const TasksPanel = () => {
 
         for (const edge of response.data.data.project.tasks.edges) {
           result.push({
+            id: edge.node.id,
             name: edge.node.name,
             folderName: edge.node.folder.name,
             taskType: edge.node.taskType,
@@ -73,13 +82,25 @@ const TasksPanel = () => {
     // eslint-disable-next-line
   }, [folderIds, projectName])
 
-  if (!data.length) return <></>
-
   return (
     <section className="row" style={{ minHeight: 200, width: '100%' }}>
       <div className="wrapper">
         {loading && <Shade />}
-        <DataTable value={data} scrollable scrollHeight={200}>
+        <DataTable 
+          value={data} 
+          scrollable="true"
+          scrollHeight="flex"
+          emptyMessage="No tasks found"
+          rowClassName={(rowData) => {
+            let i = 0
+            for (const pair of pairing) {
+              i++
+              if (pair === rowData.id){
+                return `row-hl-${i}`
+              }
+            }
+          }}
+        >
           {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
           <Column field="name" header="Task" />
           <Column field="taskType" header="Task type" />

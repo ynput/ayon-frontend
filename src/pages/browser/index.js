@@ -31,6 +31,7 @@ const BrowserPage = () => {
     )
   }, [projectName, focusedFolders, focusedVersions])
 
+
   // Return the wrapper
 
   return (
@@ -46,7 +47,7 @@ const BrowserPage = () => {
             <section className="row invisible" style={{ flexGrow: 1 }}>
               {hierarchy}
             </section>
-            <TasksPanel />
+              <TasksPanel />
           </section>
         </SplitterPanel>
 

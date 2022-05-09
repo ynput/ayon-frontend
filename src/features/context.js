@@ -9,6 +9,7 @@ const contextSlice = createSlice({
     focusedFolders: [],
     focusedSubsets: [],
     focusedVersions: [],
+    pairing: [],
   },
   reducers: {
     selectProject: (state, action) => {
@@ -52,8 +53,9 @@ const contextSlice = createSlice({
       state.focusedVersions = []
     },
 
-    setShowTasks: (state, action) => {
-      state.showTasks = action.payload
+    setPairing: (state, action) => {
+      console.log("setPairing", action.payload)
+      state.pairing = action.payload
     },
 
     setBreadcrumbs: (state, action) => {
@@ -96,8 +98,8 @@ export const {
   setFocusedFolders,
   setFocusedSubsets,
   setFocusedVersions,
-  setShowTasks,
   setBreadcrumbs,
+  setPairing,
 } = contextSlice.actions
 
 export default contextSlice.reducer

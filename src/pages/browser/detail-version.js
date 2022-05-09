@@ -23,6 +23,7 @@ const VERSION_QUERY = `
                             family
                             folder {
                                 name
+                                parents
                             }
                         }
                         representations{
@@ -103,6 +104,9 @@ const VersionDetail = () => {
               subsetName: subset.name,
               family: subset.family,
               fileCount: representation.fileCount,
+              // for breadcrumbs
+              versionName: version.name,
+              folderParents: folder.parents,
             })
           }
         }

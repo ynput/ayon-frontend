@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { DateTime } from 'luxon'
@@ -9,7 +9,7 @@ import { InputText, Spacer, Button, Shade } from '../../components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { setFocusedVersions, setBreadcrumbs } from '../../features/context'
+import { setFocusedVersions, setBreadcrumbs, setPairing } from '../../features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subset-utils'
 
@@ -107,6 +107,18 @@ const Subsets = ({ projectName, folders, focusedVersions }) => {
     ])
   }, [subsetData, focusedVersions])
 
+
+  const taskList = useMemo(() =>{
+    const res = []
+    for (const subset of subsetData) {
+      if (subset.taskId) 
+        res.push(subset.taskId)
+    }
+    dispatch(setPairing(res))
+    return res
+    // eslint-disable-next-line
+  }, [subsetData])
+
   return (
     <section className="invisible insplit">
       <section className="invisible row">
@@ -177,10 +189,22 @@ const Subsets = ({ projectName, folders, focusedVersions }) => {
             emptyMessage="No subset found"
             selectionMode="multiple"
             selection={selection}
+
+            rowClassName={(row) => {
+              let i = 0
+              for (const taskId of taskList) {
+                i++
+                if (row.taskId === taskId) {
+                  return `row-hl-${i}`
+              }}
+            }}
+
             onSelectionChange={(e) => {
               let selection = []
+              let tasks = []
               for (let elm of e.value) {
                 if (elm.versionId) selection.push(elm.versionId)
+                if (elm.taskId) tasks.push(elm.taskId)
               }
               dispatch(setFocusedVersions(selection))
             }}
