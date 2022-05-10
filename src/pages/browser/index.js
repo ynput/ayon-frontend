@@ -16,13 +16,17 @@ const BrowserPage = () => {
   const focusedVersions = context.focusedVersions
   const selectedVersions = context.selectedVersions
 
-  console.log('Selected versions:', selectedVersions)
-
   // Cache components
 
   const hierarchy = useMemo(() => {
-    return <Hierarchy projectName={projectName} folderTypes={folderTypes} />
-  }, [projectName, folderTypes])
+    return (
+      <Hierarchy 
+        projectName={projectName} 
+        folderTypes={folderTypes} 
+        focusedFolders={focusedFolders}
+      />
+    )
+  }, [projectName, folderTypes, focusedFolders])
 
   const subsets = useMemo(() => {
     return (

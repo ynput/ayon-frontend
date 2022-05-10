@@ -60,8 +60,8 @@ const VersionDetail = () => {
   // Load versions and representations
   useEffect(() => {
     if (!(context.focusedVersions && context.focusedVersions.length)) {
-      setVersions(null)
-      setRepresentations(null)
+      setVersions([])
+      setRepresentations([])
       return
     }
 
@@ -122,7 +122,7 @@ const VersionDetail = () => {
   //
 
   // No version selected. do not show the detail
-  if (!versions.length) return <></>
+  if (!versions || !versions.length) return <></>
 
   let versionDetailWidget
 
