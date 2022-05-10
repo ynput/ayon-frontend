@@ -48,6 +48,7 @@ const FolderDetail = () => {
 
     if (!folderId) {
       setData({})
+      return
     }
 
     axios.post('/graphql', { query, variables }).then((response) => {
