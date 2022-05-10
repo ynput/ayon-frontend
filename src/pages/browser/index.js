@@ -14,6 +14,9 @@ const BrowserPage = () => {
   const folderTypes = context.project.folderTypes
   const focusedFolders = context.focusedFolders
   const focusedVersions = context.focusedVersions
+  const selectedVersions = context.selectedVersions
+
+  console.log('Selected versions:', selectedVersions)
 
   // Cache components
 
@@ -27,10 +30,10 @@ const BrowserPage = () => {
         projectName={projectName}
         folders={focusedFolders}
         focusedVersions={focusedVersions}
+        selectedVersions={selectedVersions}
       />
     )
-  }, [projectName, focusedFolders, focusedVersions])
-
+  }, [projectName, focusedFolders, focusedVersions, selectedVersions])
 
   // Return the wrapper
 
@@ -47,7 +50,7 @@ const BrowserPage = () => {
             <section className="row invisible" style={{ flexGrow: 1 }}>
               {hierarchy}
             </section>
-              <TasksPanel />
+            <TasksPanel />
           </section>
         </SplitterPanel>
 

@@ -9,16 +9,26 @@ import { InputText, Spacer, Button, Shade } from '../../components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { setFocusedVersions, setBreadcrumbs, setPairing } from '../../features/context'
+import {
+  setFocusedVersions,
+  setSelectedVersions,
+  setBreadcrumbs,
+  setPairing,
+} from '../../features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subset-utils'
 
-const Subsets = ({ projectName, folders, focusedVersions }) => {
+const Subsets = ({
+  projectName,
+  folders,
+  focusedVersions,
+  selectedVersions,
+}) => {
   const dispatch = useDispatch()
   const [subsetData, setSubsetData] = useState([])
   const [selection, setSelection] = useState([])
   const [loading, setLoading] = useState(false)
-  const [selectedVersions, setSelectedVersions] = useState({})
+  // const [selectedVersions, setSelectedVersions] = useState({})
   const [focusOnReload, setFocusOnReload] = useState(null)
 
   const columns = [
@@ -43,7 +53,14 @@ const Subsets = ({ projectName, folders, focusedVersions }) => {
       width: 70,
       body: (row) =>
         VersionList(row, (subsetId, versionId) => {
-          setSelectedVersions({ ...selectedVersions, [subsetId]: versionId })
+          const newSelection = selectedVersions[row.folderId] || {}
+          newSelection[subsetId] = versionId
+          dispatch(
+            setSelectedVersions({
+              ...selectedVersions,
+              [row.folderId]: newSelection,
+            })
+          )
           setFocusOnReload(versionId)
         }),
     },
@@ -69,12 +86,19 @@ const Subsets = ({ projectName, folders, focusedVersions }) => {
     if (folders.length === 0) return
 
     // version overrides
+    // Get a list of version overrides for the current set of folders
     let versionOverrides = []
-    for (const subsetId in selectedVersions) {
-      versionOverrides.push(selectedVersions[subsetId])
+    for (const folderId of folders) {
+      const c = selectedVersions[folderId]
+      if (!c) continue
+      for (const subsetId in c) {
+        const versionId = c[subsetId]
+        if (versionOverrides.includes(versionId)) continue
+        versionOverrides.push(versionId)
+      }
     }
-
     if (versionOverrides.length === 0) {
+      // We need at least one item in the array to filter.
       versionOverrides = ['00000000000000000000000000000000']
     }
 
@@ -107,12 +131,10 @@ const Subsets = ({ projectName, folders, focusedVersions }) => {
     ])
   }, [subsetData, focusedVersions])
 
-
-  const taskList = useMemo(() =>{
+  const taskList = useMemo(() => {
     const res = []
     for (const subset of subsetData) {
-      if (subset.taskId) 
-        res.push(subset.taskId)
+      if (subset.taskId) res.push(subset.taskId)
     }
     dispatch(setPairing(res))
     return res
@@ -189,16 +211,15 @@ const Subsets = ({ projectName, folders, focusedVersions }) => {
             emptyMessage="No subset found"
             selectionMode="multiple"
             selection={selection}
-
             rowClassName={(row) => {
               let i = 0
               for (const taskId of taskList) {
                 i++
                 if (row.taskId === taskId) {
                   return `row-hl-${i}`
-              }}
+                }
+              }
             }}
-
             onSelectionChange={(e) => {
               let selection = []
               let tasks = []

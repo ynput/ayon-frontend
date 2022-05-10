@@ -12,7 +12,6 @@ import { arrayEquals } from '../../utils'
 import { buildQuery } from './queries'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
-
 const formatName = (row) => {
   if (row.data.entityType === 'task')
     return (

@@ -14,7 +14,6 @@ import { toast } from 'react-toastify'
 import { Spacer } from '../../components'
 import { loadAnatomyPresets } from '../../utils'
 
-
 const PresetList = ({ selectedPreset, setSelectedPreset, timestamp }) => {
   const [presetList, setPresetList] = useState([])
 
@@ -36,8 +35,7 @@ const PresetList = ({ selectedPreset, setSelectedPreset, timestamp }) => {
       >
         <Column field="title" header="Name" />
         <Column field="primary" header="Primary" style={{ maxWidth: 70 }} />
-        <Column field="version" header="Version" style={{ maxWidth: 80}} />
-
+        <Column field="version" header="Version" style={{ maxWidth: 80 }} />
       </DataTable>
     </div>
   )
@@ -56,9 +54,7 @@ const AnatomyPresets = () => {
   //
 
   useEffect(() => {
-    axios
-      .get('/api/anatomy/schema')
-      .then((res) => setSchema(res.data))
+    axios.get('/api/anatomy/schema').then((res) => setSchema(res.data))
   }, [])
 
   useEffect(() => {
@@ -67,11 +63,10 @@ const AnatomyPresets = () => {
       .then((res) => setFormData(res.data))
   }, [selectedPreset])
 
-
   //
   // Actions
   //
-  
+
   const savePreset = (name) => {
     axios
       .put(`/api/anatomy/presets/${name}`, formData)
@@ -108,7 +103,7 @@ const AnatomyPresets = () => {
       rejectLabel: 'Cancel',
       reject: () => {
         // do nothing
-      }
+      },
     })
   }
 
@@ -137,19 +132,14 @@ const AnatomyPresets = () => {
           visible="true"
           onHide={() => setShowNameDialog(false)}
         >
-          <InputText 
+          <InputText
             value={newPresetName}
             onChange={(e) => setNewPresetName(e.target.value)}
-            placeholder="Preset name" 
+            placeholder="Preset name"
           />
-          <Button 
-            label="Save" 
-            onClick={() => savePreset(newPresetName)}
-          />
+          <Button label="Save" onClick={() => savePreset(newPresetName)} />
         </Dialog>
       )}
-
-
 
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
         <PresetList
@@ -161,32 +151,32 @@ const AnatomyPresets = () => {
 
       <section style={{ flexGrow: 1 }} className="invisible">
         <section className="invisible row">
-          <Button 
-            label="Save current preset" 
-            icon="pi pi-plus" 
-            disabled={selectedPreset === '_'} 
+          <Button
+            label="Save current preset"
+            icon="pi pi-plus"
+            disabled={selectedPreset === '_'}
             onClick={() => savePreset(selectedPreset)}
           />
-          <Button 
-            label="Save as a new preset" 
-            icon="pi pi-plus" 
+          <Button
+            label="Save as a new preset"
+            icon="pi pi-plus"
             onClick={() => {
               setNewPresetName('')
               setShowNameDialog(true)
             }}
           />
-          <Button 
-            label="Delete the preset" 
-            icon="pi pi-times" 
-            disabled={selectedPreset === '_'} 
+          <Button
+            label="Delete the preset"
+            icon="pi pi-times"
+            disabled={selectedPreset === '_'}
             onClick={deletePreset}
           />
-          <Button 
-            label="Set as primary preset" 
-            icon="pi pi-times" 
+          <Button
+            label="Set as primary preset"
+            icon="pi pi-times"
             onClick={setPrimaryPreset}
           />
-          <Spacer/>
+          <Spacer />
         </section>
 
         <section style={{ flexGrow: 1 }}>

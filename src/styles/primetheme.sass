@@ -65,13 +65,16 @@ $prime-input-border: 2px solid #373d48
 
 .p-datatable, .p-treetable
   user-select: none
+
+  tr
+    border-left: 2px solid transparent
+
   td
     border: 0 !important
     white-space: nowrap
     border-bottom: 0 !important
     overflow: hidden
     text-overflow: ellipsis
-
 
   .p-datatable-tbody > tr, .p-treetable-tbody > tr
     background: $op-background-dark
@@ -80,6 +83,7 @@ $prime-input-border: 2px solid #373d48
     border: 0
     background: $op-background-dark
     border-right: 2px solid $op-background-light
+    padding: 0.5rem .6rem .6rem .6rem
 
 .p-treetable-scrollable-header
   background: $op-background-dark !important

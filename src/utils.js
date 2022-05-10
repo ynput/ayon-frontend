@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-
 const arrayEquals = (a, b) => {
   return (
     Array.isArray(a) &&
@@ -9,7 +8,6 @@ const arrayEquals = (a, b) => {
     a.every((val, index) => val === b[index])
   )
 }
-
 
 const loadAnatomyPresets = async () => {
   const defaultPreset = { name: '_', title: '<default (built-in)>' }
@@ -24,17 +22,14 @@ const loadAnatomyPresets = async () => {
   for (const preset of response.data.presets) {
     if (preset.primary)
       primaryPreset = { name: preset.name, title: `<default (${preset.name})>` }
-    presets.push({ 
-      name: preset.name, 
-      title: preset.name, 
-      version: preset.version, 
-      primary: preset.primary ? "PRIMARY" : ""
+    presets.push({
+      name: preset.name,
+      title: preset.name,
+      version: preset.version,
+      primary: preset.primary ? 'PRIMARY' : '',
     })
   }
   return [primaryPreset, ...presets]
 }
 
-export {
-  arrayEquals,
-  loadAnatomyPresets
-}
+export { arrayEquals, loadAnatomyPresets }

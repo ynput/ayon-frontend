@@ -45,9 +45,8 @@ const TasksPanel = () => {
   const [loading, setLoading] = useState(false)
   const userName = useSelector((state) => state.user.name)
 
-
   useEffect(() => {
-    if (!folderIds.length){
+    if (!folderIds.length) {
       setData([])
       setLoading(false)
       return
@@ -86,8 +85,8 @@ const TasksPanel = () => {
     <section className="row" style={{ minHeight: 200, width: '100%' }}>
       <div className="wrapper">
         {loading && <Shade />}
-        <DataTable 
-          value={data} 
+        <DataTable
+          value={data}
           scrollable="true"
           scrollHeight="flex"
           emptyMessage="No tasks found"
@@ -95,13 +94,15 @@ const TasksPanel = () => {
             let i = 0
             for (const pair of pairing) {
               i++
-              if (pair === rowData.id){
+              if (pair === rowData.id) {
                 return `row-hl-${i}`
               }
             }
           }}
         >
-          {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
+          {folderIds.length > 1 && (
+            <Column field="folderName" header="Folder" />
+          )}
           <Column field="name" header="Task" />
           <Column field="taskType" header="Task type" />
           <Column field="isMine" header="Mine" />

@@ -20,7 +20,6 @@ const Header = () => {
         onHide={() => setUserMenuVisible(false)}
       />
 
-
       <Button
         icon="pi pi-bars"
         className="p-button-link"

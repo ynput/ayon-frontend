@@ -71,7 +71,7 @@ const RepresentationDetail = ({ representations }) => {
             onSelectionChange={(e) => setSelectedRepresentation(e.value)}
             onRowDoubleClick={(e) => setFocusedRepresentation(e.data.id)}
             onRowClick={(e) => {
-              console.log("row click", e)
+              console.log('row click', e)
               dispatch(
                 setBreadcrumbs({
                   parents: e.data.folderParents,

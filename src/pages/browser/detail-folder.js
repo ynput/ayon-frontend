@@ -67,15 +67,13 @@ const FolderDetail = () => {
     //eslint-disable-next-line
   }, [projectName, folderId])
 
-
-  if (folders.length > 1){
-    return(
+  if (folders.length > 1) {
+    return (
       <section className="column">
         <span>{folders.length} folders selected</span>
       </section>
     )
   }
-
 
   return (
     <section style={{ flexGrow: 1 }}>
@@ -96,6 +94,5 @@ const FolderDetail = () => {
     </section>
   )
 }
-
 
 export default FolderDetail

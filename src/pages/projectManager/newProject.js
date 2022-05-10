@@ -8,8 +8,7 @@ import axios from 'axios'
 import AnatomyEditor from '../../containers/anatomyEditor'
 import { loadAnatomyPresets } from '../../utils'
 
-
-const PresetDropdown = ({selectedPreset, setSelectedPreset}) => {
+const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
   const [presetList, setPresetList] = useState([])
 
   useEffect(() => {
@@ -19,7 +18,7 @@ const PresetDropdown = ({selectedPreset, setSelectedPreset}) => {
         setSelectedPreset(r[0].name)
       }
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -36,7 +35,6 @@ const PresetDropdown = ({selectedPreset, setSelectedPreset}) => {
   )
 }
 
-
 const NewProjectDialog = ({ onHide }) => {
   const [schema, setSchema] = useState(null)
   const [name, setName] = useState('')
@@ -44,14 +42,11 @@ const NewProjectDialog = ({ onHide }) => {
   const [selectedPreset, setSelectedPreset] = useState(null)
 
   useEffect(() => {
-    axios
-      .get('/api/anatomy/schema')
-      .then((res) => setSchema(res.data))
+    axios.get('/api/anatomy/schema').then((res) => setSchema(res.data))
   }, [])
 
   useEffect(() => {
-    if (!selectedPreset) 
-      return
+    if (!selectedPreset) return
     axios
       .get(`/api/anatomy/presets/${selectedPreset}`)
       .then((res) => setAnatomy(res.data))
@@ -62,7 +57,7 @@ const NewProjectDialog = ({ onHide }) => {
 
   const handleSubmit = () => {
     axios
-      .post('/api/projects', {name, anatomy})
+      .post('/api/projects', { name, anatomy })
       .then(() => {
         toast.success('Project created')
         onHide()
@@ -72,16 +67,12 @@ const NewProjectDialog = ({ onHide }) => {
       })
   }
 
-
   //
   // Render
   //
 
   const footer = (
-    <div
-      style={{
-      }}
-    >
+    <div style={{}}>
       <Button
         icon="pi pi-plus"
         label="Create"
@@ -119,14 +110,14 @@ const NewProjectDialog = ({ onHide }) => {
             marginBottom: 8,
           }}
         >
-          <InputText 
-            placeholder="Project Name" 
-            style={{ width: '100%' }} 
+          <InputText
+            placeholder="Project Name"
+            style={{ width: '100%' }}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <PresetDropdown 
-            selectedPreset={selectedPreset} 
+          <PresetDropdown
+            selectedPreset={selectedPreset}
             setSelectedPreset={setSelectedPreset}
             tooltip="Project anatomy preset"
           />

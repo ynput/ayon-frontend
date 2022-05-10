@@ -159,6 +159,7 @@ const parseSubsetData = (data) => {
       fps: parseSubsetFps(subset),
       resolution: parseSubsetResolution(subset),
       folder: subset.folder.name,
+      folderId: subset.folder.id,
       author: vers ? vers.author : null,
       parents: subset.folder.parents,
       versionList: subset.versionList || [],
@@ -169,7 +170,6 @@ const parseSubsetData = (data) => {
       frames: parseSubsetFrames(subset),
       createdAt: vers ? vers.createdAt : subset.createdAt,
     }
-    console.log(sub)
     s.push(sub)
   }
   return s

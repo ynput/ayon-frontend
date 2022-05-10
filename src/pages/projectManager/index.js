@@ -34,13 +34,14 @@ const ProjectManager = () => {
 
   return (
     <main>
-     { showNewProject && (
-        <NewProjectDialog onHide={() => {
-          setProjectListTimestamp(projectListTimestamp + 1)
-          setShowNewProject(false)
+      {showNewProject && (
+        <NewProjectDialog
+          onHide={() => {
+            setProjectListTimestamp(projectListTimestamp + 1)
+            setShowNewProject(false)
           }}
-       />
-     )}
+        />
+      )}
 
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
         <div className="wrapper">

@@ -11,10 +11,7 @@ import { MultiSelect } from 'primereact/multiselect'
 
 import { Shade, FolderTypeIcon } from '../../components'
 
-import {
-  setFocusedFolders,
-  setBreadcrumbs,
-} from '../../features/context'
+import { setFocusedFolders, setBreadcrumbs } from '../../features/context'
 
 const quickFormat = (name, type) => {
   return (
@@ -162,40 +159,40 @@ const Hierarchy = ({ projectName, folderTypes }) => {
         />
       </section>
 
-      <section style={{ flexGrow: 1}}>
+      <section style={{ flexGrow: 1 }}>
         <div className="wrapper">
-        {loading && <Shade />}
-        <TreeTable
-          value={treeData}
-          responsive="true"
-          scrollable
-          scrollHeight="100%"
-          selectionMode="multiple"
-          selectionKeys={selectedFolders}
-          emptyMessage=" "
-          onSelectionChange={(e) => {
-            setSelectedFolders(e.value)
-            const selection = Object.keys(e.value)
-            dispatch(setFocusedFolders(selection))
-          }}
-          onRowClick={(e) => {
-            const node = e.node.data
-            dispatch(
-              setBreadcrumbs({
-                parents: node.parents,
-                folder: node.name,
-              })
-            )
-          }}
-        >
-          <Column
-            header="Hierarchy"
-            field="body"
-            expander={true}
-            style={{ width: '100%' }}
-          />
-        </TreeTable>
-      </div>
+          {loading && <Shade />}
+          <TreeTable
+            value={treeData}
+            responsive="true"
+            scrollable
+            scrollHeight="100%"
+            selectionMode="multiple"
+            selectionKeys={selectedFolders}
+            emptyMessage=" "
+            onSelectionChange={(e) => {
+              setSelectedFolders(e.value)
+              const selection = Object.keys(e.value)
+              dispatch(setFocusedFolders(selection))
+            }}
+            onRowClick={(e) => {
+              const node = e.node.data
+              dispatch(
+                setBreadcrumbs({
+                  parents: node.parents,
+                  folder: node.name,
+                })
+              )
+            }}
+          >
+            <Column
+              header="Hierarchy"
+              field="body"
+              expander={true}
+              style={{ width: '100%' }}
+            />
+          </TreeTable>
+        </div>
       </section>
     </section>
   )
