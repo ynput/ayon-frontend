@@ -9,6 +9,7 @@ const contextSlice = createSlice({
     focusedFolders: [],
     focusedSubsets: [],
     focusedVersions: [],
+    focusedTasks: [],
     selectedVersions: {},
     pairing: [],
   },
@@ -35,6 +36,11 @@ const contextSlice = createSlice({
       state.focusedType = 'subset'
       state.focusedSubsets = action.payload
       state.focusedVersions = []
+    },
+
+    setFocusedTasks: (state, action) => {
+      state.focusedType = 'task'
+      state.focusedTasks = action.payload
     },
 
     setFocusedVersions: (state, action) => {
@@ -102,6 +108,7 @@ export const {
   setFocusedFolders,
   setFocusedSubsets,
   setFocusedVersions,
+  setFocusedTasks,
   setSelectedVersions,
   setBreadcrumbs,
   setPairing,

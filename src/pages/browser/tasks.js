@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useEffect, useState, useMemo } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 
-import { DataTable } from 'primereact/datatable'
+import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Shade } from '../../components'
 
+import { setFocusedTasks } from '../../features/context'
+import { groupResult } from '../../utils'
+
 import axios from 'axios'
+
 
 const TASKS_QUERY = `
 query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
@@ -27,23 +31,20 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
 }
 `
 
-const sortByKey = (array, key) => {
-  return array.sort(function (a, b) {
-    var x = a[key]
-    var y = b[key]
-    return x < y ? -1 : x > y ? 1 : 0
-  })
-}
 
 const TasksPanel = () => {
+  const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const folderIds = context.focusedFolders
-  const pairing = context.pairing
 
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
   const userName = useSelector((state) => state.user.name)
+
+  //
+  // Hooks
+  //
 
   useEffect(() => {
     if (!folderIds.length) {
@@ -66,47 +67,62 @@ const TasksPanel = () => {
 
         for (const edge of response.data.data.project.tasks.edges) {
           result.push({
-            id: edge.node.id,
-            name: edge.node.name,
-            folderName: edge.node.folder.name,
-            taskType: edge.node.taskType,
-            isMine: edge.node.assignees.includes(userName) ? 'yes' : 'no',
+              id: edge.node.id,
+              name: edge.node.name,
+              folderName: edge.node.folder.name,
+              taskType: edge.node.taskType,
+              isMine: edge.node.assignees.includes(userName) ? 'yes' : '',
           })
         }
       })
       .finally(() => {
-        setData(sortByKey(result, 'name'))
+        setData(groupResult(result, 'name'))
         setLoading(false)
       })
     // eslint-disable-next-line
   }, [folderIds, projectName])
 
+  const selectedTasks = useMemo(() => {
+    const r = {}
+    for (const tid of context.focusedTasks) 
+      r[tid] = true
+    return r
+  
+  }, [context.focusedTasks])
+
+  //
+  // Handlers
+  //
+    
+  const onSelectionChange = (event) => {
+    dispatch(setFocusedTasks(Object.keys(event.value)))
+  }
+  
+
+  //
+  // Render
+  //
+
   return (
     <section className="row" style={{ minHeight: 200, width: '100%' }}>
       <div className="wrapper">
         {loading && <Shade />}
-        <DataTable
+        <TreeTable
           value={data}
           scrollable="true"
-          scrollHeight="flex"
+          scrollHeight="100%"
           emptyMessage="No tasks found"
-          rowClassName={(rowData) => {
-            let i = 0
-            for (const pair of pairing) {
-              i++
-              if (pair === rowData.id) {
-                return `row-hl-${i}`
-              }
-            }
-          }}
+          selectionMode="multiple"
+          selectionKeys={selectedTasks}//console.log(selectedTasks)
+          onSelectionChange={onSelectionChange}
         >
+          <Column field="name" header="Task" expander="true"/>
           {folderIds.length > 1 && (
             <Column field="folderName" header="Folder" />
           )}
-          <Column field="name" header="Task" />
-          <Column field="taskType" header="Task type" />
-          <Column field="isMine" header="Mine" />
-        </DataTable>
+          <Column field="taskType" header="Task type" style={{width:90}} />
+          <Column field="isMine" header="Mine" style={{width:40}}/>
+        </TreeTable>
       </div>
     </section>
   )
