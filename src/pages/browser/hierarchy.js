@@ -9,18 +9,14 @@ import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 
-import { Shade, FolderTypeIcon } from '../../components'
+import { Shade } from '../../components'
+import { CellWithIcon } from '../../components/icons'
 
 import { setFocusedFolders, setBreadcrumbs } from '../../features/context'
+import { getFolderTypeIcon } from '../../utils'
 
-const quickFormat = (name, type) => {
-  return (
-    <>
-      <FolderTypeIcon name={type}/>
-      <span style={{ marginLeft: 10 }}>{name}</span>
-    </>
-  )
-}
+
+
 
 const filterHierarchy = (text, folder) => {
   /*
@@ -45,7 +41,10 @@ const filterHierarchy = (text, folder) => {
           hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: quickFormat(item.name, item.folderType),
+          body: (<CellWithIcon 
+            icon={getFolderTypeIcon(item.folderType)}
+            text={item.name}
+          />)
         },
       })
     } else if (item.children) {
@@ -60,7 +59,10 @@ const filterHierarchy = (text, folder) => {
             hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
             parents: item.parents,
-            body: quickFormat(item.name, item.folderType),
+            body: (<CellWithIcon 
+              icon={getFolderTypeIcon(item.folderType)}
+              text={item.name}
+            />)
           },
         })
       }

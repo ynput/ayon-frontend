@@ -4,9 +4,11 @@ import { useSelector, useDispatch } from 'react-redux'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Shade } from '../../components'
+import { CellWithIcon} from '../../components/icons'
 
-import { setFocusedTasks } from '../../features/context'
+import { setFocusedTasks, setPairing } from '../../features/context'
 import { groupResult } from '../../utils'
+
 
 import axios from 'axios'
 
@@ -95,13 +97,41 @@ const TasksPanel = () => {
   //
     
   const onSelectionChange = (event) => {
-    dispatch(setFocusedTasks(Object.keys(event.value)))
+    const taskIds = Object.keys(event.value)
+    let pairs = []
+    for (const tid of taskIds) {
+      pairs.push({
+        taskId: tid,
+      })
+    }
+    dispatch(setPairing(pairs))
+    dispatch(setFocusedTasks(taskIds))
   }
-  
 
   //
   // Render
   //
+  
+  const nameRenderer = (node) => {
+    const icon = node.data.isGroup ? 'folder' : 'settings'
+    let className = ''
+    let i = 0
+    for (const pair of context.pairing) {
+      i++
+      if (pair.taskId === node.data.id) {
+        className = `row-hl-${i}`
+        break
+      }
+    }
+
+    return (
+      <CellWithIcon 
+        icon={icon} 
+        text={node.data.name}
+        iconClassName={className}
+      />
+    )
+  }
 
   return (
     <section className="row" style={{ minHeight: 200, width: '100%' }}>
@@ -116,7 +146,7 @@ const TasksPanel = () => {
           selectionKeys={selectedTasks}//console.log(selectedTasks)
           onSelectionChange={onSelectionChange}
         >
-          <Column field="name" header="Task" expander="true"/>
+          <Column field="name" header="Task" expander="true" body={nameRenderer}/>
           {folderIds.length > 1 && (
             <Column field="folderName" header="Folder" />
           )}

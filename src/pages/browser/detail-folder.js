@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
-import { FolderTypeIcon } from '../../components'
-
 import Thumbnail from '../../containers/thumbnail'
 import AttributeTable from '../../containers/attributeTable'
 
@@ -79,7 +77,7 @@ const FolderDetail = () => {
   return (
     <section style={{ flexGrow: 1 }}>
       <h3>
-        <FolderTypeIcon name={data.folderType} />
+        {/*<FolderTypeIcon name={data.folderType} />*/}
         <span style={{ marginLeft: 15 }}>{data.name}</span>
       </h3>
       <Thumbnail

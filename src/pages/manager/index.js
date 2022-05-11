@@ -2,13 +2,14 @@ import { useEffect, useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
-import { Shade, Spacer, FolderTypeIcon } from '../../components'
+import { Shade, Spacer } from '../../components'
+import { CellWithIcon } from '../../components/icons'
 
 import { Button } from 'primereact/button'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { arrayEquals } from '../../utils'
+import { arrayEquals, getFolderTypeIcon } from '../../utils'
 import { buildQuery } from './queries'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
@@ -21,10 +22,10 @@ const formatName = (row) => {
     )
   else
     return (
-      <>
-        <FolderTypeIcon name={row.data.folderType} />
-        <span style={{ marginLeft: 10 }}>{row.data.name}</span>
-      </>
+      <CellWithIcon 
+        icon={getFolderTypeIcon(row.data.folderType)}
+        text={row.data.name}
+      />
     )
 }
 

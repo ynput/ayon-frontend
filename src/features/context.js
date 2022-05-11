@@ -42,6 +42,7 @@ const contextSlice = createSlice({
     setFocusedTasks: (state, action) => {
       state.focusedType = 'task'
       state.focusedTasks = action.payload
+      state.focusedVersions = []
     },
 
     setFocusedVersions: (state, action) => {
@@ -51,6 +52,7 @@ const contextSlice = createSlice({
       } else {
         state.focusedType = 'version'
         state.focusedVersions = action.payload
+        state.focusedTasks = []
       }
     },
 

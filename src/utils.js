@@ -104,4 +104,24 @@ const loadAnatomyPresets = async () => {
   return [primaryPreset, ...presets]
 }
 
-export { arrayEquals, loadAnatomyPresets, groupResult, sortByKey }
+
+const getFolderTypeIcon = (folderType) => {
+  return {
+    Folder: 'folder',
+    Sequence: 'auto_awesome_motion',
+    Assetbuild: 'dataset',
+    Asset: 'dataset',
+    Library: 'inventory_2',
+    Episode: 'theater_comedy',
+    Shot: 'camera_roll'
+  }[folderType] || 'folder'
+}
+
+
+const getTaskTypeIcon = (taskType) => {
+  return "settings"
+}
+
+
+
+export { arrayEquals, loadAnatomyPresets, groupResult, sortByKey, getFolderTypeIcon, getTaskTypeIcon }

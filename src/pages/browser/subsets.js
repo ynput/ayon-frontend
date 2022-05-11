@@ -6,38 +6,20 @@ import { DateTime } from 'luxon'
 import axios from 'axios'
 
 import { InputText, Spacer, Button, Shade } from '../../components'
+import { CellWithIcon } from '../../components/icons'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
+import { groupResult } from '../../utils'
 import {
   setFocusedVersions,
   setSelectedVersions,
   setBreadcrumbs,
   setPairing,
 } from '../../features/context'
-import { groupResult } from '../../utils'
+
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subset-utils'
-
-
-const CellWithIcon = ({ icon, iconClassName, text }) => {
-  return (
-    <>
-    <span 
-      className={`material-symbols-outlined ${iconClassName || 'color-ternary'}`} 
-      style={{ 
-        display: "inline",
-        fontSize: '1.3rem', 
-        marginRight: '0.5rem',
-        verticalAlign: 'text-top',
-      }}
-    > 
-      {icon}
-    </span>
-    {text}
-    </>
-  )
-}
 
 
 const Subsets = ({
@@ -201,6 +183,7 @@ const Subsets = ({
     }
     dispatch(setPairing(pairs))
     return subsetIds
+  // eslint-disable-next-line
   }, [subsetData, focusedVersions])
   
   // Transform the subset data into a TreeTable compatible format
@@ -276,11 +259,11 @@ const Subsets = ({
         <div className="wrapper">
           {loading && <Shade />}
           <TreeTable
-            scrollable
             responsive="true"
+            scrollHeight="100%"
+            scrollable="true"
             resizableColumns
             columnResizeMode="expand"
-            scrollHeight="flex"
             value={tableData}
             emptyMessage="No subset found"
             selectionMode="multiple"

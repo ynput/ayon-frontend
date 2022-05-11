@@ -4,8 +4,6 @@ import { Password } from 'primereact/password'
 import { Dropdown } from 'primereact/dropdown'
 import { ProgressSpinner } from 'primereact/progressspinner'
 
-import FolderTypeIcon from './folder-type-icon'
-
 const Spacer = (props) => (
   <div
     style={{
@@ -62,7 +60,6 @@ export {
   Button,
   Password,
   Dropdown,
-  FolderTypeIcon,
   Spacer,
   Shade,
   TableWrapper,
