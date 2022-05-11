@@ -12,7 +12,8 @@ const arrayEquals = (a, b) => {
 
 
 const sortByKey = (array, key) => {
-  /* sort an array of objects by a given key */
+  // Return a copy of array of objects sorted 
+  // by the given key
   return array.sort(function (a, b) {
     var x = a[key]
     var y = b[key]
@@ -67,7 +68,8 @@ const groupResult = (data, groupBy, key="id") => {
       result.push({
         key: `group-${item[groupBy]}`,
         data: {
-          [groupBy]: item[groupBy]
+          [groupBy]: item[groupBy],
+          isGroup: true
         },
         children: [{
           key: item[key],

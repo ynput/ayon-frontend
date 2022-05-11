@@ -16,7 +16,7 @@ import { setFocusedFolders, setBreadcrumbs } from '../../features/context'
 const quickFormat = (name, type) => {
   return (
     <>
-      <FolderTypeIcon name={type} />
+      <FolderTypeIcon name={type}/>
       <span style={{ marginLeft: 10 }}>{name}</span>
     </>
   )
@@ -69,28 +69,21 @@ const filterHierarchy = (text, folder) => {
   return result
 }
 
-const Hierarchy = ({ projectName, folderTypes }) => {
+const Hierarchy = ({ projectName, folderTypes, focusedFolders }) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
-  const [selectedFolders, setSelectedFolders] = useState({})
-
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const folderTypeList = useMemo(() => {
-    if (!folderTypes) return []
-    let nlist = []
-    for (let folderType in folderTypes) {
-      nlist.push({
-        value: folderType,
-        label: folderType,
-      })
-    }
-    return nlist
-  }, [folderTypes])
+  //
+  // Hooks
+  //
 
-  const loadHierarchy = () => {
+  // Fetch the hierarchy data from the server, when the project changes
+  // or when user changes the folder types to be displayed
+  
+  useEffect(() => {
     setLoading(true)
     let url = `/api/projects/${projectName}/hierarchy`
 
@@ -110,17 +103,75 @@ const Hierarchy = ({ projectName, folderTypes }) => {
       .finally(() => {
         setLoading(false)
       })
-  }
+    // eslint-disable-next-line
+  }, [projectName, selectedFolderTypes])
 
+
+  // We already have the data, so we can do the client-side filtering
+  // and tree transformation
+  
   const treeData = useMemo(() => {
     if (!data) return []
     return filterHierarchy(query, data)
   }, [data, query])
 
-  useEffect(() => {
-    loadHierarchy()
-    // eslint-disable-next-line
-  }, [projectName, selectedFolderTypes])
+  
+  //
+  // Selection
+  //
+
+  // Transform the plain list of focused folder ids to a map
+  // {id: true}, which is needed for the Treetable
+  
+  const selectedFolders = useMemo(() => {
+    if (!focusedFolders) return []
+    const r = {}
+    for (const tid of focusedFolders) 
+      r[tid] = true
+    return r
+  }, [focusedFolders])
+  
+  // Set breadcrumbs on row click (the latest selected folder,
+  // will be the one that is displayed in the breadcrumbs)
+
+  const onRowClick = (event) => {
+    const node = event.node.data
+    dispatch(
+      setBreadcrumbs({
+        parents: node.parents,
+        folder: node.name,
+      })
+    )
+  }
+
+  // Update the folder selection in the project context
+
+  const onSelectionChange = (event) => {
+    const selection = Object.keys(event.value)
+    dispatch(setFocusedFolders(selection))
+  }
+
+  //
+  // Folder types
+  //
+  
+  // Transform a list of folder types to a list of objects
+  // compatible with the MultiSelect component
+
+  const folderTypeList = useMemo(() => {
+    if (!folderTypes) return []
+    let nlist = []
+    for (let folderType in folderTypes) {
+      nlist.push({
+        value: folderType,
+        label: folderType,
+      })
+    }
+    return nlist
+  }, [folderTypes])
+
+  // Custom "selected folder type" render template for the multiselect
+  // component
 
   const selectedTypeTemplate = (option) => {
     if (option) {
@@ -129,6 +180,10 @@ const Hierarchy = ({ projectName, folderTypes }) => {
     }
     return 'Folder types'
   }
+
+  //
+  // Render
+  //
 
   return (
     <section className="invisible insplit">
@@ -170,20 +225,8 @@ const Hierarchy = ({ projectName, folderTypes }) => {
             selectionMode="multiple"
             selectionKeys={selectedFolders}
             emptyMessage=" "
-            onSelectionChange={(e) => {
-              setSelectedFolders(e.value)
-              const selection = Object.keys(e.value)
-              dispatch(setFocusedFolders(selection))
-            }}
-            onRowClick={(e) => {
-              const node = e.node.data
-              dispatch(
-                setBreadcrumbs({
-                  parents: node.parents,
-                  folder: node.name,
-                })
-              )
-            }}
+            onSelectionChange={onSelectionChange}
+            onRowClick={onRowClick}
           >
             <Column
               header="Hierarchy"

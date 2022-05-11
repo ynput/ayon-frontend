@@ -7,6 +7,7 @@ const VersionList = (row, onSelectVersion) => {
   const [currentVersion, setCurrentVersion] = useState(null)
 
   const versions = useMemo(() => {
+    if (!row.versionList) return []
     return row.versionList.map((version) => {
       if (version.id === row.versionId) setCurrentVersion(version.name)
       return {

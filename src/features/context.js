@@ -30,6 +30,7 @@ const contextSlice = createSlice({
       state.focusedFolders = action.payload
       state.focusedSubsets = []
       state.focusedVersions = []
+      state.pairing = []
     },
 
     setFocusedSubsets: (state, action) => {

@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { DateTime } from 'luxon'
 
 import axios from 'axios'
 
 import { InputText, Spacer, Button, Shade } from '../../components'
-import { DataTable } from 'primereact/datatable'
+import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import {
@@ -15,8 +15,30 @@ import {
   setBreadcrumbs,
   setPairing,
 } from '../../features/context'
+import { groupResult } from '../../utils'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subset-utils'
+
+
+const CellWithIcon = ({ icon, iconClassName, text }) => {
+  return (
+    <>
+    <span 
+      className={`material-symbols-outlined ${iconClassName || ''}`} 
+      style={{ 
+        display: "inline",
+        fontSize: '1.3rem', 
+        marginRight: '0.5rem',
+        verticalAlign: 'text-top',
+      }}
+    > 
+      {icon}
+    </span>
+    {text}
+    </>
+  )
+}
+
 
 const Subsets = ({
   projectName,
@@ -25,17 +47,42 @@ const Subsets = ({
   selectedVersions,
 }) => {
   const dispatch = useDispatch()
+  const pairing = useSelector(state => state.context.pairing)
   const [subsetData, setSubsetData] = useState([])
-  const [selection, setSelection] = useState([])
   const [loading, setLoading] = useState(false)
-  // const [selectedVersions, setSelectedVersions] = useState({})
   const [focusOnReload, setFocusOnReload] = useState(null)
+
+
+  // Columns definition
+  // It must be here since we are referencing the component state and the context :-(
+  
 
   const columns = [
     {
       field: 'name',
       header: 'Subset',
       width: 200,
+      body: (node) => {
+
+        let className = ''
+        let i = 0
+        for (const pair of pairing) {
+          i++
+          if (pair.taskId === node.data.taskId) {
+            className = `row-hl-${i}`
+            break
+          }
+        }
+
+        let icon = 'dataset'
+        if (node.data.isGroup)
+          icon = "folder"
+        else if (node.data.taskId)
+          icon = "settings"
+
+
+        return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
+      }
     },
     {
       field: 'folder',
@@ -51,24 +98,23 @@ const Subsets = ({
       field: 'versionList',
       header: 'Version',
       width: 70,
-      body: (row) =>
-        VersionList(row, (subsetId, versionId) => {
-          const newSelection = selectedVersions[row.folderId] || {}
+      body: (node) => VersionList(node.data, (subsetId, versionId) => {
+          let newSelection = {...selectedVersions[node.data.folderId] }
           newSelection[subsetId] = versionId
           dispatch(
             setSelectedVersions({
               ...selectedVersions,
-              [row.folderId]: newSelection,
+              [node.data.folderId]: newSelection,
             })
           )
           setFocusOnReload(versionId)
-        }),
+        }) // end VersionList
     },
     {
       field: 'time',
       header: 'Time',
       width: 150,
-      body: (row) => DateTime.fromSeconds(row.createdAt).toRelative(),
+      body: (node) => node.data.createdAt && DateTime.fromSeconds(node.data.createdAt).toRelative()
     },
     {
       field: 'author',
@@ -81,6 +127,12 @@ const Subsets = ({
       width: 120,
     },
   ]
+
+  //
+  // Hooks
+  //
+    
+  // Load the subsets/versions data from the server
 
   useEffect(() => {
     if (folders.length === 0) return
@@ -124,22 +176,70 @@ const Subsets = ({
       })
     // eslint-disable-next-line
   }, [folders, projectName, selectedVersions])
+    
 
-  useEffect(() => {
-    setSelection([
-      ...subsetData.filter((s) => focusedVersions.includes(s.versionId)),
-    ])
-  }, [subsetData, focusedVersions])
+  // Parse focusedVersions list from the project context
+  // and create a list of selected subset rows compatible
+  // with the TreeTable component
 
-  const taskList = useMemo(() => {
-    const res = []
-    for (const subset of subsetData) {
-      if (subset.taskId) res.push(subset.taskId)
+  const selectedRows = useMemo(() => {
+    if (focusedVersions.length === 0) return []
+    const subsetIds = {}
+    const pairs = []
+    for (const sdata of subsetData) {
+      if (focusedVersions.includes(sdata.versionId)) {
+        subsetIds[sdata.id] = true
+
+        if (sdata.taskId) {
+          pairs.push({
+            taskId: sdata.taskId,
+            folderId: sdata.folderId,
+            versionId: sdata.versionId,
+          })
+        }
+      }
     }
-    dispatch(setPairing(res))
-    return res
-    // eslint-disable-next-line
+    dispatch(setPairing(pairs))
+    return subsetIds
+  }, [subsetData, focusedVersions])
+  
+  // Transform the subset data into a TreeTable compatible format
+  // by grouping the data by the subset name
+
+  const tableData = useMemo(() => {
+    return groupResult(subsetData, "name")
   }, [subsetData])
+
+  //
+  // Handlers
+  //
+
+  // Set the breadcrumbs when a row is clicked
+  const onRowClick = (event) => {
+    dispatch(
+      setBreadcrumbs({
+        parents: event.node.parents,
+        folder: event.node.folder,
+        subset: event.node.name,
+        version: event.node.versionName,
+      })
+    )
+  }
+
+  const onSelectionChange = (event) => {
+    let result = []
+    const selection = Object.keys(event.value)
+    for (const sdata of subsetData) {
+      if (selection.includes(sdata.id)) {
+        result.push(sdata.versionId)
+      }
+    }
+    dispatch(setFocusedVersions(result))
+  }
+
+  //
+  // Render
+  //
 
   return (
     <section className="invisible insplit">
@@ -165,30 +265,6 @@ const Subsets = ({
           tooltipOptions={{ position: 'bottom' }}
         />
         <Spacer />
-        <Button
-          icon="pi pi-lock"
-          tooltip="Mockup button"
-          disabled={true}
-          tooltipOptions={{ position: 'bottom' }}
-        />
-        <Button
-          icon="pi pi-sitemap"
-          tooltip="Mockup button"
-          disabled={true}
-          tooltipOptions={{ position: 'bottom' }}
-        />
-        <Button
-          icon="pi pi-star"
-          tooltip="Mockup button"
-          disabled={true}
-          tooltipOptions={{ position: 'bottom' }}
-        />
-        <Button
-          icon="pi pi-cog"
-          tooltip="Mockup button"
-          disabled={true}
-          tooltipOptions={{ position: 'bottom' }}
-        />
       </section>
 
       <section
@@ -199,53 +275,25 @@ const Subsets = ({
       >
         <div className="wrapper">
           {loading && <Shade />}
-          <DataTable
+          <TreeTable
             scrollable
             responsive="true"
             resizableColumns
             columnResizeMode="expand"
-            scrollDirection="both"
             scrollHeight="flex"
-            responsiveLayout="scroll"
-            value={subsetData}
+            value={tableData}
             emptyMessage="No subset found"
             selectionMode="multiple"
-            selection={selection}
-            rowClassName={(row) => {
-              let i = 0
-              for (const taskId of taskList) {
-                i++
-                if (row.taskId === taskId) {
-                  return `row-hl-${i}`
-                }
-              }
-            }}
-            onSelectionChange={(e) => {
-              let selection = []
-              let tasks = []
-              for (let elm of e.value) {
-                if (elm.versionId) selection.push(elm.versionId)
-                if (elm.taskId) tasks.push(elm.taskId)
-              }
-              dispatch(setFocusedVersions(selection))
-            }}
-            onRowClick={(e) => {
-              dispatch(
-                setBreadcrumbs({
-                  parents: e.data.parents,
-                  folder: e.data.folder,
-                  subset: e.data.name,
-                  version: e.data.versionName,
-                })
-              )
-            }}
+            selectionKeys={selectedRows}
+            onSelectionChange={onSelectionChange}
+            onRowClick={onRowClick}
           >
-            {columns.map((col) => {
+            {columns.map((col, i) => {
               return (
-                <Column {...col} key={col.field} style={{ width: col.width }} />
+                <Column {...col} key={col.field} style={{ width: col.width }} expander={i === 0}/>
               )
             })}
-          </DataTable>
+          </TreeTable>
         </div>
       </section>
     </section>
