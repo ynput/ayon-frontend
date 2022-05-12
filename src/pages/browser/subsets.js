@@ -199,10 +199,10 @@ const Subsets = ({
   const onRowClick = (event) => {
     dispatch(
       setBreadcrumbs({
-        parents: event.node.parents,
-        folder: event.node.folder,
-        subset: event.node.name,
-        version: event.node.versionName,
+        parents: event.node.data.parents,
+        folder: event.node.data.folder,
+        subset: event.node.data.name,
+        version: event.node.data.versionName,
       })
     )
   }

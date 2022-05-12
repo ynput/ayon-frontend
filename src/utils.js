@@ -137,7 +137,6 @@ const updateFolderTypeIcons = (data) => {
   for (const name in data) {
     FOLDER_TYPE_ICONS[name] = data[name]
   }
-  console.log("FOLDER_TYPE_ICONS", FOLDER_TYPE_ICONS)
 }
 
 const getTaskTypeIcon = (taskType) => {
@@ -148,7 +147,6 @@ const updateTaskTypeIcons = (data) => {
   for (const name in data) {
     TASK_TYPE_ICONS[name] = data[name]
   }
-  console.log("TASK_TYPE_ICONS", TASK_TYPE_ICONS)
 }
 
 const getFamilyIcon = (family) => {

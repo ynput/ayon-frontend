@@ -50,7 +50,6 @@ const ProjectPage = () => {
         const data = response.data
         dispatch(setProjectData(data))
 
-        console.log(response.data)
         // Icons
         const r = {}
         for (const folderTypeName in data.folderTypes) {
