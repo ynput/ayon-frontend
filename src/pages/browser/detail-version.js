@@ -6,6 +6,8 @@ import Thumbnail from '../../containers/thumbnail'
 import AttributeTable from '../../containers/attributeTable'
 import RepresentationDetail from './detail-representation'
 
+import { getFamilyIcon } from '../../utils'
+
 const VERSION_QUERY = `
     query Versions($projectName: String!, $versions: [String!]!) {
         project(name: $projectName) {
@@ -140,8 +142,14 @@ const VersionDetail = () => {
     versionDetailWidget = (
       <section className="column">
         <h3>
-          <span>
-            {versions[0].subsetName} {versions[0].name}
+          <span 
+            className="material-symbols-outlined color-ternary"
+            style={{ verticalAlign: 'bottom' }}
+          >
+            {getFamilyIcon(versions[0].family)}
+          </span>
+          <span style={{ marginLeft: 10 }}>
+            {versions[0].subsetName} | {versions[0].name}
           </span>
         </h3>
         <Thumbnail

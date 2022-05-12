@@ -4,6 +4,7 @@ import axios from 'axios'
 
 import Thumbnail from '../../containers/thumbnail'
 import AttributeTable from '../../containers/attributeTable'
+import { getFolderTypeIcon } from '../../utils'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {
@@ -77,8 +78,13 @@ const FolderDetail = () => {
   return (
     <section style={{ flexGrow: 1 }}>
       <h3>
-        {/*<FolderTypeIcon name={data.folderType} />*/}
-        <span style={{ marginLeft: 15 }}>{data.name}</span>
+        <span 
+          className="material-symbols-outlined color-ternary"
+          style={{ verticalAlign: 'bottom' }}
+        >
+          {getFolderTypeIcon(data.folderType)}
+        </span>
+        <span style={{ marginLeft: 10 }}>{data.name}</span>
       </h3>
       <Thumbnail
         projectName={projectName}
