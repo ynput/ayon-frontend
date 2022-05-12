@@ -5,7 +5,7 @@ import { DateTime } from 'luxon'
 
 import axios from 'axios'
 
-import { InputText, Spacer, Button, Shade, ToolButton } from '../../components'
+import { InputText, Spacer, Shade, ToolButton } from '../../components'
 import { CellWithIcon } from '../../components/icons'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -165,11 +165,24 @@ const Subsets = ({
   const selectedRows = useMemo(() => {
     if (focusedVersions.length === 0) return []
     const subsetIds = {}
-    const pairs = []
     for (const sdata of subsetData) {
       if (focusedVersions.includes(sdata.versionId)) {
         subsetIds[sdata.id] = true
+      }
+    }
+    return subsetIds
+  }, [subsetData, focusedVersions])
 
+  // Since using dispatch in useMemo causes errors,
+  // we need to use useEffect to update task-version pairing
+  // in the context
+
+  useEffect(() => {
+    if (!selectedRows) 
+      return
+    const pairs = []
+    for (const sdata of subsetData) {
+      if (Object.keys(selectedRows).includes(sdata.id)) {
         if (sdata.taskId) {
           pairs.push({
             taskId: sdata.taskId,
@@ -180,9 +193,9 @@ const Subsets = ({
       }
     }
     dispatch(setPairing(pairs))
-    return subsetIds
+    // shut up about missing dispatch dependency
     // eslint-disable-next-line
-  }, [subsetData, focusedVersions])
+  }, [subsetData, selectedRows])
 
   // Transform the subset data into a TreeTable compatible format
   // by grouping the data by the subset name
@@ -197,6 +210,10 @@ const Subsets = ({
 
   // Set the breadcrumbs when a row is clicked
   const onRowClick = (event) => {
+    if (event.node.data.isGroup) {
+      return
+    }
+
     dispatch(
       setBreadcrumbs({
         parents: event.node.data.parents,
