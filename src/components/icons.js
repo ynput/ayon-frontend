@@ -5,12 +5,7 @@ const CellWithIcon = ({ icon, iconClassName, text }) => {
         className={`material-symbols-outlined ${
           iconClassName || 'color-ternary'
         }`}
-        style={{
-          display: 'inline',
-          fontSize: '1.3rem',
-          marginRight: '0.5rem',
-          verticalAlign: 'text-top',
-        }}
+        style={{ marginRight: '0.6rem' }}
       >
         {icon}
       </span>

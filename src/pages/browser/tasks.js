@@ -99,6 +99,7 @@ const TasksPanel = () => {
         taskId: tid,
       })
     }
+    console.log("pairing:", pairs)
     dispatch(setPairing(pairs))
     dispatch(setFocusedTasks(taskIds))
   }

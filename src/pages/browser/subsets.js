@@ -178,11 +178,11 @@ const Subsets = ({
   // in the context
 
   useEffect(() => {
-    if (!selectedRows) 
+    if (!focusedVersions.length) 
       return
     const pairs = []
     for (const sdata of subsetData) {
-      if (Object.keys(selectedRows).includes(sdata.id)) {
+      if (focusedVersions.includes(sdata.versionId)) {
         if (sdata.taskId) {
           pairs.push({
             taskId: sdata.taskId,
@@ -195,7 +195,7 @@ const Subsets = ({
     dispatch(setPairing(pairs))
     // shut up about missing dispatch dependency
     // eslint-disable-next-line
-  }, [subsetData, selectedRows])
+  }, [subsetData, focusedVersions])
 
   // Transform the subset data into a TreeTable compatible format
   // by grouping the data by the subset name

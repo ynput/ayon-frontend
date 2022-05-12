@@ -44,12 +44,12 @@ const BrowserPage = () => {
   return (
     <main>
       <Splitter
-        orientation="horizontal"
+        layout="horizontal"
         stateKey={'browserSplitter'}
         stateStorage={'local'}
         style={{ width: '100%', height: '100%' }}
       >
-        <SplitterPanel size={15} style={{ minWidth: 250, maxWidth: 600 }}>
+        <SplitterPanel style={{ minWidth: 250, maxWidth: 600}}>
           <section className="invisible insplit">
             <section className="row invisible" style={{ flexGrow: 1 }}>
               {hierarchy}
@@ -58,9 +58,9 @@ const BrowserPage = () => {
           </section>
         </SplitterPanel>
 
-        <SplitterPanel size={85}>
+        <SplitterPanel>
           <Splitter
-            orientation="horizontal"
+            layout="horizontal"
             stateKey={'detailSplitter'}
             stateStorage={'local'}
           >
