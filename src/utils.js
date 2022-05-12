@@ -101,23 +101,64 @@ const loadAnatomyPresets = async () => {
   return [primaryPreset, ...presets]
 }
 
+
+//
+// Icons
+//
+
+const FOLDER_TYPE_ICONS = {}
+const TASK_TYPE_ICONS = {}
+const FAMILY_ICONS = {
+  image: 'imagesmode',
+  render: 'photo_library',
+  plate: 'camera_roll',
+  camera: 'videocam',
+  model: 'language',
+  texture: 'palette',
+  look: 'ev_shadow',
+  rig: 'accessibility',
+  animation: 'directions_run',
+  cache: 'animation',
+  layout: 'nature_people',
+  setdress: 'forest',
+  groom: 'content_cut',
+  matchmove: 'switch_video',
+  vdb: 'local_fire_department',
+  lightrig: 'wb_incandescent',
+  lut: 'opacity',
+}
+
 const getFolderTypeIcon = (folderType) => {
-  return (
-    {
-      Folder: 'folder',
-      Sequence: 'auto_awesome_motion',
-      Assetbuild: 'dataset',
-      Asset: 'dataset',
-      Library: 'inventory_2',
-      Episode: 'theater_comedy',
-      Shot: 'camera_roll',
-    }[folderType] || 'folder'
-  )
+  if (!folderType) return 'folder'
+  return FOLDER_TYPE_ICONS[folderType] || 'help_center'
+}
+
+const updateFolderTypeIcons = (data) => {
+  for (const name in data) {
+    FOLDER_TYPE_ICONS[name] = data[name]
+  }
+  console.log("FOLDER_TYPE_ICONS", FOLDER_TYPE_ICONS)
 }
 
 const getTaskTypeIcon = (taskType) => {
-  return 'settings'
+  return TASK_TYPE_ICONS[taskType] || 'help_center'
 }
+
+const updateTaskTypeIcons = (data) => {
+  for (const name in data) {
+    TASK_TYPE_ICONS[name] = data[name]
+  }
+  console.log("TASK_TYPE_ICONS", TASK_TYPE_ICONS)
+}
+
+const getFamilyIcon = (family) => {
+  return FAMILY_ICONS[family] || 'help_center'
+}
+
+//
+// Export
+//
+
 
 export {
   arrayEquals,
@@ -126,4 +167,7 @@ export {
   sortByKey,
   getFolderTypeIcon,
   getTaskTypeIcon,
+  getFamilyIcon,
+  updateFolderTypeIcons,
+  updateTaskTypeIcons,
 }

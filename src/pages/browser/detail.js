@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { Button, Spacer } from '../../components'
+import { ToolButton, Spacer } from '../../components'
 
 import FolderDetail from './detail-folder'
 import VersionDetail from './detail-version'
@@ -31,7 +31,7 @@ const Detail = () => {
           {context.focusedType || 'Nothing selected'}
         </span>
         <Spacer />
-        <Button icon="pi pi-bolt" disabled={true} tooltip="Mockup button" />
+        <ToolButton icon="settings" disabled={true} tooltip="Mockup button" />
       </section>
       {detailComponent}
     </section>

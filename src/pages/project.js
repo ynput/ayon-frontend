@@ -12,6 +12,7 @@ import SiteSync from './sitesync'
 import LoadingPage from './loading'
 
 import { selectProject, setProjectData } from '../features/context'
+import { updateFolderTypeIcons, updateTaskTypeIcons } from '../utils'
 
 const ProjectContexInfo = () => {
   /**
@@ -45,9 +46,30 @@ const ProjectPage = () => {
     setLoading(true)
     axios
       .get(`/api/projects/${projectName}`)
-      .then((response) => dispatch(setProjectData(response.data)))
+      .then((response) => {
+        const data = response.data
+        dispatch(setProjectData(data))
+
+        console.log(response.data)
+        // Icons
+        const r = {}
+        for (const folderTypeName in data.folderTypes) {
+          r[folderTypeName] = data.folderTypes[folderTypeName].icon
+        }
+        updateFolderTypeIcons(r)
+
+        const s = {}
+        for (const taskTypeName in data.taskTypes) {
+          s[taskTypeName] = data.taskTypes[taskTypeName].icon
+        }
+        updateTaskTypeIcons(s)
+
+      })
       .finally(() => {
         dispatch(selectProject(projectName))
+
+        
+
         setLoading(false)
       })
   }, [dispatch, projectName])

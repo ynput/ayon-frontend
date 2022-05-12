@@ -7,7 +7,7 @@ import { Shade } from '../../components'
 import { CellWithIcon } from '../../components/icons'
 
 import { setFocusedTasks, setPairing } from '../../features/context'
-import { groupResult } from '../../utils'
+import { groupResult, getTaskTypeIcon } from '../../utils'
 
 import axios from 'axios'
 
@@ -108,7 +108,7 @@ const TasksPanel = () => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup ? 'folder' : 'settings'
+    const icon = node.data.isGroup ? 'folder' : getTaskTypeIcon(node.data.taskType)
     let className = ''
     let i = 0
     for (const pair of context.pairing) {

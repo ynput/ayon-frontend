@@ -10,7 +10,7 @@ import { CellWithIcon } from '../../components/icons'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { groupResult } from '../../utils'
+import { groupResult, getFamilyIcon } from '../../utils'
 import {
   setFocusedVersions,
   setSelectedVersions,
@@ -51,13 +51,9 @@ const Subsets = ({
           }
         }
 
-        let icon = 'dataset'
-        if (node.data.isGroup) icon = 'folder'
-        else if (node.data.taskId) icon = 'settings'
-
         return (
           <CellWithIcon
-            icon={icon}
+            icon={getFamilyIcon(node.data.family)}
             iconClassName={className}
             text={node.data.name}
           />
