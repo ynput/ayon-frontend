@@ -114,7 +114,7 @@ const FAMILY_ICONS = {
   plate: 'camera_roll',
   camera: 'videocam',
   model: 'language',
-  texture: 'palette',
+  texture: 'texture',
   look: 'ev_shadow',
   rig: 'accessibility',
   animation: 'directions_run',

@@ -51,9 +51,11 @@ const Subsets = ({
           }
         }
 
+        const icon = node.data.isGroup ? "folder" : getFamilyIcon(node.data.family)
+
         return (
           <CellWithIcon
-            icon={getFamilyIcon(node.data.family)}
+            icon={icon}
             iconClassName={className}
             text={node.data.name}
           />
