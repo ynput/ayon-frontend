@@ -20,9 +20,9 @@ const BrowserPage = () => {
 
   const hierarchy = useMemo(() => {
     return (
-      <Hierarchy 
-        projectName={projectName} 
-        folderTypes={folderTypes} 
+      <Hierarchy
+        projectName={projectName}
+        folderTypes={folderTypes}
         focusedFolders={focusedFolders}
       />
     )

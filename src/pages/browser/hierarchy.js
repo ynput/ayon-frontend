@@ -15,9 +15,6 @@ import { CellWithIcon } from '../../components/icons'
 import { setFocusedFolders, setBreadcrumbs } from '../../features/context'
 import { getFolderTypeIcon } from '../../utils'
 
-
-
-
 const filterHierarchy = (text, folder) => {
   /*
     Filter the hierarchy using a given text and rename "id" to "key"
@@ -41,10 +38,12 @@ const filterHierarchy = (text, folder) => {
           hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: (<CellWithIcon 
-            icon={getFolderTypeIcon(item.folderType)}
-            text={item.name}
-          />)
+          body: (
+            <CellWithIcon
+              icon={getFolderTypeIcon(item.folderType)}
+              text={item.name}
+            />
+          ),
         },
       })
     } else if (item.children) {
@@ -59,10 +58,12 @@ const filterHierarchy = (text, folder) => {
             hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
             parents: item.parents,
-            body: (<CellWithIcon 
-              icon={getFolderTypeIcon(item.folderType)}
-              text={item.name}
-            />)
+            body: (
+              <CellWithIcon
+                icon={getFolderTypeIcon(item.folderType)}
+                text={item.name}
+              />
+            ),
           },
         })
       }
@@ -84,7 +85,7 @@ const Hierarchy = ({ projectName, folderTypes, focusedFolders }) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  
+
   useEffect(() => {
     setLoading(true)
     let url = `/api/projects/${projectName}/hierarchy`
@@ -108,31 +109,28 @@ const Hierarchy = ({ projectName, folderTypes, focusedFolders }) => {
     // eslint-disable-next-line
   }, [projectName, selectedFolderTypes])
 
-
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
-  
+
   const treeData = useMemo(() => {
     if (!data) return []
     return filterHierarchy(query, data)
   }, [data, query])
 
-  
   //
   // Selection
   //
 
   // Transform the plain list of focused folder ids to a map
   // {id: true}, which is needed for the Treetable
-  
+
   const selectedFolders = useMemo(() => {
     if (!focusedFolders) return []
     const r = {}
-    for (const tid of focusedFolders) 
-      r[tid] = true
+    for (const tid of focusedFolders) r[tid] = true
     return r
   }, [focusedFolders])
-  
+
   // Set breadcrumbs on row click (the latest selected folder,
   // will be the one that is displayed in the breadcrumbs)
 
@@ -156,7 +154,7 @@ const Hierarchy = ({ projectName, folderTypes, focusedFolders }) => {
   //
   // Folder types
   //
-  
+
   // Transform a list of folder types to a list of objects
   // compatible with the MultiSelect component
 

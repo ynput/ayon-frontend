@@ -5,7 +5,7 @@ import { DateTime } from 'luxon'
 
 import axios from 'axios'
 
-import { InputText, Spacer, Button, Shade } from '../../components'
+import { InputText, Spacer, Button, Shade, ToolButton } from '../../components'
 import { CellWithIcon } from '../../components/icons'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -18,9 +18,7 @@ import {
   setPairing,
 } from '../../features/context'
 
-
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subset-utils'
-
 
 const Subsets = ({
   projectName,
@@ -29,15 +27,13 @@ const Subsets = ({
   selectedVersions,
 }) => {
   const dispatch = useDispatch()
-  const pairing = useSelector(state => state.context.pairing)
+  const pairing = useSelector((state) => state.context.pairing)
   const [subsetData, setSubsetData] = useState([])
   const [loading, setLoading] = useState(false)
   const [focusOnReload, setFocusOnReload] = useState(null)
 
-
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
-  
 
   const columns = [
     {
@@ -45,7 +41,6 @@ const Subsets = ({
       header: 'Subset',
       width: 200,
       body: (node) => {
-
         let className = ''
         let i = 0
         for (const pair of pairing) {
@@ -57,14 +52,17 @@ const Subsets = ({
         }
 
         let icon = 'dataset'
-        if (node.data.isGroup)
-          icon = "folder"
-        else if (node.data.taskId)
-          icon = "settings"
+        if (node.data.isGroup) icon = 'folder'
+        else if (node.data.taskId) icon = 'settings'
 
-
-        return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
-      }
+        return (
+          <CellWithIcon
+            icon={icon}
+            iconClassName={className}
+            text={node.data.name}
+          />
+        )
+      },
     },
     {
       field: 'folder',
@@ -80,8 +78,9 @@ const Subsets = ({
       field: 'versionList',
       header: 'Version',
       width: 70,
-      body: (node) => VersionList(node.data, (subsetId, versionId) => {
-          let newSelection = {...selectedVersions[node.data.folderId] }
+      body: (node) =>
+        VersionList(node.data, (subsetId, versionId) => {
+          let newSelection = { ...selectedVersions[node.data.folderId] }
           newSelection[subsetId] = versionId
           dispatch(
             setSelectedVersions({
@@ -90,13 +89,15 @@ const Subsets = ({
             })
           )
           setFocusOnReload(versionId)
-        }) // end VersionList
+        }), // end VersionList
     },
     {
       field: 'time',
       header: 'Time',
       width: 150,
-      body: (node) => node.data.createdAt && DateTime.fromSeconds(node.data.createdAt).toRelative()
+      body: (node) =>
+        node.data.createdAt &&
+        DateTime.fromSeconds(node.data.createdAt).toRelative(),
     },
     {
       field: 'author',
@@ -113,7 +114,7 @@ const Subsets = ({
   //
   // Hooks
   //
-    
+
   // Load the subsets/versions data from the server
 
   useEffect(() => {
@@ -158,7 +159,6 @@ const Subsets = ({
       })
     // eslint-disable-next-line
   }, [folders, projectName, selectedVersions])
-    
 
   // Parse focusedVersions list from the project context
   // and create a list of selected subset rows compatible
@@ -183,14 +183,14 @@ const Subsets = ({
     }
     dispatch(setPairing(pairs))
     return subsetIds
-  // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [subsetData, focusedVersions])
-  
+
   // Transform the subset data into a TreeTable compatible format
   // by grouping the data by the subset name
 
   const tableData = useMemo(() => {
-    return groupResult(subsetData, "name")
+    return groupResult(subsetData, 'name')
   }, [subsetData])
 
   //
@@ -232,17 +232,16 @@ const Subsets = ({
           <InputText
             style={{ width: '200px' }}
             placeholder="Filter subsets..."
-            disabled={true}
           />
         </span>
-        <Button
-          icon="pi pi-list"
+        <ToolButton
+          icon="compare_arrows"
           tooltip="Mockup button"
-          disabled={true}
+          disabled={false}
           tooltipOptions={{ position: 'bottom' }}
         />
-        <Button
-          icon="pi pi-th-large"
+        <ToolButton
+          icon="settings"
           tooltip="Mockup button"
           disabled={true}
           tooltipOptions={{ position: 'bottom' }}
@@ -273,7 +272,12 @@ const Subsets = ({
           >
             {columns.map((col, i) => {
               return (
-                <Column {...col} key={col.field} style={{ width: col.width }} expander={i === 0}/>
+                <Column
+                  {...col}
+                  key={col.field}
+                  style={{ width: col.width }}
+                  expander={i === 0}
+                />
               )
             })}
           </TreeTable>

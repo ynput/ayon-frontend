@@ -24,7 +24,8 @@ $prime-input-border: 2px solid #373d48
 
 .p-button:not(.p-button-link)
   background: $op-button-primary-background
-  border: 2px solid #373d48 
+  border: 2px solid transparent !important
+  margin: 1px
   color: $op-font-color
 
   &:focus
@@ -75,6 +76,11 @@ $prime-input-border: 2px solid #373d48
 
   .p-datatable-tbody > tr, .p-treetable-tbody > tr
     background: $op-background-dark
+
+    td
+      height: 2rem
+      .p-treetable-toggler
+        vertical-align: baseline
 
   .p-datatable-thead > tr > th, .p-treetable-thead > tr > th
     border: 0
@@ -173,3 +179,20 @@ $prime-input-border: 2px solid #373d48
     left: 0
     width: 100%
     text-align: center
+
+
+
+.tool-button
+  margin: 0,
+  padding: 0,
+  height: 2.5rem,
+  width: auto,
+  aspect-ratio: 1,
+  display: flex
+  align-items: center
+  justify-content: center
+  box-shadow: none
+  border: 1px solid transparent !important
+  color: $op-font-color !important
+  span
+    font-size: 1.5rem !important

@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-
 const arrayEquals = (a, b) => {
   return (
     Array.isArray(a) &&
@@ -10,9 +9,8 @@ const arrayEquals = (a, b) => {
   )
 }
 
-
 const sortByKey = (array, key) => {
-  // Return a copy of array of objects sorted 
+  // Return a copy of array of objects sorted
   // by the given key
   return array.sort(function (a, b) {
     var x = a[key]
@@ -21,24 +19,21 @@ const sortByKey = (array, key) => {
   })
 }
 
-
 const isGroupable = (data, key, value) => {
-  // Returns true if the key with the given value is 
+  // Returns true if the key with the given value is
   // presented multiple times in the array
   // and therefore can be grouped.
   let count = 0
   for (const item of data) {
-    if (item[key] === value){
+    if (item[key] === value) {
       count++
-      if (count > 1)
-        return true
+      if (count > 1) return true
     }
   }
   return false
 }
 
-
-const groupResult = (data, groupBy, key="id") => {
+const groupResult = (data, groupBy, key = 'id') => {
   // Transform a list of records to a TreeTable-compatible structure
   // with grouped records.
   let result = []
@@ -47,7 +42,7 @@ const groupResult = (data, groupBy, key="id") => {
     // Unique items. Just add to root
     if (!isGroupable(data, groupBy, item[groupBy])) {
       result.push({ key: item[key], data: item })
-    } 
+    }
 
     // Item of an existing group
     else if (existingGroups.includes(item[groupBy])) {
@@ -55,12 +50,12 @@ const groupResult = (data, groupBy, key="id") => {
         if (group.data[groupBy] === item[groupBy]) {
           group.children.push({
             key: item[key],
-            data: item
+            data: item,
           })
           break
         }
       }
-    } 
+    }
 
     // New group
     else {
@@ -69,12 +64,14 @@ const groupResult = (data, groupBy, key="id") => {
         key: `group-${item[groupBy]}`,
         data: {
           [groupBy]: item[groupBy],
-          isGroup: true
+          isGroup: true,
         },
-        children: [{
-          key: item[key],
-          data: item
-        }]
+        children: [
+          {
+            key: item[key],
+            data: item,
+          },
+        ],
       })
     }
   }
@@ -104,24 +101,29 @@ const loadAnatomyPresets = async () => {
   return [primaryPreset, ...presets]
 }
 
-
 const getFolderTypeIcon = (folderType) => {
-  return {
-    Folder: 'folder',
-    Sequence: 'auto_awesome_motion',
-    Assetbuild: 'dataset',
-    Asset: 'dataset',
-    Library: 'inventory_2',
-    Episode: 'theater_comedy',
-    Shot: 'camera_roll'
-  }[folderType] || 'folder'
+  return (
+    {
+      Folder: 'folder',
+      Sequence: 'auto_awesome_motion',
+      Assetbuild: 'dataset',
+      Asset: 'dataset',
+      Library: 'inventory_2',
+      Episode: 'theater_comedy',
+      Shot: 'camera_roll',
+    }[folderType] || 'folder'
+  )
 }
-
 
 const getTaskTypeIcon = (taskType) => {
-  return "settings"
+  return 'settings'
 }
 
-
-
-export { arrayEquals, loadAnatomyPresets, groupResult, sortByKey, getFolderTypeIcon, getTaskTypeIcon }
+export {
+  arrayEquals,
+  loadAnatomyPresets,
+  groupResult,
+  sortByKey,
+  getFolderTypeIcon,
+  getTaskTypeIcon,
+}

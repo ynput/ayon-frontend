@@ -4,14 +4,12 @@ import { useSelector, useDispatch } from 'react-redux'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Shade } from '../../components'
-import { CellWithIcon} from '../../components/icons'
+import { CellWithIcon } from '../../components/icons'
 
 import { setFocusedTasks, setPairing } from '../../features/context'
 import { groupResult } from '../../utils'
 
-
 import axios from 'axios'
-
 
 const TASKS_QUERY = `
 query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
@@ -32,7 +30,6 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
   }
 }
 `
-
 
 const TasksPanel = () => {
   const dispatch = useDispatch()
@@ -69,11 +66,11 @@ const TasksPanel = () => {
 
         for (const edge of response.data.data.project.tasks.edges) {
           result.push({
-              id: edge.node.id,
-              name: edge.node.name,
-              folderName: edge.node.folder.name,
-              taskType: edge.node.taskType,
-              isMine: edge.node.assignees.includes(userName) ? 'yes' : '',
+            id: edge.node.id,
+            name: edge.node.name,
+            folderName: edge.node.folder.name,
+            taskType: edge.node.taskType,
+            isMine: edge.node.assignees.includes(userName) ? 'yes' : '',
           })
         }
       })
@@ -86,16 +83,14 @@ const TasksPanel = () => {
 
   const selectedTasks = useMemo(() => {
     const r = {}
-    for (const tid of context.focusedTasks) 
-      r[tid] = true
+    for (const tid of context.focusedTasks) r[tid] = true
     return r
-  
   }, [context.focusedTasks])
 
   //
   // Handlers
   //
-    
+
   const onSelectionChange = (event) => {
     const taskIds = Object.keys(event.value)
     let pairs = []
@@ -111,7 +106,7 @@ const TasksPanel = () => {
   //
   // Render
   //
-  
+
   const nameRenderer = (node) => {
     const icon = node.data.isGroup ? 'folder' : 'settings'
     let className = ''
@@ -125,8 +120,8 @@ const TasksPanel = () => {
     }
 
     return (
-      <CellWithIcon 
-        icon={icon} 
+      <CellWithIcon
+        icon={icon}
         text={node.data.name}
         iconClassName={className}
       />
@@ -134,7 +129,7 @@ const TasksPanel = () => {
   }
 
   return (
-    <section className="row" style={{ minHeight: 200, width: '100%' }}>
+    <section className="row" style={{ minHeight: 250, width: '100%' }}>
       <div className="wrapper">
         {loading && <Shade />}
         <TreeTable
@@ -143,15 +138,20 @@ const TasksPanel = () => {
           scrollHeight="100%"
           emptyMessage="No tasks found"
           selectionMode="multiple"
-          selectionKeys={selectedTasks}//console.log(selectedTasks)
+          selectionKeys={selectedTasks}
           onSelectionChange={onSelectionChange}
         >
-          <Column field="name" header="Task" expander="true" body={nameRenderer}/>
+          <Column
+            field="name"
+            header="Task"
+            expander="true"
+            body={nameRenderer}
+          />
           {folderIds.length > 1 && (
             <Column field="folderName" header="Folder" />
           )}
-          <Column field="taskType" header="Task type" style={{width:90}} />
-          <Column field="isMine" header="Mine" style={{width:40}}/>
+          <Column field="taskType" header="Task type" style={{ width: 90 }} />
+          <Column field="isMine" header="Mine" style={{ width: 40 }} />
         </TreeTable>
       </div>
     </section>

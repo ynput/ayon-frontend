@@ -55,6 +55,20 @@ const TableWrapper = (props) => {
   )
 }
 
+const ToolButton = (props) => {
+  return (
+    <Button
+      className={`tool-button ${props.className || ''}`}
+      disabled={props.disabled}
+      onClick={props.onClick}
+      tooltip={props.tooltip}
+      tooltipOptions={{ position: props.tooltipPosition || 'bottom' }}
+    >
+      <span className="material-symbols-outlined">{props.icon}</span>
+    </Button>
+  )
+}
+
 export {
   InputText,
   Button,
@@ -63,4 +77,5 @@ export {
   Spacer,
   Shade,
   TableWrapper,
+  ToolButton,
 }

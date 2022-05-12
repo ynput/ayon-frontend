@@ -42,10 +42,10 @@ const ProjectMenu = ({ visible, onHide }) => {
         <TableWrapper>
           <DataTable
             value={projectList}
-            scrollable
+            scrollable="true"
             scrollHeight="flex"
             selectionMode="single"
-            responsive
+            responsive="true"
             dataKey="name"
             onSelectionChange={(e) => {
               navigate(`/projects/${e.value.name}/browser`)

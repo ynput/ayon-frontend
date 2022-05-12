@@ -22,7 +22,7 @@ const formatName = (row) => {
     )
   else
     return (
-      <CellWithIcon 
+      <CellWithIcon
         icon={getFolderTypeIcon(row.data.folderType)}
         text={row.data.name}
       />

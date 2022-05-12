@@ -3,6 +3,7 @@ import { Button, Spacer } from '../../components'
 
 import FolderDetail from './detail-folder'
 import VersionDetail from './detail-version'
+import TaskDetail from './detail-task'
 
 const Detail = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -15,6 +16,9 @@ const Detail = () => {
       break
     case 'version':
       detailComponent = <VersionDetail />
+      break
+    case 'task':
+      detailComponent = <TaskDetail />
       break
     default:
       break
