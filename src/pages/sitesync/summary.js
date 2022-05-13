@@ -158,6 +158,7 @@ const SiteSyncSummary = ({
           responsive
           scrollHeight="flex"
           responsiveLayout="scroll"
+          resizableColumns
           value={representations}
           dataKey="representationId"
           selectionMode="single"

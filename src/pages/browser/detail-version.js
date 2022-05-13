@@ -143,7 +143,7 @@ const VersionDetail = () => {
       <section className="column">
         <h3>
           <span
-            className="material-symbols-outlined color-ternary"
+            className="material-symbols-outlined"
             style={{ verticalAlign: 'bottom' }}
           >
             {getFamilyIcon(versions[0].family)}

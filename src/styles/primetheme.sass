@@ -1,12 +1,13 @@
-$prime-input-background: $op-background-dark
-$prime-input-border: 2px solid #373d48 
+$prime-input-border: 1px solid $color-grey-03
+$prime-input-background: $color-grey-00
+$prime-button-background: $color-grey-03
 
 
 .p-component
-  font-family: $op-font-family
+  font-family: $font-family
 
 .p-component-overlay
-  background: rgba($op-background-dark,.5)
+  background: rgba($color-grey-00, .5)
 
 // input
 
@@ -14,19 +15,18 @@ $prime-input-border: 2px solid #373d48
   background-color: $prime-input-background
   border: $prime-input-border
   border-radius: 4px
+  box-shadow: none !important
 
   &:enabled, &:not(.p-disabled)
     &:focus, &:hover
-      box-shadow: 0 0 1px rgba(#47b7da, .3)
-      border-color: #47b7da
+      border-color: $color-hl-00
 
 // button
 
 .p-button:not(.p-button-link)
   background: $op-button-primary-background
   border: 2px solid transparent !important
-  margin: 1px
-  color: $op-font-color
+  color: $color-text
 
   &:focus
     border: 2px solid $op-button-primary-background
@@ -35,12 +35,12 @@ $prime-input-border: 2px solid #373d48
     &:hover
       background: lighten($op-button-primary-background, 6)
       border: 2px solid $op-button-primary-background
-      color: $op-font-color
+      color: $color-text
 
     &:hover
       background: lighten($op-button-primary-background, 8)
       border: 2px solid $op-button-primary-background
-      color: $op-font-color
+      color: $color-text
 
 .p-multiselect-panel, .p-dropdown-panel
   background: rgba($op-background-dark,.9)
@@ -85,7 +85,22 @@ $prime-input-border: 2px solid #373d48
     text-overflow: ellipsis
 
   .p-datatable-tbody > tr, .p-treetable-tbody > tr
-    background: $op-background-dark
+    border-bottom: 1px solid transparent
+
+    &:nth-child(odd)
+      background: $color-grey-00
+
+    &:nth-child(even)
+      background: darken($color-grey-00, 1.7)
+
+    &.p-highlight
+      background: rgba($color-hl-00, .1)
+      &:hover
+        background: rgba($color-hl-00, .2) !important
+
+    &:hover
+      background: rgba(255, 255, 255, 0.05) !important
+      color: white
 
     td
       height: 2rem
@@ -94,24 +109,24 @@ $prime-input-border: 2px solid #373d48
 
   .p-datatable-thead > tr > th, .p-treetable-thead > tr > th
     border: 0
-    background: $op-background-dark
+    background: $color-grey-00
     border-right: 2px solid $op-background-light
     padding: 0.5rem .6rem .6rem .6rem
 
 .p-treetable-scrollable-header
-  background: $op-background-dark !important
+  background: $color-grey-00 !important
 
 .p-datatable-thead > tr, .p-treetable-thead > tr
-    background: $op-background-dark !important
+    background: $color-grey-00 !important
     user-select: none
     border-bottom: 2px solid rgba(0,0,0,.1)
-    --webkit-user-drag: none
 
     th:last-child
       border-right: 1px solid transparent
 
 .p-datatable .p-sortable-column.p-highlight
-  background: $op-background-dark
+  background: $color-grey-00
+
 
 // Splitter
 
@@ -142,15 +157,8 @@ $prime-input-border: 2px solid #373d48
   display: inline
   padding: 0
   &:hover
-    boxShadow: 0
+    box-shadow: 0
     border: 0
-
-
-.table-editor
-  input
-    min-width: 50px
-    width: 100%
-    border:0
 
 
 .p-accordion
@@ -173,36 +181,42 @@ $prime-input-border: 2px solid #373d48
 
 
 .p-sidebar, .p-dialog, .p-paginator
-  background: rgba($op-background-dark,.9)
+  background: $color-grey-00
   border: 0
 
-  .p-dialog-header, .p-dialog-content
+  .p-dialog-content
+    background: transparent
+    border-top: 1px solid $color-grey-02
+    border-bottom: 1px solid $color-grey-02
+    padding: 10px
+
+  .p-dialog-header, .p-dialog-footer
     background: transparent
     border: 0
 
-
-.p-sidebar-header
-  h3
-    display: block
-    position: absolute
-    top: 16px
-    left: 0
-    width: 100%
-    text-align: center
+  .p-sidebar-header
+    h3
+      display: block
+      position: absolute
+      top: 16px
+      left: 0
+      width: 100%
+      text-align: center
+      border: 0
 
 
 
 .tool-button
   margin: 0,
   padding: 0,
-  height: 34px,
+  height: 32px,
   width: auto,
   aspect-ratio: 1,
   display: flex
   align-items: center
   justify-content: center
   box-shadow: none
-  border: 1px solid transparent !important
-  color: $op-font-color !important
+  border: 0 !important
+  color: $color-text !important
   span
     font-size: 1.5rem !important

@@ -79,7 +79,7 @@ const TaskDetail = () => {
     <section style={{ flexGrow: 1 }}>
       <h3>
         <span
-          className="material-symbols-outlined color-ternary"
+          className="material-symbols-outlined"
           style={{ verticalAlign: 'bottom' }}
         >
           {getTaskTypeIcon(data.taskType)}

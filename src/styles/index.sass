@@ -5,47 +5,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200;0,400;0,600;1,300;1,400&display=swap')
 @import url('https://fonts.sandbox.google.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200')
 
-.material-symbols-outlined
-  font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 20
 
 *
   box-sizing: border-box
 
 html
   scroll-behavior: smooth
-  background-color: $op-background-main
-  color: $op-font-color
-  font-size: $op-font-size
-  font-family: $op-font-family
+  color: $color-text
+  background-color: $color-grey-01
+  font-family: $font-family
+  font-size: $font-size
+
+// Scrollbars
 
 ::-webkit-scrollbar
   width: 20px
   height: 20px
 
-::-webkit-scrollbar-track
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner
   background-color: transparent
 
 ::-webkit-scrollbar-thumb
-  background-color: $op-scrollbar-color
+  background-color: $color-scrollbar-thumb
   border-radius: 20px
   border: 6px solid transparent
   background-clip: content-box
 
-::-webkit-scrollbar-thumb:hover
-  background-color: lighten($op-scrollbar-color, 5)
+  &:hover
+    background-color: $color-scrollbar-thumb-hover
 
-::-webkit-scrollbar-corner
-  background: transparent
+// Icon font
 
+.material-symbols-outlined
+  color: $color-icon
+  font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 20
 
-.color-primary
-  color: $op-primary
-
-.color-secondary
-  color: $op-secondary
-
-.color-ternary
-  color: $op-ternary
+// Navigation
 
 nav
   display: flex
@@ -59,6 +54,7 @@ nav
     background-color: $op-background-main
     padding: 0.5rem 0 
     padding-left: 0.5rem
+
 
   a, button
     display: block
@@ -184,9 +180,9 @@ section
 .section-header
   font-size: 1.3em
   padding-left: 8px
-  
-  &::first-letter
-    text-transform: capitalize
+  display: flex
+  align-items: center
+  height: 33px
 
 
 input:-webkit-autofill, input:-webkit-autofill:focus
@@ -203,8 +199,6 @@ h3, h4
   margin: 0
   padding-bottom: 5px
   border-bottom: 1px solid $op-background-main
-  .material-symbols-outlined
-    color: $op-ternary
 
   &h3
     margin-bottom: 20px
@@ -218,13 +212,13 @@ h3, h4
 //
 
 .oauth-icon
-  color: $op-ternary
+  color: $color-icon
   width: 3rem
   height: auto
   transition: color .4s ease
   :hover
     transition: color .4s ease
-    color: lighten($op-ternary, 5)
+    color: lighten($color-icon, 5)
 
 .attribute-table
   padding: 3px
@@ -251,6 +245,21 @@ h3, h4
     background-color: #161616
     span
       font-size: 4rem
+
+.editor-field
+  display: block
+  border: 1px solid $color-grey-02
+  padding: 4px
+  margin: 2px
+  border-radius: 3px
+  height: 26px
+
+.table-editor
+  margin: 0 
+  input
+    border: 1px solid $color-hl-00
+
+
   
 //
 // Highlights

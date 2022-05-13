@@ -52,7 +52,6 @@ const RepresentationDetail = ({ representations }) => {
       <section className="invisible row">
         <span className="section-header">Representations</span>
         <Spacer />
-        <Button icon="pi pi-bolt" disabled={true} tooltip="Mockup button" />
       </section>
       <section style={{ flexGrow: 1 }}>
         <div className="wrapper">

@@ -160,12 +160,15 @@ const EditorView = ({ projectName, settings }) => {
 
   const formatAttribute = (node, fieldName, styled = true) => {
     const chobj = changes[node.id]
+    let className = ''
+    let value = node.attrib[fieldName]
     if (chobj && chobj.hasOwnProperty(fieldName)) {
-      const nval = chobj[fieldName]
-      if (styled) return <span style={{ color: 'red' }}>{nval}</span>
-      else return nval
+      value = chobj[fieldName]
+      className = 'color-hl-01'
     }
-    return node.attrib[fieldName]
+    if (!styled) return value
+
+    return <span className={`editor-field ${className}`}>{value}</span>
   }
 
   const onCommit = async () => {
@@ -231,45 +234,47 @@ const EditorView = ({ projectName, settings }) => {
       </section>
 
       <section className="column" style={{ flexGrow: 1 }}>
-        {loading && <Shade />}
-        <TreeTable
-          responsive="true"
-          scrollable
-          scrollHeight="100%"
-          value={hierarchy}
-          onExpand={onExpand}
-          resizableColumns
-          columnResizeMode="expand"
-          expandedKeys={expandedKeys}
-          onToggle={(e) => setExpandedKeys(e.value)}
-        >
-          <Column
-            field="name"
-            header="Name"
-            expander
-            body={(row) => formatName(row)}
-            style={{ width: 300 }}
-          />
+        <div className="wrapper">
+          {loading && <Shade />}
+          <TreeTable
+            responsive="true"
+            scrollable
+            scrollHeight="100%"
+            value={hierarchy}
+            onExpand={onExpand}
+            resizableColumns
+            columnResizeMode="expand"
+            expandedKeys={expandedKeys}
+            onToggle={(e) => setExpandedKeys(e.value)}
+          >
+            <Column
+              field="name"
+              header="Name"
+              expander
+              body={(row) => formatName(row)}
+              style={{ width: 300 }}
+            />
 
-          {columns.map((col) => {
-            return (
-              <Column
-                key={col.name}
-                header={col.title}
-                field={col.name}
-                style={{ width: 100 }}
-                body={(rowData) => formatAttribute(rowData.data, col.name)}
-                editor={(options) => {
-                  return col.editor(
-                    options,
-                    onAttributeEdit,
-                    formatAttribute(options.rowData, col.name, false)
-                  )
-                }}
-              />
-            )
-          })}
-        </TreeTable>
+            {columns.map((col) => {
+              return (
+                <Column
+                  key={col.name}
+                  header={col.title}
+                  field={col.name}
+                  style={{ width: 100 }}
+                  body={(rowData) => formatAttribute(rowData.data, col.name)}
+                  editor={(options) => {
+                    return col.editor(
+                      options,
+                      onAttributeEdit,
+                      formatAttribute(options.rowData, col.name, false)
+                    )
+                  }}
+                />
+              )
+            })}
+          </TreeTable>
+        </div>
       </section>
     </>
   )

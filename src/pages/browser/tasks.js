@@ -154,7 +154,6 @@ const TasksPanel = () => {
             <Column field="folderName" header="Folder" />
           )}
           <Column field="taskType" header="Task type" style={{ width: 90 }} />
-          <Column field="isMine" header="Mine" style={{ width: 40 }} />
         </TreeTable>
       </div>
     </section>

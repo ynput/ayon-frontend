@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { ToolButton, Spacer } from '../../components'
+import { Spacer } from '../../components'
 
 import FolderDetail from './detail-folder'
 import VersionDetail from './detail-version'
@@ -24,14 +24,17 @@ const Detail = () => {
       break
   }
 
+  // <ToolButton icon="settings" disabled={true} tooltip="Mockup button" />
+
+  const header = context.focusedType
+    ? context.focusedType.charAt(0).toUpperCase() + context.focusedType.slice(1)
+    : 'No selection'
+
   return (
     <section className="invisible insplit">
       <section className="row invisible">
-        <span className="section-header">
-          {context.focusedType || 'Nothing selected'}
-        </span>
+        <span className="section-header">{header}</span>
         <Spacer />
-        <ToolButton icon="settings" disabled={true} tooltip="Mockup button" />
       </section>
       {detailComponent}
     </section>

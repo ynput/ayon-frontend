@@ -30,7 +30,13 @@ const UserMenu = ({ visible, onHide }) => {
       onHide={onHide}
       icons={() => <h3>User menu</h3>}
     >
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}
+      >
         <Button
           onClick={() => {
             navigate('/doc/api')

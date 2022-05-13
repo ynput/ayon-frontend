@@ -2,9 +2,7 @@ const CellWithIcon = ({ icon, iconClassName, text }) => {
   return (
     <>
       <span
-        className={`material-symbols-outlined ${
-          iconClassName || 'color-ternary'
-        }`}
+        className={`material-symbols-outlined ${iconClassName || ''}`}
         style={{ marginRight: '0.6rem' }}
       >
         {icon}

@@ -293,6 +293,7 @@ const Subsets = ({
                   key={col.field}
                   style={{ width: col.width }}
                   expander={i === 0}
+                  resizeable={true}
                 />
               )
             })}

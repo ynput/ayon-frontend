@@ -20,7 +20,7 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
   if (!base64) {
     return (
       <div className="thumbnail placeholder">
-        <span className="color-ternary material-symbols-outlined">image</span>
+        <span className="material-symbols-outlined">image</span>
       </div>
     )
   }

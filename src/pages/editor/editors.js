@@ -8,16 +8,11 @@ const stringEditor = (options, callback, value) => {
 }
 
 const integerEditor = (options, callback, value) => {
-  //console.log(options)
+  console.log(options)
+  console.log(value)
   //  onChange={(e) => options.editorCallback(e.value)}
   return (
-    <div
-      className="table-editor"
-      style={{
-        width: '100%',
-        height: '100%',
-      }}
-    >
+    <div className="table-editor">
       <InputNumber
         showButtons={false}
         useGrouping={false}
