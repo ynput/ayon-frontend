@@ -142,7 +142,7 @@ const VersionDetail = () => {
     versionDetailWidget = (
       <section className="column">
         <h3>
-          <span 
+          <span
             className="material-symbols-outlined color-ternary"
             style={{ verticalAlign: 'bottom' }}
           >

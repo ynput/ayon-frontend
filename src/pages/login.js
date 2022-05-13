@@ -6,8 +6,7 @@ import axios from 'axios'
 import { login } from '../features/user'
 
 import { InputText, Password, Button } from '../components'
-
-import OAuth2ProviderIcon from '../components/oauth2-provider-icon'
+import OAuth2ProviderIcon from '../components/oauthIcons'
 
 const constructOAuth2Url = (url, clientId, redirectUri, scope) => {
   const query = new URLSearchParams({

@@ -99,7 +99,7 @@ const TasksPanel = () => {
         taskId: tid,
       })
     }
-    console.log("pairing:", pairs)
+    console.log('pairing:', pairs)
     dispatch(setPairing(pairs))
     dispatch(setFocusedTasks(taskIds))
   }
@@ -109,7 +109,9 @@ const TasksPanel = () => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup ? 'folder' : getTaskTypeIcon(node.data.taskType)
+    const icon = node.data.isGroup
+      ? 'folder'
+      : getTaskTypeIcon(node.data.taskType)
     let className = ''
     let i = 0
     for (const pair of context.pairing) {

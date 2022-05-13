@@ -101,7 +101,6 @@ const loadAnatomyPresets = async () => {
   return [primaryPreset, ...presets]
 }
 
-
 //
 // Icons
 //
@@ -156,7 +155,6 @@ const getFamilyIcon = (family) => {
 //
 // Export
 //
-
 
 export {
   arrayEquals,

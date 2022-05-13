@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import axios from 'axios'
 
 import AttributeTable from '../../containers/attributeTable'
-import {getTaskTypeIcon} from '../../utils'
+import { getTaskTypeIcon } from '../../utils'
 
 const TASK_QUERY = `
     query Tasks($projectName: String!, $tasks: [String!]!) {
@@ -78,7 +78,7 @@ const TaskDetail = () => {
   return (
     <section style={{ flexGrow: 1 }}>
       <h3>
-        <span 
+        <span
           className="material-symbols-outlined color-ternary"
           style={{ verticalAlign: 'bottom' }}
         >

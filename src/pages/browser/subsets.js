@@ -51,7 +51,9 @@ const Subsets = ({
           }
         }
 
-        const icon = node.data.isGroup ? "folder" : getFamilyIcon(node.data.family)
+        const icon = node.data.isGroup
+          ? 'folder'
+          : getFamilyIcon(node.data.family)
 
         return (
           <CellWithIcon
@@ -178,8 +180,7 @@ const Subsets = ({
   // in the context
 
   useEffect(() => {
-    if (!focusedVersions.length) 
-      return
+    if (!focusedVersions.length) return
     const pairs = []
     for (const sdata of subsetData) {
       if (focusedVersions.includes(sdata.versionId)) {

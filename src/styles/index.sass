@@ -206,15 +206,25 @@ h3, h4
   .material-symbols-outlined
     color: $op-ternary
 
-h3
-  margin-bottom: 20px
+  &h3
+    margin-bottom: 20px
 
-h4
-  margin-bottom: 10px
+  &h4
+    margin-bottom: 10px
 
-ul
-  margin: 0
 
+//
+// Custom components
+//
+
+.oauth-icon
+  color: $op-ternary
+  width: 3rem
+  height: auto
+  transition: color .4s ease
+  :hover
+    transition: color .4s ease
+    color: lighten($op-ternary, 5)
 
 .attribute-table
   padding: 3px
@@ -229,7 +239,22 @@ ul
 
     &:first-child
       border-top: 0 !important
+
+.thumbnail
+  width: 100%,
+  height: auto,
+  &.placeholder
+    aspect-ratio: 1.77
+    display: flex
+    justify-content: center
+    align-items: center
+    background-color: #161616
+    span
+      font-size: 4rem
   
+//
+// Highlights
+//
 
 .row-hl-1
   color: #01cc34 !important

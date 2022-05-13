@@ -78,7 +78,7 @@ const FolderDetail = () => {
   return (
     <section style={{ flexGrow: 1 }}>
       <h3>
-        <span 
+        <span
           className="material-symbols-outlined color-ternary"
           style={{ verticalAlign: 'bottom' }}
         >

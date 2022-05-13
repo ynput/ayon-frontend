@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faImage } from '@fortawesome/free-solid-svg-icons'
 import axios from 'axios'
 
 const Thumbnail = ({ projectName, entityType, entityId }) => {
@@ -21,19 +19,8 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
 
   if (!base64) {
     return (
-      <div
-        style={{
-          width: '100%',
-          height: 'auto',
-          aspectRatio: '1.77',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#161616',
-          fontSize: '2em',
-        }}
-      >
-        <FontAwesomeIcon icon={faImage} className="color-ternary" />
+      <div className="thumbnail placeholder">
+        <span className="color-ternary material-symbols-outlined">image</span>
       </div>
     )
   }

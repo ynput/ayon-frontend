@@ -49,7 +49,7 @@ const BrowserPage = () => {
         stateStorage={'local'}
         style={{ width: '100%', height: '100%' }}
       >
-        <SplitterPanel style={{ minWidth: 250, maxWidth: 600}}>
+        <SplitterPanel style={{ minWidth: 250, maxWidth: 600 }}>
           <section className="invisible insplit">
             <section className="row invisible" style={{ flexGrow: 1 }}>
               {hierarchy}

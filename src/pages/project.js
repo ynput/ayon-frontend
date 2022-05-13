@@ -62,12 +62,9 @@ const ProjectPage = () => {
           s[taskTypeName] = data.taskTypes[taskTypeName].icon
         }
         updateTaskTypeIcons(s)
-
       })
       .finally(() => {
         dispatch(selectProject(projectName))
-
-        
 
         setLoading(false)
       })

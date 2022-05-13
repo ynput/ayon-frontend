@@ -21,6 +21,7 @@ const SettingsPage = () => {
       <nav id="project-nav">
         <NavLink to={`/settings/anatomy`}>Anatomy</NavLink>
         <NavLink to={`/settings/system`}>System</NavLink>
+        <NavLink to={`/settings/attributes`}>Attributes</NavLink>
         <NavLink to={`/settings/users`}>Users</NavLink>
         <Spacer />
       </nav>
