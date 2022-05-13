@@ -7,7 +7,7 @@ import { Dialog } from 'primereact/dialog'
 import { Spacer, Button } from '../components'
 
 import BrowserPage from './browser'
-import ManagerPage from './manager'
+import EditorPage from './editor'
 import SiteSync from './sitesync'
 import LoadingPage from './loading'
 
@@ -79,7 +79,7 @@ const ProjectPage = () => {
   }
 
   let child = null
-  if (module === 'manager') child = <ManagerPage />
+  if (module === 'editor') child = <EditorPage />
   else if (module === 'sitesync') child = <SiteSync />
   else child = <BrowserPage />
 
@@ -94,7 +94,7 @@ const ProjectPage = () => {
       </Dialog>
       <nav>
         <NavLink to={`/projects/${projectName}/browser`}>Browser</NavLink>
-        <NavLink to={`/projects/${projectName}/manager`}>Manager</NavLink>
+        <NavLink to={`/projects/${projectName}/editor`}>Editor</NavLink>
         <NavLink to={`/projects/${projectName}/sitesync`}>SiteSync</NavLink>
         <Spacer />
         <Button

@@ -29,7 +29,7 @@ const formatName = (row) => {
     )
 }
 
-const ManagerView = ({ projectName, settings }) => {
+const EditorView = ({ projectName, settings }) => {
   const [hierarchy, setHierarchy] = useState([])
   const [changes, setChanges] = useState({})
   const [loading, setLoading] = useState(false)
@@ -279,14 +279,14 @@ const ManagerView = ({ projectName, settings }) => {
 // Page wrapper
 //
 
-const ManagerPage = () => {
+const EditorPage = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   return (
     <main className="rows">
-      <ManagerView projectName={projectName} settings={settings} />
+      <EditorView projectName={projectName} settings={settings} />
     </main>
   )
 }
-export default ManagerPage
+export default EditorPage
