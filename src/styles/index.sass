@@ -52,8 +52,7 @@ nav
 
   &.primary
     background-color: $op-background-main
-    padding: 0.5rem 0 
-    padding-left: 0.5rem
+    padding: 0.5rem 1rem 
 
 
   a, button
@@ -168,14 +167,13 @@ section
         content: ' / '
       
 .breadcrumbs-copy-button
-  color: #aaa !important
-  padding: 0
-  border: 0 !important
-  background: transparent !important
+  margin-left: 8px
+  .icon
+    margin-top: 4px
+    font-size: 1.4rem
   &:focus
     outline: none !important
     box-shadow: none !important    
-    margin: 0 10px
 
 .section-header
   font-size: 1.3em
@@ -256,8 +254,11 @@ h3, h4
 
 .table-editor
   margin: 0 
-  input
-    border: 1px solid $color-hl-00
+  .p-inputwrapper
+    width: 100%
+    input
+      width: 100%
+      border: 1px solid $color-hl-00
 
 
   

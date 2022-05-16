@@ -171,7 +171,7 @@ const LoginPage = () => {
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={onLoginKeyDown}
         />
-        <Button label="Login" onClick={doLogin} />
+        <Button label="Login" icon="login" onClick={doLogin} />
       </section>
       {oauthOptions && <OAuth2Links options={oauthOptions} />}
     </main>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Spacer } from '../../components'
+import { LinkButton, Spacer } from '../../components'
 
 import Breadcrumbs from './breadcrumbs'
 import UserMenu from './userMenu'
@@ -20,21 +20,13 @@ const Header = () => {
         onHide={() => setUserMenuVisible(false)}
       />
 
-      <Button
-        icon="pi pi-bars"
-        className="p-button-link"
-        onClick={() => setProjectMenuVisible(true)}
-      />
+      <LinkButton icon="menu" onClick={() => setProjectMenuVisible(true)} />
 
       <Spacer>
         <Breadcrumbs />
       </Spacer>
 
-      <Button
-        className="p-button-link"
-        icon="pi pi-user"
-        onClick={() => setUserMenuVisible(true)}
-      />
+      <LinkButton icon="person" onClick={() => setUserMenuVisible(true)} />
     </nav>
   )
 }

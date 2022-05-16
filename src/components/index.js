@@ -1,5 +1,5 @@
 import { InputText } from 'primereact/inputtext'
-import { Button } from 'primereact/button'
+import { Button as PrimeButton } from 'primereact/button'
 import { Password } from 'primereact/password'
 import { Dropdown } from 'primereact/dropdown'
 import { ProgressSpinner } from 'primereact/progressspinner'
@@ -55,17 +55,49 @@ const TableWrapper = (props) => {
   )
 }
 
+const Button = (props) => {
+  return (
+    <PrimeButton
+      className={`normal-button ${props.className || ''}`}
+      disabled={props.disabled}
+      onClick={props.onClick}
+      tooltip={props.tooltip}
+      tooltipOptions={{ position: props.tooltipPosition || 'bottom' }}
+    >
+      <span className="icon material-symbols-outlined">{props.icon}</span>
+      <span className="label">{props.label}</span>
+    </PrimeButton>
+  )
+}
+
 const ToolButton = (props) => {
   return (
-    <Button
+    <PrimeButton
       className={`tool-button ${props.className || ''}`}
       disabled={props.disabled}
       onClick={props.onClick}
       tooltip={props.tooltip}
       tooltipOptions={{ position: props.tooltipPosition || 'bottom' }}
     >
-      <span className="material-symbols-outlined">{props.icon}</span>
-    </Button>
+      <span className="icon material-symbols-outlined">{props.icon}</span>
+    </PrimeButton>
+  )
+}
+
+const LinkButton = (props) => {
+  return (
+    <PrimeButton
+      className={`p-button-link link-button ${props.className || ''}`}
+      disabled={props.disabled}
+      onClick={props.onClick}
+      tooltip={props.tooltip}
+      tooltipOptions={{ position: props.tooltipPosition || 'bottom' }}
+    >
+      {props.icon && (
+        <span className="icon material-symbols-outlined">{props.icon}</span>
+      )}
+      {props.label && <span className="label">{props.label}</span>}
+    </PrimeButton>
   )
 }
 
@@ -78,4 +110,5 @@ export {
   Shade,
   TableWrapper,
   ToolButton,
+  LinkButton,
 }

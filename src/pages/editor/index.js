@@ -1,14 +1,13 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import axios from 'axios'
 
-import { Shade, Spacer } from '../../components'
+import { Shade, Spacer, Button } from '../../components'
 import { CellWithIcon } from '../../components/icons'
-
-import { Button } from 'primereact/button'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
+import { setBreadcrumbs } from '../../features/context'
 import { arrayEquals, getFolderTypeIcon } from '../../utils'
 import { buildQuery } from './queries'
 import { stringEditor, integerEditor, floatEditor } from './editors'
@@ -34,6 +33,7 @@ const EditorView = ({ projectName, settings }) => {
   const [changes, setChanges] = useState({})
   const [loading, setLoading] = useState(false)
   const [expandedKeys, setExpandedKeys] = useState({})
+  const dispatch = useDispatch()
 
   const columns = useMemo(() => {
     if (!settings.attributes) return []
@@ -143,6 +143,18 @@ const EditorView = ({ projectName, settings }) => {
     loadHierarchy(event.node.path)
   }
 
+  const onRowClick = (event) => {
+    const node = event.node.data
+    if (node.entityType === 'folder') {
+      dispatch(
+        setBreadcrumbs({
+          parents: node.parents,
+          folder: node.name,
+        })
+      )
+    }
+  }
+
   //
   // Format / Edit
   //
@@ -222,15 +234,15 @@ const EditorView = ({ projectName, settings }) => {
   return (
     <>
       <section className="invisible row">
-        <Button icon="pi pi-plus" label="Add folder" disabled />
-        <Button icon="pi pi-plus" label="Add task" disabled />
+        <Button icon="create_new_folder" label="Add folder" disabled />
+        <Button icon="add_task" label="Add task" disabled />
         <Spacer />
         <Button
-          icon="pi pi-times"
+          icon="close"
           label="Revert Changes"
           onClick={() => setChanges({})}
         />
-        <Button icon="pi pi-check" label="Commit Changes" onClick={onCommit} />
+        <Button icon="check" label="Commit Changes" onClick={onCommit} />
       </section>
 
       <section className="column" style={{ flexGrow: 1 }}>
@@ -246,6 +258,7 @@ const EditorView = ({ projectName, settings }) => {
             columnResizeMode="expand"
             expandedKeys={expandedKeys}
             onToggle={(e) => setExpandedKeys(e.value)}
+            onRowClick={onRowClick}
           >
             <Column
               field="name"

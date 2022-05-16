@@ -9,6 +9,7 @@ const BASE_QUERY = `
             folderType
             hasChildren
             hasTasks
+            parents
             attrib {
               #FOLDER_ATTRS#
             }

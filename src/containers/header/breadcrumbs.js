@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { Button } from '../../components'
+import { LinkButton } from '../../components'
 
 const Breadcrumbs = () => {
   /*
@@ -69,14 +69,14 @@ const Breadcrumbs = () => {
         ))}
       </ul>
 
-      <Button
-        icon="pi pi-copy"
+      <LinkButton
+        icon="content_copy"
         className="breadcrumbs-copy-button"
         onClick={() => {
           alert(`TODO: Copy to clipboard\n\n ${uri}`)
         }}
         tooltip="Copy URI to clipboard"
-        tooltipOptions={{ position: 'bottom' }}
+        tooltipPosition="bottom"
         disabled={!breadcrumbs}
       />
     </div>

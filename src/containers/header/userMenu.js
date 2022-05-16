@@ -5,6 +5,7 @@ import { Sidebar } from 'primereact/sidebar'
 import { Button } from 'primereact/button'
 import axios from 'axios'
 
+import { Spacer } from '../../components'
 import { logout } from '../../features/user'
 
 const UserMenu = ({ visible, onHide }) => {
@@ -32,6 +33,7 @@ const UserMenu = ({ visible, onHide }) => {
     >
       <div
         style={{
+          height: '100%',
           display: 'flex',
           flexDirection: 'column',
           gap: 3,
@@ -69,6 +71,7 @@ const UserMenu = ({ visible, onHide }) => {
           label="Profile"
           icon="pi pi-user"
         />
+        <Spacer />
         <Button onClick={doLogout} label="Sign Out" icon="pi pi-sign-out" />
       </div>
     </Sidebar>

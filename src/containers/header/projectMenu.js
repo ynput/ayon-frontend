@@ -57,7 +57,7 @@ const ProjectMenu = ({ visible, onHide }) => {
         </TableWrapper>
 
         <Button
-          icon="pi pi-cog"
+          icon="settings_suggest"
           label="Project manager"
           style={{ marginTop: 10 }}
           onClick={() => {

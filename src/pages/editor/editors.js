@@ -8,8 +8,6 @@ const stringEditor = (options, callback, value) => {
 }
 
 const integerEditor = (options, callback, value) => {
-  console.log(options)
-  console.log(value)
   //  onChange={(e) => options.editorCallback(e.value)}
   return (
     <div className="table-editor">
