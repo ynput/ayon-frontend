@@ -8,16 +8,18 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import { setBreadcrumbs } from '../../features/context'
-import { arrayEquals, getFolderTypeIcon } from '../../utils'
+import { arrayEquals, getFolderTypeIcon, getTaskTypeIcon } from '../../utils'
 import { buildQuery } from './queries'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
 const formatName = (row) => {
   if (row.data.entityType === 'task')
     return (
-      <span>
-        <i>{row.data.name}</i>
-      </span>
+      <CellWithIcon
+        icon={getTaskTypeIcon(row.data.taskType)}
+        text={row.data.name}
+        textStyle={{fontStyle: 'italic'}}
+      />
     )
   else
     return (

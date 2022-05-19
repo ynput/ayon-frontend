@@ -21,6 +21,7 @@ const BASE_QUERY = `
           node {
             id
             name
+            taskType
             attrib {
               #TASK_ATTRS#
             }
