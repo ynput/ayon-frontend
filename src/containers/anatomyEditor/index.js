@@ -1,6 +1,6 @@
 import Form from '@rjsf/core'
 
-import { Accordion, AccordionTab } from 'primereact/accordion'
+import { Panel } from 'primereact/panel'
 
 import compactListUiSchema from './compactList'
 import templateGroupUiSchema from './templateGroup'
@@ -9,20 +9,18 @@ import customFields from './customFields'
 import './anatomy.sass'
 
 const WrapperTemplate = (props) => {
-  return (
-    <Accordion multiple transitionOptions={{ timeout: 0 }}>
-      {props.properties.map((element) => {
-        return (
-          <AccordionTab
+  return props.properties.map((element) => (
+          <Panel
             key={element.name}
             header={element.content.props.schema.title}
+            toggleable
+            collapsed={true}
+            transitionOptions={{ timeout: 0 }}
           >
-            <>{element.content}</>
-          </AccordionTab>
+            {element.content}
+          </Panel>
         )
-      })}
-    </Accordion>
-  )
+      )
 }
 
 const TopLevelObjectFieldTemplate = (props) => {

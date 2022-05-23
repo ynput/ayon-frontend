@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-import SettingsEditor from '../../containers/settingsEditor'
+import AnatomyEditor from '../../containers/anatomyEditor'
 
 import { Button } from 'primereact/button'
 import { DataTable } from 'primereact/datatable'
@@ -181,7 +181,7 @@ const AnatomyPresets = () => {
 
         <section style={{ flexGrow: 1 }}>
           <div className="wrapper" style={{ overflowY: 'scroll' }}>
-            <SettingsEditor
+            <AnatomyEditor
               schema={schema}
               formData={formData}
               onChange={setFormData}

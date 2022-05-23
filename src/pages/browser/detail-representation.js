@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { Button, Spacer } from '../../components'
+import { Spacer } from '../../components'
 
 import { setBreadcrumbs } from '../../features/context'
 import SiteSyncDetail from '../sitesync/detail'

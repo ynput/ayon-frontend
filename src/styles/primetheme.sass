@@ -161,25 +161,6 @@ $prime-button-background: $color-grey-03
     border: 0
 
 
-.p-accordion
-  width: 100%
-  .p-accordion-header
-    .p-accordion-header-link
-      background: darken($op-background-dark,2)
-      border: 0
-      &:focus
-        box-shadow: none !important
-
-    &:not(.p-disabled).p-highlight .p-accordion-header-link
-        background: darken($op-background-dark,2)
-        border: 0
-        outline: none !important
-
-  .p-accordion-content
-    background: transparent !important
-    border: 0
-
-
 .p-sidebar, .p-dialog, .p-paginator
   background: $color-grey-00
   border: 0
@@ -245,4 +226,34 @@ $prime-button-background: $color-grey-03
 .link-button
   padding: 0
   margin: 0
+
+
+
+.p-panel
+  .p-panel-content
+    padding: 0
+    padding-left: 25px
+    border-radius: 0
+    border: 0
+    background-color: transparent
+
+  .p-panel-header
+    border-radius: 0
+    background-color: rgba(0,0,0,0.2)
+    border: 0
+
+.p-divider
+  .p-divider-content
+    background-color: transparent
+
+.p-tabview
+  margin: 20px 0
+  .p-tabview-nav
+    .p-tabview-nav-link
+      background-color: transparent
+
+  .p-tabview-panels
+    background-color: transparent
+
+
 

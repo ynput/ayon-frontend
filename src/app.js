@@ -25,7 +25,7 @@ const SettingsLoader = () => {
 
   useEffect(() => {
     if (!user.name) return
-    axios.get('/api/settings').then((response) => {
+    axios.get('/api/settings/attributes').then((response) => {
       dispatch(setSettings(response.data))
     })
     // eslint-disable-next-line

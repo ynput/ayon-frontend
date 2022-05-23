@@ -1,0 +1,89 @@
+
+
+.rjsf
+  flex-grow: 1
+  .errors
+    display: none
+
+  .form-panel-header
+    display: flex
+    flex-direction: row
+    justify-content: space-between
+    align-items: baseline
+    font-size: 1.2rem
+    h4
+      margin: 0
+      padding:0
+      margin-left: 10px
+      border: 0
+      font-size: 1rem
+
+    small
+      margin-left: 20px
+      opacity: 0.4
+  
+  .form-object-field
+    display: flex
+    flex-direction: column
+
+    .form-object-field-item
+      border-left: 4px solid transparent
+
+      // color for overrides
+      .site
+        border-left: 4px solid green
+
+      .project
+        border-left: 4px solid blue
+
+      .edit
+        border-left: 4px solid red
+
+    &.layout-compact       
+      flex-direction: row
+      flex-grow: 1
+
+      .form-object-field-item
+        flex-grow: 1
+
+  .form-inline-field
+    margin: 6px 0
+    margin-left: 6px
+    display: flex
+    flex-grow: 1
+    flex-direction: row
+    align-items: center
+    justify-content: left
+    gap: 8px
+
+
+    .form-inline-field-label
+      flex-basis: 120px
+      text-align: left
+
+    .form-inline-field-widget
+      flex-grow: 1
+      >:not(.p-inputswitch)
+        width: 100%
+      
+
+    &.error
+      color: red
+    
+
+  .form-array-field
+    display: flex
+    flex-direction: column
+
+    .form-array-field-item
+      flex-grow: 1
+      display: flex
+      flex-direction: row
+      align-items: center
+
+      .p-panel
+        flex-grow: 1
+
+
+  .settings-add-button
+    margin-bottom: 1rem
