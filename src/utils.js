@@ -1,14 +1,11 @@
 import { useState } from 'react'
 import axios from 'axios'
 
-const arrayEquals = (a, b) => {
-  return (
-    Array.isArray(a) &&
-    Array.isArray(b) &&
-    a.length === b.length &&
-    a.every((val, index) => val === b[index])
-  )
-}
+import { isEmpty, isEqual, xorWith } from 'lodash';
+
+
+const arrayEquals = (x, y) => isEmpty(xorWith(x, y, isEqual));
+
 
 const sortByKey = (array, key) => {
   // Return a copy of array of objects sorted

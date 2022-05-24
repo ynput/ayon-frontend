@@ -5,6 +5,8 @@
   .errors
     display: none
 
+  // PANEL HEADER
+
   .form-panel-header
     display: flex
     flex-direction: row
@@ -21,16 +23,22 @@
     small
       margin-left: 20px
       opacity: 0.4
+
+  // OBJECT
   
   .form-object-field
     display: flex
     flex-direction: column
 
+    .group-changed
+      .form-object-field-item
+        border-left: 4px solid red !important
+
     .form-object-field-item
       border-left: 4px solid transparent
 
       // color for overrides
-      .site
+      .studio
         border-left: 4px solid green
 
       .project
@@ -42,31 +50,33 @@
     &.layout-compact       
       flex-direction: row
       flex-grow: 1
+      gap: 6px
 
       .form-object-field-item
         flex-grow: 1
 
   .form-inline-field
     margin: 6px 0
-    margin-left: 6px
     display: flex
     flex-grow: 1
     flex-direction: row
     align-items: center
     justify-content: left
-    gap: 8px
-
 
     .form-inline-field-label
       flex-basis: 120px
-      text-align: left
+      text-align: center
+      background-color: transparent
+      white-space: nowrap
 
     .form-inline-field-widget
       flex-grow: 1
       >:not(.p-inputswitch)
         width: 100%
-      
 
+      .p-inputswitch
+        margin-left: 20px
+        
     &.error
       color: red
     
@@ -79,7 +89,7 @@
       flex-grow: 1
       display: flex
       flex-direction: row
-      align-items: center
+      align-items: top
 
       .p-panel
         flex-grow: 1
@@ -87,3 +97,9 @@
 
   .settings-add-button
     margin-bottom: 1rem
+
+  .settings-rm-button
+    display: flex
+    align-items: top
+    justify-content: top
+    margin: 2px

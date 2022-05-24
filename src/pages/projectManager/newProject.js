@@ -78,7 +78,7 @@ const NewProjectDialog = ({ onHide }) => {
         label="Create"
         className="p-button-info"
         onClick={handleSubmit}
-        style={{ width: 120, marginTop: 15 }}
+        style={{ width: 120 }}
       />
     </div>
   )
