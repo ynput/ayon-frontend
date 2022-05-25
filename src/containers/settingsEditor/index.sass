@@ -1,5 +1,3 @@
-
-
 .rjsf
   flex-grow: 1
   .errors
@@ -13,6 +11,7 @@
     justify-content: space-between
     align-items: baseline
     font-size: 1.2rem
+
     h4
       margin: 0
       padding:0
@@ -62,12 +61,17 @@
     flex-direction: row
     align-items: center
     justify-content: left
+    gap: 3px
 
     .form-inline-field-label
-      flex-basis: 120px
+      flex-basis: 130px
       text-align: center
       background-color: transparent
       white-space: nowrap
+      border: 1px solid rgba(#fff,0.1)
+      padding: 0.5rem
+      font-weight: bold
+
 
     .form-inline-field-widget
       flex-grow: 1
@@ -80,6 +84,7 @@
     &.error
       color: red
     
+  // ARRAYS
 
   .form-array-field
     display: flex
@@ -94,6 +99,7 @@
       .p-panel
         flex-grow: 1
 
+  // BUTTONS
 
   .settings-add-button
     margin-bottom: 1rem

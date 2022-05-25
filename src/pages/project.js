@@ -99,7 +99,7 @@ const ProjectPage = () => {
         <Spacer />
         <Button
           className="p-button-link"
-          icon="pi pi-cog"
+          icon="settings"
           onClick={() => {
             setShowContextDialog(true)
           }}

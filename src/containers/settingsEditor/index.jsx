@@ -5,6 +5,7 @@ import { Panel } from 'primereact/panel'
 import { Button } from 'primereact/button'
 import { Divider } from 'primereact/divider'
 import { TextWidget, SelectWidget, CheckboxWidget } from './widgets'
+import { Tooltip } from 'primereact/tooltip'
 import { useLocalStorage, arrayEquals } from '../../utils'
 
 
@@ -95,14 +96,11 @@ function ObjectFieldTemplate(props) {
       override_levels[key] = overrides[key].level
     
     if (isChanged(props.formData[key], overrides[key].value)){
-      console.log(props.schema)
       override_levels[key] = `edit`
       if (props.schema.isgroup)
         className += ' group-changed'
     }
   }
-
-
 
 
   const fields = (
@@ -166,12 +164,19 @@ function FieldTemplate(props) {
 
   }
 
-  //console.log("FIELD", props.label, props)
+
   return (
     <>
     {divider}
     <div className={`form-inline-field p-inputgroup ${props.errors.props.errors ? 'error' : ''}`}>
-      {props.label && <div className="form-inline-field-label p-inputgroup-addon">{props.label}</div>}
+      {props.label && (
+        <div 
+          className={`form-inline-field-label ${ props.rawDescription ? 'field-label' : ''}`}
+          data-pr-tooltip={`${props.rawDescription ? props.rawDescription : ''}`}
+        >
+          {props.label}
+        </div>
+      )}
       <div className="form-inline-field-widget">{props.children}</div>
     </div>
     </>
@@ -217,7 +222,6 @@ const ArrayFieldTemplate = (props) => {
   )
 }
 
-
 const widgets = {
   TextWidget,
   SelectWidget,
@@ -246,6 +250,7 @@ const SettingsEditor = ({schema, formData, onChange}) => {
   }
 
   return (
+    <>
     <Form
       schema={schema}
       uiSchema={uiSchema}
@@ -259,6 +264,8 @@ const SettingsEditor = ({schema, formData, onChange}) => {
       children={<></>}
       
     />
+    <Tooltip target=".form-inline-field-label" />
+    </>
   )
 }
 

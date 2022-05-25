@@ -17,13 +17,7 @@ const CheckboxWidget = function(props) {
 const SelectWidget = (props) => {
   const options = props.options.enumOptions
   const tooltip = [];
-  if (props.schema.description)
-    tooltip.push(props.schema.description)
-  else
-    tooltip.push(props.schema.title)
-
   if (props.rawErrors){
-    tooltip.push("")
     for (const err of props.rawErrors)
       tooltip.push(err)
   }
@@ -50,13 +44,7 @@ const SelectWidget = (props) => {
 
 const TextWidget = (props) => {
   const tooltip = [];
-  if (props.schema.description)
-    tooltip.push(props.schema.description)
-  else
-    tooltip.push(props.schema.title)
-
   if (props.rawErrors){
-    tooltip.push("")
     for (const err of props.rawErrors)
       tooltip.push(err)
   }
