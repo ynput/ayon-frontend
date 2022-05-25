@@ -11,7 +11,7 @@ import { useLocalStorage, arrayEquals } from '../../utils'
 
 import './index.sass'
 
-const SettingsPanel = ({objId, title, description, children, layout}) => {
+const SettingsPanel = ({objId, title, description, children, layout, revertButton}) => {
   const [expandedObjects, setExpandedObjects] = useLocalStorage('expanded-settings-keys', [])
 
   const onToggle = (e) => {
@@ -33,6 +33,7 @@ const SettingsPanel = ({objId, title, description, children, layout}) => {
           <h4>{title}</h4>
           <div style={{flex:1}}></div>
           <small>{description}</small>
+          {revertButton && revertButton}  
         </div>
       )
   }
@@ -66,8 +67,9 @@ const isChanged = (current, override) => {
     return current !== override
   }
   for (const key in current){
-    if (key === "__overrides__")
+    if (["__overrides__", "__changes__"].includes(key))
       continue
+
     if (isChanged(current[key], current.__overrides__[key].value))
       return true
   }
@@ -80,8 +82,10 @@ const isChanged = (current, override) => {
 function ObjectFieldTemplate(props) {
   const overrides = props.formData.__overrides__ || {}
   const override_levels = {}
+  //const changes = []
 
   let className = ""
+  let changed = false
   if (props.schema.layout)
     className = `form-object-field layout-${props.schema.layout}`
 
@@ -94,22 +98,31 @@ function ObjectFieldTemplate(props) {
 
     if (overrides[key].level)
       override_levels[key] = overrides[key].level
-    
+
     if (isChanged(props.formData[key], overrides[key].value)){
-      override_levels[key] = `edit`
-      if (props.schema.isgroup)
-        className += ' group-changed'
+      override_levels[key] = "edit"
+      overrides[key].changed = true
+      changed = true
     }
+    else
+      overrides[key].changed = false
   }
+
+  if (changed && props.schema.isgroup)
+    className += " group-changed"
 
 
   const fields = (
     <div className={className}>
-      {props.properties.map((element, index) => (
-        <div key={index} className={`form-object-field-item ${override_levels[element.name] || ''}`} >
-          {element.content}
-        </div>
-      ))}
+      {props.properties.map((element, index) => {
+        
+        return (
+          <div key={index} className={`form-object-field-item ${override_levels[element.name] || ''}`} >
+            {element.content}
+          </div>
+      )
+
+      })}
     </div>
   )
   
@@ -119,15 +132,44 @@ function ObjectFieldTemplate(props) {
 
   const objId = props.idSchema.$id
 
-  let title = props.title
+  let title = `${props.title} ${props.schema.isgroup ? 'group' : ''}`
   if (props.formData.name)
     title = props.formData.name
+
+  let revertButton = <></>
+  /*
+  if (props.schema.isgroup && changes.length > 0)
+    revertButton = <Button 
+      label="revert"
+      onClick={() => {
+        console.log(props)
+        if (props.formData.__changes__)
+          delete props.formData.__changes__
+        //for (const key in props.formData.__overrides__){
+        //  console.log("revert", key, "to", props.formData.__overrides__[key].value)
+        //  props.formData[key] = props.formData.__overrides__[key].value
+        //}
+       
+        for (const element of props.properties){
+          const nval = props.formData.__overrides__[element.name].value
+          console.log("revert", element.name, "to", nval)
+          element.content.props.onChange(nval)
+        }
+
+
+      }}
+    />
+  */
+
+  //    onClick={() => console.log(props)}
+  //    onClick={() => props.onChange({...props.formData.__overrides__.value, __overrides__: props.formData.__overrides__})}
 
   return (
     <SettingsPanel
       objId={objId}
       title={title}
       description={props.description}
+      revertButton={revertButton}
     >
       {fields}
     </SettingsPanel>

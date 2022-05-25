@@ -1,3 +1,4 @@
+//import { useMemo } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { InputNumber } from 'primereact/inputnumber'
 import { InputSwitch } from 'primereact/inputswitch'
@@ -5,6 +6,7 @@ import { Dropdown } from 'primereact/dropdown'
 
 
 const CheckboxWidget = function(props) {
+  //const originalValue = useMemo(() => props.value, [])
   return (
     <InputSwitch 
       checked={props.value} 
@@ -41,7 +43,6 @@ const SelectWidget = (props) => {
 }
 
 
-
 const TextWidget = (props) => {
   const tooltip = [];
   if (props.rawErrors){
@@ -57,6 +58,7 @@ const TextWidget = (props) => {
     opts.max = props.schema.maximum
     opts.step = 1
     opts.showButtons = true
+    opts.useGrouping = false
     opts.onChange = (e) => props.onChange(e.value)
   }
   else{

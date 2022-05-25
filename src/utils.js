@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import axios from 'axios'
 
-import { isEmpty, isEqual, xorWith } from 'lodash';
+import { isEmpty, isEqual, xorWith, cloneDeep } from 'lodash';
 
 
 const arrayEquals = (x, y) => isEmpty(xorWith(x, y, isEqual));
+const deepCopy = (obj) => cloneDeep(obj)
 
 
 const sortByKey = (array, key) => {
@@ -197,6 +198,7 @@ function useLocalStorage(key, initialValue) {
 
 export {
   arrayEquals,
+  deepCopy,
   loadAnatomyPresets,
   groupResult,
   sortByKey,
