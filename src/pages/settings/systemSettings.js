@@ -4,9 +4,10 @@ import axios from 'axios'
 import { Button } from '../../components'
 import SettingsEditor from '../../containers/settingsEditor/'
 import { deepCopy } from '../../utils'
+import { isEqual } from 'lodash'
 
-
-const patch = (data, inGroup=false) => {
+/*
+const oldpatch = (data, inGroup=false) => {
   const overrides = data.__overrides__ 
   let hasChanges = false
   for (const key in data) {
@@ -34,11 +35,44 @@ const patch = (data, inGroup=false) => {
   delete data.__overrides__
   return hasChanges
 }
+*/
 
 
-const createPatch = (data) => {
+
+const patch = (data, overrides, root) => {
+  let hasChanges = false
+  for (const key in data){
+    const path = `${root}_${key}`
+    const override = overrides[path]
+
+    if (override && override.level === 'default'){
+      if (isEqual(override.value, data[key])){
+        // no change. remove from patch
+        delete data[key]
+        continue
+      }
+    } 
+      
+    if (typeof data[key] === 'object' && Array.isArray(data[key]) === false){
+      if (override && override.type === 'group')
+        hasChanges = true
+      else {
+        if (patch(data[key], overrides, path))
+          hasChanges = true
+        else
+          delete data[key]
+      }
+    } 
+    else 
+      hasChanges = true
+  }
+  return hasChanges
+}
+
+
+const createPatch = (data, overrides) => {
   const r = deepCopy(data)
-  patch(r)
+  patch(r, overrides, "root")
   return r
 }
 
@@ -48,6 +82,7 @@ const createPatch = (data) => {
 const SystemSettings = () => {
   const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
+  const [overrides, setOverrides] = useState(null)
   const [newData, setNewData] = useState(null)
 
 
@@ -59,13 +94,18 @@ const SystemSettings = () => {
 
   const loadSettings = () => {
     axios
-      .get('/api/settings/system?verbose=true')
+      .get('/api/settings/system')//?verbose=true')
       .then(res => {
         setOriginalData(res.data)
         setNewData(null)
       })
       .catch(err => console.log(err))
+
+    axios
+      .get('/api/settings/system/overrides')
+      .then(res => setOverrides(res.data))
   }
+
 
   useEffect(() => {
     loadSchema()
@@ -73,13 +113,12 @@ const SystemSettings = () => {
   }, [])
 
   const onChange = (formData) => {
-    console.log(formData)
+ //   console.log(formData)
     setNewData(formData)
   }
 
   const onSave = () => {
-    const patchData = createPatch(newData)
-    console.log(patchData)
+    const patchData = createPatch(newData, overrides)
     axios
       .patch('/api/settings/system', patchData)
       .then(() => loadSettings())
@@ -98,10 +137,10 @@ const SystemSettings = () => {
       * and the new data is different from the original data.
       * It is memoized, so re-reder is not triggered when newData is updated.
       * */
-    if (!(schema && originalData))
+    if (!(schema && originalData && overrides))
        return "Loading editor.."
-    return <SettingsEditor schema={schema} formData={originalData} onChange={onChange}/>
-  }, [schema, originalData])
+    return <SettingsEditor schema={schema} formData={originalData} overrides={overrides} onChange={onChange}/>
+  }, [schema, originalData, overrides])
 
   return (
     <main>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import Form from '@rjsf/core'
 
 import { Panel } from 'primereact/panel'
@@ -6,7 +6,9 @@ import { Button } from 'primereact/button'
 import { Divider } from 'primereact/divider'
 import { TextWidget, SelectWidget, CheckboxWidget } from './widgets'
 import { Tooltip } from 'primereact/tooltip'
-import { useLocalStorage, arrayEquals } from '../../utils'
+import { useLocalStorage  } from '../../utils'
+
+import {isEqual} from 'lodash'
 
 
 import './index.sass'
@@ -58,118 +60,80 @@ const SettingsPanel = ({objId, title, description, children, layout, revertButto
 }
 
 
-
-const isChanged = (current, override) => {
-  if (Array.isArray(current)){
-    return !arrayEquals(current, override)
-  }
-  if (typeof current !== 'object') {
-    return current !== override
-  }
-  for (const key in current){
-    if (["__overrides__", "__changes__"].includes(key))
-      continue
-
-    if (isChanged(current[key], current.__overrides__[key].value))
-      return true
-  }
-  return false
-}
-
-
-
-
 function ObjectFieldTemplate(props) {
-  const overrides = props.formData.__overrides__ || {}
-  const override_levels = {}
-  //const changes = []
 
   let className = ""
-  let changed = false
   if (props.schema.layout)
     className = `form-object-field layout-${props.schema.layout}`
 
-  for (const key in props.formData){
-    if (key === "__overrides__")
-      continue
+  //
+  // Highlight overrides and changed fields
+  //
 
-    if (!overrides[key])
-      continue
+  // check if the group is overriden
+  // if so, apply "group-changed" class to the object field, 
+  // which will cause all fields to be highlighted
 
-    if (overrides[key].level)
-      override_levels[key] = overrides[key].level
-
-    if (isChanged(props.formData[key], overrides[key].value)){
-      override_levels[key] = "edit"
-      overrides[key].changed = true
-      changed = true
+  const objId = props.idSchema.$id
+  if (props.formContext.overrides){
+    const override = props.formContext.overrides[objId]
+    if (override && override.type === "group"){
+      if (!isEqual(props.formData, override.value)){
+          className += " group-changed"
+      }
     }
-    else
-      overrides[key].changed = false
   }
 
-  if (changed && props.schema.isgroup)
-    className += " group-changed"
+  // apply the override level to each field
+  // of the object, also check if the field is the field is changed
 
+  const overrideLevels = useMemo(() => {
+    const result = {}
+    for (const key in props.formData){
+      const schemaId = props.idSchema[key].$id
+      if (schemaId && props.formContext.overrides && props.formContext.overrides[schemaId]){
+        const override = props.formContext.overrides[schemaId]
+        result[key] = override.level
+        if (!isEqual(props.formData[key], override.value)){
+          result[key] = "edit"
+        }
+      }
+    }
+    return result
+  }, [props.formData, props.idSchema, props.formContext.overrides])
 
-  const fields = (
+  // memoize the fields
+
+  const fields = useMemo(() => (
     <div className={className}>
       {props.properties.map((element, index) => {
-        
         return (
-          <div key={index} className={`form-object-field-item ${override_levels[element.name] || ''}`} >
+          <div key={index} className={`form-object-field-item ${overrideLevels[element.name] || ''}`} >
             {element.content}
           </div>
       )
-
       })}
     </div>
-  )
+  ), [props.properties, className, overrideLevels])
   
+
+  // aaand... render
+
   if (["compact", "root"].includes(props.schema.layout))
     return fields
 
+  // In case of "pseudo-dicts" (array of objects with a "name" attribute)
+  // use the "name" attribute as the title
 
-  const objId = props.idSchema.$id
-
-  let title = `${props.title} ${props.schema.isgroup ? 'group' : ''}`
+  let title = props.title
   if (props.formData.name)
     title = props.formData.name
-
-  let revertButton = <></>
-  /*
-  if (props.schema.isgroup && changes.length > 0)
-    revertButton = <Button 
-      label="revert"
-      onClick={() => {
-        console.log(props)
-        if (props.formData.__changes__)
-          delete props.formData.__changes__
-        //for (const key in props.formData.__overrides__){
-        //  console.log("revert", key, "to", props.formData.__overrides__[key].value)
-        //  props.formData[key] = props.formData.__overrides__[key].value
-        //}
-       
-        for (const element of props.properties){
-          const nval = props.formData.__overrides__[element.name].value
-          console.log("revert", element.name, "to", nval)
-          element.content.props.onChange(nval)
-        }
-
-
-      }}
-    />
-  */
-
-  //    onClick={() => console.log(props)}
-  //    onClick={() => props.onChange({...props.formData.__overrides__.value, __overrides__: props.formData.__overrides__})}
 
   return (
     <SettingsPanel
       objId={objId}
       title={title}
       description={props.description}
-      revertButton={revertButton}
     >
       {fields}
     </SettingsPanel>
@@ -182,7 +146,6 @@ function FieldTemplate(props) {
   let divider = <></>
   if (props.schema.section)
     divider = <Divider><span className="p-tag">{props.schema.section}</span></Divider>
-
 
   if (props.schema.type === "object"){
     return (
@@ -205,7 +168,6 @@ function FieldTemplate(props) {
     )
 
   }
-
 
   return (
     <>
@@ -271,7 +233,7 @@ const widgets = {
 }
 
 
-const SettingsEditor = ({schema, formData, onChange}) => {
+const SettingsEditor = ({schema, formData, onChange, overrides}) => {
   useEffect(() => {
     return () => {
       console.log('unmounting form')
@@ -291,12 +253,17 @@ const SettingsEditor = ({schema, formData, onChange}) => {
     ),
   }
 
+  const formContext = {
+    overrides
+  }
+
   return (
     <>
     <Form
       schema={schema}
       uiSchema={uiSchema}
       formData={formData}
+      formContext={formContext}
       widgets={widgets}
       liveValidate={true}
       FieldTemplate={FieldTemplate}
