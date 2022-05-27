@@ -5,38 +5,7 @@ import { Button } from '../../components'
 import SettingsEditor from '../../containers/settingsEditor/'
 import { deepCopy } from '../../utils'
 import { isEqual } from 'lodash'
-
-/*
-const oldpatch = (data, inGroup=false) => {
-  const overrides = data.__overrides__ 
-  let hasChanges = false
-  for (const key in data) {
-    if (key === '__overrides__')
-      continue
-    
-    if (typeof data[key] === 'object') {
-      if (!Array.isArray(data[key])) {
-        const ig = inGroup || (overrides[key] && overrides[key].type === 'group')
-        if (!patch(data[key], ig)){
-          delete data[key]
-        } else {
-          hasChanges = true
-        }
-        continue
-      }
-    }
-
-    if (overrides[key].changed || inGroup || overrides[key].level !== 'default'){ 
-      hasChanges = true
-    }
-    else
-       delete data[key]
-  }
-  delete data.__overrides__
-  return hasChanges
-}
-*/
-
+import { toast } from 'react-toastify'
 
 
 const patch = (data, overrides, root) => {
@@ -75,7 +44,6 @@ const createPatch = (data, overrides) => {
   patch(r, overrides, "root")
   return r
 }
-
 
 
 
@@ -122,6 +90,7 @@ const SystemSettings = () => {
     axios
       .patch('/api/settings/system', patchData)
       .then(() => loadSettings())
+      .catch(err => toast.error("Unable to save settings. Check the form for errors."))
   }
 
   const onDelete = () => {

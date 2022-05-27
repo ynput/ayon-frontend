@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import Form from '@rjsf/core'
 
 import { Panel } from 'primereact/panel'
@@ -6,9 +6,9 @@ import { Button } from 'primereact/button'
 import { Divider } from 'primereact/divider'
 import { TextWidget, SelectWidget, CheckboxWidget } from './widgets'
 import { Tooltip } from 'primereact/tooltip'
-import { useLocalStorage  } from '../../utils'
 
-import {isEqual} from 'lodash'
+import { useLocalStorage  } from '../../utils'
+import { isEqual } from 'lodash'
 
 
 import './index.sass'
@@ -178,7 +178,9 @@ function FieldTemplate(props) {
           className={`form-inline-field-label ${ props.rawDescription ? 'field-label' : ''}`}
           data-pr-tooltip={`${props.rawDescription ? props.rawDescription : ''}`}
         >
+          <span>
           {props.label}
+          </span>
         </div>
       )}
       <div className="form-inline-field-widget">{props.children}</div>
@@ -234,12 +236,6 @@ const widgets = {
 
 
 const SettingsEditor = ({schema, formData, onChange, overrides}) => {
-  useEffect(() => {
-    return () => {
-      console.log('unmounting form')
-    }
-  }, [])
-
   if (!schema) {
     return <div>Loading schema...</div>
   }

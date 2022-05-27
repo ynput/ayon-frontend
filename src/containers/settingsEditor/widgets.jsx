@@ -1,5 +1,6 @@
-//import { useMemo } from 'react'
+import { useMemo } from 'react'
 import { InputText } from 'primereact/inputtext'
+import { InputTextarea } from 'primereact/inputtextarea'
 import { InputNumber } from 'primereact/inputnumber'
 import { InputSwitch } from 'primereact/inputswitch'
 import { Dropdown } from 'primereact/dropdown'
@@ -50,6 +51,10 @@ const TextWidget = (props) => {
       tooltip.push(err)
   }
 
+  // hack for string arrays. to prevent null value passed to the
+  // input text widget handled as uncontrolled input
+  const value = useMemo(() => props.value || "", [props.value])
+
   let Input = null
   const opts = {}
   if (props.schema.type === 'integer'){
@@ -61,6 +66,12 @@ const TextWidget = (props) => {
     opts.useGrouping = false
     opts.onChange = (e) => props.onChange(e.value)
   }
+  else if (props.schema.widget === 'textarea'){
+    Input = InputTextarea
+    opts.autoResize = true
+    opts.rows = 5
+    opts.onChange = (e) => props.onChange(e.target.value)
+  }
   else{
     Input = InputText
     opts.onChange = (e) => props.onChange(e.target.value)
@@ -69,7 +80,7 @@ const TextWidget = (props) => {
   return (
     <Input
       className={props.rawErrors && props.rawErrors.length > 0 ? 'p-invalid' : ''}
-      value={props.value}
+      value={value}
       onBlur={props.onBlur}
       onFocus={props.onFocus}
       tooltip={tooltip.join('\n')}
