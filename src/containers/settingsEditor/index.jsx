@@ -98,6 +98,9 @@ function ObjectFieldTemplate(props) {
           result[key] = "edit"
         }
       }
+      // else if (props.schema.properties[key] && props.schema.properties[key].type !== "object"){
+      //   result[key] = "project"
+      // }
     }
     return result
   }, [props.formData, props.idSchema, props.formContext.overrides])
@@ -126,8 +129,9 @@ function ObjectFieldTemplate(props) {
   // use the "name" attribute as the title
 
   let title = props.title
-  if (props.formData.name)
-    title = props.formData.name
+  if (Object.keys(props.schema.properties).includes("name")){
+    title = props.formData.name || <span className="new-object">Unnamed item</span>
+  }
 
   return (
     <SettingsPanel
