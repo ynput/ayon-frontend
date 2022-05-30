@@ -7,17 +7,12 @@ import { Dropdown } from 'primereact/dropdown'
 
 
 const updateOverrides = (props, changed) => {
-  if (!props.formContext.overrides)
-    props.formContext.overrides = {}
-
-  const overrides = props.formContext.overrides
-  
-  if (!Object.keys(overrides).includes(props.id))
-    overrides[props.id] = {changed: true}
-  else
-    overrides[props.id].changed = changed
-  console.log("updated ", props.id, overrides[props.id])
+  if (changed && !props.formContext.changedKeys.includes(props.id))
+    props.formContext.changedKeys.push(props.id)
+  else if (!changed && props.formContext.changedKeys.includes(props.id))
+    props.formContext.changedKeys.splice(props.formContext.changedKeys.indexOf(props.id), 1)
 }
+
 
 const getDefaultValue = (props) => {
   if (props.formContext.overrides && props.formContext.overrides[props.id])
@@ -26,20 +21,21 @@ const getDefaultValue = (props) => {
 }
 
 
-
 const CheckboxWidget = function(props) {
   const originalValue = getDefaultValue(props)
+
+  const onChange = (e) => {
+    updateOverrides(props, e.value !== originalValue)
+    props.onChange(e.value)
+  }
+
   return (
     <InputSwitch 
       checked={props.value} 
-      onChange={(e) => {
-        updateOverrides(props, e.value !== originalValue)
-        props.onChange(e.value)
-      }}
+      onChange={onChange}
     />
   )
 } 
-
 
 
 const SelectWidget = (props) => {
@@ -52,7 +48,7 @@ const SelectWidget = (props) => {
   }
   const onChange = (e) => {
     updateOverrides(props, e.value !== originalValue)
-    props.onChange(e.value);
+    props.onChange(e.value)
   }
 
   return (
@@ -126,5 +122,6 @@ const TextWidget = (props) => {
     />
   );
 }
+
 
 export { TextWidget, SelectWidget, CheckboxWidget }

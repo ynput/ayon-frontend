@@ -38,7 +38,6 @@ const SettingsPanel = ({objId, title, description, children, layout, revertButto
       )
   }
 
-  
   let nclass = `form-object-field ${layout ? `layout-${layout}` : ''} ${className ||''} `
 
   return (
@@ -53,19 +52,16 @@ const SettingsPanel = ({objId, title, description, children, layout, revertButto
       {children}
     </Panel>
   )
-
 }
 
 
 function ObjectFieldTemplate(props) {
-
   let className = ""
   if (props.schema.layout)
     className = `form-object-field layout-${props.schema.layout}`
 
-  //
   // Highlight overrides and changed fields
-  //
+
   const objId = props.idSchema.$id
 
   let overrideLevel = useMemo(() => {
@@ -75,7 +71,7 @@ function ObjectFieldTemplate(props) {
         continue // not a child of this object
       const child = props.formContext.overrides[childId]
 
-      if (child.changed){
+      if (props.formContext.changedKeys.includes(childId)){
         res = "edit"
         break
       }
@@ -88,8 +84,7 @@ function ObjectFieldTemplate(props) {
     return res
     // form data's here, because formContext.overrides is not triggered :/
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.formContext.overrides, objId, props.formData])
-
+  }, [{...props.formContext.overrides}, [...props.formContext.changedKeys], objId, props.formData])
 
   if (props.schema.isgroup && overrideLevel === "edit"){
     className += " group-changed"
@@ -109,7 +104,6 @@ function ObjectFieldTemplate(props) {
     </div>
   ), [props.properties, className])
   
-
   // aaand... render
 
   if (["compact", "root"].includes(props.schema.layout))
@@ -139,9 +133,7 @@ function ObjectFieldTemplate(props) {
 }
 
 
-
 function FieldTemplate(props) {
-
   const divider = useMemo(() => {
     if (props.schema.section)
       return (
@@ -153,6 +145,7 @@ function FieldTemplate(props) {
       return <></>
   }, [props.schema.section])
 
+  // Object fields
 
   if (props.schema.type === "object"){
     return (
@@ -163,24 +156,21 @@ function FieldTemplate(props) {
     )
   }
 
+  // Array fields
 
   if(props.schema.type === "array"){
     let overrideLevel = "default"
 
     const overrides = props.formContext.overrides
-    if (overrides[props.id]){
+    if (overrides && overrides[props.id]){
       overrideLevel = overrides[props.id].level
     }
 
-    for (const childId in props.formContext.overrides) {
+    for (const childId of props.formContext.changedKeys) {
       if (!childId.startsWith(`${props.id}_`))
         continue // not a child of this object
-      const child = props.formContext.overrides[childId]
-
-      if (child.changed){
-        overrideLevel = "edit group-changed"
-        break
-      }
+      overrideLevel = "edit group-changed"
+      break
     }
 
     return (
@@ -195,10 +185,11 @@ function FieldTemplate(props) {
     )
   }
 
+  // Leaves
 
   const overrides = props.formContext.overrides ? props.formContext.overrides[props.id] : null
-  const fieldChanged = overrides && overrides.changed
-  const overrideLevel = fieldChanged? 'edit' : (overrides ? overrides.level : 'default')
+  const fieldChanged = props.formContext.changedKeys.includes(props.id) 
+  const overrideLevel = fieldChanged ? 'edit' : (overrides ? overrides.level : 'default')
 
   return (
     <>
@@ -218,11 +209,7 @@ function FieldTemplate(props) {
     </div>
     </>
   )
-
 }
-
-
-
 
 
 const ArrayItemTemplate = (props) => {
@@ -259,10 +246,21 @@ const ArrayFieldTemplate = (props) => {
   )
 }
 
+
 const widgets = {
   TextWidget,
   SelectWidget,
   CheckboxWidget,
+}
+
+
+// Just close the top-level object to a simple div
+const uiSchema = {
+  "ui:FieldTemplate": (props) => (
+    <div className="form-root-object">
+      {props.children}
+    </div>
+  ),
 }
 
 
@@ -271,17 +269,9 @@ const SettingsEditor = ({schema, formData, onChange, overrides}) => {
     return <div>Loading schema...</div>
   }
 
-  // Just close the top-level object to a simple div
-  const uiSchema = {
-    "ui://FieldTemplate": (props) => (
-      <div className="form-root-object">
-        {props.children}
-      </div>
-    ),
-  }
-
   const formContext = {
     overrides: overrides || {},
+    changedKeys: [],
   }
 
   return (
@@ -298,9 +288,8 @@ const SettingsEditor = ({schema, formData, onChange, overrides}) => {
       ArrayFieldTemplate={ArrayFieldTemplate}
       onChange={(evt) => onChange(evt.formData)}
       children={<></>}
-      
     />
-    <Tooltip target=".form-inline-field-label" />
+      <Tooltip target=".form-inline-field-label" />
     </>
   )
 }

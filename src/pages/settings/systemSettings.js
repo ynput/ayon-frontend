@@ -66,6 +66,7 @@ const SystemSettings = () => {
       * */
     if (!(schema && originalData && overrides))
        return "Loading editor.."
+    console.log("Rendering editor")
     return <SettingsEditor schema={schema} formData={originalData} overrides={overrides} onChange={onChange}/>
   }, [schema, originalData, overrides])
 
