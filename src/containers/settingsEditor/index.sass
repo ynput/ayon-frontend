@@ -28,27 +28,32 @@
       opacity: 0.4
 
   // OBJECT
+
+  .group-changed
+    .p-panel-header
+      border-style: dashed 
+      border-left: 4px solid #106aa2 !important
+    .form-inline-field-label
+      color: #106AA2 
   
   .form-object-field
     display: flex
     flex-direction: column
 
-    .group-changed
-      .form-object-field-item
-        border-left: 4px solid #106AA2
 
     .form-object-field-item
-      border-left: 4px solid transparent
+      .p-panel-header
+        border-left: 4px solid transparent
 
       // color for overrides
-      .studio
-        border-left: 4px solid #56a06f
+      .obj-override-studio > .p-panel-header
+          border-left: 4px solid #56a06f
 
-      .project
-        border-left: 4px solid #E67300
+      .obj-override-project > .p-panel-header
+          border-left: 4px solid #E67300
 
-      .edit
-        border-left: 4px solid #106AA2 !important
+      .obj-override-edit > .p-panel-header
+          border-left: 4px solid #106AA2
 
     &.layout-compact       
       flex-direction: row
@@ -71,16 +76,24 @@
       flex-basis: 140px
       padding-left: 4px
 
+      &.studio
+        color: #56a06f
+      &.project
+        color: #E67300
+      &.edit
+        color: #106AA2
+
       span
         display: block
         width: 100%
         height: 34px
-        text-align: center
         background-color: transparent
         white-space: nowrap
-        border: 1px solid rgba(#fff,0.1)
         padding: 0.5rem
         font-weight: bold
+        text-align: right
+        border: 1px solid transparent
+
 
     .form-inline-field-widget
 

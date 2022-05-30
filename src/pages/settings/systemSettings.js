@@ -2,49 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 
 import { Button } from '../../components'
-import SettingsEditor from '../../containers/settingsEditor/'
-import { deepCopy } from '../../utils'
-import { isEqual } from 'lodash'
 import { toast } from 'react-toastify'
-
-
-const patch = (data, overrides, root) => {
-  let hasChanges = false
-  for (const key in data){
-    const path = `${root}_${key}`
-    const override = overrides[path]
-
-    if (override && override.level === 'default'){
-      if (isEqual(override.value, data[key])){
-        // no change. remove from patch
-        delete data[key]
-        continue
-      }
-    } 
-      
-    if (typeof data[key] === 'object' && Array.isArray(data[key]) === false){
-      if (override && override.type === 'group')
-        hasChanges = true
-      else {
-        if (patch(data[key], overrides, path))
-          hasChanges = true
-        else
-          delete data[key]
-      }
-    } 
-    else 
-      hasChanges = true
-  }
-  return hasChanges
-}
-
-
-const createPatch = (data, overrides) => {
-  const r = deepCopy(data)
-  patch(r, overrides, "root")
-  return r
-}
-
+import SettingsEditor from '../../containers/settingsEditor/'
 
 
 const SystemSettings = () => {
@@ -55,14 +14,14 @@ const SystemSettings = () => {
 
 
   const loadSchema = () => {
-    axios.get('/api/settings/schema')
+    axios.get('/api/settings/system/schema')
       .then(res => setSchema(res.data))
       .catch(err => console.log(err))
   }
 
   const loadSettings = () => {
     axios
-      .get('/api/settings/system')//?verbose=true')
+      .get('/api/settings/system')
       .then(res => {
         setOriginalData(res.data)
         setNewData(null)
@@ -86,11 +45,10 @@ const SystemSettings = () => {
   }
 
   const onSave = () => {
-    const patchData = createPatch(newData, overrides)
     axios
-      .patch('/api/settings/system', patchData)
+      .put('/api/settings/system', newData)
       .then(() => loadSettings())
-      .catch(err => toast.error("Unable to save settings. Check the form for errors."))
+      .catch(() => toast.error("Unable to save settings. Check the form for errors."))
   }
 
   const onDelete = () => {

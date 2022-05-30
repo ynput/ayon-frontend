@@ -6,18 +6,44 @@ import { InputSwitch } from 'primereact/inputswitch'
 import { Dropdown } from 'primereact/dropdown'
 
 
-const CheckboxWidget = function(props) {
-  //const originalValue = useMemo(() => props.value, [])
-  return (
-    <InputSwitch 
-      checked={props.value} 
-      onChange={(e) => props.onChange(e.value)}
-    />
-  )
+const updateOverrides = (props, changed) => {
+  if (!props.formContext.overrides)
+    props.formContext.overrides = {}
+
+  const overrides = props.formContext.overrides
+  
+  if (!Object.keys(overrides).includes(props.id))
+    overrides[props.id] = {changed: true}
+  else
+    overrides[props.id].changed = changed
+  console.log("updated ", props.id, overrides[props.id])
+}
+
+const getDefaultValue = (props) => {
+  if (props.formContext.overrides && props.formContext.overrides[props.id])
+    return props.formContext.overrides[props.id].value
+  return null
 }
 
 
+
+const CheckboxWidget = function(props) {
+  const originalValue = getDefaultValue(props)
+  return (
+    <InputSwitch 
+      checked={props.value} 
+      onChange={(e) => {
+        updateOverrides(props, e.value !== originalValue)
+        props.onChange(e.value)
+      }}
+    />
+  )
+} 
+
+
+
 const SelectWidget = (props) => {
+  const originalValue = getDefaultValue(props)
   const options = props.options.enumOptions
   const tooltip = [];
   if (props.rawErrors){
@@ -25,6 +51,7 @@ const SelectWidget = (props) => {
       tooltip.push(err)
   }
   const onChange = (e) => {
+    updateOverrides(props, e.value !== originalValue)
     props.onChange(e.value);
   }
 
@@ -45,6 +72,7 @@ const SelectWidget = (props) => {
 
 
 const TextWidget = (props) => {
+  const originalValue = getDefaultValue(props)
   const tooltip = [];
   if (props.rawErrors){
     for (const err of props.rawErrors)
@@ -64,17 +92,26 @@ const TextWidget = (props) => {
     opts.step = 1
     opts.showButtons = true
     opts.useGrouping = false
-    opts.onChange = (e) => props.onChange(e.value)
+    opts.onChange = (e) => {
+      updateOverrides(props, e.value !== originalValue)
+      props.onChange(e.value)
+    }
   }
   else if (props.schema.widget === 'textarea'){
     Input = InputTextarea
     opts.autoResize = true
     opts.rows = 5
-    opts.onChange = (e) => props.onChange(e.target.value)
+    opts.onChange = (e) => {
+      updateOverrides(props, e.target.value !== originalValue)
+      props.onChange(e.target.value)
+    }
   }
   else{
     Input = InputText
-    opts.onChange = (e) => props.onChange(e.target.value)
+    opts.onChange = (e) => {
+      updateOverrides(props, e.target.value !== originalValue)
+      props.onChange(e.target.value)
+    }
   }
 
   return (
