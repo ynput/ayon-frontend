@@ -125,6 +125,9 @@ $field-gap: 8px
       flex-grow: 1
       display: flex
       flex-direction: row
+      gap: 6px
+
+      margin-right: 4px
 
       .p-panel
         flex-grow: 1
@@ -137,11 +140,18 @@ $field-gap: 8px
     justify-content: left
     margin-bottom: 1rem 0
 
-  .settings-rm-button
+  .array-item-controls
     display: flex
-    align-items: top
-    justify-content: top
-    //margin: 2px
+    flex-direction: row
+    align-items: flex-start
+    gap: 4px
+
+  .array-item-controls button, .settings-add-button button
+      width: 2rem
+      height: 2rem
+      border-radius: 50%
+      border: 1px solid #434a56 !important
+      margin-top: 4px
 
   // Prime theme overrides
 
@@ -151,6 +161,3 @@ $field-gap: 8px
       padding-left: 20px !important
       margin: 0
       border-left: 1px dashed #434a56 !important
-
-    .p-panel-header
-      border-left: 4px solid transparent

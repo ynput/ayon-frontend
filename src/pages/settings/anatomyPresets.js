@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import axios from 'axios'
 
 import SettingsEditor from '../../containers/settingsEditor'
@@ -43,7 +43,8 @@ const PresetList = ({ selectedPreset, setSelectedPreset, timestamp }) => {
 
 const AnatomyPresets = () => {
   const [schema, setSchema] = useState(null)
-  const [formData, setFormData] = useState(null)
+  const [originalData, setOriginalData] = useState(null)
+  const [newData, setNewData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState('_')
   const [showNameDialog, setShowNameDialog] = useState(false)
   const [newPresetName, setNewPresetName] = useState('')
@@ -60,7 +61,7 @@ const AnatomyPresets = () => {
   useEffect(() => {
     axios
       .get(`/api/anatomy/presets/${selectedPreset}`)
-      .then((res) => setFormData(res.data))
+      .then((res) => setOriginalData(res.data))
   }, [selectedPreset])
 
   //
@@ -69,7 +70,7 @@ const AnatomyPresets = () => {
 
   const savePreset = (name) => {
     axios
-      .put(`/api/anatomy/presets/${name}`, formData)
+      .put(`/api/anatomy/presets/${name}`, newData)
       .then(() => {
         setPresetListTimestamp(presetListTimestamp + 1)
         setSelectedPreset(name)
@@ -122,6 +123,20 @@ const AnatomyPresets = () => {
   //
   // Render
   //
+
+
+  const editor = useMemo(() => {
+    if (!(schema && originalData))
+      return "Loading editor..."
+
+    return (
+      <SettingsEditor
+        schema={schema}
+        formData={originalData}
+        onChange={setNewData}
+      />
+    )
+  }, [schema, originalData])
 
   return (
     <main>
@@ -181,11 +196,7 @@ const AnatomyPresets = () => {
 
         <section className="invisible" style={{ flexGrow: 1 }}>
           <div className="wrapper" style={{ overflowY: 'scroll' }}>
-            <SettingsEditor
-              schema={schema}
-              formData={formData}
-              onChange={setFormData}
-            />
+            {editor}
           </div>
         </section>
       </section>

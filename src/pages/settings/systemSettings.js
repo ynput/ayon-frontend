@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
+import { Badge } from 'primereact/badge'
 
-import { Button, Spacer } from '../../components'
+import { Button } from '../../components'
 import { toast } from 'react-toastify'
 import SettingsEditor from '../../containers/settingsEditor/'
 
@@ -11,6 +12,7 @@ const SystemSettings = () => {
   const [originalData, setOriginalData] = useState(null)
   const [overrides, setOverrides] = useState(null)
   const [newData, setNewData] = useState(null)
+  const [breadcrumbs, setBreadcrumbs] = useState(null)
 
 
   const loadSchema = () => {
@@ -66,8 +68,15 @@ const SystemSettings = () => {
       * */
     if (!(schema && originalData && overrides))
        return "Loading editor.."
-    console.log("Rendering editor")
-    return <SettingsEditor schema={schema} formData={originalData} overrides={overrides} onChange={onChange}/>
+    return (
+      <SettingsEditor 
+        schema={schema} 
+        formData={originalData} 
+        overrides={overrides} 
+        onChange={onChange}
+        onSetBreadcrumbs={setBreadcrumbs}
+      />
+    )
   }, [schema, originalData, overrides])
 
   return (
@@ -85,6 +94,14 @@ const SystemSettings = () => {
             icon="cancel"
             onClick={onDelete}
           />
+          <div>
+            {
+
+            Array.isArray(breadcrumbs) && breadcrumbs.map(crumb => (
+              <Badge key={crumb} value={crumb} style={{marginRight: 3}}/>
+            ))
+            }
+          </div>
       </section>
       <section className="invisible" style={{flexGrow: 1}}>
           <div className="wrapper" style={{ overflowY: 'scroll', flexGrow: 2, maxWidth: 1200, margin: "0 auto"}}>

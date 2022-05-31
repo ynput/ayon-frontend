@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
 import { Dropdown } from 'primereact/dropdown'
 import { toast } from 'react-toastify'
 import axios from 'axios'
-//import AnatomyEditor from '../../containers/anatomyEditor'
 import SettingsEditor from '../../containers/settingsEditor'
 import { loadAnatomyPresets } from '../../utils'
 
@@ -39,7 +38,8 @@ const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
 const NewProjectDialog = ({ onHide }) => {
   const [schema, setSchema] = useState(null)
   const [name, setName] = useState('')
-  const [anatomy, setAnatomy] = useState(null)
+  const [originalAnatomy, setOriginalAnatomy] = useState(null)
+  const [newAnatomy, setNewAnatomy] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState(null)
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const NewProjectDialog = ({ onHide }) => {
     if (!selectedPreset) return
     axios
       .get(`/api/anatomy/presets/${selectedPreset}`)
-      .then((res) => setAnatomy(res.data))
+      .then((res) => setOriginalAnatomy(res.data))
   }, [selectedPreset])
 
   // Logic
@@ -58,7 +58,7 @@ const NewProjectDialog = ({ onHide }) => {
 
   const handleSubmit = () => {
     axios
-      .post('/api/projects', { name, anatomy })
+      .post('/api/projects', { name, anatomy: newAnatomy })
       .then(() => {
         toast.success('Project created')
         onHide()
@@ -71,6 +71,18 @@ const NewProjectDialog = ({ onHide }) => {
   //
   // Render
   //
+
+  const editor = useMemo(() => {
+    if (!(originalAnatomy && schema))
+      return "Loading editor..."
+    return (
+        <SettingsEditor
+          schema={schema}
+          formData={originalAnatomy}
+          onChange={setNewAnatomy}
+        />
+    )
+  }, [schema, originalAnatomy])
 
   const footer = (
     <div style={{}}>
@@ -123,11 +135,7 @@ const NewProjectDialog = ({ onHide }) => {
             tooltip="Project anatomy preset"
           />
         </div>
-        <SettingsEditor
-          schema={schema}
-          formData={anatomy}
-          onChange={setAnatomy}
-        />
+        { editor }
       </div>
     </Dialog>
   )
