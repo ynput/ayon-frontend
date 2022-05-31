@@ -5,7 +5,8 @@ import { Button } from 'primereact/button'
 import { Dropdown } from 'primereact/dropdown'
 import { toast } from 'react-toastify'
 import axios from 'axios'
-import AnatomyEditor from '../../containers/anatomyEditor'
+//import AnatomyEditor from '../../containers/anatomyEditor'
+import SettingsEditor from '../../containers/settingsEditor'
 import { loadAnatomyPresets } from '../../utils'
 
 const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
@@ -122,7 +123,7 @@ const NewProjectDialog = ({ onHide }) => {
             tooltip="Project anatomy preset"
           />
         </div>
-        <AnatomyEditor
+        <SettingsEditor
           schema={schema}
           formData={anatomy}
           onChange={setAnatomy}

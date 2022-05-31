@@ -56,9 +56,9 @@ const SettingsPanel = ({objId, title, description, children, layout, revertButto
 
 
 function ObjectFieldTemplate(props) {
-  let className = ""
+  let className = "form-object-field"
   if (props.schema.layout)
-    className = `form-object-field layout-${props.schema.layout}`
+    className += ` layout-${props.schema.layout}`
 
   // Highlight overrides and changed fields
 
@@ -239,7 +239,12 @@ const ArrayFieldTemplate = (props) => {
         ))}
         {props.canAdd && (
           <div className="settings-add-button">
-            <Button onClick={props.onAddClick} icon="pi pi-plus" label="Add"/>
+            <Button 
+              onClick={props.onAddClick} 
+              icon="pi pi-plus" 
+              label="Add"
+              className="p-button p-button-outlined"
+            />
           </div>
         )}
     </div>
@@ -257,7 +262,7 @@ const widgets = {
 // Just close the top-level object to a simple div
 const uiSchema = {
   "ui:FieldTemplate": (props) => (
-    <div className="form-root-object">
+    <div className="form-root-field">
       {props.children}
     </div>
   ),

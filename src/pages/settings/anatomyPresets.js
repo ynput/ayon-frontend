@@ -179,7 +179,7 @@ const AnatomyPresets = () => {
           <Spacer />
         </section>
 
-        <section style={{ flexGrow: 1 }}>
+        <section className="invisible" style={{ flexGrow: 1 }}>
           <div className="wrapper" style={{ overflowY: 'scroll' }}>
             <SettingsEditor
               schema={schema}

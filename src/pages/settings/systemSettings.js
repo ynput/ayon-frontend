@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 
-import { Button } from '../../components'
+import { Button, Spacer } from '../../components'
 import { toast } from 'react-toastify'
 import SettingsEditor from '../../containers/settingsEditor/'
 
@@ -86,8 +86,8 @@ const SystemSettings = () => {
             onClick={onDelete}
           />
       </section>
-      <section style={{flexGrow: 1}}>
-          <div className="wrapper" style={{ overflowY: 'scroll'}}>
+      <section className="invisible" style={{flexGrow: 1}}>
+          <div className="wrapper" style={{ overflowY: 'scroll', flexGrow: 2, maxWidth: 1200, margin: "0 auto"}}>
             {editor}
           </div>
       </section>
