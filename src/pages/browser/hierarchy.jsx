@@ -111,7 +111,6 @@ const Hierarchy = ({ projectName, folderTypes, focusedFolders }) => {
 
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
-  
 
   const treeData = useMemo(() => {
     if (!data) return []

@@ -73,14 +73,13 @@ const NewProjectDialog = ({ onHide }) => {
   //
 
   const editor = useMemo(() => {
-    if (!(originalAnatomy && schema))
-      return "Loading editor..."
+    if (!(originalAnatomy && schema)) return 'Loading editor...'
     return (
-        <SettingsEditor
-          schema={schema}
-          formData={originalAnatomy}
-          onChange={setNewAnatomy}
-        />
+      <SettingsEditor
+        schema={schema}
+        formData={originalAnatomy}
+        onChange={setNewAnatomy}
+      />
     )
   }, [schema, originalAnatomy])
 
@@ -135,7 +134,7 @@ const NewProjectDialog = ({ onHide }) => {
             tooltip="Project anatomy preset"
           />
         </div>
-        { editor }
+        {editor}
       </div>
     </Dialog>
   )

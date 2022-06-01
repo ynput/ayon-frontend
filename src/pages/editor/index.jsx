@@ -18,7 +18,7 @@ const formatName = (row) => {
       <CellWithIcon
         icon={getTaskTypeIcon(row.data.taskType)}
         text={row.data.name}
-        textStyle={{fontStyle: 'italic'}}
+        textStyle={{ fontStyle: 'italic' }}
       />
     )
   else

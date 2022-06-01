@@ -124,10 +124,8 @@ const AnatomyPresets = () => {
   // Render
   //
 
-
   const editor = useMemo(() => {
-    if (!(schema && originalData))
-      return "Loading editor..."
+    if (!(schema && originalData)) return 'Loading editor...'
 
     return (
       <SettingsEditor
