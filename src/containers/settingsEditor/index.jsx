@@ -22,6 +22,40 @@ const uiSchema = {
   ),
 }
 
+
+
+const buildOverrides = (formData) => {
+  let result = {}
+  
+  const crawl = (obj, path=[]) => {
+    for (const key in obj) {
+      const value = obj[key]
+      const newPath = path.concat(key)
+      const objId = `root_${newPath.join('_')}`
+      if (typeof value === 'object') {
+        result[objId] = {
+          path: newPath,
+          type: Array.isArray(value) ? "array" : "branch",
+          level: "default",
+        }
+        crawl(value, newPath)
+      } else {
+        result[objId] = {
+          path: newPath,
+          type: "leaf",
+          level: "default",
+          value: value,
+        }
+      }
+    }
+  }
+
+  crawl(formData)
+  return result
+}
+
+
+
 const SettingsEditor = ({
   schema,
   formData,
@@ -34,8 +68,8 @@ const SettingsEditor = ({
   }
 
   const formContext = {
-    overrides: overrides || {},
-    changedKeys: [],
+    overrides: {...buildOverrides(formData), ...overrides || {}},
+    changedKeys: [], // source of all problems
     onSetBreadcrumbs,
   }
 
@@ -58,5 +92,6 @@ const SettingsEditor = ({
     </>
   )
 }
+
 
 export default SettingsEditor

@@ -37,8 +37,10 @@ const SettingsPanel = ({
           cursor: 'pointer',
         }}
         onClick={(evt) => {
-          options.onTogglerClick(evt)
-          if (onClick) onClick()
+          if (evt.detail === 1 && onClick) 
+              onClick()
+          else if (evt.detail === 2) 
+            options.onTogglerClick(evt)
         }}
       >
         <button

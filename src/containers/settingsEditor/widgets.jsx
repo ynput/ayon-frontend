@@ -15,33 +15,43 @@ const updateOverrides = (props, changed) => {
     )
 }
 
-const getDefaultValue = (props) => {
-  if (props.formContext.overrides && props.formContext.overrides[props.id])
-    return props.formContext.overrides[props.id].value
-  return null
+const parseContext = (props) => {
+  const result = {originalValue: null, path: []}
+  if (props.formContext.overrides && props.formContext.overrides[props.id]){
+    result.originalValue = props.formContext.overrides[props.id].value
+    result.path = props.formContext.overrides[props.id].path
+  }
+  return result
 }
 
 const CheckboxWidget = function (props) {
-  const originalValue = getDefaultValue(props)
+  const {originalValue, path} = parseContext(props)
 
   const onChange = (e) => {
     updateOverrides(props, e.value !== originalValue)
     props.onChange(e.value)
+    props.formContext.onSetBreadcrumbs(path)
   }
 
   return <InputSwitch checked={props.value} onChange={onChange} />
 }
 
 const SelectWidget = (props) => {
-  const originalValue = getDefaultValue(props)
+  const {originalValue, path} = parseContext(props)
   const options = props.options.enumOptions
   const tooltip = []
   if (props.rawErrors) {
     for (const err of props.rawErrors) tooltip.push(err)
   }
+
   const onChange = (e) => {
     updateOverrides(props, e.value !== originalValue)
     props.onChange(e.value)
+  }
+
+  const onFocus = (e) => {
+    props.formContext.onSetBreadcrumbs(path)
+    props.onFocus(e)
   }
 
   return (
@@ -50,7 +60,7 @@ const SelectWidget = (props) => {
       value={props.value}
       onChange={onChange}
       onBlur={props.onBlur}
-      onFocus={props.onFocus}
+      onFocus={onFocus}
       optionLabel="label"
       optionValue="value"
       tooltip={tooltip.join('\n')}
@@ -60,7 +70,7 @@ const SelectWidget = (props) => {
 }
 
 const TextWidget = (props) => {
-  const originalValue = getDefaultValue(props)
+  const {originalValue, path} = parseContext(props)
   const tooltip = []
   if (props.rawErrors) {
     for (const err of props.rawErrors) tooltip.push(err)
@@ -99,6 +109,11 @@ const TextWidget = (props) => {
     }
   }
 
+  const onFocus = (e) => {
+    props.formContext.onSetBreadcrumbs(path)
+    props.onFocus(e)
+  }
+
   return (
     <Input
       className={
@@ -106,7 +121,7 @@ const TextWidget = (props) => {
       }
       value={value}
       onBlur={props.onBlur}
-      onFocus={props.onFocus}
+      onFocus={onFocus}
       tooltip={tooltip.join('\n')}
       tooltipOptions={{ position: 'bottom' }}
       {...opts}
