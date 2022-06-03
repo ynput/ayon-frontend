@@ -60,6 +60,24 @@ $field-gap: 8px
       .form-object-field-item
         flex-grow: 1
 
+
+    &.layout-expanded
+      flex-direction: row
+      border-bottom: 1px dotted #444
+      flex-grow: 1
+      padding-bottom: 6px
+
+      .name-field
+        .form-inline-field-label
+          display: none
+
+      .data-fields
+        display: flex
+        flex-grow: 1
+        flex-direction: column
+        gap: 6px
+
+
   .form-inline-field
     display: flex
     flex-grow: 1
