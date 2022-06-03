@@ -50,7 +50,7 @@ const NewProjectDialog = ({ onHide }) => {
     if (!selectedPreset) return
     axios
       .get(`/api/anatomy/presets/${selectedPreset}`)
-      .then((res) => setOriginalAnatomy(res.data))
+      .then((res) => {setOriginalAnatomy(res.data)})
   }, [selectedPreset])
 
   // Logic
@@ -58,7 +58,7 @@ const NewProjectDialog = ({ onHide }) => {
 
   const handleSubmit = () => {
     axios
-      .post('/api/projects', { name, anatomy: newAnatomy })
+      .post('/api/projects', { name, anatomy: newAnatomy || originalAnatomy })
       .then(() => {
         toast.success('Project created')
         onHide()

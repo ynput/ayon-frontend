@@ -69,8 +69,8 @@ const SettingsEditor = ({
 
   const formContext = {
     overrides: {...buildOverrides(formData), ...overrides || {}},
+    onSetBreadcrumbs: onSetBreadcrumbs || (() => {}),
     changedKeys: [], // source of all problems
-    onSetBreadcrumbs,
   }
 
   return (
