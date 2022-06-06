@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import axios from 'axios'
 
@@ -8,13 +8,14 @@ import Header from './containers/header'
 
 import LoginPage from './pages/login'
 import LoadingPage from './pages/loading'
-import ProjectPage from './pages/project'
-import ProjectManager from './pages/projectManager'
-import ExplorerPage from './pages/explorer'
-import APIDocsPage from './pages/doc/api'
-import ProfilePage from './pages/profile'
-import SettingsPage from './pages/settings'
 import Error from './pages/error'
+
+const ProjectPage = lazy(() => import('./pages/project'))
+const ProjectManager = lazy(() => import('./pages/projectManager'))
+const ExplorerPage = lazy(() => import('./pages/explorer'))
+const APIDocsPage = lazy(() => import('./pages/doc/api'))
+const ProfilePage = lazy(() => import('./pages/profile'))
+const SettingsPage = lazy(() => import('./pages/settings'))
 
 import { login } from './features/user'
 import { setSettings } from './features/settings'
@@ -77,31 +78,33 @@ const App = () => {
   if (Object.keys(settings).length === 0) return <SettingsLoader />
 
   return (
-    <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path="/" exact element={<Navigate replace to="/projects" />} />
-        <Route path="/projects" exact element={<ProjectManager />} />
-        <Route
-          path="/projects/:projectName/:module"
-          exact
-          element={<ProjectPage />}
-        />
+    <Suspense fallback={<LoadingPage />}>
+      <BrowserRouter>
+        <Header />
+        <Routes>
+          <Route path="/" exact element={<Navigate replace to="/projects" />} />
+          <Route path="/projects" exact element={<ProjectManager />} />
+          <Route
+            path="/projects/:projectName/:module"
+            exact
+            element={<ProjectPage />}
+          />
 
-        <Route
-          path="/settings"
-          exact
-          element={<Navigate replace to="/settings/anatomy" />}
-        />
-        <Route path="/settings/:module" exact element={<SettingsPage />} />
+          <Route
+            path="/settings"
+            exact
+            element={<Navigate replace to="/settings/anatomy" />}
+          />
+          <Route path="/settings/:module" exact element={<SettingsPage />} />
 
-        <Route path="/explorer" element={<ExplorerPage />} />
-        <Route path="/doc/api" element={<APIDocsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/explorer" element={<ExplorerPage />} />
+          <Route path="/doc/api" element={<APIDocsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
 
-        <Route element={<Error code="404" />} />
-      </Routes>
-    </BrowserRouter>
+          <Route element={<Error code="404" />} />
+        </Routes>
+      </BrowserRouter>
+    </Suspense>
   )
 }
 
