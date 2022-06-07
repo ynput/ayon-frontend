@@ -1,4 +1,4 @@
-const AttributeTable = ({ entityType, attribSettings, data, style }) => {
+const AttributeTable = ({ entityType, attribSettings, data, additionalData, style }) => {
   return (
     <div
       className="attribute-table"
@@ -8,6 +8,17 @@ const AttributeTable = ({ entityType, attribSettings, data, style }) => {
         ...style,
       }}
     >
+
+      { additionalData && additionalData.map((data, index) => (
+        <div
+          key={index}
+          className="attribute-table-row"
+        >
+          <span>{data.title}</span>
+          <span>{data.value}</span>
+        </div>
+      ))}
+
       {data &&
         attribSettings
           .filter((attr) => attr.scope.includes(entityType) && data[attr.name])

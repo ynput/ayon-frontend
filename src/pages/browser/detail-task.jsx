@@ -90,6 +90,10 @@ const TaskDetail = () => {
         entityType="task"
         attribSettings={settings.attributes}
         data={data.attrib}
+        additionalData={[
+          {title: "Assignees", value: data.assignees && data.assignees.length ? data.assignees.join(', ') : '-'},
+          {title: "Task Type", value: data.taskType},
+        ]}
       />
     </section>
   )

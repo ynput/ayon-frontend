@@ -14,6 +14,7 @@ const FOLDER_QUERY = `
                     node {
                         name
                         folderType
+                        path
                         attrib {
                           #FOLDER_ATTRS#
                         }
@@ -95,6 +96,10 @@ const FolderDetail = () => {
         entityType="folder"
         attribSettings={settings.attributes}
         data={data.attrib}
+        additionalData={[
+          {title: "Folder type", value: data.folderType},
+          {title: "Path", value: data.path},
+        ]}
       />
     </section>
   )
