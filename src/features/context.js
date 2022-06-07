@@ -5,6 +5,7 @@ const contextSlice = createSlice({
   initialState: {
     projectName: null,
     project: {},
+    expandedFolders: {},
     focusedType: null,
     focusedFolders: [],
     focusedSubsets: [],
@@ -23,6 +24,10 @@ const contextSlice = createSlice({
     setProjectData: (state, action) => {
       state.project = action.payload
       return state
+    },
+
+    setExpandedFolders: (state, action) => {
+      state.expandedFolders = action.payload
     },
 
     setFocusedFolders: (state, action) => {
@@ -113,6 +118,7 @@ export const {
   setFocusedVersions,
   setFocusedTasks,
   setSelectedVersions,
+  setExpandedFolders,
   setBreadcrumbs,
   setPairing,
 } = contextSlice.actions
