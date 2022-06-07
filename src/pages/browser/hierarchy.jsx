@@ -12,10 +12,10 @@ import { MultiSelect } from 'primereact/multiselect'
 import { Shade } from '../../components'
 import { CellWithIcon } from '../../components/icons'
 
-import { setFocusedFolders, setBreadcrumbs } from '../../features/context'
+import { setFocusedFolders, setBreadcrumbs, setExpandedFolders } from '../../features/context'
 import { getFolderTypeIcon } from '../../utils'
 
-const filterHierarchy = (text, folder) => {
+const filterHierarchy = (text, folder, expandedFolders) => {
   /*
     Filter the hierarchy using a given text and rename "id" to "key"
     and "name" to "label", which is needed to render the hierarchy
@@ -72,7 +72,7 @@ const filterHierarchy = (text, folder) => {
   return result
 }
 
-const Hierarchy = ({ projectName, folderTypes, focusedFolders }) => {
+const Hierarchy = ({ projectName, folderTypes, focusedFolders, expandedFolders }) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
@@ -151,6 +151,11 @@ const Hierarchy = ({ projectName, folderTypes, focusedFolders }) => {
     dispatch(setFocusedFolders(selection))
   }
 
+  const onToggle = (event) => {
+    dispatch(setExpandedFolders(event.value))
+  }
+
+
   //
   // Folder types
   //
@@ -224,8 +229,10 @@ const Hierarchy = ({ projectName, folderTypes, focusedFolders }) => {
             scrollHeight="100%"
             selectionMode="multiple"
             selectionKeys={selectedFolders}
+            expandedKeys={expandedFolders}
             emptyMessage=" "
             onSelectionChange={onSelectionChange}
+            onToggle={onToggle}
             onRowClick={onRowClick}
           >
             <Column

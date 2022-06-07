@@ -12,6 +12,7 @@ const BrowserPage = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const folderTypes = context.project.folderTypes
+  const expandedFolders = context.expandedFolders
   const focusedFolders = context.focusedFolders
   const focusedVersions = context.focusedVersions
   const selectedVersions = context.selectedVersions
@@ -24,9 +25,10 @@ const BrowserPage = () => {
         projectName={projectName}
         folderTypes={folderTypes}
         focusedFolders={focusedFolders}
+        expandedFolders={expandedFolders}
       />
     )
-  }, [projectName, folderTypes, focusedFolders])
+  }, [projectName, folderTypes, focusedFolders, expandedFolders])
 
   const subsets = useMemo(() => {
     return (
