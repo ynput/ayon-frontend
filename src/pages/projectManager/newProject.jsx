@@ -38,6 +38,7 @@ const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
 const NewProjectDialog = ({ onHide }) => {
   const [schema, setSchema] = useState(null)
   const [name, setName] = useState('')
+  const [code, setCode] = useState('')
   const [originalAnatomy, setOriginalAnatomy] = useState(null)
   const [newAnatomy, setNewAnatomy] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState(null)
@@ -58,7 +59,7 @@ const NewProjectDialog = ({ onHide }) => {
 
   const handleSubmit = () => {
     axios
-      .post('/api/projects', { name, anatomy: newAnatomy || originalAnatomy })
+      .post('/api/projects', { name, code, anatomy: newAnatomy || originalAnatomy })
       .then(() => {
         toast.success('Project created')
         onHide()
@@ -127,6 +128,12 @@ const NewProjectDialog = ({ onHide }) => {
             style={{ width: '100%' }}
             value={name}
             onChange={(e) => setName(e.target.value)}
+          />
+          <InputText
+            placeholder="Project code"
+            style={{  }}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
           />
           <PresetDropdown
             selectedPreset={selectedPreset}
