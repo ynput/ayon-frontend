@@ -1,17 +1,19 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { DataTable } from 'primereact/datatable'
+import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Spacer } from '../../components'
 
-import { setBreadcrumbs } from '../../features/context'
 import SiteSyncDetail from '../sitesync/detail'
+import { setBreadcrumbs } from '../../features/context'
+import { groupResult } from '../../utils'
 
 const columns = [
   {
     field: 'name',
     header: 'Name',
-    width: 70,
+    width: 90,
+    expander: true
   },
   {
     field: 'folderName',
@@ -37,6 +39,26 @@ const RepresentationDetail = ({ representations }) => {
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
   const [focusedRepresentation, setFocusedRepresentation] = useState(null)
 
+  const data = useMemo(() => {
+    return groupResult(representations, 'name')
+  }, [representations])
+
+
+  const onRowClick = (e) => {
+    dispatch(
+      setBreadcrumbs({
+        parents: e.node.data.folderParents,
+        folder: e.node.data.folderName,
+        subset: e.node.data.subsetName,
+        version: e.node.data.versionName,
+        representation: e.node.data.name,
+      })
+    )
+    if (e.originalEvent.detail === 2) {
+      setFocusedRepresentation(e.node.data.id)
+    }
+  }
+
   return (
     <>
       {focusedRepresentation && (
@@ -44,7 +66,7 @@ const RepresentationDetail = ({ representations }) => {
           projectName={projectName}
           localSite={null}
           remoteSite={null}
-          representationId={selectedRepresentation.id}
+          representationId={focusedRepresentation}
           onHide={() => setFocusedRepresentation(null)}
         />
       )}
@@ -55,39 +77,22 @@ const RepresentationDetail = ({ representations }) => {
       </section>
       <section style={{ flexGrow: 1 }}>
         <div className="wrapper">
-          <DataTable
-            scrollable
-            responsive="true"
-            resizableColumns
-            columnResizeMode="expand"
-            scrollDirection="both"
-            scrollHeight="flex"
-            responsiveLayout="scroll"
-            value={representations}
+          <TreeTable
+            scrollable="true"
+            scrollHeight="100%"
+            value={data}
             emptyMessage="No representation found"
             selectionMode="single"
-            selection={selectedRepresentation}
+            selectionKeys={selectedRepresentation}
             onSelectionChange={(e) => setSelectedRepresentation(e.value)}
-            onRowDoubleClick={(e) => setFocusedRepresentation(e.data.id)}
-            onRowClick={(e) => {
-              console.log('row click', e)
-              dispatch(
-                setBreadcrumbs({
-                  parents: e.data.folderParents,
-                  folder: e.data.folderName,
-                  subset: e.data.subsetName,
-                  version: e.data.versionName,
-                  representation: e.data.name,
-                })
-              )
-            }}
+            onRowClick={onRowClick}
           >
             {columns.map((col) => {
               return (
                 <Column {...col} key={col.field} style={{ width: col.width }} />
               )
             })}
-          </DataTable>
+          </TreeTable>
         </div>
       </section>
     </>
