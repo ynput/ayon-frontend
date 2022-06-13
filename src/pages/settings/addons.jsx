@@ -2,6 +2,7 @@ import {Dropdown} from 'primereact/dropdown'
 import {Spacer, Button} from '../../components'
 
 import { useState, useEffect, useMemo } from 'react'
+import { toast } from 'react-toastify'
 import axios from 'axios'
 
 
@@ -12,6 +13,7 @@ const AddonListItem = ({ addon, formData, setFormData }) => {
   const stagingVersion = formData[addon.name] ? formData[addon.name].stagingVersion : addon.stagingVersion || null
 
   const options = useMemo(() => {
+    setFormData({...formData, [addon.name]: {productionVersion, stagingVersion}})
     return [{label: "(NONE)", value: null}, ...addon.versions.map(version => {
       return {
         label: version,
@@ -80,7 +82,10 @@ const AddonsSettings = () => {
   const submit = () => {
     axios
       .post('/api/addons', {versions: formData})
-      .then(() => load())
+      .then(() => {
+        toast.success('Addons updated')
+        load()
+      })
       .catch(err => console.error(err))
   }
 
@@ -96,6 +101,7 @@ const AddonsSettings = () => {
       </section>
       <section className="invisible">
         <Spacer>
+        <section className="invisible">
         {data && data.map(addon => (
           <AddonListItem
             key={addon.id}
@@ -104,6 +110,7 @@ const AddonsSettings = () => {
             setFormData={setFormData}
           />
         ))}
+        </section>
         </Spacer>
       </section>
     </main>

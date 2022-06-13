@@ -64,7 +64,8 @@ const SettingsEditor = ({
   onSetBreadcrumbs,
 }) => {
   if (!schema) {
-    return <div>Loading schema...</div>
+    // TODO: maybe a spinner or something?
+    return <div></div>
   }
 
   const formContext = {
