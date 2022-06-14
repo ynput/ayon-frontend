@@ -12,7 +12,11 @@ import { MultiSelect } from 'primereact/multiselect'
 import { Shade } from '../../components'
 import { CellWithIcon } from '../../components/icons'
 
-import { setFocusedFolders, setBreadcrumbs, setExpandedFolders } from '../../features/context'
+import {
+  setFocusedFolders,
+  setBreadcrumbs,
+  setExpandedFolders,
+} from '../../features/context'
 import { getFolderTypeIcon } from '../../utils'
 
 const filterHierarchy = (text, folder, expandedFolders) => {
@@ -72,7 +76,12 @@ const filterHierarchy = (text, folder, expandedFolders) => {
   return result
 }
 
-const Hierarchy = ({ projectName, folderTypes, focusedFolders, expandedFolders }) => {
+const Hierarchy = ({
+  projectName,
+  folderTypes,
+  focusedFolders,
+  expandedFolders,
+}) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
@@ -154,7 +163,6 @@ const Hierarchy = ({ projectName, folderTypes, focusedFolders, expandedFolders }
   const onToggle = (event) => {
     dispatch(setExpandedFolders(event.value))
   }
-
 
   //
   // Folder types

@@ -97,8 +97,8 @@ const FolderDetail = () => {
         attribSettings={settings.attributes}
         data={data.attrib}
         additionalData={[
-          {title: "Folder type", value: data.folderType},
-          {title: "Path", value: data.path},
+          { title: 'Folder type', value: data.folderType },
+          { title: 'Path', value: data.path },
         ]}
       />
     </section>

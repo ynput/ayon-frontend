@@ -49,9 +49,9 @@ const NewProjectDialog = ({ onHide }) => {
 
   useEffect(() => {
     if (!selectedPreset) return
-    axios
-      .get(`/api/anatomy/presets/${selectedPreset}`)
-      .then((res) => {setOriginalAnatomy(res.data)})
+    axios.get(`/api/anatomy/presets/${selectedPreset}`).then((res) => {
+      setOriginalAnatomy(res.data)
+    })
   }, [selectedPreset])
 
   // Logic
@@ -59,7 +59,11 @@ const NewProjectDialog = ({ onHide }) => {
 
   const handleSubmit = () => {
     axios
-      .post('/api/projects', { name, code, anatomy: newAnatomy || originalAnatomy })
+      .post('/api/projects', {
+        name,
+        code,
+        anatomy: newAnatomy || originalAnatomy,
+      })
       .then(() => {
         toast.success('Project created')
         onHide()
@@ -131,7 +135,7 @@ const NewProjectDialog = ({ onHide }) => {
           />
           <InputText
             placeholder="Project code"
-            style={{  }}
+            style={{}}
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />

@@ -78,7 +78,7 @@ const App = () => {
   if (Object.keys(settings).length === 0) return <SettingsLoader />
 
   return (
-    <Suspense fallback={<LoadingPage/>}>
+    <Suspense fallback={<LoadingPage />}>
       <BrowserRouter>
         <Header />
         <Routes>

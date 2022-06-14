@@ -16,8 +16,8 @@ const updateOverrides = (props, changed) => {
 }
 
 const parseContext = (props) => {
-  const result = {originalValue: null, path: []}
-  if (props.formContext.overrides && props.formContext.overrides[props.id]){
+  const result = { originalValue: null, path: [] }
+  if (props.formContext.overrides && props.formContext.overrides[props.id]) {
     result.originalValue = props.formContext.overrides[props.id].value
     result.path = props.formContext.overrides[props.id].path
   }
@@ -25,7 +25,7 @@ const parseContext = (props) => {
 }
 
 const CheckboxWidget = function (props) {
-  const {originalValue, path} = parseContext(props)
+  const { originalValue, path } = parseContext(props)
 
   const onChange = (e) => {
     updateOverrides(props, e.value !== originalValue)
@@ -37,7 +37,7 @@ const CheckboxWidget = function (props) {
 }
 
 const SelectWidget = (props) => {
-  const {originalValue, path} = parseContext(props)
+  const { originalValue, path } = parseContext(props)
   const options = props.options.enumOptions
   const tooltip = []
   if (props.rawErrors) {
@@ -70,7 +70,7 @@ const SelectWidget = (props) => {
 }
 
 const TextWidget = (props) => {
-  const {originalValue, path} = parseContext(props)
+  const { originalValue, path } = parseContext(props)
   const tooltip = []
   if (props.rawErrors) {
     for (const err of props.rawErrors) tooltip.push(err)

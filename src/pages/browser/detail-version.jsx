@@ -161,9 +161,7 @@ const VersionDetail = () => {
           entityType="version"
           attribSettings={settings.attributes}
           data={versions[0].attrib}
-          additionalData={[
-            {title: "Author", value: versions[0].author},
-          ]}
+          additionalData={[{ title: 'Author', value: versions[0].author }]}
         />
       </section>
     )

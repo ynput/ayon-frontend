@@ -1,4 +1,10 @@
-const AttributeTable = ({ entityType, attribSettings, data, additionalData, style }) => {
+const AttributeTable = ({
+  entityType,
+  attribSettings,
+  data,
+  additionalData,
+  style,
+}) => {
   return (
     <div
       className="attribute-table"
@@ -8,16 +14,13 @@ const AttributeTable = ({ entityType, attribSettings, data, additionalData, styl
         ...style,
       }}
     >
-
-      { additionalData && additionalData.map((data, index) => (
-        <div
-          key={index}
-          className="attribute-table-row"
-        >
-          <span>{data.title}</span>
-          <span>{data.value}</span>
-        </div>
-      ))}
+      {additionalData &&
+        additionalData.map((data, index) => (
+          <div key={index} className="attribute-table-row">
+            <span>{data.title}</span>
+            <span>{data.value}</span>
+          </div>
+        ))}
 
       {data &&
         attribSettings

@@ -13,7 +13,7 @@ const columns = [
     field: 'name',
     header: 'Name',
     width: 90,
-    expander: true
+    expander: true,
   },
   {
     field: 'folderName',
@@ -42,7 +42,6 @@ const RepresentationDetail = ({ representations }) => {
   const data = useMemo(() => {
     return groupResult(representations, 'name')
   }, [representations])
-
 
   const onRowClick = (e) => {
     dispatch(

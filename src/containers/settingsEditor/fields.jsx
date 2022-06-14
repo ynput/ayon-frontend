@@ -45,31 +45,26 @@ function ObjectFieldTemplate(props) {
 
   // memoize the fields
 
-  const fields = useMemo(
-    () => {
-      if (props.schema.layout === "expanded"){
-        let nameField = null
-        let otherFields = []
+  const fields = useMemo(() => {
+    if (props.schema.layout === 'expanded') {
+      let nameField = null
+      let otherFields = []
 
-        for (const element of props.properties) {
-          if (element.name === "name")
-            nameField = element.content
-          else
-            otherFields.push(element.content)
-        }
-        return (
-          <div className={className}>
-            <div className="name-field">
-              {nameField}
-            </div>
-            <div className="data-fields">
-              {otherFields.map((element) => element)}
-            </div>
-          </div>
-        )
-      } // ugly layout
-
+      for (const element of props.properties) {
+        if (element.name === 'name') nameField = element.content
+        else otherFields.push(element.content)
+      }
       return (
+        <div className={className}>
+          <div className="name-field">{nameField}</div>
+          <div className="data-fields">
+            {otherFields.map((element) => element)}
+          </div>
+        </div>
+      )
+    } // ugly layout
+
+    return (
       <div className={className}>
         {props.properties.map((element, index) => {
           return (
@@ -79,15 +74,13 @@ function ObjectFieldTemplate(props) {
           )
         })}
       </div>
-    )},
-    [props.properties, className]
-  )
+    )
+  }, [props.properties, className])
 
   // aaand... render
 
-  if (['compact', 'root', 'expanded'].includes(props.schema.layout)) return fields
-
-
+  if (['compact', 'root', 'expanded'].includes(props.schema.layout))
+    return fields
 
   // In case of "pseudo-dicts" (array of objects with a "name" attribute)
   // use the "name" attribute as the title

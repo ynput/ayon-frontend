@@ -56,11 +56,11 @@ const ProjectManager = () => {
             onSelectionChange={(e) => setSelectedProject(e.value)}
           >
             <Column field="name" header="Name" />
-            <Column field="code" header="Code" style={{maxWidth: 80}} />
+            <Column field="code" header="Code" style={{ maxWidth: 80 }} />
             <Column
               field="createdAt"
               header="Created"
-              style={{maxWidth: '150px'}}
+              style={{ maxWidth: '150px' }}
               body={(rowdata) =>
                 DateTime.fromSeconds(rowdata.createdAt).toRelative()
               }
@@ -68,7 +68,7 @@ const ProjectManager = () => {
             <Column
               field="updatedAt"
               header="Updated"
-              style={{maxWidth: '150px'}}
+              style={{ maxWidth: '150px' }}
               body={(rowdata) =>
                 DateTime.fromSeconds(rowdata.updatedAt).toRelative()
               }
