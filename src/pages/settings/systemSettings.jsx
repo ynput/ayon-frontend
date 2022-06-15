@@ -1,16 +1,20 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
-import { DataTable } from 'primereact/datatable'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Panel } from 'primereact/panel'
 import { ToggleButton } from 'primereact/togglebutton'
 
-import { Button, Spacer } from '../../components'
+import { Spacer } from '../../components'
 import SettingsEditor from '../../containers/settingsEditor'
 
-const AddonsPanel = ({ selectedAddons, onSelectAddons, showVersions }) => {
+const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions }) => {
   const [addons, setAddons] = useState({})
+
+  // Selection
+  // selectedAddons state from the parent component stores "data" of the selected addons
+  // but for the datatable, we only need keys. the following selectedKeys and onSelectionChange
+  // functions are used to convert the data to keys and vice versa.
 
   const selectedKeys = useMemo(() => {
     const result = {}
@@ -21,24 +25,28 @@ const AddonsPanel = ({ selectedAddons, onSelectAddons, showVersions }) => {
     return result
   }, [selectedAddons])
 
-  console.log('SELECTED KEYS', selectedKeys)
 
   const onSelectionChange = (e) => {
+    // This nested loop looks a bit weird, but it's necessary 
+    // to maintain the order of the selected addons as
+    // the user selects them.
     let result = []
-    for (const rd of addons) {
-      if (e.value[rd.key]) {
-        console.log('oooo', rd)
-        result.push(rd.data)
-      }
-
-      for (const rdc of rd.children) {
-        if (e.value[rdc.key]) {
-          result.push(rdc.data)
+    for (const key in e.value){
+      for (const rd of addons){
+        if (rd.key === key){
+          result.push(rd.data)
+        }
+        for (const rd2 of rd.children){
+          if (rd2.key === key){
+            result.push(rd2.data)
+          }
         }
       }
     }
-    onSelectAddons(result)
+    setSelectedAddons(result)
   }
+
+  // Load addons from the server
 
   useEffect(() => {
     axios.get('/api/addons').then((res) => {
@@ -78,10 +86,13 @@ const AddonsPanel = ({ selectedAddons, onSelectAddons, showVersions }) => {
 
         result.push(row)
       }
-      console.log(result)
       setAddons(result)
     })
   }, [showVersions])
+
+  // Add this to the treetable to make multiselect work without
+  // ctrl+click:
+  // metaKeySelection={false}
 
   return (
     <section style={{ width: 400, height: '100%' }}>
@@ -183,7 +194,7 @@ const SystemSettings = () => {
           <AddonsPanel
             showVersions={showVersions}
             selectedAddons={selectedAddons}
-            onSelectAddons={setSelectedAddons}
+            setSelectedAddons={setSelectedAddons}
           />
           <section
             className="invisible"
@@ -200,6 +211,7 @@ const SystemSettings = () => {
             >
               {selectedAddons
                 .filter((addon) => addon.version)
+                .reverse()
                 .map((addon) => (
                   <Panel
                     key={`${addon.name}-${addon.version}`}
