@@ -127,11 +127,11 @@ const SettingsPanel = ({ addon, onClose, onUpdate, localData }) => {
   }
 
   const loadSettings = () => {
+    const params = { version: addon.version }
     if (localData) {
       setOriginalData(localData)
     }
     else {
-      const params = { version: addon.version }
       axios
         .get(`/api/addons/${addon.name}/settings`, { params })
         .then((res) => {
@@ -142,7 +142,7 @@ const SettingsPanel = ({ addon, onClose, onUpdate, localData }) => {
     }
 
     axios
-      .get(`/api/addons/${addon.name}/overrides`)
+      .get(`/api/addons/${addon.name}/overrides`, {params})
       .then((res) => setOverrides(res.data))
   }
 
