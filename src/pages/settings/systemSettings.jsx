@@ -5,10 +5,10 @@ import { Column } from 'primereact/column'
 import { Panel } from 'primereact/panel'
 import { ToggleButton } from 'primereact/togglebutton'
 
-import { Spacer } from '../../components'
+import { Button, Spacer } from '../../components'
 import SettingsEditor from '../../containers/settingsEditor'
 
-const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions }) => {
+const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions, changedKeys }) => {
   const [addons, setAddons] = useState({})
 
   // Selection
@@ -102,8 +102,9 @@ const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions }) => {
           selectionMode="multiple"
           selectionKeys={selectedKeys}
           onSelectionChange={onSelectionChange}
+          rowClassName={(rowData) => {return changedKeys.includes(rowData.key) ? 'changed' : ''}}
         >
-          <Column field="name" header="Name" expander="true" />
+          <Column field="title" header="Addon" expander="true" />
           <Column field="version" header="Version" />
           <Column field="usage" header="" />
         </TreeTable>
@@ -112,11 +113,10 @@ const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions }) => {
   )
 }
 
-const SettingsPanel = ({ addon, onClose, onUpdate }) => {
+const SettingsPanel = ({ addon, onClose, onUpdate, localData }) => {
   const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [overrides, setOverrides] = useState(null)
-  const [newData, setNewData] = useState(null)
 
   const loadSchema = () => {
     const params = { version: addon.version }
@@ -127,14 +127,19 @@ const SettingsPanel = ({ addon, onClose, onUpdate }) => {
   }
 
   const loadSettings = () => {
-    const params = { version: addon.version }
-    axios
-      .get(`/api/addons/${addon.name}/settings`, { params })
-      .then((res) => {
-        setOriginalData(res.data)
-        setNewData(null)
-      })
-      .catch((err) => console.log(err))
+    if (localData) {
+      setOriginalData(localData)
+    }
+    else {
+      const params = { version: addon.version }
+      axios
+        .get(`/api/addons/${addon.name}/settings`, { params })
+        .then((res) => {
+          setOriginalData(res.data)
+          //setNewData(null)
+        })
+        .catch((err) => console.log(err))
+    }
 
     axios
       .get(`/api/addons/${addon.name}/overrides`)
@@ -147,8 +152,7 @@ const SettingsPanel = ({ addon, onClose, onUpdate }) => {
   }, [addon.name, addon.version])
 
   const onChange = (formData) => {
-    //   console.log(formData)
-    setNewData(formData)
+    onUpdate(addon.name, addon.version, formData)
   }
 
   const editor = useMemo(() => {
@@ -174,9 +178,32 @@ const SystemSettings = () => {
   const [newData, setNewData] = useState({})
 
   const onSettingsChange = (addon, version, data) => {
-    if (!newData[addon]) newData[addon] = {}
-    newData[addon][version] = data
-    setNewData(newData)
+    const res = { ...newData }
+    if (!res[addon]) res[addon] = {}
+    res[addon][version] = data
+    setNewData(res)
+  }
+
+  const changedKeys = useMemo(() => {
+    let result = []
+    for (const addon in newData) {
+      for (const version in newData[addon]) {
+        result.push(`${addon}@${version}`)
+      }
+    }
+    return result
+  }, [newData])
+
+  const onSave = () => {
+    for (const addon in newData) {
+      for (const version in newData[addon]) {
+        const params = { version }
+        axios
+          .post(`/api/addons/${addon}/settings`, newData[addon][version], {params})
+          .then((res) => console.log(res))
+          .catch((err) => console.log(err))
+      }
+    }
   }
 
   return (
@@ -189,12 +216,18 @@ const SystemSettings = () => {
             onLabel="Hide versions"
             offLabel="Show versions"
           />
+          <Button
+            onClick={onSave}
+            disabled={changedKeys.length === 0}
+            label="Save"
+          />
         </section>
         <section className="invisible row" style={{ flexGrow: 1 }}>
           <AddonsPanel
             showVersions={showVersions}
             selectedAddons={selectedAddons}
             setSelectedAddons={setSelectedAddons}
+            changedKeys={changedKeys}
           />
           <section
             className="invisible"
@@ -217,11 +250,22 @@ const SystemSettings = () => {
                     key={`${addon.name}-${addon.version}`}
                     style={{ flexGrow: 0 }}
                   >
-                    <SettingsPanel addon={addon} onUpdate={onSettingsChange} />
+                    <SettingsPanel 
+                      addon={addon} 
+                      onUpdate={onSettingsChange} 
+                      localData={newData[addon.name] && newData[addon.name][addon.version]}
+                    />
                   </Panel>
                 ))}
 
               <Spacer />
+            </div>
+          </section>
+          <section style={{ width: 600, height: "100%"}}>
+            <div className="wrapper" style={{ overflowY: "scroll" }}>
+              <pre style={{ width: "100%", height: "100%"}}>
+                {JSON.stringify(newData, null, 2)}
+              </pre>
             </div>
           </section>
         </section>

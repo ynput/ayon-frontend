@@ -58,6 +58,8 @@ const SettingsEditor = ({
   onChange,
   overrides,
   onSetBreadcrumbs,
+  onSetChangedKeys,
+  changedKeys
 }) => {
   if (!schema) {
     // TODO: maybe a spinner or something?
@@ -67,7 +69,8 @@ const SettingsEditor = ({
   const formContext = {
     overrides: { ...buildOverrides(formData), ...(overrides || {}) },
     onSetBreadcrumbs: onSetBreadcrumbs || (() => {}),
-    changedKeys: [], // source of all problems
+    changedKeys: changedKeys || [], // source of all problems
+    onSetChangedKeys: onSetChangedKeys || (() => {}),
   }
 
   return (
