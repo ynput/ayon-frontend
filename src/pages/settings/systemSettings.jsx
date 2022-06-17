@@ -119,21 +119,19 @@ const SettingsPanel = ({ addon, onClose, onUpdate, localData }) => {
   const [overrides, setOverrides] = useState(null)
 
   const loadSchema = () => {
-    const params = { version: addon.version }
     axios
-      .get(`/api/addons/${addon.name}/schema`, { params })
+      .get(`/api/addons/${addon.name}/${addon.version}/schema`)
       .then((res) => setSchema(res.data))
       .catch((err) => console.log(err))
   }
 
   const loadSettings = () => {
-    const params = { version: addon.version }
     if (localData) {
       setOriginalData(localData)
     }
     else {
       axios
-        .get(`/api/addons/${addon.name}/settings`, { params })
+        .get(`/api/addons/${addon.name}/${addon.version}/settings`)
         .then((res) => {
           setOriginalData(res.data)
           //setNewData(null)
@@ -142,7 +140,7 @@ const SettingsPanel = ({ addon, onClose, onUpdate, localData }) => {
     }
 
     axios
-      .get(`/api/addons/${addon.name}/overrides`, {params})
+      .get(`/api/addons/${addon.name}/${addon.version}/overrides`)
       .then((res) => setOverrides(res.data))
   }
 
@@ -197,9 +195,8 @@ const SystemSettings = () => {
   const onSave = () => {
     for (const addon in newData) {
       for (const version in newData[addon]) {
-        const params = { version }
         axios
-          .post(`/api/addons/${addon}/settings`, newData[addon][version], {params})
+          .post(`/api/addons/${addon}/${version}/settings`, newData[addon][version])
           .then((res) => console.log(res))
           .catch((err) => console.log(err))
       }
