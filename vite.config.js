@@ -9,6 +9,10 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/addons': {
+        target: 'http://localhost:5000',
+        changeOrigin: false,
+      },
       '/graphql': {
         target: 'http://localhost:5000',
         changeOrigin: true,

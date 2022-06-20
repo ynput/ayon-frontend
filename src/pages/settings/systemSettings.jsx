@@ -66,7 +66,9 @@ const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions, changedK
         }
 
         if (showVersions) {
-          for (const version of addon.versions) {
+          for (const version in addon.versions) {
+            if (!addon.versions[version].hasSettings)
+              continue
             row.children.push({
               key: `${addon.name}@${version}`,
               data: {
@@ -113,7 +115,7 @@ const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions, changedK
   )
 }
 
-const SettingsPanel = ({ addon, onClose, onUpdate, localData }) => {
+const SettingsPanel = ({ addon, onUpdate, localData, reloadTrigger }) => {
   const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [overrides, setOverrides] = useState(null)
@@ -147,7 +149,7 @@ const SettingsPanel = ({ addon, onClose, onUpdate, localData }) => {
   useEffect(() => {
     loadSchema()
     loadSettings()
-  }, [addon.name, addon.version])
+  }, [addon.name, addon.version, reloadTrigger])
 
   const onChange = (formData) => {
     onUpdate(addon.name, addon.version, formData)
@@ -172,6 +174,7 @@ const SettingsPanel = ({ addon, onClose, onUpdate, localData }) => {
 const SystemSettings = () => {
   const [showVersions, setShowVersions] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
+  const [reloadTrigger, setReloadTrigger] = useState(0)
 
   const [newData, setNewData] = useState({})
 
@@ -197,7 +200,9 @@ const SystemSettings = () => {
       for (const version in newData[addon]) {
         axios
           .post(`/api/addons/${addon}/${version}/settings`, newData[addon][version])
-          .then((res) => console.log(res))
+          .then((res) => {
+            setReloadTrigger(reloadTrigger + 1)
+          })
           .catch((err) => console.log(err))
       }
     }
@@ -251,6 +256,7 @@ const SystemSettings = () => {
                       addon={addon} 
                       onUpdate={onSettingsChange} 
                       localData={newData[addon.name] && newData[addon.name][addon.version]}
+                      reloadTrigger={reloadTrigger}
                     />
                   </Panel>
                 ))}

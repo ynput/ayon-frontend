@@ -20,7 +20,7 @@ const AddonListItem = ({ addon, formData, setFormData }) => {
     })
     return [
       { label: '(NONE)', value: null },
-      ...addon.versions.map((version) => {
+      ...Object.keys(addon.versions).map((version) => {
         return {
           label: version,
           value: version,

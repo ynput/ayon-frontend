@@ -10,6 +10,7 @@ import BrowserPage from './browser'
 import EditorPage from './editor'
 import SiteSync from './sitesync'
 import LoadingPage from './loading'
+import ProjectAddon from './projectAddon'
 
 import { selectProject, setProjectData } from '../features/context'
 import { updateFolderTypeIcons, updateTaskTypeIcons } from '../utils'
@@ -78,9 +79,11 @@ const ProjectPage = () => {
     return <LoadingPage />
   }
 
+
   let child = null
   if (module === 'editor') child = <EditorPage />
   else if (module === 'sitesync') child = <SiteSync />
+  else if (module === 'addon') child = <ProjectAddon />
   else child = <BrowserPage />
 
   return (
@@ -96,6 +99,7 @@ const ProjectPage = () => {
         <NavLink to={`/projects/${projectName}/browser`}>Browser</NavLink>
         <NavLink to={`/projects/${projectName}/editor`}>Editor</NavLink>
         <NavLink to={`/projects/${projectName}/sitesync`}>SiteSync</NavLink>
+        <NavLink to={`/projects/${projectName}/addon`}>Test addon</NavLink>
         <Spacer />
         <Button
           className="p-button-link"
