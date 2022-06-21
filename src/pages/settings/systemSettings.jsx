@@ -8,7 +8,12 @@ import { ToggleButton } from 'primereact/togglebutton'
 import { Button, Spacer } from '../../components'
 import SettingsEditor from '../../containers/settingsEditor'
 
-const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions, changedKeys }) => {
+const AddonsPanel = ({
+  selectedAddons,
+  setSelectedAddons,
+  showVersions,
+  changedKeys,
+}) => {
   const [addons, setAddons] = useState({})
 
   // Selection
@@ -25,19 +30,18 @@ const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions, changedK
     return result
   }, [selectedAddons])
 
-
   const onSelectionChange = (e) => {
-    // This nested loop looks a bit weird, but it's necessary 
+    // This nested loop looks a bit weird, but it's necessary
     // to maintain the order of the selected addons as
     // the user selects them.
     let result = []
-    for (const key in e.value){
-      for (const rd of addons){
-        if (rd.key === key){
+    for (const key in e.value) {
+      for (const rd of addons) {
+        if (rd.key === key) {
           result.push(rd.data)
         }
-        for (const rd2 of rd.children){
-          if (rd2.key === key){
+        for (const rd2 of rd.children) {
+          if (rd2.key === key) {
             result.push(rd2.data)
           }
         }
@@ -67,8 +71,7 @@ const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions, changedK
 
         if (showVersions) {
           for (const version in addon.versions) {
-            if (!addon.versions[version].hasSettings)
-              continue
+            if (!addon.versions[version].hasSettings) continue
             row.children.push({
               key: `${addon.name}@${version}`,
               data: {
@@ -104,7 +107,9 @@ const AddonsPanel = ({ selectedAddons, setSelectedAddons, showVersions, changedK
           selectionMode="multiple"
           selectionKeys={selectedKeys}
           onSelectionChange={onSelectionChange}
-          rowClassName={(rowData) => {return changedKeys.includes(rowData.key) ? 'changed' : ''}}
+          rowClassName={(rowData) => {
+            return changedKeys.includes(rowData.key) ? 'changed' : ''
+          }}
         >
           <Column field="title" header="Addon" expander="true" />
           <Column field="version" header="Version" />
@@ -130,8 +135,7 @@ const SettingsPanel = ({ addon, onUpdate, localData, reloadTrigger }) => {
   const loadSettings = () => {
     if (localData) {
       setOriginalData(localData)
-    }
-    else {
+    } else {
       axios
         .get(`/api/addons/${addon.name}/${addon.version}/settings`)
         .then((res) => {
@@ -199,7 +203,10 @@ const SystemSettings = () => {
     for (const addon in newData) {
       for (const version in newData[addon]) {
         axios
-          .post(`/api/addons/${addon}/${version}/settings`, newData[addon][version])
+          .post(
+            `/api/addons/${addon}/${version}/settings`,
+            newData[addon][version]
+          )
           .then((res) => {
             setReloadTrigger(reloadTrigger + 1)
           })
@@ -252,10 +259,13 @@ const SystemSettings = () => {
                     key={`${addon.name}-${addon.version}`}
                     style={{ flexGrow: 0 }}
                   >
-                    <SettingsPanel 
-                      addon={addon} 
-                      onUpdate={onSettingsChange} 
-                      localData={newData[addon.name] && newData[addon.name][addon.version]}
+                    <SettingsPanel
+                      addon={addon}
+                      onUpdate={onSettingsChange}
+                      localData={
+                        newData[addon.name] &&
+                        newData[addon.name][addon.version]
+                      }
                       reloadTrigger={reloadTrigger}
                     />
                   </Panel>
@@ -264,9 +274,9 @@ const SystemSettings = () => {
               <Spacer />
             </div>
           </section>
-          <section style={{ width: 600, height: "100%"}}>
-            <div className="wrapper" style={{ overflowY: "scroll" }}>
-              <pre style={{ width: "100%", height: "100%"}}>
+          <section style={{ width: 600, height: '100%' }}>
+            <div className="wrapper" style={{ overflowY: 'scroll' }}>
+              <pre style={{ width: '100%', height: '100%' }}>
                 {JSON.stringify(newData, null, 2)}
               </pre>
             </div>

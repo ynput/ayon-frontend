@@ -59,12 +59,10 @@ const AnatomyPresets = () => {
   }, [])
 
   useEffect(() => {
-    axios
-      .get(`/api/anatomy/presets/${selectedPreset}`)
-      .then((res) => {
-        setNewData(res.data)
-        setOriginalData(res.data)
-      })
+    axios.get(`/api/anatomy/presets/${selectedPreset}`).then((res) => {
+      setNewData(res.data)
+      setOriginalData(res.data)
+    })
   }, [selectedPreset])
 
   //

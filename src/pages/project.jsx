@@ -32,7 +32,8 @@ const ProjectPage = () => {
    */
 
   const [loading, setLoading] = useState(true)
-  const { projectName, module } = useParams()
+  const [addons, setAddons] = useState([])
+  const { projectName, module, addonName } = useParams()
   const dispatch = useDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
@@ -45,6 +46,7 @@ const ProjectPage = () => {
   // Fetch project data
   useEffect(() => {
     setLoading(true)
+
     axios
       .get(`/api/projects/${projectName}`)
       .then((response) => {
@@ -63,10 +65,28 @@ const ProjectPage = () => {
           s[taskTypeName] = data.taskTypes[taskTypeName].icon
         }
         updateTaskTypeIcons(s)
+
+        // Load addons
+        // Loading it here beceause we can have a version override
+        // from the project data
+
+        axios.get('/api/addons').then((response) => {
+          let result = []
+          for (const definition of response.data.addons) {
+            const versDef = definition.versions[definition.productionVersion]
+            if (!versDef) continue
+            if (!versDef.frontendScopes.includes('project')) continue
+            result.push({
+              name: definition.name,
+              title: definition.title,
+              version: definition.productionVersion,
+            })
+          }
+          setAddons(result)
+        })
       })
       .finally(() => {
         dispatch(selectProject(projectName))
-
         setLoading(false)
       })
   }, [dispatch, projectName])
@@ -79,12 +99,17 @@ const ProjectPage = () => {
     return <LoadingPage />
   }
 
-
   let child = null
   if (module === 'editor') child = <EditorPage />
   else if (module === 'sitesync') child = <SiteSync />
-  else if (module === 'addon') child = <ProjectAddon />
-  else child = <BrowserPage />
+  else if (addonName) {
+    for (const addon of addons) {
+      if (addon.name === addonName) {
+        child = <ProjectAddon addon_name={addonName} version={'1.0.0'} />
+        break
+      }
+    }
+  } else child = <BrowserPage />
 
   return (
     <>
@@ -99,7 +124,14 @@ const ProjectPage = () => {
         <NavLink to={`/projects/${projectName}/browser`}>Browser</NavLink>
         <NavLink to={`/projects/${projectName}/editor`}>Editor</NavLink>
         <NavLink to={`/projects/${projectName}/sitesync`}>SiteSync</NavLink>
-        <NavLink to={`/projects/${projectName}/addon`}>Test addon</NavLink>
+        {addons.map((addon) => (
+          <NavLink
+            to={`/projects/${projectName}/addon/${addon.name}`}
+            key={addon.name}
+          >
+            {addon.title}
+          </NavLink>
+        ))}
         <Spacer />
         <Button
           className="p-button-link"

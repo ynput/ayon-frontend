@@ -85,7 +85,11 @@ const App = () => {
           <Route path="/" exact element={<Navigate replace to="/projects" />} />
           <Route path="/projects" exact element={<ProjectManager />} />
           <Route
-            path={"/projects/:projectName/:module"}
+            path={'/projects/:projectName/:module'}
+            element={<ProjectPage />}
+          />
+          <Route
+            path={'/projects/:projectName/addon/:addonName'}
             element={<ProjectPage />}
           />
 

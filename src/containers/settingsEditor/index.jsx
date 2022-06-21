@@ -59,7 +59,7 @@ const SettingsEditor = ({
   overrides,
   onSetBreadcrumbs,
   onSetChangedKeys,
-  changedKeys
+  changedKeys,
 }) => {
   if (!schema) {
     // TODO: maybe a spinner or something?

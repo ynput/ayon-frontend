@@ -1,18 +1,19 @@
 import { useRef } from 'react'
 import { useSelector } from 'react-redux'
 
-const ProjectAddon = ({addon_name, version}) => {
+const ProjectAddon = ({ addon_name, version }) => {
   const addonRef = useRef(null)
   const context = useSelector((state) => ({ ...state.context }))
 
-  //  const addonUrl = `/addons/${addon_name}/${version}`;
-  const addonUrl = `/addons/test/1.0.0`;
+  const addonUrl = `/addons/${addon_name}/${version}`
 
   const onLoad = () => {
     const addonWnd = addonRef.current.contentWindow
     addonWnd.postMessage({
       type: 'init',
-      data: context
+      scope: 'project',
+      context: context,
+      accessToken: localStorage.getItem('accessToken'),
     })
   }
 
@@ -24,7 +25,7 @@ const ProjectAddon = ({addon_name, version}) => {
         src={addonUrl}
         ref={addonRef}
         onLoad={onLoad}
-        style={{ flexGrow: 1, background: "transparent" }}
+        style={{ flexGrow: 1, background: 'transparent' }}
       />
     </main>
   )
