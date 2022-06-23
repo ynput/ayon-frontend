@@ -5,7 +5,7 @@ const ProjectAddon = ({ addon_name, version }) => {
   const addonRef = useRef(null)
   const context = useSelector((state) => ({ ...state.context }))
 
-  const addonUrl = `/addons/${addon_name}/${version}`
+  const addonUrl = `/addons/${addon_name}/${version}/`
 
   const onLoad = () => {
     const addonWnd = addonRef.current.contentWindow

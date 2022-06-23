@@ -75,11 +75,14 @@ const ProjectPage = () => {
           for (const definition of response.data.addons) {
             const versDef = definition.versions[definition.productionVersion]
             if (!versDef) continue
-            if (!versDef.frontendScopes.includes('project')) continue
+            const projectScope = versDef.frontendScopes['project']
+            if (!projectScope) continue
+
             result.push({
               name: definition.name,
               title: definition.title,
               version: definition.productionVersion,
+              settings: projectScope
             })
           }
           setAddons(result)
