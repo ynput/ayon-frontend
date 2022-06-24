@@ -108,7 +108,11 @@ const ProjectPage = () => {
   else if (addonName) {
     for (const addon of addons) {
       if (addon.name === addonName) {
-        child = <ProjectAddon addon_name={addonName} version={'1.0.0'} />
+        child = (<ProjectAddon 
+          addon_name={addonName} 
+          version={'1.0.0'} 
+          sidebar={addon.settings.sidebar}
+        />)
         break
       }
     }

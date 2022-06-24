@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 
 import Hierarchy from './browser/hierarchy'
 
-const ProjectAddon = ({ addon_name, version }) => {
+const ProjectAddon = ({ addon_name, version, sidebar }) => {
   const addonRef = useRef(null)
   const [loading, setLoading] = useState(true)
 
@@ -31,27 +31,32 @@ const ProjectAddon = ({ addon_name, version }) => {
   }, [focusedFolders])
 
 
-  const sidebar = useMemo(() => {
-    return (
-      <section className="invisible" style={{flexBasis: 400}}>
-        <div className="wrapper">
-        <Hierarchy
-          projectName={projectName}
-          folderTypes={folderTypes}
-          focusedFolders={focusedFolders}
-          expandedFolders={expandedFolders}
-        />
-        </div>
-      </section>
-    )
-  }, [projectName, folderTypes, focusedFolders, expandedFolders])
+  const sidebarComponent = useMemo(() => {
+
+    if (sidebar === "hierarchy"){
+      return (
+        <section className="invisible" style={{flexBasis: 400}}>
+          <div className="wrapper">
+          <Hierarchy
+            projectName={projectName}
+            folderTypes={folderTypes}
+            focusedFolders={focusedFolders}
+            expandedFolders={expandedFolders}
+          />
+          </div>
+        </section>
+      )
+    } else {
+      return <></>
+    }
+  }, [sidebar, projectName, folderTypes, focusedFolders, expandedFolders])
 
 
 
   return (
     <main>
 
-      { sidebar }
+      { sidebarComponent }
 
       <section style={{height: "100%", flexGrow: 1}}>
         <iframe
