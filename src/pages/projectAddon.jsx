@@ -1,32 +1,71 @@
-import { useRef } from 'react'
+import { useRef, useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
+
+import Hierarchy from './browser/hierarchy'
 
 const ProjectAddon = ({ addon_name, version }) => {
   const addonRef = useRef(null)
+  const [loading, setLoading] = useState(true)
+
   const context = useSelector((state) => ({ ...state.context }))
+  const projectName = context.projectName
+  const folderTypes = context.project.folderTypes
+  const expandedFolders = context.expandedFolders
+  const focusedFolders = context.focusedFolders
 
   const addonUrl = `/addons/${addon_name}/${version}/`
 
-  const onLoad = () => {
+
+  const pushContext = () => {
     const addonWnd = addonRef.current.contentWindow
     addonWnd.postMessage({
-      type: 'init',
       scope: 'project',
       context: context,
       accessToken: localStorage.getItem('accessToken'),
     })
   }
 
+  useEffect(()=>{
+    if (loading) return
+    pushContext()
+  }, [focusedFolders])
+
+
+  const sidebar = useMemo(() => {
+    return (
+      <section className="invisible" style={{flexBasis: 400}}>
+        <div className="wrapper">
+        <Hierarchy
+          projectName={projectName}
+          folderTypes={folderTypes}
+          focusedFolders={focusedFolders}
+          expandedFolders={expandedFolders}
+        />
+        </div>
+      </section>
+    )
+  }, [projectName, folderTypes, focusedFolders, expandedFolders])
+
+
+
   return (
-    <main className="rows">
-      <iframe
-        className="embed"
-        title="apidoc"
-        src={addonUrl}
-        ref={addonRef}
-        onLoad={onLoad}
-        style={{ flexGrow: 1, background: 'transparent' }}
-      />
+    <main>
+
+      { sidebar }
+
+      <section style={{height: "100%", flexGrow: 1}}>
+        <iframe
+          className="embed"
+          title="apidoc"
+          src={addonUrl}
+          ref={addonRef}
+          onLoad={()=>{
+            setLoading(false)
+            pushContext()
+          }}
+          style={{ flexGrow: 1, background: 'transparent' }}
+        />
+      </section>
     </main>
   )
 }
