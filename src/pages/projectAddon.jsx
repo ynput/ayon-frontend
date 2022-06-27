@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 
 import Hierarchy from './browser/hierarchy'
 
-const ProjectAddon = ({ addon_name, version, sidebar }) => {
+const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   const addonRef = useRef(null)
   const [loading, setLoading] = useState(true)
 
@@ -13,36 +13,35 @@ const ProjectAddon = ({ addon_name, version, sidebar }) => {
   const expandedFolders = context.expandedFolders
   const focusedFolders = context.focusedFolders
 
-  const addonUrl = `/addons/${addon_name}/${version}/`
-
+  const addonUrl = `/addons/${addonName}/${addonVersion}/`
 
   const pushContext = () => {
     const addonWnd = addonRef.current.contentWindow
     addonWnd.postMessage({
       scope: 'project',
-      context: context,
       accessToken: localStorage.getItem('accessToken'),
+      context,
+      addonName,
+      addonVersion,
     })
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     if (loading) return
     pushContext()
   }, [focusedFolders])
 
-
   const sidebarComponent = useMemo(() => {
-
-    if (sidebar === "hierarchy"){
+    if (sidebar === 'hierarchy') {
       return (
-        <section className="invisible" style={{flexBasis: 400}}>
+        <section className="invisible" style={{ flexBasis: 400 }}>
           <div className="wrapper">
-          <Hierarchy
-            projectName={projectName}
-            folderTypes={folderTypes}
-            focusedFolders={focusedFolders}
-            expandedFolders={expandedFolders}
-          />
+            <Hierarchy
+              projectName={projectName}
+              folderTypes={folderTypes}
+              focusedFolders={focusedFolders}
+              expandedFolders={expandedFolders}
+            />
           </div>
         </section>
       )
@@ -51,20 +50,17 @@ const ProjectAddon = ({ addon_name, version, sidebar }) => {
     }
   }, [sidebar, projectName, folderTypes, focusedFolders, expandedFolders])
 
-
-
   return (
     <main>
+      {sidebarComponent}
 
-      { sidebarComponent }
-
-      <section style={{height: "100%", flexGrow: 1}}>
+      <section style={{ height: '100%', flexGrow: 1 }}>
         <iframe
           className="embed"
           title="apidoc"
           src={addonUrl}
           ref={addonRef}
-          onLoad={()=>{
+          onLoad={() => {
             setLoading(false)
             pushContext()
           }}

@@ -82,7 +82,7 @@ const ProjectPage = () => {
               name: definition.name,
               title: definition.title,
               version: definition.productionVersion,
-              settings: projectScope
+              settings: projectScope,
             })
           }
           setAddons(result)
@@ -108,11 +108,13 @@ const ProjectPage = () => {
   else if (addonName) {
     for (const addon of addons) {
       if (addon.name === addonName) {
-        child = (<ProjectAddon 
-          addon_name={addonName} 
-          version={'1.0.0'} 
-          sidebar={addon.settings.sidebar}
-        />)
+        child = (
+          <ProjectAddon
+            addonName={addonName}
+            addonVersion={addon.version}
+            sidebar={addon.settings.sidebar}
+          />
+        )
         break
       }
     }
