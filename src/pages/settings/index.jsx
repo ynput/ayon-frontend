@@ -3,8 +3,8 @@ import { useParams, NavLink } from 'react-router-dom'
 import { Spacer } from '../../components'
 
 import AnatomyPresets from './anatomyPresets'
-import SystemSettings from './systemSettings'
 import AddonsSettings from './addons'
+import StudioOverrides from './studioOverrides'
 
 const SettingsPage = () => {
   const { module } = useParams()
@@ -21,8 +21,8 @@ const SettingsPage = () => {
     switch (module) {
       case 'anatomy':
         return <AnatomyPresets />
-      case 'system':
-        return <SystemSettings />
+      case 'studio':
+        return <StudioOverrides />
       case 'addons':
         return <AddonsSettings />
       default:
@@ -35,7 +35,7 @@ const SettingsPage = () => {
       <nav id="project-nav">
         <NavLink to={`/settings/anatomy`}>Anatomy</NavLink>
         <NavLink to={`/settings/addons`}>Addons</NavLink>
-        <NavLink to={`/settings/system`}>System</NavLink>
+        <NavLink to={`/settings/studio`}>Studio</NavLink>
         <NavLink to={`/settings/attributes`}>Attributes</NavLink>
         <NavLink to={`/settings/users`}>Users</NavLink>
         <Spacer />

@@ -12,7 +12,8 @@ const AddonsPanel = ({
   selectedAddons,
   setSelectedAddons,
   showVersions,
-  changedKeys,
+  changedAddons,
+  onDismissChanges,
 }) => {
   const [addons, setAddons] = useState({})
 
@@ -108,7 +109,7 @@ const AddonsPanel = ({
           selectionKeys={selectedKeys}
           onSelectionChange={onSelectionChange}
           rowClassName={(rowData) => {
-            return changedKeys.includes(rowData.key) ? 'changed' : ''
+            return {"changed" : changedAddons.includes(rowData.key)} 
           }}
         >
           <Column field="title" header="Addon" expander="true" />
@@ -120,7 +121,7 @@ const AddonsPanel = ({
   )
 }
 
-const SettingsPanel = ({ addon, onUpdate, localData, reloadTrigger }) => {
+const SettingsPanel = ({ addon, onUpdate, onSetChangedKeys, localData, changedKeys, reloadTrigger }) => {
   const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [overrides, setOverrides] = useState(null)
@@ -155,9 +156,7 @@ const SettingsPanel = ({ addon, onUpdate, localData, reloadTrigger }) => {
     loadSettings()
   }, [addon.name, addon.version, reloadTrigger])
 
-  const onChange = (formData) => {
-    onUpdate(addon.name, addon.version, formData)
-  }
+
 
   const editor = useMemo(() => {
     if (!(schema && originalData && overrides)) return <></>
@@ -165,9 +164,11 @@ const SettingsPanel = ({ addon, onUpdate, localData, reloadTrigger }) => {
       <SettingsEditor
         schema={schema}
         formData={originalData}
+        changedKeys={changedKeys}
         overrides={overrides}
-        onChange={onChange}
         onSetBreadcrumbs={() => {}}
+        onChange={data => onUpdate(addon.name, addon.version, data)}
+        onSetChangedKeys={data => onSetChangedKeys(addon.name, addon.version, data)}
       />
     )
   }, [schema, originalData, overrides])
@@ -181,6 +182,7 @@ const SystemSettings = () => {
   const [reloadTrigger, setReloadTrigger] = useState(0)
 
   const [newData, setNewData] = useState({})
+  const [localOverrides, setLocalOverrides] = useState([])
 
   const onSettingsChange = (addon, version, data) => {
     const res = { ...newData }
@@ -189,7 +191,14 @@ const SystemSettings = () => {
     setNewData(res)
   }
 
-  const changedKeys = useMemo(() => {
+  const onSetChangedKeys = (addon, version, data) => {
+    const res = { ...localOverrides } 
+    if (!res[addon]) res[addon] = {}
+    res[addon][version] = data
+    setLocalOverrides(res)
+  }
+
+  const changedAddons = useMemo(() => {
     let result = []
     for (const addon in newData) {
       for (const version in newData[addon]) {
@@ -207,7 +216,7 @@ const SystemSettings = () => {
             `/api/addons/${addon}/${version}/settings`,
             newData[addon][version]
           )
-          .then((res) => {
+          .then(() => {
             setReloadTrigger(reloadTrigger + 1)
           })
           .catch((err) => console.log(err))
@@ -227,7 +236,7 @@ const SystemSettings = () => {
           />
           <Button
             onClick={onSave}
-            disabled={changedKeys.length === 0}
+            disabled={changedAddons.length === 0}
             label="Save"
           />
         </section>
@@ -236,7 +245,7 @@ const SystemSettings = () => {
             showVersions={showVersions}
             selectedAddons={selectedAddons}
             setSelectedAddons={setSelectedAddons}
-            changedKeys={changedKeys}
+            changedAddons={changedAddons}
           />
           <section
             className="invisible"
@@ -262,10 +271,12 @@ const SystemSettings = () => {
                     <SettingsPanel
                       addon={addon}
                       onUpdate={onSettingsChange}
+                      onSetChangedKeys={onSetChangedKeys}
                       localData={
                         newData[addon.name] &&
                         newData[addon.name][addon.version]
                       }
+                      changedKeys={localOverrides[addon.name] && localOverrides[addon.name][addon.version]}
                       reloadTrigger={reloadTrigger}
                     />
                   </Panel>

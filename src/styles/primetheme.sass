@@ -84,10 +84,16 @@ $prime-button-background: $color-grey-03
   .p-datatable-tbody > tr, .p-treetable-tbody > tr
     border-bottom: 1px solid transparent
 
+    &.changed
+      border-left: 4px solid #106aa2 !important
+
     &:nth-child(odd)
       background: #21252b
+      border-left: 4px solid #21252b
+
     &:nth-child(even)
       background: #272c33
+      border-left: 4px solid #272c33
 
     &.p-highlight
       background: rgba($color-hl-00, .2)

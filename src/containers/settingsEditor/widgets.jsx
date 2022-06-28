@@ -13,6 +13,7 @@ const updateOverrides = (props, changed) => {
       props.formContext.changedKeys.indexOf(props.id),
       1
     )
+  props.formContext.onSetChangedKeys(props.formContext.changedKeys)
 }
 
 const parseContext = (props) => {
