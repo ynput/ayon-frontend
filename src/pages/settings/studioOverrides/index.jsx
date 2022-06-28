@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 
 import { Panel } from 'primereact/panel'
 import { ToggleButton } from 'primereact/togglebutton'
@@ -9,71 +9,79 @@ import { Button, Spacer } from '/src/components'
 import AddonList from './addonList'
 import SettingsPanel from './settingsPanel'
 
-
-
 const StudioOverrides = () => {
   const [showVersions, setShowVersions] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
-  const [reloadTrigger, setReloadTrigger] = useState(0)
+  const [reloadTrigger, setReloadTrigger] = useState({})
+  const [localData, setLocalData] = useState({})
+  const [localOverrides, setLocalOverrides] = useState({})
 
-  const [newData, setNewData] = useState({})
-  const [localOverrides, setLocalOverrides] = useState([])
-
-  const onSettingsChange = (addon, version, data) => {
-    const res = { ...newData }
-    if (!res[addon]) res[addon] = {}
-    res[addon][version] = data
-    setNewData(res)
+  const onSettingsChange = (addonName, addonVersion, data) => {
+    setLocalData((localData) => {
+      localData[`${addonName}@${addonVersion}`] = data
+      return { ...localData }
+    })
   }
 
-  const onSetChangedKeys = (addon, version, data) => {
-    const res = { ...localOverrides } 
-    if (!res[addon]) res[addon] = {}
-    res[addon][version] = data
-    setLocalOverrides(res)
+  const onSetChangedKeys = (addonName, addonVersion, data) => {
+    setLocalOverrides((localOverrides) => {
+      localOverrides[`${addonName}@${addonVersion}`] = data
+      return { ...localOverrides }
+    })
   }
 
-  const changedAddons = useMemo(() => {
-    let result = []
-    for (const addon in newData) {
-      for (const version in newData[addon]) {
-        result.push(`${addon}@${version}`)
+  const forceAddonReload = (addonName, addonVersion) => {
+    setReloadTrigger((reloadTrigger) => {
+      const now = new Date()
+      return {
+        ...reloadTrigger,
+        [`${addonName}@${addonVersion}`]: now,
       }
-    }
-    return result
-  }, [newData])
+    })
+  }
 
   const onSave = () => {
-    for (const addon in newData) {
-      for (const version in newData[addon]) {
-        axios
-          .post(
-            `/api/addons/${addon}/${version}/settings`,
-            newData[addon][version]
-          )
-          .then(() => {
-            setLocalOverrides({})
-            setNewData({})
-            setReloadTrigger(reloadTrigger + 1)
-          })
-          .catch((err) => console.log(err))
-      }
+    for (const key in localData) {
+      const [addonName, addonVersion] = key.split('@')
+      axios
+        .post(
+          `/api/addons/${addonName}/${addonVersion}/settings`,
+          localData[key]
+        )
+        .then(() => {
+          setLocalOverrides({})
+          setLocalData({})
+          forceAddonReload(addonName, addonVersion)
+        })
+        .catch((err) => console.log(err))
     }
   }
 
   const onDismissChanges = (addonName, addonVersion) => {
-    const res = {...newData}
-    delete(res[addonName][addonVersion])
-    if (!Object.keys(res[addonName]).length)
-      delete(res[addonName])
-    setNewData(res)
+    console.log('Dismiss changes')
+    const key = `${addonName}@${addonVersion}`
 
-    const overrides = {...localOverrides}
-    delete(overrides[addonName][addonVersion])
-    if (!Object.keys(overrides[addonName]).length)
-      delete(overrides[addonName])
-    setLocalOverrides(overrides)
-    setReloadTrigger(reloadTrigger + 1)
+    setLocalData((localData) => {
+      const res = { ...localData }
+      if (res[key]) delete res[key]
+      return res
+    })
+
+    setLocalOverrides((overrides) => {
+      const res = { ...overrides }
+      if (res[key]) delete res[key]
+      return res
+    })
+
+    forceAddonReload(addonName, addonVersion)
+  } // end of onDismissChanges
+
+  const onRemoveOverrides = (addonName, addonVersion) => {
+    axios
+      .delete(`/api/addons/${addonName}/${addonVersion}/overrides`)
+      .then(() => {
+        onDismissChanges(addonName, addonVersion)
+      })
   }
 
   return (
@@ -88,7 +96,7 @@ const StudioOverrides = () => {
           />
           <Button
             onClick={onSave}
-            disabled={changedAddons.length === 0}
+            disabled={Object.keys(localData).length === 0}
             label="Save"
           />
         </section>
@@ -97,12 +105,13 @@ const StudioOverrides = () => {
             showVersions={showVersions}
             selectedAddons={selectedAddons}
             setSelectedAddons={setSelectedAddons}
-            changedAddons={changedAddons}
+            changedAddons={Object.keys(localData)}
             onDismissChanges={onDismissChanges}
+            onRemoveOverrides={onRemoveOverrides}
           />
           <section
             className="invisible"
-            style={{ flexGrow: 1, height: '100%' }}
+            style={{ flexGrow: 2, height: '100%' }}
           >
             <div
               className="wrapper"
@@ -123,14 +132,19 @@ const StudioOverrides = () => {
                   >
                     <SettingsPanel
                       addon={addon}
-                      onUpdate={onSettingsChange}
-                      onSetChangedKeys={onSetChangedKeys}
-                      localData={
-                        newData[addon.name] &&
-                        newData[addon.name][addon.version]
+                      onChange={(data) =>
+                        onSettingsChange(addon.name, addon.version, data)
                       }
-                      changedKeys={localOverrides[addon.name] && localOverrides[addon.name][addon.version]}
-                      reloadTrigger={reloadTrigger}
+                      onSetChangedKeys={(data) =>
+                        onSetChangedKeys(addon.name, addon.version, data)
+                      }
+                      localData={localData[`${addon.name}@${addon.version}`]}
+                      changedKeys={
+                        localOverrides[`${addon.name}@${addon.version}`]
+                      }
+                      reloadTrigger={
+                        reloadTrigger[`${addon.name}@${addon.version}`]
+                      }
                     />
                   </Panel>
                 ))}
@@ -138,14 +152,17 @@ const StudioOverrides = () => {
               <Spacer />
             </div>
           </section>
-          <section style={{ width: 600, height: '100%' }}>
-            <div className="wrapper" style={{ overflowY: 'scroll', flexDirection: 'column' }}>
+          <section style={{ minWidth: 300, flexGrow: 1, height: '100%' }}>
+            <div
+              className="wrapper"
+              style={{ overflowY: 'scroll', flexDirection: 'column' }}
+            >
               <h3>Form data</h3>
-              <pre style={{ width: '100%', flexGrow:1 }}>
-                {JSON.stringify(newData, null, 2)}
+              <pre style={{ width: '100%', flexGrow: 1 }}>
+                {JSON.stringify(localData, null, 2)}
               </pre>
               <h3>Changed keys</h3>
-              <pre style={{ width: '100%', flexGrow:1 }}>
+              <pre style={{ width: '100%', flexGrow: 1 }}>
                 {JSON.stringify(localOverrides, null, 2)}
               </pre>
             </div>

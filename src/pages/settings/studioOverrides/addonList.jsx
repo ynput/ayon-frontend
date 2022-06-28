@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu';
+import { ContextMenu } from 'primereact/contextmenu'
 
 const AddonList = ({
   selectedAddons,
@@ -11,12 +11,11 @@ const AddonList = ({
   showVersions,
   changedAddons,
   onDismissChanges,
+  onRemoveOverrides,
 }) => {
   const [addons, setAddons] = useState({})
-  const [selectedNodeKey, setSelectedNodeKey] = useState(null);
+  const [selectedNodeKey, setSelectedNodeKey] = useState(null)
   const cm = useRef(null)
-
-  console.log("Changed addons", changedAddons)
 
   // Selection
   // selectedAddons state from the parent component stores "data" of the selected addons
@@ -97,58 +96,59 @@ const AddonList = ({
     })
   }, [showVersions])
 
-
   const menu = useMemo(() => {
-
     const result = [
-        {
-            label: 'Remove overrides',
-            icon: 'pi pi-times',
-            command: () => {
-              console.log("fooo")
-            }
+      {
+        label: 'Remove overrides',
+        icon: 'pi pi-times',
+        command: () => {
+          const [addonName, addonVersion] = selectedNodeKey.split('@')
+          onRemoveOverrides(addonName, addonVersion)
         },
-        {
-            label: 'Dismiss changes',
-            icon: 'pi pi-cog',
-            disabled: !changedAddons.includes(selectedNodeKey),
-            command: () => {
-              const [addonName, addonVersion] = selectedNodeKey.split("@")
-              onDismissChanges(addonName, addonVersion)
-            }
+      },
+      {
+        label: 'Dismiss changes',
+        icon: 'pi pi-cog',
+        disabled: !changedAddons.includes(selectedNodeKey),
+        command: () => {
+          const [addonName, addonVersion] = selectedNodeKey.split('@')
+          onDismissChanges(addonName, addonVersion)
         },
-        {
-          label: 'Import settings',
-          icon: 'pi pi-cog',
-          disabled: true
-        }
+      },
+      {
+        label: 'Import settings',
+        icon: 'pi pi-cog',
+        disabled: true,
+      },
     ]
     return result
-
   }, [selectedNodeKey])
-
 
   // Add this to the treetable to make multiselect work without
   // ctrl+click:
   // metaKeySelection={false}
-  
 
   return (
     <section style={{ width: 400, height: '100%' }}>
       <div className="wrapper">
-
-        <ContextMenu model={menu} ref={cm} onHide={() => setSelectedNodeKey(null)} />
+        <ContextMenu
+          model={menu}
+          ref={cm}
+          onHide={() => setSelectedNodeKey(null)}
+        />
 
         <TreeTable
           value={addons}
           selectionMode="multiple"
           selectionKeys={selectedKeys}
           onSelectionChange={onSelectionChange}
-          contextMenuSelectionKey={selectedNodeKey} 
-          onContextMenuSelectionChange={event => setSelectedNodeKey(event.value)}
-          onContextMenu={event => cm.current.show(event.originalEvent)}
+          contextMenuSelectionKey={selectedNodeKey}
+          onContextMenuSelectionChange={(event) =>
+            setSelectedNodeKey(event.value)
+          }
+          onContextMenu={(event) => cm.current.show(event.originalEvent)}
           rowClassName={(rowData) => {
-            return {"changed" : changedAddons.includes(rowData.key)} 
+            return { changed: changedAddons.includes(rowData.key) }
           }}
         >
           <Column field="title" header="Addon" expander="true" />

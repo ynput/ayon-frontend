@@ -109,7 +109,7 @@ const AddonsPanel = ({
           selectionKeys={selectedKeys}
           onSelectionChange={onSelectionChange}
           rowClassName={(rowData) => {
-            return {"changed" : changedAddons.includes(rowData.key)} 
+            return { changed: changedAddons.includes(rowData.key) }
           }}
         >
           <Column field="title" header="Addon" expander="true" />
@@ -121,7 +121,14 @@ const AddonsPanel = ({
   )
 }
 
-const SettingsPanel = ({ addon, onUpdate, onSetChangedKeys, localData, changedKeys, reloadTrigger }) => {
+const SettingsPanel = ({
+  addon,
+  onUpdate,
+  onSetChangedKeys,
+  localData,
+  changedKeys,
+  reloadTrigger,
+}) => {
   const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [overrides, setOverrides] = useState(null)
@@ -156,8 +163,6 @@ const SettingsPanel = ({ addon, onUpdate, onSetChangedKeys, localData, changedKe
     loadSettings()
   }, [addon.name, addon.version, reloadTrigger])
 
-
-
   const editor = useMemo(() => {
     if (!(schema && originalData && overrides)) return <></>
     return (
@@ -167,8 +172,10 @@ const SettingsPanel = ({ addon, onUpdate, onSetChangedKeys, localData, changedKe
         changedKeys={changedKeys}
         overrides={overrides}
         onSetBreadcrumbs={() => {}}
-        onChange={data => onUpdate(addon.name, addon.version, data)}
-        onSetChangedKeys={data => onSetChangedKeys(addon.name, addon.version, data)}
+        onChange={(data) => onUpdate(addon.name, addon.version, data)}
+        onSetChangedKeys={(data) =>
+          onSetChangedKeys(addon.name, addon.version, data)
+        }
       />
     )
   }, [schema, originalData, overrides])
@@ -192,7 +199,7 @@ const SystemSettings = () => {
   }
 
   const onSetChangedKeys = (addon, version, data) => {
-    const res = { ...localOverrides } 
+    const res = { ...localOverrides }
     if (!res[addon]) res[addon] = {}
     res[addon][version] = data
     setLocalOverrides(res)
@@ -276,7 +283,10 @@ const SystemSettings = () => {
                         newData[addon.name] &&
                         newData[addon.name][addon.version]
                       }
-                      changedKeys={localOverrides[addon.name] && localOverrides[addon.name][addon.version]}
+                      changedKeys={
+                        localOverrides[addon.name] &&
+                        localOverrides[addon.name][addon.version]
+                      }
                       reloadTrigger={reloadTrigger}
                     />
                   </Panel>

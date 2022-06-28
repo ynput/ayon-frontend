@@ -3,8 +3,14 @@ import { useState, useMemo, useEffect } from 'react'
 
 import SettingsEditor from '/src/containers/settingsEditor'
 
-
-const SettingsPanel = ({ addon, onUpdate, onSetChangedKeys, localData, changedKeys, reloadTrigger }) => {
+const SettingsPanel = ({
+  addon,
+  onChange,
+  onSetChangedKeys,
+  localData,
+  changedKeys,
+  reloadTrigger,
+}) => {
   const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [overrides, setOverrides] = useState(null)
@@ -39,8 +45,6 @@ const SettingsPanel = ({ addon, onUpdate, onSetChangedKeys, localData, changedKe
     loadSettings()
   }, [addon.name, addon.version, reloadTrigger])
 
-
-
   const editor = useMemo(() => {
     if (!(schema && originalData && overrides)) return <></>
     return (
@@ -49,9 +53,9 @@ const SettingsPanel = ({ addon, onUpdate, onSetChangedKeys, localData, changedKe
         formData={originalData}
         changedKeys={changedKeys}
         overrides={overrides}
+        onChange={onChange}
+        onSetChangedKeys={onSetChangedKeys}
         onSetBreadcrumbs={() => {}}
-        onChange={data => onUpdate(addon.name, addon.version, data)}
-        onSetChangedKeys={data => onSetChangedKeys(addon.name, addon.version, data)}
       />
     )
   }, [schema, originalData, overrides])
