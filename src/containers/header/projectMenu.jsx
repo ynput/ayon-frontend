@@ -48,8 +48,8 @@ const ProjectMenu = ({ visible, onHide }) => {
             responsive="true"
             dataKey="name"
             onSelectionChange={(e) => {
-              navigate(`/projects/${e.value.name}/browser`)
               onHide()
+              navigate(`/projects/${e.value.name}/browser`)
             }}
           >
             <Column field="name" header="Project name" />
@@ -61,8 +61,8 @@ const ProjectMenu = ({ visible, onHide }) => {
           label="Project manager"
           style={{ marginTop: 10 }}
           onClick={() => {
-            navigate('/projects')
             onHide()
+            navigate('/projects')
           }}
         />
       </div>

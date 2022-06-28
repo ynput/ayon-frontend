@@ -41,32 +41,32 @@ const UserMenu = ({ visible, onHide }) => {
       >
         <Button
           onClick={() => {
-            navigate('/doc/api')
             onHide()
+            navigate('/doc/api')
           }}
           label="REST API docs"
           icon="pi pi-book"
         />
         <Button
           onClick={() => {
-            navigate('/explorer')
             onHide()
+            navigate('/explorer')
           }}
           label="GraphQL explorer"
           icon="pi pi-sitemap"
         />
         <Button
           onClick={() => {
-            navigate('/settings')
             onHide()
+            navigate('/settings')
           }}
           label="Settings"
           icon="pi pi-cog"
         />
         <Button
           onClick={() => {
-            navigate('/profile')
             onHide()
+            navigate('/profile')
           }}
           label="Profile"
           icon="pi pi-user"
