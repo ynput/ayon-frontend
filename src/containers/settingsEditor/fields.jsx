@@ -86,9 +86,9 @@ function ObjectFieldTemplate(props) {
   // use the "name" attribute as the title
 
   let title = props.title
-  if (Object.keys(props.schema.properties).includes('name')) {
+  if ('name' in props.schema.properties) {
     let label = null
-    if (Object.keys(props.schema.properties).includes('label'))
+    if ('label' in props.schema.properties)
       label = props.formData.label
     title = label || props.formData.name || (
       <span className="new-object">Unnamed item</span>

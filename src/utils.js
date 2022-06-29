@@ -201,6 +201,7 @@ export {
   getFolderTypeIcon,
   getTaskTypeIcon,
   getFamilyIcon,
+  isEmpty,
   updateFolderTypeIcons,
   updateTaskTypeIcons,
   useLocalStorage,

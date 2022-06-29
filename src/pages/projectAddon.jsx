@@ -48,7 +48,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
     } else {
       return <></>
     }
-  }, [sidebar, projectName, folderTypes, focusedFolders, expandedFolders])
+  }, [sidebar, projectName, folderTypes, focusedFolders, context])
 
   return (
     <main>

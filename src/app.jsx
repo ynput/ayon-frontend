@@ -19,6 +19,7 @@ const SettingsPage = lazy(() => import('./pages/settings'))
 
 import { login } from './features/user'
 import { setSettings } from './features/settings'
+import { isEmpty } from './utils'
 
 const SettingsLoader = () => {
   const user = useSelector((state) => ({ ...state.user }))
@@ -75,7 +76,7 @@ const App = () => {
   }
 
   // Load settings
-  if (Object.keys(settings).length === 0) return <SettingsLoader />
+  if (isEmpty(settings)) return <SettingsLoader />
 
   return (
     <Suspense fallback={<LoadingPage />}>
