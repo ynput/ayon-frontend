@@ -7,71 +7,191 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import { Shade, Spacer, Button } from '/src/components'
-import { setBreadcrumbs } from '/src/features/context'
-import { arrayEquals } from '/src/utils'
+import { setBreadcrumbs, setExpandedFolders } from '/src/features/context'
+import { isEmpty } from '/src/utils'
 
 import { buildQuery } from './queries'
 import { formatName, getColumns} from './utils'
 
 
-const EditorView = ({ projectName, settings }) => {
-  const [hierarchy, setHierarchy] = useState([])
-  const [changes, setChanges] = useState({})
+const EditorView = () => {
   const [loading, setLoading] = useState(false)
-  const [expandedKeys, setExpandedKeys] = useState({})
+
+  const context = useSelector((state) => ({ ...state.context }))
+  const settings = useSelector((state) => ({ ...state.settings }))
+  const projectName = context.projectName
   const dispatch = useDispatch()
 
-  const columns = useMemo(() => getColumns(settings), [settings.attributes])
+  const [nodeData, setNodeData] = useState({})
 
-  const query = useMemo(() => {
-    if (!settings.attributes) return null
-    return buildQuery(settings.attributes)
-  }, [settings.attributes])
+  const columns = useMemo(() => getColumns(settings.attributes), [settings.attributes])
+  const query = useMemo(() => buildQuery(settings.attributes), [settings.attributes])
+
+
+  const loadBranch = async (parentId) => {
+    const variables = { projectName, parent: parentId || 'root' }
+    const response = await axios.post('/graphql', { query, variables })
+
+    if (response.status !== 200) {
+      console.log(response)
+      return {}
+    }
+
+    const data = response.data
+    const nodes = {}
+
+    for (const edge of data.data.project.folders.edges) {
+      const node = edge.node
+      nodes[node.id] = {
+        data: { ...node, entityType: 'folder' },
+        parentId,
+        leaf: !(node.hasChildren || node.hasTasks),
+      }
+    }
+
+    // Add tasks
+    for (const edge of data.data.project.tasks.edges) {
+      const node = edge.node
+      nodes[node.id] = {
+        data: { ...node, entityType: 'task' },
+        parentId,
+        leaf: true,
+      }
+    }
+    return nodes
+  }
+
+
+  const parents = useMemo(() => {
+    /*
+      { parentId: [child1Id, child2Id....] }
+    */
+
+    const result = {}
+    for (const childId in nodeData) {
+      const parentId = nodeData[childId].parentId
+      if (!(parentId in result))
+        result[parentId] = []
+      result[parentId].push(childId)
+    }
+    return result
+  }, [nodeData])
+
+
+  const getUpdatedNodeData = async (nodeData, expandedKeys) => {
+    // Load newly expanded branches
+    for (const expandedKey of expandedKeys){
+      if (!(expandedKey in parents)){
+       const newNodes = await loadBranch(expandedKey)
+       Object.assign(nodeData, newNodes)
+      }
+    }
+
+    // remove children from closed branches
+    for (const existingKey in parents){
+      if (existingKey === "root") continue
+      if (!(existingKey in expandedKeys)){
+        for (const unusedKey in parents[existingKey]){
+          delete(nodeData[unusedKey])
+        }
+      }
+    }
+    return {...nodeData}
+  }
+
+
+  useEffect(() => {
+    setLoading(true)
+    const expandedKeys = [...Object.keys(context.expandedFolders), "root"]
+    getUpdatedNodeData(nodeData, expandedKeys).then(
+      (result) => {
+        console.log("RES", result)
+        setNodeData(result)
+        setLoading(false)
+      }
+    )
+  }, [context.expandedFolders])
+
+
+
+
+  const treeData = useMemo(() => {
+    if (isEmpty(parents)){
+      return []
+    }
+    const result = []
+
+    const buildHierarchy = (parentId, target) => {
+      for (const childId of parents[parentId]){
+        console.log(childId, nodeData[childId])
+        const node = {
+          key: childId,
+          data: nodeData[childId].data,
+          leaf: nodeData[childId].leaf,
+        }
+        if (!node.leaf){
+          node.children = []
+          if (childId in context.expandedFolders)
+            buildHierarchy(childId, node.children)
+        }
+        target.push(node)
+      }
+    } 
+
+    buildHierarchy("root", result)
+    return result
+  }, [parents])
+
+
+  //
+
+  const onToggle = (event) => {
+    dispatch(setExpandedFolders(event.value))
+  }
+
+
+  return (
+      <section className="column" style={{ flexGrow: 1 }}>
+        <div className="wrapper">
+          {loading && <Shade />}
+          <TreeTable
+            responsive="true"
+            scrollable
+            scrollHeight="100%"
+            value={treeData}
+            resizableColumns
+            columnResizeMode="expand"
+            expandedKeys={context.expandedFolders}
+            onToggle={onToggle}
+          >
+            <Column
+              field="name"
+              header="Name"
+              expander
+              body={(row) => formatName(row)}
+              style={{ width: 300 }}
+            />
+          </TreeTable>
+        </div>
+      </section>
+  )
+
+
+  /*
 
   const loadHierarchy = async (path = []) => {
     if (!query) return
 
     setLoading(true)
 
-    const parentId = path.length > 0 ? path[path.length - 1] : null
 
-    const variables = { projectName, parent: parentId || 'root' }
-    const response = await axios.post('/graphql', { query, variables })
-
-    if (response.status !== 200) {
-      console.log(response)
-      setLoading(false)
-      return
     }
 
-    const data = response.data
 
     const pathArr = path ? path : []
     let nodes = []
     // Add children
-    for (const edge of data.data.project.folders.edges) {
-      const node = edge.node
-      nodes.push({
-        data: { ...node, entityType: 'folder' },
-        key: node.id,
-        leaf: !(node.hasChildren || node.hasTasks),
-        children: [],
-        path: [...pathArr, node.id],
-      })
-    }
-
-    // Add tasks
-    for (const edge of data.data.project.tasks.edges) {
-      const node = edge.node
-      nodes.push({
-        data: { ...node, entityType: 'task' },
-        key: node.id,
-        leaf: true,
-        children: [],
-        path: [...pathArr, node.id],
-      })
-    }
-
+  
     if (!parentId) {
       setHierarchy(nodes)
       setLoading(false)
@@ -192,9 +312,14 @@ const EditorView = ({ projectName, settings }) => {
     setExpandedKeys(newExpandedKeys)
   }
 
+  */
+
   //
   // Display table
   //
+
+  return (<div></div>)
+
 
   return (
     <>
@@ -263,12 +388,9 @@ const EditorView = ({ projectName, settings }) => {
 //
 
 const EditorPage = () => {
-  const context = useSelector((state) => ({ ...state.context }))
-  const settings = useSelector((state) => ({ ...state.settings }))
-  const projectName = context.projectName
   return (
     <main className="rows">
-      <EditorView projectName={projectName} settings={settings} />
+      <EditorView />
     </main>
   )
 }
