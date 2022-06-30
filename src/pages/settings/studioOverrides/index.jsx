@@ -1,10 +1,12 @@
 import axios from 'axios'
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 
 import { Panel } from 'primereact/panel'
 import { ToggleButton } from 'primereact/togglebutton'
+
 import { Button, Spacer } from '/src/components'
+import { isEmpty } from '/src/utils'
 
 import AddonList from './addonList'
 import SettingsPanel from './settingsPanel'
@@ -58,7 +60,6 @@ const StudioOverrides = () => {
   }
 
   const onDismissChanges = (addonName, addonVersion) => {
-    console.log('Dismiss changes')
     const key = `${addonName}@${addonVersion}`
 
     setLocalData((localData) => {
@@ -96,7 +97,7 @@ const StudioOverrides = () => {
           />
           <Button
             onClick={onSave}
-            disabled={Object.keys(localData).length === 0}
+            disabled={isEmpty(localData)}
             label="Save"
           />
         </section>

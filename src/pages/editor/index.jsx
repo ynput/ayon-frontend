@@ -1,34 +1,18 @@
-import { useEffect, useState, useMemo } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
 import axios from 'axios'
 
-import { Shade, Spacer, Button } from '../../components'
-import { CellWithIcon } from '../../components/icons'
+import { useEffect, useState, useMemo } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { setBreadcrumbs } from '../../features/context'
-import { arrayEquals, getFolderTypeIcon, getTaskTypeIcon } from '../../utils'
-import { buildQuery } from './queries'
-import { stringEditor, integerEditor, floatEditor } from './editors'
+import { Shade, Spacer, Button } from '/src/components'
+import { setBreadcrumbs } from '/src/features/context'
+import { arrayEquals } from '/src/utils'
 
-const formatName = (row) => {
-  if (row.data.entityType === 'task')
-    return (
-      <CellWithIcon
-        icon={getTaskTypeIcon(row.data.taskType)}
-        text={row.data.name}
-        textStyle={{ fontStyle: 'italic' }}
-      />
-    )
-  else
-    return (
-      <CellWithIcon
-        icon={getFolderTypeIcon(row.data.folderType)}
-        text={row.data.name}
-      />
-    )
-}
+import { buildQuery } from './queries'
+import { formatName, getColumns} from './utils'
+
 
 const EditorView = ({ projectName, settings }) => {
   const [hierarchy, setHierarchy] = useState([])
@@ -37,28 +21,7 @@ const EditorView = ({ projectName, settings }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
   const dispatch = useDispatch()
 
-  const columns = useMemo(() => {
-    if (!settings.attributes) return []
-    let cols = []
-    for (const attrib of settings.attributes) {
-      if (attrib.scope.includes('folder')) {
-        let editor
-        if (attrib.attribType === 'integer') {
-          editor = integerEditor
-        } else if (attrib.attribType === 'float') {
-          editor = floatEditor
-        } else {
-          editor = stringEditor
-        }
-        cols.push({
-          name: attrib.name,
-          title: attrib.title,
-          editor: editor,
-        })
-      }
-    }
-    return cols
-  }, [settings.attributes])
+  const columns = useMemo(() => getColumns(settings), [settings.attributes])
 
   const query = useMemo(() => {
     if (!settings.attributes) return null
