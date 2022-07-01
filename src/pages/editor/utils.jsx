@@ -22,10 +22,10 @@ const formatName = (row) => {
 }
 
 
-const getColumns = (settings) => {
-    if (!settings.attributes) return []
+const getColumns = (attributes) => {
+    if (!attributes) return []
     let cols = []
-    for (const attrib of settings.attributes) {
+    for (const attrib of attributes) {
       if (attrib.scope.includes('folder')) {
         let editor
         if (attrib.attribType === 'integer') {

@@ -6,15 +6,15 @@ import { useSelector, useDispatch } from 'react-redux'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { Shade, Spacer, Button } from '/src/components'
-import { setBreadcrumbs, setExpandedFolders } from '/src/features/context'
 import { isEmpty } from '/src/utils'
+import { setBreadcrumbs, setExpandedFolders } from '/src/features/context'
+import { Shade, Spacer, Button } from '/src/components'
 
 import { buildQuery } from './queries'
 import { formatName, getColumns} from './utils'
 
 
-const EditorView = () => {
+const EditorPage = () => {
   const [loading, setLoading] = useState(false)
 
   const context = useSelector((state) => ({ ...state.context }))
@@ -23,10 +23,34 @@ const EditorView = () => {
   const dispatch = useDispatch()
 
   const [nodeData, setNodeData] = useState({})
+  const [changes, setChanges] = useState({})
+
+  //
+  // Helpers
+  //
 
   const columns = useMemo(() => getColumns(settings.attributes), [settings.attributes])
   const query = useMemo(() => buildQuery(settings.attributes), [settings.attributes])
 
+  const parents = useMemo(() => {
+    // This is an auto-generated object in the form of:
+    //   { parentId: [child1Id, child2Id....] 
+    // It is updated when nodeData changes and it speeds up
+    // building hierarchy
+
+    const result = {}
+    for (const childId in nodeData) {
+      const parentId = nodeData[childId].data.parentId
+      if (!(parentId in result))
+        result[parentId] = []
+      result[parentId].push(childId)
+    }
+    return result
+  }, [nodeData])
+
+  //
+  // Loading node data
+  //
 
   const loadBranch = async (parentId) => {
     const variables = { projectName, parent: parentId || 'root' }
@@ -40,11 +64,15 @@ const EditorView = () => {
     const data = response.data
     const nodes = {}
 
+    // Add folders
     for (const edge of data.data.project.folders.edges) {
       const node = edge.node
       nodes[node.id] = {
-        data: { ...node, entityType: 'folder' },
-        parentId,
+        data: {
+          ...node, 
+          parentId,
+          entityType: 'folder',
+        },
         leaf: !(node.hasChildren || node.hasTasks),
       }
     }
@@ -53,29 +81,16 @@ const EditorView = () => {
     for (const edge of data.data.project.tasks.edges) {
       const node = edge.node
       nodes[node.id] = {
-        data: { ...node, entityType: 'task' },
-        parentId,
-        leaf: true,
+        data: { 
+          ...node, 
+          parentId,
+          entityType: 'task' 
+        },
+        leaf: true, // Tasks never have children
       }
     }
     return nodes
   }
-
-
-  const parents = useMemo(() => {
-    /*
-      { parentId: [child1Id, child2Id....] }
-    */
-
-    const result = {}
-    for (const childId in nodeData) {
-      const parentId = nodeData[childId].parentId
-      if (!(parentId in result))
-        result[parentId] = []
-      result[parentId].push(childId)
-    }
-    return result
-  }, [nodeData])
 
 
   const getUpdatedNodeData = async (nodeData, expandedKeys) => {
@@ -105,7 +120,6 @@ const EditorView = () => {
     const expandedKeys = [...Object.keys(context.expandedFolders), "root"]
     getUpdatedNodeData(nodeData, expandedKeys).then(
       (result) => {
-        console.log("RES", result)
         setNodeData(result)
         setLoading(false)
       }
@@ -113,9 +127,12 @@ const EditorView = () => {
   }, [context.expandedFolders])
 
 
-
-
   const treeData = useMemo(() => {
+    // Build hierarchical data for the TreeTable component
+    // Trigger the rebuild when parents are updated (which are
+    // updated after nodeData update. Both nodeData and parents
+    // are needed for the hierarchy, so thi cascading makes 
+    // it possible)
     if (isEmpty(parents)){
       return []
     }
@@ -123,7 +140,6 @@ const EditorView = () => {
 
     const buildHierarchy = (parentId, target) => {
       for (const childId of parents[parentId]){
-        console.log(childId, nodeData[childId])
         const node = {
           key: childId,
           data: nodeData[childId].data,
@@ -142,90 +158,94 @@ const EditorView = () => {
     return result
   }, [parents])
 
+  //
+  // Format / edit
+  //
+
+  const formatAttribute = (node, fieldName, styled = true) => {
+    const chobj = changes[node.id]
+    let className = ''
+    let value = node.attrib[fieldName]
+    if (chobj && chobj.hasOwnProperty(fieldName)) {
+      value = chobj[fieldName]
+      className = 'color-hl-01'
+    }
+    if (!styled) return value
+
+    return <span className={`editor-field ${className}`}>{value}</span>
+  }
+
+  const updateAttribute = (options, value) => {
+    const id = options.rowData.id
+    // double underscore prefix for local custom helpers,
+    // single underscore prefix for top level properties of the entity
+    // no prefix for attributes
+    const rowChanges = changes[id] || {
+      __entityType: options.rowData.entityType,
+      __entityId: options.rowData.id,
+      __parentId: options.rowData.parentId,
+    }
+    rowChanges[options.field] = value
+    setChanges((changes) => {
+      return {...changes, [id]: rowChanges}
+    })
+  }
 
   //
+  // User events handlers
+  //
+
+  const onRevert = () => {
+    setChanges({})
+  }
+
+  const onCommit = async () => {
+    console.log(changes)
+    let branchesToReload = []
+    
+    for (const entityId in changes) {
+      const entityType = changes[entityId].__entityType
+      const parentId = changes[entityId].__parentId
+      const attribChanges = {}
+      const entityChanges = {}
+
+      for (const k in changes[entityId]) {
+        if (k.startsWith('__')){
+          continue}
+        else if (k.startsWith('_')) {
+          entityChanges[k.substring(1)] = changes[entityId][k]
+        } else {
+          attribChanges[k] = changes[entityId][k]
+        }
+      }
+
+      const response = await axios.patch(
+        `/api/projects/${projectName}/${entityType}s/${entityId}`,
+        { ...entityChanges, attrib: attribChanges }
+      )
+
+      if (response.status >= 400) {
+        //TODO: toast
+        console.log(response)
+      } else {
+        delete(changes[entityId])
+      }
+
+      if (!branchesToReload.includes(parentId))
+        branchesToReload.push(parentId)
+    }
+
+    // Reload modified branches
+    const newNodeData = {...nodeData}
+    for (const branch of branchesToReload){
+       const newNodes = await loadBranch(branch)
+       Object.assign(newNodeData, newNodes)
+    }
+    setNodeData(newNodeData)
+  }
 
   const onToggle = (event) => {
     dispatch(setExpandedFolders(event.value))
-  }
-
-
-  return (
-      <section className="column" style={{ flexGrow: 1 }}>
-        <div className="wrapper">
-          {loading && <Shade />}
-          <TreeTable
-            responsive="true"
-            scrollable
-            scrollHeight="100%"
-            value={treeData}
-            resizableColumns
-            columnResizeMode="expand"
-            expandedKeys={context.expandedFolders}
-            onToggle={onToggle}
-          >
-            <Column
-              field="name"
-              header="Name"
-              expander
-              body={(row) => formatName(row)}
-              style={{ width: 300 }}
-            />
-          </TreeTable>
-        </div>
-      </section>
-  )
-
-
-  /*
-
-  const loadHierarchy = async (path = []) => {
-    if (!query) return
-
-    setLoading(true)
-
-
-    }
-
-
-    const pathArr = path ? path : []
-    let nodes = []
-    // Add children
-  
-    if (!parentId) {
-      setHierarchy(nodes)
-      setLoading(false)
-      return
-    }
-
-    // TODO: try to do this in one pass
-    let result = [...hierarchy]
-    const updateHierarchy = (src) => {
-      for (let node of src || result) {
-        if (node.data.id === parentId) {
-          node.children = nodes
-          return
-        } else {
-          if (node.children) {
-            updateHierarchy(node.children)
-          }
-        }
-      }
-    }
-    updateHierarchy()
-    setHierarchy(result)
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    if (!projectName) return
-    loadHierarchy()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectName])
-
-  const onExpand = (event) => {
-    // if (event.node.children.length) return
-    loadHierarchy(event.node.path)
   }
 
   const onRowClick = (event) => {
@@ -241,100 +261,18 @@ const EditorView = () => {
   }
 
   //
-  // Format / Edit
+  // Render the TreeTable
   //
-
-  const onAttributeEdit = (options, value) => {
-    const id = options.rowData.id
-    const rowChanges = changes[id] || {
-      _entityType: options.rowData.entityType,
-      _entityId: options.rowData.id,
-      _path: options.node.path,
-    }
-    rowChanges[options.field] = value
-    setChanges({ ...changes, [id]: rowChanges })
-  }
-
-  const formatAttribute = (node, fieldName, styled = true) => {
-    const chobj = changes[node.id]
-    let className = ''
-    let value = node.attrib[fieldName]
-    if (chobj && chobj.hasOwnProperty(fieldName)) {
-      value = chobj[fieldName]
-      className = 'color-hl-01'
-    }
-    if (!styled) return value
-
-    return <span className={`editor-field ${className}`}>{value}</span>
-  }
-
-  const onCommit = async () => {
-    let branchesToReload = []
-
-    for (const entityId in changes) {
-      const entityType = changes[entityId]._entityType
-      const parentPath = changes[entityId]._path.slice(0, -1)
-      const entityChanges = {}
-      for (const k in changes[entityId]) {
-        if (k.startsWith('_')) continue
-        entityChanges[k] = changes[entityId][k]
-      }
-
-      const response = await axios.patch(
-        `/api/projects/${projectName}/${entityType}s/${entityId}`,
-        { attrib: entityChanges }
-      )
-
-      if (response.status !== 200) {
-        //TODO: toast
-        console.log(response)
-      }
-
-      if (branchesToReload.length === 0) branchesToReload.push(parentPath)
-
-      for (const branch of branchesToReload) {
-        if (arrayEquals(branch, parentPath)) continue
-        branchesToReload.push(parentPath)
-      }
-    }
-
-    const newExpandedKeys = {}
-    for (const expandedKey in expandedKeys) {
-      if (changes.hasOwnProperty(expandedKey)) continue
-      newExpandedKeys[expandedKey] = true
-    }
-
-    for (const branch of branchesToReload) {
-      await loadHierarchy(branch)
-    }
-
-    setChanges({})
-    setExpandedKeys(newExpandedKeys)
-  }
-
-  */
-
-  //
-  // Display table
-  //
-
-  return (<div></div>)
-
 
   return (
-    <>
+    <main className="rows">
       <section className="invisible row">
         <Button icon="create_new_folder" label="Add folder" disabled />
         <Button icon="add_task" label="Add task" disabled />
         <Spacer />
-        <Button
-          icon="close"
-          label="Revert Changes"
-          onClick={() => setChanges({})}
-        />
+        <Button icon="close" label="Revert Changes" onClick={onRevert} />
         <Button icon="check" label="Commit Changes" onClick={onCommit} />
       </section>
-
       <section className="column" style={{ flexGrow: 1 }}>
         <div className="wrapper">
           {loading && <Shade />}
@@ -342,13 +280,13 @@ const EditorView = () => {
             responsive="true"
             scrollable
             scrollHeight="100%"
-            value={hierarchy}
-            onExpand={onExpand}
+            value={treeData}
             resizableColumns
             columnResizeMode="expand"
-            expandedKeys={expandedKeys}
-            onToggle={(e) => setExpandedKeys(e.value)}
+            expandedKeys={context.expandedFolders}
+            onToggle={onToggle}
             onRowClick={onRowClick}
+            rowClassName={(rowData) => {return {"changed": (rowData.key in changes)}} }
           >
             <Column
               field="name"
@@ -357,7 +295,6 @@ const EditorView = () => {
               body={(row) => formatName(row)}
               style={{ width: 300 }}
             />
-
             {columns.map((col) => {
               return (
                 <Column
@@ -369,7 +306,7 @@ const EditorView = () => {
                   editor={(options) => {
                     return col.editor(
                       options,
-                      onAttributeEdit,
+                      updateAttribute,
                       formatAttribute(options.rowData, col.name, false)
                     )
                   }}
@@ -379,19 +316,8 @@ const EditorView = () => {
           </TreeTable>
         </div>
       </section>
-    </>
-  )
-}
-
-//
-// Page wrapper
-//
-
-const EditorPage = () => {
-  return (
-    <main className="rows">
-      <EditorView />
     </main>
   )
 }
+
 export default EditorPage
