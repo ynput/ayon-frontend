@@ -7,7 +7,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import { isEmpty } from '/src/utils'
-import { setBreadcrumbs, setExpandedFolders } from '/src/features/context'
+import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/features/context'
 import { Shade, Spacer, Button } from '/src/components'
 
 import { buildQuery } from './queries'
@@ -22,8 +22,10 @@ const EditorPage = () => {
   const projectName = context.projectName
   const dispatch = useDispatch()
 
+  const [currentNode, setCurrentNode] = useState(null)
   const [nodeData, setNodeData] = useState({})
   const [changes, setChanges] = useState({})
+  const [newNodes, setNewNodes] = useState([])
 
   //
   // Helpers
@@ -89,6 +91,7 @@ const EditorPage = () => {
         leaf: true, // Tasks never have children
       }
     }
+
     return nodes
   }
 
@@ -102,6 +105,14 @@ const EditorPage = () => {
       }
     }
 
+    // Add unsaved nodes
+    for (const node of newNodes){
+      nodeData[node.id] = {
+        data: node,
+        leaf: true
+      }
+    }
+
     // remove children from closed branches
     for (const existingKey in parents){
       if (existingKey === "root") continue
@@ -111,6 +122,9 @@ const EditorPage = () => {
         }
       }
     }
+
+  
+
     return {...nodeData}
   }
 
@@ -124,15 +138,16 @@ const EditorPage = () => {
         setLoading(false)
       }
     )
-  }, [context.expandedFolders])
+  }, [context.expandedFolders, newNodes])
 
+
+  // Build hierarchical data for the TreeTable component
+  // Trigger the rebuild when parents are updated (which are
+  // updated after nodeData update. Both nodeData and parents
+  // are needed for the hierarchy, so thi cascading makes 
+  // it possible)
 
   const treeData = useMemo(() => {
-    // Build hierarchical data for the TreeTable component
-    // Trigger the rebuild when parents are updated (which are
-    // updated after nodeData update. Both nodeData and parents
-    // are needed for the hierarchy, so thi cascading makes 
-    // it possible)
     if (isEmpty(parents)){
       return []
     }
@@ -157,6 +172,30 @@ const EditorPage = () => {
     buildHierarchy("root", result)
     return result
   }, [parents])
+
+  // Handle selection change.
+  // This also accept the selection from the project context, so 
+  // when the selection is made in the browser page, it is propagated to the editor too
+  // (but only the last focused folder, since editor does not support multiselect for
+  // various reasons)
+
+  useEffect(() => {
+    const nodeId = context.focusedFolders.length && context.focusedFolders[context.focusedFolders.length - 1]
+    if (!nodeId){
+      return 
+    }
+    const node = nodeData[nodeId]?.data
+    if (!node) return
+    if (node.entityType === 'folder') {
+      dispatch(
+        setBreadcrumbs({
+          parents: node.parents,
+          folder: node.name,
+        })
+      )
+    }
+    setCurrentNode(node)
+  }, [context.focusedFolders, treeData])
 
   //
   // Format / edit
@@ -200,10 +239,19 @@ const EditorPage = () => {
   }
 
   const onCommit = async () => {
-    console.log(changes)
+    setLoading(true)
     let branchesToReload = []
+
+    for (const entity of newNodes){
+      // TODO
+      // use post to create new nodes.
+      // don't forget to apply data from "changes"
+    }
+    setNewNodes([])
     
     for (const entityId in changes) {
+      if (entityId.startsWith("newnode"))
+        continue
       const entityType = changes[entityId].__entityType
       const parentId = changes[entityId].__parentId
       const attribChanges = {}
@@ -242,23 +290,56 @@ const EditorPage = () => {
        Object.assign(newNodeData, newNodes)
     }
     setNodeData(newNodeData)
+    setLoading(false)
   }
 
   const onToggle = (event) => {
     dispatch(setExpandedFolders(event.value))
   }
 
-  const onRowClick = (event) => {
-    const node = event.node.data
-    if (node.entityType === 'folder') {
-      dispatch(
-        setBreadcrumbs({
-          parents: node.parents,
-          folder: node.name,
-        })
-      )
-    }
+
+  const onSelectionChange = (event) => {
+    dispatch(setFocusedFolders([event.value]))
   }
+
+  //
+  // Adding new nodes
+  //
+
+  // New nodes can be added only when a parent folder is selected.
+  // The parent folder must exist in the database (it is not possible to create children of unsaved folders)
+  const canAdd = currentNode && currentNode?.entityType === "folder" && !(currentNode?.id?.startsWith("newnode"))
+  
+  const addNode = (entityType) => {
+    if (!currentNode){
+      return
+    }
+    const parentId = currentNode.id
+    // console.log(`Adding new ${entityType} to parent ${parentId} (${currentNode.id})`)
+    setNewNodes((newNodes) => {
+      const name = `New ${entityType} ${newNodes.length + 1}`
+      const id = `newnode${newNodes.length + 1}`
+      return [...newNodes, {
+        id,
+        entityType,
+        parentId,
+        name,
+        attrib: {...currentNode.attrib}
+      }]
+    })
+
+
+    // if the parent is not expanded, open the branch (to have a visual feedback)
+    if (!(parentId in context.expandedFolders)){
+      console.log("set expanded folders", parentId)
+      dispatch(setExpandedFolders({...context.expandedFolders, [parentId]: true}))
+    }
+
+  }
+
+  const onAddFolder = () => addNode("folder")
+  const onAddTask = () => addNode("task")
+
 
   //
   // Render the TreeTable
@@ -267,8 +348,8 @@ const EditorPage = () => {
   return (
     <main className="rows">
       <section className="invisible row">
-        <Button icon="create_new_folder" label="Add folder" disabled />
-        <Button icon="add_task" label="Add task" disabled />
+        <Button icon="create_new_folder" label="Add folder" disabled={!canAdd} onClick={onAddFolder} />
+        <Button icon="add_task" label="Add task" disabled={!canAdd} onClick={onAddTask} />
         <Spacer />
         <Button icon="close" label="Revert Changes" onClick={onRevert} />
         <Button icon="check" label="Commit Changes" onClick={onCommit} />
@@ -285,7 +366,9 @@ const EditorPage = () => {
             columnResizeMode="expand"
             expandedKeys={context.expandedFolders}
             onToggle={onToggle}
-            onRowClick={onRowClick}
+            selectionMode="single"
+            selectionKeys={currentNode && currentNode.id}
+            onSelectionChange={onSelectionChange}
             rowClassName={(rowData) => {return {"changed": (rowData.key in changes)}} }
           >
             <Column
