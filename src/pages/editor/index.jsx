@@ -11,7 +11,53 @@ import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/feat
 import { Shade, Spacer, Button } from '/src/components'
 
 import { buildQuery } from './queries'
-import { formatName, getColumns} from './utils'
+import { formatName, getColumns } from './utils'
+import { stringEditor } from './editors'
+
+
+const loadBranch = async (query, projectName, parentId) => {
+  console.log("Loading branch", parentId)
+  const variables = { projectName, parent: parentId || 'root' }
+  const response = await axios.post('/graphql', { query, variables })
+
+  if (response.status !== 200) {
+    console.log(response)
+    return {}
+  }
+
+  const data = response.data
+  const nodes = {}
+
+  // Add folders
+  for (const edge of data.data.project.folders.edges) {
+    const node = edge.node
+    console.log("loaded", node.name)
+    nodes[node.id] = {
+      data: {
+        ...node, 
+        __parentId: parentId || "root",
+        __entityType: 'folder',
+      },
+      leaf: !(node.hasChildren || node.hasTasks),
+    }
+  }
+
+  // Add tasks
+  for (const edge of data.data.project.tasks.edges) {
+    const node = edge.node
+    nodes[node.id] = {
+      data: { 
+        ...node, 
+        __parentId: parentId || "root",
+        __entityType: 'task' 
+      },
+      leaf: true, // Tasks never have children
+    }
+  }
+
+  return nodes
+}
+
 
 
 const EditorPage = () => {
@@ -34,83 +80,36 @@ const EditorPage = () => {
   const columns = useMemo(() => getColumns(settings.attributes), [settings.attributes])
   const query = useMemo(() => buildQuery(settings.attributes), [settings.attributes])
 
-  const parents = useMemo(() => {
-    // This is an auto-generated object in the form of:
-    //   { parentId: [child1Id, child2Id....] 
-    // It is updated when nodeData changes and it speeds up
-    // building hierarchy
-
-    const result = {}
-    for (const childId in nodeData) {
-      const parentId = nodeData[childId].data.parentId
-      if (!(parentId in result))
-        result[parentId] = []
-      result[parentId].push(childId)
-    }
-    return result
-  }, [nodeData])
-
   //
   // Loading node data
   //
 
-  const loadBranch = async (parentId) => {
-    const variables = { projectName, parent: parentId || 'root' }
-    const response = await axios.post('/graphql', { query, variables })
-
-    if (response.status !== 200) {
-      console.log(response)
-      return {}
-    }
-
-    const data = response.data
-    const nodes = {}
-
-    // Add folders
-    for (const edge of data.data.project.folders.edges) {
-      const node = edge.node
-      nodes[node.id] = {
-        data: {
-          ...node, 
-          parentId,
-          entityType: 'folder',
-        },
-        leaf: !(node.hasChildren || node.hasTasks),
-      }
-    }
-
-    // Add tasks
-    for (const edge of data.data.project.tasks.edges) {
-      const node = edge.node
-      nodes[node.id] = {
-        data: { 
-          ...node, 
-          parentId,
-          entityType: 'task' 
-        },
-        leaf: true, // Tasks never have children
-      }
-    }
-
-    return nodes
-  }
-
-
   const getUpdatedNodeData = async (nodeData, expandedKeys) => {
+
     // Load newly expanded branches
     for (const expandedKey of expandedKeys){
       if (!(expandedKey in parents)){
-       const newNodes = await loadBranch(expandedKey)
+       const newNodes = await loadBranch(query, projectName, expandedKey)
        Object.assign(nodeData, newNodes)
       }
     }
 
     // Add unsaved nodes
+    let newNodesIds = []
     for (const node of newNodes){
       nodeData[node.id] = {
         data: node,
         leaf: true
       }
+      newNodesIds.push(node.id)
+    }
+
+    // Remove unsaved nodes which are deleted (via revert changes)
+    for (const existingKey in nodeData){
+      if (!existingKey.startsWith("newnode"))
+        continue
+      if (!newNodesIds.includes(existingKey))
+        delete(nodeData[existingKey])
     }
 
     // remove children from closed branches
@@ -123,13 +122,12 @@ const EditorPage = () => {
       }
     }
 
-  
-
     return {...nodeData}
   }
 
 
   useEffect(() => {
+    console.log("Rebuilding nodes")
     setLoading(true)
     const expandedKeys = [...Object.keys(context.expandedFolders), "root"]
     getUpdatedNodeData(nodeData, expandedKeys).then(
@@ -140,6 +138,28 @@ const EditorPage = () => {
     )
   }, [context.expandedFolders, newNodes])
 
+  //
+  // Build hierarchy
+  //
+
+  const parents = useMemo(() => {
+    // This is an auto-generated object in the form of:
+    //   { parentId: [child1Id, child2Id....] 
+    // It is updated when nodeData changes and it speeds up
+    // building hierarchy
+
+    console.log("Rebuilding parents")
+    const result = {}
+    for (const childId in nodeData) {
+      const parentId = nodeData[childId].data.__parentId
+      if (!(parentId in result))
+        result[parentId] = []
+      result[parentId].push(childId)
+    }
+    return result
+  }, [nodeData])
+
+
 
   // Build hierarchical data for the TreeTable component
   // Trigger the rebuild when parents are updated (which are
@@ -148,12 +168,15 @@ const EditorPage = () => {
   // it possible)
 
   const treeData = useMemo(() => {
+    console.log("REbuilding treedata")
     if (isEmpty(parents)){
       return []
     }
     const result = []
 
     const buildHierarchy = (parentId, target) => {
+      if (!parents[parentId])
+        return
       for (const childId of parents[parentId]){
         const node = {
           key: childId,
@@ -186,7 +209,8 @@ const EditorPage = () => {
     }
     const node = nodeData[nodeId]?.data
     if (!node) return
-    if (node.entityType === 'folder') {
+    if (node.__entityType === 'folder') {
+      console.log(node)
       dispatch(
         setBreadcrumbs({
           parents: node.parents,
@@ -220,9 +244,8 @@ const EditorPage = () => {
     // single underscore prefix for top level properties of the entity
     // no prefix for attributes
     const rowChanges = changes[id] || {
-      __entityType: options.rowData.entityType,
-      __entityId: options.rowData.id,
-      __parentId: options.rowData.parentId,
+      __entityType: options.rowData.__entityType,
+      __parentId: options.rowData.__parentId,
     }
     rowChanges[options.field] = value
     setChanges((changes) => {
@@ -230,12 +253,56 @@ const EditorPage = () => {
     })
   }
 
+  const updateName = (options, value) => {
+    console.log(options, value)
+  }
+
   //
   // User events handlers
   //
 
+  const onDeleteSelected = async () => {
+     console.log(currentNode)
+    if (!currentNode)
+      return
+    let branchesToReload = []
+    branchesToReload.push(currentNode.__parentId)
+
+    if (currentNode.id.startsWith("newnode")){
+      setNewNodes(newnodes => {
+        return newnodes.filter((node) => node.id !== currentNode.id)
+      })
+      return
+    }
+
+    const res = await axios.delete(
+        `/api/projects/${projectName}/${currentNode.__entityType}s/${currentNode.id}`
+      )
+
+    const newNodeData = { ...nodeData }
+    // clean-up branch
+    for (const nodeId in newNodeData){
+      const node = newNodeData[nodeId]
+      console.log("checking", node, "to reload", branchesToReload)
+      if (branchesToReload.includes(node.data.__parentId))
+        console.log("deleting", node)
+        delete(newNodeData[nodeId])
+    }
+    for (const branch of branchesToReload){
+       const newNodes = await loadBranch(query, projectName, branch)
+       Object.assign(newNodeData, newNodes)
+    }
+    console.log("Set node data", newNodeData)
+    setNodeData(newNodeData)
+    setNewNodes([])
+
+
+  }
+
+
   const onRevert = () => {
     setChanges({})
+    setNewNodes([])
   }
 
   const onCommit = async () => {
@@ -243,11 +310,33 @@ const EditorPage = () => {
     let branchesToReload = []
 
     for (const entity of newNodes){
-      // TODO
-      // use post to create new nodes.
-      // don't forget to apply data from "changes"
+
+      const entityType = entity.__entityType
+      const newEntity = {...entity}
+      const entityChanges = changes[entity.id]
+
+      for (const key in (entityChanges || {})){
+        if (key.startsWith("__")) continue
+        newEntity.attrib[key] = entityChanges[key]
+      }
+      delete(newEntity.id)
+      if (entityType === "folder")
+        newEntity.parentId = entity.__parentId
+      else if (entityType === "task")
+        newEntity.folderId = entity.parentId
+
+      try {
+        const response = await axios.post(
+          `/api/projects/${projectName}/${entityType}s`,
+          newEntity
+        )
+      } catch {
+        console.log("Unable to save", entity.name)
+      }
+
+      if (!branchesToReload.includes(newEntity.parentId))
+        branchesToReload.push(newEntity.parentId)
     }
-    setNewNodes([])
     
     for (const entityId in changes) {
       if (entityId.startsWith("newnode"))
@@ -272,6 +361,7 @@ const EditorPage = () => {
         { ...entityChanges, attrib: attribChanges }
       )
 
+
       if (response.status >= 400) {
         //TODO: toast
         console.log(response)
@@ -283,15 +373,30 @@ const EditorPage = () => {
         branchesToReload.push(parentId)
     }
 
-    // Reload modified branches
-    const newNodeData = {...nodeData}
+    //
+    // Update node data
+    //
+
+    const newNodeData = { ...nodeData }
+
+    // remove previously unsaved nodes 
+    //(they should come back in the loadBranch request with the valid ID)
+    for (const key in newNodeData){
+      if (key.startsWith("newnode"))
+        delete (newNodeData[key])
+    }
+
     for (const branch of branchesToReload){
-       const newNodes = await loadBranch(branch)
+       const newNodes = await loadBranch(query, projectName, branch)
        Object.assign(newNodeData, newNodes)
     }
+
+    setNewNodes([])
+    setChanges({})
     setNodeData(newNodeData)
     setLoading(false)
-  }
+  } // commit
+
 
   const onToggle = (event) => {
     dispatch(setExpandedFolders(event.value))
@@ -308,30 +413,40 @@ const EditorPage = () => {
 
   // New nodes can be added only when a parent folder is selected.
   // The parent folder must exist in the database (it is not possible to create children of unsaved folders)
-  const canAdd = currentNode && currentNode?.entityType === "folder" && !(currentNode?.id?.startsWith("newnode"))
+  const canAdd = currentNode && currentNode?.__entityType === "folder" && !(currentNode?.id?.startsWith("newnode"))
+  const canCommit = (!isEmpty(changes)) || newNodes.length
   
   const addNode = (entityType) => {
     if (!currentNode){
       return
     }
     const parentId = currentNode.id
-    // console.log(`Adding new ${entityType} to parent ${parentId} (${currentNode.id})`)
+
+    setNodeData((nodeData) => {
+      nodeData[parentId].leaf = false
+      return nodeData
+    })
+
     setNewNodes((newNodes) => {
-      const name = `New ${entityType} ${newNodes.length + 1}`
+      const name = `new_${entityType}_${newNodes.length + 1}`
       const id = `newnode${newNodes.length + 1}`
-      return [...newNodes, {
+      const newNode = {
         id,
-        entityType,
-        parentId,
         name,
-        attrib: {...currentNode.attrib}
-      }]
+        attrib: {...currentNode.attrib},
+        __entityType: entityType,
+        __parentId: parentId,
+      }
+      if (entityType === "folder")
+        newNode["parentId"] = parentId
+      else if (entityType === "task")
+        newNode["folderId"] = parentId
+      return [...newNodes, newNode]
     })
 
 
     // if the parent is not expanded, open the branch (to have a visual feedback)
     if (!(parentId in context.expandedFolders)){
-      console.log("set expanded folders", parentId)
       dispatch(setExpandedFolders({...context.expandedFolders, [parentId]: true}))
     }
 
@@ -350,9 +465,10 @@ const EditorPage = () => {
       <section className="invisible row">
         <Button icon="create_new_folder" label="Add folder" disabled={!canAdd} onClick={onAddFolder} />
         <Button icon="add_task" label="Add task" disabled={!canAdd} onClick={onAddTask} />
+        <Button label="Delete selected" onClick={onDeleteSelected}/>
         <Spacer />
-        <Button icon="close" label="Revert Changes" onClick={onRevert} />
-        <Button icon="check" label="Commit Changes" onClick={onCommit} />
+        <Button icon="close" label="Revert Changes" onClick={onRevert} disabled={!canCommit}/>
+        <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit}/>
       </section>
       <section className="column" style={{ flexGrow: 1 }}>
         <div className="wrapper">
@@ -370,6 +486,7 @@ const EditorPage = () => {
             selectionKeys={currentNode && currentNode.id}
             onSelectionChange={onSelectionChange}
             rowClassName={(rowData) => {return {"changed": (rowData.key in changes)}} }
+            selectOnEdit={false}
           >
             <Column
               field="name"
@@ -377,6 +494,9 @@ const EditorPage = () => {
               expander
               body={(row) => formatName(row)}
               style={{ width: 300 }}
+              editor={(options) => {
+                return stringEditor(options, updateName, options.rowData.name)
+              }}
             />
             {columns.map((col) => {
               return (
