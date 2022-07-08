@@ -341,24 +341,22 @@ const EditorPage = () => {
 
     for (const entity of newNodes){
 
+      console.log("NEW ENTITY", entity)
+
       const entityType = entity.__entityType
       const newEntity = {...entity}
       const entityChanges = changes[entity.id]
 
       for (const key in (entityChanges || {})){
         if (key.startsWith("__")) continue
-
-        // TODO: use underscore to determine all top level attrs
-        if (key === "_name")
-          newEntity.name = entityChanges[key]
+        if (key.startsWith("_"))
+          newEntity[key.substring(1)] = entityChanges[key]
         else
           newEntity.attrib[key] = entityChanges[key]
       }
       delete(newEntity.id)
-      if (entityType === "folder")
-        newEntity.parentId = entity.__parentId
-      else if (entityType === "task")
-        newEntity.folderId = entity.parentId
+
+      console.log("POST ENTITY", newEntity)
 
       try {
         await axios.post(
@@ -382,14 +380,12 @@ const EditorPage = () => {
       const attribChanges = {}
       const entityChanges = {}
 
-      for (const k in changes[entityId]) {
-        if (k.startsWith('__')){
-          continue}
-        else if (k.startsWith('_')) {
-          entityChanges[k.substring(1)] = changes[entityId][k]
-        } else {
-          attribChanges[k] = changes[entityId][k]
-        }
+      for (const key in changes[entityId]) {
+        if (key.startsWith('__')) continue
+        if (key.startsWith('_'))
+          entityChanges[key.substring(1)] = changes[entityId][key]
+        else
+          attribChanges[key] = changes[entityId][key]
       }
 
       try {
@@ -472,8 +468,10 @@ const EditorPage = () => {
       }
       if (entityType === "folder")
         newNode["parentId"] = parentId
-      else if (entityType === "task")
+      else if (entityType === "task"){
         newNode["folderId"] = parentId
+        newNode["taskType"] = "Generic"
+      }
       return [...newNodes, newNode]
     })
 
