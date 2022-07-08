@@ -3,7 +3,14 @@ import { InputNumber } from 'primereact/inputnumber'
 
 const stringEditor = (options, callback, value) => {
   return (
-    <InputText type="text" value={value} onChange={(e) => callback(e.value)} />
+    <InputText 
+      type="text" 
+      value={value} 
+      onChange={(e) => {
+        console.log("nchg", e.target.value)
+        callback(options, e.target.value)
+      }} 
+    />
   )
 }
 

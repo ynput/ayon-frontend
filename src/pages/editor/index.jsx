@@ -5,23 +5,25 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
+import { toast } from 'react-toastify'
 
 import { isEmpty } from '/src/utils'
 import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/features/context'
 import { Shade, Spacer, Button } from '/src/components'
+import { CellWithIcon } from '/src/components/icons'
+import { getFolderTypeIcon, getTaskTypeIcon } from '/src/utils'
 
 import { buildQuery } from './queries'
-import { formatName, getColumns } from './utils'
+import { getColumns } from './utils'
 import { stringEditor } from './editors'
 
 
 const loadBranch = async (query, projectName, parentId) => {
-  console.log("Loading branch", parentId)
   const variables = { projectName, parent: parentId || 'root' }
   const response = await axios.post('/graphql', { query, variables })
 
   if (response.status !== 200) {
-    console.log(response)
+    toast.error(`Unable to load branch ${parentId}`)
     return {}
   }
 
@@ -31,7 +33,6 @@ const loadBranch = async (query, projectName, parentId) => {
   // Add folders
   for (const edge of data.data.project.folders.edges) {
     const node = edge.node
-    console.log("loaded", node.name)
     nodes[node.id] = {
       data: {
         ...node, 
@@ -127,7 +128,6 @@ const EditorPage = () => {
 
 
   useEffect(() => {
-    console.log("Rebuilding nodes")
     setLoading(true)
     const expandedKeys = [...Object.keys(context.expandedFolders), "root"]
     getUpdatedNodeData(nodeData, expandedKeys).then(
@@ -148,7 +148,6 @@ const EditorPage = () => {
     // It is updated when nodeData changes and it speeds up
     // building hierarchy
 
-    console.log("Rebuilding parents")
     const result = {}
     for (const childId in nodeData) {
       const parentId = nodeData[childId].data.__parentId
@@ -168,7 +167,6 @@ const EditorPage = () => {
   // it possible)
 
   const treeData = useMemo(() => {
-    console.log("REbuilding treedata")
     if (isEmpty(parents)){
       return []
     }
@@ -210,7 +208,6 @@ const EditorPage = () => {
     const node = nodeData[nodeId]?.data
     if (!node) return
     if (node.__entityType === 'folder') {
-      console.log(node)
       dispatch(
         setBreadcrumbs({
           parents: node.parents,
@@ -238,6 +235,32 @@ const EditorPage = () => {
     return <span className={`editor-field ${className}`}>{value}</span>
   }
 
+  const formatName = (node, styled = true) => {
+    const chobj = changes[node.id]
+    const className = chobj?._name ? 'color-hl-01' : ''
+    const value = chobj?._name ? chobj._name : node.name
+    if (!styled) return value
+    if (node.__entityType === 'task')
+      return (
+        <CellWithIcon
+          icon={getTaskTypeIcon(node.taskType)}
+          text={value || "Unnamed task"}
+          textStyle={{ fontStyle: 'italic' }}
+          textClassName={{className}}
+        />
+      )
+    else
+      return (
+        <CellWithIcon
+          icon={getFolderTypeIcon(node.folderType)}
+          textClassName={{className}}
+          text={value || "Unnamed folder"}
+        />
+      )
+  }
+
+
+
   const updateAttribute = (options, value) => {
     const id = options.rowData.id
     // double underscore prefix for local custom helpers,
@@ -254,7 +277,15 @@ const EditorPage = () => {
   }
 
   const updateName = (options, value) => {
-    console.log(options, value)
+    const id = options.rowData.id
+    const rowChanges = changes[id] || {
+      __entityType: options.rowData.__entityType,
+      __parentId: options.rowData.__parentId,
+    }
+    rowChanges["_name"] = value
+    setChanges((changes) => {
+      return {...changes, [id]: rowChanges}
+    })
   }
 
   //
@@ -262,7 +293,6 @@ const EditorPage = () => {
   //
 
   const onDeleteSelected = async () => {
-     console.log(currentNode)
     if (!currentNode)
       return
     let branchesToReload = []
@@ -275,28 +305,28 @@ const EditorPage = () => {
       return
     }
 
-    const res = await axios.delete(
-        `/api/projects/${projectName}/${currentNode.__entityType}s/${currentNode.id}`
-      )
+    try {
+      const res = await axios.delete(
+          `/api/projects/${projectName}/${currentNode.__entityType}s/${currentNode.id}`
+        )
+      toast.success(`${currentNode.name} deleted`)
+    } catch {
+      toast.error(`Unable to delete ${currentNode.name}`)
+    }
 
     const newNodeData = { ...nodeData }
     // clean-up branch
     for (const nodeId in newNodeData){
       const node = newNodeData[nodeId]
-      console.log("checking", node, "to reload", branchesToReload)
       if (branchesToReload.includes(node.data.__parentId))
-        console.log("deleting", node)
         delete(newNodeData[nodeId])
     }
     for (const branch of branchesToReload){
        const newNodes = await loadBranch(query, projectName, branch)
        Object.assign(newNodeData, newNodes)
     }
-    console.log("Set node data", newNodeData)
     setNodeData(newNodeData)
-    setNewNodes([])
-
-
+//    setNewNodes([])
   }
 
 
@@ -317,7 +347,12 @@ const EditorPage = () => {
 
       for (const key in (entityChanges || {})){
         if (key.startsWith("__")) continue
-        newEntity.attrib[key] = entityChanges[key]
+
+        // TODO: use underscore to determine all top level attrs
+        if (key === "_name")
+          newEntity.name = entityChanges[key]
+        else
+          newEntity.attrib[key] = entityChanges[key]
       }
       delete(newEntity.id)
       if (entityType === "folder")
@@ -326,12 +361,13 @@ const EditorPage = () => {
         newEntity.folderId = entity.parentId
 
       try {
-        const response = await axios.post(
+        await axios.post(
           `/api/projects/${projectName}/${entityType}s`,
           newEntity
         )
+        toast.success(`Saved new ${entityType} ${newEntity.name}`)
       } catch {
-        console.log("Unable to save", entity.name)
+        toast.error("Unable to save", entity.name)
       }
 
       if (!branchesToReload.includes(newEntity.parentId))
@@ -356,17 +392,15 @@ const EditorPage = () => {
         }
       }
 
-      const response = await axios.patch(
-        `/api/projects/${projectName}/${entityType}s/${entityId}`,
-        { ...entityChanges, attrib: attribChanges }
-      )
-
-
-      if (response.status >= 400) {
-        //TODO: toast
-        console.log(response)
-      } else {
+      try {
+        await axios.patch(
+          `/api/projects/${projectName}/${entityType}s/${entityId}`,
+          { ...entityChanges, attrib: attribChanges }
+        )
         delete(changes[entityId])
+      }
+      catch {
+        toast.error(`Unable to save ${entityChanges.name}`)
       }
 
       if (!branchesToReload.includes(parentId))
@@ -428,11 +462,10 @@ const EditorPage = () => {
     })
 
     setNewNodes((newNodes) => {
-      const name = `new_${entityType}_${newNodes.length + 1}`
+      //const name = `new_${entityType}_${newNodes.length + 1}`
       const id = `newnode${newNodes.length + 1}`
       const newNode = {
         id,
-        name,
         attrib: {...currentNode.attrib},
         __entityType: entityType,
         __parentId: parentId,
@@ -485,17 +518,17 @@ const EditorPage = () => {
             selectionMode="single"
             selectionKeys={currentNode && currentNode.id}
             onSelectionChange={onSelectionChange}
-            rowClassName={(rowData) => {return {"changed": (rowData.key in changes)}} }
+            rowClassName={(rowData) => {return {"changed": (rowData.key in changes || rowData.key.startsWith('newnode'))}} }
             selectOnEdit={false}
           >
             <Column
               field="name"
               header="Name"
-              expander
-              body={(row) => formatName(row)}
+              expander={true}
+              body={(rowData) => formatName(rowData.data)}
               style={{ width: 300 }}
               editor={(options) => {
-                return stringEditor(options, updateName, options.rowData.name)
+                return stringEditor(options, updateName, formatName(options.rowData, false))
               }}
             />
             {columns.map((col) => {
@@ -504,7 +537,7 @@ const EditorPage = () => {
                   key={col.name}
                   header={col.title}
                   field={col.name}
-                  style={{ width: 100 }}
+                  style={{ minWidth: 30 }}
                   body={(rowData) => formatAttribute(rowData.data, col.name)}
                   editor={(options) => {
                     return col.editor(
