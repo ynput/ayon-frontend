@@ -20,6 +20,7 @@ import { stringEditor } from './editors'
 
 const loadBranch = async (query, projectName, parentId) => {
   const variables = { projectName, parent: parentId || 'root' }
+  console.log("Branch load")
   const response = await axios.post('/graphql', { query, variables })
 
   if (response.status !== 200) {
@@ -231,7 +232,6 @@ const EditorPage = () => {
       className = 'color-hl-01'
     }
     else if (node.ownAttrib && !node.ownAttrib.includes(fieldName)){
-      console.log("Hey. inherited", fieldName)
       className = 'faded'
     }
     if (!styled) return value
@@ -339,6 +339,15 @@ const EditorPage = () => {
     setNewNodes([])
   }
 
+  const getBranchesToReload = (entityId) => {
+    let result = [entityId]
+    if (!parents[entityId])
+      return result
+    for (const chId of parents[entityId])
+      result = [...result, ...getBranchesToReload(chId)]
+    return result
+  }
+
   const onCommit = async () => {
     setLoading(true)
     let branchesToReload = []
@@ -372,6 +381,7 @@ const EditorPage = () => {
         toast.error("Unable to save", entity.name)
       }
 
+      // just reload the parent branch. new entities don't have children
       if (!branchesToReload.includes(newEntity.parentId))
         branchesToReload.push(newEntity.parentId)
     }
@@ -393,6 +403,7 @@ const EditorPage = () => {
       }
 
       try {
+        console.log("PATCH", {...entityChanges, attrib: attribChanges})
         await axios.patch(
           `/api/projects/${projectName}/${entityType}s/${entityId}`,
           { ...entityChanges, attrib: attribChanges }
@@ -405,6 +416,11 @@ const EditorPage = () => {
 
       if (!branchesToReload.includes(parentId))
         branchesToReload.push(parentId)
+
+      for (const eid of getBranchesToReload(entityId)){
+        if (!branchesToReload.includes(eid))
+          branchesToReload.push(eid)
+      }
     }
 
     //
