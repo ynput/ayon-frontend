@@ -230,6 +230,10 @@ const EditorPage = () => {
       value = chobj[fieldName]
       className = 'color-hl-01'
     }
+    else if (node.ownAttrib && !node.ownAttrib.includes(fieldName)){
+      console.log("Hey. inherited", fieldName)
+      className = 'faded'
+    }
     if (!styled) return value
 
     return <span className={`editor-field ${className}`}>{value}</span>
