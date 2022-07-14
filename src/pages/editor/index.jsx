@@ -20,7 +20,7 @@ import { stringEditor } from './editors'
 
 const loadBranch = async (query, projectName, parentId) => {
   const variables = { projectName, parent: parentId || 'root' }
-  console.log("Branch load")
+  console.log("Branch load", parentId)
   const response = await axios.post('/graphql', { query, variables })
 
   if (response.status !== 200) {
@@ -343,8 +343,10 @@ const EditorPage = () => {
     let result = [entityId]
     if (!parents[entityId])
       return result
-    for (const chId of parents[entityId])
-      result = [...result, ...getBranchesToReload(chId)]
+    for (const chId of parents[entityId]){
+      if (chId in parents)
+        result = [...result, ...getBranchesToReload(chId)]
+    }
     return result
   }
 
