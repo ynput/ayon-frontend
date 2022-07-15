@@ -23,6 +23,7 @@ const BASE_QUERY = `
             id
             name
             taskType
+            ownAttrib
             attrib {
               #TASK_ATTRS#
             }

@@ -229,10 +229,10 @@ const EditorPage = () => {
     let value = node.attrib[fieldName]
     if (chobj && chobj.hasOwnProperty(fieldName)) {
       value = chobj[fieldName]
-      className = 'color-hl-01'
+      className = 'changed'
     }
     else if (node.ownAttrib && !node.ownAttrib.includes(fieldName)){
-      className = 'faded'
+      className = 'inherited'
     }
     if (!styled) return value
 
