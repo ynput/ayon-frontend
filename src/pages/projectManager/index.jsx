@@ -1,34 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DateTime } from 'luxon'
-import { toast } from 'react-toastify'
 
-import axios from 'axios'
-
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
-import { Button } from 'primereact/button'
+import { Button } from '/src/components'
+import ProjectList from '/src/containers/projectList'
 
 import ProjectStats from './stats'
 import NewProjectDialog from './newProject'
 
+
 const ProjectManager = () => {
   const navigate = useNavigate()
-  const [projectList, setProjectList] = useState([])
   const [projectListTimestamp, setProjectListTimestamp] = useState(0)
   const [selectedProject, setSelectedProject] = useState(null)
   const [showNewProject, setShowNewProject] = useState(false)
-
-  useEffect(() => {
-    axios
-      .get('/api/projects')
-      .then((response) => {
-        setProjectList(response.data.projects || [])
-      })
-      .catch(() => {
-        toast.error('Unable to load projects')
-      })
-  }, [projectListTimestamp])
 
   const deleteProject = () => {}
 
@@ -44,42 +28,16 @@ const ProjectManager = () => {
       )}
 
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
-        <div className="wrapper">
-          <DataTable
-            value={projectList}
-            scrollable
-            scrollHeight="flex"
-            selectionMode="single"
-            responsive="true"
-            dataKey="name"
-            selection={selectedProject}
-            onSelectionChange={(e) => setSelectedProject(e.value)}
-          >
-            <Column field="name" header="Name" />
-            <Column field="code" header="Code" style={{ maxWidth: 80 }} />
-            <Column
-              field="createdAt"
-              header="Created"
-              style={{ maxWidth: '150px' }}
-              body={(rowdata) =>
-                DateTime.fromSeconds(rowdata.createdAt).toRelative()
-              }
-            />
-            <Column
-              field="updatedAt"
-              header="Updated"
-              style={{ maxWidth: '150px' }}
-              body={(rowdata) =>
-                DateTime.fromSeconds(rowdata.updatedAt).toRelative()
-              }
-            />
-          </DataTable>
-        </div>
+          <ProjectList
+            selectedProject={selectedProject}
+            onSelectProject={setSelectedProject} 
+            reloadTrigger={projectListTimestamp}
+          />
       </section>
 
       <section style={{ flexGrow: 1 }} className="invisible">
         <section className="invisible row">
-          <h1>{selectedProject ? selectedProject.name : 'SELECT A PROJECT'}</h1>
+          <h1>{selectedProject ? selectedProject : 'SELECT A PROJECT'}</h1>
         </section>
 
         <section className="invisible row">
@@ -88,7 +46,7 @@ const ProjectManager = () => {
             icon="pi pi-folder-open"
             disabled={!selectedProject}
             onClick={() =>
-              navigate(`/projects/${selectedProject.name}/browser`)
+              navigate(`/projects/${selectedProject}/browser`)
             }
           />
           <Button
@@ -108,7 +66,7 @@ const ProjectManager = () => {
 
         <section style={{ flexGrow: 1 }}>
           {selectedProject && (
-            <ProjectStats projectName={selectedProject.name} />
+            <ProjectStats projectName={selectedProject} />
           )}
         </section>
       </section>

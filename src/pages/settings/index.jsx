@@ -5,6 +5,7 @@ import { Spacer } from '../../components'
 import AnatomyPresets from './anatomyPresets'
 import AddonsSettings from './addons'
 import StudioOverrides from './studioOverrides'
+import Users from './users'
 
 const SettingsPage = () => {
   const { module } = useParams()
@@ -25,6 +26,8 @@ const SettingsPage = () => {
         return <StudioOverrides />
       case 'addons':
         return <AddonsSettings />
+      case 'users':
+        return <Users />
       default:
         return <div>Not implemented</div>
     }

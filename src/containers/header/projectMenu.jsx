@@ -1,27 +1,12 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { Button, TableWrapper } from '../../components'
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
+import { Button } from '/src/components'
 import { Sidebar } from 'primereact/sidebar'
+import ProjectList from '/src/containers/projectList'
 
-import axios from 'axios'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
-  const [projectList, setProjectList] = useState([])
-
-  useEffect(() => {
-    axios
-      .get('/api/projects')
-      .then((response) => {
-        setProjectList(response.data.projects || [])
-      })
-      .catch(() => {
-        console.error.error('Unable to load projects')
-      })
-  }, [])
 
   return (
     <Sidebar
@@ -39,23 +24,14 @@ const ProjectMenu = ({ visible, onHide }) => {
           height: '100%',
         }}
       >
-        <TableWrapper>
-          <DataTable
-            value={projectList}
-            scrollable="true"
-            scrollHeight="flex"
-            selectionMode="single"
-            responsive="true"
-            dataKey="name"
-            onSelectionChange={(e) => {
+        <ProjectList 
+          onSelectProject={
+            projectName=>{
               onHide()
-              navigate(`/projects/${e.value.name}/browser`)
-            }}
-          >
-            <Column field="name" header="Project name" />
-          </DataTable>
-        </TableWrapper>
-
+              navigate(`/projects/${projectName}/browser`)
+            }
+          }
+        />
         <Button
           icon="settings_suggest"
           label="Project manager"

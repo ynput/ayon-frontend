@@ -7,7 +7,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { toast } from 'react-toastify'
 
-import { isEmpty } from '/src/utils'
+import { isEmpty, sortByKey } from '/src/utils'
 import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/features/context'
 import { Shade, Spacer, Button } from '/src/components'
 import { CellWithIcon } from '/src/components/icons'
@@ -179,6 +179,7 @@ const EditorPage = () => {
       for (const childId of parents[parentId]){
         const node = {
           key: childId,
+          name: nodeData[childId].data.name,
           data: nodeData[childId].data,
           leaf: nodeData[childId].leaf,
         }
@@ -192,7 +193,7 @@ const EditorPage = () => {
     } 
 
     buildHierarchy("root", result)
-    return result
+    return sortByKey(result, "name")
   }, [parents])
 
   // Handle selection change.
