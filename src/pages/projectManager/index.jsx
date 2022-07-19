@@ -43,7 +43,7 @@ const ProjectManager = () => {
         <section className="invisible row">
           <Button
             label="Open selected project"
-            icon="pi pi-folder-open"
+            icon="folder_open"
             disabled={!selectedProject}
             onClick={() =>
               navigate(`/projects/${selectedProject}/browser`)
@@ -51,14 +51,14 @@ const ProjectManager = () => {
           />
           <Button
             label="Delete selected project"
-            icon="pi pi-trash"
+            icon="delete"
             className="p-button-danger"
             disabled={true || !selectedProject}
             onClick={deleteProject}
           />
           <Button
             label="Create a new project"
-            icon="pi pi-plus"
+            icon="create_new_folder"
             onClick={() => setShowNewProject(true)}
           />
           <div style={{ flexGrow: 1 }} />
