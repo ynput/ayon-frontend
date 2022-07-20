@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { TableWrapper } from '/src/components'
 import axios from 'axios'
 
 const USERS_QUERY = `
@@ -11,6 +13,8 @@ const USERS_QUERY = `
           name
           isAdmin
           isManager
+          roles
+          hasPassword
           attrib {
             fullName
             email
@@ -21,9 +25,25 @@ const USERS_QUERY = `
   }
 `
 
-const UserList = ({projectName}) => {
+const formatRoles = (rowData, projectName) => {
+  if (rowData.isAdmin) return 'admin'
+  if (rowData.isManager) return 'manager'
+  let result = []
+  const roles = JSON.parse(rowData.roles)
+  for (const role in roles) {
+    if (!projectName) result.push(role)
+    else if (roles[role] === 'all') result.push(role)
+    else if (Array.isArray(roles[role]) && roles[role].includes(projectName))
+      result.push(role)
+  }
+  return result.join(', ')
+}
+
+const UserList = ({ projectName, selectedUsers, onSelectUsers, reloadTrigger }) => {
   const [userList, setUserList] = useState([])
   const [loading, setLoading] = useState(false)
+
+  // Load user list
 
   useEffect(() => {
     setLoading(true)
@@ -35,39 +55,62 @@ const UserList = ({projectName}) => {
       })
       .then((response) => {
         const edges = response?.data?.data?.users.edges
-        if (!edges)
-          return
-        for (const edge of edges)
-          result.push(edge.node)
+        if (!edges) return
+        for (const edge of edges) result.push(edge.node)
+      })
+      .catch(() => {
+        toast.error('Unable to load users')
       })
       .finally(() => {
         setUserList(result)
         setLoading(false)
       })
+  }, [reloadTrigger])
 
-  }, [])
+  // Selection
 
-  const formatBool = (value) => {
-    if (value)
-      return "yep"
-    return ""
+  const selection = useMemo(() => {
+    let result = []
+    for (const user of userList) {
+      if (selectedUsers.includes(user.name)) 
+        result.push(user)
+    }
+    return result
+  }, [selectedUsers, userList])
+
+  const onSelectionChange = (e) => {
+    if (!onSelectUsers) return
+    let result = []
+    for (const user of e.value) result.push(user.name)
+    onSelectUsers(result)
   }
 
+  // Render
+
   return (
-    <div>
+    <TableWrapper>
       <DataTable
         value={userList}
+        scrollable="true"
+        scrollHeight="flex"
         dataKey="name"
         loading={loading}
-      >
-        <Column field='name' header="Name"/>
-        <Column field='attrib.fullName' header="Full name"/>
-        <Column field='attrib.email' header="Email"/>
-        <Column field='isAdmin' header="Admin" body={rowData => formatBool(rowData.isAdmin)} />
-        <Column field='isManager' header="Manager" body={rowData => formatBool(rowData.isManager)}/>
+        selectionMode="multiple"
+        onSelectionChange={onSelectionChange}
+        selection={selection}
+      > 
+        <Column field="name" header="Name" />
+        <Column field="attrib.fullName" header="Full name" />
+        <Column
+          header="Roles"
+          body={(rowData) => formatRoles(rowData, projectName)}
+        />
+        <Column
+          header="Has password"
+          body={(rowData) => (rowData.hasPassword ? 'yes' : '')}
+        />
       </DataTable>
-    </div>
-
+    </TableWrapper>
   )
 }
 

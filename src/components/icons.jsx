@@ -1,4 +1,10 @@
-const CellWithIcon = ({ icon, iconClassName, text, textStyle, textClassName }) => {
+const CellWithIcon = ({
+  icon,
+  iconClassName,
+  text,
+  textStyle,
+  textClassName,
+}) => {
   return (
     <>
       <span
@@ -7,7 +13,9 @@ const CellWithIcon = ({ icon, iconClassName, text, textStyle, textClassName }) =
       >
         {icon}
       </span>
-      <span style={textStyle} className={textClassName}>{text}</span>
+      <span style={textStyle} className={textClassName}>
+        {text}
+      </span>
     </>
   )
 }

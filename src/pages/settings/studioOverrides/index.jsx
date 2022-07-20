@@ -95,11 +95,7 @@ const StudioOverrides = () => {
             onLabel="Hide versions"
             offLabel="Show versions"
           />
-          <Button
-            onClick={onSave}
-            disabled={isEmpty(localData)}
-            label="Save"
-          />
+          <Button onClick={onSave} disabled={isEmpty(localData)} label="Save" />
         </section>
         <section className="invisible row" style={{ flexGrow: 1 }}>
           <AddonList

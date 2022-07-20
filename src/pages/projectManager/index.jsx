@@ -7,7 +7,6 @@ import ProjectList from '/src/containers/projectList'
 import ProjectStats from './stats'
 import NewProjectDialog from './newProject'
 
-
 const ProjectManager = () => {
   const navigate = useNavigate()
   const [projectListTimestamp, setProjectListTimestamp] = useState(0)
@@ -28,11 +27,11 @@ const ProjectManager = () => {
       )}
 
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
-          <ProjectList
-            selectedProject={selectedProject}
-            onSelectProject={setSelectedProject} 
-            reloadTrigger={projectListTimestamp}
-          />
+        <ProjectList
+          selectedProject={selectedProject}
+          onSelectProject={setSelectedProject}
+          reloadTrigger={projectListTimestamp}
+        />
       </section>
 
       <section style={{ flexGrow: 1 }} className="invisible">
@@ -45,9 +44,7 @@ const ProjectManager = () => {
             label="Open selected project"
             icon="folder_open"
             disabled={!selectedProject}
-            onClick={() =>
-              navigate(`/projects/${selectedProject}/browser`)
-            }
+            onClick={() => navigate(`/projects/${selectedProject}/browser`)}
           />
           <Button
             label="Delete selected project"
@@ -65,9 +62,7 @@ const ProjectManager = () => {
         </section>
 
         <section style={{ flexGrow: 1 }}>
-          {selectedProject && (
-            <ProjectStats projectName={selectedProject} />
-          )}
+          {selectedProject && <ProjectStats projectName={selectedProject} />}
         </section>
       </section>
     </main>

@@ -6,6 +6,7 @@ import AnatomyPresets from './anatomyPresets'
 import AddonsSettings from './addons'
 import StudioOverrides from './studioOverrides'
 import Users from './users'
+import Roles from './roles'
 
 const SettingsPage = () => {
   const { module } = useParams()
@@ -28,6 +29,8 @@ const SettingsPage = () => {
         return <AddonsSettings />
       case 'users':
         return <Users />
+      case 'roles':
+        return <Roles />
       default:
         return <div>Not implemented</div>
     }
@@ -41,6 +44,7 @@ const SettingsPage = () => {
         <NavLink to={`/settings/studio`}>Studio</NavLink>
         <NavLink to={`/settings/attributes`}>Attributes</NavLink>
         <NavLink to={`/settings/users`}>Users</NavLink>
+        <NavLink to={`/settings/roles`}>Roles</NavLink>
         <Spacer />
       </nav>
       {moduleComponent}
