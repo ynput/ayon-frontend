@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { LinkButton, Spacer } from '../../components'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import { LinkButton, Spacer } from '/src/components'
 
 import Breadcrumbs from './breadcrumbs'
 import UserMenu from './userMenu'
@@ -8,6 +9,14 @@ import ProjectMenu from './projectMenu'
 const Header = () => {
   const [projectMenuVisible, setProjectMenuVisible] = useState(false)
   const [userMenuVisible, setUserMenuVisible] = useState(false)
+  const location = useLocation()
+
+  // Hide sidebars when location changes
+  useEffect(() => {
+    setProjectMenuVisible(false)
+    setUserMenuVisible(false)
+  }, [location.pathname])
+
 
   return (
     <nav className="primary">

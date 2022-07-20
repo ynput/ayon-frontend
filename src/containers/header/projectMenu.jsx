@@ -4,7 +4,6 @@ import { Button } from '/src/components'
 import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
 
-
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
 
@@ -24,20 +23,18 @@ const ProjectMenu = ({ visible, onHide }) => {
           height: '100%',
         }}
       >
-        <ProjectList 
-          onSelectProject={
-            projectName=>{
-              onHide()
-              navigate(`/projects/${projectName}/browser`)
-            }
-          }
+        <ProjectList
+          onSelectProject={(projectName) => {
+            //onHide()
+            navigate(`/projects/${projectName}/browser`)
+          }}
         />
         <Button
           icon="settings_suggest"
           label="Project manager"
           style={{ marginTop: 10 }}
           onClick={() => {
-            onHide()
+            //onHide()
             navigate('/projects')
           }}
         />
