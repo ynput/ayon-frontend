@@ -28,8 +28,8 @@ const ProjectManager = () => {
 
       <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
         <ProjectList
-          selectedProject={selectedProject}
-          onSelectProject={setSelectedProject}
+          selection={selectedProject}
+          onSelect={setSelectedProject}
           reloadTrigger={projectListTimestamp}
         />
       </section>

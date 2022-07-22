@@ -11,7 +11,7 @@ const formatName = (rowData, defaultTitle) => {
   return rowData.name
 }
 
-const ProjectList = ({ selectedProject, onSelectProject, showNull }) => {
+const ProjectList = ({ selection, onSelect, showNull, multiselect }) => {
   const [projectList, setProjectList] = useState([])
 
   useEffect(() => {
@@ -30,21 +30,52 @@ const ProjectList = ({ selectedProject, onSelectProject, showNull }) => {
       })
   }, [])
 
-  const selection = useMemo(() => {
-    for (const project of projectList) {
-      if (project.name === selectedProject) return project
-      if (!selectedProject && project.name === '_') return project
+  const selectionObj = useMemo(() => {
+    if (multiselect){
+      let result = []
+      for (const project of projectList){
+        if(selection === null){
+          if(project.name === "_"){
+            result.push(project)
+          }
+          break
+        }
+        if (selection.includes(project.name))
+          result.push(project)
+
+      }
+      return result
     }
-  }, [selectedProject, projectList])
+    else {
+      for (const project of projectList) {
+        if (project.name === selection) return project
+        if (!selection && project.name === '_') return project
+      }
+    } // single select
+  }, [selection, projectList])
 
   const onSelectionChange = (e) => {
-    if (!onSelectProject) return
-    if (e.value.name === '_') {
-      onSelectProject(null)
+    if (!onSelect)
       return
-    }
-    onSelectProject(e.value.name)
-  }
+    if (multiselect){
+      let result = []
+      for (const node of e.value){
+        if(node.name === "_"){
+          result = null
+          break
+        }
+        result.push(node.name)
+      }
+      onSelect(result)
+
+    } // multiselect
+    else {
+      if (e.value.name === '_')
+        onSelect(null)
+      else
+        onSelect(e.value.name)
+    } // single select
+  } // onSelectionChange
 
   return (
     <TableWrapper>
@@ -52,10 +83,10 @@ const ProjectList = ({ selectedProject, onSelectProject, showNull }) => {
         value={projectList}
         scrollable="true"
         scrollHeight="flex"
-        selectionMode="single"
+        selectionMode={multiselect ? "multiple" : "single"}
         responsive="true"
         dataKey="name"
-        selection={selection}
+        selection={selectionObj}
         onSelectionChange={onSelectionChange}
       >
         <Column field="name" header="Project name" body={rowData => formatName(rowData, showNull)} />

@@ -18,8 +18,8 @@ const Roles = () => {
         <section className="lighter" style={{ flexBasis: 400, padding: 0, height: "100%" }}>
           <ProjectList
             showNull="( default )"
-            selectedProject={projectName}
-            onSelectProject={setProjectName}
+            selection={projectName}
+            onSelect={setProjectName}
           />
         </section>
 

@@ -24,19 +24,13 @@ const ProjectMenu = ({ visible, onHide }) => {
         }}
       >
         <ProjectList
-          onSelectProject={(projectName) => {
-            //onHide()
-            navigate(`/projects/${projectName}/browser`)
-          }}
+          onSelect={(projectName) => navigate(`/projects/${projectName}/browser`)}
         />
         <Button
           icon="settings_suggest"
           label="Project manager"
           style={{ marginTop: 10 }}
-          onClick={() => {
-            //onHide()
-            navigate('/projects')
-          }}
+          onClick={() => navigate('/projects')}
         />
       </div>
     </Sidebar>

@@ -5,6 +5,8 @@ import { Column } from 'primereact/column'
 import { TableWrapper } from '/src/components'
 import axios from 'axios'
 
+import './users.sass'
+
 const USERS_QUERY = `
   query UserList {
     users {
@@ -14,6 +16,7 @@ const USERS_QUERY = `
           isAdmin
           isManager
           roles
+          defaultRoles
           hasPassword
           attrib {
             fullName
@@ -25,21 +28,41 @@ const USERS_QUERY = `
   }
 `
 
-const formatRoles = (rowData, projectName) => {
-  if (rowData.isAdmin) return 'admin'
-  if (rowData.isManager) return 'manager'
-  let result = []
-  const roles = JSON.parse(rowData.roles)
-  for (const role in roles) {
-    if (!projectName) result.push(role)
-    else if (roles[role] === 'all') result.push(role)
-    else if (Array.isArray(roles[role]) && roles[role].includes(projectName))
-      result.push(role)
+const formatRoles = (rowData, selectedProjects) => {
+  let res = {}
+  if (rowData.isAdmin) 
+    res.admin = {cls: 'role admin'}
+  else if (rowData.isManager)
+    res.manager = {cls: 'role manager'}
+  else if (!selectedProjects){
+    for (const name of rowData.defaultRoles || [])
+      res[name] = {cls: 'role default'}
   }
-  return result.join(', ')
+  else {
+    const roleSet = JSON.parse(rowData.roles)
+    for (const projectName of selectedProjects){
+      for(const roleName of roleSet[projectName] || []){
+        if (roleName in res)
+          res[roleName].count += 1
+        else
+          res[roleName] = {count: 1}
+        res[roleName].cls = res[roleName].count === selectedProjects.length ? "role all" : "role partial"
+      }
+    }
+  }
+
+  return (
+    <>
+      {
+        Object.keys(res).map((roleName) => (
+          <span key={roleName} className={res[roleName].cls}>{roleName}</span>
+        ))
+      }
+    </>
+  ) 
 }
 
-const UserList = ({ projectName, selectedUsers, onSelectUsers, reloadTrigger }) => {
+const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigger }) => {
   const [userList, setUserList] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -103,7 +126,7 @@ const UserList = ({ projectName, selectedUsers, onSelectUsers, reloadTrigger }) 
         <Column field="attrib.fullName" header="Full name" />
         <Column
           header="Roles"
-          body={(rowData) => formatRoles(rowData, projectName)}
+          body={(rowData) => formatRoles(rowData, selectedProjects)}
         />
         <Column
           header="Has password"
