@@ -28,6 +28,32 @@ const USERS_QUERY = `
   }
 `
 
+const buildRoleAssignData = (projectNames, roleNames, users) => {
+  let result = []
+  for (const roleName of roleNames){
+    let shouldSelect = false
+
+    for (const user of users){
+      const roleSet = JSON.parse(user.roles) || {}
+      for (const projectName of projectNames || []){
+        if ((roleSet[projectName] || []).includes(roleName)){
+          shouldSelect = true
+          break
+        }
+      }
+    }
+
+    result.push({
+      name: roleName,
+      shouldSelect
+    })
+
+  } // for each role name
+  return result
+}
+
+
+
 const formatRoles = (rowData, selectedProjects) => {
   let res = {}
   if (rowData.isAdmin) 
@@ -62,8 +88,9 @@ const formatRoles = (rowData, selectedProjects) => {
   ) 
 }
 
-const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigger }) => {
+const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigger, onRoleAssignData }) => {
   const [userList, setUserList] = useState([])
+  const [rolesList, setRolesList] = useState([])
   const [loading, setLoading] = useState(false)
 
   // Load user list
@@ -90,6 +117,27 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
       })
   }, [reloadTrigger])
 
+
+  useEffect(() => {
+    setLoading(true)
+    let result = []
+    axios
+      .get("/api/roles/_")
+      .then((response) => {
+        for (const role of response.data)
+          result.push(role.name)
+      })
+      .catch(() => {
+        toast.error('Unable to load roles')
+      })
+      .finally(() => {
+        setRolesList(result)
+        setLoading(false)
+      })
+  }, [])
+
+
+
   // Selection
 
   const selection = useMemo(() => {
@@ -98,8 +146,13 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
       if (selectedUsers.includes(user.name)) 
         result.push(user)
     }
+    if(onRoleAssignData){
+      onRoleAssignData(
+        buildRoleAssignData(selectedProjects, rolesList, result)
+      )
+    }
     return result
-  }, [selectedUsers, userList])
+  }, [selectedUsers, userList, selectedProjects])
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return

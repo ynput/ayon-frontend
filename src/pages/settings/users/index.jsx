@@ -7,6 +7,7 @@ const Users = () => {
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [selectedUsers, setSelectedUsers] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState(0)
+  const [roleAssignData, setRoleAssignData] = useState(0)
 
   // const triggerReload = () => setReloadTrigger(reloadTrigger+1)
 
@@ -33,6 +34,7 @@ const Users = () => {
           selectedUsers={selectedUsers}
           onSelectUsers={setSelectedUsers}
           reloadTrigger={reloadTrigger}
+          onRoleAssignData={setRoleAssignData}
         />
       </section>
 
@@ -40,6 +42,7 @@ const Users = () => {
         <UserDetail 
           selectedUsers={selectedUsers} 
           reloadTrigger={reloadTrigger}
+          roleAssignData={roleAssignData}
         />
       </section>
       </section>
