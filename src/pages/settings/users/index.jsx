@@ -25,18 +25,13 @@ const Users = () => {
         />
       </section>
 
-      <section
-        className="lighter"
-        style={{ flexGrow: 1, padding: 0, height: '100%' }}
-      >
-        <UserList
-          selectedProjects={selectedProjects}
-          selectedUsers={selectedUsers}
-          onSelectUsers={setSelectedUsers}
-          reloadTrigger={reloadTrigger}
-          setUserDetailData={setUserDetailData}
-        />
-      </section>
+      <UserList
+        selectedProjects={selectedProjects}
+        selectedUsers={selectedUsers}
+        onSelectUsers={setSelectedUsers}
+        reloadTrigger={reloadTrigger}
+        setUserDetailData={setUserDetailData}
+      />
 
       <UserDetail
         userDetailData={userDetailData}

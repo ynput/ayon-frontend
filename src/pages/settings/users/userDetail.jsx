@@ -59,7 +59,7 @@ const AccessControl = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
 
   const activeOptions = [
     { label: 'Active', value: true },
-    { label: 'Disabled', value: false },
+    { label: 'Inactive', value: false },
   ]
 
   const updateFormData = (key, value) => {

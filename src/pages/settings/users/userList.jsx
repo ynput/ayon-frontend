@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TableWrapper } from '/src/components'
+import { TableWrapper, Button } from '/src/components'
 import axios from 'axios'
 
 import './users.sass'
@@ -187,33 +187,44 @@ const UserList = ({
   // Render
 
   return (
-    <TableWrapper>
-      <DataTable
-        value={userList}
-        scrollable="true"
-        scrollHeight="flex"
-        dataKey="name"
-        loading={loading}
-        selectionMode="multiple"
-        onSelectionChange={onSelectionChange}
-        selection={selection}
-      >
-        <Column field="name" header="Name" />
-        <Column field="attrib.fullName" header="Full name" />
-        <Column
-          header="Roles"
-          body={(rowData) => formatRoles(rowData, selectedProjects)}
-        />
-        <Column
-          header="Has password"
-          body={(rowData) => (rowData.hasPassword ? 'yes' : '')}
-        />
-        <Column
-          header="Active"
-          body={(rowData) => (rowData.active ? 'yes' : '')}
-        />
-      </DataTable>
-    </TableWrapper>
+    <section
+      className="invisible"
+      style={{ flexGrow: 1, padding: 0, height: '100%' }}
+    >
+      <section className="invisible row">
+        <Button onClick={()=>{}} label="New user" />
+      </section>
+      <section className="lighter" style={{ flexGrow: 1 }}>
+        <TableWrapper>
+          <DataTable
+            value={userList}
+            scrollable="true"
+            scrollHeight="flex"
+            dataKey="name"
+            loading={loading}
+            selectionMode="multiple"
+            onSelectionChange={onSelectionChange}
+            selection={selection}
+          >
+            <Column field="name" header="Name" />
+            <Column field="attrib.fullName" header="Full name" />
+            <Column field="attrib.email" header="Email" />
+            <Column
+              header="Roles"
+              body={(rowData) => formatRoles(rowData, selectedProjects)}
+            />
+            <Column
+              header="Has password"
+              body={(rowData) => (rowData.hasPassword ? 'yes' : '')}
+            />
+            <Column
+              header="Active"
+              body={(rowData) => (rowData.active ? 'yes' : '')}
+            />
+          </DataTable>
+        </TableWrapper>
+      </section>
+    </section>
   )
 }
 
