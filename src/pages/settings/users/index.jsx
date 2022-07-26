@@ -9,11 +9,14 @@ const Users = () => {
   const [reloadTrigger, setReloadTrigger] = useState(0)
   const [userDetailData, setUserDetailData] = useState({})
 
-  const triggerReload = () => setReloadTrigger(reloadTrigger+1)
+  const triggerReload = () => setReloadTrigger(reloadTrigger + 1)
 
   return (
     <main>
-      <section className="lighter" style={{ flexBasis: '400px', padding: 0, height: "100%" }}>
+      <section
+        className="lighter"
+        style={{ flexBasis: '400px', padding: 0, height: '100%' }}
+      >
         <ProjectList
           showNull="( default )"
           multiselect={true}
@@ -22,9 +25,12 @@ const Users = () => {
         />
       </section>
 
-      <section className="lighter" style={{ flexGrow: 1, padding: 0, height: "100%" }}>
-        <UserList 
-          selectedProjects={selectedProjects} 
+      <section
+        className="lighter"
+        style={{ flexGrow: 1, padding: 0, height: '100%' }}
+      >
+        <UserList
+          selectedProjects={selectedProjects}
           selectedUsers={selectedUsers}
           onSelectUsers={setSelectedUsers}
           reloadTrigger={reloadTrigger}
@@ -32,11 +38,11 @@ const Users = () => {
         />
       </section>
 
-        <UserDetail 
-          userDetailData={userDetailData}
-          reloadTrigger={reloadTrigger}
-          onTriggerReload={triggerReload}
-        />
+      <UserDetail
+        userDetailData={userDetailData}
+        reloadTrigger={reloadTrigger}
+        onTriggerReload={triggerReload}
+      />
     </main>
   )
 }

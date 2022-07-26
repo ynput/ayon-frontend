@@ -8,14 +8,15 @@ const Roles = () => {
   const [selectedRole, setSelectedRole] = useState(null)
   const [reloadTrigger, setReloadTrigger] = useState(0)
 
-  const triggerReload = () => setReloadTrigger(reloadTrigger+1)
+  const triggerReload = () => setReloadTrigger(reloadTrigger + 1)
 
   return (
     <main>
-
-      <section className="invisible row" style={{flexGrow: 1}}>
-
-        <section className="lighter" style={{ flexBasis: 400, padding: 0, height: "100%" }}>
+      <section className="invisible row" style={{ flexGrow: 1 }}>
+        <section
+          className="lighter"
+          style={{ flexBasis: 400, padding: 0, height: '100%' }}
+        >
           <ProjectList
             showNull="( default )"
             selection={projectName}
@@ -23,8 +24,11 @@ const Roles = () => {
           />
         </section>
 
-        <section className="lighter" style={{ flexBasis: 400, padding: 0, height: "100%" }}>
-          <RolesList 
+        <section
+          className="lighter"
+          style={{ flexBasis: 400, padding: 0, height: '100%' }}
+        >
+          <RolesList
             projectName={projectName}
             reloadTrigger={reloadTrigger}
             selectedRole={selectedRole}
@@ -32,17 +36,14 @@ const Roles = () => {
           />
         </section>
 
-        <RoleDetail 
-          projectName={projectName} 
-          roleName={selectedRole} 
+        <RoleDetail
+          projectName={projectName}
+          roleName={selectedRole}
           onChange={triggerReload}
         />
-
       </section>
-
     </main>
   )
 }
 
 export default Roles
-

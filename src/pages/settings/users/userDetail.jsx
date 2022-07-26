@@ -4,93 +4,80 @@ import { Button, Spacer, InputText } from '/src/components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 import axios from 'axios'
-import {isEmpty} from '/src/utils'
-
+import { isEmpty } from '/src/utils'
 
 const FormRow = (props) => {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "row",
-      flexGrow: 1,
-      alignItems: "center"
-    }}
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'row',
+        flexGrow: 1,
+        alignItems: 'center',
+      }}
     >
-      <div style={{flexBasis: 120}}>
-        {props.label}
-      </div>
-      <div style={{flexGrow: 1, display: "flex", flexDirection: "column"}}>
+      <div style={{ flexBasis: 120 }}>{props.label}</div>
+      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {props.children}
       </div>
     </div>
   )
 }
 
-
-const UserAttrib = ({ 
-  formData,
-  setFormData,
-  attributes,
-}) => {
-
+const UserAttrib = ({ formData, setFormData, attributes }) => {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 8
-    }}>
-    {
-      Object.keys(attributes).map((attrName) => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
+      {Object.keys(attributes).map((attrName) => (
         <FormRow label={attributes[attrName]} key={attrName}>
-          <InputText value={formData[attrName]} onChange={
-            e => {
+          <InputText
+            value={formData[attrName]}
+            onChange={(e) => {
               const value = e.target.value
-              setFormData(fd=>{
-                return {...fd, [attrName]: value}
+              setFormData((fd) => {
+                return { ...fd, [attrName]: value }
               })
-            }
-          }/>
+            }}
+          />
         </FormRow>
-      ))
-    }
-
+      ))}
     </div>
   )
 }
 
-
-const AccessControl = ({ 
-  formData,
-  setFormData,
-  rolesLabel="Roles"
-})=> {
-
+const AccessControl = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
   const userLevels = [
-    {label: 'User', value: 'user'},
-    {label: 'Manager', value: 'manager'},
-    {label: 'Administrator', value: 'admin'},
+    { label: 'User', value: 'user' },
+    { label: 'Manager', value: 'manager' },
+    { label: 'Administrator', value: 'admin' },
   ]
 
   const activeOptions = [
-    {label: 'Active', value: true },
-    {label: 'Disabled', value: false },
+    { label: 'Active', value: true },
+    { label: 'Disabled', value: false },
   ]
 
   const updateFormData = (key, value) => {
     setFormData((fd) => {
-      return {...fd, [key]: value}
+      return { ...fd, [key]: value }
     })
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 8
-    }}>
-
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
       <FormRow label="User active">
-        <SelectButton 
+        <SelectButton
           unselectable={false}
           value={formData.userActive}
           onChange={(e) => updateFormData('userActive', e.value)}
@@ -99,7 +86,7 @@ const AccessControl = ({
       </FormRow>
 
       <FormRow label="User level">
-        <SelectButton 
+        <SelectButton
           unselectable={false}
           value={formData.userLevel}
           onChange={(e) => updateFormData('userLevel', e.value)}
@@ -107,39 +94,33 @@ const AccessControl = ({
         />
       </FormRow>
 
-      
-      
       {formData.userLevel === 'user' && (
-        <FormRow label={rolesLabel}> 
-          <RolesDropdown 
-            style={{flexGrow:1}}
-            selectedRoles={formData.roles} 
-            setSelectedRoles={value => updateFormData('roles', value)} 
+        <FormRow label={rolesLabel}>
+          <RolesDropdown
+            style={{ flexGrow: 1 }}
+            selectedRoles={formData.roles}
+            setSelectedRoles={(value) => updateFormData('roles', value)}
           />
         </FormRow>
-      )
-      }
+      )}
     </div>
   )
 }
 
-
-const UserDetail = ({userDetailData, onTriggerReload}) => {
+const UserDetail = ({ userDetailData, onTriggerReload }) => {
   const [formData, setFormData] = useState({})
 
   const userAttrib = {
-    fullName: "Full name",
-    email: "EMail"
+    fullName: 'Full name',
+    email: 'EMail',
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     let nroles = []
-    if (isEmpty(userDetailData))
-      return 
-    if (userDetailData.roles?.length){
-      for (const nrole of userDetailData.roles){
-        if (nrole.shouldSelect)
-          nroles.push(nrole.name)
+    if (isEmpty(userDetailData)) return
+    if (userDetailData.roles?.length) {
+      for (const nrole of userDetailData.roles) {
+        if (nrole.shouldSelect) nroles.push(nrole.name)
       }
     }
     const formData = {
@@ -147,7 +128,7 @@ const UserDetail = ({userDetailData, onTriggerReload}) => {
       userLevel: userDetailData.userLevel,
       roles: nroles,
     }
-    if (userDetailData.users.length === 1){
+    if (userDetailData.users.length === 1) {
       for (const attrName in userAttrib)
         formData[attrName] = userDetailData.users[0].attrib[attrName]
     }
@@ -155,10 +136,11 @@ const UserDetail = ({userDetailData, onTriggerReload}) => {
   }, [userDetailData])
 
   // editing a single user, so show attributes form too
-  const singleUserEdit = userDetailData.users?.length === 1 ? userDetailData.users[0] : null
+  const singleUserEdit =
+    userDetailData.users?.length === 1 ? userDetailData.users[0] : null
 
   // no selected user. do not show the panel
-  if (!userDetailData.users?.length){
+  if (!userDetailData.users?.length) {
     return <></>
   }
 
@@ -171,57 +153,49 @@ const UserDetail = ({userDetailData, onTriggerReload}) => {
       const data = {}
       const attrib = {}
 
-      if (singleUserEdit){
-        for (const attrName in userAttrib)
-          attrib[attrName] = formData[attrName]
+      if (singleUserEdit) {
+        for (const attrName in userAttrib) attrib[attrName] = formData[attrName]
       }
 
       const roles = JSON.parse(user.roles || {})
 
-      if (!userDetailData.projectNames){
+      if (!userDetailData.projectNames) {
         // no project is selected. update default roles
-        console.log("Updating default roles to", formData.roles)
         data.default_roles = formData.roles
-
       } else {
         // project(s) selected. update roles
         for (const projectName of userDetailData.projectNames)
           roles[projectName] = formData.roles
-
       }
 
       // update user level && do role clean-up
-      data.is_admin = formData.userLevel === "admin"
-      data.is_manager = formData.userLevel === "manager"
+      data.is_admin = formData.userLevel === 'admin'
+      data.is_manager = formData.userLevel === 'manager'
 
-      if (!(data.is_admin || data.is_manager)){
-        if (!isEmpty(roles))
-          data.roles = roles
+      if (!(data.is_admin || data.is_manager)) {
+        if (!isEmpty(roles)) data.roles = roles
       } else {
         data.roles = null
       }
 
       // Apply the patch
-      
+
       try {
         await axios.patch(`/api/users/${user.name}`, {
-            active: formData.userActive,
-            attrib,
-            data
+          active: formData.userActive,
+          attrib,
+          data,
         })
-
       } catch {
         toast.error(`Unable to update user ${user.name} `)
       }
-
     } // for user
     onTriggerReload()
-
   }
 
   const onDelete = async () => {
-    for (const user of userDetailData.users){
-      try{
+    for (const user of userDetailData.users) {
+      try {
         await axios.delete(`/api/users/${user.name}`)
       } catch {
         toast.error(`Unable to delete user ${user.name}`)
@@ -235,31 +209,38 @@ const UserDetail = ({userDetailData, onTriggerReload}) => {
   //
 
   return (
-    <section className="invisible" style={{ flexBasis: 500, padding: 0, height: "100%" }}>
+    <section
+      className="invisible"
+      style={{ flexBasis: 500, padding: 0, height: '100%' }}
+    >
       <section className="invisible row">
         <Button onClick={onSave} label="Save selected users" />
-        <Button onClick={onDelete} label="Delete selected users"/>
+        <Button onClick={onDelete} label="Delete selected users" />
         <Spacer />
-      </section> 
-      <section className="lighter" style={{flexGrow: 1}}>
-        {
-          singleUserEdit && (
+      </section>
+      <section className="lighter" style={{ flexGrow: 1 }}>
+        {singleUserEdit && (
           <>
             <h2>{singleUserEdit.attrib.fullName || singleUserEdit.name}</h2>
-            <UserAttrib formData={formData} setFormData={setFormData} attributes={userAttrib} />
+            <UserAttrib
+              formData={formData}
+              setFormData={setFormData}
+              attributes={userAttrib}
+            />
           </>
-          )
-        }
+        )}
 
-        <AccessControl 
+        <AccessControl
           formData={formData}
           setFormData={setFormData}
-          rolesLabel={userDetailData.projectNames?.length ? "Project roles" : "Default roles"}
+          rolesLabel={
+            userDetailData.projectNames?.length
+              ? 'Project roles'
+              : 'Default roles'
+          }
         />
       </section>
     </section>
-
-
   )
 }
 

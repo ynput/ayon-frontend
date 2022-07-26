@@ -1,30 +1,28 @@
-import {useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { Button, Spacer } from '/src/components'
 
-const RoleDetail = ({projectName, roleName, onChange}) => {
+const RoleDetail = ({ projectName, roleName, onChange }) => {
   const [roleData, setRoleData] = useState(null)
 
-  useEffect(()=>{
-    if (!roleName){
+  useEffect(() => {
+    if (!roleName) {
       setRoleData(null)
       return
     }
     axios
-    .get(`/api/roles/${roleName}/${projectName || '_'}`)
-    .then(response => {
-      setRoleData(response.data)
-    })
-
+      .get(`/api/roles/${roleName}/${projectName || '_'}`)
+      .then((response) => {
+        setRoleData(response.data)
+      })
   }, [projectName, roleName])
-
 
   const onSave = () => {
     axios
       .put(`/api/roles/${roleName}/${projectName || '_'}`, roleData)
       .then(() => {
-        toast.success("Role saved")
+        toast.success('Role saved')
         onChange()
       })
   }
@@ -33,24 +31,27 @@ const RoleDetail = ({projectName, roleName, onChange}) => {
     axios
       .delete(`/api/roles/${roleName}/${projectName || '_'}`, roleData)
       .then(() => {
-        toast.success("Role deleted")
+        toast.success('Role deleted')
         onChange()
       })
   }
 
-
-
   return (
-    <section className="invisible" style={{ flexGrow: 1, padding: 0, height: "100%" }}>
+    <section
+      className="invisible"
+      style={{ flexGrow: 1, padding: 0, height: '100%' }}
+    >
       <section className="invisible row">
         <Button onClick={onSave} label="Save project role" />
-        <Button onClick={onDelete} label="Delete project role" disabled={!projectName}/>
+        <Button
+          onClick={onDelete}
+          label="Delete project role"
+          disabled={!projectName}
+        />
         <Spacer />
-      </section> 
-      <section className="lighter" style={{flexGrow: 1}}>
-        <pre>
-          {JSON.stringify(roleData, null, 2)}
-        </pre>
+      </section>
+      <section className="lighter" style={{ flexGrow: 1 }}>
+        <pre>{JSON.stringify(roleData, null, 2)}</pre>
       </section>
     </section>
   )

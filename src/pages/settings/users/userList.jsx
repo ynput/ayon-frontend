@@ -31,88 +31,86 @@ const USERS_QUERY = `
 
 const buildUserDetailData = (projectNames, roleNames, users) => {
   let roles = []
-  let userLevel = "user"
+  let userLevel = 'user'
   let allDisabled = true
 
-  for (const roleName of roleNames){
+  for (const roleName of roleNames) {
     let shouldSelect = false
 
-    for (const user of users){
+    for (const user of users) {
       const roleSet = JSON.parse(user.roles) || {}
-      if (user.active)
-        allDisabled = false
+      if (user.active) allDisabled = false
 
-      if (user.isManager && userLevel === "user")
-        userLevel = "manager"
-      if (user.isAdmin && ["user", "manager"].includes(userLevel))
-        userLevel = "admin"
+      if (user.isManager && userLevel === 'user') userLevel = 'manager'
+      if (user.isAdmin && ['user', 'manager'].includes(userLevel))
+        userLevel = 'admin'
 
-      for (const projectName of projectNames || []){
-        if ((roleSet[projectName] || []).includes(roleName)){
+      for (const projectName of projectNames || []) {
+        if ((roleSet[projectName] || []).includes(roleName)) {
           shouldSelect = true
           break
         }
       }
       // for default_roles
-      if (!projectNames && user.defaultRoles.includes(roleName)){
+      if (!projectNames && user.defaultRoles.includes(roleName)) {
         shouldSelect = true
         break
       }
-
     }
 
     roles.push({
       name: roleName,
-      shouldSelect
+      shouldSelect,
     })
-
   } // for each role name
   return {
     users,
     projectNames,
     roles,
     userLevel,
-    userActive: !allDisabled
+    userActive: !allDisabled,
   }
 }
 
-
-
 const formatRoles = (rowData, selectedProjects) => {
   let res = {}
-  if (rowData.isAdmin) 
-    res.admin = {cls: 'role admin'}
-  else if (rowData.isManager)
-    res.manager = {cls: 'role manager'}
-  else if (!selectedProjects){
+  if (rowData.isAdmin) res.admin = { cls: 'role admin' }
+  else if (rowData.isManager) res.manager = { cls: 'role manager' }
+  else if (!selectedProjects) {
     for (const name of rowData.defaultRoles || [])
-      res[name] = {cls: 'role default'}
-  }
-  else {
+      res[name] = { cls: 'role default' }
+  } else {
     const roleSet = JSON.parse(rowData.roles)
-    for (const projectName of selectedProjects){
-      for(const roleName of roleSet[projectName] || []){
-        if (roleName in res)
-          res[roleName].count += 1
-        else
-          res[roleName] = {count: 1}
-        res[roleName].cls = res[roleName].count === selectedProjects.length ? "role all" : "role partial"
+    for (const projectName of selectedProjects) {
+      for (const roleName of roleSet[projectName] || []) {
+        if (roleName in res) res[roleName].count += 1
+        else res[roleName] = { count: 1 }
+        res[roleName].cls =
+          res[roleName].count === selectedProjects.length
+            ? 'role all'
+            : 'role partial'
       }
     }
   }
 
   return (
     <>
-      {
-        Object.keys(res).map((roleName) => (
-          <span key={roleName} className={res[roleName].cls}>{roleName}</span>
-        ))
-      }
+      {Object.keys(res).map((roleName) => (
+        <span key={roleName} className={res[roleName].cls}>
+          {roleName}
+        </span>
+      ))}
     </>
-  ) 
+  )
 }
 
-const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigger, setUserDetailData }) => {
+const UserList = ({
+  selectedProjects,
+  selectedUsers,
+  onSelectUsers,
+  reloadTrigger,
+  setUserDetailData,
+}) => {
   const [userList, setUserList] = useState([])
   const [rolesList, setRolesList] = useState([])
   const [loading, setLoading] = useState(false)
@@ -136,11 +134,9 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
         toast.error('Unable to load users')
       })
       .finally(() => {
-
         let newSelection = []
-        for (const user of result){
-          if (selectedUsers.includes(user.name))
-            newSelection.push(user.name)
+        for (const user of result) {
+          if (selectedUsers.includes(user.name)) newSelection.push(user.name)
         }
 
         onSelectUsers(newSelection)
@@ -149,15 +145,13 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
       })
   }, [reloadTrigger])
 
-
   useEffect(() => {
     setLoading(true)
     let result = []
     axios
-      .get("/api/roles/_")
+      .get('/api/roles/_')
       .then((response) => {
-        for (const role of response.data)
-          result.push(role.name)
+        for (const role of response.data) result.push(role.name)
       })
       .catch(() => {
         toast.error('Unable to load roles')
@@ -168,17 +162,14 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
       })
   }, [])
 
-
-
   // Selection
 
   const selection = useMemo(() => {
     let result = []
     for (const user of userList) {
-      if (selectedUsers.includes(user.name)) 
-        result.push(user)
+      if (selectedUsers.includes(user.name)) result.push(user)
     }
-    if(setUserDetailData){
+    if (setUserDetailData) {
       setUserDetailData(
         buildUserDetailData(selectedProjects, rolesList, result)
       )
@@ -206,7 +197,7 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
         selectionMode="multiple"
         onSelectionChange={onSelectionChange}
         selection={selection}
-      > 
+      >
         <Column field="name" header="Name" />
         <Column field="attrib.fullName" header="Full name" />
         <Column

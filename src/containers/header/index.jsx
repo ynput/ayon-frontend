@@ -17,7 +17,6 @@ const Header = () => {
     setUserMenuVisible(false)
   }, [location.pathname])
 
-
   return (
     <nav className="primary">
       <ProjectMenu

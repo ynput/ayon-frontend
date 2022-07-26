@@ -16,7 +16,7 @@ const ProjectList = ({ selection, onSelect, showNull, multiselect }) => {
 
   useEffect(() => {
     let result = []
-    if (showNull) result.push({name: "_"})
+    if (showNull) result.push({ name: '_' })
     axios
       .get('/api/projects')
       .then((response) => {
@@ -31,22 +31,19 @@ const ProjectList = ({ selection, onSelect, showNull, multiselect }) => {
   }, [])
 
   const selectionObj = useMemo(() => {
-    if (multiselect){
+    if (multiselect) {
       let result = []
-      for (const project of projectList){
-        if(selection === null){
-          if(project.name === "_"){
+      for (const project of projectList) {
+        if (selection === null) {
+          if (project.name === '_') {
             result.push(project)
           }
           break
         }
-        if (selection.includes(project.name))
-          result.push(project)
-
+        if (selection.includes(project.name)) result.push(project)
       }
       return result
-    }
-    else {
+    } else {
       for (const project of projectList) {
         if (project.name === selection) return project
         if (!selection && project.name === '_') return project
@@ -55,25 +52,21 @@ const ProjectList = ({ selection, onSelect, showNull, multiselect }) => {
   }, [selection, projectList])
 
   const onSelectionChange = (e) => {
-    if (!onSelect)
-      return
-    if (multiselect){
+    if (!onSelect) return
+    if (multiselect) {
       let result = []
-      for (const node of e.value){
-        if(node.name === "_"){
+      for (const node of e.value) {
+        if (node.name === '_') {
           result = null
           break
         }
         result.push(node.name)
       }
       onSelect(result)
-
     } // multiselect
     else {
-      if (e.value.name === '_')
-        onSelect(null)
-      else
-        onSelect(e.value.name)
+      if (e.value.name === '_') onSelect(null)
+      else onSelect(e.value.name)
     } // single select
   } // onSelectionChange
 
@@ -83,13 +76,17 @@ const ProjectList = ({ selection, onSelect, showNull, multiselect }) => {
         value={projectList}
         scrollable="true"
         scrollHeight="flex"
-        selectionMode={multiselect ? "multiple" : "single"}
+        selectionMode={multiselect ? 'multiple' : 'single'}
         responsive="true"
         dataKey="name"
         selection={selectionObj}
         onSelectionChange={onSelectionChange}
       >
-        <Column field="name" header="Project name" body={rowData => formatName(rowData, showNull)} />
+        <Column
+          field="name"
+          header="Project name"
+          body={(rowData) => formatName(rowData, showNull)}
+        />
         <Column field="code" header="Code" style={{ maxWidth: 80 }} />
       </DataTable>
     </TableWrapper>

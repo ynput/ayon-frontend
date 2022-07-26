@@ -24,7 +24,9 @@ const ProjectMenu = ({ visible, onHide }) => {
         }}
       >
         <ProjectList
-          onSelect={(projectName) => navigate(`/projects/${projectName}/browser`)}
+          onSelect={(projectName) =>
+            navigate(`/projects/${projectName}/browser`)
+          }
         />
         <Button
           icon="settings_suggest"

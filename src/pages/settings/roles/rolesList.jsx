@@ -5,7 +5,12 @@ import { Column } from 'primereact/column'
 import { TableWrapper } from '/src/components'
 import axios from 'axios'
 
-const RolesList = ({ projectName, selectedRole, onSelectRole, reloadTrigger }) => {
+const RolesList = ({
+  projectName,
+  selectedRole,
+  onSelectRole,
+  reloadTrigger,
+}) => {
   const [rolesList, setRolesList] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -15,7 +20,7 @@ const RolesList = ({ projectName, selectedRole, onSelectRole, reloadTrigger }) =
     setLoading(true)
     let result = []
     axios
-      .get(`/api/roles/${projectName || '_' }`)
+      .get(`/api/roles/${projectName || '_'}`)
       .then((response) => {
         result = response.data
       })
@@ -28,12 +33,10 @@ const RolesList = ({ projectName, selectedRole, onSelectRole, reloadTrigger }) =
       })
   }, [projectName, reloadTrigger])
 
-
   // Selection
   const selection = useMemo(() => {
     for (const role of rolesList) {
-      if (role.name === selectedRole) 
-        return role
+      if (role.name === selectedRole) return role
     }
   }, [selectedRole, rolesList])
 
@@ -43,8 +46,7 @@ const RolesList = ({ projectName, selectedRole, onSelectRole, reloadTrigger }) =
   }
 
   const getRowClass = (rowData) => {
-    console.log(rowData)
-    return {"changed" : rowData.isProjectLevel}
+    return { changed: rowData.isProjectLevel }
   }
 
   // Render
@@ -61,7 +63,7 @@ const RolesList = ({ projectName, selectedRole, onSelectRole, reloadTrigger }) =
         selection={selection}
         onSelectionChange={onSelectionChange}
         rowClassName={getRowClass}
-      > 
+      >
         <Column field="name" header="Role name" />
       </DataTable>
     </TableWrapper>
@@ -69,4 +71,3 @@ const RolesList = ({ projectName, selectedRole, onSelectRole, reloadTrigger }) =
 }
 
 export default RolesList
-
