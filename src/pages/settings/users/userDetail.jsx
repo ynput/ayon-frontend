@@ -191,10 +191,8 @@ const UserDetail = ({userDetailData, onTriggerReload}) => {
       }
 
       // update user level && do role clean-up
-      if (user.isAdmin !== (formData.userLevel === "admin"))
-        data.is_admin = formData.userLevel === "admin"
-      if (user.isManager !== (formData.userLevel === "manager"))
-        data.is_manager = formData.userLevel === "manager"
+      data.is_admin = formData.userLevel === "admin"
+      data.is_manager = formData.userLevel === "manager"
 
       if (!(data.is_admin || data.is_manager)){
         if (!isEmpty(roles))
@@ -204,7 +202,7 @@ const UserDetail = ({userDetailData, onTriggerReload}) => {
       }
 
       // Apply the patch
-
+      
       try {
         await axios.patch(`/api/users/${user.name}`, {
             active: formData.userActive,
