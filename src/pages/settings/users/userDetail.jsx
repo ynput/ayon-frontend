@@ -192,11 +192,11 @@ const UserDetail = ({userDetailData, onTriggerReload}) => {
 
       // update user level && do role clean-up
       if (user.isAdmin !== (formData.userLevel === "admin"))
-        data.isAdmin = formData.userLevel === "admin"
+        data.is_admin = formData.userLevel === "admin"
       if (user.isManager !== (formData.userLevel === "manager"))
-        data.isManager = formData.userLevel === "manager"
+        data.is_manager = formData.userLevel === "manager"
 
-      if (!(data.isAdmin || data.isManager)){
+      if (!(data.is_admin || data.is_manager)){
         if (!isEmpty(roles))
           data.roles = roles
       } else {
