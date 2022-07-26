@@ -29,7 +29,7 @@ const USERS_QUERY = `
   }
 `
 
-const buildRoleAssignData = (projectNames, roleNames, users) => {
+const buildUserDetailData = (projectNames, roleNames, users) => {
   let roles = []
   let userLevel = "user"
   let allDisabled = true
@@ -53,6 +53,12 @@ const buildRoleAssignData = (projectNames, roleNames, users) => {
           break
         }
       }
+      // for default_roles
+      if (!projectNames && user.defaultRoles.includes(roleName)){
+        shouldSelect = true
+        break
+      }
+
     }
 
     roles.push({
@@ -62,9 +68,11 @@ const buildRoleAssignData = (projectNames, roleNames, users) => {
 
   } // for each role name
   return {
+    users,
+    projectNames,
     roles,
     userLevel,
-    active: !allDisabled
+    userActive: !allDisabled
   }
 }
 
@@ -104,7 +112,7 @@ const formatRoles = (rowData, selectedProjects) => {
   ) 
 }
 
-const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigger, onRoleAssignData }) => {
+const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigger, setUserDetailData }) => {
   const [userList, setUserList] = useState([])
   const [rolesList, setRolesList] = useState([])
   const [loading, setLoading] = useState(false)
@@ -128,6 +136,14 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
         toast.error('Unable to load users')
       })
       .finally(() => {
+
+        let newSelection = []
+        for (const user of result){
+          if (selectedUsers.includes(user.name))
+            newSelection.push(user.name)
+        }
+
+        onSelectUsers(newSelection)
         setUserList(result)
         setLoading(false)
       })
@@ -162,9 +178,9 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
       if (selectedUsers.includes(user.name)) 
         result.push(user)
     }
-    if(onRoleAssignData){
-      onRoleAssignData(
-        buildRoleAssignData(selectedProjects, rolesList, result)
+    if(setUserDetailData){
+      setUserDetailData(
+        buildUserDetailData(selectedProjects, rolesList, result)
       )
     }
     return result

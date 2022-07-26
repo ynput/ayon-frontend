@@ -7,18 +7,12 @@ const Users = () => {
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [selectedUsers, setSelectedUsers] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState(0)
-  const [roleAssignData, setRoleAssignData] = useState(0)
+  const [userDetailData, setUserDetailData] = useState({})
 
-  // const triggerReload = () => setReloadTrigger(reloadTrigger+1)
+  const triggerReload = () => setReloadTrigger(reloadTrigger+1)
 
   return (
-    <main className="rows">
-      <section className="invisible row">
-        buttons will be here
-      </section>
-
-      <section className="invisible row" style={{flexGrow: 1}}>
-
+    <main>
       <section className="lighter" style={{ flexBasis: '400px', padding: 0, height: "100%" }}>
         <ProjectList
           showNull="( default )"
@@ -34,16 +28,15 @@ const Users = () => {
           selectedUsers={selectedUsers}
           onSelectUsers={setSelectedUsers}
           reloadTrigger={reloadTrigger}
-          onRoleAssignData={setRoleAssignData}
+          setUserDetailData={setUserDetailData}
         />
       </section>
 
         <UserDetail 
-          selectedUsers={selectedUsers} 
+          userDetailData={userDetailData}
           reloadTrigger={reloadTrigger}
-          roleAssignData={roleAssignData}
+          onTriggerReload={triggerReload}
         />
-      </section>
     </main>
   )
 }
