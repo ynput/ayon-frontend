@@ -15,6 +15,7 @@ const USERS_QUERY = `
           name
           isAdmin
           isManager
+          active
           roles
           defaultRoles
           hasPassword
@@ -29,12 +30,23 @@ const USERS_QUERY = `
 `
 
 const buildRoleAssignData = (projectNames, roleNames, users) => {
-  let result = []
+  let roles = []
+  let userLevel = "user"
+  let allDisabled = true
+
   for (const roleName of roleNames){
     let shouldSelect = false
 
     for (const user of users){
       const roleSet = JSON.parse(user.roles) || {}
+      if (user.active)
+        allDisabled = false
+
+      if (user.isManager && userLevel === "user")
+        userLevel = "manager"
+      if (user.isAdmin && ["user", "manager"].includes(userLevel))
+        userLevel = "admin"
+
       for (const projectName of projectNames || []){
         if ((roleSet[projectName] || []).includes(roleName)){
           shouldSelect = true
@@ -43,13 +55,17 @@ const buildRoleAssignData = (projectNames, roleNames, users) => {
       }
     }
 
-    result.push({
+    roles.push({
       name: roleName,
       shouldSelect
     })
 
   } // for each role name
-  return result
+  return {
+    roles,
+    userLevel,
+    active: !allDisabled
+  }
 }
 
 
@@ -184,6 +200,10 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, reloadTrigge
         <Column
           header="Has password"
           body={(rowData) => (rowData.hasPassword ? 'yes' : '')}
+        />
+        <Column
+          header="Active"
+          body={(rowData) => (rowData.active ? 'yes' : '')}
         />
       </DataTable>
     </TableWrapper>

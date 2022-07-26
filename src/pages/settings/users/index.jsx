@@ -38,13 +38,11 @@ const Users = () => {
         />
       </section>
 
-      <section className="lighter" style={{ flexBasis: '400px', padding: 0, height: "100%" }}>
         <UserDetail 
           selectedUsers={selectedUsers} 
           reloadTrigger={reloadTrigger}
           roleAssignData={roleAssignData}
         />
-      </section>
       </section>
     </main>
   )
