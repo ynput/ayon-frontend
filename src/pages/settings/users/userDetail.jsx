@@ -59,7 +59,7 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
 
       if (!userDetailData.projectNames) {
         // no project is selected. update default roles
-        data.default_roles = formData.roles
+        data.defaultRoles = formData.roles
       } else {
         // project(s) selected. update roles
         for (const projectName of userDetailData.projectNames)
@@ -67,10 +67,10 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
       }
 
       // update user level && do role clean-up
-      data.is_admin = formData.userLevel === 'admin'
-      data.is_manager = formData.userLevel === 'manager'
+      data.isAdmin = formData.userLevel === 'admin'
+      data.isManager = formData.userLevel === 'manager'
 
-      if (!(data.is_admin || data.is_manager)) {
+      if (!(data.isAdmin || data.isManager)) {
         if (!isEmpty(roles)) data.roles = roles
       } else {
         data.roles = null

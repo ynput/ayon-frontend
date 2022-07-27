@@ -52,7 +52,7 @@ const buildUserDetailData = (projectNames, roleNames, users) => {
           break
         }
       }
-      // for default_roles
+      // for defaultRoles
       if (!projectNames && user.defaultRoles.includes(roleName)) {
         shouldSelect = true
         break

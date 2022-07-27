@@ -32,14 +32,14 @@ const NewUserDialog = ({ onHide }) => {
       if (formData[key]) payload.attrib[key] = formData[key]
     }
 
-    if (formData.userLevel === 'admin') payload.data.is_admin = true
-    else if (formData.userLevel === 'manager') payload.data.is_manager = true
+    if (formData.userLevel === 'admin') payload.data.isAdmin = true
+    else if (formData.userLevel === 'manager') payload.data.isManager = true
     else {
-      payload.data.default_roles = formData.roles || []
+      payload.data.defaultRoles = formData.roles || []
       if (selectedProjects) {
         const roles = {}
         for (const projectName of selectedProjects)
-          roles[projectName] = payload.data.default_roles
+          roles[projectName] = payload.data.defaultRoles
         payload.data.roles = roles
       }
     }
