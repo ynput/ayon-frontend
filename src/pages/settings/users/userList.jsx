@@ -30,46 +30,35 @@ const USERS_QUERY = `
   }
 `
 
-const buildUserDetailData = (projectNames, roleNames, users) => {
+const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
   let roles = []
-  let userLevel = 'user'
-  let allDisabled = true
-
-  for (const roleName of roleNames) {
-    let shouldSelect = false
-
-    for (const user of users) {
-      const roleSet = JSON.parse(user.roles) || {}
-      if (user.active) allDisabled = false
-
-      if (user.isManager && userLevel === 'user') userLevel = 'manager'
-      if (user.isAdmin && ['user', 'manager'].includes(userLevel))
-        userLevel = 'admin'
-
+  let roleSet = []
+  if (lastSelectedUser){
+    if (!projectNames)
+      roleSet = lastSelectedUser.defaultRoles || []
+    else {
+      const uroles = JSON.parse(lastSelectedUser.roles) || []
       for (const projectName of projectNames || []) {
-        if ((roleSet[projectName] || []).includes(roleName)) {
-          shouldSelect = true
-          break
-        }
-      }
-      // for defaultRoles
-      if (!projectNames && user.defaultRoles.includes(roleName)) {
-        shouldSelect = true
-        break
+        roleSet = [...roleSet, ...uroles[projectName] || []]
       }
     }
+  }
 
+  for (const roleName of roleNames)
     roles.push({
       name: roleName,
-      shouldSelect,
+      shouldSelect: roleSet.includes(roleName)
     })
-  } // for each role name
+
+  let userLevel = lastSelectedUser.isManager ? "manager" : "user"
+  if (lastSelectedUser.isAdmin) userLevel = "admin"
+
   return {
     users,
     projectNames,
     roles,
     userLevel,
-    userActive: !allDisabled,
+    userActive: lastSelectedUser?.active,
   }
 }
 
@@ -117,6 +106,7 @@ const UserList = ({
   const [rolesList, setRolesList] = useState([])
   const [loading, setLoading] = useState(false)
   const [showNewUser, setShowNewUser] = useState(false)
+  const [lastSelectedUser, setLastSelectedUser] = useState(null)
 
   // Load user list
 
@@ -174,7 +164,7 @@ const UserList = ({
     }
     if (setUserDetailData) {
       setUserDetailData(
-        buildUserDetailData(selectedProjects, rolesList, result)
+        buildUserDetailData(selectedProjects, rolesList, result, lastSelectedUser)
       )
     }
     return result
@@ -219,6 +209,7 @@ const UserList = ({
             selectionMode="multiple"
             onSelectionChange={onSelectionChange}
             selection={selection}
+            onRowClick={e => {setLastSelectedUser(e.data)}}
           >
             <Column field="name" header="Name" />
             <Column field="attrib.fullName" header="Full name" />

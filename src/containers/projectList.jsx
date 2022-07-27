@@ -23,7 +23,7 @@ const ProjectList = ({ selection, onSelect, showNull, multiselect }) => {
         result = [...result, ...(response.data.projects || [])]
       })
       .catch(() => {
-        console.error.error('Unable to load projects')
+        console.log('Unable to load projects')
       })
       .finally(() => {
         setProjectList(result)
