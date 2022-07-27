@@ -1,118 +1,16 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Spacer, InputText } from '/src/components'
-import { SelectButton } from 'primereact/selectbutton'
-import RolesDropdown from '/src/containers/rolesDropdown'
+import { Button, Spacer } from '/src/components'
 import axios from 'axios'
 import { isEmpty } from '/src/utils'
-
-const FormRow = (props) => {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        flexGrow: 1,
-        alignItems: 'center',
-      }}
-    >
-      <div style={{ flexBasis: 120 }}>{props.label}</div>
-      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {props.children}
-      </div>
-    </div>
-  )
-}
-
-const UserAttrib = ({ formData, setFormData, attributes }) => {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-      }}
-    >
-      {Object.keys(attributes).map((attrName) => (
-        <FormRow label={attributes[attrName]} key={attrName}>
-          <InputText
-            value={formData[attrName]}
-            onChange={(e) => {
-              const value = e.target.value
-              setFormData((fd) => {
-                return { ...fd, [attrName]: value }
-              })
-            }}
-          />
-        </FormRow>
-      ))}
-    </div>
-  )
-}
-
-const AccessControl = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
-  const userLevels = [
-    { label: 'User', value: 'user' },
-    { label: 'Manager', value: 'manager' },
-    { label: 'Administrator', value: 'admin' },
-  ]
-
-  const activeOptions = [
-    { label: 'Active', value: true },
-    { label: 'Inactive', value: false },
-  ]
-
-  const updateFormData = (key, value) => {
-    setFormData((fd) => {
-      return { ...fd, [key]: value }
-    })
-  }
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-      }}
-    >
-      <FormRow label="User active">
-        <SelectButton
-          unselectable={false}
-          value={formData.userActive}
-          onChange={(e) => updateFormData('userActive', e.value)}
-          options={activeOptions}
-        />
-      </FormRow>
-
-      <FormRow label="User level">
-        <SelectButton
-          unselectable={false}
-          value={formData.userLevel}
-          onChange={(e) => updateFormData('userLevel', e.value)}
-          options={userLevels}
-        />
-      </FormRow>
-
-      {formData.userLevel === 'user' && (
-        <FormRow label={rolesLabel}>
-          <RolesDropdown
-            style={{ flexGrow: 1 }}
-            selectedRoles={formData.roles}
-            setSelectedRoles={(value) => updateFormData('roles', value)}
-          />
-        </FormRow>
-      )}
-    </div>
-  )
-}
+import { UserAttrib, AccessControl } from './forms'
 
 const UserDetail = ({ userDetailData, onTriggerReload }) => {
   const [formData, setFormData] = useState({})
 
   const userAttrib = {
     fullName: 'Full name',
-    email: 'EMail',
+    email: 'Email',
   }
 
   useEffect(() => {

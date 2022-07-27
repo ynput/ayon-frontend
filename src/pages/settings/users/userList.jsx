@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TableWrapper, Button } from '/src/components'
+import NewUserDialog from './newUserDialog'
 import axios from 'axios'
 
 import './users.sass'
@@ -110,10 +111,12 @@ const UserList = ({
   onSelectUsers,
   reloadTrigger,
   setUserDetailData,
+  onTriggerReload,
 }) => {
   const [userList, setUserList] = useState([])
   const [rolesList, setRolesList] = useState([])
   const [loading, setLoading] = useState(false)
+  const [showNewUser, setShowNewUser] = useState(false)
 
   // Load user list
 
@@ -192,8 +195,19 @@ const UserList = ({
       style={{ flexGrow: 1, padding: 0, height: '100%' }}
     >
       <section className="invisible row">
-        <Button onClick={()=>{}} label="New user" />
+        <Button onClick={() => setShowNewUser(true)} label="New user" />
       </section>
+
+      {showNewUser && (
+        <NewUserDialog
+          rolesList={rolesList}
+          onHide={() => {
+            setShowNewUser(false)
+            onTriggerReload()
+          }}
+        />
+      )}
+
       <section className="lighter" style={{ flexGrow: 1 }}>
         <TableWrapper>
           <DataTable

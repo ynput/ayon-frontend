@@ -31,6 +31,7 @@ const Users = () => {
         onSelectUsers={setSelectedUsers}
         reloadTrigger={reloadTrigger}
         setUserDetailData={setUserDetailData}
+        onTriggerReload={triggerReload}
       />
 
       <UserDetail

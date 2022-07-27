@@ -90,8 +90,8 @@ const NewProjectDialog = ({ onHide }) => {
 
   const footer = (
     <div style={{}}>
+      <Spacer />
       <Button
-        icon="pi pi-plus"
         label="Create"
         className="p-button-info"
         onClick={handleSubmit}

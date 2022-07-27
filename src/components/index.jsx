@@ -4,6 +4,8 @@ import { Password } from 'primereact/password'
 import { Dropdown } from 'primereact/dropdown'
 import { ProgressSpinner } from 'primereact/progressspinner'
 
+// Layout components
+
 const Spacer = (props) => (
   <div
     style={{
@@ -32,7 +34,7 @@ const Shade = (props) => {
         justifyContent: 'center',
       }}
     >
-      <ProgressSpinner />
+      {props.children || <ProgressSpinner />}
     </div>
   )
 }
@@ -54,6 +56,37 @@ const TableWrapper = (props) => {
     </div>
   )
 }
+
+const FormLayout = (props) => {
+  const style = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    ...(props.style || {}),
+  }
+
+  return <div style={style}>{props.children}</div>
+}
+
+const FormRow = (props) => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'row',
+        flexGrow: 1,
+        alignItems: 'center',
+      }}
+    >
+      <div style={{ flexBasis: 120 }}>{props.label}</div>
+      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        {props.children}
+      </div>
+    </div>
+  )
+}
+
+// Primereact wrappers
 
 const Button = (props) => {
   return (
@@ -111,4 +144,6 @@ export {
   TableWrapper,
   ToolButton,
   LinkButton,
+  FormLayout,
+  FormRow,
 }
