@@ -50,8 +50,8 @@ const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) =
       shouldSelect: roleSet.includes(roleName)
     })
 
-  let userLevel = lastSelectedUser.isManager ? "manager" : "user"
-  if (lastSelectedUser.isAdmin) userLevel = "admin"
+  let userLevel = lastSelectedUser?.isManager ? "manager" : "user"
+  if (lastSelectedUser?.isAdmin) userLevel = "admin"
 
   return {
     users,
