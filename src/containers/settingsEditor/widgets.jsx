@@ -4,6 +4,7 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { InputNumber } from 'primereact/inputnumber'
 import { InputSwitch } from 'primereact/inputswitch'
 import { Dropdown } from 'primereact/dropdown'
+import { MultiSelect } from 'primereact/multiselect'
 
 const updateOverrides = (props, changed) => {
   if (changed && !props.formContext.changedKeys.includes(props.id))
@@ -55,6 +56,17 @@ const SelectWidget = (props) => {
     props.onFocus(e)
   }
 
+  if (props.multiple) {
+    return (
+      <MultiSelect
+        options={options}
+        value={props.value}
+        onChange={onChange}
+        onFocus={onFocus}
+      />
+    )
+  }
+
   return (
     <Dropdown
       options={options}
@@ -97,7 +109,7 @@ const TextWidget = (props) => {
   } else if (props.schema.widget === 'textarea') {
     Input = InputTextarea
     opts.autoResize = true
-    opts.rows = 5
+    opts.rows = 8
     opts.onChange = (e) => {
       updateOverrides(props, e.target.value !== originalValue)
       props.onChange(e.target.value)

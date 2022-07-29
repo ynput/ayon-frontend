@@ -30,16 +30,20 @@ const USERS_QUERY = `
   }
 `
 
-const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
+const buildUserDetailData = (
+  projectNames,
+  roleNames,
+  users,
+  lastSelectedUser
+) => {
   let roles = []
   let roleSet = []
-  if (lastSelectedUser){
-    if (!projectNames)
-      roleSet = lastSelectedUser.defaultRoles || []
+  if (lastSelectedUser) {
+    if (!projectNames) roleSet = lastSelectedUser.defaultRoles || []
     else {
       const uroles = JSON.parse(lastSelectedUser.roles) || []
       for (const projectName of projectNames || []) {
-        roleSet = [...roleSet, ...uroles[projectName] || []]
+        roleSet = [...roleSet, ...(uroles[projectName] || [])]
       }
     }
   }
@@ -47,11 +51,11 @@ const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) =
   for (const roleName of roleNames)
     roles.push({
       name: roleName,
-      shouldSelect: roleSet.includes(roleName)
+      shouldSelect: roleSet.includes(roleName),
     })
 
-  let userLevel = lastSelectedUser?.isManager ? "manager" : "user"
-  if (lastSelectedUser?.isAdmin) userLevel = "admin"
+  let userLevel = lastSelectedUser?.isManager ? 'manager' : 'user'
+  if (lastSelectedUser?.isAdmin) userLevel = 'admin'
 
   return {
     users,
@@ -164,7 +168,12 @@ const UserList = ({
     }
     if (setUserDetailData) {
       setUserDetailData(
-        buildUserDetailData(selectedProjects, rolesList, result, lastSelectedUser)
+        buildUserDetailData(
+          selectedProjects,
+          rolesList,
+          result,
+          lastSelectedUser
+        )
       )
     }
     return result
@@ -209,7 +218,9 @@ const UserList = ({
             selectionMode="multiple"
             onSelectionChange={onSelectionChange}
             selection={selection}
-            onRowClick={e => {setLastSelectedUser(e.data)}}
+            onRowClick={(e) => {
+              setLastSelectedUser(e.data)
+            }}
           >
             <Column field="name" header="Name" />
             <Column field="attrib.fullName" header="Full name" />

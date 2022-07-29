@@ -134,7 +134,7 @@ function FieldTemplate(props) {
 
   // Array fields
 
-  if (props.schema.type === 'array') {
+  if (props.schema.type === 'array' && props.schema.items.type !== 'string') {
     let overrideLevel = 'default'
     let path = null
 
