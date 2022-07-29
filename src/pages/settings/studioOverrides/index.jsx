@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 import { useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { Panel } from 'primereact/panel'
 import { ToggleButton } from 'primereact/togglebutton'
@@ -53,9 +54,14 @@ const StudioOverrides = () => {
         .then(() => {
           setLocalOverrides({})
           setLocalData({})
+        })
+        .catch((err) => {
+          toast.error(`Unable to save ${addonName} ${addonVersion} settings`)
+          console.log(err)
+        })
+        .finally(()=>{
           forceAddonReload(addonName, addonVersion)
         })
-        .catch((err) => console.log(err))
     }
   }
 
