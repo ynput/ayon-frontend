@@ -1,4 +1,5 @@
 import React from 'react'
+import axios from 'axios'
 import { createRoot } from 'react-dom/client'
 
 import { configureStore } from '@reduxjs/toolkit'
@@ -24,6 +25,20 @@ const store = configureStore({
     context: contextReducer,
   },
 })
+
+
+axios.interceptors.response.use(
+  response => {
+    return response
+  }, 
+  error => {
+    if (error.response.status === 401 && window.location.pathname !== "/") {
+      window.location.href = '/'
+    }
+    return Promise.reject(error)
+  }
+)
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const root = createRoot(document.getElementById('root'))
