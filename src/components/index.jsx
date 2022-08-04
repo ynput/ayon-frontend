@@ -76,6 +76,7 @@ const FormRow = (props) => {
         flexDirection: 'row',
         flexGrow: 1,
         alignItems: 'center',
+        gap: 8
       }}
     >
       <div style={{ flexBasis: 120 }}>{props.label}</div>
