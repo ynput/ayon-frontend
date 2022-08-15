@@ -12,7 +12,7 @@ const ProfilePage = () => {
   const [pass1, setPass1] = useState("")
   const [pass2, setPass2] = useState("")
 
-  useEffect(() => {
+  const loadUserData = () => {
     axios.get('/api/users/me').then((result) => {
       setUserData(result.data)
       setFormData({
@@ -20,7 +20,9 @@ const ProfilePage = () => {
         email: result.data.attrib.email,
       })
     })
-  }, [])
+  }
+
+  useEffect(loadUserData, [])
 
   if (!userData) return <LoadingPage />
 
@@ -31,6 +33,25 @@ const ProfilePage = () => {
     passInvalid = "Password unchanged"
   else if (pass1 !== pass2)
     passInvalid = "Passwords mismatch"
+
+
+  const setAttrib = (key, value) => {
+    setFormData((fd) => {return {...fd, [key]: value}})
+  }
+
+  const saveProfile = () => {
+    axios
+      .patch(`/api/users/${userData.name}`, {
+        attrib: {
+          fullName: formData.fullName,
+          email: formData.email
+        }
+      })
+      .then(() => {
+        toast.success("Profile updated")
+        loadUserData()
+      })
+  }
 
   const savePassword = () => {
     axios
@@ -51,9 +72,24 @@ const ProfilePage = () => {
         <h2>Basic information</h2>
         
         <FormLayout>
-          <FormRow label="User name"><InputText value={userData.name} disabled={true} /></FormRow>
-          <FormRow label="Full name"><InputText value={formData.fullName} /></FormRow>
-          <FormRow label="Email"><InputText value={formData.email }/></FormRow>
+          <FormRow label="User name">
+            <InputText value={userData.name} disabled={true} />
+          </FormRow>
+          <FormRow label="Full name">
+            <InputText 
+              value={formData.fullName} 
+              onChange={e => setAttrib("fullName", e.target.value)} 
+            />
+          </FormRow>
+          <FormRow label="Email">
+            <InputText 
+              value={formData.email}
+              onChange={e => setAttrib("email", e.target.value)} 
+            />
+          </FormRow>
+          <FormRow>
+            <Button label="Update profile" onClick={saveProfile}/>
+          </FormRow>
         </FormLayout>
 
         <h2>Change password</h2>
