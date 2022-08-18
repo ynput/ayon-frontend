@@ -26,19 +26,17 @@ const store = configureStore({
   },
 })
 
-
 axios.interceptors.response.use(
-  response => {
+  (response) => {
     return response
-  }, 
-  error => {
-    if (error.response.status === 401 && window.location.pathname !== "/") {
+  },
+  (error) => {
+    if (error.response.status === 401 && window.location.pathname !== '/') {
       window.location.href = '/'
     }
     return Promise.reject(error)
   }
 )
-
 
 document.addEventListener('DOMContentLoaded', () => {
   const root = createRoot(document.getElementById('root'))

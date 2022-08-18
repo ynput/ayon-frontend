@@ -1,12 +1,18 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, lazy } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
 import { Spacer } from '../../components'
 
-import AnatomyPresets from './anatomyPresets'
-import AddonsSettings from './addons'
-import StudioOverrides from './studioOverrides'
-import Users from './users'
-import Roles from './roles'
+// import AnatomyPresets from './anatomyPresets'
+// import AddonsSettings from './addons'
+// import StudioOverrides from './studioOverrides'
+// import Users from './users'
+// import Roles from './roles'
+
+const AnatomyPresets = lazy(() => import('./anatomyPresets'))
+const AddonsSettings = lazy(() => import('./addons'))
+const StudioOverrides = lazy(() => import('./studio'))
+const Users = lazy(() => import('./users'))
+const Roles = lazy(() => import('./roles'))
 
 const SettingsPage = () => {
   const { module } = useParams()

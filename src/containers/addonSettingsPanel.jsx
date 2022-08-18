@@ -3,17 +3,20 @@ import { useState, useMemo, useEffect } from 'react'
 
 import SettingsEditor from '/src/containers/settingsEditor'
 
-const SettingsPanel = ({
+const AddonSettingsPanel = ({
   addon,
   onChange,
   onSetChangedKeys,
   localData,
   changedKeys,
   reloadTrigger,
+  projectName = null,
 }) => {
   const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [overrides, setOverrides] = useState(null)
+
+  const projectSuffix = projectName ? `/${projectName}` : ''
 
   const loadSchema = () => {
     axios
@@ -27,7 +30,9 @@ const SettingsPanel = ({
       setOriginalData(localData)
     } else {
       axios
-        .get(`/api/addons/${addon.name}/${addon.version}/settings`)
+        .get(
+          `/api/addons/${addon.name}/${addon.version}/settings${projectSuffix}`
+        )
         .then((res) => {
           setOriginalData(res.data)
           //setNewData(null)
@@ -36,14 +41,16 @@ const SettingsPanel = ({
     }
 
     axios
-      .get(`/api/addons/${addon.name}/${addon.version}/overrides`)
+      .get(
+        `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`
+      )
       .then((res) => setOverrides(res.data))
   }
 
   useEffect(() => {
     loadSchema()
     loadSettings()
-  }, [addon.name, addon.version, reloadTrigger])
+  }, [addon.name, addon.version, reloadTrigger, projectName])
 
   const editor = useMemo(() => {
     if (!(schema && originalData && overrides)) return <></>
@@ -63,4 +70,4 @@ const SettingsPanel = ({
   return <div style={{ flexGrow: 0 }}>{editor}</div>
 }
 
-export default SettingsPanel
+export default AddonSettingsPanel

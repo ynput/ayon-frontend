@@ -9,8 +9,8 @@ import { ToggleButton } from 'primereact/togglebutton'
 import { Button, Spacer } from '/src/components'
 import { isEmpty } from '/src/utils'
 
-import AddonList from './addonList'
-import SettingsPanel from './settingsPanel'
+import AddonList from '/src/containers/addonList'
+import AddonSettingsPanel from '/src/containers/addonSettingsPanel'
 
 const StudioOverrides = () => {
   const [showVersions, setShowVersions] = useState(false)
@@ -59,7 +59,7 @@ const StudioOverrides = () => {
           toast.error(`Unable to save ${addonName} ${addonVersion} settings`)
           console.log(err)
         })
-        .finally(()=>{
+        .finally(() => {
           forceAddonReload(addonName, addonVersion)
         })
     }
@@ -133,7 +133,7 @@ const StudioOverrides = () => {
                     key={`${addon.name}-${addon.version}`}
                     style={{ flexGrow: 0 }}
                   >
-                    <SettingsPanel
+                    <AddonSettingsPanel
                       addon={addon}
                       onChange={(data) =>
                         onSettingsChange(addon.name, addon.version, data)

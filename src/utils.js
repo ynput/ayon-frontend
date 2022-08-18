@@ -122,6 +122,7 @@ const FAMILY_ICONS = {
   vdb: 'local_fire_department',
   lightrig: 'wb_incandescent',
   lut: 'opacity',
+  workfile: 'home_repair_service',
 }
 
 const getFolderTypeIcon = (folderType) => {

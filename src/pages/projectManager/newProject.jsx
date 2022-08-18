@@ -1,12 +1,12 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Dialog } from 'primereact/dialog'
-import { InputText } from 'primereact/inputtext'
-import { Button } from 'primereact/button'
 import { Dropdown } from 'primereact/dropdown'
 import { toast } from 'react-toastify'
+
 import axios from 'axios'
-import SettingsEditor from '../../containers/settingsEditor'
-import { loadAnatomyPresets } from '../../utils'
+import { Button, Spacer, InputText } from '/src/components'
+import SettingsEditor from '/src/containers/settingsEditor'
+import { loadAnatomyPresets } from '/src/utils'
 
 const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
   const [presetList, setPresetList] = useState([])
