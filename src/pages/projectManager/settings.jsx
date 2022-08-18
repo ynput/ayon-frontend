@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 
 import { Panel } from 'primereact/panel'
@@ -162,6 +162,7 @@ const ProjectSettings = ({ projectName }) => {
             <Spacer />
           </div>
         </section>
+        {/*
         <section style={{ minWidth: 300, flexGrow: 1, height: '100%' }}>
           <div
             className="wrapper"
@@ -177,6 +178,7 @@ const ProjectSettings = ({ projectName }) => {
             </pre>
           </div>
         </section>
+        */}
       </section>
     </section>
   )
