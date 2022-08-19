@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
+import { Dropdown } from 'primereact/dropdown'
 import { toast } from 'react-toastify'
 
 import { isEmpty, sortByKey } from '/src/utils'
@@ -15,7 +16,7 @@ import {
 } from '/src/features/context'
 import { Shade, Spacer, Button } from '/src/components'
 import { CellWithIcon } from '/src/components/icons'
-import { getFolderTypeIcon, getTaskTypeIcon } from '/src/utils'
+import { getFolderTypeIcon, getTaskTypeIcon, getFolderTypes, getTaskTypes } from '/src/utils'
 
 import { buildQuery } from './queries'
 import { getColumns } from './utils'
@@ -62,6 +63,53 @@ const loadBranch = async (query, projectName, parentId) => {
 
   return nodes
 }
+
+
+const typeEditor = (options, callback, value) => {
+  const rowData = options.node.data
+  if (!rowData){
+    console.log(options.node)
+    return <></>
+  }
+  const types = rowData.__entityType === "folder" ? getFolderTypes() : getTaskTypes()
+
+
+  const typeTemplate = (option, props) => {
+      if (option) {
+          return (
+              <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
+                  <span
+                    className={`material-symbols-outlined`}
+                    style={{ marginRight: '0.6rem' }}
+                  >
+                    {option.icon}
+                  </span>
+                  <span>{option.name}</span>
+              </div>
+          );
+      }
+
+      return (
+          <span>
+              {props.placeholder}
+          </span>
+      );
+  }
+
+  console.log("VALUE", value)
+
+  return (
+    <Dropdown 
+      options={types} 
+      optionLabel="name"
+      optionValue="name"
+      value={value} 
+      itemTemplate={typeTemplate}
+      style={{width: "100%"}}
+    />
+  ) 
+}
+
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -262,6 +310,24 @@ const EditorPage = () => {
       )
   }
 
+  const formatType = (node, styled = true) => {
+    const chobj = changes[node.id]
+    let className
+    let value
+
+    if (!styled)
+      return node.__entityType === "folder" ? node.folderType : node.taskType
+
+    if (node.__entityType === "folder"){
+      className = chobj?._folderType ? 'color-hl-01' : ''
+      value = chobj?._folderType ? chobj._folderType : node.folderType
+    } else {
+      className = chobj?._taskType ? 'color-hl-01' : ''
+      value = chobj?._taskType ? chobj._taskType : node.taskType
+    }
+    return <span className={`editor-field ${className}`}>{value}</span>
+  }
+
   const updateAttribute = (options, value) => {
     const id = options.rowData.id
     // double underscore prefix for local custom helpers,
@@ -287,6 +353,10 @@ const EditorPage = () => {
     setChanges((changes) => {
       return { ...changes, [id]: rowChanges }
     })
+  }
+
+  const updateType = (options, value) => {
+    // TODO
   }
 
   //
@@ -561,6 +631,19 @@ const EditorPage = () => {
                   options,
                   updateName,
                   formatName(options.rowData, false)
+                )
+              }}
+            />
+            <Column
+              field="type"
+              header="Type"
+              body={(rowData) => formatType(rowData.data)}
+              style={{ width: 200 }}
+              editor={(options) => {
+                return typeEditor(
+                  options,
+                  updateType,
+                  formatType(options.rowData, false)
                 )
               }}
             />

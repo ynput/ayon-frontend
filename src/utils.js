@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 
-import { isEmpty, isEqual, xorWith, cloneDeep } from 'lodash'
+import { isEmpty, isEqual, xorWith, cloneDeep, sortBy } from 'lodash'
 
 const arrayEquals = (x, y) => isEmpty(xorWith(x, y, isEqual))
 const deepCopy = (obj) => cloneDeep(obj)
@@ -150,6 +150,21 @@ const getFamilyIcon = (family) => {
   return FAMILY_ICONS[family] || 'help_center'
 }
 
+const getFolderTypes = () => {
+  let result = []
+  for (const name in FOLDER_TYPE_ICONS)
+    result.push({name, icon: FOLDER_TYPE_ICONS[name]})
+  return sortBy(result, "name")
+}
+
+const getTaskTypes = () => {
+  let result = []
+  for (const name in TASK_TYPE_ICONS)
+    result.push({name, icon: TASK_TYPE_ICONS[name]})
+  return sortBy(result, "name")
+}
+
+
 function useLocalStorage(key, initialValue) {
   // State to store our value
   // Pass initial state function to useState so logic is only executed once
@@ -202,6 +217,8 @@ export {
   getFolderTypeIcon,
   getTaskTypeIcon,
   getFamilyIcon,
+  getFolderTypes,
+  getTaskTypes,
   isEmpty,
   updateFolderTypeIcons,
   updateTaskTypeIcons,
