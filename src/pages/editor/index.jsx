@@ -73,6 +73,9 @@ const typeEditor = (options, callback, value) => {
   }
   const types = rowData.__entityType === "folder" ? getFolderTypes() : getTaskTypes()
 
+  const onChange = (event) => {
+    callback(options, event.value)
+  }
 
   const typeTemplate = (option, props) => {
       if (option) {
@@ -105,6 +108,7 @@ const typeEditor = (options, callback, value) => {
       optionValue="name"
       value={value} 
       itemTemplate={typeTemplate}
+      onChange={onChange}
       style={{width: "100%"}}
     />
   ) 
@@ -315,9 +319,6 @@ const EditorPage = () => {
     let className
     let value
 
-    if (!styled)
-      return node.__entityType === "folder" ? node.folderType : node.taskType
-
     if (node.__entityType === "folder"){
       className = chobj?._folderType ? 'color-hl-01' : ''
       value = chobj?._folderType ? chobj._folderType : node.folderType
@@ -325,6 +326,9 @@ const EditorPage = () => {
       className = chobj?._taskType ? 'color-hl-01' : ''
       value = chobj?._taskType ? chobj._taskType : node.taskType
     }
+
+    if (!styled)
+      return value
     return <span className={`editor-field ${className}`}>{value}</span>
   }
 
@@ -356,7 +360,16 @@ const EditorPage = () => {
   }
 
   const updateType = (options, value) => {
-    // TODO
+    const id = options.rowData.id
+    const rowChanges = changes[id] || {
+      __entityType: options.rowData.__entityType,
+      __parentId: options.rowData.__parentId,
+    }
+    const key = options.rowData.__entityType === "folder" ? "_folderType" : "_taskType"
+    rowChanges[key] = value
+    setChanges((changes) => {
+      return { ...changes, [id]: rowChanges }
+    })
   }
 
   //
