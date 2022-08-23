@@ -1,11 +1,12 @@
 import axios from 'axios'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Dropdown } from 'primereact/dropdown'
+import { InputSwitch } from 'primereact/inputswitch'
 import { toast } from 'react-toastify'
 
 import { isEmpty, sortByKey } from '/src/utils'
@@ -99,8 +100,6 @@ const typeEditor = (options, callback, value) => {
       );
   }
 
-  console.log("VALUE", value)
-
   return (
     <Dropdown 
       options={types} 
@@ -127,6 +126,21 @@ const EditorPage = () => {
   const [nodeData, setNodeData] = useState({})
   const [changes, setChanges] = useState({})
   const [newNodes, setNewNodes] = useState([])
+  const [selectionLocked, setSelectionLocked] = useState(false)
+
+
+  const currentSelection = useMemo(() => {
+    // This object holds the information on current selected nodes.
+    // It has the same structure as nodeData, e.g. {objecId: nodeData, ...}
+    // so it is compatible with the treetable selection argument and it 
+    // also provides complete node information
+    const result = {}
+    for (const key of context.focusedFolders)
+      result[key] = nodeData[key] || true
+    for (const key of context.focusedTasks)
+      result[key] = nodeData[key] || true
+    return result
+  }, [context.focusedFolders, context.focusedTasks, nodeData])
 
   //
   // Helpers
@@ -332,19 +346,26 @@ const EditorPage = () => {
     return <span className={`editor-field ${className}`}>{value}</span>
   }
 
+  //
+  // Update handlers
+  //
+
   const updateAttribute = (options, value) => {
-    const id = options.rowData.id
-    // double underscore prefix for local custom helpers,
-    // single underscore prefix for top level properties of the entity
-    // no prefix for attributes
-    const rowChanges = changes[id] || {
-      __entityType: options.rowData.__entityType,
-      __parentId: options.rowData.__parentId,
-    }
-    rowChanges[options.field] = value
     setChanges((changes) => {
-      return { ...changes, [id]: rowChanges }
+      for (const id in currentSelection){
+        changes[id] = changes[id] || {
+          __entityType: nodeData[id].data.__entityType,
+          __parentId: nodeData[id].data.__parentId,
+        }
+        // console.log("SET", nodeData[id].data.name, options.field, "to", value)
+        changes[id][options.field] = value
+      }
+      return changes
     })
+
+    // Force table render when selection is locked
+    if (selectionLocked)
+      dispatch(setFocusedFolders(context.focusedFolders))
   }
 
   const updateName = (options, value) => {
@@ -389,7 +410,7 @@ const EditorPage = () => {
     }
 
     try {
-      const res = await axios.delete(
+      await axios.delete(
         `/api/projects/${projectName}/${currentNode.__entityType}s/${currentNode.id}`
       )
       toast.success(`${currentNode.name} deleted`)
@@ -426,7 +447,7 @@ const EditorPage = () => {
     return result
   }
 
-  const onCommit = async () => {
+  const onCommit = useCallback(async () => {
     setLoading(true)
     let branchesToReload = []
 
@@ -463,6 +484,7 @@ const EditorPage = () => {
     }
 
     for (const entityId in changes) {
+      console.log("Patching", entityId, changes[entityId])
       if (entityId.startsWith('newnode')) continue
       const entityType = changes[entityId].__entityType
       const parentId = changes[entityId].__parentId
@@ -515,14 +537,18 @@ const EditorPage = () => {
     setChanges({})
     setNodeData(newNodeData)
     setLoading(false)
-  } // commit
+  }, [newNodes, changes, query, projectName]) // commit
+
+
 
   const onToggle = (event) => {
     dispatch(setExpandedFolders(event.value))
   }
 
   const onSelectionChange = (event) => {
-    dispatch(setFocusedFolders([event.value]))
+    if (selectionLocked)
+      return
+    dispatch(setFocusedFolders(Object.keys(event.value)))
   }
 
   //
@@ -596,6 +622,12 @@ const EditorPage = () => {
           onClick={onAddTask}
         />
         <Button label="Delete selected" onClick={onDeleteSelected} />
+        <InputSwitch
+          checked={selectionLocked} 
+          onChange={()=>setSelectionLocked(!selectionLocked)} 
+          style={{width: 40, marginLeft: 10}}
+        />
+        Lock selection
         <Spacer />
         <Button
           icon="close"
@@ -622,8 +654,8 @@ const EditorPage = () => {
             columnResizeMode="expand"
             expandedKeys={context.expandedFolders}
             onToggle={onToggle}
-            selectionMode="single"
-            selectionKeys={currentNode && currentNode.id}
+            selectionMode="multiple"
+            selectionKeys={currentSelection}
             onSelectionChange={onSelectionChange}
             rowClassName={(rowData) => {
               return {

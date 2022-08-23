@@ -19,7 +19,7 @@ const integerEditor = (options, callback, value) => {
   return (
     <div className="table-editor">
       <InputNumber
-        showButtons={false}
+        showButtons={false}     
         useGrouping={false}
         allowEmpty={true}
         value={value}
