@@ -88,6 +88,12 @@ $prime-button-background: $color-grey-03
     &.changed
       border-left: 4px solid #106aa2 !important
 
+    &.deleted
+      .editor-field, .cell-with-icon-text 
+        text-decoration: line-through
+        text-decoration-color: red
+        text-decoration-thickness: 3px
+
     &:nth-child(odd)
       background: #21252b
       border-left: 4px solid #21252b

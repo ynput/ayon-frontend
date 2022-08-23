@@ -13,7 +13,7 @@ const CellWithIcon = ({
       >
         {icon}
       </span>
-      <span style={textStyle} className={textClassName}>
+      <span style={textStyle} className={`cell-with-icon-text ${textClassName}`}>
         {text}
       </span>
     </>

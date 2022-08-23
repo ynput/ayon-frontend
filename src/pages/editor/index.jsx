@@ -397,41 +397,26 @@ const EditorPage = () => {
   // User events handlers
   //
 
-  const onDeleteSelected = async () => {
-    if (!currentNode) return
-    let branchesToReload = []
-    branchesToReload.push(currentNode.__parentId)
+  const markDelete = () => {
+    // Mark the current selection for deletion.
+    setNewNodes((newNodes) => {
+      return newNodes.filter(node => !(node.id in currentSelection))
+    })
 
-    if (currentNode.id.startsWith('newnode')) {
-      setNewNodes((newnodes) => {
-        return newnodes.filter((node) => node.id !== currentNode.id)
-      })
-      return
-    }
-
-    try {
-      await axios.delete(
-        `/api/projects/${projectName}/${currentNode.__entityType}s/${currentNode.id}`
-      )
-      toast.success(`${currentNode.name} deleted`)
-    } catch {
-      toast.error(`Unable to delete ${currentNode.name}`)
-    }
-
-    const newNodeData = { ...nodeData }
-    // clean-up branch
-    for (const nodeId in newNodeData) {
-      const node = newNodeData[nodeId]
-      if (branchesToReload.includes(node.data.__parentId))
-        delete newNodeData[nodeId]
-    }
-    for (const branch of branchesToReload) {
-      const newNodes = await loadBranch(query, projectName, branch)
-      Object.assign(newNodeData, newNodes)
-    }
-    setNodeData(newNodeData)
-    //    setNewNodes([])
+    setChanges((changes) => {
+      for (const id in currentSelection){
+        if (id.startsWith('newnode'))
+          continue
+        changes[id] = changes[id] || {
+          __entityType: nodeData[id].data.__entityType,
+          __parentId: nodeData[id].data.__parentId,
+        }
+        changes[id].__action = "delete"
+      }
+      return changes
+    })
   }
+
 
   const onRevert = () => {
     setChanges({})
@@ -450,6 +435,62 @@ const EditorPage = () => {
   const onCommit = useCallback(async () => {
     setLoading(true)
     let branchesToReload = []
+    let deleted = []
+    let updated = []
+    let created = []
+
+    //
+    // PATCH / DELETE EXISTING ENTITIES
+    //
+
+    for (const entityId in changes) {
+      if (entityId.startsWith('newnode')) continue
+
+      const entityType = changes[entityId].__entityType
+      const parentId = changes[entityId].__parentId
+
+      if (changes[entityId].__action === "delete"){
+        try {
+          await axios.delete(
+            `/api/projects/${projectName}/${entityType}s/${entityId}`
+          )
+          deleted.push(entityId)
+        } catch {
+          toast.error(`Unable to delete entity`) // TODO: be decriptive
+        }
+
+      } else { // End delete, begin patch
+        const attribChanges = {}
+        const entityChanges = {}
+
+        for (const key in changes[entityId]) {
+          if (key.startsWith('__')) continue
+          if (key.startsWith('_'))
+            entityChanges[key.substring(1)] = changes[entityId][key]
+          else attribChanges[key] = changes[entityId][key]
+        }
+
+        try {
+          console.log('PATCH', { ...entityChanges, attrib: attribChanges })
+          await axios.patch(
+            `/api/projects/${projectName}/${entityType}s/${entityId}`,
+            { ...entityChanges, attrib: attribChanges }
+          )
+          updated.push(entityId)
+        } catch {
+          toast.error(`Unable to save ${entityChanges.name}`)
+        }
+      } // Patch
+
+      if (!branchesToReload.includes(parentId)) branchesToReload.push(parentId)
+      for (const eid of getBranchesToReload(entityId)) {
+        if (!branchesToReload.includes(eid)) branchesToReload.push(eid)
+      }
+    } // PATCH EXISTING ENTITIES
+
+    //
+    // CREATE NEW ENTITIES
+    //
 
     for (const entity of newNodes) {
       console.log('NEW ENTITY', entity)
@@ -469,9 +510,6 @@ const EditorPage = () => {
           newEntity.attrib[key] = entityChanges[key]
         }
       }
-      delete newEntity.id
-
-      console.log('POST ENTITY', newEntity)
 
       try {
         await axios.post(
@@ -479,6 +517,7 @@ const EditorPage = () => {
           newEntity
         )
         toast.success(`Saved new ${entityType} ${newEntity.name}`)
+        created.push(newEntity.id)
       } catch {
         toast.error('Unable to save', entity.name)
       }
@@ -486,61 +525,36 @@ const EditorPage = () => {
       // just reload the parent branch. new entities don't have children
       if (!branchesToReload.includes(newEntity.parentId))
         branchesToReload.push(newEntity.parentId)
-    }
-
-    for (const entityId in changes) {
-      console.log("Patching", entityId, changes[entityId])
-      if (entityId.startsWith('newnode')) continue
-      const entityType = changes[entityId].__entityType
-      const parentId = changes[entityId].__parentId
-      const attribChanges = {}
-      const entityChanges = {}
-
-      for (const key in changes[entityId]) {
-        if (key.startsWith('__')) continue
-        if (key.startsWith('_'))
-          entityChanges[key.substring(1)] = changes[entityId][key]
-        else attribChanges[key] = changes[entityId][key]
-      }
-
-      try {
-        console.log('PATCH', { ...entityChanges, attrib: attribChanges })
-        await axios.patch(
-          `/api/projects/${projectName}/${entityType}s/${entityId}`,
-          { ...entityChanges, attrib: attribChanges }
-        )
-        delete changes[entityId]
-      } catch {
-        toast.error(`Unable to save ${entityChanges.name}`)
-      }
-
-      if (!branchesToReload.includes(parentId)) branchesToReload.push(parentId)
-
-      for (const eid of getBranchesToReload(entityId)) {
-        if (!branchesToReload.includes(eid)) branchesToReload.push(eid)
-      }
-    }
+    } // CREATE NEW ENTITIES
 
     //
-    // Update node data
+    // Update local state
     //
 
-    const newNodeData = { ...nodeData }
+    const affected = [...created, ...updated, ...deleted]
 
-    // remove previously unsaved nodes
-    //(they should come back in the loadBranch request with the valid ID)
-    for (const key in newNodeData) {
-      if (key.startsWith('newnode')) delete newNodeData[key]
-    }
+    setNewNodes((nodes) => {
+      return nodes.filter(n => !created.includes(n.id) )
+    })
+    setChanges((nodes) => {
+      for (const id in nodes){
+        if (affected.includes(id))
+          delete nodes[id]
+      }
+      return nodes
+    })
+    setNodeData(async (nodes) => {
+      for (const id in nodes){
+        if (affected.includes(id))
+          delete nodes[id]
+      }
+      for (const branch of branchesToReload) {
+        const newNodes = await loadBranch(query, projectName, branch)
+        Object.assign(nodes, newNodes)
+      }
 
-    for (const branch of branchesToReload) {
-      const newNodes = await loadBranch(query, projectName, branch)
-      Object.assign(newNodeData, newNodes)
-    }
-
-    setNewNodes([])
-    setChanges({})
-    setNodeData(newNodeData)
+      return nodes
+    })
     setLoading(false)
   }, [newNodes, changes, query, projectName]) // commit
 
@@ -627,7 +641,7 @@ const EditorPage = () => {
           disabled={!canAdd}
           onClick={onAddTask}
         />
-        <Button label="Delete selected" onClick={onDeleteSelected} />
+        <Button label="Delete selected" onClick={markDelete} />
         <InputSwitch
           checked={selectionLocked} 
           onChange={()=>setSelectionLocked(!selectionLocked)} 
@@ -667,6 +681,8 @@ const EditorPage = () => {
               return {
                 changed:
                   rowData.key in changes || rowData.key.startsWith('newnode'),
+                deleted:
+                  rowData.key in changes && changes[rowData.key]?.__action == "delete",
               }
             }}
             selectOnEdit={false}
