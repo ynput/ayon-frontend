@@ -580,6 +580,7 @@ const EditorPage = () => {
       const newNode = {
         id,
         attrib: { ...currentNode.attrib },
+        ownAttrib: [],
         __entityType: entityType,
         __parentId: parentId,
       }
