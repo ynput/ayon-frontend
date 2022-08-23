@@ -458,11 +458,16 @@ const EditorPage = () => {
       const newEntity = { ...entity }
       const entityChanges = changes[entity.id]
 
+      // it is a new entity, so only valid attributes are those 
+      // stored in `changes`. The rest are inherited ones
+      newEntity.attrib = {} 
       for (const key in entityChanges || {}) {
         if (key.startsWith('__')) continue
         if (key.startsWith('_'))
           newEntity[key.substring(1)] = entityChanges[key]
-        else newEntity.attrib[key] = entityChanges[key]
+        else {
+          newEntity.attrib[key] = entityChanges[key]
+        }
       }
       delete newEntity.id
 
