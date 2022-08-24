@@ -48,9 +48,9 @@ const EditorPage = () => {
     // also provides complete node information
     const result = {}
     for (const key of context.focusedFolders)
-      result[key] = nodeData[key] || true
+      result[key] = nodeData[key]
     for (const key of context.focusedTasks)
-      result[key] = nodeData[key] || true
+      result[key] = nodeData[key]
     return result
   }, [context.focusedFolders, context.focusedTasks, nodeData])
 
@@ -344,25 +344,33 @@ const EditorPage = () => {
     setNewNodes((nodes) => {
       return nodes.filter(n => !created.includes(n.id) )
     })
+
     setChanges((nodes) => {
       for (const id in nodes){
         if (affected.includes(id))
           delete nodes[id]
       }
       return nodes
-    })
+    }) // setChanges
+
     setNodeData(async (nodes) => {
       for (const id in nodes){
         if (affected.includes(id))
           delete nodes[id]
       }
+      // Reload affected branches
       for (const branch of branchesToReload) {
-        const newNodes = await loadBranch(query, projectName, branch)
-        Object.assign(nodes, newNodes)
+        const res = await loadBranch(query, projectName, branch)
+        Object.assign(nodes, res)
       }
-
+      // Keep failed new nodes in node data
+      for (const nodeId of newNodes){
+        if (created.includes(nodeId))
+          continue
+        nodes[nodeId] = newNodes[nodeId]
+      }
       return nodes
-    })
+    }) // setNodeData
     setLoading(false)
   }, [newNodes, changes, query, projectName]) // commit
 
@@ -382,57 +390,88 @@ const EditorPage = () => {
   // Adding new nodes
   //
 
-  // New nodes can be added only when a parent folder is selected.
-  // The parent folder must exist in the database (it is not possible to create children of unsaved folders)
-  const canAdd = false
-    // currentNode &&
-    // currentNode?.__entityType === 'folder' &&
-    // !currentNode?.id?.startsWith('newnode')
+
+  const futureParents = useMemo(() => {
+    // Returns a list of node ids from the current selection
+    // for which children creation is available
+    let parents = []
+    for (const parentId in currentSelection){
+      const node = currentSelection[parentId]
+      if (!node)
+        continue
+      // unable to add children to unsaved nodes
+      if (node.data.name?.startsWith("newnode"))
+        continue
+      // unable to add children to tasks
+      if (node.data.__entityType !== "folder")
+        continue
+      parents.push(parentId)
+    }
+    return parents
+  }, [currentSelection])
+
+  const canAdd = futureParents.length > 0
   const canCommit = !isEmpty(changes) || newNodes.length
 
-  const addNode = (entityType) => {
-    if (!currentNode) {
-      return
-    }
-    const parentId = currentNode.id
+  const addNode = (entityType, root) => {
+    const parents = root ? [null] : futureParents
 
-    setNodeData((nodeData) => {
-      nodeData[parentId].leaf = false
-      return nodeData
+    if (!parents.length){
+      console.log("Nothing to add")
+      return 
+    }
+
+    if (!root){
+      // Adding children to existing nodes, so
+      // ensure the parents are not leaves
+      setNodeData((nodeData) => {
+        for (const parentId of parents)
+          nodeData[parentId].leaf = false
+        return nodeData
+      })
+    }
+
+    setNewNodes((nodes) => {
+      let i = 0
+      let newNodes = []
+      for (const parentId of parents){
+        const id = `newnode${nodes.length + i}`
+        const newNode = {
+          id,
+          attrib: { ...nodeData[parentId]?.data.attrib || {} },
+          ownAttrib: [],
+          __entityType: entityType,
+          __parentId: parentId || "root",
+        }
+        if (entityType === 'folder') newNode['parentId'] = parentId
+        else if (entityType === 'task') {
+          newNode['folderId'] = parentId
+          newNode['taskType'] = 'Generic'
+        }
+        newNodes.push(newNode)
+        i++ 
+      }
+      console.log("ADDING", newNodes)
+      return [...nodes, ...newNodes]
     })
 
-    setNewNodes((newNodes) => {
-      //const name = `new_${entityType}_${newNodes.length + 1}`
-      const id = `newnode${newNodes.length + 1}`
-      const newNode = {
-        id,
-        attrib: { ...currentNode.attrib },
-        ownAttrib: [],
-        __entityType: entityType,
-        __parentId: parentId,
-      }
-      if (entityType === 'folder') newNode['parentId'] = parentId
-      else if (entityType === 'task') {
-        newNode['folderId'] = parentId
-        newNode['taskType'] = 'Generic'
-      }
-      return [...newNodes, newNode]
-    })
-
-    // if the parent is not expanded, open the branch (to have a visual feedback)
-    if (!(parentId in context.expandedFolders)) {
-      dispatch(
-        setExpandedFolders({ ...context.expandedFolders, [parentId]: true })
-      )
+    if (!root){
+      // Update expanded folders context object
+      const exps = {...context.expandedFolders}
+      for (const id of parents)
+        exps[id] = true
+      dispatch(setExpandedFolders(exps))
     }
-  }
+  } // Add node
 
   const onAddFolder = () => addNode('folder')
+  const onAddRootFolder = () => addNode('folder', true)
   const onAddTask = () => addNode('task')
 
   //
   // Render the TreeTable
   //
+
 
   return (
     <main className="rows">
@@ -449,7 +488,16 @@ const EditorPage = () => {
           disabled={!canAdd}
           onClick={onAddTask}
         />
-        <Button label="Delete selected" onClick={onDelete} />
+        <Button
+          icon="create_new_folder"
+          label="Add root folder"
+          onClick={onAddRootFolder}
+        />
+        <Button 
+          label="Delete selected" 
+          icon="delete"
+          onClick={onDelete} 
+        />
         <InputSwitch
           checked={selectionLocked} 
           onChange={()=>setSelectionLocked(!selectionLocked)} 
