@@ -22,7 +22,7 @@ import {
 
 import { buildQuery } from './queries'
 import { getColumns, formatName, formatType, formatAttribute } from './utils'
-import { stringEditor } from './editors'
+import { stringEditor, typeEditor } from './editors'
 import { loadBranch, getUpdatedNodeData} from './loader'
 
 
