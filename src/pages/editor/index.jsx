@@ -72,13 +72,17 @@ const typeEditor = (options, callback, value) => {
     console.log(options.node)
     return <></>
   }
-  const types = rowData.__entityType === "folder" ? getFolderTypes() : getTaskTypes()
+  const types = rowData.__entityType === "folder" 
+    //? [{name: null, icon: "folder", label: "Folder"}, ...getFolderTypes()]
+    ? getFolderTypes()
+    : getTaskTypes()
 
   const onChange = (event) => {
-    callback(options, event.value)
+    console.log("SeT TYPE TO", event.value || null)
+    callback(options, event.value || null)
   }
 
-  const typeTemplate = (option, props) => {
+  const itemTemplate = (option, props) => {
       if (option) {
           return (
               <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
@@ -88,7 +92,7 @@ const typeEditor = (options, callback, value) => {
                   >
                     {option.icon}
                   </span>
-                  <span>{option.name}</span>
+                  <span>{option.label}</span>
               </div>
           );
       }
@@ -100,13 +104,22 @@ const typeEditor = (options, callback, value) => {
       );
   }
 
+  const valueTemplate = (option, props) => {
+    if (option)
+      return <span>{option.label || "Folder"}</span>
+    return <span>Folder</span>
+  }
+
   return (
     <Dropdown 
       options={types} 
-      optionLabel="name"
+      optionLabel="label"
       optionValue="name"
+      dataKey="name"
       value={value} 
-      itemTemplate={typeTemplate}
+      showClear={ rowData.__entityType === "folder" }
+      emptyMessage="Folder"
+      itemTemplate={itemTemplate}
       onChange={onChange}
       style={{width: "100%"}}
     />
@@ -329,13 +342,13 @@ const EditorPage = () => {
   }
 
   const formatType = (node, styled = true) => {
-    const chobj = changes[node.id]
+    const chobj = changes[node.id] || {}
     let className
     let value
 
     if (node.__entityType === "folder"){
-      className = chobj?._folderType ? 'color-hl-01' : ''
-      value = chobj?._folderType ? chobj._folderType : node.folderType
+      className = "_folderType" in chobj ? 'color-hl-01' : ''
+      value = "_folderType" in chobj ? chobj._folderType : node.folderType // || "Folder"
     } else {
       className = chobj?._taskType ? 'color-hl-01' : ''
       value = chobj?._taskType ? chobj._taskType : node.taskType
@@ -388,6 +401,7 @@ const EditorPage = () => {
     }
     const key = options.rowData.__entityType === "folder" ? "_folderType" : "_taskType"
     rowChanges[key] = value
+    console.log(rowChanges)
     setChanges((changes) => {
       return { ...changes, [id]: rowChanges }
     })
