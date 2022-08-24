@@ -1,5 +1,56 @@
 import { InputText } from 'primereact/inputtext'
 import { InputNumber } from 'primereact/inputnumber'
+import { Dropdown } from 'primereact/dropdown'
+
+import { getFolderTypes, getTaskTypes } from '/src/utils'
+
+const typeEditor = (options, callback, value) => {
+  const rowData = options.node.data
+  if (!rowData) return <></>
+
+  const types = rowData.__entityType === "folder" 
+    ? getFolderTypes()
+    : getTaskTypes()
+
+  const onChange = (event) => callback(options, event.value || null)
+
+  const itemTemplate = (option, props) => {
+      if (option) {
+          return (
+              <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
+                  <span
+                    className={`material-symbols-outlined`}
+                    style={{ marginRight: '0.6rem' }}
+                  >
+                    {option.icon}
+                  </span>
+                  <span>{option.label}</span>
+              </div>
+          );
+      }
+
+      return (
+          <span>
+              {props.placeholder}
+          </span>
+      );
+  }
+
+  return (
+    <Dropdown 
+      options={types} 
+      optionLabel="label"
+      optionValue="name"
+      dataKey="name"
+      value={value} 
+      showClear={ rowData.__entityType === "folder" }
+      emptyMessage="Folder"
+      itemTemplate={itemTemplate}
+      onChange={onChange}
+      style={{width: "100%"}}
+    />
+  ) 
+}
 
 const stringEditor = (options, callback, value) => {
   return (
@@ -57,4 +108,4 @@ const floatEditor = (options, callback, value) => {
   )
 }
 
-export { stringEditor, integerEditor, floatEditor }
+export { typeEditor, stringEditor, integerEditor, floatEditor }

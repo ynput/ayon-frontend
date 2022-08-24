@@ -2,129 +2,28 @@ import axios from 'axios'
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { toast } from 'react-toastify'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { Dropdown } from 'primereact/dropdown'
 import { InputSwitch } from 'primereact/inputswitch'
-import { toast } from 'react-toastify'
+import { Shade, Spacer, Button } from '/src/components'
 
-import { isEmpty, sortByKey } from '/src/utils'
+import { 
+  isEmpty, 
+  sortByKey, 
+} from '/src/utils'
+
 import {
   setBreadcrumbs,
   setExpandedFolders,
   setFocusedFolders,
 } from '/src/features/context'
-import { Shade, Spacer, Button } from '/src/components'
-import { CellWithIcon } from '/src/components/icons'
-import { getFolderTypeIcon, getTaskTypeIcon, getFolderTypes, getTaskTypes } from '/src/utils'
 
 import { buildQuery } from './queries'
-import { getColumns } from './utils'
+import { getColumns, formatName, formatType, formatAttribute } from './utils'
 import { stringEditor } from './editors'
-
-const loadBranch = async (query, projectName, parentId) => {
-  const variables = { projectName, parent: parentId || 'root' }
-  console.log('Branch load', parentId)
-  const response = await axios.post('/graphql', { query, variables })
-
-  if (response.status !== 200) {
-    toast.error(`Unable to load branch ${parentId}`)
-    return {}
-  }
-
-  const data = response.data
-  const nodes = {}
-
-  // Add folders
-  for (const edge of data.data.project.folders.edges) {
-    const node = edge.node
-    nodes[node.id] = {
-      data: {
-        ...node,
-        __parentId: parentId || 'root',
-        __entityType: 'folder',
-      },
-      leaf: !(node.hasChildren || node.hasTasks),
-    }
-  }
-
-  // Add tasks
-  for (const edge of data.data.project.tasks.edges) {
-    const node = edge.node
-    nodes[node.id] = {
-      data: {
-        ...node,
-        __parentId: parentId || 'root',
-        __entityType: 'task',
-      },
-      leaf: true, // Tasks never have children
-    }
-  }
-
-  return nodes
-}
-
-
-const typeEditor = (options, callback, value) => {
-  const rowData = options.node.data
-  if (!rowData){
-    console.log(options.node)
-    return <></>
-  }
-  const types = rowData.__entityType === "folder" 
-    //? [{name: null, icon: "folder", label: "Folder"}, ...getFolderTypes()]
-    ? getFolderTypes()
-    : getTaskTypes()
-
-  const onChange = (event) => {
-    console.log("SeT TYPE TO", event.value || null)
-    callback(options, event.value || null)
-  }
-
-  const itemTemplate = (option, props) => {
-      if (option) {
-          return (
-              <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
-                  <span
-                    className={`material-symbols-outlined`}
-                    style={{ marginRight: '0.6rem' }}
-                  >
-                    {option.icon}
-                  </span>
-                  <span>{option.label}</span>
-              </div>
-          );
-      }
-
-      return (
-          <span>
-              {props.placeholder}
-          </span>
-      );
-  }
-
-  const valueTemplate = (option, props) => {
-    if (option)
-      return <span>{option.label || "Folder"}</span>
-    return <span>Folder</span>
-  }
-
-  return (
-    <Dropdown 
-      options={types} 
-      optionLabel="label"
-      optionValue="name"
-      dataKey="name"
-      value={value} 
-      showClear={ rowData.__entityType === "folder" }
-      emptyMessage="Folder"
-      itemTemplate={itemTemplate}
-      onChange={onChange}
-      style={{width: "100%"}}
-    />
-  ) 
-}
+import { loadBranch, getUpdatedNodeData} from './loader'
 
 
 const EditorPage = () => {
@@ -135,7 +34,7 @@ const EditorPage = () => {
   const projectName = context.projectName
   const dispatch = useDispatch()
 
-  const [currentNode, setCurrentNode] = useState(null)
+  // DEPRECATED const [currentNode, setCurrentNode] = useState(null)
   const [nodeData, setNodeData] = useState({})
   const [changes, setChanges] = useState({})
   const [newNodes, setNewNodes] = useState([])
@@ -168,52 +67,11 @@ const EditorPage = () => {
     [settings.attributes]
   )
 
-  //
-  // Loading node data
-  //
-
-  const getUpdatedNodeData = async (nodeData, expandedKeys) => {
-    // Load newly expanded branches
-    for (const expandedKey of expandedKeys) {
-      if (!(expandedKey in parents)) {
-        const newNodes = await loadBranch(query, projectName, expandedKey)
-        Object.assign(nodeData, newNodes)
-      }
-    }
-
-    // Add unsaved nodes
-    let newNodesIds = []
-    for (const node of newNodes) {
-      nodeData[node.id] = {
-        data: node,
-        leaf: true,
-      }
-      newNodesIds.push(node.id)
-    }
-
-    // Remove unsaved nodes which are deleted (via revert changes)
-    for (const existingKey in nodeData) {
-      if (!existingKey.startsWith('newnode')) continue
-      if (!newNodesIds.includes(existingKey)) delete nodeData[existingKey]
-    }
-
-    // remove children from closed branches
-    for (const existingKey in parents) {
-      if (existingKey === 'root') continue
-      if (!(existingKey in expandedKeys)) {
-        for (const unusedKey in parents[existingKey]) {
-          delete nodeData[unusedKey]
-        }
-      }
-    }
-
-    return { ...nodeData }
-  }
 
   useEffect(() => {
     setLoading(true)
     const expandedKeys = [...Object.keys(context.expandedFolders), 'root']
-    getUpdatedNodeData(nodeData, expandedKeys).then((result) => {
+    getUpdatedNodeData(nodeData, newNodes, expandedKeys, parents, query, projectName).then((result) => {
       setNodeData(result)
       setLoading(false)
     })
@@ -295,69 +153,7 @@ const EditorPage = () => {
         })
       )
     }
-    setCurrentNode(node)
   }, [context.focusedFolders, treeData])
-
-  //
-  // Format / edit
-  //
-
-  const formatAttribute = (node, fieldName, styled = true) => {
-    const chobj = changes[node.id]
-    let className = ''
-    let value = node.attrib[fieldName]
-    if (chobj && chobj.hasOwnProperty(fieldName)) {
-      value = chobj[fieldName]
-      className = 'changed'
-    } else if (node.ownAttrib && !node.ownAttrib.includes(fieldName)) {
-      className = 'inherited'
-    }
-    if (!styled) return value
-
-    return <span className={`editor-field ${className}`}>{value}</span>
-  }
-
-  const formatName = (node, styled = true) => {
-    const chobj = changes[node.id]
-    const className = chobj?._name ? 'color-hl-01' : ''
-    const value = chobj?._name ? chobj._name : node.name
-    if (!styled) return value
-    if (node.__entityType === 'task')
-      return (
-        <CellWithIcon
-          icon={getTaskTypeIcon(node.taskType)}
-          text={value || 'Unnamed task'}
-          textStyle={{ fontStyle: 'italic' }}
-          textClassName={{ className }}
-        />
-      )
-    else
-      return (
-        <CellWithIcon
-          icon={getFolderTypeIcon(node.folderType)}
-          textClassName={{ className }}
-          text={value || 'Unnamed folder'}
-        />
-      )
-  }
-
-  const formatType = (node, styled = true) => {
-    const chobj = changes[node.id] || {}
-    let className
-    let value
-
-    if (node.__entityType === "folder"){
-      className = "_folderType" in chobj ? 'color-hl-01' : ''
-      value = "_folderType" in chobj ? chobj._folderType : node.folderType // || "Folder"
-    } else {
-      className = chobj?._taskType ? 'color-hl-01' : ''
-      value = chobj?._taskType ? chobj._taskType : node.taskType
-    }
-
-    if (!styled)
-      return value
-    return <span className={`editor-field ${className}`}>{value}</span>
-  }
 
   //
   // Update handlers
@@ -370,7 +166,6 @@ const EditorPage = () => {
           __entityType: nodeData[id].data.__entityType,
           __parentId: nodeData[id].data.__parentId,
         }
-        // console.log("SET", nodeData[id].data.name, options.field, "to", value)
         changes[id][options.field] = value
       }
       return changes
@@ -401,7 +196,6 @@ const EditorPage = () => {
     }
     const key = options.rowData.__entityType === "folder" ? "_folderType" : "_taskType"
     rowChanges[key] = value
-    console.log(rowChanges)
     setChanges((changes) => {
       return { ...changes, [id]: rowChanges }
     })
@@ -411,7 +205,7 @@ const EditorPage = () => {
   // User events handlers
   //
 
-  const markDelete = () => {
+  const onDelete = () => {
     // Mark the current selection for deletion.
     setNewNodes((newNodes) => {
       return newNodes.filter(node => !(node.id in currentSelection))
@@ -590,10 +384,10 @@ const EditorPage = () => {
 
   // New nodes can be added only when a parent folder is selected.
   // The parent folder must exist in the database (it is not possible to create children of unsaved folders)
-  const canAdd =
-    currentNode &&
-    currentNode?.__entityType === 'folder' &&
-    !currentNode?.id?.startsWith('newnode')
+  const canAdd = false
+    // currentNode &&
+    // currentNode?.__entityType === 'folder' &&
+    // !currentNode?.id?.startsWith('newnode')
   const canCommit = !isEmpty(changes) || newNodes.length
 
   const addNode = (entityType) => {
@@ -655,7 +449,7 @@ const EditorPage = () => {
           disabled={!canAdd}
           onClick={onAddTask}
         />
-        <Button label="Delete selected" onClick={markDelete} />
+        <Button label="Delete selected" onClick={onDelete} />
         <InputSwitch
           checked={selectionLocked} 
           onChange={()=>setSelectionLocked(!selectionLocked)} 
@@ -705,26 +499,26 @@ const EditorPage = () => {
               field="name"
               header="Name"
               expander={true}
-              body={(rowData) => formatName(rowData.data)}
+              body={(rowData) => formatName(rowData.data, changes)}
               style={{ width: 300 }}
               editor={(options) => {
                 return stringEditor(
                   options,
                   updateName,
-                  formatName(options.rowData, false)
+                  formatName(options.rowData, changes, false)
                 )
               }}
             />
             <Column
               field="type"
               header="Type"
-              body={(rowData) => formatType(rowData.data)}
+              body={(rowData) => formatType(rowData.data, changes)}
               style={{ width: 200 }}
               editor={(options) => {
                 return typeEditor(
                   options,
                   updateType,
-                  formatType(options.rowData, false)
+                  formatType(options.rowData, changes, false)
                 )
               }}
             />
@@ -735,12 +529,12 @@ const EditorPage = () => {
                   header={col.title}
                   field={col.name}
                   style={{ minWidth: 30 }}
-                  body={(rowData) => formatAttribute(rowData.data, col.name)}
+                  body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
                   editor={(options) => {
                     return col.editor(
                       options,
                       updateAttribute,
-                      formatAttribute(options.rowData, col.name, false)
+                      formatAttribute(options.rowData, changes, col.name, false)
                     )
                   }}
                 />
