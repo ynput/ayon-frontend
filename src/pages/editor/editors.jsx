@@ -58,7 +58,6 @@ const stringEditor = (options, callback, value) => {
       type="text"
       value={value}
       onChange={(e) => {
-        console.log('nchg', e.target.value)
         callback(options, e.target.value)
       }}
     />
@@ -84,7 +83,6 @@ const integerEditor = (options, callback, value) => {
 }
 
 const floatEditor = (options, callback, value) => {
-  //console.log(options)
   //  onChange={(e) => options.editorCallback(e.value)}
   return (
     <div

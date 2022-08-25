@@ -129,6 +129,10 @@ const EditorPage = () => {
     return sortByKey(result, 'name')
   }, [parents])
 
+  /*
+    *
+  TODO: remove if not needed (probably it isn't)
+
   // Handle selection change.
   // This also accept the selection from the project context, so
   // when the selection is made in the browser page, it is propagated to the editor too
@@ -153,6 +157,8 @@ const EditorPage = () => {
       )
     }
   }, [context.focusedFolders, treeData])
+
+  */
 
   //
   // Update handlers

@@ -36,7 +36,7 @@ const formatName = (node, changes, styled = true) => {
     textStyle.fontStyle = "italic"
     value = value || "Unnamed task"
   } else {
-    icon = getFolderTypeIcon(node.taskType)
+    icon = getFolderTypeIcon(node.folderType)
     value = value || "Unnamed folder"
   }
   
