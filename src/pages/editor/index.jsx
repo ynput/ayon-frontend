@@ -34,7 +34,6 @@ const EditorPage = () => {
   const projectName = context.projectName
   const dispatch = useDispatch()
 
-  // DEPRECATED const [currentNode, setCurrentNode] = useState(null)
   const [nodeData, setNodeData] = useState({})
   const [changes, setChanges] = useState({})
   const [newNodes, setNewNodes] = useState([])
@@ -202,34 +201,9 @@ const EditorPage = () => {
   }
 
   //
-  // User events handlers
+  // Commit changes
   //
 
-  const onDelete = () => {
-    // Mark the current selection for deletion.
-    setNewNodes((newNodes) => {
-      return newNodes.filter(node => !(node.id in currentSelection))
-    })
-
-    setChanges((changes) => {
-      for (const id in currentSelection){
-        if (id.startsWith('newnode'))
-          continue
-        changes[id] = changes[id] || {
-          __entityType: nodeData[id].data.__entityType,
-          __parentId: nodeData[id].data.__parentId,
-        }
-        changes[id].__action = "delete"
-      }
-      return changes
-    })
-  }
-
-
-  const onRevert = () => {
-    setChanges({})
-    setNewNodes([])
-  }
 
   const getBranchesToReload = (entityId) => {
     let result = [entityId]
@@ -374,22 +348,9 @@ const EditorPage = () => {
     setLoading(false)
   }, [newNodes, changes, query, projectName]) // commit
 
-
-
-  const onToggle = (event) => {
-    dispatch(setExpandedFolders(event.value))
-  }
-
-  const onSelectionChange = (event) => {
-    if (selectionLocked)
-      return
-    dispatch(setFocusedFolders(Object.keys(event.value)))
-  }
-
   //
   // Adding new nodes
   //
-
 
   const futureParents = useMemo(() => {
     // Returns a list of node ids from the current selection
@@ -464,9 +425,68 @@ const EditorPage = () => {
     }
   } // Add node
 
+
+  //
+  // Other user events handlers (Toolbar)
+  //
+
+  const onDelete = () => {
+    // Mark the current selection for deletion.
+    setNewNodes((newNodes) => {
+      return newNodes.filter(node => !(node.id in currentSelection))
+    })
+
+    setChanges((changes) => {
+      for (const id in currentSelection){
+        if (id.startsWith('newnode'))
+          continue
+        changes[id] = changes[id] || {
+          __entityType: nodeData[id].data.__entityType,
+          __parentId: nodeData[id].data.__parentId,
+        }
+        changes[id].__action = "delete"
+      }
+      return changes
+    })
+  }
+
+
+  const onRevert = () => {
+    setChanges({})
+    setNewNodes([])
+  }
+
+
   const onAddFolder = () => addNode('folder')
   const onAddRootFolder = () => addNode('folder', true)
   const onAddTask = () => addNode('task')
+
+
+  //
+  // Table event handlers
+  //
+
+  const onToggle = (event) => {
+    dispatch(setExpandedFolders(event.value))
+  }
+
+  const onSelectionChange = (event) => {
+    if (selectionLocked)
+      return
+    dispatch(setFocusedFolders(Object.keys(event.value)))
+  }
+
+  const onRowClick = (event) => {
+    const node = event.node.data
+    if (node.__entityType !== "folder")
+      return
+    dispatch(
+      setBreadcrumbs({
+         parents: node.parents,
+         folder: node.name,
+       })
+    )
+  }
 
   //
   // Render the TreeTable
@@ -533,6 +553,7 @@ const EditorPage = () => {
             selectionMode="multiple"
             selectionKeys={currentSelection}
             onSelectionChange={onSelectionChange}
+            onRowClick={onRowClick}
             rowClassName={(rowData) => {
               return {
                 changed:

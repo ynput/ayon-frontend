@@ -20,44 +20,56 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
 
 const formatName = (node, changes, styled = true) => {
   const chobj = changes[node.id]
-  const className = chobj?._name ? 'color-hl-01' : ''
-  const value = chobj?._name ? chobj._name : node.name
+  let value = chobj?._name ? chobj._name : node.name
+
   if (!styled) return value
-  if (node.__entityType === 'task')
-    return (
-      <CellWithIcon
-        icon={getTaskTypeIcon(node.taskType)}
-        text={value || 'Unnamed task'}
-        textStyle={{ fontStyle: 'italic' }}
-        textClassName={{ className }}
-      />
-    )
-  else
-    return (
-      <CellWithIcon
-        icon={getFolderTypeIcon(node.folderType)}
-        textClassName={{ className }}
-        text={value || 'Unnamed folder'}
-      />
-    )
+
+  let icon
+  const textStyle = {}
+  if (!value)
+    textStyle.color = "var(--color-hl-error)"
+  if (chobj?.hasOwnProperty("_name"))
+    textStyle.color = "var(--color-hl-changed)"
+
+  if (node.__entityType === 'task'){
+    icon = getTaskTypeIcon(node.taskType) 
+    textStyle.fontStyle = "italic"
+    value = value || "Unnamed task"
+  } else {
+    icon = getFolderTypeIcon(node.taskType)
+    value = value || "Unnamed folder"
+  }
+  
+  return (
+    <CellWithIcon
+      icon={icon}
+      text={value}
+      textStyle={textStyle}
+    />
+  )
 }
 
 const formatType = (node, changes, styled = true) => {
   const chobj = changes[node.id] || {}
-  let className
+  const style = {}
   let value
 
   if (node.__entityType === "folder"){
-    className = "_folderType" in chobj ? 'color-hl-01' : ''
     value = "_folderType" in chobj ? chobj._folderType : node.folderType // || "Folder"
+    if ("_folderType" in chobj)
+      style.color = "var(--color-hl-changed)"
   } else {
-    className = chobj?._taskType ? 'color-hl-01' : ''
     value = chobj?._taskType ? chobj._taskType : node.taskType
+    if (!value)
+      style.color = "var(--color-hl-error)"
+    else if ("_taskType" in chobj)
+      style.color = "var(--color-hl-changed)"
+    
   }
 
   if (!styled)
     return value
-  return <span className={`editor-field ${className}`}>{value}</span>
+  return <span className="editor-field" style={style}>{value}</span>
 }
 
 
