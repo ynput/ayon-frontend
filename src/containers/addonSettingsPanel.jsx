@@ -47,6 +47,25 @@ const AddonSettingsPanel = ({
       .then((res) => setOverrides(res.data))
   }
 
+  const deleteOverride = (path) => {
+    console.log("DELETING OVERRIDE", path)
+    axios
+      .post(
+        `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`,
+        {action: "delete", path: path}
+      )
+      .catch(() => {
+        console.log("e-eee")
+      })
+      .then(() => {
+        console.log("Override deleted")
+      })
+      .finally(() => {
+        loadSettings()
+      })
+  }
+
+
   useEffect(() => {
     loadSchema()
     loadSettings()
@@ -62,7 +81,9 @@ const AddonSettingsPanel = ({
         overrides={overrides}
         onChange={onChange}
         onSetChangedKeys={onSetChangedKeys}
+        onDeleteOverride={deleteOverride}
         onSetBreadcrumbs={() => {}}
+        level={projectName ? "project" : "studio"}
       />
     )
   }, [schema, originalData, overrides])

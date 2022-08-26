@@ -11,9 +11,21 @@ function ObjectFieldTemplate(props) {
   // Highlight overrides and changed fields
 
   const objId = props.idSchema.$id
-  const path =
-    props.formContext.overrides[objId] &&
-    props.formContext.overrides[objId].path
+  const override = props.formContext.overrides[objId]
+  const path = override?.path
+
+
+  let labelStyle = {}
+  let rmOverrideFunc = null
+  if (override) {
+    if (override?.inGroup)
+      labelStyle.fontStyle = "italic"
+    else if (override.level === props.formContext.level)
+      rmOverrideFunc = () => {
+        props.formContext.onDeleteOverride(path)
+      }
+  }
+
 
   let overrideLevel = useMemo(() => {
     let res = 'default'
@@ -103,6 +115,7 @@ function ObjectFieldTemplate(props) {
       }}
       title={title}
       description={props.description}
+      rmOverrideFunc={rmOverrideFunc}
       className={`obj-override-${overrideLevel}`}
     >
       {fields}
@@ -132,21 +145,43 @@ function FieldTemplate(props) {
     )
   }
 
+  //
+  // Solve overrides for lists and leaves
+  //
+
+  const override = props.formContext.overrides
+    ? props.formContext.overrides[props.id]
+    : null
+
+
+  const fieldChanged = props.formContext.changedKeys.includes(props.id)
+  const overrideLevel = fieldChanged
+    ? 'edit'
+    : override
+    ? override.level
+    : 'default'
+
+  let labelStyle = {}
+  let rmOverrideFunc = null
+
+  if (override){
+    if (override?.inGroup)
+      labelStyle.fontStyle = "italic"
+    else if (override.level === props.formContext.level)
+      rmOverrideFunc = () => {
+        const path = override.path
+        props.formContext.onDeleteOverride(path)
+      }
+  }
+
   // Array fields
 
   if (props.schema.type === 'array' && props.schema.items.type !== 'string') {
-    let overrideLevel = 'default'
-    let path = null
-
-    const overrides = props.formContext.overrides
-    if (overrides && overrides[props.id]) {
-      overrideLevel = overrides[props.id].level
-      path = overrides[props.id].path
-    }
+    let className = 'obj-override-'
 
     for (const childId of props.formContext.changedKeys) {
       if (!childId.startsWith(`${props.id}_`)) continue // not a child of this object
-      overrideLevel = 'edit group-changed'
+      className += 'edit group-changed'
       break
     }
 
@@ -155,10 +190,11 @@ function FieldTemplate(props) {
         objId={props.id}
         title={props.schema.title}
         description={props.schema.description}
-        className={`obj-override-${overrideLevel}`}
+        className={className}
+        rmOverrideFunc={rmOverrideFunc}
         onClick={() => {
-          if (props.formContext.onSetBreadcrumbs)
-            props.formContext.onSetBreadcrumbs(path)
+          if (props.formContext.onSetBreadcrumbs && override?.path)
+            props.formContext.onSetBreadcrumbs(override.path)
         }}
       >
         {props.children}
@@ -168,15 +204,6 @@ function FieldTemplate(props) {
 
   // Leaves
 
-  const overrides = props.formContext.overrides
-    ? props.formContext.overrides[props.id]
-    : null
-  const fieldChanged = props.formContext.changedKeys.includes(props.id)
-  const overrideLevel = fieldChanged
-    ? 'edit'
-    : overrides
-    ? overrides.level
-    : 'default'
 
   return (
     <>
@@ -198,10 +225,11 @@ function FieldTemplate(props) {
             <span
               onClick={() => {
                 if (props.formContext.onSetBreadcrumbs)
-                  props.formContext.onSetBreadcrumbs(overrides.path)
+                  props.formContext.onSetBreadcrumbs(override.path)
               }}
+              style={labelStyle}
             >
-              {props.label}
+              {props.label} {rmOverrideFunc && <button onClick={rmOverrideFunc}>x</button>}
             </span>
           </div>
         )}

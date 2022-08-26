@@ -8,6 +8,7 @@ const SettingsPanel = ({
   children,
   layout,
   revertButton,
+  rmOverrideFunc,
   className = '',
   onClick,
 }) => {
@@ -50,6 +51,7 @@ const SettingsPanel = ({
         <h4>{title}</h4>
         <div style={{ flex: 1 }}></div>
         <small>{description}</small>
+        {rmOverrideFunc && <button onClick={rmOverrideFunc}>x</button>}
         {revertButton && revertButton}
       </div>
     )
