@@ -15,6 +15,7 @@ function ObjectFieldTemplate(props) {
   const path = override?.path
 
 
+  // TODO: actually use overrides
   let labelStyle = {}
   let rmOverrideFunc = null
   if (override) {
@@ -177,13 +178,16 @@ function FieldTemplate(props) {
   // Array fields
 
   if (props.schema.type === 'array' && props.schema.items.type !== 'string') {
-    let className = 'obj-override-'
+    let className
 
     for (const childId of props.formContext.changedKeys) {
       if (!childId.startsWith(`${props.id}_`)) continue // not a child of this object
-      className += 'edit group-changed'
+      className = 'obj-override-edit group-changed'
       break
     }
+
+    if (!className)
+      className = `obj-override-${overrideLevel}`
 
     return (
       <SettingsPanel
