@@ -55,7 +55,7 @@ const formatType = (node, changes, styled = true) => {
   let value
 
   if (node.__entityType === "folder"){
-    value = "_folderType" in chobj ? chobj._folderType : node.folderType // || "Folder"
+    value = "_folderType" in chobj ? chobj._folderType : node.folderType
     if ("_folderType" in chobj)
       style.color = "var(--color-hl-changed)"
   } else {
@@ -69,6 +69,8 @@ const formatType = (node, changes, styled = true) => {
 
   if (!styled)
     return value
+  if (node.__entityType === "folder" && !value)
+    value = "Folder"
   return <span className="editor-field" style={style}>{value}</span>
 }
 

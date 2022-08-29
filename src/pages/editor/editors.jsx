@@ -4,15 +4,17 @@ import { Dropdown } from 'primereact/dropdown'
 
 import { getFolderTypes, getTaskTypes } from '/src/utils'
 
+const FOLDER_TYPE = {name: "_", icon: "folder", label: "Folder"} 
+
 const typeEditor = (options, callback, value) => {
   const rowData = options.node.data
   if (!rowData) return <></>
 
   const types = rowData.__entityType === "folder" 
-    ? getFolderTypes()
+    ? [FOLDER_TYPE, ...getFolderTypes()]
     : getTaskTypes()
 
-  const onChange = (event) => callback(options, event.value || null)
+  const onChange = (event) => callback(options, event.value === "_" ? null : event.value )
 
   const itemTemplate = (option, props) => {
       if (option) {
@@ -36,14 +38,14 @@ const typeEditor = (options, callback, value) => {
       );
   }
 
+  // showClear={ rowData.__entityType === "folder" }
   return (
     <Dropdown 
       options={types} 
       optionLabel="label"
       optionValue="name"
       dataKey="name"
-      value={value} 
-      showClear={ rowData.__entityType === "folder" }
+      value={value || "_"} 
       emptyMessage="Folder"
       itemTemplate={itemTemplate}
       onChange={onChange}
