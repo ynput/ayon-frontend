@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import { Panel } from 'primereact/panel'
+import { ContextMenu } from 'primereact/contextmenu'
 import { useLocalStorage } from '../../utils'
 
 const SettingsPanel = ({
@@ -7,11 +9,11 @@ const SettingsPanel = ({
   description,
   children,
   layout,
-  revertButton,
-  rmOverrideFunc,
+  contextMenuModel,
   className = '',
   onClick,
 }) => {
+  const contextMenuRef = useRef(null)
   const [expandedObjects, setExpandedObjects] = useLocalStorage(
     'expanded-settings-keys',
     []
@@ -30,8 +32,11 @@ const SettingsPanel = ({
       ? 'pi pi-chevron-right'
       : 'pi pi-chevron-down'
     return (
+      <>
+      <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <div
         className="p-panel-header form-panel-header"
+        onContextMenu={(e) => contextMenuRef.current.show(e) }
         style={{
           justifyContent: 'start',
           alignItems: 'center',
@@ -51,9 +56,8 @@ const SettingsPanel = ({
         <h4>{title}</h4>
         <div style={{ flex: 1 }}></div>
         <small>{description}</small>
-        {rmOverrideFunc && <button onClick={rmOverrideFunc}>x</button>}
-        {revertButton && revertButton}
       </div>
+      </>
     )
   }
 

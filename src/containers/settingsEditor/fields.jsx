@@ -1,8 +1,40 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { Button } from 'primereact/button'
 import { Divider } from 'primereact/divider'
+import { ContextMenu } from 'primereact/contextmenu'
 
 import SettingsPanel from './settingsPanel'
+
+
+const buildContextMenu = (rmOverrideFunc) => {
+  return  [
+    {
+      label: "Remove override",
+      disabled: !rmOverrideFunc,
+      command: rmOverrideFunc
+    },
+    {
+      label: "Log event (debug)",
+      command: (event) => console.log(event)
+    },
+    {
+      label: "Copy path",
+      command: () => {}
+    },
+    {
+      label: "Copy value",
+      disabled: true,
+      command: () => {}
+    },
+    { 
+      label: "Paste value",
+      disabled: true,
+      command: () => {}
+    }
+  ]
+}
+
+
 
 function ObjectFieldTemplate(props) {
   let className = 'form-object-field'
@@ -16,6 +48,7 @@ function ObjectFieldTemplate(props) {
 
 
   // TODO: actually use overrides
+  // NOTE: after a few days, idk what this todo means
   let labelStyle = {}
   let rmOverrideFunc = null
   if (override) {
@@ -26,6 +59,8 @@ function ObjectFieldTemplate(props) {
         props.formContext.onDeleteOverride(path)
       }
   }
+
+  const contextMenuModel = buildContextMenu(rmOverrideFunc)
 
 
   let overrideLevel = useMemo(() => {
@@ -116,7 +151,7 @@ function ObjectFieldTemplate(props) {
       }}
       title={title}
       description={props.description}
-      rmOverrideFunc={rmOverrideFunc}
+      contextMenuModel={contextMenuModel}
       className={`obj-override-${overrideLevel}`}
     >
       {fields}
@@ -125,6 +160,7 @@ function ObjectFieldTemplate(props) {
 }
 
 function FieldTemplate(props) {
+  const contextMenuRef = useRef(null)
   const divider = useMemo(() => {
     if (props.schema.section)
       return (
@@ -175,6 +211,10 @@ function FieldTemplate(props) {
       }
   }
 
+  // Context menu
+
+  const contextMenuModel = buildContextMenu(rmOverrideFunc)
+
   // Array fields
 
   if (props.schema.type === 'array' && props.schema.items.type !== 'string') {
@@ -195,7 +235,7 @@ function FieldTemplate(props) {
         title={props.schema.title}
         description={props.schema.description}
         className={className}
-        rmOverrideFunc={rmOverrideFunc}
+        contextMenuModel={contextMenuModel}
         onClick={() => {
           if (props.formContext.onSetBreadcrumbs && override?.path)
             props.formContext.onSetBreadcrumbs(override.path)
@@ -212,7 +252,9 @@ function FieldTemplate(props) {
   return (
     <>
       {divider}
+      <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <div
+        onContextMenu={(e) => contextMenuRef.current.show(e)}
         className={`form-inline-field p-inputgroup ${
           props.errors.props.errors ? 'error' : ''
         }`}
@@ -233,7 +275,7 @@ function FieldTemplate(props) {
               }}
               style={labelStyle}
             >
-              {props.label} {rmOverrideFunc && <button onClick={rmOverrideFunc}>x</button>}
+              {props.label}
             </span>
           </div>
         )}
