@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { LinkButton } from '../../components'
+import { toast } from 'react-toastify'
 
 const Breadcrumbs = () => {
   /*
@@ -53,6 +54,15 @@ const Breadcrumbs = () => {
     projectName,
   ])
 
+  const copyURI = () => {
+    navigator.clipboard.writeText(uri)
+      .then(() => {
+      toast.success('URI copied');
+    }, (err) => {
+      toast.error('Could not copy text: ', err);
+    })
+  }
+
   if (!projectName) return <></>
 
   return (
@@ -72,9 +82,7 @@ const Breadcrumbs = () => {
       <LinkButton
         icon="content_copy"
         className="breadcrumbs-copy-button"
-        onClick={() => {
-          alert(`TODO: Copy to clipboard\n\n ${uri}`)
-        }}
+        onClick={copyURI}
         tooltip="Copy URI to clipboard"
         tooltipPosition="bottom"
         disabled={!breadcrumbs}
