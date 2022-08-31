@@ -59,6 +59,7 @@ const SettingsEditor = ({
   overrides,
   onSetBreadcrumbs,
   onSetChangedKeys,
+  onPinOverride,
   onDeleteOverride,
   level,
   changedKeys,
@@ -70,11 +71,12 @@ const SettingsEditor = ({
 
   const formContext = {
     overrides: { ...buildOverrides(formData), ...(overrides || {}) },
-    level: level || "studio",
+    level: level || 'studio',
     onSetBreadcrumbs: onSetBreadcrumbs || (() => {}),
     changedKeys: changedKeys || [], // source of all problems
     onSetChangedKeys: onSetChangedKeys || (() => {}),
-    onDeleteOverride: onDeleteOverride || (() => {})
+    onDeleteOverride: onDeleteOverride || (() => {}),
+    onPinOverride: onPinOverride || (() => {}),
   }
 
   return (

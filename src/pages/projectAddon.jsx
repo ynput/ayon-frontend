@@ -13,7 +13,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   const expandedFolders = context.expandedFolders
   const focusedFolders = context.focusedFolders
 
-  const addonUrl = `/addons/${addonName}/${addonVersion}/`
+  const addonUrl = `/addons/${addonName}/${addonVersion}/frontend/`
 
   const pushContext = () => {
     const addonWnd = addonRef.current.contentWindow

@@ -22,6 +22,10 @@ const ProjectManager = () => {
       label: 'Dashboard',
     },
     {
+      name: 'addons',
+      label: 'Addons',
+    },
+    {
       name: 'settings',
       label: 'Settings',
     },
@@ -90,6 +94,9 @@ const ProjectManager = () => {
 
           <section className="invisible" style={{ flexGrow: 1 }}>
             {currentView === 'dashboard' && (
+              <ProjectStats projectName={selectedProject} />
+            )}
+            {currentView === 'addons' && (
               <ProjectStats projectName={selectedProject} />
             )}
             {currentView === 'settings' && (

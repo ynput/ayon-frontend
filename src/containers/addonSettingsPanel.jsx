@@ -48,23 +48,40 @@ const AddonSettingsPanel = ({
   }
 
   const deleteOverride = (path) => {
-    console.log("DELETING OVERRIDE", path)
+    console.log('DELETING OVERRIDE', path)
     axios
       .post(
         `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`,
-        {action: "delete", path: path}
+        { action: 'delete', path: path }
       )
       .catch(() => {
-        console.log("e-eee")
+        console.log('e-eee')
       })
       .then(() => {
-        console.log("Override deleted")
+        console.log('Override deleted')
       })
       .finally(() => {
         loadSettings()
       })
   }
 
+  const pinOverride = (path) => {
+    console.log('PINNING OVERRIDE', path)
+    axios
+      .post(
+        `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`,
+        { action: 'pin', path: path }
+      )
+      .catch(() => {
+        console.log('e-eee')
+      })
+      .then(() => {
+        console.log('Override deleted')
+      })
+      .finally(() => {
+        loadSettings()
+      })
+  }
 
   useEffect(() => {
     loadSchema()
@@ -82,8 +99,9 @@ const AddonSettingsPanel = ({
         onChange={onChange}
         onSetChangedKeys={onSetChangedKeys}
         onDeleteOverride={deleteOverride}
+        onPinOverride={pinOverride}
         onSetBreadcrumbs={() => {}}
-        level={projectName ? "project" : "studio"}
+        level={projectName ? 'project' : 'studio'}
       />
     )
   }, [schema, originalData, overrides])

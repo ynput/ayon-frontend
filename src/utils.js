@@ -153,17 +153,16 @@ const getFamilyIcon = (family) => {
 const getFolderTypes = () => {
   let result = []
   for (const name in FOLDER_TYPE_ICONS)
-    result.push({name, label: name, icon: FOLDER_TYPE_ICONS[name]})
-  return sortBy(result, "name")
+    result.push({ name, label: name, icon: FOLDER_TYPE_ICONS[name] })
+  return sortBy(result, 'name')
 }
 
 const getTaskTypes = () => {
   let result = []
   for (const name in TASK_TYPE_ICONS)
-    result.push({name, label: name, icon: TASK_TYPE_ICONS[name]})
-  return sortBy(result, "name")
+    result.push({ name, label: name, icon: TASK_TYPE_ICONS[name] })
+  return sortBy(result, 'name')
 }
-
 
 function useLocalStorage(key, initialValue) {
   // State to store our value

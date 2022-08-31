@@ -1,18 +1,16 @@
 import axios from 'axios'
 
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { InputSwitch } from 'primereact/inputswitch'
+import { ContextMenu } from 'primereact/contextmenu'
 import { Shade, Spacer, Button } from '/src/components'
 
-import { 
-  isEmpty, 
-  sortByKey, 
-} from '/src/utils'
+import { isEmpty, sortByKey } from '/src/utils'
 
 import {
   setBreadcrumbs,
@@ -23,8 +21,7 @@ import {
 import { buildQuery } from './queries'
 import { getColumns, formatName, formatType, formatAttribute } from './utils'
 import { stringEditor, typeEditor } from './editors'
-import { loadBranch, getUpdatedNodeData} from './loader'
-
+import { loadBranch, getUpdatedNodeData } from './loader'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -38,18 +35,16 @@ const EditorPage = () => {
   const [changes, setChanges] = useState({})
   const [newNodes, setNewNodes] = useState([])
   const [selectionLocked, setSelectionLocked] = useState(false)
-
+  const contextMenuRef = useRef(null)
 
   const currentSelection = useMemo(() => {
     // This object holds the information on current selected nodes.
     // It has the same structure as nodeData, e.g. {objecId: nodeData, ...}
-    // so it is compatible with the treetable selection argument and it 
+    // so it is compatible with the treetable selection argument and it
     // also provides complete node information
     const result = {}
-    for (const key of context.focusedFolders)
-      result[key] = nodeData[key]
-    for (const key of context.focusedTasks)
-      result[key] = nodeData[key]
+    for (const key of context.focusedFolders) result[key] = nodeData[key]
+    for (const key of context.focusedTasks) result[key] = nodeData[key]
     return result
   }, [context.focusedFolders, context.focusedTasks, nodeData])
 
@@ -66,11 +61,17 @@ const EditorPage = () => {
     [settings.attributes]
   )
 
-
   useEffect(() => {
     setLoading(true)
     const expandedKeys = [...Object.keys(context.expandedFolders), 'root']
-    getUpdatedNodeData(nodeData, newNodes, expandedKeys, parents, query, projectName).then((result) => {
+    getUpdatedNodeData(
+      nodeData,
+      newNodes,
+      expandedKeys,
+      parents,
+      query,
+      projectName
+    ).then((result) => {
       setNodeData(result)
       setLoading(false)
     })
@@ -129,44 +130,13 @@ const EditorPage = () => {
     return sortByKey(result, 'name')
   }, [parents])
 
-  /*
-    *
-  TODO: remove if not needed (probably it isn't)
-
-  // Handle selection change.
-  // This also accept the selection from the project context, so
-  // when the selection is made in the browser page, it is propagated to the editor too
-  // (but only the last focused folder, since editor does not support multiselect for
-  // various reasons)
-
-  useEffect(() => {
-    const nodeId =
-      context.focusedFolders.length &&
-      context.focusedFolders[context.focusedFolders.length - 1]
-    if (!nodeId) {
-      return
-    }
-    const node = nodeData[nodeId]?.data
-    if (!node) return
-    if (node.__entityType === 'folder') {
-      dispatch(
-        setBreadcrumbs({
-          parents: node.parents,
-          folder: node.name,
-        })
-      )
-    }
-  }, [context.focusedFolders, treeData])
-
-  */
-
   //
   // Update handlers
   //
 
   const updateAttribute = (options, value) => {
     setChanges((changes) => {
-      for (const id in currentSelection){
+      for (const id in currentSelection) {
         changes[id] = changes[id] || {
           __entityType: nodeData[id].data.__entityType,
           __parentId: nodeData[id].data.__parentId,
@@ -177,8 +147,7 @@ const EditorPage = () => {
     })
 
     // Force table render when selection is locked
-    if (selectionLocked)
-      dispatch(setFocusedFolders(context.focusedFolders))
+    if (selectionLocked) dispatch(setFocusedFolders(context.focusedFolders))
   }
 
   const updateName = (options, value) => {
@@ -199,7 +168,8 @@ const EditorPage = () => {
       __entityType: options.rowData.__entityType,
       __parentId: options.rowData.__parentId,
     }
-    const key = options.rowData.__entityType === "folder" ? "_folderType" : "_taskType"
+    const key =
+      options.rowData.__entityType === 'folder' ? '_folderType' : '_taskType'
     rowChanges[key] = value
     setChanges((changes) => {
       return { ...changes, [id]: rowChanges }
@@ -209,7 +179,6 @@ const EditorPage = () => {
   //
   // Commit changes
   //
-
 
   const getBranchesToReload = (entityId) => {
     let result = [entityId]
@@ -237,7 +206,7 @@ const EditorPage = () => {
       const entityType = changes[entityId].__entityType
       const parentId = changes[entityId].__parentId
 
-      if (changes[entityId].__action === "delete"){
+      if (changes[entityId].__action === 'delete') {
         try {
           await axios.delete(
             `/api/projects/${projectName}/${entityType}s/${entityId}`
@@ -246,8 +215,8 @@ const EditorPage = () => {
         } catch {
           toast.error(`Unable to delete entity`) // TODO: be decriptive
         }
-
-      } else { // End delete, begin patch
+      } else {
+        // End delete, begin patch
         const attribChanges = {}
         const entityChanges = {}
 
@@ -287,9 +256,9 @@ const EditorPage = () => {
       const newEntity = { ...entity }
       const entityChanges = changes[entity.id]
 
-      // it is a new entity, so only valid attributes are those 
+      // it is a new entity, so only valid attributes are those
       // stored in `changes`. The rest are inherited ones
-      newEntity.attrib = {} 
+      newEntity.attrib = {}
       for (const key in entityChanges || {}) {
         if (key.startsWith('__')) continue
         if (key.startsWith('_'))
@@ -322,21 +291,19 @@ const EditorPage = () => {
     const affected = [...created, ...updated, ...deleted]
 
     setNewNodes((nodes) => {
-      return nodes.filter(n => !created.includes(n.id) )
+      return nodes.filter((n) => !created.includes(n.id))
     })
 
     setChanges((nodes) => {
-      for (const id in nodes){
-        if (affected.includes(id))
-          delete nodes[id]
+      for (const id in nodes) {
+        if (affected.includes(id)) delete nodes[id]
       }
       return nodes
     }) // setChanges
 
     setNodeData(async (nodes) => {
-      for (const id in nodes){
-        if (affected.includes(id))
-          delete nodes[id]
+      for (const id in nodes) {
+        if (affected.includes(id)) delete nodes[id]
       }
       // Reload affected branches
       for (const branch of branchesToReload) {
@@ -344,9 +311,8 @@ const EditorPage = () => {
         Object.assign(nodes, res)
       }
       // Keep failed new nodes in node data
-      for (const nodeId of newNodes){
-        if (created.includes(nodeId))
-          continue
+      for (const nodeId of newNodes) {
+        if (created.includes(nodeId)) continue
         nodes[nodeId] = newNodes[nodeId]
       }
       return nodes
@@ -362,16 +328,13 @@ const EditorPage = () => {
     // Returns a list of node ids from the current selection
     // for which children creation is available
     let parents = []
-    for (const parentId in currentSelection){
+    for (const parentId in currentSelection) {
       const node = currentSelection[parentId]
-      if (!node)
-        continue
+      if (!node) continue
       // unable to add children to unsaved nodes
-      if (node.data.name?.startsWith("newnode"))
-        continue
+      if (node.data.name?.startsWith('newnode')) continue
       // unable to add children to tasks
-      if (node.data.__entityType !== "folder")
-        continue
+      if (node.data.__entityType !== 'folder') continue
       parents.push(parentId)
     }
     return parents
@@ -383,17 +346,16 @@ const EditorPage = () => {
   const addNode = (entityType, root) => {
     const parents = root ? [null] : futureParents
 
-    if (!parents.length){
-      console.log("Nothing to add")
-      return 
+    if (!parents.length) {
+      console.log('Nothing to add')
+      return
     }
 
-    if (!root){
+    if (!root) {
       // Adding children to existing nodes, so
       // ensure the parents are not leaves
       setNodeData((nodeData) => {
-        for (const parentId of parents)
-          nodeData[parentId].leaf = false
+        for (const parentId of parents) nodeData[parentId].leaf = false
         return nodeData
       })
     }
@@ -401,14 +363,14 @@ const EditorPage = () => {
     setNewNodes((nodes) => {
       let i = 0
       let newNodes = []
-      for (const parentId of parents){
+      for (const parentId of parents) {
         const id = `newnode${nodes.length + i}`
         const newNode = {
           id,
-          attrib: { ...nodeData[parentId]?.data.attrib || {} },
+          attrib: { ...(nodeData[parentId]?.data.attrib || {}) },
           ownAttrib: [],
           __entityType: entityType,
-          __parentId: parentId || "root",
+          __parentId: parentId || 'root',
         }
         if (entityType === 'folder') newNode['parentId'] = parentId
         else if (entityType === 'task') {
@@ -416,21 +378,19 @@ const EditorPage = () => {
           newNode['taskType'] = 'Generic'
         }
         newNodes.push(newNode)
-        i++ 
+        i++
       }
-      console.log("ADDING", newNodes)
+      console.log('ADDING', newNodes)
       return [...nodes, ...newNodes]
     })
 
-    if (!root){
+    if (!root) {
       // Update expanded folders context object
-      const exps = {...context.expandedFolders}
-      for (const id of parents)
-        exps[id] = true
+      const exps = { ...context.expandedFolders }
+      for (const id of parents) exps[id] = true
       dispatch(setExpandedFolders(exps))
     }
   } // Add node
-
 
   //
   // Other user events handlers (Toolbar)
@@ -439,34 +399,81 @@ const EditorPage = () => {
   const onDelete = () => {
     // Mark the current selection for deletion.
     setNewNodes((newNodes) => {
-      return newNodes.filter(node => !(node.id in currentSelection))
+      return newNodes.filter((node) => !(node.id in currentSelection))
     })
 
     setChanges((changes) => {
-      for (const id in currentSelection){
-        if (id.startsWith('newnode'))
-          continue
+      for (const id in currentSelection) {
+        if (id.startsWith('newnode')) continue
         changes[id] = changes[id] || {
           __entityType: nodeData[id].data.__entityType,
           __parentId: nodeData[id].data.__parentId,
         }
-        changes[id].__action = "delete"
+        changes[id].__action = 'delete'
       }
       return changes
     })
   }
-
 
   const onRevert = () => {
     setChanges({})
     setNewNodes([])
   }
 
+  const revertChangesOnSelection = useCallback(() => {
+    const modifiedIds = Object.keys(changes).filter(
+      (i) => i in currentSelection
+    )
+    const newIds = newNodes
+      .map((i) => i.id)
+      .filter((i) => i in currentSelection)
+
+    setNewNodes((nodes) => {
+      return nodes.filter((i) => !newIds.includes(i.id))
+    })
+    setChanges((nodes) => {
+      const result = {}
+      for (const id in nodes) {
+        if (!modifiedIds.includes(id)) result[id] = nodes[id]
+      }
+      return result
+    })
+  }, [currentSelection, changes, newNodes])
 
   const onAddFolder = () => addNode('folder')
   const onAddRootFolder = () => addNode('folder', true)
   const onAddTask = () => addNode('task')
 
+  // Context menu
+
+  const onContextMenuSelectionChange = (event) => {
+    if (!(event.value in currentSelection)) {
+      dispatch(setFocusedFolders([event.value]))
+    }
+  }
+
+  const contextMenuModel = useMemo(() => {
+    return [
+      {
+        label: 'Copy attributes',
+        disabled: Object.keys(currentSelection) !== 1,
+        command: () => alert('Not implemented'),
+      },
+      {
+        label: 'Paste attributes',
+        disabled: true,
+        command: () => alert('Not implemented'),
+      },
+      {
+        label: 'Revert changes',
+        command: revertChangesOnSelection,
+      },
+      {
+        label: 'Delete',
+        command: onDelete,
+      },
+    ]
+  }, [currentSelection])
 
   //
   // Table event handlers
@@ -477,27 +484,24 @@ const EditorPage = () => {
   }
 
   const onSelectionChange = (event) => {
-    if (selectionLocked)
-      return
+    if (selectionLocked) return
     dispatch(setFocusedFolders(Object.keys(event.value)))
   }
 
   const onRowClick = (event) => {
     const node = event.node.data
-    if (node.__entityType !== "folder")
-      return
+    if (node.__entityType !== 'folder') return
     dispatch(
       setBreadcrumbs({
-         parents: node.parents,
-         folder: node.name,
-       })
+        parents: node.parents,
+        folder: node.name,
+      })
     )
   }
 
   //
   // Render the TreeTable
   //
-
 
   return (
     <main className="rows">
@@ -519,15 +523,11 @@ const EditorPage = () => {
           label="Add root folder"
           onClick={onAddRootFolder}
         />
-        <Button 
-          label="Delete selected" 
-          icon="delete"
-          onClick={onDelete} 
-        />
+        <Button label="Delete selected" icon="delete" onClick={onDelete} />
         <InputSwitch
-          checked={selectionLocked} 
-          onChange={()=>setSelectionLocked(!selectionLocked)} 
-          style={{width: 40, marginLeft: 10}}
+          checked={selectionLocked}
+          onChange={() => setSelectionLocked(!selectionLocked)}
+          style={{ width: 40, marginLeft: 10 }}
         />
         Lock selection
         <Spacer />
@@ -547,6 +547,7 @@ const EditorPage = () => {
       <section className="column" style={{ flexGrow: 1 }}>
         <div className="wrapper">
           {loading && <Shade />}
+          <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
           <TreeTable
             responsive="true"
             scrollable
@@ -565,10 +566,13 @@ const EditorPage = () => {
                 changed:
                   rowData.key in changes || rowData.key.startsWith('newnode'),
                 deleted:
-                  rowData.key in changes && changes[rowData.key]?.__action == "delete",
+                  rowData.key in changes &&
+                  changes[rowData.key]?.__action == 'delete',
               }
             }}
             selectOnEdit={false}
+            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
           >
             <Column
               field="name"
@@ -604,7 +608,9 @@ const EditorPage = () => {
                   header={col.title}
                   field={col.name}
                   style={{ minWidth: 30 }}
-                  body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
+                  body={(rowData) =>
+                    formatAttribute(rowData.data, changes, col.name)
+                  }
                   editor={(options) => {
                     return col.editor(
                       options,

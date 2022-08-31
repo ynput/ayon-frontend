@@ -33,30 +33,30 @@ const SettingsPanel = ({
       : 'pi pi-chevron-down'
     return (
       <>
-      <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-      <div
-        className="p-panel-header form-panel-header"
-        onContextMenu={(e) => contextMenuRef.current.show(e) }
-        style={{
-          justifyContent: 'start',
-          alignItems: 'center',
-          cursor: 'pointer',
-        }}
-        onClick={(evt) => {
-          if (evt.detail === 1 && onClick) onClick()
-          else if (evt.detail === 2) options.onTogglerClick(evt)
-        }}
-      >
-        <button
-          className={options.togglerClassName}
-          onClick={options.onTogglerClick}
+        <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+        <div
+          className="p-panel-header form-panel-header"
+          onContextMenu={(e) => contextMenuRef.current.show(e)}
+          style={{
+            justifyContent: 'start',
+            alignItems: 'center',
+            cursor: 'pointer',
+          }}
+          onClick={(evt) => {
+            if (evt.detail === 1 && onClick) onClick()
+            else if (evt.detail === 2) options.onTogglerClick(evt)
+          }}
         >
-          <span className={toggleIcon}></span>
-        </button>
-        <h4>{title}</h4>
-        <div style={{ flex: 1 }}></div>
-        <small>{description}</small>
-      </div>
+          <button
+            className={options.togglerClassName}
+            onClick={options.onTogglerClick}
+          >
+            <span className={toggleIcon}></span>
+          </button>
+          <h4>{title}</h4>
+          <div style={{ flex: 1 }}></div>
+          <small>{description}</small>
+        </div>
       </>
     )
   }

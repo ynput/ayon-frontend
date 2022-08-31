@@ -91,7 +91,6 @@ const StudioOverrides = () => {
       })
   }
 
-
   return (
     <main>
       <section className="invisible" style={{ flexGrow: 1 }}>

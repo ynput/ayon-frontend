@@ -5,36 +5,38 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import SettingsPanel from './settingsPanel'
 
-
-const buildContextMenu = (rmOverrideFunc) => {
-  return  [
+const buildContextMenu = (rmOverrideFunc, pinOverrideFunc) => {
+  return [
     {
-      label: "Remove override",
+      label: 'Pin override',
+      disabled: !pinOverrideFunc,
+      command: pinOverrideFunc,
+    },
+    {
+      label: 'Remove override',
       disabled: !rmOverrideFunc,
-      command: rmOverrideFunc
+      command: rmOverrideFunc,
     },
     {
-      label: "Log event (debug)",
-      command: (event) => console.log(event)
+      label: 'Log event (debug)',
+      command: (event) => console.log(event),
     },
     {
-      label: "Copy path",
-      command: () => {}
+      label: 'Copy path',
+      command: () => {},
     },
     {
-      label: "Copy value",
+      label: 'Copy value',
       disabled: true,
-      command: () => {}
+      command: () => {},
     },
-    { 
-      label: "Paste value",
+    {
+      label: 'Paste value',
       disabled: true,
-      command: () => {}
-    }
+      command: () => {},
+    },
   ]
 }
-
-
 
 function ObjectFieldTemplate(props) {
   let className = 'form-object-field'
@@ -46,14 +48,12 @@ function ObjectFieldTemplate(props) {
   const override = props.formContext.overrides[objId]
   const path = override?.path
 
-
   // TODO: actually use overrides
   // NOTE: after a few days, idk what this todo means
   let labelStyle = {}
   let rmOverrideFunc = null
   if (override) {
-    if (override?.inGroup)
-      labelStyle.fontStyle = "italic"
+    if (override?.inGroup) labelStyle.fontStyle = 'italic'
     else if (override.level === props.formContext.level)
       rmOverrideFunc = () => {
         props.formContext.onDeleteOverride(path)
@@ -61,7 +61,6 @@ function ObjectFieldTemplate(props) {
   }
 
   const contextMenuModel = buildContextMenu(rmOverrideFunc)
-
 
   let overrideLevel = useMemo(() => {
     let res = 'default'
@@ -190,7 +189,6 @@ function FieldTemplate(props) {
     ? props.formContext.overrides[props.id]
     : null
 
-
   const fieldChanged = props.formContext.changedKeys.includes(props.id)
   const overrideLevel = fieldChanged
     ? 'edit'
@@ -200,10 +198,10 @@ function FieldTemplate(props) {
 
   let labelStyle = {}
   let rmOverrideFunc = null
+  let pinOverrideFunc = null
 
-  if (override){
-    if (override?.inGroup)
-      labelStyle.fontStyle = "italic"
+  if (override) {
+    if (override?.inGroup) labelStyle.fontStyle = 'italic'
     else if (override.level === props.formContext.level)
       rmOverrideFunc = () => {
         const path = override.path
@@ -211,9 +209,16 @@ function FieldTemplate(props) {
       }
   }
 
+  if (!override || override.level === 'default') {
+    pinOverrideFunc = () => {
+      const path = override.path
+      props.formContext.onPinOverride(path)
+    }
+  }
+
   // Context menu
 
-  const contextMenuModel = buildContextMenu(rmOverrideFunc)
+  const contextMenuModel = buildContextMenu(rmOverrideFunc, pinOverrideFunc)
 
   // Array fields
 
@@ -226,8 +231,7 @@ function FieldTemplate(props) {
       break
     }
 
-    if (!className)
-      className = `obj-override-${overrideLevel}`
+    if (!className) className = `obj-override-${overrideLevel}`
 
     return (
       <SettingsPanel
@@ -247,7 +251,6 @@ function FieldTemplate(props) {
   }
 
   // Leaves
-
 
   return (
     <>

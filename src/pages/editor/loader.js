@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { toast } from 'react-toastify'
 
-
 const loadBranch = async (query, projectName, parentId) => {
   const variables = { projectName, parent: parentId || 'root' }
   console.log('Branch load', parentId)
@@ -48,7 +47,14 @@ const loadBranch = async (query, projectName, parentId) => {
 // Loading node data
 //
 
-const getUpdatedNodeData = async (nodeData, newNodes, expandedKeys, parents, query, projectName) => {
+const getUpdatedNodeData = async (
+  nodeData,
+  newNodes,
+  expandedKeys,
+  parents,
+  query,
+  projectName
+) => {
   // Load newly expanded branches
   for (const expandedKey of expandedKeys) {
     if (!(expandedKey in parents)) {
@@ -86,5 +92,4 @@ const getUpdatedNodeData = async (nodeData, newNodes, expandedKeys, parents, que
   return { ...nodeData }
 }
 
-
-export {loadBranch, getUpdatedNodeData}
+export { loadBranch, getUpdatedNodeData }

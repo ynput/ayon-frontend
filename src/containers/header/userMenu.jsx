@@ -41,7 +41,7 @@ const UserMenu = ({ visible, onHide }) => {
       >
         <Button
           onClick={() => {
-            onHide()
+            // onHide()
             navigate('/doc/api')
           }}
           label="REST API docs"
@@ -49,7 +49,7 @@ const UserMenu = ({ visible, onHide }) => {
         />
         <Button
           onClick={() => {
-            onHide()
+            // onHide()
             navigate('/explorer')
           }}
           label="GraphQL explorer"
@@ -57,7 +57,7 @@ const UserMenu = ({ visible, onHide }) => {
         />
         <Button
           onClick={() => {
-            onHide()
+            // onHide()
             navigate('/settings')
           }}
           label="Settings"
@@ -65,7 +65,7 @@ const UserMenu = ({ visible, onHide }) => {
         />
         <Button
           onClick={() => {
-            onHide()
+            // onHide()
             navigate('/profile')
           }}
           label="Profile"

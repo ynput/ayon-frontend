@@ -4,54 +4,58 @@ import { Dropdown } from 'primereact/dropdown'
 
 import { getFolderTypes, getTaskTypes } from '/src/utils'
 
-const FOLDER_TYPE = {name: "_", icon: "folder", label: "Folder"} 
+const FOLDER_TYPE = { name: '_', icon: 'folder', label: 'Folder' }
 
 const typeEditor = (options, callback, value) => {
   const rowData = options.node.data
   if (!rowData) return <></>
 
-  const types = rowData.__entityType === "folder" 
-    ? [FOLDER_TYPE, ...getFolderTypes()]
-    : getTaskTypes()
+  const types =
+    rowData.__entityType === 'folder'
+      ? [FOLDER_TYPE, ...getFolderTypes()]
+      : getTaskTypes()
 
-  const onChange = (event) => callback(options, event.value === "_" ? null : event.value )
+  const onChange = (event) =>
+    callback(options, event.value === '_' ? null : event.value)
 
   const itemTemplate = (option, props) => {
-      if (option) {
-          return (
-              <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
-                  <span
-                    className={`material-symbols-outlined`}
-                    style={{ marginRight: '0.6rem' }}
-                  >
-                    {option.icon}
-                  </span>
-                  <span>{option.label}</span>
-              </div>
-          );
-      }
-
+    if (option) {
       return (
-          <span>
-              {props.placeholder}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
+          <span
+            className={`material-symbols-outlined`}
+            style={{ marginRight: '0.6rem' }}
+          >
+            {option.icon}
           </span>
-      );
+          <span>{option.label}</span>
+        </div>
+      )
+    }
+
+    return <span>{props.placeholder}</span>
   }
 
   // showClear={ rowData.__entityType === "folder" }
   return (
-    <Dropdown 
-      options={types} 
+    <Dropdown
+      options={types}
       optionLabel="label"
       optionValue="name"
       dataKey="name"
-      value={value || "_"} 
+      value={value || '_'}
       emptyMessage="Folder"
       itemTemplate={itemTemplate}
       onChange={onChange}
-      style={{width: "100%"}}
+      style={{ width: '100%' }}
     />
-  ) 
+  )
 }
 
 const stringEditor = (options, callback, value) => {
@@ -71,7 +75,7 @@ const integerEditor = (options, callback, value) => {
   return (
     <div className="table-editor">
       <InputNumber
-        showButtons={false}     
+        showButtons={false}
         useGrouping={false}
         allowEmpty={true}
         value={value}

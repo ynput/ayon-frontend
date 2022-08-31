@@ -2,7 +2,6 @@ import { CellWithIcon } from '../../components/icons'
 import { getFolderTypeIcon, getTaskTypeIcon } from '../../utils'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
-
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
   let className = ''
@@ -26,27 +25,20 @@ const formatName = (node, changes, styled = true) => {
 
   let icon
   const textStyle = {}
-  if (!value)
-    textStyle.color = "var(--color-hl-error)"
-  if (chobj?.hasOwnProperty("_name"))
-    textStyle.color = "var(--color-hl-changed)"
+  if (!value) textStyle.color = 'var(--color-hl-error)'
+  if (chobj?.hasOwnProperty('_name'))
+    textStyle.color = 'var(--color-hl-changed)'
 
-  if (node.__entityType === 'task'){
-    icon = getTaskTypeIcon(node.taskType) 
-    textStyle.fontStyle = "italic"
-    value = value || "Unnamed task"
+  if (node.__entityType === 'task') {
+    icon = getTaskTypeIcon(node.taskType)
+    textStyle.fontStyle = 'italic'
+    value = value || 'Unnamed task'
   } else {
     icon = getFolderTypeIcon(node.folderType)
-    value = value || "Unnamed folder"
+    value = value || 'Unnamed folder'
   }
-  
-  return (
-    <CellWithIcon
-      icon={icon}
-      text={value}
-      textStyle={textStyle}
-    />
-  )
+
+  return <CellWithIcon icon={icon} text={value} textStyle={textStyle} />
 }
 
 const formatType = (node, changes, styled = true) => {
@@ -54,26 +46,23 @@ const formatType = (node, changes, styled = true) => {
   const style = {}
   let value
 
-  if (node.__entityType === "folder"){
-    value = "_folderType" in chobj ? chobj._folderType : node.folderType
-    if ("_folderType" in chobj)
-      style.color = "var(--color-hl-changed)"
+  if (node.__entityType === 'folder') {
+    value = '_folderType' in chobj ? chobj._folderType : node.folderType
+    if ('_folderType' in chobj) style.color = 'var(--color-hl-changed)'
   } else {
     value = chobj?._taskType ? chobj._taskType : node.taskType
-    if (!value)
-      style.color = "var(--color-hl-error)"
-    else if ("_taskType" in chobj)
-      style.color = "var(--color-hl-changed)"
-    
+    if (!value) style.color = 'var(--color-hl-error)'
+    else if ('_taskType' in chobj) style.color = 'var(--color-hl-changed)'
   }
 
-  if (!styled)
-    return value
-  if (node.__entityType === "folder" && !value)
-    value = "Folder"
-  return <span className="editor-field" style={style}>{value}</span>
+  if (!styled) return value
+  if (node.__entityType === 'folder' && !value) value = 'Folder'
+  return (
+    <span className="editor-field" style={style}>
+      {value}
+    </span>
+  )
 }
-
 
 const getColumns = (attributes) => {
   if (!attributes) return []
