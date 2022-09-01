@@ -55,12 +55,14 @@ const Breadcrumbs = () => {
   ])
 
   const copyURI = () => {
-    navigator.clipboard.writeText(uri)
-      .then(() => {
-      toast.success('URI copied');
-    }, (err) => {
-      toast.error('Could not copy text: ', err);
-    })
+    navigator.clipboard.writeText(uri).then(
+      () => {
+        toast.success('URI copied')
+      },
+      (err) => {
+        toast.error('Could not copy text: ', err)
+      }
+    )
   }
 
   if (!projectName) return <></>
