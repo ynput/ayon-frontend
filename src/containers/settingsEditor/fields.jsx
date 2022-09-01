@@ -52,6 +52,7 @@ function ObjectFieldTemplate(props) {
   // NOTE: after a few days, idk what this todo means
   let labelStyle = {}
   let rmOverrideFunc = null
+  let pinOverrideFunc = null
   if (override) {
     if (override?.inGroup) labelStyle.fontStyle = 'italic'
     else if (override.level === props.formContext.level)
@@ -60,7 +61,13 @@ function ObjectFieldTemplate(props) {
       }
   }
 
-  const contextMenuModel = buildContextMenu(rmOverrideFunc)
+  if (!override || override.level !== props.formContext.level){
+    pinOverrideFunc = () => {
+      props.formContext.onPinOverride(path)
+    }  
+  }
+
+  const contextMenuModel = buildContextMenu(rmOverrideFunc, pinOverrideFunc)
 
   let overrideLevel = useMemo(() => {
     let res = 'default'
