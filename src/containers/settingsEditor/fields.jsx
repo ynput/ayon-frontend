@@ -209,7 +209,7 @@ function FieldTemplate(props) {
       }
   }
 
-  if (!override || override.level === 'default') {
+  if (!override || override.level !== props.formContext.level) {
     pinOverrideFunc = () => {
       const path = override.path
       props.formContext.onPinOverride(path)
