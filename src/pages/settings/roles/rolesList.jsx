@@ -46,7 +46,7 @@ const RolesList = ({
   }
 
   const getRowClass = (rowData) => {
-    return { changed: rowData.isProjectLevel }
+    return { 'changed-project': rowData.isProjectLevel }
   }
 
   // Render

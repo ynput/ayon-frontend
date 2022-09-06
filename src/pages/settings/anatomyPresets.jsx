@@ -15,9 +15,9 @@ import { toast } from 'react-toastify'
 import { Spacer } from '../../components'
 import { loadAnatomyPresets } from '../../utils'
 
-const PresetList = ({ 
-  selectedPreset, 
-  setSelectedPreset, 
+const PresetList = ({
+  selectedPreset,
+  setSelectedPreset,
   timestamp,
   onSetPrimary,
   onUnsetPrimary,
@@ -27,29 +27,27 @@ const PresetList = ({
   const contextMenuRef = useRef(null)
 
   useEffect(() => {
-    toast.info("Loading list")
+    toast.info('Loading list')
     loadAnatomyPresets().then((r) => setPresetList(r))
   }, [timestamp])
 
-
-  const contextMenuModel = useMemo(()=>{
+  const contextMenuModel = useMemo(() => {
     return [
       {
-        label: "Set as primary",
-        command: onSetPrimary
+        label: 'Set as primary',
+        command: onSetPrimary,
       },
       {
-        label: "Unset primary preset",
-        command: onUnsetPrimary
+        label: 'Unset primary preset',
+        command: onUnsetPrimary,
       },
       {
-        label: "Delete",
-        disabled: selectedPreset === "_",
-        command: onDelete
-      }
+        label: 'Delete',
+        disabled: selectedPreset === '_',
+        command: onDelete,
+      },
     ]
-
-  },[selectedPreset, presetList])
+  }, [selectedPreset, presetList])
 
   return (
     <div className="wrapper">
@@ -63,8 +61,8 @@ const PresetList = ({
         dataKey="name"
         selection={{ name: selectedPreset }}
         onSelectionChange={(e) => setSelectedPreset(e.value.name)}
-        onContextMenuSelectionChange={e => setSelectedPreset(e.value.name)}
-        onContextMenu={e => contextMenuRef.current.show(e.originalEvent)}
+        onContextMenuSelectionChange={(e) => setSelectedPreset(e.value.name)}
+        onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
       >
         <Column field="title" header="Name" />
         <Column field="primary" header="Primary" style={{ maxWidth: 70 }} />

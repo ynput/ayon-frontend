@@ -7,8 +7,8 @@ import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 
 const updateOverrides = (props, changed) => {
-  if (!props.formContext){
-    return  // WARN!
+  if (!props.formContext) {
+    return // WARN!
   }
   if (changed && !props.formContext.changedKeys.includes(props.id))
     props.formContext.changedKeys.push(props.id)
@@ -62,12 +62,12 @@ const SelectWidget = (props) => {
   if (props.multiple) {
     return (
       <>
-      <MultiSelect
-        options={options}
-        value={props.value}
-        onChange={onChange}
-        onFocus={onFocus}
-      />
+        <MultiSelect
+          options={options}
+          value={props.value}
+          onChange={onChange}
+          onFocus={onFocus}
+        />
       </>
     )
   }

@@ -54,7 +54,7 @@ const SettingsPanel = ({
           >
             <span className={toggleIcon}></span>
           </button>
-          { enabledToggler }
+          {enabledToggler}
           <h4>{title}</h4>
           <div style={{ flex: 1 }}></div>
           <small>{description}</small>

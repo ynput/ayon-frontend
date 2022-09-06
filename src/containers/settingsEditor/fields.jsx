@@ -61,10 +61,10 @@ function ObjectFieldTemplate(props) {
       }
   }
 
-  if (!override || override.level !== props.formContext.level){
+  if (!override || override.level !== props.formContext.level) {
     pinOverrideFunc = () => {
       props.formContext.onPinOverride(path)
-    }  
+    }
   }
 
   const contextMenuModel = buildContextMenu(rmOverrideFunc, pinOverrideFunc)
@@ -100,10 +100,10 @@ function ObjectFieldTemplate(props) {
   // memoize the fields
 
   const enabledToggler = useMemo(() => {
-    for (const element of props.properties){
-      if (element.name === "enabled"){
+    for (const element of props.properties) {
+      if (element.name === 'enabled') {
         return (
-          <span className='form-object-header-enabled-toggler'>
+          <span className="form-object-header-enabled-toggler">
             {element.content}
           </span>
         )
@@ -133,7 +133,10 @@ function ObjectFieldTemplate(props) {
     return (
       <div className={className}>
         {props.properties.map((element, index) => {
-          if (element.name === "enabled" && !["compact", "root"].includes(props.schema.layout))
+          if (
+            element.name === 'enabled' &&
+            !['compact', 'root'].includes(props.schema.layout)
+          )
             return <></>
           return (
             <div key={index} className="form-object-field-item">
@@ -244,7 +247,11 @@ function FieldTemplate(props) {
 
   // Array fields
 
-  if (props.schema.type === 'array' && props.schema.items.type !== 'string' && props.schema.layout !== 'compact') {
+  if (
+    props.schema.type === 'array' &&
+    props.schema.items.type !== 'string' &&
+    props.schema.layout !== 'compact'
+  ) {
     let className
 
     for (const childId of props.formContext.changedKeys) {
@@ -274,7 +281,12 @@ function FieldTemplate(props) {
 
   // Leaves
 
-  const widgetClass = props.schema.type === "array" && props.schema.layout === "compact" && props.formData?.length ? "left-border" : ""
+  const widgetClass =
+    props.schema.type === 'array' &&
+    props.schema.layout === 'compact' &&
+    props.formData?.length
+      ? 'left-border'
+      : ''
 
   return (
     <>
@@ -306,7 +318,9 @@ function FieldTemplate(props) {
             </span>
           </div>
         )}
-        <div className={`form-inline-field-widget ${widgetClass}`}>{props.children}</div>
+        <div className={`form-inline-field-widget ${widgetClass}`}>
+          {props.children}
+        </div>
       </div>
     </>
   )

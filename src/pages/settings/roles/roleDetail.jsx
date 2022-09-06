@@ -24,7 +24,7 @@ const RoleDetail = ({ projectName, roleName, onChange }) => {
     axios
       .get(`/api/roles/${roleName}/${projectName || '_'}`)
       .then((response) => {
-        console.log("Loaded role", roleName, projectName)
+        console.log('Loaded role', roleName, projectName)
         setOriginalData(response.data)
       })
   }, [projectName, roleName])
@@ -39,14 +39,11 @@ const RoleDetail = ({ projectName, roleName, onChange }) => {
   }
 
   const onDelete = () => {
-    axios
-      .delete(`/api/roles/${roleName}/${projectName || '_'}`)
-      .then(() => {
-        toast.success('Role deleted')
-        onChange()
-      })
+    axios.delete(`/api/roles/${roleName}/${projectName || '_'}`).then(() => {
+      toast.success('Role deleted')
+      onChange()
+    })
   }
-
 
   const editor = useMemo(() => {
     if (!(schema && originalData)) return 'Loading editor...'
@@ -82,10 +79,9 @@ const RoleDetail = ({ projectName, roleName, onChange }) => {
             flexDirection: 'column',
             overflowY: 'scroll',
             gap: 12,
-            padding: 12
+            padding: 12,
           }}
         >
-
           {editor}
         </div>
       </section>
