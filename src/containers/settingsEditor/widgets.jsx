@@ -7,6 +7,9 @@ import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 
 const updateOverrides = (props, changed) => {
+  if (!props.formContext){
+    return  // WARN!
+  }
   if (changed && !props.formContext.changedKeys.includes(props.id))
     props.formContext.changedKeys.push(props.id)
   else if (!changed && props.formContext.changedKeys.includes(props.id))
@@ -14,12 +17,12 @@ const updateOverrides = (props, changed) => {
       props.formContext.changedKeys.indexOf(props.id),
       1
     )
-  props.formContext.onSetChangedKeys(props.formContext.changedKeys)
+  props.formContext?.onSetChangedKeys(props.formContext.changedKeys)
 }
 
 const parseContext = (props) => {
   const result = { originalValue: null, path: [] }
-  if (props.formContext.overrides && props.formContext.overrides[props.id]) {
+  if (props.formContext?.overrides && props.formContext.overrides[props.id]) {
     result.originalValue = props.formContext.overrides[props.id].value
     result.path = props.formContext.overrides[props.id].path
   }
@@ -32,7 +35,7 @@ const CheckboxWidget = function (props) {
   const onChange = (e) => {
     updateOverrides(props, e.value !== originalValue)
     props.onChange(e.value)
-    props.formContext.onSetBreadcrumbs(path)
+    props.formContext?.onSetBreadcrumbs(path)
   }
 
   return <InputSwitch checked={props.value} onChange={onChange} />
@@ -52,18 +55,20 @@ const SelectWidget = (props) => {
   }
 
   const onFocus = (e) => {
-    props.formContext.onSetBreadcrumbs(path)
+    props.formContext?.onSetBreadcrumbs(path)
     props.onFocus(e)
   }
 
   if (props.multiple) {
     return (
+      <>
       <MultiSelect
         options={options}
         value={props.value}
         onChange={onChange}
         onFocus={onFocus}
       />
+      </>
     )
   }
 
@@ -123,7 +128,7 @@ const TextWidget = (props) => {
   }
 
   const onFocus = (e) => {
-    props.formContext.onSetBreadcrumbs(path)
+    props.formContext?.onSetBreadcrumbs(path)
     props.onFocus(e)
   }
 

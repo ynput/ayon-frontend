@@ -10,6 +10,7 @@ const SettingsPanel = ({
   children,
   layout,
   contextMenuModel,
+  enabledToggler,
   className = '',
   onClick,
 }) => {
@@ -53,6 +54,7 @@ const SettingsPanel = ({
           >
             <span className={toggleIcon}></span>
           </button>
+          { enabledToggler }
           <h4>{title}</h4>
           <div style={{ flex: 1 }}></div>
           <small>{description}</small>

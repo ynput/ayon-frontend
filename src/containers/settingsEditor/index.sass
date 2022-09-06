@@ -34,6 +34,10 @@ $field-gap: 8px
 
   // OBJECT
 
+  .form-object-header-enabled-toggler
+    .form-inline-field-label
+      display: none
+
   .group-changed
     .p-panel-header
       border-style: dashed 
@@ -113,6 +117,9 @@ $field-gap: 8px
 
 
     .form-inline-field-widget
+      &.left-border
+        border-left: 1px dashed #434a56 !important
+        padding-left: 6px
 
       flex-grow: 1
       >:not(.p-inputswitch)

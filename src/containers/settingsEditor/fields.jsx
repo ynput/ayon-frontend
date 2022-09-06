@@ -99,6 +99,18 @@ function ObjectFieldTemplate(props) {
 
   // memoize the fields
 
+  const enabledToggler = useMemo(() => {
+    for (const element of props.properties){
+      if (element.name === "enabled"){
+        return (
+          <span className='form-object-header-enabled-toggler'>
+            {element.content}
+          </span>
+        )
+      }
+    }
+  }, [props.properties])
+
   const fields = useMemo(() => {
     if (props.schema.layout === 'expanded') {
       let nameField = null
@@ -121,6 +133,8 @@ function ObjectFieldTemplate(props) {
     return (
       <div className={className}>
         {props.properties.map((element, index) => {
+          if (element.name === "enabled" && !["compact", "root"].includes(props.schema.layout))
+            return <></>
           return (
             <div key={index} className="form-object-field-item">
               {element.content}
@@ -159,6 +173,7 @@ function ObjectFieldTemplate(props) {
       description={props.description}
       contextMenuModel={contextMenuModel}
       className={`obj-override-${overrideLevel}`}
+      enabledToggler={enabledToggler}
     >
       {fields}
     </SettingsPanel>
@@ -229,7 +244,7 @@ function FieldTemplate(props) {
 
   // Array fields
 
-  if (props.schema.type === 'array' && props.schema.items.type !== 'string') {
+  if (props.schema.type === 'array' && props.schema.items.type !== 'string' && props.schema.layout !== 'compact') {
     let className
 
     for (const childId of props.formContext.changedKeys) {
@@ -258,6 +273,8 @@ function FieldTemplate(props) {
   }
 
   // Leaves
+
+  const widgetClass = props.schema.type === "array" && props.schema.layout === "compact" && props.formData?.length ? "left-border" : ""
 
   return (
     <>
@@ -289,7 +306,7 @@ function FieldTemplate(props) {
             </span>
           </div>
         )}
-        <div className="form-inline-field-widget">{props.children}</div>
+        <div className={`form-inline-field-widget ${widgetClass}`}>{props.children}</div>
       </div>
     </>
   )
