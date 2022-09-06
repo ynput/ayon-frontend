@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import axios from 'axios'
 
 import SettingsEditor from '../../containers/settingsEditor'
@@ -9,20 +9,51 @@ import { Column } from 'primereact/column'
 import { Dialog } from 'primereact/dialog'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { InputText } from 'primereact/inputtext'
+import { ContextMenu } from 'primereact/contextmenu'
 import { toast } from 'react-toastify'
 
 import { Spacer } from '../../components'
 import { loadAnatomyPresets } from '../../utils'
 
-const PresetList = ({ selectedPreset, setSelectedPreset, timestamp }) => {
+const PresetList = ({ 
+  selectedPreset, 
+  setSelectedPreset, 
+  timestamp,
+  onSetPrimary,
+  onUnsetPrimary,
+  onDelete,
+}) => {
   const [presetList, setPresetList] = useState([])
+  const contextMenuRef = useRef(null)
 
   useEffect(() => {
+    toast.info("Loading list")
     loadAnatomyPresets().then((r) => setPresetList(r))
   }, [timestamp])
 
+
+  const contextMenuModel = useMemo(()=>{
+    return [
+      {
+        label: "Set as primary",
+        command: onSetPrimary
+      },
+      {
+        label: "Unset primary preset",
+        command: onUnsetPrimary
+      },
+      {
+        label: "Delete",
+        disabled: selectedPreset === "_",
+        command: onDelete
+      }
+    ]
+
+  },[selectedPreset, presetList])
+
   return (
     <div className="wrapper">
+      <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <DataTable
         value={presetList}
         scrollable
@@ -32,6 +63,8 @@ const PresetList = ({ selectedPreset, setSelectedPreset, timestamp }) => {
         dataKey="name"
         selection={{ name: selectedPreset }}
         onSelectionChange={(e) => setSelectedPreset(e.value.name)}
+        onContextMenuSelectionChange={e => setSelectedPreset(e.value.name)}
+        onContextMenu={e => contextMenuRef.current.show(e.originalEvent)}
       >
         <Column field="title" header="Name" />
         <Column field="primary" header="Primary" style={{ maxWidth: 70 }} />
@@ -121,6 +154,18 @@ const AnatomyPresets = () => {
       })
   }
 
+  const unsetPrimaryPreset = () => {
+    axios
+      .post(`/api/anatomy/presets/_/primary`)
+      .then(() => {
+        setPresetListTimestamp(presetListTimestamp + 1)
+        toast.info(`Unset primary preset`)
+      })
+      .catch((err) => {
+        toast.error(err.message)
+      })
+  }
+
   //
   // Render
   //
@@ -160,6 +205,9 @@ const AnatomyPresets = () => {
           selectedPreset={selectedPreset}
           setSelectedPreset={setSelectedPreset}
           timestamp={presetListTimestamp}
+          onSetPrimary={setPrimaryPreset}
+          onUnsetPrimary={unsetPrimaryPreset}
+          onDelete={deletePreset}
         />
       </section>
 
