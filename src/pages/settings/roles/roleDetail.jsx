@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { Button, Spacer, TableWrapper } from '/src/components'
+import { Button, Spacer } from '/src/components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const RoleDetail = ({ projectName, roleName, onChange }) => {
@@ -9,14 +9,7 @@ const RoleDetail = ({ projectName, roleName, onChange }) => {
   const [schema, setSchema] = useState(null)
   const [newData, setNewData] = useState(null)
 
-  useEffect(() => {
-    axios
-      .get(`/api/roles/_schema`)
-      .then((res) => setSchema(res.data))
-      .catch((err) => console.log(err))
-  }, [])
-
-  useEffect(() => {
+  const loadRoleData = () => {
     if (!roleName) {
       setOriginalData(null)
       return
@@ -26,7 +19,19 @@ const RoleDetail = ({ projectName, roleName, onChange }) => {
       .then((response) => {
         console.log('Loaded role', roleName, projectName)
         setOriginalData(response.data)
+        setNewData(response.data)
       })
+  }
+
+  useEffect(() => {
+    axios
+      .get(`/api/roles/_schema`)
+      .then((res) => setSchema(res.data))
+      .catch((err) => console.log(err))
+  }, [])
+
+  useEffect(() => {
+    loadRoleData()
   }, [projectName, roleName])
 
   const onSave = () => {
@@ -34,6 +39,7 @@ const RoleDetail = ({ projectName, roleName, onChange }) => {
       .put(`/api/roles/${roleName}/${projectName || '_'}`, newData)
       .then(() => {
         toast.success('Role saved')
+        loadRoleData()
         onChange()
       })
   }
@@ -41,12 +47,13 @@ const RoleDetail = ({ projectName, roleName, onChange }) => {
   const onDelete = () => {
     axios.delete(`/api/roles/${roleName}/${projectName || '_'}`).then(() => {
       toast.success('Role deleted')
+      loadRoleData()
       onChange()
     })
   }
 
   const editor = useMemo(() => {
-    if (!(schema && originalData)) return 'Loading editor...'
+    if (!(schema && originalData)) return <></>
 
     return (
       <SettingsEditor
