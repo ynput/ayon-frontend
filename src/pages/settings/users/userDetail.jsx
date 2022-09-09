@@ -112,8 +112,12 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
       style={{ flexBasis: 500, padding: 0, height: '100%' }}
     >
       <section className="invisible row">
-        <Button onClick={onSave} label="Save selected users" />
-        <Button onClick={onDelete} label="Delete selected users" />
+        <Button onClick={onSave} label="Save selected users" icon="check" />
+        <Button
+          onClick={onDelete}
+          label="Delete selected users"
+          icon="person_remove"
+        />
         <Spacer />
       </section>
       <section className="lighter" style={{ flexGrow: 1 }}>

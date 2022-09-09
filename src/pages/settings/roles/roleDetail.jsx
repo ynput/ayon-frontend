@@ -4,10 +4,13 @@ import { toast } from 'react-toastify'
 import { Button, Spacer } from '/src/components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
-const RoleDetail = ({ projectName, roleName, onChange }) => {
+const RoleDetail = ({ projectName, role, onChange }) => {
   const [originalData, setOriginalData] = useState(null)
   const [schema, setSchema] = useState(null)
   const [newData, setNewData] = useState(null)
+
+  const roleName = role?.name
+  const isProjectLevel = role?.isProjectLevel
 
   const loadRoleData = () => {
     if (!roleName) {
@@ -70,11 +73,16 @@ const RoleDetail = ({ projectName, roleName, onChange }) => {
       style={{ flexGrow: 1, padding: 0, height: '100%' }}
     >
       <section className="invisible row">
-        <Button onClick={onSave} label="Save project role" />
+        <Button
+          onClick={onSave}
+          label={`Save ${projectName ? 'project ' : ''}role`}
+          icon="check"
+        />
         <Button
           onClick={onDelete}
           label="Delete project role"
-          disabled={!projectName}
+          disabled={!(projectName && isProjectLevel)}
+          icon="group_remove"
         />
         <Spacer />
       </section>

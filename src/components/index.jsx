@@ -76,11 +76,20 @@ const FormRow = (props) => {
         flexDirection: 'row',
         flexGrow: 1,
         alignItems: 'center',
-        gap: 8,
+        gap: 12,
+        //border: '1px solid blue',
       }}
     >
-      <div style={{ flexBasis: 120 }}>{props.label}</div>
-      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minWidth: 120 }}>{props.label}</div>
+      <div
+        style={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'left',
+          //border: '1px solid red',
+        }}
+      >
         {props.children}
       </div>
     </div>

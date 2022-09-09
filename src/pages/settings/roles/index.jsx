@@ -24,21 +24,16 @@ const Roles = () => {
           />
         </section>
 
-        <section
-          className="lighter"
-          style={{ flexBasis: 400, padding: 0, height: '100%' }}
-        >
-          <RolesList
-            projectName={projectName}
-            reloadTrigger={reloadTrigger}
-            selectedRole={selectedRole}
-            onSelectRole={setSelectedRole}
-          />
-        </section>
+        <RolesList
+          projectName={projectName}
+          reloadTrigger={reloadTrigger}
+          selectedRole={selectedRole}
+          onSelectRole={setSelectedRole}
+        />
 
         <RoleDetail
           projectName={projectName}
-          roleName={selectedRole}
+          role={selectedRole}
           onChange={triggerReload}
         />
       </section>

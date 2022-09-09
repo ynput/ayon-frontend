@@ -194,7 +194,11 @@ const UserList = ({
       style={{ flexGrow: 1, padding: 0, height: '100%' }}
     >
       <section className="invisible row">
-        <Button onClick={() => setShowNewUser(true)} label="New user" />
+        <Button
+          onClick={() => setShowNewUser(true)}
+          label="Add a new user"
+          icon="person_add"
+        />
       </section>
 
       {showNewUser && (

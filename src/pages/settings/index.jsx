@@ -13,6 +13,7 @@ const AddonsSettings = lazy(() => import('./addons'))
 const StudioOverrides = lazy(() => import('./studio'))
 const Users = lazy(() => import('./users'))
 const Roles = lazy(() => import('./roles'))
+const Attributes = lazy(() => import('./attributes'))
 
 const SettingsPage = () => {
   const { module } = useParams()
@@ -37,6 +38,8 @@ const SettingsPage = () => {
         return <Users />
       case 'roles':
         return <Roles />
+      case 'attributes':
+        return <Attributes />
       default:
         return <div>Not implemented</div>
     }

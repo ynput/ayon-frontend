@@ -93,7 +93,7 @@ const ProfilePage = () => {
             />
           </FormRow>
           <FormRow>
-            <Button label="Update profile" onClick={saveProfile} />
+            <Button label="Update profile" icon="check" onClick={saveProfile} />
           </FormRow>
         </FormLayout>
 
@@ -115,6 +115,7 @@ const ProfilePage = () => {
           <FormRow>
             <Button
               label="Update password"
+              icon="lock"
               onClick={savePassword}
               disabled={passInvalid}
             />

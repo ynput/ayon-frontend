@@ -132,18 +132,17 @@ function ObjectFieldTemplate(props) {
 
     return (
       <div className={className}>
-        {props.properties.map((element, index) => {
-          if (
-            element.name === 'enabled' &&
-            !['compact', 'root'].includes(props.schema.layout)
+        {props.properties
+          .filter(
+            (element) =>
+              element.name !== 'enabled' ||
+              ['compact', 'root'].includes(props.schema.layout)
           )
-            return <></>
-          return (
+          .map((element, index) => (
             <div key={index} className="form-object-field-item">
               {element.content}
             </div>
-          )
-        })}
+          ))}
       </div>
     )
   }, [props.properties, className])
@@ -154,7 +153,7 @@ function ObjectFieldTemplate(props) {
     return fields
 
   // In case of "pseudo-dicts" (array of objects with a "name" attribute)
-  // use the "name" attribute as the title
+  // use the "name" attributeas the title
 
   let title = props.title
   if ('name' in props.schema.properties) {
