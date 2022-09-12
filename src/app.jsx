@@ -1,5 +1,6 @@
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import {v4 as uuidv4} from 'uuid';
 import axios from 'axios'
 
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
@@ -9,6 +10,7 @@ import Header from './containers/header'
 import LoginPage from './pages/login'
 import LoadingPage from './pages/loading'
 import Error from './pages/error'
+import WebsocketListener from './containers/websocket'
 
 const ProjectPage = lazy(() => import('./pages/project'))
 const ProjectManager = lazy(() => import('./pages/projectManager'))
@@ -43,10 +45,12 @@ const App = () => {
   const [loading, setLoading] = useState(false)
 
   const storedAccessToken = localStorage.getItem('accessToken')
-  if (storedAccessToken)
+  if (storedAccessToken){
     axios.defaults.headers.common[
       'Authorization'
     ] = `Bearer ${storedAccessToken}`
+  }
+  axios.defaults.headers.common['Sender-Id'] = uuidv4();
 
   useEffect(() => {
     setLoading(true)
@@ -80,6 +84,7 @@ const App = () => {
 
   return (
     <Suspense fallback={<LoadingPage />}>
+      <WebsocketListener />
       <BrowserRouter>
         <Header />
         <Routes>

@@ -25,7 +25,8 @@
     "react-toastify": "^9.0.3",
     "react-transition-group": "^4.4.2",
     "react-use-websocket": "^4.2.0",
-    "sass": "^1.52.1"
+    "sass": "^1.52.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
