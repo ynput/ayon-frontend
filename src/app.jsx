@@ -1,6 +1,6 @@
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
@@ -45,12 +45,12 @@ const App = () => {
   const [loading, setLoading] = useState(false)
 
   const storedAccessToken = localStorage.getItem('accessToken')
-  if (storedAccessToken){
+  if (storedAccessToken) {
     axios.defaults.headers.common[
       'Authorization'
     ] = `Bearer ${storedAccessToken}`
   }
-  axios.defaults.headers.common['Sender-Id'] = uuidv4();
+  axios.defaults.headers.common['X-Sender'] = uuidv4()
 
   useEffect(() => {
     setLoading(true)

@@ -3,6 +3,7 @@ import axios from 'axios'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
+import PubSub from '/src/pubsub'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -78,6 +79,56 @@ const EditorPage = () => {
   }, [context.expandedFolders, newNodes])
 
   //
+  // External events handling
+  //
+
+  const handlePubSub = async (topic, message) => {
+    if (message.project?.toLowerCase() !== projectName.toLowerCase()) return
+
+    const getEntity = async (entityType, entityId) => {
+      let data = {}
+      try {
+        const result = await axios.get(
+          `/api/projects/${projectName}/${entityType}s/${entityId}`
+        )
+        data = result.data
+      } catch {}
+      return data
+    }
+
+    const updateEntities = async (entityType, ids) => {
+      const patch = {}
+      for (const entityId of ids) {
+        const newEntity = await getEntity(entityType, entityId)
+        patch[entityId] = newEntity
+      }
+      if (isEmpty(patch)) return
+
+      setNodeData((nd) => {
+        const result = { ...nd }
+        for (const entityId in patch) {
+          const row = { ...result[entityId] }
+          Object.assign(row.data, patch[entityId])
+          result[entityId] = row
+        }
+        return result
+      })
+    }
+
+    // This is used just to get the current list of nodes to be updated
+    setNodeData((nd) => {
+      const toUpdate = message.summary.ids.filter((id) => id in nd)
+      if (toUpdate.length) updateEntities(message.summary.entityType, toUpdate)
+      return nd
+    })
+  } // handlePubSub
+
+  useEffect(() => {
+    const token = PubSub.subscribe('entity_changed', handlePubSub)
+    return () => PubSub.unsubscribe(token)
+  }, [])
+
+  //
   // Build hierarchy
   //
 
@@ -86,6 +137,7 @@ const EditorPage = () => {
     //   { parentId: [child1Id, child2Id....]
     // It is updated when nodeData changes and it speeds up
     // building hierarchy
+    console.log('NodeData changed')
 
     const result = {}
     for (const childId in nodeData) {

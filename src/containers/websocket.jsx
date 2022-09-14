@@ -1,42 +1,54 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
-import PubSub from 'pubsub-js'
+import axios from 'axios'
+import PubSub from '/src/pubsub'
+import { arrayEquals } from '/src/utils'
 
-
-const wsAddress = `${window.location.protocol.replace('http','ws')}//${window.location.host}/ws`
-
+const wsAddress = `${window.location.protocol.replace('http', 'ws')}//${
+  window.location.host
+}/ws`
 
 const WebsocketListener = () => {
-  console.log("connect to", wsAddress)
-  const {sendMessage, readyState, getWebSocket} = useWebSocket(wsAddress, {
-      shouldReconnect: () => true,
-    }
-  )
+  const [topics, setTopics] = useState([])
+
+  const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, {
+    shouldReconnect: () => true,
+  })
 
   useEffect(() => {
-    if(readyState === ReadyState.CLOSED){
-      console.log("WS CLOSED")
+    console.log('Topics changed', topics)
+    sendMessage(
+      JSON.stringify({
+        topic: 'auth',
+        token: localStorage.getItem('accessToken'),
+        subscribe: topics,
+      })
+    )
+  }, [topics])
+
+  const onMessage = (message) => {
+    const data = JSON.parse(message.data)
+    if (data.topic === 'heartbeat') return
+    if (data.sender === axios.defaults.headers.common['X-Sender']) {
+      return // my own message. ignore
     }
+    console.log('Event RX', data)
+    PubSub.publish(data.topic, data)
+  }
 
-    if(readyState === ReadyState.OPEN){
-      sendMessage(JSON.stringify(({
-        "topic": "auth",
-        "token": localStorage.getItem('accessToken'),
-        "subscribe": ["log"]
-      })))
-      
-      getWebSocket().onmessage = (message) =>{
+  PubSub.setOnSubscriptionsChange((newTopics) => {
+    if (arrayEquals(topics, newTopics)) return
+    setTopics(newTopics)
+  })
 
-        const data = JSON.parse(message.data)
-
-
-        console.log("Event RX", data)
-        PubSub.publish(data.topic, data);
-      }
+  useEffect(() => {
+    if (readyState === ReadyState.OPEN) {
+      getWebSocket().onmessage = onMessage
+      setTopics([])
     }
-  }, [readyState, getWebSocket]);
+  }, [readyState, getWebSocket])
 
-  return (<></>)
+  return <></>
 }
 
 export default WebsocketListener
