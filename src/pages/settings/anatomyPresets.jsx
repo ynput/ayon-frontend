@@ -1,9 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import axios from 'axios'
 
-import SettingsEditor from '../../containers/settingsEditor'
-
-import { Button } from 'primereact/button'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Dialog } from 'primereact/dialog'
@@ -12,8 +9,9 @@ import { InputText } from 'primereact/inputtext'
 import { ContextMenu } from 'primereact/contextmenu'
 import { toast } from 'react-toastify'
 
-import { Spacer } from '../../components'
-import { loadAnatomyPresets } from '../../utils'
+import SettingsEditor from '/src/containers/settingsEditor'
+import { Spacer, Button } from '/src/components'
+import { loadAnatomyPresets } from '/src/utils'
 
 const PresetList = ({
   selectedPreset,
@@ -213,13 +211,13 @@ const AnatomyPresets = () => {
         <section className="invisible row">
           <Button
             label="Save current preset"
-            icon="pi pi-plus"
+            icon="check"
             disabled={selectedPreset === '_'}
             onClick={() => savePreset(selectedPreset)}
           />
           <Button
             label="Save as a new preset"
-            icon="pi pi-plus"
+            icon="add"
             onClick={() => {
               setNewPresetName('')
               setShowNameDialog(true)
@@ -227,13 +225,13 @@ const AnatomyPresets = () => {
           />
           <Button
             label="Delete the preset"
-            icon="pi pi-times"
+            icon="delete"
             disabled={selectedPreset === '_'}
             onClick={deletePreset}
           />
           <Button
             label="Set as primary preset"
-            icon="pi pi-times"
+            icon="bolt"
             onClick={setPrimaryPreset}
           />
           <Spacer />

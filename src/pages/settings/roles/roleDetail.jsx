@@ -63,6 +63,7 @@ const RoleDetail = ({ projectName, role, onChange }) => {
         schema={schema}
         formData={originalData}
         onChange={setNewData}
+        level={isProjectLevel ? 'project' : 'studio'}
       />
     )
   }, [schema, originalData])

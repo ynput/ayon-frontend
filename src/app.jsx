@@ -18,6 +18,7 @@ const ExplorerPage = lazy(() => import('./pages/explorer'))
 const APIDocsPage = lazy(() => import('./pages/doc/api'))
 const ProfilePage = lazy(() => import('./pages/profile'))
 const SettingsPage = lazy(() => import('./pages/settings'))
+const EventViewer = lazy(() => import('./pages/eventViewer'))
 
 import { login } from './features/user'
 import { setSettings } from './features/settings'
@@ -109,6 +110,7 @@ const App = () => {
           <Route path="/explorer" element={<ExplorerPage />} />
           <Route path="/doc/api" element={<APIDocsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/events" element={<EventViewer />} />
 
           <Route element={<Error code="404" />} />
         </Routes>

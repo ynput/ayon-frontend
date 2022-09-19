@@ -186,6 +186,10 @@ const Attributes = () => {
     setShowEditor(true)
   }
 
+  const renderBuiltIn = (rowData) => {
+    return rowData.builtin ? "built-in" : ""
+  }
+
   return (
     <main className="rows">
       {showEditor && (
@@ -223,6 +227,7 @@ const Attributes = () => {
               header="Title"
               style={{ maxWidth: 130 }}
             />
+            <Column field="builtIn" header="" style={{ maxWidth: 60}} body={ renderBuiltIn }/>
             <Column
               header="Scopes"
               body={(rowData) => rowData.scope.join(', ')}

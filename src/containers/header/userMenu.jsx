@@ -2,7 +2,7 @@ import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { Sidebar } from 'primereact/sidebar'
-import { Button } from 'primereact/button'
+import { Button } from '/src/components'
 import axios from 'axios'
 
 import { Spacer } from '../../components'
@@ -41,38 +41,41 @@ const UserMenu = ({ visible, onHide }) => {
       >
         <Button
           onClick={() => {
-            // onHide()
             navigate('/doc/api')
           }}
           label="REST API docs"
-          icon="pi pi-book"
+          icon="help"
         />
         <Button
           onClick={() => {
-            // onHide()
             navigate('/explorer')
           }}
           label="GraphQL explorer"
-          icon="pi pi-sitemap"
+          icon="account_tree"
         />
         <Button
           onClick={() => {
-            // onHide()
+            navigate('/events')
+          }}
+          label="Event viewer"
+          icon="history"
+        />
+        <Button
+          onClick={() => {
             navigate('/settings')
           }}
           label="Settings"
-          icon="pi pi-cog"
+          icon="settings"
         />
         <Button
           onClick={() => {
-            // onHide()
             navigate('/profile')
           }}
           label="Profile"
-          icon="pi pi-user"
+          icon="manage_accounts"
         />
         <Spacer />
-        <Button onClick={doLogout} label="Sign Out" icon="pi pi-sign-out" />
+        <Button onClick={doLogout} label="Sign Out" icon="logout" />
       </div>
     </Sidebar>
   )

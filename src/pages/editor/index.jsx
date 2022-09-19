@@ -124,7 +124,7 @@ const EditorPage = () => {
   } // handlePubSub
 
   useEffect(() => {
-    const token = PubSub.subscribe('entity_changed', handlePubSub)
+    const token = PubSub.subscribe('entity.update', handlePubSub)
     return () => PubSub.unsubscribe(token)
   }, [])
 
