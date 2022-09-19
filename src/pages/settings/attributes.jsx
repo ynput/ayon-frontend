@@ -5,6 +5,8 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Dialog } from 'primereact/dialog'
 import { MultiSelect } from 'primereact/multiselect'
+import { Dropdown } from 'primereact/dropdown'
+
 import {
   TableWrapper,
   Button,
@@ -24,6 +26,12 @@ const SCOPE_OPTIONS = [
   { value: 'user', label: 'User' },
 ]
 
+const TYPE_OPTIONS = [
+  { value: 'string', label: 'String' },
+  { value: 'integer', label: 'Integer' },
+  { value: 'float', label: 'Decimal number' },
+]
+
 const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
   const [formData, setFormData] = useState(null)
 
@@ -34,6 +42,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
           name: 'newAttribute',
           builtin: false,
           scope: ['folder', 'task'],
+          position: existingNames.length,
           data: { title: 'New attribute', type: 'string' },
         }
       ),
@@ -99,7 +108,16 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               options={SCOPE_OPTIONS}
               disabled={formData.builtin}
               value={formData.scope}
+              onChange={(e) => setTopLevelData('scope', e.target.value)}
             />
+          </FormRow>
+          <FormRow label="Type">
+            <Dropdown 
+              value={formData?.data.type} 
+              disabled={formData.builtin}
+              options={TYPE_OPTIONS} 
+              onChange={e => setData('type', e.target.value)}
+             />
           </FormRow>
           <FormRow label="Title">
             <InputText
@@ -155,6 +173,18 @@ const Attributes = () => {
     [attributes]
   )
 
+  const onSave = () => {
+    setLoading(true)
+    axios
+      .put('/api/attributes', {attributes})
+      .then(() => toast.success("Attribute set saved"))
+      .catch(() => toast.error("Unable to set attributes"))
+      .finally(() => {
+        setLoading(false)
+        loadAttributes()
+      })
+  }
+
   const onEdit = (attribute) => {
     setAttributes((src) => {
       let rows = [...src]
@@ -168,6 +198,7 @@ const Attributes = () => {
       rows.push(attribute)
       return rows
     }) // setAttributes
+    setSelectedAttribute(attribute)
     setShowEditor(false)
   }
 
@@ -186,8 +217,16 @@ const Attributes = () => {
     setShowEditor(true)
   }
 
+  const onDelete = () => {
+    if (!selectedAttribute?.name)
+      return
+    setAttributes(attrs => {
+      return attrs.filter(attr => attr.name !== selectedAttribute.name)
+    })
+  }
+
   const renderBuiltIn = (rowData) => {
-    return rowData.builtin ? "built-in" : ""
+    return rowData?.builtin ? "built-in" : ""
   }
 
   return (
@@ -201,9 +240,9 @@ const Attributes = () => {
         />
       )}
       <section className="invisible row">
-        <Button label="Save settings" icon="check" />
+        <Button label="Save settings" icon="check" onClick={onSave} />
         <Button label="Add attribute" icon="add" onClick={onNewAttribute} />
-        <Button label="Delete attribute" icon="delete" />
+        <Button label="Delete attribute" icon="delete" disabled={selectedAttribute?.builtin} onClick={onDelete} />
       </section>
       <section style={{ flexGrow: 1 }}>
         <TableWrapper>
