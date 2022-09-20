@@ -176,7 +176,7 @@ const Attributes = () => {
   const onSave = () => {
     setLoading(true)
     axios
-      .put('/api/attributes', {attributes})
+      .put('/api/attributes', {attributes, deleteMissing: true})
       .then(() => toast.success("Attribute set saved"))
       .catch(() => toast.error("Unable to set attributes"))
       .finally(() => {

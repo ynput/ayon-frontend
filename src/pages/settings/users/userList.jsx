@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TableWrapper, Button } from '/src/components'
+import { ContextMenu } from 'primereact/contextmenu'
+import { Dialog } from 'primereact/dialog'
+import { TableWrapper, Button, InputText, FormLayout, FormRow } from '/src/components'
 import NewUserDialog from './newUserDialog'
 import axios from 'axios'
 
@@ -98,6 +100,38 @@ const formatRoles = (rowData, selectedProjects) => {
   )
 }
 
+
+const RenameUserDialog = ({onHide, selectedUsers}) => {
+  const [newName, setNewName] = useState("")
+
+  if (!selectedUsers?.length){
+    // this shouldn't happen
+    onHide()
+    return <></>
+  }
+
+  const oldName = selectedUsers[0]
+  const onSubmit = () => {
+    axios.patch(`/api/users/${oldName}/rename`, {newName})
+    .then(() => toast.success("User renamed"))
+    .catch(() => toast.error("Unable to rename user"))
+    .finally(() => onHide())
+  }
+  return (
+    <Dialog header={`Rename user ${oldName}`} visible={true} onHide={onHide} >
+      <FormLayout>
+        <FormRow label="New name">
+          <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />
+        </FormRow>
+        <FormRow>
+          <Button label="Rename" onClick={onSubmit} />
+        </FormRow>
+      </FormLayout>
+    </Dialog>
+  )
+}
+
+
 const UserList = ({
   selectedProjects,
   selectedUsers,
@@ -111,6 +145,8 @@ const UserList = ({
   const [loading, setLoading] = useState(false)
   const [showNewUser, setShowNewUser] = useState(false)
   const [lastSelectedUser, setLastSelectedUser] = useState(null)
+  const [showRenameUser, setShowRenameUser] = useState(false)
+  const contextMenuRef = useRef(null)
 
   // Load user list
 
@@ -179,12 +215,23 @@ const UserList = ({
     return result
   }, [selectedUsers, userList, selectedProjects])
 
+
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
     let result = []
     for (const user of e.value) result.push(user.name)
     onSelectUsers(result)
   }
+
+  // CTX
+
+  const contextMenuModel = [
+    {
+      "label" : "Rename user",
+      "disabled": selection.length !== 1,
+      "command": () => setShowRenameUser(true)
+    }
+  ]
 
   // Render
 
@@ -211,8 +258,19 @@ const UserList = ({
         />
       )}
 
+      {showRenameUser && (
+          <RenameUserDialog
+            selectedUsers={selectedUsers}
+            onHide={() => {
+              setShowRenameUser(false)
+              onTriggerReload()
+            }}
+          />
+      )}
+
       <section className="lighter" style={{ flexGrow: 1 }}>
         <TableWrapper>
+          <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
           <DataTable
             value={userList}
             scrollable="true"
@@ -221,6 +279,14 @@ const UserList = ({
             loading={loading}
             selectionMode="multiple"
             onSelectionChange={onSelectionChange}
+            onContextMenu={e => contextMenuRef.current.show(e.originalEvent)}
+            onContextMenuSelectionChange={(e) => {
+              if (!selectedUsers.includes(e.value.name)){
+                onSelectUsers([...selection, e.value.name]) 
+              }
+              setLastSelectedUser(e.data)
+              }
+            }
             selection={selection}
             onRowClick={(e) => {
               setLastSelectedUser(e.data)
