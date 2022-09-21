@@ -8,7 +8,7 @@ import { TableWrapper } from '/src/components'
 
 const EVENTS_QUERY = `
 query Events {
-    events {
+    events(last: 100) {
       edges {
         node {
           id
@@ -60,7 +60,13 @@ const EventViewer = () => {
     <main>
       <section style={{ flexGrow: 1 }}>
         <TableWrapper>
-          <DataTable value={eventData}>
+          <DataTable 
+            value={eventData}
+            scrollable="true"
+            scrollHeight="flex"
+            responsive="true"
+            dataKey="id"
+          >
             <Column header="Time" body={formatTime} style={{ width: 200 }} />
             <Column header="Topic" field="topic" style={{ width: 200 }} />
             <Column header="User" field="user" style={{ width: 200 }} />
