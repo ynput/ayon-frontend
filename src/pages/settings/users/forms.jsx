@@ -27,7 +27,8 @@ const AccessControl = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
   const userLevels = [
     { label: 'User', value: 'user' },
     { label: 'Manager', value: 'manager' },
-    { label: 'Administrator', value: 'admin' },
+    { label: 'Admin', value: 'admin' },
+    { label: 'Service', value: 'service' },
   ]
 
   const activeOptions = [

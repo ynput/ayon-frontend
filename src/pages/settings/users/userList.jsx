@@ -18,6 +18,7 @@ const USERS_QUERY = `
           name
           isAdmin
           isManager
+          isService
           active
           roles
           defaultRoles
@@ -56,8 +57,13 @@ const buildUserDetailData = (
       shouldSelect: roleSet.includes(roleName),
     })
 
-  let userLevel = lastSelectedUser?.isManager ? 'manager' : 'user'
-  if (lastSelectedUser?.isAdmin) userLevel = 'admin'
+  let userLevel = 'user'
+  if (lastSelectedUser?.isAdmin)
+    userLevel = 'admin'
+  else if (lastSelectedUser?.isService)
+    userLevel = 'service'
+  else if (lastSelectedUser?.isManager)
+    userLevel = 'manager'
 
   return {
     users,
@@ -71,6 +77,7 @@ const buildUserDetailData = (
 const formatRoles = (rowData, selectedProjects) => {
   let res = {}
   if (rowData.isAdmin) res.admin = { cls: 'role admin' }
+  else if (rowData.isService) res.service = { cls: 'role manager' }
   else if (rowData.isManager) res.manager = { cls: 'role manager' }
   else if (!selectedProjects) {
     for (const name of rowData.defaultRoles || [])
@@ -195,25 +202,36 @@ const UserList = ({
       })
   }, [])
 
+
+
+
+
   // Selection
 
   const selection = useMemo(() => {
     let result = []
+    let lastUsr = null
     for (const user of userList) {
-      if (selectedUsers.includes(user.name)) result.push(user)
+      if (selectedUsers.includes(user.name)) (
+        result.push(user)
+      )
+      if (user?.name === lastSelectedUser?.name)
+        lastUsr = {...user}
     }
     if (setUserDetailData) {
+      setLastSelectedUser(lastUsr)
+
       setUserDetailData(
         buildUserDetailData(
           selectedProjects,
           rolesList,
           result,
-          lastSelectedUser
+          lastUsr
         )
       )
     }
     return result
-  }, [selectedUsers, userList, selectedProjects])
+  }, [selectedUsers, userList, selectedProjects, reloadTrigger])
 
 
   const onSelectionChange = (e) => {
@@ -225,12 +243,29 @@ const UserList = ({
 
   // CTX
 
+  const onDelete = async () => {
+    for (const user of selectedUsers) {
+      try {
+        await axios.delete(`/api/users/${user}`)
+      } catch {
+        toast.error(`Unable to delete user ${user}`)
+      }
+    }
+    onTriggerReload()
+  }
+
   const contextMenuModel = [
     {
       "label" : "Rename user",
       "disabled": selection.length !== 1,
       "command": () => setShowRenameUser(true)
+    },
+    {
+      "label" : "Delete selected",
+      "disabled": !selection.length,
+      "command": () => onDelete()
     }
+
   ]
 
   // Render
@@ -245,6 +280,12 @@ const UserList = ({
           onClick={() => setShowNewUser(true)}
           label="Add a new user"
           icon="person_add"
+        />
+        <Button
+          onClick={onDelete}
+          label="Delete selected users"
+          icon="person_remove"
+          disabled={!selectedUsers.length}
         />
       </section>
 

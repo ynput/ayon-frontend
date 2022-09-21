@@ -34,6 +34,7 @@ const NewUserDialog = ({ onHide }) => {
 
     if (formData.userLevel === 'admin') payload.data.isAdmin = true
     else if (formData.userLevel === 'manager') payload.data.isManager = true
+    else if (formData.userLevel === 'service') payload.data.isService = true
     else {
       payload.data.defaultRoles = formData.roles || []
       if (selectedProjects) {

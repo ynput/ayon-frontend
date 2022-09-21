@@ -30,6 +30,7 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
       for (const attrName in userAttrib)
         formData[attrName] = userDetailData.users[0].attrib[attrName]
     }
+    console.log("New form data", userDetailData, formData)
     setFormData(formData)
   }, [userDetailData])
 
@@ -69,8 +70,9 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
       // update user level && do role clean-up
       data.isAdmin = formData.userLevel === 'admin'
       data.isManager = formData.userLevel === 'manager'
+      data.isService = formData.userLevel === 'service'
 
-      if (!(data.isAdmin || data.isManager)) {
+      if (!(data.isAdmin || data.isManager || data.isService)) {
         if (!isEmpty(roles)) data.roles = roles
       } else {
         data.roles = null
@@ -91,16 +93,7 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
     onTriggerReload()
   }
 
-  const onDelete = async () => {
-    for (const user of userDetailData.users) {
-      try {
-        await axios.delete(`/api/users/${user.name}`)
-      } catch {
-        toast.error(`Unable to delete user ${user.name}`)
-      }
-    }
-    onTriggerReload()
-  }
+ 
 
   //
   // Render
@@ -113,11 +106,6 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
     >
       <section className="invisible row">
         <Button onClick={onSave} label="Save selected users" icon="check" />
-        <Button
-          onClick={onDelete}
-          label="Delete selected users"
-          icon="person_remove"
-        />
         <Spacer />
       </section>
       <section className="lighter" style={{ flexGrow: 1 }}>
