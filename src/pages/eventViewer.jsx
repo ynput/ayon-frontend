@@ -26,7 +26,7 @@ query Events {
 const EventViewer = () => {
   const [eventData, setEventData] = useState([])
 
-  useEffect(() => {
+  const loadEventData = () => {
     axios
       .post('/graphql', {
         query: EVENTS_QUERY,
@@ -48,7 +48,25 @@ const EventViewer = () => {
         }
         setEventData(result)
       })
+  }
 
+  const handlePubSub = (topic, message) => {
+    if (topic === 'client.reconnected') {
+      loadEventData()
+      return
+    }
+    setEventData((ed) => {
+      return [message, ...ed]
+    })
+  }
+
+  useEffect(() => {
+    const token = PubSub.subscribe('*', handlePubSub)
+    return () => PubSub.unsubscribe(token)
+  }, [])
+
+  useEffect(() => {
+    loadEventData()
     // eslint-disable-next-line
   }, [])
 
@@ -60,7 +78,7 @@ const EventViewer = () => {
     <main>
       <section style={{ flexGrow: 1 }}>
         <TableWrapper>
-          <DataTable 
+          <DataTable
             value={eventData}
             scrollable="true"
             scrollHeight="flex"

@@ -4,19 +4,20 @@ import axios from 'axios'
 import PubSub from '/src/pubsub'
 import { arrayEquals } from '/src/utils'
 
-const wsAddress = `${window.location.protocol.replace('http', 'ws')}//${
-  window.location.host
-}/ws`
+const proto = window.location.protocol.replace('http', 'ws')
+const wsAddress = `${proto}//${window.location.host}/ws`
+const wsOpts = {
+  shouldReconnect: () => true,
+}
 
 const WebsocketListener = () => {
   const [topics, setTopics] = useState([])
+  const { sendMessage, readyState, getWebSocket } = useWebSocket(
+    wsAddress,
+    wsOpts
+  )
 
-  const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, {
-    shouldReconnect: () => true,
-  })
-
-  useEffect(() => {
-    console.log('Topics changed', topics)
+  const subscribe = () => {
     sendMessage(
       JSON.stringify({
         topic: 'auth',
@@ -24,6 +25,11 @@ const WebsocketListener = () => {
         subscribe: topics,
       })
     )
+  }
+
+  useEffect(() => {
+    console.log('Topics changed', topics)
+    subscribe()
   }, [topics])
 
   const onMessage = (message) => {
@@ -38,13 +44,22 @@ const WebsocketListener = () => {
 
   PubSub.setOnSubscriptionsChange((newTopics) => {
     if (arrayEquals(topics, newTopics)) return
+    console.log('WS: Subscriptions changed')
     setTopics(newTopics)
   })
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
+      console.log('WS connected')
       getWebSocket().onmessage = onMessage
-      setTopics([])
+      subscribe()
+      // Dispatch a fake event to the frontend components
+      // in case they depend on the event stream and may
+      // miss some messages - this should force reloading
+      // events using graphql
+      PubSub.publish('client.reconnected', {
+        topic: 'client.reconnected',
+      })
     }
   }, [readyState, getWebSocket])
 

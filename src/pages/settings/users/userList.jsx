@@ -4,7 +4,13 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 import { Dialog } from 'primereact/dialog'
-import { TableWrapper, Button, InputText, FormLayout, FormRow } from '/src/components'
+import {
+  TableWrapper,
+  Button,
+  InputText,
+  FormLayout,
+  FormRow,
+} from '/src/components'
 import NewUserDialog from './newUserDialog'
 import axios from 'axios'
 
@@ -58,12 +64,9 @@ const buildUserDetailData = (
     })
 
   let userLevel = 'user'
-  if (lastSelectedUser?.isAdmin)
-    userLevel = 'admin'
-  else if (lastSelectedUser?.isService)
-    userLevel = 'service'
-  else if (lastSelectedUser?.isManager)
-    userLevel = 'manager'
+  if (lastSelectedUser?.isAdmin) userLevel = 'admin'
+  else if (lastSelectedUser?.isService) userLevel = 'service'
+  else if (lastSelectedUser?.isManager) userLevel = 'manager'
 
   return {
     users,
@@ -107,11 +110,10 @@ const formatRoles = (rowData, selectedProjects) => {
   )
 }
 
+const RenameUserDialog = ({ onHide, selectedUsers }) => {
+  const [newName, setNewName] = useState('')
 
-const RenameUserDialog = ({onHide, selectedUsers}) => {
-  const [newName, setNewName] = useState("")
-
-  if (!selectedUsers?.length){
+  if (!selectedUsers?.length) {
     // this shouldn't happen
     onHide()
     return <></>
@@ -119,16 +121,20 @@ const RenameUserDialog = ({onHide, selectedUsers}) => {
 
   const oldName = selectedUsers[0]
   const onSubmit = () => {
-    axios.patch(`/api/users/${oldName}/rename`, {newName})
-    .then(() => toast.success("User renamed"))
-    .catch(() => toast.error("Unable to rename user"))
-    .finally(() => onHide())
+    axios
+      .patch(`/api/users/${oldName}/rename`, { newName })
+      .then(() => toast.success('User renamed'))
+      .catch(() => toast.error('Unable to rename user'))
+      .finally(() => onHide())
   }
   return (
-    <Dialog header={`Rename user ${oldName}`} visible={true} onHide={onHide} >
+    <Dialog header={`Rename user ${oldName}`} visible={true} onHide={onHide}>
       <FormLayout>
         <FormRow label="New name">
-          <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />
+          <InputText
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
         </FormRow>
         <FormRow>
           <Button label="Rename" onClick={onSubmit} />
@@ -137,7 +143,6 @@ const RenameUserDialog = ({onHide, selectedUsers}) => {
     </Dialog>
   )
 }
-
 
 const UserList = ({
   selectedProjects,
@@ -202,37 +207,24 @@ const UserList = ({
       })
   }, [])
 
-
-
-
-
   // Selection
 
   const selection = useMemo(() => {
     let result = []
     let lastUsr = null
     for (const user of userList) {
-      if (selectedUsers.includes(user.name)) (
-        result.push(user)
-      )
-      if (user?.name === lastSelectedUser?.name)
-        lastUsr = {...user}
+      if (selectedUsers.includes(user.name)) result.push(user)
+      if (user?.name === lastSelectedUser?.name) lastUsr = { ...user }
     }
     if (setUserDetailData) {
       setLastSelectedUser(lastUsr)
 
       setUserDetailData(
-        buildUserDetailData(
-          selectedProjects,
-          rolesList,
-          result,
-          lastUsr
-        )
+        buildUserDetailData(selectedProjects, rolesList, result, lastUsr)
       )
     }
     return result
   }, [selectedUsers, userList, selectedProjects, reloadTrigger])
-
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
@@ -256,16 +248,15 @@ const UserList = ({
 
   const contextMenuModel = [
     {
-      "label" : "Rename user",
-      "disabled": selection.length !== 1,
-      "command": () => setShowRenameUser(true)
+      label: 'Rename user',
+      disabled: selection.length !== 1,
+      command: () => setShowRenameUser(true),
     },
     {
-      "label" : "Delete selected",
-      "disabled": !selection.length,
-      "command": () => onDelete()
-    }
-
+      label: 'Delete selected',
+      disabled: !selection.length,
+      command: () => onDelete(),
+    },
   ]
 
   // Render
@@ -300,13 +291,13 @@ const UserList = ({
       )}
 
       {showRenameUser && (
-          <RenameUserDialog
-            selectedUsers={selectedUsers}
-            onHide={() => {
-              setShowRenameUser(false)
-              onTriggerReload()
-            }}
-          />
+        <RenameUserDialog
+          selectedUsers={selectedUsers}
+          onHide={() => {
+            setShowRenameUser(false)
+            onTriggerReload()
+          }}
+        />
       )}
 
       <section className="lighter" style={{ flexGrow: 1 }}>
@@ -320,14 +311,13 @@ const UserList = ({
             loading={loading}
             selectionMode="multiple"
             onSelectionChange={onSelectionChange}
-            onContextMenu={e => contextMenuRef.current.show(e.originalEvent)}
+            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
             onContextMenuSelectionChange={(e) => {
-              if (!selectedUsers.includes(e.value.name)){
-                onSelectUsers([...selection, e.value.name]) 
+              if (!selectedUsers.includes(e.value.name)) {
+                onSelectUsers([...selection, e.value.name])
               }
               setLastSelectedUser(e.data)
-              }
-            }
+            }}
             selection={selection}
             onRowClick={(e) => {
               setLastSelectedUser(e.data)

@@ -70,57 +70,62 @@ const ProfilePage = () => {
   }
 
   return (
-    <main>
+    <main className="center">
       <div>
         <h1>{displayName}</h1>
+        <section>
+          <h2>Basic information</h2>
 
-        <h2>Basic information</h2>
+          <FormLayout>
+            <FormRow label="User name">
+              <InputText value={userData.name} disabled={true} />
+            </FormRow>
+            <FormRow label="Full name">
+              <InputText
+                value={formData.fullName}
+                onChange={(e) => setAttrib('fullName', e.target.value)}
+              />
+            </FormRow>
+            <FormRow label="Email">
+              <InputText
+                value={formData.email}
+                onChange={(e) => setAttrib('email', e.target.value)}
+              />
+            </FormRow>
+            <FormRow>
+              <Button
+                label="Update profile"
+                icon="check"
+                onClick={saveProfile}
+              />
+            </FormRow>
+          </FormLayout>
 
-        <FormLayout>
-          <FormRow label="User name">
-            <InputText value={userData.name} disabled={true} />
-          </FormRow>
-          <FormRow label="Full name">
-            <InputText
-              value={formData.fullName}
-              onChange={(e) => setAttrib('fullName', e.target.value)}
-            />
-          </FormRow>
-          <FormRow label="Email">
-            <InputText
-              value={formData.email}
-              onChange={(e) => setAttrib('email', e.target.value)}
-            />
-          </FormRow>
-          <FormRow>
-            <Button label="Update profile" icon="check" onClick={saveProfile} />
-          </FormRow>
-        </FormLayout>
+          <h2>Change password</h2>
 
-        <h2>Change password</h2>
-
-        <FormLayout>
-          <FormRow label="New password">
-            <Password
-              value={pass1}
-              onChange={(e) => setPass1(e.target.value)}
-            />
-          </FormRow>
-          <FormRow label="Confirm password">
-            <Password
-              value={pass2}
-              onChange={(e) => setPass2(e.target.value)}
-            />
-          </FormRow>
-          <FormRow>
-            <Button
-              label="Update password"
-              icon="lock"
-              onClick={savePassword}
-              disabled={passInvalid}
-            />
-          </FormRow>
-        </FormLayout>
+          <FormLayout>
+            <FormRow label="New password">
+              <Password
+                value={pass1}
+                onChange={(e) => setPass1(e.target.value)}
+              />
+            </FormRow>
+            <FormRow label="Confirm password">
+              <Password
+                value={pass2}
+                onChange={(e) => setPass2(e.target.value)}
+              />
+            </FormRow>
+            <FormRow>
+              <Button
+                label="Update password"
+                icon="lock"
+                onClick={savePassword}
+                disabled={passInvalid}
+              />
+            </FormRow>
+          </FormLayout>
+        </section>
       </div>
     </main>
   )

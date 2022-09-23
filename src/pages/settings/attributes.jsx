@@ -112,12 +112,12 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
             />
           </FormRow>
           <FormRow label="Type">
-            <Dropdown 
-              value={formData?.data.type} 
+            <Dropdown
+              value={formData?.data.type}
               disabled={formData.builtin}
-              options={TYPE_OPTIONS} 
-              onChange={e => setData('type', e.target.value)}
-             />
+              options={TYPE_OPTIONS}
+              onChange={(e) => setData('type', e.target.value)}
+            />
           </FormRow>
           <FormRow label="Title">
             <InputText
@@ -176,9 +176,9 @@ const Attributes = () => {
   const onSave = () => {
     setLoading(true)
     axios
-      .put('/api/attributes', {attributes, deleteMissing: true})
-      .then(() => toast.success("Attribute set saved"))
-      .catch(() => toast.error("Unable to set attributes"))
+      .put('/api/attributes', { attributes, deleteMissing: true })
+      .then(() => toast.success('Attribute set saved'))
+      .catch(() => toast.error('Unable to set attributes'))
       .finally(() => {
         setLoading(false)
         loadAttributes()
@@ -218,15 +218,14 @@ const Attributes = () => {
   }
 
   const onDelete = () => {
-    if (!selectedAttribute?.name)
-      return
-    setAttributes(attrs => {
-      return attrs.filter(attr => attr.name !== selectedAttribute.name)
+    if (!selectedAttribute?.name) return
+    setAttributes((attrs) => {
+      return attrs.filter((attr) => attr.name !== selectedAttribute.name)
     })
   }
 
   const renderBuiltIn = (rowData) => {
-    return rowData?.builtin ? "built-in" : ""
+    return rowData?.builtin ? 'built-in' : ''
   }
 
   return (
@@ -242,7 +241,12 @@ const Attributes = () => {
       <section className="invisible row">
         <Button label="Save settings" icon="check" onClick={onSave} />
         <Button label="Add attribute" icon="add" onClick={onNewAttribute} />
-        <Button label="Delete attribute" icon="delete" disabled={selectedAttribute?.builtin} onClick={onDelete} />
+        <Button
+          label="Delete attribute"
+          icon="delete"
+          disabled={selectedAttribute?.builtin}
+          onClick={onDelete}
+        />
       </section>
       <section style={{ flexGrow: 1 }}>
         <TableWrapper>
@@ -266,7 +270,12 @@ const Attributes = () => {
               header="Title"
               style={{ maxWidth: 130 }}
             />
-            <Column field="builtIn" header="" style={{ maxWidth: 60}} body={ renderBuiltIn }/>
+            <Column
+              field="builtIn"
+              header=""
+              style={{ maxWidth: 60 }}
+              body={renderBuiltIn}
+            />
             <Column
               header="Scopes"
               body={(rowData) => rowData.scope.join(', ')}
