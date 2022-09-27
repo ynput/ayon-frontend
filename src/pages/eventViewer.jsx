@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { DateTime } from 'luxon'
 
+import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TableWrapper } from '/src/components'
@@ -23,8 +24,39 @@ query Events {
 }
 `
 
+
+const EventDetailDialog = ({eventId, onHide}) => {
+  const [eventData, setEventData] = useState(null)
+
+  useEffect(() => {
+    if (!eventId){
+      onHide()
+      return
+    }
+
+    axios
+      .get(`/api/events/${eventId}`)
+      .then((response) => {
+        setEventData(response.data)
+      })
+  }, [eventId])
+
+
+
+  return (
+    <Dialog onHide={onHide} visible={true}>
+      <pre>
+        {JSON.stringify(eventData, null, 2)}
+      </pre>
+    </Dialog>
+  )
+} 
+
+
 const EventViewer = () => {
   const [eventData, setEventData] = useState([])
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [detailVisible, setDetailVisible] = useState(false)
 
   const loadEventData = () => {
     axios
@@ -74,9 +106,22 @@ const EventViewer = () => {
     return DateTime.fromSeconds(rowData.updatedAt).toRelative()
   }
 
+  const onRowClick = (e) => {
+    if (e.originalEvent.detail === 2) {
+      setDetailVisible(true)
+    }
+  }
+
   return (
     <main>
       <section style={{ flexGrow: 1 }}>
+        { detailVisible && (
+          <EventDetailDialog
+            onHide={() => setDetailVisible(false)}
+            eventId={selectedEvent?.id}
+          />
+
+        )}
         <TableWrapper>
           <DataTable
             value={eventData}
@@ -84,6 +129,10 @@ const EventViewer = () => {
             scrollHeight="flex"
             responsive="true"
             dataKey="id"
+            selectionMode="single"
+            onSelectionChange={e => setSelectedEvent(e.value)}
+            selection={selectedEvent}
+            onRowClick={onRowClick}
           >
             <Column header="Time" body={formatTime} style={{ width: 200 }} />
             <Column header="Topic" field="topic" style={{ width: 200 }} />
