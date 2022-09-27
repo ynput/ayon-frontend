@@ -22,28 +22,13 @@ const EventViewer = lazy(() => import('./pages/eventViewer'))
 
 import { login } from './features/user'
 import { setSettings } from './features/settings'
-import { isEmpty } from './utils'
 
-const SettingsLoader = () => {
-  const user = useSelector((state) => ({ ...state.user }))
-  const dispatch = useDispatch()
-
-  useEffect(() => {
-    if (!user.name) return
-    axios.get('/api/settings/attributes').then((response) => {
-      dispatch(setSettings(response.data))
-    })
-    // eslint-disable-next-line
-  }, [user.name])
-
-  return <LoadingPage />
-}
 
 const App = () => {
   const user = useSelector((state) => ({ ...state.user }))
-  const settings = useSelector((state) => ({ ...state.settings }))
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
+  const [serverError, setServerError] = useState(false)
 
   const storedAccessToken = localStorage.getItem('accessToken')
   if (storedAccessToken) {
@@ -53,25 +38,41 @@ const App = () => {
   }
   axios.defaults.headers.common['X-Sender'] = uuidv4()
 
+  // Call /api/info to check whether the user is logged in
+  // and to acquire server settings
+
   useEffect(() => {
     setLoading(true)
     axios
-      .get('/api/users/me')
+      .get('/api/info')
       .then((response) => {
-        dispatch(
-          login({
-            user: response.data,
-            accessToken: storedAccessToken,
-          })
-        )
-        setLoading(false)
+        if (response.data.user){
+          dispatch(
+            login({
+              user: response.data.user,
+              accessToken: storedAccessToken,
+            })
+          )
+          
+          dispatch(
+            setSettings({
+              attributes: response.data.attributes
+            })
+          )
+
+        }
       })
-      .catch(() => {
+      .catch((err) => {
+        setServerError(err.response.status)
+      })
+      .finally(() => {
         setLoading(false)
       })
   }, [dispatch, storedAccessToken])
 
   if (loading) return <LoadingPage />
+
+  // User is not logged in
   if (!user.name) return <LoginPage />
 
   if (window.location.pathname.startsWith('/login/')) {
@@ -80,8 +81,13 @@ const App = () => {
     return <LoadingPage />
   }
 
-  // Load settings
-  if (isEmpty(settings)) return <SettingsLoader />
+  if (serverError)
+    return <ErrorPage code={serverError} message="Server connection failed"  />
+
+
+  //
+  // RENDER THE MAIN APP
+  //
 
   return (
     <Suspense fallback={<LoadingPage />}>
