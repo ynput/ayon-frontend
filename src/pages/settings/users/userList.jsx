@@ -8,6 +8,7 @@ import {
   TableWrapper,
   Button,
   InputText,
+  Password,
   FormLayout,
   FormRow,
 } from '/src/components'
@@ -144,6 +145,46 @@ const RenameUserDialog = ({ onHide, selectedUsers }) => {
   )
 }
 
+const SetPasswordDialog = ({ onHide, selectedUsers }) => {
+  const [password, setPassword] = useState('')
+
+  if (!selectedUsers?.length) {
+    // this shouldn't happen
+    onHide()
+    return <></>
+  }
+
+  const userName = selectedUsers[0]
+  const onSubmit = () => {
+    axios
+      .patch(`/api/users/${userName}/password`, { password })
+      .then(() => {
+        onHide()
+        toast.success('Password changed')
+      })
+      .catch(() => toast.error('Unable to change password'))
+  }
+  return (
+    <Dialog
+      header={`Change user ${userName} password`}
+      visible={true}
+      onHide={onHide}
+    >
+      <FormLayout>
+        <FormRow label="New password">
+          <Password
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </FormRow>
+        <FormRow>
+          <Button label="Set password" onClick={onSubmit} />
+        </FormRow>
+      </FormLayout>
+    </Dialog>
+  )
+}
+
 const UserList = ({
   selectedProjects,
   selectedUsers,
@@ -158,6 +199,7 @@ const UserList = ({
   const [showNewUser, setShowNewUser] = useState(false)
   const [lastSelectedUser, setLastSelectedUser] = useState(null)
   const [showRenameUser, setShowRenameUser] = useState(false)
+  const [showSetPassword, setShowSetPassword] = useState(false)
   const contextMenuRef = useRef(null)
 
   // Load user list
@@ -253,6 +295,11 @@ const UserList = ({
       command: () => setShowRenameUser(true),
     },
     {
+      label: 'Set password',
+      disabled: selection.length !== 1,
+      command: () => setShowSetPassword(true),
+    },
+    {
       label: 'Delete selected',
       disabled: !selection.length,
       command: () => onDelete(),
@@ -295,6 +342,16 @@ const UserList = ({
           selectedUsers={selectedUsers}
           onHide={() => {
             setShowRenameUser(false)
+            onTriggerReload()
+          }}
+        />
+      )}
+
+      {showSetPassword && (
+        <SetPasswordDialog
+          selectedUsers={selectedUsers}
+          onHide={() => {
+            setShowSetPassword(false)
             onTriggerReload()
           }}
         />

@@ -9,6 +9,7 @@ import { UserAttrib, AccessControl } from './forms'
 
 const NewUserDialog = ({ onHide }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
+  const [password, setPassword] = useState('')
   const [formData, setFormData] = useState({
     userLevel: 'user',
     userActive: true,
@@ -48,6 +49,15 @@ const NewUserDialog = ({ onHide }) => {
     axios
       .put(`/api/users/${formData.name}`, payload)
       .then(() => {
+        if (password) {
+          axios
+            .patch(`/api/users/${formData.name}/password`, { password })
+            .then(() => toast.success('Password set'))
+            .catch((err) =>
+              toast.error('Unable to set password. Use change password button.')
+            )
+        }
+
         toast.success('User created')
         // keep re-usable data in the form
         setFormData((fd) => {
@@ -94,7 +104,11 @@ const NewUserDialog = ({ onHide }) => {
           formData={formData}
           setFormData={setFormData}
           attributes={{ name: 'Login', ...userAttrib }}
+          password={password}
+          setPassword={setPassword}
+          showPassword={true}
         />
+        <h2>Access control</h2>
         <AccessControl
           formData={formData}
           setFormData={setFormData}

@@ -1,9 +1,16 @@
-import { InputText, FormLayout, FormRow } from '/src/components'
+import { InputText, FormLayout, FormRow, Password } from '/src/components'
 
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 
-const UserAttrib = ({ formData, setFormData, attributes }) => {
+const UserAttrib = ({
+  formData,
+  setFormData,
+  attributes,
+  showPassword,
+  password,
+  setPassword,
+}) => {
   return (
     <FormLayout>
       {Object.keys(attributes).map((attrName) => (
@@ -19,6 +26,14 @@ const UserAttrib = ({ formData, setFormData, attributes }) => {
           />
         </FormRow>
       ))}
+      {showPassword && (
+        <FormRow label="Password">
+          <Password
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </FormRow>
+      )}
     </FormLayout>
   )
 }
