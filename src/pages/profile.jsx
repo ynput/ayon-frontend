@@ -11,6 +11,54 @@ import {
   Button,
 } from '/src/components'
 
+
+const SessionItem = ({session, userName, onChange}) => {
+
+  const invalidate = () => {
+    axios
+      .delete(`/api/users/${userName}/sessions/${session.token}`)
+      .then(() => {
+        toast.success("Session invalidated")
+        onChange()
+      })
+      .catch(() => toast.error("Unable to invalidate the session"))
+  }
+
+  return (
+    <section>
+      {session.token} {session.token === localStorage.getItem('accessToken') && "(this session)"}
+      <Button label="Invalidate" onClick={invalidate} />
+    </section>
+  )
+}
+
+const SessionList = ({userName}) => {
+  const [sessions, setSessions] = useState([])
+
+  const loadSessionList = () => {
+    axios
+      .get(`/api/users/${userName}/sessions`)
+      .then(response => {
+          console.log(response)
+          setSessions(response.data.sessions)
+      })
+  }
+
+  useEffect(() => {
+    loadSessionList()
+  }, [userName])
+
+  console.log(sessions)
+
+  return (
+    <>
+      {sessions.map(session => <SessionItem key={session.token} session={session} userName={userName} onChange={loadSessionList} />
+      )}
+    </>
+  )
+}
+
+
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null)
   const [formData, setFormData] = useState({})
@@ -70,9 +118,9 @@ const ProfilePage = () => {
   }
 
   return (
-    <main className="center">
+    <main style={{flexDirection: "row"}}>
       <div>
-        <h1>{displayName}</h1>
+        <h2>{displayName}</h2>
         <section>
           <h2>Basic information</h2>
 
@@ -126,7 +174,14 @@ const ProfilePage = () => {
             </FormRow>
           </FormLayout>
         </section>
+
       </div>
+        {userData.name &&
+      <div>
+        <h2>Active sessions</h2>
+        <SessionList userName={userData.name} />
+        </div>
+        }
     </main>
   )
 }
