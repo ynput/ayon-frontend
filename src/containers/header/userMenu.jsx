@@ -62,6 +62,13 @@ const UserMenu = ({ visible, onHide }) => {
         />
         <Button
           onClick={() => {
+            navigate('/services')
+          }}
+          label="Services"
+          icon="home_repair_service"
+        />
+        <Button
+          onClick={() => {
             navigate('/settings')
           }}
           label="Settings"

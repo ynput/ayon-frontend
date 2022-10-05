@@ -3,6 +3,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket'
 import axios from 'axios'
 import PubSub from '/src/pubsub'
 import { arrayEquals } from '/src/utils'
+import { toast } from 'react-toastify'
 
 const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
@@ -38,6 +39,9 @@ const WebsocketListener = () => {
     if (data.sender === axios.defaults.headers.common['X-Sender']) {
       return // my own message. ignore
     }
+    if (data.topic === 'shout' && data?.summary?.text)
+      toast.info(data.summary.text)
+
     console.log('Event RX', data)
     PubSub.publish(data.topic, data)
   }

@@ -19,10 +19,10 @@ const APIDocsPage = lazy(() => import('./pages/doc/api'))
 const ProfilePage = lazy(() => import('./pages/profile'))
 const SettingsPage = lazy(() => import('./pages/settings'))
 const EventViewer = lazy(() => import('./pages/eventViewer'))
+const ServicesPage = lazy(() => import('./pages/services'))
 
 import { login } from './features/user'
 import { setSettings } from './features/settings'
-
 
 const App = () => {
   const user = useSelector((state) => ({ ...state.user }))
@@ -46,20 +46,19 @@ const App = () => {
     axios
       .get('/api/info')
       .then((response) => {
-        if (response.data.user){
+        if (response.data.user) {
           dispatch(
             login({
               user: response.data.user,
               accessToken: storedAccessToken,
             })
           )
-          
+
           dispatch(
             setSettings({
-              attributes: response.data.attributes
+              attributes: response.data.attributes,
             })
           )
-
         }
       })
       .catch((err) => {
@@ -82,8 +81,7 @@ const App = () => {
   }
 
   if (serverError)
-    return <ErrorPage code={serverError} message="Server connection failed"  />
-
+    return <ErrorPage code={serverError} message="Server connection failed" />
 
   //
   // RENDER THE MAIN APP
@@ -117,6 +115,7 @@ const App = () => {
           <Route path="/doc/api" element={<APIDocsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/events" element={<EventViewer />} />
+          <Route path="/services" element={<ServicesPage />} />
 
           <Route element={<Error code="404" />} />
         </Routes>

@@ -24,34 +24,26 @@ query Events {
 }
 `
 
-
-const EventDetailDialog = ({eventId, onHide}) => {
+const EventDetailDialog = ({ eventId, onHide }) => {
   const [eventData, setEventData] = useState(null)
 
   useEffect(() => {
-    if (!eventId){
+    if (!eventId) {
       onHide()
       return
     }
 
-    axios
-      .get(`/api/events/${eventId}`)
-      .then((response) => {
-        setEventData(response.data)
-      })
+    axios.get(`/api/events/${eventId}`).then((response) => {
+      setEventData(response.data)
+    })
   }, [eventId])
-
-
 
   return (
     <Dialog onHide={onHide} visible={true}>
-      <pre>
-        {JSON.stringify(eventData, null, 2)}
-      </pre>
+      <pre>{JSON.stringify(eventData, null, 2)}</pre>
     </Dialog>
   )
-} 
-
+}
 
 const EventViewer = () => {
   const [eventData, setEventData] = useState([])
@@ -115,12 +107,11 @@ const EventViewer = () => {
   return (
     <main>
       <section style={{ flexGrow: 1 }}>
-        { detailVisible && (
+        {detailVisible && (
           <EventDetailDialog
             onHide={() => setDetailVisible(false)}
             eventId={selectedEvent?.id}
           />
-
         )}
         <TableWrapper>
           <DataTable
@@ -130,7 +121,7 @@ const EventViewer = () => {
             responsive="true"
             dataKey="id"
             selectionMode="single"
-            onSelectionChange={e => setSelectedEvent(e.value)}
+            onSelectionChange={(e) => setSelectedEvent(e.value)}
             selection={selectedEvent}
             onRowClick={onRowClick}
           >
