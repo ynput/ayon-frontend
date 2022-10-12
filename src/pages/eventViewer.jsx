@@ -139,7 +139,7 @@ const EventViewer = () => {
             selection={selectedEvent}
             onRowClick={onRowClick}
             rowClassName={(rowData) => {
-              return { italic: selectedEvent && selectedEvent.id === rowData.dependsOn }
+              return { italic: selectedEvent && selectedEvent.dependsOn === rowData.id }
             }}
           >
             <Column header="Time" body={formatTime} style={{ maxWidth: 200 }} />
