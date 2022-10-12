@@ -15,8 +15,10 @@ query Events {
           id
           topic
           user
+          sender
           project
           description
+          dependsOn
           updatedAt
         }
       }
@@ -65,6 +67,8 @@ const EventViewer = () => {
             id: edge.node.id,
             topic: edge.node.topic,
             user: edge.node.user,
+            sender: edge.node.sender,
+            dependsOn: edge.node.dependsOn,
             project: edge.node.project,
             description: edge.node.description,
             updatedAt: edge.node.updatedAt,
@@ -80,7 +84,17 @@ const EventViewer = () => {
       return
     }
     setEventData((ed) => {
-      return [message, ...ed]
+      let updated = false
+      for (const row of ed){
+        if (row.id !== message.id)
+          continue
+        updated = true
+        Object.assign(row, message)
+        return ed
+      }
+      if (!updated)
+        return [message, ...ed]
+
     })
   }
 
@@ -124,11 +138,16 @@ const EventViewer = () => {
             onSelectionChange={(e) => setSelectedEvent(e.value)}
             selection={selectedEvent}
             onRowClick={onRowClick}
+            rowClassName={(rowData) => {
+              return { italic: selectedEvent && selectedEvent.id === rowData.dependsOn }
+            }}
           >
-            <Column header="Time" body={formatTime} style={{ width: 200 }} />
-            <Column header="Topic" field="topic" style={{ width: 200 }} />
-            <Column header="User" field="user" style={{ width: 200 }} />
-            <Column header="Project" field="project" style={{ width: 200 }} />
+            <Column header="Time" body={formatTime} style={{ maxWidth: 200 }} />
+            <Column header="Id" field="id" style={{ maxWidth: 300 }} />
+            <Column header="Topic" field="topic" style={{ maxWidth: 120 }} />
+            <Column header="User" field="user" style={{ maxWidth: 120 }} />
+            <Column header="Sender" field="sender" style={{ maxWidth: 300 }} />
+            <Column header="Project" field="project" style={{ maxWidth: 150 }} />
             <Column header="Description" field="description" />
           </DataTable>
         </TableWrapper>
