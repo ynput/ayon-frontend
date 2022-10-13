@@ -97,6 +97,22 @@ function ObjectFieldTemplate(props) {
     className += ' group-changed'
   }
 
+  // Object descrtiption (from docstrings)
+
+  const shortDescription = props.schema.description &&
+    props.schema.description.split("\n")[0]
+
+  const longDescription = props.schema.description &&
+    <>
+    {props.schema.description
+      .split("\n")
+      .slice(1)
+      .join("\n")
+      .split("\n\n")
+      .map(p => <p>{p}</p>)}
+    </>
+
+
   // memoize the fields
 
   const enabledToggler = useMemo(() => {
@@ -121,16 +137,21 @@ function ObjectFieldTemplate(props) {
         else otherFields.push(element.content)
       }
       return (
+        <>
+        {longDescription}
         <div className={className}>
           <div className="name-field">{nameField}</div>
           <div className="data-fields">
             {otherFields.map((element) => element)}
           </div>
         </div>
+        </>
       )
     } // ugly layout
 
     return (
+      <>
+      {longDescription}
       <div className={className}>
         {props.properties
           .filter(
@@ -144,8 +165,9 @@ function ObjectFieldTemplate(props) {
             </div>
           ))}
       </div>
+      </>
     )
-  }, [props.properties, className])
+  }, [props.properties, className ])
 
   // aaand... render
 
@@ -172,7 +194,7 @@ function ObjectFieldTemplate(props) {
           props.formContext.onSetBreadcrumbs(path)
       }}
       title={title}
-      description={props.description}
+      description={shortDescription}
       contextMenuModel={contextMenuModel}
       className={`obj-override-${overrideLevel}`}
       enabledToggler={enabledToggler}
@@ -188,11 +210,13 @@ function FieldTemplate(props) {
     if (props.schema.section)
       return (
         <Divider>
-          <span className="p-tag">{props.schema.section}</span>
+          {props.schema.section !== "---" && <span className="p-tag">{props.schema.section}</span>}
         </Divider>
       )
     else return <></>
   }, [props.schema.section])
+
+
 
   // Object fields
 
@@ -243,6 +267,7 @@ function FieldTemplate(props) {
   // Context menu
 
   const contextMenuModel = buildContextMenu(rmOverrideFunc, pinOverrideFunc)
+
 
   // Array fields
 

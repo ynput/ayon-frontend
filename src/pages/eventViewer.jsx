@@ -20,6 +20,7 @@ query Events {
           description
           dependsOn
           updatedAt
+          status
         }
       }
     }
@@ -72,6 +73,7 @@ const EventViewer = () => {
             project: edge.node.project,
             description: edge.node.description,
             updatedAt: edge.node.updatedAt,
+            status: edge.node.status,
           })
         }
         setEventData(result)
@@ -149,6 +151,7 @@ const EventViewer = () => {
             <Column header="User" field="user" style={{ maxWidth: 120 }} />
             <Column header="Project" field="project" style={{ maxWidth: 150 }} />
             <Column header="Description" field="description" />
+            <Column header="Status" field="status" style={{ maxWidth: 150 }} />
           </DataTable>
         </TableWrapper>
       </section>
