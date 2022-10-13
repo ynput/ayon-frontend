@@ -90,10 +90,10 @@ const EventViewer = () => {
           continue
         updated = true
         Object.assign(row, message)
-        return ed
       }
       if (!updated)
         return [message, ...ed]
+      return [...ed]
 
     })
   }
@@ -109,7 +109,8 @@ const EventViewer = () => {
   }, [])
 
   const formatTime = (rowData) => {
-    return DateTime.fromSeconds(rowData.updatedAt).toRelative()
+    return DateTime.fromSeconds(rowData.updatedAt).toFormat('yyyy-LL-dd hh:mm:ss')
+    //return DateTime.fromSeconds(rowData.updatedAt).toRelative()
   }
 
   const onRowClick = (e) => {
@@ -139,7 +140,7 @@ const EventViewer = () => {
             selection={selectedEvent}
             onRowClick={onRowClick}
             rowClassName={(rowData) => {
-              return { italic: selectedEvent && selectedEvent.dependsOn === rowData.id }
+              return { highlight: selectedEvent && selectedEvent.dependsOn === rowData.id }
             }}
           >
             <Column header="Time" body={formatTime} style={{ maxWidth: 200 }} />
