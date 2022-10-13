@@ -144,10 +144,9 @@ const EventViewer = () => {
             }}
           >
             <Column header="Time" body={formatTime} style={{ maxWidth: 200 }} />
-            <Column header="Id" field="id" style={{ maxWidth: 300 }} />
             <Column header="Topic" field="topic" style={{ maxWidth: 120 }} />
-            <Column header="User" field="user" style={{ maxWidth: 120 }} />
             <Column header="Sender" field="sender" style={{ maxWidth: 300 }} />
+            <Column header="User" field="user" style={{ maxWidth: 120 }} />
             <Column header="Project" field="project" style={{ maxWidth: 150 }} />
             <Column header="Description" field="description" />
           </DataTable>

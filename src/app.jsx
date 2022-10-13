@@ -1,6 +1,6 @@
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { v4 as uuidv4 } from 'uuid'
+import short from 'short-uuid'
 import axios from 'axios'
 
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
@@ -36,7 +36,7 @@ const App = () => {
       'Authorization'
     ] = `Bearer ${storedAccessToken}`
   }
-  axios.defaults.headers.common['X-Sender'] = uuidv4()
+  axios.defaults.headers.common['X-Sender'] = short.generate()
 
   // Call /api/info to check whether the user is logged in
   // and to acquire server settings

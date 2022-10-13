@@ -25,6 +25,7 @@
     "react-transition-group": "^4.4.2",
     "react-use-websocket": "^4.2.0",
     "sass": "^1.52.1",
+    "short-uuid": "^4.2.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
