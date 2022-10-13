@@ -111,7 +111,7 @@ const EventViewer = () => {
   }, [])
 
   const formatTime = (rowData) => {
-    return DateTime.fromSeconds(rowData.updatedAt).toFormat('yyyy-LL-dd hh:mm:ss')
+    return DateTime.fromSeconds(rowData.updatedAt).toFormat('yyyy-LL-dd HH:mm:ss')
     //return DateTime.fromSeconds(rowData.updatedAt).toRelative()
   }
 
