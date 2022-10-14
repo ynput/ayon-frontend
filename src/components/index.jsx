@@ -4,6 +4,8 @@ import { Password } from 'primereact/password'
 import { Dropdown } from 'primereact/dropdown'
 import { ProgressSpinner } from 'primereact/progressspinner'
 
+import { Section, Toolbar, Panel } from './layout'
+
 // Layout components
 
 const Spacer = (props) => (
@@ -45,10 +47,11 @@ const TableWrapper = (props) => {
       <div
         style={{
           position: 'absolute',
-          top: '0',
-          left: '0',
-          right: '0',
-          bottom: '0',
+          top: 3, // prevent header covering rounded corners of the parent panel
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: 0,
         }}
       >
         {props.children}
@@ -156,4 +159,7 @@ export {
   LinkButton,
   FormLayout,
   FormRow,
+  Section,
+  Toolbar,
+  Panel,
 }
