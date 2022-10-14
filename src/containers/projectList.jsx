@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 
-import { TableWrapper } from '/src/components'
+import { TableWrapper, Section, Panel } from '/src/components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
@@ -11,7 +11,14 @@ const formatName = (rowData, defaultTitle) => {
   return rowData.name
 }
 
-const ProjectList = ({ selection, onSelect, showNull, multiselect }) => {
+const ProjectList = ({
+  selection,
+  onSelect,
+  showNull,
+  multiselect,
+  header,
+  footer,
+}) => {
   const [projectList, setProjectList] = useState([])
 
   useEffect(() => {
@@ -71,25 +78,31 @@ const ProjectList = ({ selection, onSelect, showNull, multiselect }) => {
   } // onSelectionChange
 
   return (
-    <TableWrapper>
-      <DataTable
-        value={projectList}
-        scrollable="true"
-        scrollHeight="flex"
-        selectionMode={multiselect ? 'multiple' : 'single'}
-        responsive="true"
-        dataKey="name"
-        selection={selectionObj}
-        onSelectionChange={onSelectionChange}
-      >
-        <Column
-          field="name"
-          header="Project name"
-          body={(rowData) => formatName(rowData, showNull)}
-        />
-        <Column field="code" header="Code" style={{ maxWidth: 80 }} />
-      </DataTable>
-    </TableWrapper>
+    <Section style={{ maxWidth: 400 }}>
+      {header}
+      <Panel className="nopad">
+        <TableWrapper>
+          <DataTable
+            value={projectList}
+            scrollable="true"
+            scrollHeight="flex"
+            selectionMode={multiselect ? 'multiple' : 'single'}
+            responsive="true"
+            dataKey="name"
+            selection={selectionObj}
+            onSelectionChange={onSelectionChange}
+          >
+            <Column
+              field="name"
+              header="Project name"
+              body={(rowData) => formatName(rowData, showNull)}
+            />
+            <Column field="code" header="Code" style={{ maxWidth: 80 }} />
+          </DataTable>
+        </TableWrapper>
+      </Panel>
+      {footer}
+    </Section>
   )
 }
 

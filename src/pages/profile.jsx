@@ -9,6 +9,8 @@ import {
   InputText,
   Password,
   Button,
+  Section,
+  Panel,
 } from '/src/components'
 
 const SessionItem = ({ session, userName, onChange }) => {
@@ -23,12 +25,12 @@ const SessionItem = ({ session, userName, onChange }) => {
   }
 
   return (
-    <section>
+    <Panel size={1}>
       {session.token}{' '}
       {session.token === localStorage.getItem('accessToken') &&
         '(this session)'}
       <Button label="Invalidate" onClick={invalidate} />
-    </section>
+    </Panel>
   )
 }
 
@@ -115,18 +117,16 @@ const ProfilePage = () => {
       .then(() => {
         toast.success('Password changed')
       })
-      .catch((err) => {
+      .catch(() => {
         toast.error('Unable to change password')
       })
   }
 
   return (
-    <main style={{ flexDirection: 'row' }}>
-      <div>
-        <h2>{displayName}</h2>
-        <section>
-          <h2>Basic information</h2>
-
+    <main>
+      <Section style={{ maxWidth: 400 }}>
+        <h2>Basic information</h2>
+        <Panel size={1}>
           <FormLayout>
             <FormRow label="User name">
               <InputText value={userData.name} disabled={true} />
@@ -151,9 +151,11 @@ const ProfilePage = () => {
               />
             </FormRow>
           </FormLayout>
+        </Panel>
 
-          <h2>Change password</h2>
+        <h2>Change password</h2>
 
+        <Panel size={1}>
           <FormLayout>
             <FormRow label="New password">
               <Password
@@ -176,13 +178,13 @@ const ProfilePage = () => {
               />
             </FormRow>
           </FormLayout>
-        </section>
-      </div>
+        </Panel>
+      </Section>
       {userData.name && (
-        <div>
+        <Section>
           <h2>Active sessions</h2>
           <SessionList userName={userData.name} />
-        </div>
+        </Section>
       )}
     </main>
   )

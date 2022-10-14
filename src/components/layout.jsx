@@ -26,4 +26,12 @@ const Panel = ({ className = '', style = {}, size = null, ...props }) => {
   )
 }
 
-export { Section, Toolbar, Panel }
+const ScrollArea = ({ className, style = {}, ...props }) => {
+  return (
+    <div className={`ay-scrollarea ${className}`} style={style}>
+      {props.children}
+    </div>
+  )
+}
+
+export { Section, Toolbar, Panel, ScrollArea }

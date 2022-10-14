@@ -14,6 +14,9 @@ import {
   FormLayout,
   FormRow,
   InputText,
+  Section,
+  Panel,
+  Toolbar,
 } from '/src/components'
 
 const SCOPE_OPTIONS = [
@@ -229,7 +232,7 @@ const Attributes = () => {
   }
 
   return (
-    <main className="rows">
+    <main>
       {showEditor && (
         <AttributeEditor
           attribute={selectedAttribute}
@@ -238,59 +241,65 @@ const Attributes = () => {
           onHide={() => setShowEditor(false)}
         />
       )}
-      <section className="invisible row">
-        <Button label="Save settings" icon="check" onClick={onSave} />
-        <Button label="Add attribute" icon="add" onClick={onNewAttribute} />
-        <Button
-          label="Delete attribute"
-          icon="delete"
-          disabled={selectedAttribute?.builtin}
-          onClick={onDelete}
-        />
-      </section>
-      <section style={{ flexGrow: 1 }}>
-        <TableWrapper>
-          <DataTable
-            scrollable="true"
-            scrollHeight="flex"
-            dataKey="name"
-            value={attributes}
-            reorderableRows
-            onRowReorder={onRowReorder}
-            loading={loading}
-            selectionMode="single"
-            selection={selectedAttribute}
-            onSelectionChange={(e) => setSelectedAttribute(e.value)}
-            onRowDoubleClick={() => setShowEditor(true)}
-          >
-            <Column rowReorder style={{ maxWidth: 30 }} />
-            <Column field="name" header="Name" style={{ maxWidth: 130 }} />
-            <Column
-              field="data.title"
-              header="Title"
-              style={{ maxWidth: 130 }}
-            />
-            <Column
-              field="builtIn"
-              header=""
-              style={{ maxWidth: 60 }}
-              body={renderBuiltIn}
-            />
-            <Column
-              header="Scopes"
-              body={(rowData) => rowData.scope.join(', ')}
-              style={{ maxWidth: 330 }}
-            />
-            <Column field="data.type" header="Type" style={{ maxWidth: 150 }} />
-            <Column
-              field="data.example"
-              header="Example"
-              style={{ maxWidth: 200 }}
-            />
-            <Column field="data.description" header="Description" />
-          </DataTable>
-        </TableWrapper>
-      </section>
+      <Section>
+        <Toolbar>
+          <Button label="Save settings" icon="check" onClick={onSave} />
+          <Button label="Add attribute" icon="add" onClick={onNewAttribute} />
+          <Button
+            label="Delete attribute"
+            icon="delete"
+            disabled={selectedAttribute?.builtin}
+            onClick={onDelete}
+          />
+        </Toolbar>
+        <Panel className="nopad">
+          <TableWrapper>
+            <DataTable
+              scrollable="true"
+              scrollHeight="flex"
+              dataKey="name"
+              value={attributes}
+              reorderableRows
+              onRowReorder={onRowReorder}
+              loading={loading}
+              selectionMode="single"
+              selection={selectedAttribute}
+              onSelectionChange={(e) => setSelectedAttribute(e.value)}
+              onRowDoubleClick={() => setShowEditor(true)}
+            >
+              <Column rowReorder style={{ maxWidth: 30 }} />
+              <Column field="name" header="Name" style={{ maxWidth: 130 }} />
+              <Column
+                field="data.title"
+                header="Title"
+                style={{ maxWidth: 130 }}
+              />
+              <Column
+                field="builtIn"
+                header=""
+                style={{ maxWidth: 60 }}
+                body={renderBuiltIn}
+              />
+              <Column
+                header="Scopes"
+                body={(rowData) => rowData.scope.join(', ')}
+                style={{ maxWidth: 330 }}
+              />
+              <Column
+                field="data.type"
+                header="Type"
+                style={{ maxWidth: 150 }}
+              />
+              <Column
+                field="data.example"
+                header="Example"
+                style={{ maxWidth: 200 }}
+              />
+              <Column field="data.description" header="Description" />
+            </DataTable>
+          </TableWrapper>
+        </Panel>
+      </Section>
     </main>
   )
 }

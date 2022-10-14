@@ -1,7 +1,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { Button, Spacer } from '/src/components'
+import {
+  Button,
+  Spacer,
+  Section,
+  Panel,
+  Toolbar,
+  ScrollArea,
+} from '/src/components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const RoleDetail = ({ projectName, role, onChange }) => {
@@ -69,11 +76,8 @@ const RoleDetail = ({ projectName, role, onChange }) => {
   }, [schema, originalData])
 
   return (
-    <section
-      className="invisible"
-      style={{ flexGrow: 1, padding: 0, height: '100%' }}
-    >
-      <section className="invisible row">
+    <Section>
+      <Toolbar>
         <Button
           onClick={onSave}
           label={`Save ${projectName ? 'project ' : ''}role`}
@@ -86,22 +90,11 @@ const RoleDetail = ({ projectName, role, onChange }) => {
           icon="group_remove"
         />
         <Spacer />
-      </section>
-      <section className="lighter" style={{ flexGrow: 1 }}>
-        <div
-          className="wrapper"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            overflowY: 'scroll',
-            gap: 12,
-            padding: 12,
-          }}
-        >
-          {editor}
-        </div>
-      </section>
-    </section>
+      </Toolbar>
+      <Panel className="nopad transparent">
+        <ScrollArea>{editor}</ScrollArea>
+      </Panel>
+    </Section>
   )
 }
 

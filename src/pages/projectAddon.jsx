@@ -1,5 +1,6 @@
 import { useRef, useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
+import { Section } from '/src/components'
 
 import Hierarchy from './browser/hierarchy'
 
@@ -34,16 +35,12 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   const sidebarComponent = useMemo(() => {
     if (sidebar === 'hierarchy') {
       return (
-        <section className="invisible" style={{ flexBasis: 400 }}>
-          <div className="wrapper">
-            <Hierarchy
-              projectName={projectName}
-              folderTypes={folderTypes}
-              focusedFolders={focusedFolders}
-              expandedFolders={expandedFolders}
-            />
-          </div>
-        </section>
+        <Hierarchy
+          projectName={projectName}
+          folderTypes={folderTypes}
+          focusedFolders={focusedFolders}
+          expandedFolders={expandedFolders}
+        />
       )
     } else {
       return <></>
@@ -54,7 +51,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
     <main>
       {sidebarComponent}
 
-      <section style={{ height: '100%', flexGrow: 1 }}>
+      <Section>
         <iframe
           className="embed"
           title="apidoc"
@@ -66,7 +63,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
           }}
           style={{ flexGrow: 1, background: 'transparent' }}
         />
-      </section>
+      </Section>
     </main>
   )
 }

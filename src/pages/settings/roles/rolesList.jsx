@@ -10,6 +10,9 @@ import {
   Spacer,
   FormLayout,
   FormRow,
+  Section,
+  Panel,
+  Toolbar,
 } from '/src/components'
 import axios from 'axios'
 
@@ -134,28 +137,26 @@ const RolesList = ({
   // Render
 
   return (
-    <section
-      className="invisible"
-      style={{ flexBasis: 400, padding: 0, height: '100%' }}
-    >
-      <section className="invisible row">
-        {showNewRole && (
-          <NewRoleDialog
-            onClose={() => {
-              setShowNewRole(false)
-              loadRoles()
-            }}
-            rolesList={rolesList}
-          />
-        )}
+    <Section style={{ maxWidth: 400 }}>
+      {showNewRole && (
+        <NewRoleDialog
+          onClose={() => {
+            setShowNewRole(false)
+            loadRoles()
+          }}
+          rolesList={rolesList}
+        />
+      )}
+
+      <Toolbar>
         <Button
           label="New role"
           onClick={() => setShowNewRole(true)}
           icon="group_add"
         />
-      </section>
+      </Toolbar>
 
-      <section className="lighter" style={{ flexGrow: 1, padding: 0 }}>
+      <Panel className="nopad">
         <TableWrapper>
           <DataTable
             value={rolesList}
@@ -171,8 +172,8 @@ const RolesList = ({
             <Column field="name" header="Role name" />
           </DataTable>
         </TableWrapper>
-      </section>
-    </section>
+      </Panel>
+    </Section>
   )
 }
 

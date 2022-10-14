@@ -6,6 +6,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { MultiSelect } from 'primereact/multiselect'
 import { FilterMatchMode } from 'primereact/api'
+import { Section, Panel, TableWrapper } from '/src/components'
 
 import { formatStatus, SYNC_STATES } from './common'
 import SiteSyncDetail from './detail'
@@ -140,7 +141,7 @@ const SiteSyncSummary = ({
   }
 
   return (
-    <section style={{ flexGrow: 1 }}>
+    <Section>
       {selectedRepresentation && (
         <SiteSyncDetail
           projectName={projectName}
@@ -152,82 +153,88 @@ const SiteSyncSummary = ({
           }}
         />
       )}
-      <div className="wrapper">
-        <DataTable
-          scrollable
-          responsive
-          scrollHeight="flex"
-          responsiveLayout="scroll"
-          resizableColumns
-          value={representations}
-          dataKey="representationId"
-          selectionMode="single"
-          selection={selectedRepresentation}
-          onSelectionChange={(e) => setSelectedRepresentation(e.value)}
-          lazy
-          paginator
-          filterDisplay="row"
-          first={lazyParams.first}
-          rows={lazyParams.rows}
-          totalRecords={totalCount}
-          sortField={lazyParams.sortField}
-          sortOrder={lazyParams.sortOrder}
-          filters={lazyParams.filters}
-          onPage={onPage}
-          onSort={onSort}
-          onFilter={onFilter}
-          loading={loading}
-        >
-          <Column
-            field="folder"
-            header="Folder"
-            sortable
-            filter
-            filterMatchModeOptions={textMatchModes}
-          />
-          <Column
-            field="subset"
-            header="Subset"
-            sortable
-            filter
-            filterMatchModeOptions={textMatchModes}
-          />
-          <Column field="version" header="Version" style={{ maxWidth: 150 }} />
-          <Column
-            field="representation"
-            header="Representation"
-            filter
-            filterElement={representationFilterTemplate}
-            filterMatchModeOptions={selectMatchModes}
-          />
-          <Column
-            field="fileCount"
-            header="File count"
-            style={{ maxWidth: 100 }}
-          />
-          <Column
-            field="localStatus"
-            header="Local status"
-            sortable
-            filter
-            filterElement={statusFilterTemplate}
-            filterMatchModeOptions={selectMatchModes}
-            body={(val) => formatStatus(val.localStatus)}
-            style={{ maxWidth: 250 }}
-          />
-          <Column
-            field="remoteStatus"
-            header="Remote status"
-            sortable
-            filter
-            filterElement={statusFilterTemplate}
-            filterMatchModeOptions={selectMatchModes}
-            body={(val) => formatStatus(val.remoteStatus)}
-            style={{ maxWidth: 250 }}
-          />
-        </DataTable>
-      </div>
-    </section>
+      <Panel className="nopad">
+        <TableWrapper>
+          <DataTable
+            scrollable
+            responsive
+            scrollHeight="flex"
+            responsiveLayout="scroll"
+            resizableColumns
+            value={representations}
+            dataKey="representationId"
+            selectionMode="single"
+            selection={selectedRepresentation}
+            onSelectionChange={(e) => setSelectedRepresentation(e.value)}
+            lazy
+            paginator
+            filterDisplay="row"
+            first={lazyParams.first}
+            rows={lazyParams.rows}
+            totalRecords={totalCount}
+            sortField={lazyParams.sortField}
+            sortOrder={lazyParams.sortOrder}
+            filters={lazyParams.filters}
+            onPage={onPage}
+            onSort={onSort}
+            onFilter={onFilter}
+            loading={loading}
+          >
+            <Column
+              field="folder"
+              header="Folder"
+              sortable
+              filter
+              filterMatchModeOptions={textMatchModes}
+            />
+            <Column
+              field="subset"
+              header="Subset"
+              sortable
+              filter
+              filterMatchModeOptions={textMatchModes}
+            />
+            <Column
+              field="version"
+              header="Version"
+              style={{ maxWidth: 150 }}
+            />
+            <Column
+              field="representation"
+              header="Representation"
+              filter
+              filterElement={representationFilterTemplate}
+              filterMatchModeOptions={selectMatchModes}
+            />
+            <Column
+              field="fileCount"
+              header="File count"
+              style={{ maxWidth: 100 }}
+            />
+            <Column
+              field="localStatus"
+              header="Local status"
+              sortable
+              filter
+              filterElement={statusFilterTemplate}
+              filterMatchModeOptions={selectMatchModes}
+              body={(val) => formatStatus(val.localStatus)}
+              style={{ maxWidth: 250 }}
+            />
+            <Column
+              field="remoteStatus"
+              header="Remote status"
+              sortable
+              filter
+              filterElement={statusFilterTemplate}
+              filterMatchModeOptions={selectMatchModes}
+              body={(val) => formatStatus(val.remoteStatus)}
+              style={{ maxWidth: 250 }}
+            />
+          </DataTable>
+        </TableWrapper>
+      </Panel>
+    </Section>
   )
 }
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
+import { Section, Panel, TableWrapper } from '/src/components'
 
 const AddonList = ({
   selectedAddons,
@@ -12,6 +13,8 @@ const AddonList = ({
   changedAddons,
   onDismissChanges,
   onRemoveOverrides,
+  header,
+  footer,
 }) => {
   const [addons, setAddons] = useState({})
   const [selectedNodeKey, setSelectedNodeKey] = useState(null)
@@ -129,34 +132,38 @@ const AddonList = ({
   // metaKeySelection={false}
 
   return (
-    <section style={{ width: 400, height: '100%' }}>
-      <div className="wrapper">
-        <ContextMenu
-          model={menu}
-          ref={cm}
-          onHide={() => setSelectedNodeKey(null)}
-        />
+    <Section style={{ maxWidth: 400 }}>
+      {header}
+      <Panel className="nopad">
+        <TableWrapper>
+          <ContextMenu
+            model={menu}
+            ref={cm}
+            onHide={() => setSelectedNodeKey(null)}
+          />
 
-        <TreeTable
-          value={addons}
-          selectionMode="multiple"
-          selectionKeys={selectedKeys}
-          onSelectionChange={onSelectionChange}
-          contextMenuSelectionKey={selectedNodeKey}
-          onContextMenuSelectionChange={(event) =>
-            setSelectedNodeKey(event.value)
-          }
-          onContextMenu={(event) => cm.current.show(event.originalEvent)}
-          rowClassName={(rowData) => {
-            return { changed: changedAddons.includes(rowData.key) }
-          }}
-        >
-          <Column field="title" header="Addon" expander="true" />
-          <Column field="version" header="Version" />
-          <Column field="usage" header="" />
-        </TreeTable>
-      </div>
-    </section>
+          <TreeTable
+            value={addons}
+            selectionMode="multiple"
+            selectionKeys={selectedKeys}
+            onSelectionChange={onSelectionChange}
+            contextMenuSelectionKey={selectedNodeKey}
+            onContextMenuSelectionChange={(event) =>
+              setSelectedNodeKey(event.value)
+            }
+            onContextMenu={(event) => cm.current.show(event.originalEvent)}
+            rowClassName={(rowData) => {
+              return { changed: changedAddons.includes(rowData.key) }
+            }}
+          >
+            <Column field="title" header="Addon" expander="true" />
+            <Column field="version" header="Version" />
+            <Column field="usage" header="" />
+          </TreeTable>
+        </TableWrapper>
+      </Panel>
+      {footer}
+    </Section>
   )
 }
 

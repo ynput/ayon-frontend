@@ -41,8 +41,8 @@ const AddonListItem = ({ addonName, formData, setFormData }) => {
   }
 
   return (
-    <section className="row" style={{ width: 800 }}>
-      <span>{addon.title}</span>
+    <Panel style={{ width: 800, flexDirection: 'row', alignItems: 'center' }}>
+      <div style={{ flexBasis: 300 }}>{addon.title}</div>
       <Spacer />
       <div className="p-inputgroup">
         <span className="p-inputgroup-addon">Production</span>
@@ -64,7 +64,7 @@ const AddonListItem = ({ addonName, formData, setFormData }) => {
           onChange={onStagingChange}
         />
       </div>
-    </section>
+    </Panel>
   )
 }
 

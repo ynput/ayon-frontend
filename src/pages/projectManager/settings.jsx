@@ -3,12 +3,17 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 
-import { Panel } from 'primereact/panel'
 import { ToggleButton } from 'primereact/togglebutton'
 
-import { Button, Spacer } from '/src/components'
 import { isEmpty } from '/src/utils'
-
+import {
+  Button,
+  Spacer,
+  Section,
+  Panel,
+  Toolbar,
+  ScrollArea,
+} from '/src/components'
 import AddonList from '/src/containers/addonList'
 import AddonSettingsPanel from '/src/containers/addonSettingsPanel'
 
@@ -101,69 +106,62 @@ const ProjectSettings = ({ projectName }) => {
       })
   }
 
-  return (
-    <section className="invisible" style={{ flexGrow: 1 }}>
-      <section className="invisible row">
-        <ToggleButton
-          checked={showVersions}
-          onChange={(e) => setShowVersions(e.value)}
-          onLabel="Hide versions"
-          offLabel="Show versions"
-        />
-        <Button onClick={onSave} disabled={isEmpty(localData)} label="Save" />
-      </section>
-      <section className="invisible row" style={{ flexGrow: 1 }}>
-        <AddonList
-          showVersions={showVersions}
-          selectedAddons={selectedAddons}
-          setSelectedAddons={setSelectedAddons}
-          changedAddons={Object.keys(localData)}
-          onDismissChanges={onDismissChanges}
-          onRemoveOverrides={onRemoveOverrides}
-        />
-        <section className="invisible" style={{ flexGrow: 2, height: '100%' }}>
-          <div
-            className="wrapper"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              overflowY: 'scroll',
-              gap: 12,
-            }}
-          >
-            {selectedAddons
-              .filter((addon) => addon.version)
-              .reverse()
-              .map((addon) => (
-                <Panel
-                  key={`${addon.name}-${addon.version}`}
-                  style={{ flexGrow: 0 }}
-                >
-                  <AddonSettingsPanel
-                    addon={addon}
-                    onChange={(data) =>
-                      onSettingsChange(addon.name, addon.version, data)
-                    }
-                    onSetChangedKeys={(data) =>
-                      onSetChangedKeys(addon.name, addon.version, data)
-                    }
-                    localData={localData[`${addon.name}@${addon.version}`]}
-                    changedKeys={
-                      localOverrides[`${addon.name}@${addon.version}`]
-                    }
-                    reloadTrigger={
-                      reloadTrigger[`${addon.name}@${addon.version}`]
-                    }
-                    projectName={projectName}
-                  />
-                </Panel>
-              ))}
+  const addonListHeader = (
+    <Toolbar>
+      <ToggleButton
+        checked={showVersions}
+        onChange={(e) => setShowVersions(e.value)}
+        onLabel="Hide versions"
+        offLabel="Show versions"
+      />
+      <Button onClick={onSave} disabled={isEmpty(localData)} label="Save" />
+    </Toolbar>
+  )
 
-            <Spacer />
-          </div>
-        </section>
-        {/*
-        <section style={{ minWidth: 300, flexGrow: 1, height: '100%' }}>
+  return (
+    <Section className="row">
+      <AddonList
+        showVersions={showVersions}
+        selectedAddons={selectedAddons}
+        setSelectedAddons={setSelectedAddons}
+        changedAddons={Object.keys(localData)}
+        onDismissChanges={onDismissChanges}
+        onRemoveOverrides={onRemoveOverrides}
+        header={addonListHeader}
+      />
+      <Section>
+        <ScrollArea>
+          {selectedAddons
+            .filter((addon) => addon.version)
+            .reverse()
+            .map((addon) => (
+              <Panel
+                key={`${addon.name}-${addon.version}`}
+                style={{ flexGrow: 0 }}
+                className="transparent nopad"
+              >
+                <AddonSettingsPanel
+                  addon={addon}
+                  onChange={(data) =>
+                    onSettingsChange(addon.name, addon.version, data)
+                  }
+                  onSetChangedKeys={(data) =>
+                    onSetChangedKeys(addon.name, addon.version, data)
+                  }
+                  localData={localData[`${addon.name}@${addon.version}`]}
+                  changedKeys={localOverrides[`${addon.name}@${addon.version}`]}
+                  reloadTrigger={
+                    reloadTrigger[`${addon.name}@${addon.version}`]
+                  }
+                  projectName={projectName}
+                />
+              </Panel>
+            ))}
+
+          <Spacer />
+        </ScrollArea>
+      </Section>
+      {/*
           <div
             className="wrapper"
             style={{ overflowY: 'scroll', flexDirection: 'column' }}
@@ -177,10 +175,8 @@ const ProjectSettings = ({ projectName }) => {
               {JSON.stringify(localOverrides, null, 2)}
             </pre>
           </div>
-        </section>
         */}
-      </section>
-    </section>
+    </Section>
   )
 }
 

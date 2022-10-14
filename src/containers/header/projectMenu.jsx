@@ -7,6 +7,15 @@ import ProjectList from '/src/containers/projectList'
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
 
+  const footer = (
+    <Button
+      icon="settings_suggest"
+      label="Project manager"
+      style={{ marginTop: 10, width: '100%' }}
+      onClick={() => navigate('/projects')}
+    />
+  )
+
   return (
     <Sidebar
       position="left"
@@ -24,15 +33,10 @@ const ProjectMenu = ({ visible, onHide }) => {
         }}
       >
         <ProjectList
+          footer={footer}
           onSelect={(projectName) =>
             navigate(`/projects/${projectName}/browser`)
           }
-        />
-        <Button
-          icon="settings_suggest"
-          label="Project manager"
-          style={{ marginTop: 10 }}
-          onClick={() => navigate('/projects')}
         />
       </div>
     </Sidebar>

@@ -12,31 +12,24 @@ const Roles = () => {
 
   return (
     <main>
-      <section className="invisible row" style={{ flexGrow: 1 }}>
-        <section
-          className="lighter"
-          style={{ flexBasis: 400, padding: 0, height: '100%' }}
-        >
-          <ProjectList
-            showNull="( default )"
-            selection={projectName}
-            onSelect={setProjectName}
-          />
-        </section>
+      <ProjectList
+        showNull="( default )"
+        selection={projectName}
+        onSelect={setProjectName}
+      />
 
-        <RolesList
-          projectName={projectName}
-          reloadTrigger={reloadTrigger}
-          selectedRole={selectedRole}
-          onSelectRole={setSelectedRole}
-        />
+      <RolesList
+        projectName={projectName}
+        reloadTrigger={reloadTrigger}
+        selectedRole={selectedRole}
+        onSelectRole={setSelectedRole}
+      />
 
-        <RoleDetail
-          projectName={projectName}
-          role={selectedRole}
-          onChange={triggerReload}
-        />
-      </section>
+      <RoleDetail
+        projectName={projectName}
+        role={selectedRole}
+        onChange={triggerReload}
+      />
     </main>
   )
 }

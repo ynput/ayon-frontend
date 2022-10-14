@@ -4,7 +4,7 @@ import { Password } from 'primereact/password'
 import { Dropdown } from 'primereact/dropdown'
 import { ProgressSpinner } from 'primereact/progressspinner'
 
-import { Section, Toolbar, Panel } from './layout'
+import { Section, Toolbar, Panel, ScrollArea } from './layout'
 
 // Layout components
 
@@ -162,4 +162,5 @@ export {
   Section,
   Toolbar,
   Panel,
+  ScrollArea,
 }

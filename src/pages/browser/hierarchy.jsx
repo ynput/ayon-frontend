@@ -199,7 +199,7 @@ const Hierarchy = ({
   //
 
   return (
-    <Section>
+    <Section style={{ maxWidth: 500 }}>
       <Toolbar>
         <span className="p-input-icon-left" style={{ flexGrow: 1 }}>
           <i className="pi pi-search" />

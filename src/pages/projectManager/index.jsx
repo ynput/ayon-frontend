@@ -33,6 +33,16 @@ const ProjectManager = () => {
 
   const deleteProject = () => {}
 
+  const toolbar = (
+    <Toolbar>
+      <Button
+        label="Create a new project"
+        icon="create_new_folder"
+        onClick={() => setShowNewProject(true)}
+      />
+    </Toolbar>
+  )
+
   return (
     <main>
       {showNewProject && (
@@ -44,22 +54,12 @@ const ProjectManager = () => {
         />
       )}
 
-      <Section size={400} style={{ width: 400, maxWidth: 400 }}>
-        <Toolbar>
-          <Button
-            label="Create a new project"
-            icon="create_new_folder"
-            onClick={() => setShowNewProject(true)}
-          />
-        </Toolbar>
-        <Panel>
-          <ProjectList
-            selection={selectedProject}
-            onSelect={setSelectedProject}
-            reloadTrigger={projectListTimestamp}
-          />
-        </Panel>
-      </Section>
+      <ProjectList
+        header={toolbar}
+        selection={selectedProject}
+        onSelect={setSelectedProject}
+        reloadTrigger={projectListTimestamp}
+      />
 
       {selectedProject && (
         <Section>
@@ -91,7 +91,7 @@ const ProjectManager = () => {
             />
           </Toolbar>
 
-          <Panel className="transparent">
+          <Panel className="transparent nopad">
             {currentView === 'dashboard' && (
               <ProjectStats projectName={selectedProject} />
             )}

@@ -53,7 +53,7 @@ const NewUserDialog = ({ onHide }) => {
           axios
             .patch(`/api/users/${formData.name}/password`, { password })
             .then(() => toast.success('Password set'))
-            .catch((err) =>
+            .catch(() =>
               toast.error('Unable to set password. Use change password button.')
             )
         }
@@ -93,13 +93,7 @@ const NewUserDialog = ({ onHide }) => {
         height: '80%',
       }}
     >
-      <section
-        className="invisible"
-        style={{
-          width: '100%',
-          height: '100%',
-        }}
-      >
+      <div style={{ width: '100%', height: '100%' }}>
         <UserAttrib
           formData={formData}
           setFormData={setFormData}
@@ -125,7 +119,7 @@ const NewUserDialog = ({ onHide }) => {
             />
           </>
         )}
-      </section>
+      </div>
     </Dialog>
   )
 }

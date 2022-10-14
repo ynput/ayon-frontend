@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Spacer } from '/src/components'
+import { Button, Spacer, Section, Toolbar, Panel } from '/src/components'
 import axios from 'axios'
 import { isEmpty } from '/src/utils'
 import { UserAttrib, AccessControl } from './forms'
@@ -98,15 +98,12 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
   //
 
   return (
-    <section
-      className="invisible"
-      style={{ flexBasis: 500, padding: 0, height: '100%' }}
-    >
-      <section className="invisible row">
+    <Section style={{ maxWidth: 500 }}>
+      <Toolbar>
         <Button onClick={onSave} label="Save selected users" icon="check" />
         <Spacer />
-      </section>
-      <section className="lighter" style={{ flexGrow: 1 }}>
+      </Toolbar>
+      <Panel>
         {singleUserEdit && (
           <>
             <h2>{singleUserEdit.attrib.fullName || singleUserEdit.name}</h2>
@@ -127,8 +124,8 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
               : 'Default roles'
           }
         />
-      </section>
-    </section>
+      </Panel>
+    </Section>
   )
 }
 

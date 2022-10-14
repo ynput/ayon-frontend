@@ -10,7 +10,15 @@ import { ContextMenu } from 'primereact/contextmenu'
 import { toast } from 'react-toastify'
 
 import SettingsEditor from '/src/containers/settingsEditor'
-import { Spacer, Button } from '/src/components'
+import {
+  Spacer,
+  Button,
+  Section,
+  Panel,
+  Toolbar,
+  TableWrapper,
+  ScrollArea,
+} from '/src/components'
 import { loadAnatomyPresets } from '/src/utils'
 
 const PresetList = ({
@@ -25,7 +33,6 @@ const PresetList = ({
   const contextMenuRef = useRef(null)
 
   useEffect(() => {
-    toast.info('Loading list')
     loadAnatomyPresets().then((r) => setPresetList(r))
   }, [timestamp])
 
@@ -48,7 +55,7 @@ const PresetList = ({
   }, [selectedPreset, presetList])
 
   return (
-    <div className="wrapper">
+    <TableWrapper>
       <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <DataTable
         value={presetList}
@@ -66,7 +73,7 @@ const PresetList = ({
         <Column field="primary" header="Primary" style={{ maxWidth: 70 }} />
         <Column field="version" header="Version" style={{ maxWidth: 80 }} />
       </DataTable>
-    </div>
+    </TableWrapper>
   )
 }
 
@@ -196,19 +203,21 @@ const AnatomyPresets = () => {
         </Dialog>
       )}
 
-      <section className="lighter" style={{ flexBasis: '600px', padding: 0 }}>
-        <PresetList
-          selectedPreset={selectedPreset}
-          setSelectedPreset={setSelectedPreset}
-          timestamp={presetListTimestamp}
-          onSetPrimary={setPrimaryPreset}
-          onUnsetPrimary={unsetPrimaryPreset}
-          onDelete={deletePreset}
-        />
-      </section>
+      <Section style={{ maxWidth: 600 }}>
+        <Panel className="nopad">
+          <PresetList
+            selectedPreset={selectedPreset}
+            setSelectedPreset={setSelectedPreset}
+            timestamp={presetListTimestamp}
+            onSetPrimary={setPrimaryPreset}
+            onUnsetPrimary={unsetPrimaryPreset}
+            onDelete={deletePreset}
+          />
+        </Panel>
+      </Section>
 
-      <section style={{ flexGrow: 1 }} className="invisible">
-        <section className="invisible row">
+      <Section>
+        <Toolbar>
           <Button
             label="Save current preset"
             icon="check"
@@ -235,14 +244,12 @@ const AnatomyPresets = () => {
             onClick={setPrimaryPreset}
           />
           <Spacer />
-        </section>
+        </Toolbar>
 
-        <section className="invisible" style={{ flexGrow: 1 }}>
-          <div className="wrapper" style={{ overflowY: 'scroll' }}>
-            {editor}
-          </div>
-        </section>
-      </section>
+        <Panel className="transparent">
+          <ScrollArea>{editor}</ScrollArea>
+        </Panel>
+      </Section>
     </main>
   )
 }

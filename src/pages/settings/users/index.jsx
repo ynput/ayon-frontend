@@ -3,6 +3,8 @@ import ProjectList from '/src/containers/projectList'
 import UserList from './userList'
 import UserDetail from './userDetail'
 
+import { Section, Panel } from '/src/components'
+
 const Users = () => {
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [selectedUsers, setSelectedUsers] = useState([])
@@ -13,17 +15,16 @@ const Users = () => {
 
   return (
     <main>
-      <section
-        className="lighter"
-        style={{ flexBasis: '400px', padding: 0, height: '100%' }}
-      >
-        <ProjectList
-          showNull="( default )"
-          multiselect={true}
-          selection={selectedProjects}
-          onSelect={setSelectedProjects}
-        />
-      </section>
+      <Section style={{ maxWidth: 400 }}>
+        <Panel className="nopad">
+          <ProjectList
+            showNull="( default )"
+            multiselect={true}
+            selection={selectedProjects}
+            onSelect={setSelectedProjects}
+          />
+        </Panel>
+      </Section>
 
       <UserList
         selectedProjects={selectedProjects}
