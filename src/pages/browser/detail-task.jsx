@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
-import AttributeTable from '../../containers/attributeTable'
-import { getTaskTypeIcon } from '../../utils'
+import AttributeTable from '/src/containers/attributeTable'
+import { getTaskTypeIcon } from '/src/utils'
+import { Panel } from '/src/components'
 
 const TASK_QUERY = `
     query Tasks($projectName: String!, $tasks: [String!]!) {
@@ -69,14 +70,14 @@ const TaskDetail = () => {
 
   if (tasks.length > 1) {
     return (
-      <section className="column">
+      <Panel>
         <span>{tasks.length} tasks selected</span>
-      </section>
+      </Panel>
     )
   }
 
   return (
-    <section style={{ flexGrow: 1 }}>
+    <Panel>
       <h3>
         <span
           className="material-symbols-outlined"
@@ -101,7 +102,7 @@ const TaskDetail = () => {
           { title: 'Task Type', value: data.taskType },
         ]}
       />
-    </section>
+    </Panel>
   )
 }
 

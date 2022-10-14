@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
+import { Panel } from '/src/components'
 import Thumbnail from '../../containers/thumbnail'
 import AttributeTable from '../../containers/attributeTable'
 import RepresentationDetail from './detail-representation'
@@ -131,16 +132,16 @@ const VersionDetail = () => {
   // Multiple versions selected. Show an info message
   if (versions.length > 1) {
     versionDetailWidget = (
-      <section className="column">
+      <Panel>
         <span>{versions.length} versions selected</span>
-      </section>
+      </Panel>
     )
   }
 
   // One version selected. Show the detail
   else {
     versionDetailWidget = (
-      <section className="column">
+      <Panel>
         <h3>
           <span
             className="material-symbols-outlined"
@@ -163,7 +164,7 @@ const VersionDetail = () => {
           data={versions[0].attrib}
           additionalData={[{ title: 'Author', value: versions[0].author }]}
         />
-      </section>
+      </Panel>
     )
   }
 

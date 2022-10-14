@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { Spacer } from '../../components'
+import { Panel, Toolbar, TableWrapper } from '/src/components'
 
 import SiteSyncDetail from '../sitesync/detail'
 import { setBreadcrumbs } from '../../features/context'
@@ -70,12 +70,11 @@ const RepresentationDetail = ({ representations }) => {
         />
       )}
 
-      <section className="invisible row">
+      <Toolbar>
         <span className="section-header">Representations</span>
-        <Spacer />
-      </section>
-      <section style={{ flexGrow: 1 }}>
-        <div className="wrapper">
+      </Toolbar>
+      <Panel className="nopad">
+        <TableWrapper>
           <TreeTable
             scrollable="true"
             scrollHeight="100%"
@@ -92,8 +91,8 @@ const RepresentationDetail = ({ representations }) => {
               )
             })}
           </TreeTable>
-        </div>
-      </section>
+        </TableWrapper>
+      </Panel>
     </>
   )
 }

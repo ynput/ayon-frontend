@@ -3,11 +3,11 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { Shade } from '../../components'
-import { CellWithIcon } from '../../components/icons'
+import { Shade, Panel, TableWrapper } from '/src/components'
+import { CellWithIcon } from '/src/components/icons'
 
-import { setFocusedTasks, setPairing } from '../../features/context'
-import { groupResult, getTaskTypeIcon } from '../../utils'
+import { setFocusedTasks, setPairing } from '/src/features/context'
+import { groupResult, getTaskTypeIcon } from '/src/utils'
 
 import axios from 'axios'
 
@@ -131,8 +131,8 @@ const TasksPanel = () => {
   }
 
   return (
-    <section className="row" style={{ minHeight: 250, width: '100%' }}>
-      <div className="wrapper">
+    <Panel size={250} className="nopad">
+      <TableWrapper>
         {loading && <Shade />}
         <TreeTable
           value={data}
@@ -154,8 +154,8 @@ const TasksPanel = () => {
           )}
           <Column field="taskType" header="Task type" style={{ width: 90 }} />
         </TreeTable>
-      </div>
-    </section>
+      </TableWrapper>
+    </Panel>
   )
 }
 

@@ -5,8 +5,8 @@ import { toast } from 'react-toastify'
 import axios from 'axios'
 import { login } from '../features/user'
 
-import { InputText, Password, Button } from '../components'
-import OAuth2ProviderIcon from '../components/oauthIcons'
+import { InputText, Password, Button, Panel } from '/src/components'
+import OAuth2ProviderIcon from '/src/components/oauthIcons'
 
 const constructOAuth2Url = (url, clientId, redirectUri, scope) => {
   const query = new URLSearchParams({
@@ -149,9 +149,9 @@ const LoginPage = () => {
   if (loading) return <div>Loading...</div>
 
   return (
-    <main className="center" style={{ flexDirection: 'column' }}>
+    <main className="center">
       <h1>OpenPype server</h1>
-      <section>
+      <Panel size={1}>
         <InputText
           ref={loginRef}
           placeholder="Username"
@@ -172,7 +172,7 @@ const LoginPage = () => {
           onKeyDown={onLoginKeyDown}
         />
         <Button label="Login" icon="login" onClick={doLogin} />
-      </section>
+      </Panel>
       {oauthOptions && <OAuth2Links options={oauthOptions} />}
     </main>
   )

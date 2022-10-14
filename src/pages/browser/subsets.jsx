@@ -5,18 +5,26 @@ import { DateTime } from 'luxon'
 
 import axios from 'axios'
 
-import { InputText, Spacer, Shade, ToolButton } from '../../components'
-import { CellWithIcon } from '../../components/icons'
+import {
+  InputText,
+  Spacer,
+  Shade,
+  ToolButton,
+  TableWrapper,
+} from '/src/components'
+import { Section, Toolbar, Panel } from '/src/components/layout'
+import { CellWithIcon } from '/src/components/icons'
+
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { groupResult, getFamilyIcon } from '../../utils'
+import { groupResult, getFamilyIcon } from '/src/utils'
 import {
   setFocusedVersions,
   setSelectedVersions,
   setBreadcrumbs,
   setPairing,
-} from '../../features/context'
+} from '/src/features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subset-utils'
 
@@ -241,8 +249,8 @@ const Subsets = ({
   //
 
   return (
-    <section className="invisible insplit">
-      <section className="invisible row">
+    <Section className="wrap">
+      <Toolbar>
         <span className="p-input-icon-left">
           <i className="pi pi-search" />
           <InputText
@@ -263,15 +271,10 @@ const Subsets = ({
           tooltipOptions={{ position: 'bottom' }}
         />
         <Spacer />
-      </section>
+      </Toolbar>
 
-      <section
-        style={{
-          flexGrow: 1,
-          padding: 0,
-        }}
-      >
-        <div className="wrapper">
+      <Panel className="nopad">
+        <TableWrapper>
           {loading && <Shade />}
           <TreeTable
             responsive="true"
@@ -298,9 +301,9 @@ const Subsets = ({
               )
             })}
           </TreeTable>
-        </div>
-      </section>
-    </section>
+        </TableWrapper>
+      </Panel>
+    </Section>
   )
 }
 

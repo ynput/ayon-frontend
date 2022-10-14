@@ -1,5 +1,5 @@
 import { Dropdown } from 'primereact/dropdown'
-import { Spacer, Button } from '/src/components'
+import { Spacer, Button, Toolbar, Panel } from '/src/components'
 
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
@@ -108,9 +108,9 @@ const AddonVersions = ({ projectName }) => {
 
   return (
     <>
-      <section className="invisible row">
+      <Toolbar>
         <Button label="Save" icon="check" onClick={submit} />
-      </section>
+      </Toolbar>
       <section className="invisible">
         <Spacer>
           <section className="invisible">

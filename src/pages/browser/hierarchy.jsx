@@ -9,8 +9,8 @@ import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 
-import { Shade } from '../../components'
-import { CellWithIcon } from '../../components/icons'
+import { Shade, Section, Panel, Toolbar, TableWrapper } from '/src/components'
+import { CellWithIcon } from '/src/components/icons'
 
 import {
   setFocusedFolders,
@@ -19,7 +19,7 @@ import {
 } from '../../features/context'
 import { getFolderTypeIcon } from '../../utils'
 
-const filterHierarchy = (text, folder, expandedFolders) => {
+const filterHierarchy = (text, folder) => {
   /*
     Filter the hierarchy using a given text and rename "id" to "key"
     and "name" to "label", which is needed to render the hierarchy
@@ -199,8 +199,8 @@ const Hierarchy = ({
   //
 
   return (
-    <section className="invisible insplit">
-      <section className="invisible row">
+    <Section>
+      <Toolbar>
         <span className="p-input-icon-left" style={{ flexGrow: 1 }}>
           <i className="pi pi-search" />
           <InputText
@@ -225,10 +225,10 @@ const Hierarchy = ({
             flexBasis: '40%',
           }}
         />
-      </section>
+      </Toolbar>
 
-      <section style={{ flexGrow: 1 }}>
-        <div className="wrapper">
+      <Panel className="nopad">
+        <TableWrapper>
           {loading && <Shade />}
           <TreeTable
             value={treeData}
@@ -250,9 +250,9 @@ const Hierarchy = ({
               style={{ width: '100%' }}
             />
           </TreeTable>
-        </div>
-      </section>
-    </section>
+        </TableWrapper>
+      </Panel>
+    </Section>
   )
 }
 

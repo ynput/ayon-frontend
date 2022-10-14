@@ -99,19 +99,21 @@ function ObjectFieldTemplate(props) {
 
   // Object descrtiption (from docstrings)
 
-  const shortDescription = props.schema.description &&
-    props.schema.description.split("\n")[0]
+  const shortDescription =
+    props.schema.description && props.schema.description.split('\n')[0]
 
-  const longDescription = props.schema.description &&
+  const longDescription = props.schema.description && (
     <>
-    {props.schema.description
-      .split("\n")
-      .slice(1)
-      .join("\n")
-      .split("\n\n")
-      .map(p => <p>{p}</p>)}
+      {props.schema.description
+        .split('\n')
+        .slice(1)
+        .join('\n')
+        .split('\n\n')
+        .map((p) => (
+          <p>{p}</p>
+        ))}
     </>
-
+  )
 
   // memoize the fields
 
@@ -138,36 +140,36 @@ function ObjectFieldTemplate(props) {
       }
       return (
         <>
-        {longDescription}
-        <div className={className}>
-          <div className="name-field">{nameField}</div>
-          <div className="data-fields">
-            {otherFields.map((element) => element)}
+          {longDescription}
+          <div className={className}>
+            <div className="name-field">{nameField}</div>
+            <div className="data-fields">
+              {otherFields.map((element) => element)}
+            </div>
           </div>
-        </div>
         </>
       )
     } // ugly layout
 
     return (
       <>
-      {longDescription}
-      <div className={className}>
-        {props.properties
-          .filter(
-            (element) =>
-              element.name !== 'enabled' ||
-              ['compact', 'root'].includes(props.schema.layout)
-          )
-          .map((element, index) => (
-            <div key={index} className="form-object-field-item">
-              {element.content}
-            </div>
-          ))}
-      </div>
+        {longDescription}
+        <div className={className}>
+          {props.properties
+            .filter(
+              (element) =>
+                element.name !== 'enabled' ||
+                ['compact', 'root'].includes(props.schema.layout)
+            )
+            .map((element, index) => (
+              <div key={index} className="form-object-field-item">
+                {element.content}
+              </div>
+            ))}
+        </div>
       </>
     )
-  }, [props.properties, className ])
+  }, [props.properties, className])
 
   // aaand... render
 
@@ -210,13 +212,13 @@ function FieldTemplate(props) {
     if (props.schema.section)
       return (
         <Divider>
-          {props.schema.section !== "---" && <span className="p-tag">{props.schema.section}</span>}
+          {props.schema.section !== '---' && (
+            <span className="p-tag">{props.schema.section}</span>
+          )}
         </Divider>
       )
     else return <></>
   }, [props.schema.section])
-
-
 
   // Object fields
 
@@ -267,7 +269,6 @@ function FieldTemplate(props) {
   // Context menu
 
   const contextMenuModel = buildContextMenu(rmOverrideFunc, pinOverrideFunc)
-
 
   // Array fields
 

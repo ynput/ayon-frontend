@@ -11,6 +11,9 @@ import {
   Password,
   FormLayout,
   FormRow,
+  Section,
+  Panel,
+  Toolbar,
 } from '/src/components'
 import NewUserDialog from './newUserDialog'
 import axios from 'axios'
@@ -309,11 +312,8 @@ const UserList = ({
   // Render
 
   return (
-    <section
-      className="invisible"
-      style={{ flexGrow: 1, padding: 0, height: '100%' }}
-    >
-      <section className="invisible row">
+    <Section>
+      <Toolbar>
         <Button
           onClick={() => setShowNewUser(true)}
           label="Add a new user"
@@ -325,7 +325,7 @@ const UserList = ({
           icon="person_remove"
           disabled={!selectedUsers.length}
         />
-      </section>
+      </Toolbar>
 
       {showNewUser && (
         <NewUserDialog
@@ -357,7 +357,7 @@ const UserList = ({
         />
       )}
 
-      <section className="lighter" style={{ flexGrow: 1 }}>
+      <Panel className="nopad">
         <TableWrapper>
           <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
           <DataTable
@@ -397,8 +397,8 @@ const UserList = ({
             />
           </DataTable>
         </TableWrapper>
-      </section>
-    </section>
+      </Panel>
+    </Section>
   )
 }
 

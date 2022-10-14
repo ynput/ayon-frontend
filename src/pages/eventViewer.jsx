@@ -5,7 +5,7 @@ import { DateTime } from 'luxon'
 import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TableWrapper } from '/src/components'
+import { Section, Toolbar, Panel, TableWrapper } from '/src/components'
 
 const EVENTS_QUERY = `
 query Events {
@@ -87,16 +87,13 @@ const EventViewer = () => {
     }
     setEventData((ed) => {
       let updated = false
-      for (const row of ed){
-        if (row.id !== message.id)
-          continue
+      for (const row of ed) {
+        if (row.id !== message.id) continue
         updated = true
         Object.assign(row, message)
       }
-      if (!updated)
-        return [message, ...ed]
+      if (!updated) return [message, ...ed]
       return [...ed]
-
     })
   }
 
@@ -111,7 +108,9 @@ const EventViewer = () => {
   }, [])
 
   const formatTime = (rowData) => {
-    return DateTime.fromSeconds(rowData.updatedAt).toFormat('yyyy-LL-dd HH:mm:ss')
+    return DateTime.fromSeconds(rowData.updatedAt).toFormat(
+      'yyyy-LL-dd HH:mm:ss'
+    )
     //return DateTime.fromSeconds(rowData.updatedAt).toRelative()
   }
 
@@ -123,38 +122,60 @@ const EventViewer = () => {
 
   return (
     <main>
-      <section style={{ flexGrow: 1 }}>
-        {detailVisible && (
-          <EventDetailDialog
-            onHide={() => setDetailVisible(false)}
-            eventId={selectedEvent?.id}
-          />
-        )}
-        <TableWrapper>
-          <DataTable
-            value={eventData}
-            scrollable="true"
-            scrollHeight="flex"
-            responsive="true"
-            dataKey="id"
-            selectionMode="single"
-            onSelectionChange={(e) => setSelectedEvent(e.value)}
-            selection={selectedEvent}
-            onRowClick={onRowClick}
-            rowClassName={(rowData) => {
-              return { highlight: selectedEvent && selectedEvent.dependsOn === rowData.id }
-            }}
-          >
-            <Column header="Time" body={formatTime} style={{ maxWidth: 200 }} />
-            <Column header="Topic" field="topic" style={{ maxWidth: 120 }} />
-            <Column header="Sender" field="sender" style={{ maxWidth: 300 }} />
-            <Column header="User" field="user" style={{ maxWidth: 120 }} />
-            <Column header="Project" field="project" style={{ maxWidth: 150 }} />
-            <Column header="Description" field="description" />
-            <Column header="Status" field="status" style={{ maxWidth: 150 }} />
-          </DataTable>
-        </TableWrapper>
-      </section>
+      {detailVisible && (
+        <EventDetailDialog
+          onHide={() => setDetailVisible(false)}
+          eventId={selectedEvent?.id}
+        />
+      )}
+      <Section>
+        <Toolbar></Toolbar>
+        <Panel>
+          <TableWrapper>
+            <DataTable
+              value={eventData}
+              scrollable="true"
+              scrollHeight="flex"
+              responsive="true"
+              dataKey="id"
+              selectionMode="single"
+              onSelectionChange={(e) => setSelectedEvent(e.value)}
+              selection={selectedEvent}
+              onRowClick={onRowClick}
+              rowClassName={(rowData) => {
+                return {
+                  highlight:
+                    selectedEvent && selectedEvent.dependsOn === rowData.id,
+                }
+              }}
+            >
+              <Column
+                header="Time"
+                body={formatTime}
+                style={{ maxWidth: 200 }}
+              />
+              <Column header="Topic" field="topic" style={{ maxWidth: 120 }} />
+              <Column
+                header="Sender"
+                field="sender"
+                style={{ maxWidth: 300 }}
+              />
+              <Column header="User" field="user" style={{ maxWidth: 120 }} />
+              <Column
+                header="Project"
+                field="project"
+                style={{ maxWidth: 150 }}
+              />
+              <Column header="Description" field="description" />
+              <Column
+                header="Status"
+                field="status"
+                style={{ maxWidth: 150 }}
+              />
+            </DataTable>
+          </TableWrapper>
+        </Panel>
+      </Section>
     </main>
   )
 }

@@ -7,6 +7,7 @@ import Detail from './detail'
 import TasksPanel from './tasks'
 
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { Section } from '/src/components'
 
 const BrowserPage = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -47,12 +48,10 @@ const BrowserPage = () => {
     <main>
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
         <SplitterPanel size={18} style={{ minWidth: 250, maxWidth: 600 }}>
-          <section className="invisible insplit">
-            <section className="row invisible" style={{ flexGrow: 1 }}>
-              {hierarchy}
-            </section>
+          <Section className="wrap">
+            {hierarchy}
             <TasksPanel />
-          </section>
+          </Section>
         </SplitterPanel>
 
         <SplitterPanel size={82}>

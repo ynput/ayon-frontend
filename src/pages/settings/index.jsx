@@ -2,12 +2,6 @@ import { useMemo, useEffect, lazy } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
 import { Spacer } from '../../components'
 
-// import AnatomyPresets from './anatomyPresets'
-// import AddonsSettings from './addons'
-// import StudioOverrides from './studioOverrides'
-// import Users from './users'
-// import Roles from './roles'
-
 const AnatomyPresets = lazy(() => import('./anatomyPresets'))
 const AddonsSettings = lazy(() => import('./addons'))
 const StudioOverrides = lazy(() => import('./studio'))
@@ -19,14 +13,13 @@ const SettingsPage = () => {
   const { module } = useParams()
 
   useEffect(() => {
-    document.title = 'Settings'
+    //document.title = 'Settings'
     return () => {
       console.log('unmounting settings page')
     }
   }, [])
 
   const moduleComponent = useMemo(() => {
-    console.log('Loading settings module', module)
     switch (module) {
       case 'anatomy':
         return <AnatomyPresets />
@@ -47,7 +40,7 @@ const SettingsPage = () => {
 
   return (
     <>
-      <nav id="project-nav">
+      <nav className="secondary">
         <NavLink to={`/settings/anatomy`}>Anatomy</NavLink>
         <NavLink to={`/settings/addons`}>Addons</NavLink>
         <NavLink to={`/settings/studio`}>Studio</NavLink>

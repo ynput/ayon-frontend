@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { SelectButton } from 'primereact/selectbutton'
-import { Button, Spacer } from '/src/components'
+import { Button, Spacer, Section, Toolbar, Panel } from '/src/components'
 import ProjectList from '/src/containers/projectList'
 
 import ProjectStats from './stats'
@@ -44,27 +44,26 @@ const ProjectManager = () => {
         />
       )}
 
-      <section className="invisible" style={{ flexBasis: '400px', padding: 0 }}>
-        <section className="invisible row">
+      <Section size={400} style={{ width: 400, maxWidth: 400 }}>
+        <Toolbar>
           <Button
             label="Create a new project"
             icon="create_new_folder"
             onClick={() => setShowNewProject(true)}
           />
-          <Spacer />
-        </section>
-        <section style={{ flexGrow: 1 }}>
+        </Toolbar>
+        <Panel>
           <ProjectList
             selection={selectedProject}
             onSelect={setSelectedProject}
             reloadTrigger={projectListTimestamp}
           />
-        </section>
-      </section>
+        </Panel>
+      </Section>
 
       {selectedProject && (
-        <section style={{ flexGrow: 1 }} className="invisible">
-          <section className="invisible row">
+        <Section>
+          <Toolbar>
             <SelectButton
               value={currentView}
               optionValue="name"
@@ -90,9 +89,9 @@ const ProjectManager = () => {
               disabled={true || !selectedProject}
               onClick={deleteProject}
             />
-          </section>
+          </Toolbar>
 
-          <section className="invisible" style={{ flexGrow: 1 }}>
+          <Panel className="transparent">
             {currentView === 'dashboard' && (
               <ProjectStats projectName={selectedProject} />
             )}
@@ -102,8 +101,8 @@ const ProjectManager = () => {
             {currentView === 'settings' && (
               <ProjectSettings projectName={selectedProject} />
             )}
-          </section>
-        </section>
+          </Panel>
+        </Section>
       )}
     </main>
   )

@@ -9,7 +9,15 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { InputSwitch } from 'primereact/inputswitch'
 import { ContextMenu } from 'primereact/contextmenu'
-import { Shade, Spacer, Button } from '/src/components'
+import {
+  Shade,
+  Spacer,
+  Button,
+  Section,
+  Toolbar,
+  Panel,
+  TableWrapper,
+} from '/src/components'
 
 import { isEmpty, sortByKey } from '/src/utils'
 
@@ -556,126 +564,135 @@ const EditorPage = () => {
   //
 
   return (
-    <main className="rows">
-      <section className="invisible row">
-        <Button
-          icon="create_new_folder"
-          label="Add folder"
-          disabled={!canAdd}
-          onClick={onAddFolder}
-        />
-        <Button
-          icon="add_task"
-          label="Add task"
-          disabled={!canAdd}
-          onClick={onAddTask}
-        />
-        <Button
-          icon="create_new_folder"
-          label="Add root folder"
-          onClick={onAddRootFolder}
-        />
-        <Button label="Delete selected" icon="delete" onClick={onDelete} />
-        <InputSwitch
-          checked={selectionLocked}
-          onChange={() => setSelectionLocked(!selectionLocked)}
-          style={{ width: 40, marginLeft: 10 }}
-        />
-        Lock selection
-        <Spacer />
-        <Button
-          icon="close"
-          label="Revert Changes"
-          onClick={onRevert}
-          disabled={!canCommit}
-        />
-        <Button
-          icon="check"
-          label="Commit Changes"
-          onClick={onCommit}
-          disabled={!canCommit}
-        />
-      </section>
-      <section className="column" style={{ flexGrow: 1 }}>
-        <div className="wrapper">
-          {loading && <Shade />}
-          <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-          <TreeTable
-            responsive="true"
-            scrollable
-            scrollHeight="100%"
-            value={treeData}
-            resizableColumns
-            columnResizeMode="expand"
-            expandedKeys={context.expandedFolders}
-            onToggle={onToggle}
-            selectionMode="multiple"
-            selectionKeys={currentSelection}
-            onSelectionChange={onSelectionChange}
-            onRowClick={onRowClick}
-            rowClassName={(rowData) => {
-              return {
-                changed:
-                  rowData.key in changes || rowData.key.startsWith('newnode'),
-                deleted:
-                  rowData.key in changes &&
-                  changes[rowData.key]?.__action == 'delete',
+    <main>
+      <Section>
+        <Toolbar>
+          <Button
+            icon="create_new_folder"
+            label="Add folder"
+            disabled={!canAdd}
+            onClick={onAddFolder}
+          />
+          <Button
+            icon="add_task"
+            label="Add task"
+            disabled={!canAdd}
+            onClick={onAddTask}
+          />
+          <Button
+            icon="create_new_folder"
+            label="Add root folder"
+            onClick={onAddRootFolder}
+          />
+          <Button label="Delete selected" icon="delete" onClick={onDelete} />
+          <InputSwitch
+            checked={selectionLocked}
+            onChange={() => setSelectionLocked(!selectionLocked)}
+            style={{ width: 40, marginLeft: 10 }}
+          />
+          Lock selection
+          <Spacer />
+          <Button
+            icon="close"
+            label="Revert Changes"
+            onClick={onRevert}
+            disabled={!canCommit}
+          />
+          <Button
+            icon="check"
+            label="Commit Changes"
+            onClick={onCommit}
+            disabled={!canCommit}
+          />
+        </Toolbar>
+        <Panel className="nopad">
+          <TableWrapper>
+            {loading && <Shade />}
+            <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+            <TreeTable
+              responsive="true"
+              scrollable
+              scrollHeight="100%"
+              value={treeData}
+              resizableColumns
+              columnResizeMode="expand"
+              expandedKeys={context.expandedFolders}
+              onToggle={onToggle}
+              selectionMode="multiple"
+              selectionKeys={currentSelection}
+              onSelectionChange={onSelectionChange}
+              onRowClick={onRowClick}
+              rowClassName={(rowData) => {
+                return {
+                  changed:
+                    rowData.key in changes || rowData.key.startsWith('newnode'),
+                  deleted:
+                    rowData.key in changes &&
+                    changes[rowData.key]?.__action == 'delete',
+                }
+              }}
+              selectOnEdit={false}
+              onContextMenu={(e) =>
+                contextMenuRef.current.show(e.originalEvent)
               }
-            }}
-            selectOnEdit={false}
-            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-            onContextMenuSelectionChange={onContextMenuSelectionChange}
-          >
-            <Column
-              field="name"
-              header="Name"
-              expander={true}
-              body={(rowData) => formatName(rowData.data, changes)}
-              style={{ width: 300 }}
-              editor={(options) => {
-                return stringEditor(
-                  options,
-                  updateName,
-                  formatName(options.rowData, changes, false)
+              onContextMenuSelectionChange={onContextMenuSelectionChange}
+            >
+              <Column
+                field="name"
+                header="Name"
+                expander={true}
+                body={(rowData) => formatName(rowData.data, changes)}
+                style={{ width: 300 }}
+                editor={(options) => {
+                  return stringEditor(
+                    options,
+                    updateName,
+                    formatName(options.rowData, changes, false)
+                  )
+                }}
+              />
+              <Column
+                field="type"
+                header="Type"
+                body={(rowData) => formatType(rowData.data, changes)}
+                style={{ width: 200 }}
+                editor={(options) => {
+                  return typeEditor(
+                    options,
+                    updateType,
+                    formatType(options.rowData, changes, false)
+                  )
+                }}
+              />
+              {columns.map((col) => {
+                return (
+                  <Column
+                    key={col.name}
+                    header={col.title}
+                    field={col.name}
+                    style={{ minWidth: 30 }}
+                    body={(rowData) =>
+                      formatAttribute(rowData.data, changes, col.name)
+                    }
+                    editor={(options) => {
+                      return col.editor(
+                        options,
+                        updateAttribute,
+                        formatAttribute(
+                          options.rowData,
+                          changes,
+                          col.name,
+                          false
+                        )
+                      )
+                    }}
+                  />
                 )
-              }}
-            />
-            <Column
-              field="type"
-              header="Type"
-              body={(rowData) => formatType(rowData.data, changes)}
-              style={{ width: 200 }}
-              editor={(options) => {
-                return typeEditor(
-                  options,
-                  updateType,
-                  formatType(options.rowData, changes, false)
-                )
-              }}
-            />
-            {columns.map((col) => {
-              return (
-                <Column
-                  key={col.name}
-                  header={col.title}
-                  field={col.name}
-                  style={{ minWidth: 30 }}
-                  body={(rowData) =>
-                    formatAttribute(rowData.data, changes, col.name)
-                  }
-                  editor={(options) => {
-                    return col.editor(
-                      options,
-                      updateAttribute,
-                      formatAttribute(options.rowData, changes, col.name, false)
-                    )
-                  }}
-                />
-              )
-            })}
-          </TreeTable>
-        </div>
-      </section>
+              })}
+            </TreeTable>
+          </TableWrapper>
+        </Panel>
+      </Section>
     </main>
   )
 }

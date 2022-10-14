@@ -129,7 +129,7 @@ const ProjectPage = () => {
       >
         {showContextDialog && <ProjectContexInfo />}
       </Dialog>
-      <nav>
+      <nav className="secondary">
         <NavLink to={`/projects/${projectName}/browser`}>Browser</NavLink>
         <NavLink to={`/projects/${projectName}/editor`}>Editor</NavLink>
         <NavLink to={`/projects/${projectName}/sitesync`}>SiteSync</NavLink>

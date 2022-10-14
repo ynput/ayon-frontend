@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux'
-import { Spacer } from '../../components'
+import { Spacer } from '/src/components'
+import { Section, Toolbar } from '/src/components/layout'
 
 import FolderDetail from './detail-folder'
 import VersionDetail from './detail-version'
@@ -31,13 +32,13 @@ const Detail = () => {
     : 'No selection'
 
   return (
-    <section className="invisible insplit">
-      <section className="row invisible">
+    <Section className="wrap">
+      <Toolbar>
         <span className="section-header">{header}</span>
         <Spacer />
-      </section>
+      </Toolbar>
       {detailComponent}
-    </section>
+    </Section>
   )
 }
 

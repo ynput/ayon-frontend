@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
+import { Panel } from '/src/components/layout'
+
 import Thumbnail from '../../containers/thumbnail'
 import AttributeTable from '../../containers/attributeTable'
 import { getFolderTypeIcon } from '../../utils'
@@ -70,14 +72,14 @@ const FolderDetail = () => {
 
   if (folders.length > 1) {
     return (
-      <section className="column">
+      <Panel>
         <span>{folders.length} folders selected</span>
-      </section>
+      </Panel>
     )
   }
 
   return (
-    <section style={{ flexGrow: 1 }}>
+    <Panel>
       <h3>
         <span
           className="material-symbols-outlined"
@@ -101,7 +103,7 @@ const FolderDetail = () => {
           { title: 'Path', value: data.path },
         ]}
       />
-    </section>
+    </Panel>
   )
 }
 
