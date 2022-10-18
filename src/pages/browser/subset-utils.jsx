@@ -119,9 +119,7 @@ const parseSubsetResolution = (subset) => {
   const folderResolution =
     folderWidth && folderHeight ? `${folderWidth}x${folderHeight}` : ''
 
-  if (!subset) return folderResolution
-  if (!subset.latestVersion) return folderResolution
-  if (!subset.latestVersion.attrib) return folderResolution
+  if (!subset?.latestVersion?.attrib) return folderResolution
 
   const width = subset.latestVersion.attrib.resolutionWidth || null
   const height = subset.latestVersion.attrib.resolutionHeight || null
@@ -135,9 +133,7 @@ const parseSubsetFrames = (subset) => {
   const folderFrames =
     folderStart && folderEnd ? `${folderStart}-${folderEnd}` : ''
 
-  if (!subset) return ''
-  if (!subset.latestVersion) return ''
-  if (!subset.latestVersion.attrib) return ''
+  if (!subset?.latestVersion?.attrib) return ''
   const frameStart = subset.latestVersion.attrib.frameStart || ''
   const frameEnd = subset.latestVersion.attrib.frameEnd || ''
   const frames = frameStart && frameEnd ? `${frameStart}-${frameEnd}` : ''

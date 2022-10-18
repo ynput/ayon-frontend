@@ -1,90 +1,53 @@
-@import 'variables'
-@import 'primetheme'
-
+//
+// Fonts
+//
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200;0,400;0,600;1,300;1,400&display=swap')
 @import url('https://fonts.sandbox.google.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200')
 
+//
+// Global variables
+//
+
+:root
+  --color-text: #d3d8de
+
+  --color-grey-00: #21252b
+  --color-grey-01: #2c313a 
+  --color-grey-02: #373d48
+  --color-grey-03: #434a56
+  --color-grey-04: #4b5362
+  --color-grey-05: #576170
+  --color-grey-06: #6b7685
+  --color-grey-07: #99a3b2
+  --color-grey-08: #d3d8de
+  --color-grey-09: #f0f2f5
+
+  --color-hl-00: #47b7da
+  --color-hl-01: #fb9c15
+  --color-hl-changed: #106aa2
+  --color-hl-studio: #56a06f
+  --color-hl-project: #e67300
+  --color-hl-error: #ff4422
+
+  --color-icon: #c1d8e9
+
+  --color-row-hl: rgba(71, 184, 218, .2)
+  --color-row-hl-hover: rgba(71, 184, 218, .3)
+
+//
+// Layout & Core
+//
 
 *
   box-sizing: border-box
 
 html
   scroll-behavior: smooth
-  color: $color-text
-  background-color: $color-grey-01
-  font-family: $font-family
-  font-size: $font-size
-
-// Scrollbars
-
-::-webkit-scrollbar
-  width: 20px
-  height: 20px
-
-::-webkit-scrollbar-track, ::-webkit-scrollbar-corner
-  background-color: transparent
-
-::-webkit-scrollbar-thumb
-  background-color: $color-scrollbar-thumb
-  border-radius: 20px
-  border: 6px solid transparent
-  background-clip: content-box
-
-  &:hover
-    background-color: $color-scrollbar-thumb-hover
-
-// Icon font
-
-.material-symbols-outlined
-  color: $color-icon
-  font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 20
-
-// Navigation
-
-nav
-  display: flex
-  flex-direction: row
-  align-items: center
-  justify-content: space-between
-  padding: 0
-
-  &.primary
-    background-color: $op-background-main
-    padding: 0.5rem 1rem 
-
-  &.secondary
-    background-color: $op-background-dark
-    
-
-  a, button
-    display: block
-    padding: 10px 14px
-    text-decoration: none
-    transition: text-shadow 0.2s
-    user-select: none !important
-    color: #fff
-    font-weight: 600
-    font-size: 1.1rem
-    -webkit-user-drag: none
-
-    &:hover
-      color: white
-      text-shadow: 0 0 5px #aaa
-      transition: text-shadow 0.2s
-
-    &.active
-      background-color: $op-background-main
-      text-decoration: underline
-
-    &:focus
-      outline: none !important
-      box-shadow: none !important
-      
-  .spacer
-    flex: 1
-
-
+  color: var(--color-text)
+  background-color: var(--color-grey-01)
+  font-family: 'Nunito Sans', 'Lato', 'Roboto', 'Helvetica', sans-serif
+  font-size: 13px
 
 #root
   position: fixed
@@ -95,7 +58,6 @@ nav
   display: flex
   flex-direction: column
   min-height: 0
-
 
   &>main
     flex-grow: 1
@@ -110,37 +72,8 @@ nav
       justify-content: center
       gap: 12
 
-    &.rows
-      flex-direction: column
 
-section
-  position: relative
-  display: flex
-  align-items: center
-  flex-direction: column
-  gap: 5px
-  padding: 12px
-  border-radius: 5px
-  background-color: $op-background-dark
-
-  &>*
-    width: 100%
-
-  &.invisible
-    background: transparent
-    border: 0
-    padding: 0
-
-  &.row
-    flex-direction: row
-    &>*
-      width: auto
-
-  &.insplit
-    position: absolute
-    width: 100%
-    height: 100%
-
+// TODO: is this still used? Remove?
 .wrapper
   position: absolute
   top: 3px
@@ -150,6 +83,180 @@ section
   padding: 0
   margin: 0
 
+// Scrollbars
+
+::-webkit-scrollbar
+  width: 20px
+  height: 20px
+
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner
+  background-color: transparent
+
+::-webkit-scrollbar-thumb
+  background-color: var(--color-grey-03)
+  border-radius: 20px
+  border: 6px solid transparent
+  background-clip: content-box
+
+  &:hover
+    background-color: var(--color-grey-04)
+
+// Icon font
+
+.material-symbols-outlined
+  color: var(--color-icon)
+  font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 20
+
+// Navigation
+
+nav
+  display: flex
+  flex-direction: row
+  align-items: center
+  padding: 0
+
+  &.primary
+    background-color: var(--color-grey-01)
+    padding: 0.5rem 1rem 
+
+  &.secondary
+    background-color: var(--color-grey-00)    
+
+  a, button
+    display: block
+    padding: 10px 14px
+    text-decoration: none
+    transition: text-shadow 0.2s
+    user-select: none !important
+    color: var(--color-text)
+    font-weight: 600
+    font-size: 1.1rem
+    -webkit-user-drag: none
+
+    &:hover
+      color: white
+      text-shadow: 0 0 5px var(--color-text)
+      transition: text-shadow 0.2s
+
+    &.active
+      background-color: var(--color-grey-01)
+      text-decoration: underline
+
+    &:focus
+      outline: none !important
+      box-shadow: none !important
+      
+  .spacer
+    flex: 1
+
+
+
+.section-header
+  font-size: 1.3em
+  padding-left: 8px
+  display: flex
+  align-items: center
+  height: 33px
+
+
+.embed
+  border: 0
+  background-color: white
+
+
+h3, h4
+  display: flex
+  align-items: center
+  margin: 0
+  padding-bottom: 5px
+  border-bottom: 1px solid var(--color-grey-01)
+
+  &h3
+    margin-bottom: 20px
+
+  &h4
+    margin-bottom: 10px
+
+//
+// Hacks
+// 
+
+// Hide the ugly login autocomplete highlight
+input:-webkit-autofill, input:-webkit-autofill:focus
+  transition: background-color 600000s 0s, color 600000s 0s
+
+//
+// Custom components
+//
+
+.oauth-icon
+  color: var(--color-icon)
+  width: 3rem
+  height: auto
+  transition: color .4s ease
+  :hover
+    transition: color .4s ease
+
+.attribute-table
+  padding: 3px
+  
+  .attribute-table-row
+    display: flex,
+    flex-direction: row,
+    justify-content: space-between,
+    align-items: center,
+    padding: 3px 0
+    border-top: 1px solid var(--color-grey-01)
+
+    &:first-child
+      border-top: 0 !important
+
+.thumbnail
+  width: 100%,
+  height: auto,
+  &.placeholder
+    aspect-ratio: 1.77
+    display: flex
+    justify-content: center
+    align-items: center
+    background-color: #161616
+    span
+      font-size: 4rem
+
+//
+// Editor
+//
+
+.editor-field
+  display: block
+  border: 1px solid var(--color-grey-02)
+  padding: 4px
+  margin: 2px
+  border-radius: 3px
+  height: 26px
+
+  &.changed
+    border: 1px solid var(--color-hl-changed)
+
+  &.inherited
+    color: var(--color-grey-06)
+    font-style: italic
+
+.table-editor
+  margin: 0 
+  .p-inputwrapper
+    width: 100%
+    input
+      width: 100%
+      border: 1px solid var(--color-hl-00)
+
+.form-error-text
+  color: var(--color-hl-error)
+  font-style: italic
+
+//
+// Bread crumbs
+//
 
 .breadcrumbs
   list-style: none
@@ -178,107 +285,18 @@ section
   &:focus
     outline: none !important
     box-shadow: none !important    
-
-.section-header
-  font-size: 1.3em
-  padding-left: 8px
-  display: flex
-  align-items: center
-  height: 33px
-
-
-input:-webkit-autofill, input:-webkit-autofill:focus
-  transition: background-color 600000s 0s, color 600000s 0s
-
-.embed
-  border: 0
-  background-color: white
-
-
-h3, h4
-  display: flex
-  align-items: center
-  margin: 0
-  padding-bottom: 5px
-  border-bottom: 1px solid $op-background-main
-
-  &h3
-    margin-bottom: 20px
-
-  &h4
-    margin-bottom: 10px
-
-
-//
-// Custom components
-//
-
-.oauth-icon
-  color: $color-icon
-  width: 3rem
-  height: auto
-  transition: color .4s ease
-  :hover
-    transition: color .4s ease
-    color: lighten($color-icon, 5)
-
-.attribute-table
-  padding: 3px
-  
-  .attribute-table-row
-    display: flex,
-    flex-direction: row,
-    justify-content: space-between,
-    align-items: center,
-    padding: 3px 0
-    border-top: 1px solid $op-background-main
-
-    &:first-child
-      border-top: 0 !important
-
-.thumbnail
-  width: 100%,
-  height: auto,
-  &.placeholder
-    aspect-ratio: 1.77
-    display: flex
-    justify-content: center
-    align-items: center
-    background-color: #161616
-    span
-      font-size: 4rem
-
-.editor-field
-  display: block
-  border: 1px solid $color-grey-02
-  padding: 4px
-  margin: 2px
-  border-radius: 3px
-  height: 26px
-
-  &.changed
-    border: 1px solid #106aa2
-
-  &.inherited
-    color: $color-grey-06
-    font-style: italic
-
-.table-editor
-  margin: 0 
-  .p-inputwrapper
-    width: 100%
-    input
-      width: 100%
-      border: 1px solid $color-hl-00
-
-.form-error-text
-  color: #dd4124 
-  font-style: italic
-
   
 //
 // Highlights
 //
+
+// Fade the row - used for inherited values in the editor
+
+.faded
+  color: rgba(234, 240, 246, 0.3)
+  font-style: italic
+
+// Highlighting (used to match subset/tasks in the browser)
 
 .row-hl-1
   color: #01cc34 !important

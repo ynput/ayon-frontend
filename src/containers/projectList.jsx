@@ -18,11 +18,14 @@ const ProjectList = ({
   multiselect,
   header,
   footer,
+  reloadTrigger,
 }) => {
   const [projectList, setProjectList] = useState([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     let result = []
+    setLoading(true)
     if (showNull) result.push({ name: '_' })
     axios
       .get('/api/projects')
@@ -34,8 +37,9 @@ const ProjectList = ({
       })
       .finally(() => {
         setProjectList(result)
+        setLoading(false)
       })
-  }, [])
+  }, [reloadTrigger])
 
   const selectionObj = useMemo(() => {
     if (multiselect) {
@@ -91,6 +95,7 @@ const ProjectList = ({
             dataKey="name"
             selection={selectionObj}
             onSelectionChange={onSelectionChange}
+            loading={loading}
           >
             <Column
               field="name"

@@ -38,17 +38,17 @@ const SessionList = ({ userName }) => {
   const [sessions, setSessions] = useState([])
 
   const loadSessionList = () => {
-    axios.get(`/api/users/${userName}/sessions`).then((response) => {
-      console.log(response)
-      setSessions(response.data.sessions)
-    })
+    axios
+      .get(`/api/users/${userName}/sessions`)
+      .then((response) => {
+        setSessions(response.data.sessions)
+      })
+      .catch(() => toast.error('Unable to load sessions'))
   }
 
   useEffect(() => {
     loadSessionList()
   }, [userName])
-
-  console.log(sessions)
 
   return (
     <>
@@ -72,20 +72,21 @@ const ProfilePage = () => {
   const [pass2, setPass2] = useState('')
 
   const loadUserData = () => {
-    axios.get('/api/users/me').then((result) => {
-      setUserData(result.data)
-      setFormData({
-        fullName: result.data.attrib.fullName,
-        email: result.data.attrib.email,
+    axios
+      .get('/api/users/me')
+      .then((result) => {
+        setUserData(result.data)
+        setFormData({
+          fullName: result.data.attrib.fullName,
+          email: result.data.attrib.email,
+        })
       })
-    })
+      .catch(() => toast.error('Unable to load user data'))
   }
 
   useEffect(loadUserData, [])
 
   if (!userData) return <LoadingPage />
-
-  const displayName = userData.attrib.fullName || userData.name
 
   let passInvalid = false
   if (!pass1) passInvalid = 'Password unchanged'

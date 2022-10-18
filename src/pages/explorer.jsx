@@ -3,7 +3,7 @@ const ExplorerPage = () => {
     Render the GraphiQL interface.
     */
   return (
-    <main className="rows">
+    <main>
       <iframe
         className="embed"
         title="graphiql"

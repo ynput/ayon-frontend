@@ -99,7 +99,7 @@ const AddonVersions = ({ projectName }) => {
         toast.success('Addons updated')
         load()
       })
-      .catch((err) => console.error(err))
+      .catch(() => toast.error('Unable to update addons versions'))
   }
 
   useEffect(() => {

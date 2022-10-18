@@ -11,10 +11,10 @@ import NewProjectDialog from './newProject'
 
 const ProjectManager = () => {
   const navigate = useNavigate()
-  const [projectListTimestamp, setProjectListTimestamp] = useState(0)
   const [selectedProject, setSelectedProject] = useState(null)
   const [showNewProject, setShowNewProject] = useState(false)
   const [currentView, setCurrentView] = useState('dashboard')
+  const [listReloadTrigger, setListReloadTrigger] = useState(0)
 
   const views = [
     {
@@ -31,7 +31,9 @@ const ProjectManager = () => {
     },
   ]
 
-  const deleteProject = () => {}
+  const deleteProject = () => {
+    setListReloadTrigger((val) => val + 1)
+  }
 
   const toolbar = (
     <Toolbar>
@@ -48,8 +50,8 @@ const ProjectManager = () => {
       {showNewProject && (
         <NewProjectDialog
           onHide={() => {
-            setProjectListTimestamp(projectListTimestamp + 1)
             setShowNewProject(false)
+            setListReloadTrigger((val) => val + 1)
           }}
         />
       )}
@@ -58,7 +60,7 @@ const ProjectManager = () => {
         header={toolbar}
         selection={selectedProject}
         onSelect={setSelectedProject}
-        reloadTrigger={projectListTimestamp}
+        reloadTrigger={listReloadTrigger}
       />
 
       {selectedProject && (

@@ -341,7 +341,6 @@
    * PubSub.unsubscribe('mytopic');
    */
   PubSub.unsubscribe = function (value) {
-    console.log('Unsubscribe')
     var descendantTopicExists = function (topic) {
         var m
         for (m in messages) {

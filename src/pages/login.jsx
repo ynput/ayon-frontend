@@ -155,6 +155,7 @@ const LoginPage = () => {
         <InputText
           ref={loginRef}
           placeholder="Username"
+          name="username"
           aria-label="Username"
           required
           value={name}
@@ -164,6 +165,7 @@ const LoginPage = () => {
         <Password
           ref={passwordRef}
           placeholder="Password"
+          name="password"
           feedback={false}
           aria-label="Password"
           required

@@ -1,6 +1,6 @@
 const APIDocsPage = () => {
   return (
-    <main className="rows">
+    <main>
       <iframe
         className="embed"
         title="apidoc"

@@ -38,7 +38,7 @@ const SiteSyncPage = () => {
   if (loading) return <LoadingPage />
 
   return (
-    <main className="rows">
+    <main>
       <SiteSyncSummary
         projectName={projectName}
         localSite={localSite}
