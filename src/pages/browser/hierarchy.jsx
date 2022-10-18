@@ -81,6 +81,7 @@ const Hierarchy = ({
   folderTypes,
   focusedFolders,
   expandedFolders,
+  size,
 }) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
@@ -198,8 +199,12 @@ const Hierarchy = ({
   // Render
   //
 
+  const sectionStyle = {}
+  if (size)
+    sectionStyle.maxWidth = size
+
   return (
-    <Section style={{ maxWidth: 500 }}>
+    <Section style={sectionStyle}>
       <Toolbar>
         <span className="p-input-icon-left" style={{ flexGrow: 1 }}>
           <i className="pi pi-search" />

@@ -40,6 +40,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
           folderTypes={folderTypes}
           focusedFolders={focusedFolders}
           expandedFolders={expandedFolders}
+          size={500}
         />
       )
     } else {
