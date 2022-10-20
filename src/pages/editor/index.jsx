@@ -249,8 +249,7 @@ const EditorPage = () => {
     return result
   }
 
-  const onCommit = useCallback(async () => {
-    setLoading(true)
+  const onCommit = useCallback(() => {
     let branchesToReload = []
     let deleted = []
     let updated = []
@@ -259,6 +258,8 @@ const EditorPage = () => {
     //
     // PATCH / DELETE EXISTING ENTITIES
     //
+    
+    const operations = []
 
     for (const entityId in changes) {
       if (entityId.startsWith('newnode')) continue
@@ -267,14 +268,10 @@ const EditorPage = () => {
       const parentId = changes[entityId].__parentId
 
       if (changes[entityId].__action === 'delete') {
-        try {
-          await axios.delete(
-            `/api/projects/${projectName}/${entityType}s/${entityId}`
-          )
-          deleted.push(entityId)
-        } catch {
-          toast.error(`Unable to delete entity`) // TODO: be decriptive
-        }
+
+        operations.push({type: 'delete', entityType, entityId })
+        deleted.push(entityId)
+
       } else {
         // End delete, begin patch
         const attribChanges = {}
@@ -287,16 +284,14 @@ const EditorPage = () => {
           else attribChanges[key] = changes[entityId][key]
         }
 
-        try {
-          console.log('PATCH', { ...entityChanges, attrib: attribChanges })
-          await axios.patch(
-            `/api/projects/${projectName}/${entityType}s/${entityId}`,
-            { ...entityChanges, attrib: attribChanges }
-          )
-          updated.push(entityId)
-        } catch {
-          toast.error(`Unable to save ${entityChanges.name}`)
-        }
+        operations.push({
+          type: 'update',
+          entityType,
+          entityId,
+          data: {...entityChanges, attrib: attribChanges}
+        })
+        updated.push(entityId)
+
       } // Patch
 
       if (!branchesToReload.includes(parentId)) branchesToReload.push(parentId)
@@ -328,56 +323,61 @@ const EditorPage = () => {
         }
       }
 
-      try {
-        await axios.post(
-          `/api/projects/${projectName}/${entityType}s`,
-          newEntity
-        )
-        toast.success(`Saved new ${entityType} ${newEntity.name}`)
-        created.push(newEntity.id)
-      } catch {
-        toast.error('Unable to save', entity.name)
-      }
+      operations.push({type: 'create', entityType, data: newEntity })
+      created.push(entity.id)
 
       // just reload the parent branch. new entities don't have children
       if (!branchesToReload.includes(newEntity.parentId))
         branchesToReload.push(newEntity.parentId)
     } // CREATE NEW ENTITIES
 
-    //
-    // Update local state
-    //
 
-    const affected = [...created, ...updated, ...deleted]
 
-    setNewNodes((nodes) => {
-      return nodes.filter((n) => !created.includes(n.id))
-    })
+    setLoading(true)
+    axios
+      .post(`/api/projects/${projectName}/operations`, {operations})
+      .then((res) => {
 
-    setChanges((nodes) => {
-      for (const id in nodes) {
-        if (affected.includes(id)) delete nodes[id]
-      }
-      return nodes
-    }) // setChanges
+        // TODO: use the response to highlight the failed operations
 
-    setNodeData(async (nodes) => {
-      for (const id in nodes) {
-        if (affected.includes(id)) delete nodes[id]
-      }
-      // Reload affected branches
-      for (const branch of branchesToReload) {
-        const res = await loadBranch(query, projectName, branch)
-        Object.assign(nodes, res)
-      }
-      // Keep failed new nodes in node data
-      for (const nodeId of newNodes) {
-        if (created.includes(nodeId)) continue
-        nodes[nodeId] = newNodes[nodeId]
-      }
-      return nodes
-    }) // setNodeData
-    setLoading(false)
+        const affected = [...created, ...updated, ...deleted]
+
+        setNewNodes(nodes => nodes.filter((n) => !created.includes(n.id)))
+
+        setChanges((nodes) => {
+          for (const id in nodes) {
+            if (affected.includes(id)) delete nodes[id]
+          }
+          return nodes
+        }) // setChanges
+
+        setNodeData(async (nodes) => {
+          for (const id in nodes) {
+            if (affected.includes(id)) delete nodes[id]
+          }
+          // Reload affected branches
+          for (const branch of branchesToReload) {
+            const res = await loadBranch(query, projectName, branch)
+            Object.assign(nodes, res)
+          }
+          // Keep failed new nodes in node data
+          for (const nodeId of newNodes) {
+            if (created.includes(nodeId)) continue
+            nodes[nodeId] = newNodes[nodeId]
+          }
+          return nodes
+        }) // setNodeData
+
+
+      }) // Successful post
+      .catch((err) => {
+        toast.error("Unable to save changes")
+        console.log('ERROR', err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+
   }, [newNodes, changes, query, projectName]) // commit
 
   //
@@ -392,7 +392,7 @@ const EditorPage = () => {
       const node = currentSelection[parentId]
       if (!node) continue
       // unable to add children to unsaved nodes
-      if (node.data.name?.startsWith('newnode')) continue
+      if (node.data.id?.startsWith('newnode')) continue
       // unable to add children to tasks
       if (node.data.__entityType !== 'folder') continue
       parents.push(parentId)
