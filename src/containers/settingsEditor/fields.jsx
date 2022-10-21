@@ -346,6 +346,9 @@ function FieldTemplate(props) {
         <div className={`form-inline-field-widget ${widgetClass}`}>
           {props.children}
         </div>
+        <div className="form-inline-field-help">
+          {props.rawDescription ? <div>{props.rawDescription}</div> : ''}
+        </div>
       </div>
     </>
   )

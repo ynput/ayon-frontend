@@ -1,5 +1,12 @@
 $field-gap: 8px
 
+.form-inline-field-help
+  display: none
+
+.settings-help-visible
+  .form-inline-field-help
+    display: block !important
+    
 .rjsf
   flex-grow: 1
   margin: 0
@@ -138,6 +145,14 @@ $field-gap: 8px
 
       .p-inputtextarea
         font-family: monospace
+
+    .form-inline-field-help
+      min-width: 20%
+      max-width: 20%
+
+      div
+        border-bottom: 1px dashed #434a56 !important
+        padding: 0.6rem
         
     &.error
       color: red

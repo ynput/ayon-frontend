@@ -20,6 +20,7 @@ import AddonSettingsPanel from '/src/containers/addonSettingsPanel'
 
 const StudioOverrides = () => {
   const [showVersions, setShowVersions] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState({})
   const [localData, setLocalData] = useState({})
@@ -105,6 +106,12 @@ const StudioOverrides = () => {
         onLabel="Hide versions"
         offLabel="Show versions"
       />
+      <ToggleButton
+        checked={showHelp}
+        onChange={(e) => setShowHelp(e.value)}
+        onLabel="Hide help"
+        offLabel="Show help"
+      />
       <Button onClick={onSave} disabled={isEmpty(localData)} label="Save" />
     </Toolbar>
   )
@@ -121,7 +128,7 @@ const StudioOverrides = () => {
         header={addonListHeader}
       />
 
-      <Section>
+      <Section className={showHelp && "settings-help-visible"}>
         <ScrollArea>
           {selectedAddons
             .filter((addon) => addon.version)

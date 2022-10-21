@@ -43,7 +43,24 @@ const CheckboxWidget = function (props) {
 
 const SelectWidget = (props) => {
   const { originalValue, path } = parseContext(props)
-  const options = props.options.enumOptions
+
+  const options = []
+  for (const opt of props.options.enumOptions) {
+    const label = opt.value?.label || opt.value?.value || opt.value
+    const value = opt.value?.value || opt.value
+    options.push({ label, value })
+  }
+
+  // Ensure the value is in the options
+  let value
+  if (props.multiple){
+    value = props.value || []
+    value = value.filter((v) => options.find((o) => o.value === v))
+  } else {
+    value = props.value || ''
+    if (!options.find((o) => o.value === value)) value = ''
+  }
+
   const tooltip = []
   if (props.rawErrors) {
     for (const err of props.rawErrors) tooltip.push(err)
@@ -64,9 +81,10 @@ const SelectWidget = (props) => {
       <>
         <MultiSelect
           options={options}
-          value={props.value}
+          value={value}
           onChange={onChange}
           onFocus={onFocus}
+          className={props.rawErrors?.length ? 'p-invalid' : ''}
         />
       </>
     )
@@ -75,7 +93,7 @@ const SelectWidget = (props) => {
   return (
     <Dropdown
       options={options}
-      value={props.value}
+      value={value}
       onChange={onChange}
       onBlur={props.onBlur}
       onFocus={onFocus}
@@ -83,6 +101,7 @@ const SelectWidget = (props) => {
       optionValue="value"
       tooltip={tooltip.join('\n')}
       tooltipOptions={{ position: 'bottom' }}
+      className={props.rawErrors?.length ? 'p-invalid' : ''}
     />
   )
 }
@@ -90,10 +109,9 @@ const SelectWidget = (props) => {
 const TextWidget = (props) => {
   const { originalValue, path } = parseContext(props)
   const tooltip = []
-  if (props.rawErrors) {
+  if (props.rawErrors?.length) {
     for (const err of props.rawErrors) tooltip.push(err)
-  }
-
+  } 
   // hack for string arrays. to prevent null value passed to the
   // input text widget handled as uncontrolled input
   const value = useMemo(() => props.value || '', [props.value])
@@ -102,8 +120,10 @@ const TextWidget = (props) => {
   const opts = {}
   if (props.schema.type === 'integer') {
     Input = InputNumber
-    opts.min = props.schema.minimum
-    opts.max = props.schema.maximum
+    if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
+    if (props.schema.maximum !== undefined) opts.max = props.schema.maximum
+    if (props.schema.exclusiveMinimum !== undefined) opts.min = props.schema.exclusiveMinimum + 1
+    if (props.schema.exclusiveMaximum !== undefined) opts.max = props.schema.exclusiveMaximum - 1
     opts.step = 1
     opts.showButtons = true
     opts.useGrouping = false
@@ -134,9 +154,7 @@ const TextWidget = (props) => {
 
   return (
     <Input
-      className={
-        props.rawErrors && props.rawErrors.length > 0 ? 'p-invalid' : ''
-      }
+      className={props.rawErrors?.length ? 'p-invalid' : ''}
       value={value}
       onBlur={props.onBlur}
       onFocus={onFocus}
