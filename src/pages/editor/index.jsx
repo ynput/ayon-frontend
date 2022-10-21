@@ -83,7 +83,9 @@ const EditorPage = () => {
           className={`material-symbols-outlined`}
           style={{ color: 'var(--color-hl-error)' }}
           title={error}
-        >warning</span>
+        >
+          warning
+        </span>
       )
     }
   }
@@ -109,7 +111,7 @@ const EditorPage = () => {
   //
 
   const handlePubSub = async (topic, message) => {
-    if (topic !== "entity.update") return
+    if (topic !== 'entity.update') return
     if (message.project?.toLowerCase() !== projectName.toLowerCase()) return
 
     const getEntity = async (entityType, entityId) => {
@@ -283,11 +285,10 @@ const EditorPage = () => {
       if (changes[entityId].__action === 'delete') {
         operations.push({
           id: entityId,
-          type: 'delete', 
-          entityType, 
-          entityId 
+          type: 'delete',
+          entityType,
+          entityId,
         })
-
       } else {
         // End delete, begin patch
         const attribChanges = {}
@@ -305,7 +306,7 @@ const EditorPage = () => {
           type: 'update',
           entityType,
           entityId,
-          data: {...entityChanges, attrib: attribChanges}
+          data: { ...entityChanges, attrib: attribChanges },
         })
       } // Patch
 
@@ -338,8 +339,8 @@ const EditorPage = () => {
 
       operations.push({
         id: entity.id,
-        type: 'create', 
-        entityType, 
+        type: 'create',
+        entityType,
         data: newEntity,
       })
 
@@ -348,41 +349,47 @@ const EditorPage = () => {
         branchesToReload.push(newEntity.parentId)
     } // CREATE NEW ENTITIES
 
-
     // Send the changes to the server
 
     setLoading(true)
     axios
-      .post(`/api/projects/${projectName}/operations`, {operations})
+      .post(`/api/projects/${projectName}/operations`, { operations })
       .then((res) => {
-
         // console.log("OPS result", res.data.operations)
 
         if (!res.data.success) {
           toast.warn('Errors occured during save')
         }
 
-        const updated = res.data.operations.filter(op => op.type === 'update' && op.success).map(op => op.id)
-        const created = res.data.operations.filter(op => op.type === 'create' && op.success).map(op => op.id)
-        const deleted = res.data.operations.filter(op => op.type === 'delete' && op.success).map(op => op.id)
+        const updated = res.data.operations
+          .filter((op) => op.type === 'update' && op.success)
+          .map((op) => op.id)
+        const created = res.data.operations
+          .filter((op) => op.type === 'create' && op.success)
+          .map((op) => op.id)
+        const deleted = res.data.operations
+          .filter((op) => op.type === 'delete' && op.success)
+          .map((op) => op.id)
 
         const affected = [...created, ...updated, ...deleted]
 
         setErrors(() => {
           const result = {}
-          for (const op of res.data.operations){
+          for (const op of res.data.operations) {
             if (!op.success) result[op.id] = op.error
           }
           return result
         })
 
         // Remove succesfully created nodes from the newNodes list
-        setNewNodes(nodes => nodes.filter((n) => !created.includes(n.id)))
+        setNewNodes((nodes) => nodes.filter((n) => !created.includes(n.id)))
 
         // Remove successful operations from the changes
         setChanges((nodes) => {
           const result = {}
-          for (const id of Object.keys(nodes).filter((n) => !affected.includes(n))) {
+          for (const id of Object.keys(nodes).filter(
+            (n) => !affected.includes(n)
+          )) {
             result[id] = nodes[id]
           }
           return result
@@ -406,8 +413,6 @@ const EditorPage = () => {
           }
           return nodes
         }) // setNodeData
-
-
       }) // Successful post
       .catch((err) => {
         // Error status should only happen if the server is down
@@ -418,7 +423,6 @@ const EditorPage = () => {
       .finally(() => {
         setLoading(false)
       })
-
   }, [newNodes, changes, query, projectName]) // commit
 
   //

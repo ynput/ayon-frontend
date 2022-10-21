@@ -53,7 +53,7 @@ const SelectWidget = (props) => {
 
   // Ensure the value is in the options
   let value
-  if (props.multiple){
+  if (props.multiple) {
     value = props.value || []
     value = value.filter((v) => options.find((o) => o.value === v))
   } else {
@@ -111,7 +111,7 @@ const TextWidget = (props) => {
   const tooltip = []
   if (props.rawErrors?.length) {
     for (const err of props.rawErrors) tooltip.push(err)
-  } 
+  }
   // hack for string arrays. to prevent null value passed to the
   // input text widget handled as uncontrolled input
   const value = useMemo(() => props.value || '', [props.value])
@@ -122,8 +122,10 @@ const TextWidget = (props) => {
     Input = InputNumber
     if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
     if (props.schema.maximum !== undefined) opts.max = props.schema.maximum
-    if (props.schema.exclusiveMinimum !== undefined) opts.min = props.schema.exclusiveMinimum + 1
-    if (props.schema.exclusiveMaximum !== undefined) opts.max = props.schema.exclusiveMaximum - 1
+    if (props.schema.exclusiveMinimum !== undefined)
+      opts.min = props.schema.exclusiveMinimum + 1
+    if (props.schema.exclusiveMaximum !== undefined)
+      opts.max = props.schema.exclusiveMaximum - 1
     opts.step = 1
     opts.showButtons = true
     opts.useGrouping = false

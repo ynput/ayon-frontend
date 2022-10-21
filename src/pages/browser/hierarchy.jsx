@@ -200,8 +200,7 @@ const Hierarchy = ({
   //
 
   const sectionStyle = {}
-  if (size)
-    sectionStyle.maxWidth = size
+  if (size) sectionStyle.maxWidth = size
 
   return (
     <Section style={sectionStyle}>

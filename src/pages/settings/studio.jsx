@@ -128,7 +128,7 @@ const StudioOverrides = () => {
         header={addonListHeader}
       />
 
-      <Section className={showHelp && "settings-help-visible"}>
+      <Section className={showHelp && 'settings-help-visible'}>
         <ScrollArea>
           {selectedAddons
             .filter((addon) => addon.version)
