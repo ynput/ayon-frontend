@@ -43,6 +43,7 @@ const EditorPage = () => {
   const [nodeData, setNodeData] = useState({})
   const [changes, setChanges] = useState({})
   const [newNodes, setNewNodes] = useState([])
+  const [errors, setErrors] = useState({})
   const [selectionLocked, setSelectionLocked] = useState(false)
   const contextMenuRef = useRef(null)
 
@@ -70,6 +71,23 @@ const EditorPage = () => {
     [settings.attributes]
   )
 
+  const formatError = (rowData) => {
+    // Format the error icon for the given row
+    // If the row has no error, return null,
+    // otherwise return the error icon with the error message
+    // as tooltip.
+    const error = errors[rowData.id]
+    if (error) {
+      return (
+        <span
+          className={`material-symbols-outlined`}
+          style={{ color: 'var(--color-hl-error)' }}
+          title={error}
+        >warning</span>
+      )
+    }
+  }
+
   useEffect(() => {
     setLoading(true)
     const expandedKeys = [...Object.keys(context.expandedFolders), 'root']
@@ -91,6 +109,7 @@ const EditorPage = () => {
   //
 
   const handlePubSub = async (topic, message) => {
+    if (topic !== "entity.update") return
     if (message.project?.toLowerCase() !== projectName.toLowerCase()) return
 
     const getEntity = async (entityType, entityId) => {
@@ -250,16 +269,10 @@ const EditorPage = () => {
   }
 
   const onCommit = useCallback(() => {
-    let branchesToReload = []
-    let deleted = []
-    let updated = []
-    let created = []
-
-    //
-    // PATCH / DELETE EXISTING ENTITIES
-    //
-    
+    const branchesToReload = []
     const operations = []
+
+    // PATCH / DELETE EXISTING ENTITIES
 
     for (const entityId in changes) {
       if (entityId.startsWith('newnode')) continue
@@ -268,9 +281,12 @@ const EditorPage = () => {
       const parentId = changes[entityId].__parentId
 
       if (changes[entityId].__action === 'delete') {
-
-        operations.push({type: 'delete', entityType, entityId })
-        deleted.push(entityId)
+        operations.push({
+          id: entityId,
+          type: 'delete', 
+          entityType, 
+          entityId 
+        })
 
       } else {
         // End delete, begin patch
@@ -285,13 +301,12 @@ const EditorPage = () => {
         }
 
         operations.push({
+          id: entityId,
           type: 'update',
           entityType,
           entityId,
           data: {...entityChanges, attrib: attribChanges}
         })
-        updated.push(entityId)
-
       } // Patch
 
       if (!branchesToReload.includes(parentId)) branchesToReload.push(parentId)
@@ -305,8 +320,6 @@ const EditorPage = () => {
     //
 
     for (const entity of newNodes) {
-      console.log('NEW ENTITY', entity)
-
       const entityType = entity.__entityType
       const newEntity = { ...entity }
       const entityChanges = changes[entity.id]
@@ -323,8 +336,12 @@ const EditorPage = () => {
         }
       }
 
-      operations.push({type: 'create', entityType, data: newEntity })
-      created.push(entity.id)
+      operations.push({
+        id: entity.id,
+        type: 'create', 
+        entityType, 
+        data: newEntity,
+      })
 
       // just reload the parent branch. new entities don't have children
       if (!branchesToReload.includes(newEntity.parentId))
@@ -332,25 +349,47 @@ const EditorPage = () => {
     } // CREATE NEW ENTITIES
 
 
+    // Send the changes to the server
 
     setLoading(true)
     axios
       .post(`/api/projects/${projectName}/operations`, {operations})
       .then((res) => {
 
-        // TODO: use the response to highlight the failed operations
+        // console.log("OPS result", res.data.operations)
+
+        if (!res.data.success) {
+          toast.warn('Errors occured during save')
+        }
+
+        const updated = res.data.operations.filter(op => op.type === 'update' && op.success).map(op => op.id)
+        const created = res.data.operations.filter(op => op.type === 'create' && op.success).map(op => op.id)
+        const deleted = res.data.operations.filter(op => op.type === 'delete' && op.success).map(op => op.id)
 
         const affected = [...created, ...updated, ...deleted]
 
+        setErrors(() => {
+          const result = {}
+          for (const op of res.data.operations){
+            if (!op.success) result[op.id] = op.error
+          }
+          return result
+        })
+
+        // Remove succesfully created nodes from the newNodes list
         setNewNodes(nodes => nodes.filter((n) => !created.includes(n.id)))
 
+        // Remove successful operations from the changes
         setChanges((nodes) => {
-          for (const id in nodes) {
-            if (affected.includes(id)) delete nodes[id]
+          const result = {}
+          for (const id of Object.keys(nodes).filter((n) => !affected.includes(n))) {
+            result[id] = nodes[id]
           }
-          return nodes
+          return result
         }) // setChanges
 
+        // Create a new nodeData object with the updated data. Reload the
+        // branches that were affected by the changes
         setNodeData(async (nodes) => {
           for (const id in nodes) {
             if (affected.includes(id)) delete nodes[id]
@@ -371,7 +410,9 @@ const EditorPage = () => {
 
       }) // Successful post
       .catch((err) => {
-        toast.error("Unable to save changes")
+        // Error status should only happen if the server is down
+        // Request is VERY malformed or there is a bug in the server.
+        toast.error("Unable to save changes. This shouldn't happen.")
         console.log('ERROR', err)
       })
       .finally(() => {
@@ -689,6 +730,12 @@ const EditorPage = () => {
                   />
                 )
               })}
+              <Column
+                field="error"
+                header=""
+                body={(rowData) => formatError(rowData.data)}
+                style={{ width: 24 }}
+              />
             </TreeTable>
           </TableWrapper>
         </Panel>
