@@ -30,7 +30,6 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
       for (const attrName in userAttrib)
         formData[attrName] = userDetailData.users[0].attrib[attrName]
     }
-    console.log('New form data', userDetailData, formData)
     setFormData(formData)
   }, [userDetailData])
 

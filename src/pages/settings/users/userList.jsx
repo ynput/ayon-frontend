@@ -4,6 +4,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 import { Dialog } from 'primereact/dialog'
+import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import {
   TableWrapper,
   Button,
@@ -281,14 +282,23 @@ const UserList = ({
   // CTX
 
   const onDelete = async () => {
-    for (const user of selectedUsers) {
-      try {
-        await axios.delete(`/api/users/${user}`)
-      } catch {
-        toast.error(`Unable to delete user ${user}`)
-      }
-    }
-    onTriggerReload()
+
+    confirmDialog({
+      message: `Are you sure you want to delete ${selectedUsers.length} user(s)?`,
+      header: 'Delete users',
+      icon: 'pi pi-exclamation-triangle',
+      accept: async () => {
+        for (const user of selectedUsers) {
+          try {
+            await axios.delete(`/api/users/${user}`)
+          } catch {
+            toast.error(`Unable to delete user ${user}`)
+          }
+        }
+        onTriggerReload()
+      },
+      reject: () => {}
+    })
   }
 
   const contextMenuModel = [
@@ -313,6 +323,7 @@ const UserList = ({
 
   return (
     <Section>
+      <ConfirmDialog />
       <Toolbar>
         <Button
           onClick={() => setShowNewUser(true)}

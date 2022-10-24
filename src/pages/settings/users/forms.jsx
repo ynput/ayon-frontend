@@ -30,6 +30,7 @@ const UserAttrib = ({
         <FormRow label="Password">
           <Password
             value={password}
+            feedback={false}
             onChange={(e) => setPassword(e.target.value)}
           />
         </FormRow>

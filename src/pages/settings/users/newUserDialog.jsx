@@ -27,6 +27,9 @@ const NewUserDialog = ({ onHide }) => {
       return
     }
 
+    if (password)
+      payload.password = password
+
     payload.attrib = {}
     payload.data = {}
     for (const key in userAttrib) {
@@ -49,24 +52,16 @@ const NewUserDialog = ({ onHide }) => {
     axios
       .put(`/api/users/${formData.name}`, payload)
       .then(() => {
-        if (password) {
-          axios
-            .patch(`/api/users/${formData.name}/password`, { password })
-            .then(() => toast.success('Password set'))
-            .catch(() =>
-              toast.error('Unable to set password. Use change password button.')
-            )
-        }
-
         toast.success('User created')
         // keep re-usable data in the form
+        setPassword("")
         setFormData((fd) => {
           return { roles: fd.roles, userLevel: fd.userLevel }
         })
       })
-      .catch(() => {
-        toast.error('User creation failed')
-        console.log(payload)
+      .catch((err) => {
+        const msg = err.response?.data?.detail || "Unhandled exception"
+        toast.error(`Unable to create user: ${msg}`)
       })
   }
 
