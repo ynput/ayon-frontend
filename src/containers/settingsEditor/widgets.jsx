@@ -44,10 +44,11 @@ const CheckboxWidget = function (props) {
 const SelectWidget = (props) => {
   const { originalValue, path } = parseContext(props)
 
+  const enumLabels = props.schema?.enumLabels || {}
   const options = []
   for (const opt of props.options.enumOptions) {
-    const label = opt.value?.label || opt.value?.value || opt.value
-    const value = opt.value?.value || opt.value
+    const value = opt.value
+    const label = enumLabels[value] || value
     options.push({ label, value })
   }
 
