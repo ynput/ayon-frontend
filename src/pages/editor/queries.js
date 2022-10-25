@@ -1,3 +1,5 @@
+import pypeClient from '/src/pype'
+
 const BASE_QUERY = `
   query FolderTree($projectName: String!, $parent: String!) {
     project(name: $projectName) {
@@ -34,10 +36,10 @@ const BASE_QUERY = `
   }
 `
 
-const buildQuery = (attributes) => {
+const buildQuery = () => {
   let f_attribs = ''
   let t_attribs = ''
-  for (const attrib of attributes) {
+  for (const attrib of pypeClient.settings.attributes) {
     if (attrib.scope.includes('folder')) f_attribs += `${attrib.name}\n`
     if (attrib.scope.includes('task')) t_attribs += `${attrib.name}\n`
   }

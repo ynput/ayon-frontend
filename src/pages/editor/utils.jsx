@@ -1,5 +1,7 @@
-import { CellWithIcon } from '../../components/icons'
-import { getFolderTypeIcon, getTaskTypeIcon } from '../../utils'
+import pypeClient from '/src/pype'
+
+import { CellWithIcon } from '/src/components/icons'
+import { getFolderTypeIcon, getTaskTypeIcon } from '/src/utils'
 import { stringEditor, integerEditor, floatEditor } from './editors'
 
 const formatAttribute = (node, changes, fieldName, styled = true) => {
@@ -64,10 +66,10 @@ const formatType = (node, changes, styled = true) => {
   )
 }
 
-const getColumns = (attributes) => {
-  if (!attributes) return []
+const getColumns = () => {
+  if (pypeClient.settings.attributes.length === 0) return []
   let cols = []
-  for (const attrib of attributes) {
+  for (const attrib of pypeClient.settings.attributes) {
     if (attrib.scope.includes('folder')) {
       let editor
       if (attrib.attribType === 'integer') {
@@ -79,7 +81,7 @@ const getColumns = (attributes) => {
       }
       cols.push({
         name: attrib.name,
-        title: attrib.title,
+        title: attrib.data.title,
         editor: editor,
       })
     }

@@ -1,6 +1,7 @@
+import pypeClient from '/src/pype'
+
 const AttributeTable = ({
   entityType,
-  attribSettings,
   data,
   additionalData,
   style,
@@ -23,11 +24,11 @@ const AttributeTable = ({
         ))}
 
       {data &&
-        attribSettings
+        pypeClient.settings.attributes
           .filter((attr) => attr.scope.includes(entityType) && data[attr.name])
           .map((attr) => (
             <div key={attr.name} className="attribute-table-row">
-              <span>{attr.title}</span>
+              <span>{attr.data.title}</span>
               <span>{data[attr.name]}</span>
             </div>
           ))}

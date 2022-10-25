@@ -36,7 +36,6 @@ const EditorPage = () => {
   const [loading, setLoading] = useState(false)
 
   const context = useSelector((state) => ({ ...state.context }))
-  const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   const dispatch = useDispatch()
 
@@ -62,14 +61,8 @@ const EditorPage = () => {
   // Helpers
   //
 
-  const columns = useMemo(
-    () => getColumns(settings.attributes),
-    [settings.attributes]
-  )
-  const query = useMemo(
-    () => buildQuery(settings.attributes),
-    [settings.attributes]
-  )
+  const columns = useMemo(() => getColumns(), [])
+  const query = useMemo(() => buildQuery(), [])
 
   const formatError = (rowData) => {
     // Format the error icon for the given row

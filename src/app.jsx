@@ -1,12 +1,12 @@
+import pypeClient from '/src/pype'
+import axios from 'axios'
+import short from 'short-uuid'
+
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import short from 'short-uuid'
-import axios from 'axios'
-
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 
 import Header from './containers/header'
-
 import LoginPage from './pages/login'
 import LoadingPage from './pages/loading'
 import Error from './pages/error'
@@ -22,7 +22,7 @@ const EventViewer = lazy(() => import('./pages/eventViewer'))
 const ServicesPage = lazy(() => import('./pages/services'))
 
 import { login } from './features/user'
-import { setSettings } from './features/settings'
+
 
 const App = () => {
   const user = useSelector((state) => ({ ...state.user }))
@@ -54,11 +54,9 @@ const App = () => {
             })
           )
 
-          dispatch(
-            setSettings({
-              attributes: response.data.attributes,
-            })
-          )
+          pypeClient.settings = {
+            attributes: response.data.attributes,
+          }
         }
       })
       .catch((err) => {

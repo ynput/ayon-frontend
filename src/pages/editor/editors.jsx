@@ -3,6 +3,7 @@ import { InputNumber } from 'primereact/inputnumber'
 import { Dropdown } from 'primereact/dropdown'
 
 import { getFolderTypes, getTaskTypes } from '/src/utils'
+import pypeClient from '/src/pype'
 
 const FOLDER_TYPE = { name: '_', icon: 'folder', label: 'Folder' }
 
@@ -72,6 +73,8 @@ const stringEditor = (options, callback, value) => {
 
 const integerEditor = (options, callback, value) => {
   //  onChange={(e) => options.editorCallback(e.value)}
+  const attrSettings = pypeClient.getAttribSettings(options.field)
+  console.log(attrSettings)
   return (
     <div className="table-editor">
       <InputNumber
@@ -90,6 +93,8 @@ const integerEditor = (options, callback, value) => {
 
 const floatEditor = (options, callback, value) => {
   //  onChange={(e) => options.editorCallback(e.value)}
+  const attrSettings = pypeClient.getAttribSettings(options.field)
+  console.log(attrSettings)
   return (
     <div
       className="table-editor"
@@ -101,7 +106,7 @@ const floatEditor = (options, callback, value) => {
       <InputNumber
         showButtons={false}
         value={value}
-        minFractionDigits={3}
+        minFractionDigits={0}
         maxFractionDigits={3}
         onChange={(e) => {
           callback(options, e.value)

@@ -1,3 +1,5 @@
+import pypeClient from '/src/pype'
+
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
@@ -28,9 +30,9 @@ const FOLDER_QUERY = `
 
 `
 
-const buildFolderQuery = (attributes) => {
+const buildFolderQuery = () => {
   let f_attribs = ''
-  for (const attrib of attributes) {
+  for (const attrib of pypeClient.settings.attributes) {
     if (attrib.scope.includes('folder')) f_attribs += `${attrib.name}\n`
   }
   return FOLDER_QUERY.replace('#FOLDER_ATTRS#', f_attribs)
@@ -38,14 +40,13 @@ const buildFolderQuery = (attributes) => {
 
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
-  const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   const folders = context.focusedFolders
   const folderId = folders.length === 1 ? folders[0] : null
   const [data, setData] = useState({})
 
   useEffect(() => {
-    const query = buildFolderQuery(settings.attributes)
+    const query = buildFolderQuery()
     const variables = { projectName, folders: [folderId] }
 
     if (!folderId) {
@@ -96,7 +97,6 @@ const FolderDetail = () => {
       />
       <AttributeTable
         entityType="folder"
-        attribSettings={settings.attributes}
         data={data.attrib}
         additionalData={[
           { title: 'Folder type', value: data.folderType },

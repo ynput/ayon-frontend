@@ -1,3 +1,5 @@
+import pypeClient from '/src/pype'
+
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
@@ -26,9 +28,9 @@ const TASK_QUERY = `
 
 `
 
-const buildTaskQuery = (attributes) => {
+const buildTaskQuery = () => {
   let f_attribs = ''
-  for (const attrib of attributes) {
+  for (const attrib of pypeClient.settings.attributes) {
     if (attrib.scope.includes('task')) f_attribs += `${attrib.name}\n`
   }
   return TASK_QUERY.replace('#TASK_ATTRS#', f_attribs)
@@ -36,14 +38,13 @@ const buildTaskQuery = (attributes) => {
 
 const TaskDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
-  const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   const tasks = context.focusedTasks
   const taskId = tasks.length === 1 ? tasks[0] : null
   const [data, setData] = useState({})
 
   useEffect(() => {
-    const query = buildTaskQuery(settings.attributes)
+    const query = buildTaskQuery()
     const variables = { projectName, tasks: [taskId] }
 
     if (!taskId) {
@@ -89,7 +90,6 @@ const TaskDetail = () => {
       </h3>
       <AttributeTable
         entityType="task"
-        attribSettings={settings.attributes}
         data={data.attrib}
         additionalData={[
           {

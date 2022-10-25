@@ -27,8 +27,7 @@ const NewUserDialog = ({ onHide }) => {
       return
     }
 
-    if (password)
-      payload.password = password
+    if (password) payload.password = password
 
     payload.attrib = {}
     payload.data = {}
@@ -54,13 +53,13 @@ const NewUserDialog = ({ onHide }) => {
       .then(() => {
         toast.success('User created')
         // keep re-usable data in the form
-        setPassword("")
+        setPassword('')
         setFormData((fd) => {
           return { roles: fd.roles, userLevel: fd.userLevel }
         })
       })
       .catch((err) => {
-        const msg = err.response?.data?.detail || "Unhandled exception"
+        const msg = err.response?.data?.detail || 'Unhandled exception'
         toast.error(`Unable to create user: ${msg}`)
       })
   }

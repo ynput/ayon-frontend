@@ -282,7 +282,6 @@ const UserList = ({
   // CTX
 
   const onDelete = async () => {
-
     confirmDialog({
       message: `Are you sure you want to delete ${selectedUsers.length} user(s)?`,
       header: 'Delete users',
@@ -297,7 +296,7 @@ const UserList = ({
         }
         onTriggerReload()
       },
-      reject: () => {}
+      reject: () => {},
     })
   }
 

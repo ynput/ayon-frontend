@@ -1,3 +1,5 @@
+import pypeClient from '/src/pype'
+
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
@@ -45,9 +47,9 @@ const VERSION_QUERY = `
     }
 `
 
-const buildVersionQuery = (attributes) => {
+const buildVersionQuery = () => {
   let f_attribs = ''
-  for (const attrib of attributes) {
+  for (const attrib of pypeClient.settings.attributes) {
     if (attrib.scope.includes('version')) f_attribs += `${attrib.name}\n`
   }
   return VERSION_QUERY.replace('#VERSION_ATTRS#', f_attribs)
@@ -55,7 +57,6 @@ const buildVersionQuery = (attributes) => {
 
 const VersionDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
-  const settings = useSelector((state) => ({ ...state.settings }))
   const projectName = context.projectName
   const [versions, setVersions] = useState([])
   const [representations, setRepresentations] = useState([])
@@ -70,7 +71,7 @@ const VersionDetail = () => {
 
     axios
       .post('/graphql', {
-        query: buildVersionQuery(settings.attributes),
+        query: buildVersionQuery(),
         variables: { projectName, versions: context.focusedVersions },
       })
       .then((response) => {
@@ -160,7 +161,6 @@ const VersionDetail = () => {
         />
         <AttributeTable
           entityType="version"
-          attribSettings={settings.attributes}
           data={versions[0].attrib}
           additionalData={[{ title: 'Author', value: versions[0].author }]}
         />

@@ -7,7 +7,6 @@ import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
 
 import userReducer from './features/user'
-import settingsReducer from './features/settings'
 import contextReducer from './features/context'
 
 import App from './app'
@@ -23,7 +22,6 @@ import './styles/primetheme.sass'
 const store = configureStore({
   reducer: {
     user: userReducer,
-    settings: settingsReducer,
     context: contextReducer,
   },
 })
@@ -54,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
           newestOnTop={true}
           draggable={false}
           closeOnClick={true}
-          autoClose={2000}
+          autoClose={3000}
           limit={5}
         />
       </ReduxProvider>
