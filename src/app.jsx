@@ -23,7 +23,6 @@ const ServicesPage = lazy(() => import('./pages/services'))
 
 import { login } from './features/user'
 
-
 const App = () => {
   const user = useSelector((state) => ({ ...state.user }))
   const dispatch = useDispatch()

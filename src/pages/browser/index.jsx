@@ -1,13 +1,14 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 
-import Hierarchy from './hierarchy'
-import Subsets from './subsets'
-import Detail from './detail'
-import TasksPanel from './tasks'
-
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '/src/components'
+
+import Hierarchy from '/src/containers/hierarchy'
+import TaskList from '/src/containers/taskList'
+
+import Subsets from './subsets'
+import Detail from './detail'
 
 const BrowserPage = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -50,7 +51,7 @@ const BrowserPage = () => {
         <SplitterPanel size={18} style={{ minWidth: 250, maxWidth: 600 }}>
           <Section className="wrap">
             {hierarchy}
-            <TasksPanel />
+            <TaskList style={{ maxHeight: 300 }} />
           </Section>
         </SplitterPanel>
 
@@ -68,5 +69,3 @@ const BrowserPage = () => {
 }
 
 export default BrowserPage
-/*
- */

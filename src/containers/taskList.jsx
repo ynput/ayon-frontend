@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { Shade, Panel, TableWrapper } from '/src/components'
+import { Shade, Panel, TableWrapper, Section } from '/src/components'
 import { CellWithIcon } from '/src/components/icons'
 
 import { setFocusedTasks, setPairing } from '/src/features/context'
@@ -31,7 +31,7 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
 }
 `
 
-const TasksPanel = () => {
+const TaskList = ({ style = {} }) => {
   const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
@@ -59,10 +59,7 @@ const TasksPanel = () => {
         variables: { projectName, folderIds },
       })
       .then((response) => {
-        if (
-          !(response.data && response.data.data && response.data.data.project)
-        )
-          return
+        if (!response?.data?.data?.project) return
 
         for (const edge of response.data.data.project.tasks.edges) {
           result.push({
@@ -92,7 +89,7 @@ const TasksPanel = () => {
   //
 
   const onSelectionChange = (event) => {
-    const taskIds = Object.keys(event.value)
+    const taskIds = Object.keys(event.value).filter((k) => k.length === 32)
     let pairs = []
     for (const tid of taskIds) {
       pairs.push({
@@ -131,32 +128,34 @@ const TasksPanel = () => {
   }
 
   return (
-    <Panel size={250} className="nopad">
-      <TableWrapper>
-        {loading && <Shade />}
-        <TreeTable
-          value={data}
-          scrollable="true"
-          scrollHeight="100%"
-          emptyMessage="No tasks found"
-          selectionMode="multiple"
-          selectionKeys={selectedTasks}
-          onSelectionChange={onSelectionChange}
-        >
-          <Column
-            field="name"
-            header="Task"
-            expander="true"
-            body={nameRenderer}
-          />
-          {folderIds.length > 1 && (
-            <Column field="folderName" header="Folder" />
-          )}
-          <Column field="taskType" header="Task type" style={{ width: 90 }} />
-        </TreeTable>
-      </TableWrapper>
-    </Panel>
+    <Section style={style}>
+      <Panel className="nopad">
+        <TableWrapper>
+          {loading && <Shade />}
+          <TreeTable
+            value={data}
+            scrollable="true"
+            scrollHeight="100%"
+            emptyMessage="No tasks found"
+            selectionMode="multiple"
+            selectionKeys={selectedTasks}
+            onSelectionChange={onSelectionChange}
+          >
+            <Column
+              field="name"
+              header="Task"
+              expander="true"
+              body={nameRenderer}
+            />
+            {folderIds.length > 1 && (
+              <Column field="folderName" header="Folder" />
+            )}
+            <Column field="taskType" header="Task type" style={{ width: 90 }} />
+          </TreeTable>
+        </TableWrapper>
+      </Panel>
+    </Section>
   )
 }
 
-export default TasksPanel
+export default TaskList

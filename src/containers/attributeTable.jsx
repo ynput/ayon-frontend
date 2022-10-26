@@ -1,11 +1,6 @@
 import pypeClient from '/src/pype'
 
-const AttributeTable = ({
-  entityType,
-  data,
-  additionalData,
-  style,
-}) => {
+const AttributeTable = ({ entityType, data, additionalData, style }) => {
   return (
     <div
       className="attribute-table"

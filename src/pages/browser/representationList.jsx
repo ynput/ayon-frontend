@@ -32,7 +32,7 @@ const columns = [
   },
 ]
 
-const RepresentationDetail = ({ representations }) => {
+const RepresentationList = ({ representations }) => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const dispatch = useDispatch()
@@ -97,4 +97,4 @@ const RepresentationDetail = ({ representations }) => {
   )
 }
 
-export default RepresentationDetail
+export default RepresentationList

@@ -1,15 +1,15 @@
+import axios from 'axios'
 import pypeClient from '/src/pype'
 
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import axios from 'axios'
 
+import { getFamilyIcon } from '/src/utils'
 import { Panel } from '/src/components'
-import Thumbnail from '../../containers/thumbnail'
-import AttributeTable from '../../containers/attributeTable'
-import RepresentationDetail from './detail-representation'
+import Thumbnail from '/src/containers/thumbnail'
+import AttributeTable from '/src/containers/attributeTable'
 
-import { getFamilyIcon } from '../../utils'
+import RepresentationList from './representationList'
 
 const VERSION_QUERY = `
     query Versions($projectName: String!, $versions: [String!]!) {
@@ -173,7 +173,7 @@ const VersionDetail = () => {
     <>
       {versionDetailWidget}
       {representations && (
-        <RepresentationDetail representations={representations} />
+        <RepresentationList representations={representations} />
       )}
     </>
   )

@@ -26,7 +26,7 @@ import {
   setPairing,
 } from '/src/features/context'
 
-import { SUBSET_QUERY, parseSubsetData, VersionList } from './subset-utils'
+import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
 
 const Subsets = ({
   projectName,

@@ -16,8 +16,8 @@ import {
   setFocusedFolders,
   setBreadcrumbs,
   setExpandedFolders,
-} from '../../features/context'
-import { getFolderTypeIcon } from '../../utils'
+} from '/src/features/context'
+import { getFolderTypeIcon } from '/src//utils'
 
 const filterHierarchy = (text, folder) => {
   /*
@@ -81,7 +81,7 @@ const Hierarchy = ({
   folderTypes,
   focusedFolders,
   expandedFolders,
-  size,
+  style = {},
 }) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
@@ -199,11 +199,8 @@ const Hierarchy = ({
   // Render
   //
 
-  const sectionStyle = {}
-  if (size) sectionStyle.maxWidth = size
-
   return (
-    <Section style={sectionStyle}>
+    <Section style={style}>
       <Toolbar>
         <span className="p-input-icon-left" style={{ flexGrow: 1 }}>
           <i className="pi pi-search" />

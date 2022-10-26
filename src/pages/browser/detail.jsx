@@ -1,10 +1,9 @@
 import { useSelector } from 'react-redux'
-import { Spacer } from '/src/components'
-import { Section, Toolbar } from '/src/components/layout'
+import { Spacer, Section, Toolbar } from '/src/components'
 
-import FolderDetail from './detail-folder'
-import VersionDetail from './detail-version'
-import TaskDetail from './detail-task'
+import FolderDetail from './folderDetail'
+import VersionDetail from './versionDetail'
+import TaskDetail from './taskDetail'
 
 const Detail = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -24,8 +23,6 @@ const Detail = () => {
     default:
       break
   }
-
-  // <ToolButton icon="settings" disabled={true} tooltip="Mockup button" />
 
   const header = context.focusedType
     ? context.focusedType.charAt(0).toUpperCase() + context.focusedType.slice(1)

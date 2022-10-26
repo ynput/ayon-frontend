@@ -2,7 +2,7 @@ import { useRef, useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Section } from '/src/components'
 
-import Hierarchy from './browser/hierarchy'
+import Hierarchy from '/src/containers/hierarchy'
 
 const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   const addonRef = useRef(null)

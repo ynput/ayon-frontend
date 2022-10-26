@@ -11,6 +11,7 @@ import EditorPage from './editor'
 import SiteSync from './sitesync'
 import LoadingPage from './loading'
 import ProjectAddon from './projectAddon'
+import WorkfilesPage from './workfiles'
 
 import { selectProject, setProjectData } from '../features/context'
 import { updateFolderTypeIcons, updateTaskTypeIcons } from '../utils'
@@ -104,6 +105,7 @@ const ProjectPage = () => {
 
   let child = null
   if (module === 'editor') child = <EditorPage />
+  else if (module === 'workfiles') child = <WorkfilesPage />
   else if (module === 'sitesync') child = <SiteSync />
   else if (addonName) {
     for (const addon of addons) {
@@ -132,6 +134,7 @@ const ProjectPage = () => {
       <nav className="secondary">
         <NavLink to={`/projects/${projectName}/browser`}>Browser</NavLink>
         <NavLink to={`/projects/${projectName}/editor`}>Editor</NavLink>
+        <NavLink to={`/projects/${projectName}/workfiles`}>Workfiles</NavLink>
         <NavLink to={`/projects/${projectName}/sitesync`}>SiteSync</NavLink>
         {addons.map((addon) => (
           <NavLink
