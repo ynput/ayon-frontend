@@ -130,6 +130,14 @@ function ObjectFieldTemplate(props) {
   }, [props.properties])
 
   const fields = useMemo(() => {
+    let hiddenFields = []
+    for (const propName in props?.schema?.properties || {}) {
+      const ppts = props?.schema?.properties[propName]
+      if (ppts.conditionalEnum) {
+        hiddenFields = ppts.enum.filter((e) => e !== props.formData[propName])
+      }
+    }
+
     if (props.schema.layout === 'expanded') {
       let nameField = null
       let otherFields = []
@@ -144,7 +152,9 @@ function ObjectFieldTemplate(props) {
           <div className={className}>
             <div className="name-field">{nameField}</div>
             <div className="data-fields">
-              {otherFields.map((element) => element)}
+              {otherFields
+                .filter((f) => !hiddenFields.includes(f.props.name))
+                .map((element) => element)}
             </div>
           </div>
         </>
@@ -158,8 +168,9 @@ function ObjectFieldTemplate(props) {
           {props.properties
             .filter(
               (element) =>
-                element.name !== 'enabled' ||
-                ['compact', 'root'].includes(props.schema.layout)
+                (element.name !== 'enabled' ||
+                  ['compact', 'root'].includes(props.schema.layout)) &&
+                !hiddenFields.includes(element.name)
             )
             .map((element, index) => (
               <div key={index} className="form-object-field-item">
@@ -207,11 +218,9 @@ function ObjectFieldTemplate(props) {
 }
 
 function FieldTemplate(props) {
-
   // Do not render the field if it belongs to a different scope (studio/project)
   if (props.schema.scope && props.schema.scope !== props.formContext.level)
     return null
-
 
   const contextMenuRef = useRef(null)
   const divider = useMemo(() => {
