@@ -103,7 +103,7 @@ function ObjectFieldTemplate(props) {
     props.schema.description && props.schema.description.split('\n')[0]
 
   const longDescription = props.schema.description && (
-    <>
+    <div className="form-object-field-help">
       {props.schema.description
         .split('\n')
         .slice(1)
@@ -112,7 +112,7 @@ function ObjectFieldTemplate(props) {
         .map((p) => (
           <p>{p}</p>
         ))}
-    </>
+    </div>
   )
 
   // memoize the fields
@@ -207,6 +207,12 @@ function ObjectFieldTemplate(props) {
 }
 
 function FieldTemplate(props) {
+
+  // Do not render the field if it belongs to a different scope (studio/project)
+  if (props.schema.scope && props.schema.scope !== props.formContext.level)
+    return null
+
+
   const contextMenuRef = useRef(null)
   const divider = useMemo(() => {
     if (props.schema.section)
