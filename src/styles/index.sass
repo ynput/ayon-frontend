@@ -258,7 +258,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus
 // Bread crumbs
 //
 
-.breadcrumbs
+.breadcrumbs, .settings-breadcrumbs
   list-style: none
   display: flex
   flex-direction: row
@@ -275,7 +275,12 @@ input:-webkit-autofill, input:-webkit-autofill:focus
 
     &:not(:last-child)
       &::after
-        content: ' / '
+        margin: 0 5px
+        content: '/'
+
+.settings-breadcrumbs
+  &>li
+    font-size: 1em !important
       
 .breadcrumbs-copy-button
   margin-left: 8px

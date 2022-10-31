@@ -59,8 +59,6 @@ const SettingsEditor = ({
   overrides,
   onSetBreadcrumbs,
   onSetChangedKeys,
-  onPinOverride,
-  onDeleteOverride,
   level,
   changedKeys,
 }) => {
@@ -75,8 +73,6 @@ const SettingsEditor = ({
     onSetBreadcrumbs: onSetBreadcrumbs || (() => {}),
     changedKeys: changedKeys || [], // source of all problems
     onSetChangedKeys: onSetChangedKeys || (() => {}),
-    onDeleteOverride: onDeleteOverride || (() => {}),
-    onPinOverride: onPinOverride || (() => {}),
   }
 
   return (

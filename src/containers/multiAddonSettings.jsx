@@ -1,13 +1,10 @@
-// DEPRECATED, UNUSED, DELETE!
-
 import axios from 'axios'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 
 import { ToggleButton } from 'primereact/togglebutton'
 
-import { isEmpty } from '/src/utils'
 import {
   Button,
   Spacer,
@@ -15,24 +12,22 @@ import {
   Panel,
   Toolbar,
   ScrollArea,
+  ToolButton,
 } from '/src/components'
+
 import AddonList from '/src/containers/addonList'
 import AddonSettingsPanel from '/src/containers/addonSettingsPanel'
 
-const ProjectSettings = ({ projectName }) => {
+const MultiAddonSettings = ({ projectName }) => {
   const [showVersions, setShowVersions] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState({})
   const [localData, setLocalData] = useState({})
   const [localOverrides, setLocalOverrides] = useState({})
+  const [currentSelection, setCurrentSelection] = useState(null)
 
-  useEffect(() => {
-    setSelectedAddons([])
-    setLocalData({})
-    setLocalOverrides({})
-  }, [projectName])
-
-  if (!projectName) return <>No project selected</>
+  const projectSuffix = projectName ? `/${projectName}` : ''
 
   const onSettingsChange = (addonName, addonVersion, data) => {
     setLocalData((localData) => {
@@ -63,7 +58,7 @@ const ProjectSettings = ({ projectName }) => {
       const [addonName, addonVersion] = key.split('@')
       axios
         .post(
-          `/api/addons/${addonName}/${addonVersion}/settings/${projectName}`,
+          `/api/addons/${addonName}/${addonVersion}/settings${projectSuffix}`,
           localData[key]
         )
         .then(() => {
@@ -100,28 +95,108 @@ const ProjectSettings = ({ projectName }) => {
 
   const onRemoveOverrides = (addonName, addonVersion) => {
     axios
-      .delete(
-        `/api/addons/${addonName}/${addonVersion}/overrides/${projectName}`
-      )
+      .delete(`/api/addons/${addonName}/${addonVersion}/overrides${projectSuffix}`)
       .then(() => {
         onDismissChanges(addonName, addonVersion)
       })
   }
 
-  const addonListHeader = (
+  const deleteOverride = (addon, path) => {
+    console.log('DELETING OVERRIDE', path)
+    axios
+      .post(
+        `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`,
+        { action: 'delete', path: path }
+      )
+      .catch(() => {
+        console.log('e-eee')
+      })
+      .then(() => {
+        console.log('Override deleted')
+      })
+      .finally(() => {
+        forceAddonReload(addon.name, addon.version)
+      })
+  }
+
+  const pinOverride = (addon, path) => {
+    console.log('PINNING OVERRIDE', path)
+    axios
+      .post(
+        `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`,
+        { action: 'pin', path: path }
+      )
+      .catch(() => {
+        console.log('e-eee')
+      })
+      .then(() => {
+        console.log('Override deleted')
+      })
+      .finally(() => {
+        forceAddonReload(addon.name, addon.version)
+      })
+  }
+
+  //
+  // RENDER
+  //
+
+
+  const addonListHeader = useMemo(() =>(
     <Toolbar>
       <ToggleButton
         checked={showVersions}
         onChange={(e) => setShowVersions(e.value)}
-        onLabel="Hide versions"
-        offLabel="Show versions"
+        onLabel="Hide all versions"
+        offLabel="Show all versions"
       />
-      <Button onClick={onSave} disabled={isEmpty(localData)} label="Save" />
     </Toolbar>
-  )
+  ), [showVersions])
+
+
+  const settingsListHeader = useMemo(() => {
+    console.log("RENDERING SETTINGS LIST HEADER", currentSelection, localOverrides)
+    return (
+      <Toolbar>
+        <ToolButton
+          onClick={() => {setShowHelp(!showHelp)}}
+          icon="help"
+        />
+        <Spacer >
+          {currentSelection && (
+            <ul className="settings-breadcrumbs">
+              <li>{currentSelection.addon?.name}</li>
+              {(currentSelection?.path || []).map((breadcrumb, index) => (
+                <li key={index}>{breadcrumb}</li>
+              ))}
+            </ul>
+          )}
+        </Spacer>
+
+        <ToolButton icon="content_copy" disabled={true}/> 
+        <ToolButton icon="content_paste" disabled={true}/> 
+        <ToolButton 
+          icon="push_pin" 
+          tooltip="Pin default value as an override"
+          disabled={
+          (!currentSelection?.addon?.name) 
+            || (currentSelection.hasOverride)
+            || (localOverrides[currentSelection.addonString] || []).includes(currentSelection.fieldId)
+        }
+          onClick={() => pinOverride(currentSelection.addon, currentSelection.path)}
+        />
+        <ToolButton 
+          icon="lock_reset" 
+          tooltip="Remove override from the selected field"
+          disabled={(!currentSelection?.addon?.name) || !currentSelection.hasOverride }
+          onClick={() => deleteOverride(currentSelection.addon, currentSelection.path)}
+          />
+      </Toolbar>
+    )
+  }, [showHelp, currentSelection, localOverrides])
 
   return (
-    <Section className="row">
+    <>
       <AddonList
         showVersions={showVersions}
         selectedAddons={selectedAddons}
@@ -131,7 +206,10 @@ const ProjectSettings = ({ projectName }) => {
         onRemoveOverrides={onRemoveOverrides}
         header={addonListHeader}
       />
-      <Section>
+
+      <Section className={showHelp && 'settings-help-visible'}>
+        { settingsListHeader }
+        <Section>
         <ScrollArea>
           {selectedAddons
             .filter((addon) => addon.version)
@@ -141,6 +219,7 @@ const ProjectSettings = ({ projectName }) => {
                 key={`${addon.name}-${addon.version}`}
                 style={{ flexGrow: 0 }}
                 className="transparent nopad"
+                size={1}
               >
                 <AddonSettingsPanel
                   addon={addon}
@@ -155,6 +234,7 @@ const ProjectSettings = ({ projectName }) => {
                   reloadTrigger={
                     reloadTrigger[`${addon.name}@${addon.version}`]
                   }
+                  onSelect={setCurrentSelection}
                   projectName={projectName}
                 />
               </Panel>
@@ -162,12 +242,17 @@ const ProjectSettings = ({ projectName }) => {
 
           <Spacer />
         </ScrollArea>
+        </Section>
       </Section>
-      {/*
-          <div
-            className="wrapper"
-            style={{ overflowY: 'scroll', flexDirection: 'column' }}
-          >
+     
+      <Section style={{maxWidth: 300}}>
+        <Toolbar>
+          <Spacer />
+          <Button label="Revert changes" icon="refresh" onClick={onDismissChanges}/>
+          <Button label="Save changes" icon="check" onClick={onSave}/>
+        </Toolbar>
+        <Panel>
+          <ScrollArea>
             <h3>Form data</h3>
             <pre style={{ width: '100%', flexGrow: 1 }}>
               {JSON.stringify(localData, null, 2)}
@@ -176,10 +261,13 @@ const ProjectSettings = ({ projectName }) => {
             <pre style={{ width: '100%', flexGrow: 1 }}>
               {JSON.stringify(localOverrides, null, 2)}
             </pre>
-          </div>
-        */}
-    </Section>
+          </ScrollArea>
+        </Panel>
+      </Section>
+      
+    </>
   )
 }
 
-export default ProjectSettings
+export default MultiAddonSettings
+

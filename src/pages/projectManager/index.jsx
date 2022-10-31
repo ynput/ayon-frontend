@@ -6,8 +6,8 @@ import { Button, Spacer, Section, Toolbar, Panel } from '/src/components'
 import ProjectList from '/src/containers/projectList'
 
 import ProjectStats from './stats'
-import ProjectSettings from './settings'
 import NewProjectDialog from './newProject'
+import MultiAddonSettings from '/src/containers/multiAddonSettings'
 
 const ProjectManager = () => {
   const navigate = useNavigate()
@@ -93,7 +93,7 @@ const ProjectManager = () => {
             />
           </Toolbar>
 
-          <Panel className="transparent nopad">
+          <Panel className="transparent nopad" style={{flexDirection: 'row'}}>
             {currentView === 'dashboard' && (
               <ProjectStats projectName={selectedProject} />
             )}
@@ -101,7 +101,7 @@ const ProjectManager = () => {
               <ProjectStats projectName={selectedProject} />
             )}
             {currentView === 'settings' && (
-              <ProjectSettings projectName={selectedProject} />
+              <MultiAddonSettings projectName={selectedProject} />
             )}
           </Panel>
         </Section>
