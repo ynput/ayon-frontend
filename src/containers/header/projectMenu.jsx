@@ -12,7 +12,7 @@ const ProjectMenu = ({ visible, onHide }) => {
       icon="settings_suggest"
       label="Project manager"
       style={{ marginTop: 10, width: '100%' }}
-      onClick={() => navigate('/projects')}
+      onClick={() => navigate('/projectManager')}
     />
   )
 

@@ -66,6 +66,7 @@ const ProjectPage = () => {
           s[taskTypeName] = data.taskTypes[taskTypeName].icon
         }
         updateTaskTypeIcons(s)
+        localStorage.setItem('lastProject', projectName)
 
         // Load addons
         // Loading it here beceause we can have a version override

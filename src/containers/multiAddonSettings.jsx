@@ -144,11 +144,10 @@ const MultiAddonSettings = ({ projectName }) => {
 
   const addonListHeader = useMemo(() =>(
     <Toolbar>
-      <ToggleButton
+      <Button
         checked={showVersions}
-        onChange={(e) => setShowVersions(e.value)}
-        onLabel="Hide all versions"
-        offLabel="Show all versions"
+        onClick={() => setShowVersions(v => !v)}
+        label={showVersions ? "Hide all versions" : "Show all versions"}
       />
     </Toolbar>
   ), [showVersions])
