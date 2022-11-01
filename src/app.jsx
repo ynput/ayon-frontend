@@ -90,8 +90,16 @@ const App = () => {
       <BrowserRouter>
         <Header />
         <Routes>
-          <Route path="/" exact element={<Navigate replace to="/projectManager/dashboard" />} />
-          <Route path="/projectManager" exact element={<Navigate replace to="/projectManager/dashboard" />} />
+          <Route
+            path="/"
+            exact
+            element={<Navigate replace to="/projectManager/dashboard" />}
+          />
+          <Route
+            path="/projectManager"
+            exact
+            element={<Navigate replace to="/projectManager/dashboard" />}
+          />
           <Route path="/projectManager/:module" element={<ProjectManager />} />
 
           <Route

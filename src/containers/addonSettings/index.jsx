@@ -3,8 +3,6 @@ import axios from 'axios'
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 
-import { ToggleButton } from 'primereact/togglebutton'
-
 import {
   Button,
   Spacer,
@@ -16,9 +14,9 @@ import {
 } from '/src/components'
 
 import AddonList from '/src/containers/addonList'
-import AddonSettingsPanel from '/src/containers/addonSettingsPanel'
+import AddonSettingsPanel from './addonSettingsPanel'
 
-const MultiAddonSettings = ({ projectName }) => {
+const AddonSettings = ({ projectName }) => {
   const [showVersions, setShowVersions] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
@@ -95,7 +93,9 @@ const MultiAddonSettings = ({ projectName }) => {
 
   const onRemoveOverrides = (addonName, addonVersion) => {
     axios
-      .delete(`/api/addons/${addonName}/${addonVersion}/overrides${projectSuffix}`)
+      .delete(
+        `/api/addons/${addonName}/${addonVersion}/overrides${projectSuffix}`
+      )
       .then(() => {
         onDismissChanges(addonName, addonVersion)
       })
@@ -141,27 +141,55 @@ const MultiAddonSettings = ({ projectName }) => {
   // RENDER
   //
 
-
-  const addonListHeader = useMemo(() =>(
-    <Toolbar>
-      <Button
-        checked={showVersions}
-        onClick={() => setShowVersions(v => !v)}
-        label={showVersions ? "Hide all versions" : "Show all versions"}
-      />
-    </Toolbar>
-  ), [showVersions])
-
+  const addonListHeader = useMemo(
+    () => (
+      <Toolbar>
+        <Button
+          checked={showVersions}
+          onClick={() => setShowVersions((v) => !v)}
+          label={showVersions ? 'Hide all versions' : 'Show all versions'}
+        />
+      </Toolbar>
+    ),
+    [showVersions]
+  )
 
   const settingsListHeader = useMemo(() => {
-    console.log("RENDERING SETTINGS LIST HEADER", currentSelection, localOverrides)
+    console.log(
+      'RENDERING SETTINGS LIST HEADER',
+      currentSelection,
+      localOverrides
+    )
     return (
       <Toolbar>
+        <ToolButton icon="content_copy" disabled={true} />
+        <ToolButton icon="content_paste" disabled={true} />
         <ToolButton
-          onClick={() => {setShowHelp(!showHelp)}}
-          icon="help"
+          icon="push_pin"
+          tooltip="Pin default value as an override"
+          disabled={
+            !currentSelection?.addon?.name ||
+            currentSelection.hasOverride ||
+            (localOverrides[currentSelection.addonString] || []).includes(
+              currentSelection.fieldId
+            )
+          }
+          onClick={() =>
+            pinOverride(currentSelection.addon, currentSelection.path)
+          }
         />
-        <Spacer >
+        <ToolButton
+          icon="lock_reset"
+          tooltip="Remove override from the selected field"
+          disabled={
+            !currentSelection?.addon?.name || !currentSelection.hasOverride
+          }
+          onClick={() =>
+            deleteOverride(currentSelection.addon, currentSelection.path)
+          }
+        />
+
+        <Spacer>
           {currentSelection && (
             <ul className="settings-breadcrumbs">
               <li>{currentSelection.addon?.name}</li>
@@ -172,24 +200,12 @@ const MultiAddonSettings = ({ projectName }) => {
           )}
         </Spacer>
 
-        <ToolButton icon="content_copy" disabled={true}/> 
-        <ToolButton icon="content_paste" disabled={true}/> 
-        <ToolButton 
-          icon="push_pin" 
-          tooltip="Pin default value as an override"
-          disabled={
-          (!currentSelection?.addon?.name) 
-            || (currentSelection.hasOverride)
-            || (localOverrides[currentSelection.addonString] || []).includes(currentSelection.fieldId)
-        }
-          onClick={() => pinOverride(currentSelection.addon, currentSelection.path)}
+        <ToolButton
+          onClick={() => {
+            setShowHelp(!showHelp)
+          }}
+          icon="help"
         />
-        <ToolButton 
-          icon="lock_reset" 
-          tooltip="Remove override from the selected field"
-          disabled={(!currentSelection?.addon?.name) || !currentSelection.hasOverride }
-          onClick={() => deleteOverride(currentSelection.addon, currentSelection.path)}
-          />
       </Toolbar>
     )
   }, [showHelp, currentSelection, localOverrides])
@@ -207,48 +223,54 @@ const MultiAddonSettings = ({ projectName }) => {
       />
 
       <Section className={showHelp && 'settings-help-visible'}>
-        { settingsListHeader }
+        {settingsListHeader}
         <Section>
-        <ScrollArea>
-          {selectedAddons
-            .filter((addon) => addon.version)
-            .reverse()
-            .map((addon) => (
-              <Panel
-                key={`${addon.name}-${addon.version}`}
-                style={{ flexGrow: 0 }}
-                className="transparent nopad"
-                size={1}
-              >
-                <AddonSettingsPanel
-                  addon={addon}
-                  onChange={(data) =>
-                    onSettingsChange(addon.name, addon.version, data)
-                  }
-                  onSetChangedKeys={(data) =>
-                    onSetChangedKeys(addon.name, addon.version, data)
-                  }
-                  localData={localData[`${addon.name}@${addon.version}`]}
-                  changedKeys={localOverrides[`${addon.name}@${addon.version}`]}
-                  reloadTrigger={
-                    reloadTrigger[`${addon.name}@${addon.version}`]
-                  }
-                  onSelect={setCurrentSelection}
-                  projectName={projectName}
-                />
-              </Panel>
-            ))}
+          <ScrollArea>
+            {selectedAddons
+              .filter((addon) => addon.version)
+              .reverse()
+              .map((addon) => (
+                <Panel
+                  key={`${addon.name}-${addon.version}`}
+                  style={{ flexGrow: 0 }}
+                  className="transparent nopad"
+                  size={1}
+                >
+                  <AddonSettingsPanel
+                    addon={addon}
+                    onChange={(data) =>
+                      onSettingsChange(addon.name, addon.version, data)
+                    }
+                    onSetChangedKeys={(data) =>
+                      onSetChangedKeys(addon.name, addon.version, data)
+                    }
+                    localData={localData[`${addon.name}@${addon.version}`]}
+                    changedKeys={
+                      localOverrides[`${addon.name}@${addon.version}`]
+                    }
+                    reloadTrigger={
+                      reloadTrigger[`${addon.name}@${addon.version}`]
+                    }
+                    onSelect={setCurrentSelection}
+                    projectName={projectName}
+                  />
+                </Panel>
+              ))}
 
-          <Spacer />
-        </ScrollArea>
+            <Spacer />
+          </ScrollArea>
         </Section>
       </Section>
-     
-      <Section style={{maxWidth: 300}}>
+
+      <Section style={{ maxWidth: 300 }}>
         <Toolbar>
           <Spacer />
-          <Button label="Revert changes" icon="refresh" onClick={onDismissChanges}/>
-          <Button label="Save changes" icon="check" onClick={onSave}/>
+          <Button
+            label="Revert changes"
+            icon="refresh"
+            onClick={onDismissChanges}
+          />
+          <Button label="Save changes" icon="check" onClick={onSave} />
         </Toolbar>
         <Panel>
           <ScrollArea>
@@ -263,10 +285,8 @@ const MultiAddonSettings = ({ projectName }) => {
           </ScrollArea>
         </Panel>
       </Section>
-      
     </>
   )
 }
 
-export default MultiAddonSettings
-
+export default AddonSettings

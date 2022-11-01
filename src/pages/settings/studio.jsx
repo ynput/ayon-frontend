@@ -1,11 +1,10 @@
-import MultiAddonSettings from '/src/containers/multiAddonSettings'
-
+import AddonSettings from '/src/containers/addonSettings'
 
 const StudioOverrides = () => {
   return (
-  <main>
-      <MultiAddonSettings />
-  </main>
+    <main>
+      <AddonSettings />
+    </main>
   )
 }
 

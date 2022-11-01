@@ -10,7 +10,7 @@ const AddonSettingsPanel = ({
   localData,
   changedKeys,
   reloadTrigger,
-  onSelect=()=>{},
+  onSelect = () => {},
   projectName = null,
 }) => {
   const [schema, setSchema] = useState(null)
@@ -18,7 +18,6 @@ const AddonSettingsPanel = ({
   const [overrides, setOverrides] = useState(null)
 
   const projectSuffix = projectName ? `/${projectName}` : ''
-
 
   const loadSchema = () => {
     axios
@@ -50,7 +49,7 @@ const AddonSettingsPanel = ({
   }
 
   const onSetBreadcrumbs = (path) => {
-    const fieldId = ["root", ...(path || [])].join('_')
+    const fieldId = ['root', ...(path || [])].join('_')
     onSelect({
       addon,
       addonString: `${addon.name}@${addon.version}`,

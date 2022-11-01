@@ -33,7 +33,6 @@ function ObjectFieldTemplate(props) {
     }
   }
 
-
   let overrideLevel = useMemo(() => {
     let res = 'default'
     for (const childId in props.formContext.overrides) {
@@ -229,7 +228,6 @@ function FieldTemplate(props) {
   if (override) {
     if (override?.inGroup) labelStyle.fontStyle = 'italic'
   }
-
 
   // Array fields
 

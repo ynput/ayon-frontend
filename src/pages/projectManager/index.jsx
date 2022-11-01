@@ -6,7 +6,7 @@ import ProjectList from '/src/containers/projectList'
 
 import ProjectStats from './stats'
 import NewProjectDialog from './newProject'
-import MultiAddonSettings from '/src/containers/multiAddonSettings'
+import AddonSettings from '/src/containers/addonSettings'
 
 const ProjectManager = () => {
   const navigate = useNavigate()
@@ -46,39 +46,39 @@ const ProjectManager = () => {
 
   return (
     <>
-    <nav className="secondary">
+      <nav className="secondary">
         <NavLink to={`/projectManager/dashboard`}>Dashboard</NavLink>
         <NavLink to={`/projectManager/settings`}>Settings</NavLink>
-    </nav>
-    <main>
-      {showNewProject && (
-        <NewProjectDialog
-          onHide={() => {
-            setShowNewProject(false)
-            setListReloadTrigger((val) => val + 1)
-          }}
+      </nav>
+      <main>
+        {showNewProject && (
+          <NewProjectDialog
+            onHide={() => {
+              setShowNewProject(false)
+              setListReloadTrigger((val) => val + 1)
+            }}
+          />
+        )}
+
+        <ProjectList
+          header={toolbar}
+          selection={selectedProject}
+          onSelect={setSelectedProject}
+          reloadTrigger={listReloadTrigger}
         />
-      )}
 
-      <ProjectList
-        header={toolbar}
-        selection={selectedProject}
-        onSelect={setSelectedProject}
-        reloadTrigger={listReloadTrigger}
-      />
-
-      {selectedProject && (
-        <>
+        {selectedProject && (
+          <>
             {module === 'dashboard' && (
               <ProjectStats projectName={selectedProject} />
             )}
 
             {module === 'settings' && (
-              <MultiAddonSettings projectName={selectedProject} />
+              <AddonSettings projectName={selectedProject} />
             )}
-        </>
-      )}
-    </main>
+          </>
+        )}
+      </main>
     </>
   )
 }
