@@ -5,6 +5,7 @@ import { Button, Toolbar } from '/src/components'
 import ProjectList from '/src/containers/projectList'
 
 import ProjectStats from './stats'
+import ProjectAnatomy from './anatomy'
 import NewProjectDialog from './newProject'
 import AddonSettings from '/src/containers/addonSettings'
 
@@ -48,6 +49,7 @@ const ProjectManager = () => {
     <>
       <nav className="secondary">
         <NavLink to={`/projectManager/dashboard`}>Dashboard</NavLink>
+        <NavLink to={`/projectManager/anatomy`}>Anatomy</NavLink>
         <NavLink to={`/projectManager/settings`}>Settings</NavLink>
       </nav>
       <main>
@@ -71,6 +73,10 @@ const ProjectManager = () => {
           <>
             {module === 'dashboard' && (
               <ProjectStats projectName={selectedProject} />
+            )}
+
+            {module === 'anatomy' && (
+              <ProjectAnatomy projectName={selectedProject} />
             )}
 
             {module === 'settings' && (

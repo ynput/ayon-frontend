@@ -212,9 +212,16 @@ input:-webkit-autofill, input:-webkit-autofill:focus
       border-top: 0 !important
 
 .thumbnail
-  width: 100%,
-  height: auto,
+  height: auto
+  display: flex
+  flex-direction: row
+  align-items: center
+
+  img
+    max-width: 500px
+
   &.placeholder
+    max-width: 500px
     aspect-ratio: 1.77
     display: flex
     justify-content: center

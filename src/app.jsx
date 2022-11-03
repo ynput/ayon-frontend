@@ -114,7 +114,7 @@ const App = () => {
           <Route
             path="/settings"
             exact
-            element={<Navigate replace to="/settings/anatomy" />}
+            element={<Navigate replace to="/settings/anatomyPresets" />}
           />
           <Route path="/settings/:module" exact element={<SettingsPage />} />
 

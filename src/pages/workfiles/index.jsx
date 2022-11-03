@@ -1,4 +1,6 @@
 import axios from 'axios'
+import pypeClient from '/src/pype'
+
 import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
 
@@ -7,8 +9,11 @@ import { Column } from 'primereact/column'
 
 import { Section, Panel, TableWrapper } from '/src/components'
 import { CellWithIcon } from '/src/components/icons'
+
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'
+import Thumbnail from '/src/containers/thumbnail'
+import AttributeTable from '/src//containers/attributeTable'
 
 const WORKFILES_QUERY = `
 query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
@@ -54,7 +59,16 @@ const WorkfileDetail = ({ projectName, workfileId, style }) => {
   return (
     <Section style={style}>
       <Panel>
-        <pre>{JSON.stringify(data, null, 2)}</pre>
+        <Thumbnail
+          project={projectName}
+          entityType="workfile"
+          entityId={workfileId}
+        />
+        <AttributeTable
+          entityType="workfile"
+          data={data?.attrib || {}}
+          additionalData={[{ title: 'Path', value: data?.path }]}
+        />
       </Panel>
     </Section>
   )
@@ -183,7 +197,6 @@ const WorkfilesPage = () => {
         pairing={pairing}
         selectedWorkfile={selectedWorkfile}
         setSelectedWorkfile={setSelectedWorkfile}
-        style={{ maxWidth: 400, minWidth: 300 }}
       />
 
       <WorkfileDetail

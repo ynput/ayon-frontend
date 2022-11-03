@@ -4,7 +4,6 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Panel, Toolbar, TableWrapper } from '/src/components'
 
-import SiteSyncDetail from '../sitesync/detail'
 import { setBreadcrumbs } from '../../features/context'
 import { groupResult } from '../../utils'
 
@@ -60,7 +59,7 @@ const RepresentationList = ({ representations }) => {
 
   return (
     <>
-      {focusedRepresentation && (
+      {/*focusedRepresentation && (
         <SiteSyncDetail
           projectName={projectName}
           localSite={null}
@@ -68,7 +67,7 @@ const RepresentationList = ({ representations }) => {
           representationId={focusedRepresentation}
           onHide={() => setFocusedRepresentation(null)}
         />
-      )}
+      )*/}
 
       <Toolbar>
         <span className="section-header">Representations</span>

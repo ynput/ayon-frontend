@@ -26,10 +26,12 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
   }
 
   return (
-    <img
-      alt={`Entity thumbnail ${entityId}`}
-      src={`data:image/png;charset=utf-8;base64,${base64}`}
-    />
+    <div className="thumbnail">
+      <img
+        alt={`Entity thumbnail ${entityId}`}
+        src={`data:image/png;charset=utf-8;base64,${base64}`}
+      />
+    </div>
   )
 }
 

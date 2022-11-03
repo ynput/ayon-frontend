@@ -6,9 +6,9 @@ import axios from 'axios'
 
 import { Panel } from '/src/components/layout'
 
-import Thumbnail from '../../containers/thumbnail'
-import AttributeTable from '../../containers/attributeTable'
-import { getFolderTypeIcon } from '../../utils'
+import Thumbnail from '/src/containers/thumbnail'
+import AttributeTable from '/src/containers/attributeTable'
+import { getFolderTypeIcon } from '/src/utils'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {

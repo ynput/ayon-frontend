@@ -21,7 +21,7 @@ const SettingsPage = () => {
 
   const moduleComponent = useMemo(() => {
     switch (module) {
-      case 'anatomy':
+      case 'anatomyPresets':
         return <AnatomyPresets />
       case 'studio':
         return <StudioOverrides />
@@ -41,7 +41,7 @@ const SettingsPage = () => {
   return (
     <>
       <nav className="secondary">
-        <NavLink to={`/settings/anatomy`}>Anatomy</NavLink>
+        <NavLink to={`/settings/anatomyPresets`}>Anatomy presets</NavLink>
         <NavLink to={`/settings/addons`}>Addons</NavLink>
         <NavLink to={`/settings/studio`}>Studio</NavLink>
         <NavLink to={`/settings/attributes`}>Attributes</NavLink>
