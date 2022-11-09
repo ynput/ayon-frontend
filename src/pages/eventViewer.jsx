@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
 import axios from 'axios'
+
+import { useState, useEffect } from 'react'
 import { DateTime } from 'luxon'
+import { Section, Toolbar, Panel, TableWrapper } from 'openpype-components'
 
 import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { Section, Toolbar, Panel, TableWrapper } from '/src/components'
 
 const EVENTS_QUERY = `
 query Events {
