@@ -18,7 +18,7 @@ import {
   Toolbar,
   TableWrapper,
   ScrollArea,
-} from '/src/components'
+} from 'openpype-components'
 import { loadAnatomyPresets } from '/src/utils'
 
 const PresetList = ({

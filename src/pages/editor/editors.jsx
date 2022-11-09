@@ -1,4 +1,5 @@
-import { InputText } from 'primereact/inputtext'
+import { InputText } from 'openpype-components'
+
 import { InputNumber } from 'primereact/inputnumber'
 import { Dropdown } from 'primereact/dropdown'
 
@@ -62,7 +63,6 @@ const typeEditor = (options, callback, value) => {
 const stringEditor = (options, callback, value) => {
   return (
     <InputText
-      type="text"
       value={value}
       onChange={(e) => {
         callback(options, e.target.value)

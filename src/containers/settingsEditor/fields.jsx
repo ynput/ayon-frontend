@@ -1,6 +1,5 @@
-import { useMemo, useRef } from 'react'
-import { Button } from 'primereact/button'
-import { Divider } from 'primereact/divider'
+import { useMemo } from 'react'
+import { Button, Divider } from 'openpype-components'
 
 import SettingsPanel from './settingsPanel'
 
@@ -73,8 +72,8 @@ function ObjectFieldTemplate(props) {
         .slice(1)
         .join('\n')
         .split('\n\n')
-        .map((p) => (
-          <p>{p}</p>
+        .map((p, idx) => (
+          <p key={idx}>{p}</p>
         ))}
     </div>
   )
@@ -199,9 +198,7 @@ function FieldTemplate(props) {
     if (props.schema.section)
       return (
         <Divider>
-          {props.schema.section !== '---' && (
-            <span className="p-tag">{props.schema.section}</span>
-          )}
+          {props.schema.section !== '---' && props.schema.section}
         </Divider>
       )
     else return <></>
@@ -285,7 +282,7 @@ function FieldTemplate(props) {
     <>
       {divider}
       <div
-        className={`form-inline-field p-inputgroup ${
+        className={`form-inline-field ${
           props.errors.props.errors ? 'error' : ''
         }`}
       >
@@ -325,18 +322,18 @@ const ArrayItemTemplate = (props) => {
     <div className="array-item-controls">
       <Button
         onClick={props.onDropIndexClick(props.index)}
-        className="p-button-danger p-button-outlined settings-rm-button"
-        icon="pi pi-times"
+        className="circle"
+        icon="close"
       />
       <Button
         onClick={props.onReorderClick(props.index, props.index - 1)}
-        className="p-button-success p-button-outlined settings-up-button"
-        icon="pi pi-arrow-up"
+        className="circle"
+        icon="arrow_upward"
       />
       <Button
         onClick={props.onReorderClick(props.index, props.index + 1)}
-        className="p-button-success p-button-outlined settings-down-button"
-        icon="pi pi-arrow-down"
+        className="circle"
+        icon="arrow_downward"
       />
     </div>
   )
@@ -357,13 +354,7 @@ const ArrayFieldTemplate = (props) => {
         <ArrayItemTemplate key={element.name} {...element} />
       ))}
       {props.canAdd && (
-        <div className="settings-add-button">
-          <Button
-            onClick={props.onAddClick}
-            icon="pi pi-plus"
-            className="p-button-success p-button-outlined"
-          />
-        </div>
+        <Button onClick={props.onAddClick} className="circle" icon="add" />
       )}
     </div>
   )

@@ -1,9 +1,8 @@
 import { useState } from 'react'
+import { Section, Panel } from 'openpype-components'
 import ProjectList from '/src/containers/projectList'
 import UserList from './userList'
 import UserDetail from './userDetail'
-
-import { Section, Panel } from '/src/components'
 
 const Users = () => {
   const [selectedProjects, setSelectedProjects] = useState(null)

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Section } from '/src/components'
+import { Section } from 'openpype-components'
 
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'

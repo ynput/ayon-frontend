@@ -1,5 +1,4 @@
-import { InputText, FormLayout, FormRow, Password } from '/src/components'
-
+import { InputText, FormLayout, FormRow, Password } from 'openpype-components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 

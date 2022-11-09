@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState } from 'react'
-import { Button } from 'primereact/button'
+import { LinkButton } from 'openpype-components'
 import { Menu } from 'primereact/menu'
 
 const VersionList = (row, onSelectVersion) => {
@@ -22,9 +22,7 @@ const VersionList = (row, onSelectVersion) => {
   return (
     <>
       <Menu model={versions} popup ref={menu} />
-      <Button
-        className="p-button-link"
-        style={{ margin: 0, padding: 0 }}
+      <LinkButton
         label={currentVersion}
         onClick={(e) => menu.current.toggle(e)}
       />

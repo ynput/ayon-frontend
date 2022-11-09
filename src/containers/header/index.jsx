@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { LinkButton, Spacer } from '/src/components'
+import { Button, Spacer } from 'openpype-components'
 
 import Breadcrumbs from './breadcrumbs'
 import UserMenu from './userMenu'
@@ -28,13 +28,21 @@ const Header = () => {
         onHide={() => setUserMenuVisible(false)}
       />
 
-      <LinkButton icon="menu" onClick={() => setProjectMenuVisible(true)} />
+      <Button
+        icon="dataset"
+        className="transparent"
+        onClick={() => setProjectMenuVisible(true)}
+      />
 
       <Spacer>
         <Breadcrumbs />
       </Spacer>
 
-      <LinkButton icon="person" onClick={() => setUserMenuVisible(true)} />
+      <Button
+        icon="person"
+        className="transparent"
+        onClick={() => setUserMenuVisible(true)}
+      />
     </nav>
   )
 }

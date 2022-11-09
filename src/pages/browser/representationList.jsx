@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { Panel, Toolbar, TableWrapper } from 'openpype-components'
+
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { Panel, Toolbar, TableWrapper } from '/src/components'
 
-import { setBreadcrumbs } from '../../features/context'
-import { groupResult } from '../../utils'
+import { setBreadcrumbs } from '/src/features/context'
+import { groupResult } from '/src/utils'
 
 const columns = [
   {

@@ -1,11 +1,12 @@
+import axios from 'axios'
+
 import { useEffect, useState, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
+import { InputText, Password, Button, Panel } from 'openpype-components'
 
-import axios from 'axios'
-import { login } from '../features/user'
+import { login } from '/src/features/user'
 
-import { InputText, Password, Button, Panel } from '/src/components'
 import OAuth2ProviderIcon from '/src/components/oauthIcons'
 
 const constructOAuth2Url = (url, clientId, redirectUri, scope) => {

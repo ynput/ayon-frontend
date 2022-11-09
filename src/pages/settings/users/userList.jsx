@@ -15,7 +15,7 @@ import {
   Section,
   Panel,
   Toolbar,
-} from '/src/components'
+} from 'openpype-components'
 import NewUserDialog from './newUserDialog'
 import axios from 'axios'
 

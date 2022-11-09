@@ -6,7 +6,7 @@ import axios from 'axios'
 
 import AttributeTable from '/src/containers/attributeTable'
 import { getTaskTypeIcon } from '/src/utils'
-import { Panel } from '/src/components'
+import { Panel } from 'openpype-components'
 
 const TASK_QUERY = `
     query Tasks($projectName: String!, $tasks: [String!]!) {

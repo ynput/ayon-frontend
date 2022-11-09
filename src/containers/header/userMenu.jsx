@@ -1,12 +1,11 @@
+import axios from 'axios'
+
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { Button, Spacer } from 'openpype-components'
 import { Sidebar } from 'primereact/sidebar'
-import { Button } from '/src/components'
-import axios from 'axios'
-
-import { Spacer } from '../../components'
-import { logout } from '../../features/user'
+import { logout } from '/src/features/user'
 
 const UserMenu = ({ visible, onHide }) => {
   const dispatch = useDispatch()

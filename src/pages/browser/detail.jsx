@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { Spacer, Section, Toolbar } from '/src/components'
+import { Spacer, Section, Toolbar } from 'openpype-components'
 
 import FolderDetail from './folderDetail'
 import VersionDetail from './versionDetail'

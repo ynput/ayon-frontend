@@ -1,7 +1,8 @@
+import axios from 'axios'
+
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Spacer, Section, Toolbar, Panel } from '/src/components'
-import axios from 'axios'
+import { Button, Spacer, Section, Toolbar, Panel } from 'openpype-components'
 import { isEmpty } from '/src/utils'
 import { UserAttrib, AccessControl } from './forms'
 

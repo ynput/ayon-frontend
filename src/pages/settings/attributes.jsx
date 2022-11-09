@@ -17,7 +17,7 @@ import {
   Section,
   Panel,
   Toolbar,
-} from '/src/components'
+} from 'openpype-components'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },

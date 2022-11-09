@@ -1,10 +1,11 @@
 import axios from 'axios'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { Section, Panel, TableWrapper } from 'openpype-components'
+
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
-import { Section, Panel, TableWrapper } from '/src/components'
 
 const AddonList = ({
   selectedAddons,

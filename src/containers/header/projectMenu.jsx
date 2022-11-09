@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
+import { Button } from 'openpype-components'
 
-import { Button } from '/src/components'
 import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
 

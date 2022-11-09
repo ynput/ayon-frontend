@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
-import { Panel } from '/src/components/layout'
+import { Panel } from 'openpype-components'
 
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'

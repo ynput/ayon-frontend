@@ -1,5 +1,8 @@
 $field-gap: 8px
 
+.form-field
+  flex-grow: 1
+
 .form-inline-field-help, .form-object-field-help
   display: none
 
@@ -96,9 +99,10 @@ $field-gap: 8px
     display: flex
     flex-grow: 1
     flex-direction: row
-    align-items: top
+    align-items: flex-start
     justify-content: left
-    gap: 3px
+    gap: 6px
+    padding-right: 2px // fix for right outline
 
     .form-inline-field-label
       flex-basis: 200px
@@ -112,39 +116,24 @@ $field-gap: 8px
         color: var(--color-hl-changed)
 
       span
-        display: block
+        display: flex
+        align-items: center
+        justify-content: flex-end
         width: 100%
-        height: 34px
+        height: var(--base-input-size)
         background-color: transparent
         white-space: nowrap
-        padding: 0.5rem
         font-weight: bold
-        text-align: right
-        border: 1px solid transparent
 
 
     .form-inline-field-widget
+      flex-grow: 1
+      display: flex
+      flex-direction: row
       &.left-border
         border-left: 1px dashed #434a56 !important
         padding-left: 6px
 
-      flex-grow: 1
-      >:not(.p-inputswitch)
-        width: 100%
-
-      .p-inputswitch
-        margin-top: 0.5rem
-        margin-left: 10px
-
-      .p-inputtext :not(.p-inputtextarea)
-        height: 34px
-
-      .p-dropdown
-        .p-inputtext
-          height: 32px
-
-      .p-inputtextarea
-        font-family: monospace
 
     .form-inline-field-help
       min-width: 20%
@@ -155,11 +144,12 @@ $field-gap: 8px
         padding: 0.6rem
         
     &.error
-      color: red
+      color: var(--color-hl-error, red)
     
   // ARRAYS
 
   .form-array-field
+    flex-grow: 1
     display: flex
     flex-direction: column
     gap: $field-gap
@@ -177,24 +167,11 @@ $field-gap: 8px
 
   // BUTTONS
 
-  .settings-add-button
-    display: flex
-    flex-direction: row
-    justify-content: left
-    margin-bottom: 1rem 0
-
   .array-item-controls
     display: flex
     flex-direction: row
     align-items: flex-start
     gap: 4px
-
-  .array-item-controls button, .settings-add-button button
-      width: 2rem
-      height: 2rem
-      border-radius: 50%
-      border: 1px solid #434a56 !important
-      margin-top: 4px
 
   // Prime theme overrides
 

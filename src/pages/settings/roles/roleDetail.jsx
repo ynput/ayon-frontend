@@ -8,7 +8,7 @@ import {
   Panel,
   Toolbar,
   ScrollArea,
-} from '/src/components'
+} from 'openpype-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const RoleDetail = ({ projectName, role, onChange }) => {

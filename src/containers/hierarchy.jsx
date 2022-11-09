@@ -1,15 +1,21 @@
+import axios from 'axios'
+
 import { useState, useEffect, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
+import {
+  Shade,
+  Section,
+  Panel,
+  Toolbar,
+  InputText,
+  TableWrapper,
+} from 'openpype-components'
 
-import axios from 'axios'
-
-import { InputText } from 'primereact/inputtext'
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 
-import { Shade, Section, Panel, Toolbar, TableWrapper } from '/src/components'
 import { CellWithIcon } from '/src/components/icons'
 
 import {
@@ -202,16 +208,13 @@ const Hierarchy = ({
   return (
     <Section style={style}>
       <Toolbar>
-        <span className="p-input-icon-left" style={{ flexGrow: 1 }}>
-          <i className="pi pi-search" />
-          <InputText
-            style={{ width: '100%' }}
-            placeholder="Filter folders..."
-            disabled={!projectName || loading}
-            value={query}
-            onChange={(evt) => setQuery(evt.target.value)}
-          />
-        </span>
+        <InputText
+          style={{ flexGrow: 1 }}
+          placeholder="Filter folders..."
+          disabled={!projectName || loading}
+          value={query}
+          onChange={(evt) => setQuery(evt.target.value)}
+        />
 
         <MultiSelect
           value={selectedFolderTypes}
@@ -222,9 +225,7 @@ const Hierarchy = ({
           disabled={!projectName || loading}
           selectedItemTemplate={selectedTypeTemplate}
           onChange={(e) => setSelectedFolderTypes(e.value)}
-          style={{
-            flexBasis: '40%',
-          }}
+          style={{ flexBasis: '40%' }}
         />
       </Toolbar>
 

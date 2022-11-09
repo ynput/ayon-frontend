@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
-import { InputText } from 'primereact/inputtext'
-import { InputTextarea } from 'primereact/inputtextarea'
+import { InputText, InputTextarea, InputSwitch } from 'openpype-components'
+
 import { InputNumber } from 'primereact/inputnumber'
-import { InputSwitch } from 'primereact/inputswitch'
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 
@@ -85,7 +84,9 @@ const SelectWidget = (props) => {
           value={value}
           onChange={onChange}
           onFocus={onFocus}
-          className={props.rawErrors?.length ? 'p-invalid' : ''}
+          className={`form-field ${
+            props.rawErrors?.length ? 'p-invalid error' : ''
+          }`}
         />
       </>
     )
@@ -102,7 +103,9 @@ const SelectWidget = (props) => {
       optionValue="value"
       tooltip={tooltip.join('\n')}
       tooltipOptions={{ position: 'bottom' }}
-      className={props.rawErrors?.length ? 'p-invalid' : ''}
+      className={`form-field ${
+        props.rawErrors?.length ? 'p-invalid error' : ''
+      }`}
     />
   )
 }
@@ -157,7 +160,9 @@ const TextWidget = (props) => {
 
   return (
     <Input
-      className={props.rawErrors?.length ? 'p-invalid' : ''}
+      className={`form-field ${
+        props.rawErrors?.length ? 'p-invalid error' : ''
+      }`}
       value={value}
       onBlur={props.onBlur}
       onFocus={onFocus}

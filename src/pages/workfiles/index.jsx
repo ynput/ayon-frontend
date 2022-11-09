@@ -1,5 +1,4 @@
 import axios from 'axios'
-import pypeClient from '/src/pype'
 
 import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
@@ -7,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { Section, Panel, TableWrapper } from '/src/components'
+import { Section, Panel, TableWrapper } from 'openpype-components'
 import { CellWithIcon } from '/src/components/icons'
 
 import Hierarchy from '/src/containers/hierarchy'

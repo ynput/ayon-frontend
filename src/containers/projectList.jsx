@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import axios from 'axios'
 
-import { TableWrapper, Section, Panel } from '/src/components'
+import { useState, useEffect, useMemo } from 'react'
+import { TableWrapper, Section, Panel } from 'openpype-components'
+
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-
-import axios from 'axios'
 
 const formatName = (rowData, defaultTitle) => {
   if (rowData.name === '_') return defaultTitle

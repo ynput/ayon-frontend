@@ -3,12 +3,7 @@ import axios from 'axios'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import PubSub from '/src/pubsub'
 
-import { TreeTable } from 'primereact/treetable'
-import { Column } from 'primereact/column'
-import { InputSwitch } from 'primereact/inputswitch'
-import { ContextMenu } from 'primereact/contextmenu'
 import {
   Shade,
   Spacer,
@@ -17,8 +12,14 @@ import {
   Toolbar,
   Panel,
   TableWrapper,
-} from '/src/components'
+  InputSwitch,
+} from 'openpype-components'
 
+import { TreeTable } from 'primereact/treetable'
+import { Column } from 'primereact/column'
+import { ContextMenu } from 'primereact/contextmenu'
+
+import PubSub from '/src/pubsub'
 import { isEmpty, sortByKey } from '/src/utils'
 
 import {

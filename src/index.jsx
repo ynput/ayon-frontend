@@ -12,12 +12,11 @@ import contextReducer from './features/context'
 import App from './app'
 
 import 'react-toastify/dist/ReactToastify.css'
-import 'primereact/resources/themes/arya-blue/theme.css'
 import 'primereact/resources/primereact.min.css'
 import 'primeicons/primeicons.css'
+import 'openpype-components/dist/style.css'
 
 import './styles/index.sass'
-import './styles/primetheme.sass'
 
 const store = configureStore({
   reducer: {

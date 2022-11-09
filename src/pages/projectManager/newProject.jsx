@@ -4,7 +4,7 @@ import { Dropdown } from 'primereact/dropdown'
 import { toast } from 'react-toastify'
 
 import axios from 'axios'
-import { Button, Spacer, InputText } from '/src/components'
+import { Button, Spacer, InputText, Toolbar } from 'openpype-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 import { loadAnatomyPresets } from '/src/utils'
 
@@ -91,12 +91,7 @@ const NewProjectDialog = ({ onHide }) => {
   const footer = (
     <div style={{}}>
       <Spacer />
-      <Button
-        label="Create"
-        className="p-button-info"
-        onClick={handleSubmit}
-        style={{ width: 120 }}
-      />
+      <Button icon="add" label="Create" onClick={handleSubmit} />
     </div>
   )
 
@@ -117,25 +112,18 @@ const NewProjectDialog = ({ onHide }) => {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
+          gap: 8,
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            gap: 8,
-            marginBottom: 8,
-          }}
-        >
+        <Toolbar>
           <InputText
             placeholder="Project Name"
-            style={{ width: '100%' }}
+            style={{ flexGrow: 1 }}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <InputText
             placeholder="Project code"
-            style={{}}
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
@@ -144,7 +132,7 @@ const NewProjectDialog = ({ onHide }) => {
             setSelectedPreset={setSelectedPreset}
             tooltip="Project anatomy preset"
           />
-        </div>
+        </Toolbar>
         {editor}
       </div>
     </Dialog>

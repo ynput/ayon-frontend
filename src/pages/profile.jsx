@@ -11,7 +11,7 @@ import {
   Button,
   Section,
   Panel,
-} from '/src/components'
+} from 'openpype-components'
 
 const SessionItem = ({ session, userName, onChange }) => {
   const invalidate = () => {
@@ -25,7 +25,7 @@ const SessionItem = ({ session, userName, onChange }) => {
   }
 
   return (
-    <Panel size={1}>
+    <Panel>
       {session.token}{' '}
       {session.token === localStorage.getItem('accessToken') &&
         '(this session)'}
@@ -127,7 +127,7 @@ const ProfilePage = () => {
     <main>
       <Section style={{ maxWidth: 400 }}>
         <h2>Basic information</h2>
-        <Panel size={1}>
+        <Panel>
           <FormLayout>
             <FormRow label="User name">
               <InputText value={userData.name} disabled={true} />
@@ -156,7 +156,7 @@ const ProfilePage = () => {
 
         <h2>Change password</h2>
 
-        <Panel size={1}>
+        <Panel>
           <FormLayout>
             <FormRow label="New password">
               <Password

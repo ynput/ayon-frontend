@@ -9,10 +9,12 @@ import {
   InputText,
   Spacer,
   Shade,
-  ToolButton,
+  Button,
   TableWrapper,
-} from '/src/components'
-import { Section, Toolbar, Panel } from '/src/components/layout'
+  Section,
+  Toolbar,
+  Panel,
+} from 'openpype-components'
 import { CellWithIcon } from '/src/components/icons'
 
 import { TreeTable } from 'primereact/treetable'
@@ -251,26 +253,7 @@ const Subsets = ({
   return (
     <Section className="wrap">
       <Toolbar>
-        <span className="p-input-icon-left">
-          <i className="pi pi-search" />
-          <InputText
-            style={{ width: '200px' }}
-            placeholder="Filter subsets..."
-          />
-        </span>
-        <ToolButton
-          icon="compare_arrows"
-          tooltip="Mockup button"
-          disabled={false}
-          tooltipOptions={{ position: 'bottom' }}
-        />
-        <ToolButton
-          icon="settings"
-          tooltip="Mockup button"
-          disabled={true}
-          tooltipOptions={{ position: 'bottom' }}
-        />
-        <Spacer />
+        <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
       </Toolbar>
 
       <Panel className="nopad">

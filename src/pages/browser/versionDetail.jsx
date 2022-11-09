@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 
 import { getFamilyIcon } from '/src/utils'
-import { Panel } from '/src/components'
+import { Panel } from 'openpype-components'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
 

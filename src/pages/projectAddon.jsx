@@ -1,6 +1,6 @@
 import { useRef, useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Section } from '/src/components'
+import { Section } from 'openpype-components'
 
 import Hierarchy from '/src/containers/hierarchy'
 
@@ -40,7 +40,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
           folderTypes={folderTypes}
           focusedFolders={focusedFolders}
           expandedFolders={expandedFolders}
-          size={500}
+          style={{ maxWidth: 500, minWidth: 300 }}
         />
       )
     } else {

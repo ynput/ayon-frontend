@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams, NavLink } from 'react-router-dom'
 
-import { Button, Toolbar } from '/src/components'
+import { Button, Toolbar } from 'openpype-components'
 import ProjectList from '/src/containers/projectList'
 
 import ProjectStats from './stats'

@@ -10,8 +10,7 @@ import {
   Panel,
   Toolbar,
   ScrollArea,
-  ToolButton,
-} from '/src/components'
+} from 'openpype-components'
 
 import AddonList from '/src/containers/addonList'
 import AddonSettingsPanel from './addonSettingsPanel'
@@ -155,16 +154,11 @@ const AddonSettings = ({ projectName }) => {
   )
 
   const settingsListHeader = useMemo(() => {
-    console.log(
-      'RENDERING SETTINGS LIST HEADER',
-      currentSelection,
-      localOverrides
-    )
     return (
       <Toolbar>
-        <ToolButton icon="content_copy" disabled={true} />
-        <ToolButton icon="content_paste" disabled={true} />
-        <ToolButton
+        <Button icon="content_copy" disabled={true} />
+        <Button icon="content_paste" disabled={true} />
+        <Button
           icon="push_pin"
           tooltip="Pin default value as an override"
           disabled={
@@ -178,7 +172,7 @@ const AddonSettings = ({ projectName }) => {
             pinOverride(currentSelection.addon, currentSelection.path)
           }
         />
-        <ToolButton
+        <Button
           icon="lock_reset"
           tooltip="Remove override from the selected field"
           disabled={
@@ -200,7 +194,7 @@ const AddonSettings = ({ projectName }) => {
           )}
         </Spacer>
 
-        <ToolButton
+        <Button
           onClick={() => {
             setShowHelp(!showHelp)
           }}

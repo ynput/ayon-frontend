@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
-import { Section, ScrollArea, Toolbar, Button } from '/src/components'
+import { Section, ScrollArea, Toolbar, Button } from 'openpype-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const ProjectAnatomy = ({ projectName }) => {

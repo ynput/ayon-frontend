@@ -13,7 +13,7 @@ import {
   Section,
   Panel,
   Toolbar,
-} from '/src/components'
+} from 'openpype-components'
 import axios from 'axios'
 
 const NewRoleDialog = ({ onClose, rolesList }) => {
@@ -65,7 +65,7 @@ const NewRoleDialog = ({ onClose, rolesList }) => {
       footer={footer}
       onHide={onClose}
       visible={true}
-      style={{ width: 300 }}
+      style={{ width: 500 }}
     >
       <FormLayout>
         <FormRow label="Role name">

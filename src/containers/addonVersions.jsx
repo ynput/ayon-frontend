@@ -1,5 +1,5 @@
 import { Dropdown } from 'primereact/dropdown'
-import { Spacer, Button, Toolbar, Panel } from '/src/components'
+import { Spacer, Button, Toolbar, Panel } from 'openpype-components'
 
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'

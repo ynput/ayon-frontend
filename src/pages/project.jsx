@@ -1,10 +1,11 @@
+import axios from 'axios'
+
 import { useState, useEffect } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import axios from 'axios'
+import { Spacer, Button } from 'openpype-components'
 
 import { Dialog } from 'primereact/dialog'
-import { Spacer, Button } from '../components'
 
 import BrowserPage from './browser'
 import EditorPage from './editor'
@@ -144,8 +145,8 @@ const ProjectPage = () => {
         ))}
         <Spacer />
         <Button
-          className="p-button-link"
-          icon="settings"
+          className="transparent"
+          icon="more_horiz"
           onClick={() => {
             setShowContextDialog(true)
           }}

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { LinkButton } from '../../components'
+import { Button } from 'openpype-components'
 import { toast } from 'react-toastify'
 
 const Breadcrumbs = () => {
@@ -81,13 +81,14 @@ const Breadcrumbs = () => {
         ))}
       </ul>
 
-      <LinkButton
+      <Button
         icon="content_copy"
-        className="breadcrumbs-copy-button"
+        className="transparent"
         onClick={copyURI}
         tooltip="Copy URI to clipboard"
         tooltipPosition="bottom"
         disabled={!breadcrumbs}
+        style={{ marginLeft: 10 }}
       />
     </div>
   )

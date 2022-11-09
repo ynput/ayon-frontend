@@ -1,11 +1,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { Shade, Panel, TableWrapper, Section } from 'openpype-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { Shade, Panel, TableWrapper, Section } from '/src/components'
-import { CellWithIcon } from '/src/components/icons'
 
+import { CellWithIcon } from '/src/components/icons'
 import { setFocusedTasks, setPairing } from '/src/features/context'
 import { groupResult, getTaskTypeIcon } from '/src/utils'
 

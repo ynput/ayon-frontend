@@ -1,4 +1,4 @@
-import { Shade } from '../components'
+import { Shade } from 'openpype-components'
 
 const LoadingPage = () => {
   return (
