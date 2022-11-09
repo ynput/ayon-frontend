@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { Panel, Toolbar, TableWrapper } from 'openpype-components'
+import { Toolbar, TablePanel } from 'openpype-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -73,26 +73,24 @@ const RepresentationList = ({ representations }) => {
       <Toolbar>
         <span className="section-header">Representations</span>
       </Toolbar>
-      <Panel className="nopad">
-        <TableWrapper>
-          <TreeTable
-            scrollable="true"
-            scrollHeight="100%"
-            value={data}
-            emptyMessage="No representation found"
-            selectionMode="single"
-            selectionKeys={selectedRepresentation}
-            onSelectionChange={(e) => setSelectedRepresentation(e.value)}
-            onRowClick={onRowClick}
-          >
-            {columns.map((col) => {
-              return (
-                <Column {...col} key={col.field} style={{ width: col.width }} />
-              )
-            })}
-          </TreeTable>
-        </TableWrapper>
-      </Panel>
+      <TablePanel>
+        <TreeTable
+          scrollable="true"
+          scrollHeight="100%"
+          value={data}
+          emptyMessage="No representation found"
+          selectionMode="single"
+          selectionKeys={selectedRepresentation}
+          onSelectionChange={(e) => setSelectedRepresentation(e.value)}
+          onRowClick={onRowClick}
+        >
+          {columns.map((col) => {
+            return (
+              <Column {...col} key={col.field} style={{ width: col.width }} />
+            )
+          })}
+        </TreeTable>
+      </TablePanel>
     </>
   )
 }

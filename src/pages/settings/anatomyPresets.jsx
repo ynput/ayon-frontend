@@ -14,10 +14,9 @@ import {
   Spacer,
   Button,
   Section,
-  Panel,
   Toolbar,
-  TableWrapper,
-  ScrollArea,
+  TablePanel,
+  ScrollPanel,
 } from 'openpype-components'
 import { loadAnatomyPresets } from '/src/utils'
 
@@ -55,7 +54,7 @@ const PresetList = ({
   }, [selectedPreset, presetList])
 
   return (
-    <TableWrapper>
+    <TablePanel>
       <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <DataTable
         value={presetList}
@@ -73,7 +72,7 @@ const PresetList = ({
         <Column field="primary" header="Primary" style={{ maxWidth: 70 }} />
         <Column field="version" header="Version" style={{ maxWidth: 80 }} />
       </DataTable>
-    </TableWrapper>
+    </TablePanel>
   )
 }
 
@@ -204,16 +203,14 @@ const AnatomyPresets = () => {
       )}
 
       <Section style={{ maxWidth: 600 }}>
-        <Panel className="nopad">
-          <PresetList
-            selectedPreset={selectedPreset}
-            setSelectedPreset={setSelectedPreset}
-            timestamp={presetListTimestamp}
-            onSetPrimary={setPrimaryPreset}
-            onUnsetPrimary={unsetPrimaryPreset}
-            onDelete={deletePreset}
-          />
-        </Panel>
+        <PresetList
+          selectedPreset={selectedPreset}
+          setSelectedPreset={setSelectedPreset}
+          timestamp={presetListTimestamp}
+          onSetPrimary={setPrimaryPreset}
+          onUnsetPrimary={unsetPrimaryPreset}
+          onDelete={deletePreset}
+        />
       </Section>
 
       <Section>
@@ -246,9 +243,13 @@ const AnatomyPresets = () => {
           <Spacer />
         </Toolbar>
 
-        <Panel className="transparent">
-          <ScrollArea>{editor}</ScrollArea>
-        </Panel>
+        <ScrollPanel
+          style={{ flexGrow: 1 }}
+          scrollStyle={{ padding: 0 }}
+          className="transparent"
+        >
+          {editor}
+        </ScrollPanel>
       </Section>
     </main>
   )

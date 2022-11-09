@@ -83,12 +83,11 @@ const Breadcrumbs = () => {
 
       <Button
         icon="content_copy"
-        className="transparent"
+        className="transparent copy-uri-button"
         onClick={copyURI}
         tooltip="Copy URI to clipboard"
         tooltipPosition="bottom"
         disabled={!breadcrumbs}
-        style={{ marginLeft: 10 }}
       />
     </div>
   )

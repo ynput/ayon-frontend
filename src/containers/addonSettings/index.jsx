@@ -9,7 +9,7 @@ import {
   Section,
   Panel,
   Toolbar,
-  ScrollArea,
+  ScrollPanel,
 } from 'openpype-components'
 
 import AddonList from '/src/containers/addonList'
@@ -219,7 +219,7 @@ const AddonSettings = ({ projectName }) => {
       <Section className={showHelp && 'settings-help-visible'}>
         {settingsListHeader}
         <Section>
-          <ScrollArea>
+          <ScrollPanel className="transparent nopad" style={{flexGrow: 1}} scrollStyle={{padding:0}}>
             {selectedAddons
               .filter((addon) => addon.version)
               .reverse()
@@ -252,7 +252,7 @@ const AddonSettings = ({ projectName }) => {
               ))}
 
             <Spacer />
-          </ScrollArea>
+          </ScrollPanel>
         </Section>
       </Section>
 
@@ -266,8 +266,7 @@ const AddonSettings = ({ projectName }) => {
           />
           <Button label="Save changes" icon="check" onClick={onSave} />
         </Toolbar>
-        <Panel>
-          <ScrollArea>
+          <ScrollPanel style={{flexGrow: 1}}>
             <h3>Form data</h3>
             <pre style={{ width: '100%', flexGrow: 1 }}>
               {JSON.stringify(localData, null, 2)}
@@ -276,8 +275,7 @@ const AddonSettings = ({ projectName }) => {
             <pre style={{ width: '100%', flexGrow: 1 }}>
               {JSON.stringify(localOverrides, null, 2)}
             </pre>
-          </ScrollArea>
-        </Panel>
+          </ScrollPanel>
       </Section>
     </>
   )

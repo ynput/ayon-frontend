@@ -8,14 +8,13 @@ import { MultiSelect } from 'primereact/multiselect'
 import { Dropdown } from 'primereact/dropdown'
 
 import {
-  TableWrapper,
+  TablePanel,
   Button,
   Spacer,
   FormLayout,
   FormRow,
   InputText,
   Section,
-  Panel,
   Toolbar,
 } from 'openpype-components'
 
@@ -252,53 +251,47 @@ const Attributes = () => {
             onClick={onDelete}
           />
         </Toolbar>
-        <Panel className="nopad">
-          <TableWrapper>
-            <DataTable
-              scrollable="true"
-              scrollHeight="flex"
-              dataKey="name"
-              value={attributes}
-              reorderableRows
-              onRowReorder={onRowReorder}
-              loading={loading}
-              selectionMode="single"
-              selection={selectedAttribute}
-              onSelectionChange={(e) => setSelectedAttribute(e.value)}
-              onRowDoubleClick={() => setShowEditor(true)}
-            >
-              <Column rowReorder style={{ maxWidth: 30 }} />
-              <Column field="name" header="Name" style={{ maxWidth: 130 }} />
-              <Column
-                field="data.title"
-                header="Title"
-                style={{ maxWidth: 130 }}
-              />
-              <Column
-                field="builtIn"
-                header=""
-                style={{ maxWidth: 60 }}
-                body={renderBuiltIn}
-              />
-              <Column
-                header="Scopes"
-                body={(rowData) => rowData.scope.join(', ')}
-                style={{ maxWidth: 330 }}
-              />
-              <Column
-                field="data.type"
-                header="Type"
-                style={{ maxWidth: 150 }}
-              />
-              <Column
-                field="data.example"
-                header="Example"
-                style={{ maxWidth: 200 }}
-              />
-              <Column field="data.description" header="Description" />
-            </DataTable>
-          </TableWrapper>
-        </Panel>
+        <TablePanel>
+          <DataTable
+            scrollable="true"
+            scrollHeight="flex"
+            dataKey="name"
+            value={attributes}
+            reorderableRows
+            onRowReorder={onRowReorder}
+            loading={loading}
+            selectionMode="single"
+            selection={selectedAttribute}
+            onSelectionChange={(e) => setSelectedAttribute(e.value)}
+            onRowDoubleClick={() => setShowEditor(true)}
+          >
+            <Column rowReorder style={{ maxWidth: 30 }} />
+            <Column field="name" header="Name" style={{ maxWidth: 130 }} />
+            <Column
+              field="data.title"
+              header="Title"
+              style={{ maxWidth: 130 }}
+            />
+            <Column
+              field="builtIn"
+              header=""
+              style={{ maxWidth: 60 }}
+              body={renderBuiltIn}
+            />
+            <Column
+              header="Scopes"
+              body={(rowData) => rowData.scope.join(', ')}
+              style={{ maxWidth: 330 }}
+            />
+            <Column field="data.type" header="Type" style={{ maxWidth: 150 }} />
+            <Column
+              field="data.example"
+              header="Example"
+              style={{ maxWidth: 200 }}
+            />
+            <Column field="data.description" header="Description" />
+          </DataTable>
+        </TablePanel>
       </Section>
     </main>
   )

@@ -152,7 +152,7 @@ const LoginPage = () => {
   return (
     <main className="center">
       <h1>OpenPype server</h1>
-      <Panel size={1}>
+      <Panel>
         <InputText
           ref={loginRef}
           placeholder="Username"

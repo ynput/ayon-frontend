@@ -22,30 +22,6 @@
       gap: 12
 
 
-// Scrollbars
-
-::-webkit-scrollbar
-  width: 20px
-  height: 20px
-
-::-webkit-scrollbar-track, ::-webkit-scrollbar-corner
-  background-color: transparent
-
-::-webkit-scrollbar-thumb
-  background-color: var(--color-grey-03)
-  border-radius: 20px
-  border: 6px solid transparent
-  background-clip: content-box
-
-  &:hover
-    background-color: var(--color-grey-04)
-
-// Icon font
-
-.material-symbols-outlined
-  color: var(--color-icon)
-  font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 20
-
 // Navigation
 
 nav.primary 
@@ -230,14 +206,9 @@ input:-webkit-autofill, input:-webkit-autofill:focus
   &>li
     font-size: 1em !important
       
-.breadcrumbs-copy-button
-  margin-left: 8px
-  .icon
-    margin-top: 4px
-    font-size: 1.4rem
-  &:focus
-    outline: none !important
-    box-shadow: none !important    
+.copy-uri-button
+  .material-symbols-outlined
+    font-size: 1.2em !important
   
 //
 // Highlights

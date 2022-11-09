@@ -7,13 +7,10 @@ import axios from 'axios'
 
 import {
   InputText,
-  Spacer,
   Shade,
-  Button,
-  TableWrapper,
+  TablePanel,
   Section,
   Toolbar,
-  Panel,
 } from 'openpype-components'
 import { CellWithIcon } from '/src/components/icons'
 
@@ -256,36 +253,34 @@ const Subsets = ({
         <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
       </Toolbar>
 
-      <Panel className="nopad">
-        <TableWrapper>
-          {loading && <Shade />}
-          <TreeTable
-            responsive="true"
-            scrollHeight="100%"
-            scrollable="true"
-            resizableColumns
-            columnResizeMode="expand"
-            value={tableData}
-            emptyMessage="No subset found"
-            selectionMode="multiple"
-            selectionKeys={selectedRows}
-            onSelectionChange={onSelectionChange}
-            onRowClick={onRowClick}
-          >
-            {columns.map((col, i) => {
-              return (
-                <Column
-                  {...col}
-                  key={col.field}
-                  style={{ width: col.width }}
-                  expander={i === 0}
-                  resizeable={true}
-                />
-              )
-            })}
-          </TreeTable>
-        </TableWrapper>
-      </Panel>
+      <TablePanel>
+        {loading && <Shade />}
+        <TreeTable
+          responsive="true"
+          scrollHeight="100%"
+          scrollable="true"
+          resizableColumns
+          columnResizeMode="expand"
+          value={tableData}
+          emptyMessage="No subset found"
+          selectionMode="multiple"
+          selectionKeys={selectedRows}
+          onSelectionChange={onSelectionChange}
+          onRowClick={onRowClick}
+        >
+          {columns.map((col, i) => {
+            return (
+              <Column
+                {...col}
+                key={col.field}
+                style={{ width: col.width }}
+                expander={i === 0}
+                resizeable={true}
+              />
+            )
+          })}
+        </TreeTable>
+      </TablePanel>
     </Section>
   )
 }

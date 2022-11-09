@@ -10,8 +10,7 @@ import {
   Button,
   Section,
   Toolbar,
-  Panel,
-  TableWrapper,
+  TablePanel,
   InputSwitch,
 } from 'openpype-components'
 
@@ -644,99 +643,90 @@ const EditorPage = () => {
             disabled={!canCommit}
           />
         </Toolbar>
-        <Panel className="nopad">
-          <TableWrapper>
-            {loading && <Shade />}
-            <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-            <TreeTable
-              responsive="true"
-              scrollable
-              scrollHeight="100%"
-              value={treeData}
-              resizableColumns
-              columnResizeMode="expand"
-              expandedKeys={context.expandedFolders}
-              onToggle={onToggle}
-              selectionMode="multiple"
-              selectionKeys={currentSelection}
-              onSelectionChange={onSelectionChange}
-              onRowClick={onRowClick}
-              rowClassName={(rowData) => {
-                return {
-                  changed:
-                    rowData.key in changes || rowData.key.startsWith('newnode'),
-                  deleted:
-                    rowData.key in changes &&
-                    changes[rowData.key]?.__action == 'delete',
-                }
-              }}
-              selectOnEdit={false}
-              onContextMenu={(e) =>
-                contextMenuRef.current.show(e.originalEvent)
+        <TablePanel>
+          {loading && <Shade />}
+          <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+          <TreeTable
+            responsive="true"
+            scrollable
+            scrollHeight="100%"
+            value={treeData}
+            resizableColumns
+            columnResizeMode="expand"
+            expandedKeys={context.expandedFolders}
+            onToggle={onToggle}
+            selectionMode="multiple"
+            selectionKeys={currentSelection}
+            onSelectionChange={onSelectionChange}
+            onRowClick={onRowClick}
+            rowClassName={(rowData) => {
+              return {
+                changed:
+                  rowData.key in changes || rowData.key.startsWith('newnode'),
+                deleted:
+                  rowData.key in changes &&
+                  changes[rowData.key]?.__action == 'delete',
               }
-              onContextMenuSelectionChange={onContextMenuSelectionChange}
-            >
-              <Column
-                field="name"
-                header="Name"
-                expander={true}
-                body={(rowData) => formatName(rowData.data, changes)}
-                style={{ width: 300 }}
-                editor={(options) => {
-                  return stringEditor(
-                    options,
-                    updateName,
-                    formatName(options.rowData, changes, false)
-                  )
-                }}
-              />
-              <Column
-                field="type"
-                header="Type"
-                body={(rowData) => formatType(rowData.data, changes)}
-                style={{ width: 200 }}
-                editor={(options) => {
-                  return typeEditor(
-                    options,
-                    updateType,
-                    formatType(options.rowData, changes, false)
-                  )
-                }}
-              />
-              {columns.map((col) => {
-                return (
-                  <Column
-                    key={col.name}
-                    header={col.title}
-                    field={col.name}
-                    style={{ minWidth: 30 }}
-                    body={(rowData) =>
-                      formatAttribute(rowData.data, changes, col.name)
-                    }
-                    editor={(options) => {
-                      return col.editor(
-                        options,
-                        updateAttribute,
-                        formatAttribute(
-                          options.rowData,
-                          changes,
-                          col.name,
-                          false
-                        )
-                      )
-                    }}
-                  />
+            }}
+            selectOnEdit={false}
+            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+          >
+            <Column
+              field="name"
+              header="Name"
+              expander={true}
+              body={(rowData) => formatName(rowData.data, changes)}
+              style={{ width: 300 }}
+              editor={(options) => {
+                return stringEditor(
+                  options,
+                  updateName,
+                  formatName(options.rowData, changes, false)
                 )
-              })}
-              <Column
-                field="error"
-                header=""
-                body={(rowData) => formatError(rowData.data)}
-                style={{ width: 24 }}
-              />
-            </TreeTable>
-          </TableWrapper>
-        </Panel>
+              }}
+            />
+            <Column
+              field="type"
+              header="Type"
+              body={(rowData) => formatType(rowData.data, changes)}
+              style={{ width: 200 }}
+              editor={(options) => {
+                return typeEditor(
+                  options,
+                  updateType,
+                  formatType(options.rowData, changes, false)
+                )
+              }}
+            />
+            {columns.map((col) => {
+              return (
+                <Column
+                  key={col.name}
+                  header={col.title}
+                  field={col.name}
+                  style={{ minWidth: 30 }}
+                  body={(rowData) =>
+                    formatAttribute(rowData.data, changes, col.name)
+                  }
+                  editor={(options) => {
+                    return col.editor(
+                      options,
+                      updateAttribute,
+                      formatAttribute(options.rowData, changes, col.name, false)
+                    )
+                  }}
+                />
+              )
+            })}
+            <Column
+              field="error"
+              header=""
+              body={(rowData) => formatError(rowData.data)}
+              style={{ width: 24 }}
+            />
+          </TreeTable>
+        </TablePanel>
       </Section>
     </main>
   )

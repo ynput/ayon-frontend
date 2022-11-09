@@ -6,14 +6,13 @@ import { ContextMenu } from 'primereact/contextmenu'
 import { Dialog } from 'primereact/dialog'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import {
-  TableWrapper,
+  TablePanel,
   Button,
   InputText,
   Password,
   FormLayout,
   FormRow,
   Section,
-  Panel,
   Toolbar,
 } from 'openpype-components'
 import NewUserDialog from './newUserDialog'
@@ -367,47 +366,45 @@ const UserList = ({
         />
       )}
 
-      <Panel className="nopad">
-        <TableWrapper>
-          <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-          <DataTable
-            value={userList}
-            scrollable="true"
-            scrollHeight="flex"
-            dataKey="name"
-            loading={loading}
-            selectionMode="multiple"
-            onSelectionChange={onSelectionChange}
-            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-            onContextMenuSelectionChange={(e) => {
-              if (!selectedUsers.includes(e.value.name)) {
-                onSelectUsers([...selection, e.value.name])
-              }
-              setLastSelectedUser(e.data)
-            }}
-            selection={selection}
-            onRowClick={(e) => {
-              setLastSelectedUser(e.data)
-            }}
-          >
-            <Column field="name" header="Name" />
-            <Column field="attrib.fullName" header="Full name" />
-            <Column field="attrib.email" header="Email" />
-            <Column
-              header="Roles"
-              body={(rowData) => formatRoles(rowData, selectedProjects)}
-            />
-            <Column
-              header="Has password"
-              body={(rowData) => (rowData.hasPassword ? 'yes' : '')}
-            />
-            <Column
-              header="Active"
-              body={(rowData) => (rowData.active ? 'yes' : '')}
-            />
-          </DataTable>
-        </TableWrapper>
-      </Panel>
+      <TablePanel>
+        <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+        <DataTable
+          value={userList}
+          scrollable="true"
+          scrollHeight="flex"
+          dataKey="name"
+          loading={loading}
+          selectionMode="multiple"
+          onSelectionChange={onSelectionChange}
+          onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+          onContextMenuSelectionChange={(e) => {
+            if (!selectedUsers.includes(e.value.name)) {
+              onSelectUsers([...selection, e.value.name])
+            }
+            setLastSelectedUser(e.data)
+          }}
+          selection={selection}
+          onRowClick={(e) => {
+            setLastSelectedUser(e.data)
+          }}
+        >
+          <Column field="name" header="Name" />
+          <Column field="attrib.fullName" header="Full name" />
+          <Column field="attrib.email" header="Email" />
+          <Column
+            header="Roles"
+            body={(rowData) => formatRoles(rowData, selectedProjects)}
+          />
+          <Column
+            header="Has password"
+            body={(rowData) => (rowData.hasPassword ? 'yes' : '')}
+          />
+          <Column
+            header="Active"
+            body={(rowData) => (rowData.active ? 'yes' : '')}
+          />
+        </DataTable>
+      </TablePanel>
     </Section>
   )
 }

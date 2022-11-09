@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { useState, useEffect, useMemo } from 'react'
-import { TableWrapper, Section, Panel } from 'openpype-components'
+import { TablePanel, Section, Panel } from 'openpype-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -89,28 +89,26 @@ const ProjectList = ({
   return (
     <Section style={{ maxWidth: 400 }}>
       {header}
-      <Panel className="nopad">
-        <TableWrapper>
-          <DataTable
-            value={projectList}
-            scrollable="true"
-            scrollHeight="flex"
-            selectionMode={multiselect ? 'multiple' : 'single'}
-            responsive="true"
-            dataKey="name"
-            selection={selectionObj}
-            onSelectionChange={onSelectionChange}
-            loading={loading}
-          >
-            <Column
-              field="name"
-              header="Project name"
-              body={(rowData) => formatName(rowData, showNull)}
-            />
-            <Column field="code" header="Code" style={{ maxWidth: 80 }} />
-          </DataTable>
-        </TableWrapper>
-      </Panel>
+      <TablePanel>
+        <DataTable
+          value={projectList}
+          scrollable="true"
+          scrollHeight="flex"
+          selectionMode={multiselect ? 'multiple' : 'single'}
+          responsive="true"
+          dataKey="name"
+          selection={selectionObj}
+          onSelectionChange={onSelectionChange}
+          loading={loading}
+        >
+          <Column
+            field="name"
+            header="Project name"
+            body={(rowData) => formatName(rowData, showNull)}
+          />
+          <Column field="code" header="Code" style={{ maxWidth: 80 }} />
+        </DataTable>
+      </TablePanel>
       {footer}
     </Section>
   )

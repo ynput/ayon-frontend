@@ -7,7 +7,7 @@ import {
   Section,
   Panel,
   Toolbar,
-  ScrollArea,
+  ScrollPanel,
 } from 'openpype-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
@@ -91,9 +91,9 @@ const RoleDetail = ({ projectName, role, onChange }) => {
         />
         <Spacer />
       </Toolbar>
-      <Panel className="nopad transparent">
-        <ScrollArea>{editor}</ScrollArea>
-      </Panel>
+      <ScrollPanel className="nopad transparent" scrollStyle={{padding:0}} style={{flexGrow: 1}}>
+        {editor}
+      </ScrollPanel>
     </Section>
   )
 }

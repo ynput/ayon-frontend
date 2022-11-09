@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { Shade, Panel, TableWrapper, Section } from 'openpype-components'
+import { Shade, Panel, TablePanel, Section } from 'openpype-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -129,31 +129,29 @@ const TaskList = ({ style = {} }) => {
 
   return (
     <Section style={style}>
-      <Panel className="nopad">
-        <TableWrapper>
-          {loading && <Shade />}
-          <TreeTable
-            value={data}
-            scrollable="true"
-            scrollHeight="100%"
-            emptyMessage="No tasks found"
-            selectionMode="multiple"
-            selectionKeys={selectedTasks}
-            onSelectionChange={onSelectionChange}
-          >
-            <Column
-              field="name"
-              header="Task"
-              expander="true"
-              body={nameRenderer}
-            />
-            {folderIds.length > 1 && (
-              <Column field="folderName" header="Folder" />
-            )}
-            <Column field="taskType" header="Task type" style={{ width: 90 }} />
-          </TreeTable>
-        </TableWrapper>
-      </Panel>
+      <TablePanel>
+        {loading && <Shade />}
+        <TreeTable
+          value={data}
+          scrollable="true"
+          scrollHeight="100%"
+          emptyMessage="No tasks found"
+          selectionMode="multiple"
+          selectionKeys={selectedTasks}
+          onSelectionChange={onSelectionChange}
+        >
+          <Column
+            field="name"
+            header="Task"
+            expander="true"
+            body={nameRenderer}
+          />
+          {folderIds.length > 1 && (
+            <Column field="folderName" header="Folder" />
+          )}
+          <Column field="taskType" header="Task type" style={{ width: 90 }} />
+        </TreeTable>
+      </TablePanel>
     </Section>
   )
 }

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Section, Panel } from 'openpype-components'
 import ProjectList from '/src/containers/projectList'
 import UserList from './userList'
 import UserDetail from './userDetail'
@@ -14,16 +13,12 @@ const Users = () => {
 
   return (
     <main>
-      <Section style={{ maxWidth: 400 }}>
-        <Panel className="nopad">
-          <ProjectList
-            showNull="( default )"
-            multiselect={true}
-            selection={selectedProjects}
-            onSelect={setSelectedProjects}
-          />
-        </Panel>
-      </Section>
+      <ProjectList
+        showNull="( default )"
+        multiselect={true}
+        selection={selectedProjects}
+        onSelect={setSelectedProjects}
+      />
 
       <UserList
         selectedProjects={selectedProjects}

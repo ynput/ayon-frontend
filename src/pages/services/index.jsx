@@ -6,11 +6,10 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 import {
-  TableWrapper,
+  TablePanel,
   Button,
   Spacer,
   Section,
-  Panel,
   Toolbar,
 } from 'openpype-components'
 import NewServiceDialog from './newService'
@@ -112,42 +111,38 @@ const ServicesPage = () => {
           <Button label="New service" onClick={() => setShowNewService(true)} />
           <Spacer />
         </Toolbar>
-        <Panel className="nopad">
-          <TableWrapper>
-            <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-            <DataTable
-              value={services}
-              scrollable="true"
-              scrollHeight="flex"
-              dataKey="name"
-              selectionMode="multiple"
-              selection={selection}
-              onContextMenu={(e) =>
-                contextMenuRef.current.show(e.originalEvent)
-              }
-              onSelectionChange={(e) =>
-                setSelectedServices(e.value.map((i) => i.name))
-              }
-              onContextMenuSelectionChange={(e) => {
-                if (!selectedServices.includes(e.value.name))
-                  setSelectedServices([...selectedServices, e.value.name])
-              }}
-            >
-              <Column field="name" header="Service name" />
-              <Column field="addonName" header="Addon name" />
-              <Column field="addonVersion" header="Addon version" />
-              <Column field="service" header="Service" />
-              <Column field="hostname" header="Host" />
-              <Column
-                field="isRunning"
-                header="Status"
-                body={formatStatus}
-                style={{ maxWidth: 120 }}
-              />
-              <Column field="lastSeen" header="Last seen" body={formatTime} />
-            </DataTable>
-          </TableWrapper>
-        </Panel>
+        <TablePanel>
+          <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+          <DataTable
+            value={services}
+            scrollable="true"
+            scrollHeight="flex"
+            dataKey="name"
+            selectionMode="multiple"
+            selection={selection}
+            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+            onSelectionChange={(e) =>
+              setSelectedServices(e.value.map((i) => i.name))
+            }
+            onContextMenuSelectionChange={(e) => {
+              if (!selectedServices.includes(e.value.name))
+                setSelectedServices([...selectedServices, e.value.name])
+            }}
+          >
+            <Column field="name" header="Service name" />
+            <Column field="addonName" header="Addon name" />
+            <Column field="addonVersion" header="Addon version" />
+            <Column field="service" header="Service" />
+            <Column field="hostname" header="Host" />
+            <Column
+              field="isRunning"
+              header="Status"
+              body={formatStatus}
+              style={{ maxWidth: 120 }}
+            />
+            <Column field="lastSeen" header="Last seen" body={formatTime} />
+          </DataTable>
+        </TablePanel>
       </Section>
     </main>
   )

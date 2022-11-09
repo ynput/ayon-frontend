@@ -6,12 +6,11 @@ import { Dialog } from 'primereact/dialog'
 import {
   Button,
   InputText,
-  TableWrapper,
+  TablePanel,
   Spacer,
   FormLayout,
   FormRow,
   Section,
-  Panel,
   Toolbar,
 } from 'openpype-components'
 import axios from 'axios'
@@ -156,23 +155,21 @@ const RolesList = ({
         />
       </Toolbar>
 
-      <Panel className="nopad">
-        <TableWrapper>
-          <DataTable
-            value={rolesList}
-            scrollable="true"
-            scrollHeight="flex"
-            dataKey="name"
-            loading={loading}
-            selectionMode="single"
-            selection={selection}
-            onSelectionChange={onSelectionChange}
-            rowClassName={getRowClass}
-          >
-            <Column field="name" header="Role name" />
-          </DataTable>
-        </TableWrapper>
-      </Panel>
+      <TablePanel>
+        <DataTable
+          value={rolesList}
+          scrollable="true"
+          scrollHeight="flex"
+          dataKey="name"
+          loading={loading}
+          selectionMode="single"
+          selection={selection}
+          onSelectionChange={onSelectionChange}
+          rowClassName={getRowClass}
+        >
+          <Column field="name" header="Role name" />
+        </DataTable>
+      </TablePanel>
     </Section>
   )
 }

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { Section, Panel, TableWrapper } from 'openpype-components'
+import { Section, Panel, TablePanel } from 'openpype-components'
 import { CellWithIcon } from '/src/components/icons'
 
 import Hierarchy from '/src/containers/hierarchy'
@@ -146,23 +146,21 @@ const WorkfileList = ({
 
   return (
     <Section style={style}>
-      <Panel className="nopad">
-        <TableWrapper>
-          <DataTable
-            scrollable="true"
-            scrollHeight="flex"
-            selectionMode="single"
-            responsive="true"
-            dataKey="id"
-            value={data}
-            loading={loading}
-            selection={selectedWorkfile}
-            onSelectionChange={(e) => setSelectedWorkfile(e.value)}
-          >
-            <Column field="name" header="Name" body={formatName} />
-          </DataTable>
-        </TableWrapper>
-      </Panel>
+      <TablePanel>
+        <DataTable
+          scrollable="true"
+          scrollHeight="flex"
+          selectionMode="single"
+          responsive="true"
+          dataKey="id"
+          value={data}
+          loading={loading}
+          selection={selectedWorkfile}
+          onSelectionChange={(e) => setSelectedWorkfile(e.value)}
+        >
+          <Column field="name" header="Name" body={formatName} />
+        </DataTable>
+      </TablePanel>
     </Section>
   )
 }

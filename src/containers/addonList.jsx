@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Section, Panel, TableWrapper } from 'openpype-components'
+import { Section, TablePanel } from 'openpype-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -135,34 +135,32 @@ const AddonList = ({
   return (
     <Section style={{ maxWidth: 400 }}>
       {header}
-      <Panel className="nopad">
-        <TableWrapper>
-          <ContextMenu
-            model={menu}
-            ref={cm}
-            onHide={() => setSelectedNodeKey(null)}
-          />
+      <TablePanel>
+        <ContextMenu
+          model={menu}
+          ref={cm}
+          onHide={() => setSelectedNodeKey(null)}
+        />
 
-          <TreeTable
-            value={addons}
-            selectionMode="multiple"
-            selectionKeys={selectedKeys}
-            onSelectionChange={onSelectionChange}
-            contextMenuSelectionKey={selectedNodeKey}
-            onContextMenuSelectionChange={(event) =>
-              setSelectedNodeKey(event.value)
-            }
-            onContextMenu={(event) => cm.current.show(event.originalEvent)}
-            rowClassName={(rowData) => {
-              return { changed: changedAddons.includes(rowData.key) }
-            }}
-          >
-            <Column field="title" header="Addon" expander="true" />
-            <Column field="version" header="Version" />
-            <Column field="usage" header="" />
-          </TreeTable>
-        </TableWrapper>
-      </Panel>
+        <TreeTable
+          value={addons}
+          selectionMode="multiple"
+          selectionKeys={selectedKeys}
+          onSelectionChange={onSelectionChange}
+          contextMenuSelectionKey={selectedNodeKey}
+          onContextMenuSelectionChange={(event) =>
+            setSelectedNodeKey(event.value)
+          }
+          onContextMenu={(event) => cm.current.show(event.originalEvent)}
+          rowClassName={(rowData) => {
+            return { changed: changedAddons.includes(rowData.key) }
+          }}
+        >
+          <Column field="title" header="Addon" expander="true" />
+          <Column field="version" header="Version" />
+          <Column field="usage" header="" />
+        </TreeTable>
+      </TablePanel>
       {footer}
     </Section>
   )

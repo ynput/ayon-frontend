@@ -11,6 +11,7 @@ import {
   Button,
   Section,
   Panel,
+  Spacer,
 } from 'openpype-components'
 
 const SessionItem = ({ session, userName, onChange }) => {
@@ -182,11 +183,12 @@ const ProfilePage = () => {
         </Panel>
       </Section>
       {userData.name && (
-        <Section>
+        <Section style={{flexGrow: 0}}>
           <h2>Active sessions</h2>
           <SessionList userName={userData.name} />
         </Section>
       )}
+      <Spacer />
     </main>
   )
 }

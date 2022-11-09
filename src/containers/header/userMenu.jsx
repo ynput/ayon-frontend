@@ -35,6 +35,7 @@ const UserMenu = ({ visible, onHide }) => {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
+          padding: 4,
           gap: 3,
         }}
       >

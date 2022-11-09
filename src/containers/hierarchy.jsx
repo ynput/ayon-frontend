@@ -9,7 +9,7 @@ import {
   Panel,
   Toolbar,
   InputText,
-  TableWrapper,
+  TablePanel,
 } from 'openpype-components'
 
 import { Column } from 'primereact/column'
@@ -209,7 +209,7 @@ const Hierarchy = ({
     <Section style={style}>
       <Toolbar>
         <InputText
-          style={{ flexGrow: 1 }}
+          style={{ flexGrow: 1, minWidth: 100 }}
           placeholder="Filter folders..."
           disabled={!projectName || loading}
           value={query}
@@ -225,35 +225,33 @@ const Hierarchy = ({
           disabled={!projectName || loading}
           selectedItemTemplate={selectedTypeTemplate}
           onChange={(e) => setSelectedFolderTypes(e.value)}
-          style={{ flexBasis: '40%' }}
+          style={{ flexBasis: 150 }}
         />
       </Toolbar>
 
-      <Panel className="nopad">
-        <TableWrapper>
-          {loading && <Shade />}
-          <TreeTable
-            value={treeData}
-            responsive="true"
-            scrollable
-            scrollHeight="100%"
-            selectionMode="multiple"
-            selectionKeys={selectedFolders}
-            expandedKeys={expandedFolders}
-            emptyMessage=" "
-            onSelectionChange={onSelectionChange}
-            onToggle={onToggle}
-            onRowClick={onRowClick}
-          >
-            <Column
-              header="Hierarchy"
-              field="body"
-              expander={true}
-              style={{ width: '100%' }}
-            />
-          </TreeTable>
-        </TableWrapper>
-      </Panel>
+      <TablePanel>
+        {loading && <Shade />}
+        <TreeTable
+          value={treeData}
+          responsive="true"
+          scrollable
+          scrollHeight="100%"
+          selectionMode="multiple"
+          selectionKeys={selectedFolders}
+          expandedKeys={expandedFolders}
+          emptyMessage=" "
+          onSelectionChange={onSelectionChange}
+          onToggle={onToggle}
+          onRowClick={onRowClick}
+        >
+          <Column
+            header="Hierarchy"
+            field="body"
+            expander={true}
+            style={{ width: '100%' }}
+          />
+        </TreeTable>
+      </TablePanel>
     </Section>
   )
 }

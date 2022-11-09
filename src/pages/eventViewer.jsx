@@ -2,7 +2,7 @@ import axios from 'axios'
 
 import { useState, useEffect } from 'react'
 import { DateTime } from 'luxon'
-import { Section, Toolbar, Panel, TableWrapper } from 'openpype-components'
+import { Section, Toolbar, TablePanel } from 'openpype-components'
 
 import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
@@ -131,51 +131,37 @@ const EventViewer = () => {
       )}
       <Section>
         <Toolbar></Toolbar>
-        <Panel>
-          <TableWrapper>
-            <DataTable
-              value={eventData}
-              scrollable="true"
-              scrollHeight="flex"
-              responsive="true"
-              dataKey="id"
-              selectionMode="single"
-              onSelectionChange={(e) => setSelectedEvent(e.value)}
-              selection={selectedEvent}
-              onRowClick={onRowClick}
-              rowClassName={(rowData) => {
-                return {
-                  highlight:
-                    selectedEvent && selectedEvent.dependsOn === rowData.id,
-                }
-              }}
-            >
-              <Column
-                header="Time"
-                body={formatTime}
-                style={{ maxWidth: 200 }}
-              />
-              <Column header="Topic" field="topic" style={{ maxWidth: 120 }} />
-              <Column
-                header="Sender"
-                field="sender"
-                style={{ maxWidth: 300 }}
-              />
-              <Column header="User" field="user" style={{ maxWidth: 120 }} />
-              <Column
-                header="Project"
-                field="project"
-                style={{ maxWidth: 150 }}
-              />
-              <Column header="Description" field="description" />
-              <Column
-                header="Status"
-                field="status"
-                style={{ maxWidth: 150 }}
-              />
-            </DataTable>
-          </TableWrapper>
-        </Panel>
+        <TablePanel>
+          <DataTable
+            value={eventData}
+            scrollable="true"
+            scrollHeight="flex"
+            responsive="true"
+            dataKey="id"
+            selectionMode="single"
+            onSelectionChange={(e) => setSelectedEvent(e.value)}
+            selection={selectedEvent}
+            onRowClick={onRowClick}
+            rowClassName={(rowData) => {
+              return {
+                highlight:
+                  selectedEvent && selectedEvent.dependsOn === rowData.id,
+              }
+            }}
+          >
+            <Column header="Time" body={formatTime} style={{ maxWidth: 200 }} />
+            <Column header="Topic" field="topic" style={{ maxWidth: 120 }} />
+            <Column header="Sender" field="sender" style={{ maxWidth: 300 }} />
+            <Column header="User" field="user" style={{ maxWidth: 120 }} />
+            <Column
+              header="Project"
+              field="project"
+              style={{ maxWidth: 150 }}
+            />
+            <Column header="Description" field="description" />
+            <Column header="Status" field="status" style={{ maxWidth: 150 }} />
+          </DataTable>
+        </TablePanel>
       </Section>
     </main>
   )
