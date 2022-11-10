@@ -64,6 +64,7 @@ const stringEditor = (options, callback, value) => {
   return (
     <InputText
       value={value}
+      style={{ width: '100%' }}
       onChange={(e) => {
         callback(options, e.target.value)
       }}
@@ -78,6 +79,7 @@ const integerEditor = (options, callback, value) => {
   return (
     <div className="table-editor">
       <InputNumber
+        style={{ width: '100%' }}
         showButtons={false}
         useGrouping={false}
         allowEmpty={true}

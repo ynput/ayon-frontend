@@ -219,7 +219,11 @@ const AddonSettings = ({ projectName }) => {
       <Section className={showHelp && 'settings-help-visible'}>
         {settingsListHeader}
         <Section>
-          <ScrollPanel className="transparent nopad" style={{flexGrow: 1}} scrollStyle={{padding:0}}>
+          <ScrollPanel
+            className="transparent nopad"
+            style={{ flexGrow: 1 }}
+            scrollStyle={{ padding: 0 }}
+          >
             {selectedAddons
               .filter((addon) => addon.version)
               .reverse()
@@ -266,16 +270,16 @@ const AddonSettings = ({ projectName }) => {
           />
           <Button label="Save changes" icon="check" onClick={onSave} />
         </Toolbar>
-          <ScrollPanel style={{flexGrow: 1}}>
-            <h3>Form data</h3>
-            <pre style={{ width: '100%', flexGrow: 1 }}>
-              {JSON.stringify(localData, null, 2)}
-            </pre>
-            <h3>Changed keys</h3>
-            <pre style={{ width: '100%', flexGrow: 1 }}>
-              {JSON.stringify(localOverrides, null, 2)}
-            </pre>
-          </ScrollPanel>
+        <ScrollPanel style={{ flexGrow: 1 }}>
+          <h3>Form data</h3>
+          <pre style={{ width: '100%', flexGrow: 1 }}>
+            {JSON.stringify(localData, null, 2)}
+          </pre>
+          <h3>Changed keys</h3>
+          <pre style={{ width: '100%', flexGrow: 1 }}>
+            {JSON.stringify(localOverrides, null, 2)}
+          </pre>
+        </ScrollPanel>
       </Section>
     </>
   )

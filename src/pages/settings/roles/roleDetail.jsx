@@ -91,7 +91,11 @@ const RoleDetail = ({ projectName, role, onChange }) => {
         />
         <Spacer />
       </Toolbar>
-      <ScrollPanel className="nopad transparent" scrollStyle={{padding:0}} style={{flexGrow: 1}}>
+      <ScrollPanel
+        className="nopad transparent"
+        scrollStyle={{ padding: 0 }}
+        style={{ flexGrow: 1 }}
+      >
         {editor}
       </ScrollPanel>
     </Section>

@@ -183,7 +183,7 @@ const ProfilePage = () => {
         </Panel>
       </Section>
       {userData.name && (
-        <Section style={{flexGrow: 0}}>
+        <Section style={{ flexGrow: 0 }}>
           <h2>Active sessions</h2>
           <SessionList userName={userData.name} />
         </Section>
