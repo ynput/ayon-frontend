@@ -251,7 +251,7 @@ const Attributes = () => {
             onClick={onDelete}
           />
         </Toolbar>
-        <TablePanel>
+        <TablePanel loading={loading}>
           <DataTable
             scrollable="true"
             scrollHeight="flex"
@@ -259,7 +259,6 @@ const Attributes = () => {
             value={attributes}
             reorderableRows
             onRowReorder={onRowReorder}
-            loading={loading}
             selectionMode="single"
             selection={selectedAttribute}
             onSelectionChange={(e) => setSelectedAttribute(e.value)}

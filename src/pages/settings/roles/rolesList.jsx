@@ -155,13 +155,12 @@ const RolesList = ({
         />
       </Toolbar>
 
-      <TablePanel>
+      <TablePanel loading={loading}>
         <DataTable
           value={rolesList}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
-          loading={loading}
           selectionMode="single"
           selection={selection}
           onSelectionChange={onSelectionChange}

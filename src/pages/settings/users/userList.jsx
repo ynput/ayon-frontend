@@ -366,14 +366,13 @@ const UserList = ({
         />
       )}
 
-      <TablePanel>
+      <TablePanel loading={loading}>
         <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable
           value={userList}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
-          loading={loading}
           selectionMode="multiple"
           onSelectionChange={onSelectionChange}
           onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}

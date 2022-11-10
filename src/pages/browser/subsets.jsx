@@ -253,8 +253,7 @@ const Subsets = ({
         <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
       </Toolbar>
 
-      <TablePanel>
-        {loading && <Shade />}
+      <TablePanel loading={loading}>
         <TreeTable
           responsive="true"
           scrollHeight="100%"

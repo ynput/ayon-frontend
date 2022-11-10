@@ -53,8 +53,10 @@ const EventViewer = () => {
   const [eventData, setEventData] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [detailVisible, setDetailVisible] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const loadEventData = () => {
+    setLoading(true)
     axios
       .post('/graphql', {
         query: EVENTS_QUERY,
@@ -79,6 +81,7 @@ const EventViewer = () => {
         }
         setEventData(result)
       })
+      .finally(() => setLoading(false))
   }
 
   const handlePubSub = (topic, message) => {
@@ -131,7 +134,7 @@ const EventViewer = () => {
       )}
       <Section>
         <Toolbar></Toolbar>
-        <TablePanel>
+        <TablePanel loading={loading}>
           <DataTable
             value={eventData}
             scrollable="true"

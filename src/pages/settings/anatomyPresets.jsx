@@ -29,10 +29,14 @@ const PresetList = ({
   onDelete,
 }) => {
   const [presetList, setPresetList] = useState([])
+  const [loading, setLoading] = useState(false)
   const contextMenuRef = useRef(null)
 
   useEffect(() => {
-    loadAnatomyPresets().then((r) => setPresetList(r))
+    setLoading(true)
+    loadAnatomyPresets()
+      .then((r) => setPresetList(r))
+      .finally(() => setLoading(false))
   }, [timestamp])
 
   const contextMenuModel = useMemo(() => {
@@ -54,7 +58,7 @@ const PresetList = ({
   }, [selectedPreset, presetList])
 
   return (
-    <TablePanel>
+    <TablePanel loading={setLoading}>
       <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <DataTable
         value={presetList}

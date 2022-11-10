@@ -89,7 +89,7 @@ const ProjectList = ({
   return (
     <Section style={{ maxWidth: 400 }}>
       {header}
-      <TablePanel>
+      <TablePanel loading={loading}>
         <DataTable
           value={projectList}
           scrollable="true"
@@ -99,7 +99,6 @@ const ProjectList = ({
           dataKey="name"
           selection={selectionObj}
           onSelectionChange={onSelectionChange}
-          loading={loading}
         >
           <Column
             field="name"

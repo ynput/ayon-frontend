@@ -12,7 +12,7 @@ import { CellWithIcon } from '/src/components/icons'
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'
 import Thumbnail from '/src/containers/thumbnail'
-import AttributeTable from '/src//containers/attributeTable'
+import AttributeTable from '/src/containers/attributeTable'
 
 const WORKFILES_QUERY = `
 query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
@@ -90,7 +90,6 @@ const WorkfileList = ({
       setLoading(false)
       return
     }
-    console.log(taskIds)
     setLoading(true)
     let result = []
     axios
@@ -146,7 +145,7 @@ const WorkfileList = ({
 
   return (
     <Section style={style}>
-      <TablePanel>
+      <TablePanel loading={loading}>
         <DataTable
           scrollable="true"
           scrollHeight="flex"
@@ -154,7 +153,6 @@ const WorkfileList = ({
           responsive="true"
           dataKey="id"
           value={data}
-          loading={loading}
           selection={selectedWorkfile}
           onSelectionChange={(e) => setSelectedWorkfile(e.value)}
         >

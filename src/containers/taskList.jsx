@@ -129,8 +129,7 @@ const TaskList = ({ style = {} }) => {
 
   return (
     <Section style={style}>
-      <TablePanel>
-        {loading && <Shade />}
+      <TablePanel loading={loading}>
         <TreeTable
           value={data}
           scrollable="true"

@@ -229,8 +229,7 @@ const Hierarchy = ({
         />
       </Toolbar>
 
-      <TablePanel>
-        {loading && <Shade />}
+      <TablePanel loading={loading}>
         <TreeTable
           value={treeData}
           responsive="true"

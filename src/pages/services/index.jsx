@@ -27,14 +27,21 @@ const formatStatus = (rowData) => {
 
 const ServicesPage = () => {
   const [services, setServices] = useState([])
+  const [loading, setLoading] = useState(false)
   const [showNewService, setShowNewService] = useState(false)
   const [selectedServices, setSelectedServices] = useState([])
   const contextMenuRef = useRef(null)
 
   const loadServices = () => {
-    axios.get('/api/services').then((response) => {
-      setServices(response.data.services)
-    })
+    setLoading(true)
+    axios
+      .get('/api/services')
+      .then((response) => {
+        setServices(response.data.services)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
   const deleteSelected = () => {
@@ -111,7 +118,7 @@ const ServicesPage = () => {
           <Button label="New service" onClick={() => setShowNewService(true)} />
           <Spacer />
         </Toolbar>
-        <TablePanel>
+        <TablePanel loading={loading}>
           <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
           <DataTable
             value={services}

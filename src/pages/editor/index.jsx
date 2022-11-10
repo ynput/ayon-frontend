@@ -643,8 +643,7 @@ const EditorPage = () => {
             disabled={!canCommit}
           />
         </Toolbar>
-        <TablePanel>
-          {loading && <Shade />}
+        <TablePanel loading={loading}>
           <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
           <TreeTable
             responsive="true"

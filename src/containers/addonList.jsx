@@ -18,6 +18,7 @@ const AddonList = ({
   footer,
 }) => {
   const [addons, setAddons] = useState({})
+  const [loading, setLoading] = useState(false)
   const [selectedNodeKey, setSelectedNodeKey] = useState(null)
   const cm = useRef(null)
 
@@ -58,46 +59,52 @@ const AddonList = ({
   // Load addons from the server
 
   useEffect(() => {
-    axios.get('/api/addons').then((res) => {
-      let result = []
-      for (const addon of res.data.addons) {
-        const row = {
-          key: showVersions
-            ? `${addon.name}@production`
-            : `${addon.name}@${addon.productionVersion}`,
-          selectable: !showVersions,
-          children: [],
-          data: {
-            name: addon.name,
-            title: addon.title,
-            version: showVersions ? '' : addon.productionVersion,
-          },
-        }
-
-        if (showVersions) {
-          for (const version in addon.versions) {
-            if (!addon.versions[version].hasSettings) continue
-            row.children.push({
-              key: `${addon.name}@${version}`,
-              data: {
-                name: addon.name,
-                title: addon.title,
-                version: version,
-                usage:
-                  addon.productionVersion === version
-                    ? 'Production'
-                    : addon.stagingVersion === version
-                    ? 'Staging'
-                    : '',
-              },
-            })
+    setLoading(true)
+    axios
+      .get('/api/addons')
+      .then((res) => {
+        let result = []
+        for (const addon of res.data.addons) {
+          const row = {
+            key: showVersions
+              ? `${addon.name}@production`
+              : `${addon.name}@${addon.productionVersion}`,
+            selectable: !showVersions,
+            children: [],
+            data: {
+              name: addon.name,
+              title: addon.title,
+              version: showVersions ? '' : addon.productionVersion,
+            },
           }
-        } // if showVersions
 
-        result.push(row)
-      }
-      setAddons(result)
-    })
+          if (showVersions) {
+            for (const version in addon.versions) {
+              if (!addon.versions[version].hasSettings) continue
+              row.children.push({
+                key: `${addon.name}@${version}`,
+                data: {
+                  name: addon.name,
+                  title: addon.title,
+                  version: version,
+                  usage:
+                    addon.productionVersion === version
+                      ? 'Production'
+                      : addon.stagingVersion === version
+                      ? 'Staging'
+                      : '',
+                },
+              })
+            }
+          } // if showVersions
+
+          result.push(row)
+        }
+        setAddons(result)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [showVersions])
 
   const menu = useMemo(() => {
@@ -135,7 +142,7 @@ const AddonList = ({
   return (
     <Section style={{ maxWidth: 400 }}>
       {header}
-      <TablePanel>
+      <TablePanel loading={loading}>
         <ContextMenu
           model={menu}
           ref={cm}
