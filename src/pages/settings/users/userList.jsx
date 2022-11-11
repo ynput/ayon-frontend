@@ -9,7 +9,7 @@ import {
   TablePanel,
   Button,
   InputText,
-  Password,
+  InputPassword,
   FormLayout,
   FormRow,
   Section,
@@ -175,7 +175,7 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
     >
       <FormLayout>
         <FormRow label="New password">
-          <Password
+          <InputPassword
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />

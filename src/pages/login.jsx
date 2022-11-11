@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useEffect, useState, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { InputText, Password, Button, Panel } from 'openpype-components'
+import { InputText, InputPassword, Button, Panel } from 'openpype-components'
 
 import { login } from '/src/features/user'
 
@@ -163,7 +163,7 @@ const LoginPage = () => {
           onChange={(e) => setName(e.target.value)}
           onKeyDown={onLoginKeyDown}
         />
-        <Password
+        <InputPassword
           ref={passwordRef}
           placeholder="Password"
           name="password"

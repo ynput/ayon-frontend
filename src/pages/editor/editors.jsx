@@ -1,9 +1,7 @@
-import { InputText } from 'openpype-components'
-
-import { InputNumber } from 'primereact/inputnumber'
+import { InputText, InputNumber } from 'openpype-components'
 import { Dropdown } from 'primereact/dropdown'
-
 import { getFolderTypes, getTaskTypes } from '/src/utils'
+
 import pypeClient from '/src/pype'
 
 const FOLDER_TYPE = { name: '_', icon: 'folder', label: 'Folder' }
@@ -81,7 +79,6 @@ const integerEditor = (options, callback, value) => {
       <InputNumber
         style={{ width: '100%' }}
         showButtons={false}
-        useGrouping={false}
         allowEmpty={true}
         value={value}
         onChange={(e) => {

@@ -2,13 +2,13 @@ import pypeClient from '/src/pype'
 import axios from 'axios'
 import short from 'short-uuid'
 
+import { LoaderShade } from 'openpype-components'
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 
 import Header from './containers/header'
 import LoginPage from './pages/login'
-import LoadingPage from './pages/loading'
 import Error from './pages/error'
 import WebsocketListener from './containers/websocket'
 
@@ -66,7 +66,7 @@ const App = () => {
       })
   }, [dispatch, storedAccessToken])
 
-  if (loading) return <LoadingPage />
+  if (loading) return <LoaderShade />
 
   // User is not logged in
   if (!user.name) return <LoginPage />
@@ -74,7 +74,7 @@ const App = () => {
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
     window.history.replaceState({}, document.title, '/')
-    return <LoadingPage />
+    return <LoaderShade />
   }
 
   if (serverError)
@@ -85,7 +85,7 @@ const App = () => {
   //
 
   return (
-    <Suspense fallback={<LoadingPage />}>
+    <Suspense fallback={<LoaderShade />}>
       <WebsocketListener />
       <BrowserRouter>
         <Header />

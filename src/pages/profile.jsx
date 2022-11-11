@@ -7,7 +7,7 @@ import {
   FormLayout,
   FormRow,
   InputText,
-  Password,
+  InputPassword,
   Button,
   Section,
   Panel,
@@ -160,13 +160,13 @@ const ProfilePage = () => {
         <Panel>
           <FormLayout>
             <FormRow label="New password">
-              <Password
+              <InputPassword
                 value={pass1}
                 onChange={(e) => setPass1(e.target.value)}
               />
             </FormRow>
             <FormRow label="Confirm password">
-              <Password
+              <InputPassword
                 value={pass2}
                 onChange={(e) => setPass2(e.target.value)}
               />

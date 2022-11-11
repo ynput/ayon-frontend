@@ -1,7 +1,11 @@
 import { useMemo } from 'react'
-import { InputText, InputTextarea, InputSwitch } from 'openpype-components'
+import {
+  InputText,
+  InputNumber,
+  InputTextarea,
+  InputSwitch,
+} from 'openpype-components'
 
-import { InputNumber } from 'primereact/inputnumber'
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 

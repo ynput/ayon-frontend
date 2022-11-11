@@ -1,4 +1,9 @@
-import { InputText, FormLayout, FormRow, Password } from 'openpype-components'
+import {
+  InputText,
+  FormLayout,
+  FormRow,
+  InputPassword,
+} from 'openpype-components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 
@@ -27,7 +32,7 @@ const UserAttrib = ({
       ))}
       {showPassword && (
         <FormRow label="Password">
-          <Password
+          <InputPassword
             value={password}
             feedback={false}
             onChange={(e) => setPassword(e.target.value)}
