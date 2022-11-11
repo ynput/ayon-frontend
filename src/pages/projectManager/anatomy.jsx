@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
-import { Section, ScrollArea, Toolbar, Button } from 'openpype-components'
+import { Section, ScrollPanel, Toolbar, Button } from 'openpype-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const ProjectAnatomy = ({ projectName }) => {
@@ -50,7 +50,13 @@ const ProjectAnatomy = ({ projectName }) => {
         <Button label="Update anatomy" icon="save" onClick={saveAnatomy} />
       </Toolbar>
       <Section>
-        <ScrollArea>{editor}</ScrollArea>
+        <ScrollPanel
+          className="transparent nopad"
+          style={{ flexGrow: 1 }}
+          scrollStyle={{ padding: 0 }}
+        >
+          {editor}
+        </ScrollPanel>
       </Section>
     </Section>
   )
