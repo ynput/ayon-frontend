@@ -158,7 +158,6 @@ const LoginPage = () => {
           placeholder="Username"
           name="username"
           aria-label="Username"
-          required
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={onLoginKeyDown}
@@ -167,9 +166,7 @@ const LoginPage = () => {
           ref={passwordRef}
           placeholder="Password"
           name="password"
-          feedback={false}
           aria-label="Password"
-          required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={onLoginKeyDown}

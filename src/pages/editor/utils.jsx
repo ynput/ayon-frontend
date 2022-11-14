@@ -72,9 +72,9 @@ const getColumns = () => {
   for (const attrib of pypeClient.settings.attributes) {
     if (attrib.scope.includes('folder')) {
       let editor
-      if (attrib.attribType === 'integer') {
+      if (attrib.data.type === 'integer') {
         editor = integerEditor
-      } else if (attrib.attribType === 'float') {
+      } else if (attrib.data.type === 'float') {
         editor = floatEditor
       } else {
         editor = stringEditor

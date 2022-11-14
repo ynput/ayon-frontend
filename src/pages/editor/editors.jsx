@@ -61,8 +61,8 @@ const typeEditor = (options, callback, value) => {
 const stringEditor = (options, callback, value) => {
   return (
     <InputText
-      value={value}
       style={{ width: '100%' }}
+      value={value}
       onChange={(e) => {
         callback(options, e.target.value)
       }}
@@ -71,20 +71,32 @@ const stringEditor = (options, callback, value) => {
 }
 
 const integerEditor = (options, callback, value) => {
-  //  onChange={(e) => options.editorCallback(e.value)}
   const attrSettings = pypeClient.getAttribSettings(options.field)
-  console.log(attrSettings)
+
+  let min = null
+  if (attrSettings && attrSettings.data.hasOwnProperty('gt'))
+    min = attrSettings.data.gt + 1
+  else if (attrSettings && attrSettings.data.hasOwnProperty('gte'))
+    min = attrSettings.data.gte
+
+  let max = null
+  if (attrSettings && attrSettings.data.hasOwnProperty('lt'))
+    max = attrSettings.data.lt - 1
+  else if (attrSettings && attrSettings.data.hasOwnProperty('lte'))
+    max = attrSettings.data.lte
+
   return (
     <div className="table-editor">
       <InputNumber
         style={{ width: '100%' }}
-        showButtons={false}
-        allowEmpty={true}
         value={value}
+        min={min}
+        max={max}
+        step={1}
         onChange={(e) => {
-          callback(options, e.value)
+          const val = e.target.value === '' ? null : parseInt(e.target.value)
+          callback(options, val)
         }}
-        className="p-inputtext-sm"
       />
     </div>
   )
@@ -93,7 +105,17 @@ const integerEditor = (options, callback, value) => {
 const floatEditor = (options, callback, value) => {
   //  onChange={(e) => options.editorCallback(e.value)}
   const attrSettings = pypeClient.getAttribSettings(options.field)
-  console.log(attrSettings)
+  let min = null
+  if (attrSettings && attrSettings.data.hasOwnProperty('gt'))
+    min = attrSettings.data.gt + 0.00001
+  else if (attrSettings && attrSettings.data.hasOwnProperty('gte'))
+    min = attrSettings.data.gte
+
+  let max = null
+  if (attrSettings && attrSettings.data.hasOwnProperty('lt'))
+    max = attrSettings.data.lt - 0.00001
+  else if (attrSettings && attrSettings.data.hasOwnProperty('lte'))
+    max = attrSettings.data.lte
   return (
     <div
       className="table-editor"
@@ -103,14 +125,15 @@ const floatEditor = (options, callback, value) => {
       }}
     >
       <InputNumber
-        showButtons={false}
+        style={{ width: '100%' }}
         value={value}
-        minFractionDigits={0}
-        maxFractionDigits={3}
+        min={min}
+        max={max}
+        step="any"
         onChange={(e) => {
-          callback(options, e.value)
+          const val = e.target.value === '' ? null : parseFloat(e.target.value)
+          callback(options, val)
         }}
-        className="p-inputtext-sm"
       />
     </div>
   )
