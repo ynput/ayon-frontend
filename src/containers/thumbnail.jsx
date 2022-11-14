@@ -1,23 +1,40 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+const parseThumbnail = (response) => {
+  // Create base64 image from axios response
+  if (response.status !== 200) {
+    return null
+  }
+
+  const mime = response.headers['content-type']
+  const base64 = btoa(
+    new Uint8Array(response.data).reduce(
+      (data, byte) => data + String.fromCharCode(byte),
+      ''
+    )
+  )
+  return `data:${mime};base64,${base64}`
+}
+
 const Thumbnail = ({ projectName, entityType, entityId }) => {
-  const [base64, setBase64] = useState(null)
+  const [thumbData, setThumbData] = useState(null)
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
+
 
   useEffect(() => {
     if (!entityId) {
-      setBase64(null)
+      setThumbData(null)
       return
     }
     axios
       .get(url, { responseType: 'arraybuffer' })
-      .then((response) =>
-        setBase64(btoa(String.fromCharCode(...new Uint8Array(response.data))))
-      )
+      .then((response) => {
+        setThumbData(parseThumbnail(response))
+      })
   }, [url, entityId])
 
-  if (!base64) {
+  if (!thumbData) {
     return (
       <div className="thumbnail placeholder">
         <span className="material-symbols-outlined">image</span>
@@ -29,7 +46,7 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
     <div className="thumbnail">
       <img
         alt={`Entity thumbnail ${entityId}`}
-        src={`data:image/png;charset=utf-8;base64,${base64}`}
+        src={thumbData}
       />
     </div>
   )
