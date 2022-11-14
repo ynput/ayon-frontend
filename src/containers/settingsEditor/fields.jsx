@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Button, Divider } from 'openpype-components'
-
+import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './settingsPanel'
 
 function ObjectFieldTemplate(props) {
@@ -67,14 +67,7 @@ function ObjectFieldTemplate(props) {
 
   const longDescription = props.schema.description && (
     <div className="form-object-field-help">
-      {props.schema.description
-        .split('\n')
-        .slice(1)
-        .join('\n')
-        .split('\n\n')
-        .map((p, idx) => (
-          <p key={idx}>{p}</p>
-        ))}
+      <ReactMarkdown>{props.schema.description}</ReactMarkdown>
     </div>
   )
 
@@ -310,7 +303,11 @@ function FieldTemplate(props) {
           {props.children}
         </div>
         <div className="form-inline-field-help">
-          {props.rawDescription ? <div>{props.rawDescription}</div> : ''}
+          {props.rawDescription && (
+            <div>
+              <ReactMarkdown>{props.rawDescription}</ReactMarkdown>
+            </div>
+          )}
         </div>
       </div>
     </>
