@@ -36,8 +36,8 @@ const CheckboxWidget = function (props) {
   const { originalValue, path } = parseContext(props)
 
   const onChange = (e) => {
-    updateOverrides(props, e.value !== originalValue)
-    props.onChange(e.value)
+    updateOverrides(props, e.target.checked !== originalValue)
+    props.onChange(e.target.checked)
     props.formContext?.onSetBreadcrumbs(path)
   }
 
