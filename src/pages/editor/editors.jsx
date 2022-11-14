@@ -61,7 +61,6 @@ const typeEditor = (options, callback, value) => {
 const stringEditor = (options, callback, value) => {
   return (
     <InputText
-      style={{ width: '100%' }}
       value={value}
       onChange={(e) => {
         callback(options, e.target.value)
