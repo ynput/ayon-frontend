@@ -58,7 +58,7 @@ const PresetList = ({
   }, [selectedPreset, presetList])
 
   return (
-    <TablePanel loading={setLoading}>
+    <TablePanel loading={loading}>
       <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <DataTable
         value={presetList}
