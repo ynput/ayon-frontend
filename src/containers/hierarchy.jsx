@@ -178,17 +178,8 @@ const Hierarchy = ({
   // Transform a list of folder types to a list of objects
   // compatible with the MultiSelect component
 
-  const folderTypeList = useMemo(() => {
-    if (!folderTypes) return []
-    let nlist = []
-    for (let folderType in folderTypes) {
-      nlist.push({
-        value: folderType,
-        label: folderType,
-      })
-    }
-    return nlist
-  }, [folderTypes])
+
+  const folderTypeList = folderTypes.map(e => ({ label: e.name, value: e.name }))
 
   // Custom "selected folder type" render template for the multiselect
   // component

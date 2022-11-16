@@ -56,16 +56,20 @@ const ProjectPage = () => {
 
         // Icons
         const r = {}
-        for (const folderTypeName in data.folderTypes) {
-          r[folderTypeName] = data.folderTypes[folderTypeName].icon
+
+        for (const folderType of data.folderTypes) {
+          r[folderType.name] = folderType.icon
         }
         updateFolderTypeIcons(r)
 
         const s = {}
-        for (const taskTypeName in data.taskTypes) {
-          s[taskTypeName] = data.taskTypes[taskTypeName].icon
+        for (const taskType of data.taskTypes) {
+          s[taskType.name] = taskType.icon
         }
         updateTaskTypeIcons(s)
+
+       //TODO: statuses
+
         localStorage.setItem('lastProject', projectName)
 
         // Load addons

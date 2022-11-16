@@ -4,7 +4,6 @@ import { getFolderTypes, getTaskTypes } from '/src/utils'
 
 import pypeClient from '/src/pype'
 
-const FOLDER_TYPE = { name: '_', icon: 'folder', label: 'Folder' }
 
 const typeEditor = (options, callback, value) => {
   const rowData = options.node.data
@@ -12,11 +11,11 @@ const typeEditor = (options, callback, value) => {
 
   const types =
     rowData.__entityType === 'folder'
-      ? [FOLDER_TYPE, ...getFolderTypes()]
+      ? getFolderTypes()
       : getTaskTypes()
 
   const onChange = (event) =>
-    callback(options, event.value === '_' ? null : event.value)
+    callback(options, event.value)
 
   const itemTemplate = (option, props) => {
     if (option) {
