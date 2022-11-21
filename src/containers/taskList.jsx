@@ -1,10 +1,12 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Shade, Panel, TablePanel, Section } from 'openpype-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
+import { ContextMenu } from 'primereact/contextmenu'
 
+import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { setFocusedTasks, setPairing } from '/src/features/context'
 import { groupResult, getTaskTypeIcon } from '/src/utils'
@@ -40,6 +42,8 @@ const TaskList = ({ style = {} }) => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
   const userName = useSelector((state) => state.user.name)
+  const ctxMenuRef = useRef(null)
+  const [showDetail, setShowDetail] = useState(false)
 
   //
   // Hooks
@@ -100,6 +104,12 @@ const TaskList = ({ style = {} }) => {
     dispatch(setFocusedTasks(taskIds))
   }
 
+  const onContextMenuSelectionChange = (event) => {
+    if (context.focusedTasks.includes(event.value)) return
+    dispatch(setPairing([{ taskId: event.value }]))
+    dispatch(setFocusedFolders([event.value]))
+  }
+
   //
   // Render
   //
@@ -127,9 +137,25 @@ const TaskList = ({ style = {} }) => {
     )
   }
 
+  const ctxMenuModel = [
+    {
+      label: 'Detail',
+      command: () => setShowDetail(true),
+      disabled: context.focusedTasks.length !== 1,
+    },
+  ]
+
   return (
     <Section style={style}>
       <TablePanel loading={loading}>
+        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
+        <EntityDetail
+          projectName={projectName}
+          entityType="task"
+          entityId={context.focusedTasks[0]}
+          visible={showDetail}
+          onHide={() => setShowDetail(false)}
+        />
         <TreeTable
           value={data}
           scrollable="true"
@@ -138,6 +164,8 @@ const TaskList = ({ style = {} }) => {
           selectionMode="multiple"
           selectionKeys={selectedTasks}
           onSelectionChange={onSelectionChange}
+          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+          onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
           <Column
             field="name"

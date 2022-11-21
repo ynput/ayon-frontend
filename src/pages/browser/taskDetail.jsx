@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux'
 import axios from 'axios'
 
 import AttributeTable from '/src/containers/attributeTable'
-import { getTaskTypeIcon } from '/src/utils'
+import { getTaskTypeIcon, getStatusColor } from '/src/utils'
 import { Panel } from 'openpype-components'
 
 const TASK_QUERY = `
@@ -15,6 +15,7 @@ const TASK_QUERY = `
                 edges {
                     node {
                         name
+                        status
                         taskType
                         assignees
                         attrib {
@@ -77,6 +78,12 @@ const TaskDetail = () => {
     )
   }
 
+  const status = (
+    <span className="status" style={{ color: getStatusColor(data.status) }}>
+      {data.status}
+    </span>
+  )
+
   return (
     <Panel>
       <h3>
@@ -100,6 +107,7 @@ const TaskDetail = () => {
                 : '-',
           },
           { title: 'Task Type', value: data.taskType },
+          { title: 'Status', value: status },
         ]}
       />
     </Panel>

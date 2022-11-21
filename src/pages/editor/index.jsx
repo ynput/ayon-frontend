@@ -545,6 +545,7 @@ const EditorPage = () => {
   // Context menu
 
   const onContextMenuSelectionChange = (event) => {
+    // TODO: handle tasks
     if (!(event.value in currentSelection)) {
       dispatch(setFocusedFolders([event.value]))
     }

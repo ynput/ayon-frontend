@@ -4,18 +4,14 @@ import { getFolderTypes, getTaskTypes } from '/src/utils'
 
 import pypeClient from '/src/pype'
 
-
 const typeEditor = (options, callback, value) => {
   const rowData = options.node.data
   if (!rowData) return <></>
 
   const types =
-    rowData.__entityType === 'folder'
-      ? getFolderTypes()
-      : getTaskTypes()
+    rowData.__entityType === 'folder' ? getFolderTypes() : getTaskTypes()
 
-  const onChange = (event) =>
-    callback(options, event.value)
+  const onChange = (event) => callback(options, event.value)
 
   const itemTemplate = (option, props) => {
     if (option) {

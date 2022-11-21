@@ -103,6 +103,7 @@ const loadAnatomyPresets = async () => {
 
 const FOLDER_TYPE_ICONS = {}
 const TASK_TYPE_ICONS = {}
+const STATUS_COLORS = {}
 const FAMILY_ICONS = {
   image: 'imagesmode',
   render: 'photo_library',
@@ -142,6 +143,16 @@ const getTaskTypeIcon = (taskType) => {
 const updateTaskTypeIcons = (data) => {
   for (const name in data) {
     TASK_TYPE_ICONS[name] = data[name]
+  }
+}
+
+const getStatusColor = (status) => {
+  return STATUS_COLORS[status] || '#c0c0c0'
+}
+
+const updateStatusColors = (data) => {
+  for (const name in data) {
+    STATUS_COLORS[name] = data[name]
   }
 }
 
@@ -214,11 +225,13 @@ export {
   sortByKey,
   getFolderTypeIcon,
   getTaskTypeIcon,
+  getStatusColor,
   getFamilyIcon,
   getFolderTypes,
   getTaskTypes,
   isEmpty,
   updateFolderTypeIcons,
   updateTaskTypeIcons,
+  updateStatusColors,
   useLocalStorage,
 }

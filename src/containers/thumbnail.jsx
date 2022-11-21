@@ -21,17 +21,14 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
   const [thumbData, setThumbData] = useState(null)
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
 
-
   useEffect(() => {
     if (!entityId) {
       setThumbData(null)
       return
     }
-    axios
-      .get(url, { responseType: 'arraybuffer' })
-      .then((response) => {
-        setThumbData(parseThumbnail(response))
-      })
+    axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
+      setThumbData(parseThumbnail(response))
+    })
   }, [url, entityId])
 
   if (!thumbData) {
@@ -44,10 +41,7 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
 
   return (
     <div className="thumbnail">
-      <img
-        alt={`Entity thumbnail ${entityId}`}
-        src={thumbData}
-      />
+      <img alt={`Entity thumbnail ${entityId}`} src={thumbData} />
     </div>
   )
 }

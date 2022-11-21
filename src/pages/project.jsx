@@ -14,7 +14,11 @@ import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles'
 
 import { selectProject, setProjectData } from '../features/context'
-import { updateFolderTypeIcons, updateTaskTypeIcons } from '../utils'
+import {
+  updateFolderTypeIcons,
+  updateTaskTypeIcons,
+  updateStatusColors,
+} from '../utils'
 
 const ProjectContexInfo = () => {
   /**
@@ -56,7 +60,6 @@ const ProjectPage = () => {
 
         // Icons
         const r = {}
-
         for (const folderType of data.folderTypes) {
           r[folderType.name] = folderType.icon
         }
@@ -68,7 +71,13 @@ const ProjectPage = () => {
         }
         updateTaskTypeIcons(s)
 
-       //TODO: statuses
+        const t = {}
+        for (const status of data.statuses) {
+          t[status.name] = status.color
+        }
+        updateStatusColors(t)
+
+        //TODO: statuses
 
         localStorage.setItem('lastProject', projectName)
 

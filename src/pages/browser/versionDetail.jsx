@@ -4,7 +4,7 @@ import pypeClient from '/src/pype'
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 
-import { getFamilyIcon } from '/src/utils'
+import { getFamilyIcon, getStatusColor } from '/src/utils'
 import { Panel } from 'openpype-components'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
@@ -20,6 +20,7 @@ const VERSION_QUERY = `
                         version
                         name
                         author
+                        status
                         attrib {
                           #VERSION_ATTRS#
                         }
@@ -95,6 +96,7 @@ const VersionDetail = () => {
             name: version.name,
             author: version.author,
             attrib: version.attrib,
+            status: version.status,
             family: subset.family,
             subsetName: subset.name,
             folderName: folder.name,
@@ -141,6 +143,14 @@ const VersionDetail = () => {
 
   // One version selected. Show the detail
   else {
+    const status = (
+      <span
+        className="status"
+        style={{ color: getStatusColor(versions[0].status) }}
+      >
+        {versions[0].status}
+      </span>
+    )
     versionDetailWidget = (
       <Panel>
         <h3>
@@ -162,7 +172,10 @@ const VersionDetail = () => {
         <AttributeTable
           entityType="version"
           data={versions[0].attrib}
-          additionalData={[{ title: 'Author', value: versions[0].author }]}
+          additionalData={[
+            { title: 'Author', value: versions[0].author },
+            { title: 'Status', value: status },
+          ]}
         />
       </Panel>
     )

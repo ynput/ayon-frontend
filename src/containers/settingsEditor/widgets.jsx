@@ -4,6 +4,7 @@ import {
   InputNumber,
   InputTextarea,
   InputSwitch,
+  InputColor,
 } from 'openpype-components'
 
 import { Dropdown } from 'primereact/dropdown'
@@ -140,6 +141,12 @@ const TextWidget = (props) => {
     opts.onChange = (e) => {
       updateOverrides(props, e.value !== originalValue)
       props.onChange(e.value)
+    }
+  } else if (props.schema.widget === 'color') {
+    Input = InputColor
+    opts.onChange = (e) => {
+      updateOverrides(props, e.target.value !== originalValue)
+      props.onChange(e.target.value)
     }
   } else if (props.schema.widget === 'textarea') {
     Input = InputTextarea

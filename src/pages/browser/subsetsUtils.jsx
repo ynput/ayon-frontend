@@ -39,6 +39,7 @@ query Subsets($projectName: String!, $folders: [String!]!, $versionOverrides: [S
                     id
                     name
                     family
+                    status
                     createdAt
                     versionList{
                       id
@@ -151,6 +152,7 @@ const parseSubsetData = (data) => {
       id: subset.id,
       name: subset.name,
       family: subset.family,
+      status: subset.status,
       fps: parseSubsetFps(subset),
       resolution: parseSubsetResolution(subset),
       folder: subset.folder.name,

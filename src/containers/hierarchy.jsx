@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import {
@@ -15,8 +15,10 @@ import {
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
+import { ContextMenu } from 'primereact/contextmenu'
 
 import { CellWithIcon } from '/src/components/icons'
+import EntityDetail from '/src/containers/entityDetail'
 
 import {
   setFocusedFolders,
@@ -94,6 +96,8 @@ const Hierarchy = ({
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
+  const ctxMenuRef = useRef(null)
+  const [showDetail, setShowDetail] = useState(false)
 
   //
   // Hooks
@@ -167,6 +171,11 @@ const Hierarchy = ({
     dispatch(setFocusedFolders(selection))
   }
 
+  const onContextMenuSelectionChange = (event) => {
+    if (focusedFolders.includes(event.value)) return
+    dispatch(setFocusedFolders([event.value]))
+  }
+
   const onToggle = (event) => {
     dispatch(setExpandedFolders(event.value))
   }
@@ -178,8 +187,10 @@ const Hierarchy = ({
   // Transform a list of folder types to a list of objects
   // compatible with the MultiSelect component
 
-
-  const folderTypeList = folderTypes.map(e => ({ label: e.name, value: e.name }))
+  const folderTypeList = folderTypes.map((e) => ({
+    label: e.name,
+    value: e.name,
+  }))
 
   // Custom "selected folder type" render template for the multiselect
   // component
@@ -191,6 +202,14 @@ const Hierarchy = ({
     }
     return 'Folder types'
   }
+
+  const ctxMenuModel = [
+    {
+      label: 'Detail',
+      command: () => setShowDetail(true),
+      disabled: focusedFolders.length !== 1,
+    },
+  ]
 
   //
   // Render
@@ -221,6 +240,14 @@ const Hierarchy = ({
       </Toolbar>
 
       <TablePanel loading={loading}>
+        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
+        <EntityDetail
+          projectName={projectName}
+          entityType="folder"
+          entityId={focusedFolders[0]}
+          visible={showDetail}
+          onHide={() => setShowDetail(false)}
+        />
         <TreeTable
           value={treeData}
           responsive="true"
@@ -233,6 +260,8 @@ const Hierarchy = ({
           onSelectionChange={onSelectionChange}
           onToggle={onToggle}
           onRowClick={onRowClick}
+          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+          onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
           <Column
             header="Hierarchy"

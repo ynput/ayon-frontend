@@ -5,19 +5,16 @@ import { DateTime } from 'luxon'
 
 import axios from 'axios'
 
-import {
-  InputText,
-  Shade,
-  TablePanel,
-  Section,
-  Toolbar,
-} from 'openpype-components'
-import { CellWithIcon } from '/src/components/icons'
+import { InputText, TablePanel, Section, Toolbar } from 'openpype-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
+import { ContextMenu } from 'primereact/contextmenu'
 
-import { groupResult, getFamilyIcon } from '/src/utils'
+import EntityDetail from '/src/containers/entityDetail'
+import { CellWithIcon } from '/src/components/icons'
+
+import { groupResult, getFamilyIcon, getStatusColor } from '/src/utils'
 import {
   setFocusedVersions,
   setSelectedVersions,
@@ -68,6 +65,21 @@ const Subsets = ({
             iconClassName={className}
             text={node.data.name}
           />
+        )
+      },
+    },
+    {
+      field: 'status',
+      header: 'Status',
+      width: 100,
+      body: (node) => {
+        if (node.data.isGroup) {
+          return ''
+        }
+        return (
+          <span style={{ color: getStatusColor(node.data.status) }}>
+            {node.data.status}
+          </span>
         )
       },
     },
