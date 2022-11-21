@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { DateTime } from 'luxon'
@@ -17,6 +17,7 @@ import { CellWithIcon } from '/src/components/icons'
 import { groupResult, getFamilyIcon, getStatusColor } from '/src/utils'
 import {
   setFocusedVersions,
+  setFocusedSubsets,
   setSelectedVersions,
   setBreadcrumbs,
   setPairing,
@@ -27,14 +28,17 @@ import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
 const Subsets = ({
   projectName,
   folders,
+  pairing,
   focusedVersions,
+  focusedSubsets,
   selectedVersions,
 }) => {
   const dispatch = useDispatch()
-  const pairing = useSelector((state) => state.context.pairing)
   const [subsetData, setSubsetData] = useState([])
   const [loading, setLoading] = useState(false)
   const [focusOnReload, setFocusOnReload] = useState(null)
+  const ctxMenuRef = useRef(null)
+  const [showDetail, setShowDetail] = useState(false)
 
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
@@ -246,14 +250,39 @@ const Subsets = ({
 
   const onSelectionChange = (event) => {
     let result = []
+    let subsets = []
     const selection = Object.keys(event.value)
     for (const sdata of subsetData) {
       if (selection.includes(sdata.id)) {
         result.push(sdata.versionId)
+        subsets.push(sdata.id)
       }
     }
+    // we need to set the focused versions first
+    // otherwise setFocusedSubsets will clear the selection
+    // of versions.
+    dispatch(setFocusedSubsets(subsets))
     dispatch(setFocusedVersions(result))
   }
+
+
+  const onContextMenuSelectionChange = (event) => {
+    if (focusedSubsets.includes(event.value)) return
+    const subsetId = event.value
+    const versionId = subsetData.find((s) => s.id === subsetId).versionId
+    dispatch(setFocusedSubsets([subsetId]))
+    dispatch(setFocusedVersions([versionId]))
+  }
+
+
+  const ctxMenuModel = [
+    {
+      label: 'Detail',
+      command: () => setShowDetail(true),
+      disabled: focusedSubsets.length !== 1,
+    },
+  ]
+
 
   //
   // Render
@@ -266,6 +295,14 @@ const Subsets = ({
       </Toolbar>
 
       <TablePanel loading={loading}>
+        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
+        <EntityDetail
+          projectName={projectName}
+          entityType="subset"
+          entityId={focusedSubsets[0]}
+          visible={showDetail}
+          onHide={() => setShowDetail(false)}
+        />
         <TreeTable
           responsive="true"
           scrollHeight="100%"
@@ -278,6 +315,8 @@ const Subsets = ({
           selectionKeys={selectedRows}
           onSelectionChange={onSelectionChange}
           onRowClick={onRowClick}
+          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+          onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
           {columns.map((col, i) => {
             return (

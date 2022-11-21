@@ -18,6 +18,8 @@ const BrowserPage = () => {
   const focusedFolders = context.focusedFolders
   const focusedVersions = context.focusedVersions
   const selectedVersions = context.selectedVersions
+  const focusedSubsets = context.focusedSubsets
+  const pairing = context.pairing
 
   // Cache components
 
@@ -38,10 +40,12 @@ const BrowserPage = () => {
         projectName={projectName}
         folders={focusedFolders}
         focusedVersions={focusedVersions}
+        focusedSubsets={focusedSubsets}
+        pairing={pairing}
         selectedVersions={selectedVersions}
       />
     )
-  }, [projectName, focusedFolders, focusedVersions, selectedVersions])
+  }, [projectName, focusedFolders, focusedVersions, selectedVersions, focusedSubsets, pairing])
 
   // Return the wrapper
 

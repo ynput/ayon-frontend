@@ -107,7 +107,7 @@ const TaskList = ({ style = {} }) => {
   const onContextMenuSelectionChange = (event) => {
     if (context.focusedTasks.includes(event.value)) return
     dispatch(setPairing([{ taskId: event.value }]))
-    dispatch(setFocusedFolders([event.value]))
+    dispatch(setFocusedTasks([event.value]))
   }
 
   //
