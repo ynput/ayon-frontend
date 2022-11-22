@@ -38,7 +38,7 @@ const Subsets = ({
   const [loading, setLoading] = useState(false)
   const [focusOnReload, setFocusOnReload] = useState(null)
   const ctxMenuRef = useRef(null)
-  const [showDetail, setShowDetail] = useState(false)
+  const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
 
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
@@ -277,9 +277,14 @@ const Subsets = ({
 
   const ctxMenuModel = [
     {
-      label: 'Detail',
-      command: () => setShowDetail(true),
+      label: 'Subset detail',
+      command: () => setShowDetail('subset'),
       disabled: focusedSubsets.length !== 1,
+    },
+    {
+      label: 'Version detail',
+      command: () => setShowDetail('version'),
+      disabled: focusedVersions.length !== 1,
     },
   ]
 
@@ -298,8 +303,8 @@ const Subsets = ({
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
-          entityType="subset"
-          entityId={focusedSubsets[0]}
+          entityType={showDetail}
+          entityId={showDetail === 'subset' ? focusedSubsets[0] : focusedVersions[0]}
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
