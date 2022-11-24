@@ -8,7 +8,7 @@ import { Panel } from 'openpype-components'
 
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
-import { getFolderTypeIcon, getStatusColor } from '/src/utils'
+import { getFolderTypeIcon, getStatusColor, getTagColor } from '/src/utils'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {
@@ -20,6 +20,7 @@ const FOLDER_QUERY = `
                         folderType
                         path
                         status
+                        tags
                         attrib {
                           #FOLDER_ATTRS#
                         }
@@ -86,6 +87,18 @@ const FolderDetail = () => {
     </span>
   )
 
+  console.log('data', data)
+
+  const tags = !data.tags?.length ? null : ( 
+    <>
+      {data.tags.map((tag) => (
+        <span key={tag} className="tag" style={{ color: getTagColor(tag)}}>
+          {tag}
+        </span>
+      ))}
+    </>
+  )
+
   return (
     <Panel>
       <h3>
@@ -107,6 +120,7 @@ const FolderDetail = () => {
         data={data.attrib}
         additionalData={[
           { title: 'Status', value: status },
+          { title: 'Tags', value: tags },
           { title: 'Folder type', value: data.folderType },
           { title: 'Path', value: data.path },
         ]}

@@ -13,7 +13,7 @@ const EntityDetail = ({
   const [data, setData] = useState(null)
 
   useEffect(() => {
-    if (!entityId) return
+    if (!(entityId && entityType)) return
 
     axios
       .get(`/api/projects/${projectName}/${entityType}s/${entityId}`)

@@ -18,6 +18,7 @@ import {
   updateFolderTypeIcons,
   updateTaskTypeIcons,
   updateStatusColors,
+  updateTagColors,
 } from '../utils'
 
 const ProjectContexInfo = () => {
@@ -76,6 +77,12 @@ const ProjectPage = () => {
           t[status.name] = status.color
         }
         updateStatusColors(t)
+
+        const g = {}
+        for (const tag of data.tags) {
+          g[tag.name] = tag.color
+        }
+        updateTagColors(g)
 
         //TODO: statuses
 

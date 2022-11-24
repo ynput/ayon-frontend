@@ -63,7 +63,10 @@ const TaskList = ({ style = {} }) => {
         variables: { projectName, folderIds },
       })
       .then((response) => {
-        if (!response?.data?.data?.project) return
+        if (!response?.data?.data?.project) {
+          console.error('Loading tasks failed', response.data.errors)
+          return
+        }
 
         for (const edge of response.data.data.project.tasks.edges) {
           result.push({
