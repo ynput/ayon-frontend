@@ -1,8 +1,8 @@
 import axios from 'axios'
 
 import { useState, useEffect } from 'react'
-import { DateTime } from 'luxon'
 import { Section, Toolbar, TablePanel } from 'openpype-components'
+import { TimestampField } from '/src/containers/fieldFormat'
 
 import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
@@ -112,10 +112,7 @@ const EventViewer = () => {
   }, [])
 
   const formatTime = (rowData) => {
-    return DateTime.fromSeconds(rowData.updatedAt).toFormat(
-      'yyyy-LL-dd HH:mm:ss'
-    )
-    //return DateTime.fromSeconds(rowData.updatedAt).toRelative()
+    return <TimestampField value={rowData.updatedAt} />
   }
 
   const onRowClick = (e) => {

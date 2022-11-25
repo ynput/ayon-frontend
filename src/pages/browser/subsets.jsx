@@ -13,8 +13,9 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
+import { StatusField, TimestampField } from '/src/containers/fieldFormat'
 
-import { groupResult, getFamilyIcon, getStatusColor } from '/src/utils'
+import { groupResult, getFamilyIcon } from '/src/utils'
 import {
   setFocusedVersions,
   setFocusedSubsets,
@@ -77,14 +78,8 @@ const Subsets = ({
       header: 'Status',
       width: 100,
       body: (node) => {
-        if (node.data.isGroup) {
-          return ''
-        }
-        return (
-          <span style={{ color: getStatusColor(node.data.status) }}>
-            {node.data.status}
-          </span>
-        )
+        if (node.data.isGroup) return ''
+        return <StatusField value={node.data.status} />
       },
     },
     {
@@ -120,7 +115,7 @@ const Subsets = ({
       width: 150,
       body: (node) =>
         node.data.createdAt &&
-        DateTime.fromSeconds(node.data.createdAt).toRelative(),
+        <TimestampField value={node.data.createdAt} />
     },
     {
       field: 'author',
