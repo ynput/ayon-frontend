@@ -55,7 +55,7 @@ const ProjectList = ({
           //   break
           // }
         }
-        if (selection.includes(project.name)) result.push(project)
+        if (selection?.includes(project.name)) result.push(project)
       }
       return result
     } else {

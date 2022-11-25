@@ -119,9 +119,9 @@ const FolderDetail = () => {
         entityType="folder"
         data={data.attrib}
         additionalData={[
+          { title: 'Folder type', value: data.folderType },
           { title: 'Status', value: status },
           { title: 'Tags', value: tags },
-          { title: 'Folder type', value: data.folderType },
           { title: 'Path', value: data.path },
         ]}
       />
