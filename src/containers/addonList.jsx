@@ -152,6 +152,8 @@ const AddonList = ({
         <TreeTable
           value={addons}
           selectionMode="multiple"
+          scrollable="true"
+          scrollHeight="100%"
           selectionKeys={selectedKeys}
           onSelectionChange={onSelectionChange}
           contextMenuSelectionKey={selectedNodeKey}
