@@ -1,33 +1,45 @@
 import pypeClient from '/src/pype'
+import styled from 'styled-components'
+
+const AttributeTableContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+`
+
+const AttributeTableRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  border-top: 1px solid var(--color-grey-01);
+  &:first-child {
+    border-top: none !important;
+  } 
+`
 
 const AttributeTable = ({ entityType, data, additionalData, style }) => {
   return (
-    <div
-      className="attribute-table"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        ...style,
-      }}
-    >
+    <AttributeTableContainer style={style}>
       {additionalData &&
         additionalData.map((data, index) => (
-          <div key={index} className="attribute-table-row">
+          <AttributeTableRow key={index}>
             <span>{data.title}</span>
             <span>{data.value}</span>
-          </div>
+          </AttributeTableRow>
         ))}
 
       {data &&
         pypeClient.settings.attributes
           .filter((attr) => attr.scope.includes(entityType) && data[attr.name])
           .map((attr) => (
-            <div key={attr.name} className="attribute-table-row">
+            <AttributeTableRow key={attr.name}>
               <span>{attr.data.title}</span>
               <span>{data[attr.name]}</span>
-            </div>
+            </AttributeTableRow>
           ))}
-    </div>
+    </AttributeTableContainer>
   )
 }
 

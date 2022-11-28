@@ -171,7 +171,10 @@ const VersionDetail = () => {
           data={versions[0].attrib}
           additionalData={[
             { title: 'Author', value: versions[0].author },
-            { title: 'Status', value: <StatusField value={versions[0].status} /> },
+            {
+              title: 'Status',
+              value: <StatusField value={versions[0].status} />,
+            },
             { title: 'Tags', value: <TagsField value={versions[0].tags} /> },
           ]}
         />

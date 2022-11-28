@@ -7,6 +7,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
 import { Section, Panel, TablePanel } from 'openpype-components'
+import { PathField } from '/src/containers/fieldFormat'
 import { CellWithIcon } from '/src/components/icons'
 
 import Hierarchy from '/src/containers/hierarchy'
@@ -66,7 +67,7 @@ const WorkfileDetail = ({ projectName, workfileId, style }) => {
         <AttributeTable
           entityType="workfile"
           data={data?.attrib || {}}
-          additionalData={[{ title: 'Path', value: data?.path }]}
+          additionalData={[{ title: 'Path', value: <PathField value={data?.path}/> }]}
         />
       </Panel>
     </Section>
@@ -192,6 +193,7 @@ const WorkfilesPage = () => {
         pairing={pairing}
         selectedWorkfile={selectedWorkfile}
         setSelectedWorkfile={setSelectedWorkfile}
+        style={{ maxWidth: 500, minWidth: 300 }}
       />
 
       <WorkfileDetail

@@ -114,8 +114,7 @@ const Subsets = ({
       header: 'Time',
       width: 150,
       body: (node) =>
-        node.data.createdAt &&
-        <TimestampField value={node.data.createdAt} />
+        node.data.createdAt && <TimestampField value={node.data.createdAt} />,
     },
     {
       field: 'author',
@@ -260,7 +259,6 @@ const Subsets = ({
     dispatch(setFocusedVersions(result))
   }
 
-
   const onContextMenuSelectionChange = (event) => {
     if (focusedSubsets.includes(event.value)) return
     const subsetId = event.value
@@ -268,7 +266,6 @@ const Subsets = ({
     dispatch(setFocusedSubsets([subsetId]))
     dispatch(setFocusedVersions([versionId]))
   }
-
 
   const ctxMenuModel = [
     {
@@ -282,7 +279,6 @@ const Subsets = ({
       disabled: focusedVersions.length !== 1,
     },
   ]
-
 
   //
   // Render
@@ -299,7 +295,9 @@ const Subsets = ({
         <EntityDetail
           projectName={projectName}
           entityType={showDetail}
-          entityId={showDetail === 'subset' ? focusedSubsets[0] : focusedVersions[0]}
+          entityId={
+            showDetail === 'subset' ? focusedSubsets[0] : focusedVersions[0]
+          }
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />

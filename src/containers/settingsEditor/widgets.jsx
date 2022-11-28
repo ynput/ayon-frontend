@@ -144,7 +144,7 @@ const TextWidget = (props) => {
     }
   } else if (props.schema.widget === 'color') {
     Input = InputColor
-    opts.style={maxWidth: '50px', minWidth: '50px'}
+    opts.style = { maxWidth: '50px', minWidth: '50px' }
     opts.onChange = (e) => {
       updateOverrides(props, e.target.value !== originalValue)
       props.onChange(e.target.value)

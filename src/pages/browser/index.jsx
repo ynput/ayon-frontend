@@ -45,7 +45,14 @@ const BrowserPage = () => {
         selectedVersions={selectedVersions}
       />
     )
-  }, [projectName, focusedFolders, focusedVersions, selectedVersions, focusedSubsets, pairing])
+  }, [
+    projectName,
+    focusedFolders,
+    focusedVersions,
+    selectedVersions,
+    focusedSubsets,
+    pairing,
+  ])
 
   // Return the wrapper
 
