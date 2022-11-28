@@ -140,7 +140,7 @@ const TextWidget = (props) => {
     opts.useGrouping = false
     opts.onChange = (e) => {
       updateOverrides(props, e.value !== originalValue)
-      props.onChange(e.value)
+      props.onChange(e.target.value)
     }
   } else if (props.schema.widget === 'color') {
     Input = InputColor
