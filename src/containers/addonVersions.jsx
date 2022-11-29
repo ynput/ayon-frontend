@@ -1,5 +1,5 @@
 import { Dropdown } from 'primereact/dropdown'
-import { Spacer, Button, Toolbar, Panel } from 'openpype-components'
+import { Spacer, Button, Toolbar, Panel, ScrollPanel } from 'openpype-components'
 
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
@@ -41,29 +41,25 @@ const AddonListItem = ({ addonName, formData, setFormData }) => {
   }
 
   return (
-    <Panel style={{ width: 800, flexDirection: 'row', alignItems: 'center' }}>
+    <Panel style={{ width: 800, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <div style={{ flexBasis: 300 }}>{addon.title}</div>
       <Spacer />
-      <div className="p-inputgroup">
-        <span className="p-inputgroup-addon">Production</span>
-        <Dropdown
-          style={{ width: 200 }}
-          options={options}
-          value={productionVersion}
-          placeholder="(NONE)"
-          onChange={onProductionChange}
-        />
-      </div>
-      <div className="p-inputgroup">
-        <span className="p-inputgroup-addon">Staging</span>
-        <Dropdown
-          style={{ width: 200 }}
-          options={options}
-          value={stagingVersion}
-          placeholder="(NONE)"
-          onChange={onStagingChange}
-        />
-      </div>
+      <span>Production</span>
+      <Dropdown
+        style={{ width: 200 }}
+        options={options}
+        value={productionVersion}
+        placeholder="(NONE)"
+        onChange={onProductionChange}
+      />
+      <span>Staging</span>
+      <Dropdown
+        style={{ width: 200 }}
+        options={options}
+        value={stagingVersion}
+        placeholder="(NONE)"
+        onChange={onStagingChange}
+      />
     </Panel>
   )
 }
@@ -111,9 +107,12 @@ const AddonVersions = ({ projectName }) => {
       <Toolbar>
         <Button label="Save" icon="check" onClick={submit} />
       </Toolbar>
-      <section className="invisible">
+      <ScrollPanel style={{ flexGrow: 1, backgroundColor: "transparent" }}>
         <Spacer>
-          <section className="invisible">
+          <section 
+            className="invisible" 
+            style={{gap: 6, display: "flex", flexDirection: "column"}}
+          >
             {formData &&
               Object.keys(formData).map((addonName) => (
                 <AddonListItem
@@ -124,7 +123,7 @@ const AddonVersions = ({ projectName }) => {
               ))}
           </section>
         </Spacer>
-      </section>
+      </ScrollPanel>
     </>
   )
 }
