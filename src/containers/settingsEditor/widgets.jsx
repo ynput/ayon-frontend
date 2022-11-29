@@ -126,7 +126,9 @@ const TextWidget = (props) => {
   const value = useMemo(() => props.value || '', [props.value])
 
   let Input = null
-  const opts = {}
+  const opts = {
+    placeholder: props.schema?.placeholder || '',
+  }
   if (props.schema.type === 'integer') {
     Input = InputNumber
     if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
