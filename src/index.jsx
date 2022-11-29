@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
           newestOnTop={true}
           draggable={false}
           closeOnClick={true}
-          autoClose={3000}
+          autoClose={6000}
           limit={5}
         />
       </ReduxProvider>

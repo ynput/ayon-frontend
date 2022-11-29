@@ -2,6 +2,7 @@ import axios from 'axios'
 
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
+import ReactMarkdown from 'react-markdown'
 
 import {
   Button,
@@ -63,7 +64,13 @@ const AddonSettings = ({ projectName }) => {
           setLocalData({})
         })
         .catch((err) => {
-          toast.error(`Unable to save ${addonName} ${addonVersion} settings`)
+          toast.error((
+            <ReactMarkdown>
+{`Unable to save ${addonName} ${addonVersion} settings
+
+${err.response?.data?.detail}`}
+            </ReactMarkdown>
+          ))
           console.log(err)
         })
         .finally(() => {
