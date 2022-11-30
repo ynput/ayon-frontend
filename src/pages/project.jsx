@@ -145,6 +145,7 @@ const ProjectPage = () => {
 
   // Fetch project data
   useEffect(() => {
+    loadProjectData()
   }, [dispatch, projectName])
 
 
