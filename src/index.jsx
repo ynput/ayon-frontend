@@ -48,10 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
           transition={Flip}
           theme="dark"
           pauseOnFocusLoss={false}
-          newestOnTop={true}
+          newestOnTop={false}
           draggable={false}
           closeOnClick={true}
-          autoClose={6000}
+          autoClose={5000}
           limit={5}
         />
       </ReduxProvider>

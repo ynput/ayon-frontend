@@ -5,14 +5,18 @@ import PubSub from '/src/pubsub'
 import { arrayEquals } from '/src/utils'
 import { toast } from 'react-toastify'
 
+import { LoaderShade } from 'openpype-components'
+
 const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
 const wsOpts = {
   shouldReconnect: () => true,
 }
 
+
 const WebsocketListener = () => {
   const [topics, setTopics] = useState([])
+  const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const { sendMessage, readyState, getWebSocket } = useWebSocket(
     wsAddress,
     wsOpts
@@ -36,11 +40,16 @@ const WebsocketListener = () => {
   const onMessage = (message) => {
     const data = JSON.parse(message.data)
     if (data.topic === 'heartbeat') return
+
+    if (data.topic === 'server.restart_requested')
+      setServerRestartingVisible(true)
+
     if (data.sender === axios.defaults.headers.common['X-Sender']) {
       return // my own message. ignore
     }
     if (data.topic === 'shout' && data?.summary?.text)
       toast.info(data.summary.text)
+
 
     console.log('Event RX', data)
     PubSub.publish(data.topic, data)
@@ -54,20 +63,24 @@ const WebsocketListener = () => {
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
-      console.log('WS connected')
+      setServerRestartingVisible(false)
       getWebSocket().onmessage = onMessage
       subscribe()
       // Dispatch a fake event to the frontend components
       // in case they depend on the event stream and may
       // miss some messages - this should force reloading
       // events using graphql
-      PubSub.publish('client.reconnected', {
-        topic: 'client.reconnected',
+      PubSub.publish('client.connected', {
+        topic: 'client.connected',
       })
     }
   }, [readyState, getWebSocket])
 
-  return <></>
+  return <>
+    {serverRestartingVisible && (
+      <LoaderShade style={{backgroundColor: 'transparent'}} message="Server is restarting" />
+    )}
+  </>
 }
 
 export default WebsocketListener

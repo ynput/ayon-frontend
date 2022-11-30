@@ -45,8 +45,17 @@ const DateTimeContainer = styled.div`
 `
 
 const TimestampField = ({ value }) => {
-  const date = new Date(value * 1000)
-  const [dd, tt] = date.toISOString().slice(0, 19).split('T')
+  let dd, tt
+  const ts = Math.trunc(value * 1000)
+  if (!ts) return null
+
+  try {
+    const date = new Date(ts)
+    if (date)
+      [dd, tt] = date.toISOString().slice(0, 19).split('T')
+  } catch (e) {
+    console.error("Bad value", ts)
+  }
   return (
     <DateTimeContainer>
       <span>{dd}</span>

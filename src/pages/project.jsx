@@ -13,6 +13,8 @@ import LoadingPage from './loading'
 import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles'
 
+import PubSub from '/src/pubsub'
+
 import { selectProject, setProjectData } from '../features/context'
 import {
   updateFolderTypeIcons,
@@ -43,16 +45,10 @@ const ProjectPage = () => {
   const dispatch = useDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
-  // Set project data to null when leaving project page
-  useEffect(() => {
-    return () => dispatch(selectProject(null))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
-  // Fetch project data
-  useEffect(() => {
+  const loadProjectData = () => {
+    console.log("Loading project data")
     setLoading(true)
-
     axios
       .get(`/api/projects/${projectName}`)
       .then((response) => {
@@ -114,7 +110,45 @@ const ProjectPage = () => {
         dispatch(selectProject(projectName))
         setLoading(false)
       })
+  }
+
+
+  const handlePubSub = async (topic, message) => {
+    if (topic === "client.connected") {
+      console.log("ProjectPage: client.connected. Reloading project data")
+      loadProjectData()
+    }
+    else if (topic === "entity.update" && message.summary.entityType === "project" && message.summary.name === projectName) {
+      console.log("ProjectPage: entity.update. Reloading project data")
+      loadProjectData()
+    }
+    else{
+      console.log("ProjectPage: Unhandled pubsub message", topic, message)
+    }
+  }
+
+  // Set project data to null when leaving project page
+  useEffect(() => {
+    return () => dispatch(selectProject(null))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const token = PubSub.subscribe('client.connected', handlePubSub)
+    return () => PubSub.unsubscribe(token)
+  }, [])
+
+  useEffect(() => {
+    const token = PubSub.subscribe('entity.update', handlePubSub)
+    return () => PubSub.unsubscribe(token)
+  }, [])
+
+  // Fetch project data
+  useEffect(() => {
   }, [dispatch, projectName])
+
+
+
 
   //
   // Render page

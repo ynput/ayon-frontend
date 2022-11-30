@@ -38,13 +38,19 @@ const EventDetailDialog = ({ eventId, onHide }) => {
     }
 
     axios.get(`/api/events/${eventId}`).then((response) => {
-      setEventData(response.data)
+      const event = response.data
+      if (event.topic.startsWith('log.')){
+        setEventData(event.payload.message)
+        return
+      }
+      setEventData(JSON.stringify(event.payload, null, 2))
+
     })
   }, [eventId])
 
   return (
     <Dialog onHide={onHide} visible={true}>
-      <pre>{JSON.stringify(eventData, null, 2)}</pre>
+      <pre>{eventData}</pre>
     </Dialog>
   )
 }
@@ -85,7 +91,7 @@ const EventViewer = () => {
   }
 
   const handlePubSub = (topic, message) => {
-    if (topic === 'client.reconnected') {
+    if (topic === 'client.connected') {
       loadEventData()
       return
     }
@@ -146,20 +152,17 @@ const EventViewer = () => {
               return {
                 highlight:
                   selectedEvent && selectedEvent.dependsOn === rowData.id,
+                "row-error": rowData.topic === 'log.error',
+                "row-warning": rowData.topic === 'log.warning',
+                "row-success": rowData.topic === 'log.success',
               }
             }}
           >
-            <Column header="Time" body={formatTime} style={{ maxWidth: 200 }} />
-            <Column header="Topic" field="topic" style={{ maxWidth: 120 }} />
-            <Column header="Sender" field="sender" style={{ maxWidth: 300 }} />
-            <Column header="User" field="user" style={{ maxWidth: 120 }} />
-            <Column
-              header="Project"
-              field="project"
-              style={{ maxWidth: 150 }}
-            />
+            <Column header="Time" body={formatTime} style={{ maxWidth: 180 }} />
+            <Column header="Topic" field="topic" style={{ maxWidth: 200 }} />
             <Column header="Description" field="description" />
-            <Column header="Status" field="status" style={{ maxWidth: 150 }} />
+            <Column header="User" field="user" style={{ maxWidth: 120 }} />
+            <Column header="Project" field="project" style={{ maxWidth: 150 }} />
           </DataTable>
         </TablePanel>
       </Section>

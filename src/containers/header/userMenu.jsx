@@ -81,6 +81,17 @@ const UserMenu = ({ visible, onHide }) => {
           label="Profile"
           icon="manage_accounts"
         />
+        <Button
+          onClick={() => {
+            axios
+              .post('/api/system/restart')
+              .finally(() => {
+                onHide()
+              })
+          }}
+          label="Server restart"
+          icon="restart_alt"
+        />
         <Spacer />
         <Button onClick={doLogout} label="Sign Out" icon="logout" />
       </div>
