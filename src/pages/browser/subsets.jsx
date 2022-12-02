@@ -26,15 +26,17 @@ import {
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
 
-const Subsets = ({
-  projectName,
-  folders,
-  pairing,
-  focusedVersions,
-  focusedSubsets,
-  selectedVersions,
-}) => {
+const Subsets = () => {
   const dispatch = useDispatch()
+  const context = useSelector((state) => ({ ...state.context }))
+
+  const projectName = context.projectName
+  const focusedVersions = context.focusedVersions
+  const focusedFolders = context.focusedFolders
+  const selectedVersions = context.selectedVersions
+  const focusedSubsets = context.focusedSubsets
+  const pairing = context.pairing
+
   const [subsetData, setSubsetData] = useState([])
   const [loading, setLoading] = useState(false)
   const [focusOnReload, setFocusOnReload] = useState(null)
@@ -135,12 +137,12 @@ const Subsets = ({
   // Load the subsets/versions data from the server
 
   useEffect(() => {
-    if (folders.length === 0) return
+    if (focusedFolders?.length === 0) return
 
     // version overrides
     // Get a list of version overrides for the current set of folders
     let versionOverrides = []
-    for (const folderId of folders) {
+    for (const folderId of focusedFolders) {
       const c = selectedVersions[folderId]
       if (!c) continue
       for (const subsetId in c) {
@@ -158,7 +160,7 @@ const Subsets = ({
     axios
       .post('/graphql', {
         query: SUBSET_QUERY,
-        variables: { folders, projectName, versionOverrides },
+        variables: { folders: focusedFolders, projectName, versionOverrides },
       })
       .then((response) => {
         if (!(response.data.data && response.data.data.project)) {
@@ -175,14 +177,14 @@ const Subsets = ({
         }
       })
     // eslint-disable-next-line
-  }, [folders, projectName, selectedVersions])
+  }, [focusedFolders, projectName, selectedVersions])
 
   // Parse focusedVersions list from the project context
   // and create a list of selected subset rows compatible
   // with the TreeTable component
 
   const selectedRows = useMemo(() => {
-    if (focusedVersions.length === 0) return []
+    if (focusedVersions?.length === 0) return []
     const subsetIds = {}
     for (const sdata of subsetData) {
       if (focusedVersions.includes(sdata.versionId)) {

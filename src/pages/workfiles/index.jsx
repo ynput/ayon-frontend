@@ -169,22 +169,12 @@ const WorkfilesPage = () => {
 
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
-  const folderTypes = context.project.folderTypes
-  const expandedFolders = context.expandedFolders
-  const focusedFolders = context.focusedFolders
   const focusedTasks = context.focusedTasks
   const pairing = context.pairing
 
   return (
     <main>
-      <Hierarchy
-        projectName={projectName}
-        folderTypes={folderTypes}
-        focusedFolders={focusedFolders}
-        expandedFolders={expandedFolders}
-        style={{ maxWidth: 500, minWidth: 300 }}
-      />
-
+      <Hierarchy style={{ maxWidth: 500, minWidth: 300 }} />
       <TaskList style={{ maxWidth: 400, minWidth: 400 }} />
 
       <WorkfileList

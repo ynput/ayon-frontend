@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import {
   Shade,
@@ -84,13 +84,13 @@ const filterHierarchy = (text, folder) => {
   return result
 }
 
-const Hierarchy = ({
-  projectName,
-  folderTypes,
-  focusedFolders,
-  expandedFolders,
-  style = {},
-}) => {
+const Hierarchy = (props) => {
+  const context = useSelector((state) => ({ ...state.context }))
+  const projectName = context.projectName
+  const folderTypes = context.project.folderTypes
+  const expandedFolders = context.expandedFolders
+  const focusedFolders = context.focusedFolders
+  
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
@@ -216,7 +216,7 @@ const Hierarchy = ({
   //
 
   return (
-    <Section style={style}>
+    <Section style={props.style}>
       <Toolbar>
         <InputText
           style={{ flexGrow: 1, minWidth: 100 }}
