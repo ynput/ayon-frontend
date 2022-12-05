@@ -21,7 +21,7 @@ const AddonSettingsPanel = ({
 
   const loadSchema = () => {
     axios
-      .get(`/api/addons/${addon.name}/${addon.version}/schema`)
+      .get(`/api/addons/${addon.name}/${addon.version}/schema${projectSuffix}`)
       .then((res) => setSchema(res.data))
       .catch((err) => console.log(err))
   }

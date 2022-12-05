@@ -245,7 +245,6 @@ function FieldTemplate(props) {
     }
 
     if (!className) className = `obj-override-${overrideLevel}`
-
     return (
       <SettingsPanel
         objId={props.id}
@@ -263,13 +262,14 @@ function FieldTemplate(props) {
   }
 
   // Leaves
-
+  
   const widgetClass =
     props.schema.type === 'array' &&
     props.schema.layout === 'compact' &&
     props.formData?.length
       ? 'left-border'
       : ''
+
 
   return (
     <>
@@ -315,12 +315,25 @@ function FieldTemplate(props) {
 }
 
 const ArrayItemTemplate = (props) => {
+  const parentSchema = props?.children?._owner?.memoizedProps?.schema || {}
+  const itemName = props?.children?.props?.formData?.name   
+  let undeletable = false
+
+  const children = props.children
+
+  if (itemName && (parentSchema.requiredItems || []).includes(itemName)) {
+    undeletable = true
+    if (children.props.formData.name === itemName)
+      children.props.schema.properties.name.fixedValue = itemName
+  }
+    
   const rmButton = props.hasRemove && (
     <div className="array-item-controls">
       <Button
         onClick={props.onDropIndexClick(props.index)}
         className="circle"
         icon="close"
+        disabled={undeletable}
       />
       <Button
         onClick={props.onReorderClick(props.index, props.index - 1)}
@@ -337,7 +350,7 @@ const ArrayItemTemplate = (props) => {
 
   return (
     <div className="form-array-field-item">
-      {props.children}
+      {children}
       {rmButton}
     </div>
   )

@@ -128,6 +128,7 @@ const TextWidget = (props) => {
   let Input = null
   const opts = {
     placeholder: props.schema?.placeholder || '',
+    disabled: props.schema.readonly || props.schema.disabled || (props.schema.fixedValue && props.schema.fixedValue === value),
   }
   if (props.schema.type === 'integer') {
     Input = InputNumber
@@ -171,6 +172,7 @@ const TextWidget = (props) => {
     props.formContext?.onSetBreadcrumbs(path)
     props.onFocus(e)
   }
+
 
   return (
     <Input
