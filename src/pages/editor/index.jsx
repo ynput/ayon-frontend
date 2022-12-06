@@ -713,7 +713,8 @@ const EditorPage = () => {
                     return col.editor(
                       options,
                       updateAttribute,
-                      formatAttribute(options.rowData, changes, col.name, false)
+                      formatAttribute(options.rowData, changes, col.name, false),
+                      col.editorSettings
                     )
                   }}
                 />

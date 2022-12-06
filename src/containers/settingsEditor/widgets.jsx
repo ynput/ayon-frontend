@@ -89,6 +89,8 @@ const SelectWidget = (props) => {
           value={value}
           onChange={onChange}
           onFocus={onFocus}
+          placeholder={props.schema?.placeholder}
+          disabled={props.schema?.disabled}
           className={`form-field ${
             props.rawErrors?.length ? 'p-invalid error' : ''
           }`}
@@ -108,6 +110,8 @@ const SelectWidget = (props) => {
       optionValue="value"
       tooltip={tooltip.join('\n')}
       tooltipOptions={{ position: 'bottom' }}
+      placeholder={props.schema?.placeholder}
+      disabled={props.schema?.disabled}
       className={`form-field ${
         props.rawErrors?.length ? 'p-invalid error' : ''
       }`}
@@ -132,6 +136,7 @@ const TextWidget = (props) => {
   }
   if (props.schema.type === 'integer') {
     Input = InputNumber
+    opts.value = value
     if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
     if (props.schema.maximum !== undefined) opts.max = props.schema.maximum
     if (props.schema.exclusiveMinimum !== undefined)
@@ -147,21 +152,32 @@ const TextWidget = (props) => {
     }
   } else if (props.schema.widget === 'color') {
     Input = InputColor
+    opts.value = value
     opts.style = { maxWidth: '50px', minWidth: '50px' }
     opts.onChange = (e) => {
       updateOverrides(props, e.target.value !== originalValue)
       props.onChange(e.target.value)
     }
+  } else if (props.schema.widget === 'color_with_alpha') {
+    Input = InputText
+    opts.value = JSON.stringify(value)
+    opts.onChange = (e) => {
+      updateOverrides(props, e.target.value !== originalValue)
+      props.onChange(JSON.parse(e.target.value))
+    }
+  
   } else if (props.schema.widget === 'textarea') {
     Input = InputTextarea
     opts.autoResize = true
     opts.rows = 8
+    opts.value = value
     opts.onChange = (e) => {
       updateOverrides(props, e.target.value !== originalValue)
       props.onChange(e.target.value)
     }
   } else {
     Input = InputText
+    opts.value = value
     opts.onChange = (e) => {
       updateOverrides(props, e.target.value !== originalValue)
       props.onChange(e.target.value)
@@ -179,7 +195,6 @@ const TextWidget = (props) => {
       className={`form-field ${
         props.rawErrors?.length ? 'p-invalid error' : ''
       }`}
-      value={value}
       onBlur={props.onBlur}
       onFocus={onFocus}
       tooltip={tooltip.join('\n')}

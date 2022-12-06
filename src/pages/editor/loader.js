@@ -5,14 +5,18 @@ const loadBranch = async (query, projectName, parentId) => {
   const variables = { projectName, parent: parentId || 'root' }
   console.log('Branch load', parentId)
   const response = await axios.post('/graphql', { query, variables })
+  console.log("GOT", response)
 
   if (response.status !== 200) {
     toast.error(`Unable to load branch ${parentId}`)
     return {}
   }
 
+  
   const data = response.data
   const nodes = {}
+
+  console.log(data)
 
   // Add folders
   for (const edge of data.data.project.folders.edges) {

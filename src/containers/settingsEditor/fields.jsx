@@ -7,6 +7,8 @@ function ObjectFieldTemplate(props) {
   let className = 'form-object-field'
   if (props.schema.layout) className += ` layout-${props.schema.layout}`
 
+  //console.log(props.title, props.schema)
+
   // Highlight overrides and changed fields
 
   const objId = props.idSchema.$id
@@ -15,22 +17,23 @@ function ObjectFieldTemplate(props) {
 
   // TODO: actually use overrides
   // NOTE: after a few days, idk what this todo means
-  let labelStyle = {}
-  let rmOverrideFunc = null
-  let pinOverrideFunc = null
-  if (override) {
-    if (override?.inGroup) labelStyle.fontStyle = 'italic'
-    else if (override.level === props.formContext.level)
-      rmOverrideFunc = () => {
-        props.formContext.onDeleteOverride(path)
-      }
-  }
 
-  if (!override || override.level !== props.formContext.level) {
-    pinOverrideFunc = () => {
-      props.formContext.onPinOverride(path)
-    }
-  }
+  // TODO: originally used for context menus. I hope we won't need it again.
+  // let labelStyle = {}
+  // let rmOverrideFunc = null
+  // let pinOverrideFunc = null
+  // if (override) {
+  //   if (override?.inGroup) labelStyle.fontStyle = 'italic'
+  //   else if (override.level === props.formContext.level)
+  //     rmOverrideFunc = () => {
+  //       props.formContext.onDeleteOverride(path)
+  //     }
+  // }
+  // if (!override || override.level !== props.formContext.level) {
+  //   pinOverrideFunc = () => {
+  //     props.formContext.onPinOverride(path)
+  //   }
+  // }
 
   let overrideLevel = useMemo(() => {
     let res = 'default'
@@ -199,14 +202,9 @@ function FieldTemplate(props) {
 
   // Object fields
 
-  if (props.schema.type === 'object') {
-    return (
-      <>
-        {divider}
-        {props.children}
-      </>
-    )
-  }
+  if (props.schema.type === 'object') 
+    return <>{divider}{props.children}</>
+  
 
   //
   // Solve overrides for lists and leaves

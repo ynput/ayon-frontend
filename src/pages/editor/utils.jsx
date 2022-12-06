@@ -2,7 +2,7 @@ import pypeClient from '/src/pype'
 
 import { CellWithIcon } from '/src/components/icons'
 import { getFolderTypeIcon, getTaskTypeIcon } from '/src/utils'
-import { stringEditor, integerEditor, floatEditor } from './editors'
+import { stringEditor, integerEditor, floatEditor, enumEditor } from './editors'
 
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
@@ -75,7 +75,9 @@ const getColumns = () => {
       if (attrib.data.type === 'integer') {
         editor = integerEditor
       } else if (attrib.data.type === 'float') {
-        editor = floatEditor
+        editor = floatEditor 
+      } else if (attrib.data.enum && attrib.data.enum.length > 0) {
+        editor = enumEditor
       } else {
         editor = stringEditor
       }
@@ -83,6 +85,7 @@ const getColumns = () => {
         name: attrib.name,
         title: attrib.data.title,
         editor: editor,
+        editorSettings: attrib.data,
       })
     }
   }

@@ -4,7 +4,8 @@ import { getFolderTypes, getTaskTypes } from '/src/utils'
 
 import pypeClient from '/src/pype'
 
-const typeEditor = (options, callback, value) => {
+
+const typeEditor = (options, callback, value, settings) => {
   const rowData = options.node.data
   if (!rowData) return <></>
 
@@ -53,7 +54,7 @@ const typeEditor = (options, callback, value) => {
   )
 }
 
-const stringEditor = (options, callback, value) => {
+const stringEditor = (options, callback, value, settings) => {
   return (
     <InputText
       value={value}
@@ -64,7 +65,26 @@ const stringEditor = (options, callback, value) => {
   )
 }
 
-const integerEditor = (options, callback, value) => {
+const enumEditor = (options, callback, value, settings) => {
+  const enumData = settings.enum || []
+  const onChange = (event) => callback(options, event.value)
+
+  return (
+    <Dropdown
+      value={value || ''}
+      options={enumData}
+      optionLabel="label"
+      optionValue="value"
+      dataKey="value"
+      onChange={onChange}
+      style={{  minWidth: 10, width: '100%' }}
+    />
+  )
+
+}
+
+
+const integerEditor = (options, callback, value, settings) => {
   const attrSettings = pypeClient.getAttribSettings(options.field)
 
   let min = null
@@ -96,7 +116,7 @@ const integerEditor = (options, callback, value) => {
   )
 }
 
-const floatEditor = (options, callback, value) => {
+const floatEditor = (options, callback, value, settings) => {
   //  onChange={(e) => options.editorCallback(e.value)}
   const attrSettings = pypeClient.getAttribSettings(options.field)
   let min = null
@@ -133,4 +153,4 @@ const floatEditor = (options, callback, value) => {
   )
 }
 
-export { typeEditor, stringEditor, integerEditor, floatEditor }
+export { typeEditor, stringEditor, integerEditor, floatEditor, enumEditor }
