@@ -44,18 +44,26 @@ const DateTimeContainer = styled.div`
   }
 `
 
-const TimestampField = ({ value }) => {
-  let dd, tt
-  const ts = Math.trunc(value * 1000)
-  if (!ts) return null
+const timestampToTime = (timestamp) => {
+  // convert unix timestamp (in seconds) to a list ["YYYY-MM-DD", "HH:MM:SS"]
+  // assume timestamp is in UTC, return local time
+  //
+  if (!timestamp) return ['-', '-']
+  const jsTimestamp = Math.trunc(timestamp * 1000)
+  
+  const date = new Date(jsTimestamp)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return [`${year}-${month}-${day}`, `${hours}:${minutes}:${seconds}`]
+}
 
-  try {
-    const date = new Date(ts)
-    if (date)
-      [dd, tt] = date.toISOString().slice(0, 19).split('T')
-  } catch (e) {
-    console.error("Bad value", ts)
-  }
+
+const TimestampField = ({ value }) => {
+  const [dd, tt] = timestampToTime(value)
   return (
     <DateTimeContainer>
       <span>{dd}</span>
