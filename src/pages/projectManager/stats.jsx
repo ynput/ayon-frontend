@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Fieldset } from 'primereact/fieldset'
 import { toast } from 'react-toastify'
 
 const ProjectStats = ({ projectName }) => {
@@ -28,7 +27,6 @@ const ProjectStats = ({ projectName }) => {
   if (!(data && data.counts)) return <></>
 
   return (
-    <Fieldset legend="Project statistics">
       <ul>
         {Object.keys(data.counts).map((key) => (
           <li key={key}>
@@ -36,7 +34,6 @@ const ProjectStats = ({ projectName }) => {
           </li>
         ))}
       </ul>
-    </Fieldset>
   )
 }
 

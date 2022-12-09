@@ -1,10 +1,10 @@
-# OpenPype server web interface
+# Ayon server web interface
 
-All the OpenPype web frontends are for preview purposes and convenience only at the moment to make it easier to explore the database records during the development phase. Any functionality they have or lack at the moment is not guaranteed in future releases. 
+All the Ayon web frontends are for preview purposes and convenience only at the moment to make it easier to explore the database records during the development phase. Any functionality they have or lack at the moment is not guaranteed in future releases. 
 
 ## Requirements
 
-- nodejs >= 17
+- nodejs >= 18
 - yarn
 
 ## Building
