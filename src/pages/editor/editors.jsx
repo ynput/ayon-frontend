@@ -2,7 +2,7 @@ import { InputText, InputNumber } from 'openpype-components'
 import { Dropdown } from 'primereact/dropdown'
 import { getFolderTypes, getTaskTypes } from '/src/utils'
 
-import pypeClient from '/src/pype'
+import ayonClient from '/src/ayon'
 
 
 const typeEditor = (options, callback, value, settings) => {
@@ -85,7 +85,7 @@ const enumEditor = (options, callback, value, settings) => {
 
 
 const integerEditor = (options, callback, value, settings) => {
-  const attrSettings = pypeClient.getAttribSettings(options.field)
+  const attrSettings = ayonClient.getAttribSettings(options.field)
 
   let min = null
   if (attrSettings && attrSettings.data.hasOwnProperty('gt'))
@@ -118,7 +118,7 @@ const integerEditor = (options, callback, value, settings) => {
 
 const floatEditor = (options, callback, value, settings) => {
   //  onChange={(e) => options.editorCallback(e.value)}
-  const attrSettings = pypeClient.getAttribSettings(options.field)
+  const attrSettings = ayonClient.getAttribSettings(options.field)
   let min = null
   if (attrSettings && attrSettings.data.hasOwnProperty('gt'))
     min = attrSettings.data.gt + 0.00001

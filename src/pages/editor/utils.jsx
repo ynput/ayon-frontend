@@ -1,4 +1,4 @@
-import pypeClient from '/src/pype'
+import ayonClient from '/src/ayon'
 
 import { CellWithIcon } from '/src/components/icons'
 import { getFolderTypeIcon, getTaskTypeIcon } from '/src/utils'
@@ -67,9 +67,9 @@ const formatType = (node, changes, styled = true) => {
 }
 
 const getColumns = () => {
-  if (pypeClient.settings.attributes.length === 0) return []
+  if (ayonClient.settings.attributes.length === 0) return []
   let cols = []
-  for (const attrib of pypeClient.settings.attributes) {
+  for (const attrib of ayonClient.settings.attributes) {
     if (attrib.scope.includes('folder')) {
       let editor
       if (attrib.data.type === 'integer') {

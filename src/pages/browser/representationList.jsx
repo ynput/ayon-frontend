@@ -86,7 +86,13 @@ const RepresentationList = ({ representations }) => {
         >
           {columns.map((col) => {
             return (
-              <Column {...col} key={col.field} style={{ width: col.width }} />
+              <Column
+                key={col.field} 
+                field={col.field}
+                header={col.header}
+                expander={col.expander}
+                style={{ width: col.width }} 
+              />
             )
           })}
         </TreeTable>

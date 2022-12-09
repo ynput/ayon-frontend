@@ -1,5 +1,5 @@
 import axios from 'axios'
-import pypeClient from '/src/pype'
+import ayonClient from '/src/ayon'
 
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
@@ -54,7 +54,7 @@ const VERSION_QUERY = `
 
 const buildVersionQuery = () => {
   let f_attribs = ''
-  for (const attrib of pypeClient.settings.attributes) {
+  for (const attrib of ayonClient.settings.attributes) {
     if (attrib.scope.includes('version')) f_attribs += `${attrib.name}\n`
   }
   return VERSION_QUERY.replace('#VERSION_ATTRS#', f_attribs)

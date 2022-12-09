@@ -1,4 +1,4 @@
-import pypeClient from '/src/pype'
+import ayonClient from '/src/ayon'
 import axios from 'axios'
 import short from 'short-uuid'
 
@@ -53,7 +53,7 @@ const App = () => {
             })
           )
 
-          pypeClient.settings = {
+          ayonClient.settings = {
             attributes: response.data.attributes,
           }
         }

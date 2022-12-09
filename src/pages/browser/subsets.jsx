@@ -321,11 +321,15 @@ const Subsets = () => {
           {columns.map((col, i) => {
             return (
               <Column
-                {...col}
                 key={col.field}
                 style={{ width: col.width }}
                 expander={i === 0}
                 resizeable={true}
+
+                field={col.field}
+                header={col.header}
+                body={col.body}
+
               />
             )
           })}

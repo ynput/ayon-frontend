@@ -3,6 +3,15 @@
 import { getTagColor, getStatusColor } from '/src/utils'
 import styled from 'styled-components'
 
+
+// Attributes
+
+
+const AttributeField = ({ value }) => {
+
+}
+
+
 // Tags
 
 const TagsContainer = styled.div`
@@ -91,4 +100,4 @@ const PathField = ({ value }) => {
 }
 
 
-export { TagsField, StatusField, TimestampField, PathField }
+export { AttributeField, TagsField, StatusField, TimestampField, PathField }

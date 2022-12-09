@@ -1,4 +1,4 @@
-import pypeClient from '/src/pype'
+import ayonClient from '/src/ayon'
 
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
@@ -33,7 +33,7 @@ const TASK_QUERY = `
 
 const buildTaskQuery = () => {
   let f_attribs = ''
-  for (const attrib of pypeClient.settings.attributes) {
+  for (const attrib of ayonClient.settings.attributes) {
     if (attrib.scope.includes('task')) f_attribs += `${attrib.name}\n`
   }
   return TASK_QUERY.replace('#TASK_ATTRS#', f_attribs)

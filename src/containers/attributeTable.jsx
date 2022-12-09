@@ -1,4 +1,4 @@
-import pypeClient from '/src/pype'
+import ayonClient from '/src/ayon'
 import styled from 'styled-components'
 
 const AttributeTableContainer = styled.div`
@@ -31,7 +31,7 @@ const AttributeTable = ({ entityType, data, additionalData, style }) => {
         ))}
 
       {data &&
-        pypeClient.settings.attributes
+        ayonClient.settings.attributes
           .filter((attr) => attr.scope.includes(entityType) && data[attr.name])
           .map((attr) => (
             <AttributeTableRow key={attr.name}>
