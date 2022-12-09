@@ -151,7 +151,7 @@ const LoginPage = () => {
 
   return (
     <main className="center">
-      <h1>OpenPype server</h1>
+      <h1>Ayon server</h1>
       <Panel>
         <InputText
           ref={loginRef}

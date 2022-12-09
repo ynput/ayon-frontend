@@ -1,7 +1,7 @@
 {
-  "name": "openpype4-frontend",
+  "name": "ayon-frontend",
   "private": true,
-  "version": "4.0.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

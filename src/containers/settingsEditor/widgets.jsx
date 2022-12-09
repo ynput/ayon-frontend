@@ -47,7 +47,6 @@ const CheckboxWidget = function (props) {
 
 const SelectWidget = (props) => {
   const { originalValue, path } = parseContext(props)
-
   const enumLabels = props.schema?.enumLabels || {}
   const options = []
   for (const opt of props.options.enumOptions) {
@@ -195,6 +194,7 @@ const TextWidget = (props) => {
 
 
   return (
+    <>
     <Input
       className={`form-field ${
         props.rawErrors?.length ? 'p-invalid error' : ''
@@ -205,6 +205,8 @@ const TextWidget = (props) => {
       tooltipOptions={{ position: 'bottom' }}
       {...opts}
     />
+      {/*JSON.stringify(value)*/}
+    </>
   )
 }
 
