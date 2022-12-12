@@ -3,6 +3,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { DateTime } from 'luxon'
 
+// import styles
+import styles from './subsets.module.scss'
+
 import axios from 'axios'
 
 import { InputText, TablePanel, Section, Toolbar } from 'openpype-components'
@@ -291,7 +294,6 @@ const Subsets = () => {
       <Toolbar>
         <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
       </Toolbar>
-
       <TablePanel loading={loading}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
@@ -317,6 +319,7 @@ const Subsets = () => {
           onRowClick={onRowClick}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
+          className={styles.table}
         >
           {columns.map((col, i) => {
             return (
@@ -325,11 +328,9 @@ const Subsets = () => {
                 style={{ width: col.width }}
                 expander={i === 0}
                 resizeable={true}
-
                 field={col.field}
                 header={col.header}
                 body={col.body}
-
               />
             )
           })}

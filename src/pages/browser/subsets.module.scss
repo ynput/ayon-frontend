@@ -1,0 +1,17 @@
+.table {
+  height: 100%;
+
+  :global(.p-treetable-scrollable-wrapper) {
+    height: inherit;
+  }
+
+  :global(.p-treetable-scrollable-view) {
+    height: inherit;
+    display: flex;
+    flex-direction: column;
+  }
+  :global(.p-treetable-scrollable-body) {
+    flex: 1;
+    max-height: none !important;
+  }
+}
