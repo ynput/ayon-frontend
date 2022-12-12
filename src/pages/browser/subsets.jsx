@@ -329,7 +329,7 @@ const Subsets = () => {
                 field={col.field}
                 header={col.header}
                 body={col.body}
-
+                
               />
             )
           })}
