@@ -152,21 +152,11 @@ const TextWidget = (props) => {
   } else if (props.schema.widget === 'color') {
     Input = InputColor
     opts.value = value
-    opts.format = 'hex'
-    opts.alpha = false
+    opts.format = props.schema.colorFormat || "hex"
+    opts.alpha = props.schema.colorAlpha || false
     opts.onChange = (e) => {
       updateOverrides(props, e.target.value !== originalValue)
       props.onChange(e.target.value)
-    }
-  } else if (props.schema.widget === 'color_with_alpha') {
-    Input = InputColor
-    opts.value = value
-    opts.format = 'float'
-    opts.alpha = true
-    opts.onChange = (e) => {
-      const newVal = e.target.value
-      updateOverrides(props, newVal !== originalValue)
-      props.onChange(newVal)
     }
   
   } else if (props.schema.widget === 'textarea') {
