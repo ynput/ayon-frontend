@@ -3,9 +3,6 @@ import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { DateTime } from 'luxon'
 
-// import styles
-import styles from './subsets.module.scss'
-
 import axios from 'axios'
 
 import { InputText, TablePanel, Section, Toolbar } from 'openpype-components'
@@ -307,7 +304,6 @@ const Subsets = () => {
         />
         <TreeTable
           responsive="true"
-          scrollHeight="100%"
           scrollable="true"
           resizableColumns
           columnResizeMode="expand"
@@ -319,7 +315,6 @@ const Subsets = () => {
           onRowClick={onRowClick}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
-          className={styles.table}
         >
           {columns.map((col, i) => {
             return (
