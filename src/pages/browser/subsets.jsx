@@ -325,12 +325,12 @@ const Subsets = () => {
                 style={{ width: col.width }}
                 expander={i === 0}
                 resizeable={true}
-                field={col.field}
 
+                field={col.field}
                 header={col.header}
                 body={col.body}
+                
               />
-              
             )
           })}
         </TreeTable>
