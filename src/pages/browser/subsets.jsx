@@ -291,6 +291,7 @@ const Subsets = () => {
       <Toolbar>
         <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
       </Toolbar>
+
       <TablePanel loading={loading}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
@@ -325,9 +326,11 @@ const Subsets = () => {
                 expander={i === 0}
                 resizeable={true}
                 field={col.field}
+
                 header={col.header}
                 body={col.body}
               />
+              
             )
           })}
         </TreeTable>
