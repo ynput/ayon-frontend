@@ -304,6 +304,7 @@ const Subsets = () => {
         />
         <TreeTable
           responsive="true"
+          scrollHeight="100%"
           scrollable="true"
           resizableColumns
           columnResizeMode="expand"
