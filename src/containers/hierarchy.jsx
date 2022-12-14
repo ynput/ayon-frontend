@@ -93,7 +93,7 @@ const Hierarchy = (props) => {
   const folderTypes = context.project.folderTypes
   const expandedFolders = context.expandedFolders
   const focusedFolders = context.focusedFolders
-
+  
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
