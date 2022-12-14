@@ -13,7 +13,7 @@ const contextSlice = createSlice({
     focusedTasks: [],
     selectedVersions: {},
     pairing: [],
-    editTags: false,
+    dialog: {},
   },
   reducers: {
     selectProject: (state, action) => {
@@ -108,8 +108,9 @@ const contextSlice = createSlice({
       state.breadcrumbs = bc
       return state
     }, // setBreadcrumbs
-    setEditTags: (state, action) => {
-      state.editTags = action.payload
+    setDialog: (state, action) => {
+      if (action.payload) state.dialog = action.payload
+      else state.dialog = {}
     },
   }, // reducers
 })
@@ -125,7 +126,7 @@ export const {
   setExpandedFolders,
   setBreadcrumbs,
   setPairing,
-  setEditTags,
+  setDialog,
 } = contextSlice.actions
 
 export default contextSlice.reducer

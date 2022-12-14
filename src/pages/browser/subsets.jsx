@@ -22,7 +22,7 @@ import {
   setSelectedVersions,
   setBreadcrumbs,
   setPairing,
-  setEditTags,
+  setDialog,
 } from '/src/features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
@@ -283,7 +283,7 @@ const Subsets = () => {
     },
     {
       label: 'Edit Tags',
-      command: () => dispatch(setEditTags(true)),
+      command: () => dispatch(setDialog({ type: 'tags' })),
       disabled: focusedFolders.length !== 1,
     },
   ]

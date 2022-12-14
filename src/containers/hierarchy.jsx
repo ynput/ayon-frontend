@@ -24,7 +24,7 @@ import {
   setFocusedFolders,
   setBreadcrumbs,
   setExpandedFolders,
-  setEditTags,
+  setDialog,
 } from '/src/features/context'
 import { getFolderTypeIcon } from '/src//utils'
 
@@ -212,7 +212,14 @@ const Hierarchy = (props) => {
     },
     {
       label: 'Edit Tags',
-      command: () => dispatch(setEditTags(true)),
+      command: (v) =>
+        dispatch(
+          setDialog({
+            type: 'tags',
+            entityId: focusedFolders[0],
+            entityType: 'folder',
+          })
+        ),
       disabled: focusedFolders.length !== 1,
     },
   ]
