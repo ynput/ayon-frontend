@@ -283,8 +283,15 @@ const Subsets = () => {
     },
     {
       label: 'Edit Tags',
-      command: () => dispatch(setDialog({ type: 'tags' })),
-      disabled: focusedFolders.length !== 1,
+      command: () =>
+        dispatch(
+          setDialog({
+            type: 'tags',
+            entityId: focusedVersions[0],
+            entityType: 'version',
+          })
+        ),
+      disabled: focusedVersions.length !== 1,
     },
   ]
 

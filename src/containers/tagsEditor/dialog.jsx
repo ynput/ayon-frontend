@@ -78,7 +78,6 @@ const TagsEditorDialog = ({
       contentStyle={{ overflow: 'hidden' }}
     >
       <TagsEditor value={selected} options={tags} onChange={handleOnChange} />
-      {/* <div style={{ height: 50 }}></div> */}
     </Dialog>
   )
 }

@@ -148,7 +148,14 @@ const TaskList = ({ style = {} }) => {
     },
     {
       label: 'Edit Tags',
-      command: () => dispatch(setDialog({ type: 'tags' })),
+      command: () =>
+        dispatch(
+          setDialog({
+            type: 'tags',
+            entityId: context.focusedTasks[0],
+            entityType: 'task',
+          })
+        ),
       disabled: context.focusedFolders.length !== 1,
     },
   ]

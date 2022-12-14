@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setDialog } from '/src/features/context'
 import TagsEditorDialog from './dialog'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 
 export const TagsEditorContainer = () => {
   // get redux context state
@@ -49,9 +50,19 @@ export const TagsEditorContainer = () => {
     }
   }, [isTagsOpen, entityId, setIsLoading])
 
-  const handleSuccess = (tags) => {
+  const handleSuccess = async (tags) => {
     console.log(tags)
-    setTags(tags)
+    try {
+      await axios.patch(
+        `/api/projects/${projectName}/${entityType}s/${entityId}`,
+        { tags }
+      )
+    } catch (error) {
+      console.error(error)
+      const errMessage =
+        error.response.data.detail || `Error ${error.response.status}`
+      toast.error(`Unable to update tags. ${errMessage}`)
+    }
   }
 
   return (
@@ -62,7 +73,7 @@ export const TagsEditorContainer = () => {
       value={tags}
       onSuccess={handleSuccess}
       isLoading={isLoading}
-      error={isError}
+      isError={isError}
     />
   )
 }
