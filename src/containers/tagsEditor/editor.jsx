@@ -8,6 +8,11 @@ const EditorContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  &::after {
+    content: '';
+    height: 30px;
+  }
 `
 
 const ButtonsContainer = styled.div`

@@ -18,6 +18,12 @@ const TagsEditorDialog = ({
   // Set a constant dialog height so that there's no popping
   const [height, setHeight] = useState(null)
 
+  useEffect(() => {
+    return () => {
+      setHeight(null)
+    }
+  }, [visible])
+
   // temp state of selected tags
   const [selected, setSelected] = useState([])
 
@@ -67,12 +73,12 @@ const TagsEditorDialog = ({
       footer={footer}
       header={header}
       ref={dialogRef}
-      onShow={() =>
-        setHeight(dialogRef.current?.getElement()?.offsetHeight + 50)
-      }
+      onShow={() => setHeight(dialogRef.current?.getElement()?.offsetHeight)}
       style={{ height: height || 'unset' }}
+      contentStyle={{ overflow: 'hidden' }}
     >
       <TagsEditor value={selected} options={tags} onChange={handleOnChange} />
+      {/* <div style={{ height: 50 }}></div> */}
     </Dialog>
   )
 }
