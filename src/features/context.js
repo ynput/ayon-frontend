@@ -13,7 +13,7 @@ const contextSlice = createSlice({
     focusedTasks: [],
     selectedVersions: {},
     pairing: [],
-    editTags: true,
+    editTags: false,
   },
   reducers: {
     selectProject: (state, action) => {
