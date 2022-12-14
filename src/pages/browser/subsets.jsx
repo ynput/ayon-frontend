@@ -22,6 +22,7 @@ import {
   setSelectedVersions,
   setBreadcrumbs,
   setPairing,
+  setEditTags,
 } from '/src/features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
@@ -280,6 +281,11 @@ const Subsets = () => {
       command: () => setShowDetail('version'),
       disabled: focusedVersions.length !== 1,
     },
+    {
+      label: 'Edit Tags',
+      command: () => dispatch(setEditTags(true)),
+      disabled: focusedFolders.length !== 1,
+    },
   ]
 
   //
@@ -325,11 +331,9 @@ const Subsets = () => {
                 style={{ width: col.width }}
                 expander={i === 0}
                 resizeable={true}
-
                 field={col.field}
                 header={col.header}
                 body={col.body}
-                
               />
             )
           })}

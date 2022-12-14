@@ -24,6 +24,7 @@ import {
   setFocusedFolders,
   setBreadcrumbs,
   setExpandedFolders,
+  setEditTags,
 } from '/src/features/context'
 import { getFolderTypeIcon } from '/src//utils'
 
@@ -90,7 +91,7 @@ const Hierarchy = (props) => {
   const folderTypes = context.project.folderTypes
   const expandedFolders = context.expandedFolders
   const focusedFolders = context.focusedFolders
-  
+
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
@@ -207,6 +208,11 @@ const Hierarchy = (props) => {
     {
       label: 'Detail',
       command: () => setShowDetail(true),
+      disabled: focusedFolders.length !== 1,
+    },
+    {
+      label: 'Edit Tags',
+      command: () => dispatch(setEditTags(true)),
       disabled: focusedFolders.length !== 1,
     },
   ]

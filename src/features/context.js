@@ -13,6 +13,7 @@ const contextSlice = createSlice({
     focusedTasks: [],
     selectedVersions: {},
     pairing: [],
+    editTags: true,
   },
   reducers: {
     selectProject: (state, action) => {
@@ -107,6 +108,9 @@ const contextSlice = createSlice({
       state.breadcrumbs = bc
       return state
     }, // setBreadcrumbs
+    setEditTags: (state, action) => {
+      state.editTags = action.payload
+    },
   }, // reducers
 })
 
@@ -121,6 +125,7 @@ export const {
   setExpandedFolders,
   setBreadcrumbs,
   setPairing,
+  setEditTags,
 } = contextSlice.actions
 
 export default contextSlice.reducer
