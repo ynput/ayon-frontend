@@ -54,7 +54,7 @@ const App = () => {
           )
 
           if (!response.data.attributes.length) {
-            toast.error('Unable to load attributes. Something is wrong')
+            toast.error("Unable to load attributes. Something is wrong")
           }
 
           ayonClient.settings = {
