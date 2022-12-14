@@ -269,14 +269,16 @@ function FieldTemplate(props) {
       : ''
 
 
+  // do not show error for color widgets (they are declared as strings, but
+  // contains arrays. The error is not relevant for the user)
+  const className = `form-inline-field ${
+    (props.errors.props.errors && (props.schema.widget !== 'color')) ? 'error' : ''
+  }`
+
   return (
     <>
       {divider}
-      <div
-        className={`form-inline-field ${
-          props.errors.props.errors ? 'error' : ''
-        }`}
-      >
+      <div className={className} >
         {props.label && (
           <div
             className={`form-inline-field-label ${

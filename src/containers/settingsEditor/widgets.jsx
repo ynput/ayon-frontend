@@ -10,6 +10,16 @@ import {
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 
+
+const addDecimalPoint = (value) => {
+  const valueString = value.toString(10)
+  if (!valueString.match(/\./))
+    return valueString.concat(".0")
+  else 
+    return valueString
+}
+
+
 const updateOverrides = (props, changed) => {
   if (!props.formContext) {
     return // WARN!
@@ -133,41 +143,50 @@ const TextWidget = (props) => {
     placeholder: props.schema?.placeholder || '',
     disabled: props.schema.readonly || props.schema.disabled || (props.schema.fixedValue && props.schema.fixedValue === value),
   }
-  if (props.schema.type === 'integer') {
+
+  //
+  // Numeric input
+  //
+
+  if (["integer", "number"].includes(props.schema.type)) {
     Input = InputNumber
-    opts.value = value
+    if (props.schema.type === "number"){
+      opts.step = 0.1
+      opts.value = addDecimalPoint(value)
+    } else {
+      opts.value = value
+      opts.step = 1
+    }
     if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
     if (props.schema.maximum !== undefined) opts.max = props.schema.maximum
     if (props.schema.exclusiveMinimum !== undefined)
-      opts.min = props.schema.exclusiveMinimum + 1
+      opts.min = props.schema.exclusiveMinimum + opts.step
     if (props.schema.exclusiveMaximum !== undefined)
-      opts.max = props.schema.exclusiveMaximum - 1
-    opts.step = 1
+      opts.max = props.schema.exclusiveMaximum - opts.step
     opts.showButtons = true
     opts.useGrouping = false
     opts.onChange = (e) => {
       updateOverrides(props, e.value !== originalValue)
       props.onChange(e.target.value)
     }
+
+  //
+  // Color picker
+  //
+
   } else if (props.schema.widget === 'color') {
     Input = InputColor
     opts.value = value
-    opts.format = 'hex'
-    opts.alpha = false
+    opts.format = props.schema.colorFormat || "hex"
+    opts.alpha = props.schema.colorAlpha || false
     opts.onChange = (e) => {
       updateOverrides(props, e.target.value !== originalValue)
       props.onChange(e.target.value)
     }
-  } else if (props.schema.widget === 'color_with_alpha') {
-    Input = InputColor
-    opts.value = value
-    opts.format = 'float'
-    opts.alpha = true
-    opts.onChange = (e) => {
-      const newVal = e.target.value
-      updateOverrides(props, newVal !== originalValue)
-      props.onChange(newVal)
-    }
+
+  //
+  // Textarea
+  //
   
   } else if (props.schema.widget === 'textarea') {
     Input = InputTextarea

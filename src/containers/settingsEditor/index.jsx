@@ -74,6 +74,8 @@ const SettingsEditor = ({
     changedKeys: changedKeys || [], // source of all problems
     onSetChangedKeys: onSetChangedKeys || (() => {}),
   }
+  
+  console.log('SettingsEditor', formContext)
 
   return (
     <>

@@ -47,6 +47,7 @@ const filterHierarchy = (text, folder) => {
         children: newChildren,
         data: {
           name: item.name,
+          label: item.label,
           folderType: item.folderType,
           hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
@@ -54,7 +55,7 @@ const filterHierarchy = (text, folder) => {
           body: (
             <CellWithIcon
               icon={getFolderTypeIcon(item.folderType)}
-              text={item.name}
+              text={item.label}
             />
           ),
         },
@@ -67,6 +68,7 @@ const filterHierarchy = (text, folder) => {
           children: newChildren,
           data: {
             name: item.name,
+            label: item.label,
             folderType: item.folderType,
             hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
@@ -74,7 +76,7 @@ const filterHierarchy = (text, folder) => {
             body: (
               <CellWithIcon
                 icon={getFolderTypeIcon(item.folderType)}
-                text={item.name}
+                text={item.label}
               />
             ),
           },

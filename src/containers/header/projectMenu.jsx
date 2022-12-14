@@ -3,9 +3,15 @@ import { Button } from 'openpype-components'
 
 import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
+import { useSelector } from 'react-redux'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
+
+  // get project context
+  const context = useSelector((state) => ({ ...state.context }))
+  // get current project name (id)
+  const projectName = context.projectName
 
   const footer = (
     <Button
@@ -37,6 +43,7 @@ const ProjectMenu = ({ visible, onHide }) => {
           onSelect={(projectName) =>
             navigate(`/projects/${projectName}/browser`)
           }
+          selection={projectName}
         />
       </div>
     </Sidebar>
