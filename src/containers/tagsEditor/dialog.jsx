@@ -1,10 +1,23 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { Dialog } from 'primereact/dialog'
 import { Button } from 'openpype-components'
 import TagsEditor from './editor'
 
-const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags }) => {
+const TagsEditorDialog = ({
+  visible,
+  onHide,
+  onSuccess,
+  value,
+  tags,
+  isLoading,
+  isError,
+}) => {
+  // temp dialog
+  const dialogRef = useRef(null)
+  // Set a constant dialog height so that there's no popping
+  const [height, setHeight] = useState(null)
+
   // temp state of selected tags
   const [selected, setSelected] = useState([])
 
@@ -45,8 +58,20 @@ const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags }) => {
     </div>
   )
 
+  if (isLoading || isError) return null
+
   return (
-    <Dialog visible={visible} onHide={onHide} footer={footer} header={header}>
+    <Dialog
+      visible={visible}
+      onHide={onHide}
+      footer={footer}
+      header={header}
+      ref={dialogRef}
+      onShow={() =>
+        setHeight(dialogRef.current?.getElement()?.offsetHeight + 50)
+      }
+      style={{ height: height || 'unset' }}
+    >
       <TagsEditor value={selected} options={tags} onChange={handleOnChange} />
     </Dialog>
   )
@@ -65,6 +90,7 @@ TagsEditorDialog.propTypes = {
   onSuccess: PropTypes.func.isRequired,
   value: PropTypes.arrayOf(PropTypes.string),
   tags: tagsType,
+  isLoading: PropTypes.bool,
 }
 
 export default TagsEditorDialog
