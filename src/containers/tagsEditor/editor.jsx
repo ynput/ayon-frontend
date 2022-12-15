@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { Button, InputText } from 'openpype-components'
 import styled from 'styled-components'
@@ -74,20 +74,31 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
     )
   }
 
+  const optionsObject = useMemo(
+    () => options.reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {}),
+    [options]
+  )
+
   return (
     <EditorContainer>
       <div>
         <h3>Assigned</h3>
         <ButtonsContainer>
-          {value.map((v) => (
-            <Button
-              label={v}
-              icon="close"
-              onClick={() => handleRemove(v)}
-              key={v}
-              style={{ backgroundColor: '#435648', gap: 3 }}
-            />
-          ))}
+          {value.map((v) => {
+            const value = optionsObject[v]
+            return (
+              <Button
+                label={v}
+                icon="close"
+                onClick={() => handleRemove(v)}
+                key={v}
+                style={{
+                  gap: 3,
+                  borderLeft: `solid 4px ${value.color}`,
+                }}
+              />
+            )
+          })}
         </ButtonsContainer>
       </div>
       <div>
@@ -99,15 +110,17 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </AvailableHeader>
-
         <ButtonsContainer>
-          {filteredOptions.map(({ name }) => (
+          {filteredOptions.map(({ name, color }) => (
             <Button
               label={name}
               icon="add"
               onClick={() => handleAdd(name)}
               key={name}
-              style={{ gap: 3 }}
+              style={{
+                gap: 3,
+                borderLeft: `solid 4px ${color}`,
+              }}
             />
           ))}
         </ButtonsContainer>
