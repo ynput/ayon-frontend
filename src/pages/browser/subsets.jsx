@@ -282,7 +282,7 @@ const Subsets = () => {
       disabled: focusedVersions.length !== 1,
     },
     {
-      label: 'Edit Tags',
+      label: 'Edit Version Tags',
       command: () =>
         dispatch(
           setDialog({

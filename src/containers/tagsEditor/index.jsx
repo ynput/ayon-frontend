@@ -4,6 +4,7 @@ import { setDialog } from '/src/features/context'
 import TagsEditorDialog from './dialog'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { setReload } from '../../features/context'
 
 export const TagsEditorContainer = () => {
   // get redux context state
@@ -13,6 +14,7 @@ export const TagsEditorContainer = () => {
   const isTagsOpen = context.dialog.type === 'tags'
 
   const entityType = context.dialog.entityType
+  // TODO entityIds -> [id]
   const entityId = context.dialog.entityId
   const projectName = context.projectName
   // get all tags for project
@@ -57,6 +59,11 @@ export const TagsEditorContainer = () => {
         `/api/projects/${projectName}/${entityType}s/${entityId}`,
         { tags }
       )
+
+      // on success updating tags dispatch reload of data
+      dispatch(setReload({ type: entityType, reload: true }))
+
+      // dispatch callback function to reload data
     } catch (error) {
       console.error(error)
       const errMessage =

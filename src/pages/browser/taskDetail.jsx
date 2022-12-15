@@ -1,13 +1,14 @@
 import ayonClient from '/src/ayon'
 
 import { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 
 import AttributeTable from '/src/containers/attributeTable'
 import { getTaskTypeIcon } from '/src/utils'
 import { StatusField, TagsField } from '/src/containers/fieldFormat'
 import { Panel } from 'openpype-components'
+import { setReload } from '../../features/context'
 
 const TASK_QUERY = `
     query Tasks($projectName: String!, $tasks: [String!]!) {
@@ -40,16 +41,16 @@ const buildTaskQuery = () => {
 }
 
 const TaskDetail = () => {
+  const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const tasks = context.focusedTasks
   const taskId = tasks.length === 1 ? tasks[0] : null
   const [data, setData] = useState({})
+  const query = buildTaskQuery()
+  const variables = { projectName, tasks: [taskId] }
 
-  useEffect(() => {
-    const query = buildTaskQuery()
-    const variables = { projectName, tasks: [taskId] }
-
+  const getTaskData = () => {
     if (!taskId) {
       setData({})
       return
@@ -70,7 +71,24 @@ const TaskDetail = () => {
       setData(edges[0].node)
     })
     //eslint-disable-next-line
+  }
+
+  useEffect(() => {
+    getTaskData()
   }, [projectName, taskId])
+
+  const reload = context.reload.task
+
+  useEffect(() => {
+    if (reload) {
+      // reloading task data
+      console.log('reloading task data')
+      // get task data
+      getTaskData()
+      // clear reload
+      dispatch(setReload({ type: 'task', reload: false }))
+    }
+  }, [reload])
 
   if (tasks.length > 1) {
     return (

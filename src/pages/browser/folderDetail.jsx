@@ -1,7 +1,7 @@
 import ayonClient from '/src/ayon'
 
 import { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 
 import { Panel } from 'openpype-components'
@@ -11,6 +11,7 @@ import AttributeTable from '/src/containers/attributeTable'
 import { getFolderTypeIcon } from '/src/utils'
 
 import { StatusField, TagsField } from '/src/containers/fieldFormat'
+import { setReload } from '../../features/context'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {
@@ -43,13 +44,15 @@ const buildFolderQuery = () => {
 }
 
 const FolderDetail = () => {
+  const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const folders = context.focusedFolders
   const folderId = folders.length === 1 ? folders[0] : null
+
   const [data, setData] = useState({})
 
-  useEffect(() => {
+  const getFolderData = () => {
     const query = buildFolderQuery()
     const variables = { projectName, folders: [folderId] }
 
@@ -72,8 +75,28 @@ const FolderDetail = () => {
 
       setData(edges[0].node)
     })
+  }
+
+  // get data for folder on mount and folder change
+  useEffect(() => {
+    getFolderData()
     //eslint-disable-next-line
   }, [projectName, folderId])
+
+  // get reload trigger for type = "folder"
+  const reload = context.reload.folder
+
+  // reload data on redux trigger (eg: updating tags)
+  useEffect(() => {
+    if (reload) {
+      console.log('reloading folder data')
+      // reload data for folder
+      getFolderData(projectName, folderId)
+      // reset reload trigger
+      dispatch(setReload({ type: 'folder', reload: false }))
+    }
+    //eslint-disable-next-line
+  }, [reload])
 
   if (folders.length > 1) {
     return (

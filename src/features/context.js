@@ -14,6 +14,7 @@ const contextSlice = createSlice({
     selectedVersions: {},
     pairing: [],
     dialog: {},
+    reload: {},
   },
   reducers: {
     selectProject: (state, action) => {
@@ -112,6 +113,12 @@ const contextSlice = createSlice({
       if (action.payload) state.dialog = action.payload
       else state.dialog = {}
     },
+    setReload: (state, action) => {
+      state.reload = {
+        ...state.reload,
+        [action.payload.type]: action.payload.reload,
+      }
+    },
   }, // reducers
 })
 
@@ -127,6 +134,7 @@ export const {
   setBreadcrumbs,
   setPairing,
   setDialog,
+  setReload,
 } = contextSlice.actions
 
 export default contextSlice.reducer
