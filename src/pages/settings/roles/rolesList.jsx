@@ -12,7 +12,7 @@ import {
   FormRow,
   Section,
   Toolbar,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 import axios from 'axios'
 
 const NewRoleDialog = ({ onClose, rolesList }) => {

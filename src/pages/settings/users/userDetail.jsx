@@ -2,7 +2,7 @@ import axios from 'axios'
 
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Spacer, Section, Toolbar, Panel } from 'openpype-components'
+import { Button, Spacer, Section, Toolbar, Panel } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { UserAttrib, AccessControl } from './forms'
 

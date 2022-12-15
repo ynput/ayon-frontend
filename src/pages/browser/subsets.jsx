@@ -5,7 +5,7 @@ import { DateTime } from 'luxon'
 
 import axios from 'axios'
 
-import { InputText, TablePanel, Section, Toolbar } from 'openpype-components'
+import { InputText, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'

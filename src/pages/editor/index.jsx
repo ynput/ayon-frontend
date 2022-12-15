@@ -12,7 +12,7 @@ import {
   Toolbar,
   TablePanel,
   InputSwitch,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'

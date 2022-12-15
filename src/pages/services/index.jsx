@@ -11,7 +11,7 @@ import {
   Spacer,
   Section,
   Toolbar,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 import NewServiceDialog from './newService'
 
 const formatTime = (rowData) => {

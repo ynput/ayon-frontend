@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useEffect, useState, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { InputText, InputPassword, Button, Panel } from 'openpype-components'
+import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
 
 import { login } from '/src/features/user'
 

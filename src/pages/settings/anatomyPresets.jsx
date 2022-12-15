@@ -17,7 +17,7 @@ import {
   Toolbar,
   TablePanel,
   ScrollPanel,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 import { loadAnatomyPresets } from '/src/utils'
 
 const PresetList = ({

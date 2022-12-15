@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { Dialog } from 'primereact/dialog'
-import { Button } from 'openpype-components'
+import { Button } from '@ynput/ayon-react-components'
 import TagsEditor from './editor'
 
 const TagsEditorDialog = ({

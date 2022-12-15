@@ -2,7 +2,7 @@ import ayonClient from '/src/ayon'
 import axios from 'axios'
 import short from 'short-uuid'
 
-import { LoaderShade } from 'openpype-components'
+import { LoaderShade } from '@ynput/ayon-react-components'
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'

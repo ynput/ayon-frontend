@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { Button } from 'openpype-components'
+import { Button } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 
 const Breadcrumbs = () => {

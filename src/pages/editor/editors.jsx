@@ -1,4 +1,4 @@
-import { InputText, InputNumber } from 'openpype-components'
+import { InputText, InputNumber } from '@ynput/ayon-react-components'
 import { Dropdown } from 'primereact/dropdown'
 import { getFolderTypes, getTaskTypes } from '/src/utils'
 

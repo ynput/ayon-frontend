@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
-import { Spacer, Button } from 'openpype-components'
+import { Spacer, Button } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { UserAttrib, AccessControl } from './forms'
 

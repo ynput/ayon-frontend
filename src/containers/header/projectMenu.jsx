@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Button } from 'openpype-components'
+import { Button } from '@ynput/ayon-react-components'
 
 import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'

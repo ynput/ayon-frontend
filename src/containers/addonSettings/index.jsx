@@ -11,7 +11,7 @@ import {
   Panel,
   Toolbar,
   ScrollPanel,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 import AddonList from '/src/containers/addonList'
 import AddonSettingsPanel from './addonSettingsPanel'

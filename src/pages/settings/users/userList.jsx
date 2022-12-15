@@ -14,7 +14,7 @@ import {
   FormRow,
   Section,
   Toolbar,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 import NewUserDialog from './newUserDialog'
 import axios from 'axios'
 

@@ -5,7 +5,7 @@ import {
   InputTextarea,
   InputSwitch,
   InputColor,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'

@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState } from 'react'
-import { LinkButton } from 'openpype-components'
+import { LinkButton } from '@ynput/ayon-react-components'
 import { Menu } from 'primereact/menu'
 
 const VersionList = (row, onSelectVersion) => {

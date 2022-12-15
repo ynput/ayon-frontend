@@ -5,7 +5,7 @@ import PubSub from '/src/pubsub'
 import { arrayEquals } from '/src/utils'
 import { toast } from 'react-toastify'
 
-import { LoaderShade } from 'openpype-components'
+import { LoaderShade } from '@ynput/ayon-react-components'
 
 const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`

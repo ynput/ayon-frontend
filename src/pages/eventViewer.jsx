@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { useState, useEffect } from 'react'
-import { Section, Toolbar, TablePanel } from 'openpype-components'
+import { Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
 
 import { Dialog } from 'primereact/dialog'

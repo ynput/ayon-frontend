@@ -1,4 +1,4 @@
-import { Shade } from 'openpype-components'
+import { Shade } from '@ynput/ayon-react-components'
 
 const LoadingPage = () => {
   return (
