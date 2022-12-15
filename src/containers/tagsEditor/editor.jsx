@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
-import { Button } from 'openpype-components'
+import { Button, InputText } from 'openpype-components'
 import styled from 'styled-components'
 
 const EditorContainer = styled.div`
@@ -19,9 +19,18 @@ const ButtonsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+  margin-top: 10px;
+`
+
+const AvailableHeader = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `
 
 const TagsEditor = ({ options = [], value = [], onChange }) => {
+  const [search, setSearch] = useState('')
+
   const handleRemove = (v) => {
     console.log('removing:', v)
     const newValue = [...value]
@@ -56,6 +65,15 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
     }
   }
 
+  // filter out already selected options
+  let filteredOptions = options.filter(({ name }) => !value.includes(name))
+  if (search !== '') {
+    // filter results if searched
+    filteredOptions = filteredOptions.filter(({ name }) =>
+      name.includes(search)
+    )
+  }
+
   return (
     <EditorContainer>
       <div>
@@ -73,20 +91,25 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
         </ButtonsContainer>
       </div>
       <div>
-        <h3>Available</h3>
+        <AvailableHeader>
+          <h3>Available</h3>
+          <InputText
+            placeholder={'Search tags...'}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </AvailableHeader>
+
         <ButtonsContainer>
-          {options.map(
-            ({ name }) =>
-              !value.includes(name) && (
-                <Button
-                  label={name}
-                  icon="add"
-                  onClick={() => handleAdd(name)}
-                  key={name}
-                  style={{ gap: 3 }}
-                />
-              )
-          )}
+          {filteredOptions.map(({ name }) => (
+            <Button
+              label={name}
+              icon="add"
+              onClick={() => handleAdd(name)}
+              key={name}
+              style={{ gap: 3 }}
+            />
+          ))}
         </ButtonsContainer>
       </div>
     </EditorContainer>
