@@ -152,7 +152,7 @@ const TaskList = ({ style = {} }) => {
         dispatch(
           setDialog({
             type: 'tags',
-            entityId: context.focusedTasks[0],
+            entityIds: context.focusedTasks,
             entityType: 'task',
           })
         ),

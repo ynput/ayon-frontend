@@ -287,7 +287,7 @@ const Subsets = () => {
         dispatch(
           setDialog({
             type: 'tags',
-            entityId: focusedVersions[0],
+            entityIds: focusedVersions,
             entityType: 'version',
           })
         ),

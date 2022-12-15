@@ -14,8 +14,9 @@ export const TagsEditorContainer = () => {
   const isTagsOpen = context.dialog.type === 'tags'
 
   const entityType = context.dialog.entityType
-  // TODO entityIds -> [id]
-  const entityId = context.dialog.entityId
+  const entityIds = context.dialog.entityIds
+  // start off with only being able to edit one entities set of tags
+  const entityId = entityIds && entityIds.length ? entityIds[0] : null
   const projectName = context.projectName
   // get all tags for project
   const projectTags = context.project.tags
