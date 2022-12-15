@@ -16,7 +16,7 @@ import {
   InputText,
   Section,
   Toolbar,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },

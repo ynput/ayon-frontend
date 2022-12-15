@@ -8,7 +8,7 @@ import {
   Panel,
   Toolbar,
   ScrollPanel,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const RoleDetail = ({ projectName, role, onChange }) => {

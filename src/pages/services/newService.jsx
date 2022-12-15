@@ -9,7 +9,7 @@ import {
   Spacer,
   Button,
   InputText,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [addonData, setAddonData] = useState([])

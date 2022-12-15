@@ -12,7 +12,7 @@ import {
   Section,
   Panel,
   Spacer,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 const SessionItem = ({ session, userName, onChange }) => {
   const invalidate = () => {

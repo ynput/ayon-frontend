@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Spacer, Button } from 'openpype-components'
+import { Spacer, Button } from '@ynput/ayon-react-components'
 
 import { Dialog } from 'primereact/dialog'
 

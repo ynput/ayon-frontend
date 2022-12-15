@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Button } from 'openpype-components'
+import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 const EditorContainer = styled.div`

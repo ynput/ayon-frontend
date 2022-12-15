@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Button, Divider } from 'openpype-components'
+import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './settingsPanel'
 

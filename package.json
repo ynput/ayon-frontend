@@ -11,10 +11,10 @@
   "dependencies": {
     "@reduxjs/toolkit": "^1.8.2",
     "@rjsf/core": "^4.2.0",
+    "@ynput/ayon-react-components": "^0.1.8",
     "axios": "^0.27.2",
     "lodash": "^4.17.21",
     "luxon": "^2.4.0",
-    "openpype-components": "^0.1.8",
     "primeicons": "^5.0.0",
     "primereact": "^8.1.1",
     "react": "^18.0.0",

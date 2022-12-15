@@ -1,6 +1,6 @@
 import { useMemo, useEffect, lazy } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
-import { Spacer } from 'openpype-components'
+import { Spacer } from '@ynput/ayon-react-components'
 
 const AnatomyPresets = lazy(() => import('./anatomyPresets'))
 const AddonsSettings = lazy(() => import('./addons'))

@@ -3,7 +3,7 @@ import {
   FormLayout,
   FormRow,
   InputPassword,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 
