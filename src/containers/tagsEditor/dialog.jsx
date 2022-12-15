@@ -12,7 +12,6 @@ const TagsEditorDialog = ({
   tags,
   isLoading,
   isError,
-  names,
 }) => {
   // temp dialog
   const dialogRef = useRef(null)
@@ -61,7 +60,7 @@ const TagsEditorDialog = ({
 
   const header = (
     <div>
-      <h2>{`Editing Tags: ${names[0]}`}</h2>
+      <h2>Tags Editor</h2>
     </div>
   )
 
@@ -97,7 +96,6 @@ TagsEditorDialog.propTypes = {
   value: PropTypes.arrayOf(PropTypes.string),
   tags: tagsType,
   isLoading: PropTypes.bool,
-  names: PropTypes.string,
 }
 
 export default TagsEditorDialog
