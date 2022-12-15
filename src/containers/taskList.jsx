@@ -8,7 +8,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
-import { setFocusedTasks, setPairing } from '/src/features/context'
+import { setFocusedTasks, setPairing, setDialog } from '/src/features/context'
 import { groupResult, getTaskTypeIcon } from '/src/utils'
 
 import axios from 'axios'
@@ -145,6 +145,18 @@ const TaskList = ({ style = {} }) => {
       label: 'Detail',
       command: () => setShowDetail(true),
       disabled: context.focusedTasks.length !== 1,
+    },
+    {
+      label: 'Edit Tags',
+      command: () =>
+        dispatch(
+          setDialog({
+            type: 'tags',
+            entityIds: context.focusedTasks,
+            entityType: 'task',
+          })
+        ),
+      disabled: context.focusedFolders.length !== 1,
     },
   ]
 

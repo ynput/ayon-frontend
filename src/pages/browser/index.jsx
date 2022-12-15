@@ -6,10 +6,9 @@ import TaskList from '/src/containers/taskList'
 
 import Subsets from './subsets'
 import Detail from './detail'
+import TagsEditorContainer from '/src/containers/tagsEditor'
 
 const BrowserPage = () => {
-  // Return the wrapper
-
   return (
     <main>
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
@@ -31,6 +30,7 @@ const BrowserPage = () => {
           </Splitter>
         </SplitterPanel>
       </Splitter>
+      <TagsEditorContainer />
     </main>
   )
 }

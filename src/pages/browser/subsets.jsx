@@ -22,6 +22,7 @@ import {
   setSelectedVersions,
   setBreadcrumbs,
   setPairing,
+  setDialog,
 } from '/src/features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
@@ -280,6 +281,18 @@ const Subsets = () => {
       command: () => setShowDetail('version'),
       disabled: focusedVersions.length !== 1,
     },
+    {
+      label: 'Edit Version Tags',
+      command: () =>
+        dispatch(
+          setDialog({
+            type: 'tags',
+            entityIds: focusedVersions,
+            entityType: 'version',
+          })
+        ),
+      disabled: focusedVersions.length !== 1,
+    },
   ]
 
   //
@@ -325,11 +338,9 @@ const Subsets = () => {
                 style={{ width: col.width }}
                 expander={i === 0}
                 resizeable={true}
-
                 field={col.field}
                 header={col.header}
                 body={col.body}
-                
               />
             )
           })}

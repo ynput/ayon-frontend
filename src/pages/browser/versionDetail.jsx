@@ -2,7 +2,7 @@ import axios from 'axios'
 import ayonClient from '/src/ayon'
 
 import { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { Panel } from 'openpype-components'
 
@@ -12,6 +12,7 @@ import { StatusField, TagsField } from '/src/containers/fieldFormat'
 import { getFamilyIcon } from '/src/utils'
 
 import RepresentationList from './representationList'
+import { setReload } from '../../features/context'
 
 const VERSION_QUERY = `
     query Versions($projectName: String!, $versions: [String!]!) {
@@ -61,13 +62,15 @@ const buildVersionQuery = () => {
 }
 
 const VersionDetail = () => {
+  const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const [versions, setVersions] = useState([])
   const [representations, setRepresentations] = useState([])
 
-  // Load versions and representations
-  useEffect(() => {
+  const query = buildVersionQuery()
+
+  const getVersionData = () => {
     if (!(context.focusedVersions && context.focusedVersions.length)) {
       setVersions([])
       setRepresentations([])
@@ -76,7 +79,7 @@ const VersionDetail = () => {
 
     axios
       .post('/graphql', {
-        query: buildVersionQuery(),
+        query: query,
         variables: { projectName, versions: context.focusedVersions },
       })
       .then((response) => {
@@ -124,9 +127,25 @@ const VersionDetail = () => {
         setVersions(vArr)
         setRepresentations(rArr)
       })
+  }
 
+  // Load versions and representations
+  useEffect(() => {
+    getVersionData()
     //eslint-disable-next-line
   }, [context.projectName, context.focusedVersions, projectName])
+
+  const reload = context.reload.version
+
+  // reload
+  useEffect(() => {
+    if (reload) {
+      console.log('reloading version detail')
+      getVersionData()
+      // reset reload
+      dispatch(setReload({ type: 'version', reload: false }))
+    }
+  }, [reload])
 
   //
   // Render
