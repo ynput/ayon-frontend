@@ -13,7 +13,6 @@ const contextSlice = createSlice({
       versions: [],
       tasks: [],
     },
-    focusedTasks: [],
     selectedVersions: {},
     pairing: [],
     dialog: {},
@@ -51,7 +50,7 @@ const contextSlice = createSlice({
 
     setFocusedTasks: (state, action) => {
       state.focused.type = 'task'
-      state.focusedTasks = action.payload
+      state.focused.tasks = action.payload
       state.focused.versions = []
     },
 
@@ -62,7 +61,7 @@ const contextSlice = createSlice({
       } else {
         state.focused.type = 'version'
         state.focused.versions = action.payload
-        state.focusedTasks = []
+        state.focused.tasks = []
       }
     },
     setSelectedVersions: (state, action) => {
