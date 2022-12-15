@@ -59,7 +59,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
   return (
     <EditorContainer>
       <div>
-        <h3>Selected</h3>
+        <h3>Assigned</h3>
         <ButtonsContainer>
           {value.map((v) => (
             <Button
@@ -67,13 +67,13 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
               icon="close"
               onClick={() => handleRemove(v)}
               key={v}
-              style={{ backgroundColor: '#435648' }}
+              style={{ backgroundColor: '#435648', gap: 3 }}
             />
           ))}
         </ButtonsContainer>
       </div>
       <div>
-        <h3>Tags</h3>
+        <h3>Available</h3>
         <ButtonsContainer>
           {options.map(
             ({ name }) =>
@@ -83,6 +83,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
                   icon="add"
                   onClick={() => handleAdd(name)}
                   key={name}
+                  style={{ gap: 3 }}
                 />
               )
           )}

@@ -18,6 +18,7 @@ export const TagsEditorContainer = ({
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [tags, setTags] = useState([])
+  const [names, setNames] = useState([])
 
   useEffect(() => {
     if (ids && type) {
@@ -30,7 +31,9 @@ export const TagsEditorContainer = ({
             `/api/projects/${projectName}/${type}s/${ids[0]}`
           )
 
+          console.log(data)
           setTags(data.tags)
+          setNames([data.name])
           console.log(data)
         } catch (error) {
           console.error(error)
@@ -75,6 +78,7 @@ export const TagsEditorContainer = ({
       onSuccess={handleSuccess}
       isLoading={isLoading}
       isError={isError}
+      names={names}
     />
   )
 }
