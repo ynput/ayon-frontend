@@ -32,10 +32,10 @@ const Subsets = () => {
   const context = useSelector((state) => ({ ...state.context }))
 
   const projectName = context.projectName
-  const focusedVersions = context.focusedVersions
-  const focusedFolders = context.focusedFolders
+  const focusedVersions = context.focused.versions
+  const focusedFolders = context.focused.folders
   const selectedVersions = context.selectedVersions
-  const focusedSubsets = context.focusedSubsets
+  const focusedSubsets = context.focused.subsets
   const pairing = context.pairing
 
   const [subsetData, setSubsetData] = useState([])
@@ -287,8 +287,6 @@ const Subsets = () => {
         dispatch(
           setDialog({
             type: 'tags',
-            entityIds: focusedVersions,
-            entityType: 'version',
           })
         ),
       disabled: focusedVersions.length !== 1,

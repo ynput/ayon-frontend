@@ -67,7 +67,9 @@ const WorkfileDetail = ({ projectName, workfileId, style }) => {
         <AttributeTable
           entityType="workfile"
           data={data?.attrib || {}}
-          additionalData={[{ title: 'Path', value: <PathField value={data?.path}/> }]}
+          additionalData={[
+            { title: 'Path', value: <PathField value={data?.path} /> },
+          ]}
         />
       </Panel>
     </Section>
@@ -169,7 +171,7 @@ const WorkfilesPage = () => {
 
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
-  const focusedTasks = context.focusedTasks
+  const focusedTasks = context.focused.tasks
   const pairing = context.pairing
 
   return (

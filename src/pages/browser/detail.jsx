@@ -10,7 +10,7 @@ const Detail = () => {
 
   let detailComponent = null
 
-  switch (context.focusedType) {
+  switch (context.focused.type) {
     case 'folder':
       detailComponent = <FolderDetail />
       break
@@ -24,8 +24,9 @@ const Detail = () => {
       break
   }
 
-  const header = context.focusedType
-    ? context.focusedType.charAt(0).toUpperCase() + context.focusedType.slice(1)
+  const header = context.focused.type
+    ? context.focused.type.charAt(0).toUpperCase() +
+      context.focused.type.slice(1)
     : 'No selection'
 
   return (
