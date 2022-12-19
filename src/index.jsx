@@ -34,7 +34,7 @@ axios.interceptors.response.use(
       window.location.href = '/'
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -55,6 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
           limit={5}
         />
       </ReduxProvider>
-    </React.StrictMode>
+    </React.StrictMode>,
   )
 })

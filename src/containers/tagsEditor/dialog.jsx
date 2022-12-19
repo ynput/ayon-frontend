@@ -4,15 +4,7 @@ import { Dialog } from 'primereact/dialog'
 import { Button } from '@ynput/ayon-react-components'
 import TagsEditor from './editor'
 
-const TagsEditorDialog = ({
-  visible,
-  onHide,
-  onSuccess,
-  value,
-  tags,
-  isLoading,
-  isError,
-}) => {
+const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, isError }) => {
   // temp dialog
   const dialogRef = useRef(null)
   // Set a constant dialog height so that there's no popping
@@ -86,7 +78,7 @@ export const tagsType = PropTypes.arrayOf(
   PropTypes.shape({
     name: PropTypes.string.isRequired,
     color: PropTypes.string,
-  })
+  }),
 )
 
 TagsEditorDialog.propTypes = {

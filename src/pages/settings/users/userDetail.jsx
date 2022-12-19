@@ -35,8 +35,7 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
   }, [userDetailData])
 
   // editing a single user, so show attributes form too
-  const singleUserEdit =
-    userDetailData.users?.length === 1 ? userDetailData.users[0] : null
+  const singleUserEdit = userDetailData.users?.length === 1 ? userDetailData.users[0] : null
 
   // no selected user. do not show the panel
   if (!userDetailData.users?.length) {
@@ -63,8 +62,7 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
         data.defaultRoles = formData.roles
       } else {
         // project(s) selected. update roles
-        for (const projectName of userDetailData.projectNames)
-          roles[projectName] = formData.roles
+        for (const projectName of userDetailData.projectNames) roles[projectName] = formData.roles
       }
 
       // update user level && do role clean-up
@@ -107,22 +105,14 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
         {singleUserEdit && (
           <>
             <h2>{singleUserEdit.attrib.fullName || singleUserEdit.name}</h2>
-            <UserAttrib
-              formData={formData}
-              setFormData={setFormData}
-              attributes={userAttrib}
-            />
+            <UserAttrib formData={formData} setFormData={setFormData} attributes={userAttrib} />
           </>
         )}
 
         <AccessControl
           formData={formData}
           setFormData={setFormData}
-          rolesLabel={
-            userDetailData.projectNames?.length
-              ? 'Project roles'
-              : 'Default roles'
-          }
+          rolesLabel={userDetailData.projectNames?.length ? 'Project roles' : 'Default roles'}
         />
       </Panel>
     </Section>

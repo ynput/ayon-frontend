@@ -179,24 +179,14 @@ const AnatomyPresets = () => {
   const editor = useMemo(() => {
     if (!(schema && originalData)) return 'Loading editor...'
 
-    return (
-      <SettingsEditor
-        schema={schema}
-        formData={originalData}
-        onChange={setNewData}
-      />
-    )
+    return <SettingsEditor schema={schema} formData={originalData} onChange={setNewData} />
   }, [schema, originalData])
 
   return (
     <main>
       <ConfirmDialog />
       {showNameDialog && (
-        <Dialog
-          header="Preset name"
-          visible="true"
-          onHide={() => setShowNameDialog(false)}
-        >
+        <Dialog header="Preset name" visible="true" onHide={() => setShowNameDialog(false)}>
           <InputText
             value={newPresetName}
             onChange={(e) => setNewPresetName(e.target.value)}
@@ -239,19 +229,11 @@ const AnatomyPresets = () => {
             disabled={selectedPreset === '_'}
             onClick={deletePreset}
           />
-          <Button
-            label="Set as primary preset"
-            icon="bolt"
-            onClick={setPrimaryPreset}
-          />
+          <Button label="Set as primary preset" icon="bolt" onClick={setPrimaryPreset} />
           <Spacer />
         </Toolbar>
 
-        <ScrollPanel
-          style={{ flexGrow: 1 }}
-          scrollStyle={{ padding: 0 }}
-          className="transparent"
-        >
+        <ScrollPanel style={{ flexGrow: 1 }} scrollStyle={{ padding: 0 }} className="transparent">
           {editor}
         </ScrollPanel>
       </Section>

@@ -8,9 +8,7 @@ const userSlice = createSlice({
     login: (state, action) => {
       if (action.payload.accessToken) {
         localStorage.setItem('accessToken', action.payload.accessToken)
-        axios.defaults.headers.common[
-          'Authorization'
-        ] = `Bearer ${action.payloadaccessToken}`
+        axios.defaults.headers.common['Authorization'] = `Bearer ${action.payloadaccessToken}`
       }
       state = action.payload.user
       return state

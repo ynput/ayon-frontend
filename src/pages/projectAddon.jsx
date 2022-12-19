@@ -39,9 +39,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
 
   const sidebarComponent = useMemo(() => {
     if (sidebar === 'hierarchy') {
-      return (
-        <Hierarchy style={{ maxWidth: 500, minWidth: 300 }} />
-      )
+      return <Hierarchy style={{ maxWidth: 500, minWidth: 300 }} />
     } else {
       return <></>
     }

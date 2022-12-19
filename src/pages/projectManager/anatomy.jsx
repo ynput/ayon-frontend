@@ -35,13 +35,7 @@ const ProjectAnatomy = ({ projectName }) => {
   const editor = useMemo(() => {
     if (!(schema && originalData)) return 'Loading editor...'
 
-    return (
-      <SettingsEditor
-        schema={schema}
-        formData={originalData}
-        onChange={setNewData}
-      />
-    )
+    return <SettingsEditor schema={schema} formData={originalData} onChange={setNewData} />
   }, [schema, originalData])
 
   return (

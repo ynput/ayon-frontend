@@ -34,14 +34,13 @@ export const TagsEditorContainer = () => {
       const getTags = async () => {
         try {
           const { data } = await axios.get(
-            `/api/projects/${projectName}/${entityType}s/${entityId}`
+            `/api/projects/${projectName}/${entityType}s/${entityId}`,
           )
 
           setTags(data.tags)
         } catch (error) {
           console.error(error)
-          const errMessage =
-            error.response.data.detail || `Error ${error.response.status}`
+          const errMessage = error.response.data.detail || `Error ${error.response.status}`
           toast.error(`Unable to load tags. ${errMessage}`)
           setIsError(true)
         }
@@ -56,10 +55,7 @@ export const TagsEditorContainer = () => {
   const handleSuccess = async (tags) => {
     console.log(tags)
     try {
-      await axios.patch(
-        `/api/projects/${projectName}/${entityType}s/${entityId}`,
-        { tags }
-      )
+      await axios.patch(`/api/projects/${projectName}/${entityType}s/${entityId}`, { tags })
 
       // on success updating tags dispatch reload of data
       dispatch(setReload({ type: entityType, reload: true }))
@@ -67,8 +63,7 @@ export const TagsEditorContainer = () => {
       // dispatch callback function to reload data
     } catch (error) {
       console.error(error)
-      const errMessage =
-        error.response.data.detail || `Error ${error.response.status}`
+      const errMessage = error.response.data.detail || `Error ${error.response.status}`
       toast.error(`Unable to update tags. ${errMessage}`)
     }
   }

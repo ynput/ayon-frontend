@@ -1,20 +1,8 @@
-import {
-  InputText,
-  FormLayout,
-  FormRow,
-  InputPassword,
-} from '@ynput/ayon-react-components'
+import { InputText, FormLayout, FormRow, InputPassword } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 
-const UserAttrib = ({
-  formData,
-  setFormData,
-  attributes,
-  showPassword,
-  password,
-  setPassword,
-}) => {
+const UserAttrib = ({ formData, setFormData, attributes, showPassword, password, setPassword }) => {
   return (
     <FormLayout>
       {Object.keys(attributes).map((attrName) => (

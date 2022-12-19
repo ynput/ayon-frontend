@@ -56,26 +56,21 @@ const WorkfileDetail = ({ projectName, workfileId, style }) => {
       })
   }, [projectName, workfileId])
 
-
   return (
     <Section style={style}>
       <Panel>
-        {
-          loading ? ( <div>Loading...</div> ) : (
-            <>
-            <Thumbnail
-              project={projectName}
-              entityType="workfile"
-              entityId={workfileId}
-            />
+        {loading ? (
+          <div>Loading...</div>
+        ) : (
+          <>
+            <Thumbnail project={projectName} entityType="workfile" entityId={workfileId} />
             <AttributeTable
               entityType="workfile"
               data={data?.attrib || {}}
-              additionalData={[{ title: 'Path', value: <PathField value={data?.path}/> }]}
+              additionalData={[{ title: 'Path', value: <PathField value={data?.path} /> }]}
             />
-            </>
-          )
-        }
+          </>
+        )}
       </Panel>
     </Section>
   )
@@ -193,10 +188,7 @@ const WorkfilesPage = () => {
         style={{ maxWidth: 500, minWidth: 300 }}
       />
 
-      <WorkfileDetail
-        projectName={projectName}
-        workfileId={selectedWorkfile?.id}
-      />
+      <WorkfileDetail projectName={projectName} workfileId={selectedWorkfile?.id} />
     </main>
   )
 }

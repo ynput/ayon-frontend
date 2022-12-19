@@ -40,12 +40,11 @@ const EventDetailDialog = ({ eventId, onHide }) => {
 
     axios.get(`/api/events/${eventId}`).then((response) => {
       const event = response.data
-      if (event.topic.startsWith('log.')){
+      if (event.topic.startsWith('log.')) {
         setEventData(event.payload.message)
         return
       }
       setEventData(JSON.stringify(event.payload, null, 2))
-
     })
   }, [eventId])
 
@@ -131,10 +130,7 @@ const EventViewer = () => {
   return (
     <main>
       {detailVisible && (
-        <EventDetailDialog
-          onHide={() => setDetailVisible(false)}
-          eventId={selectedEvent?.id}
-        />
+        <EventDetailDialog onHide={() => setDetailVisible(false)} eventId={selectedEvent?.id} />
       )}
       <Section>
         <Toolbar></Toolbar>
@@ -151,11 +147,10 @@ const EventViewer = () => {
             onRowClick={onRowClick}
             rowClassName={(rowData) => {
               return {
-                highlight:
-                  selectedEvent && selectedEvent.dependsOn === rowData.id,
-                "row-error": rowData.topic === 'log.error',
-                "row-warning": rowData.topic === 'log.warning',
-                "row-success": rowData.topic === 'log.success',
+                highlight: selectedEvent && selectedEvent.dependsOn === rowData.id,
+                'row-error': rowData.topic === 'log.error',
+                'row-warning': rowData.topic === 'log.warning',
+                'row-success': rowData.topic === 'log.success',
               }
             }}
           >

@@ -5,14 +5,12 @@ import { getFolderTypes, getTaskTypes } from '/src/utils'
 
 import ayonClient from '/src/ayon'
 
-
 //eslint-disable-next-line no-unused-vars
 const typeEditor = (options, callback, value, settings) => {
   const rowData = options.node.data
   if (!rowData) return <></>
 
-  const types =
-    rowData.__entityType === 'folder' ? getFolderTypes() : getTaskTypes()
+  const types = rowData.__entityType === 'folder' ? getFolderTypes() : getTaskTypes()
 
   const onChange = (event) => callback(options, event.value)
 
@@ -26,10 +24,7 @@ const typeEditor = (options, callback, value, settings) => {
             alignItems: 'center',
           }}
         >
-          <span
-            className={`material-symbols-outlined`}
-            style={{ marginRight: '0.6rem' }}
-          >
+          <span className={`material-symbols-outlined`} style={{ marginRight: '0.6rem' }}>
             {option.icon}
           </span>
           <span>{option.label}</span>
@@ -81,12 +76,11 @@ const enumEditor = (options, callback, value, settings) => {
         optionValue="value"
         dataKey="value"
         onChange={onChange}
-        style={{  minWidth: 10, width: '100%' }}
+        style={{ minWidth: 10, width: '100%' }}
       />
     )
   } else if (settings.type === 'list_of_strings') {
-
-    console.log("VALUE", value)
+    console.log('VALUE', value)
 
     return (
       <MultiSelect
@@ -96,31 +90,26 @@ const enumEditor = (options, callback, value, settings) => {
         optionValue="value"
         dataKey="value"
         onChange={onChange}
-        style={{  minWidth: 10, width: '100%' }}
+        style={{ minWidth: 10, width: '100%' }}
       />
     )
   }
 
-  console.log("SET", settings)
+  console.log('SET', settings)
   return <>Unsuppored editor</>
 }
-
 
 //eslint-disable-next-line no-unused-vars
 const integerEditor = (options, callback, value, settings) => {
   const attrSettings = ayonClient.getAttribSettings(options.field)
 
   let min = null
-  if (attrSettings && ('gt' in attrSettings.data))
-    min = attrSettings.data.gt + 1
-  else if (attrSettings && ('gte' in attrSettings.data))
-    min = attrSettings.data.gte
+  if (attrSettings && 'gt' in attrSettings.data) min = attrSettings.data.gt + 1
+  else if (attrSettings && 'gte' in attrSettings.data) min = attrSettings.data.gte
 
   let max = null
-  if (attrSettings && ('lt' in attrSettings.data))
-    max = attrSettings.data.lt - 1
-  else if (attrSettings && ('lte' in attrSettings.data))
-    max = attrSettings.data.lte
+  if (attrSettings && 'lt' in attrSettings.data) max = attrSettings.data.lt - 1
+  else if (attrSettings && 'lte' in attrSettings.data) max = attrSettings.data.lte
 
   return (
     <div className="table-editor">
@@ -144,16 +133,12 @@ const floatEditor = (options, callback, value, settings) => {
   //  onChange={(e) => options.editorCallback(e.value)}
   const attrSettings = ayonClient.getAttribSettings(options.field)
   let min = null
-  if (attrSettings && ('gt' in attrSettings.data))
-    min = attrSettings.data.gt + 0.00001
-  else if (attrSettings && ('gte' in attrSettings.data))
-    min = attrSettings.data.gte
+  if (attrSettings && 'gt' in attrSettings.data) min = attrSettings.data.gt + 0.00001
+  else if (attrSettings && 'gte' in attrSettings.data) min = attrSettings.data.gte
 
   let max = null
-  if (attrSettings && ('lt' in attrSettings.data))
-    max = attrSettings.data.lt - 0.00001
-  else if (attrSettings && ('lte' in attrSettings))
-    max = attrSettings.data.lte
+  if (attrSettings && 'lt' in attrSettings.data) max = attrSettings.data.lt - 0.00001
+  else if (attrSettings && 'lte' in attrSettings) max = attrSettings.data.lte
   return (
     <div
       className="table-editor"

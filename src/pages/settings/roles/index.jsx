@@ -12,11 +12,7 @@ const Roles = () => {
 
   return (
     <main>
-      <ProjectList
-        showNull="( default )"
-        selection={projectName}
-        onSelect={setProjectName}
-      />
+      <ProjectList showNull="( default )" selection={projectName} onSelect={setProjectName} />
 
       <RolesList
         projectName={projectName}
@@ -25,11 +21,7 @@ const Roles = () => {
         onSelectRole={setSelectedRole}
       />
 
-      <RoleDetail
-        projectName={projectName}
-        role={selectedRole}
-        onChange={triggerReload}
-      />
+      <RoleDetail projectName={projectName} role={selectedRole} onChange={triggerReload} />
     </main>
   )
 }

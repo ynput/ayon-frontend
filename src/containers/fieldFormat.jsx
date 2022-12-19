@@ -3,15 +3,11 @@
 import { getTagColor, getStatusColor } from '/src/utils'
 import styled from 'styled-components'
 
-
 // Attributes
-
 
 const AttributeField = ({ value }) => {
   return <>{value}</>
-
 }
-
 
 // Tags
 
@@ -60,7 +56,7 @@ const timestampToTime = (timestamp) => {
   //
   if (!timestamp) return ['-', '-']
   const jsTimestamp = Math.trunc(timestamp * 1000)
-  
+
   const date = new Date(jsTimestamp)
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -70,7 +66,6 @@ const timestampToTime = (timestamp) => {
   const seconds = String(date.getSeconds()).padStart(2, '0')
   return [`${year}-${month}-${day}`, `${hours}:${minutes}:${seconds}`]
 }
-
 
 const TimestampField = ({ value }) => {
   const [dd, tt] = timestampToTime(value)
@@ -82,7 +77,6 @@ const TimestampField = ({ value }) => {
   )
 }
 
-
 // PATH
 
 const PathContainer = styled.div`
@@ -93,12 +87,7 @@ const PathContainer = styled.div`
 
 const PathField = ({ value }) => {
   if (!value) return '\u00A0'
-  return(
-    <PathContainer>
-      {value}
-    </PathContainer>
-  )
+  return <PathContainer>{value}</PathContainer>
 }
-
 
 export { AttributeField, TagsField, StatusField, TimestampField, PathField }

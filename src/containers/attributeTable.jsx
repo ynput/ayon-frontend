@@ -16,7 +16,7 @@ const AttributeTableRow = styled.div`
   border-top: 1px solid var(--color-grey-01);
   &:first-child {
     border-top: none !important;
-  } 
+  }
 `
 
 const AttributeTable = ({ entityType, data, additionalData, style }) => {

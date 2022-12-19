@@ -118,9 +118,7 @@ const TaskList = ({ style = {} }) => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup
-      ? 'folder'
-      : getTaskTypeIcon(node.data.taskType)
+    const icon = node.data.isGroup ? 'folder' : getTaskTypeIcon(node.data.taskType)
     let className = ''
     let i = 0
     for (const pair of context.pairing) {
@@ -131,13 +129,7 @@ const TaskList = ({ style = {} }) => {
       }
     }
 
-    return (
-      <CellWithIcon
-        icon={icon}
-        text={node.data.name}
-        iconClassName={className}
-      />
-    )
+    return <CellWithIcon icon={icon} text={node.data.name} iconClassName={className} />
   }
 
   const ctxMenuModel = [
@@ -154,7 +146,7 @@ const TaskList = ({ style = {} }) => {
             type: 'tags',
             entityIds: context.focusedTasks,
             entityType: 'task',
-          })
+          }),
         ),
       disabled: context.focusedFolders.length !== 1,
     },
@@ -182,15 +174,8 @@ const TaskList = ({ style = {} }) => {
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
-          <Column
-            field="name"
-            header="Task"
-            expander="true"
-            body={nameRenderer}
-          />
-          {folderIds.length > 1 && (
-            <Column field="folderName" header="Folder" />
-          )}
+          <Column field="name" header="Task" expander="true" body={nameRenderer} />
+          {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
           <Column field="taskType" header="Task type" style={{ width: 90 }} />
         </TreeTable>
       </TablePanel>

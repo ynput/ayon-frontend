@@ -79,13 +79,7 @@ const NewProjectDialog = ({ onHide }) => {
 
   const editor = useMemo(() => {
     if (!(originalAnatomy && schema)) return 'Loading editor...'
-    return (
-      <SettingsEditor
-        schema={schema}
-        formData={originalAnatomy}
-        onChange={setNewAnatomy}
-      />
-    )
+    return <SettingsEditor schema={schema} formData={originalAnatomy} onChange={setNewAnatomy} />
   }, [schema, originalAnatomy])
 
   const footer = (

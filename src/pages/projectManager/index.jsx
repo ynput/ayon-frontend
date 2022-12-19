@@ -71,17 +71,11 @@ const ProjectManager = () => {
 
         {selectedProject && (
           <>
-            {module === 'dashboard' && (
-              <ProjectStats projectName={selectedProject} />
-            )}
+            {module === 'dashboard' && <ProjectStats projectName={selectedProject} />}
 
-            {module === 'anatomy' && (
-              <ProjectAnatomy projectName={selectedProject} />
-            )}
+            {module === 'anatomy' && <ProjectAnatomy projectName={selectedProject} />}
 
-            {module === 'settings' && (
-              <AddonSettings projectName={selectedProject} />
-            )}
+            {module === 'settings' && <AddonSettings projectName={selectedProject} />}
           </>
         )}
       </main>

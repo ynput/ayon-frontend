@@ -24,12 +24,7 @@ const UserMenu = ({ visible, onHide }) => {
   }
 
   return (
-    <Sidebar
-      position="right"
-      visible={visible}
-      onHide={onHide}
-      icons={() => <h3>User menu</h3>}
-    >
+    <Sidebar position="right" visible={visible} onHide={onHide} icons={() => <h3>User menu</h3>}>
       <div
         style={{
           height: '100%',
@@ -83,11 +78,9 @@ const UserMenu = ({ visible, onHide }) => {
         />
         <Button
           onClick={() => {
-            axios
-              .post('/api/system/restart')
-              .finally(() => {
-                onHide()
-              })
+            axios.post('/api/system/restart').finally(() => {
+              onHide()
+            })
           }}
           label="Server restart"
           icon="restart_alt"

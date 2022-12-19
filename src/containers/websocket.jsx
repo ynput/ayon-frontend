@@ -13,14 +13,10 @@ const wsOpts = {
   shouldReconnect: () => true,
 }
 
-
 const WebsocketListener = () => {
   const [topics, setTopics] = useState([])
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
-  const { sendMessage, readyState, getWebSocket } = useWebSocket(
-    wsAddress,
-    wsOpts
-  )
+  const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, wsOpts)
 
   const subscribe = () => {
     sendMessage(
@@ -28,7 +24,7 @@ const WebsocketListener = () => {
         topic: 'auth',
         token: localStorage.getItem('accessToken'),
         subscribe: topics,
-      })
+      }),
     )
   }
 
@@ -41,15 +37,12 @@ const WebsocketListener = () => {
     const data = JSON.parse(message.data)
     if (data.topic === 'heartbeat') return
 
-    if (data.topic === 'server.restart_requested')
-      setServerRestartingVisible(true)
+    if (data.topic === 'server.restart_requested') setServerRestartingVisible(true)
 
     if (data.sender === axios.defaults.headers.common['X-Sender']) {
       return // my own message. ignore
     }
-    if (data.topic === 'shout' && data?.summary?.text)
-      toast.info(data.summary.text)
-
+    if (data.topic === 'shout' && data?.summary?.text) toast.info(data.summary.text)
 
     console.log('Event RX', data)
     PubSub.publish(data.topic, data)
@@ -76,11 +69,13 @@ const WebsocketListener = () => {
     }
   }, [readyState, getWebSocket])
 
-  return <>
-    {serverRestartingVisible && (
-      <LoaderShade style={{backgroundColor: 'transparent'}} message="Server is restarting" />
-    )}
-  </>
+  return (
+    <>
+      {serverRestartingVisible && (
+        <LoaderShade style={{ backgroundColor: 'transparent' }} message="Server is restarting" />
+      )}
+    </>
+  )
 }
 
 export default WebsocketListener

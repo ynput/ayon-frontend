@@ -23,12 +23,7 @@ const ProjectMenu = ({ visible, onHide }) => {
   )
 
   return (
-    <Sidebar
-      position="left"
-      visible={visible}
-      onHide={onHide}
-      icons={() => <h3>Project menu</h3>}
-    >
+    <Sidebar position="left" visible={visible} onHide={onHide} icons={() => <h3>Project menu</h3>}>
       <div
         style={{
           display: 'flex',
@@ -40,9 +35,7 @@ const ProjectMenu = ({ visible, onHide }) => {
       >
         <ProjectList
           footer={footer}
-          onSelect={(projectName) =>
-            navigate(`/projects/${projectName}/browser`)
-          }
+          onSelect={(projectName) => navigate(`/projects/${projectName}/browser`)}
           selection={projectName}
         />
       </div>

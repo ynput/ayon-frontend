@@ -2,11 +2,7 @@ import Form from '@rjsf/core'
 
 import { Tooltip } from 'primereact/tooltip'
 import { TextWidget, SelectWidget, CheckboxWidget } from './widgets'
-import {
-  FieldTemplate,
-  ObjectFieldTemplate,
-  ArrayFieldTemplate,
-} from './fields'
+import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
 import './index.sass'
 
 const widgets = {
@@ -17,9 +13,7 @@ const widgets = {
 
 // Just close the top-level object to a simple div
 const uiSchema = {
-  'ui:FieldTemplate': (props) => (
-    <div className="form-root-field">{props.children}</div>
-  ),
+  'ui:FieldTemplate': (props) => <div className="form-root-field">{props.children}</div>,
 }
 
 const buildOverrides = (formData) => {

@@ -33,9 +33,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
       newValue.splice(index, 1)
       onChange(newValue)
     } else {
-      console.warn(
-        `REMOVE OPTION FAILED: ${v} already NOT in value: ${value.toString}`
-      )
+      console.warn(`REMOVE OPTION FAILED: ${v} already NOT in value: ${value.toString}`)
     }
   }
 
@@ -50,9 +48,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
       newValue.push(v)
       onChange(newValue)
     } else {
-      console.warn(
-        `ADD OPTION FAILED: ${v} already in value: ${value.toString}`
-      )
+      console.warn(`ADD OPTION FAILED: ${v} already in value: ${value.toString}`)
     }
   }
 
@@ -78,13 +74,8 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
           {options.map(
             ({ name }) =>
               !value.includes(name) && (
-                <Button
-                  label={name}
-                  icon="add"
-                  onClick={() => handleAdd(name)}
-                  key={name}
-                />
-              )
+                <Button label={name} icon="add" onClick={() => handleAdd(name)} key={name} />
+              ),
           )}
         </ButtonsContainer>
       </div>
@@ -93,9 +84,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
 }
 
 TagsEditor.propTypes = {
-  options: PropTypes.arrayOf(
-    PropTypes.shape({ name: PropTypes.string.isRequired })
-  ),
+  options: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string.isRequired })),
   value: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 }
 

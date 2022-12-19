@@ -170,21 +170,14 @@ const VersionDetail = () => {
     versionDetailWidget = (
       <Panel>
         <h3>
-          <span
-            className="material-symbols-outlined"
-            style={{ verticalAlign: 'bottom' }}
-          >
+          <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
             {getFamilyIcon(versions[0].family)}
           </span>
           <span style={{ marginLeft: 10 }}>
             {versions[0].subsetName} | {versions[0].name}
           </span>
         </h3>
-        <Thumbnail
-          projectName={projectName}
-          entityType="version"
-          entityId={versions[0].id}
-        />
+        <Thumbnail projectName={projectName} entityType="version" entityId={versions[0].id} />
         <AttributeTable
           entityType="version"
           data={versions[0].attrib}
@@ -205,9 +198,7 @@ const VersionDetail = () => {
   return (
     <>
       {versionDetailWidget}
-      {representations && (
-        <RepresentationList representations={representations} />
-      )}
+      {representations && <RepresentationList representations={representations} />}
     </>
   )
 }

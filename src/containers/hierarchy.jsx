@@ -3,12 +3,7 @@ import axios from 'axios'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import {
-  Section,
-  Toolbar,
-  InputText,
-  TablePanel,
-} from '@ynput/ayon-react-components'
+import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
 
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
@@ -35,10 +30,7 @@ const filterHierarchy = (text, folder) => {
   let result = []
   if (!folder) return []
   for (const item of folder) {
-    if (
-      item.name &&
-      (!text || item.name.toLowerCase().includes(text.toLowerCase()))
-    ) {
+    if (item.name && (!text || item.name.toLowerCase().includes(text.toLowerCase()))) {
       const newChildren = filterHierarchy(false, item.children)
       result.push({
         key: item.id,
@@ -50,12 +42,7 @@ const filterHierarchy = (text, folder) => {
           hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: (
-            <CellWithIcon
-              icon={getFolderTypeIcon(item.folderType)}
-              text={item.label}
-            />
-          ),
+          body: <CellWithIcon icon={getFolderTypeIcon(item.folderType)} text={item.label} />,
         },
       })
     } else if (item.children) {
@@ -71,12 +58,7 @@ const filterHierarchy = (text, folder) => {
             hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
             parents: item.parents,
-            body: (
-              <CellWithIcon
-                icon={getFolderTypeIcon(item.folderType)}
-                text={item.label}
-              />
-            ),
+            body: <CellWithIcon icon={getFolderTypeIcon(item.folderType)} text={item.label} />,
           },
         })
       }
@@ -120,8 +102,7 @@ const Hierarchy = (props) => {
         setData(response.data.hierarchy)
       })
       .catch((error) => {
-        const errMessage =
-          error.response.data.detail || `Error ${error.response.status}`
+        const errMessage = error.response.data.detail || `Error ${error.response.status}`
         toast.error(`Unable to load hierarchy. ${errMessage}`)
       })
       .finally(() => {
@@ -161,7 +142,7 @@ const Hierarchy = (props) => {
       setBreadcrumbs({
         parents: node.parents,
         folder: node.name,
-      })
+      }),
     )
   }
 
@@ -218,7 +199,7 @@ const Hierarchy = (props) => {
             type: 'tags',
             entityIds: focusedFolders,
             entityType: 'folder',
-          })
+          }),
         ),
       disabled: focusedFolders.length !== 1,
     },
@@ -276,12 +257,7 @@ const Hierarchy = (props) => {
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
-          <Column
-            header="Hierarchy"
-            field="body"
-            expander={true}
-            style={{ width: '100%' }}
-          />
+          <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
         </TreeTable>
       </TablePanel>
     </Section>

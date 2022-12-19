@@ -32,9 +32,7 @@ const App = () => {
 
   const storedAccessToken = localStorage.getItem('accessToken')
   if (storedAccessToken) {
-    axios.defaults.headers.common[
-      'Authorization'
-    ] = `Bearer ${storedAccessToken}`
+    axios.defaults.headers.common['Authorization'] = `Bearer ${storedAccessToken}`
   }
   axios.defaults.headers.common['X-Sender'] = short.generate()
 
@@ -51,11 +49,11 @@ const App = () => {
             login({
               user: response.data.user,
               accessToken: storedAccessToken,
-            })
+            }),
           )
 
           if (!response.data.attributes.length) {
-            toast.error("Unable to load attributes. Something is wrong")
+            toast.error('Unable to load attributes. Something is wrong')
           }
 
           ayonClient.settings = {
@@ -82,8 +80,7 @@ const App = () => {
     return <LoaderShade />
   }
 
-  if (serverError)
-    return <ErrorPage code={serverError} message="Server connection failed" />
+  if (serverError) return <ErrorPage code={serverError} message="Server connection failed" />
 
   //
   // RENDER THE MAIN APP
@@ -95,11 +92,7 @@ const App = () => {
       <BrowserRouter>
         <Header />
         <Routes>
-          <Route
-            path="/"
-            exact
-            element={<Navigate replace to="/projectManager/dashboard" />}
-          />
+          <Route path="/" exact element={<Navigate replace to="/projectManager/dashboard" />} />
           <Route
             path="/projectManager"
             exact
@@ -107,14 +100,8 @@ const App = () => {
           />
           <Route path="/projectManager/:module" element={<ProjectManager />} />
 
-          <Route
-            path={'/projects/:projectName/:module'}
-            element={<ProjectPage />}
-          />
-          <Route
-            path={'/projects/:projectName/addon/:addonName'}
-            element={<ProjectPage />}
-          />
+          <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+          <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
 
           <Route
             path="/settings"

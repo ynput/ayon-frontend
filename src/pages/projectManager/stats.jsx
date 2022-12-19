@@ -27,13 +27,13 @@ const ProjectStats = ({ projectName }) => {
   if (!(data && data.counts)) return <></>
 
   return (
-      <ul>
-        {Object.keys(data.counts).map((key) => (
-          <li key={key}>
-            {key} : {JSON.stringify(data.counts[key])}
-          </li>
-        ))}
-      </ul>
+    <ul>
+      {Object.keys(data.counts).map((key) => (
+        <li key={key}>
+          {key} : {JSON.stringify(data.counts[key])}
+        </li>
+      ))}
+    </ul>
   )
 }
 

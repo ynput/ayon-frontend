@@ -21,7 +21,6 @@
   /* eslint-disable no-undef */
   if (typeof exports === 'object') {
     if (module !== undefined && module.exports) {
-
       exports = module.exports = PubSub // Node.js specific `module.exports`
     }
     exports.PubSub = PubSub // CommonJS module 1.1.1 spec
@@ -77,12 +76,7 @@
     subscriber(message, data)
   }
 
-  function deliverMessage(
-    originalMessage,
-    matchedMessage,
-    data,
-    immediateExceptions
-  ) {
+  function deliverMessage(originalMessage, matchedMessage, data, immediateExceptions) {
     var subscribers = messages[matchedMessage],
       callSubscriber = immediateExceptions
         ? callSubscriberWithImmediateExceptions
@@ -122,8 +116,7 @@
   function hasDirectSubscribersFor(message) {
     var topic = String(message),
       found = Boolean(
-        Object.prototype.hasOwnProperty.call(messages, topic) &&
-          hasKeys(messages[topic])
+        Object.prototype.hasOwnProperty.call(messages, topic) && hasKeys(messages[topic]),
       )
 
     return found
@@ -131,9 +124,7 @@
 
   function messageHasSubscribers(message) {
     var topic = String(message),
-      found =
-        hasDirectSubscribersFor(topic) ||
-        hasDirectSubscribersFor(ALL_SUBSCRIBING_MSG),
+      found = hasDirectSubscribersFor(topic) || hasDirectSubscribersFor(ALL_SUBSCRIBING_MSG),
       position = topic.lastIndexOf('.')
 
     while (!found && position !== -1) {
@@ -263,10 +254,7 @@
   PubSub.clearSubscriptions = function clearSubscriptions(topic) {
     var m
     for (m in messages) {
-      if (
-        Object.prototype.hasOwnProperty.call(messages, m) &&
-        m.indexOf(topic) === 0
-      ) {
+      if (Object.prototype.hasOwnProperty.call(messages, m) && m.indexOf(topic) === 0) {
         delete messages[m]
       }
     }
@@ -288,10 +276,7 @@
     var token
     var count = 0
     for (m in messages) {
-      if (
-        Object.prototype.hasOwnProperty.call(messages, m) &&
-        m.indexOf(topic) === 0
-      ) {
+      if (Object.prototype.hasOwnProperty.call(messages, m) && m.indexOf(topic) === 0) {
         // eslint-disable-next-line no-unused-vars
         for (token in messages[m]) {
           count++
@@ -312,10 +297,7 @@
     var m
     var list = []
     for (m in messages) {
-      if (
-        Object.prototype.hasOwnProperty.call(messages, m) &&
-        m.indexOf(topic) === 0
-      ) {
+      if (Object.prototype.hasOwnProperty.call(messages, m) && m.indexOf(topic) === 0) {
         list.push(m)
       }
     }
@@ -346,10 +328,7 @@
     var descendantTopicExists = function (topic) {
         var m
         for (m in messages) {
-          if (
-            Object.prototype.hasOwnProperty.call(messages, m) &&
-            m.indexOf(topic) === 0
-          ) {
+          if (Object.prototype.hasOwnProperty.call(messages, m) && m.indexOf(topic) === 0) {
             // a descendant of the topic exists:
             return true
           }
@@ -359,8 +338,7 @@
       },
       isTopic =
         typeof value === 'string' &&
-        (Object.prototype.hasOwnProperty.call(messages, value) ||
-          descendantTopicExists(value)),
+        (Object.prototype.hasOwnProperty.call(messages, value) || descendantTopicExists(value)),
       isToken = !isTopic && typeof value === 'string',
       isFunction = typeof value === 'function',
       result = false,
@@ -386,10 +364,7 @@
 
         if (isFunction) {
           for (t in message) {
-            if (
-              Object.prototype.hasOwnProperty.call(message, t) &&
-              message[t] === value
-            ) {
+            if (Object.prototype.hasOwnProperty.call(message, t) && message[t] === value) {
               delete message[t]
               result = true
             }

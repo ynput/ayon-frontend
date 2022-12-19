@@ -4,12 +4,7 @@ const ExplorerPage = () => {
     */
   return (
     <main>
-      <iframe
-        className="embed"
-        title="graphiql"
-        src="/graphiql"
-        style={{ flexGrow: 1 }}
-      />
+      <iframe className="embed" title="graphiql" src="/graphiql" style={{ flexGrow: 1 }} />
     </main>
   )
 }

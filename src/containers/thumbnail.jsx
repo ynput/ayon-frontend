@@ -9,10 +9,7 @@ const parseThumbnail = (response) => {
 
   const mime = response.headers['content-type']
   const base64 = btoa(
-    new Uint8Array(response.data).reduce(
-      (data, byte) => data + String.fromCharCode(byte),
-      ''
-    )
+    new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), ''),
   )
   return `data:${mime};base64,${base64}`
 }

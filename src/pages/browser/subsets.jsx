@@ -62,17 +62,9 @@ const Subsets = () => {
           }
         }
 
-        const icon = node.data.isGroup
-          ? 'folder'
-          : getFamilyIcon(node.data.family)
+        const icon = node.data.isGroup ? 'folder' : getFamilyIcon(node.data.family)
 
-        return (
-          <CellWithIcon
-            icon={icon}
-            iconClassName={className}
-            text={node.data.name}
-          />
-        )
+        return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
       },
     },
     {
@@ -106,7 +98,7 @@ const Subsets = () => {
             setSelectedVersions({
               ...selectedVersions,
               [node.data.folderId]: newSelection,
-            })
+            }),
           )
           setFocusOnReload(versionId)
         }), // end VersionList
@@ -115,8 +107,7 @@ const Subsets = () => {
       field: 'time',
       header: 'Time',
       width: 150,
-      body: (node) =>
-        node.data.createdAt && <TimestampField value={node.data.createdAt} />,
+      body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
     },
     {
       field: 'author',
@@ -240,7 +231,7 @@ const Subsets = () => {
         folder: event.node.data.folder,
         subset: event.node.data.name,
         version: event.node.data.versionName,
-      })
+      }),
     )
   }
 
@@ -288,7 +279,7 @@ const Subsets = () => {
             type: 'tags',
             entityIds: focusedVersions,
             entityType: 'version',
-          })
+          }),
         ),
       disabled: focusedVersions.length !== 1,
     },
@@ -309,9 +300,7 @@ const Subsets = () => {
         <EntityDetail
           projectName={projectName}
           entityType={showDetail}
-          entityId={
-            showDetail === 'subset' ? focusedSubsets[0] : focusedVersions[0]
-          }
+          entityId={showDetail === 'subset' ? focusedSubsets[0] : focusedVersions[0]}
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
