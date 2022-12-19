@@ -18,15 +18,16 @@
     factory(PubSub)
   }
   // CommonJS and Node.js module support
+  /* eslint-disable no-undef */
   if (typeof exports === 'object') {
     if (module !== undefined && module.exports) {
+
       exports = module.exports = PubSub // Node.js specific `module.exports`
     }
     exports.PubSub = PubSub // CommonJS module 1.1.1 spec
     module.exports = exports = PubSub // CommonJS
   }
   // AMD support
-  /* eslint-disable no-undef */
   else if (typeof define === 'function' && define.amd) {
     define(function () {
       return PubSub
@@ -291,6 +292,7 @@
         Object.prototype.hasOwnProperty.call(messages, m) &&
         m.indexOf(topic) === 0
       ) {
+        // eslint-disable-next-line no-unused-vars
         for (token in messages[m]) {
           count++
         }
@@ -413,4 +415,5 @@
   }
 })
 
+// eslint-disable-next-line no-undef
 export default PubSub

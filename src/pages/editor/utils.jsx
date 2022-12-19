@@ -8,7 +8,7 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
   let className = ''
   let value = node.attrib[fieldName]
-  if (chobj && chobj.hasOwnProperty(fieldName)) {
+  if (chobj && (fieldName in chobj)) {
     value = chobj[fieldName]
     className = 'changed'
   } else if (node.ownAttrib && !node.ownAttrib.includes(fieldName)) {
@@ -28,7 +28,7 @@ const formatName = (node, changes, styled = true) => {
   let icon
   const textStyle = {}
   if (!value) textStyle.color = 'var(--color-hl-error)'
-  if (chobj?.hasOwnProperty('_name'))
+  if (chobj && ('_name' in chobj))
     textStyle.color = 'var(--color-hl-changed)'
 
   if (node.__entityType === 'task') {

@@ -5,7 +5,6 @@ import {
   Button,
   Spacer,
   Section,
-  Panel,
   Toolbar,
   ScrollPanel,
 } from '@ynput/ayon-react-components'

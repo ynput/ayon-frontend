@@ -67,6 +67,7 @@ const contextSlice = createSlice({
       state.selectedVersions = action.payload
     },
 
+    //eslint-disable-next-line no-unused-vars
     clearFocus: (state, action) => {
       state.focusedType = null
       state.focusedFolders = []

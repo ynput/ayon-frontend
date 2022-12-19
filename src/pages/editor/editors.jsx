@@ -6,6 +6,7 @@ import { getFolderTypes, getTaskTypes } from '/src/utils'
 import ayonClient from '/src/ayon'
 
 
+//eslint-disable-next-line no-unused-vars
 const typeEditor = (options, callback, value, settings) => {
   const rowData = options.node.data
   if (!rowData) return <></>
@@ -55,6 +56,7 @@ const typeEditor = (options, callback, value, settings) => {
   )
 }
 
+//eslint-disable-next-line no-unused-vars
 const stringEditor = (options, callback, value, settings) => {
   return (
     <InputText
@@ -104,19 +106,20 @@ const enumEditor = (options, callback, value, settings) => {
 }
 
 
+//eslint-disable-next-line no-unused-vars
 const integerEditor = (options, callback, value, settings) => {
   const attrSettings = ayonClient.getAttribSettings(options.field)
 
   let min = null
-  if (attrSettings && attrSettings.data.hasOwnProperty('gt'))
+  if (attrSettings && ('gt' in attrSettings.data))
     min = attrSettings.data.gt + 1
-  else if (attrSettings && attrSettings.data.hasOwnProperty('gte'))
+  else if (attrSettings && ('gte' in attrSettings.data))
     min = attrSettings.data.gte
 
   let max = null
-  if (attrSettings && attrSettings.data.hasOwnProperty('lt'))
+  if (attrSettings && ('lt' in attrSettings.data))
     max = attrSettings.data.lt - 1
-  else if (attrSettings && attrSettings.data.hasOwnProperty('lte'))
+  else if (attrSettings && ('lte' in attrSettings.data))
     max = attrSettings.data.lte
 
   return (
@@ -136,19 +139,20 @@ const integerEditor = (options, callback, value, settings) => {
   )
 }
 
+//eslint-disable-next-line no-unused-vars
 const floatEditor = (options, callback, value, settings) => {
   //  onChange={(e) => options.editorCallback(e.value)}
   const attrSettings = ayonClient.getAttribSettings(options.field)
   let min = null
-  if (attrSettings && attrSettings.data.hasOwnProperty('gt'))
+  if (attrSettings && ('gt' in attrSettings.data))
     min = attrSettings.data.gt + 0.00001
-  else if (attrSettings && attrSettings.data.hasOwnProperty('gte'))
+  else if (attrSettings && ('gte' in attrSettings.data))
     min = attrSettings.data.gte
 
   let max = null
-  if (attrSettings && attrSettings.data.hasOwnProperty('lt'))
+  if (attrSettings && ('lt' in attrSettings.data))
     max = attrSettings.data.lt - 0.00001
-  else if (attrSettings && attrSettings.data.hasOwnProperty('lte'))
+  else if (attrSettings && ('lte' in attrSettings))
     max = attrSettings.data.lte
   return (
     <div

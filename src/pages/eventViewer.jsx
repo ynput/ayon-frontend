@@ -1,4 +1,5 @@
 import axios from 'axios'
+import PubSub from '/src/pubsub'
 
 import { useState, useEffect } from 'react'
 import { Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'

@@ -4,9 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import {
-  Shade,
   Section,
-  Panel,
   Toolbar,
   InputText,
   TablePanel,
@@ -214,7 +212,7 @@ const Hierarchy = (props) => {
     },
     {
       label: 'Edit Tags',
-      command: (v) =>
+      command: () =>
         dispatch(
           setDialog({
             type: 'tags',

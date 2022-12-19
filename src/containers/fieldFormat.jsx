@@ -8,6 +8,7 @@ import styled from 'styled-components'
 
 
 const AttributeField = ({ value }) => {
+  return <>{value}</>
 
 }
 

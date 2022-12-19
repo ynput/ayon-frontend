@@ -64,7 +64,9 @@ const AddonListItem = ({ addonName, formData, setFormData }) => {
   )
 }
 
+// eslint-disable-next-line no-unused-vars
 const AddonVersions = ({ projectName }) => {
+  // eslint-disable-next-line no-unused-vars
   const [originalData, setOriginalData] = useState(null)
   const [formData, setFormData] = useState(null)
 
@@ -116,6 +118,7 @@ const AddonVersions = ({ projectName }) => {
             {formData &&
               Object.keys(formData).map((addonName) => (
                 <AddonListItem
+                  key={addonName}
                   addonName={addonName}
                   formData={formData}
                   setFormData={setFormData}

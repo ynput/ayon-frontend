@@ -5,7 +5,6 @@ import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import {
-  Shade,
   Spacer,
   Button,
   Section,
@@ -114,7 +113,9 @@ const EditorPage = () => {
           `/api/projects/${projectName}/${entityType}s/${entityId}`
         )
         data = result.data
-      } catch {}
+      } catch {
+        toast.error(`Error loading ${entityType} ${entityId}`)
+      }
       return data
     }
 

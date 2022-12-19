@@ -56,19 +56,26 @@ const WorkfileDetail = ({ projectName, workfileId, style }) => {
       })
   }, [projectName, workfileId])
 
+
   return (
     <Section style={style}>
       <Panel>
-        <Thumbnail
-          project={projectName}
-          entityType="workfile"
-          entityId={workfileId}
-        />
-        <AttributeTable
-          entityType="workfile"
-          data={data?.attrib || {}}
-          additionalData={[{ title: 'Path', value: <PathField value={data?.path}/> }]}
-        />
+        {
+          loading ? ( <div>Loading...</div> ) : (
+            <>
+            <Thumbnail
+              project={projectName}
+              entityType="workfile"
+              entityId={workfileId}
+            />
+            <AttributeTable
+              entityType="workfile"
+              data={data?.attrib || {}}
+              additionalData={[{ title: 'Path', value: <PathField value={data?.path}/> }]}
+            />
+            </>
+          )
+        }
       </Panel>
     </Section>
   )

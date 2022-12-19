@@ -90,8 +90,9 @@ const SettingsEditor = ({
         ObjectFieldTemplate={ObjectFieldTemplate}
         ArrayFieldTemplate={ArrayFieldTemplate}
         onChange={(evt) => onChange(evt.formData)}
-        children={<></>}
-      />
+      >
+        <div />
+      </Form>
       <Tooltip target=".form-inline-field-label" />
     </>
   )

@@ -6,10 +6,11 @@ import { LoaderShade } from '@ynput/ayon-react-components'
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 import Header from './containers/header'
 import LoginPage from './pages/login'
-import Error from './pages/error'
+import ErrorPage from './pages/error'
 import WebsocketListener from './containers/websocket'
 
 const ProjectPage = lazy(() => import('./pages/project'))
@@ -128,7 +129,7 @@ const App = () => {
           <Route path="/events" element={<EventViewer />} />
           <Route path="/services" element={<ServicesPage />} />
 
-          <Route element={<Error code="404" />} />
+          <Route element={<ErrorPage code="404" />} />
         </Routes>
       </BrowserRouter>
     </Suspense>
