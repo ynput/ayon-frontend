@@ -1,5 +1,6 @@
 import { InputText, InputNumber } from '@ynput/ayon-react-components'
 import { Dropdown } from 'primereact/dropdown'
+import { MultiSelect } from 'primereact/multiselect'
 import { getFolderTypes, getTaskTypes } from '/src/utils'
 
 import ayonClient from '/src/ayon'
@@ -69,18 +70,37 @@ const enumEditor = (options, callback, value, settings) => {
   const enumData = settings.enum || []
   const onChange = (event) => callback(options, event.value)
 
-  return (
-    <Dropdown
-      value={value || ''}
-      options={enumData}
-      optionLabel="label"
-      optionValue="value"
-      dataKey="value"
-      onChange={onChange}
-      style={{  minWidth: 10, width: '100%' }}
-    />
-  )
+  if (settings.type === 'string') {
+    return (
+      <Dropdown
+        value={value || ''}
+        options={enumData}
+        optionLabel="label"
+        optionValue="value"
+        dataKey="value"
+        onChange={onChange}
+        style={{  minWidth: 10, width: '100%' }}
+      />
+    )
+  } else if (settings.type === 'list_of_strings') {
 
+    console.log("VALUE", value)
+
+    return (
+      <MultiSelect
+        value={value || []}
+        options={enumData}
+        optionLabel="label"
+        optionValue="value"
+        dataKey="value"
+        onChange={onChange}
+        style={{  minWidth: 10, width: '100%' }}
+      />
+    )
+  }
+
+  console.log("SET", settings)
+  return <>Unsuppored editor</>
 }
 
 
