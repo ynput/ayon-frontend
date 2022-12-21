@@ -199,7 +199,6 @@ const Hierarchy = (props) => {
             type: 'tags',
           }),
         ),
-      disabled: focusedFolders.length !== 1,
     },
   ]
 
