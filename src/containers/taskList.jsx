@@ -145,7 +145,7 @@ const TaskList = ({ style = {} }) => {
         dispatch(
           setDialog({
             type: 'tags',
-          })
+          }),
         ),
       disabled: context.focused.folders.length !== 1,
     },
