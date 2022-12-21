@@ -6,13 +6,35 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { setReload } from '../../features/context'
 
+const buildTagsQuery = (type) => {
+  const TAGS_QUERY = `
+    query Tags($projectName: String!, $ids: [String!]!) {
+        project(name: $projectName) {
+          ${type}s(ids: $ids) {
+                edges {
+                    node {
+                        id
+                        name
+                        tags
+                    }
+                }
+            }
+        }
+    }
+
+`
+
+  return TAGS_QUERY
+}
+
 export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => {
   // get redux context state
   const dispatch = useDispatch()
 
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
-  const [tags, setTags] = useState([])
+  // tags is an object of entity ids as keys  {entityidexample: {tags: ['tag1'], name: 'shot1', id: entityidexample}, }
+  const [tags, setTags] = useState({})
 
   useEffect(() => {
     if (ids && type) {
@@ -21,11 +43,23 @@ export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => 
 
       const getTags = async () => {
         try {
-          const { data } = await axios.get(`/api/projects/${projectName}/${type}s/${ids[0]}`)
+          const { data } = await axios.post('/graphql', {
+            query: buildTagsQuery(type),
+            variables: { projectName, ids },
+          })
 
-          console.log(data)
-          setTags(data.tags)
-          console.log(data)
+          if (data.errors) throw data.errors[0].message
+
+          let tagsData = data.data.project[type + 's'].edges
+
+          if (tagsData) {
+            // format data as an object with the ids as keys
+            tagsData = tagsData.reduce((acc, cur) => ({ ...acc, [cur.node.id]: cur.node }), {})
+          } else throw 'No edges found on data'
+
+          console.log(tagsData)
+
+          setTags(tagsData)
         } catch (error) {
           console.error(error)
           const errMessage = error.response.data.detail || `Error ${error.response.status}`
@@ -40,12 +74,24 @@ export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => 
     }
   }, [ids, setIsLoading])
 
-  const handleSuccess = async (tags) => {
-    console.log(tags)
+  const handleSuccess = async (newTags) => {
+    console.log(newTags)
+
     try {
-      await axios.patch(`/api/projects/${projectName}/${type}s/${ids[0]}`, {
-        tags,
-      })
+      // create operations array of all entities
+      const operations = Object.keys(tags).map((id) => ({
+        type: 'update',
+        entityType: type,
+        entityId: id,
+        data: {
+          tags: newTags,
+        },
+      }))
+
+      console.log(operations)
+
+      // use operations end point to update all at once
+      await axios.post(`/api/projects/${projectName}/operations`, { operations })
 
       // on success updating tags dispatch reload of data
       dispatch(setReload({ type: type, reload: true }))

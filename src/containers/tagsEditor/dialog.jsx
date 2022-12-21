@@ -9,6 +9,12 @@ const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, 
   const dialogRef = useRef(null)
   // Set a constant dialog height so that there's no popping
   const [height, setHeight] = useState(null)
+  // If multiple entities tags are being edited
+  const [isMulti, setIsMulti] = useState(false)
+  // currently multi select always overwrites
+  const [isOverwrite, setIsOverwrite] = useState(false)
+  // all the names of the entities
+  const [names, setNames] = useState([])
 
   useEffect(() => {
     return () => {
@@ -20,11 +26,33 @@ const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, 
   const [selected, setSelected] = useState([])
 
   useEffect(() => {
-    setSelected([...value])
-    return () => {
-      setSelected([])
+    if (!isLoading && !isError) {
+      const allNames = []
+      // all tags and remove any "shared" duplicate tags
+      // removes the ids from the tags so all ids tags will get overwritten
+      const allTags = Object.values(value).reduce((result, { tags, name }, index) => {
+        // set isMulti
+        if (index === 1) {
+          setIsMulti(true)
+          // for now multi select will always casuse overwrite
+          setIsOverwrite(true)
+        }
+        // set names
+        allNames.push(name)
+        // only add tags to result if not already there
+        tags.forEach((t) => !result.includes(t) && result.push(t))
+        return result
+      }, [])
+
+      // set states
+      setNames(allNames)
+      setSelected(allTags)
+
+      return () => {
+        setSelected([])
+      }
     }
-  }, [value, visible, setSelected])
+  }, [value, visible, setSelected, isLoading, isError])
 
   const handleSuccess = () => {
     console.log('Success')
@@ -46,13 +74,18 @@ const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, 
   const footer = (
     <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
       <Button label={'Cancel'} onClick={handleCancel} />
-      <Button label={'Save'} onClick={handleSuccess} />
+      <Button
+        label={isOverwrite ? 'Overwite All' : 'Save'}
+        onClick={handleSuccess}
+        style={{ backgroundColor: isOverwrite && 'red' }}
+      />
     </div>
   )
 
   const header = (
     <div>
-      <h2>Tags Editor</h2>
+      <h2>{`Tags Editor${isMulti ? ' (Multiple)' : ''}: ${names.join(', ')}`}</h2>
+      {isOverwrite && <span>Warning: All Tags will be applied to all Entities.</span>}
     </div>
   )
 
@@ -74,6 +107,7 @@ const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, 
   )
 }
 
+// global tags to choose from
 export const tagsType = PropTypes.arrayOf(
   PropTypes.shape({
     name: PropTypes.string.isRequired,
@@ -85,7 +119,7 @@ TagsEditorDialog.propTypes = {
   visible: PropTypes.bool,
   onHide: PropTypes.func.isRequired,
   onSuccess: PropTypes.func.isRequired,
-  value: PropTypes.arrayOf(PropTypes.string),
+  value: PropTypes.object,
   tags: tagsType,
   isLoading: PropTypes.bool,
 }
