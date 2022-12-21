@@ -147,7 +147,6 @@ const TaskList = ({ style = {} }) => {
             type: 'tags',
           }),
         ),
-      disabled: context.focused.folders.length !== 1,
     },
   ]
 

@@ -277,9 +277,8 @@ const Subsets = () => {
         dispatch(
           setDialog({
             type: 'tags',
-          })
+          }),
         ),
-      disabled: focusedVersions.length !== 1,
     },
   ]
 
