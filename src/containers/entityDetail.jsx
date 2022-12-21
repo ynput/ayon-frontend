@@ -3,13 +3,7 @@ import { useState, useEffect } from 'react'
 
 import { Dialog } from 'primereact/dialog'
 
-const EntityDetail = ({
-  projectName,
-  entityType,
-  entityId,
-  visible,
-  onHide,
-}) => {
+const EntityDetail = ({ projectName, entityType, entityId, visible, onHide }) => {
   const [data, setData] = useState(null)
 
   useEffect(() => {

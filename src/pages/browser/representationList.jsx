@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { Toolbar, TablePanel } from 'openpype-components'
+import { useDispatch } from 'react-redux'
+import { Toolbar, TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -33,11 +33,10 @@ const columns = [
 ]
 
 const RepresentationList = ({ representations }) => {
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
+  //const context = useSelector((state) => ({ ...state.context }))
   const dispatch = useDispatch()
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
-  const [focusedRepresentation, setFocusedRepresentation] = useState(null)
+  //const [focusedRepresentation, setFocusedRepresentation] = useState(null)
 
   const data = useMemo(() => {
     return groupResult(representations, 'name')
@@ -51,10 +50,10 @@ const RepresentationList = ({ representations }) => {
         subset: e.node.data.subsetName,
         version: e.node.data.versionName,
         representation: e.node.data.name,
-      })
+      }),
     )
     if (e.originalEvent.detail === 2) {
-      setFocusedRepresentation(e.node.data.id)
+      //setFocusedRepresentation(e.node.data.id)
     }
   }
 
@@ -87,11 +86,11 @@ const RepresentationList = ({ representations }) => {
           {columns.map((col) => {
             return (
               <Column
-                key={col.field} 
+                key={col.field}
                 field={col.field}
                 header={col.header}
                 expander={col.expander}
-                style={{ width: col.width }} 
+                style={{ width: col.width }}
               />
             )
           })}

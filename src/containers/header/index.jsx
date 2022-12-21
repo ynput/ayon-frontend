@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Button, Spacer } from 'openpype-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from './breadcrumbs'
 import UserMenu from './userMenu'
@@ -19,30 +19,16 @@ const Header = () => {
 
   return (
     <nav className="primary">
-      <ProjectMenu
-        visible={projectMenuVisible}
-        onHide={() => setProjectMenuVisible(false)}
-      />
-      <UserMenu
-        visible={userMenuVisible}
-        onHide={() => setUserMenuVisible(false)}
-      />
+      <ProjectMenu visible={projectMenuVisible} onHide={() => setProjectMenuVisible(false)} />
+      <UserMenu visible={userMenuVisible} onHide={() => setUserMenuVisible(false)} />
 
-      <Button
-        icon="dataset"
-        className="transparent"
-        onClick={() => setProjectMenuVisible(true)}
-      />
+      <Button icon="dataset" className="transparent" onClick={() => setProjectMenuVisible(true)} />
 
       <Spacer>
         <Breadcrumbs />
       </Spacer>
 
-      <Button
-        icon="person"
-        className="transparent"
-        onClick={() => setUserMenuVisible(true)}
-      />
+      <Button icon="person" className="transparent" onClick={() => setUserMenuVisible(true)} />
     </nav>
   )
 }

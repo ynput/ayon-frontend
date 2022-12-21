@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { Shade, Panel, TablePanel, Section } from 'openpype-components'
+import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -119,9 +119,7 @@ const TaskList = ({ style = {} }) => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup
-      ? 'folder'
-      : getTaskTypeIcon(node.data.taskType)
+    const icon = node.data.isGroup ? 'folder' : getTaskTypeIcon(node.data.taskType)
     let className = ''
     let i = 0
     for (const pair of context.pairing) {
@@ -132,13 +130,7 @@ const TaskList = ({ style = {} }) => {
       }
     }
 
-    return (
-      <CellWithIcon
-        icon={icon}
-        text={node.data.name}
-        iconClassName={className}
-      />
-    )
+    return <CellWithIcon icon={icon} text={node.data.name} iconClassName={className} />
   }
 
   const ctxMenuModel = [
@@ -181,15 +173,8 @@ const TaskList = ({ style = {} }) => {
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
-          <Column
-            field="name"
-            header="Task"
-            expander="true"
-            body={nameRenderer}
-          />
-          {folderIds.length > 1 && (
-            <Column field="folderName" header="Folder" />
-          )}
+          <Column field="name" header="Task" expander="true" body={nameRenderer} />
+          {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
           <Column field="taskType" header="Task type" style={{ width: 90 }} />
         </TreeTable>
       </TablePanel>

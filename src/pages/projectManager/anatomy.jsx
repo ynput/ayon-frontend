@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
-import { Section, ScrollPanel, Toolbar, Button } from 'openpype-components'
+import { Section, ScrollPanel, Toolbar, Button } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const ProjectAnatomy = ({ projectName }) => {
@@ -35,13 +35,7 @@ const ProjectAnatomy = ({ projectName }) => {
   const editor = useMemo(() => {
     if (!(schema && originalData)) return 'Loading editor...'
 
-    return (
-      <SettingsEditor
-        schema={schema}
-        formData={originalData}
-        onChange={setNewData}
-      />
-    )
+    return <SettingsEditor schema={schema} formData={originalData} onChange={setNewData} />
   }, [schema, originalData])
 
   return (

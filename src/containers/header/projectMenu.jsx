@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Button } from 'openpype-components'
+import { Button } from '@ynput/ayon-react-components'
 
 import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
@@ -23,12 +23,7 @@ const ProjectMenu = ({ visible, onHide }) => {
   )
 
   return (
-    <Sidebar
-      position="left"
-      visible={visible}
-      onHide={onHide}
-      icons={() => <h3>Project menu</h3>}
-    >
+    <Sidebar position="left" visible={visible} onHide={onHide} icons={() => <h3>Project menu</h3>}>
       <div
         style={{
           display: 'flex',
@@ -40,9 +35,7 @@ const ProjectMenu = ({ visible, onHide }) => {
       >
         <ProjectList
           footer={footer}
-          onSelect={(projectName) =>
-            navigate(`/projects/${projectName}/browser`)
-          }
+          onSelect={(projectName) => navigate(`/projects/${projectName}/browser`)}
           selection={projectName}
         />
       </div>

@@ -31,9 +31,7 @@ const AddonSettingsPanel = ({
       setOriginalData(localData)
     } else {
       axios
-        .get(
-          `/api/addons/${addon.name}/${addon.version}/settings${projectSuffix}`
-        )
+        .get(`/api/addons/${addon.name}/${addon.version}/settings${projectSuffix}`)
         .then((res) => {
           setOriginalData(res.data)
           //setNewData(null)
@@ -42,9 +40,7 @@ const AddonSettingsPanel = ({
     }
 
     axios
-      .get(
-        `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`
-      )
+      .get(`/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`)
       .then((res) => setOverrides(res.data))
   }
 

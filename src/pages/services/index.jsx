@@ -5,19 +5,11 @@ import { DateTime } from 'luxon'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
-import {
-  TablePanel,
-  Button,
-  Spacer,
-  Section,
-  Toolbar,
-} from 'openpype-components'
+import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './newService'
 
 const formatTime = (rowData) => {
-  return rowData.lastSeen
-    ? DateTime.fromSeconds(rowData.lastSeen).toRelative()
-    : 'Never'
+  return rowData.lastSeen ? DateTime.fromSeconds(rowData.lastSeen).toRelative() : 'Never'
 }
 
 const formatStatus = (rowData) => {
@@ -108,10 +100,7 @@ const ServicesPage = () => {
   return (
     <main>
       {showNewService && (
-        <NewServiceDialog
-          onHide={() => setShowNewService(false)}
-          onSpawn={loadServices}
-        />
+        <NewServiceDialog onHide={() => setShowNewService(false)} onSpawn={loadServices} />
       )}
       <Section>
         <Toolbar>
@@ -128,9 +117,7 @@ const ServicesPage = () => {
             selectionMode="multiple"
             selection={selection}
             onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-            onSelectionChange={(e) =>
-              setSelectedServices(e.value.map((i) => i.name))
-            }
+            onSelectionChange={(e) => setSelectedServices(e.value.map((i) => i.name))}
             onContextMenuSelectionChange={(e) => {
               if (!selectedServices.includes(e.value.name))
                 setSelectedServices([...selectedServices, e.value.name])

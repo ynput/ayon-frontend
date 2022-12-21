@@ -12,7 +12,7 @@ import {
   Section,
   Panel,
   Spacer,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 const SessionItem = ({ session, userName, onChange }) => {
   const invalidate = () => {
@@ -27,9 +27,7 @@ const SessionItem = ({ session, userName, onChange }) => {
 
   return (
     <Panel>
-      {session.token}{' '}
-      {session.token === localStorage.getItem('accessToken') &&
-        '(this session)'}
+      {session.token} {session.token === localStorage.getItem('accessToken') && '(this session)'}
       <Button label="Invalidate" onClick={invalidate} />
     </Panel>
   )
@@ -146,11 +144,7 @@ const ProfilePage = () => {
               />
             </FormRow>
             <FormRow>
-              <Button
-                label="Update profile"
-                icon="check"
-                onClick={saveProfile}
-              />
+              <Button label="Update profile" icon="check" onClick={saveProfile} />
             </FormRow>
           </FormLayout>
         </Panel>
@@ -160,16 +154,10 @@ const ProfilePage = () => {
         <Panel>
           <FormLayout>
             <FormRow label="New password">
-              <InputPassword
-                value={pass1}
-                onChange={(e) => setPass1(e.target.value)}
-              />
+              <InputPassword value={pass1} onChange={(e) => setPass1(e.target.value)} />
             </FormRow>
             <FormRow label="Confirm password">
-              <InputPassword
-                value={pass2}
-                onChange={(e) => setPass2(e.target.value)}
-              />
+              <InputPassword value={pass2} onChange={(e) => setPass2(e.target.value)} />
             </FormRow>
             <FormRow>
               <Button

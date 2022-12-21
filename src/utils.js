@@ -85,8 +85,7 @@ const loadAnatomyPresets = async () => {
   let primaryPreset = defaultPreset
   let presets = []
   for (const preset of response.data.presets) {
-    if (preset.primary)
-      primaryPreset = { name: preset.name, title: `<default (${preset.name})>` }
+    if (preset.primary) primaryPreset = { name: preset.name, title: `<default (${preset.name})>` }
     presets.push({
       name: preset.name,
       title: preset.name,
@@ -208,8 +207,7 @@ function useLocalStorage(key, initialValue) {
   const setValue = (value) => {
     try {
       // Allow value to be a function so we have same API as useState
-      const valueToStore =
-        value instanceof Function ? value(storedValue) : value
+      const valueToStore = value instanceof Function ? value(storedValue) : value
       // Save state
       setStoredValue(valueToStore)
       // Save to local storage

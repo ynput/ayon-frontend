@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { Button, InputText } from 'openpype-components'
+import { Button, InputText } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 const EditorContainer = styled.div`
@@ -42,9 +42,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
       newValue.splice(index, 1)
       onChange(newValue)
     } else {
-      console.warn(
-        `REMOVE OPTION FAILED: ${v} already NOT in value: ${value.toString}`
-      )
+      console.warn(`REMOVE OPTION FAILED: ${v} already NOT in value: ${value.toString}`)
     }
   }
 
@@ -59,9 +57,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
       newValue.push(v)
       onChange(newValue)
     } else {
-      console.warn(
-        `ADD OPTION FAILED: ${v} already in value: ${value.toString}`
-      )
+      console.warn(`ADD OPTION FAILED: ${v} already in value: ${value.toString}`)
     }
   }
 
@@ -130,9 +126,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
 }
 
 TagsEditor.propTypes = {
-  options: PropTypes.arrayOf(
-    PropTypes.shape({ name: PropTypes.string.isRequired })
-  ),
+  options: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string.isRequired })),
   value: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 }
 

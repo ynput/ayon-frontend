@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 
-import { Panel } from 'openpype-components'
+import { Panel } from '@ynput/ayon-react-components'
 
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
@@ -109,19 +109,12 @@ const FolderDetail = () => {
   return (
     <Panel>
       <h3>
-        <span
-          className="material-symbols-outlined"
-          style={{ verticalAlign: 'bottom' }}
-        >
+        <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getFolderTypeIcon(data.folderType)}
         </span>
         <span style={{ marginLeft: 10 }}>{data.name}</span>
       </h3>
-      <Thumbnail
-        projectName={projectName}
-        entityType="folder"
-        entityId={folderId}
-      />
+      <Thumbnail projectName={projectName} entityType="folder" entityId={folderId} />
       <AttributeTable
         entityType="folder"
         data={data.attrib}

@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { Button, Spacer } from 'openpype-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 import { Sidebar } from 'primereact/sidebar'
 import { logout } from '/src/features/user'
 
@@ -24,12 +24,7 @@ const UserMenu = ({ visible, onHide }) => {
   }
 
   return (
-    <Sidebar
-      position="right"
-      visible={visible}
-      onHide={onHide}
-      icons={() => <h3>User menu</h3>}
-    >
+    <Sidebar position="right" visible={visible} onHide={onHide} icons={() => <h3>User menu</h3>}>
       <div
         style={{
           height: '100%',
@@ -83,11 +78,9 @@ const UserMenu = ({ visible, onHide }) => {
         />
         <Button
           onClick={() => {
-            axios
-              .post('/api/system/restart')
-              .finally(() => {
-                onHide()
-              })
+            axios.post('/api/system/restart').finally(() => {
+              onHide()
+            })
           }}
           label="Server restart"
           icon="restart_alt"

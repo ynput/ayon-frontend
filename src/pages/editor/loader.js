@@ -5,14 +5,13 @@ const loadBranch = async (query, projectName, parentId) => {
   const variables = { projectName, parent: parentId || 'root' }
   console.log('Branch load', parentId)
   const response = await axios.post('/graphql', { query, variables })
-  console.log("GOT", response)
+  console.log('GOT', response)
 
   if (response.status !== 200) {
     toast.error(`Unable to load branch ${parentId}`)
     return {}
   }
 
-  
   const data = response.data
   const nodes = {}
 
@@ -57,7 +56,7 @@ const getUpdatedNodeData = async (
   expandedKeys,
   parents,
   query,
-  projectName
+  projectName,
 ) => {
   // Load newly expanded branches
   for (const expandedKey of expandedKeys) {

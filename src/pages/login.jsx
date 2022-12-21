@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useEffect, useState, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { InputText, InputPassword, Button, Panel } from 'openpype-components'
+import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
 
 import { login } from '/src/features/user'
 
@@ -97,15 +97,12 @@ const LoginPage = () => {
             login({
               user: response.data.user,
               accessToken: response.data.token,
-            })
+            }),
           )
         }
       })
       .catch((err) => {
-        toast.error(
-          err.response.data.detail ||
-            `Unable to login: Error ${err.response.status}`
-        )
+        toast.error(err.response.data.detail || `Unable to login: Error ${err.response.status}`)
       })
   }
 
@@ -122,25 +119,13 @@ const LoginPage = () => {
   useEffect(() => {
     let result = []
     axios.get('/api/oauth2/options').then((response) => {
-      if (
-        !(
-          response.data &&
-          response.data.options &&
-          response.data.options.length
-        )
-      )
-        return
+      if (!(response.data && response.data.options && response.data.options.length)) return
 
       for (const option of response.data.options) {
         const redirectUri = `${window.location.origin}/login/${option.name}`
         result.push({
           name: option.name,
-          url: constructOAuth2Url(
-            option.url,
-            option.client_id,
-            redirectUri,
-            option.scope
-          ),
+          url: constructOAuth2Url(option.url, option.client_id, redirectUri, option.scope),
         })
       }
       setOauthOptions(result)

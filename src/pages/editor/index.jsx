@@ -5,14 +5,13 @@ import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import {
-  Shade,
   Spacer,
   Button,
   Section,
   Toolbar,
   TablePanel,
   InputSwitch,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -21,11 +20,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 import PubSub from '/src/pubsub'
 import { isEmpty, sortByKey } from '/src/utils'
 
-import {
-  setBreadcrumbs,
-  setExpandedFolders,
-  setFocusedFolders,
-} from '/src/features/context'
+import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/features/context'
 
 import { buildQuery } from './queries'
 import { getColumns, formatName, formatType, formatAttribute } from './utils'
@@ -86,17 +81,12 @@ const EditorPage = () => {
   useEffect(() => {
     setLoading(true)
     const expandedKeys = [...Object.keys(context.expandedFolders), 'root']
-    getUpdatedNodeData(
-      nodeData,
-      newNodes,
-      expandedKeys,
-      parents,
-      query,
-      projectName
-    ).then((result) => {
-      setNodeData(result)
-      setLoading(false)
-    })
+    getUpdatedNodeData(nodeData, newNodes, expandedKeys, parents, query, projectName).then(
+      (result) => {
+        setNodeData(result)
+        setLoading(false)
+      },
+    )
   }, [context.expandedFolders, newNodes])
 
   //
@@ -110,11 +100,11 @@ const EditorPage = () => {
     const getEntity = async (entityType, entityId) => {
       let data = {}
       try {
-        const result = await axios.get(
-          `/api/projects/${projectName}/${entityType}s/${entityId}`
-        )
+        const result = await axios.get(`/api/projects/${projectName}/${entityType}s/${entityId}`)
         data = result.data
-      } catch {}
+      } catch {
+        toast.error(`Error loading ${entityType} ${entityId}`)
+      }
       return data
     }
 
@@ -193,8 +183,7 @@ const EditorPage = () => {
         }
         if (!node.leaf) {
           node.children = []
-          if (childId in context.expandedFolders)
-            buildHierarchy(childId, node.children)
+          if (childId in context.expandedFolders) buildHierarchy(childId, node.children)
         }
         target.push(node)
       }
@@ -242,8 +231,7 @@ const EditorPage = () => {
       __entityType: options.rowData.__entityType,
       __parentId: options.rowData.__parentId,
     }
-    const key =
-      options.rowData.__entityType === 'folder' ? '_folderType' : '_taskType'
+    const key = options.rowData.__entityType === 'folder' ? '_folderType' : '_taskType'
     rowChanges[key] = value
     setChanges((changes) => {
       return { ...changes, [id]: rowChanges }
@@ -289,8 +277,7 @@ const EditorPage = () => {
 
         for (const key in changes[entityId]) {
           if (key.startsWith('__')) continue
-          if (key.startsWith('_'))
-            entityChanges[key.substring(1)] = changes[entityId][key]
+          if (key.startsWith('_')) entityChanges[key.substring(1)] = changes[entityId][key]
           else attribChanges[key] = changes[entityId][key]
         }
 
@@ -323,8 +310,7 @@ const EditorPage = () => {
       newEntity.attrib = {}
       for (const key in entityChanges || {}) {
         if (key.startsWith('__')) continue
-        if (key.startsWith('_'))
-          newEntity[key.substring(1)] = entityChanges[key]
+        if (key.startsWith('_')) newEntity[key.substring(1)] = entityChanges[key]
         else {
           newEntity.attrib[key] = entityChanges[key]
         }
@@ -338,8 +324,7 @@ const EditorPage = () => {
       })
 
       // just reload the parent branch. new entities don't have children
-      if (!branchesToReload.includes(newEntity.parentId))
-        branchesToReload.push(newEntity.parentId)
+      if (!branchesToReload.includes(newEntity.parentId)) branchesToReload.push(newEntity.parentId)
     } // CREATE NEW ENTITIES
 
     // Send the changes to the server
@@ -380,9 +365,7 @@ const EditorPage = () => {
         // Remove successful operations from the changes
         setChanges((nodes) => {
           const result = {}
-          for (const id of Object.keys(nodes).filter(
-            (n) => !affected.includes(n)
-          )) {
+          for (const id of Object.keys(nodes).filter((n) => !affected.includes(n))) {
             result[id] = nodes[id]
           }
           return result
@@ -519,12 +502,8 @@ const EditorPage = () => {
   }
 
   const revertChangesOnSelection = useCallback(() => {
-    const modifiedIds = Object.keys(changes).filter(
-      (i) => i in currentSelection
-    )
-    const newIds = newNodes
-      .map((i) => i.id)
-      .filter((i) => i in currentSelection)
+    const modifiedIds = Object.keys(changes).filter((i) => i in currentSelection)
+    const newIds = newNodes.map((i) => i.id).filter((i) => i in currentSelection)
 
     setNewNodes((nodes) => {
       return nodes.filter((i) => !newIds.includes(i.id))
@@ -594,7 +573,7 @@ const EditorPage = () => {
       setBreadcrumbs({
         parents: node.parents,
         folder: node.name,
-      })
+      }),
     )
   }
 
@@ -612,17 +591,8 @@ const EditorPage = () => {
             disabled={!canAdd}
             onClick={onAddFolder}
           />
-          <Button
-            icon="add_task"
-            label="Add task"
-            disabled={!canAdd}
-            onClick={onAddTask}
-          />
-          <Button
-            icon="create_new_folder"
-            label="Add root folder"
-            onClick={onAddRootFolder}
-          />
+          <Button icon="add_task" label="Add task" disabled={!canAdd} onClick={onAddTask} />
+          <Button icon="create_new_folder" label="Add root folder" onClick={onAddRootFolder} />
           <Button label="Delete selected" icon="delete" onClick={onDelete} />
           <InputSwitch
             checked={selectionLocked}
@@ -631,18 +601,8 @@ const EditorPage = () => {
           />
           Lock selection
           <Spacer />
-          <Button
-            icon="close"
-            label="Revert Changes"
-            onClick={onRevert}
-            disabled={!canCommit}
-          />
-          <Button
-            icon="check"
-            label="Commit Changes"
-            onClick={onCommit}
-            disabled={!canCommit}
-          />
+          <Button icon="close" label="Revert Changes" onClick={onRevert} disabled={!canCommit} />
+          <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
         </Toolbar>
         <TablePanel loading={loading}>
           <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
@@ -661,11 +621,8 @@ const EditorPage = () => {
             onRowClick={onRowClick}
             rowClassName={(rowData) => {
               return {
-                changed:
-                  rowData.key in changes || rowData.key.startsWith('newnode'),
-                deleted:
-                  rowData.key in changes &&
-                  changes[rowData.key]?.__action == 'delete',
+                changed: rowData.key in changes || rowData.key.startsWith('newnode'),
+                deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
               }
             }}
             selectOnEdit={false}
@@ -682,7 +639,7 @@ const EditorPage = () => {
                 return stringEditor(
                   options,
                   updateName,
-                  formatName(options.rowData, changes, false)
+                  formatName(options.rowData, changes, false),
                 )
               }}
             />
@@ -692,11 +649,7 @@ const EditorPage = () => {
               body={(rowData) => formatType(rowData.data, changes)}
               style={{ width: 200 }}
               editor={(options) => {
-                return typeEditor(
-                  options,
-                  updateType,
-                  formatType(options.rowData, changes, false)
-                )
+                return typeEditor(options, updateType, formatType(options.rowData, changes, false))
               }}
             />
             {columns.map((col) => {
@@ -706,20 +659,13 @@ const EditorPage = () => {
                   header={col.title}
                   field={col.name}
                   style={{ minWidth: 30 }}
-                  body={(rowData) =>
-                    formatAttribute(rowData.data, changes, col.name)
-                  }
+                  body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
                   editor={(options) => {
                     return col.editor(
                       options,
                       updateAttribute,
-                      formatAttribute(
-                        options.rowData,
-                        changes,
-                        col.name,
-                        false
-                      ),
-                      col.editorSettings
+                      formatAttribute(options.rowData, changes, col.name, false),
+                      col.editorSettings,
                     )
                   }}
                 />

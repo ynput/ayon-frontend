@@ -3,13 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
 import { Dropdown } from 'primereact/dropdown'
-import {
-  FormLayout,
-  FormRow,
-  Spacer,
-  Button,
-  InputText,
-} from 'openpype-components'
+import { FormLayout, FormRow, Spacer, Button, InputText } from '@ynput/ayon-react-components'
 
 const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [addonData, setAddonData] = useState([])
@@ -21,9 +15,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [selectedHost, setSelectedHost] = useState(null)
 
   useEffect(() => {
-    axios
-      .get('/api/addons?details=1')
-      .then((response) => setAddonData(response.data.addons))
+    axios.get('/api/addons?details=1').then((response) => setAddonData(response.data.addons))
 
     axios.get('/api/hosts').then((response) => setHostData(response.data.hosts))
   }, [])
@@ -70,11 +62,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   }
 
   const canSubmit =
-    selectedAddon?.name &&
-    selectedVersion &&
-    selectedService &&
-    selectedHost &&
-    serviceName?.length
+    selectedAddon?.name && selectedVersion && selectedService && selectedHost && serviceName?.length
 
   const footer = (
     <>
@@ -84,18 +72,10 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   )
 
   return (
-    <Dialog
-      visible={true}
-      header="New service"
-      onHide={() => onHide()}
-      footer={footer}
-    >
+    <Dialog visible={true} header="New service" onHide={() => onHide()} footer={footer}>
       <FormLayout>
         <FormRow label="Service name">
-          <InputText
-            value={serviceName}
-            onChange={(e) => setServiceName(e.target.value)}
-          />
+          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
         </FormRow>
 
         <FormRow label="Addon name">

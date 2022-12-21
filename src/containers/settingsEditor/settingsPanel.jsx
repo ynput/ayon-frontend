@@ -11,10 +11,7 @@ const SettingsPanel = ({
   className = '',
   onClick,
 }) => {
-  const [expandedObjects, setExpandedObjects] = useLocalStorage(
-    'expanded-settings-keys',
-    []
-  )
+  const [expandedObjects, setExpandedObjects] = useLocalStorage('expanded-settings-keys', [])
 
   const onToggle = () => {
     if (expandedObjects.includes(objId))
@@ -25,9 +22,7 @@ const SettingsPanel = ({
   const expanded = expandedObjects.includes(objId)
 
   const panelHeaderTemplate = (options) => {
-    const toggleIcon = options.collapsed
-      ? 'pi pi-chevron-right'
-      : 'pi pi-chevron-down'
+    const toggleIcon = options.collapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-down'
     return (
       <>
         <div
@@ -42,10 +37,7 @@ const SettingsPanel = ({
             else if (evt.detail === 2) options.onTogglerClick(evt)
           }}
         >
-          <button
-            className={options.togglerClassName}
-            onClick={options.onTogglerClick}
-          >
+          <button className={options.togglerClassName} onClick={options.onTogglerClick}>
             <span className={toggleIcon}></span>
           </button>
           {enabledToggler}
@@ -57,9 +49,7 @@ const SettingsPanel = ({
     )
   }
 
-  let nclass = `form-object-field ${layout ? `layout-${layout}` : ''} ${
-    className || ''
-  } `
+  let nclass = `form-object-field ${layout ? `layout-${layout}` : ''} ${className || ''} `
 
   return (
     <Panel

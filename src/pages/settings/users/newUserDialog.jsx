@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
-import { Spacer, Button } from 'openpype-components'
+import { Spacer, Button } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { UserAttrib, AccessControl } from './forms'
 
@@ -42,8 +42,7 @@ const NewUserDialog = ({ onHide }) => {
       payload.data.defaultRoles = formData.roles || []
       if (selectedProjects) {
         const roles = {}
-        for (const projectName of selectedProjects)
-          roles[projectName] = payload.data.defaultRoles
+        for (const projectName of selectedProjects) roles[projectName] = payload.data.defaultRoles
         payload.data.roles = roles
       }
     }
@@ -97,11 +96,7 @@ const NewUserDialog = ({ onHide }) => {
           showPassword={true}
         />
         <h2>Access control</h2>
-        <AccessControl
-          formData={formData}
-          setFormData={setFormData}
-          rolesLabel="Default roles"
-        />
+        <AccessControl formData={formData} setFormData={setFormData} rolesLabel="Default roles" />
 
         {formData.userLevel === 'user' && (
           <>

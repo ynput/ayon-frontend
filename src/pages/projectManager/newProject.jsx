@@ -4,7 +4,7 @@ import { Dropdown } from 'primereact/dropdown'
 import { toast } from 'react-toastify'
 
 import axios from 'axios'
-import { Button, Spacer, InputText, Toolbar } from 'openpype-components'
+import { Button, Spacer, InputText, Toolbar } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 import { loadAnatomyPresets } from '/src/utils'
 
@@ -79,13 +79,7 @@ const NewProjectDialog = ({ onHide }) => {
 
   const editor = useMemo(() => {
     if (!(originalAnatomy && schema)) return 'Loading editor...'
-    return (
-      <SettingsEditor
-        schema={schema}
-        formData={originalAnatomy}
-        onChange={setNewAnatomy}
-      />
-    )
+    return <SettingsEditor schema={schema} formData={originalAnatomy} onChange={setNewAnatomy} />
   }, [schema, originalAnatomy])
 
   const footer = (

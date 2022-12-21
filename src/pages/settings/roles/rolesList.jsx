@@ -12,16 +12,13 @@ import {
   FormRow,
   Section,
   Toolbar,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 import axios from 'axios'
 
 const NewRoleDialog = ({ onClose, rolesList }) => {
   const [roleName, setRoleName] = useState('')
 
-  const roleNames = useMemo(
-    () => rolesList.map((i) => i?.name.toLowerCase()),
-    [rolesList]
-  )
+  const roleNames = useMemo(() => rolesList.map((i) => i?.name.toLowerCase()), [rolesList])
 
   const onSubmit = () => {
     axios
@@ -37,8 +34,7 @@ const NewRoleDialog = ({ onClose, rolesList }) => {
   }
 
   let error = null
-  if (roleNames.includes(roleName.toLowerCase()))
-    error = 'This role already exists'
+  if (roleNames.includes(roleName.toLowerCase())) error = 'This role already exists'
   else if (!roleName.match('^[a-zA-Z_]{2,20}$')) error = 'Invalid role name'
 
   const footer = (
@@ -49,12 +45,7 @@ const NewRoleDialog = ({ onClose, rolesList }) => {
       }}
     >
       <Spacer />
-      <Button
-        label="Create"
-        icon="group_add"
-        disabled={!!error}
-        onClick={onSubmit}
-      />
+      <Button label="Create" icon="group_add" disabled={!!error} onClick={onSubmit} />
     </div>
   )
 
@@ -68,25 +59,15 @@ const NewRoleDialog = ({ onClose, rolesList }) => {
     >
       <FormLayout>
         <FormRow label="Role name">
-          <InputText
-            value={roleName}
-            onChange={(e) => setRoleName(e.target.value)}
-          />
+          <InputText value={roleName} onChange={(e) => setRoleName(e.target.value)} />
         </FormRow>
-        <FormRow>
-          {error && <span className="form-error-text">{error}</span>}
-        </FormRow>
+        <FormRow>{error && <span className="form-error-text">{error}</span>}</FormRow>
       </FormLayout>
     </Dialog>
   )
 }
 
-const RolesList = ({
-  projectName,
-  selectedRole,
-  onSelectRole,
-  reloadTrigger,
-}) => {
+const RolesList = ({ projectName, selectedRole, onSelectRole, reloadTrigger }) => {
   const [rolesList, setRolesList] = useState([])
   const [loading, setLoading] = useState(false)
   const [showNewRole, setShowNewRole] = useState(false)
@@ -148,11 +129,7 @@ const RolesList = ({
       )}
 
       <Toolbar>
-        <Button
-          label="New role"
-          onClick={() => setShowNewRole(true)}
-          icon="group_add"
-        />
+        <Button label="New role" onClick={() => setShowNewRole(true)} icon="group_add" />
       </Toolbar>
 
       <TablePanel loading={loading}>

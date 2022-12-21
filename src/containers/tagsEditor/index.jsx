@@ -37,8 +37,7 @@ export const TagsEditorContainer = ({
           console.log(data)
         } catch (error) {
           console.error(error)
-          const errMessage =
-            error.response.data.detail || `Error ${error.response.status}`
+          const errMessage = error.response.data.detail || `Error ${error.response.status}`
           toast.error(`Unable to load tags. ${errMessage}`)
           setIsError(true)
         }
@@ -63,8 +62,7 @@ export const TagsEditorContainer = ({
       // dispatch callback function to reload data
     } catch (error) {
       console.error(error)
-      const errMessage =
-        error.response.data.detail || `Error ${error.response.status}`
+      const errMessage = error.response.data.detail || `Error ${error.response.status}`
       toast.error(`Unable to update tags. ${errMessage}`)
     }
   }

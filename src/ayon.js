@@ -4,7 +4,7 @@ const ayonClient = {
   },
 
   getAttribSettings(name) {
-    return this.settings.attributes.find((attr) => attr.name === name);
+    return this.settings.attributes.find((attr) => attr.name === name)
   },
 }
 

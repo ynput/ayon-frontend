@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Spacer, Button } from 'openpype-components'
+import { Spacer, Button } from '@ynput/ayon-react-components'
 
 import { Dialog } from 'primereact/dialog'
 
@@ -45,9 +45,8 @@ const ProjectPage = () => {
   const dispatch = useDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
-
   const loadProjectData = () => {
-    console.log("Loading project data")
+    console.log('Loading project data')
     setLoading(true)
     axios
       .get(`/api/projects/${projectName}`)
@@ -112,18 +111,19 @@ const ProjectPage = () => {
       })
   }
 
-
   const handlePubSub = async (topic, message) => {
-    if (topic === "client.connected") {
-      console.log("ProjectPage: client.connected. Reloading project data")
+    if (topic === 'client.connected') {
+      console.log('ProjectPage: client.connected. Reloading project data')
       loadProjectData()
-    }
-    else if (topic === "entity.update" && message.summary.entityType === "project" && message.summary.name === projectName) {
-      console.log("ProjectPage: entity.update. Reloading project data")
+    } else if (
+      topic === 'entity.update' &&
+      message.summary.entityType === 'project' &&
+      message.summary.name === projectName
+    ) {
+      console.log('ProjectPage: entity.update. Reloading project data')
       loadProjectData()
-    }
-    else{
-      console.log("ProjectPage: Unhandled pubsub message", topic, message)
+    } else {
+      console.log('ProjectPage: Unhandled pubsub message', topic, message)
     }
   }
 
@@ -147,9 +147,6 @@ const ProjectPage = () => {
   useEffect(() => {
     loadProjectData()
   }, [dispatch, projectName])
-
-
-
 
   //
   // Render page
@@ -191,10 +188,7 @@ const ProjectPage = () => {
         <NavLink to={`/projects/${projectName}/editor`}>Editor</NavLink>
         <NavLink to={`/projects/${projectName}/workfiles`}>Workfiles</NavLink>
         {addons.map((addon) => (
-          <NavLink
-            to={`/projects/${projectName}/addon/${addon.name}`}
-            key={addon.name}
-          >
+          <NavLink to={`/projects/${projectName}/addon/${addon.name}`} key={addon.name}>
             {addon.title}
           </NavLink>
         ))}

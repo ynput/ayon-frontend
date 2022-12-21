@@ -16,7 +16,7 @@ import {
   InputText,
   Section,
   Toolbar,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -46,9 +46,9 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
           scope: ['folder', 'task'],
           position: existingNames.length,
           data: { title: 'New attribute', type: 'string' },
-        }
+        },
       ),
-    [attribute]
+    [attribute],
   )
 
   const isNew = !attribute
@@ -69,10 +69,8 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
   let error = null
   if (formData) {
     if (isNew) {
-      if (existingNames.includes(formData.name))
-        error = 'This attribute already exists'
-      else if (!formData.name.match('^[a-zA-Z_]{2,20}$'))
-        error = 'Invalid attribute name'
+      if (existingNames.includes(formData.name)) error = 'This attribute already exists'
+      else if (!formData.name.match('^[a-zA-Z_]{2,20}$')) error = 'Invalid attribute name'
     } // name validation
   }
 
@@ -133,9 +131,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               onChange={(e) => setData('example', e.target.value)}
             />
           </FormRow>
-          <FormRow>
-            {error && <span className="form-error-text">{error}</span>}
-          </FormRow>
+          <FormRow>{error && <span className="form-error-text">{error}</span>}</FormRow>
         </FormLayout>
       )}
     </Dialog>
@@ -172,7 +168,7 @@ const Attributes = () => {
   // existingAttrNames = [attr.name for attr in attributes] if attributes else []
   const existingAttrNames = useMemo(
     () => (attributes ? attributes.map((i) => i.name) : []),
-    [attributes]
+    [attributes],
   )
 
   const onSave = () => {
@@ -266,28 +262,15 @@ const Attributes = () => {
           >
             <Column rowReorder style={{ maxWidth: 30 }} />
             <Column field="name" header="Name" style={{ maxWidth: 130 }} />
-            <Column
-              field="data.title"
-              header="Title"
-              style={{ maxWidth: 130 }}
-            />
-            <Column
-              field="builtIn"
-              header=""
-              style={{ maxWidth: 60 }}
-              body={renderBuiltIn}
-            />
+            <Column field="data.title" header="Title" style={{ maxWidth: 130 }} />
+            <Column field="builtIn" header="" style={{ maxWidth: 60 }} body={renderBuiltIn} />
             <Column
               header="Scopes"
               body={(rowData) => rowData.scope.join(', ')}
               style={{ maxWidth: 330 }}
             />
             <Column field="data.type" header="Type" style={{ maxWidth: 150 }} />
-            <Column
-              field="data.example"
-              header="Example"
-              style={{ maxWidth: 200 }}
-            />
+            <Column field="data.example" header="Example" style={{ maxWidth: 200 }} />
             <Column field="data.description" header="Description" />
           </DataTable>
         </TablePanel>

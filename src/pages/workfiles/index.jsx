@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { Section, Panel, TablePanel } from 'openpype-components'
+import { Section, Panel, TablePanel } from '@ynput/ayon-react-components'
 import { PathField } from '/src/containers/fieldFormat'
 import { CellWithIcon } from '/src/components/icons'
 
@@ -59,18 +59,18 @@ const WorkfileDetail = ({ projectName, workfileId, style }) => {
   return (
     <Section style={style}>
       <Panel>
-        <Thumbnail
-          project={projectName}
-          entityType="workfile"
-          entityId={workfileId}
-        />
-        <AttributeTable
-          entityType="workfile"
-          data={data?.attrib || {}}
-          additionalData={[
-            { title: 'Path', value: <PathField value={data?.path} /> },
-          ]}
-        />
+        {loading ? (
+          <div>Loading...</div>
+        ) : (
+          <>
+            <Thumbnail project={projectName} entityType="workfile" entityId={workfileId} />
+            <AttributeTable
+              entityType="workfile"
+              data={data?.attrib || {}}
+              additionalData={[{ title: 'Path', value: <PathField value={data?.path} /> }]}
+            />
+          </>
+        )}
       </Panel>
     </Section>
   )
@@ -188,10 +188,7 @@ const WorkfilesPage = () => {
         style={{ maxWidth: 500, minWidth: 300 }}
       />
 
-      <WorkfileDetail
-        projectName={projectName}
-        workfileId={selectedWorkfile?.id}
-      />
+      <WorkfileDetail projectName={projectName} workfileId={selectedWorkfile?.id} />
     </main>
   )
 }

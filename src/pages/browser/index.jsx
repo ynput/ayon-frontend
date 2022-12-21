@@ -1,6 +1,6 @@
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Section } from 'openpype-components'
 import { useSelector } from 'react-redux'
+import { Section } from '@ynput/ayon-react-components'
 
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'

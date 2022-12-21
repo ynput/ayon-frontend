@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { useState, useEffect, useMemo } from 'react'
-import { TablePanel, Section, Panel } from 'openpype-components'
+import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'

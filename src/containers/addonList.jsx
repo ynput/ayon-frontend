@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Section, TablePanel } from 'openpype-components'
+import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -143,11 +143,7 @@ const AddonList = ({
     <Section style={{ maxWidth: 400 }}>
       {header}
       <TablePanel loading={loading}>
-        <ContextMenu
-          model={menu}
-          ref={cm}
-          onHide={() => setSelectedNodeKey(null)}
-        />
+        <ContextMenu model={menu} ref={cm} onHide={() => setSelectedNodeKey(null)} />
 
         <TreeTable
           value={addons}
@@ -157,9 +153,7 @@ const AddonList = ({
           selectionKeys={selectedKeys}
           onSelectionChange={onSelectionChange}
           contextMenuSelectionKey={selectedNodeKey}
-          onContextMenuSelectionChange={(event) =>
-            setSelectedNodeKey(event.value)
-          }
+          onContextMenuSelectionChange={(event) => setSelectedNodeKey(event.value)}
           onContextMenu={(event) => cm.current.show(event.originalEvent)}
           rowClassName={(rowData) => {
             return { changed: changedAddons.includes(rowData.key) }

@@ -4,14 +4,7 @@ import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import ReactMarkdown from 'react-markdown'
 
-import {
-  Button,
-  Spacer,
-  Section,
-  Panel,
-  Toolbar,
-  ScrollPanel,
-} from 'openpype-components'
+import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 
 import AddonList from '/src/containers/addonList'
 import AddonSettingsPanel from './addonSettingsPanel'
@@ -55,22 +48,19 @@ const AddonSettings = ({ projectName }) => {
     for (const key in localData) {
       const [addonName, addonVersion] = key.split('@')
       axios
-        .post(
-          `/api/addons/${addonName}/${addonVersion}/settings${projectSuffix}`,
-          localData[key]
-        )
+        .post(`/api/addons/${addonName}/${addonVersion}/settings${projectSuffix}`, localData[key])
         .then(() => {
           setLocalOverrides({})
           setLocalData({})
         })
         .catch((err) => {
-          toast.error((
+          toast.error(
             <ReactMarkdown>
-{`Unable to save ${addonName} ${addonVersion} settings
+              {`Unable to save ${addonName} ${addonVersion} settings
 
 ${err.response?.data?.detail}`}
-            </ReactMarkdown>
-          ))
+            </ReactMarkdown>,
+          )
           console.log(err)
         })
         .finally(() => {
@@ -98,22 +88,18 @@ ${err.response?.data?.detail}`}
   } // end of onDismissChanges
 
   const onRemoveOverrides = (addonName, addonVersion) => {
-    axios
-      .delete(
-        `/api/addons/${addonName}/${addonVersion}/overrides${projectSuffix}`
-      )
-      .then(() => {
-        onDismissChanges(addonName, addonVersion)
-      })
+    axios.delete(`/api/addons/${addonName}/${addonVersion}/overrides${projectSuffix}`).then(() => {
+      onDismissChanges(addonName, addonVersion)
+    })
   }
 
   const deleteOverride = (addon, path) => {
     console.log('DELETING OVERRIDE', path)
     axios
-      .post(
-        `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`,
-        { action: 'delete', path: path }
-      )
+      .post(`/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`, {
+        action: 'delete',
+        path: path,
+      })
       .catch(() => {
         console.log('e-eee')
       })
@@ -128,10 +114,10 @@ ${err.response?.data?.detail}`}
   const pinOverride = (addon, path) => {
     console.log('PINNING OVERRIDE', path)
     axios
-      .post(
-        `/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`,
-        { action: 'pin', path: path }
-      )
+      .post(`/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`, {
+        action: 'pin',
+        path: path,
+      })
       .catch(() => {
         console.log('e-eee')
       })
@@ -157,7 +143,7 @@ ${err.response?.data?.detail}`}
         />
       </Toolbar>
     ),
-    [showVersions]
+    [showVersions],
   )
 
   const settingsListHeader = useMemo(() => {
@@ -171,23 +157,15 @@ ${err.response?.data?.detail}`}
           disabled={
             !currentSelection?.addon?.name ||
             currentSelection.hasOverride ||
-            (localOverrides[currentSelection.addonString] || []).includes(
-              currentSelection.fieldId
-            )
+            (localOverrides[currentSelection.addonString] || []).includes(currentSelection.fieldId)
           }
-          onClick={() =>
-            pinOverride(currentSelection.addon, currentSelection.path)
-          }
+          onClick={() => pinOverride(currentSelection.addon, currentSelection.path)}
         />
         <Button
           icon="lock_reset"
           tooltip="Remove override from the selected field"
-          disabled={
-            !currentSelection?.addon?.name || !currentSelection.hasOverride
-          }
-          onClick={() =>
-            deleteOverride(currentSelection.addon, currentSelection.path)
-          }
+          disabled={!currentSelection?.addon?.name || !currentSelection.hasOverride}
+          onClick={() => deleteOverride(currentSelection.addon, currentSelection.path)}
         />
 
         <Spacer>
@@ -243,19 +221,11 @@ ${err.response?.data?.detail}`}
                 >
                   <AddonSettingsPanel
                     addon={addon}
-                    onChange={(data) =>
-                      onSettingsChange(addon.name, addon.version, data)
-                    }
-                    onSetChangedKeys={(data) =>
-                      onSetChangedKeys(addon.name, addon.version, data)
-                    }
+                    onChange={(data) => onSettingsChange(addon.name, addon.version, data)}
+                    onSetChangedKeys={(data) => onSetChangedKeys(addon.name, addon.version, data)}
                     localData={localData[`${addon.name}@${addon.version}`]}
-                    changedKeys={
-                      localOverrides[`${addon.name}@${addon.version}`]
-                    }
-                    reloadTrigger={
-                      reloadTrigger[`${addon.name}@${addon.version}`]
-                    }
+                    changedKeys={localOverrides[`${addon.name}@${addon.version}`]}
+                    reloadTrigger={reloadTrigger[`${addon.name}@${addon.version}`]}
                     onSelect={setCurrentSelection}
                     projectName={projectName}
                   />
@@ -270,18 +240,12 @@ ${err.response?.data?.detail}`}
       <Section style={{ maxWidth: 300 }}>
         <Toolbar>
           <Spacer />
-          <Button
-            label="Revert changes"
-            icon="refresh"
-            onClick={onDismissChanges}
-          />
+          <Button label="Revert changes" icon="refresh" onClick={onDismissChanges} />
           <Button label="Save changes" icon="check" onClick={onSave} />
         </Toolbar>
         <ScrollPanel style={{ flexGrow: 1 }}>
           <h3>Form data</h3>
-          <pre style={{ width: '100%', flexGrow: 1 }}>
-            {JSON.stringify(localData, null, 2)}
-          </pre>
+          <pre style={{ width: '100%', flexGrow: 1 }}>{JSON.stringify(localData, null, 2)}</pre>
           <h3>Changed keys</h3>
           <pre style={{ width: '100%', flexGrow: 1 }}>
             {JSON.stringify(localOverrides, null, 2)}

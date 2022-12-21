@@ -9,4 +9,5 @@ All the Ayon web frontends are for preview purposes and convenience only at the 
 
 ## Building
 
-Run `yarn install && yarn build`
+ - Run `yarn prepare` to install git pre-commit hooks for linting
+ - Run `yarn install && yarn build`

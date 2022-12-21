@@ -7,7 +7,7 @@ import axios from 'axios'
 import AttributeTable from '/src/containers/attributeTable'
 import { getTaskTypeIcon } from '/src/utils'
 import { StatusField, TagsField } from '/src/containers/fieldFormat'
-import { Panel } from 'openpype-components'
+import { Panel } from '@ynput/ayon-react-components'
 import { setReload } from '../../features/context'
 
 const TASK_QUERY = `
@@ -101,10 +101,7 @@ const TaskDetail = () => {
   return (
     <Panel>
       <h3>
-        <span
-          className="material-symbols-outlined"
-          style={{ verticalAlign: 'bottom' }}
-        >
+        <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getTaskTypeIcon(data.taskType)}
         </span>
         <span style={{ marginLeft: 10 }}>{data.name}</span>
@@ -118,10 +115,7 @@ const TaskDetail = () => {
           { title: 'Tags', value: <TagsField value={data.tags} /> },
           {
             title: 'Assignees',
-            value:
-              data.assignees && data.assignees.length
-                ? data.assignees.join(', ')
-                : '-',
+            value: data.assignees && data.assignees.length ? data.assignees.join(', ') : '-',
           },
         ]}
       />

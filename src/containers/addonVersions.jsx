@@ -1,5 +1,5 @@
 import { Dropdown } from 'primereact/dropdown'
-import { Spacer, Button, Toolbar, Panel, ScrollPanel } from 'openpype-components'
+import { Spacer, Button, Toolbar, Panel, ScrollPanel } from '@ynput/ayon-react-components'
 
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
@@ -64,7 +64,9 @@ const AddonListItem = ({ addonName, formData, setFormData }) => {
   )
 }
 
+// eslint-disable-next-line no-unused-vars
 const AddonVersions = ({ projectName }) => {
+  // eslint-disable-next-line no-unused-vars
   const [originalData, setOriginalData] = useState(null)
   const [formData, setFormData] = useState(null)
 
@@ -107,15 +109,16 @@ const AddonVersions = ({ projectName }) => {
       <Toolbar>
         <Button label="Save" icon="check" onClick={submit} />
       </Toolbar>
-      <ScrollPanel style={{ flexGrow: 1, backgroundColor: "transparent" }}>
+      <ScrollPanel style={{ flexGrow: 1, backgroundColor: 'transparent' }}>
         <Spacer>
-          <section 
-            className="invisible" 
-            style={{gap: 6, display: "flex", flexDirection: "column"}}
+          <section
+            className="invisible"
+            style={{ gap: 6, display: 'flex', flexDirection: 'column' }}
           >
             {formData &&
               Object.keys(formData).map((addonName) => (
                 <AddonListItem
+                  key={addonName}
                   addonName={addonName}
                   formData={formData}
                   setFormData={setFormData}

@@ -1,14 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import {
-  Button,
-  Spacer,
-  Section,
-  Panel,
-  Toolbar,
-  ScrollPanel,
-} from 'openpype-components'
+import { Button, Spacer, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const RoleDetail = ({ projectName, role, onChange }) => {
@@ -24,13 +17,11 @@ const RoleDetail = ({ projectName, role, onChange }) => {
       setOriginalData(null)
       return
     }
-    axios
-      .get(`/api/roles/${roleName}/${projectName || '_'}`)
-      .then((response) => {
-        console.log('Loaded role', roleName, projectName)
-        setOriginalData(response.data)
-        setNewData(response.data)
-      })
+    axios.get(`/api/roles/${roleName}/${projectName || '_'}`).then((response) => {
+      console.log('Loaded role', roleName, projectName)
+      setOriginalData(response.data)
+      setNewData(response.data)
+    })
   }
 
   useEffect(() => {
@@ -45,13 +36,11 @@ const RoleDetail = ({ projectName, role, onChange }) => {
   }, [projectName, roleName])
 
   const onSave = () => {
-    axios
-      .put(`/api/roles/${roleName}/${projectName || '_'}`, newData)
-      .then(() => {
-        toast.success('Role saved')
-        loadRoleData()
-        onChange()
-      })
+    axios.put(`/api/roles/${roleName}/${projectName || '_'}`, newData).then(() => {
+      toast.success('Role saved')
+      loadRoleData()
+      onChange()
+    })
   }
 
   const onDelete = () => {
@@ -78,11 +67,7 @@ const RoleDetail = ({ projectName, role, onChange }) => {
   return (
     <Section>
       <Toolbar>
-        <Button
-          onClick={onSave}
-          label={`Save ${projectName ? 'project ' : ''}role`}
-          icon="check"
-        />
+        <Button onClick={onSave} label={`Save ${projectName ? 'project ' : ''}role`} icon="check" />
         <Button
           onClick={onDelete}
           label="Delete project role"

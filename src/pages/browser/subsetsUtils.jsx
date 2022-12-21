@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState } from 'react'
-import { LinkButton } from 'openpype-components'
+import { LinkButton } from '@ynput/ayon-react-components'
 import { Menu } from 'primereact/menu'
 
 const VersionList = (row, onSelectVersion) => {
@@ -22,10 +22,7 @@ const VersionList = (row, onSelectVersion) => {
   return (
     <>
       <Menu model={versions} popup ref={menu} />
-      <LinkButton
-        label={currentVersion}
-        onClick={(e) => menu.current.toggle(e)}
-      />
+      <LinkButton label={currentVersion} onClick={(e) => menu.current.toggle(e)} />
     </>
   )
 }
@@ -115,8 +112,7 @@ const parseSubsetResolution = (subset) => {
     */
   const folderWidth = subset.folder.attrib.resolutionWidth || null
   const folderHeight = subset.folder.attrib.resolutionHeight || null
-  const folderResolution =
-    folderWidth && folderHeight ? `${folderWidth}x${folderHeight}` : ''
+  const folderResolution = folderWidth && folderHeight ? `${folderWidth}x${folderHeight}` : ''
 
   if (!subset?.latestVersion?.attrib) return folderResolution
 
@@ -129,8 +125,7 @@ const parseSubsetResolution = (subset) => {
 const parseSubsetFrames = (subset) => {
   const folderStart = subset.folder.attrib.frameStart || null
   const folderEnd = subset.folder.attrib.frameEnd || null
-  const folderFrames =
-    folderStart && folderEnd ? `${folderStart}-${folderEnd}` : ''
+  const folderFrames = folderStart && folderEnd ? `${folderStart}-${folderEnd}` : ''
 
   if (!subset?.latestVersion?.attrib) return ''
   const frameStart = subset.latestVersion.attrib.frameStart || ''

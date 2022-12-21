@@ -14,7 +14,7 @@ import {
   FormRow,
   Section,
   Toolbar,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 import NewUserDialog from './newUserDialog'
 import axios from 'axios'
 
@@ -43,12 +43,7 @@ const USERS_QUERY = `
   }
 `
 
-const buildUserDetailData = (
-  projectNames,
-  roleNames,
-  users,
-  lastSelectedUser
-) => {
+const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
   let roles = []
   let roleSet = []
   if (lastSelectedUser) {
@@ -87,8 +82,7 @@ const formatRoles = (rowData, selectedProjects) => {
   else if (rowData.isService) res.service = { cls: 'role manager' }
   else if (rowData.isManager) res.manager = { cls: 'role manager' }
   else if (!selectedProjects) {
-    for (const name of rowData.defaultRoles || [])
-      res[name] = { cls: 'role default' }
+    for (const name of rowData.defaultRoles || []) res[name] = { cls: 'role default' }
   } else {
     const roleSet = JSON.parse(rowData.roles)
     for (const projectName of selectedProjects) {
@@ -96,9 +90,7 @@ const formatRoles = (rowData, selectedProjects) => {
         if (roleName in res) res[roleName].count += 1
         else res[roleName] = { count: 1 }
         res[roleName].cls =
-          res[roleName].count === selectedProjects.length
-            ? 'role all'
-            : 'role partial'
+          res[roleName].count === selectedProjects.length ? 'role all' : 'role partial'
       }
     }
   }
@@ -135,10 +127,7 @@ const RenameUserDialog = ({ onHide, selectedUsers }) => {
     <Dialog header={`Rename user ${oldName}`} visible={true} onHide={onHide}>
       <FormLayout>
         <FormRow label="New name">
-          <InputText
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-          />
+          <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />
         </FormRow>
         <FormRow>
           <Button label="Rename" onClick={onSubmit} />
@@ -168,17 +157,10 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
       .catch(() => toast.error('Unable to change password'))
   }
   return (
-    <Dialog
-      header={`Change user ${userName} password`}
-      visible={true}
-      onHide={onHide}
-    >
+    <Dialog header={`Change user ${userName} password`} visible={true} onHide={onHide}>
       <FormLayout>
         <FormRow label="New password">
-          <InputPassword
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <InputPassword value={password} onChange={(e) => setPassword(e.target.value)} />
         </FormRow>
         <FormRow>
           <Button label="Set password" onClick={onSubmit} />
@@ -264,9 +246,7 @@ const UserList = ({
     if (setUserDetailData) {
       setLastSelectedUser(lastUsr)
 
-      setUserDetailData(
-        buildUserDetailData(selectedProjects, rolesList, result, lastUsr)
-      )
+      setUserDetailData(buildUserDetailData(selectedProjects, rolesList, result, lastUsr))
     }
     return result
   }, [selectedUsers, userList, selectedProjects, reloadTrigger])
@@ -323,11 +303,7 @@ const UserList = ({
     <Section>
       <ConfirmDialog />
       <Toolbar>
-        <Button
-          onClick={() => setShowNewUser(true)}
-          label="Add a new user"
-          icon="person_add"
-        />
+        <Button onClick={() => setShowNewUser(true)} label="Add a new user" icon="person_add" />
         <Button
           onClick={onDelete}
           label="Delete selected users"
@@ -390,18 +366,9 @@ const UserList = ({
           <Column field="name" header="Name" />
           <Column field="attrib.fullName" header="Full name" />
           <Column field="attrib.email" header="Email" />
-          <Column
-            header="Roles"
-            body={(rowData) => formatRoles(rowData, selectedProjects)}
-          />
-          <Column
-            header="Has password"
-            body={(rowData) => (rowData.hasPassword ? 'yes' : '')}
-          />
-          <Column
-            header="Active"
-            body={(rowData) => (rowData.active ? 'yes' : '')}
-          />
+          <Column header="Roles" body={(rowData) => formatRoles(rowData, selectedProjects)} />
+          <Column header="Has password" body={(rowData) => (rowData.hasPassword ? 'yes' : '')} />
+          <Column header="Active" body={(rowData) => (rowData.active ? 'yes' : '')} />
         </DataTable>
       </TablePanel>
     </Section>

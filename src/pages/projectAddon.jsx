@@ -1,6 +1,6 @@
 import { useRef, useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Section } from 'openpype-components'
+import { Section } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 import Hierarchy from '/src/containers/hierarchy'

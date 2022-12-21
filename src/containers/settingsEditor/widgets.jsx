@@ -5,20 +5,16 @@ import {
   InputTextarea,
   InputSwitch,
   InputColor,
-} from 'openpype-components'
+} from '@ynput/ayon-react-components'
 
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 
-
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)
-  if (!valueString.match(/\./))
-    return valueString.concat(".0")
-  else 
-    return valueString
+  if (!valueString.match(/\./)) return valueString.concat('.0')
+  else return valueString
 }
-
 
 const updateOverrides = (props, changed) => {
   if (!props.formContext) {
@@ -27,10 +23,7 @@ const updateOverrides = (props, changed) => {
   if (changed && !props.formContext.changedKeys.includes(props.id))
     props.formContext.changedKeys.push(props.id)
   else if (!changed && props.formContext.changedKeys.includes(props.id))
-    props.formContext.changedKeys.splice(
-      props.formContext.changedKeys.indexOf(props.id),
-      1
-    )
+    props.formContext.changedKeys.splice(props.formContext.changedKeys.indexOf(props.id), 1)
   props.formContext?.onSetChangedKeys(props.formContext.changedKeys)
 }
 
@@ -100,9 +93,7 @@ const SelectWidget = (props) => {
           onFocus={onFocus}
           placeholder={props.schema?.placeholder}
           disabled={props.schema?.disabled}
-          className={`form-field ${
-            props.rawErrors?.length ? 'p-invalid error' : ''
-          }`}
+          className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
         />
       </>
     )
@@ -121,9 +112,7 @@ const SelectWidget = (props) => {
       tooltipOptions={{ position: 'bottom' }}
       placeholder={props.schema?.placeholder}
       disabled={props.schema?.disabled}
-      className={`form-field ${
-        props.rawErrors?.length ? 'p-invalid error' : ''
-      }`}
+      className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
     />
   )
 }
@@ -141,16 +130,19 @@ const TextWidget = (props) => {
   let Input = null
   const opts = {
     placeholder: props.schema?.placeholder || '',
-    disabled: props.schema.readonly || props.schema.disabled || (props.schema.fixedValue && props.schema.fixedValue === value),
+    disabled:
+      props.schema.readonly ||
+      props.schema.disabled ||
+      (props.schema.fixedValue && props.schema.fixedValue === value),
   }
 
   //
   // Numeric input
   //
 
-  if (["integer", "number"].includes(props.schema.type)) {
+  if (['integer', 'number'].includes(props.schema.type)) {
     Input = InputNumber
-    if (props.schema.type === "number"){
+    if (props.schema.type === 'number') {
       opts.step = 0.1
       opts.value = addDecimalPoint(value)
     } else {
@@ -170,24 +162,22 @@ const TextWidget = (props) => {
       props.onChange(e.target.value)
     }
 
-  //
-  // Color picker
-  //
-
+    //
+    // Color picker
+    //
   } else if (props.schema.widget === 'color') {
     Input = InputColor
     opts.value = value
-    opts.format = props.schema.colorFormat || "hex"
+    opts.format = props.schema.colorFormat || 'hex'
     opts.alpha = props.schema.colorAlpha || false
     opts.onChange = (e) => {
       updateOverrides(props, e.target.value !== originalValue)
       props.onChange(e.target.value)
     }
 
-  //
-  // Textarea
-  //
-  
+    //
+    // Textarea
+    //
   } else if (props.schema.widget === 'textarea') {
     Input = InputTextarea
     opts.autoResize = true
@@ -211,19 +201,16 @@ const TextWidget = (props) => {
     props.onFocus(e)
   }
 
-
   return (
     <>
-    <Input
-      className={`form-field ${
-        props.rawErrors?.length ? 'p-invalid error' : ''
-      }`}
-      onBlur={props.onBlur}
-      onFocus={onFocus}
-      tooltip={tooltip.join('\n')}
-      tooltipOptions={{ position: 'bottom' }}
-      {...opts}
-    />
+      <Input
+        className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
+        onBlur={props.onBlur}
+        onFocus={onFocus}
+        tooltip={tooltip.join('\n')}
+        tooltipOptions={{ position: 'bottom' }}
+        {...opts}
+      />
       {/*JSON.stringify(value)*/}
     </>
   )

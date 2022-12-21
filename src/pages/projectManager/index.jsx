@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams, NavLink } from 'react-router-dom'
 
-import { Button, Toolbar } from 'openpype-components'
+import { Button, Toolbar } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 
 import ProjectStats from './stats'
@@ -71,17 +71,11 @@ const ProjectManager = () => {
 
         {selectedProject && (
           <>
-            {module === 'dashboard' && (
-              <ProjectStats projectName={selectedProject} />
-            )}
+            {module === 'dashboard' && <ProjectStats projectName={selectedProject} />}
 
-            {module === 'anatomy' && (
-              <ProjectAnatomy projectName={selectedProject} />
-            )}
+            {module === 'anatomy' && <ProjectAnatomy projectName={selectedProject} />}
 
-            {module === 'settings' && (
-              <AddonSettings projectName={selectedProject} />
-            )}
+            {module === 'settings' && <AddonSettings projectName={selectedProject} />}
           </>
         )}
       </main>
