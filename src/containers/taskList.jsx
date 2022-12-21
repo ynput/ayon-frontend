@@ -37,7 +37,8 @@ const TaskList = ({ style = {} }) => {
   const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
-  const folderIds = context.focusedFolders
+  const folderIds = context.focused.folders
+  const focusedTasks = context.focused.tasks
 
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
@@ -87,9 +88,9 @@ const TaskList = ({ style = {} }) => {
 
   const selectedTasks = useMemo(() => {
     const r = {}
-    for (const tid of context.focusedTasks) r[tid] = true
+    for (const tid of focusedTasks) r[tid] = true
     return r
-  }, [context.focusedTasks])
+  }, [focusedTasks])
 
   //
   // Handlers
@@ -108,7 +109,7 @@ const TaskList = ({ style = {} }) => {
   }
 
   const onContextMenuSelectionChange = (event) => {
-    if (context.focusedTasks.includes(event.value)) return
+    if (focusedTasks.includes(event.value)) return
     dispatch(setPairing([{ taskId: event.value }]))
     dispatch(setFocusedTasks([event.value]))
   }
@@ -136,7 +137,7 @@ const TaskList = ({ style = {} }) => {
     {
       label: 'Detail',
       command: () => setShowDetail(true),
-      disabled: context.focusedTasks.length !== 1,
+      disabled: focusedTasks.length !== 1,
     },
     {
       label: 'Edit Tags',
@@ -144,11 +145,9 @@ const TaskList = ({ style = {} }) => {
         dispatch(
           setDialog({
             type: 'tags',
-            entityIds: context.focusedTasks,
-            entityType: 'task',
-          }),
+          })
         ),
-      disabled: context.focusedFolders.length !== 1,
+      disabled: context.focused.folders.length !== 1,
     },
   ]
 
@@ -159,7 +158,7 @@ const TaskList = ({ style = {} }) => {
         <EntityDetail
           projectName={projectName}
           entityType="task"
-          entityId={context.focusedTasks[0]}
+          entityId={focusedTasks[0]}
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />

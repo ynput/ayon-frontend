@@ -72,7 +72,7 @@ const Hierarchy = (props) => {
   const projectName = context.projectName
   const folderTypes = context.project.folderTypes
   const expandedFolders = context.expandedFolders
-  const focusedFolders = context.focusedFolders
+  const focusedFolders = context.focused.folders
 
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
@@ -197,9 +197,7 @@ const Hierarchy = (props) => {
         dispatch(
           setDialog({
             type: 'tags',
-            entityIds: focusedFolders,
-            entityType: 'folder',
-          }),
+          })
         ),
       disabled: focusedFolders.length !== 1,
     },

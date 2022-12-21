@@ -6,11 +6,13 @@ const contextSlice = createSlice({
     projectName: null,
     project: {},
     expandedFolders: {},
-    focusedType: null,
-    focusedFolders: [],
-    focusedSubsets: [],
-    focusedVersions: [],
-    focusedTasks: [],
+    focused: {
+      type: null,
+      folders: [],
+      subsets: [],
+      versions: [],
+      tasks: [],
+    },
     selectedVersions: {},
     pairing: [],
     dialog: {},
@@ -33,46 +35,45 @@ const contextSlice = createSlice({
     },
 
     setFocusedFolders: (state, action) => {
-      state.focusedType = 'folder'
-      state.focusedFolders = action.payload
-      state.focusedSubsets = []
-      state.focusedVersions = []
+      state.focused.type = 'folder'
+      state.focused.folders = action.payload
+      state.focused.subsets = []
+      state.focused.versions = []
       state.pairing = []
     },
 
     setFocusedSubsets: (state, action) => {
-      state.focusedType = 'subset'
-      state.focusedSubsets = action.payload
-      state.focusedVersions = []
+      state.focused.type = 'subset'
+      state.focused.subsets = action.payload
+      state.focused.versions = []
     },
 
     setFocusedTasks: (state, action) => {
-      state.focusedType = 'task'
-      state.focusedTasks = action.payload
-      state.focusedVersions = []
+      state.focused.type = 'task'
+      state.focused.tasks = action.payload
+      state.focused.versions = []
     },
 
     setFocusedVersions: (state, action) => {
       if (action.payload === null) {
-        state.focusedType = 'folder'
-        state.focusedVersions = []
+        state.focused.type = 'folder'
+        state.focused.versions = []
       } else {
-        state.focusedType = 'version'
-        state.focusedVersions = action.payload
-        state.focusedTasks = []
+        state.focused.type = 'version'
+        state.focused.versions = action.payload
+        state.focused.tasks = []
       }
     },
-
     setSelectedVersions: (state, action) => {
       state.selectedVersions = action.payload
     },
 
     //eslint-disable-next-line no-unused-vars
     clearFocus: (state, action) => {
-      state.focusedType = null
-      state.focusedFolders = []
-      state.focusedSubsets = []
-      state.focusedVersions = []
+      state.focused.type = null
+      state.focused.folders = []
+      state.focused.subsets = []
+      state.focused.versions = []
     },
 
     setPairing: (state, action) => {

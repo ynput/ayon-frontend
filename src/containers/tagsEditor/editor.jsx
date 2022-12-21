@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, InputText } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 const EditorContainer = styled.div`
@@ -19,9 +19,18 @@ const ButtonsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+  margin-top: 10px;
+`
+
+const AvailableHeader = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `
 
 const TagsEditor = ({ options = [], value = [], onChange }) => {
+  const [search, setSearch] = useState('')
+
   const handleRemove = (v) => {
     console.log('removing:', v)
     const newValue = [...value]
@@ -52,31 +61,64 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
     }
   }
 
+  // filter out already selected options
+  let filteredOptions = options.filter(({ name }) => !value.includes(name))
+  if (search !== '') {
+    // filter results if searched
+    filteredOptions = filteredOptions.filter(({ name }) =>
+      name.includes(search)
+    )
+  }
+
+  const optionsObject = useMemo(
+    () => options.reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {}),
+    [options]
+  )
+
   return (
     <EditorContainer>
       <div>
-        <h3>Selected</h3>
+        <h3>Assigned</h3>
         <ButtonsContainer>
-          {value.map((v) => (
-            <Button
-              label={v}
-              icon="close"
-              onClick={() => handleRemove(v)}
-              key={v}
-              style={{ backgroundColor: '#435648' }}
-            />
-          ))}
+          {value.map((v) => {
+            const value = optionsObject[v]
+            return (
+              <Button
+                label={v}
+                icon="close"
+                onClick={() => handleRemove(v)}
+                key={v}
+                style={{
+                  gap: 3,
+                  borderLeft: `solid 4px ${value.color}`,
+                }}
+              />
+            )
+          })}
         </ButtonsContainer>
       </div>
       <div>
-        <h3>Tags</h3>
+        <AvailableHeader>
+          <h3>Available</h3>
+          <InputText
+            placeholder={'Search tags...'}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </AvailableHeader>
         <ButtonsContainer>
-          {options.map(
-            ({ name }) =>
-              !value.includes(name) && (
-                <Button label={name} icon="add" onClick={() => handleAdd(name)} key={name} />
-              ),
-          )}
+          {filteredOptions.map(({ name, color }) => (
+            <Button
+              label={name}
+              icon="add"
+              onClick={() => handleAdd(name)}
+              key={name}
+              style={{
+                gap: 3,
+                borderLeft: `solid 4px ${color}`,
+              }}
+            />
+          ))}
         </ButtonsContainer>
       </div>
     </EditorContainer>

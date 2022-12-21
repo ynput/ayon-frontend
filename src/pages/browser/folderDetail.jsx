@@ -47,7 +47,7 @@ const FolderDetail = () => {
   const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
-  const folders = context.focusedFolders
+  const folders = context.focused.folders
   const folderId = folders.length === 1 ? folders[0] : null
 
   const [data, setData] = useState({})

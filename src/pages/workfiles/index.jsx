@@ -171,7 +171,7 @@ const WorkfilesPage = () => {
 
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
-  const focusedTasks = context.focusedTasks
+  const focusedTasks = context.focused.tasks
   const pairing = context.pairing
 
   return (

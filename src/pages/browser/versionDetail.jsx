@@ -70,8 +70,10 @@ const VersionDetail = () => {
 
   const query = buildVersionQuery()
 
+  const focusedVersions = context.focused.versions
+
   const getVersionData = () => {
-    if (!(context.focusedVersions && context.focusedVersions.length)) {
+    if (!focusedVersions?.length) {
       setVersions([])
       setRepresentations([])
       return
@@ -80,7 +82,7 @@ const VersionDetail = () => {
     axios
       .post('/graphql', {
         query: query,
-        variables: { projectName, versions: context.focusedVersions },
+        variables: { projectName, versions: focusedVersions },
       })
       .then((response) => {
         const data = response.data.data
@@ -133,7 +135,7 @@ const VersionDetail = () => {
   useEffect(() => {
     getVersionData()
     //eslint-disable-next-line
-  }, [context.projectName, context.focusedVersions, projectName])
+  }, [context.projectName, focusedVersions, projectName])
 
   const reload = context.reload.version
 

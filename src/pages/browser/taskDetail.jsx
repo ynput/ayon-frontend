@@ -44,7 +44,7 @@ const TaskDetail = () => {
   const dispatch = useDispatch()
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
-  const tasks = context.focusedTasks
+  const tasks = context.focused.tasks
   const taskId = tasks.length === 1 ? tasks[0] : null
   const [data, setData] = useState({})
   const query = buildTaskQuery()

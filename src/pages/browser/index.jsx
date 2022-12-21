@@ -1,4 +1,5 @@
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { useSelector } from 'react-redux'
 import { Section } from '@ynput/ayon-react-components'
 
 import Hierarchy from '/src/containers/hierarchy'
@@ -9,6 +10,18 @@ import Detail from './detail'
 import TagsEditorContainer from '/src/containers/tagsEditor'
 
 const BrowserPage = () => {
+  const context = useSelector((state) => ({ ...state.context }))
+  // check if tags dialog is open
+  const dialogType = context.dialog.type
+  const projectName = context.projectName
+  // get all tags for project
+  const projectTags = context.project.tags
+  const focusedType = context.focused.type
+  let focusedIds = []
+  if (focusedType) {
+    focusedIds = context.focused[`${focusedType}s`]
+  }
+
   return (
     <main>
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
@@ -30,7 +43,13 @@ const BrowserPage = () => {
           </Splitter>
         </SplitterPanel>
       </Splitter>
-      <TagsEditorContainer />
+      {dialogType === 'tags' && !!focusedIds?.length && (
+        <TagsEditorContainer
+          ids={focusedIds}
+          type={focusedType}
+          {...{ projectName, projectTags }}
+        />
+      )}
     </main>
   )
 }

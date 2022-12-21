@@ -47,10 +47,10 @@ const EditorPage = () => {
     // so it is compatible with the treetable selection argument and it
     // also provides complete node information
     const result = {}
-    for (const key of context.focusedFolders) result[key] = nodeData[key]
-    for (const key of context.focusedTasks) result[key] = nodeData[key]
+    for (const key of context.focused.folders) result[key] = nodeData[key]
+    for (const key of context.focused.tasks) result[key] = nodeData[key]
     return result
-  }, [context.focusedFolders, context.focusedTasks, nodeData])
+  }, [context.focused.folders, context.focused.tasks, nodeData])
 
   //
   // Helpers
@@ -210,7 +210,7 @@ const EditorPage = () => {
     })
 
     // Force table render when selection is locked
-    if (selectionLocked) dispatch(setFocusedFolders(context.focusedFolders))
+    if (selectionLocked) dispatch(setFocusedFolders(context.focused.folders))
   }
 
   const updateName = (options, value) => {
