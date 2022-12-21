@@ -25,8 +25,7 @@ const Detail = () => {
   }
 
   const header = context.focused.type
-    ? context.focused.type.charAt(0).toUpperCase() +
-      context.focused.type.slice(1)
+    ? context.focused.type.charAt(0).toUpperCase() + context.focused.type.slice(1)
     : 'No selection'
 
   return (
