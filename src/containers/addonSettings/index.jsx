@@ -18,18 +18,19 @@ const AddonSettings = ({ projectName }) => {
   const [localOverrides, setLocalOverrides] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
 
+  const projectKey = projectName || 'default'
   const projectSuffix = projectName ? `/${projectName}` : ''
 
   const onSettingsChange = (addonName, addonVersion, data) => {
     setLocalData((localData) => {
-      localData[`${addonName}@${addonVersion}`] = data
+      localData[`${projectKey}-${addonName}@${addonVersion}`] = data
       return { ...localData }
     })
   }
 
   const onSetChangedKeys = (addonName, addonVersion, data) => {
     setLocalOverrides((localOverrides) => {
-      localOverrides[`${addonName}@${addonVersion}`] = data
+      localOverrides[`${projectKey}-${addonName}@${addonVersion}`] = data
       return { ...localOverrides }
     })
   }
@@ -39,14 +40,16 @@ const AddonSettings = ({ projectName }) => {
       const now = new Date()
       return {
         ...reloadTrigger,
-        [`${addonName}@${addonVersion}`]: now,
+        [`${projectKey}-${addonName}@${addonVersion}`]: now,
       }
     })
   }
 
   const onSave = () => {
     for (const key in localData) {
-      const [addonName, addonVersion] = key.split('@')
+      const [proj, addon] = key.split('-')
+      if (proj !== projectKey) continue
+      const [addonName, addonVersion] = addon.split('@')
       axios
         .post(`/api/addons/${addonName}/${addonVersion}/settings${projectSuffix}`, localData[key])
         .then(() => {
@@ -70,7 +73,7 @@ ${err.response?.data?.detail}`}
   }
 
   const onDismissChanges = (addonName, addonVersion) => {
-    const key = `${addonName}@${addonVersion}`
+    const key = `${projectKey}-${addonName}@${addonVersion}`
 
     setLocalData((localData) => {
       const res = { ...localData }
@@ -89,6 +92,7 @@ ${err.response?.data?.detail}`}
 
   const onRemoveOverrides = (addonName, addonVersion) => {
     axios.delete(`/api/addons/${addonName}/${addonVersion}/overrides${projectSuffix}`).then(() => {
+      // do we want to force a reload here?
       onDismissChanges(addonName, addonVersion)
     })
   }
@@ -192,6 +196,7 @@ ${err.response?.data?.detail}`}
   return (
     <>
       <AddonList
+        projectKey={projectKey}
         showVersions={showVersions}
         selectedAddons={selectedAddons}
         setSelectedAddons={setSelectedAddons}
@@ -212,25 +217,24 @@ ${err.response?.data?.detail}`}
             {selectedAddons
               .filter((addon) => addon.version)
               .reverse()
-              .map((addon) => (
-                <Panel
-                  key={`${addon.name}-${addon.version}`}
-                  style={{ flexGrow: 0 }}
-                  className="transparent nopad"
-                  size={1}
-                >
-                  <AddonSettingsPanel
-                    addon={addon}
-                    onChange={(data) => onSettingsChange(addon.name, addon.version, data)}
-                    onSetChangedKeys={(data) => onSetChangedKeys(addon.name, addon.version, data)}
-                    localData={localData[`${addon.name}@${addon.version}`]}
-                    changedKeys={localOverrides[`${addon.name}@${addon.version}`]}
-                    reloadTrigger={reloadTrigger[`${addon.name}@${addon.version}`]}
-                    onSelect={setCurrentSelection}
-                    projectName={projectName}
-                  />
-                </Panel>
-              ))}
+              .map((addon) => {
+                const key = `${projectKey}-${addon.name}@${addon.version}`
+
+                return (
+                  <Panel key={key} style={{ flexGrow: 0 }} className="transparent nopad" size={1}>
+                    <AddonSettingsPanel
+                      addon={addon}
+                      onChange={(data) => onSettingsChange(addon.name, addon.version, data)}
+                      onSetChangedKeys={(data) => onSetChangedKeys(addon.name, addon.version, data)}
+                      localData={localData[key]}
+                      changedKeys={localOverrides[key]}
+                      reloadTrigger={reloadTrigger[key]}
+                      onSelect={setCurrentSelection}
+                      projectName={projectName}
+                    />
+                  </Panel>
+                )
+              })}
 
             <Spacer />
           </ScrollPanel>

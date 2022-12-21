@@ -8,6 +8,7 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 const AddonList = ({
+  projectKey,
   selectedAddons,
   setSelectedAddons,
   showVersions,
@@ -30,11 +31,12 @@ const AddonList = ({
   const selectedKeys = useMemo(() => {
     const result = {}
     for (const addon of selectedAddons) {
-      const key = `${addon.name}@${addon.version}`
+      const prefix = projectKey ? `${projectKey}-` : ''
+      const key = `${prefix}${addon.name}@${addon.version}`
       result[key] = true
     }
     return result
-  }, [selectedAddons])
+  }, [selectedAddons, projectKey])
 
   const onSelectionChange = (e) => {
     // This nested loop looks a bit weird, but it's necessary
@@ -65,11 +67,13 @@ const AddonList = ({
       .then((res) => {
         let result = []
         for (const addon of res.data.addons) {
+          const prefix = projectKey ? `${projectKey}-` : ''
+          const selectable = addon.productionVersion !== undefined && !showVersions
           const row = {
             key: showVersions
-              ? `${addon.name}@production`
-              : `${addon.name}@${addon.productionVersion}`,
-            selectable: !showVersions,
+              ? `${prefix}${addon.name}@production`
+              : `${prefix}${addon.name}@${addon.productionVersion}`,
+            selectable: selectable,
             children: [],
             data: {
               name: addon.name,
@@ -82,7 +86,8 @@ const AddonList = ({
             for (const version in addon.versions) {
               if (!addon.versions[version].hasSettings) continue
               row.children.push({
-                key: `${addon.name}@${version}`,
+                key: `${prefix}${addon.name}@${version}`,
+                selectable: true,
                 data: {
                   name: addon.name,
                   title: addon.title,
@@ -105,7 +110,7 @@ const AddonList = ({
       .finally(() => {
         setLoading(false)
       })
-  }, [showVersions])
+  }, [showVersions, projectKey])
 
   const menu = useMemo(() => {
     const result = [
@@ -156,10 +161,13 @@ const AddonList = ({
           onContextMenuSelectionChange={(event) => setSelectedNodeKey(event.value)}
           onContextMenu={(event) => cm.current.show(event.originalEvent)}
           rowClassName={(rowData) => {
-            return { changed: changedAddons.includes(rowData.key) }
+            return {
+              changed: changedAddons.includes(rowData.key),
+              faded: !rowData.selectable,
+            }
           }}
         >
-          <Column field="title" header="Addon" expander="true" />
+          <Column field="title" header="Addon" expander="true" style={{ width: 200 }} />
           <Column field="version" header="Version" />
           <Column field="usage" header="" />
         </TreeTable>

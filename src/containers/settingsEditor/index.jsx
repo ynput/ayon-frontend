@@ -69,8 +69,6 @@ const SettingsEditor = ({
     onSetChangedKeys: onSetChangedKeys || (() => {}),
   }
 
-  console.log('SettingsEditor', formContext)
-
   return (
     <>
       <Form
