@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { Button, InputText } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import CreateButton from './createButton'
 
-const EditorContainer = styled.div`
+const EditorContainerStyled = styled.div`
   max-width: 400px;
   display: flex;
   flex-direction: column;
@@ -15,14 +16,19 @@ const EditorContainer = styled.div`
   }
 `
 
-const ButtonsContainer = styled.div`
+const ButtonsContainerStyled = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
   margin-top: 10px;
+
+  /* form fills whole row to push artist tags to a new line */
+  form {
+    flex-basis: 100%;
+  }
 `
 
-const AvailableHeader = styled.header`
+const AvailableHeaderStyled = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -30,6 +36,7 @@ const AvailableHeader = styled.header`
 
 const TagsEditor = ({ options = [], value = [], onChange }) => {
   const [search, setSearch] = useState('')
+  const [newItem, setNewItem] = useState('')
 
   const handleRemove = (v) => {
     console.log('removing:', v)
@@ -61,27 +68,49 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
     }
   }
 
+  // creating a new "artist tag"
+  const handleCreate = (e) => {
+    e.preventDefault()
+    // check item is not empty string and not already added
+    if (!newItem || newItem === '' || value.includes(newItem)) return
+
+    console.log('add new tag:', newItem)
+    handleAdd(newItem)
+    // clear input
+    setNewItem('')
+  }
+
   // filter out already selected options
   let filteredOptions = options.filter(({ name }) => !value.includes(name))
   if (search !== '') {
     // filter results if searched
-    filteredOptions = filteredOptions.filter(({ name }) =>
-      name.includes(search)
-    )
+    filteredOptions = filteredOptions.filter(({ name }) => name.includes(search))
   }
 
   const optionsObject = useMemo(
     () => options.reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {}),
-    [options]
+    [options],
+  )
+
+  // sort tags by "artist" and "global"
+  const [globalTags, artistTags] = value.reduce(
+    (result, tag) => {
+      result[tag in optionsObject ? 0 : 1].push(tag) // Determine and push to global/artist arr
+      return result
+    },
+    [[], []],
   )
 
   return (
-    <EditorContainer>
+    <EditorContainerStyled>
       <div>
         <h3>Assigned</h3>
-        <ButtonsContainer>
-          {value.map((v) => {
+        <ButtonsContainerStyled>
+          {[...globalTags, ...artistTags].map((v) => {
+            // get object from options otherwise "artist" tag
+            const isArtist = !optionsObject[v]
             const value = optionsObject[v]
+
             return (
               <Button
                 label={v}
@@ -90,23 +119,31 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
                 key={v}
                 style={{
                   gap: 3,
-                  borderLeft: `solid 4px ${value.color}`,
+                  borderLeft: !isArtist && `solid 4px ${value.color}`,
+                  order: isArtist && 1,
                 }}
               />
             )
           })}
-        </ButtonsContainer>
+          <CreateButton
+            placeholder="New Artist Tag..."
+            onSubmit={handleCreate}
+            noSpaces
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+          />
+        </ButtonsContainerStyled>
       </div>
       <div>
-        <AvailableHeader>
+        <AvailableHeaderStyled>
           <h3>Available</h3>
           <InputText
-            placeholder={'Search tags...'}
+            placeholder={'Search Tags...'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-        </AvailableHeader>
-        <ButtonsContainer>
+        </AvailableHeaderStyled>
+        <ButtonsContainerStyled>
           {filteredOptions.map(({ name, color }) => (
             <Button
               label={name}
@@ -119,9 +156,9 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
               }}
             />
           ))}
-        </ButtonsContainer>
+        </ButtonsContainerStyled>
       </div>
-    </EditorContainer>
+    </EditorContainerStyled>
   )
 }
 

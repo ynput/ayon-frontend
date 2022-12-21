@@ -65,7 +65,7 @@ const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, 
       footer={footer}
       header={header}
       ref={dialogRef}
-      onShow={() => setHeight(dialogRef.current?.getElement()?.offsetHeight)}
+      onShow={() => setHeight(dialogRef.current?.getElement()?.offsetHeight + 15)}
       style={{ height: height || 'unset' }}
       contentStyle={{ overflow: 'hidden' }}
     >

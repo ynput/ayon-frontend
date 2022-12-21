@@ -197,7 +197,7 @@ const Hierarchy = (props) => {
         dispatch(
           setDialog({
             type: 'tags',
-          })
+          }),
         ),
       disabled: focusedFolders.length !== 1,
     },
