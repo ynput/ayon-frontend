@@ -10,8 +10,9 @@ import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
 import { getFolderTypeIcon } from '/src/utils'
 
-import { StatusField, TagsField } from '/src/containers/fieldFormat'
+import { TagsField } from '/src/containers/fieldFormat'
 import { setReload } from '../../features/context'
+import StatusField from '../../components/status/statusField'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {

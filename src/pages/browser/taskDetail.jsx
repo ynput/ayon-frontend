@@ -6,9 +6,10 @@ import axios from 'axios'
 
 import AttributeTable from '/src/containers/attributeTable'
 import { getTaskTypeIcon } from '/src/utils'
-import { StatusField, TagsField } from '/src/containers/fieldFormat'
+import { TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
 import { setReload } from '../../features/context'
+import StatusField from '../../components/status/statusField'
 
 const TASK_QUERY = `
     query Tasks($projectName: String!, $tasks: [String!]!) {

@@ -8,11 +8,12 @@ import { Panel } from '@ynput/ayon-react-components'
 
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
-import { StatusField, TagsField } from '/src/containers/fieldFormat'
+import { TagsField } from '/src/containers/fieldFormat'
 import { getFamilyIcon } from '/src/utils'
 
 import RepresentationList from './representationList'
 import { setReload } from '../../features/context'
+import StatusField from '../../components/status/statusField'
 
 const VERSION_QUERY = `
     query Versions($projectName: String!, $versions: [String!]!) {

@@ -1,7 +1,8 @@
 // Various comoonents for formatting fields in the UI
-
+import PropTypes from 'prop-types'
 import { getTagColor, getStatusColor } from '/src/utils'
 import styled from 'styled-components'
+import Dropdown from '../components/dropDown'
 
 // Attributes
 
@@ -29,13 +30,6 @@ const TagsField = ({ value }) => {
       ))}
     </TagsContainer>
   )
-}
-
-// Status
-
-const StatusField = ({ value }) => {
-  if (!value) return '\u00A0'
-  return <span style={{ color: getStatusColor(value) }}>{value}</span>
 }
 
 // Datetime
@@ -90,4 +84,4 @@ const PathField = ({ value }) => {
   return <PathContainer>{value}</PathContainer>
 }
 
-export { AttributeField, TagsField, StatusField, TimestampField, PathField }
+export { AttributeField, TagsField, TimestampField, PathField }

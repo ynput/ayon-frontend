@@ -12,7 +12,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
-import { StatusField, TimestampField } from '/src/containers/fieldFormat'
+import { TimestampField } from '/src/containers/fieldFormat'
 
 import { groupResult, getFamilyIcon } from '/src/utils'
 import {
@@ -25,6 +25,7 @@ import {
 } from '/src/features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
+import StatusField from '../../components/status/statusField'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -285,6 +286,8 @@ const Subsets = () => {
   //
   // Render
   //
+
+  console.log(subsetData)
 
   return (
     <Section className="wrap">
