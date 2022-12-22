@@ -1,4 +1,10 @@
-import { InputText, FormLayout, FormRow, InputPassword } from '@ynput/ayon-react-components'
+import {
+  InputSwitch,
+  InputText,
+  FormLayout,
+  FormRow,
+  InputPassword,
+} from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 
@@ -67,6 +73,13 @@ const AccessControl = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
           value={formData.userLevel}
           onChange={(e) => updateFormData('userLevel', e.value)}
           options={userLevels}
+        />
+      </FormRow>
+
+      <FormRow label="Guest">
+        <InputSwitch
+          checked={formData.isGuest}
+          onChange={(e) => updateFormData('isGuest', e.target.checked)}
         />
       </FormRow>
 

@@ -29,6 +29,7 @@ const USERS_QUERY = `
           isAdmin
           isManager
           isService
+          isGuest
           active
           roles
           defaultRoles
@@ -73,6 +74,7 @@ const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) =
     roles,
     userLevel,
     userActive: lastSelectedUser?.active,
+    isGuest: lastSelectedUser?.isGuest,
   }
 }
 
