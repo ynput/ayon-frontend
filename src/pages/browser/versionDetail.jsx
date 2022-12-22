@@ -13,7 +13,6 @@ import { getFamilyIcon } from '/src/utils'
 
 import RepresentationList from './representationList'
 import { setReload } from '../../features/context'
-import StatusField from '../../components/status/statusField'
 import StatusSelect from '../../components/status/statusSelect'
 
 const VERSION_QUERY = `

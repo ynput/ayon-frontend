@@ -12,7 +12,6 @@ import { getFolderTypeIcon } from '/src/utils'
 
 import { TagsField } from '/src/containers/fieldFormat'
 import { setReload } from '../../features/context'
-import StatusField from '../../components/status/statusField'
 import StatusSelect from '../../components/status/statusSelect'
 
 const FOLDER_QUERY = `

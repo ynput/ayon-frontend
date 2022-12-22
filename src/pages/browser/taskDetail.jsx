@@ -9,7 +9,6 @@ import { getTaskTypeIcon } from '/src/utils'
 import { TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
 import { setReload } from '../../features/context'
-import StatusField from '../../components/status/statusField'
 import StatusSelect from '../../components/status/statusSelect'
 
 const TASK_QUERY = `
