@@ -10,6 +10,7 @@ import { TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
 import { setReload } from '../../features/context'
 import StatusField from '../../components/status/statusField'
+import StatusSelect from '../../components/status/statusSelect'
 
 const TASK_QUERY = `
     query Tasks($projectName: String!, $tasks: [String!]!) {
@@ -112,7 +113,12 @@ const TaskDetail = () => {
         data={data.attrib}
         additionalData={[
           { title: 'Task Type', value: data.taskType },
-          { title: 'Status', value: <StatusField value={data.status} /> },
+          {
+            title: 'Status',
+            value: (
+              <StatusSelect value={data.status} statuses={context.project.statuses} height={29} />
+            ),
+          },
           { title: 'Tags', value: <TagsField value={data.tags} /> },
           {
             title: 'Assignees',

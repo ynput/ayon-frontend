@@ -14,6 +14,7 @@ import { getFamilyIcon } from '/src/utils'
 import RepresentationList from './representationList'
 import { setReload } from '../../features/context'
 import StatusField from '../../components/status/statusField'
+import StatusSelect from '../../components/status/statusSelect'
 
 const VERSION_QUERY = `
     query Versions($projectName: String!, $versions: [String!]!) {
@@ -188,7 +189,13 @@ const VersionDetail = () => {
             { title: 'Author', value: versions[0].author },
             {
               title: 'Status',
-              value: <StatusField value={versions[0].status} />,
+              value: (
+                <StatusSelect
+                  value={versions[0].status}
+                  statuses={context.project.statuses}
+                  height={29}
+                />
+              ),
             },
             { title: 'Tags', value: <TagsField value={versions[0].tags} /> },
           ]}

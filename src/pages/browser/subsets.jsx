@@ -25,7 +25,7 @@ import {
 } from '/src/features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
-import StatusField from '../../components/status/statusField'
+import StatusSelect from '../../components/status/statusSelect'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -71,10 +71,13 @@ const Subsets = () => {
     {
       field: 'status',
       header: 'Status',
-      width: 100,
+      width: 150,
+      style: { overflow: 'visible', padding: '10px !important' },
       body: (node) => {
         if (node.data.isGroup) return ''
-        return <StatusField value={node.data.status} />
+        return (
+          <StatusSelect value={node.data.status} statuses={context.project.statuses} width={150} />
+        )
       },
     },
     {
@@ -287,8 +290,6 @@ const Subsets = () => {
   // Render
   //
 
-  console.log(subsetData)
-
   return (
     <Section className="wrap">
       <Toolbar>
@@ -323,12 +324,13 @@ const Subsets = () => {
             return (
               <Column
                 key={col.field}
-                style={{ width: col.width }}
+                style={{ ...col.style, width: col.width }}
                 expander={i === 0}
                 resizeable={true}
                 field={col.field}
                 header={col.header}
                 body={col.body}
+                className={col.field}
               />
             )
           })}

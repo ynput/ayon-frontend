@@ -13,6 +13,7 @@ import { getFolderTypeIcon } from '/src/utils'
 import { TagsField } from '/src/containers/fieldFormat'
 import { setReload } from '../../features/context'
 import StatusField from '../../components/status/statusField'
+import StatusSelect from '../../components/status/statusSelect'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {
@@ -121,7 +122,12 @@ const FolderDetail = () => {
         data={data.attrib}
         additionalData={[
           { title: 'Folder type', value: data.folderType },
-          { title: 'Status', value: <StatusField value={data.status} /> },
+          {
+            title: 'Status',
+            value: (
+              <StatusSelect value={data.status} statuses={context.project.statuses} height={29} />
+            ),
+          },
           { title: 'Tags', value: <TagsField value={data.tags} /> },
           { title: 'Path', value: data.path },
         ]}
