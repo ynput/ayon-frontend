@@ -11,7 +11,7 @@ const StatusSelect = ({ value, statuses = [], size = 'full', width = 150, height
   }
 
   return (
-    <Dropdown value={value} style={{ width, height }}>
+    <Dropdown value={value} options={statuses} style={{ width, height }}>
       {(props) =>
         props.isOpen ? (
           statuses.map((status) => (

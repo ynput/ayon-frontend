@@ -1,12 +1,26 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { getStatusColor } from '/src/utils'
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 
 const hoverStyle = css`
+  background-color: var(--color-grey-02);
+  color: ${({ color }) => color};
+`
+
+const invertHoverStyle = css`
   /* flips the bg color for text color */
   background-color: ${({ color }) => color};
   color: black;
+`
+
+const moveDown = keyframes`
+  from {
+    min-height: 18px;
+  }
+  to {
+    min-height: 29px;
+  }
 `
 
 const ContainerStyled = styled.div`
@@ -26,17 +40,32 @@ const ContainerStyled = styled.div`
 
   border-radius: var(--border-radius);
   /* same height as a row */
-  height: 23px;
+  height: 29px;
+  min-height: 29px;
 
   ${({ isSelecting }) =>
     isSelecting &&
     css`
       border-radius: 0;
       height: 29px;
+      min-height: 29px;
+    `}
+
+  ${({ isSelecting, isActive }) =>
+    isSelecting &&
+    !isActive &&
+    css`
+      animation: ${moveDown};
+      animation-duration: 0.3s;
     `}
 
   /* default text color */
   color: ${({ color }) => color};
+
+  /* sets for hover and when active whilst open (top one) */
+  :hover {
+    ${hoverStyle}
+  }
 
   /* keeps the active field at the top */
   order: 2;
@@ -46,23 +75,12 @@ const ContainerStyled = styled.div`
     css`
       /* hover always on at top */
       order: 1;
-      ${hoverStyle}
+      ${invertHoverStyle}
+
+      :hover {
+        ${invertHoverStyle}
+      }
     `}
-
-  /* sets for hover and when active whilst open (top one) */
-  :hover {
-    ${hoverStyle}
-
-    /* set hover styles for when open */
-    ${({ isActive, isSelecting }) =>
-      !isActive &&
-      isSelecting &&
-      css`
-        /* hover always on at top */
-        background-color: var(--color-grey-02);
-        color: ${({ color }) => color};
-      `}
-  }
 `
 
 const StatusField = ({

@@ -123,9 +123,7 @@ const FolderDetail = () => {
           { title: 'Folder type', value: data.folderType },
           {
             title: 'Status',
-            value: (
-              <StatusSelect value={data.status} statuses={context.project.statuses} height={29} />
-            ),
+            value: <StatusSelect value={data.status} statuses={context.project.statuses} />,
           },
           { title: 'Tags', value: <TagsField value={data.tags} /> },
           { title: 'Path', value: data.path },

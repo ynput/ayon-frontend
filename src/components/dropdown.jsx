@@ -12,7 +12,8 @@ const BackdropStyled = styled.div`
 
 const ContainerStyled = styled.div`
   position: relative;
-  height: 100%;
+  height: ${({ height }) => `${height}px`};
+  margin-bottom: -1px;
   width: max-content;
 `
 
@@ -26,34 +27,42 @@ const OptionsStyled = styled.div`
   flex-direction: column;
 
   border-radius: var(--border-radius);
-  margin: 2px 0;
-  top: 0;
+
   outline: none;
   background-color: unset;
   z-index: 10;
+  height: ${({ height }) => `${height}px`};
 
   ${({ isOpen }) =>
     isOpen &&
     css`
       margin: 0px;
-      top: -1px;
       /* same border used as primereact dropdowns */
       outline: 1px solid #383838;
       background-color: var(--color-grey-00);
       z-index: 20;
       border-radius: var(--border-radius);
       overflow: clip;
+
+      /* calc open height based on number of options */
+      height: ${({ height, length }) => `${height * length}px`};
     `}
+
+  transition: height 0.3s;
 `
 
-const Dropdown = ({ children, onChange, value, style }) => {
+const Dropdown = ({ children, onChange, value, style, options }) => {
   const [isOpen, setIsOpen] = useState(false)
+
+  // number of options to choose from sets height for animation
+  const length = options.length
+  const closedHeight = style.height || 29
 
   return (
     <>
       {isOpen && <BackdropStyled onClick={() => setIsOpen(false)} />}
-      <ContainerStyled onClick={() => setIsOpen(!isOpen)} style={style}>
-        <OptionsStyled isOpen={isOpen} onClick={onChange}>
+      <ContainerStyled onClick={() => setIsOpen(!isOpen)} style={style} height={closedHeight}>
+        <OptionsStyled isOpen={isOpen} onClick={onChange} length={length} height={closedHeight}>
           {children({ isOpen, selected: value })}
         </OptionsStyled>
       </ContainerStyled>
@@ -62,10 +71,11 @@ const Dropdown = ({ children, onChange, value, style }) => {
 }
 
 Dropdown.propTypes = {
-  children: PropTypes.func,
+  children: PropTypes.func.isRequired,
   //   onChange: PropTypes.func.isRequired,
-  value: PropTypes.string,
+  value: PropTypes.string.isRequired,
   style: PropTypes.object,
+  options: PropTypes.array.isRequired,
 }
 
 export default Dropdown
