@@ -33,12 +33,6 @@ const OptionsStyled = styled.div`
 
   background-color: ${(props) => (props.isOpen ? 'var(--color-grey-00)' : 'unset')};
   z-index: ${(props) => (props.isOpen ? 20 : 10)};
-
-  /* & > * {
-    &:hover {
-      background-color: ${(props) => (props.isOpen ? 'var(--color-grey-02) !important' : 'unset')};
-    }
-  } */
 `
 
 const Dropdown = ({ children, onChange, value, style }) => {

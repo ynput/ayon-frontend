@@ -8,6 +8,7 @@ const ContainerStyled = styled.div`
   align-items: center;
   gap: 5px;
   font-size: var(--base-font-size);
+  border-radius: var(--border-radius);
   /* same height as a row */
   height: ${(props) => (props.isSelecting ? '29px' : '23px')};
 
@@ -15,31 +16,38 @@ const ContainerStyled = styled.div`
 
   cursor: pointer;
 
-  color: ${(props) => props.color};
-
-  :hover {
-    background-color: ${(props) =>
-      props.isSelecting ? (props.isActive ? props.color : 'var(--color-grey-02)') : props.color};
-    color: ${(props) => (props.isSelecting ? props.color : 'black')};
-
-    .material-symbols-outlined {
-      color: ${(props) => (props.isSelecting ? 'unset' : 'black')};
-    }
-  }
-
-  border-radius: var(--border-radius);
-
+  /* ICON */
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 20;
-    color: ${(props) => props.color};
+    /* always taks parents color */
+    color: inherit;
   }
 
-  /* when open and active set hover state */
-  background-color: ${(props) =>
-    props.isSelecting ? (props.isActive ? props.color : 'var(--color-grey-02)') : 'unset'};
-  color: ${(props) => (props.isSelecting ? (props.isActive ? 'black' : props.color) : 'unset')};
+  /* keeps the active field at the top */
+  order: 2;
+  &.isActive.isSelecting {
+    order: 1;
+  }
 
-  order: ${(props) => (props.isActive ? 0 : 1)};
+  &:not(:hover) {
+    /* text color when not hovering */
+    color: ${({ color }) => color};
+  }
+
+  /* sets for hover and when active whilst open (top one) */
+  :hover,
+  &.isActive.isSelecting {
+    /* flips the bg color for text color */
+    background-color: ${({ color }) => color};
+    color: black;
+  }
+
+  /* set hover styles for when open */
+  /* overrides hover when closed */
+  &.isSelecting.notActive:hover {
+    background-color: var(--color-grey-02);
+    color: ${({ color }) => color};
+  }
 `
 
 const StatusField = ({
@@ -62,6 +70,9 @@ const StatusField = ({
       isActive={isActive}
       id={value}
       isSelecting={isSelecting}
+      className={`${isActive ? 'isActive' : 'notActive'} ${
+        isSelecting ? 'isSelecting' : 'notSelecting'
+      }`}
     >
       <span className="material-symbols-outlined">{icon}</span>
       {size !== 'icon' && (size === 'short' ? valueShort : value)}
