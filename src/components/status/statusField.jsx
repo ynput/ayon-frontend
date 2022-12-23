@@ -1,19 +1,20 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { getStatusColor } from '/src/utils'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+
+const hoverStyle = css`
+  /* flips the bg color for text color */
+  background-color: ${({ color }) => color};
+  color: black;
+`
 
 const ContainerStyled = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
   font-size: var(--base-font-size);
-  border-radius: var(--border-radius);
-  /* same height as a row */
-  height: ${(props) => (props.isSelecting ? '29px' : '23px')};
-
   position: relative;
-
   cursor: pointer;
 
   /* ICON */
@@ -23,30 +24,44 @@ const ContainerStyled = styled.div`
     color: inherit;
   }
 
+  border-radius: var(--border-radius);
+  /* same height as a row */
+  height: 23px;
+
+  ${({ isSelecting }) =>
+    isSelecting &&
+    css`
+      border-radius: 0;
+      height: 29px;
+    `}
+
+  /* default text color */
+  color: ${({ color }) => color};
+
   /* keeps the active field at the top */
   order: 2;
-  &.isActive.isSelecting {
-    order: 1;
-  }
-
-  &:not(:hover) {
-    /* text color when not hovering */
-    color: ${({ color }) => color};
-  }
+  ${({ isActive, isSelecting }) =>
+    isActive &&
+    isSelecting &&
+    css`
+      /* hover always on at top */
+      order: 1;
+      ${hoverStyle}
+    `}
 
   /* sets for hover and when active whilst open (top one) */
-  :hover,
-  &.isActive.isSelecting {
-    /* flips the bg color for text color */
-    background-color: ${({ color }) => color};
-    color: black;
-  }
+  :hover {
+    ${hoverStyle}
 
-  /* set hover styles for when open */
-  /* overrides hover when closed */
-  &.isSelecting.notActive:hover {
-    background-color: var(--color-grey-02);
-    color: ${({ color }) => color};
+    /* set hover styles for when open */
+    ${({ isActive, isSelecting }) =>
+      !isActive &&
+      isSelecting &&
+      css`
+        /* hover always on at top */
+        background-color: var(--color-grey-02);
+        color: ${({ color }) => color};
+      `}
   }
 `
 
@@ -70,9 +85,6 @@ const StatusField = ({
       isActive={isActive}
       id={value}
       isSelecting={isSelecting}
-      className={`${isActive ? 'isActive' : 'notActive'} ${
-        isSelecting ? 'isSelecting' : 'notSelecting'
-      }`}
     >
       <span className="material-symbols-outlined">{icon}</span>
       {size !== 'icon' && (size === 'short' ? valueShort : value)}

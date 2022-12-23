@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 // background acts as a blocker
 const BackdropStyled = styled.div`
@@ -26,13 +26,24 @@ const OptionsStyled = styled.div`
   flex-direction: column;
 
   border-radius: var(--border-radius);
-  margin: ${(props) => (props.isOpen ? '0' : '2px 0')};
-  top: ${(props) => (props.isOpen ? '-1px' : '0')};
-  /* same border used as primereact dropdowns */
-  outline: ${(props) => (props.isOpen ? '1px solid #383838;' : 'none')};
+  margin: 2px 0;
+  top: 0;
+  outline: none;
+  background-color: unset;
+  z-index: 10;
 
-  background-color: ${(props) => (props.isOpen ? 'var(--color-grey-00)' : 'unset')};
-  z-index: ${(props) => (props.isOpen ? 20 : 10)};
+  ${({ isOpen }) =>
+    isOpen &&
+    css`
+      margin: 0px;
+      top: -1px;
+      /* same border used as primereact dropdowns */
+      outline: 1px solid #383838;
+      background-color: var(--color-grey-00);
+      z-index: 20;
+      border-radius: var(--border-radius);
+      overflow: clip;
+    `}
 `
 
 const Dropdown = ({ children, onChange, value, style }) => {
