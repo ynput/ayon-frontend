@@ -26,17 +26,19 @@ const OptionsStyled = styled.div`
   flex-direction: column;
 
   border-radius: var(--border-radius);
+  margin: ${(props) => (props.isOpen ? '0' : '2px 0')};
+  top: ${(props) => (props.isOpen ? '-1px' : '0')};
   /* same border used as primereact dropdowns */
   outline: ${(props) => (props.isOpen ? '1px solid #383838;' : 'none')};
 
   background-color: ${(props) => (props.isOpen ? 'var(--color-grey-00)' : 'unset')};
   z-index: ${(props) => (props.isOpen ? 20 : 10)};
 
-  & > * {
+  /* & > * {
     &:hover {
-      background-color: ${(props) => (props.isOpen ? 'var(--color-grey-02)' : 'unset')};
+      background-color: ${(props) => (props.isOpen ? 'var(--color-grey-02) !important' : 'unset')};
     }
-  }
+  } */
 `
 
 const Dropdown = ({ children, onChange, value, style }) => {
