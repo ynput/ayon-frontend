@@ -23,6 +23,7 @@ const EventViewer = lazy(() => import('./pages/eventViewer'))
 const ServicesPage = lazy(() => import('./pages/services'))
 
 import { login } from './features/user'
+import { useGetInfoQuery } from './services/ayon'
 
 const App = () => {
   const user = useSelector((state) => ({ ...state.user }))
@@ -38,6 +39,8 @@ const App = () => {
 
   // Call /api/info to check whether the user is logged in
   // and to acquire server settings
+  const { data, isLoading, error } = useGetInfoQuery()
+  console.log({ isLoading, data, error })
 
   useEffect(() => {
     setLoading(true)

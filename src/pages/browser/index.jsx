@@ -8,7 +8,6 @@ import TaskList from '/src/containers/taskList'
 import Subsets from './subsets'
 import Detail from './detail'
 import TagsEditorContainer from '/src/containers/tagsEditor'
-import { useGetTagsByTypeQuery } from '../../services/ayon'
 
 const BrowserPage = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -22,9 +21,6 @@ const BrowserPage = () => {
   if (focusedType) {
     focusedIds = context.focused[`${focusedType}s`]
   }
-
-  const { data, isLoading } = useGetTagsByTypeQuery({ name: projectName })
-  console.log({ isLoading, data })
 
   return (
     <main>
