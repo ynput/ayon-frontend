@@ -4,53 +4,61 @@ import AttributeTable from '/src/containers/attributeTable'
 import { getTaskTypeIcon } from '/src/utils'
 import { StatusField, TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
-import { useGetTaskDetailsQuery } from '../../services/ayon'
+import { useGetEntitiesDetailsQuery } from '../../services/ayon'
 
 const TaskDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
-  const tasks = context.focused.tasks
-  const taskId = tasks.length === 1 ? tasks[0] : null
+  const focusedTasks = context.focused.tasks
+  const taskId = focusedTasks.length === 1 ? focusedTasks[0] : null
 
-  const { data, isError, isLoading } = useGetTaskDetailsQuery(
+  // GET RTK QUERY
+  const {
+    data: tasksData,
+    isError,
+    isLoading,
+  } = useGetEntitiesDetailsQuery(
     {
       projectName,
-      tasks: [taskId],
+      ids: [taskId],
       attributes: ayonClient.settings.attributes,
+      type: 'task',
     },
     { skip: !taskId },
   )
 
-  if (isLoading) return '...loading'
+  if (isLoading) return 'loading..'
 
-  if (isError) return '...ERROR: Soemthing went wrong :-('
+  if (isError) return 'ERROR: Soemthing went wrong...'
 
-  if (tasks.length > 1) {
+  if (focusedTasks.length > 1) {
     return (
       <Panel>
-        <span>{tasks.length} tasks selected</span>
+        <span>{focusedTasks.length} tasks selected</span>
       </Panel>
     )
   }
+
+  const task = tasksData[0].node
 
   return (
     <Panel>
       <h3>
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
-          {getTaskTypeIcon(data.taskType)}
+          {getTaskTypeIcon(task.taskType)}
         </span>
-        <span style={{ marginLeft: 10 }}>{data.name}</span>
+        <span style={{ marginLeft: 10 }}>{task.name}</span>
       </h3>
       <AttributeTable
         entityType="task"
-        data={data.attrib}
+        data={task.attrib}
         additionalData={[
-          { title: 'Task Type', value: data.taskType },
-          { title: 'Status', value: <StatusField value={data.status} /> },
-          { title: 'Tags', value: <TagsField value={data.tags} /> },
+          { title: 'Task Type', value: task.taskType },
+          { title: 'Status', value: <StatusField value={task.status} /> },
+          { title: 'Tags', value: <TagsField value={task.tags} /> },
           {
             title: 'Assignees',
-            value: data.assignees && data.assignees.length ? data.assignees.join(', ') : '-',
+            value: task.assignees?.length ? task.assignees.join(', ') : '-',
           },
         ]}
       />
