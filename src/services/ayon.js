@@ -55,14 +55,16 @@ export const ayonApi = createApi({
           {},
         ),
     }),
-    // getTagsByType: builder.query({
-    //   query: ({ type, projectName, ids }) => ({
-    //     url: `/api/projects/${projectName}/${type}s/${ids[0]}`,
-    //   }),
-    // }),
+    updateTagsByType: builder.mutation({
+      query: ({ projectName, operations }) => ({
+        url: `/api/projects/${projectName}/operations`,
+        method: 'POST',
+        body: { operations },
+      }),
+    }),
   }),
 })
 
 // Export hooks for usage in function components, which are
 // auto-generated based on the defined endpoints
-export const { useGetTagsByTypeQuery } = ayonApi
+export const { useGetTagsByTypeQuery, useUpdateTagsByTypeMutation } = ayonApi

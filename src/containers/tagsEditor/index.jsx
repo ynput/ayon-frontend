@@ -2,10 +2,8 @@ import React from 'react'
 import { useDispatch } from 'react-redux'
 import { setDialog } from '/src/features/context'
 import TagsEditorDialog from './dialog'
-import axios from 'axios'
-import { toast } from 'react-toastify'
 import { setReload } from '../../features/context'
-import { useGetTagsByTypeQuery } from '../../services/ayon'
+import { useGetTagsByTypeQuery, useUpdateTagsByTypeMutation } from '../../services/ayon'
 
 export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => {
   // get redux context state
@@ -14,34 +12,33 @@ export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => 
   // tags is an object of entity ids as keys  {entityidexample: {tags: ['tag1'], name: 'shot1', id: entityidexample}, }
   const { data: tags, isLoading, isError } = useGetTagsByTypeQuery({ projectName, type, ids })
   console.log(tags)
+  // update tags hook
+  const [updateTags] = useUpdateTagsByTypeMutation()
 
   const handleSuccess = async (newTags) => {
-    console.log(newTags)
+    console.log({ newTags })
+
+    // create operations array of all entities
+    const operations = Object.keys(tags).map((id) => ({
+      type: 'update',
+      entityType: type,
+      entityId: id,
+      data: {
+        tags: newTags,
+      },
+    }))
+
+    console.log({ operations })
 
     try {
-      // create operations array of all entities
-      const operations = Object.keys(tags).map((id) => ({
-        type: 'update',
-        entityType: type,
-        entityId: id,
-        data: {
-          tags: newTags,
-        },
-      }))
+      const payload = updateTags({ projectName, operations }).unwrap()
 
-      console.log(operations)
-
-      // use operations end point to update all at once
-      await axios.post(`/api/projects/${projectName}/operations`, { operations })
+      console.log('fulfilled', payload)
 
       // on success updating tags dispatch reload of data
       dispatch(setReload({ type: type, reload: true }))
-
-      // dispatch callback function to reload data
     } catch (error) {
-      console.error(error)
-      const errMessage = error.response.data.detail || `Error ${error.response.status}`
-      toast.error(`Unable to update tags. ${errMessage}`)
+      console.error('rejected', error)
     }
   }
 
