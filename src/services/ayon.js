@@ -27,7 +27,6 @@ const buildTagsQuery = (type) => {
 export const ayonApi = createApi({
   reducerPath: 'ayonApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: '/graphql',
     prepareHeaders: (headers) => {
       const storedAccessToken = localStorage.getItem('accessToken')
       if (storedAccessToken) {
@@ -43,7 +42,7 @@ export const ayonApi = createApi({
   endpoints: (builder) => ({
     getTagsByTypeGraphql: builder.query({
       query: ({ type, projectName, ids }) => ({
-        url: '',
+        url: '/graphql',
         method: 'POST',
         body: {
           query: buildTagsQuery(type),
@@ -51,9 +50,14 @@ export const ayonApi = createApi({
         },
       }),
     }),
+    getTagsByType: builder.query({
+      query: ({ type, projectName, ids }) => ({
+        url: `/api/projects/${projectName}/${type}s/${ids[0]}`,
+      }),
+    }),
   }),
 })
 
 // Export hooks for usage in function components, which are
 // auto-generated based on the defined endpoints
-export const { useGetTagsByTypeGraphqlQuery } = ayonApi
+export const { useGetTagsByTypeGraphqlQuery, useGetTagsByTypeQuery } = ayonApi

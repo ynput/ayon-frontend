@@ -5,7 +5,7 @@ import TagsEditorDialog from './dialog'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { setReload } from '../../features/context'
-import { useGetTagsByTypeGraphqlQuery } from '../../services/ayon'
+import { useGetTagsByTypeGraphqlQuery, useGetTagsByTypeQuery } from '../../services/ayon'
 
 const buildTagsQuery = (type) => {
   const TAGS_QUERY = `
@@ -37,8 +37,9 @@ export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => 
   // tags is an object of entity ids as keys  {entityidexample: {tags: ['tag1'], name: 'shot1', id: entityidexample}, }
   const [tags, setTags] = useState({})
   // EXAMPLE USING GRAPHQL POST REQUEST
-  const { data, error } = useGetTagsByTypeGraphqlQuery({ projectName, type, ids })
-  console.log(data, error)
+  const { data: gqlData } = useGetTagsByTypeGraphqlQuery({ projectName, type, ids })
+  const { data: restData } = useGetTagsByTypeQuery({ projectName, type, ids })
+  console.log(gqlData, restData)
 
   useEffect(() => {
     if (ids && type) {
