@@ -2,11 +2,32 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import short from 'short-uuid'
 
+const buildTagsQuery = (type) => {
+  const TAGS_QUERY = `
+      query Tags($projectName: String!, $ids: [String!]!) {
+          project(name: $projectName) {
+            ${type}s(ids: $ids) {
+                  edges {
+                      node {
+                          id
+                          name
+                          tags
+                      }
+                  }
+              }
+          }
+      }
+  
+  `
+
+  return TAGS_QUERY
+}
+
 // Define a service using a base URL and expected endpoints
 export const ayonApi = createApi({
   reducerPath: 'ayonApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: '/api',
+    baseUrl: '/graphql',
     prepareHeaders: (headers) => {
       const storedAccessToken = localStorage.getItem('accessToken')
       if (storedAccessToken) {
@@ -20,10 +41,19 @@ export const ayonApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    getInfo: builder.query({ query: () => '/info' }),
+    getTagsByTypeGraphql: builder.query({
+      query: ({ type, projectName, ids }) => ({
+        url: '',
+        method: 'POST',
+        body: {
+          query: buildTagsQuery(type),
+          variables: { projectName, ids },
+        },
+      }),
+    }),
   }),
 })
 
 // Export hooks for usage in function components, which are
 // auto-generated based on the defined endpoints
-export const { useGetTagsByTypeQuery, useGetInfoQuery } = ayonApi
+export const { useGetTagsByTypeGraphqlQuery } = ayonApi
