@@ -114,7 +114,13 @@ const TaskDetail = () => {
           { title: 'Task Type', value: data.taskType },
           {
             title: 'Status',
-            value: <StatusSelect value={data.status} statuses={context.project.statuses} />,
+            value: (
+              <StatusSelect
+                value={data.status}
+                statuses={context.project.statuses}
+                align={'right'}
+              />
+            ),
           },
           { title: 'Tags', value: <TagsField value={data.tags} /> },
           {

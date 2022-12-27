@@ -23,7 +23,7 @@ const moveDown = keyframes`
   }
 `
 
-const ContainerStyled = styled.div`
+const StatusStyled = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
@@ -81,6 +81,17 @@ const ContainerStyled = styled.div`
         ${invertHoverStyle}
       }
     `}
+
+  /* ALIGNMENT */
+    ${({ align }) =>
+    align === 'right' &&
+    css`
+      justify-content: end;
+
+      span {
+        order: 2;
+      }
+    `}
 `
 
 const StatusField = ({
@@ -90,23 +101,25 @@ const StatusField = ({
   isActive,
   isSelecting,
   size = 'full',
+  align = 'left',
   onClick,
   style,
 }) => {
   const color = getStatusColor(value)
 
   return (
-    <ContainerStyled
+    <StatusStyled
       style={{ ...style }}
       onClick={onClick}
       color={color}
       isActive={isActive}
       id={value}
       isSelecting={isSelecting}
+      align={align}
     >
       <span className="material-symbols-outlined">{icon}</span>
       {size !== 'icon' && (size === 'short' ? valueShort : value)}
-    </ContainerStyled>
+    </StatusStyled>
   )
 }
 
@@ -117,7 +130,9 @@ StatusField.propTypes = {
   isActive: PropTypes.bool,
   isSelecting: PropTypes.bool,
   size: PropTypes.oneOf(['full', 'short', 'icon']),
+  align: PropTypes.oneOf(['left', 'right']),
   onClick: PropTypes.func,
+  style: PropTypes.object,
 }
 
 export default StatusField

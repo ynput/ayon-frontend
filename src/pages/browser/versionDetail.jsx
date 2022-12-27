@@ -189,7 +189,11 @@ const VersionDetail = () => {
             {
               title: 'Status',
               value: (
-                <StatusSelect value={versions[0].status} statuses={context.project.statuses} />
+                <StatusSelect
+                  value={versions[0].status}
+                  statuses={context.project.statuses}
+                  align={'right'}
+                />
               ),
             },
             { title: 'Tags', value: <TagsField value={versions[0].tags} /> },
