@@ -1,4 +1,3 @@
-import ayonClient from '/src/ayon'
 import { useSelector } from 'react-redux'
 import AttributeTable from '/src/containers/attributeTable'
 import { getTaskTypeIcon } from '/src/utils'
@@ -21,7 +20,6 @@ const TaskDetail = () => {
     {
       projectName,
       ids: [taskId],
-      attributes: ayonClient.settings.attributes,
       type: 'task',
     },
     { skip: !taskId },

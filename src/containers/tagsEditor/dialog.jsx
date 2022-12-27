@@ -52,7 +52,7 @@ const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, 
         setSelected([])
       }
     }
-  }, [value, visible, setSelected, isLoading, isError])
+  }, [visible, setSelected, isLoading, isError])
 
   const handleSuccess = () => {
     console.log('Success')

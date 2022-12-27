@@ -1,4 +1,3 @@
-import ayonClient from '/src/ayon'
 import { useSelector } from 'react-redux'
 import { Panel } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
@@ -61,7 +60,6 @@ const VersionDetail = () => {
     {
       projectName,
       ids: focusedVersions,
-      attributes: ayonClient.settings.attributes,
       type: 'version',
     },
     { skip: !focusedVersions },

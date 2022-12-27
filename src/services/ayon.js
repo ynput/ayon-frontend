@@ -1,24 +1,7 @@
 // Need to use the React-specific entry point to allow generating React hooks
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import short from 'short-uuid'
-
-const buildTagsQuery = (type) =>
-  `
-      query Tags($projectName: String!, $ids: [String!]!) {
-          project(name: $projectName) {
-            ${type}s(ids: $ids) {
-                  edges {
-                      node {
-                          id
-                          name
-                          tags
-                      }
-                  }
-              }
-          }
-      }
-  
-  `
+import ayonClient from '/src/ayon'
 
 const TASK_QUERY = `
   query Tasks($projectName: String!, $ids: [String!]!) {
@@ -48,6 +31,7 @@ const FOLDER_QUERY = `
             folders(ids: $ids) {
                 edges {
                     node {
+                        id
                         name
                         folderType
                         path
@@ -103,9 +87,9 @@ const VERSION_QUERY = `
     }
 `
 
-const buildEntitiesDetailsQuery = (attributes, type) => {
+const buildEntitiesDetailsQuery = (type) => {
   let f_attribs = ''
-  for (const attrib of attributes) {
+  for (const attrib of ayonClient.settings.attributes) {
     if (attrib.scope.includes(type)) f_attribs += `${attrib.name}\n`
   }
 
@@ -129,11 +113,11 @@ const buildEntitiesDetailsQuery = (attributes, type) => {
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
-const buildOperations = (ids, type, data) =>
-  ids.map((id) => ({
+const buildOperations = (entities, type, data) =>
+  entities.map((entity) => ({
     type: 'update',
     entityType: type,
-    entityId: id,
+    entityId: entity.id,
     data,
   }))
 
@@ -155,44 +139,42 @@ export const ayonApi = createApi({
   }),
   tagTypes: ['folder', 'task', 'version', 'subset', 'tag'],
   endpoints: (builder) => ({
-    getTagsByType: builder.query({
-      query: ({ type, projectName, ids }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: buildTagsQuery(type),
-          variables: { projectName, ids },
-        },
-      }),
-      transformResponse: (response, meta, { type }) =>
-        response.data.project[type + 's'].edges.reduce(
-          (acc, cur) => ({ ...acc, [cur.node.id]: cur.node }),
-          {},
-        ),
-      providesTags: (result, error, { ids }) => [
-        ...ids.map((entityId) => ({ type: 'tag', entityId })),
-      ],
-    }),
-    updateTagsByType: builder.mutation({
-      query: ({ projectName, ids, type, tags }) => ({
+    updateEntitiesDetails: builder.mutation({
+      query: ({ projectName, type, patches, data }) => ({
         url: `/api/projects/${projectName}/operations`,
         method: 'POST',
         body: {
-          operations: buildOperations(ids, type, { tags }),
+          operations: buildOperations(patches, type, data),
         },
       }),
-      invalidatesTags: (result, error, { type, ids }) =>
-        ids.flatMap((entityId) => [
-          { type, entityId },
-          { type: 'tag', entityId },
-        ]),
+      async onQueryStarted({ projectName, type, patches }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          ayonApi.util.updateQueryData(
+            'getEntitiesDetails',
+            { projectName, ids: patches.map((p) => p.id), type },
+            (draft) => {
+              Object.assign(
+                draft,
+                patches.map((p) => ({ node: p })),
+              )
+            },
+          ),
+        )
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo()
+        }
+      },
+      invalidatesTags: (result, error, { type, patches }) =>
+        patches.flatMap(({ id }) => [{ type, id }]),
     }),
     getEntitiesDetails: builder.query({
-      query: ({ projectName, ids, attributes, type }) => ({
+      query: ({ projectName, ids, type }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: buildEntitiesDetailsQuery(attributes, type),
+          query: buildEntitiesDetailsQuery(type),
           variables: { projectName, ids },
         },
       }),
@@ -205,5 +187,4 @@ export const ayonApi = createApi({
 
 // Export hooks for usage in function components, which are
 // auto-generated based on the defined endpoints
-export const { useGetTagsByTypeQuery, useUpdateTagsByTypeMutation, useGetEntitiesDetailsQuery } =
-  ayonApi
+export const { useUpdateEntitiesDetailsMutation, useGetEntitiesDetailsQuery } = ayonApi

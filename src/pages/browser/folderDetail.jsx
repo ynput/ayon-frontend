@@ -1,4 +1,3 @@
-import ayonClient from '/src/ayon'
 import { useSelector } from 'react-redux'
 import { Panel } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
@@ -22,11 +21,12 @@ const FolderDetail = () => {
     {
       projectName,
       ids: [folderId],
-      attributes: ayonClient.settings.attributes,
       type: 'folder',
     },
     { skip: !folderId },
   )
+
+  console.log(foldersData)
 
   if (isLoading) return 'loading..'
 
