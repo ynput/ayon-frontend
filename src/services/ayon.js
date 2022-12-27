@@ -40,7 +40,7 @@ export const ayonApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    getTagsByTypeGraphql: builder.query({
+    getTagsByType: builder.query({
       query: ({ type, projectName, ids }) => ({
         url: '/graphql',
         method: 'POST',
@@ -49,15 +49,20 @@ export const ayonApi = createApi({
           variables: { projectName, ids },
         },
       }),
+      transformResponse: (response, meta, { type }) =>
+        response.data.project[type + 's'].edges.reduce(
+          (acc, cur) => ({ ...acc, [cur.node.id]: cur.node }),
+          {},
+        ),
     }),
-    getTagsByType: builder.query({
-      query: ({ type, projectName, ids }) => ({
-        url: `/api/projects/${projectName}/${type}s/${ids[0]}`,
-      }),
-    }),
+    // getTagsByType: builder.query({
+    //   query: ({ type, projectName, ids }) => ({
+    //     url: `/api/projects/${projectName}/${type}s/${ids[0]}`,
+    //   }),
+    // }),
   }),
 })
 
 // Export hooks for usage in function components, which are
 // auto-generated based on the defined endpoints
-export const { useGetTagsByTypeGraphqlQuery, useGetTagsByTypeQuery } = ayonApi
+export const { useGetTagsByTypeQuery } = ayonApi

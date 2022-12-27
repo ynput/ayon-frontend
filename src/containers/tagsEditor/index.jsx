@@ -1,83 +1,19 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useDispatch } from 'react-redux'
 import { setDialog } from '/src/features/context'
 import TagsEditorDialog from './dialog'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { setReload } from '../../features/context'
-import { useGetTagsByTypeGraphqlQuery, useGetTagsByTypeQuery } from '../../services/ayon'
-
-const buildTagsQuery = (type) => {
-  const TAGS_QUERY = `
-    query Tags($projectName: String!, $ids: [String!]!) {
-        project(name: $projectName) {
-          ${type}s(ids: $ids) {
-                edges {
-                    node {
-                        id
-                        name
-                        tags
-                    }
-                }
-            }
-        }
-    }
-
-`
-
-  return TAGS_QUERY
-}
+import { useGetTagsByTypeQuery } from '../../services/ayon'
 
 export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => {
   // get redux context state
   const dispatch = useDispatch()
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [isError, setIsError] = useState(false)
   // tags is an object of entity ids as keys  {entityidexample: {tags: ['tag1'], name: 'shot1', id: entityidexample}, }
-  const [tags, setTags] = useState({})
-  // EXAMPLE USING GRAPHQL POST REQUEST
-  const { data: gqlData } = useGetTagsByTypeGraphqlQuery({ projectName, type, ids })
-  const { data: restData } = useGetTagsByTypeQuery({ projectName, type, ids })
-  console.log(gqlData, restData)
-
-  useEffect(() => {
-    if (ids && type) {
-      // get tags for entity
-      setIsLoading(true)
-
-      const getTags = async () => {
-        try {
-          const { data } = await axios.post('/graphql', {
-            query: buildTagsQuery(type),
-            variables: { projectName, ids },
-          })
-
-          if (data.errors) throw data.errors[0].message
-
-          let tagsData = data.data.project[type + 's'].edges
-
-          if (tagsData) {
-            // format data as an object with the ids as keys
-            tagsData = tagsData.reduce((acc, cur) => ({ ...acc, [cur.node.id]: cur.node }), {})
-          } else throw 'No edges found on data'
-
-          console.log(tagsData)
-
-          setTags(tagsData)
-        } catch (error) {
-          console.error(error)
-          const errMessage = error.response.data.detail || `Error ${error.response.status}`
-          toast.error(`Unable to load tags. ${errMessage}`)
-          setIsError(true)
-        }
-
-        setIsLoading(false)
-      }
-
-      getTags()
-    }
-  }, [ids, setIsLoading])
+  const { data: tags, isLoading, isError } = useGetTagsByTypeQuery({ projectName, type, ids })
+  console.log(tags)
 
   const handleSuccess = async (newTags) => {
     console.log(newTags)
