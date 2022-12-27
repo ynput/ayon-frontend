@@ -25,6 +25,7 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
     const formData = {
       userActive: userDetailData.userActive,
       userLevel: userDetailData.userLevel,
+      isGuest: userDetailData.isGuest,
       roles: nroles,
     }
     if (userDetailData.users.length === 1) {
@@ -69,6 +70,7 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
       data.isAdmin = formData.userLevel === 'admin'
       data.isManager = formData.userLevel === 'manager'
       data.isService = formData.userLevel === 'service'
+      data.isGuest = formData.isGuest
 
       if (!(data.isAdmin || data.isManager || data.isService)) {
         if (!isEmpty(roles)) data.roles = roles

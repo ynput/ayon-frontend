@@ -31,6 +31,7 @@ const NewUserDialog = ({ onHide }) => {
 
     payload.attrib = {}
     payload.data = {}
+    if (formData.isGuest) payload.data.isGuest = true
     for (const key in userAttrib) {
       if (formData[key]) payload.attrib[key] = formData[key]
     }
