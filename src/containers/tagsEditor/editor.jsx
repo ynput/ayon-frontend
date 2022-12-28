@@ -152,18 +152,20 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
           />
         </AvailableHeaderStyled>
         <ButtonsContainerStyled>
-          {filteredOptions.map(({ name, color }) => (
-            <Button
-              label={name}
-              icon="add"
-              onClick={() => handleAdd(name)}
-              key={name}
-              style={{
-                gap: 3,
-                borderLeft: `solid 4px ${color}`,
-              }}
-            />
-          ))}
+          {filteredOptions.length
+            ? filteredOptions.map(({ name, color }) => (
+                <Button
+                  label={name}
+                  icon="add"
+                  onClick={() => handleAdd(name)}
+                  key={name}
+                  style={{
+                    gap: 3,
+                    borderLeft: `solid 4px ${color}`,
+                  }}
+                />
+              ))
+            : 'No results found in search...'}
         </ButtonsContainerStyled>
       </SectionsWrapperStyled>
     </EditorContainerStyled>
