@@ -111,7 +111,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
 
   return (
     <EditorContainerStyled>
-      <SectionsWrapperStyled>
+      <div>
         <h3>Assigned</h3>
         <ButtonsContainerStyled>
           {[...globalTags, ...artistTags].map((v) => {
@@ -141,7 +141,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
             onChange={(e) => setNewItem(e.target.value)}
           />
         </ButtonsContainerStyled>
-      </SectionsWrapperStyled>
+      </div>
       <SectionsWrapperStyled>
         <AvailableHeaderStyled>
           <h3>Available</h3>
