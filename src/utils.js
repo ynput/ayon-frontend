@@ -103,6 +103,7 @@ const loadAnatomyPresets = async () => {
 const FOLDER_TYPE_ICONS = {}
 const TASK_TYPE_ICONS = {}
 const STATUS_COLORS = {}
+const STATUS_ICONS = {}
 const TAG_COLORS = {}
 const FAMILY_ICONS = {
   image: 'imagesmode',
@@ -154,6 +155,15 @@ const updateStatusColors = (data) => {
   for (const name in data) {
     STATUS_COLORS[name] = data[name]
   }
+}
+const updateStatusIcons = (data) => {
+  for (const name in data) {
+    STATUS_ICONS[name] = data[name]
+  }
+}
+
+const getStatusIcon = (status) => {
+  return STATUS_ICONS[status] || 'radio_button_checked'
 }
 
 const getTagColor = (status) => {
@@ -235,6 +245,7 @@ export {
   getFolderTypeIcon,
   getTaskTypeIcon,
   getStatusColor,
+  getStatusIcon,
   getTagColor,
   getFamilyIcon,
   getFolderTypes,
@@ -243,6 +254,7 @@ export {
   updateFolderTypeIcons,
   updateTaskTypeIcons,
   updateStatusColors,
+  updateStatusIcons,
   updateTagColors,
   useLocalStorage,
 }

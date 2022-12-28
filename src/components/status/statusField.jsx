@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { getStatusColor } from '/src/utils'
 import styled, { css, keyframes } from 'styled-components'
+import { getStatusIcon, getStatusColor } from '../../utils'
 
 const hoverStyle = css`
   background-color: var(--color-grey-02);
@@ -97,7 +97,6 @@ const StatusStyled = styled.div`
 const StatusField = ({
   value,
   valueShort,
-  icon = 'radio_button_unchecked',
   isActive,
   isSelecting,
   size = 'full',
@@ -106,6 +105,7 @@ const StatusField = ({
   style,
 }) => {
   const color = getStatusColor(value)
+  const icon = getStatusIcon(value)
 
   return (
     <StatusStyled
@@ -126,7 +126,6 @@ const StatusField = ({
 StatusField.propTypes = {
   value: PropTypes.string.isRequired,
   valueShort: PropTypes.string,
-  icon: PropTypes.string,
   isActive: PropTypes.bool,
   isSelecting: PropTypes.bool,
   size: PropTypes.oneOf(['full', 'short', 'icon']),
