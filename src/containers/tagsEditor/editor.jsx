@@ -6,14 +6,14 @@ import CreateButton from './createButton'
 
 const EditorContainerStyled = styled.div`
   max-width: 400px;
+  width: 90vw;
   display: flex;
   flex-direction: column;
   gap: 20px;
 
-  &::after {
-    content: '';
-    height: 30px;
-  }
+  /* enable scrolling om avaible section */
+  overflow-y: hidden;
+  height: 100%;
 `
 
 const ButtonsContainerStyled = styled.div`
@@ -21,11 +21,19 @@ const ButtonsContainerStyled = styled.div`
   flex-wrap: wrap;
   gap: 5px;
   margin-top: 10px;
+  min-height: 65px;
 
   /* form fills whole row to push artist tags to a new line */
   form {
     flex-basis: 100%;
+    align-self: flex-end;
   }
+`
+
+// wraps avaiable header and buttons
+const SectionsWrapperStyled = styled.div`
+  /* scrolling for overflow */
+  overflow-y: auto;
 `
 
 const AvailableHeaderStyled = styled.header`
@@ -134,7 +142,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
           />
         </ButtonsContainerStyled>
       </div>
-      <div>
+      <SectionsWrapperStyled>
         <AvailableHeaderStyled>
           <h3>Available</h3>
           <InputText
@@ -144,20 +152,22 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
           />
         </AvailableHeaderStyled>
         <ButtonsContainerStyled>
-          {filteredOptions.map(({ name, color }) => (
-            <Button
-              label={name}
-              icon="add"
-              onClick={() => handleAdd(name)}
-              key={name}
-              style={{
-                gap: 3,
-                borderLeft: `solid 4px ${color}`,
-              }}
-            />
-          ))}
+          {filteredOptions.length
+            ? filteredOptions.map(({ name, color }) => (
+                <Button
+                  label={name}
+                  icon="add"
+                  onClick={() => handleAdd(name)}
+                  key={name}
+                  style={{
+                    gap: 3,
+                    borderLeft: `solid 4px ${color}`,
+                  }}
+                />
+              ))
+            : 'No results found in search...'}
         </ButtonsContainerStyled>
-      </div>
+      </SectionsWrapperStyled>
     </EditorContainerStyled>
   )
 }
