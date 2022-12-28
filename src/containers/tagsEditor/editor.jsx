@@ -6,7 +6,7 @@ import CreateButton from './createButton'
 
 const EditorContainerStyled = styled.div`
   max-width: 400px;
-  width: 100%;
+  width: 90vw;
   display: flex;
   flex-direction: column;
   gap: 20px;
