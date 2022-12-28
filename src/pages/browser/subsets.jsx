@@ -158,7 +158,7 @@ const Subsets = () => {
       field: 'status',
       header: 'Status',
       width: 150,
-      style: { overflow: 'visible', padding: '10px !important' },
+      style: { overflow: 'visible', padding: '10px !important', overflowX: 'clip' },
       body: (node) => {
         if (node.data.isGroup) return ''
         return (
