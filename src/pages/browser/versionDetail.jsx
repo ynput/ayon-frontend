@@ -151,11 +151,14 @@ const VersionDetail = () => {
 
       // use operations end point to update all at once
       await axios.post(`/api/projects/${projectName}/operations`, { operations })
-      // reload data for subsets
-      // TODO: Only reload affected entities
-      // TODO: Optimistic updates will remove this manula reload
-      getVersionData()
-      // dispatch callback function to reload data
+
+      // update data state to reflect change
+      // Has wait for post request to resolve 200
+      const newVersions = [...versions].map((data) =>
+        data.id === entity.id ? { ...data, status: value } : data,
+      )
+
+      setVersions(newVersions)
     } catch (error) {
       console.error(error)
     }

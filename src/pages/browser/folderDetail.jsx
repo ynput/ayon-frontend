@@ -98,11 +98,10 @@ const FolderDetail = () => {
 
       // use operations end point to update all at once
       await axios.post(`/api/projects/${projectName}/operations`, { operations })
-      // reload data for subsets
-      // TODO: Only reload affected entities
-      // TODO: Optimistic updates will remove this manula reload
-      getFolderData()
-      // dispatch callback function to reload data
+
+      // update data state to reflect change
+      // Has wait for post request to resolve 200
+      setData({ ...data, status: value })
     } catch (error) {
       console.error(error)
     }

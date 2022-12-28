@@ -46,10 +46,8 @@ const Subsets = () => {
 
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
-
-  // Load the subsets/versions data from the server
   const getSubsetsData = async () => {
-    if (focusedFolders?.length === 0) return
+    // if ids are provided only get subsets for those ids
 
     // version overrides
     // Get a list of version overrides for the current set of folders
@@ -68,34 +66,41 @@ const Subsets = () => {
       versionOverrides = ['00000000000000000000000000000000']
     }
 
-    setLoading(true)
-    axios
-      .post('/graphql', {
+    try {
+      const response = await axios.post('/graphql', {
         query: SUBSET_QUERY,
         variables: { folders: focusedFolders, projectName, versionOverrides },
       })
-      .then((response) => {
-        if (!(response.data.data && response.data.data.project)) {
-          toast.error('Unable to fetch subsets')
-          return
-        }
-        console.log(response.data.data)
-        setSubsetData(parseSubsetData(response.data.data))
-      })
-      .finally(() => {
-        setLoading(false)
-        if (focusOnReload) {
-          dispatch(setFocusedVersions([focusOnReload]))
-          setFocusOnReload(null)
-        }
-      })
+      // successfull res
+      const parsedData = parseSubsetData(response.data.data)
+      console.log(parsedData)
+      return parsedData
+    } catch (error) {
+      console.log(error)
+      toast.error('Unable to fetch subsets')
+    }
+  }
+
+  // Load the subsets/versions data from the server and transform
+  const setSubsetsData = async () => {
+    if (focusedFolders?.length === 0) return
+
+    setLoading(true)
+    const subsetParsedData = await getSubsetsData()
+    setSubsetData(subsetParsedData)
+    setLoading(false)
+    if (focusOnReload) {
+      dispatch(setFocusedVersions([focusOnReload]))
+      setFocusOnReload(null)
+    }
   }
 
   useEffect(() => {
-    getSubsetsData(focusedFolders, projectName, selectedVersions)
+    setSubsetsData()
     // eslint-disable-next-line
   }, [focusedFolders, projectName, selectedVersions])
 
+  // update subset status
   const handleStatusChange = async (value, oldValue, entity) => {
     if (value === oldValue || !entity.id) return
 
@@ -115,13 +120,16 @@ const Subsets = () => {
 
       // use operations end point to update all at once
       await axios.post(`/api/projects/${projectName}/operations`, { operations })
-      // reload data for subsets
-      // TODO: Only reload affected entities
-      // TODO: Optimistic updates will remove this manula reload
-      getSubsetsData()
-      // dispatch callback function to reload data
+
+      // delete outdated subsets and push new ones to state
+      const newSubsets = [...subsetData].map((data) =>
+        data.id === entity.id ? { ...data, status: value } : data,
+      )
+      // set new state
+      setSubsetData(newSubsets)
     } catch (error) {
       console.error(error)
+      toast.error('Unable to update subset status')
     }
   }
 
