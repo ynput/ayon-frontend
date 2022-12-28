@@ -3,12 +3,16 @@ import PropTypes from 'prop-types'
 import Dropdown from '../dropDown'
 import StatusField from './statusField'
 
-const StatusSelect = ({ value, statuses = [], size = 'full', width = 150, height, align }) => {
+const StatusSelect = ({
+  value,
+  statuses = [],
+  size = 'full',
+  width = 150,
+  height,
+  align,
+  onChange,
+}) => {
   if (!value) return null
-
-  const handleChange = (name) => {
-    console.log(name)
-  }
 
   return (
     <Dropdown value={value} options={statuses} style={{ width, height }}>
@@ -21,7 +25,7 @@ const StatusSelect = ({ value, statuses = [], size = 'full', width = 150, height
               size={size}
               isSelecting
               isActive={props.selected === status.name}
-              onClick={() => handleChange(status.name)}
+              onClick={() => onChange(status.name)}
               align={align}
             />
           ))
@@ -44,6 +48,7 @@ StatusSelect.propTypes = {
       state: PropTypes.string.isRequired,
     }).isRequired,
   ),
+  onChange: PropTypes.func.isRequired,
 }
 
 export default StatusSelect

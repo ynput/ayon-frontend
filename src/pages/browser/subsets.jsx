@@ -47,6 +47,84 @@ const Subsets = () => {
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
 
+  // Load the subsets/versions data from the server
+  const getSubsetsData = async () => {
+    if (focusedFolders?.length === 0) return
+
+    // version overrides
+    // Get a list of version overrides for the current set of folders
+    let versionOverrides = []
+    for (const folderId of focusedFolders) {
+      const c = selectedVersions[folderId]
+      if (!c) continue
+      for (const subsetId in c) {
+        const versionId = c[subsetId]
+        if (versionOverrides.includes(versionId)) continue
+        versionOverrides.push(versionId)
+      }
+    }
+    if (versionOverrides.length === 0) {
+      // We need at least one item in the array to filter.
+      versionOverrides = ['00000000000000000000000000000000']
+    }
+
+    setLoading(true)
+    axios
+      .post('/graphql', {
+        query: SUBSET_QUERY,
+        variables: { folders: focusedFolders, projectName, versionOverrides },
+      })
+      .then((response) => {
+        if (!(response.data.data && response.data.data.project)) {
+          toast.error('Unable to fetch subsets')
+          return
+        }
+        console.log(response.data.data)
+        setSubsetData(parseSubsetData(response.data.data))
+      })
+      .finally(() => {
+        setLoading(false)
+        if (focusOnReload) {
+          dispatch(setFocusedVersions([focusOnReload]))
+          setFocusOnReload(null)
+        }
+      })
+  }
+
+  useEffect(() => {
+    getSubsetsData(focusedFolders, projectName, selectedVersions)
+    // eslint-disable-next-line
+  }, [focusedFolders, projectName, selectedVersions])
+
+  const handleStatusChange = async (value, oldValue, entity) => {
+    if (value === oldValue || !entity.id) return
+
+    try {
+      // create operations array of all entities
+      // currently only supports changing one status
+      const operations = [
+        {
+          type: 'update',
+          entityType: 'subset',
+          entityId: entity.id,
+          data: {
+            status: value,
+          },
+        },
+      ]
+
+      // use operations end point to update all at once
+      await axios.post(`/api/projects/${projectName}/operations`, { operations })
+      // reload data for subsets
+      // TODO: Only reload affected entities
+      // TODO: Optimistic updates will remove this manula reload
+      getSubsetsData()
+      // dispatch callback function to reload data
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const columns = [
     {
       field: 'name',
@@ -76,7 +154,12 @@ const Subsets = () => {
       body: (node) => {
         if (node.data.isGroup) return ''
         return (
-          <StatusSelect value={node.data.status} statuses={context.project.statuses} width={150} />
+          <StatusSelect
+            value={node.data.status}
+            statuses={context.project.statuses}
+            width={150}
+            onChange={(v) => handleStatusChange(v, node.data.status, node.data)}
+          />
         )
       },
     },
@@ -128,51 +211,6 @@ const Subsets = () => {
   //
   // Hooks
   //
-
-  // Load the subsets/versions data from the server
-
-  useEffect(() => {
-    if (focusedFolders?.length === 0) return
-
-    // version overrides
-    // Get a list of version overrides for the current set of folders
-    let versionOverrides = []
-    for (const folderId of focusedFolders) {
-      const c = selectedVersions[folderId]
-      if (!c) continue
-      for (const subsetId in c) {
-        const versionId = c[subsetId]
-        if (versionOverrides.includes(versionId)) continue
-        versionOverrides.push(versionId)
-      }
-    }
-    if (versionOverrides.length === 0) {
-      // We need at least one item in the array to filter.
-      versionOverrides = ['00000000000000000000000000000000']
-    }
-
-    setLoading(true)
-    axios
-      .post('/graphql', {
-        query: SUBSET_QUERY,
-        variables: { folders: focusedFolders, projectName, versionOverrides },
-      })
-      .then((response) => {
-        if (!(response.data.data && response.data.data.project)) {
-          toast.error('Unable to fetch subsets')
-          return
-        }
-        setSubsetData(parseSubsetData(response.data.data))
-      })
-      .finally(() => {
-        setLoading(false)
-        if (focusOnReload) {
-          dispatch(setFocusedVersions([focusOnReload]))
-          setFocusOnReload(null)
-        }
-      })
-    // eslint-disable-next-line
-  }, [focusedFolders, projectName, selectedVersions])
 
   // Parse focusedVersions list from the project context
   // and create a list of selected subset rows compatible

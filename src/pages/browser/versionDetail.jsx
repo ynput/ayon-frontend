@@ -132,6 +132,35 @@ const VersionDetail = () => {
       })
   }
 
+  const handleStatusChange = async (value, oldValue, entity) => {
+    if (value === oldValue) return
+
+    try {
+      // create operations array of all entities
+      // currently only supports changing one status
+      const operations = [
+        {
+          type: 'update',
+          entityType: 'version',
+          entityId: entity.id,
+          data: {
+            status: value,
+          },
+        },
+      ]
+
+      // use operations end point to update all at once
+      await axios.post(`/api/projects/${projectName}/operations`, { operations })
+      // reload data for subsets
+      // TODO: Only reload affected entities
+      // TODO: Optimistic updates will remove this manula reload
+      getVersionData()
+      // dispatch callback function to reload data
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   // Load versions and representations
   useEffect(() => {
     getVersionData()
@@ -193,6 +222,7 @@ const VersionDetail = () => {
                   value={versions[0].status}
                   statuses={context.project.statuses}
                   align={'right'}
+                  onChange={(v) => handleStatusChange(v, versions[0].status, versions[0])}
                 />
               ),
             },

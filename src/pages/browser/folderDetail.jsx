@@ -20,6 +20,7 @@ const FOLDER_QUERY = `
             folders(ids: $folders) {
                 edges {
                     node {
+                        id
                         name
                         folderType
                         path
@@ -78,6 +79,35 @@ const FolderDetail = () => {
     })
   }
 
+  const handleStatusChange = async (value, oldValue, entity) => {
+    if (value === oldValue) return
+
+    try {
+      // create operations array of all entities
+      // currently only supports changing one status
+      const operations = [
+        {
+          type: 'update',
+          entityType: 'folder',
+          entityId: entity.id,
+          data: {
+            status: value,
+          },
+        },
+      ]
+
+      // use operations end point to update all at once
+      await axios.post(`/api/projects/${projectName}/operations`, { operations })
+      // reload data for subsets
+      // TODO: Only reload affected entities
+      // TODO: Optimistic updates will remove this manula reload
+      getFolderData()
+      // dispatch callback function to reload data
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   // get data for folder on mount and folder change
   useEffect(() => {
     getFolderData()
@@ -128,6 +158,7 @@ const FolderDetail = () => {
                 value={data.status}
                 statuses={context.project.statuses}
                 align={'right'}
+                onChange={(v) => handleStatusChange(v, data.status, data)}
               />
             ),
           },
