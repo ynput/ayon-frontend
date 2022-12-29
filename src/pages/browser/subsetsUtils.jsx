@@ -97,6 +97,7 @@ query Subsets($projectName: String!, $folders: [String!]!, $versionOverrides: [S
     }
 }
 `
+
 const parseSubsetFps = (subset) => {
   const folderFps = subset.folder.attrib.fps || ''
   if (!subset) return folderFps

@@ -2,10 +2,11 @@ import { useSelector } from 'react-redux'
 import { Panel } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
-import { StatusField, TagsField } from '/src/containers/fieldFormat'
+import { TagsField } from '/src/containers/fieldFormat'
 import { getFamilyIcon } from '/src/utils'
 import RepresentationList from './representationList'
 import { useGetEntitiesDetailsQuery } from '../../services/ayon'
+import StatusSelect from '../../components/status/statusSelect'
 
 const transformVersionsData = (versions) => {
   let vArr = []
@@ -74,6 +75,33 @@ const VersionDetail = () => {
   // No version selected. do not show the detail
   if (!versions || !versions.length) return null
 
+  const handleStatusChange = async (value, oldValue, entity) => {
+    if (value === oldValue) return
+
+    try {
+      // create operations array of all entities
+      // currently only supports changing one status
+      const operations = [
+        {
+          type: 'update',
+          entityType: 'version',
+          entityId: entity.id,
+          data: {
+            status: value,
+          },
+        },
+      ]
+
+      // update data state to reflect change
+      // Has wait for post request to resolve 200
+      const newVersions = [...versions].map((data) =>
+        data.id === entity.id ? { ...data, status: value } : data,
+      )
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   let versionDetailWidget
 
   // Multiple versions selected. Show an info message
@@ -105,7 +133,14 @@ const VersionDetail = () => {
             { title: 'Author', value: versions[0].author },
             {
               title: 'Status',
-              value: <StatusField value={versions[0].status} />,
+              value: (
+                <StatusSelect
+                  value={versions[0].status}
+                  statuses={context.project.statuses}
+                  align={'right'}
+                  onChange={(v) => handleStatusChange(v, versions[0].status, versions[0])}
+                />
+              ),
             },
             { title: 'Tags', value: <TagsField value={versions[0].tags} /> },
           ]}

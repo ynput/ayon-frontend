@@ -103,6 +103,8 @@ const loadAnatomyPresets = async () => {
 const FOLDER_TYPE_ICONS = {}
 const TASK_TYPE_ICONS = {}
 const STATUS_COLORS = {}
+const STATUS_ICONS = {}
+const STATUS_SHORT_NAMES = {}
 const TAG_COLORS = {}
 const FAMILY_ICONS = {
   image: 'imagesmode',
@@ -146,13 +148,27 @@ const updateTaskTypeIcons = (data) => {
   }
 }
 
-const getStatusColor = (status) => {
-  return STATUS_COLORS[status] || '#c0c0c0'
+const getStatusProps = (status) => {
+  return {
+    color: STATUS_COLORS[status] || '#c0c0c0',
+    icon: STATUS_ICONS[status] || 'radio_button_checked',
+    shortName: STATUS_SHORT_NAMES[status] || 'ERR',
+  }
 }
 
 const updateStatusColors = (data) => {
   for (const name in data) {
     STATUS_COLORS[name] = data[name]
+  }
+}
+const updateStatusIcons = (data) => {
+  for (const name in data) {
+    STATUS_ICONS[name] = data[name]
+  }
+}
+const updateStatusShortNames = (data) => {
+  for (const name in data) {
+    STATUS_SHORT_NAMES[name] = data[name]
   }
 }
 
@@ -234,7 +250,7 @@ export {
   sortByKey,
   getFolderTypeIcon,
   getTaskTypeIcon,
-  getStatusColor,
+  getStatusProps,
   getTagColor,
   getFamilyIcon,
   getFolderTypes,
@@ -243,6 +259,8 @@ export {
   updateFolderTypeIcons,
   updateTaskTypeIcons,
   updateStatusColors,
+  updateStatusIcons,
+  updateStatusShortNames,
   updateTagColors,
   useLocalStorage,
 }

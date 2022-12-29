@@ -1,9 +1,10 @@
 import { useSelector } from 'react-redux'
 import AttributeTable from '/src/containers/attributeTable'
 import { getTaskTypeIcon } from '/src/utils'
-import { StatusField, TagsField } from '/src/containers/fieldFormat'
+import { TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
 import { useGetEntitiesDetailsQuery } from '../../services/ayon'
+import StatusSelect from '../../components/status/statusSelect'
 
 const TaskDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -29,6 +30,29 @@ const TaskDetail = () => {
 
   if (isError) return 'ERROR: Soemthing went wrong...'
 
+  const handleStatusChange = async (value, oldValue, entity) => {
+    if (value === oldValue) return
+
+    try {
+      // create operations array of all entities
+      // currently only supports changing one status
+      const operations = [
+        {
+          type: 'update',
+          entityType: 'task',
+          entityId: entity.id,
+          data: {
+            status: value,
+          },
+        },
+      ]
+
+      // TODO set new status in RTK
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   if (focusedTasks.length > 1) {
     return (
       <Panel>
@@ -52,7 +76,17 @@ const TaskDetail = () => {
         data={task.attrib}
         additionalData={[
           { title: 'Task Type', value: task.taskType },
-          { title: 'Status', value: <StatusField value={task.status} /> },
+          {
+            title: 'Status',
+            value: (
+              <StatusSelect
+                value={task.status}
+                statuses={context.project.statuses}
+                align={'right'}
+                onChange={(v) => handleStatusChange(v, task.status, task)}
+              />
+            ),
+          },
           { title: 'Tags', value: <TagsField value={task.tags} /> },
           {
             title: 'Assignees',

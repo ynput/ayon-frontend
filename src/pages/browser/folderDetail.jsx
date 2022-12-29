@@ -3,8 +3,9 @@ import { Panel } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
 import { getFolderTypeIcon } from '/src/utils'
-import { StatusField, TagsField } from '/src/containers/fieldFormat'
+import { TagsField } from '/src/containers/fieldFormat'
 import { useGetEntitiesDetailsQuery } from '../../services/ayon'
+import StatusSelect from '../../components/status/statusSelect'
 
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -32,6 +33,27 @@ const FolderDetail = () => {
 
   if (isError) return 'ERROR: Something went wrong...'
 
+  const handleStatusChange = async (value, oldValue, entity) => {
+    if (value === oldValue) return
+
+    try {
+      // create operations array of all entities
+      const operations = [
+        {
+          type: 'update',
+          entityType: 'folder',
+          entityId: entity.id,
+          data: {
+            status: value,
+          },
+        },
+      ]
+      // TODO update entity in RTK
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   if (focusedFolders.length > 1) {
     return (
       <Panel>
@@ -55,10 +77,20 @@ const FolderDetail = () => {
         entityType="folder"
         data={folder.attrib}
         additionalData={[
-          { title: 'Folder type', value: folder.folderType },
-          { title: 'Status', value: <StatusField value={folder.status} /> },
-          { title: 'Tags', value: <TagsField value={folder.tags} /> },
-          { title: 'Path', value: folder.path },
+          { title: 'Folder type', value: foldersData.folderType },
+          {
+            title: 'Status',
+            value: (
+              <StatusSelect
+                value={foldersData.status}
+                statuses={context.project.statuses}
+                align={'right'}
+                onChange={(v) => handleStatusChange(v, foldersData.status, foldersData)}
+              />
+            ),
+          },
+          { title: 'Tags', value: <TagsField value={foldersData.tags} /> },
+          { title: 'Path', value: foldersData.path },
         ]}
       />
     </Panel>
