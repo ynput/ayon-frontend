@@ -3,7 +3,7 @@ import AttributeTable from '/src/containers/attributeTable'
 import { getTaskTypeIcon } from '/src/utils'
 import { TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
-import { useGetEntitiesDetailsQuery } from '../../services/ayon'
+import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
 import StatusSelect from '../../components/status/statusSelect'
 
 const TaskDetail = () => {
@@ -26,30 +26,27 @@ const TaskDetail = () => {
     { skip: !taskId },
   )
 
+  // PATCH FOLDERS DATA
+  const [updateTask] = useUpdateEntitiesDetailsMutation()
+
   if (isLoading) return 'loading..'
 
   if (isError) return 'ERROR: Soemthing went wrong...'
 
-  const handleStatusChange = async (value, oldValue, entity) => {
-    if (value === oldValue) return
-
+  const handleStatusChange = async (value, entity) => {
     try {
-      // create operations array of all entities
-      // currently only supports changing one status
-      const operations = [
-        {
-          type: 'update',
-          entityType: 'task',
-          entityId: entity.id,
-          data: {
-            status: value,
-          },
-        },
-      ]
+      const patches = [{ ...entity, status: value }]
 
-      // TODO set new status in RTK
+      const payload = await updateTask({
+        projectName,
+        type: 'task',
+        data: { status: value },
+        patches,
+      }).unwrap()
+
+      console.log('fulfilled', payload)
     } catch (error) {
-      console.error(error)
+      console.error('rejected', error)
     }
   }
 
@@ -83,7 +80,7 @@ const TaskDetail = () => {
                 value={task.status}
                 statuses={context.project.statuses}
                 align={'right'}
-                onChange={(v) => handleStatusChange(v, task.status, task)}
+                onChange={(v) => handleStatusChange(v, task)}
               />
             ),
           },

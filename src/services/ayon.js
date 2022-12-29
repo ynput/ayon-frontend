@@ -113,11 +113,11 @@ const buildEntitiesDetailsQuery = (type) => {
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
-const buildOperations = (entities, type, data) =>
-  entities.map((entity) => ({
+const buildOperations = (ids, type, data) =>
+  ids.map((id) => ({
     type: 'update',
     entityType: type,
-    entityId: entity.id,
+    entityId: id,
     data,
   }))
 
@@ -140,14 +140,16 @@ export const ayonApi = createApi({
   tagTypes: ['folder', 'task', 'version', 'subset', 'tag'],
   endpoints: (builder) => ({
     updateEntitiesDetails: builder.mutation({
-      query: ({ projectName, type, patches, data }) => ({
+      query: ({ projectName, type, patches, data, ids }) => ({
         url: `/api/projects/${projectName}/operations`,
         method: 'POST',
         body: {
-          operations: buildOperations(patches, type, data),
+          operations: buildOperations(ids || patches.map((p) => p.id), type, data),
         },
       }),
       async onQueryStarted({ projectName, type, patches }, { dispatch, queryFulfilled }) {
+        if (!patches) return
+
         const patchResult = dispatch(
           ayonApi.util.updateQueryData(
             'getEntitiesDetails',
@@ -166,8 +168,8 @@ export const ayonApi = createApi({
           patchResult.undo()
         }
       },
-      invalidatesTags: (result, error, { type, patches }) =>
-        patches.flatMap(({ id }) => [{ type, id }]),
+      invalidatesTags: (result, error, { type, ids, patches }) =>
+        ids ? ids.flatMap((id) => [{ type, id }]) : patches.flatMap(({ id }) => [{ type, id }]),
     }),
     getEntitiesDetails: builder.query({
       query: ({ projectName, ids, type }) => ({

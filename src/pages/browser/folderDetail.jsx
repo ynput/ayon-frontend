@@ -4,7 +4,7 @@ import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
 import { getFolderTypeIcon } from '/src/utils'
 import { TagsField } from '/src/containers/fieldFormat'
-import { useGetEntitiesDetailsQuery } from '../../services/ayon'
+import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
 import StatusSelect from '../../components/status/statusSelect'
 
 const FolderDetail = () => {
@@ -27,30 +27,27 @@ const FolderDetail = () => {
     { skip: !folderId },
   )
 
-  console.log(foldersData)
+  // PATCH FOLDERS DATA
+  const [updateFolder] = useUpdateEntitiesDetailsMutation()
 
   if (isLoading) return 'loading..'
 
   if (isError) return 'ERROR: Something went wrong...'
 
-  const handleStatusChange = async (value, oldValue, entity) => {
-    if (value === oldValue) return
-
+  const handleStatusChange = async (value, entity) => {
     try {
-      // create operations array of all entities
-      const operations = [
-        {
-          type: 'update',
-          entityType: 'folder',
-          entityId: entity.id,
-          data: {
-            status: value,
-          },
-        },
-      ]
-      // TODO update entity in RTK
+      const patches = [{ ...entity, status: value }]
+
+      const payload = await updateFolder({
+        projectName,
+        type: 'folder',
+        data: { status: value },
+        patches,
+      }).unwrap()
+
+      console.log('fulfilled', payload)
     } catch (error) {
-      console.error(error)
+      console.error('rejected', error)
     }
   }
 
@@ -77,20 +74,20 @@ const FolderDetail = () => {
         entityType="folder"
         data={folder.attrib}
         additionalData={[
-          { title: 'Folder type', value: foldersData.folderType },
+          { title: 'Folder type', value: folder.folderType },
           {
             title: 'Status',
             value: (
               <StatusSelect
-                value={foldersData.status}
+                value={folder.status}
                 statuses={context.project.statuses}
                 align={'right'}
-                onChange={(v) => handleStatusChange(v, foldersData.status, foldersData)}
+                onChange={(v) => handleStatusChange(v, folder)}
               />
             ),
           },
-          { title: 'Tags', value: <TagsField value={foldersData.tags} /> },
-          { title: 'Path', value: foldersData.path },
+          { title: 'Tags', value: <TagsField value={folder.tags} /> },
+          { title: 'Path', value: folder.path },
         ]}
       />
     </Panel>

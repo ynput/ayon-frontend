@@ -5,7 +5,7 @@ import AttributeTable from '/src/containers/attributeTable'
 import { TagsField } from '/src/containers/fieldFormat'
 import { getFamilyIcon } from '/src/utils'
 import RepresentationList from './representationList'
-import { useGetEntitiesDetailsQuery } from '../../services/ayon'
+import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
 import StatusSelect from '../../components/status/statusSelect'
 
 const transformVersionsData = (versions) => {
@@ -66,6 +66,9 @@ const VersionDetail = () => {
     { skip: !focusedVersions },
   )
 
+  // PATCH VERSIONS DATA
+  const [updateFolder] = useUpdateEntitiesDetailsMutation()
+
   if (isLoading) return 'loading..'
 
   if (isError) return 'ERROR: Soemthing went wrong...'
@@ -75,30 +78,18 @@ const VersionDetail = () => {
   // No version selected. do not show the detail
   if (!versions || !versions.length) return null
 
-  const handleStatusChange = async (value, oldValue, entity) => {
-    if (value === oldValue) return
-
+  const handleStatusChange = async (value, entity) => {
     try {
-      // create operations array of all entities
-      // currently only supports changing one status
-      const operations = [
-        {
-          type: 'update',
-          entityType: 'version',
-          entityId: entity.id,
-          data: {
-            status: value,
-          },
-        },
-      ]
+      const payload = await updateFolder({
+        projectName,
+        type: 'version',
+        data: { status: value },
+        ids: [entity.id],
+      }).unwrap()
 
-      // update data state to reflect change
-      // Has wait for post request to resolve 200
-      const newVersions = [...versions].map((data) =>
-        data.id === entity.id ? { ...data, status: value } : data,
-      )
+      console.log('fulfilled', payload)
     } catch (error) {
-      console.error(error)
+      console.error('rejected', error)
     }
   }
 
@@ -138,7 +129,7 @@ const VersionDetail = () => {
                   value={versions[0].status}
                   statuses={context.project.statuses}
                   align={'right'}
-                  onChange={(v) => handleStatusChange(v, versions[0].status, versions[0])}
+                  onChange={(v) => handleStatusChange(v, versions[0])}
                 />
               ),
             },
