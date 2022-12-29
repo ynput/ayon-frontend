@@ -158,7 +158,7 @@ const Subsets = () => {
       field: 'status',
       header: 'Status',
       width: initStatusColumnWidth,
-      style: { overflow: 'visible', padding: '10px !important', overflowX: 'clip' },
+      style: { overflow: 'visible', padding: '10px !important' },
       body: (node) => {
         if (node.data.isGroup) return ''
         const statusMaxWidth = 120
