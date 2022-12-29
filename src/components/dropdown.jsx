@@ -145,7 +145,7 @@ Dropdown.propTypes = {
   value: PropTypes.string.isRequired,
   style: PropTypes.object,
   options: PropTypes.array.isRequired,
-  message: PropTypes.string,
+  message: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
 }
 
 export default Dropdown

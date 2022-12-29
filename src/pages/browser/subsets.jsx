@@ -103,27 +103,27 @@ const Subsets = () => {
   }, [focusedFolders, projectName, selectedVersions])
 
   // update subset status
-  const handleStatusChange = async (value, oldValue, entity) => {
+  const handleStatusChange = async (value, selectedId) => {
     try {
       // create operations array of all entities
       // currently only supports changing one status
-      const operations = [
-        {
-          type: 'update',
-          entityType: 'subset',
-          entityId: entity.id,
-          data: {
-            status: value,
-          },
+      const operations = focusedSubsets.map((id) => ({
+        type: 'update',
+        entityType: 'subset',
+        entityId: id,
+        data: {
+          status: value,
         },
-      ]
+      }))
 
       // use operations end point to update all at once
       await axios.post(`/api/projects/${projectName}/operations`, { operations })
 
       // delete outdated subsets and push new ones to state
       const newSubsets = [...subsetData].map((data) =>
-        data.id === entity.id ? { ...data, status: value } : data,
+        focusedSubsets.includes(data.id) || data.id === selectedId
+          ? { ...data, status: value }
+          : data,
       )
       // set new state
       setSubsetData(newSubsets)
@@ -173,8 +173,9 @@ const Subsets = () => {
                   : 'short'
                 : 'full'
             }
-            onChange={(v) => handleStatusChange(v, node.data.status, node.data)}
+            onChange={(v) => handleStatusChange(v, node.data.id)}
             maxWidth="100%"
+            multipleSelected={focusedSubsets.length}
           />
         )
       },
