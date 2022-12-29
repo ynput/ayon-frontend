@@ -1,0 +1,207 @@
+.optionsDropdown {
+  ul {
+    display: grid;
+    grid-auto-flow: column dense;
+    overflow: auto;
+
+    width: 100%;
+    justify-content: flex-start;
+
+    list-style-type: none;
+
+    gap: 10px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  @media (min-width: 901px) {
+    &.isDesktopTabs {
+      ul {
+        height: unset !important;
+        padding: 10px 0;
+        margin: -10px 0;
+      }
+
+      li {
+        margin: 10px 0;
+      }
+    }
+  }
+
+  li {
+    min-width: max-content;
+  }
+}
+
+.button {
+  border-radius: var(--b-r-l);
+}
+
+.mobileButton {
+  display: none;
+}
+
+.mobileSelected {
+  display: none;
+}
+
+.placeholder {
+  display: none;
+}
+
+.navTitle {
+  display: none;
+}
+
+@mixin dropDown($height) {
+  -webkit-tap-highlight-color: transparent;
+
+  position: relative;
+  width: fit-content;
+
+  span {
+    user-select: none;
+  }
+
+  width: fit-content;
+
+  height: $height;
+  z-index: 20;
+
+  // overflow: hidden;
+  display: grid;
+  grid-auto-flow: row dense;
+  grid-template-columns: 1fr;
+
+  transition: height 0.3s;
+
+  ul {
+    grid-auto-flow: row dense;
+    grid-template-columns: 1fr;
+    gap: 0;
+    position: absolute;
+    top: 100%;
+    width: -webkit-fill-available;
+    overflow: hidden;
+
+    border-radius: var(--b-r-l);
+    transition: height 0.3s;
+
+    background-color: var(--primary-light);
+    box-shadow: 0 0 0 1.5px var(--primary-dark);
+    margin-top: -$height;
+    padding-top: $height;
+  }
+
+  li {
+    padding: 0 20px;
+
+    display: flex;
+    align-items: center;
+
+    transition: all 0.2s;
+    position: relative;
+
+    z-index: 10;
+    top: -20px;
+    opacity: 0;
+    color: var(--primary-dark);
+
+    // box-shadow: 0 -0.5px 0 var(--primary-dark);
+
+    cursor: pointer;
+
+    &.isActive {
+      background-color: var(--primary-dark);
+      color: white;
+    }
+  }
+
+  svg {
+    font-size: 150%;
+    color: var(--primary-dark);
+    transition: transform 0.4s;
+    margin-left: 20px;
+  }
+
+  &:hover.notOpen {
+    ul {
+      box-shadow: var(--shadow-s), 0 0 0 1.5px var(--primary);
+    }
+  }
+
+  &.isOpen {
+    li {
+      top: 0;
+      opacity: 1;
+    }
+
+    ul {
+      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--primary-dark);
+    }
+
+    svg {
+      transform: rotate(180deg);
+    }
+  }
+
+  .button {
+    display: none;
+  }
+  .mobileButton {
+    display: block;
+  }
+
+  .mobileSelected {
+    display: block;
+    padding: 0 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 30;
+    cursor: pointer;
+  }
+
+  .titles {
+    display: grid;
+    line-height: 0;
+
+    & > * {
+      grid-column: 1;
+      grid-row: 1;
+
+      // hide if not active
+      opacity: 0;
+      color: var(--primary-dark);
+    }
+  }
+  .isTitleActive {
+    opacity: 1;
+    min-width: max-content;
+  }
+}
+
+// always do drop down on tablet except for alwaysTabs
+@media (max-width: 900px) {
+  .optionsDropdown.notAlwaysTabs {
+    @include dropDown(60px);
+  }
+}
+
+// if desktopTabs false
+@media (min-width: 901px) {
+  .notDesktopTabs.optionsDropdown.notAlwaysTabs {
+    @include dropDown(50px);
+  }
+}
+
+// @media (max-width: 600px) {
+//   .optionsDropdown {
+//     position: sticky;
+//     width: 100%;
+//     top: 70px;
+//   }
+// }

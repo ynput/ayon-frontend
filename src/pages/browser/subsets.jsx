@@ -12,7 +12,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
-import { StatusField, TimestampField } from '/src/containers/fieldFormat'
+import { TimestampField } from '/src/containers/fieldFormat'
 
 import { groupResult, getFamilyIcon } from '/src/utils'
 import {
@@ -25,6 +25,7 @@ import {
 } from '/src/features/context'
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
+import StatusSelect from '../../components/status/statusSelect'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -42,9 +43,95 @@ const Subsets = () => {
   const [focusOnReload, setFocusOnReload] = useState(null)
   const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
+  // sets size of status based on status column width
+  const initStatusColumnWidth = 150
+  const [statusColumnWidth, setStatusColumnWidth] = useState(initStatusColumnWidth)
 
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
+  const getSubsetsData = async () => {
+    // if ids are provided only get subsets for those ids
+
+    // version overrides
+    // Get a list of version overrides for the current set of folders
+    let versionOverrides = []
+    for (const folderId of focusedFolders) {
+      const c = selectedVersions[folderId]
+      if (!c) continue
+      for (const subsetId in c) {
+        const versionId = c[subsetId]
+        if (versionOverrides.includes(versionId)) continue
+        versionOverrides.push(versionId)
+      }
+    }
+    if (versionOverrides.length === 0) {
+      // We need at least one item in the array to filter.
+      versionOverrides = ['00000000000000000000000000000000']
+    }
+
+    try {
+      const response = await axios.post('/graphql', {
+        query: SUBSET_QUERY,
+        variables: { folders: focusedFolders, projectName, versionOverrides },
+      })
+      // successfull res
+      const parsedData = parseSubsetData(response.data.data)
+      return parsedData
+    } catch (error) {
+      console.log(error)
+      toast.error('Unable to fetch subsets')
+    }
+  }
+
+  // Load the subsets/versions data from the server and transform
+  const setSubsetsData = async () => {
+    if (focusedFolders?.length === 0) return
+
+    setLoading(true)
+    const subsetParsedData = await getSubsetsData()
+    setSubsetData(subsetParsedData)
+    setLoading(false)
+    if (focusOnReload) {
+      dispatch(setFocusedVersions([focusOnReload]))
+      setFocusOnReload(null)
+    }
+  }
+
+  useEffect(() => {
+    setSubsetsData()
+    // eslint-disable-next-line
+  }, [focusedFolders, projectName, selectedVersions])
+
+  // update subset status
+  const handleStatusChange = async (value, oldValue, entity) => {
+    try {
+      // create operations array of all entities
+      // currently only supports changing one status
+      const operations = [
+        {
+          type: 'update',
+          entityType: 'subset',
+          entityId: entity.id,
+          data: {
+            status: value,
+          },
+        },
+      ]
+
+      // use operations end point to update all at once
+      await axios.post(`/api/projects/${projectName}/operations`, { operations })
+
+      // delete outdated subsets and push new ones to state
+      const newSubsets = [...subsetData].map((data) =>
+        data.id === entity.id ? { ...data, status: value } : data,
+      )
+      // set new state
+      setSubsetData(newSubsets)
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to update subset status')
+    }
+  }
 
   const columns = [
     {
@@ -70,10 +157,26 @@ const Subsets = () => {
     {
       field: 'status',
       header: 'Status',
-      width: 100,
+      width: initStatusColumnWidth,
+      style: { overflow: 'visible', padding: '10px !important', overflowX: 'clip' },
       body: (node) => {
         if (node.data.isGroup) return ''
-        return <StatusField value={node.data.status} />
+        const statusMaxWidth = 120
+        return (
+          <StatusSelect
+            value={node.data.status}
+            statuses={context.project.statuses}
+            size={
+              statusColumnWidth < statusMaxWidth
+                ? statusColumnWidth < 60
+                  ? 'icon'
+                  : 'short'
+                : 'full'
+            }
+            onChange={(v) => handleStatusChange(v, node.data.status, node.data)}
+            maxWidth="100%"
+          />
+        )
       },
     },
     {
@@ -124,51 +227,6 @@ const Subsets = () => {
   //
   // Hooks
   //
-
-  // Load the subsets/versions data from the server
-
-  useEffect(() => {
-    if (focusedFolders?.length === 0) return
-
-    // version overrides
-    // Get a list of version overrides for the current set of folders
-    let versionOverrides = []
-    for (const folderId of focusedFolders) {
-      const c = selectedVersions[folderId]
-      if (!c) continue
-      for (const subsetId in c) {
-        const versionId = c[subsetId]
-        if (versionOverrides.includes(versionId)) continue
-        versionOverrides.push(versionId)
-      }
-    }
-    if (versionOverrides.length === 0) {
-      // We need at least one item in the array to filter.
-      versionOverrides = ['00000000000000000000000000000000']
-    }
-
-    setLoading(true)
-    axios
-      .post('/graphql', {
-        query: SUBSET_QUERY,
-        variables: { folders: focusedFolders, projectName, versionOverrides },
-      })
-      .then((response) => {
-        if (!(response.data.data && response.data.data.project)) {
-          toast.error('Unable to fetch subsets')
-          return
-        }
-        setSubsetData(parseSubsetData(response.data.data))
-      })
-      .finally(() => {
-        setLoading(false)
-        if (focusOnReload) {
-          dispatch(setFocusedVersions([focusOnReload]))
-          setFocusOnReload(null)
-        }
-      })
-    // eslint-disable-next-line
-  }, [focusedFolders, projectName, selectedVersions])
 
   // Parse focusedVersions list from the project context
   // and create a list of selected subset rows compatible
@@ -315,17 +373,21 @@ const Subsets = () => {
           onRowClick={onRowClick}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
+          onColumnResizeEnd={(e) =>
+            e.column.key === '.$status' && setStatusColumnWidth(e.element.offsetWidth)
+          }
         >
           {columns.map((col, i) => {
             return (
               <Column
                 key={col.field}
-                style={{ width: col.width }}
+                style={{ ...col.style, width: col.width }}
                 expander={i === 0}
                 resizeable={true}
                 field={col.field}
                 header={col.header}
                 body={col.body}
+                className={col.field}
               />
             )
           })}

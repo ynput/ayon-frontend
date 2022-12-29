@@ -10,8 +10,9 @@ import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
 import { getFolderTypeIcon } from '/src/utils'
 
-import { StatusField, TagsField } from '/src/containers/fieldFormat'
+import { TagsField } from '/src/containers/fieldFormat'
 import { setReload } from '../../features/context'
+import StatusSelect from '../../components/status/statusSelect'
 
 const FOLDER_QUERY = `
     query Folders($projectName: String!, $folders: [String!]!) {
@@ -19,6 +20,7 @@ const FOLDER_QUERY = `
             folders(ids: $folders) {
                 edges {
                     node {
+                        id
                         name
                         folderType
                         path
@@ -77,6 +79,34 @@ const FolderDetail = () => {
     })
   }
 
+  const handleStatusChange = async (value, oldValue, entity) => {
+    if (value === oldValue) return
+
+    try {
+      // create operations array of all entities
+      // currently only supports changing one status
+      const operations = [
+        {
+          type: 'update',
+          entityType: 'folder',
+          entityId: entity.id,
+          data: {
+            status: value,
+          },
+        },
+      ]
+
+      // use operations end point to update all at once
+      await axios.post(`/api/projects/${projectName}/operations`, { operations })
+
+      // update data state to reflect change
+      // Has wait for post request to resolve 200
+      setData({ ...data, status: value })
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   // get data for folder on mount and folder change
   useEffect(() => {
     getFolderData()
@@ -120,7 +150,17 @@ const FolderDetail = () => {
         data={data.attrib}
         additionalData={[
           { title: 'Folder type', value: data.folderType },
-          { title: 'Status', value: <StatusField value={data.status} /> },
+          {
+            title: 'Status',
+            value: (
+              <StatusSelect
+                value={data.status}
+                statuses={context.project.statuses}
+                align={'right'}
+                onChange={(v) => handleStatusChange(v, data.status, data)}
+              />
+            ),
+          },
           { title: 'Tags', value: <TagsField value={data.tags} /> },
           { title: 'Path', value: data.path },
         ]}

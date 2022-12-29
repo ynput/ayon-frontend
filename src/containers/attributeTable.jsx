@@ -26,7 +26,7 @@ const AttributeTable = ({ entityType, data, additionalData, style }) => {
         additionalData.map((data, index) => (
           <AttributeTableRow key={index}>
             <span>{data.title}</span>
-            <span>{data.value}</span>
+            {data.value}
           </AttributeTableRow>
         ))}
 
@@ -36,7 +36,7 @@ const AttributeTable = ({ entityType, data, additionalData, style }) => {
           .map((attr) => (
             <AttributeTableRow key={attr.name}>
               <span>{attr.data.title}</span>
-              <span>{data[attr.name]}</span>
+              {data[attr.name]}
             </AttributeTableRow>
           ))}
     </AttributeTableContainer>
