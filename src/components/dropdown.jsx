@@ -61,7 +61,14 @@ const Dropdown = ({ children, onChange, value, style, options }) => {
   return (
     <>
       {isOpen && <BackdropStyled onClick={() => setIsOpen(false)} />}
-      <ContainerStyled onClick={() => setIsOpen(!isOpen)} style={style} height={closedHeight}>
+      <ContainerStyled
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsOpen(!isOpen)
+        }}
+        style={style}
+        height={closedHeight}
+      >
         <OptionsStyled isOpen={isOpen} onClick={onChange} length={length} height={closedHeight}>
           {children({ isOpen, selected: value })}
         </OptionsStyled>
