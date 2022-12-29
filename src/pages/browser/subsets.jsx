@@ -73,7 +73,6 @@ const Subsets = () => {
       })
       // successfull res
       const parsedData = parseSubsetData(response.data.data)
-      console.log(parsedData)
       return parsedData
     } catch (error) {
       console.log(error)
@@ -102,8 +101,6 @@ const Subsets = () => {
 
   // update subset status
   const handleStatusChange = async (value, oldValue, entity) => {
-    if (value === oldValue || !entity.id) return
-
     try {
       // create operations array of all entities
       // currently only supports changing one status

@@ -13,6 +13,11 @@ const invertHoverStyle = css`
   background-color: ${({ color }) => color};
   color: black;
 `
+const defaultStyle = css`
+  /* default text color */
+  color: ${({ color }) => color};
+  background-color: transparent;
+`
 
 const moveDown = keyframes`
   from {
@@ -43,6 +48,9 @@ const StatusStyled = styled.div`
   height: 29px;
   min-height: 29px;
 
+  ${defaultStyle}
+
+  /* selecting styles */
   ${({ isSelecting }) =>
     isSelecting &&
     css`
@@ -59,8 +67,22 @@ const StatusStyled = styled.div`
       animation-duration: 0.3s;
     `}
 
-  /* default text color */
-  color: ${({ color }) => color};
+
+    /* Only happens when a change has been made and dropdown closed */
+    ${({ isChanging, isSelecting }) =>
+    isChanging &&
+    !isSelecting &&
+    css`
+      ${invertHoverStyle}
+    `}
+
+    /* A transition animation for onChange animation */
+    ${({ isSelecting }) =>
+    !isSelecting &&
+    css`
+      transition: background-color 0.3s, color 0.3s;
+    `}
+
 
   /* sets for hover and when active whilst open (top one) */
   :hover {
@@ -98,6 +120,7 @@ const StatusField = ({
   value,
   valueShort,
   isActive,
+  isChanging,
   isSelecting,
   size = 'full',
   align = 'left',
@@ -116,6 +139,7 @@ const StatusField = ({
       id={value}
       isSelecting={isSelecting}
       align={align}
+      isChanging={isChanging}
     >
       <span className="material-symbols-outlined">{icon}</span>
       {size !== 'icon' && (size === 'short' ? valueShort : value)}
@@ -127,6 +151,7 @@ StatusField.propTypes = {
   value: PropTypes.string.isRequired,
   valueShort: PropTypes.string,
   isActive: PropTypes.bool,
+  isChanging: PropTypes.bool,
   isSelecting: PropTypes.bool,
   size: PropTypes.oneOf(['full', 'short', 'icon']),
   align: PropTypes.oneOf(['left', 'right']),
