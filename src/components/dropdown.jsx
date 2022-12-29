@@ -56,7 +56,7 @@ const Dropdown = ({ children, onChange, value, style, options }) => {
 
   // number of options to choose from sets height for animation
   const length = options.length
-  const closedHeight = style.height || 29
+  const closedHeight = style.height || 27
 
   return (
     <>

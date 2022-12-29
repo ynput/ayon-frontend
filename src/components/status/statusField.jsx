@@ -24,7 +24,7 @@ const moveDown = keyframes`
     min-height: 18px;
   }
   to {
-    min-height: 29px;
+    min-height: 27px;
   }
 `
 
@@ -45,8 +45,8 @@ const StatusStyled = styled.div`
 
   border-radius: var(--border-radius);
   /* same height as a row */
-  height: 29px;
-  min-height: 29px;
+  height: 27px;
+  min-height: 27px;
 
   ${defaultStyle}
 
@@ -55,8 +55,8 @@ const StatusStyled = styled.div`
     isSelecting &&
     css`
       border-radius: 0;
-      height: 29px;
-      min-height: 29px;
+      height: 27px;
+      min-height: 27px;
     `}
 
   ${({ isSelecting, isActive }) =>
