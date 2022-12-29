@@ -19,6 +19,15 @@ const warningMoveIn = keyframes`
   }
 `
 
+const moveDown = keyframes`
+  from {
+    min-height: 18px;
+  }
+  to {
+    min-height: 27px;
+  }
+`
+
 const ContainerStyled = styled.div`
   position: relative;
   height: ${({ height }) => `${height}px`};
@@ -65,7 +74,7 @@ const OptionsStyled = styled.div`
   z-index: 10;
   height: ${({ height }) => `${height}px`};
 
-  ${({ isOpen, message }) =>
+  ${({ isOpen, message, index }) =>
     isOpen &&
     css`
       margin: 0px;
@@ -80,6 +89,14 @@ const OptionsStyled = styled.div`
 
       /* calc open height based on number of options */
       height: ${({ height, length }) => `${height * length}px`};
+
+      & > * {
+        animation: ${moveDown} 0.3s;
+      }
+
+      *:nth-child(${index + 1}) {
+        animation: unset;
+      }
     `}
 
   transition: height 0.3s;
@@ -91,6 +108,10 @@ const Dropdown = ({ children, value, style, options, message }) => {
   // number of options to choose from sets height for animation
   const length = options.length
   const closedHeight = style.height || 27
+
+  // get index of current value
+  const index = options.map(({ name }) => name).indexOf(value)
+  // const index =
 
   return (
     <>
@@ -105,7 +126,13 @@ const Dropdown = ({ children, value, style, options, message }) => {
         message={message}
         isOpen={isOpen}
       >
-        <OptionsStyled isOpen={isOpen} length={length} height={closedHeight} message={message}>
+        <OptionsStyled
+          isOpen={isOpen}
+          length={length}
+          height={closedHeight}
+          message={message}
+          index={index}
+        >
           {children({ isOpen, selected: value })}
         </OptionsStyled>
       </ContainerStyled>
