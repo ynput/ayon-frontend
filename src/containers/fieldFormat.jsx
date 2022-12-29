@@ -1,8 +1,7 @@
 // Various comoonents for formatting fields in the UI
-import PropTypes from 'prop-types'
-import { getTagColor, getStatusColor } from '/src/utils'
+
+import { getTagColor } from '/src/utils'
 import styled from 'styled-components'
-import Dropdown from '../components/dropDown'
 
 // Attributes
 

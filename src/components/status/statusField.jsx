@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css, keyframes } from 'styled-components'
-import { getStatusIcon, getStatusColor } from '../../utils'
+import { getStatusProps } from '../../utils'
 
 const hoverStyle = css`
   background-color: var(--color-grey-02);
@@ -105,7 +105,7 @@ const StatusStyled = styled.div`
     `}
 
   /* ALIGNMENT */
-    ${({ align }) =>
+  ${({ align }) =>
     align === 'right' &&
     css`
       justify-content: end;
@@ -114,11 +114,22 @@ const StatusStyled = styled.div`
         order: 2;
       }
     `}
+
+    /* ICON ONLY STYLES */
+      ${({ size }) =>
+    size === 'icon' &&
+    css`
+      width: 100%;
+
+      span {
+        margin: auto;
+      }
+    `}
 `
 
+// RENDER
 const StatusField = ({
   value,
-  valueShort,
   isActive,
   isChanging,
   isSelecting,
@@ -127,8 +138,7 @@ const StatusField = ({
   onClick,
   style,
 }) => {
-  const color = getStatusColor(value)
-  const icon = getStatusIcon(value)
+  const { color, icon, shortName } = getStatusProps(value)
 
   return (
     <StatusStyled
@@ -140,16 +150,16 @@ const StatusField = ({
       isSelecting={isSelecting}
       align={align}
       isChanging={isChanging}
+      size={size}
     >
       <span className="material-symbols-outlined">{icon}</span>
-      {size !== 'icon' && (size === 'short' ? valueShort : value)}
+      {size !== 'icon' && (size === 'full' ? value : shortName)}
     </StatusStyled>
   )
 }
 
 StatusField.propTypes = {
   value: PropTypes.string.isRequired,
-  valueShort: PropTypes.string,
   isActive: PropTypes.bool,
   isChanging: PropTypes.bool,
   isSelecting: PropTypes.bool,

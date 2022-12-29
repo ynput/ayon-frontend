@@ -22,6 +22,7 @@ import {
   updateStatusColors,
   updateTagColors,
   updateStatusIcons,
+  updateStatusShortNames,
 } from '../utils'
 
 const ProjectContexInfo = () => {
@@ -79,6 +80,12 @@ const ProjectPage = () => {
           i[status.name] = status.icon
         }
         updateStatusIcons(i)
+
+        const n = {}
+        for (const status of data.statuses) {
+          n[status.name] = status.shortName
+        }
+        updateStatusShortNames(n)
 
         const g = {}
         for (const tag of data.tags) {

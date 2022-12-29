@@ -7,7 +7,7 @@ const StatusSelect = ({
   value,
   statuses = [],
   size = 'full',
-  width = 150,
+  maxWidth,
   height,
   align,
   onChange,
@@ -30,8 +30,17 @@ const StatusSelect = ({
     setChangedValue(status)
   }
 
+  // calculate max width based off longest status name
+  const charWidth = 7
+  const gap = 5
+  const iconWidth = 20
+  const longestStatus = [...statuses].sort((a, b) => b.name.length - a.name.length)[0].name.length
+  const calcMaxWidth = longestStatus * charWidth + gap + iconWidth
+
+  maxWidth = maxWidth || calcMaxWidth
+
   return (
-    <Dropdown value={value} options={statuses} style={{ width, height }}>
+    <Dropdown value={value} options={statuses} style={{ maxWidth, height }}>
       {(props) =>
         props.isOpen ? (
           statuses.map((status) => (
@@ -46,7 +55,12 @@ const StatusSelect = ({
             />
           ))
         ) : (
-          <StatusField value={changedValue || value} align={align} isChanging={!!changedValue} />
+          <StatusField
+            value={changedValue || value}
+            align={align}
+            isChanging={!!changedValue}
+            size={size}
+          />
         )
       }
     </Dropdown>
@@ -65,6 +79,7 @@ StatusSelect.propTypes = {
     }).isRequired,
   ),
   onChange: PropTypes.func.isRequired,
+  maxWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 }
 
 export default StatusSelect

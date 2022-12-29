@@ -13,8 +13,7 @@ const BackdropStyled = styled.div`
 const ContainerStyled = styled.div`
   position: relative;
   height: ${({ height }) => `${height}px`};
-  margin-bottom: -1px;
-  width: max-content;
+  width: 100%;
 `
 
 const OptionsStyled = styled.div`

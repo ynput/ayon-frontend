@@ -43,6 +43,9 @@ const Subsets = () => {
   const [focusOnReload, setFocusOnReload] = useState(null)
   const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
+  // sets size of status based on status column width
+  const initStatusColumnWidth = 150
+  const [statusColumnWidth, setStatusColumnWidth] = useState(initStatusColumnWidth)
 
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
@@ -154,16 +157,24 @@ const Subsets = () => {
     {
       field: 'status',
       header: 'Status',
-      width: 150,
+      width: initStatusColumnWidth,
       style: { overflow: 'visible', padding: '10px !important', overflowX: 'clip' },
       body: (node) => {
         if (node.data.isGroup) return ''
+        const statusMaxWidth = 120
         return (
           <StatusSelect
             value={node.data.status}
             statuses={context.project.statuses}
-            width={150}
+            size={
+              statusColumnWidth < statusMaxWidth
+                ? statusColumnWidth < 60
+                  ? 'icon'
+                  : 'short'
+                : 'full'
+            }
             onChange={(v) => handleStatusChange(v, node.data.status, node.data)}
+            maxWidth="100%"
           />
         )
       },
@@ -362,6 +373,9 @@ const Subsets = () => {
           onRowClick={onRowClick}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
+          onColumnResizeEnd={(e) =>
+            e.column.key === '.$status' && setStatusColumnWidth(e.element.offsetWidth)
+          }
         >
           {columns.map((col, i) => {
             return (
