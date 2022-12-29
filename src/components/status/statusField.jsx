@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import styled, { css, keyframes } from 'styled-components'
+import styled, { css } from 'styled-components'
 import { getStatusProps } from '../../utils'
 
 const hoverStyle = css`
@@ -17,15 +17,6 @@ const defaultStyle = css`
   /* default text color */
   color: ${({ color }) => color};
   background-color: transparent;
-`
-
-const moveDown = keyframes`
-  from {
-    min-height: 18px;
-  }
-  to {
-    min-height: 27px;
-  }
 `
 
 const StatusStyled = styled.div`
@@ -59,13 +50,7 @@ const StatusStyled = styled.div`
       min-height: 27px;
     `}
 
-  ${({ isSelecting, isActive }) =>
-    isSelecting &&
-    !isActive &&
-    css`
-      animation: ${moveDown};
-      animation-duration: 0.3s;
-    `}
+
 
 
     /* Only happens when a change has been made and dropdown closed */
