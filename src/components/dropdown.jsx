@@ -53,7 +53,7 @@ const ContainerStyled = styled.div`
         outline: 1px solid #383838;
         justify-content: center;
 
-        animation: ${warningMoveIn} 0.3s forwards;
+        animation: ${warningMoveIn} 0.15s forwards;
       }
     `}
 `
@@ -91,7 +91,7 @@ const OptionsStyled = styled.div`
       height: ${({ height, length }) => `${height * length}px`};
 
       & > * {
-        animation: ${moveDown} 0.3s;
+        animation: ${moveDown} 0.15s;
       }
 
       *:nth-child(${index + 1}) {
@@ -99,7 +99,7 @@ const OptionsStyled = styled.div`
       }
     `}
 
-  transition: height 0.3s;
+  transition: height 0.15s;
 `
 
 const Dropdown = ({ children, value, style, options, message, onOpen, onClose }) => {
