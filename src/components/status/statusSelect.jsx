@@ -11,6 +11,7 @@ const StatusSelect = ({
   height,
   align,
   onChange,
+  multipleSelected,
 }) => {
   const [changedValue, setChangedValue] = useState(null)
 
@@ -19,6 +20,8 @@ const StatusSelect = ({
       setChangedValue(null)
     }
   }, [value, changedValue, setChangedValue])
+
+  console.log({ value, changedValue })
 
   if (!value) return null
 
@@ -40,7 +43,12 @@ const StatusSelect = ({
   maxWidth = maxWidth || calcMaxWidth
 
   return (
-    <Dropdown value={value} options={statuses} style={{ maxWidth, height }}>
+    <Dropdown
+      value={value}
+      options={statuses}
+      style={{ maxWidth, height }}
+      message={multipleSelected > 1 && `${multipleSelected} Selected`}
+    >
       {(props) =>
         props.isOpen ? (
           statuses.map((status) => (
@@ -80,6 +88,7 @@ StatusSelect.propTypes = {
   ),
   onChange: PropTypes.func.isRequired,
   maxWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  multipleSelected: PropTypes.number,
 }
 
 export default StatusSelect
