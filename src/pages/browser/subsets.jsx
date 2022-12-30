@@ -1,19 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { toast } from 'react-toastify'
-
-import axios from 'axios'
-
 import { InputText, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
-
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
-
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
-
 import { groupResult, getFamilyIcon } from '/src/utils'
 import {
   setFocusedVersions,
@@ -23,9 +16,9 @@ import {
   setPairing,
   setDialog,
 } from '/src/features/context'
-
-import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
+import { VersionList } from './subsetsUtils'
 import StatusSelect from '../../components/status/statusSelect'
+import { useGetSubsetsListQuery, useUpdateSubsetsMutation } from '../../services/ayon'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -38,98 +31,75 @@ const Subsets = () => {
   const focusedSubsets = context.focused.subsets
   const pairing = context.pairing
 
-  const [subsetData, setSubsetData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [focusOnReload, setFocusOnReload] = useState(null)
   const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
   // sets size of status based on status column width
   const initStatusColumnWidth = 150
   const [statusColumnWidth, setStatusColumnWidth] = useState(initStatusColumnWidth)
 
-  // Columns definition
-  // It must be here since we are referencing the component state and the context :-(
-  const getSubsetsData = async () => {
-    // if ids are provided only get subsets for those ids
-
-    // version overrides
-    // Get a list of version overrides for the current set of folders
-    let versionOverrides = []
-    for (const folderId of focusedFolders) {
-      const c = selectedVersions[folderId]
-      if (!c) continue
-      for (const subsetId in c) {
-        const versionId = c[subsetId]
-        if (versionOverrides.includes(versionId)) continue
-        versionOverrides.push(versionId)
-      }
-    }
-    if (versionOverrides.length === 0) {
-      // We need at least one item in the array to filter.
-      versionOverrides = ['00000000000000000000000000000000']
-    }
-
-    try {
-      const response = await axios.post('/graphql', {
-        query: SUBSET_QUERY,
-        variables: { folders: focusedFolders, projectName, versionOverrides },
-      })
-      // successfull res
-      const parsedData = parseSubsetData(response.data.data)
-      return parsedData
-    } catch (error) {
-      console.log(error)
-      toast.error('Unable to fetch subsets')
+  // version overrides
+  // Get a list of version overrides for the current set of folders
+  let versionOverrides = []
+  for (const folderId of focusedFolders) {
+    const c = selectedVersions[folderId]
+    if (!c) continue
+    for (const subsetId in c) {
+      const versionId = c[subsetId]
+      if (versionOverrides.includes(versionId)) continue
+      versionOverrides.push(versionId)
     }
   }
-
-  // Load the subsets/versions data from the server and transform
-  const setSubsetsData = async () => {
-    if (focusedFolders?.length === 0) return
-
-    setLoading(true)
-    const subsetParsedData = await getSubsetsData()
-    setSubsetData(subsetParsedData)
-    setLoading(false)
-    if (focusOnReload) {
-      dispatch(setFocusedVersions([focusOnReload]))
-      setFocusOnReload(null)
-    }
+  if (versionOverrides.length === 0) {
+    // We need at least one item in the array to filter.
+    versionOverrides = ['00000000000000000000000000000000']
   }
 
-  useEffect(() => {
-    setSubsetsData()
-    // eslint-disable-next-line
-  }, [focusedFolders, projectName, selectedVersions])
+  const { data: subsetData = [], isLoading: loading } = useGetSubsetsListQuery(
+    {
+      ids: focusedFolders,
+      projectName,
+      versionOverrides,
+    },
+    { skip: !focusedFolders.length },
+  )
+
+  // PATCH FOLDERS DATA
+  const [updateSubsets] = useUpdateSubsetsMutation()
 
   // update subset status
   const handleStatusChange = async (value, selectedId) => {
     try {
-      // create operations array of all entities
-      // currently only supports changing one status
-      const operations = focusedSubsets.map((id) => ({
-        type: 'update',
-        entityType: 'subset',
-        entityId: id,
-        data: {
-          status: value,
-        },
-      }))
-
-      // use operations end point to update all at once
-      await axios.post(`/api/projects/${projectName}/operations`, { operations })
+      // get selected ids
+      let ids = focusedSubsets.includes(selectedId) ? focusedSubsets : [selectedId]
 
       // delete outdated subsets and push new ones to state
-      const newSubsets = [...subsetData].map((data) =>
-        focusedSubsets.includes(data.id) || data.id === selectedId
-          ? { ...data, status: value }
-          : data,
+      const patches = [...subsetData].map((data) =>
+        ids.includes(data.id) ? { ...data, status: value } : data,
       )
-      // set new state
-      setSubsetData(newSubsets)
+
+      // need to give versionOverrides for optimistic updates
+      const payload = await updateSubsets({
+        projectName,
+        data: { status: value },
+        patches,
+        ids,
+        focusedFolders,
+        versionOverrides,
+      }).unwrap()
+
+      console.log('fulfilled', payload)
     } catch (error) {
-      console.error(error)
-      toast.error('Unable to update subset status')
+      console.error('rejected', error)
+    }
+  }
+
+  const handleStatusOpen = (id) => {
+    // handles the edge case where the use foccusess multiple subsets but then changes a different status
+    if (!focusedSubsets.includes(id)) {
+      console.log('run')
+      // not in focused selection
+      // reset selection to status id
+      dispatch(setFocusedSubsets([id]))
     }
   }
 
@@ -176,6 +146,7 @@ const Subsets = () => {
             onChange={(v) => handleStatusChange(v, node.data.id)}
             maxWidth="100%"
             multipleSelected={focusedSubsets.length}
+            onClick={() => handleStatusOpen(node.data.id)}
           />
         )
       },
@@ -196,6 +167,7 @@ const Subsets = () => {
       width: 70,
       body: (node) =>
         VersionList(node.data, (subsetId, versionId) => {
+          // TODO changing version doesn't auto update version detail
           let newSelection = { ...selectedVersions[node.data.folderId] }
           newSelection[subsetId] = versionId
           dispatch(
@@ -204,7 +176,6 @@ const Subsets = () => {
               [node.data.folderId]: newSelection,
             }),
           )
-          setFocusOnReload(versionId)
         }), // end VersionList
     },
     {

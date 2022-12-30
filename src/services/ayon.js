@@ -1,6 +1,7 @@
 // Need to use the React-specific entry point to allow generating React hooks
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import short from 'short-uuid'
+import { parseSubsetData } from '../pages/browser/subsetsUtils'
 import ayonClient from '/src/ayon'
 
 const TASK_QUERY = `
@@ -85,6 +86,77 @@ const VERSION_QUERY = `
             }
         }
     }
+`
+
+const SUBSETS_LIST_QUERY = `
+query Subsets($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
+    project(name: $projectName){
+        subsets(folderIds: $ids){
+            edges {
+                node {
+                    id
+                    name
+                    family
+                    status
+                    createdAt
+                    versionList{
+                      id
+                      version
+                      name
+                    }
+                    
+                    versions(ids: $versionOverrides){
+                      edges{
+                        node{
+                          id
+                          version
+                          name
+                          author
+                          createdAt
+                          taskId
+                          attrib {
+                              fps
+                              resolutionWidth
+                              resolutionHeight
+                              frameStart
+                              frameEnd
+                          }
+                        }
+                      }
+                    }
+
+                    latestVersion{
+                        id
+                        version
+                        name
+                        author
+                        createdAt
+                        taskId
+                        attrib {
+                            fps
+                            resolutionWidth
+                            resolutionHeight
+                            frameStart
+                            frameEnd
+                        }
+                    }
+                    folder {
+                        id
+                        name
+                        parents
+                        attrib {
+                            fps
+                            resolutionWidth
+                            resolutionHeight
+                            frameStart
+                            frameEnd
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 `
 
 const buildEntitiesDetailsQuery = (type) => {
@@ -184,9 +256,60 @@ export const ayonApi = createApi({
       providesTags: (result, error, { type }) =>
         result ? [...result.map(({ node }) => ({ type: type, id: node.id }))] : [type],
     }),
+    getSubsetsList: builder.query({
+      query: ({ projectName, ids, versionOverrides }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: SUBSETS_LIST_QUERY,
+          variables: { projectName, ids, versionOverrides },
+        },
+      }),
+      transformResponse: (response) => parseSubsetData(response.data),
+      providesTags: (result) =>
+        result ? [...result.map(({ id }) => ({ type: 'subset', id }))] : ['subset'],
+    }),
+    updateSubsets: builder.mutation({
+      query: ({ projectName, data, ids }) => ({
+        url: `/api/projects/${projectName}/operations`,
+        method: 'POST',
+        body: {
+          operations: buildOperations(ids, 'subset', data),
+        },
+      }),
+      async onQueryStarted(
+        { projectName, patches, versionOverrides, focusedFolders },
+        { dispatch, queryFulfilled },
+      ) {
+        if (!patches) return
+
+        const patchResult = dispatch(
+          ayonApi.util.updateQueryData(
+            'getSubsetsList',
+            { projectName, ids: focusedFolders, versionOverrides },
+            (draft) => {
+              Object.assign(draft, patches)
+            },
+          ),
+        )
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo()
+        }
+      },
+      invalidatesTags: (result, error, { patches }) => [
+        ...patches.map(({ id }) => ({ type: 'subset', id })),
+      ],
+    }),
   }),
 })
 
 // Export hooks for usage in function components, which are
 // auto-generated based on the defined endpoints
-export const { useUpdateEntitiesDetailsMutation, useGetEntitiesDetailsQuery } = ayonApi
+export const {
+  useUpdateEntitiesDetailsMutation,
+  useGetEntitiesDetailsQuery,
+  useGetSubsetsListQuery,
+  useUpdateSubsetsMutation,
+} = ayonApi
