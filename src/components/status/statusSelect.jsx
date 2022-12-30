@@ -12,6 +12,7 @@ const StatusSelect = ({
   align,
   onChange,
   multipleSelected,
+  onClick,
 }) => {
   const [changedValue, setChangedValue] = useState(null)
 
@@ -20,8 +21,6 @@ const StatusSelect = ({
       setChangedValue(null)
     }
   }, [value, changedValue, setChangedValue])
-
-  console.log({ value, changedValue })
 
   if (!value) return null
 
@@ -48,6 +47,7 @@ const StatusSelect = ({
       options={statuses}
       style={{ maxWidth, height }}
       message={multipleSelected > 1 && `${multipleSelected} Selected`}
+      onOpen={onClick}
     >
       {(props) =>
         props.isOpen ? (
@@ -89,6 +89,7 @@ StatusSelect.propTypes = {
   onChange: PropTypes.func.isRequired,
   maxWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   multipleSelected: PropTypes.number,
+  onClick: PropTypes.func,
 }
 
 export default StatusSelect
