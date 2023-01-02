@@ -82,6 +82,7 @@ query Subsets($projectName: String!, $folders: [String!]!, $versionOverrides: [S
                     folder {
                         id
                         name
+                        label
                         parents
                         attrib {
                             fps
@@ -151,7 +152,7 @@ const parseSubsetData = (data) => {
       status: subset.status,
       fps: parseSubsetFps(subset),
       resolution: parseSubsetResolution(subset),
-      folder: subset.folder.name,
+      folder: subset.folder.label || subset.folder.name,
       folderId: subset.folder.id,
       author: vers ? vers.author : null,
       parents: subset.folder.parents,

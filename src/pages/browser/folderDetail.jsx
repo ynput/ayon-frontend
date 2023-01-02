@@ -22,6 +22,7 @@ const FOLDER_QUERY = `
                     node {
                         id
                         name
+                        label
                         folderType
                         path
                         status
@@ -142,7 +143,7 @@ const FolderDetail = () => {
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getFolderTypeIcon(data.folderType)}
         </span>
-        <span style={{ marginLeft: 10 }}>{data.name}</span>
+        <span style={{ marginLeft: 10 }}>{data.label || data.name}</span>
       </h3>
       <Thumbnail projectName={projectName} entityType="folder" entityId={folderId} />
       <AttributeTable

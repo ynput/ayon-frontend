@@ -21,10 +21,12 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
         node {
           id
           name
+          label
           taskType
           assignees
           folder {
             name
+            label
           }
         }
       }
@@ -73,7 +75,8 @@ const TaskList = ({ style = {} }) => {
           result.push({
             id: edge.node.id,
             name: edge.node.name,
-            folderName: edge.node.folder.name,
+            label: edge.node.label,
+            folderName: edge.node.folder.label || edge.node.folder.name,
             taskType: edge.node.taskType,
             isMine: edge.node.assignees.includes(userName) ? 'yes' : '',
           })
@@ -130,7 +133,13 @@ const TaskList = ({ style = {} }) => {
       }
     }
 
-    return <CellWithIcon icon={icon} text={node.data.name} iconClassName={className} />
+    return (
+      <CellWithIcon
+        icon={icon}
+        text={node.data.label || node.data.name}
+        iconClassName={className}
+      />
+    )
   }
 
   const ctxMenuModel = [

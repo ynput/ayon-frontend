@@ -19,6 +19,7 @@ const TASK_QUERY = `
                     node {
                         id
                         name
+                        label
                         status
                         tags
                         taskType
@@ -134,7 +135,7 @@ const TaskDetail = () => {
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getTaskTypeIcon(data.taskType)}
         </span>
-        <span style={{ marginLeft: 10 }}>{data.name}</span>
+        <span style={{ marginLeft: 10 }}>{data.label || data.name}</span>
       </h3>
       <AttributeTable
         entityType="task"
