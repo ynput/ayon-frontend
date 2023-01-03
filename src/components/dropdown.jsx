@@ -102,7 +102,7 @@ const OptionsStyled = styled.div`
   transition: height 0.3s;
 `
 
-const Dropdown = ({ children, value, style, options, message }) => {
+const Dropdown = ({ children, value, style, options, message, onOpen, onClose }) => {
   const [isOpen, setIsOpen] = useState(false)
 
   // number of options to choose from sets height for animation
@@ -115,11 +115,19 @@ const Dropdown = ({ children, value, style, options, message }) => {
 
   return (
     <>
-      {isOpen && <BackdropStyled onClick={() => setIsOpen(false)} />}
+      {isOpen && (
+        <BackdropStyled
+          onClick={() => {
+            setIsOpen(false)
+            onClose && onClose()
+          }}
+        />
+      )}
       <ContainerStyled
         onClick={(e) => {
           e.stopPropagation()
           setIsOpen(!isOpen)
+          isOpen ? onClose && onClose() : onOpen && onOpen()
         }}
         style={style}
         height={closedHeight}
@@ -146,6 +154,8 @@ Dropdown.propTypes = {
   style: PropTypes.object,
   options: PropTypes.array.isRequired,
   message: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
+  onOpen: PropTypes.func,
+  onClose: PropTypes.func,
 }
 
 export default Dropdown
