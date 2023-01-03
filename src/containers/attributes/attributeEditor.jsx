@@ -16,7 +16,7 @@ const SCOPE_OPTIONS = [
 ]
 
 // Fields used on all types
-const GLOBAL_FIELDS = ['title', 'description', 'example', 'default', 'regex', 'type']
+const GLOBAL_FIELDS = ['title', 'description', 'example', 'default', 'regex']
 
 const TYPE_OPTIONS = {
   string: { value: 'string', label: 'String', fields: ['minLength', 'maxLength'] },
@@ -33,12 +33,7 @@ const TYPE_OPTIONS = {
   list_of_strings: {
     value: 'list_of_strings',
     label: 'List Of Strings',
-    fields: ['enum', 'minItems', 'maxItems'],
-  },
-  boolean: {
-    value: 'boolean',
-    label: 'Boolean',
-    fields: [],
+    fields: ['minItems', 'maxItems', 'enum'],
   },
 }
 
@@ -94,27 +89,14 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     </div>
   )
 
-  let dataFields = Object.keys(attribute.data)
-  //   filter out fields for types
-  dataFields = dataFields.filter((field) =>
-    [...GLOBAL_FIELDS, ...(TYPE_OPTIONS[attribute.data.type]?.fields || [])].includes(field),
-  )
+  let dataFields = [...GLOBAL_FIELDS]
+  if (TYPE_OPTIONS[formData?.data.type]) {
+    dataFields = [...dataFields, ...TYPE_OPTIONS[formData?.data.type].fields]
+  }
 
   const customFields = {
-    type: (value, onChange) => (
-      <Dropdown
-        value={value}
-        disabled={formData.builtin}
-        options={Object.values(TYPE_OPTIONS)}
-        onChange={onChange}
-      />
-    ),
     enum: (value = [], onChange) => (
-      <EnumEditor
-        values={value}
-        onChange={(value) => onChange({ target: { value: value } })}
-        key="enum"
-      />
+      <EnumEditor values={value} onChange={(value) => onChange({ target: { value: value } })} />
     ),
   }
 
@@ -141,6 +123,14 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               disabled={formData.builtin}
               value={formData.scope}
               onChange={(e) => setTopLevelData('scope', e.target.value)}
+            />
+          </FormRow>
+          <FormRow label="type">
+            <Dropdown
+              value={formData?.data?.type}
+              disabled={formData.builtin}
+              options={Object.values(TYPE_OPTIONS)}
+              onChange={(e) => setData('type', e.target.value)}
             />
           </FormRow>
           {dataFields.map((field) => (
