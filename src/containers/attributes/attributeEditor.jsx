@@ -19,18 +19,27 @@ const SCOPE_OPTIONS = [
 const GLOBAL_FIELDS = ['title', 'description', 'example', 'default', 'regex', 'type']
 
 const TYPE_OPTIONS = {
-  string: { value: 'string', label: 'String', fields: [] },
+  string: { value: 'string', label: 'String', fields: ['minLength', 'maxLength'] },
   integer: {
     value: 'integer',
     label: 'Integer',
-    fields: ['minLength', 'maxLength', 'minItems', 'maxItems'],
+    fields: ['ge', 'gt', 'le', 'lt'],
   },
   float: {
     value: 'float',
     label: 'Decimal number',
-    fields: ['minLength', 'maxLength', 'minItems', 'maxItems'],
+    fields: ['ge', 'gt', 'le', 'lt'],
   },
-  list_of_strings: { value: 'list_of_strings', label: 'List Of Strings', fields: ['enum'] },
+  list_of_strings: {
+    value: 'list_of_strings',
+    label: 'List Of Strings',
+    fields: ['enum', 'minItems', 'maxItems'],
+  },
+  boolean: {
+    value: 'boolean',
+    label: 'Boolean',
+    fields: [],
+  },
 }
 
 const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
