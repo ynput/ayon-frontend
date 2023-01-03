@@ -21,8 +21,6 @@ const StatusSelect = ({
     }
   }, [value, changedValue, setChangedValue])
 
-  console.log({ value, changedValue })
-
   if (!value) return null
 
   const handleChange = (status) => {

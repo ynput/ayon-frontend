@@ -26,6 +26,7 @@ import {
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
 import StatusSelect from '../../components/status/statusSelect'
+import { MultiSelect } from 'primereact/multiselect'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -133,7 +134,7 @@ const Subsets = () => {
     }
   }
 
-  const columns = [
+  let columns = [
     {
       field: 'name',
       header: 'Subset',
@@ -224,6 +225,16 @@ const Subsets = () => {
       width: 120,
     },
   ]
+
+  const filterOptions = columns.map(({ field }) => ({ value: field, label: field }))
+  const selectedFilteredOptions = filterOptions.map(({ value }) => value)
+
+  const [shownColumns, setShownColumns] = useState(selectedFilteredOptions)
+
+  // only filter columns if required
+  if (shownColumns.length < columns.length) {
+    columns = columns.filter(({ field }) => shownColumns.includes(field))
+  }
 
   //
   // Hooks
@@ -349,6 +360,13 @@ const Subsets = () => {
     <Section className="wrap">
       <Toolbar>
         <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
+        <MultiSelect
+          options={filterOptions}
+          value={shownColumns}
+          onChange={(e) => setShownColumns(e.target.value)}
+          placeholder="Filter Columns"
+          fixedPlaceholder={shownColumns.length >= filterOptions.length}
+        />
       </Toolbar>
 
       <TablePanel loading={loading}>
