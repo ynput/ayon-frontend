@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
-import Dropdown from '../dropDown'
+import Dropdown from '../dropdown'
 import StatusField from './statusField'
 
 const StatusSelect = ({

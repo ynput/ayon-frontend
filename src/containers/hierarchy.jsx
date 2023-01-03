@@ -22,11 +22,6 @@ import {
 import { getFolderTypeIcon } from '/src//utils'
 
 const filterHierarchy = (text, folder) => {
-  /*
-    Filter the hierarchy using a given text and rename "id" to "key"
-    and "name" to "label", which is needed to render the hierarchy
-    using primereact tree
-    */
   let result = []
   if (!folder) return []
   for (const item of folder) {
@@ -38,6 +33,7 @@ const filterHierarchy = (text, folder) => {
         data: {
           name: item.name,
           label: item.label,
+          status: item.status,
           folderType: item.folderType,
           hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
@@ -54,6 +50,7 @@ const filterHierarchy = (text, folder) => {
           data: {
             name: item.name,
             label: item.label,
+            status: item.status,
             folderType: item.folderType,
             hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
@@ -255,6 +252,7 @@ const Hierarchy = (props) => {
           onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
           <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
+          {/*<Column header="Status" field="status" />*/}
         </TreeTable>
       </TablePanel>
     </Section>
