@@ -84,7 +84,7 @@ const Attributes = () => {
   }
 
   const onDelete = () => {
-    if (!selectedAttribute?.name) return
+    if (!selectedAttribute?.name || Array.isArray(selectedAttribute)) return
     setAttributes((attrs) => {
       return attrs.filter((attr) => attr.name !== selectedAttribute.name)
     })
