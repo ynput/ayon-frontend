@@ -106,9 +106,11 @@ const Subsets = () => {
   // update subset status
   const handleStatusChange = async (value, selectedId) => {
     try {
+      // get selected ids
+      let ids = focusedSubsets.includes(selectedId) ? focusedSubsets : [selectedId]
       // create operations array of all entities
       // currently only supports changing one status
-      const operations = focusedSubsets.map((id) => ({
+      const operations = ids.map((id) => ({
         type: 'update',
         entityType: 'subset',
         entityId: id,
@@ -131,6 +133,15 @@ const Subsets = () => {
     } catch (error) {
       console.error(error)
       toast.error('Unable to update subset status')
+    }
+  }
+
+  const handleStatusOpen = (id) => {
+    // handles the edge case where the use foccusess multiple subsets but then changes a different status
+    if (!focusedSubsets.includes(id)) {
+      // not in focused selection
+      // reset selection to status id
+      dispatch(setFocusedSubsets([id]))
     }
   }
 
@@ -177,6 +188,7 @@ const Subsets = () => {
             onChange={(v) => handleStatusChange(v, node.data.id)}
             maxWidth="100%"
             multipleSelected={focusedSubsets.length}
+            onClick={() => handleStatusOpen(node.data.id)}
           />
         )
       },
