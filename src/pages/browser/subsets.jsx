@@ -248,6 +248,8 @@ const Subsets = () => {
     columns = columns.filter(({ field }) => shownColumns.includes(field))
   }
 
+  console.log(columns)
+
   //
   // Hooks
   //
@@ -375,7 +377,7 @@ const Subsets = () => {
         <MultiSelect
           options={filterOptions}
           value={shownColumns}
-          onChange={(e) => setShownColumns(e.target.value)}
+          onChange={(e) => e.target.value.length && setShownColumns(e.target.value)}
           placeholder="Filter Columns"
           fixedPlaceholder={shownColumns.length >= filterOptions.length}
         />
