@@ -126,7 +126,7 @@ const Attributes = () => {
             selectionMode="single"
             selection={selectedAttribute}
             onSelectionChange={(e) => setSelectedAttribute(e.value)}
-            onRowDoubleClick={() => setShowEditor(true)}
+            onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
           >
             <Column rowReorder style={{ maxWidth: 30 }} />
             <Column field="name" header="Name" style={{ maxWidth: 130 }} />
