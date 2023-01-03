@@ -3,6 +3,7 @@ import { Dialog } from 'primereact/dialog'
 import { MultiSelect } from 'primereact/multiselect'
 import { Dropdown } from 'primereact/dropdown'
 import { Button, Spacer, FormLayout, FormRow, InputText } from '@ynput/ayon-react-components'
+import EnumEditor from './enumEditor'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -14,11 +15,23 @@ const SCOPE_OPTIONS = [
   { value: 'user', label: 'User' },
 ]
 
-const TYPE_OPTIONS = [
-  { value: 'string', label: 'String' },
-  { value: 'integer', label: 'Integer' },
-  { value: 'float', label: 'Decimal number' },
-]
+// Fields used on all types
+const GLOBAL_FIELDS = ['title', 'description', 'example', 'default', 'regex', 'type']
+
+const TYPE_OPTIONS = {
+  string: { value: 'string', label: 'String', fields: [] },
+  integer: {
+    value: 'integer',
+    label: 'Integer',
+    fields: ['minLength', 'maxLength', 'minItems', 'maxItems'],
+  },
+  float: {
+    value: 'float',
+    label: 'Decimal number',
+    fields: ['minLength', 'maxLength', 'minItems', 'maxItems'],
+  },
+  list_of_strings: { value: 'list_of_strings', label: 'List Of Strings', fields: ['enum'] },
+}
 
 const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
   const [formData, setFormData] = useState(null)
@@ -72,6 +85,30 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     </div>
   )
 
+  let dataFields = Object.keys(attribute.data)
+  //   filter out fields for types
+  dataFields = dataFields.filter((field) =>
+    [...GLOBAL_FIELDS, ...(TYPE_OPTIONS[attribute.data.type]?.fields || [])].includes(field),
+  )
+
+  const customFields = {
+    type: (value, onChange) => (
+      <Dropdown
+        value={value}
+        disabled={formData.builtin}
+        options={Object.values(TYPE_OPTIONS)}
+        onChange={onChange}
+      />
+    ),
+    enum: (value = [], onChange) => (
+      <EnumEditor
+        values={value}
+        onChange={(value) => onChange({ target: { value: value } })}
+        key="enum"
+      />
+    ),
+  }
+
   return (
     <Dialog
       header={formData?.data?.title || formData?.name}
@@ -82,14 +119,14 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     >
       {formData && (
         <FormLayout>
-          <FormRow label="Name">
+          <FormRow label="name">
             <InputText
               value={formData.name}
               disabled={!isNew}
               onChange={(e) => setTopLevelData('name', e.target.value)}
             />
           </FormRow>
-          <FormRow label="Scope">
+          <FormRow label="scope">
             <MultiSelect
               options={SCOPE_OPTIONS}
               disabled={formData.builtin}
@@ -97,26 +134,18 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               onChange={(e) => setTopLevelData('scope', e.target.value)}
             />
           </FormRow>
-          <FormRow label="Type">
-            <Dropdown
-              value={formData?.data.type}
-              disabled={formData.builtin}
-              options={TYPE_OPTIONS}
-              onChange={(e) => setData('type', e.target.value)}
-            />
-          </FormRow>
-          <FormRow label="Title">
-            <InputText
-              value={formData.data.title || ''}
-              onChange={(e) => setData('title', e.target.value)}
-            />
-          </FormRow>
-          <FormRow label="Example">
-            <InputText
-              value={formData.data.example || ''}
-              onChange={(e) => setData('example', e.target.value)}
-            />
-          </FormRow>
+          {dataFields.map((field) => (
+            <FormRow label={field} key={field}>
+              {field in customFields ? (
+                customFields[field](formData?.data[field], (e) => setData(field, e.target.value))
+              ) : (
+                <InputText
+                  value={formData?.data[field]}
+                  onChange={(e) => setData(field, e.target.value)}
+                />
+              )}
+            </FormRow>
+          ))}
           <FormRow>{error && <span className="form-error-text">{error}</span>}</FormRow>
         </FormLayout>
       )}
