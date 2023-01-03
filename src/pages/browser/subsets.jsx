@@ -248,7 +248,27 @@ const Subsets = () => {
     columns = columns.filter(({ field }) => shownColumns.includes(field))
   }
 
-  console.log(columns)
+  // sort columns if localstorage set
+  let columnsOrder = localStorage.getItem('subsets-columns-order')
+  if (columnsOrder) {
+    try {
+      columnsOrder = JSON.parse(columnsOrder)
+      columns.sort((a, b) => columnsOrder[a.field] - columnsOrder[b.field])
+    } catch (error) {
+      console.log(error)
+      // remove local stage
+      localStorage.removeItem('subsets-columns-order')
+    }
+  }
+
+  const handleColumnReorder = (e) => {
+    const localStorageOrder = e.columns.reduce(
+      (acc, cur, i) => ({ ...acc, [cur.props.field]: i }),
+      {},
+    )
+
+    localStorage.setItem('subsets-columns-order', JSON.stringify(localStorageOrder))
+  }
 
   //
   // Hooks
@@ -409,6 +429,8 @@ const Subsets = () => {
           onColumnResizeEnd={(e) =>
             e.column.key === '.$status' && setStatusColumnWidth(e.element.offsetWidth)
           }
+          reorderableColumns
+          onColReorder={handleColumnReorder}
         >
           {columns.map((col, i) => {
             return (
