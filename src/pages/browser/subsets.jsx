@@ -145,6 +145,30 @@ const Subsets = () => {
     }
   }
 
+  const handleColumnResize = (e) => {
+    const field = e.column.props.field
+    const width = e.element.offsetWidth
+    const key = 'subsets-columns-widths'
+
+    // set localstorage for column size change
+    let oldWidthState = {}
+    if (localStorage.getItem(key)) {
+      oldWidthState = JSON.parse(localStorage.getItem(key))
+    }
+
+    const newWidthState = { ...oldWidthState, [field]: width }
+
+    localStorage.setItem(key, JSON.stringify(newWidthState))
+
+    // update status column size state for status size "icon | short | full"
+    field === 'status' && setStatusColumnWidth(e.element.offsetWidth)
+  }
+
+  const columnsWidthsState = useMemo(
+    () => JSON.parse(localStorage.getItem('subsets-columns-widths')) || {},
+    [],
+  )
+
   let columns = [
     {
       field: 'name',
@@ -258,9 +282,7 @@ const Subsets = () => {
       return null
     }
   }
-
   const [shownColumnsSingleFocusedInit = [], shownColumnsMultiFocusedInit = []] = useMemo(() => {
-    console.log('getting columns')
     let single = getLocalStorageArray('subsets-columns-filter-single')
     // if not local storage found/valid
     if (!single) {
@@ -490,9 +512,7 @@ const Subsets = () => {
           onRowClick={onRowClick}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
-          onColumnResizeEnd={(e) =>
-            e.column.key === '.$status' && setStatusColumnWidth(e.element.offsetWidth)
-          }
+          onColumnResizeEnd={handleColumnResize}
           reorderableColumns
           onColReorder={handleColumnReorder}
         >
@@ -500,7 +520,7 @@ const Subsets = () => {
             return (
               <Column
                 key={col.field}
-                style={{ ...col.style, width: col.width }}
+                style={{ ...col.style, width: columnsWidthsState[col.field] || col.width }}
                 expander={i === 0}
                 resizeable={true}
                 field={col.field}
