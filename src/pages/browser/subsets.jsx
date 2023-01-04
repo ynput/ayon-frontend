@@ -290,11 +290,6 @@ const Subsets = () => {
       isMultiSelected
         ? setShownColumnsMultiFocused(newArray)
         : setShownColumnsSingleFocused(newArray)
-      // save state to local storage
-      const localState = JSON.stringify(newArray)
-      const stateKey = `subsets-columns-filter-${isMultiSelected ? 'multi' : 'single'}`
-
-      localStorage.setItem(stateKey, localState)
     }
   }
 
