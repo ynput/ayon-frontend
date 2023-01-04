@@ -14,7 +14,7 @@ import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
 
-import { groupResult, getFamilyIcon } from '/src/utils'
+import { groupResult, getFamilyIcon, useLocalStorage } from '../../utils'
 import {
   setFocusedVersions,
   setFocusedSubsets,
@@ -145,10 +145,9 @@ const Subsets = () => {
     }
   }
 
-  const handleColumnResize = (e) => {
+  const storeColumnWidth = (e, key) => {
     const field = e.column.props.field
     const width = e.element.offsetWidth
-    const key = 'subsets-columns-widths'
 
     // set localstorage for column size change
     let oldWidthState = {}
@@ -160,8 +159,15 @@ const Subsets = () => {
 
     localStorage.setItem(key, JSON.stringify(newWidthState))
 
+    return { field, width }
+  }
+
+  const handleColumnResize = (e) => {
+    const key = 'subsets-columns-widths'
+    const { field, width } = storeColumnWidth(e, key)
+
     // update status column size state for status size "icon | short | full"
-    field === 'status' && setStatusColumnWidth(e.element.offsetWidth)
+    field === 'status' && setStatusColumnWidth(width)
   }
 
   const columnsWidthsState = useMemo(
@@ -266,48 +272,13 @@ const Subsets = () => {
   const allColumnsNames = filterOptions.map(({ value }) => value)
   const isMultiSelected = focusedFolders.length > 1
 
-  const getLocalStorageArray = (key) => {
-    try {
-      if (localStorage.getItem(key)) {
-        const state = JSON.parse(localStorage.getItem(key))
-        if (Array.isArray(state)) {
-          console.log('found local state: ', state)
-          return state
-        }
-      }
-
-      return null
-    } catch (error) {
-      console.log(error)
-      return null
-    }
-  }
-  const [shownColumnsSingleFocusedInit = [], shownColumnsMultiFocusedInit = []] = useMemo(() => {
-    let single = getLocalStorageArray('subsets-columns-filter-single')
-    // if not local storage found/valid
-    if (!single) {
-      // by default single focused should NOT show folders column
-      single = [...allColumnsNames]
-      if (single.indexOf('folder') !== -1) {
-        single.splice(single.indexOf('folder'), 1)
-      }
-    }
-
-    let multi = getLocalStorageArray('subsets-columns-filter-multi')
-    // if not local storage found/valid
-    if (!multi) {
-      // by default single focused should NOT show folders column
-      multi = [...allColumnsNames]
-    }
-
-    return [single, multi]
-  }, [focusedFolders.length])
-
-  const [shownColumnsSingleFocused, setShownColumnsSingleFocused] = useState(
-    shownColumnsSingleFocusedInit,
+  const [shownColumnsSingleFocused, setShownColumnsSingleFocused] = useLocalStorage(
+    'subsets-columns-filter-single',
+    allColumnsNames,
   )
-  const [shownColumnsMultiFocused, setShownColumnsMultiFocused] = useState(
-    shownColumnsMultiFocusedInit,
+  const [shownColumnsMultiFocused, setShownColumnsMultiFocused] = useLocalStorage(
+    'subsets-columns-filter-multi',
+    allColumnsNames,
   )
 
   const handleColumnsFilter = (e) => {
