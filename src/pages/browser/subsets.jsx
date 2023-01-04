@@ -238,12 +238,23 @@ const Subsets = () => {
     },
   ]
 
-  const filterOptions = columns.map(({ field }) => ({ value: field, label: field }))
-  const selectedFilteredOptions = filterOptions.map(({ value }) => value)
-
-  const [shownColumns, setShownColumns] = useState(selectedFilteredOptions)
   // enabled the folder column to always be seen regardless of focusedFolders
   const [folderOveride, setFolderOveride] = useState(false)
+
+  const filterOptions = columns.map(({ field }) => ({ value: field, label: field }))
+
+  let selectedFilteredOptions = []
+  try {
+    selectedFilteredOptions = JSON.parse(localStorage.getItem('subsets-columns-filter'))
+    // set overide if folders is included
+    if (selectedFilteredOptions.includes('folder')) {
+      if (!folderOveride) setFolderOveride(true)
+    }
+  } catch (error) {
+    selectedFilteredOptions = filterOptions.map(({ value }) => value)
+  }
+
+  const [shownColumns, setShownColumns] = useState(selectedFilteredOptions)
 
   // when multi folders selected show 'folders' column
   useEffect(() => {
@@ -282,6 +293,10 @@ const Subsets = () => {
       // make sure there's always at least one column
       setShownColumns(newArray)
     }
+
+    // save state to local storage
+    const localState = JSON.stringify(newArray)
+    localStorage.setItem('subsets-columns-filter', localState)
   }
 
   // only filter columns if required
