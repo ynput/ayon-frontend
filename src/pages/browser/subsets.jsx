@@ -242,6 +242,47 @@ const Subsets = () => {
   const selectedFilteredOptions = filterOptions.map(({ value }) => value)
 
   const [shownColumns, setShownColumns] = useState(selectedFilteredOptions)
+  // enabled the folder column to always be seen regardless of focusedFolders
+  const [folderOveride, setFolderOveride] = useState(false)
+
+  // when multi folders selected show 'folders' column
+  useEffect(() => {
+    if (folderOveride) return
+
+    if (focusedFolders.length > 1) {
+      if (shownColumns.indexOf('folder') === -1) {
+        console.log('1')
+        setShownColumns([...shownColumns, 'folder'])
+      }
+    } else {
+      if (shownColumns.indexOf('folder') > -1) {
+        const newColumns = [...shownColumns]
+        newColumns.splice(newColumns.indexOf('folder'), 1)
+        console.log('2')
+        setShownColumns(newColumns)
+      }
+    }
+  }, [focusedFolders, shownColumns, folderOveride])
+
+  const handleColumnsFilter = (e) => {
+    e.preventDefault()
+    const newArray = e.target.value || []
+
+    if (!folderOveride) {
+      // set overide if selecting folder
+      if (newArray.includes('folder')) {
+        setFolderOveride(true)
+      } else if (shownColumns.includes('folder') && focusedFolders.length) {
+        // removing folder column when multi folders selected
+        setFolderOveride(true)
+      }
+    }
+
+    if (newArray.length) {
+      // make sure there's always at least one column
+      setShownColumns(newArray)
+    }
+  }
 
   // only filter columns if required
   if (shownColumns.length < columns.length) {
@@ -397,9 +438,9 @@ const Subsets = () => {
         <MultiSelect
           options={filterOptions}
           value={shownColumns}
-          onChange={(e) => e.target.value.length && setShownColumns(e.target.value)}
+          onChange={handleColumnsFilter}
           placeholder="Filter Columns"
-          fixedPlaceholder={shownColumns.length >= filterOptions.length}
+          fixedPlaceholder={shownColumns.length + 1 >= filterOptions.length}
         />
       </Toolbar>
 
