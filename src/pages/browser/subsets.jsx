@@ -45,8 +45,7 @@ const Subsets = () => {
   const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
   // sets size of status based on status column width
-  const initStatusColumnWidth = 150
-  const [statusColumnWidth, setStatusColumnWidth] = useState(initStatusColumnWidth)
+  const [columnsWidths, setColumnWidths] = useLocalStorage('subsets-columns-widths', {})
 
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
@@ -169,7 +168,7 @@ const Subsets = () => {
     {
       field: 'status',
       header: 'Status',
-      width: initStatusColumnWidth,
+      width: 150,
       style: { overflow: 'visible' },
       body: (node) => {
         if (node.data.isGroup) return ''
@@ -179,8 +178,8 @@ const Subsets = () => {
             value={node.data.status}
             statuses={context.project.statuses}
             size={
-              statusColumnWidth < statusMaxWidth
-                ? statusColumnWidth < 60
+              columnsWidths['status'] < statusMaxWidth
+                ? columnsWidths['status'] < 60
                   ? 'icon'
                   : 'short'
                 : 'full'
@@ -292,7 +291,8 @@ const Subsets = () => {
     localStorage.setItem('subsets-columns-order', JSON.stringify(localStorageOrder))
   }
 
-  const storeColumnWidth = (e, key) => {
+  const handleColumnResize = (e) => {
+    const key = 'subsets-columns-widths'
     const field = e.column.props.field
     const width = e.element.offsetWidth
 
@@ -304,23 +304,10 @@ const Subsets = () => {
 
     const newWidthState = { ...oldWidthState, [field]: width }
 
-    localStorage.setItem(key, JSON.stringify(newWidthState))
-
-    return { field, width }
+    setColumnWidths(newWidthState)
   }
 
-  const handleColumnResize = (e) => {
-    const key = 'subsets-columns-widths'
-    const { field, width } = storeColumnWidth(e, key)
-
-    // update status column size state for status size "icon | short | full"
-    field === 'status' && setStatusColumnWidth(width)
-  }
-
-  const columnsWidthsState = useMemo(
-    () => JSON.parse(localStorage.getItem('subsets-columns-widths')) || {},
-    [],
-  )
+  // update status width
 
   //
   // Hooks
@@ -486,7 +473,7 @@ const Subsets = () => {
             return (
               <Column
                 key={col.field}
-                style={{ ...col.style, width: columnsWidthsState[col.field] || col.width }}
+                style={{ ...col.style, width: columnsWidths[col.field] || col.width }}
                 expander={i === 0}
                 resizeable={true}
                 field={col.field}
