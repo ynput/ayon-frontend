@@ -238,66 +238,74 @@ const Subsets = () => {
     },
   ]
 
-  // enabled the folder column to always be seen regardless of focusedFolders
-  const [folderOveride, setFolderOveride] = useState(false)
-
   const filterOptions = columns.map(({ field }) => ({ value: field, label: field }))
+  const allColumnsNames = filterOptions.map(({ value }) => value)
+  const isMultiSelected = focusedFolders.length > 1
 
-  let selectedFilteredOptions = []
-  try {
-    selectedFilteredOptions = JSON.parse(localStorage.getItem('subsets-columns-filter'))
-    // set overide if folders is included
-    if (selectedFilteredOptions.includes('folder')) {
-      if (!folderOveride) setFolderOveride(true)
+  const getLocalStorageArray = (key) => {
+    try {
+      if (localStorage.getItem(key)) {
+        const state = JSON.parse(localStorage.getItem(key))
+        if (Array.isArray(state)) {
+          console.log('found local state: ', state)
+          return state
+        }
+      }
+
+      return null
+    } catch (error) {
+      console.log(error)
+      return null
     }
-  } catch (error) {
-    selectedFilteredOptions = filterOptions.map(({ value }) => value)
   }
 
-  const [shownColumns, setShownColumns] = useState(selectedFilteredOptions)
-
-  // when multi folders selected show 'folders' column
-  useEffect(() => {
-    if (folderOveride) return
-
-    if (focusedFolders.length > 1) {
-      if (shownColumns.indexOf('folder') === -1) {
-        console.log('1')
-        setShownColumns([...shownColumns, 'folder'])
-      }
-    } else {
-      if (shownColumns.indexOf('folder') > -1) {
-        const newColumns = [...shownColumns]
-        newColumns.splice(newColumns.indexOf('folder'), 1)
-        console.log('2')
-        setShownColumns(newColumns)
+  const [shownColumnsSingleFocusedInit = [], shownColumnsMultiFocusedInit = []] = useMemo(() => {
+    console.log('getting columns')
+    let single = getLocalStorageArray('subsets-columns-filter-single')
+    // if not local storage found/valid
+    if (!single) {
+      // by default single focused should NOT show folders column
+      single = [...allColumnsNames]
+      if (single.indexOf('folder') !== -1) {
+        single.splice(single.indexOf('folder'), 1)
       }
     }
-  }, [focusedFolders, shownColumns, folderOveride])
+
+    let multi = getLocalStorageArray('subsets-columns-filter-multi')
+    // if not local storage found/valid
+    if (!multi) {
+      // by default single focused should NOT show folders column
+      multi = [...allColumnsNames]
+    }
+
+    return [single, multi]
+  }, [focusedFolders.length])
+
+  const [shownColumnsSingleFocused, setShownColumnsSingleFocused] = useState(
+    shownColumnsSingleFocusedInit,
+  )
+  const [shownColumnsMultiFocused, setShownColumnsMultiFocused] = useState(
+    shownColumnsMultiFocusedInit,
+  )
 
   const handleColumnsFilter = (e) => {
     e.preventDefault()
     const newArray = e.target.value || []
 
-    if (!folderOveride) {
-      // set overide if selecting folder
-      if (newArray.includes('folder')) {
-        setFolderOveride(true)
-      } else if (shownColumns.includes('folder') && focusedFolders.length) {
-        // removing folder column when multi folders selected
-        setFolderOveride(true)
-      }
-    }
-
     if (newArray.length) {
       // make sure there's always at least one column
-      setShownColumns(newArray)
-    }
+      isMultiSelected
+        ? setShownColumnsMultiFocused(newArray)
+        : setShownColumnsSingleFocused(newArray)
+      // save state to local storage
+      const localState = JSON.stringify(newArray)
+      const stateKey = `subsets-columns-filter-${isMultiSelected ? 'multi' : 'single'}`
 
-    // save state to local storage
-    const localState = JSON.stringify(newArray)
-    localStorage.setItem('subsets-columns-filter', localState)
+      localStorage.setItem(stateKey, localState)
+    }
   }
+
+  const shownColumns = isMultiSelected ? shownColumnsMultiFocused : shownColumnsSingleFocused
 
   // only filter columns if required
   if (shownColumns.length < columns.length) {
@@ -454,7 +462,7 @@ const Subsets = () => {
           options={filterOptions}
           value={shownColumns}
           onChange={handleColumnsFilter}
-          placeholder="Filter Columns"
+          placeholder={`Filter Columns (${focusedFolders.length > 1 ? 'Multiple' : 'Single'})`}
           fixedPlaceholder={shownColumns.length + 1 >= filterOptions.length}
         />
       </Toolbar>
