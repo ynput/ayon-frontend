@@ -145,36 +145,6 @@ const Subsets = () => {
     }
   }
 
-  const storeColumnWidth = (e, key) => {
-    const field = e.column.props.field
-    const width = e.element.offsetWidth
-
-    // set localstorage for column size change
-    let oldWidthState = {}
-    if (localStorage.getItem(key)) {
-      oldWidthState = JSON.parse(localStorage.getItem(key))
-    }
-
-    const newWidthState = { ...oldWidthState, [field]: width }
-
-    localStorage.setItem(key, JSON.stringify(newWidthState))
-
-    return { field, width }
-  }
-
-  const handleColumnResize = (e) => {
-    const key = 'subsets-columns-widths'
-    const { field, width } = storeColumnWidth(e, key)
-
-    // update status column size state for status size "icon | short | full"
-    field === 'status' && setStatusColumnWidth(width)
-  }
-
-  const columnsWidthsState = useMemo(
-    () => JSON.parse(localStorage.getItem('subsets-columns-widths')) || {},
-    [],
-  )
-
   let columns = [
     {
       field: 'name',
@@ -293,13 +263,6 @@ const Subsets = () => {
     }
   }
 
-  const shownColumns = isMultiSelected ? shownColumnsMultiFocused : shownColumnsSingleFocused
-
-  // only filter columns if required
-  if (shownColumns.length < columns.length) {
-    columns = columns.filter(({ field }) => shownColumns.includes(field))
-  }
-
   // sort columns if localstorage set
   let columnsOrder = localStorage.getItem('subsets-columns-order')
   if (columnsOrder) {
@@ -313,6 +276,13 @@ const Subsets = () => {
     }
   }
 
+  const shownColumns = isMultiSelected ? shownColumnsMultiFocused : shownColumnsSingleFocused
+
+  // only filter columns if required
+  if (shownColumns.length < columns.length) {
+    columns = columns.filter(({ field }) => shownColumns.includes(field))
+  }
+
   const handleColumnReorder = (e) => {
     const localStorageOrder = e.columns.reduce(
       (acc, cur, i) => ({ ...acc, [cur.props.field]: i }),
@@ -321,6 +291,36 @@ const Subsets = () => {
 
     localStorage.setItem('subsets-columns-order', JSON.stringify(localStorageOrder))
   }
+
+  const storeColumnWidth = (e, key) => {
+    const field = e.column.props.field
+    const width = e.element.offsetWidth
+
+    // set localstorage for column size change
+    let oldWidthState = {}
+    if (localStorage.getItem(key)) {
+      oldWidthState = JSON.parse(localStorage.getItem(key))
+    }
+
+    const newWidthState = { ...oldWidthState, [field]: width }
+
+    localStorage.setItem(key, JSON.stringify(newWidthState))
+
+    return { field, width }
+  }
+
+  const handleColumnResize = (e) => {
+    const key = 'subsets-columns-widths'
+    const { field, width } = storeColumnWidth(e, key)
+
+    // update status column size state for status size "icon | short | full"
+    field === 'status' && setStatusColumnWidth(width)
+  }
+
+  const columnsWidthsState = useMemo(
+    () => JSON.parse(localStorage.getItem('subsets-columns-widths')) || {},
+    [],
+  )
 
   //
   // Hooks
@@ -450,7 +450,7 @@ const Subsets = () => {
           options={filterOptions}
           value={shownColumns}
           onChange={handleColumnsFilter}
-          placeholder={`Filter Columns (${focusedFolders.length > 1 ? 'Multiple' : 'Single'})`}
+          placeholder={`Show Columns (${focusedFolders.length > 1 ? 'Multiple' : 'Single'})`}
           fixedPlaceholder={shownColumns.length + 1 >= filterOptions.length}
         />
       </Toolbar>

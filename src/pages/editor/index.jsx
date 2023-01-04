@@ -26,6 +26,8 @@ import { buildQuery } from './queries'
 import { getColumns, formatName, formatType, formatAttribute } from './utils'
 import { stringEditor, typeEditor } from './editors'
 import { loadBranch, getUpdatedNodeData } from './loader'
+import { MultiSelect } from 'primereact/multiselect'
+import { useLocalStorage } from '../../utils'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -56,7 +58,7 @@ const EditorPage = () => {
   // Helpers
   //
 
-  const columns = useMemo(() => getColumns(), [])
+  let columns = useMemo(() => getColumns(), [])
   const query = useMemo(() => buildQuery(), [])
 
   const formatError = (rowData) => {
@@ -577,6 +579,125 @@ const EditorPage = () => {
     )
   }
 
+  const filterOptions = [{ name: 'name' }, { name: 'type' }, ...columns].map(({ name }) => ({
+    value: name,
+    label: name,
+  }))
+  const allColumnsNames = filterOptions.map(({ value }) => value)
+
+  const [shownColumns, setShownColumns] = useLocalStorage(
+    'editor-columns-filter-single',
+    allColumnsNames,
+  )
+
+  const handleColumnsFilter = (e) => {
+    e.preventDefault()
+    const newArray = e.target.value || []
+
+    if (newArray.length) {
+      // make sure there's always at least one column
+
+      setShownColumns(newArray)
+    }
+  }
+
+  const handleColumnReorder = (e) => {
+    const localStorageOrder = e.columns.reduce(
+      (acc, cur, i) => ({ ...acc, [cur.props.field]: i }),
+      {},
+    )
+
+    localStorage.setItem('editor-columns-order', JSON.stringify(localStorageOrder))
+  }
+
+  const storeColumnWidth = (e, key) => {
+    const field = e.column.props.field
+    const width = e.element.offsetWidth
+
+    // set localstorage for column size change
+    let oldWidthState = {}
+    if (localStorage.getItem(key)) {
+      oldWidthState = JSON.parse(localStorage.getItem(key))
+    }
+
+    const newWidthState = { ...oldWidthState, [field]: width }
+
+    localStorage.setItem(key, JSON.stringify(newWidthState))
+
+    return { field, width }
+  }
+
+  const handleColumnResize = (e) => {
+    const key = 'editor-columns-widths'
+    storeColumnWidth(e, key)
+  }
+
+  const columnsWidthsState = useMemo(
+    () => JSON.parse(localStorage.getItem('editor-columns-widths')) || {},
+    [],
+  )
+
+  let AllColumns = [
+    <Column
+      field="name"
+      key="name"
+      header="Name"
+      expander={true}
+      body={(rowData) => formatName(rowData.data, changes)}
+      style={{ width: columnsWidthsState['name'], maxWidth: 300 }}
+      editor={(options) => {
+        return stringEditor(options, updateName, formatName(options.rowData, changes, false))
+      }}
+    />,
+    <Column
+      field="type"
+      key="type"
+      header="Type"
+      body={(rowData) => formatType(rowData.data, changes)}
+      style={{ width: columnsWidthsState['type'], maxWidth: 200 }}
+      editor={(options) => {
+        return typeEditor(options, updateType, formatType(options.rowData, changes, false))
+      }}
+    />,
+    ...columns.map((col) => (
+      <Column
+        key={col.name}
+        header={col.title}
+        field={col.name}
+        style={{ width: columnsWidthsState[col.name] }}
+        body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
+        editor={(options) => {
+          return col.editor(
+            options,
+            updateAttribute,
+            formatAttribute(options.rowData, changes, col.name, false),
+            col.editorSettings,
+          )
+        }}
+      />
+    )),
+  ]
+
+  // sort columns if localstorage set
+  let columnsOrder = localStorage.getItem('editor-columns-order')
+  if (columnsOrder) {
+    try {
+      columnsOrder = JSON.parse(columnsOrder)
+      AllColumns.sort((a, b) => columnsOrder[a.props.field] - columnsOrder[b.props.field])
+    } catch (error) {
+      console.log(error)
+      // remove local stage
+      localStorage.removeItem('editor-columns-order')
+    }
+  }
+
+  // only filter columns if required
+  if (shownColumns.length < AllColumns.length) {
+    AllColumns = AllColumns.filter(({ props }) => shownColumns.includes(props.field))
+  }
+
+  // sort columns
+
   //
   // Render the TreeTable
   //
@@ -600,6 +721,14 @@ const EditorPage = () => {
             style={{ width: 40, marginLeft: 10 }}
           />
           Lock selection
+          <MultiSelect
+            options={filterOptions}
+            value={shownColumns}
+            onChange={handleColumnsFilter}
+            placeholder={`Show Columns`}
+            fixedPlaceholder={shownColumns.length >= filterOptions.length}
+            style={{ maxWidth: 200 }}
+          />
           <Spacer />
           <Button icon="close" label="Revert Changes" onClick={onRevert} disabled={!canCommit} />
           <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
@@ -628,49 +757,11 @@ const EditorPage = () => {
             selectOnEdit={false}
             onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
+            onColumnResizeEnd={handleColumnResize}
+            reorderableColumns
+            onColReorder={handleColumnReorder}
           >
-            <Column
-              field="name"
-              header="Name"
-              expander={true}
-              body={(rowData) => formatName(rowData.data, changes)}
-              style={{ width: 300 }}
-              editor={(options) => {
-                return stringEditor(
-                  options,
-                  updateName,
-                  formatName(options.rowData, changes, false),
-                )
-              }}
-            />
-            <Column
-              field="type"
-              header="Type"
-              body={(rowData) => formatType(rowData.data, changes)}
-              style={{ width: 200 }}
-              editor={(options) => {
-                return typeEditor(options, updateType, formatType(options.rowData, changes, false))
-              }}
-            />
-            {columns.map((col) => {
-              return (
-                <Column
-                  key={col.name}
-                  header={col.title}
-                  field={col.name}
-                  style={{ minWidth: 30 }}
-                  body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
-                  editor={(options) => {
-                    return col.editor(
-                      options,
-                      updateAttribute,
-                      formatAttribute(options.rowData, changes, col.name, false),
-                      col.editorSettings,
-                    )
-                  }}
-                />
-              )
-            })}
+            {AllColumns}
             <Column
               field="error"
               header=""
