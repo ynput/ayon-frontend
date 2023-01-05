@@ -12,6 +12,7 @@ const TASK_QUERY = `
                   node {
                       id
                       name
+                      label
                       status
                       tags
                       taskType
@@ -34,6 +35,7 @@ const FOLDER_QUERY = `
                     node {
                         id
                         name
+                        label
                         folderType
                         path
                         status
