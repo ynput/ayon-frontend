@@ -71,7 +71,7 @@ const Subsets = () => {
 
   const handlePubSub = (topic, message) => {
     // check if updated subsets folder is being viewed
-    if (!focusedFolders.includes(message.summary.parentId)) return
+    if (!subsetData.map(({ id }) => id).includes(message.summary.entityId)) return
 
     console.log('WS Subsets Lists Refetch', topic)
     refetch()
