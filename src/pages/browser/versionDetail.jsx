@@ -7,6 +7,8 @@ import { getFamilyIcon } from '/src/utils'
 import RepresentationList from './representationList'
 import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
 import StatusSelect from '../../components/status/statusSelect'
+import PubSub from '/src/pubsub'
+import { useEffect } from 'react'
 
 const transformVersionsData = (versions) => {
   let vArr = []
@@ -57,6 +59,7 @@ const VersionDetail = () => {
     data: versionsData,
     isLoading,
     isError,
+    refetch,
   } = useGetEntitiesDetailsQuery(
     {
       projectName,
@@ -65,6 +68,19 @@ const VersionDetail = () => {
     },
     { skip: !focusedVersions },
   )
+
+  const handlePubSub = (topic, message) => {
+    if (!focusedVersions.includes(message.summary.entityId)) return
+    console.log('WS Version Refetch', topic)
+
+    refetch()
+  }
+
+  // PUBSUB
+  useEffect(() => {
+    const token = PubSub.subscribe('entity.version', handlePubSub)
+    return () => PubSub.unsubscribe(token)
+  }, [])
 
   // PATCH VERSIONS DATA
   const [updateFolder] = useUpdateEntitiesDetailsMutation()

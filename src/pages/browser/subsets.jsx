@@ -19,6 +19,7 @@ import {
 import { VersionList } from './subsetsUtils'
 import StatusSelect from '../../components/status/statusSelect'
 import { useGetSubsetsListQuery, useUpdateSubsetsMutation } from '../../services/ayon'
+import PubSub from '/src/pubsub'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -54,7 +55,11 @@ const Subsets = () => {
     versionOverrides = ['00000000000000000000000000000000']
   }
 
-  const { data: subsetData = [], isLoading: loading } = useGetSubsetsListQuery(
+  const {
+    data: subsetData = [],
+    isLoading: loading,
+    refetch,
+  } = useGetSubsetsListQuery(
     {
       ids: focusedFolders,
       projectName,
@@ -62,6 +67,20 @@ const Subsets = () => {
     },
     { skip: !focusedFolders.length },
   )
+
+  const handlePubSub = (topic, message) => {
+    // check if updated subsets folder is being viewed
+    if (!focusedFolders.includes(message.summary.parentId)) return
+
+    console.log('WS Subsets Lists Refetch', topic)
+    refetch()
+  }
+
+  // PUBSUB
+  useEffect(() => {
+    const token = PubSub.subscribe('entity.subset', handlePubSub)
+    return () => PubSub.unsubscribe(token)
+  }, [])
 
   // PATCH FOLDERS DATA
   const [updateSubsets] = useUpdateSubsetsMutation()

@@ -6,6 +6,8 @@ import { getFolderTypeIcon } from '/src/utils'
 import { TagsField } from '/src/containers/fieldFormat'
 import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
 import StatusSelect from '../../components/status/statusSelect'
+import { useEffect } from 'react'
+import PubSub from '/src/pubsub'
 
 const FolderDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -18,6 +20,7 @@ const FolderDetail = () => {
     data: foldersData,
     isError,
     isLoading,
+    refetch,
   } = useGetEntitiesDetailsQuery(
     {
       projectName,
@@ -26,6 +29,19 @@ const FolderDetail = () => {
     },
     { skip: !folderId },
   )
+
+  const handlePubSub = (topic, message) => {
+    if (message.summary.entityId !== folderId) return
+
+    console.log('WS Folder Refetch', topic)
+    refetch()
+  }
+
+  // PUBSUB
+  useEffect(() => {
+    const token = PubSub.subscribe('entity.folder', handlePubSub)
+    return () => PubSub.unsubscribe(token)
+  }, [])
 
   // PATCH FOLDERS DATA
   const [updateFolder] = useUpdateEntitiesDetailsMutation()

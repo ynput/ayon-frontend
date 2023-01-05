@@ -5,6 +5,8 @@ import { TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
 import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
 import StatusSelect from '../../components/status/statusSelect'
+import { useEffect } from 'react'
+import PubSub from '/src/pubsub'
 
 const TaskDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
@@ -17,6 +19,7 @@ const TaskDetail = () => {
     data: tasksData,
     isError,
     isLoading,
+    refetch,
   } = useGetEntitiesDetailsQuery(
     {
       projectName,
@@ -25,6 +28,19 @@ const TaskDetail = () => {
     },
     { skip: !taskId },
   )
+
+  const handlePubSub = (topic, message) => {
+    if (!focusedTasks.includes(message.summary.entityId)) return
+    console.log('WS Task Refetch', topic)
+
+    refetch()
+  }
+
+  // PUBSUB
+  useEffect(() => {
+    const token = PubSub.subscribe('entity.task', handlePubSub)
+    return () => PubSub.unsubscribe(token)
+  }, [])
 
   // PATCH FOLDERS DATA
   const [updateTask] = useUpdateEntitiesDetailsMutation()
