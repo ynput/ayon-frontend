@@ -129,12 +129,7 @@ const ProjectPage = () => {
     if (topic === 'client.connected') {
       console.log('ProjectPage: client.connected. Reloading project data')
       loadProjectData()
-    } else if (
-      topic === 'entity.update' &&
-      message.summary.entityType === 'project' &&
-      message.summary.name === projectName
-    ) {
-      console.log('ProjectPage: entity.update. Reloading project data')
+    } else if (topic === 'entity.project.changed' && message.project === projectName) {
       loadProjectData()
     } else {
       console.log('ProjectPage: Unhandled pubsub message', topic, message)
@@ -153,7 +148,7 @@ const ProjectPage = () => {
   }, [])
 
   useEffect(() => {
-    const token = PubSub.subscribe('entity.update', handlePubSub)
+    const token = PubSub.subscribe('entity.project', handlePubSub)
     return () => PubSub.unsubscribe(token)
   }, [])
 
@@ -166,7 +161,7 @@ const ProjectPage = () => {
   // Render page
   //
 
-  if (loading) {
+  if (loading || !projectName) {
     return <LoadingPage />
   }
 
