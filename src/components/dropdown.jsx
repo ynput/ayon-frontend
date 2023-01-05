@@ -32,6 +32,7 @@ const ContainerStyled = styled.div`
   position: relative;
   height: ${({ height }) => `${height}px`};
   width: 100%;
+  display: inline-block;
 
   /* show warning when changing multiple entities */
   ${({ isOpen, message }) =>

@@ -14,7 +14,7 @@ import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
 
-import { groupResult, getFamilyIcon } from '/src/utils'
+import { groupResult, getFamilyIcon, useLocalStorage } from '../../utils'
 import {
   setFocusedVersions,
   setFocusedSubsets,
@@ -26,6 +26,7 @@ import {
 
 import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
 import StatusSelect from '../../components/status/statusSelect'
+import { MultiSelect } from 'primereact/multiselect'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -44,8 +45,7 @@ const Subsets = () => {
   const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
   // sets size of status based on status column width
-  const initStatusColumnWidth = 150
-  const [statusColumnWidth, setStatusColumnWidth] = useState(initStatusColumnWidth)
+  const [columnsWidths, setColumnWidths] = useLocalStorage('subsets-columns-widths', {})
 
   // Columns definition
   // It must be here since we are referencing the component state and the context :-(
@@ -144,7 +144,8 @@ const Subsets = () => {
     }
   }
 
-  const columns = [
+
+  let columns = [
     {
       field: 'name',
       header: 'Subset',
@@ -168,7 +169,7 @@ const Subsets = () => {
     {
       field: 'status',
       header: 'Status',
-      width: initStatusColumnWidth,
+      width: 150,
       style: { overflow: 'visible' },
       body: (node) => {
         if (node.data.isGroup) return ''
@@ -178,8 +179,8 @@ const Subsets = () => {
             value={node.data.status}
             statuses={context.project.statuses}
             size={
-              statusColumnWidth < statusMaxWidth
-                ? statusColumnWidth < 60
+              columnsWidths['status'] < statusMaxWidth
+                ? columnsWidths['status'] < 60
                   ? 'icon'
                   : 'short'
                 : 'full'
@@ -236,6 +237,78 @@ const Subsets = () => {
       width: 120,
     },
   ]
+
+  const filterOptions = columns.map(({ field }) => ({ value: field, label: field }))
+  const allColumnsNames = filterOptions.map(({ value }) => value)
+  const isMultiSelected = focusedFolders.length > 1
+
+  const [shownColumnsSingleFocused, setShownColumnsSingleFocused] = useLocalStorage(
+    'subsets-columns-filter-single',
+    allColumnsNames,
+  )
+  const [shownColumnsMultiFocused, setShownColumnsMultiFocused] = useLocalStorage(
+    'subsets-columns-filter-multi',
+    allColumnsNames,
+  )
+
+  const handleColumnsFilter = (e) => {
+    e.preventDefault()
+    const newArray = e.target.value || []
+
+    if (newArray.length) {
+      // make sure there's always at least one column
+      isMultiSelected
+        ? setShownColumnsMultiFocused(newArray)
+        : setShownColumnsSingleFocused(newArray)
+    }
+  }
+
+  // sort columns if localstorage set
+  let columnsOrder = localStorage.getItem('subsets-columns-order')
+  if (columnsOrder) {
+    try {
+      columnsOrder = JSON.parse(columnsOrder)
+      columns.sort((a, b) => columnsOrder[a.field] - columnsOrder[b.field])
+    } catch (error) {
+      console.log(error)
+      // remove local stage
+      localStorage.removeItem('subsets-columns-order')
+    }
+  }
+
+  const shownColumns = isMultiSelected ? shownColumnsMultiFocused : shownColumnsSingleFocused
+
+  // only filter columns if required
+  if (shownColumns.length < columns.length) {
+    columns = columns.filter(({ field }) => shownColumns.includes(field))
+  }
+
+  const handleColumnReorder = (e) => {
+    const localStorageOrder = e.columns.reduce(
+      (acc, cur, i) => ({ ...acc, [cur.props.field]: i }),
+      {},
+    )
+
+    localStorage.setItem('subsets-columns-order', JSON.stringify(localStorageOrder))
+  }
+
+  const handleColumnResize = (e) => {
+    const key = 'subsets-columns-widths'
+    const field = e.column.props.field
+    const width = e.element.offsetWidth
+
+    // set localstorage for column size change
+    let oldWidthState = {}
+    if (localStorage.getItem(key)) {
+      oldWidthState = JSON.parse(localStorage.getItem(key))
+    }
+
+    const newWidthState = { ...oldWidthState, [field]: width }
+
+    setColumnWidths(newWidthState)
+  }
+
+  // update status width
 
   //
   // Hooks
@@ -361,6 +434,13 @@ const Subsets = () => {
     <Section className="wrap">
       <Toolbar>
         <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
+        <MultiSelect
+          options={filterOptions}
+          value={shownColumns}
+          onChange={handleColumnsFilter}
+          placeholder={`Show Columns (${focusedFolders.length > 1 ? 'Multiple' : 'Single'})`}
+          fixedPlaceholder={shownColumns.length + 1 >= filterOptions.length}
+        />
       </Toolbar>
 
       <TablePanel loading={loading}>
@@ -386,15 +466,15 @@ const Subsets = () => {
           onRowClick={onRowClick}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
-          onColumnResizeEnd={(e) =>
-            e.column.key === '.$status' && setStatusColumnWidth(e.element.offsetWidth)
-          }
+          onColumnResizeEnd={handleColumnResize}
+          reorderableColumns
+          onColReorder={handleColumnReorder}
         >
           {columns.map((col, i) => {
             return (
               <Column
                 key={col.field}
-                style={{ ...col.style, width: col.width }}
+                style={{ ...col.style, width: columnsWidths[col.field] || col.width }}
                 expander={i === 0}
                 resizeable={true}
                 field={col.field}
