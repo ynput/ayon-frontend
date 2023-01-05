@@ -82,7 +82,7 @@ const TaskDetail = () => {
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getTaskTypeIcon(task.taskType)}
         </span>
-        <span style={{ marginLeft: 10 }}>{task.name}</span>
+        <span style={{ marginLeft: 10 }}>{task.label || task.name}</span>
       </h3>
       <AttributeTable
         entityType="task"

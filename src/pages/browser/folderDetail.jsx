@@ -83,7 +83,7 @@ const FolderDetail = () => {
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getFolderTypeIcon(folder.folderType)}
         </span>
-        <span style={{ marginLeft: 10 }}>{folder.name}</span>
+        <span style={{ marginLeft: 10 }}>{folder.label || folder.name}</span>
       </h3>
       <Thumbnail projectName={projectName} entityType="folder" entityId={folderId} />
       <AttributeTable

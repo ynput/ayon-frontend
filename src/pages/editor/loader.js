@@ -3,9 +3,8 @@ import { toast } from 'react-toastify'
 
 const loadBranch = async (query, projectName, parentId) => {
   const variables = { projectName, parent: parentId || 'root' }
-  console.log('Branch load', parentId)
+  //console.log('Branch load', parentId)
   const response = await axios.post('/graphql', { query, variables })
-  console.log('GOT', response)
 
   if (response.status !== 200) {
     toast.error(`Unable to load branch ${parentId}`)

@@ -80,8 +80,6 @@ const enumEditor = (options, callback, value, settings) => {
       />
     )
   } else if (settings.type === 'list_of_strings') {
-    console.log('VALUE', value)
-
     return (
       <MultiSelect
         value={value || []}
@@ -95,7 +93,6 @@ const enumEditor = (options, callback, value, settings) => {
     )
   }
 
-  console.log('SET', settings)
   return <>Unsuppored editor</>
 }
 

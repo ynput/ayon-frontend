@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
+import { useSelector } from 'react-redux'
 import axios from 'axios'
 import PubSub from '/src/pubsub'
 import { arrayEquals } from '/src/utils'
@@ -17,6 +18,8 @@ const WebsocketListener = () => {
   const [topics, setTopics] = useState([])
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, wsOpts)
+  const context = useSelector((state) => state.context)
+  const projectName = context.projectName
 
   const subscribe = () => {
     sendMessage(
@@ -24,6 +27,7 @@ const WebsocketListener = () => {
         topic: 'auth',
         token: localStorage.getItem('accessToken'),
         subscribe: topics,
+        project: projectName,
       }),
     )
   }
@@ -31,7 +35,7 @@ const WebsocketListener = () => {
   useEffect(() => {
     console.log('Topics changed', topics)
     subscribe()
-  }, [topics])
+  }, [topics, projectName])
 
   const onMessage = (message) => {
     const data = JSON.parse(message.data)

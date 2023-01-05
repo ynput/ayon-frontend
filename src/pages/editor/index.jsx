@@ -151,7 +151,6 @@ const EditorPage = () => {
     //   { parentId: [child1Id, child2Id....]
     // It is updated when nodeData changes and it speeds up
     // building hierarchy
-    console.log('NodeData changed')
 
     const result = {}
     for (const childId in nodeData) {
@@ -463,7 +462,6 @@ const EditorPage = () => {
         newNodes.push(newNode)
         i++
       }
-      console.log('ADDING', newNodes)
       return [...nodes, ...newNodes]
     })
 
