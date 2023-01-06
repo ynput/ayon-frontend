@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import LoadingPage from '/src/pages/loading'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import SessionList from '/src/containers/sessionList'
 
 import {
   FormLayout,
@@ -11,57 +12,26 @@ import {
   Button,
   Section,
   Panel,
-  Spacer,
 } from '@ynput/ayon-react-components'
 
-const SessionItem = ({ session, userName, onChange }) => {
-  const invalidate = () => {
-    axios
-      .delete(`/api/users/${userName}/sessions/${session.token}`)
-      .then(() => {
-        toast.success('Session invalidated')
-        onChange()
-      })
-      .catch(() => toast.error('Unable to invalidate the session'))
-  }
-
-  return (
-    <Panel>
-      {session.token} {session.token === localStorage.getItem('accessToken') && '(this session)'}
-      <Button label="Invalidate" onClick={invalidate} />
-    </Panel>
-  )
-}
-
-const SessionList = ({ userName }) => {
-  const [sessions, setSessions] = useState([])
-
-  const loadSessionList = () => {
-    axios
-      .get(`/api/users/${userName}/sessions`)
-      .then((response) => {
-        setSessions(response.data.sessions)
-      })
-      .catch(() => toast.error('Unable to load sessions'))
-  }
-
-  useEffect(() => {
-    loadSessionList()
-  }, [userName])
-
-  return (
-    <>
-      {sessions.map((session) => (
-        <SessionItem
-          key={session.token}
-          session={session}
-          userName={userName}
-          onChange={loadSessionList}
-        />
-      ))}
-    </>
-  )
-}
+// const SessionItem = ({ session, userName, onChange }) => {
+//   const invalidate = () => {
+//     axios
+//       .delete(`/api/users/${userName}/sessions/${session.token}`)
+//       .then(() => {
+//         toast.success('Session invalidated')
+//         onChange()
+//       })
+//       .catch(() => toast.error('Unable to invalidate the session'))
+//   }
+//
+//   return (
+//     <Panel>
+//       {session.token} {session.token === localStorage.getItem('accessToken') && '(this session)'}
+//       <Button label="Invalidate" onClick={invalidate} />
+//     </Panel>
+//   )
+// }
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null)
@@ -124,7 +94,7 @@ const ProfilePage = () => {
 
   return (
     <main>
-      <Section style={{ maxWidth: 400 }}>
+      <Section style={{ flexGrow: 0 }}>
         <h2>Basic information</h2>
         <Panel>
           <FormLayout>
@@ -171,12 +141,11 @@ const ProfilePage = () => {
         </Panel>
       </Section>
       {userData.name && (
-        <Section style={{ flexGrow: 0 }}>
+        <Section style={{ flexGrow: 1 }}>
           <h2>Active sessions</h2>
           <SessionList userName={userData.name} />
         </Section>
       )}
-      <Spacer />
     </main>
   )
 }
