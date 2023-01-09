@@ -56,7 +56,7 @@ const FolderDetail = () => {
     }
   }
 
-  const folder = foldersData && foldersData[0].node
+  const folder = foldersData[0]?.node
 
   if (focusedFolders.length > 1) {
     return (

@@ -2,6 +2,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import short from 'short-uuid'
 import { parseSubsetData } from '../pages/browser/subsetsUtils'
+import { parseTasksList } from '../utils'
 import ayonClient from '/src/ayon'
 
 const TASK_QUERY = `
@@ -161,6 +162,28 @@ query Subsets($projectName: String!, $ids: [String!]!, $versionOverrides: [Strin
 }
 `
 
+const TASKS_QUERY = `
+query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
+  project(name: $projectName) {
+    tasks(folderIds:$folderIds) {
+      edges {
+        node {
+          id
+          name
+          label
+          taskType
+          assignees
+          folder {
+            name
+            label
+          }
+        }
+      }
+    }
+  }
+}
+`
+
 const buildEntitiesDetailsQuery = (type) => {
   let f_attribs = ''
   for (const attrib of ayonClient.settings.attributes) {
@@ -312,6 +335,20 @@ export const ayonApi = createApi({
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
       providesTags: ['project'],
     }),
+    getTasks: builder.query({
+      query: ({ projectName, folderIds }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: TASKS_QUERY,
+          variables: { projectName, folderIds },
+        },
+      }),
+      transformResponse: (response, meta, { userName }) =>
+        parseTasksList(response.data?.project?.tasks?.edges, userName),
+      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
+      providesTags: ['project'],
+    }),
   }),
 })
 
@@ -323,4 +360,5 @@ export const {
   useGetSubsetsListQuery,
   useUpdateSubsetsMutation,
   useGetHierarchyQuery,
+  useGetTasksQuery,
 } = ayonApi

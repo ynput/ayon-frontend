@@ -88,8 +88,6 @@ const Hierarchy = (props) => {
   // if (selectedFolderTypes) url += `?types=${selectedFolderTypes.join(',')}`
   const { isError, error, isLoading, data } = useGetHierarchyQuery({ projectName })
 
-  if (isError) toast.error(`Unable to load hierarchy. ${error}`)
-
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
 
@@ -191,6 +189,12 @@ const Hierarchy = (props) => {
   //
   // Render
   //
+
+  if (isError) {
+    toast.error(`Unable to load hierarchy. ${error}`)
+
+    return <>Error</>
+  }
 
   return (
     <Section style={props.style}>
