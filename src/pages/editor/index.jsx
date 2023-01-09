@@ -17,7 +17,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
-import PubSub from '/src/pubsub'
+import usePubSub from '/src/hooks/usePubSub'
 import { isEmpty, sortByKey } from '/src/utils'
 
 import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/features/context'
@@ -96,6 +96,7 @@ const EditorPage = () => {
   //
 
   const handlePubSub = async (topic, message) => {
+    // TODO add this to RTK QUERY
     if (topic !== 'entity.update') return
     if (message.project?.toLowerCase() !== projectName.toLowerCase()) return
 
@@ -137,10 +138,10 @@ const EditorPage = () => {
     })
   } // handlePubSub
 
-  useEffect(() => {
-    const token = PubSub.subscribe('entity.update', handlePubSub)
-    return () => PubSub.unsubscribe(token)
-  }, [])
+  // PUBSUB HOOK (Currently broken handlePubSub)
+  usePubSub('entity.task', handlePubSub)
+
+  usePubSub('entity.folder', handlePubSub)
 
   //
   // Build hierarchy

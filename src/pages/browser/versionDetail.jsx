@@ -69,7 +69,7 @@ const VersionDetail = () => {
   )
 
   // PUBSUB HOOK
-  usePubSub('entity.version', focusedVersions, refetch)
+  usePubSub('entity.version', refetch, focusedVersions)
 
   // PATCH VERSIONS DATA
   const [updateFolder] = useUpdateEntitiesDetailsMutation()

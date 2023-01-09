@@ -29,7 +29,7 @@ const TaskDetail = () => {
   )
 
   // PUBSUB HOOK
-  usePubSub('entity.task', focusedTasks, refetch)
+  usePubSub('entity.task', refetch, focusedTasks)
 
   // PATCH FOLDERS DATA
   const [updateTask] = useUpdateEntitiesDetailsMutation()

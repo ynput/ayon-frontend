@@ -72,8 +72,8 @@ const Subsets = () => {
   // PUBSUB HOOK
   usePubSub(
     'entity.subset',
-    subsetData.map(({ id }) => id),
     refetch,
+    subsetData.map(({ id }) => id),
   )
 
   // PATCH FOLDERS DATA

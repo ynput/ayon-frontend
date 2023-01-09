@@ -30,7 +30,7 @@ const FolderDetail = () => {
   )
 
   // PUBSUB HOOK
-  usePubSub('entity.folder', focusedFolders, refetch)
+  usePubSub('entity.folder', refetch, focusedFolders)
 
   // PATCH FOLDERS DATA
   const [updateFolder] = useUpdateEntitiesDetailsMutation()
