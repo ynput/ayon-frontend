@@ -69,6 +69,7 @@ const VersionDetail = () => {
     { skip: !focusedVersions },
   )
 
+  // TODO Create custom hook and use debounce for multiple messages
   const handlePubSub = (topic, message) => {
     if (!focusedVersions.includes(message.summary.entityId)) return
     console.log('WS Version Refetch', topic)
@@ -80,7 +81,7 @@ const VersionDetail = () => {
   useEffect(() => {
     const token = PubSub.subscribe('entity.version', handlePubSub)
     return () => PubSub.unsubscribe(token)
-  }, [])
+  }, [focusedVersions])
 
   // PATCH VERSIONS DATA
   const [updateFolder] = useUpdateEntitiesDetailsMutation()

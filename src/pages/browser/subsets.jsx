@@ -69,6 +69,7 @@ const Subsets = () => {
     { skip: !focusedFolders.length },
   )
 
+  // TODO Create custom hook and use debounce for multiple messages
   const handlePubSub = (topic, message) => {
     // check if updated subsets folder is being viewed
     if (!subsetData.map(({ id }) => id).includes(message.summary.entityId)) return
@@ -81,7 +82,7 @@ const Subsets = () => {
   useEffect(() => {
     const token = PubSub.subscribe('entity.subset', handlePubSub)
     return () => PubSub.unsubscribe(token)
-  }, [])
+  }, [subsetData])
 
   // PATCH FOLDERS DATA
   const [updateSubsets] = useUpdateSubsetsMutation()

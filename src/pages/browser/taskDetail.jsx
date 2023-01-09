@@ -29,6 +29,7 @@ const TaskDetail = () => {
     { skip: !taskId },
   )
 
+  // TODO Create custom hook and use debounce for multiple messages
   const handlePubSub = (topic, message) => {
     if (!focusedTasks.includes(message.summary.entityId)) return
     console.log('WS Task Refetch', topic)
@@ -40,7 +41,7 @@ const TaskDetail = () => {
   useEffect(() => {
     const token = PubSub.subscribe('entity.task', handlePubSub)
     return () => PubSub.unsubscribe(token)
-  }, [])
+  }, [focusedTasks])
 
   // PATCH FOLDERS DATA
   const [updateTask] = useUpdateEntitiesDetailsMutation()

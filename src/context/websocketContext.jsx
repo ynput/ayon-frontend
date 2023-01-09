@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 import PubSub from '/src/pubsub'
 import { arrayEquals } from '/src/utils'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
+import { debounce } from 'lodash'
 
 export const SocketContext = createContext()
 
@@ -37,11 +38,20 @@ export const SocketProvider = (props) => {
     subscribe()
   }, [topics, projectName])
 
-  PubSub.setOnSubscriptionsChange((newTopics) => {
+  const updateTopicsDebounce = debounce((newTopics) => {
     if (arrayEquals(topics, newTopics)) return
     console.log('WS: Subscriptions changed')
     setTopics(newTopics)
-  })
+  }, 100)
+
+  // NON DEBOUNCED
+  // const updateTopics = (newTopics) => {
+  //   if (arrayEquals(topics, newTopics)) return
+  //   console.log('WS: Subscriptions changed')
+  //   setTopics(newTopics)
+  // }
+
+  PubSub.setOnSubscriptionsChange((newTopics) => updateTopicsDebounce(newTopics))
 
   const onMessage = (message) => {
     const data = JSON.parse(message.data)
@@ -77,6 +87,7 @@ export const SocketProvider = (props) => {
     <SocketContext.Provider
       value={{
         getWebSocket,
+        readyState,
         serverRestartingVisible,
       }}
     >
