@@ -64,6 +64,9 @@ const contextSlice = createSlice({
         state.focused.tasks = []
       }
     },
+    setFocusedType: (state, action) => {
+      state.focused.type = action.payload
+    },
     setSelectedVersions: (state, action) => {
       state.selectedVersions = action.payload
     },
@@ -137,6 +140,7 @@ export const {
   setPairing,
   setDialog,
   setReload,
+  setFocusedType,
 } = contextSlice.actions
 
 export default contextSlice.reducer
