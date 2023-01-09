@@ -58,6 +58,8 @@ const FolderDetail = () => {
 
   const folder = foldersData[0]?.node
 
+  if (!folder) return null
+
   if (focusedFolders.length > 1) {
     return (
       <Panel>
