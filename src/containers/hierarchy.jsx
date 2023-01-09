@@ -20,6 +20,7 @@ import {
   setDialog,
 } from '/src/features/context'
 import { getFolderTypeIcon } from '/src//utils'
+import { setFocusedType } from '../features/context'
 
 const filterHierarchy = (text, folder) => {
   let result = []
@@ -68,6 +69,7 @@ const Hierarchy = (props) => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
   const folderTypes = context.project.folderTypes
+  const focusedType = context.focused.type
   const expandedFolders = context.expandedFolders
   const focusedFolders = context.focused.folders
 
@@ -182,6 +184,18 @@ const Hierarchy = (props) => {
     return 'Folder types'
   }
 
+  const handleEditTags = () => {
+    // set focused type if not already
+    if (focusedType !== 'folder') dispatch(setFocusedType('folder'))
+
+    // open dialog
+    dispatch(
+      setDialog({
+        type: 'tags',
+      }),
+    )
+  }
+
   const ctxMenuModel = [
     {
       label: 'Detail',
@@ -190,12 +204,7 @@ const Hierarchy = (props) => {
     },
     {
       label: 'Edit Tags',
-      command: () =>
-        dispatch(
-          setDialog({
-            type: 'tags',
-          }),
-        ),
+      command: handleEditTags,
     },
   ]
 
