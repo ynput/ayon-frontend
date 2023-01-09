@@ -7,7 +7,7 @@ import { Spacer, Button } from '@ynput/ayon-react-components'
 
 import { Dialog } from 'primereact/dialog'
 
-import BrowserPage from './browser'
+import BrowserPage from './browser/BrowserPage'
 import EditorPage from './editor'
 import LoadingPage from './loading'
 import ProjectAddon from './projectAddon'

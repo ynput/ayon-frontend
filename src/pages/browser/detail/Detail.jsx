@@ -1,9 +1,9 @@
 import { useSelector } from 'react-redux'
 import { Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 
-import FolderDetail from './folderDetail'
-import VersionDetail from './versionDetail'
-import TaskDetail from './taskDetail'
+import FolderDetail from './FolderDetail'
+import VersionDetail from './VersionDetail'
+import TaskDetail from './TaskDetail'
 
 const Detail = () => {
   const context = useSelector((state) => ({ ...state.context }))

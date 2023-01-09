@@ -1,52 +1,51 @@
 import { useSelector } from 'react-redux'
-import { Panel } from '@ynput/ayon-react-components'
-import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
-import { getFolderTypeIcon } from '/src/utils'
+import { getTaskTypeIcon } from '/src/utils'
 import { TagsField } from '/src/containers/fieldFormat'
+import { Panel } from '@ynput/ayon-react-components'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/updateEntitiesDetails'
 import { useGetEntitiesDetailsQuery } from '/src/services/getEntitiesDetails'
-import StatusSelect from '../../components/status/statusSelect'
+import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
-const FolderDetail = () => {
+const TaskDetail = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = context.projectName
-  const focusedFolders = context.focused.folders
-  const folderId = focusedFolders.length === 1 ? focusedFolders[0] : null
+  const focusedTasks = context.focused.tasks
+  const taskId = focusedTasks.length === 1 ? focusedTasks[0] : null
 
   // GET RTK QUERY
   const {
-    data: foldersData = [],
+    data: tasksData,
     isError,
     isLoading,
     refetch,
   } = useGetEntitiesDetailsQuery(
     {
       projectName,
-      ids: [folderId],
-      type: 'folder',
+      ids: [taskId],
+      type: 'task',
     },
-    { skip: !folderId },
+    { skip: !taskId },
   )
 
   // PUBSUB HOOK
-  usePubSub('entity.folder', refetch, focusedFolders)
+  usePubSub('entity.task', refetch, focusedTasks)
 
   // PATCH FOLDERS DATA
-  const [updateFolder] = useUpdateEntitiesDetailsMutation()
+  const [updateTask] = useUpdateEntitiesDetailsMutation()
 
   if (isLoading) return 'loading..'
 
-  if (isError) return 'ERROR: Something went wrong...'
+  if (isError) return 'ERROR: Soemthing went wrong...'
 
   const handleStatusChange = async (value, entity) => {
     try {
       const patches = [{ ...entity, status: value }]
 
-      const payload = await updateFolder({
+      const payload = await updateTask({
         projectName,
-        type: 'folder',
+        type: 'task',
         data: { status: value },
         patches,
       }).unwrap()
@@ -57,49 +56,49 @@ const FolderDetail = () => {
     }
   }
 
-  const folder = foldersData[0]?.node
-
-  if (!folder) return null
-
-  if (focusedFolders.length > 1) {
+  if (focusedTasks.length > 1) {
     return (
       <Panel>
-        <span>{focusedFolders.length} focusedFolders selected</span>
+        <span>{focusedTasks.length} tasks selected</span>
       </Panel>
     )
   }
+
+  const task = tasksData[0].node
 
   return (
     <Panel>
       <h3>
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
-          {getFolderTypeIcon(folder.folderType)}
+          {getTaskTypeIcon(task.taskType)}
         </span>
-        <span style={{ marginLeft: 10 }}>{folder.label || folder.name}</span>
+        <span style={{ marginLeft: 10 }}>{task.label || task.name}</span>
       </h3>
-      <Thumbnail projectName={projectName} entityType="folder" entityId={folderId} />
       <AttributeTable
-        entityType="folder"
-        data={folder.attrib}
+        entityType="task"
+        data={task.attrib}
         additionalData={[
-          { title: 'Folder type', value: folder.folderType },
+          { title: 'Task Type', value: task.taskType },
           {
             title: 'Status',
             value: (
               <StatusSelect
-                value={folder.status}
+                value={task.status}
                 statuses={context.project.statuses}
                 align={'right'}
-                onChange={(v) => handleStatusChange(v, folder)}
+                onChange={(v) => handleStatusChange(v, task)}
               />
             ),
           },
-          { title: 'Tags', value: <TagsField value={folder.tags} /> },
-          { title: 'Path', value: folder.path },
+          { title: 'Tags', value: <TagsField value={task.tags} /> },
+          {
+            title: 'Assignees',
+            value: task.assignees?.length ? task.assignees.join(', ') : '-',
+          },
         ]}
       />
     </Panel>
   )
 }
 
-export default FolderDetail
+export default TaskDetail

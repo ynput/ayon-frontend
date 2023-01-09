@@ -18,8 +18,8 @@ import {
   setPairing,
   setDialog,
 } from '/src/features/context'
-import { VersionList } from './subsetsUtils'
-import StatusSelect from '../../components/status/statusSelect'
+import VersionList from './VersionList'
+import StatusSelect from '/src/components/status/statusSelect'
 import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
 import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'

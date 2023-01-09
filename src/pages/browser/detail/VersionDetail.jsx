@@ -4,11 +4,11 @@ import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
 import { TagsField } from '/src/containers/fieldFormat'
 import { getFamilyIcon } from '/src/utils'
-import RepresentationList from './representationList'
+import RepresentationList from '../RepresentationList'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/updateEntitiesDetails'
 import { useGetEntitiesDetailsQuery } from '/src/services/getEntitiesDetails'
 
-import StatusSelect from '../../components/status/statusSelect'
+import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
 const transformVersionsData = (versions) => {
