@@ -7,6 +7,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
+import usePubSub from '/src/hooks/usePubSub'
 
 import { groupResult, getFamilyIcon, useLocalStorage } from '/src/utils'
 import {
@@ -20,7 +21,6 @@ import {
 import { VersionList } from './subsetsUtils'
 import StatusSelect from '../../components/status/statusSelect'
 import { useGetSubsetsListQuery, useUpdateSubsetsMutation } from '../../services/ayon'
-import PubSub from '/src/pubsub'
 import { MultiSelect } from 'primereact/multiselect'
 
 const Subsets = () => {
@@ -69,20 +69,12 @@ const Subsets = () => {
     { skip: !focusedFolders.length },
   )
 
-  // TODO Create custom hook and use debounce for multiple messages
-  const handlePubSub = (topic, message) => {
-    // check if updated subsets folder is being viewed
-    if (!subsetData.map(({ id }) => id).includes(message.summary.entityId)) return
-
-    console.log('WS Subsets Lists Refetch', topic)
-    refetch()
-  }
-
-  // PUBSUB
-  useEffect(() => {
-    const token = PubSub.subscribe('entity.subset', handlePubSub)
-    return () => PubSub.unsubscribe(token)
-  }, [subsetData])
+  // PUBSUB HOOK
+  usePubSub(
+    'entity.subset',
+    subsetData.map(({ id }) => id),
+    refetch,
+  )
 
   // PATCH FOLDERS DATA
   const [updateSubsets] = useUpdateSubsetsMutation()

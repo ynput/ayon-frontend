@@ -7,8 +7,7 @@ import { getFamilyIcon } from '/src/utils'
 import RepresentationList from './representationList'
 import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
 import StatusSelect from '../../components/status/statusSelect'
-import PubSub from '/src/pubsub'
-import { useEffect } from 'react'
+import usePubSub from '/src/hooks/usePubSub'
 
 const transformVersionsData = (versions) => {
   let vArr = []
@@ -69,19 +68,8 @@ const VersionDetail = () => {
     { skip: !focusedVersions },
   )
 
-  // TODO Create custom hook and use debounce for multiple messages
-  const handlePubSub = (topic, message) => {
-    if (!focusedVersions.includes(message.summary.entityId)) return
-    console.log('WS Version Refetch', topic)
-
-    refetch()
-  }
-
-  // PUBSUB
-  useEffect(() => {
-    const token = PubSub.subscribe('entity.version', handlePubSub)
-    return () => PubSub.unsubscribe(token)
-  }, [focusedVersions])
+  // PUBSUB HOOK
+  usePubSub('entity.version', focusedVersions, refetch)
 
   // PATCH VERSIONS DATA
   const [updateFolder] = useUpdateEntitiesDetailsMutation()

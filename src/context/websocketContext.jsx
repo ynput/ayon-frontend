@@ -42,14 +42,7 @@ export const SocketProvider = (props) => {
     if (arrayEquals(topics, newTopics)) return
     console.log('WS: Subscriptions changed')
     setTopics(newTopics)
-  }, 100)
-
-  // NON DEBOUNCED
-  // const updateTopics = (newTopics) => {
-  //   if (arrayEquals(topics, newTopics)) return
-  //   console.log('WS: Subscriptions changed')
-  //   setTopics(newTopics)
-  // }
+  }, 200)
 
   PubSub.setOnSubscriptionsChange((newTopics) => updateTopicsDebounce(newTopics))
 
