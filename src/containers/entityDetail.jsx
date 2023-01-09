@@ -1,32 +1,57 @@
-import axios from 'axios'
-import { useState, useEffect } from 'react'
-
 import { Dialog } from 'primereact/dialog'
+import { toast } from 'react-toastify'
+import { useGetEntitiesDetailsQuery } from '../services/ayon'
+import PropTypes from 'prop-types'
 
-const EntityDetail = ({ projectName, entityType, entityId, visible, onHide }) => {
-  const [data, setData] = useState(null)
+const EntityDetail = ({
+  projectName,
+  entityType,
+  entityIds,
+  visible,
+  onHide,
+  versionOverrides,
+}) => {
+  const {
+    data = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetEntitiesDetailsQuery(
+    { projectName, type: entityType, ids: entityIds, versionOverrides },
+    { skip: !visible },
+  )
 
-  useEffect(() => {
-    if (!(entityId && entityType)) return
+  if (isLoading)
+    if (isError) {
+      toast.error(`Unable to load detail. ${error}`)
+    }
 
-    axios
-      .get(`/api/projects/${projectName}/${entityType}s/${entityId}`)
-      .then((res) => setData(res.data))
-      .catch((err) => {
-        console.log(`unable to load ${entityType} ${entityId}`, err)
-      })
-      .finally(() => console.log('done'))
-  }, [entityId, entityType, projectName])
-
-  if (!(entityId && visible)) {
-    return null
-  }
+  if (!visible || data.length < 1) return null
 
   return (
     <Dialog visible={true} onHide={onHide} style={{ width: '50vw' }}>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <pre>
+        {!isLoading &&
+          !isError &&
+          JSON.stringify(
+            data.map(({ node }) => node),
+            null,
+            2,
+          )}
+        {isLoading && 'loading...'}
+        {isError && 'error...'}
+      </pre>
     </Dialog>
   )
+}
+
+EntityDetail.propTypes = {
+  projectName: PropTypes.string.isRequired,
+  entityType: PropTypes.string.isRequired,
+  entityIds: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  visible: PropTypes.bool.isRequired,
+  onHide: PropTypes.func.isRequired,
+  versionOverrides: PropTypes.arrayOf(PropTypes.string),
 }
 
 export default EntityDetail

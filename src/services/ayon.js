@@ -5,6 +5,28 @@ import { parseSubsetData } from '../pages/browser/subsetsUtils'
 import { parseTasksList } from '../utils'
 import ayonClient from '/src/ayon'
 
+const TASKS_QUERY = `
+query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
+  project(name: $projectName) {
+    tasks(folderIds:$folderIds) {
+      edges {
+        node {
+          id
+          name
+          label
+          taskType
+          assignees
+          folder {
+            name
+            label
+          }
+        }
+      }
+    }
+  }
+}
+`
+
 const TASK_QUERY = `
   query Tasks($projectName: String!, $ids: [String!]!) {
       project(name: $projectName) {
@@ -91,8 +113,67 @@ const VERSION_QUERY = `
     }
 `
 
+const SUBSET_QUERY = `
+query Subset($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
+    project(name: $projectName){
+        subsets(ids: $ids){
+            edges {
+                node {
+                    id
+                    name
+                    family
+                    status
+                    createdAt
+                    versionList{
+                      id
+                      version
+                      name
+                    }
+                    
+                    versions(ids: $versionOverrides){
+                      edges{
+                        node{
+                          id
+                          version
+                          name
+                          author
+                          createdAt
+                          taskId
+                          attrib {
+                              fps
+                              resolutionWidth
+                              resolutionHeight
+                              frameStart
+                              frameEnd
+                          }
+                        }
+                      }
+                    }
+
+                    latestVersion{
+                        id
+                        version
+                        name
+                        author
+                        createdAt
+                        taskId
+                        attrib {
+                            fps
+                            resolutionWidth
+                            resolutionHeight
+                            frameStart
+                            frameEnd
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+`
+
 const SUBSETS_LIST_QUERY = `
-query Subsets($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
+query SubsetsList($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
     project(name: $projectName){
         subsets(folderIds: $ids){
             edges {
@@ -162,28 +243,6 @@ query Subsets($projectName: String!, $ids: [String!]!, $versionOverrides: [Strin
 }
 `
 
-const TASKS_QUERY = `
-query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
-  project(name: $projectName) {
-    tasks(folderIds:$folderIds) {
-      edges {
-        node {
-          id
-          name
-          label
-          taskType
-          assignees
-          folder {
-            name
-            label
-          }
-        }
-      }
-    }
-  }
-}
-`
-
 const buildEntitiesDetailsQuery = (type) => {
   let f_attribs = ''
   for (const attrib of ayonClient.settings.attributes) {
@@ -201,12 +260,15 @@ const buildEntitiesDetailsQuery = (type) => {
     case 'version':
       QUERY = VERSION_QUERY
       break
+    case 'subset':
+      QUERY = SUBSET_QUERY
+      break
     default:
       break
   }
 
   if (!QUERY) return null
-
+  console.log(QUERY.replace('#ATTRS#', f_attribs))
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
@@ -269,15 +331,16 @@ export const ayonApi = createApi({
         ids ? ids.flatMap((id) => [{ type, id }]) : patches.flatMap(({ id }) => [{ type, id }]),
     }),
     getEntitiesDetails: builder.query({
-      query: ({ projectName, ids, type }) => ({
+      query: ({ projectName, ids, type, versionOverrides }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: buildEntitiesDetailsQuery(type),
-          variables: { projectName, ids },
+          variables: { projectName, ids, versionOverrides },
         },
       }),
       transformResponse: (response, meta, { type }) => response.data.project[type + 's'].edges,
+      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       providesTags: (result, error, { type }) =>
         result ? [...result.map(({ node }) => ({ type: type, id: node.id }))] : [type],
     }),

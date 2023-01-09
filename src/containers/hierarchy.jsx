@@ -178,7 +178,6 @@ const Hierarchy = (props) => {
     {
       label: 'Detail',
       command: () => setShowDetail(true),
-      disabled: focusedFolders.length !== 1,
     },
     {
       label: 'Edit Tags',
@@ -193,7 +192,7 @@ const Hierarchy = (props) => {
   if (isError) {
     toast.error(`Unable to load hierarchy. ${error}`)
 
-    return <>Error</>
+    return <>Error...</>
   }
 
   return (
@@ -225,7 +224,7 @@ const Hierarchy = (props) => {
         <EntityDetail
           projectName={projectName}
           entityType="folder"
-          entityId={focusedFolders[0]}
+          entityIds={focusedFolders}
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />

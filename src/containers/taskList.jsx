@@ -92,7 +92,6 @@ const TaskList = ({ style = {} }) => {
     {
       label: 'Detail',
       command: () => setShowDetail(true),
-      disabled: focusedTasks.length !== 1,
     },
     {
       label: 'Edit Tags',
@@ -118,7 +117,7 @@ const TaskList = ({ style = {} }) => {
         <EntityDetail
           projectName={projectName}
           entityType="task"
-          entityId={focusedTasks[0]}
+          entityIds={focusedTasks}
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />

@@ -378,12 +378,10 @@ const Subsets = () => {
     {
       label: 'Subset detail',
       command: () => setShowDetail('subset'),
-      disabled: focusedSubsets.length !== 1,
     },
     {
       label: 'Version detail',
       command: () => setShowDetail('version'),
-      disabled: focusedVersions.length !== 1,
     },
     {
       label: 'Edit Version Tags',
@@ -417,10 +415,11 @@ const Subsets = () => {
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
-          entityType={showDetail}
-          entityId={showDetail === 'subset' ? focusedSubsets[0] : focusedVersions[0]}
-          visible={showDetail}
+          entityType={showDetail || 'subset'}
+          entityIds={showDetail === 'subset' ? focusedSubsets : focusedVersions}
+          visible={!!showDetail}
           onHide={() => setShowDetail(false)}
+          versionOverrides={versionOverrides}
         />
         <TreeTable
           responsive="true"
