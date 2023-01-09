@@ -5,7 +5,9 @@ import AttributeTable from '/src/containers/attributeTable'
 import { TagsField } from '/src/containers/fieldFormat'
 import { getFamilyIcon } from '/src/utils'
 import RepresentationList from './representationList'
-import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
+import { useUpdateEntitiesDetailsMutation } from '/src/services/updateEntitiesDetails'
+import { useGetEntitiesDetailsQuery } from '/src/services/getEntitiesDetails'
+
 import StatusSelect from '../../components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 

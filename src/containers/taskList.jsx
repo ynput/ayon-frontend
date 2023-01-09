@@ -10,8 +10,8 @@ import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { setFocusedTasks, setPairing, setDialog } from '/src/features/context'
 import { getTaskTypeIcon } from '/src/utils'
-import { useGetTasksQuery } from '../services/ayon'
 import { toast } from 'react-toastify'
+import { useGetTasksQuery } from '/src/services/getTasks'
 
 const TaskList = ({ style = {} }) => {
   const dispatch = useDispatch()

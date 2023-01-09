@@ -2,7 +2,8 @@ import React from 'react'
 import { useDispatch } from 'react-redux'
 import { setDialog } from '/src/features/context'
 import TagsEditorDialog from './dialog'
-import { useGetEntitiesDetailsQuery, useUpdateEntitiesDetailsMutation } from '../../services/ayon'
+import { useGetEntitiesDetailsQuery } from '/src/services/getEntitiesDetails'
+import { useUpdateEntitiesDetailsMutation } from '/src/services/updateEntitiesDetails'
 
 export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => {
   // get redux context state

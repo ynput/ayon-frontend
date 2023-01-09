@@ -1,6 +1,6 @@
 import { Dialog } from 'primereact/dialog'
 import { toast } from 'react-toastify'
-import { useGetEntitiesDetailsQuery } from '../services/ayon'
+import { useGetEntitiesDetailsQuery } from '/src/services/getEntitiesDetails'
 import PropTypes from 'prop-types'
 
 const EntityDetail = ({

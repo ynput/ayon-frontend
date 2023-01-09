@@ -20,7 +20,8 @@ import {
 } from '/src/features/context'
 import { VersionList } from './subsetsUtils'
 import StatusSelect from '../../components/status/statusSelect'
-import { useGetSubsetsListQuery, useUpdateSubsetsMutation } from '../../services/ayon'
+import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
+import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
 
 const Subsets = () => {

@@ -19,7 +19,7 @@ import {
 } from '/src/features/context'
 import { getFolderTypeIcon } from '/src//utils'
 import { setFocusedType } from '../features/context'
-import { useGetHierarchyQuery } from '../services/ayon'
+import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 
 const filterHierarchy = (text, folder) => {
   let result = []
