@@ -211,7 +211,7 @@ export const ayonApi = createApi({
       return headers
     },
   }),
-  tagTypes: ['folder', 'task', 'version', 'subset', 'tag'],
+  tagTypes: ['folder', 'task', 'version', 'subset', 'tag', 'project'],
   endpoints: (builder) => ({
     updateEntitiesDetails: builder.mutation({
       query: ({ projectName, type, patches, data, ids }) => ({
@@ -304,6 +304,14 @@ export const ayonApi = createApi({
         ...patches.map(({ id }) => ({ type: 'subset', id })),
       ],
     }),
+    getHierarchy: builder.query({
+      query: ({ projectName }) => ({
+        url: `/api/projects/${projectName}/hierarchy`,
+      }),
+      transformResponse: (response) => response.hierarchy,
+      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+      providesTags: ['project'],
+    }),
   }),
 })
 
@@ -314,4 +322,5 @@ export const {
   useGetEntitiesDetailsQuery,
   useGetSubsetsListQuery,
   useUpdateSubsetsMutation,
+  useGetHierarchyQuery,
 } = ayonApi
