@@ -11,7 +11,6 @@ import { toast } from 'react-toastify'
 import Header from './containers/header'
 import LoginPage from './pages/login'
 import ErrorPage from './pages/error'
-import WebsocketListener from './containers/websocket'
 
 const ProjectPage = lazy(() => import('./pages/project'))
 const ProjectManager = lazy(() => import('./pages/projectManager'))
@@ -23,6 +22,7 @@ const EventViewer = lazy(() => import('./pages/eventViewer'))
 const ServicesPage = lazy(() => import('./pages/services'))
 
 import { login } from './features/user'
+import { SocketProvider } from './context/websocketContext'
 
 const App = () => {
   const user = useSelector((state) => ({ ...state.user }))
@@ -88,37 +88,38 @@ const App = () => {
 
   return (
     <Suspense fallback={<LoaderShade />}>
-      <WebsocketListener />
-      <BrowserRouter>
-        <Header />
-        <Routes>
-          <Route path="/" exact element={<Navigate replace to="/projectManager/dashboard" />} />
-          <Route
-            path="/projectManager"
-            exact
-            element={<Navigate replace to="/projectManager/dashboard" />}
-          />
-          <Route path="/projectManager/:module" element={<ProjectManager />} />
+      <SocketProvider>
+        <BrowserRouter>
+          <Header />
+          <Routes>
+            <Route path="/" exact element={<Navigate replace to="/projectManager/dashboard" />} />
+            <Route
+              path="/projectManager"
+              exact
+              element={<Navigate replace to="/projectManager/dashboard" />}
+            />
+            <Route path="/projectManager/:module" element={<ProjectManager />} />
 
-          <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-          <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
+            <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+            <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
 
-          <Route
-            path="/settings"
-            exact
-            element={<Navigate replace to="/settings/anatomyPresets" />}
-          />
-          <Route path="/settings/:module" exact element={<SettingsPage />} />
+            <Route
+              path="/settings"
+              exact
+              element={<Navigate replace to="/settings/anatomyPresets" />}
+            />
+            <Route path="/settings/:module" exact element={<SettingsPage />} />
 
-          <Route path="/explorer" element={<ExplorerPage />} />
-          <Route path="/doc/api" element={<APIDocsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/events" element={<EventViewer />} />
-          <Route path="/services" element={<ServicesPage />} />
+            <Route path="/explorer" element={<ExplorerPage />} />
+            <Route path="/doc/api" element={<APIDocsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/events" element={<EventViewer />} />
+            <Route path="/services" element={<ServicesPage />} />
 
-          <Route element={<ErrorPage code="404" />} />
-        </Routes>
-      </BrowserRouter>
+            <Route element={<ErrorPage code="404" />} />
+          </Routes>
+        </BrowserRouter>
+      </SocketProvider>
     </Suspense>
   )
 }

@@ -7,13 +7,11 @@ import { Spacer, Button } from '@ynput/ayon-react-components'
 
 import { Dialog } from 'primereact/dialog'
 
-import BrowserPage from './browser'
+import BrowserPage from './browser/BrowserPage'
 import EditorPage from './editor'
 import LoadingPage from './loading'
 import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles'
-
-import PubSub from '/src/pubsub'
 
 import { selectProject, setProjectData } from '../features/context'
 import {
@@ -24,6 +22,7 @@ import {
   updateStatusIcons,
   updateStatusShortNames,
 } from '../utils'
+import usePubSub from '/src/hooks/usePubSub'
 
 const ProjectContexInfo = () => {
   /**
@@ -142,15 +141,8 @@ const ProjectPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    const token = PubSub.subscribe('client.connected', handlePubSub)
-    return () => PubSub.unsubscribe(token)
-  }, [])
-
-  useEffect(() => {
-    const token = PubSub.subscribe('entity.project', handlePubSub)
-    return () => PubSub.unsubscribe(token)
-  }, [])
+  usePubSub('client.connected', handlePubSub)
+  usePubSub('entity.project', handlePubSub)
 
   // Fetch project data
   useEffect(() => {

@@ -5,8 +5,8 @@ import { Section } from '@ynput/ayon-react-components'
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'
 
-import Subsets from './subsets'
-import Detail from './detail'
+import Subsets from './Subsets'
+import Detail from './detail/Detail'
 import TagsEditorContainer from '/src/containers/tagsEditor'
 
 const BrowserPage = () => {

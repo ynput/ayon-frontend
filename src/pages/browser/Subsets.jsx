@@ -1,20 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { toast } from 'react-toastify'
-
-import axios from 'axios'
-
 import { InputText, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
-
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
-
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
+import usePubSub from '/src/hooks/usePubSub'
 
-import { groupResult, getFamilyIcon, useLocalStorage } from '../../utils'
+import { groupResult, getFamilyIcon, useLocalStorage } from '/src/utils'
 import {
   setFocusedVersions,
   setFocusedSubsets,
@@ -23,9 +18,10 @@ import {
   setPairing,
   setDialog,
 } from '/src/features/context'
-
-import { SUBSET_QUERY, parseSubsetData, VersionList } from './subsetsUtils'
-import StatusSelect from '../../components/status/statusSelect'
+import VersionList from './VersionList'
+import StatusSelect from '/src/components/status/statusSelect'
+import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
+import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
 
 const Subsets = () => {
@@ -39,99 +35,86 @@ const Subsets = () => {
   const focusedSubsets = context.focused.subsets
   const pairing = context.pairing
 
-  const [subsetData, setSubsetData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [focusOnReload, setFocusOnReload] = useState(null)
   const ctxMenuRef = useRef(null)
+  const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
   // sets size of status based on status column width
   const [columnsWidths, setColumnWidths] = useLocalStorage('subsets-columns-widths', {})
 
-  // Columns definition
-  // It must be here since we are referencing the component state and the context :-(
-  const getSubsetsData = async () => {
-    // if ids are provided only get subsets for those ids
-
-    // version overrides
-    // Get a list of version overrides for the current set of folders
-    let versionOverrides = []
-    for (const folderId of focusedFolders) {
-      const c = selectedVersions[folderId]
-      if (!c) continue
-      for (const subsetId in c) {
-        const versionId = c[subsetId]
-        if (versionOverrides.includes(versionId)) continue
-        versionOverrides.push(versionId)
-      }
-    }
-    if (versionOverrides.length === 0) {
-      // We need at least one item in the array to filter.
-      versionOverrides = ['00000000000000000000000000000000']
-    }
-
-    try {
-      const response = await axios.post('/graphql', {
-        query: SUBSET_QUERY,
-        variables: { folders: focusedFolders, projectName, versionOverrides },
-      })
-      // successfull res
-      const parsedData = parseSubsetData(response.data.data)
-      return parsedData
-    } catch (error) {
-      console.log(error)
-      toast.error('Unable to fetch subsets')
+  // version overrides
+  // Get a list of version overrides for the current set of folders
+  let versionOverrides = []
+  for (const folderId of focusedFolders) {
+    const c = selectedVersions[folderId]
+    if (!c) continue
+    for (const subsetId in c) {
+      const versionId = c[subsetId]
+      if (versionOverrides.includes(versionId)) continue
+      versionOverrides.push(versionId)
     }
   }
+  if (versionOverrides.length === 0) {
+    // We need at least one item in the array to filter.
+    versionOverrides = ['00000000000000000000000000000000']
+  }
 
-  // Load the subsets/versions data from the server and transform
-  const setSubsetsData = async () => {
-    if (focusedFolders?.length === 0) return
+  const {
+    data: subsetData = [],
+    isLoading,
+    isFetching,
+    isSuccess,
+    refetch,
+  } = useGetSubsetsListQuery(
+    {
+      ids: focusedFolders,
+      projectName,
+      versionOverrides,
+    },
+    { skip: !focusedFolders.length },
+  )
 
-    setLoading(true)
-    const subsetParsedData = await getSubsetsData()
-    setSubsetData(subsetParsedData)
-    setLoading(false)
-    if (focusOnReload) {
+  // refocus version subset after reload
+  useEffect(() => {
+    if (focusOnReload && isSuccess) {
       dispatch(setFocusedVersions([focusOnReload]))
       setFocusOnReload(null)
     }
-  }
+  }, [focusOnReload, isSuccess])
 
-  useEffect(() => {
-    setSubsetsData()
-    // eslint-disable-next-line
-  }, [focusedFolders, projectName, selectedVersions])
+  // PUBSUB HOOK
+  usePubSub(
+    'entity.subset',
+    refetch,
+    subsetData.map(({ id }) => id),
+  )
+
+  // PATCH FOLDERS DATA
+  const [updateSubsets] = useUpdateSubsetsMutation()
 
   // update subset status
   const handleStatusChange = async (value, selectedId) => {
     try {
       // get selected ids
       let ids = focusedSubsets.includes(selectedId) ? focusedSubsets : [selectedId]
-      // create operations array of all entities
-      // currently only supports changing one status
-      const operations = ids.map((id) => ({
-        type: 'update',
-        entityType: 'subset',
-        entityId: id,
-        data: {
-          status: value,
-        },
-      }))
-
-      // use operations end point to update all at once
-      await axios.post(`/api/projects/${projectName}/operations`, { operations })
 
       // delete outdated subsets and push new ones to state
-      const newSubsets = [...subsetData].map((data) =>
-        focusedSubsets.includes(data.id) || data.id === selectedId
-          ? { ...data, status: value }
-          : data,
+      const patches = [...subsetData].map((data) =>
+        ids.includes(data.id) ? { ...data, status: value } : data,
       )
-      // set new state
-      setSubsetData(newSubsets)
+
+      // need to give versionOverrides for optimistic updates
+      const payload = await updateSubsets({
+        projectName,
+        data: { status: value },
+        patches,
+        ids,
+        focusedFolders,
+        versionOverrides,
+      }).unwrap()
+
+      console.log('fulfilled', payload)
     } catch (error) {
-      console.error(error)
-      toast.error('Unable to update subset status')
+      console.error('rejected', error)
     }
   }
 
@@ -143,7 +126,6 @@ const Subsets = () => {
       dispatch(setFocusedSubsets([id]))
     }
   }
-
 
   let columns = [
     {
@@ -209,6 +191,7 @@ const Subsets = () => {
       width: 70,
       body: (node) =>
         VersionList(node.data, (subsetId, versionId) => {
+          // TODO changing version doesn't auto update version detail
           let newSelection = { ...selectedVersions[node.data.folderId] }
           newSelection[subsetId] = versionId
           dispatch(
@@ -408,12 +391,10 @@ const Subsets = () => {
     {
       label: 'Subset detail',
       command: () => setShowDetail('subset'),
-      disabled: focusedSubsets.length !== 1,
     },
     {
       label: 'Version detail',
       command: () => setShowDetail('version'),
-      disabled: focusedVersions.length !== 1,
     },
     {
       label: 'Edit Version Tags',
@@ -443,14 +424,15 @@ const Subsets = () => {
         />
       </Toolbar>
 
-      <TablePanel loading={loading}>
+      <TablePanel loading={isLoading || isFetching}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
-          entityType={showDetail}
-          entityId={showDetail === 'subset' ? focusedSubsets[0] : focusedVersions[0]}
-          visible={showDetail}
+          entityType={showDetail || 'subset'}
+          entityIds={showDetail === 'subset' ? focusedSubsets : focusedVersions}
+          visible={!!showDetail}
           onHide={() => setShowDetail(false)}
+          versionOverrides={versionOverrides}
         />
         <TreeTable
           responsive="true"

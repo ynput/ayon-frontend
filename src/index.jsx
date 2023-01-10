@@ -17,13 +17,19 @@ import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
 
 import './styles/index.sass'
+import { ayonApi } from './services/ayon'
+import { setupListeners } from '@reduxjs/toolkit/dist/query'
 
 const store = configureStore({
   reducer: {
     user: userReducer,
     context: contextReducer,
+    [ayonApi.reducerPath]: ayonApi.reducer,
   },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(ayonApi.middleware),
 })
+
+setupListeners(store.dispatch)
 
 axios.interceptors.response.use(
   (response) => {

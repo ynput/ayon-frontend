@@ -32,7 +32,12 @@ const AttributeTable = ({ entityType, data, additionalData, style }) => {
 
       {data &&
         ayonClient.settings.attributes
-          .filter((attr) => attr.scope.includes(entityType) && data[attr.name])
+          .filter(
+            (attr) =>
+              attr.scope.includes(entityType) &&
+              data[attr.name] !== undefined &&
+              data[attr.name] !== null,
+          )
           .map((attr) => (
             <AttributeTableRow key={attr.name}>
               <span>{attr.data.title}</span>

@@ -1,13 +1,11 @@
 import axios from 'axios'
-import PubSub from '/src/pubsub'
-
 import { useState, useEffect } from 'react'
 import { Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
-
 import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import usePubSub from '/src/hooks/usePubSub'
 
 const EVENTS_QUERY = `
 query Events {
@@ -107,10 +105,7 @@ const EventViewer = () => {
     })
   }
 
-  useEffect(() => {
-    const token = PubSub.subscribe('*', handlePubSub)
-    return () => PubSub.unsubscribe(token)
-  }, [])
+  usePubSub('*', handlePubSub)
 
   useEffect(() => {
     loadEventData()

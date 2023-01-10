@@ -1,6 +1,4 @@
-import axios from 'axios'
-
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
@@ -21,6 +19,7 @@ import {
 } from '/src/features/context'
 import { getFolderTypeIcon } from '/src//utils'
 import { setFocusedType } from '../features/context'
+import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 
 const filterHierarchy = (text, folder) => {
   let result = []
@@ -76,8 +75,6 @@ const Hierarchy = (props) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
   const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false)
 
@@ -87,28 +84,9 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-
-  useEffect(() => {
-    setLoading(true)
-    let url = `/api/projects/${projectName}/hierarchy`
-
-    //TODO: use axios params here
-    if (selectedFolderTypes) url += `?types=${selectedFolderTypes.join(',')}`
-
-    axios
-      .get(url)
-      .then((response) => {
-        setData(response.data.hierarchy)
-      })
-      .catch((error) => {
-        const errMessage = error.response.data.detail || `Error ${error.response.status}`
-        toast.error(`Unable to load hierarchy. ${errMessage}`)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-    // eslint-disable-next-line
-  }, [projectName, selectedFolderTypes])
+  //TODO: use axios params here
+  // if (selectedFolderTypes) url += `?types=${selectedFolderTypes.join(',')}`
+  const { isError, error, isLoading, data } = useGetHierarchyQuery({ projectName })
 
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
@@ -200,7 +178,6 @@ const Hierarchy = (props) => {
     {
       label: 'Detail',
       command: () => setShowDetail(true),
-      disabled: focusedFolders.length !== 1,
     },
     {
       label: 'Edit Tags',
@@ -212,13 +189,42 @@ const Hierarchy = (props) => {
   // Render
   //
 
+  if (isError) {
+    toast.error(`Unable to load hierarchy. ${error}`)
+
+    return <>Error...</>
+  }
+
+  const table = useMemo(
+    () => (
+      <TreeTable
+        value={treeData}
+        responsive="true"
+        scrollable
+        scrollHeight="100%"
+        selectionMode="multiple"
+        selectionKeys={selectedFolders}
+        expandedKeys={expandedFolders}
+        emptyMessage=" "
+        onSelectionChange={onSelectionChange}
+        onToggle={onToggle}
+        onRowClick={onRowClick}
+        onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+        onContextMenuSelectionChange={onContextMenuSelectionChange}
+      >
+        <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
+      </TreeTable>
+    ),
+    [treeData, selectedFolders, expandedFolders],
+  )
+
   return (
     <Section style={props.style}>
       <Toolbar>
         <InputText
           style={{ flexGrow: 1, minWidth: 100 }}
           placeholder="Filter folders..."
-          disabled={!projectName || loading}
+          disabled={!projectName || isLoading}
           value={query}
           onChange={(evt) => setQuery(evt.target.value)}
         />
@@ -229,40 +235,23 @@ const Hierarchy = (props) => {
           placeholder="Select folder types"
           showClear={true}
           optionLabel="label"
-          disabled={!projectName || loading}
+          disabled={!projectName || isLoading}
           selectedItemTemplate={selectedTypeTemplate}
           onChange={(e) => setSelectedFolderTypes(e.value)}
           style={{ flexBasis: 150 }}
         />
       </Toolbar>
 
-      <TablePanel loading={loading}>
+      <TablePanel loading={isLoading}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
           entityType="folder"
-          entityId={focusedFolders[0]}
+          entityIds={focusedFolders}
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
-        <TreeTable
-          value={treeData}
-          responsive="true"
-          scrollable
-          scrollHeight="100%"
-          selectionMode="multiple"
-          selectionKeys={selectedFolders}
-          expandedKeys={expandedFolders}
-          emptyMessage=" "
-          onSelectionChange={onSelectionChange}
-          onToggle={onToggle}
-          onRowClick={onRowClick}
-          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
-          onContextMenuSelectionChange={onContextMenuSelectionChange}
-        >
-          <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
-          {/*<Column header="Status" field="status" />*/}
-        </TreeTable>
+        {table}
       </TablePanel>
     </Section>
   )

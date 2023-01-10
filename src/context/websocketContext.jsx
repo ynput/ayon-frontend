@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
-import useWebSocket, { ReadyState } from 'react-use-websocket'
-import { useSelector } from 'react-redux'
 import axios from 'axios'
+import { useEffect, useState, createContext } from 'react'
+import { useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 import PubSub from '/src/pubsub'
 import { arrayEquals } from '/src/utils'
-import { toast } from 'react-toastify'
+import useWebSocket, { ReadyState } from 'react-use-websocket'
+import { debounce } from 'lodash'
 
-import { LoaderShade } from '@ynput/ayon-react-components'
+export const SocketContext = createContext()
 
 const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
@@ -14,9 +15,9 @@ const wsOpts = {
   shouldReconnect: () => true,
 }
 
-const WebsocketListener = () => {
-  const [topics, setTopics] = useState([])
+export const SocketProvider = (props) => {
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
+  const [topics, setTopics] = useState([])
   const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, wsOpts)
   const context = useSelector((state) => state.context)
   const projectName = context.projectName
@@ -37,6 +38,14 @@ const WebsocketListener = () => {
     subscribe()
   }, [topics, projectName])
 
+  const updateTopicsDebounce = debounce((newTopics) => {
+    if (arrayEquals(topics, newTopics)) return
+    console.log('WS: Subscriptions changed')
+    setTopics(newTopics)
+  }, 200)
+
+  PubSub.setOnSubscriptionsChange((newTopics) => updateTopicsDebounce(newTopics))
+
   const onMessage = (message) => {
     const data = JSON.parse(message.data)
     if (data.topic === 'heartbeat') return
@@ -51,12 +60,6 @@ const WebsocketListener = () => {
     console.log('Event RX', data)
     PubSub.publish(data.topic, data)
   }
-
-  PubSub.setOnSubscriptionsChange((newTopics) => {
-    if (arrayEquals(topics, newTopics)) return
-    console.log('WS: Subscriptions changed')
-    setTopics(newTopics)
-  })
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
@@ -74,12 +77,14 @@ const WebsocketListener = () => {
   }, [readyState, getWebSocket])
 
   return (
-    <>
-      {serverRestartingVisible && (
-        <LoaderShade style={{ backgroundColor: 'transparent' }} message="Server is restarting" />
-      )}
-    </>
+    <SocketContext.Provider
+      value={{
+        getWebSocket,
+        readyState,
+        serverRestartingVisible,
+      }}
+    >
+      {props.children}
+    </SocketContext.Provider>
   )
 }
-
-export default WebsocketListener

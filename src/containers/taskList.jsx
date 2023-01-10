@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
@@ -9,42 +9,19 @@ import { ContextMenu } from 'primereact/contextmenu'
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { setFocusedTasks, setPairing, setDialog } from '/src/features/context'
-import { groupResult, getTaskTypeIcon } from '/src/utils'
-
-import axios from 'axios'
-
-const TASKS_QUERY = `
-query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
-  project(name: $projectName) {
-    tasks(folderIds:$folderIds) {
-      edges {
-        node {
-          id
-          name
-          label
-          taskType
-          assignees
-          folder {
-            name
-            label
-          }
-        }
-      }
-    }
-  }
-}
-`
+import { getTaskTypeIcon } from '/src/utils'
+import { toast } from 'react-toastify'
+import { useGetTasksQuery } from '/src/services/getTasks'
 
 const TaskList = ({ style = {} }) => {
   const dispatch = useDispatch()
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
-  const folderIds = context.focused.folders
-  const focusedTasks = context.focused.tasks
 
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const projectName = useSelector((state) => state.context.projectName)
+  const folderIds = useSelector((state) => state.context.focused.folders)
+  const focusedTasks = useSelector((state) => state.context.focused.tasks)
+  const pairing = useSelector((state) => state.context.pairing)
   const userName = useSelector((state) => state.user.name)
+
   const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false)
 
@@ -52,42 +29,12 @@ const TaskList = ({ style = {} }) => {
   // Hooks
   //
 
-  useEffect(() => {
-    if (!folderIds.length) {
-      setData([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    let result = []
-    axios
-      .post('/graphql', {
-        query: TASKS_QUERY,
-        variables: { projectName, folderIds },
-      })
-      .then((response) => {
-        if (!response?.data?.data?.project) {
-          console.error('Loading tasks failed', response.data.errors)
-          return
-        }
-
-        for (const edge of response.data.data.project.tasks.edges) {
-          result.push({
-            id: edge.node.id,
-            name: edge.node.name,
-            label: edge.node.label,
-            folderName: edge.node.folder.label || edge.node.folder.name,
-            taskType: edge.node.taskType,
-            isMine: edge.node.assignees.includes(userName) ? 'yes' : '',
-          })
-        }
-      })
-      .finally(() => {
-        setData(groupResult(result, 'name'))
-        setLoading(false)
-      })
-    // eslint-disable-next-line
-  }, [folderIds, projectName])
+  const {
+    data = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetTasksQuery({ projectName, folderIds, userName }, { skip: !folderIds.length })
 
   const selectedTasks = useMemo(() => {
     const r = {}
@@ -125,7 +72,7 @@ const TaskList = ({ style = {} }) => {
     const icon = node.data.isGroup ? 'folder' : getTaskTypeIcon(node.data.taskType)
     let className = ''
     let i = 0
-    for (const pair of context.pairing) {
+    for (const pair of pairing) {
       i++
       if (pair.taskId === node.data.id) {
         className = `row-hl-${i}`
@@ -146,7 +93,6 @@ const TaskList = ({ style = {} }) => {
     {
       label: 'Detail',
       command: () => setShowDetail(true),
-      disabled: focusedTasks.length !== 1,
     },
     {
       label: 'Edit Tags',
@@ -159,14 +105,20 @@ const TaskList = ({ style = {} }) => {
     },
   ]
 
+  if (isError) {
+    toast.error(`Unable to load tasks. ${error}`)
+
+    return <>Error</>
+  }
+
   return (
     <Section style={style}>
-      <TablePanel loading={loading}>
+      <TablePanel loading={isLoading}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
           entityType="task"
-          entityId={focusedTasks[0]}
+          entityIds={focusedTasks}
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
