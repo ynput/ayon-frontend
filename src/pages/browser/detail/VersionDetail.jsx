@@ -85,12 +85,17 @@ const VersionDetail = () => {
   if (!versions || !versions.length) return null
 
   const handleStatusChange = async (value, entity) => {
+    const patches = [...versionsData].map(({ node }) =>
+      node.id === entity.id ? { ...node, status: value } : node,
+    )
+
     try {
       const payload = await updateFolder({
         projectName,
         type: 'version',
         data: { status: value },
         ids: [entity.id],
+        patches,
       }).unwrap()
 
       console.log('fulfilled', payload)
