@@ -15,7 +15,9 @@ const contextSlice = createSlice({
     },
     selectedVersions: {},
     pairing: [],
-    dialog: {},
+    dialog: {
+      type: null,
+    },
     reload: {},
   },
   reducers: {
@@ -82,7 +84,11 @@ const contextSlice = createSlice({
     setPairing: (state, action) => {
       state.pairing = action.payload
     },
-
+    subsetSelected: (state, action) => {
+      state.focused.type = 'version'
+      state.focused.versions = action.payload.versions
+      state.focused.subsets = action.payload.subsets
+    },
     setBreadcrumbs: (state, action) => {
       let bc = state.breadcrumbs || {}
       if (action.payload.parents) {
@@ -141,6 +147,7 @@ export const {
   setDialog,
   setReload,
   setFocusedType,
+  subsetSelected,
 } = contextSlice.actions
 
 export default contextSlice.reducer

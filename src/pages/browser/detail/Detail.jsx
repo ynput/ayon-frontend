@@ -6,11 +6,11 @@ import VersionDetail from './VersionDetail'
 import TaskDetail from './TaskDetail'
 
 const Detail = () => {
-  const context = useSelector((state) => ({ ...state.context }))
+  const type = useSelector((state) => state.context.focused.type)
 
   let detailComponent = null
 
-  switch (context.focused.type) {
+  switch (type) {
     case 'folder':
       detailComponent = <FolderDetail />
       break
@@ -24,9 +24,7 @@ const Detail = () => {
       break
   }
 
-  const header = context.focused.type
-    ? context.focused.type.charAt(0).toUpperCase() + context.focused.type.slice(1)
-    : 'No selection'
+  const header = type ? type.charAt(0).toUpperCase() + type.slice(1) : 'No selection'
 
   return (
     <Section className="wrap">

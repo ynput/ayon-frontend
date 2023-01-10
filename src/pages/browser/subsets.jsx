@@ -17,6 +17,7 @@ import {
   setBreadcrumbs,
   setPairing,
   setDialog,
+  subsetSelected,
 } from '/src/features/context'
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
@@ -363,20 +364,19 @@ const Subsets = () => {
   }
 
   const onSelectionChange = (event) => {
-    let result = []
+    let versions = []
     let subsets = []
     const selection = Object.keys(event.value)
     for (const sdata of subsetData) {
       if (selection.includes(sdata.id)) {
-        result.push(sdata.versionId)
+        versions.push(sdata.versionId)
         subsets.push(sdata.id)
       }
     }
     // we need to set the focused versions first
     // otherwise setFocusedSubsets will clear the selection
     // of versions.
-    dispatch(setFocusedSubsets(subsets))
-    dispatch(setFocusedVersions(result))
+    dispatch(subsetSelected({ subsets, versions }))
   }
 
   const onContextMenuSelectionChange = (event) => {
