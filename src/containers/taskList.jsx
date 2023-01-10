@@ -15,12 +15,13 @@ import { useGetTasksQuery } from '/src/services/getTasks'
 
 const TaskList = ({ style = {} }) => {
   const dispatch = useDispatch()
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
-  const folderIds = context.focused.folders
-  const focusedTasks = context.focused.tasks
 
+  const projectName = useSelector((state) => state.context.projectName)
+  const folderIds = useSelector((state) => state.context.focused.folders)
+  const focusedTasks = useSelector((state) => state.context.focused.tasks)
+  const pairing = useSelector((state) => state.context.pairing)
   const userName = useSelector((state) => state.user.name)
+
   const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false)
 
@@ -33,7 +34,7 @@ const TaskList = ({ style = {} }) => {
     isLoading,
     isError,
     error,
-  } = useGetTasksQuery({ projectName, folderIds, userName })
+  } = useGetTasksQuery({ projectName, folderIds, userName }, { skip: !folderIds.length })
 
   const selectedTasks = useMemo(() => {
     const r = {}
@@ -71,7 +72,7 @@ const TaskList = ({ style = {} }) => {
     const icon = node.data.isGroup ? 'folder' : getTaskTypeIcon(node.data.taskType)
     let className = ''
     let i = 0
-    for (const pair of context.pairing) {
+    for (const pair of pairing) {
       i++
       if (pair.taskId === node.data.id) {
         className = `row-hl-${i}`
