@@ -370,6 +370,7 @@ const UserList = ({
           <Column field="attrib.email" header="Email" />
           <Column header="Roles" body={(rowData) => formatRoles(rowData, selectedProjects)} />
           <Column header="Has password" body={(rowData) => (rowData.hasPassword ? 'yes' : '')} />
+          <Column header="Guest" body={(rowData) => (rowData.isGuest ? 'yes' : '')} />
           <Column header="Active" body={(rowData) => (rowData.active ? 'yes' : '')} />
         </DataTable>
       </TablePanel>
