@@ -17,7 +17,7 @@ export const TagsEditorContainer = () => {
   if (type) {
     ids = focused[`${type}s`]
   }
-  console.log({ focused, projectTags, projectName, type, ids })
+
   // get redux context state
   const dispatch = useDispatch()
 
