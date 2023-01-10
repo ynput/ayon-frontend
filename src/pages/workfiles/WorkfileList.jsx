@@ -1,19 +1,9 @@
 import axios from 'axios'
-
-import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
-
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-
-import { Section, Panel, TablePanel } from '@ynput/ayon-react-components'
-import { PathField } from '/src/containers/fieldFormat'
+import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '/src/components/icons'
-
-import Hierarchy from '/src/containers/hierarchy'
-import TaskList from '/src/containers/taskList'
-import Thumbnail from '/src/containers/thumbnail'
-import AttributeTable from '/src/containers/attributeTable'
 
 const WORKFILES_QUERY = `
 query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
@@ -31,50 +21,6 @@ query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
   }
 }
 `
-
-const WorkfileDetail = ({ projectName, workfileId, style }) => {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!workfileId) {
-      setData(null)
-      return
-    }
-
-    setLoading(true)
-    axios
-      .get(`/api/projects/${projectName}/workfiles/${workfileId}`)
-      .then((res) => {
-        setData(res.data)
-      })
-      .catch((err) => {
-        console.log(err)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [projectName, workfileId])
-
-  return (
-    <Section style={style}>
-      <Panel>
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          <>
-            <Thumbnail project={projectName} entityType="workfile" entityId={workfileId} />
-            <AttributeTable
-              entityType="workfile"
-              data={data?.attrib || {}}
-              additionalData={[{ title: 'Path', value: <PathField value={data?.path} /> }]}
-            />
-          </>
-        )}
-      </Panel>
-    </Section>
-  )
-}
 
 const WorkfileList = ({
   projectName,
@@ -166,30 +112,4 @@ const WorkfileList = ({
   )
 }
 
-const WorkfilesPage = () => {
-  const [selectedWorkfile, setSelectedWorkfile] = useState(null)
-
-  const projectName = useSelector((state) => state.context.projectName)
-  const focusedTasks = useSelector((state) => state.context.focused.tasks)
-  const pairing = useSelector((state) => state.context.pairing)
-
-  return (
-    <main>
-      <Hierarchy style={{ maxWidth: 500, minWidth: 300 }} />
-      <TaskList style={{ maxWidth: 400, minWidth: 400 }} />
-
-      <WorkfileList
-        projectName={projectName}
-        taskIds={focusedTasks}
-        pairing={pairing}
-        selectedWorkfile={selectedWorkfile}
-        setSelectedWorkfile={setSelectedWorkfile}
-        style={{ maxWidth: 500, minWidth: 300 }}
-      />
-
-      <WorkfileDetail projectName={projectName} workfileId={selectedWorkfile?.id} />
-    </main>
-  )
-}
-
-export default WorkfilesPage
+export default WorkfileList

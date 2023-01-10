@@ -11,7 +11,7 @@ import BrowserPage from './browser/BrowserPage'
 import EditorPage from './editor'
 import LoadingPage from './loading'
 import ProjectAddon from './projectAddon'
-import WorkfilesPage from './workfiles'
+import WorkfilesPage from './workfiles/WorkfilesPage'
 
 import { selectProject, setProjectData } from '../features/context'
 import {
