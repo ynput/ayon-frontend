@@ -6,15 +6,18 @@ import { useGetEntitiesDetailsQuery } from '/src/services/getEntitiesDetails'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/updateEntitiesDetails'
 
 export const TagsEditorContainer = () => {
-  const focused = useSelector((state) => state.context.focused)
   const projectTags = useSelector((state) => state.context.project.tags)
   const projectName = useSelector((state) => state.context.projectName)
-  const type = useSelector((state) => state.context.dialog.type)
+  // entity type folder, version, subset, task
+  const type = useSelector((state) => state.context.focused.type)
+  const dialogType = useSelector((state) => state.context.dialog.type)
+  const focused = useSelector((state) => state.context.focused)
 
   let ids = []
   if (type) {
     ids = focused[`${type}s`]
   }
+  console.log({ focused, projectTags, projectName, type, ids })
   // get redux context state
   const dispatch = useDispatch()
 
@@ -28,7 +31,7 @@ export const TagsEditorContainer = () => {
   // update tags hook
   const [updateTags] = useUpdateEntitiesDetailsMutation()
 
-  if (type !== 'tags' || !ids?.length) return null
+  if (dialogType !== 'tags' || !ids?.length) return null
 
   if (isLoading || isError) return null
 
