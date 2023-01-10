@@ -19,6 +19,7 @@ const contextSlice = createSlice({
       type: null,
     },
     reload: {},
+    breadcrumbs: {},
   },
   reducers: {
     selectProject: (state, action) => {

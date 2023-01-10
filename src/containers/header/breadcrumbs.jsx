@@ -13,9 +13,9 @@ const Breadcrumbs = () => {
     op:// USD uri.
     */
 
-  const context = useSelector((state) => ({ ...state.context }))
-  const crumbData = context.breadcrumbs || {}
-  const projectName = context.projectName
+  const crumbData = useSelector((state) => state.context.breadcrumbs)
+
+  const projectName = useSelector((state) => state.context.projectName)
 
   const [breadcrumbs, uri] = useMemo(() => {
     let crumbs = [projectName]
