@@ -195,6 +195,29 @@ const Hierarchy = (props) => {
     return <>Error...</>
   }
 
+  const table = useMemo(
+    () => (
+      <TreeTable
+        value={treeData}
+        responsive="true"
+        scrollable
+        scrollHeight="100%"
+        selectionMode="multiple"
+        selectionKeys={selectedFolders}
+        expandedKeys={expandedFolders}
+        emptyMessage=" "
+        onSelectionChange={onSelectionChange}
+        onToggle={onToggle}
+        onRowClick={onRowClick}
+        onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+        onContextMenuSelectionChange={onContextMenuSelectionChange}
+      >
+        <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
+      </TreeTable>
+    ),
+    [treeData, selectedFolders, expandedFolders],
+  )
+
   return (
     <Section style={props.style}>
       <Toolbar>
@@ -228,24 +251,7 @@ const Hierarchy = (props) => {
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
-        <TreeTable
-          value={treeData}
-          responsive="true"
-          scrollable
-          scrollHeight="100%"
-          selectionMode="multiple"
-          selectionKeys={selectedFolders}
-          expandedKeys={expandedFolders}
-          emptyMessage=" "
-          onSelectionChange={onSelectionChange}
-          onToggle={onToggle}
-          onRowClick={onRowClick}
-          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
-          onContextMenuSelectionChange={onContextMenuSelectionChange}
-        >
-          <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
-          {/*<Column header="Status" field="status" />*/}
-        </TreeTable>
+        {table}
       </TablePanel>
     </Section>
   )
