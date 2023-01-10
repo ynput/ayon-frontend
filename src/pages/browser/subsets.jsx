@@ -36,6 +36,7 @@ const Subsets = () => {
   const pairing = context.pairing
 
   const ctxMenuRef = useRef(null)
+  const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
   // sets size of status based on status column width
   const [columnsWidths, setColumnWidths] = useLocalStorage('subsets-columns-widths', {})
@@ -59,7 +60,9 @@ const Subsets = () => {
 
   const {
     data: subsetData = [],
-    isLoading: loading,
+    isLoading,
+    isFetching,
+    isSuccess,
     refetch,
   } = useGetSubsetsListQuery(
     {
@@ -69,6 +72,14 @@ const Subsets = () => {
     },
     { skip: !focusedFolders.length },
   )
+
+  // refocus version subset after reload
+  useEffect(() => {
+    if (focusOnReload && isSuccess) {
+      dispatch(setFocusedVersions([focusOnReload]))
+      setFocusOnReload(null)
+    }
+  }, [focusOnReload, isSuccess])
 
   // PUBSUB HOOK
   usePubSub(
@@ -189,6 +200,7 @@ const Subsets = () => {
               [node.data.folderId]: newSelection,
             }),
           )
+          setFocusOnReload(versionId)
         }), // end VersionList
     },
     {
@@ -412,7 +424,7 @@ const Subsets = () => {
         />
       </Toolbar>
 
-      <TablePanel loading={loading}>
+      <TablePanel loading={isLoading || isFetching}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
