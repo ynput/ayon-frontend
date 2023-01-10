@@ -17,6 +17,7 @@ import {
   setBreadcrumbs,
   setPairing,
   setDialog,
+  subsetSelected,
 } from '/src/features/context'
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
@@ -26,14 +27,13 @@ import { MultiSelect } from 'primereact/multiselect'
 
 const Subsets = () => {
   const dispatch = useDispatch()
-  const context = useSelector((state) => ({ ...state.context }))
 
-  const projectName = context.projectName
-  const focusedVersions = context.focused.versions
-  const focusedFolders = context.focused.folders
-  const selectedVersions = context.selectedVersions
-  const focusedSubsets = context.focused.subsets
-  const pairing = context.pairing
+  const projectName = useSelector((state) => state.context.projectName)
+  const focusedVersions = useSelector((state) => state.context.focused.versions)
+  const focusedFolders = useSelector((state) => state.context.focused.folders)
+  const selectedVersions = useSelector((state) => state.context.selectedVersions)
+  const focusedSubsets = useSelector((state) => state.context.focused.subsets)
+  const pairing = useSelector((state) => state.context.pairing)
 
   const ctxMenuRef = useRef(null)
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
@@ -61,7 +61,6 @@ const Subsets = () => {
   const {
     data: subsetData = [],
     isLoading,
-    isFetching,
     isSuccess,
     refetch,
   } = useGetSubsetsListQuery(
@@ -159,7 +158,6 @@ const Subsets = () => {
         return (
           <StatusSelect
             value={node.data.status}
-            statuses={context.project.statuses}
             size={
               columnsWidths['status'] < statusMaxWidth
                 ? columnsWidths['status'] < 60
@@ -363,20 +361,19 @@ const Subsets = () => {
   }
 
   const onSelectionChange = (event) => {
-    let result = []
+    let versions = []
     let subsets = []
     const selection = Object.keys(event.value)
     for (const sdata of subsetData) {
       if (selection.includes(sdata.id)) {
-        result.push(sdata.versionId)
+        versions.push(sdata.versionId)
         subsets.push(sdata.id)
       }
     }
     // we need to set the focused versions first
     // otherwise setFocusedSubsets will clear the selection
     // of versions.
-    dispatch(setFocusedSubsets(subsets))
-    dispatch(setFocusedVersions(result))
+    dispatch(subsetSelected({ subsets, versions }))
   }
 
   const onContextMenuSelectionChange = (event) => {
@@ -424,7 +421,7 @@ const Subsets = () => {
         />
       </Toolbar>
 
-      <TablePanel loading={isLoading || isFetching}>
+      <TablePanel loading={isLoading}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}

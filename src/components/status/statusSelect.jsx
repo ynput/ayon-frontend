@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import Dropdown from '../dropdown'
 import StatusField from './statusField'
+import { useSelector } from 'react-redux'
 
 const StatusSelect = ({
   value,
-  statuses = [],
   size = 'full',
   maxWidth,
   height,
@@ -14,6 +14,7 @@ const StatusSelect = ({
   multipleSelected,
   onClick,
 }) => {
+  const statuses = useSelector((state) => state.context.project.statuses)
   const [changedValue, setChangedValue] = useState(null)
 
   useEffect(() => {

@@ -10,9 +10,8 @@ import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
 const FolderDetail = () => {
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
-  const focusedFolders = context.focused.folders
+  const projectName = useSelector((state) => state.context.projectName)
+  const focusedFolders = useSelector((state) => state.context.focused.folders)
   const folderId = focusedFolders.length === 1 ? focusedFolders[0] : null
 
   // GET RTK QUERY
@@ -88,7 +87,6 @@ const FolderDetail = () => {
             value: (
               <StatusSelect
                 value={folder.status}
-                statuses={context.project.statuses}
                 align={'right'}
                 onChange={(v) => handleStatusChange(v, folder)}
               />

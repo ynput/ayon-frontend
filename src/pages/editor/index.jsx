@@ -32,8 +32,11 @@ import { useLocalStorage } from '../../utils'
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
 
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
+  const projectName = useSelector((state) => state.context.projectName)
+  const focusedFolders = useSelector((state) => state.context.focused.folders)
+  const focusedTasks = useSelector((state) => state.context.focused.tasks)
+  const expandedFolders = useSelector((state) => state.context.expandedFolders)
+
   const dispatch = useDispatch()
 
   const [nodeData, setNodeData] = useState({})
@@ -49,10 +52,10 @@ const EditorPage = () => {
     // so it is compatible with the treetable selection argument and it
     // also provides complete node information
     const result = {}
-    for (const key of context.focused.folders) result[key] = nodeData[key]
-    for (const key of context.focused.tasks) result[key] = nodeData[key]
+    for (const key of focusedFolders) result[key] = nodeData[key]
+    for (const key of focusedTasks) result[key] = nodeData[key]
     return result
-  }, [context.focused.folders, context.focused.tasks, nodeData])
+  }, [focusedFolders, focusedTasks, nodeData])
 
   //
   // Helpers
@@ -82,14 +85,14 @@ const EditorPage = () => {
 
   useEffect(() => {
     setLoading(true)
-    const expandedKeys = [...Object.keys(context.expandedFolders), 'root']
+    const expandedKeys = [...Object.keys(expandedFolders), 'root']
     getUpdatedNodeData(nodeData, newNodes, expandedKeys, parents, query, projectName).then(
       (result) => {
         setNodeData(result)
         setLoading(false)
       },
     )
-  }, [context.expandedFolders, newNodes])
+  }, [expandedFolders, newNodes])
 
   //
   // External events handling
@@ -185,7 +188,7 @@ const EditorPage = () => {
         }
         if (!node.leaf) {
           node.children = []
-          if (childId in context.expandedFolders) buildHierarchy(childId, node.children)
+          if (childId in expandedFolders) buildHierarchy(childId, node.children)
         }
         target.push(node)
       }
@@ -212,7 +215,7 @@ const EditorPage = () => {
     })
 
     // Force table render when selection is locked
-    if (selectionLocked) dispatch(setFocusedFolders(context.focused.folders))
+    if (selectionLocked) dispatch(setFocusedFolders(focusedFolders))
   }
 
   const updateName = (options, value) => {
@@ -468,7 +471,7 @@ const EditorPage = () => {
 
     if (!root) {
       // Update expanded folders context object
-      const exps = { ...context.expandedFolders }
+      const exps = { ...expandedFolders }
       for (const id of parents) exps[id] = true
       dispatch(setExpandedFolders(exps))
     }
@@ -741,7 +744,7 @@ const EditorPage = () => {
             value={treeData}
             resizableColumns
             columnResizeMode="expand"
-            expandedKeys={context.expandedFolders}
+            expandedKeys={expandedFolders}
             onToggle={onToggle}
             selectionMode="multiple"
             selectionKeys={currentSelection}

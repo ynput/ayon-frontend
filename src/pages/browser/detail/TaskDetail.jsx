@@ -9,9 +9,8 @@ import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
 const TaskDetail = () => {
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
-  const focusedTasks = context.focused.tasks
+  const projectName = useSelector((state) => state.context.projectName)
+  const focusedTasks = useSelector((state) => state.context.focused.tasks)
   const taskId = focusedTasks.length === 1 ? focusedTasks[0] : null
 
   // GET RTK QUERY
@@ -84,7 +83,6 @@ const TaskDetail = () => {
             value: (
               <StatusSelect
                 value={task.status}
-                statuses={context.project.statuses}
                 align={'right'}
                 onChange={(v) => handleStatusChange(v, task)}
               />
