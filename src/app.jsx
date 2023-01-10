@@ -25,7 +25,7 @@ import { login } from './features/user'
 import { SocketProvider } from './context/websocketContext'
 
 const App = () => {
-  const user = useSelector((state) => ({ ...state.user }))
+  const user = useSelector((state) => state.user)
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState(false)
@@ -99,23 +99,19 @@ const App = () => {
               element={<Navigate replace to="/projectManager/dashboard" />}
             />
             <Route path="/projectManager/:module" element={<ProjectManager />} />
-
             <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
             <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
-
             <Route
               path="/settings"
               exact
               element={<Navigate replace to="/settings/anatomyPresets" />}
             />
             <Route path="/settings/:module" exact element={<SettingsPage />} />
-
             <Route path="/explorer" element={<ExplorerPage />} />
             <Route path="/doc/api" element={<APIDocsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/events" element={<EventViewer />} />
             <Route path="/services" element={<ServicesPage />} />
-
             <Route element={<ErrorPage code="404" />} />
           </Routes>
         </BrowserRouter>

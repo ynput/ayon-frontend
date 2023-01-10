@@ -65,12 +65,11 @@ const filterHierarchy = (text, folder) => {
 }
 
 const Hierarchy = (props) => {
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
-  const folderTypes = context.project.folderTypes
-  const focusedType = context.focused.type
-  const expandedFolders = context.expandedFolders
-  const focusedFolders = context.focused.folders
+  const projectName = useSelector((state) => state.context.projectName)
+  const folderTypes = useSelector((state) => state.context.project.folderTypes)
+  // const focusedType = useSelector((state) => state.context.focused.type)
+  const expandedFolders = useSelector((state) => state.context.expandedFolders)
+  const focusedFolders = useSelector((state) => state.context.focused.folders)
 
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
@@ -164,7 +163,7 @@ const Hierarchy = (props) => {
 
   const handleEditTags = () => {
     // set focused type if not already
-    if (focusedType !== 'folder') dispatch(setFocusedType('folder'))
+    dispatch(setFocusedType('folder'))
 
     // open dialog
     dispatch(

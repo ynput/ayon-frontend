@@ -1,11 +1,20 @@
 import React from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setDialog } from '/src/features/context'
 import TagsEditorDialog from './dialog'
 import { useGetEntitiesDetailsQuery } from '/src/services/getEntitiesDetails'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/updateEntitiesDetails'
 
-export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => {
+export const TagsEditorContainer = () => {
+  const focused = useSelector((state) => state.context.focused)
+  const projectTags = useSelector((state) => state.context.project.tags)
+  const projectName = useSelector((state) => state.context.projectName)
+  const type = useSelector((state) => state.context.dialog.type)
+
+  let ids = []
+  if (type) {
+    ids = focused[`${type}s`]
+  }
   // get redux context state
   const dispatch = useDispatch()
 
@@ -14,10 +23,12 @@ export const TagsEditorContainer = ({ ids, type, projectName, projectTags }) => 
     data: entitiesData,
     isLoading,
     isError,
-  } = useGetEntitiesDetailsQuery({ projectName, type, ids })
+  } = useGetEntitiesDetailsQuery({ projectName, type, ids }, { skip: !type })
 
   // update tags hook
   const [updateTags] = useUpdateEntitiesDetailsMutation()
+
+  if (type !== 'tags' || !ids?.length) return null
 
   if (isLoading || isError) return null
 
