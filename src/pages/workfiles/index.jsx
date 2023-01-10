@@ -169,10 +169,9 @@ const WorkfileList = ({
 const WorkfilesPage = () => {
   const [selectedWorkfile, setSelectedWorkfile] = useState(null)
 
-  const context = useSelector((state) => ({ ...state.context }))
-  const projectName = context.projectName
-  const focusedTasks = context.focused.tasks
-  const pairing = context.pairing
+  const projectName = useSelector((state) => state.context.projectName)
+  const focusedTasks = useSelector((state) => state.context.focused.tasks)
+  const pairing = useSelector((state) => state.context.pairing)
 
   return (
     <main>

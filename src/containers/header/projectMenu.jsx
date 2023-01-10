@@ -8,10 +8,7 @@ import { useSelector } from 'react-redux'
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
 
-  // get project context
-  const context = useSelector((state) => ({ ...state.context }))
-  // get current project name (id)
-  const projectName = context.projectName
+  const projectName = useSelector((state) => state.context.projectName)
 
   const footer = (
     <Button

@@ -53,7 +53,6 @@ const transformVersionsData = (versions) => {
 const VersionDetail = () => {
   const projectName = useSelector((state) => state.context.projectName)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
-  const statuses = useSelector((state) => state.context.project.statuses)
 
   // GET RTK QUERY
   const {
@@ -134,7 +133,6 @@ const VersionDetail = () => {
               value: (
                 <StatusSelect
                   value={versions[0].status}
-                  statuses={statuses}
                   align={'right'}
                   onChange={(v) => handleStatusChange(v, versions[0])}
                 />

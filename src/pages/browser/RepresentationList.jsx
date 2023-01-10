@@ -33,7 +33,6 @@ const columns = [
 ]
 
 const RepresentationList = ({ representations }) => {
-  //const context = useSelector((state) => ({ ...state.context }))
   const dispatch = useDispatch()
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
   //const [focusedRepresentation, setFocusedRepresentation] = useState(null)
