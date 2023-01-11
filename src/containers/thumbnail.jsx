@@ -1,5 +1,39 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import styled from 'styled-components'
+
+const ThumbnailStyled = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 1.77;
+  overflow: hidden;
+  border-radius: 3px;
+  margin: auto;
+
+  /* icon */
+  span {
+    position: absolute;
+    font-size: 4rem;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    inset: 0;
+    background-color: #161616;
+  }
+`
+
+const ImageStyled = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+
+  /* ensures it always fills the parent */
+  display: block;
+  position: absolute;
+  inset: 0;
+`
 
 const parseThumbnail = (response) => {
   // Create base64 image from axios response
@@ -28,18 +62,14 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
     })
   }, [url, entityId])
 
-  if (!thumbData) {
-    return (
-      <div className="thumbnail placeholder">
-        <span className="material-symbols-outlined">image</span>
-      </div>
-    )
-  }
-
   return (
-    <div className="thumbnail">
-      <img alt={`Entity thumbnail ${entityId}`} src={thumbData} />
-    </div>
+    <ThumbnailStyled>
+      {thumbData ? (
+        <ImageStyled alt={`Entity thumbnail ${entityId}`} src={thumbData} />
+      ) : (
+        <span className="material-symbols-outlined">image</span>
+      )}
+    </ThumbnailStyled>
   )
 }
 
