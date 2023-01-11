@@ -90,9 +90,8 @@ const Attributes = () => {
     })
   }
 
-  const renderBuiltIn = (rowData) => {
-    return rowData?.builtin ? 'built-in' : ''
-  }
+  // for sortable fields
+  const sortableAttributes = attributes.map((a) => ({ ...a, scopeLength: a.scope.length }))
 
   return (
     <main>
@@ -120,26 +119,35 @@ const Attributes = () => {
             scrollable="true"
             scrollHeight="flex"
             dataKey="name"
-            value={attributes}
+            value={sortableAttributes}
             reorderableRows
             onRowReorder={onRowReorder}
             selectionMode="single"
             selection={selectedAttribute}
             onSelectionChange={(e) => setSelectedAttribute(e.value)}
             onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
+            resizableColumns
           >
             <Column rowReorder style={{ maxWidth: 30 }} />
-            <Column field="name" header="Name" style={{ maxWidth: 130 }} />
-            <Column field="data.title" header="Title" style={{ maxWidth: 130 }} />
-            <Column field="builtIn" header="" style={{ maxWidth: 60 }} body={renderBuiltIn} />
+            <Column field="name" header="Name" style={{ maxWidth: 130 }} sortable />
+            <Column field="data.title" header="Title" style={{ maxWidth: 130 }} sortable />
+            <Column
+              field="builtin"
+              header=""
+              style={{ maxWidth: 60 }}
+              body={(rowData) => (rowData?.builtin ? 'built-in' : '')}
+              sortable
+            />
             <Column
               header="Scopes"
+              field="scopeLength"
               body={(rowData) => rowData.scope.join(', ')}
               style={{ maxWidth: 330 }}
+              sortable
             />
-            <Column field="data.type" header="Type" style={{ maxWidth: 150 }} />
-            <Column field="data.example" header="Example" style={{ maxWidth: 200 }} />
-            <Column field="data.description" header="Description" />
+            <Column field="data.type" header="Type" style={{ maxWidth: 150 }} sortable />
+            <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
+            <Column field="data.description" header="Description" sortable />
           </DataTable>
         </TablePanel>
       </Section>
