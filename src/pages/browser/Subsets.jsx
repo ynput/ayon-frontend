@@ -407,6 +407,17 @@ const Subsets = () => {
   //
   // Render
   //
+  const getOutOfString = (value, total) => {
+    if (value.length === total.length) return ''
+
+    return `${value.length}/${total.length}`
+  }
+
+  const placeholder = `Show Columns  ${
+    isMultiSelected
+      ? `${getOutOfString(shownColumnsMultiFocused, filterOptions)} (Multiple)`
+      : `${getOutOfString(shownColumnsSingleFocused, filterOptions)} (Single)`
+  }`
 
   return (
     <Section className="wrap">
@@ -416,8 +427,8 @@ const Subsets = () => {
           options={filterOptions}
           value={shownColumns}
           onChange={handleColumnsFilter}
-          placeholder={`Show Columns (${focusedFolders.length > 1 ? 'Multiple' : 'Single'})`}
-          fixedPlaceholder={shownColumns.length + 1 >= filterOptions.length}
+          placeholder={placeholder}
+          fixedPlaceholder
         />
       </Toolbar>
 
