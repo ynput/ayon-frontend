@@ -71,6 +71,7 @@ const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) =
   }
 }
 
+// TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
   let res = {}
   if (rowData.isAdmin) res.admin = { cls: 'role admin' }
@@ -90,15 +91,7 @@ const formatRoles = (rowData, selectedProjects) => {
     }
   }
 
-  return (
-    <>
-      {Object.keys(res).map((roleName) => (
-        <span key={roleName} className={res[roleName].cls}>
-          {roleName}
-        </span>
-      ))}
-    </>
-  )
+  return { ...rowData, roles: res, rolesList: Object.keys(res) }
 }
 
 const UserList = ({
@@ -210,7 +203,7 @@ const UserList = ({
     })
   }
 
-  // TODO: Can these go into the details panel aswell?
+  // IDEA: Can these go into the details panel aswell?
   const contextMenuModel = [
     {
       label: 'Rename user',
@@ -228,6 +221,11 @@ const UserList = ({
       command: () => onDelete(),
     },
   ]
+
+  const userListWithRoles = useMemo(
+    () => userList.map((user) => formatRoles(user, selectedProjects)),
+    [userList],
+  )
 
   // Render
 
@@ -277,7 +275,7 @@ const UserList = ({
       <TablePanel loading={loading}>
         <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable
-          value={userList}
+          value={userListWithRoles}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
@@ -299,9 +297,16 @@ const UserList = ({
           <Column field="attrib.fullName" header="Full name" sortable />
           <Column field="attrib.email" header="Email" sortable />
           <Column
-            field="roles"
+            field={'rolesList'}
             header="Roles"
-            body={(rowData) => formatRoles(rowData, selectedProjects)}
+            body={(rowData) =>
+              rowData &&
+              Object.keys(rowData.roles).map((roleName) => (
+                <span key={roleName} className={rowData.roles[roleName].cls}>
+                  {roleName}
+                </span>
+              ))
+            }
             sortable
           />
           <Column
@@ -313,7 +318,7 @@ const UserList = ({
           <Column
             header="Guest"
             body={(rowData) => (rowData.isGuest ? 'yes' : '')}
-            field="guest"
+            field="isGuest"
             sortable
           />
           <Column
