@@ -7,6 +7,10 @@ const getAttributes = ayonApi.injectEndpoints({
         url: '/api/attributes',
       }),
       transformResponse: (res) => res.attributes,
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ name }) => ({ type: 'attribute', name })), 'attribute']
+          : ['attribute'],
     }),
   }),
 })

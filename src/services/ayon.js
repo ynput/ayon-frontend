@@ -27,6 +27,6 @@ export const ayonApi = createApi({
       return headers
     },
   }),
-  tagTypes: ['folder', 'task', 'version', 'subset', 'tag', 'project'],
+  tagTypes: ['folder', 'task', 'version', 'subset', 'tag', 'project', 'attribute'],
   endpoints: () => ({}),
 })

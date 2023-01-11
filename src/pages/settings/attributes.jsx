@@ -13,15 +13,16 @@ const Attributes = () => {
   const [showEditor, setShowEditor] = useState(false)
 
   const { data, isLoading, isError, error, isFetching } = useGetAttributesQuery()
+  if (data) console.log(data[0].data.example)
+
+  const [updateAttributes, { isLoading: updateLoading }] = useUpdateAttributesMutation()
 
   // when new data is loaded come in update local state
   useEffect(() => {
-    if (data) {
+    if (data && !updateLoading && !isFetching) {
       setAttributes(data)
     }
-  }, [data, isLoading, isFetching])
-
-  const [updateAttributes, { isLoading: updateLoading }] = useUpdateAttributesMutation()
+  }, [data, isLoading, isFetching, updateLoading])
 
   if (isError) {
     console.error(error)
@@ -37,9 +38,11 @@ const Attributes = () => {
   )
 
   const onSave = async () => {
-    await updateAttributes({ attributes, deleteMissing: true })
+    await updateAttributes({ attributes, deleteMissing: true, patches: attributes })
       .unwrap()
-      .then(() => toast.success('Attribute set saved'))
+      .then(() => {
+        toast.success('Attribute set saved')
+      })
       .catch((err) => {
         console.error(err)
         toast.error('Unable to set attributes')
@@ -109,7 +112,7 @@ const Attributes = () => {
             onClick={onDelete}
           />
         </Toolbar>
-        <TablePanel loading={isLoading || updateLoading}>
+        <TablePanel loading={isLoading || updateLoading || isFetching}>
           <DataTable
             scrollable="true"
             scrollHeight="flex"
