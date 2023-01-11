@@ -1,74 +1,24 @@
-import axios from 'axios'
-import { useState, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '/src/components/icons'
+import { useSelector } from 'react-redux'
+import { useGetWorkfileListQuery } from '/src/services/getWorkfileList'
 
-const WORKFILES_QUERY = `
-query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
-  project(name: $projectName) {
-    workfiles(taskIds:$taskIds) {
-      edges {
-        node {
-          id
-          taskId
-          name
-          path
-        }
-      }
-    }
+const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
+  const taskIds = useSelector((state) => state.context.focused.tasks)
+  const pairing = useSelector((state) => state.context.pairing)
+  const projectName = useSelector((state) => state.context.projectName)
+
+  const { data, isLoading, isError, error } = useGetWorkfileListQuery(
+    { projectName, taskIds },
+    { skip: !taskIds.length },
+  )
+
+  if (isError) {
+    console.error(error)
+    return 'Error...'
   }
-}
-`
-
-const WorkfileList = ({
-  projectName,
-  taskIds,
-  pairing,
-  selectedWorkfile,
-  setSelectedWorkfile,
-  style,
-}) => {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!taskIds.length) {
-      setData([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    let result = []
-    axios
-      .post('/graphql', {
-        query: WORKFILES_QUERY,
-        variables: { projectName, taskIds },
-      })
-      .then((response) => {
-        if (!response?.data?.data?.project) {
-          console.error(response)
-          return
-        }
-
-        for (const edge of response.data.data.project.workfiles.edges) {
-          result.push({
-            id: edge.node.id,
-            taskId: edge.node.taskId,
-            name: edge.node.name,
-            path: edge.node.path,
-          })
-        }
-        setData(result)
-      })
-      .catch((error) => {
-        console.log(error)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [taskIds])
 
   const formatName = (rowData) => {
     let className = ''
@@ -94,7 +44,7 @@ const WorkfileList = ({
 
   return (
     <Section style={style}>
-      <TablePanel loading={loading}>
+      <TablePanel loading={isLoading}>
         <DataTable
           scrollable="true"
           scrollHeight="flex"

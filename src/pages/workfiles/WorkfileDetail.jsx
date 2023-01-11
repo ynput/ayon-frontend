@@ -4,10 +4,12 @@ import { Section, Panel } from '@ynput/ayon-react-components'
 import { PathField } from '/src/containers/fieldFormat'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
+import { useSelector } from 'react-redux'
 
-const WorkfileDetail = ({ projectName, workfileId, style }) => {
+const WorkfileDetail = ({ workfileId, style }) => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
+  const projectName = useSelector((state) => state.context.projectName)
 
   useEffect(() => {
     if (!workfileId) {
