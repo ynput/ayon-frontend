@@ -139,7 +139,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
                 customFields[field](formData?.data[field], (e) => setData(field, e.target.value))
               ) : (
                 <InputText
-                  value={formData?.data[field]}
+                  value={formData?.data[field] || ''}
                   onChange={(e) => setData(field, e.target.value)}
                 />
               )}

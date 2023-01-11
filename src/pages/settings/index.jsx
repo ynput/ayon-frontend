@@ -7,7 +7,7 @@ const AddonsSettings = lazy(() => import('./addons'))
 const StudioOverrides = lazy(() => import('./studio'))
 const Users = lazy(() => import('./users'))
 const Roles = lazy(() => import('./roles'))
-const Attributes = lazy(() => import('./attributes'))
+const Attributes = lazy(() => import('./Attributes'))
 
 const SettingsPage = () => {
   const { module } = useParams()

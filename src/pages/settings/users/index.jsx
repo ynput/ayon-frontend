@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import ProjectList from '/src/containers/projectList'
-import UserList from './userList'
+import UserList from './UserList'
 import UserDetail from './userDetail'
 
 const Users = () => {

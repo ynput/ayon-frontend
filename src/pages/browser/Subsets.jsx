@@ -460,6 +460,7 @@ const Subsets = () => {
                 header={col.header}
                 body={col.body}
                 className={col.field}
+                sortable
               />
             )
           })}

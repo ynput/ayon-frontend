@@ -1,35 +1,33 @@
-import axios from 'axios'
 import { toast } from 'react-toastify'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Button, Section, Toolbar } from '@ynput/ayon-react-components'
 import AttributeEditor from '../../containers/attributes/attributeEditor'
+import { useGetAttributesQuery } from '/src/services/getAttributes'
+import { useUpdateAttributesMutation } from '/src/services/updateAttributes'
 
 const Attributes = () => {
-  const [loading, setLoading] = useState(false)
-  const [attributes, setAttributes] = useState(null)
+  const [attributes, setAttributes] = useState([])
   const [selectedAttribute, setSelectedAttribute] = useState(null)
   const [showEditor, setShowEditor] = useState(false)
 
-  const loadAttributes = () => {
-    setLoading(true)
-    axios
-      .get('/api/attributes')
-      .then((response) => {
-        setAttributes(response.data.attributes)
-      })
-      .catch(() => {
-        toast.error('Unable to load attribute list')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }
+  const { data, isLoading, isError, error, isFetching } = useGetAttributesQuery()
+  if (data) console.log(data[0].data.example)
 
+  const [updateAttributes, { isLoading: updateLoading }] = useUpdateAttributesMutation()
+
+  // when new data is loaded come in update local state
   useEffect(() => {
-    loadAttributes()
-  }, [])
+    if (data && !updateLoading && !isFetching) {
+      setAttributes(data)
+    }
+  }, [data, isLoading, isFetching, updateLoading])
+
+  if (isError) {
+    console.error(error)
+    toast.error('Unable to load attribute list')
+  }
 
   // used to disallow adding a new attribute with existing name
   // seriously. the syntax is terrible. compare the following:
@@ -39,31 +37,31 @@ const Attributes = () => {
     [attributes],
   )
 
-  const onSave = () => {
-    setLoading(true)
-    axios
-      .put('/api/attributes', { attributes, deleteMissing: true })
-      .then(() => toast.success('Attribute set saved'))
-      .catch(() => toast.error('Unable to set attributes'))
-      .finally(() => {
-        setLoading(false)
-        loadAttributes()
+  const onSave = async () => {
+    await updateAttributes({ attributes, deleteMissing: true, patches: attributes })
+      .unwrap()
+      .then(() => {
+        toast.success('Attribute set saved')
+      })
+      .catch((err) => {
+        console.error(err)
+        toast.error('Unable to set attributes')
       })
   }
 
   const onEdit = (attribute) => {
-    setAttributes((src) => {
-      let rows = [...src]
-      for (const row of rows) {
-        if (row.name === attribute.name) {
-          Object.assign(row, attribute)
-          return rows
-        }
-      }
-      // new attribute
-      rows.push(attribute)
-      return rows
-    }) // setAttributes
+    const index = attributes.findIndex((v) => v.name === attribute.name)
+    let newAttributes = [...attributes]
+    if (index === -1) {
+      // creating new attribute
+      newAttributes.push(attribute)
+    } else {
+      // updating existing attribute
+      newAttributes.splice(index, 1, attribute)
+    }
+
+    setAttributes(newAttributes)
+
     setSelectedAttribute(attribute)
     setShowEditor(false)
   }
@@ -90,9 +88,8 @@ const Attributes = () => {
     })
   }
 
-  const renderBuiltIn = (rowData) => {
-    return rowData?.builtin ? 'built-in' : ''
-  }
+  // for sortable fields
+  const sortableAttributes = attributes.map((a) => ({ ...a, scopeLength: a?.scope.length }))
 
   return (
     <main>
@@ -115,31 +112,40 @@ const Attributes = () => {
             onClick={onDelete}
           />
         </Toolbar>
-        <TablePanel loading={loading}>
+        <TablePanel loading={isLoading || updateLoading || isFetching}>
           <DataTable
             scrollable="true"
             scrollHeight="flex"
             dataKey="name"
-            value={attributes}
+            value={sortableAttributes}
             reorderableRows
             onRowReorder={onRowReorder}
             selectionMode="single"
             selection={selectedAttribute}
             onSelectionChange={(e) => setSelectedAttribute(e.value)}
             onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
+            resizableColumns
           >
             <Column rowReorder style={{ maxWidth: 30 }} />
-            <Column field="name" header="Name" style={{ maxWidth: 130 }} />
-            <Column field="data.title" header="Title" style={{ maxWidth: 130 }} />
-            <Column field="builtIn" header="" style={{ maxWidth: 60 }} body={renderBuiltIn} />
+            <Column field="name" header="Name" style={{ maxWidth: 130 }} sortable />
+            <Column field="data.title" header="Title" style={{ maxWidth: 130 }} sortable />
+            <Column
+              field="builtin"
+              header=""
+              style={{ maxWidth: 60 }}
+              body={(rowData) => (rowData?.builtin ? 'built-in' : '')}
+              sortable
+            />
             <Column
               header="Scopes"
+              field="scopeLength"
               body={(rowData) => rowData.scope.join(', ')}
               style={{ maxWidth: 330 }}
+              sortable
             />
-            <Column field="data.type" header="Type" style={{ maxWidth: 150 }} />
-            <Column field="data.example" header="Example" style={{ maxWidth: 200 }} />
-            <Column field="data.description" header="Description" />
+            <Column field="data.type" header="Type" style={{ maxWidth: 150 }} sortable />
+            <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
+            <Column field="data.description" header="Description" sortable />
           </DataTable>
         </TablePanel>
       </Section>

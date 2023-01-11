@@ -3,21 +3,14 @@ import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
-import { Dialog } from 'primereact/dialog'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
-import {
-  TablePanel,
-  Button,
-  InputText,
-  InputPassword,
-  FormLayout,
-  FormRow,
-  Section,
-  Toolbar,
-} from '@ynput/ayon-react-components'
+import { TablePanel, Button, Section, Toolbar } from '@ynput/ayon-react-components'
+// Comps
 import NewUserDialog from './newUserDialog'
+import SetPasswordDialog from './SetPasswordDialog'
+import RenameUserDialog from './RenameUserDialog'
+// utils
 import axios from 'axios'
-
 import './users.sass'
 
 const USERS_QUERY = `
@@ -78,6 +71,7 @@ const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) =
   }
 }
 
+// TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
   let res = {}
   if (rowData.isAdmin) res.admin = { cls: 'role admin' }
@@ -97,79 +91,7 @@ const formatRoles = (rowData, selectedProjects) => {
     }
   }
 
-  return (
-    <>
-      {Object.keys(res).map((roleName) => (
-        <span key={roleName} className={res[roleName].cls}>
-          {roleName}
-        </span>
-      ))}
-    </>
-  )
-}
-
-const RenameUserDialog = ({ onHide, selectedUsers }) => {
-  const [newName, setNewName] = useState('')
-
-  if (!selectedUsers?.length) {
-    // this shouldn't happen
-    onHide()
-    return <></>
-  }
-
-  const oldName = selectedUsers[0]
-  const onSubmit = () => {
-    axios
-      .patch(`/api/users/${oldName}/rename`, { newName })
-      .then(() => toast.success('User renamed'))
-      .catch(() => toast.error('Unable to rename user'))
-      .finally(() => onHide())
-  }
-  return (
-    <Dialog header={`Rename user ${oldName}`} visible={true} onHide={onHide}>
-      <FormLayout>
-        <FormRow label="New name">
-          <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />
-        </FormRow>
-        <FormRow>
-          <Button label="Rename" onClick={onSubmit} />
-        </FormRow>
-      </FormLayout>
-    </Dialog>
-  )
-}
-
-const SetPasswordDialog = ({ onHide, selectedUsers }) => {
-  const [password, setPassword] = useState('')
-
-  if (!selectedUsers?.length) {
-    // this shouldn't happen
-    onHide()
-    return <></>
-  }
-
-  const userName = selectedUsers[0]
-  const onSubmit = () => {
-    axios
-      .patch(`/api/users/${userName}/password`, { password })
-      .then(() => {
-        onHide()
-        toast.success('Password changed')
-      })
-      .catch(() => toast.error('Unable to change password'))
-  }
-  return (
-    <Dialog header={`Change user ${userName} password`} visible={true} onHide={onHide}>
-      <FormLayout>
-        <FormRow label="New password">
-          <InputPassword value={password} onChange={(e) => setPassword(e.target.value)} />
-        </FormRow>
-        <FormRow>
-          <Button label="Set password" onClick={onSubmit} />
-        </FormRow>
-      </FormLayout>
-    </Dialog>
-  )
+  return { ...rowData, roles: res, rolesList: Object.keys(res) }
 }
 
 const UserList = ({
@@ -190,7 +112,6 @@ const UserList = ({
   const contextMenuRef = useRef(null)
 
   // Load user list
-
   useEffect(() => {
     setLoading(true)
     let result = []
@@ -219,6 +140,7 @@ const UserList = ({
       })
   }, [reloadTrigger])
 
+  // loading roles
   useEffect(() => {
     setLoading(true)
     let result = []
@@ -281,6 +203,7 @@ const UserList = ({
     })
   }
 
+  // IDEA: Can these go into the details panel aswell?
   const contextMenuModel = [
     {
       label: 'Rename user',
@@ -298,6 +221,11 @@ const UserList = ({
       command: () => onDelete(),
     },
   ]
+
+  const userListWithRoles = useMemo(
+    () => userList.map((user) => formatRoles(user, selectedProjects)),
+    [userList],
+  )
 
   // Render
 
@@ -347,7 +275,7 @@ const UserList = ({
       <TablePanel loading={loading}>
         <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable
-          value={userList}
+          value={userListWithRoles}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
@@ -365,13 +293,40 @@ const UserList = ({
             setLastSelectedUser(e.data)
           }}
         >
-          <Column field="name" header="Name" />
-          <Column field="attrib.fullName" header="Full name" />
-          <Column field="attrib.email" header="Email" />
-          <Column header="Roles" body={(rowData) => formatRoles(rowData, selectedProjects)} />
-          <Column header="Has password" body={(rowData) => (rowData.hasPassword ? 'yes' : '')} />
-          <Column header="Guest" body={(rowData) => (rowData.isGuest ? 'yes' : '')} />
-          <Column header="Active" body={(rowData) => (rowData.active ? 'yes' : '')} />
+          <Column field="name" header="Name" sortable />
+          <Column field="attrib.fullName" header="Full name" sortable />
+          <Column field="attrib.email" header="Email" sortable />
+          <Column
+            field={'rolesList'}
+            header="Roles"
+            body={(rowData) =>
+              rowData &&
+              Object.keys(rowData.roles).map((roleName) => (
+                <span key={roleName} className={rowData.roles[roleName].cls}>
+                  {roleName}
+                </span>
+              ))
+            }
+            sortable
+          />
+          <Column
+            header="Has password"
+            body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
+            field="hasPassword"
+            sortable
+          />
+          <Column
+            header="Guest"
+            body={(rowData) => (rowData.isGuest ? 'yes' : '')}
+            field="isGuest"
+            sortable
+          />
+          <Column
+            header="Active"
+            body={(rowData) => (rowData.active ? 'yes' : '')}
+            field="active"
+            sortable
+          />
         </DataTable>
       </TablePanel>
     </Section>
