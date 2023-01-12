@@ -8,6 +8,7 @@ const customRoots = ayonApi.injectEndpoints({
         method: 'GET',
       }),
 
+      providesTags: ['customRoots'],
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
@@ -18,6 +19,7 @@ const customRoots = ayonApi.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
+      invalidatesTags: ['customRoots'],
 
       async onQueryStarted({ projectName, machineIdent, data }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(
