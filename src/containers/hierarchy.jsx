@@ -78,6 +78,35 @@ const Hierarchy = (props) => {
   const [showDetail, setShowDetail] = useState(false)
 
   //
+  // Folder types
+  //
+
+  // Transform a list of folder types to a list of objects
+  // compatible with the MultiSelect component
+  const [folderTypeList, folderTypeListNames] = folderTypes.reduce(
+    ([a, b], e) => {
+      a.push({
+        label: e.name,
+        value: e.name,
+      }),
+        b.push(e.name)
+      return [a, b]
+    },
+    [[], []],
+  )
+
+  // Custom "selected folder type" render template for the multiselect
+  // component
+
+  const selectedTypeTemplate = (option) => {
+    if (option) {
+      const folder_type_label = option ? option.replace(/[a-z]/g, '') : '??'
+      return <span style={{ marginRight: '10px' }}>{folder_type_label}</span>
+    }
+    return 'Folder types'
+  }
+
+  //
   // Hooks
   //
 
@@ -104,7 +133,13 @@ const Hierarchy = (props) => {
         filteredArr = filteredArr.concat(filterArray(item.children, filter))
       }
     })
-    return filteredArr
+
+    // sort by folderType
+    return filteredArr.sort(
+      (a, b) =>
+        folderTypeListNames.indexOf(a.data.folderType) -
+        folderTypeListNames.indexOf(b.data.folderType),
+    )
   }
 
   const treeDataFlat = useMemo(() => {
@@ -160,29 +195,6 @@ const Hierarchy = (props) => {
 
   const onToggle = (event) => {
     dispatch(setExpandedFolders(event.value))
-  }
-
-  //
-  // Folder types
-  //
-
-  // Transform a list of folder types to a list of objects
-  // compatible with the MultiSelect component
-
-  const folderTypeList = folderTypes.map((e) => ({
-    label: e.name,
-    value: e.name,
-  }))
-
-  // Custom "selected folder type" render template for the multiselect
-  // component
-
-  const selectedTypeTemplate = (option) => {
-    if (option) {
-      const folder_type_label = option ? option.replace(/[a-z]/g, '') : '??'
-      return <span style={{ marginRight: '10px' }}>{folder_type_label}</span>
-    }
-    return 'Folder types'
   }
 
   const handleEditTags = () => {
