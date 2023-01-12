@@ -83,17 +83,41 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  //TODO: use axios params here
-  // if (selectedFolderTypes) url += `?types=${selectedFolderTypes.join(',')}`
   const { isError, error, isLoading, data } = useGetHierarchyQuery({ projectName })
 
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
 
-  const treeData = useMemo(() => {
+  let treeData = useMemo(() => {
     if (!data) return []
     return filterHierarchy(query, data)
   }, [data, query])
+
+  function filterArray(arr = [], filter = []) {
+    let filteredArr = []
+
+    arr.forEach((item) => {
+      if (filter.includes(item.data.folderType)) {
+        filteredArr.push(item)
+      }
+      if (item.children.length > 0) {
+        filteredArr = filteredArr.concat(filterArray(item.children, filter))
+      }
+    })
+    return filteredArr
+  }
+
+  const treeDataFlat = useMemo(() => {
+    if (selectedFolderTypes.length) {
+      const filtered = filterArray(treeData, selectedFolderTypes)
+
+      return filtered
+    }
+  }, [treeData, selectedFolderTypes])
+
+  if (treeDataFlat) {
+    treeData = treeDataFlat
+  }
 
   //
   // Selection
@@ -204,7 +228,7 @@ const Hierarchy = (props) => {
         selectionMode="multiple"
         selectionKeys={selectedFolders}
         expandedKeys={expandedFolders}
-        emptyMessage=" "
+        emptyMessage={isLoading ? ' ' : 'No folders found'}
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onRowClick={onRowClick}
@@ -250,6 +274,7 @@ const Hierarchy = (props) => {
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
+
         {table}
       </TablePanel>
     </Section>
