@@ -24,6 +24,7 @@ import StatusSelect from '/src/components/status/statusSelect'
 import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
 import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
+import useSearchFilter from '/src/hooks/useSearchFilter'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -40,8 +41,6 @@ const Subsets = () => {
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
   // sets size of status based on status column width
   const [columnsWidths, setColumnWidths] = useLocalStorage('subsets-columns-widths', {})
-  // used to filter through row names
-  const [rowsFilterSearch, setRowsFilterSearch] = useState('')
 
   // version overrides
   // Get a list of version overrides for the current set of folders
@@ -343,58 +342,18 @@ const Subsets = () => {
   }, [subsetData])
 
   const searchableFields = [
-    'author',
-    'family',
-    'folder',
-    'fps',
-    'frames',
-    'name',
-    'resolution',
-    'status',
-    'versionName',
+    'data.author',
+    'data.family',
+    'data.folder',
+    'data.fps',
+    'data.frames',
+    'data.name',
+    'data.resolution',
+    'data.status',
+    'data.versionName',
   ]
-  // create keywords that are used for searching
-  tableData = useMemo(
-    () =>
-      tableData.map((subset) => ({
-        ...subset,
-        data: {
-          ...subset.data,
-          keywords: Object.entries(subset.data).flatMap(([f, v]) =>
-            searchableFields.includes(f) && v !== '' ? v.toLowerCase() : [],
-          ),
-        },
-      })),
-    [subsetData],
-  )
 
-  const searchTableData = useMemo(() => {
-    // separate into array by ,
-    const rowsFilterSearchKeywords = rowsFilterSearch.split(',').reduce((acc, cur) => {
-      if (cur.trim() === '') return acc
-      else {
-        acc.push(cur.trim())
-        return acc
-      }
-    }, [])
-
-    if (rowsFilterSearchKeywords.length && tableData) {
-      return tableData.filter((subset) => {
-        const matchingKeys = []
-        subset.data.keywords?.some((key) =>
-          rowsFilterSearchKeywords.forEach((split) => {
-            if (key.includes(split) && !matchingKeys.includes(split)) matchingKeys.push(split)
-          }),
-        )
-
-        return matchingKeys.length >= rowsFilterSearchKeywords.length
-      })
-    } else return null
-  }, [tableData, rowsFilterSearch])
-
-  if (searchTableData) {
-    tableData = searchTableData
-  }
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData)
 
   //
   // Handlers
@@ -481,8 +440,8 @@ const Subsets = () => {
         <InputText
           style={{ width: '200px' }}
           placeholder="Filter subsets..."
-          value={rowsFilterSearch}
-          onChange={(e) => setRowsFilterSearch(e.target.value)}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
         <MultiSelect
           options={filterOptions}
@@ -504,12 +463,12 @@ const Subsets = () => {
           versionOverrides={versionOverrides}
         />
         <TreeTable
+          value={filteredData}
           responsive="true"
           scrollHeight="100%"
           scrollable="true"
           resizableColumns
           columnResizeMode="expand"
-          value={tableData}
           emptyMessage="No subset found"
           selectionMode="multiple"
           selectionKeys={selectedRows}

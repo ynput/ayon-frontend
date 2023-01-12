@@ -12,6 +12,7 @@ import RenameUserDialog from './RenameUserDialog'
 // utils
 import axios from 'axios'
 import './users.sass'
+import useSearchFilter from '/src/hooks/useSearchFilter'
 
 const USERS_QUERY = `
   query UserList {
@@ -109,7 +110,6 @@ const UserList = ({
   const [lastSelectedUser, setLastSelectedUser] = useState(null)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
-  const [rowsFilterSearch, setRowsFilterSearch] = useState('')
   const contextMenuRef = useRef(null)
 
   // TODO RTK QUERY
@@ -232,57 +232,7 @@ const UserList = ({
 
   const searchableFields = ['name', 'attrib.fullName', 'attrib.email', 'rolesList', 'hasPassword']
 
-  // create keywords that are used for searching
-  userListWithRoles = useMemo(
-    () =>
-      userListWithRoles.map((user) => ({
-        ...user,
-        keywords: Object.entries(user).flatMap(([k, v]) => {
-          if (searchableFields.includes(k)) {
-            if (typeof v === 'string') {
-              return v.toLowerCase()
-            } else if (Array.isArray(v)) {
-              return v.flatMap((v) => v)
-            } else if (typeof v === 'boolean' && v) {
-              return k.toLowerCase()
-            } else return []
-          } else if (typeof v === 'object') {
-            return Object.entries(v).flatMap(([k2, v2]) =>
-              searchableFields.includes(`${k}.${k2}`) && v2 ? v2.toLowerCase() : [],
-            )
-          } else return []
-        }),
-      })),
-    [userListWithRoles],
-  )
-
-  const searchTableData = useMemo(() => {
-    // separate into array by ,
-    const rowsFilterSearchKeywords = rowsFilterSearch.split(',').reduce((acc, cur) => {
-      if (cur.trim() === '') return acc
-      else {
-        acc.push(cur.trim())
-        return acc
-      }
-    }, [])
-
-    if (rowsFilterSearchKeywords.length && userListWithRoles) {
-      return userListWithRoles.filter((user) => {
-        const matchingKeys = []
-        user.keywords?.some((key) =>
-          rowsFilterSearchKeywords.forEach((split) => {
-            if (key.includes(split) && !matchingKeys.includes(split)) matchingKeys.push(split)
-          }),
-        )
-
-        return matchingKeys.length >= rowsFilterSearchKeywords.length
-      })
-    } else return null
-  }, [userListWithRoles, rowsFilterSearch])
-
-  if (searchTableData) {
-    userListWithRoles = searchTableData
-  }
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, userListWithRoles)
 
   // Render
 
@@ -300,8 +250,8 @@ const UserList = ({
         <InputText
           style={{ width: '200px' }}
           placeholder="Filter subsets..."
-          value={rowsFilterSearch}
-          onChange={(e) => setRowsFilterSearch(e.target.value)}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </Toolbar>
 
@@ -338,7 +288,7 @@ const UserList = ({
       <TablePanel loading={loading}>
         <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable
-          value={userListWithRoles}
+          value={filteredData}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
