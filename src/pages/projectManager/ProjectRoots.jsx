@@ -11,7 +11,7 @@ import {
   Section,
 } from '@ynput/ayon-react-components'
 
-const ProjectRootForm = ({ projectName, machineName, machineIdent, roots }) => {
+const ProjectRootForm = ({ projectName, machineName, machineId, roots }) => {
   const [setCustomRoots] = useSetCustomRootsMutation()
   const [rootValues, setRootValues] = useState(null)
 
@@ -30,7 +30,7 @@ const ProjectRootForm = ({ projectName, machineName, machineIdent, roots }) => {
       <h3 style={{ display: 'block' }}>
         {machineName}{' '}
         <span style={{ fontWeight: 'normal', fontStyle: 'italic', float: 'right' }}>
-          {machineIdent}
+          {machineId}
         </span>
       </h3>
       <FormLayout>
@@ -46,7 +46,7 @@ const ProjectRootForm = ({ projectName, machineName, machineIdent, roots }) => {
         <FormRow>
           <Button
             label="Save"
-            onClick={() => setCustomRoots({ projectName, machineIdent, data: rootValues })}
+            onClick={() => setCustomRoots({ projectName, machineId, data: rootValues })}
           />
         </FormRow>
       </FormLayout>
@@ -66,7 +66,7 @@ const ProjectRoots = ({ projectName }) => {
       const roots = []
       for (const rootName in project?.config?.roots || {}) {
         const rootPath = project.config.roots[rootName][machine.platform]
-        const customRootPath = rootOverrides?.[machine.ident]?.[rootName]
+        const customRootPath = rootOverrides?.[machine.id]?.[rootName]
         roots.push({
           name: rootName,
           originalPath: rootPath,
@@ -75,7 +75,7 @@ const ProjectRoots = ({ projectName }) => {
       }
       forms.push({
         projectName,
-        machineIdent: machine.ident,
+        machineId: machine.id,
         machineName: machine.hostname,
         roots,
       })
@@ -89,7 +89,7 @@ const ProjectRoots = ({ projectName }) => {
   return (
     <Section className="invisible" style={{ maxWidth: 600 }}>
       {forms.map((form) => (
-        <ProjectRootForm key={form.machineIdent} {...form} />
+        <ProjectRootForm key={form.machineId} {...form} />
       ))}
     </Section>
   )
