@@ -11,6 +11,7 @@ import {
   Toolbar,
   TablePanel,
   InputSwitch,
+  InputText,
 } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
@@ -28,6 +29,7 @@ import { stringEditor, typeEditor } from './editors'
 import { loadBranch, getUpdatedNodeData } from './loader'
 import { MultiSelect } from 'primereact/multiselect'
 import { useLocalStorage } from '../../utils'
+import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -44,18 +46,43 @@ const EditorPage = () => {
   const [newNodes, setNewNodes] = useState([])
   const [errors, setErrors] = useState({})
   const [selectionLocked, setSelectionLocked] = useState(false)
+  // SEARCH STATES
+  const [search, setSearch] = useState('')
+  const [searchInputFocused, setSearchInputFocused] = useState(false)
+  const [searchMode, setSearchMode] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+
+  useEffect(() => {
+    // turn search mode on
+    if (searchInputFocused && !searchMode) {
+      dispatch(setFocusedFolders([]))
+      setSearchMode(true)
+    }
+
+    // if foccusing again set isSearching
+    if (searchInputFocused && searchMode && !isSearching) setIsSearching(true)
+
+    // if blurring and isSearching is true
+    if (!searchInputFocused && searchMode && isSearching) setIsSearching(false)
+
+    // turn seach mode off only when blurred and input cleared
+    if (!searchInputFocused && search.length < 1) setSearchMode(false)
+  }, [searchInputFocused, setSearchMode, searchMode, setIsSearching])
+
+  useEffect(() => {
+    if (search.length > 0 || searchMode) setIsSearching(true)
+
+    // onBlur and search cleared
+    if (!searchMode) setIsSearching(false)
+
+    const timeOutId = setTimeout(() => search.length > 0 && setIsSearching(false), 1000)
+    return () => clearTimeout(timeOutId)
+  }, [search, searchMode])
+
   const contextMenuRef = useRef(null)
 
-  const currentSelection = useMemo(() => {
-    // This object holds the information on current selected nodes.
-    // It has the same structure as nodeData, e.g. {objecId: nodeData, ...}
-    // so it is compatible with the treetable selection argument and it
-    // also provides complete node information
-    const result = {}
-    for (const key of focusedFolders) result[key] = nodeData[key]
-    for (const key of focusedTasks) result[key] = nodeData[key]
-    return result
-  }, [focusedFolders, focusedTasks, nodeData])
+  // Hierarchy data is used for fast searching
+  const { data: hierarchyData } = useGetHierarchyQuery({ projectName })
 
   //
   // Helpers
@@ -171,7 +198,7 @@ const EditorPage = () => {
   // are needed for the hierarchy, so thi cascading makes
   // it possible)
 
-  const treeData = useMemo(() => {
+  let treeData = useMemo(() => {
     if (isEmpty(parents)) {
       return []
     }
@@ -197,6 +224,55 @@ const EditorPage = () => {
     buildHierarchy('root', result)
     return sortByKey(result, 'name')
   }, [parents])
+
+  const getFolderTaskNames = (folders = []) => {
+    let taskNames = []
+    folders.forEach((folder) => {
+      taskNames.push({
+        key: folder.id,
+        name: folder.name,
+        keywords: [...folder.taskNames, folder.name, folder.folderType].map((k) => k.toLowerCase()),
+        data: {
+          name: folder.name,
+          folderType: folder.folderType,
+          id: folder.id,
+          hasChildren: false,
+          attrib: {},
+          __entityType: folder.folderType,
+        },
+      })
+
+      if (folder.children?.length) {
+        taskNames = taskNames.concat(getFolderTaskNames(folder.children))
+      }
+    })
+
+    return taskNames
+  }
+
+  let searchabledFolders = useMemo(() => getFolderTaskNames(hierarchyData), [hierarchyData])
+
+  searchabledFolders = useMemo(() => {
+    return searchMode
+      ? searchabledFolders.filter((folder) => folder.keywords.some((key) => key.includes(search)))
+      : searchabledFolders
+  }, [searchMode, searchabledFolders, search])
+
+  if (searchMode) treeData = searchabledFolders
+
+  const currentSelection = useMemo(() => {
+    // This object holds the information on current selected nodes.
+    // It has the same structure as nodeData, e.g. {objecId: nodeData, ...}
+    // so it is compatible with the treetable selection argument and it
+    // also provides complete node information
+
+    const result = {}
+    for (const key of focusedFolders) result[key] = nodeData[key]
+    for (const key of focusedTasks) result[key] = nodeData[key]
+    return result
+  }, [focusedFolders, focusedTasks, nodeData])
+
+  console.log(currentSelection)
 
   //
   // Update handlers
@@ -639,18 +715,21 @@ const EditorPage = () => {
     [],
   )
 
-  let AllColumns = [
+  let allColumns = [
     <Column
       field="name"
       key="name"
       header="Name"
       expander={true}
       body={(rowData) => formatName(rowData.data, changes)}
-      style={{ width: columnsWidthsState['name'], maxWidth: 300 }}
+      style={{ width: columnsWidthsState['name'], maxWidth: 300, height: 33 }}
       editor={(options) => {
         return stringEditor(options, updateName, formatName(options.rowData, changes, false))
       }}
     />,
+  ]
+
+  const attributeColumns = [
     <Column
       field="type"
       key="type"
@@ -680,12 +759,15 @@ const EditorPage = () => {
     )),
   ]
 
+  // when searching remove columns from treetable to increase performance
+  if (!isSearching) allColumns = allColumns.concat(attributeColumns)
+
   // sort columns if localstorage set
   let columnsOrder = localStorage.getItem('editor-columns-order')
   if (columnsOrder) {
     try {
       columnsOrder = JSON.parse(columnsOrder)
-      AllColumns.sort((a, b) => columnsOrder[a.props.field] - columnsOrder[b.props.field])
+      allColumns.sort((a, b) => columnsOrder[a.props.field] - columnsOrder[b.props.field])
     } catch (error) {
       console.log(error)
       // remove local stage
@@ -694,8 +776,8 @@ const EditorPage = () => {
   }
 
   // only filter columns if required
-  if (shownColumns.length < AllColumns.length) {
-    AllColumns = AllColumns.filter(({ props }) => shownColumns.includes(props.field))
+  if (shownColumns.length < allColumns.length) {
+    allColumns = allColumns.filter(({ props }) => shownColumns.includes(props.field))
   }
 
   // sort columns
@@ -717,12 +799,20 @@ const EditorPage = () => {
           <Button icon="add_task" label="Add task" disabled={!canAdd} onClick={onAddTask} />
           <Button icon="create_new_folder" label="Add root folder" onClick={onAddRootFolder} />
           <Button label="Delete selected" icon="delete" onClick={onDelete} />
-          <InputSwitch
-            checked={selectionLocked}
-            onChange={() => setSelectionLocked(!selectionLocked)}
-            style={{ width: 40, marginLeft: 10 }}
+
+          <Spacer />
+          <Button icon="close" label="Revert Changes" onClick={onRevert} disabled={!canCommit} />
+          <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
+        </Toolbar>
+        <Toolbar>
+          <InputText
+            style={{ width: '200px' }}
+            placeholder="Filter folders..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => setSearchInputFocused(true)}
+            onBlur={() => setSearchInputFocused(false)}
           />
-          Lock selection
           <MultiSelect
             options={filterOptions}
             value={shownColumns}
@@ -731,9 +821,12 @@ const EditorPage = () => {
             fixedPlaceholder={shownColumns.length >= filterOptions.length}
             style={{ maxWidth: 200 }}
           />
-          <Spacer />
-          <Button icon="close" label="Revert Changes" onClick={onRevert} disabled={!canCommit} />
-          <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
+          <InputSwitch
+            checked={selectionLocked}
+            onChange={() => setSelectionLocked(!selectionLocked)}
+            style={{ width: 40, marginLeft: 10 }}
+          />
+          Lock selection
         </Toolbar>
         <TablePanel loading={loading}>
           <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
@@ -762,8 +855,13 @@ const EditorPage = () => {
             onColumnResizeEnd={handleColumnResize}
             reorderableColumns
             onColReorder={handleColumnReorder}
+            paginator={searchabledFolders.length > 100 && searchMode}
+            rows={100}
+            paginatorPosition={'bottom'}
+            paginatorClassName={'editor-pages'}
+            className={searchMode && !isSearching ? 'search' : ''}
           >
-            {AllColumns}
+            {allColumns}
             <Column
               field="error"
               header=""
