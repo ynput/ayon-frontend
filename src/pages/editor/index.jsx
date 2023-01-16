@@ -261,16 +261,18 @@ const EditorPage = () => {
     return sortByKey(result, 'name')
   }, [parents])
 
-  const getFolderTaskNames = (folders = [], parentId) => {
+  const getFolderTaskNames = (folders = [], parentId, d) => {
     let taskNames = []
+    let depth = d || 0
     folders.forEach((folder) => {
       taskNames.push({
         key: folder.id,
         name: folder.name,
         parentId: parentId,
-        children: folder.children || [],
+        __children: folder.children || [],
         taskNames: folder.taskNames,
         keywords: [...folder.taskNames, folder.name, folder.folderType].map((k) => k.toLowerCase()),
+        depth: depth,
         data: {
           name: folder.name,
           folderType: folder.folderType,
@@ -282,7 +284,7 @@ const EditorPage = () => {
       })
 
       if (folder.children?.length) {
-        taskNames = taskNames.concat(getFolderTaskNames(folder.children, folder.id))
+        taskNames = taskNames.concat(getFolderTaskNames(folder.children, folder.id, depth + 1))
       }
     })
 
@@ -290,14 +292,17 @@ const EditorPage = () => {
   }
 
   // create a flat list of everything searchable, folders and tasks
-  let searchabledFolders = useMemo(() => getFolderTaskNames(hierarchyData), [hierarchyData])
+  let searchabledFolders = useMemo(
+    () => getFolderTaskNames(hierarchyData).sort((a, b) => a.depth - b.depth),
+    [hierarchyData],
+  )
 
   // create a set that can be used to look up a specific id
   const searchabledFoldersSet = useMemo(() => {
     const res = new Map()
 
     for (const folder of searchabledFolders) {
-      res.set(folder.key, { parent: folder.parentId, childrenLength: folder.children.length })
+      res.set(folder.key, { parent: folder.parentId, childrenLength: folder.__children.length })
     }
 
     return res
@@ -349,7 +354,7 @@ const EditorPage = () => {
 
         const getAllChildren = (folder) => {
           // add all children and taskNames to folders
-          folder.children?.forEach((child) => {
+          folder.__children?.forEach((child) => {
             if (!folderIds.includes(child.id)) folderIds.push(child.id)
 
             if (child.children) getAllChildren(child)
