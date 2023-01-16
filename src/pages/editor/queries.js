@@ -12,6 +12,7 @@ const BASE_QUERY = `
             hasChildren
             hasTasks
             parents
+            parentId
             ownAttrib
             attrib {
               #FOLDER_ATTRS#

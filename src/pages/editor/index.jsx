@@ -30,7 +30,6 @@ import { loadBranch, getUpdatedNodeData } from './loader'
 import { MultiSelect } from 'primereact/multiselect'
 import { useLocalStorage } from '../../utils'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
-import { useGetFoldersAndTasksQuery } from '/src/services/getFoldersAndTasks'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -53,7 +52,9 @@ const EditorPage = () => {
   const [searchMode, setSearchMode] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   // object with folderIds, task parentsIds and taskNames
-  const [searchIds, setSearchIds] = useState(null)
+  const [searchIds, setSearchIds] = useState({})
+  // search if finished when user stops typing 3 or more words
+  const searchFinished = !isSearching && searchMode && search.length > 2
 
   useEffect(() => {
     // turn search mode on
@@ -116,16 +117,23 @@ const EditorPage = () => {
   }
 
   useEffect(() => {
+    console.log('getting new data')
     setLoading(true)
     const expandedKeys = [...Object.keys(expandedFolders), 'root']
 
-    getUpdatedNodeData(nodeData, newNodes, expandedKeys, parents, query, projectName).then(
-      (result) => {
-        setNodeData(result)
-        setLoading(false)
-      },
-    )
-  }, [expandedFolders, newNodes])
+    getUpdatedNodeData(
+      nodeData,
+      newNodes,
+      expandedKeys,
+      parents,
+      query,
+      projectName,
+      searchIds,
+    ).then((result) => {
+      setNodeData(result)
+      setLoading(false)
+    })
+  }, [expandedFolders, newNodes, isSearching])
 
   //
   // External events handling
@@ -183,6 +191,23 @@ const EditorPage = () => {
   // Build hierarchy
   //
 
+  // console.log(searchIds)
+  const filteredNodeData = { ...nodeData }
+
+  // if search results filter out nodes
+  if (searchFinished && searchIds) {
+    for (const key in filteredNodeData) {
+      const { folderIds = [], taskIds = [] } = searchIds
+      if (folderIds.length && !folderIds.includes(key)) {
+        if (!filteredNodeData[key].leaf) {
+          delete filteredNodeData[key]
+        } else if (taskIds.length && !taskIds.includes(filteredNodeData[key].data.name)) {
+          delete filteredNodeData[key]
+        }
+      }
+    }
+  }
+
   const parents = useMemo(() => {
     // This is an auto-generated object in the form of:
     //   { parentId: [child1Id, child2Id....]
@@ -190,13 +215,13 @@ const EditorPage = () => {
     // building hierarchy
 
     const result = {}
-    for (const childId in nodeData) {
-      const parentId = nodeData[childId].data.__parentId
+    for (const childId in filteredNodeData) {
+      const parentId = filteredNodeData[childId].data.__parentId
       if (!(parentId in result)) result[parentId] = []
       result[parentId].push(childId)
     }
     return result
-  }, [nodeData])
+  }, [filteredNodeData])
 
   // Build hierarchical data for the TreeTable component
   // Trigger the rebuild when parents are updated (which are
@@ -238,6 +263,7 @@ const EditorPage = () => {
         key: folder.id,
         name: folder.name,
         parentId: parentId,
+        children: folder.children || [],
         taskNames: folder.taskNames,
         keywords: [...folder.taskNames, folder.name, folder.folderType].map((k) => k.toLowerCase()),
         data: {
@@ -258,83 +284,101 @@ const EditorPage = () => {
     return taskNames
   }
 
+  // create a flat list of everything searchable, folders and tasks
   let searchabledFolders = useMemo(() => getFolderTaskNames(hierarchyData), [hierarchyData])
 
-  // const searchabledFoldersObject = useMemo(
-  //   () => searchabledFolders.map(({ key, parentId }) => [key, parentId]),
-  //   [searchabledFolders],
-  // )
+  // create a set that can be used to look up a specific id
   const searchabledFoldersSet = useMemo(() => {
     const res = new Map()
 
     for (const folder of searchabledFolders) {
-      res.set(folder.key, folder.parentId)
+      res.set(folder.key, { parent: folder.parentId, childrenLength: folder.children.length })
     }
 
     return res
   }, [searchabledFolders])
 
+  // as the user types filter the flat list
   const searchedFolders = useMemo(() => {
     return searchMode
       ? searchabledFolders.filter((folder) => folder.keywords.some((key) => key.includes(search)))
       : searchabledFolders
-  }, [searchMode, searchabledFolders, search])
+  }, [searchabledFolders, search])
 
+  // Searching mode with no columns
   if (isSearching) treeData = searchedFolders
-
-  // GET FOLDERS AND TASKS QUERY FOR SEARCH
-  const { data: searchData } = useGetFoldersAndTasksQuery(
-    { ...searchIds, projectName },
-    { skip: !searchIds },
-  )
-
-  console.log(searchData)
 
   // Get data for searched folders
   useEffect(() => {
-    if (!isSearching && searchMode && search.length > 2) {
+    // parentIds
+    // const parentIds  = {id1: [], id2: null, id3: []}
+    // on search (typing finished)
+    if (searchFinished) {
+      const queryIds = {}
       let folderIds = [],
-        parentIds = [],
+        parentIds = ['root'],
         taskNames = []
 
       // find all parent ids for each id
       searchedFolders.forEach((folder) => {
         // add folder id
         folderIds.push(folder.key)
+        // add found folder id with all children (null)
+        queryIds[folder.key] = []
+
         // if folder has tasks add folderId and taskName
         if (folder.taskNames.length && folder.taskNames.some((n) => n.includes(search))) {
           parentIds.push(folder.key)
+
           // are any of the task names match with the search
           folder.taskNames.forEach(
             (name) => name.includes(search) && !taskNames.includes(name) && taskNames.push(name),
           )
+
+          // queryIds[folder.key] = folder.taskNames.filter((name) => name.includes(search))
         }
         // get folders parentId
         const getAllParents = (folder, id) => {
-          const parentId = searchabledFoldersSet.get(id || folder.key)
+          const childId = id || folder.key
+          const parentId = searchabledFoldersSet.get(childId).parent
           if (parentId && !folderIds.includes(parentId)) {
             // add parent id
             folderIds.push(parentId)
             // see if parent id has it's own parentId
             getAllParents(folder, parentId)
           }
-        }
 
+          if (parentId) {
+            const prevIds = queryIds[parentId] || []
+            queryIds[parentId] = [...prevIds, childId]
+
+            // if all children are added to parent then set back to empty (all)
+            if (queryIds[parentId].length === searchabledFoldersSet.get(parentId).childrenLength) {
+              queryIds[parentId] = []
+            }
+          }
+        }
         getAllParents(folder)
+
+        const getAllChildren = (folder) => {
+          // add all children and taskNames to folders
+          folder.children?.forEach((child) => {
+            if (!folderIds.includes(child.id)) folderIds.push(child.id)
+
+            if (child.children) getAllChildren(child)
+          })
+        }
+        getAllChildren(folder)
       })
 
       // if there are no parentIds then add invalid to return 0 results
       if (!parentIds.length) parentIds = ['00000000000000000000000000000000']
 
-      console.log({ folderIds, parentIds, taskNames })
-
-      setSearchIds({ folderIds, parentIds, taskNames })
+      // console.log({ folderIds, parentIds, taskNames })
+      console.log('setting new search ids')
+      setSearchIds({ folderIds, taskNames })
     }
-
-    if (isSearching && searchMode) {
-      setLoading(false)
-    }
-  }, [isSearching, searchedFolders, searchMode])
+  }, [searchedFolders, searchFinished])
 
   const currentSelection = useMemo(() => {
     // This object holds the information on current selected nodes.
@@ -911,7 +955,7 @@ const EditorPage = () => {
             value={treeData}
             resizableColumns
             columnResizeMode="expand"
-            expandedKeys={expandedFolders}
+            expandedKeys={isSearching ? null : expandedFolders}
             onToggle={onToggle}
             selectionMode="multiple"
             selectionKeys={currentSelection}
@@ -919,7 +963,7 @@ const EditorPage = () => {
             onRowClick={onRowClick}
             rowClassName={(rowData) => {
               return {
-                changed: rowData.key in changes || rowData.key.startsWith('newnode'),
+                changed: rowData.key in changes || rowData.key?.startsWith('newnode'),
                 deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
               }
             }}
