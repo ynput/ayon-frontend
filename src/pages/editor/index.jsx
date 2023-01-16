@@ -192,21 +192,26 @@ const EditorPage = () => {
   //
 
   // console.log(searchIds)
-  const filteredNodeData = { ...nodeData }
 
+  // SEARCH FILTER
   // if search results filter out nodes
-  if (searchFinished && searchIds) {
-    for (const key in filteredNodeData) {
-      const { folderIds = [], taskIds = [] } = searchIds
-      if (folderIds.length && !folderIds.includes(key)) {
-        if (!filteredNodeData[key].leaf) {
-          delete filteredNodeData[key]
-        } else if (taskIds.length && !taskIds.includes(filteredNodeData[key].data.name)) {
-          delete filteredNodeData[key]
+  const filteredNodeData = useMemo(() => {
+    const filtered = { ...nodeData }
+    if (searchFinished && searchIds) {
+      const { folderIds = [], taskNames = [] } = searchIds
+      for (const key in filtered) {
+        if (folderIds.length && !folderIds.includes(key)) {
+          if (!filtered[key].leaf) {
+            delete filtered[key]
+          } else if (taskNames.length && !taskNames.includes(filtered[key].data.name)) {
+            delete filtered[key]
+          }
         }
       }
     }
-  }
+
+    return filtered
+  }, [nodeData, searchMode, searchIds])
 
   const parents = useMemo(() => {
     // This is an auto-generated object in the form of:
@@ -314,28 +319,20 @@ const EditorPage = () => {
     // const parentIds  = {id1: [], id2: null, id3: []}
     // on search (typing finished)
     if (searchFinished) {
-      const queryIds = {}
       let folderIds = [],
-        parentIds = ['root'],
         taskNames = []
 
       // find all parent ids for each id
       searchedFolders.forEach((folder) => {
         // add folder id
         folderIds.push(folder.key)
-        // add found folder id with all children (null)
-        queryIds[folder.key] = []
 
         // if folder has tasks add folderId and taskName
         if (folder.taskNames.length && folder.taskNames.some((n) => n.includes(search))) {
-          parentIds.push(folder.key)
-
           // are any of the task names match with the search
           folder.taskNames.forEach(
             (name) => name.includes(search) && !taskNames.includes(name) && taskNames.push(name),
           )
-
-          // queryIds[folder.key] = folder.taskNames.filter((name) => name.includes(search))
         }
         // get folders parentId
         const getAllParents = (folder, id) => {
@@ -346,16 +343,6 @@ const EditorPage = () => {
             folderIds.push(parentId)
             // see if parent id has it's own parentId
             getAllParents(folder, parentId)
-          }
-
-          if (parentId) {
-            const prevIds = queryIds[parentId] || []
-            queryIds[parentId] = [...prevIds, childId]
-
-            // if all children are added to parent then set back to empty (all)
-            if (queryIds[parentId].length === searchabledFoldersSet.get(parentId).childrenLength) {
-              queryIds[parentId] = []
-            }
           }
         }
         getAllParents(folder)
@@ -371,11 +358,6 @@ const EditorPage = () => {
         getAllChildren(folder)
       })
 
-      // if there are no parentIds then add invalid to return 0 results
-      if (!parentIds.length) parentIds = ['00000000000000000000000000000000']
-
-      // console.log({ folderIds, parentIds, taskNames })
-      console.log('setting new search ids')
       setSearchIds({ folderIds, taskNames })
     }
   }, [searchedFolders, searchFinished])
