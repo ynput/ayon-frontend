@@ -30,6 +30,7 @@ import { loadBranch, getUpdatedNodeData } from './loader'
 import { MultiSelect } from 'primereact/multiselect'
 import { useLocalStorage } from '../../utils'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
+import { useGetFoldersAndTasksQuery } from '/src/services/getFoldersAndTasks'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -41,7 +42,7 @@ const EditorPage = () => {
 
   const dispatch = useDispatch()
 
-  const [nodeData, setNodeData] = useState({})
+  let [nodeData, setNodeData] = useState({})
   const [changes, setChanges] = useState({})
   const [newNodes, setNewNodes] = useState([])
   const [errors, setErrors] = useState({})
@@ -51,6 +52,8 @@ const EditorPage = () => {
   const [searchInputFocused, setSearchInputFocused] = useState(false)
   const [searchMode, setSearchMode] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
+  // object with folderIds, task parentsIds and taskNames
+  const [searchIds, setSearchIds] = useState(null)
 
   useEffect(() => {
     // turn search mode on
@@ -63,7 +66,9 @@ const EditorPage = () => {
     if (searchInputFocused && searchMode && !isSearching) setIsSearching(true)
 
     // if blurring and isSearching is true
-    if (!searchInputFocused && searchMode && isSearching) setIsSearching(false)
+    if (!searchInputFocused && searchMode && isSearching) {
+      setIsSearching(false)
+    }
 
     // turn seach mode off only when blurred and input cleared
     if (!searchInputFocused && search.length < 1) setSearchMode(false)
@@ -113,6 +118,7 @@ const EditorPage = () => {
   useEffect(() => {
     setLoading(true)
     const expandedKeys = [...Object.keys(expandedFolders), 'root']
+
     getUpdatedNodeData(nodeData, newNodes, expandedKeys, parents, query, projectName).then(
       (result) => {
         setNodeData(result)
@@ -225,12 +231,14 @@ const EditorPage = () => {
     return sortByKey(result, 'name')
   }, [parents])
 
-  const getFolderTaskNames = (folders = []) => {
+  const getFolderTaskNames = (folders = [], parentId) => {
     let taskNames = []
     folders.forEach((folder) => {
       taskNames.push({
         key: folder.id,
         name: folder.name,
+        parentId: parentId,
+        taskNames: folder.taskNames,
         keywords: [...folder.taskNames, folder.name, folder.folderType].map((k) => k.toLowerCase()),
         data: {
           name: folder.name,
@@ -243,7 +251,7 @@ const EditorPage = () => {
       })
 
       if (folder.children?.length) {
-        taskNames = taskNames.concat(getFolderTaskNames(folder.children))
+        taskNames = taskNames.concat(getFolderTaskNames(folder.children, folder.id))
       }
     })
 
@@ -252,13 +260,81 @@ const EditorPage = () => {
 
   let searchabledFolders = useMemo(() => getFolderTaskNames(hierarchyData), [hierarchyData])
 
-  searchabledFolders = useMemo(() => {
+  // const searchabledFoldersObject = useMemo(
+  //   () => searchabledFolders.map(({ key, parentId }) => [key, parentId]),
+  //   [searchabledFolders],
+  // )
+  const searchabledFoldersSet = useMemo(() => {
+    const res = new Map()
+
+    for (const folder of searchabledFolders) {
+      res.set(folder.key, folder.parentId)
+    }
+
+    return res
+  }, [searchabledFolders])
+
+  const searchedFolders = useMemo(() => {
     return searchMode
       ? searchabledFolders.filter((folder) => folder.keywords.some((key) => key.includes(search)))
       : searchabledFolders
   }, [searchMode, searchabledFolders, search])
 
-  if (searchMode) treeData = searchabledFolders
+  if (isSearching) treeData = searchedFolders
+
+  // GET FOLDERS AND TASKS QUERY FOR SEARCH
+  const { data: searchData } = useGetFoldersAndTasksQuery(
+    { ...searchIds, projectName },
+    { skip: !searchIds },
+  )
+
+  console.log(searchData)
+
+  // Get data for searched folders
+  useEffect(() => {
+    if (!isSearching && searchMode && search.length > 2) {
+      let folderIds = [],
+        parentIds = [],
+        taskNames = []
+
+      // find all parent ids for each id
+      searchedFolders.forEach((folder) => {
+        // add folder id
+        folderIds.push(folder.key)
+        // if folder has tasks add folderId and taskName
+        if (folder.taskNames.length && folder.taskNames.some((n) => n.includes(search))) {
+          parentIds.push(folder.key)
+          // are any of the task names match with the search
+          folder.taskNames.forEach(
+            (name) => name.includes(search) && !taskNames.includes(name) && taskNames.push(name),
+          )
+        }
+        // get folders parentId
+        const getAllParents = (folder, id) => {
+          const parentId = searchabledFoldersSet.get(id || folder.key)
+          if (parentId && !folderIds.includes(parentId)) {
+            // add parent id
+            folderIds.push(parentId)
+            // see if parent id has it's own parentId
+            getAllParents(folder, parentId)
+          }
+        }
+
+        getAllParents(folder)
+      })
+
+      // if there are no parentIds then add invalid to return 0 results
+      if (!parentIds.length) parentIds = ['00000000000000000000000000000000']
+
+      console.log({ folderIds, parentIds, taskNames })
+
+      setSearchIds({ folderIds, parentIds, taskNames })
+    }
+
+    if (isSearching && searchMode) {
+      setLoading(false)
+    }
+  }, [isSearching, searchedFolders, searchMode])
 
   const currentSelection = useMemo(() => {
     // This object holds the information on current selected nodes.
@@ -271,8 +347,6 @@ const EditorPage = () => {
     for (const key of focusedTasks) result[key] = nodeData[key]
     return result
   }, [focusedFolders, focusedTasks, nodeData])
-
-  console.log(currentSelection)
 
   //
   // Update handlers
@@ -855,11 +929,8 @@ const EditorPage = () => {
             onColumnResizeEnd={handleColumnResize}
             reorderableColumns
             onColReorder={handleColumnReorder}
-            paginator={searchabledFolders.length > 100 && searchMode}
-            rows={100}
-            paginatorPosition={'bottom'}
-            paginatorClassName={'editor-pages'}
-            className={searchMode && !isSearching ? 'search' : ''}
+            rows={20}
+            paginator={isSearching}
           >
             {allColumns}
             <Column
