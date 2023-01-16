@@ -34,6 +34,9 @@ import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
 
+  // BUG: this is required for editing to work
+  // eslint-disable-next-line no-unused-vars
+  const context = useSelector((state) => ({ ...state.context }))
   const projectName = useSelector((state) => state.context.projectName)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
