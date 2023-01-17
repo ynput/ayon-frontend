@@ -249,7 +249,7 @@ const UserList = ({
         />
         <InputText
           style={{ width: '200px' }}
-          placeholder="Filter subsets..."
+          placeholder="Filter users..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

@@ -116,7 +116,7 @@ const Attributes = () => {
           />
           <InputText
             style={{ width: '200px' }}
-            placeholder="Filter subsets..."
+            placeholder="Filter attributes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
