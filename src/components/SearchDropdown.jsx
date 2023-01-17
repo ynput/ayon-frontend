@@ -99,7 +99,7 @@ const SearchDropdown = ({
 
   suggestions = useMemo(() => {
     if (suggestionsLimit && suggestions.length > suggestionsLimit) {
-      return suggestions.splice(0, suggestionsLimit)
+      return [...suggestions].splice(0, suggestionsLimit)
     } else return suggestions
   }, [suggestions])
 
