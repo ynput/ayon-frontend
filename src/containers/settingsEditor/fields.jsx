@@ -87,7 +87,7 @@ function ObjectFieldTemplate(props) {
     let hiddenFields = []
     for (const propName in props?.schema?.properties || {}) {
       const ppts = props?.schema?.properties[propName]
-      if (!ppts.scope?.length) {
+      if (!(ppts.scope || []).includes(props.formContext.level)) {
         hiddenFields.push(propName)
       }
       if (ppts.conditionalEnum) {
