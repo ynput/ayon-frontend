@@ -31,11 +31,34 @@ const SuggestionsStyled = styled.ul`
   li {
     list-style: none;
     padding: 5px;
-    padding-left: 10px;
+    /* padding-left: 10px; */
     overflow: hidden;
     cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    /* ICON STYLES */
+    span.icon {
+      font-size: 18px;
+    }
+
+    /* TEXT STYLES */
+    span {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
     &:hover {
       background-color: var(--color-grey-02);
+    }
+
+    &.results span {
+      text-align: center;
+      width: 100%;
+      opacity: 0.5;
     }
   }
 `
@@ -53,6 +76,7 @@ const SearchDropdown = ({
   suggestionsLimit,
   onSubmit,
   onClear,
+  isLoading,
 }) => {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const inputRef = useRef()
@@ -97,7 +121,7 @@ const SearchDropdown = ({
     closeSearch()
   }
 
-  suggestions = useMemo(() => {
+  const suggestionsSpliced = useMemo(() => {
     if (suggestionsLimit && suggestions.length > suggestionsLimit) {
       return [...suggestions].splice(0, suggestionsLimit)
     } else return suggestions
@@ -115,17 +139,24 @@ const SearchDropdown = ({
       />
       {suggestionsOpen && (
         <SuggestionsStyled>
-          {suggestions.length ? (
-            suggestions.map(
-              (item) =>
-                item && (
-                  <li key={item.id} onClick={(e) => handleSubmit(e, item.id)}>
-                    {item.label || item.value}
-                  </li>
-                ),
-            )
+          {suggestionsSpliced.map(
+            (item) =>
+              item && (
+                <li key={item.id} onClick={(e) => handleSubmit(e, item.id)}>
+                  {item.icon && <span className="material-symbols-outlined icon">{item.icon}</span>}
+                  <span>{item.label || item.value}</span>
+                </li>
+              ),
+          )}
+          {isLoading ? (
+            <li key="loading">Loading...</li>
           ) : (
-            <li key="none">No Results Found</li>
+            suggestions.length > suggestionsLimit &&
+            value && (
+              <li className="results">
+                <span>{`${suggestions.length} Results`}</span>
+              </li>
+            )
           )}
         </SuggestionsStyled>
       )}
@@ -147,6 +178,7 @@ SearchDropdown.propTypes = {
   suggestionsLimit: PropTypes.number,
   onSubmit: PropTypes.func.isRequired,
   onClear: PropTypes.func,
+  isLoading: PropTypes.bool,
 }
 
 export default SearchDropdown

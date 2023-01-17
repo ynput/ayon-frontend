@@ -29,6 +29,7 @@ import { MultiSelect } from 'primereact/multiselect'
 import { useLocalStorage } from '../../utils'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
+import { getFolderTypeIcon } from '/src/utils'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -56,7 +57,7 @@ const EditorPage = () => {
   const contextMenuRef = useRef(null)
 
   // Hierarchy data is used for fast searching
-  const { data: hierarchyData } = useGetHierarchyQuery({ projectName })
+  const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery({ projectName })
 
   //
   // Helpers
@@ -242,6 +243,7 @@ const EditorPage = () => {
         taskNames: folder.taskNames,
         keywords: [...folder.taskNames, folder.name, folder.folderType].map((k) => k.toLowerCase()),
         depth: depth,
+        icon: getFolderTypeIcon(folder.folderType),
       })
 
       if (folder.children?.length) {
@@ -885,6 +887,7 @@ const EditorPage = () => {
             suggestionsLimit={5}
             onSubmit={handleSearchComplete}
             onClear={() => searchIds && setSearchIds({})}
+            isLoading={isSearchLoading}
           />
           <MultiSelect
             options={filterOptions}
