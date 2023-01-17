@@ -3,7 +3,6 @@ import axios from 'axios'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-
 import {
   Spacer,
   Button,
@@ -11,7 +10,6 @@ import {
   Toolbar,
   TablePanel,
   InputSwitch,
-  InputText,
 } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
@@ -30,6 +28,7 @@ import { loadBranch, getUpdatedNodeData } from './loader'
 import { MultiSelect } from 'primereact/multiselect'
 import { useLocalStorage } from '../../utils'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
+import SearchDropdown from '/src/components/SearchDropdown'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -51,42 +50,8 @@ const EditorPage = () => {
   const [selectionLocked, setSelectionLocked] = useState(false)
   // SEARCH STATES
   const [search, setSearch] = useState('')
-  const [searchInputFocused, setSearchInputFocused] = useState(false)
-  const [searchMode, setSearchMode] = useState(false)
-  const [isSearching, setIsSearching] = useState(false)
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
-  // search if finished when user stops typing 3 or more words
-  const searchFinished = !isSearching && searchMode && search.length > 2
-
-  useEffect(() => {
-    // turn search mode on
-    if (searchInputFocused && !searchMode) {
-      dispatch(setFocusedFolders([]))
-      setSearchMode(true)
-    }
-
-    // if foccusing again set isSearching
-    if (searchInputFocused && searchMode && !isSearching) setIsSearching(true)
-
-    // if blurring and isSearching is true
-    if (!searchInputFocused && searchMode && isSearching) {
-      setIsSearching(false)
-    }
-
-    // turn seach mode off only when blurred and input cleared
-    if (!searchInputFocused && search.length < 1) setSearchMode(false)
-  }, [searchInputFocused, setSearchMode, searchMode, setIsSearching])
-
-  useEffect(() => {
-    if (search.length > 0 || searchMode) setIsSearching(true)
-
-    // onBlur and search cleared
-    if (!searchMode) setIsSearching(false)
-
-    const timeOutId = setTimeout(() => search.length > 0 && setIsSearching(false), 1000)
-    return () => clearTimeout(timeOutId)
-  }, [search, searchMode])
 
   const contextMenuRef = useRef(null)
 
@@ -136,7 +101,7 @@ const EditorPage = () => {
       setNodeData(result)
       setLoading(false)
     })
-  }, [expandedFolders, newNodes, isSearching])
+  }, [expandedFolders, newNodes])
 
   //
   // External events handling
@@ -200,7 +165,7 @@ const EditorPage = () => {
   // if search results filter out nodes
   const filteredNodeData = useMemo(() => {
     const filtered = { ...nodeData }
-    if (searchFinished && searchIds) {
+    if (searchIds) {
       const { folderIds = [], taskNames = [] } = searchIds
       for (const key in filtered) {
         if (folderIds.length && !folderIds.includes(key)) {
@@ -214,7 +179,7 @@ const EditorPage = () => {
     }
 
     return filtered
-  }, [nodeData, searchMode, searchIds])
+  }, [nodeData, searchIds])
 
   const parents = useMemo(() => {
     // This is an auto-generated object in the form of:
@@ -264,30 +229,23 @@ const EditorPage = () => {
     return sortByKey(result, 'name')
   }, [parents])
 
-  const getFolderTaskNames = (folders = [], parentId, d) => {
+  const getFolderTaskList = (folders = [], parentId, d) => {
     let taskNames = []
     let depth = d || 0
     folders.forEach((folder) => {
       taskNames.push({
-        key: folder.id,
-        name: folder.name,
+        id: folder.id,
+        label: folder.name,
+        value: folder.name,
         parentId: parentId,
-        __children: folder.children || [],
+        children: folder.children || [],
         taskNames: folder.taskNames,
         keywords: [...folder.taskNames, folder.name, folder.folderType].map((k) => k.toLowerCase()),
         depth: depth,
-        data: {
-          name: folder.name,
-          folderType: folder.folderType,
-          id: folder.id,
-          hasChildren: false,
-          attrib: {},
-          __entityType: folder.folderType,
-        },
       })
 
       if (folder.children?.length) {
-        taskNames = taskNames.concat(getFolderTaskNames(folder.children, folder.id, depth + 1))
+        taskNames = taskNames.concat(getFolderTaskList(folder.children, folder.id, depth + 1))
       }
     })
 
@@ -296,7 +254,7 @@ const EditorPage = () => {
 
   // create a flat list of everything searchable, folders and tasks
   let searchabledFolders = useMemo(
-    () => getFolderTaskNames(hierarchyData).sort((a, b) => a.depth - b.depth),
+    () => getFolderTaskList(hierarchyData).sort((a, b) => a.depth - b.depth),
     [hierarchyData],
   )
 
@@ -305,70 +263,84 @@ const EditorPage = () => {
     const res = new Map()
 
     for (const folder of searchabledFolders) {
-      res.set(folder.key, { parent: folder.parentId, childrenLength: folder.__children.length })
+      res.set(folder.id, { parent: folder.parentId, childrenLength: folder.childrenLength })
     }
 
     return res
   }, [searchabledFolders])
 
+  const [searchSuggestions, setSearchSuggestions] = useState(searchabledFolders)
+
   // as the user types filter the flat list
-  const searchedFolders = useMemo(() => {
-    return searchMode
-      ? searchabledFolders.filter((folder) => folder.keywords.some((key) => key.includes(search)))
-      : searchabledFolders
-  }, [searchabledFolders, search])
+  const searchedFilteredFolders = useMemo(
+    () =>
+      searchabledFolders.filter((folder) => folder.keywords.some((key) => key.includes(search))),
+    [searchabledFolders, search],
+  )
 
-  // Searching mode with no columns
-  if (isSearching) treeData = searchedFolders
+  const handleSearchChange = (e) => {
+    const search = e.target.value
 
-  // Get data for searched folders
-  useEffect(() => {
+    // filter through suggestions
+    const filtered = searchSuggestions.filter((folder) =>
+      folder.keywords.some((key) => key.includes(search)),
+    )
+
+    setSearchSuggestions(filtered)
+
+    // update search text value
+    setSearch(search)
+  }
+
+  const handleSearchComplete = (ids) => {
     // parentIds
     // const parentIds  = {id1: [], id2: null, id3: []}
     // on search (typing finished)
-    if (searchFinished) {
-      let folderIds = [],
-        taskNames = []
 
-      // find all parent ids for each id
-      searchedFolders.forEach((folder) => {
-        // add folder id
-        folderIds.push(folder.key)
+    // when a specific option is clicked
+    const res = searchabledFolders.filter((r) => ids.includes(r.id))
 
-        // if folder has tasks add folderId and taskName
-        if (folder.taskNames.length && folder.taskNames.some((n) => n.includes(search))) {
-          // are any of the task names match with the search
-          folder.taskNames.forEach(
-            (name) => name.includes(search) && !taskNames.includes(name) && taskNames.push(name),
-          )
+    let folderIds = [],
+      taskNames = []
+
+    // find all parent ids for each id
+    res.forEach((folder) => {
+      // add folder id
+      folderIds.push(folder.id)
+
+      // if folder has tasks add folderId and taskName
+      if (folder.taskNames.length && folder.taskNames.some((n) => n.includes(search))) {
+        // are any of the task names match with the search
+        folder.taskNames.forEach(
+          (name) => name.includes(search) && !taskNames.includes(name) && taskNames.push(name),
+        )
+      }
+      // get folders parentId
+      const getAllParents = (folder, id) => {
+        const childId = id || folder.id
+        const parentId = searchabledFoldersSet.get(childId).parent
+        if (parentId && !folderIds.includes(parentId)) {
+          // add parent id
+          folderIds.push(parentId)
+          // see if parent id has it's own parentId
+          getAllParents(folder, parentId)
         }
-        // get folders parentId
-        const getAllParents = (folder, id) => {
-          const childId = id || folder.key
-          const parentId = searchabledFoldersSet.get(childId).parent
-          if (parentId && !folderIds.includes(parentId)) {
-            // add parent id
-            folderIds.push(parentId)
-            // see if parent id has it's own parentId
-            getAllParents(folder, parentId)
-          }
-        }
-        getAllParents(folder)
+      }
+      getAllParents(folder)
 
-        const getAllChildren = (folder) => {
-          // add all children and taskNames to folders
-          folder.__children?.forEach((child) => {
-            if (!folderIds.includes(child.id)) folderIds.push(child.id)
+      const getAllChildren = (folder) => {
+        // add all children and taskNames to folders
+        folder.children?.forEach((child) => {
+          if (!folderIds.includes(child.id)) folderIds.push(child.id)
 
-            if (child.children) getAllChildren(child)
-          })
-        }
-        getAllChildren(folder)
-      })
+          if (child.children) getAllChildren(child)
+        })
+      }
+      getAllChildren(folder)
+    })
 
-      setSearchIds({ folderIds, taskNames })
-    }
-  }, [searchedFolders, searchFinished])
+    setSearchIds({ folderIds, taskNames })
+  }
 
   const currentSelection = useMemo(() => {
     // This object holds the information on current selected nodes.
@@ -835,9 +807,6 @@ const EditorPage = () => {
         return stringEditor(options, updateName, formatName(options.rowData, changes, false))
       }}
     />,
-  ]
-
-  const attributeColumns = [
     <Column
       field="type"
       key="type"
@@ -867,9 +836,6 @@ const EditorPage = () => {
     )),
   ]
 
-  // when searching remove columns from treetable to increase performance
-  if (!isSearching) allColumns = allColumns.concat(attributeColumns)
-
   // sort columns if localstorage set
   let columnsOrder = localStorage.getItem('editor-columns-order')
   if (columnsOrder) {
@@ -892,7 +858,6 @@ const EditorPage = () => {
 
   //
   // Render the TreeTable
-  //
 
   return (
     <main>
@@ -913,13 +878,13 @@ const EditorPage = () => {
           <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
         </Toolbar>
         <Toolbar>
-          <InputText
-            style={{ width: '200px' }}
-            placeholder="Filter folders..."
+          <SearchDropdown
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onFocus={() => setSearchInputFocused(true)}
-            onBlur={() => setSearchInputFocused(false)}
+            onChange={handleSearchChange}
+            suggestions={searchedFilteredFolders}
+            suggestionsLimit={5}
+            onSubmit={handleSearchComplete}
+            onClear={() => searchIds && setSearchIds({})}
           />
           <MultiSelect
             options={filterOptions}
@@ -945,7 +910,7 @@ const EditorPage = () => {
             value={treeData}
             resizableColumns
             columnResizeMode="expand"
-            expandedKeys={isSearching ? null : expandedFolders}
+            expandedKeys={expandedFolders}
             onToggle={onToggle}
             selectionMode="multiple"
             selectionKeys={currentSelection}
@@ -964,7 +929,6 @@ const EditorPage = () => {
             reorderableColumns
             onColReorder={handleColumnReorder}
             rows={20}
-            paginator={isSearching}
           >
             {allColumns}
             <Column
