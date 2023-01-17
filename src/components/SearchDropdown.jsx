@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { InputText } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 
 const SearchStyled = styled.form`
   position: relative;
@@ -13,53 +13,84 @@ const InputTextStyled = styled(InputText)`
   width: 100%;
   z-index: 10;
   position: relative;
+  transition: border 0.2s;
+
+  /* open styles */
+  ${({ open }) =>
+    open &&
+    css`
+      &:not(:focus) {
+        border-radius: 3px 3px 0 0;
+      }
+    `}
+`
+
+const openAnimation = (limit) => keyframes`
+  from {
+    height: 0;
+  }
+  to {
+    height: ${limit * 30}px
+  }
 `
 
 const SuggestionsStyled = styled.ul`
   position: absolute;
   display: flex;
   flex-direction: column;
-  z-index: 10;
-  outline: 1px solid #383838;
+  z-index: 9;
+  border: 1px solid var(--color-grey-03);
+  border-top: none;
   background-color: var(--color-grey-00);
-  border-radius: 3px;
+  border-radius: 0 0 3px 3px;
   padding: 0px;
   margin: 0px;
   width: 100%;
-  /* box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75); */
+  overflow: hidden;
 
-  li {
-    list-style: none;
-    padding: 5px;
-    /* padding-left: 10px; */
+  /* opening animation */
+  height: 0;
+  transition: height 0.15s;
+  ${({ open, items, showResults }) =>
+    open &&
+    css`
+      height: ${(items + showResults) * 30}px;
+      animation: ${(props) => props.showAnimation && openAnimation(props.items)} 0.15s;
+      animation-iteration-count: 1;
+    `}
+`
+
+const SuggestionItemStyled = styled.li`
+  list-style: none;
+  padding: 0 5px;
+  min-height: 30px;
+  overflow: hidden;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  /* ICON STYLES */
+  span.icon {
+    font-size: 18px;
+  }
+
+  /* TEXT STYLES */
+  span.text {
     overflow: hidden;
-    cursor: pointer;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
 
-    display: flex;
-    align-items: center;
-    gap: 5px;
+  &:hover {
+    background-color: var(--color-grey-02);
+  }
 
-    /* ICON STYLES */
-    span.icon {
-      font-size: 18px;
-    }
-
-    /* TEXT STYLES */
-    span {
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    &:hover {
-      background-color: var(--color-grey-02);
-    }
-
-    &.results span {
-      text-align: center;
-      width: 100%;
-      opacity: 0.5;
-    }
+  &.results span {
+    text-align: center;
+    width: 100%;
+    opacity: 0.5;
   }
 `
 
@@ -79,6 +110,7 @@ const SearchDropdown = ({
   isLoading,
 }) => {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
+  const [showAnimation, setShowAnimation] = useState(true)
   const inputRef = useRef()
 
   const closeSearch = () => {
@@ -86,12 +118,13 @@ const SearchDropdown = ({
     setSuggestionsOpen(false)
     // defocus input
     inputRef.current.blur()
+    // reset animation
+    setShowAnimation(true)
   }
 
-  const handleSubmit = (e, id) => {
+  const handleSubmit = (e, id, value) => {
     e && e.preventDefault()
     const input = inputRef.current.value
-    const suggestionValue = e.target.innerText
 
     closeSearch()
 
@@ -104,8 +137,8 @@ const SearchDropdown = ({
     let ids = []
     if (id) {
       // clicked on specific item
-      console.log('clicked suggestion', id, suggestionValue)
-      onChange({ target: { value: suggestionValue } })
+      console.log('clicked suggestion', id, value)
+      onChange({ target: { value: value } })
       ids = [id]
     } else {
       ids = suggestions.map((s) => s.id)
@@ -136,26 +169,37 @@ const SearchDropdown = ({
         onChange={onChange}
         onFocus={() => setSuggestionsOpen(true)}
         ref={inputRef}
+        open={suggestionsOpen}
       />
       {suggestionsOpen && (
-        <SuggestionsStyled>
+        <SuggestionsStyled
+          open={suggestionsOpen}
+          items={suggestionsSpliced.length}
+          limit={suggestionsLimit}
+          showResults={(value && suggestions.length > suggestionsLimit) || !suggestions.length}
+          onAnimationEnd={() => setShowAnimation(false)}
+          showAnimation={showAnimation}
+        >
           {suggestionsSpliced.map(
             (item) =>
               item && (
-                <li key={item.id} onClick={(e) => handleSubmit(e, item.id)}>
+                <SuggestionItemStyled
+                  key={item.id}
+                  onClick={(e) => handleSubmit(e, item.id, item.value)}
+                >
                   {item.icon && <span className="material-symbols-outlined icon">{item.icon}</span>}
-                  <span>{item.label || item.value}</span>
-                </li>
+                  <span className="text">{item.label || item.value}</span>
+                </SuggestionItemStyled>
               ),
           )}
           {isLoading ? (
-            <li key="loading">Loading...</li>
+            <SuggestionItemStyled key="loading">Loading...</SuggestionItemStyled>
           ) : (
-            suggestions.length > suggestionsLimit &&
-            value && (
-              <li className="results">
+            value &&
+            (suggestions.length > suggestionsLimit || !suggestions.length) && (
+              <SuggestionItemStyled className="results">
                 <span>{`${suggestions.length} Results`}</span>
-              </li>
+              </SuggestionItemStyled>
             )
           )}
         </SuggestionsStyled>
