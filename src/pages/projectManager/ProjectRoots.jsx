@@ -11,7 +11,7 @@ import {
   Section,
 } from '@ynput/ayon-react-components'
 
-const ProjectRootForm = ({ projectName, machineName, machineId, roots }) => {
+const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots] = useSetCustomRootsMutation()
   const [rootValues, setRootValues] = useState(null)
 
@@ -28,10 +28,8 @@ const ProjectRootForm = ({ projectName, machineName, machineId, roots }) => {
   return (
     <Panel>
       <h3 style={{ display: 'block' }}>
-        {machineName}{' '}
-        <span style={{ fontWeight: 'normal', fontStyle: 'italic', float: 'right' }}>
-          {machineId}
-        </span>
+        {siteName}{' '}
+        <span style={{ fontWeight: 'normal', fontStyle: 'italic', float: 'right' }}>{siteId}</span>
       </h3>
       <FormLayout>
         {roots.map((root) => (
@@ -46,7 +44,7 @@ const ProjectRootForm = ({ projectName, machineName, machineId, roots }) => {
         <FormRow>
           <Button
             label="Save"
-            onClick={() => setCustomRoots({ projectName, machineId, data: rootValues })}
+            onClick={() => setCustomRoots({ projectName, siteId, data: rootValues })}
           />
         </FormRow>
       </FormLayout>
@@ -62,11 +60,11 @@ const ProjectRoots = ({ projectName }) => {
 
   const forms = useMemo(() => {
     const forms = []
-    for (const machine of ayonClient.settings.machines) {
+    for (const site of ayonClient.settings.sites) {
       const roots = []
       for (const rootName in project?.config?.roots || {}) {
-        const rootPath = project.config.roots[rootName][machine.platform]
-        const customRootPath = rootOverrides?.[machine.id]?.[rootName]
+        const rootPath = project.config.roots[rootName][site.platform]
+        const customRootPath = rootOverrides?.[site.id]?.[rootName]
         roots.push({
           name: rootName,
           originalPath: rootPath,
@@ -75,11 +73,11 @@ const ProjectRoots = ({ projectName }) => {
       }
       forms.push({
         projectName,
-        machineId: machine.id,
-        machineName: machine.hostname,
+        siteId: site.id,
+        siteName: site.hostname,
         roots,
       })
-    } // machines iter
+    } // sites iter
     console.log(forms)
     return forms
   }, [project, rootOverrides])
@@ -89,7 +87,7 @@ const ProjectRoots = ({ projectName }) => {
   return (
     <Section className="invisible" style={{ maxWidth: 600 }}>
       {forms.map((form) => (
-        <ProjectRootForm key={form.machineId} {...form} />
+        <ProjectRootForm key={form.siteId} {...form} />
       ))}
     </Section>
   )
