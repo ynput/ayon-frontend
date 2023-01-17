@@ -83,9 +83,12 @@ const SuggestionItemStyled = styled.li`
     text-overflow: ellipsis;
   }
 
-  &:hover {
-    background-color: var(--color-grey-02);
-  }
+  /* active by keyboard */
+  ${({ activeIndex, index }) =>
+    activeIndex === index &&
+    css`
+      background-color: var(--color-grey-02);
+    `}
 
   &.results span {
     text-align: center;
@@ -104,13 +107,15 @@ const SearchDropdown = ({
   value,
   onChange,
   suggestions = [],
-  suggestionsLimit,
+  suggestionsLimit = 5,
   onSubmit,
   onClear,
   isLoading,
 }) => {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [showAnimation, setShowAnimation] = useState(true)
+  const [activeIndex, setActiveIndex] = useState(null)
+  const [usingKeyboard, setUsingKeyboard] = useState(false)
   const inputRef = useRef()
 
   const closeSearch = () => {
@@ -122,24 +127,28 @@ const SearchDropdown = ({
     setShowAnimation(true)
   }
 
-  const handleSubmit = (e, id, value) => {
+  const handleSubmit = (e, useAll) => {
     e && e.preventDefault()
     const input = inputRef.current.value
 
     closeSearch()
+    // if active index true find item
+    const item = suggestionsSpliced[activeIndex]
+    console.log(item)
 
     // no search text clear search
-    if (!input && !id) {
+    if (!input && !item.id) {
       console.log('clearing search')
       return onClear()
     }
 
     let ids = []
-    if (id) {
+
+    if (item && !useAll) {
       // clicked on specific item
-      console.log('clicked suggestion', id, value)
-      onChange({ target: { value: value } })
-      ids = [id]
+      console.log('clicked suggestion', item.id, item.value)
+      onChange({ target: { value: item.value } })
+      ids = [item.id]
     } else {
       ids = suggestions.map((s) => s.id)
     }
@@ -160,8 +169,60 @@ const SearchDropdown = ({
     } else return suggestions
   }, [suggestions])
 
+  // used for
+  const handleKeyPress = (e) => {
+    if (e.code === 'ArrowDown') {
+      if (activeIndex === null || activeIndex >= suggestionsSpliced.length - 1) {
+        // got to top
+        setActiveIndex(0)
+      } else {
+        // go down one
+        setActiveIndex(activeIndex + 1)
+      }
+    }
+
+    if (e.code === 'ArrowUp') {
+      if (!activeIndex || activeIndex <= 0) {
+        // go to bottom
+        setActiveIndex(suggestionsSpliced.length - 1)
+      } else {
+        // go one up
+        setActiveIndex(activeIndex - 1)
+      }
+    }
+
+    if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
+      if (!usingKeyboard) setUsingKeyboard(true)
+    }
+  }
+
+  const handleMouseEnter = (i) => {
+    if (i !== activeIndex) setActiveIndex(i)
+  }
+
+  const handleMouseLeave = (i) => {
+    if (i === activeIndex) setActiveIndex(null)
+  }
+
+  const blockUpDownKeys = (e) => {
+    // prevent going to start and end of text
+    if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
+      e.preventDefault()
+    }
+
+    if (e.code === 'Enter') {
+      // prevent reloads
+      e.preventDefault()
+
+      handleSubmit(null, !usingKeyboard)
+    }
+  }
+
   return (
-    <SearchStyled onSubmit={handleSubmit}>
+    <SearchStyled
+      onKeyDown={handleKeyPress}
+      onMouseMove={() => usingKeyboard && setUsingKeyboard(false)}
+    >
       {suggestionsOpen && <BackdropStyled onClick={handleBlur} />}
       <InputTextStyled
         placeholder="Filter folders..."
@@ -170,6 +231,7 @@ const SearchDropdown = ({
         onFocus={() => setSuggestionsOpen(true)}
         ref={inputRef}
         open={suggestionsOpen}
+        onKeyDown={blockUpDownKeys}
       />
       {suggestionsOpen && (
         <SuggestionsStyled
@@ -181,11 +243,16 @@ const SearchDropdown = ({
           showAnimation={showAnimation}
         >
           {suggestionsSpliced.map(
-            (item) =>
+            (item, i) =>
               item && (
                 <SuggestionItemStyled
                   key={item.id}
-                  onClick={(e) => handleSubmit(e, item.id, item.value)}
+                  onClick={handleSubmit}
+                  tabIndex={0}
+                  activeIndex={activeIndex}
+                  index={i}
+                  onMouseEnter={() => handleMouseEnter(i)}
+                  onMouseLeave={() => handleMouseLeave(i)}
                 >
                   {item.icon && <span className="material-symbols-outlined icon">{item.icon}</span>}
                   <span className="text">{item.label || item.value}</span>
@@ -193,11 +260,13 @@ const SearchDropdown = ({
               ),
           )}
           {isLoading ? (
-            <SuggestionItemStyled key="loading">Loading...</SuggestionItemStyled>
+            <SuggestionItemStyled key="loading" activeIndex={null}>
+              Loading...
+            </SuggestionItemStyled>
           ) : (
             value &&
             (suggestions.length > suggestionsLimit || !suggestions.length) && (
-              <SuggestionItemStyled className="results">
+              <SuggestionItemStyled className="results" activeIndex={null}>
                 <span>{`${suggestions.length} Results`}</span>
               </SuggestionItemStyled>
             )
