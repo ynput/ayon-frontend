@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -13,30 +13,8 @@ import RenameUserDialog from './RenameUserDialog'
 import axios from 'axios'
 import './users.sass'
 import useSearchFilter from '/src/hooks/useSearchFilter'
-
-const USERS_QUERY = `
-  query UserList {
-    users {
-      edges {
-        node {
-          name
-          isAdmin
-          isManager
-          isService
-          isGuest
-          active
-          roles
-          defaultRoles
-          hasPassword
-          attrib {
-            fullName
-            email
-          }
-        }
-      }
-    }
-  }
-`
+import { useGetUsersQuery } from '/src/services/getUsers'
+import { useGetRolesQuery } from '/src/services/getRoles'
 
 const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
   let roles = []
@@ -103,67 +81,26 @@ const UserList = ({
   setUserDetailData,
   onTriggerReload,
 }) => {
-  const [userList, setUserList] = useState([])
-  const [rolesList, setRolesList] = useState([])
-  const [loading, setLoading] = useState(false)
   const [showNewUser, setShowNewUser] = useState(false)
   const [lastSelectedUser, setLastSelectedUser] = useState(null)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   const contextMenuRef = useRef(null)
 
-  // TODO RTK QUERY
-  // Load user list
-  useEffect(() => {
-    setLoading(true)
-    let result = []
-    axios
-      .post('/graphql', {
-        query: USERS_QUERY,
-        variables: {},
-      })
-      .then((response) => {
-        const edges = response?.data?.data?.users.edges
-        if (!edges) return
-        for (const edge of edges) result.push(edge.node)
-      })
-      .catch(() => {
-        toast.error('Unable to load users')
-      })
-      .finally(() => {
-        let newSelection = []
-        for (const user of result) {
-          if (selectedUsers.includes(user.name)) newSelection.push(user.name)
-        }
+  const { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery()
+  if (isError) toast.error('Unable to load users')
 
-        onSelectUsers(newSelection)
-        setUserList(result)
-        setLoading(false)
-      })
-  }, [reloadTrigger])
-
-  // TODO RTK QUERY
-  // loading roles
-  useEffect(() => {
-    setLoading(true)
-    let result = []
-    axios
-      .get('/api/roles/_')
-      .then((response) => {
-        for (const role of response.data) result.push(role.name)
-      })
-      .catch(() => {
-        toast.error('Unable to load roles')
-      })
-      .finally(() => {
-        setRolesList(result)
-        setLoading(false)
-      })
-  }, [])
+  const {
+    data: rolesList = [],
+    isLoading: isLoadingRoles,
+    isError: isErrorRoles,
+  } = useGetRolesQuery()
+  if (isErrorRoles) toast.error('Unable to load roles')
 
   // Selection
 
   const selection = useMemo(() => {
+    if (isFetching) return []
     let result = []
     let lastUsr = null
     for (const user of userList) {
@@ -172,11 +109,10 @@ const UserList = ({
     }
     if (setUserDetailData) {
       setLastSelectedUser(lastUsr)
-
       setUserDetailData(buildUserDetailData(selectedProjects, rolesList, result, lastUsr))
     }
     return result
-  }, [selectedUsers, userList, selectedProjects, reloadTrigger])
+  }, [selectedUsers, selectedProjects, reloadTrigger, isFetching])
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
@@ -285,7 +221,7 @@ const UserList = ({
         />
       )}
 
-      <TablePanel loading={loading}>
+      <TablePanel loading={isLoading || isLoadingRoles}>
         <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable
           value={filteredData}
