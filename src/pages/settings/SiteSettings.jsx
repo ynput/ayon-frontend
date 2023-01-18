@@ -1,12 +1,22 @@
+import { useState, useMemo } from 'react'
+import {
+  Section,
+  Panel,
+  Toolbar,
+  ScrollPanel,
+  Button,
+  TablePanel,
+} from '@ynput/ayon-react-components'
+
+import { DataTable } from 'primereact/datatable'
+import { Column } from 'primereact/column'
+
 import SettingsEditor from '/src/containers/settingsEditor'
 import AddonList from '/src/containers/addonList'
-
-import { Section, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
-import { useState, useMemo } from 'react'
 import SitesDropdown from '/src/containers/SitesDropdown'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '/src/services/siteSettings'
-//, useSetSiteSettingsMutation
+import { useSetSiteSettingsMutation } from '/src/services/siteSettings'
 
 const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
   const { data: schema, isLoading: schemaLoading } = useGetSiteSettingsSchemaQuery({
@@ -38,11 +48,47 @@ const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
   return editor
 }
 
+const ChangeList = ({ changes }) => {
+  const columns = [
+    { field: 'addonName', header: 'Addon' },
+    { field: 'addonVersion', header: 'Version' },
+    { field: 'siteId', header: 'Site' },
+  ]
+
+  const rows = useMemo(() => {
+    return Object.keys(changes).map((key) => {
+      const [addonName, addonVersion, siteId] = key.split('|')
+      return {
+        addonName,
+        addonVersion,
+        siteId,
+      }
+    })
+  }, [changes])
+
+  return (
+    <Section style={{ maxWidth: 400 }}>
+      <Toolbar>
+        <h3>Changes</h3>
+      </Toolbar>
+      <TablePanel>
+        <DataTable value={rows}>
+          {columns.map((col) => (
+            <Column key={col.field} field={col.field} header={col.header} />
+          ))}
+        </DataTable>
+      </TablePanel>
+    </Section>
+  )
+}
+
 const SiteSettings = () => {
   const [selectedAddons, setSelectedAddons] = useState([])
   const [selectedSite, setSelectedSite] = useState(null)
   const [showVersions, setShowVersions] = useState(false)
-  //const [newData, setNewData] = useState({})
+  const [newData, setNewData] = useState({})
+
+  const [setSiteSettings] = useSetSiteSettingsMutation()
 
   const listHeader = useMemo(() => {
     return (
@@ -52,15 +98,32 @@ const SiteSettings = () => {
           onClick={() => setShowVersions((v) => !v)}
           label={showVersions ? 'Hide all versions' : 'Show all versions'}
         />
-        <SitesDropdown value={selectedSite} onChange={setSelectedSite} />
+        <SitesDropdown value={selectedSite} onChange={setSelectedSite} style={{ flexGrow: 1 }} />
       </Toolbar>
     )
   }, [selectedSite])
 
-  const saveChanges = () => {}
+  const saveChanges = () => {
+    for (const key in newData) {
+      const [addonName, addonVersion, siteId] = key.split('|')
+      const data = newData[key]
+
+      setSiteSettings({
+        addonName,
+        addonVersion,
+        siteId,
+        data,
+      })
+    }
+    setNewData({})
+  }
 
   const onChange = (addonName, addonVersion, data) => {
-    console.log(addonName, addonVersion, data)
+    const key = `${addonName}|${addonVersion}|${selectedSite}`
+    setNewData((newData) => {
+      newData[key] = data
+      return { ...newData }
+    })
   }
 
   return (
@@ -105,6 +168,7 @@ const SiteSettings = () => {
         )) ||
           'Select a site to edit settings'}
       </Section>
+      <ChangeList changes={newData} />
     </main>
   )
 }
