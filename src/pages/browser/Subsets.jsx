@@ -24,6 +24,7 @@ import StatusSelect from '/src/components/status/statusSelect'
 import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
 import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
+import useSearchFilter from '/src/hooks/useSearchFilter'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -336,9 +337,23 @@ const Subsets = () => {
   // Transform the subset data into a TreeTable compatible format
   // by grouping the data by the subset name
 
-  const tableData = useMemo(() => {
+  let tableData = useMemo(() => {
     return groupResult(subsetData, 'name')
   }, [subsetData])
+
+  const searchableFields = [
+    'data.author',
+    'data.family',
+    'data.folder',
+    'data.fps',
+    'data.frames',
+    'data.name',
+    'data.resolution',
+    'data.status',
+    'data.versionName',
+  ]
+
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData)
 
   //
   // Handlers
@@ -407,17 +422,33 @@ const Subsets = () => {
   //
   // Render
   //
+  const getOutOfString = (value, total) => {
+    if (value.length === total.length) return ''
+
+    return `${value.length}/${total.length}`
+  }
+
+  const placeholder = `Show Columns  ${
+    isMultiSelected
+      ? `${getOutOfString(shownColumnsMultiFocused, filterOptions)} (Multiple)`
+      : `${getOutOfString(shownColumnsSingleFocused, filterOptions)} (Single)`
+  }`
 
   return (
     <Section className="wrap">
       <Toolbar>
-        <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
+        <InputText
+          style={{ width: '200px' }}
+          placeholder="Filter subsets..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
         <MultiSelect
           options={filterOptions}
           value={shownColumns}
           onChange={handleColumnsFilter}
-          placeholder={`Show Columns (${focusedFolders.length > 1 ? 'Multiple' : 'Single'})`}
-          fixedPlaceholder={shownColumns.length + 1 >= filterOptions.length}
+          placeholder={placeholder}
+          fixedPlaceholder
         />
       </Toolbar>
 
@@ -432,12 +463,12 @@ const Subsets = () => {
           versionOverrides={versionOverrides}
         />
         <TreeTable
+          value={filteredData}
           responsive="true"
           scrollHeight="100%"
           scrollable="true"
           resizableColumns
           columnResizeMode="expand"
-          value={tableData}
           emptyMessage="No subset found"
           selectionMode="multiple"
           selectionKeys={selectedRows}

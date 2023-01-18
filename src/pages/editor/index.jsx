@@ -3,7 +3,6 @@ import axios from 'axios'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-
 import {
   Spacer,
   Button,
@@ -18,7 +17,7 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { isEmpty, sortByKey } from '/src/utils'
+import { getTaskTypeIcon, isEmpty, sortByKey } from '/src/utils'
 
 import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/features/context'
 
@@ -28,10 +27,16 @@ import { stringEditor, typeEditor } from './editors'
 import { loadBranch, getUpdatedNodeData } from './loader'
 import { MultiSelect } from 'primereact/multiselect'
 import { useLocalStorage } from '../../utils'
+import { useGetHierarchyQuery } from '/src/services/getHierarchy'
+import SearchDropdown from '/src/components/SearchDropdown'
+import { getFolderTypeIcon } from '/src/utils'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
 
+  // BUG: this is required for editing to work
+  // eslint-disable-next-line no-unused-vars
+  const context = useSelector((state) => ({ ...state.context }))
   const projectName = useSelector((state) => state.context.projectName)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
@@ -39,23 +44,19 @@ const EditorPage = () => {
 
   const dispatch = useDispatch()
 
-  const [nodeData, setNodeData] = useState({})
+  let [nodeData, setNodeData] = useState({})
   const [changes, setChanges] = useState({})
   const [newNodes, setNewNodes] = useState([])
   const [errors, setErrors] = useState({})
   const [selectionLocked, setSelectionLocked] = useState(false)
+  // SEARCH STATES
+  // object with folderIds, task parentsIds and taskNames
+  const [searchIds, setSearchIds] = useState({})
+
   const contextMenuRef = useRef(null)
 
-  const currentSelection = useMemo(() => {
-    // This object holds the information on current selected nodes.
-    // It has the same structure as nodeData, e.g. {objecId: nodeData, ...}
-    // so it is compatible with the treetable selection argument and it
-    // also provides complete node information
-    const result = {}
-    for (const key of focusedFolders) result[key] = nodeData[key]
-    for (const key of focusedTasks) result[key] = nodeData[key]
-    return result
-  }, [focusedFolders, focusedTasks, nodeData])
+  // Hierarchy data is used for fast searching
+  const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery({ projectName })
 
   //
   // Helpers
@@ -84,14 +85,22 @@ const EditorPage = () => {
   }
 
   useEffect(() => {
+    console.log('getting new data')
     setLoading(true)
     const expandedKeys = [...Object.keys(expandedFolders), 'root']
-    getUpdatedNodeData(nodeData, newNodes, expandedKeys, parents, query, projectName).then(
-      (result) => {
-        setNodeData(result)
-        setLoading(false)
-      },
-    )
+
+    getUpdatedNodeData(
+      nodeData,
+      newNodes,
+      expandedKeys,
+      parents,
+      query,
+      projectName,
+      searchIds,
+    ).then((result) => {
+      setNodeData(result)
+      setLoading(false)
+    })
   }, [expandedFolders, newNodes])
 
   //
@@ -150,6 +159,28 @@ const EditorPage = () => {
   // Build hierarchy
   //
 
+  // console.log(searchIds)
+
+  // SEARCH FILTER
+  // if search results filter out nodes
+  const filteredNodeData = useMemo(() => {
+    const filtered = { ...nodeData }
+    if (searchIds) {
+      const { folderIds = [], taskNames = [] } = searchIds
+      for (const key in filtered) {
+        if (folderIds.length && !folderIds.includes(key)) {
+          if (!filtered[key].leaf) {
+            delete filtered[key]
+          } else if (taskNames.length && !taskNames.includes(filtered[key].data.name)) {
+            delete filtered[key]
+          }
+        }
+      }
+    }
+
+    return filtered
+  }, [nodeData, searchIds])
+
   const parents = useMemo(() => {
     // This is an auto-generated object in the form of:
     //   { parentId: [child1Id, child2Id....]
@@ -157,13 +188,13 @@ const EditorPage = () => {
     // building hierarchy
 
     const result = {}
-    for (const childId in nodeData) {
-      const parentId = nodeData[childId].data.__parentId
+    for (const childId in filteredNodeData) {
+      const parentId = filteredNodeData[childId].data.__parentId
       if (!(parentId in result)) result[parentId] = []
       result[parentId].push(childId)
     }
     return result
-  }, [nodeData])
+  }, [filteredNodeData])
 
   // Build hierarchical data for the TreeTable component
   // Trigger the rebuild when parents are updated (which are
@@ -171,7 +202,7 @@ const EditorPage = () => {
   // are needed for the hierarchy, so thi cascading makes
   // it possible)
 
-  const treeData = useMemo(() => {
+  let treeData = useMemo(() => {
     if (isEmpty(parents)) {
       return []
     }
@@ -197,6 +228,146 @@ const EditorPage = () => {
     buildHierarchy('root', result)
     return sortByKey(result, 'name')
   }, [parents])
+
+  let foundTasks = []
+  const getFolderTaskList = (folders = [], parentId, d) => {
+    console.log('running')
+    let searchList = []
+    let depth = d || 0
+    folders.forEach((folder) => {
+      searchList.push({
+        id: folder.id,
+        label: folder.name,
+        value: folder.name,
+        parentId: parentId,
+        children: folder.children || [],
+        taskNames: folder.taskNames,
+        keywords: [folder.name, folder.folderType].map((k) => k.toLowerCase()),
+        depth: depth,
+        icon: getFolderTypeIcon(folder.folderType),
+        isTask: false,
+      })
+
+      // add tasks to list if not already found
+      folder.taskNames?.forEach((task) => {
+        if (!foundTasks.includes(task)) {
+          foundTasks.push(task)
+          searchList.push({
+            id: folder.id + task,
+            label: task,
+            value: task,
+            icon: getTaskTypeIcon(task),
+            depth: depth + 1,
+            keywords: [task],
+            taskNames: [],
+            isTask: true,
+          })
+        }
+      })
+
+      if (folder.children?.length) {
+        searchList = searchList.concat(getFolderTaskList(folder.children, folder.id, depth + 1))
+      }
+    })
+
+    return searchList
+  }
+
+  // create a flat list of everything searchable, folders and tasks
+  let searchabledFolders = useMemo(
+    () => getFolderTaskList(hierarchyData).sort((a, b) => a.depth - b.depth),
+    [hierarchyData],
+  )
+
+  // create a set that can be used to look up a specific id
+  const searchabledFoldersSet = useMemo(() => {
+    const res = new Map()
+
+    for (const folder of searchabledFolders) {
+      res.set(folder.id, { parent: folder.parentId, childrenLength: folder.childrenLength })
+    }
+
+    return res
+  }, [searchabledFolders])
+
+  const searchFilter = (search, suggestions) => {
+    // filter through suggestions
+    const filtered = suggestions.filter((folder) =>
+      folder.keywords.some((key) => key.includes(search)),
+    )
+    return filtered
+  }
+
+  const handleSearchComplete = (result, search) => {
+    let folderIds = [],
+      taskNames = []
+    let results = result
+
+    // look for tasks in results and add matching folders
+    result.forEach((res) => {
+      if (!res.isTask) return
+
+      // find all
+      searchabledFolders.forEach(
+        (folder) =>
+          folder.taskNames.includes(res.value) &&
+          !folderIds.includes(folder.id) &&
+          results.push(folder),
+      )
+    })
+
+    // find all parent ids for each id
+    results.forEach((folder) => {
+      if (folder.isTask) return
+
+      // add folder id
+      folderIds.push(folder.id)
+
+      // if folder has tasks add folderId and taskName
+      if (folder.taskNames.length && folder.taskNames.some((n) => n.includes(search))) {
+        // are any of the task names match with the search
+        folder.taskNames.forEach(
+          (name) => name.includes(search) && !taskNames.includes(name) && taskNames.push(name),
+        )
+      }
+      // get folders parentId
+      const getAllParents = (folder, id) => {
+        const childId = id || folder.id
+        const parentId = searchabledFoldersSet.get(childId).parent
+        if (parentId && !folderIds.includes(parentId)) {
+          // add parent id
+          folderIds.push(parentId)
+          // see if parent id has it's own parentId
+          getAllParents(folder, parentId)
+        }
+      }
+      getAllParents(folder)
+
+      const getAllChildren = (folder) => {
+        // add all children and taskNames to folders
+        folder.children?.forEach((child) => {
+          if (!folderIds.includes(child.id)) folderIds.push(child.id)
+
+          if (child.children) getAllChildren(child)
+        })
+      }
+      getAllChildren(folder)
+    })
+
+    setSearchIds({ folderIds, taskNames })
+  }
+
+  const currentSelection = useMemo(() => {
+    // This object holds the information on current selected nodes.
+    // It has the same structure as nodeData, e.g. {objecId: nodeData, ...}
+    // so it is compatible with the treetable selection argument and it
+    // also provides complete node information
+
+    const result = {}
+    for (const key of focusedFolders) result[key] = nodeData[key]
+    for (const key of focusedTasks) result[key] = nodeData[key]
+    return result
+  }, [focusedFolders, focusedTasks, nodeData])
 
   //
   // Update handlers
@@ -639,14 +810,14 @@ const EditorPage = () => {
     [],
   )
 
-  let AllColumns = [
+  let allColumns = [
     <Column
       field="name"
       key="name"
       header="Name"
       expander={true}
       body={(rowData) => formatName(rowData.data, changes)}
-      style={{ width: columnsWidthsState['name'], maxWidth: 300 }}
+      style={{ width: columnsWidthsState['name'], maxWidth: 300, height: 33 }}
       editor={(options) => {
         return stringEditor(options, updateName, formatName(options.rowData, changes, false))
       }}
@@ -685,7 +856,7 @@ const EditorPage = () => {
   if (columnsOrder) {
     try {
       columnsOrder = JSON.parse(columnsOrder)
-      AllColumns.sort((a, b) => columnsOrder[a.props.field] - columnsOrder[b.props.field])
+      allColumns.sort((a, b) => columnsOrder[a.props.field] - columnsOrder[b.props.field])
     } catch (error) {
       console.log(error)
       // remove local stage
@@ -694,15 +865,14 @@ const EditorPage = () => {
   }
 
   // only filter columns if required
-  if (shownColumns.length < AllColumns.length) {
-    AllColumns = AllColumns.filter(({ props }) => shownColumns.includes(props.field))
+  if (shownColumns.length < allColumns.length) {
+    allColumns = allColumns.filter(({ props }) => shownColumns.includes(props.field))
   }
 
   // sort columns
 
   //
   // Render the TreeTable
-  //
 
   return (
     <main>
@@ -717,12 +887,20 @@ const EditorPage = () => {
           <Button icon="add_task" label="Add task" disabled={!canAdd} onClick={onAddTask} />
           <Button icon="create_new_folder" label="Add root folder" onClick={onAddRootFolder} />
           <Button label="Delete selected" icon="delete" onClick={onDelete} />
-          <InputSwitch
-            checked={selectionLocked}
-            onChange={() => setSelectionLocked(!selectionLocked)}
-            style={{ width: 40, marginLeft: 10 }}
+
+          <Spacer />
+          <Button icon="close" label="Revert Changes" onClick={onRevert} disabled={!canCommit} />
+          <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
+        </Toolbar>
+        <Toolbar>
+          <SearchDropdown
+            filter={searchFilter}
+            suggestions={searchabledFolders}
+            suggestionsLimit={5}
+            onSubmit={handleSearchComplete}
+            onClear={() => searchIds && setSearchIds({})}
+            isLoading={isSearchLoading}
           />
-          Lock selection
           <MultiSelect
             options={filterOptions}
             value={shownColumns}
@@ -731,9 +909,12 @@ const EditorPage = () => {
             fixedPlaceholder={shownColumns.length >= filterOptions.length}
             style={{ maxWidth: 200 }}
           />
-          <Spacer />
-          <Button icon="close" label="Revert Changes" onClick={onRevert} disabled={!canCommit} />
-          <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
+          <InputSwitch
+            checked={selectionLocked}
+            onChange={() => setSelectionLocked(!selectionLocked)}
+            style={{ width: 40, marginLeft: 10 }}
+          />
+          Lock selection
         </Toolbar>
         <TablePanel loading={loading}>
           <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
@@ -752,7 +933,7 @@ const EditorPage = () => {
             onRowClick={onRowClick}
             rowClassName={(rowData) => {
               return {
-                changed: rowData.key in changes || rowData.key.startsWith('newnode'),
+                changed: rowData.key in changes || rowData.key?.startsWith('newnode'),
                 deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
               }
             }}
@@ -762,8 +943,12 @@ const EditorPage = () => {
             onColumnResizeEnd={handleColumnResize}
             reorderableColumns
             onColReorder={handleColumnReorder}
+            rows={20}
+            paginator
+            lazy
+            totalRecords={20}
           >
-            {AllColumns}
+            {allColumns}
             <Column
               field="error"
               header=""

@@ -4,7 +4,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
-import { TablePanel, Button, Section, Toolbar } from '@ynput/ayon-react-components'
+import { TablePanel, Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
 // Comps
 import NewUserDialog from './newUserDialog'
 import SetPasswordDialog from './SetPasswordDialog'
@@ -12,6 +12,7 @@ import RenameUserDialog from './RenameUserDialog'
 // utils
 import axios from 'axios'
 import './users.sass'
+import useSearchFilter from '/src/hooks/useSearchFilter'
 
 const USERS_QUERY = `
   query UserList {
@@ -111,6 +112,7 @@ const UserList = ({
   const [showSetPassword, setShowSetPassword] = useState(false)
   const contextMenuRef = useRef(null)
 
+  // TODO RTK QUERY
   // Load user list
   useEffect(() => {
     setLoading(true)
@@ -140,6 +142,7 @@ const UserList = ({
       })
   }, [reloadTrigger])
 
+  // TODO RTK QUERY
   // loading roles
   useEffect(() => {
     setLoading(true)
@@ -222,10 +225,14 @@ const UserList = ({
     },
   ]
 
-  const userListWithRoles = useMemo(
+  let userListWithRoles = useMemo(
     () => userList.map((user) => formatRoles(user, selectedProjects)),
     [userList],
   )
+
+  const searchableFields = ['name', 'attrib.fullName', 'attrib.email', 'rolesList', 'hasPassword']
+
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, userListWithRoles)
 
   // Render
 
@@ -239,6 +246,12 @@ const UserList = ({
           label="Delete selected users"
           icon="person_remove"
           disabled={!selectedUsers.length}
+        />
+        <InputText
+          style={{ width: '200px' }}
+          placeholder="Filter users..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </Toolbar>
 
@@ -275,7 +288,7 @@ const UserList = ({
       <TablePanel loading={loading}>
         <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable
-          value={userListWithRoles}
+          value={filteredData}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"

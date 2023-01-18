@@ -12,6 +12,7 @@ const BASE_QUERY = `
             hasChildren
             hasTasks
             parents
+            parentId
             ownAttrib
             attrib {
               #FOLDER_ATTRS#
@@ -36,14 +37,15 @@ const BASE_QUERY = `
   }
 `
 
-const buildQuery = () => {
+const buildQuery = (query) => {
   let f_attribs = ''
   let t_attribs = ''
   for (const attrib of ayonClient.settings.attributes) {
     if (attrib.scope.includes('folder')) f_attribs += `${attrib.name}\n`
     if (attrib.scope.includes('task')) t_attribs += `${attrib.name}\n`
   }
-  return BASE_QUERY.replace('#FOLDER_ATTRS#', f_attribs).replace('#TASK_ATTRS#', t_attribs)
+  const QUERY = query || BASE_QUERY
+  return QUERY.replace('#FOLDER_ATTRS#', f_attribs).replace('#TASK_ATTRS#', t_attribs)
 }
 
 export { buildQuery }

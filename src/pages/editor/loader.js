@@ -14,7 +14,7 @@ const loadBranch = async (query, projectName, parentId) => {
   const data = response.data
   const nodes = {}
 
-  console.log(data)
+  console.log('loaded branch', data)
 
   // Add folders
   for (const edge of data.data.project.folders.edges) {

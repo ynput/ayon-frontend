@@ -2,18 +2,17 @@ import { toast } from 'react-toastify'
 import { useState, useMemo, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TablePanel, Button, Section, Toolbar } from '@ynput/ayon-react-components'
+import { TablePanel, Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
 import AttributeEditor from '../../containers/attributes/attributeEditor'
 import { useGetAttributesQuery } from '/src/services/getAttributes'
 import { useUpdateAttributesMutation } from '/src/services/updateAttributes'
+import useSearchFilter from '/src/hooks/useSearchFilter'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
   const [selectedAttribute, setSelectedAttribute] = useState(null)
   const [showEditor, setShowEditor] = useState(false)
-
   const { data, isLoading, isError, error, isFetching } = useGetAttributesQuery()
-  if (data) console.log(data[0].data.example)
 
   const [updateAttributes, { isLoading: updateLoading }] = useUpdateAttributesMutation()
 
@@ -89,7 +88,11 @@ const Attributes = () => {
   }
 
   // for sortable fields
-  const sortableAttributes = attributes.map((a) => ({ ...a, scopeLength: a?.scope.length }))
+  let sortableAttributes = attributes.map((a) => ({ ...a, scopeLength: a?.scope.length }))
+
+  const searchableFields = ['name', 'data.title', 'scope', 'data.type']
+
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, sortableAttributes)
 
   return (
     <main>
@@ -111,13 +114,19 @@ const Attributes = () => {
             disabled={selectedAttribute?.builtin}
             onClick={onDelete}
           />
+          <InputText
+            style={{ width: '200px' }}
+            placeholder="Filter attributes..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </Toolbar>
         <TablePanel loading={isLoading || updateLoading || isFetching}>
           <DataTable
             scrollable="true"
             scrollHeight="flex"
             dataKey="name"
-            value={sortableAttributes}
+            value={filteredData}
             reorderableRows
             onRowReorder={onRowReorder}
             selectionMode="single"
