@@ -110,7 +110,7 @@ const SearchDropdown = ({
   isLoading,
   onSubmit,
   onClear,
-  onOpen,
+  onFocus,
   onClose,
   filter,
 }) => {
@@ -189,23 +189,28 @@ const SearchDropdown = ({
     setSearch(inputText)
 
     handleFilterResults(inputText)
+
+    setSuggestionsOpen(!!inputText)
+
+    if (!inputText) {
+      console.log('clear')
+      onClear()
+    }
   }
 
   const handleBlur = () => {
-    closeSearch()
-    // handleFilterResults()
+    handleSubmit(null, true)
   }
 
   const handleFocus = () => {
-    // onOpen callback
-    onOpen && onOpen()
-    // open suggestions
-    setSuggestionsOpen(true)
-    // handleFilterResults()
+    // onFocus callback
+    onFocus && onFocus()
 
     if (search) {
       // if there's text select all the text
       inputRef.current.select()
+      // and open suggestions
+      setSuggestionsOpen(true)
     }
   }
 
@@ -343,7 +348,7 @@ SearchDropdown.propTypes = {
   isLoading: PropTypes.bool,
   onClear: PropTypes.func,
   onClose: PropTypes.func,
-  onOpen: PropTypes.func,
+  onFocus: PropTypes.func,
   filter: PropTypes.func,
 }
 
