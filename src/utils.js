@@ -154,12 +154,12 @@ const updateFolderTypeIcons = (data) => {
 }
 
 const getTaskTypeIcon = (taskType) => {
-  return TASK_TYPE_ICONS[taskType] || 'help_center'
+  return TASK_TYPE_ICONS[taskType.toLowerCase()] || 'help_center'
 }
 
 const updateTaskTypeIcons = (data) => {
   for (const name in data) {
-    TASK_TYPE_ICONS[name] = data[name]
+    TASK_TYPE_ICONS[name.toLowerCase()] = data[name]
   }
 }
 
