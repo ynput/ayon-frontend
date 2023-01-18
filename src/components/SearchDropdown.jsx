@@ -168,6 +168,11 @@ const SearchDropdown = ({
   const handleFocus = () => {
     onOpen()
     setSuggestionsOpen(true)
+
+    if (value) {
+      // if there's text select all the text
+      inputRef.current.select()
+    }
   }
 
   const suggestionsSpliced = useMemo(() => {
