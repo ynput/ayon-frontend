@@ -58,7 +58,7 @@ const App = () => {
 
           ayonClient.settings = {
             attributes: response.data.attributes,
-            machines: response.data.machines,
+            sites: response.data.sites,
           }
         }
       })

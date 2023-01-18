@@ -15,6 +15,7 @@ const AddonList = ({
   changedAddons,
   onDismissChanges,
   onRemoveOverrides,
+  withSettings = 'settings',
   header,
   footer,
 }) => {
@@ -65,6 +66,7 @@ const AddonList = ({
     axios
       .get('/api/addons')
       .then((res) => {
+        console.log('build tree')
         let result = []
         for (const addon of res.data.addons) {
           const prefix = projectKey ? `${projectKey}-` : ''
@@ -84,7 +86,9 @@ const AddonList = ({
 
           if (showVersions) {
             for (const version in addon.versions) {
-              if (!addon.versions[version].hasSettings) continue
+              if (withSettings === 'settings' && !addon.versions[version].hasSettings) continue
+              if (withSettings === 'site' && !addon.versions[version].hasSiteSettings) continue
+
               row.children.push({
                 key: `${prefix}${addon.name}@${version}`,
                 selectable: true,
@@ -101,7 +105,20 @@ const AddonList = ({
                 },
               })
             }
+            if (!row.children.length) continue
           } // if showVersions
+          else {
+            if (
+              withSettings === 'settings' &&
+              !addon.versions[addon.productionVersion]?.hasSettings
+            )
+              continue
+            if (
+              withSettings === 'site' &&
+              !addon.versions[addon.productionVersion]?.hasSiteSettings
+            )
+              continue
+          }
 
           result.push(row)
         }
