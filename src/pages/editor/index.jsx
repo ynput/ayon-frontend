@@ -50,11 +50,8 @@ const EditorPage = () => {
   const [errors, setErrors] = useState({})
   const [selectionLocked, setSelectionLocked] = useState(false)
   // SEARCH STATES
-  const [search, setSearch] = useState('')
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
-  // If the search dropdown is open
-  const [isSearching, setIsSearching] = useState(false)
 
   const contextMenuRef = useRef(null)
 
@@ -273,42 +270,20 @@ const EditorPage = () => {
     return res
   }, [searchabledFolders])
 
-  const [searchSuggestions, setSearchSuggestions] = useState(searchabledFolders)
-
-  // as the user types filter the flat list
-  const searchedFilteredFolders = useMemo(
-    () =>
-      searchabledFolders.filter((folder) => folder.keywords.some((key) => key.includes(search))),
-    [searchabledFolders, search],
-  )
-
-  const handleSearchChange = (e) => {
-    const search = e.target.value
-
+  const searchFilter = (search, suggestions) => {
     // filter through suggestions
-    const filtered = searchSuggestions.filter((folder) =>
+    const filtered = suggestions.filter((folder) =>
       folder.keywords.some((key) => key.includes(search)),
     )
-
-    setSearchSuggestions(filtered)
-
-    // update search text value
-    setSearch(search)
+    return filtered
   }
 
-  const handleSearchComplete = (ids) => {
-    // parentIds
-    // const parentIds  = {id1: [], id2: null, id3: []}
-    // on search (typing finished)
-
-    // when a specific option is clicked
-    const res = searchabledFolders.filter((r) => ids.includes(r.id))
-
+  const handleSearchComplete = (result, search) => {
     let folderIds = [],
       taskNames = []
 
     // find all parent ids for each id
-    res.forEach((folder) => {
+    result.forEach((folder) => {
       // add folder id
       folderIds.push(folder.id)
 
@@ -344,8 +319,6 @@ const EditorPage = () => {
     })
 
     setSearchIds({ folderIds, taskNames })
-
-    setIsSearching(false)
   }
 
   const currentSelection = useMemo(() => {
@@ -885,14 +858,11 @@ const EditorPage = () => {
         </Toolbar>
         <Toolbar>
           <SearchDropdown
-            value={search}
-            onChange={handleSearchChange}
-            suggestions={searchedFilteredFolders}
+            filter={searchFilter}
+            suggestions={searchabledFolders}
             suggestionsLimit={5}
             onSubmit={handleSearchComplete}
             onClear={() => searchIds && setSearchIds({})}
-            onClose={() => setIsSearching(false)}
-            onOpen={() => setIsSearching(true)}
             isLoading={isSearchLoading}
           />
           <MultiSelect
@@ -919,7 +889,7 @@ const EditorPage = () => {
             value={treeData}
             resizableColumns
             columnResizeMode="expand"
-            expandedKeys={isSearching ? {} : expandedFolders}
+            expandedKeys={expandedFolders}
             onToggle={onToggle}
             selectionMode="multiple"
             selectionKeys={currentSelection}
@@ -938,6 +908,9 @@ const EditorPage = () => {
             reorderableColumns
             onColReorder={handleColumnReorder}
             rows={20}
+            paginator
+            lazy
+            totalRecords={20}
           >
             {allColumns}
             <Column

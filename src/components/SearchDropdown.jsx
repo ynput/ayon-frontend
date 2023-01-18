@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { InputText } from '@ynput/ayon-react-components'
 import styled, { css, keyframes } from 'styled-components'
@@ -105,21 +105,31 @@ const BackdropStyled = styled.div`
 `
 
 const SearchDropdown = ({
-  value,
   suggestions = [],
   suggestionsLimit = 5,
   isLoading,
-  onChange,
   onSubmit,
   onClear,
   onOpen,
   onClose,
+  filter,
 }) => {
+  const [search, setSearch] = useState('')
+  const [searchResults, setSearchResults] = useState(suggestions)
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [showAnimation, setShowAnimation] = useState(true)
   const [activeIndex, setActiveIndex] = useState(null)
   const [usingKeyboard, setUsingKeyboard] = useState(false)
   const inputRef = useRef()
+
+  const handleFilterResults = (newSearch) => {
+    // console.log('filtering search results by', newSearch)
+    // if there is a fitler use to filter out suggestions
+    if (filter) {
+      let newSuggestions = filter(newSearch, [...suggestions])
+      setSearchResults(newSuggestions)
+    }
+  }
 
   const closeSearch = () => {
     // close suggestions
@@ -128,7 +138,8 @@ const SearchDropdown = ({
     inputRef.current.blur()
     // reset animation
     setShowAnimation(true)
-    onClose()
+    // close callback
+    onClose && onClose()
   }
 
   const handleSubmit = (e, useAll) => {
@@ -142,48 +153,68 @@ const SearchDropdown = ({
     // no search text clear search
     if (!input && useAll) {
       console.log('clearing search')
-      return onClear()
+      // reset results
+      setSearchResults(suggestions)
+      return onClear && onClear()
     }
 
-    let ids = []
+    let results = []
+    let finalSearch = search
 
     if (item && !useAll) {
       // clicked on specific item
       console.log('clicked suggestion', item.id, item.value)
-      onChange({ target: { value: item.value } })
-      ids = [item.id]
+      finalSearch = item.value
+      setSearch(finalSearch)
+      results = [item]
     } else {
-      ids = suggestions.map((s) => s.id)
+      results = searchResults
     }
 
-    console.log('submitting search with: ', ids.length, ' result found.')
+    console.log('submitting search with: ', results.length, ' result found.')
 
-    onSubmit(ids)
+    // onSubmit callback
+    onSubmit(results, finalSearch)
+
+    // update search results
+    handleFilterResults(finalSearch)
+  }
+
+  const handleOnChange = (e) => {
+    const inputText = e.target.value
+    setSearch(inputText)
+
+    handleFilterResults(inputText)
   }
 
   const handleBlur = () => {
-    console.log('blurring')
     closeSearch()
+    // handleFilterResults()
   }
 
   const handleFocus = () => {
-    onOpen()
+    // onOpen callback
+    onOpen && onOpen()
+    // open suggestions
     setSuggestionsOpen(true)
+    // handleFilterResults()
 
-    if (value) {
+    if (search) {
       // if there's text select all the text
       inputRef.current.select()
     }
   }
 
-  const suggestionsSpliced = useMemo(() => {
+  const spliceSuggestionsDown = () => {
     // only splice if the ammount of suggestions is more than the limit
-    if (suggestionsLimit && suggestions.length > suggestionsLimit) {
+    if (suggestionsLimit && searchResults.length > suggestionsLimit) {
       let start = 0
-      if (!value) start += 2
-      return [...suggestions].splice(start, suggestionsLimit)
-    } else return suggestions
-  }, [suggestions])
+      if (!search) start += 2
+      return [...searchResults].splice(start, suggestionsLimit)
+    } else return searchResults
+  }
+
+  const suggestionsSpliced = spliceSuggestionsDown()
 
   // KEY BOARD CONTROL
   const handleKeyPress = (e) => {
@@ -244,8 +275,8 @@ const SearchDropdown = ({
       {suggestionsOpen && <BackdropStyled onClick={handleBlur} />}
       <InputTextStyled
         placeholder="Filter folders..."
-        value={value}
-        onChange={onChange}
+        value={search}
+        onChange={handleOnChange}
         onFocus={handleFocus}
         ref={inputRef}
         open={suggestionsOpen}
@@ -255,7 +286,7 @@ const SearchDropdown = ({
           open={suggestionsOpen}
           items={suggestionsSpliced.length}
           limit={suggestionsLimit}
-          showResults={(value && suggestions.length > suggestionsLimit) || !suggestions.length}
+          showResults={(search && searchResults.length > suggestionsLimit) || !searchResults.length}
           onAnimationEnd={() => setShowAnimation(false)}
           showAnimation={showAnimation}
         >
@@ -281,10 +312,10 @@ const SearchDropdown = ({
               Loading...
             </SuggestionItemStyled>
           ) : (
-            value &&
-            (suggestions.length > suggestionsLimit || !suggestions.length) && (
+            search &&
+            (searchResults.length > suggestionsLimit || !searchResults.length) && (
               <SuggestionItemStyled className="results" activeIndex={null}>
-                <span>{`${suggestions.length} Results`}</span>
+                <span>{`${searchResults.length} Results`}</span>
               </SuggestionItemStyled>
             )
           )}
@@ -295,8 +326,6 @@ const SearchDropdown = ({
 }
 
 SearchDropdown.propTypes = {
-  value: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
   suggestions: PropTypes.arrayOf(
     PropTypes.shape({
       value: PropTypes.string.isRequired,
@@ -311,6 +340,7 @@ SearchDropdown.propTypes = {
   onClear: PropTypes.func,
   onClose: PropTypes.func,
   onOpen: PropTypes.func,
+  filter: PropTypes.func,
 }
 
 export default SearchDropdown
