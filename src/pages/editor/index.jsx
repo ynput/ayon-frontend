@@ -17,7 +17,7 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { isEmpty, sortByKey } from '/src/utils'
+import { getTaskTypeIcon, isEmpty, sortByKey } from '/src/utils'
 
 import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/features/context'
 
@@ -229,28 +229,48 @@ const EditorPage = () => {
     return sortByKey(result, 'name')
   }, [parents])
 
+  let foundTasks = []
   const getFolderTaskList = (folders = [], parentId, d) => {
-    let taskNames = []
+    console.log('running')
+    let searchList = []
     let depth = d || 0
     folders.forEach((folder) => {
-      taskNames.push({
+      searchList.push({
         id: folder.id,
         label: folder.name,
         value: folder.name,
         parentId: parentId,
         children: folder.children || [],
         taskNames: folder.taskNames,
-        keywords: [...folder.taskNames, folder.name, folder.folderType].map((k) => k.toLowerCase()),
+        keywords: [folder.name, folder.folderType].map((k) => k.toLowerCase()),
         depth: depth,
         icon: getFolderTypeIcon(folder.folderType),
+        isTask: false,
+      })
+
+      // add tasks to list if not already found
+      folder.taskNames?.forEach((task) => {
+        if (!foundTasks.includes(task)) {
+          foundTasks.push(task)
+          searchList.push({
+            id: folder.id + task,
+            label: task,
+            value: task,
+            icon: getTaskTypeIcon(task),
+            depth: depth + 1,
+            keywords: [task],
+            taskNames: [],
+            isTask: true,
+          })
+        }
       })
 
       if (folder.children?.length) {
-        taskNames = taskNames.concat(getFolderTaskList(folder.children, folder.id, depth + 1))
+        searchList = searchList.concat(getFolderTaskList(folder.children, folder.id, depth + 1))
       }
     })
 
-    return taskNames
+    return searchList
   }
 
   // create a flat list of everything searchable, folders and tasks
@@ -281,9 +301,25 @@ const EditorPage = () => {
   const handleSearchComplete = (result, search) => {
     let folderIds = [],
       taskNames = []
+    let results = result
+
+    // look for tasks in results and add matching folders
+    result.forEach((res) => {
+      if (!res.isTask) return
+
+      // find all
+      searchabledFolders.forEach(
+        (folder) =>
+          folder.taskNames.includes(res.value) &&
+          !folderIds.includes(folder.id) &&
+          results.push(folder),
+      )
+    })
 
     // find all parent ids for each id
-    result.forEach((folder) => {
+    results.forEach((folder) => {
+      if (folder.isTask) return
+
       // add folder id
       folderIds.push(folder.id)
 
