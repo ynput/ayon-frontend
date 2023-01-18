@@ -53,6 +53,8 @@ const EditorPage = () => {
   const [search, setSearch] = useState('')
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
+  // If the search dropdown is open
+  const [isSearching, setIsSearching] = useState(false)
 
   const contextMenuRef = useRef(null)
 
@@ -342,6 +344,8 @@ const EditorPage = () => {
     })
 
     setSearchIds({ folderIds, taskNames })
+
+    setIsSearching(false)
   }
 
   const currentSelection = useMemo(() => {
@@ -887,6 +891,8 @@ const EditorPage = () => {
             suggestionsLimit={5}
             onSubmit={handleSearchComplete}
             onClear={() => searchIds && setSearchIds({})}
+            onClose={() => setIsSearching(false)}
+            onOpen={() => setIsSearching(true)}
             isLoading={isSearchLoading}
           />
           <MultiSelect
@@ -913,7 +919,7 @@ const EditorPage = () => {
             value={treeData}
             resizableColumns
             columnResizeMode="expand"
-            expandedKeys={expandedFolders}
+            expandedKeys={isSearching ? {} : expandedFolders}
             onToggle={onToggle}
             selectionMode="multiple"
             selectionKeys={currentSelection}

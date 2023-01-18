@@ -105,12 +105,14 @@ const BackdropStyled = styled.div`
 
 const SearchDropdown = ({
   value,
-  onChange,
   suggestions = [],
   suggestionsLimit = 5,
+  isLoading,
+  onChange,
   onSubmit,
   onClear,
-  isLoading,
+  onOpen,
+  onClose,
 }) => {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [showAnimation, setShowAnimation] = useState(true)
@@ -125,6 +127,7 @@ const SearchDropdown = ({
     inputRef.current.blur()
     // reset animation
     setShowAnimation(true)
+    onClose()
   }
 
   const handleSubmit = (e, useAll) => {
@@ -134,10 +137,9 @@ const SearchDropdown = ({
     closeSearch()
     // if active index true find item
     const item = suggestionsSpliced[activeIndex]
-    console.log(item)
 
     // no search text clear search
-    if (!input && !item.id) {
+    if (!input && useAll) {
       console.log('clearing search')
       return onClear()
     }
@@ -153,7 +155,7 @@ const SearchDropdown = ({
       ids = suggestions.map((s) => s.id)
     }
 
-    console.log('submitting search', ids)
+    console.log('submitting search with: ', ids.length, ' result found.')
 
     onSubmit(ids)
   }
@@ -161,6 +163,11 @@ const SearchDropdown = ({
   const handleBlur = () => {
     console.log('blurring')
     closeSearch()
+  }
+
+  const handleFocus = () => {
+    onOpen()
+    setSuggestionsOpen(true)
   }
 
   const suggestionsSpliced = useMemo(() => {
@@ -230,7 +237,7 @@ const SearchDropdown = ({
         placeholder="Filter folders..."
         value={value}
         onChange={onChange}
-        onFocus={() => setSuggestionsOpen(true)}
+        onFocus={handleFocus}
         ref={inputRef}
         open={suggestionsOpen}
       />
@@ -291,8 +298,10 @@ SearchDropdown.propTypes = {
   ).isRequired,
   suggestionsLimit: PropTypes.number,
   onSubmit: PropTypes.func.isRequired,
-  onClear: PropTypes.func,
   isLoading: PropTypes.bool,
+  onClear: PropTypes.func,
+  onClose: PropTypes.func,
+  onOpen: PropTypes.func,
 }
 
 export default SearchDropdown
