@@ -5,10 +5,13 @@ import { Dialog } from 'primereact/dialog'
 
 import { Button, InputPassword, FormLayout, FormRow } from '@ynput/ayon-react-components'
 
-import axios from 'axios'
+import { useUpdateUserPasswordMutation } from '/src/services/user/updateUser'
 
 const SetPasswordDialog = ({ onHide, selectedUsers }) => {
   const [password, setPassword] = useState('')
+
+  // mutation hook
+  const [updateUserPassword] = useUpdateUserPasswordMutation()
 
   if (!selectedUsers?.length) {
     // this shouldn't happen
@@ -16,18 +19,21 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
     return <></>
   }
 
-  const userName = selectedUsers[0]
-  const onSubmit = () => {
-    axios
-      .patch(`/api/users/${userName}/password`, { password })
-      .then(() => {
-        onHide()
-        toast.success('Password changed')
-      })
-      .catch(() => toast.error('Unable to change password'))
+  const name = selectedUsers[0]
+  const onSubmit = async () => {
+    try {
+      await updateUserPassword({ name, password }).unwrap()
+      // SUCCESS
+      onHide()
+      toast.success('Password changed')
+    } catch (error) {
+      // FAIL
+      console.error(error)
+      toast.error('Unable to change password')
+    }
   }
   return (
-    <Dialog header={`Change user ${userName} password`} visible={true} onHide={onHide}>
+    <Dialog header={`Change user ${name} password`} visible={true} onHide={onHide}>
       <FormLayout>
         <FormRow label="New password">
           <InputPassword value={password} onChange={(e) => setPassword(e.target.value)} />

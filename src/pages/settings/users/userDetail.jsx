@@ -1,12 +1,11 @@
-import axios from 'axios'
-
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Spacer, Section, Toolbar, Panel } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { UserAttrib, AccessControl } from './forms'
+import { useUpdateUserMutation } from '/src/services/user/updateUser'
 
-const UserDetail = ({ userDetailData, onTriggerReload }) => {
+const UserDetail = ({ userDetailData }) => {
   const [formData, setFormData] = useState({})
 
   const userAttrib = {
@@ -37,6 +36,8 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
 
   // editing a single user, so show attributes form too
   const singleUserEdit = userDetailData.users?.length === 1 ? userDetailData.users[0] : null
+
+  const [updateUser] = useUpdateUserMutation()
 
   // no selected user. do not show the panel
   if (!userDetailData.users?.length) {
@@ -78,19 +79,23 @@ const UserDetail = ({ userDetailData, onTriggerReload }) => {
         data.roles = null
       }
 
-      // Apply the patch
-
       try {
-        await axios.patch(`/api/users/${user.name}`, {
-          active: formData.userActive,
-          attrib,
-          data,
-        })
-      } catch {
+        // Apply the patch
+        await updateUser({
+          name: user.name,
+          patch: {
+            active: formData.userActive,
+            attrib,
+            data,
+          },
+        }).unwrap()
+
+        console.log('user updated')
+      } catch (error) {
         toast.error(`Unable to update user ${user.name} `)
+        console.error(error)
       }
     } // for user
-    onTriggerReload()
   }
 
   //

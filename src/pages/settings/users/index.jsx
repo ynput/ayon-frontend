@@ -6,10 +6,7 @@ import UserDetail from './userDetail'
 const Users = () => {
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [selectedUsers, setSelectedUsers] = useState([])
-  const [reloadTrigger, setReloadTrigger] = useState(0)
   const [userDetailData, setUserDetailData] = useState({})
-
-  const triggerReload = () => setReloadTrigger(reloadTrigger + 1)
 
   return (
     <main>
@@ -19,21 +16,13 @@ const Users = () => {
         selection={selectedProjects}
         onSelect={setSelectedProjects}
       />
-
       <UserList
         selectedProjects={selectedProjects}
         selectedUsers={selectedUsers}
         onSelectUsers={setSelectedUsers}
-        reloadTrigger={reloadTrigger}
         setUserDetailData={setUserDetailData}
-        onTriggerReload={triggerReload}
       />
-
-      <UserDetail
-        userDetailData={userDetailData}
-        reloadTrigger={reloadTrigger}
-        onTriggerReload={triggerReload}
-      />
+      <UserDetail userDetailData={userDetailData} />
     </main>
   )
 }

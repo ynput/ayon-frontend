@@ -13,7 +13,7 @@ import RenameUserDialog from './RenameUserDialog'
 import axios from 'axios'
 import './users.sass'
 import useSearchFilter from '/src/hooks/useSearchFilter'
-import { useGetUsersQuery } from '/src/services/getUsers'
+import { useGetUsersQuery } from '../../../services/user/getUsers'
 import { useGetRolesQuery } from '/src/services/getRoles'
 
 const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
@@ -73,14 +73,7 @@ const formatRoles = (rowData, selectedProjects) => {
   return { ...rowData, roles: res, rolesList: Object.keys(res) }
 }
 
-const UserList = ({
-  selectedProjects,
-  selectedUsers,
-  onSelectUsers,
-  reloadTrigger,
-  setUserDetailData,
-  onTriggerReload,
-}) => {
+const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, setUserDetailData }) => {
   const [showNewUser, setShowNewUser] = useState(false)
   const [lastSelectedUser, setLastSelectedUser] = useState(null)
   const [showRenameUser, setShowRenameUser] = useState(false)
@@ -112,7 +105,7 @@ const UserList = ({
       setUserDetailData(buildUserDetailData(selectedProjects, rolesList, result, lastUsr))
     }
     return result
-  }, [selectedUsers, selectedProjects, reloadTrigger, isFetching])
+  }, [selectedUsers, selectedProjects, isFetching])
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
@@ -136,7 +129,6 @@ const UserList = ({
             toast.error(`Unable to delete user ${user}`)
           }
         }
-        onTriggerReload()
       },
       reject: () => {},
     })
@@ -196,7 +188,6 @@ const UserList = ({
           rolesList={rolesList}
           onHide={() => {
             setShowNewUser(false)
-            onTriggerReload()
           }}
         />
       )}
@@ -206,7 +197,6 @@ const UserList = ({
           selectedUsers={selectedUsers}
           onHide={() => {
             setShowRenameUser(false)
-            onTriggerReload()
           }}
         />
       )}
@@ -216,7 +206,6 @@ const UserList = ({
           selectedUsers={selectedUsers}
           onHide={() => {
             setShowSetPassword(false)
-            onTriggerReload()
           }}
         />
       )}

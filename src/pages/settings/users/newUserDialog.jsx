@@ -1,11 +1,10 @@
-import axios from 'axios'
-
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
 import { Spacer, Button } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { UserAttrib, AccessControl } from './forms'
+import { useAddUserMutation } from '/src/services/user/updateUser'
 
 const NewUserDialog = ({ onHide }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
@@ -15,12 +14,14 @@ const NewUserDialog = ({ onHide }) => {
     userActive: true,
   })
 
+  const [addUser] = useAddUserMutation()
+
   const userAttrib = {
     fullName: 'Full name',
     email: 'Email',
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const payload = {}
     if (!formData.name) {
       toast.error('Login name must be provided')
@@ -48,20 +49,19 @@ const NewUserDialog = ({ onHide }) => {
       }
     }
 
-    axios
-      .put(`/api/users/${formData.name}`, payload)
-      .then(() => {
-        toast.success('User created')
-        // keep re-usable data in the form
-        setPassword('')
-        setFormData((fd) => {
-          return { roles: fd.roles, userLevel: fd.userLevel }
-        })
+    try {
+      await addUser({ name: formData.name, user: payload }).unwrap()
+
+      toast.success('User created')
+      // keep re-usable data in the form
+      setPassword('')
+      setFormData((fd) => {
+        return { roles: fd.roles, userLevel: fd.userLevel }
       })
-      .catch((err) => {
-        const msg = err.response?.data?.detail || 'Unhandled exception'
-        toast.error(`Unable to create user: ${msg}`)
-      })
+    } catch (error) {
+      console.error(error)
+      toast.error(`Unable to create user: ${error.detail}`)
+    }
   }
 
   const footer = (

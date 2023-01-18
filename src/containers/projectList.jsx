@@ -1,45 +1,26 @@
-import axios from 'axios'
-
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { useGetAllProjectsQuery } from '../services/getProject'
 
 const formatName = (rowData, defaultTitle) => {
   if (rowData.name === '_') return defaultTitle
   return rowData.name
 }
 
-const ProjectList = ({
-  selection,
-  onSelect,
-  showNull,
-  multiselect,
-  header,
-  footer,
-  reloadTrigger,
-}) => {
-  const [projectList, setProjectList] = useState([])
-  const [loading, setLoading] = useState(false)
+const ProjectList = ({ selection, onSelect, showNull, multiselect, header, footer }) => {
+  // QUERY HOOK
+  // ( default ) gets added in transformResponse
+  const { data = [], isLoading, isError, error } = useGetAllProjectsQuery()
+  if (isError) {
+    console.error(error)
+  }
 
-  useEffect(() => {
-    let result = []
-    setLoading(true)
-    if (showNull) result.push({ name: '_' })
-    axios
-      .get('/api/projects')
-      .then((response) => {
-        result = [...result, ...(response.data.projects || [])]
-      })
-      .catch(() => {
-        console.log('Unable to load projects')
-      })
-      .finally(() => {
-        setProjectList(result)
-        setLoading(false)
-      })
-  }, [reloadTrigger])
+  const projectList = [...data]
+
+  if (showNull) projectList.unshift({ name: '_' })
 
   const selectionObj = useMemo(() => {
     if (multiselect) {
@@ -89,7 +70,7 @@ const ProjectList = ({
   return (
     <Section style={{ maxWidth: 400 }}>
       {header}
-      <TablePanel loading={loading}>
+      <TablePanel loading={isLoading}>
         <DataTable
           value={projectList}
           scrollable="true"
