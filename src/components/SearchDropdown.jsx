@@ -169,8 +169,9 @@ const SearchDropdown = ({
     } else return suggestions
   }, [suggestions])
 
-  // used for
+  // KEY BOARD CONTROL
   const handleKeyPress = (e) => {
+    // NAVIGATE DOWN
     if (e.code === 'ArrowDown') {
       if (activeIndex === null || activeIndex >= suggestionsSpliced.length - 1) {
         // got to top
@@ -181,6 +182,7 @@ const SearchDropdown = ({
       }
     }
 
+    // NAVIGATE UP
     if (e.code === 'ArrowUp') {
       if (!activeIndex || activeIndex <= 0) {
         // go to bottom
@@ -192,7 +194,21 @@ const SearchDropdown = ({
     }
 
     if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
+      e.preventDefault()
       if (!usingKeyboard) setUsingKeyboard(true)
+    }
+
+    // SUBMIT WITH ENTER
+    if (e.code === 'Enter') {
+      // prevent reloads
+      e.preventDefault()
+
+      handleSubmit(null, !usingKeyboard)
+    }
+
+    // CLOSE WITH ESC
+    if (e.code === 'Escape') {
+      closeSearch()
     }
   }
 
@@ -202,20 +218,6 @@ const SearchDropdown = ({
 
   const handleMouseLeave = (i) => {
     if (i === activeIndex) setActiveIndex(null)
-  }
-
-  const blockUpDownKeys = (e) => {
-    // prevent going to start and end of text
-    if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
-      e.preventDefault()
-    }
-
-    if (e.code === 'Enter') {
-      // prevent reloads
-      e.preventDefault()
-
-      handleSubmit(null, !usingKeyboard)
-    }
   }
 
   return (
@@ -231,7 +233,6 @@ const SearchDropdown = ({
         onFocus={() => setSuggestionsOpen(true)}
         ref={inputRef}
         open={suggestionsOpen}
-        onKeyDown={blockUpDownKeys}
       />
       {suggestionsOpen && (
         <SuggestionsStyled
