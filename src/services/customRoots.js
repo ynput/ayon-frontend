@@ -14,22 +14,18 @@ const customRoots = ayonApi.injectEndpoints({
     }),
 
     setCustomRoots: build.mutation({
-      query: ({ projectName, machineId, data }) => ({
-        url: `/api/projects/${projectName}/roots/${machineId}`,
+      query: ({ projectName, siteId, data }) => ({
+        url: `/api/projects/${projectName}/roots/${siteId}`,
         method: 'PUT',
         body: data,
       }),
       invalidatesTags: ['customRoots'],
 
-      async onQueryStarted({ projectName, machineId, data }, { dispatch, queryFulfilled }) {
+      async onQueryStarted({ projectName, siteId, data }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(
-          ayonApi.util.updateQueryData(
-            'getCustomRoots',
-            { projectName, machineId, data },
-            (draft) => {
-              Object.assign(draft, { ...data, [machineId]: data })
-            },
-          ),
+          ayonApi.util.updateQueryData('getCustomRoots', { projectName, siteId, data }, (draft) => {
+            Object.assign(draft, { ...data, [siteId]: data })
+          }),
         )
         try {
           await queryFulfilled

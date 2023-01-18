@@ -1,6 +1,6 @@
 import AddonSettings from '/src/containers/addonSettings'
 
-const StudioOverrides = () => {
+const StudioSettings = () => {
   return (
     <main>
       <AddonSettings />
@@ -8,4 +8,4 @@ const StudioOverrides = () => {
   )
 }
 
-export default StudioOverrides
+export default StudioSettings

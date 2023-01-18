@@ -87,7 +87,7 @@ function ObjectFieldTemplate(props) {
     let hiddenFields = []
     for (const propName in props?.schema?.properties || {}) {
       const ppts = props?.schema?.properties[propName]
-      if (!(ppts.scope || []).includes(props.formContext.level)) {
+      if (!(ppts.scope || ['studio', 'project']).includes(props.formContext.level)) {
         hiddenFields.push(propName)
       }
       if (ppts.conditionalEnum) {
@@ -169,9 +169,8 @@ function ObjectFieldTemplate(props) {
 }
 
 function FieldTemplate(props) {
-  // Do not render the field if it belongs to a different scope (studio/project) or if it is hidden
-
-  if (!(props.schema.scope || []).includes(props.formContext.level)) return null
+  // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
+  if (!(props.schema.scope || ['studio', 'project']).includes(props.formContext.level)) return null
 
   const divider = useMemo(() => {
     if (props.schema.section)
