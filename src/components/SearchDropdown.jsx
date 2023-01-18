@@ -66,6 +66,7 @@ const SuggestionItemStyled = styled.li`
   min-height: 30px;
   overflow: hidden;
   cursor: pointer;
+  user-select: none;
 
   display: flex;
   align-items: center;
