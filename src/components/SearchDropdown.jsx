@@ -176,8 +176,11 @@ const SearchDropdown = ({
   }
 
   const suggestionsSpliced = useMemo(() => {
+    // only splice if the ammount of suggestions is more than the limit
     if (suggestionsLimit && suggestions.length > suggestionsLimit) {
-      return [...suggestions].splice(0, suggestionsLimit)
+      let start = 0
+      if (!value) start += 2
+      return [...suggestions].splice(start, suggestionsLimit)
     } else return suggestions
   }, [suggestions])
 
