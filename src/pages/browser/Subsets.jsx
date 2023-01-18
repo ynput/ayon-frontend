@@ -25,6 +25,7 @@ import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
 import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
+import useColumnResize from '/src/hooks/useColumnResize'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -40,7 +41,7 @@ const Subsets = () => {
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
   // sets size of status based on status column width
-  const [columnsWidths, setColumnWidths] = useLocalStorage('subsets-columns-widths', {})
+  const [columnsWidths, setColumnWidths] = useColumnResize('subsets')
 
   // version overrides
   // Get a list of version overrides for the current set of folders
@@ -274,22 +275,6 @@ const Subsets = () => {
     localStorage.setItem('subsets-columns-order', JSON.stringify(localStorageOrder))
   }
 
-  const handleColumnResize = (e) => {
-    const key = 'subsets-columns-widths'
-    const field = e.column.props.field
-    const width = e.element.offsetWidth
-
-    // set localstorage for column size change
-    let oldWidthState = {}
-    if (localStorage.getItem(key)) {
-      oldWidthState = JSON.parse(localStorage.getItem(key))
-    }
-
-    const newWidthState = { ...oldWidthState, [field]: width }
-
-    setColumnWidths(newWidthState)
-  }
-
   // update status width
 
   //
@@ -476,7 +461,7 @@ const Subsets = () => {
           onRowClick={onRowClick}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
-          onColumnResizeEnd={handleColumnResize}
+          onColumnResizeEnd={setColumnWidths}
           reorderableColumns
           onColReorder={handleColumnReorder}
         >
