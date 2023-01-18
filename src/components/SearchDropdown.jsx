@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { InputText } from '@ynput/ayon-react-components'
 import styled, { css, keyframes } from 'styled-components'
@@ -115,12 +115,16 @@ const SearchDropdown = ({
   filter,
 }) => {
   const [search, setSearch] = useState('')
-  const [searchResults, setSearchResults] = useState(suggestions)
+  const [searchResults, setSearchResults] = useState([])
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [showAnimation, setShowAnimation] = useState(true)
   const [activeIndex, setActiveIndex] = useState(null)
   const [usingKeyboard, setUsingKeyboard] = useState(false)
   const inputRef = useRef()
+
+  useEffect(() => {
+    setSearchResults(suggestions)
+  }, [suggestions, setSearchResults])
 
   const handleFilterResults = (newSearch) => {
     // console.log('filtering search results by', newSearch)
