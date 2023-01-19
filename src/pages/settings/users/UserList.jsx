@@ -4,6 +4,7 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 import './users.sass'
+import useColumnResize from '/src/hooks/useColumnResize'
 
 const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
   let roles = []
@@ -55,6 +56,9 @@ const UserList = ({
 }) => {
   const [lastSelectedUser, setLastSelectedUser] = useState(null)
   const contextMenuRef = useRef(null)
+
+  // COLUMN WIDTH
+  const [columnsWidths, setColumnWidths] = useColumnResize('users')
 
   // Selection
 
@@ -122,10 +126,30 @@ const UserList = ({
           onRowClick={(e) => {
             setLastSelectedUser(e.data)
           }}
+          columnResizeMode="expand"
+          resizableColumns
+          onColumnResizeEnd={setColumnWidths}
+          responsive="true"
         >
-          <Column field="name" header="Name" sortable />
-          <Column field="attrib.fullName" header="Full name" sortable />
-          <Column field="attrib.email" header="Email" sortable />
+          <Column
+            field="name"
+            header="Name"
+            sortable
+            style={{ flex: `1 1 ${columnsWidths['name']}px` }}
+          />
+          <Column
+            field="attrib.fullName"
+            header="Full name"
+            sortable
+            style={{ flex: `1 1 ${columnsWidths['attrib.fullName']}px` }}
+            resizeable
+          />
+          <Column
+            field="attrib.email"
+            header="Email"
+            sortable
+            style={{ flex: `1 1 ${columnsWidths['attrib.email']}px` }}
+          />
           <Column
             field={'rolesList'}
             header="Roles"
@@ -138,24 +162,28 @@ const UserList = ({
               ))
             }
             sortable
+            style={{ flex: `1 1 ${columnsWidths['rolesList']}px` }}
           />
           <Column
             header="Has password"
             body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
             field="hasPassword"
             sortable
+            style={{ flex: `1 1 ${columnsWidths['hasPassword']}px` }}
           />
           <Column
             header="Guest"
             body={(rowData) => (rowData.isGuest ? 'yes' : '')}
             field="isGuest"
             sortable
+            style={{ flex: `1 1 ${columnsWidths['isGuest']}px` }}
           />
           <Column
             header="Active"
             body={(rowData) => (rowData.active ? 'yes' : '')}
             field="active"
             sortable
+            style={{ flex: `1 1 ${columnsWidths['active']}px` }}
           />
         </DataTable>
       </TablePanel>
