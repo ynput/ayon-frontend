@@ -26,7 +26,7 @@ const updateUser = ayonApi.injectEndpoints({
         method: 'PATCH',
         body: { password },
       }),
-      invalidatesTags: (result, error, { name }) => [{ type: 'user', name }],
+      invalidatesTags: () => ['user'],
       transformErrorResponse: (res) => res.data,
     }),
     addUser: build.mutation({
@@ -44,7 +44,7 @@ const updateUser = ayonApi.injectEndpoints({
         method: 'DELETE',
       }),
       transformErrorResponse: (res) => res.data,
-      invalidatesTags: (result, error, { name }) => [{ type: 'user', name }],
+      invalidatesTags: () => ['user'],
     }),
   }),
 })

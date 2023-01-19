@@ -80,7 +80,7 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, setUserDetai
   const [showSetPassword, setShowSetPassword] = useState(false)
   const contextMenuRef = useRef(null)
 
-  const { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery()
+  const { data: userList = [], isLoading, isError, isFetching, refetch } = useGetUsersQuery()
   if (isError) toast.error('Unable to load users')
 
   const {
@@ -125,6 +125,8 @@ const UserList = ({ selectedProjects, selectedUsers, onSelectUsers, setUserDetai
         for (const user of selectedUsers) {
           try {
             await axios.delete(`/api/users/${user}`)
+            toast.success(`Deleted user ${user}`)
+            refetch()
           } catch {
             toast.error(`Unable to delete user ${user}`)
           }
