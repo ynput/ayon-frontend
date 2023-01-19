@@ -109,101 +109,91 @@ const UserList = ({
     <Section className="wrap">
       <TablePanel loading={isLoading || isLoadingRoles}>
         <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-        <DataTable
-          value={tableList}
-          scrollable="true"
-          scrollHeight="flex"
-          dataKey="name"
-          selectionMode="multiple"
-          onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-          onContextMenuSelectionChange={(e) => {
-            if (!selectedUsers.includes(e.value.name)) {
-              setSelectedUsers([...selection, e.value.name])
-            }
-            setLastSelectedUser(e.data)
-          }}
-          selection={selection}
-          onRowClick={(e) => {
-            setLastSelectedUser(e.data)
-          }}
-          columnResizeMode="expand"
-          resizableColumns
-          onColumnResizeEnd={setColumnWidths}
-          responsive="true"
-        >
-          <Column
-            field="profile"
-            resizeable={false}
-            body={(col) => (
-              <UserImage
-                fullName={col.attrib.fullName || col.name}
-                size={25}
-                style={{ transform: 'scale(0.8)', margin: 'auto' }}
-              />
-            )}
-            style={{ width: 100 }}
-          />
-          <Column
-            field="name"
-            header="Name"
-            sortable
-            style={{ flex: `1 1 ${columnsWidths['name']}px`, width: 100 }}
-            resizeable
-          />
-          <Column
-            field="attrib.fullName"
-            header="Full name"
-            sortable
-            style={{ flex: `1 1 ${columnsWidths['attrib.fullName']}px` }}
-            resizeable
-          />
-          <Column
-            field="attrib.email"
-            header="Email"
-            sortable
-            style={{ flex: `1 1 ${columnsWidths['attrib.email']}px` }}
-          />
-          <Column
-            field={'rolesList'}
-            header="Roles"
-            body={(rowData) =>
-              rowData &&
-              Object.keys(rowData.roles).map((roleName) => (
-                <span key={roleName} className={rowData.roles[roleName].cls}>
-                  {roleName}
-                </span>
-              ))
-            }
-            sortable
-            style={{ flex: `1 1 ${columnsWidths['rolesList']}px` }}
-            resizeable
-          />
-          <Column
-            header="Has password"
-            body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
-            field="hasPassword"
-            sortable
-            style={{ flex: `1 1 ${columnsWidths['hasPassword']}px` }}
-            resizeable
-          />
-          <Column
-            header="Guest"
-            body={(rowData) => (rowData.isGuest ? 'yes' : '')}
-            field="isGuest"
-            sortable
-            style={{ flex: `1 1 ${columnsWidths['isGuest']}px` }}
-            resizeable
-          />
-          <Column
-            header="Active"
-            body={(rowData) => (rowData.active ? 'yes' : '')}
-            field="active"
-            sortable
-            style={{ flex: `1 1 ${columnsWidths['active']}px` }}
-            resizeable
-          />
-        </DataTable>
+        <div style={{ overflow: 'scroll', width: 'auto', height: '100%' }}>
+          <DataTable
+            value={tableList}
+            scrollable="true"
+            scrollHeight="flex"
+            dataKey="name"
+            selectionMode="multiple"
+            onSelectionChange={onSelectionChange}
+            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+            onContextMenuSelectionChange={(e) => {
+              if (!selectedUsers.includes(e.value.name)) {
+                setSelectedUsers([...selection, e.value.name])
+              }
+              setLastSelectedUser(e.data)
+            }}
+            selection={selection}
+            onRowClick={(e) => {
+              setLastSelectedUser(e.data)
+            }}
+            columnResizeMode="expand"
+            resizableColumns
+            onColumnResizeEnd={setColumnWidths}
+            responsive="true"
+            stateKey="users-datatable"
+            stateStorage={'local'}
+            reorderableColumns
+          >
+            <Column
+              field="profile"
+              body={(col) => (
+                <UserImage
+                  fullName={col.attrib.fullName || col.name}
+                  size={25}
+                  style={{ margin: 'auto', padding: 5, transform: 'scale(0.8)' }}
+                />
+              )}
+              resizeable
+            />
+            <Column
+              field="name"
+              header="Username"
+              sortable
+
+              // resizeable
+            />
+            <Column field="attrib.fullName" header="Full name" sortable resizeable />
+            <Column field="attrib.email" header="Email" sortable />
+            <Column
+              field={'rolesList'}
+              header="Roles"
+              body={(rowData) =>
+                rowData &&
+                Object.keys(rowData.roles).map((roleName) => (
+                  <span key={roleName} className={rowData.roles[roleName].cls}>
+                    {roleName}
+                  </span>
+                ))
+              }
+              sortable
+              style={{ flex: `1 1 ${columnsWidths['rolesList']}px` }}
+              resizeable
+            />
+            <Column
+              header="Has password"
+              body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
+              field="hasPassword"
+              sortable
+              resizeable
+            />
+            <Column
+              header="Guest"
+              body={(rowData) => (rowData.isGuest ? 'yes' : '')}
+              field="isGuest"
+              sortable
+              resizeable
+            />
+            <Column
+              header="Active"
+              body={(rowData) => (rowData.active ? 'yes' : '')}
+              field="active"
+              sortable
+              resizeable
+            />
+          </DataTable>
+        </div>
       </TablePanel>
     </Section>
   )

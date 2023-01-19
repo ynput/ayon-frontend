@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel } from '@ynput/ayon-react-components'
+import { Button, Section, Panel, InputText, FormRow } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { UserAttrib, AccessControl } from './forms'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
@@ -20,7 +20,18 @@ const HeaderStyled = styled.header`
   }
 `
 
-const UserDetail = ({ userDetailData, userList }) => {
+const UsernameStyled = styled(FormRow)`
+  .field {
+    flex-direction: row;
+    gap: 5px;
+
+    input {
+      flex: 1;
+    }
+  }
+`
+
+const UserDetail = ({ userDetailData, userList, setShowRenameUser }) => {
   const [formData, setFormData] = useState({})
 
   const userAttrib = {
@@ -47,7 +58,7 @@ const UserDetail = ({ userDetailData, userList }) => {
         formData[attrName] = userDetailData.users[0].attrib[attrName]
     }
     setFormData(formData)
-  }, [userDetailData])
+  }, [userDetailData, userList])
 
   // editing a single user, so show attributes form too
   const singleUserEdit = userDetailData.users?.length === 1 ? userDetailData.users[0] : null
@@ -134,6 +145,10 @@ const UserDetail = ({ userDetailData, userList }) => {
         </HeaderStyled>
         {singleUserEdit && (
           <>
+            <UsernameStyled label={'Username'} key={'Username'}>
+              <InputText label="Username" value={singleUserEdit.name} disabled={true} />
+              <Button icon="edit" onClick={() => setShowRenameUser(true)} />
+            </UsernameStyled>
             <UserAttrib formData={formData} setFormData={setFormData} attributes={userAttrib} />
           </>
         )}

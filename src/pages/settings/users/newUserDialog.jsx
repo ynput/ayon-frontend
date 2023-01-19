@@ -91,7 +91,7 @@ const NewUserDialog = ({ onHide }) => {
         <UserAttrib
           formData={formData}
           setFormData={setFormData}
-          attributes={{ name: 'Login', ...userAttrib }}
+          attributes={{ name: 'Username', ...userAttrib }}
           password={password}
           setPassword={setPassword}
           showPassword={true}
