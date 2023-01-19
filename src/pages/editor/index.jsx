@@ -921,9 +921,6 @@ const EditorPage = () => {
             reorderableColumns
             onColReorder={handleColumnReorder}
             rows={20}
-            paginator
-            lazy
-            totalRecords={20}
           >
             {allColumns}
             <Column
