@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Spacer, Section, Toolbar, Panel } from '@ynput/ayon-react-components'
+import { Button, Section, Panel } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { UserAttrib, AccessControl } from './forms'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
@@ -104,10 +104,6 @@ const UserDetail = ({ userDetailData }) => {
 
   return (
     <Section style={{ maxWidth: 500 }}>
-      <Toolbar>
-        <Button onClick={onSave} label="Save selected users" icon="check" />
-        <Spacer />
-      </Toolbar>
       <Panel>
         {singleUserEdit && (
           <>
@@ -121,6 +117,7 @@ const UserDetail = ({ userDetailData }) => {
           setFormData={setFormData}
           rolesLabel={userDetailData.projectNames?.length ? 'Project roles' : 'Default roles'}
         />
+        <Button onClick={onSave} label="Save selected users" icon="check" />
       </Panel>
     </Section>
   )

@@ -10,7 +10,7 @@ const formatName = (rowData, defaultTitle) => {
   return rowData.name
 }
 
-const ProjectList = ({ selection, onSelect, showNull, multiselect, header, footer }) => {
+const ProjectList = ({ selection, onSelect, showNull, multiselect, header, footer, style }) => {
   // QUERY HOOK
   // ( default ) gets added in transformResponse
   const { data = [], isLoading, isError, error } = useGetAllProjectsQuery()
@@ -68,7 +68,7 @@ const ProjectList = ({ selection, onSelect, showNull, multiselect, header, foote
   } // onSelectionChange
 
   return (
-    <Section style={{ maxWidth: 400 }}>
+    <Section style={{ maxWidth: 400, minWidth: 150, ...style }}>
       {header}
       <TablePanel loading={isLoading}>
         <DataTable
@@ -85,6 +85,7 @@ const ProjectList = ({ selection, onSelect, showNull, multiselect, header, foote
             field="name"
             header="Project name"
             body={(rowData) => formatName(rowData, showNull)}
+            style={{ minWidth: 150 }}
           />
           <Column field="code" header="Code" style={{ maxWidth: 80 }} />
         </DataTable>
