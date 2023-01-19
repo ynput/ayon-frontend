@@ -5,6 +5,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 import './users.sass'
 import useColumnResize from '/src/hooks/useColumnResize'
+import UserImage from './UserImage'
 
 const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
   let roles = []
@@ -132,10 +133,23 @@ const UserList = ({
           responsive="true"
         >
           <Column
+            field="profile"
+            resizeable={false}
+            body={(col) => (
+              <UserImage
+                fullName={col.attrib.fullName || col.name}
+                size={25}
+                style={{ transform: 'scale(0.8)', margin: 'auto' }}
+              />
+            )}
+            style={{ width: 100 }}
+          />
+          <Column
             field="name"
             header="Name"
             sortable
-            style={{ flex: `1 1 ${columnsWidths['name']}px` }}
+            style={{ flex: `1 1 ${columnsWidths['name']}px`, width: 100 }}
+            resizeable
           />
           <Column
             field="attrib.fullName"
@@ -163,6 +177,7 @@ const UserList = ({
             }
             sortable
             style={{ flex: `1 1 ${columnsWidths['rolesList']}px` }}
+            resizeable
           />
           <Column
             header="Has password"
@@ -170,6 +185,7 @@ const UserList = ({
             field="hasPassword"
             sortable
             style={{ flex: `1 1 ${columnsWidths['hasPassword']}px` }}
+            resizeable
           />
           <Column
             header="Guest"
@@ -177,6 +193,7 @@ const UserList = ({
             field="isGuest"
             sortable
             style={{ flex: `1 1 ${columnsWidths['isGuest']}px` }}
+            resizeable
           />
           <Column
             header="Active"
@@ -184,6 +201,7 @@ const UserList = ({
             field="active"
             sortable
             style={{ flex: `1 1 ${columnsWidths['active']}px` }}
+            resizeable
           />
         </DataTable>
       </TablePanel>

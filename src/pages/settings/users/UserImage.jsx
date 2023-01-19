@@ -4,8 +4,10 @@ import styled from 'styled-components'
 
 const CircleImage = styled.div`
   border-radius: 100%;
+  aspect-ratio: 1/1;
+
   width: 30px;
-  height: 30px;
+  max-height: 30px;
   position: relative;
   display: flex;
   justify-content: center;
@@ -22,7 +24,7 @@ const CircleImage = styled.div`
   }
 `
 
-const UserImage = ({ src, fullName, style }) => {
+const UserImage = ({ src, fullName, style, size = 30 }) => {
   const initials = fullName
     ?.split(' ')
     .map((w) => w[0]?.toUpperCase())
@@ -30,13 +32,16 @@ const UserImage = ({ src, fullName, style }) => {
     .join('')
 
   return (
-    <CircleImage style={style}>{src ? <img src={src} /> : <span>{initials}</span>}</CircleImage>
+    <CircleImage style={{ width: size, maxHeight: size, ...style }}>
+      {src ? <img src={src} /> : <span>{initials}</span>}
+    </CircleImage>
   )
 }
 
 UserImage.propTypes = {
   src: Proptypes.string,
   fullName: Proptypes.string.isRequired,
+  size: Proptypes.number,
 }
 
 export default UserImage
