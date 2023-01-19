@@ -31,7 +31,7 @@ const UsernameStyled = styled(FormRow)`
   }
 `
 
-const UserDetail = ({ userDetailData, userList, setShowRenameUser }) => {
+const UserDetail = ({ userDetailData, userList, setShowRenameUser, selectedUsers }) => {
   const [formData, setFormData] = useState({})
 
   const userAttrib = {
@@ -58,7 +58,7 @@ const UserDetail = ({ userDetailData, userList, setShowRenameUser }) => {
         formData[attrName] = userDetailData.users[0].attrib[attrName]
     }
     setFormData(formData)
-  }, [userDetailData, userList])
+  }, [userDetailData, selectedUsers])
 
   // editing a single user, so show attributes form too
   const singleUserEdit = userDetailData.users?.length === 1 ? userDetailData.users[0] : null

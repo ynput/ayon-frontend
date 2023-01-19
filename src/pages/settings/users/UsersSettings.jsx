@@ -40,9 +40,42 @@ const formatRoles = (rowData, selectedProjects) => {
   return { ...rowData, roles: res, rolesList: Object.keys(res) }
 }
 
+const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
+  let roles = []
+  let roleSet = []
+  if (lastSelectedUser) {
+    if (!projectNames) roleSet = lastSelectedUser.defaultRoles || []
+    else {
+      const uroles = JSON.parse(lastSelectedUser.roles) || []
+      for (const projectName of projectNames || []) {
+        roleSet = [...roleSet, ...(uroles[projectName] || [])]
+      }
+    }
+  }
+
+  for (const roleName of roleNames)
+    roles.push({
+      name: roleName,
+      shouldSelect: roleSet.includes(roleName),
+    })
+
+  let userLevel = 'user'
+  if (lastSelectedUser?.isAdmin) userLevel = 'admin'
+  else if (lastSelectedUser?.isService) userLevel = 'service'
+  else if (lastSelectedUser?.isManager) userLevel = 'manager'
+
+  return {
+    users,
+    projectNames,
+    roles,
+    userLevel,
+    userActive: lastSelectedUser?.active,
+    isGuest: lastSelectedUser?.isGuest,
+  }
+}
+
 const UsersSettings = () => {
   const [selectedUsers, setSelectedUsers] = useState([])
-  const [userDetailData, setUserDetailData] = useState({})
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [showNewUser, setShowNewUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
@@ -91,6 +124,16 @@ const UsersSettings = () => {
 
   const [search, setSearch, filteredData] = useSearchFilter(searchableFields, userListWithRoles)
 
+  const userDetailData = useMemo(() => {
+    let result = []
+    let lastUsr = null
+    for (const user of userList) {
+      if (selectedUsers.includes(user.name)) result.push(user)
+      // if (user?.name === lastSelectedUser?.name) lastUsr = { ...user }
+    }
+    return buildUserDetailData(selectedProjects, rolesList, result, lastUsr)
+  }, [userList, selectedUsers])
+
   // Render
 
   return (
@@ -135,7 +178,6 @@ const UsersSettings = () => {
               {...{
                 selectedProjects,
                 selectedUsers,
-                setUserDetailData,
                 rolesList,
                 setShowSetPassword,
                 setShowRenameUser,
@@ -151,6 +193,7 @@ const UsersSettings = () => {
               userDetailData={userDetailData}
               userList={userList}
               setShowRenameUser={setShowRenameUser}
+              selectedUsers={selectedUsers}
             />
           </SplitterPanel>
         </Splitter>
