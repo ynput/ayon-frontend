@@ -103,7 +103,7 @@ const UserDetail = ({ userDetailData }) => {
   //
 
   return (
-    <Section style={{ maxWidth: 500 }}>
+    <Section className="wrap">
       <Panel>
         {singleUserEdit && (
           <>

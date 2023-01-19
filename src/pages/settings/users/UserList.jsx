@@ -105,7 +105,7 @@ const UserList = ({
   // Render
 
   return (
-    <Section>
+    <Section className="wrap">
       <TablePanel loading={isLoading || isLoadingRoles}>
         <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable

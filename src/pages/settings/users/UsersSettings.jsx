@@ -12,17 +12,10 @@ import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useGetUsersQuery } from '../../../services/user/getUsers'
 import { useGetRolesQuery } from '/src/services/getRoles'
 import ProjectList from '/src/containers/projectList'
-import styled from 'styled-components'
 import UserDetail from './userDetail'
 import UserList from './UserList'
 import { useDeleteUserMutation } from '/src/services/user/updateUser'
-
-const SectionStyled = styled(Section)`
-  & > * {
-    height: 100%;
-    flex: 1;
-  }
-`
+import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 // TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
@@ -102,13 +95,13 @@ const UsersSettings = () => {
 
   return (
     <main>
+      <ConfirmDialog />
       <Section>
-        <ConfirmDialog />
         <Toolbar>
           <Button onClick={() => setShowNewUser(true)} label="Add New User" icon="person_add" />
           <Button
             onClick={onDelete}
-            label="Delete Selected Users"
+            label="Delete Users"
             icon="person_remove"
             disabled={!selectedUsers.length}
           />
@@ -119,31 +112,44 @@ const UsersSettings = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </Toolbar>
-        <SectionStyled style={{ display: 'flex', flexDirection: 'row' }}>
-          <ProjectList
-            showNull="( default )"
-            multiselect={true}
-            selection={selectedProjects}
-            onSelect={setSelectedProjects}
-          />
-          <UserList
-            userList={userList}
-            tableList={filteredData}
-            {...{
-              selectedProjects,
-              selectedUsers,
-              setUserDetailData,
-              rolesList,
-              setShowSetPassword,
-              setShowRenameUser,
-              onDelete,
-              isLoading,
-              isLoadingRoles,
-              setSelectedUsers,
-            }}
-          />
-          <UserDetail userDetailData={userDetailData} />
-        </SectionStyled>
+        <Splitter
+          style={{ width: '100%', height: '100%' }}
+          layout="horizontal"
+          stateKey="users-panels"
+          stateStorage="local"
+        >
+          <SplitterPanel size={10}>
+            <ProjectList
+              showNull="( default )"
+              multiselect={true}
+              selection={selectedProjects}
+              onSelect={setSelectedProjects}
+              style={{ maxWidth: 'unset' }}
+              className="wrap"
+            />
+          </SplitterPanel>
+          <SplitterPanel size={50}>
+            <UserList
+              userList={userList}
+              tableList={filteredData}
+              {...{
+                selectedProjects,
+                selectedUsers,
+                setUserDetailData,
+                rolesList,
+                setShowSetPassword,
+                setShowRenameUser,
+                onDelete,
+                isLoading,
+                isLoadingRoles,
+                setSelectedUsers,
+              }}
+            />
+          </SplitterPanel>
+          <SplitterPanel size={40} style={{ minWidth: 360 }}>
+            <UserDetail userDetailData={userDetailData} />
+          </SplitterPanel>
+        </Splitter>
       </Section>
 
       {showNewUser && (
