@@ -147,7 +147,7 @@ const UsersSettings = () => {
             />
           </SplitterPanel>
           <SplitterPanel size={40} style={{ minWidth: 360 }}>
-            <UserDetail userDetailData={userDetailData} />
+            <UserDetail userDetailData={userDetailData} userList={userList} />
           </SplitterPanel>
         </Splitter>
       </Section>

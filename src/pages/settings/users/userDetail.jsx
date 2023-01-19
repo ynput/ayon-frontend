@@ -4,8 +4,23 @@ import { Button, Section, Panel } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { UserAttrib, AccessControl } from './forms'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
+import styled from 'styled-components'
+import UserImagesStacked from './UserImagesStacked'
 
-const UserDetail = ({ userDetailData }) => {
+const HeaderStyled = styled.header`
+  display: flex;
+  border-bottom: 1px solid var(--color-grey-01);
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 10px;
+
+  h2 {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+`
+
+const UserDetail = ({ userDetailData, userList }) => {
   const [formData, setFormData] = useState({})
 
   const userAttrib = {
@@ -43,6 +58,8 @@ const UserDetail = ({ userDetailData }) => {
   if (!userDetailData.users?.length) {
     return <></>
   }
+
+  const getUserName = (user) => user.attrib.fullName || user.name
 
   //
   // API
@@ -105,9 +122,18 @@ const UserDetail = ({ userDetailData }) => {
   return (
     <Section className="wrap">
       <Panel>
+        <HeaderStyled>
+          <UserImagesStacked
+            users={userDetailData?.users.map((user) => ({ fullName: getUserName(user) }))}
+          />
+          {singleUserEdit ? (
+            <h2>{getUserName(singleUserEdit)}</h2>
+          ) : (
+            <h2>{`${userDetailData.users.length}/${userList.length} Users Selected`}</h2>
+          )}
+        </HeaderStyled>
         {singleUserEdit && (
           <>
-            <h2>{singleUserEdit.attrib.fullName || singleUserEdit.name}</h2>
             <UserAttrib formData={formData} setFormData={setFormData} attributes={userAttrib} />
           </>
         )}
