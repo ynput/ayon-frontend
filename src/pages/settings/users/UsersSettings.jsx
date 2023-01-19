@@ -7,7 +7,6 @@ import NewUserDialog from './newUserDialog'
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
 // utils
-import axios from 'axios'
 import './users.sass'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useGetUsersQuery } from '../../../services/user/getUsers'
@@ -16,6 +15,7 @@ import ProjectList from '/src/containers/projectList'
 import styled from 'styled-components'
 import UserDetail from './userDetail'
 import UserList from './UserList'
+import { useDeleteUserMutation } from '/src/services/user/updateUser'
 
 const SectionStyled = styled(Section)`
   & > * {
@@ -55,6 +55,7 @@ const UsersSettings = () => {
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
 
+  // RTK QUERY HOOKS
   const { data: userList = [], isLoading, isError } = useGetUsersQuery()
   if (isError) toast.error('Unable to load users')
 
@@ -65,6 +66,9 @@ const UsersSettings = () => {
   } = useGetRolesQuery()
   if (isErrorRoles) toast.error('Unable to load roles')
 
+  // MUTATION HOOK
+  const [deleteUser] = useDeleteUserMutation()
+
   // TODO: RTK QUERY
   const onDelete = async () => {
     confirmDialog({
@@ -74,10 +78,10 @@ const UsersSettings = () => {
       accept: async () => {
         for (const user of selectedUsers) {
           try {
-            await axios.delete(`/api/users/${user}`)
-            toast.success(`Deleted user ${user}`)
+            await deleteUser({ user }).unwrap()
+            toast.success(`Deleted user: ${user}`)
           } catch {
-            toast.error(`Unable to delete user ${user}`)
+            toast.error(`Unable to delete user: ${user}`)
           }
         }
       },
