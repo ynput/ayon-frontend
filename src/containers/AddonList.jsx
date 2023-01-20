@@ -1,19 +1,16 @@
 import axios from 'axios'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Section, TablePanel, Toolbar, Button } from '@ynput/ayon-react-components'
+import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 const AddonList = ({
-  projectKey,
   selectedAddons,
   setSelectedAddons,
   changedAddons,
-  onDismissChanges,
-  onRemoveOverrides,
   withSettings = 'settings',
 }) => {
   const [addons, setAddons] = useState({})
@@ -30,18 +27,18 @@ const AddonList = ({
   const selectedKeys = useMemo(() => {
     const result = {}
     for (const addon of selectedAddons) {
-      const prefix = projectKey ? `${projectKey}-` : ''
-      const key = `${prefix}${addon.name}@${addon.version}`
+      const key = `${addon.name}@${addon.version}`
       result[key] = true
     }
     return result
-  }, [selectedAddons, projectKey])
+  }, [selectedAddons])
 
   const onSelectionChange = (e) => {
     // This nested loop looks a bit weird, but it's necessary
     // to maintain the order of the selected addons as
     // the user selects them.
     let result = []
+    console.log('onSelectionChange', e.value)
     for (const key in e.value) {
       for (const rd of addons) {
         if (rd.key === key) {
@@ -64,15 +61,11 @@ const AddonList = ({
     axios
       .get('/api/addons')
       .then((res) => {
-        console.log('build tree')
         let result = []
         for (const addon of res.data.addons) {
-          const prefix = projectKey ? `${projectKey}-` : ''
           const selectable = addon.productionVersion !== undefined && !showVersions
           const row = {
-            key: showVersions
-              ? `${prefix}${addon.name}@production`
-              : `${prefix}${addon.name}@${addon.productionVersion}`,
+            key: showVersions ? addon.name : `${addon.name}@${addon.productionVersion}`,
             selectable: selectable,
             children: [],
             data: {
@@ -88,7 +81,7 @@ const AddonList = ({
               if (withSettings === 'site' && !addon.versions[version].hasSiteSettings) continue
 
               row.children.push({
-                key: `${prefix}${addon.name}@${version}`,
+                key: `${addon.name}@${version}`,
                 selectable: true,
                 data: {
                   name: addon.name,
@@ -125,59 +118,23 @@ const AddonList = ({
       .finally(() => {
         setLoading(false)
       })
-  }, [showVersions, projectKey])
+  }, [showVersions])
 
   const menu = useMemo(() => {
     const result = [
       {
-        label: 'Remove overrides',
-        icon: 'pi pi-times',
-        command: () => {
-          const [addonName, addonVersion] = selectedNodeKey.split('@')
-          onRemoveOverrides(addonName, addonVersion)
-        },
-      },
-      {
-        label: 'Dismiss changes',
+        label: showVersions ? 'Hide non-production versions' : 'Show all versions',
+        command: () => setShowVersions(!showVersions),
         icon: 'pi pi-cog',
-        disabled: !changedAddons.includes(selectedNodeKey),
-        command: () => {
-          const [addonName, addonVersion] = selectedNodeKey.split('@')
-          onDismissChanges(addonName, addonVersion)
-        },
-      },
-      {
-        label: 'Import settings',
-        icon: 'pi pi-cog',
-        disabled: true,
       },
     ]
     return result
   }, [selectedNodeKey])
 
-  // Add this to the treetable to make multiselect work without
-  // ctrl+click:
-  // metaKeySelection={false}
-
-  const header = useMemo(
-    () => (
-      <Toolbar>
-        <Button
-          checked={showVersions}
-          onClick={() => setShowVersions((v) => !v)}
-          label={showVersions ? 'Hide all versions' : 'Show all versions'}
-        />
-      </Toolbar>
-    ),
-    [showVersions],
-  )
-
   return (
     <Section>
-      {header}
       <TablePanel loading={loading}>
         <ContextMenu model={menu} ref={cm} onHide={() => setSelectedNodeKey(null)} />
-
         <TreeTable
           value={addons}
           selectionMode="multiple"

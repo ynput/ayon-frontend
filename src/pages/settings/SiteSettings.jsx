@@ -12,7 +12,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
 import SettingsEditor from '/src/containers/settingsEditor'
-import AddonList from '/src/containers/addonList'
+import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '/src/services/siteSettings'

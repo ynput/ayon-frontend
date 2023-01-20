@@ -60,6 +60,7 @@ const AddonSettingsPanel = ({
       addon,
       addonString: `${addon.name}@${addon.version}`,
       path,
+      siteId,
       fieldId,
       hasOverride: overrides && overrides[fieldId] ? true : false,
     })

@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 
 import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 
-import AddonList from '/src/containers/addonList'
+import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './addonSettingsPanel'
 
@@ -16,7 +16,6 @@ import AddonSettingsPanel from './addonSettingsPanel'
  */
 
 const AddonSettings = ({ projectName, showSites = false }) => {
-  const [showVersions, setShowVersions] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState({})
@@ -47,6 +46,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     setReloadTrigger((reloadTrigger) => {
       const now = new Date()
       const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
+      console.log('forceAddonReload', key)
       return {
         ...reloadTrigger,
         [key]: now,
@@ -62,7 +62,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       let url = `/api/addons/${addonName}/${addonVersion}/settings`
       if (projectName !== '_') {
         url += `/${projectName}`
-        if (siteId !== '_') url += `?site=${siteId}`
+        if (siteId && siteId !== '_') url += `?site=${siteId}`
       }
 
       axios
@@ -82,7 +82,7 @@ ${err.response?.data?.detail}`}
           console.log(err)
         })
         .finally(() => {
-          forceAddonReload(addonName, addonVersion, siteId)
+          forceAddonReload(addonName, addonVersion, siteId || '_')
         })
     }
   }
@@ -109,12 +109,20 @@ ${err.response?.data?.detail}`}
     let url = `/api/addons/${addonName}/${addonVersion}/overrides`
     if (projectKey !== '_') {
       url += `/${projectKey}`
-      if (siteId !== '_') url += `?site=${siteId}`
+      if (siteId && siteId !== '_') url += `?site=${siteId}`
     }
-    axios.delete(url).then(() => {
-      // do we want to force a reload here?
-      onDismissChanges(addonName, addonVersion, siteId)
-    })
+    console.log('REMOVE OVERRIDES', url)
+    axios
+      .delete(url)
+      .then(() => {
+        onDismissChanges(addonName, addonVersion, siteId)
+      })
+      .catch((err) => {
+        toast.error(err.response?.data?.detail || 'Unable to remove overrides')
+      })
+      .finally(() => {
+        forceAddonReload(addonName, addonVersion, siteId || '_')
+      })
   }
 
   const deleteOverride = (addon, siteId, path) => {
@@ -123,19 +131,19 @@ ${err.response?.data?.detail}`}
     let url = `/api/addons/${addon.name}/${addon.version}/overrides`
     if (projectKey !== '_') {
       url += `/${projectKey}`
-      if (siteId !== '_') url += `?site=${siteId}`
+      if (siteId && siteId !== '_') url += `?site=${siteId}`
     }
 
     axios
       .post(url, { action: 'delete', path: path })
-      .catch(() => {
-        console.log('e-eee')
+      .catch((err) => {
+        toast.error(err.response?.data?.detail || 'Unable to delete a override')
       })
       .then(() => {
         console.log('Override deleted')
       })
       .finally(() => {
-        forceAddonReload(addon.name, addon.version)
+        forceAddonReload(addon.name, addon.version, siteId || '_')
       })
   }
 
@@ -146,19 +154,19 @@ ${err.response?.data?.detail}`}
     let url = `/api/addons/${addon.name}/${addon.version}/overrides`
     if (projectKey !== '_') {
       url += `/${projectKey}`
-      if (siteId !== '_') url += `?site=${siteId}`
+      if (siteId && siteId !== '_') url += `?site=${siteId}`
     }
 
     axios
       .post(url, { action: 'pin', path: path })
-      .catch(() => {
-        console.log('e-eee')
+      .catch((err) => {
+        toast.error(err.response?.data?.detail || 'Unable to pin a override')
       })
       .then(() => {
         console.log('Override deleted')
       })
       .finally(() => {
-        forceAddonReload(addon.name, addon.version, siteId)
+        forceAddonReload(addon.name, addon.version, siteId || '_')
       })
   }
 
@@ -166,24 +174,23 @@ ${err.response?.data?.detail}`}
   // RENDER
   //
 
-  const addonListHeader = useMemo(
-    () => (
-      <Toolbar>
-        <Button
-          checked={showVersions}
-          onClick={() => setShowVersions((v) => !v)}
-          label={showVersions ? 'Hide all versions' : 'Show all versions'}
-        />
-      </Toolbar>
-    ),
-    [showVersions],
-  )
-
   const settingsListHeader = useMemo(() => {
     return (
       <Toolbar>
         <Button icon="content_copy" disabled={true} />
         <Button icon="content_paste" disabled={true} />
+        <Button
+          icon="cancel"
+          disabled={!currentSelection?.addon?.name}
+          tooltip="Remove all addon overrides"
+          onClick={() =>
+            onRemoveOverrides(
+              currentSelection.addon.name,
+              currentSelection.addon.version,
+              currentSelection.siteId,
+            )
+          }
+        />
         <Button
           icon="push_pin"
           tooltip="Pin default value as an override"
@@ -231,13 +238,11 @@ ${err.response?.data?.detail}`}
       <Section style={{ maxWidth: 400 }}>
         <AddonList
           projectKey={projectKey}
-          showVersions={showVersions}
           selectedAddons={selectedAddons}
           setSelectedAddons={setSelectedAddons}
           changedAddons={Object.keys(localData)}
           onDismissChanges={onDismissChanges}
           onRemoveOverrides={onRemoveOverrides}
-          header={addonListHeader}
         />
         {showSites && (
           <SiteList
