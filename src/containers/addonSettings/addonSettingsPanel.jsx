@@ -24,7 +24,7 @@ const AddonSettingsPanel = ({
     querySuffix += `/${projectName}`
     settingsLevel = 'project'
     if (siteId) {
-      querySuffix += `?=site${siteId}`
+      querySuffix += `?site=${siteId}`
       settingsLevel = 'site'
     }
   }
