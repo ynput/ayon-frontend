@@ -4,7 +4,7 @@ import { Dialog } from 'primereact/dialog'
 import { Button, InputText, FormLayout, FormRow } from '@ynput/ayon-react-components'
 import { useUpdateUserNameMutation } from '/src/services/user/updateUser'
 
-const RenameUserDialog = ({ onHide, selectedUsers }) => {
+const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
   const [newName, setNewName] = useState('')
 
   // mutation hook
@@ -21,16 +21,18 @@ const RenameUserDialog = ({ onHide, selectedUsers }) => {
     try {
       await updateUserName({ name: name, newName }).unwrap()
 
-      toast.success('User renamed')
+      toast.success(`Renamed ${name} -> ${newName}`)
+
+      onSuccess(newName)
     } catch (error) {
       console.error(error)
-      toast.error('Unable to rename user')
+      toast.error('Unable to rename user: ' + name)
     }
 
     onHide()
   }
   return (
-    <Dialog header={`Rename user ${name}`} visible={true} onHide={onHide}>
+    <Dialog header={`Set username for: ${name}`} visible={true} onHide={onHide}>
       <FormLayout>
         <FormRow label="New name">
           <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />

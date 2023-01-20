@@ -33,7 +33,7 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
     }
   }
   return (
-    <Dialog header={`Change user ${name} password`} visible={true} onHide={onHide}>
+    <Dialog header={`Set password for: ${name} `} visible={true} onHide={onHide}>
       <FormLayout>
         <FormRow label="New password">
           <InputPassword value={password} onChange={(e) => setPassword(e.target.value)} />

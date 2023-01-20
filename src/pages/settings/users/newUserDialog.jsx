@@ -8,6 +8,7 @@ import { useAddUserMutation } from '/src/services/user/updateUser'
 
 const NewUserDialog = ({ onHide }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
+  const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
   const [formData, setFormData] = useState({
     userLevel: 'user',
@@ -53,6 +54,8 @@ const NewUserDialog = ({ onHide }) => {
       await addUser({ name: formData.name, user: payload }).unwrap()
 
       toast.success('User created')
+      // set added users to be used for auto selection onHide
+      setAddedUsers([...addedUsers, formData.name])
       // keep re-usable data in the form
       setPassword('')
       setFormData((fd) => {
@@ -81,7 +84,7 @@ const NewUserDialog = ({ onHide }) => {
       header="New user"
       footer={footer}
       visible={true}
-      onHide={onHide}
+      onHide={() => onHide(addedUsers)}
       style={{
         width: '50vw',
         height: '80%',

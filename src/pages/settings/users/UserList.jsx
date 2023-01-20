@@ -32,10 +32,10 @@ const UserList = ({
       if (selectedUsers.includes(user.name)) result.push(user)
     }
     return result
-  }, [selectedUsers, selectedProjects])
+  }, [selectedUsers, selectedProjects, userList])
 
   const onSelectionChange = (e) => {
-    if (!setSelectedUsers) return
+    console.log('onSelectionChange:', e.value)
     let result = []
     for (const user of e.value) result.push(user.name)
     setSelectedUsers(result)
@@ -44,7 +44,7 @@ const UserList = ({
   // IDEA: Can these go into the details panel aswell?
   const contextMenuModel = [
     {
-      label: 'Rename user',
+      label: 'Set username',
       disabled: selection.length !== 1,
       command: () => setShowRenameUser(true),
     },
@@ -77,7 +77,8 @@ const UserList = ({
             onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
             onContextMenuSelectionChange={(e) => {
               if (!selectedUsers.includes(e.value.name)) {
-                setSelectedUsers([...selection, e.value.name])
+                console.log('onContextMenuSelectionChange:', e.value.name)
+                setSelectedUsers([e.value.name])
               }
             }}
             selection={selection}

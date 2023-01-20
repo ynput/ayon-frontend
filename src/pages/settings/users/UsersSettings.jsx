@@ -194,6 +194,7 @@ const UsersSettings = () => {
               userList={userList}
               setShowRenameUser={setShowRenameUser}
               selectedUsers={selectedUsers}
+              setShowSetPassword={setShowSetPassword}
             />
           </SplitterPanel>
         </Splitter>
@@ -202,8 +203,9 @@ const UsersSettings = () => {
       {showNewUser && (
         <NewUserDialog
           rolesList={rolesList}
-          onHide={() => {
+          onHide={(newUsers) => {
             setShowNewUser(false)
+            if (newUsers.length) setSelectedUsers(newUsers)
           }}
         />
       )}
@@ -211,9 +213,8 @@ const UsersSettings = () => {
       {showRenameUser && (
         <RenameUserDialog
           selectedUsers={selectedUsers}
-          onHide={() => {
-            setShowRenameUser(false)
-          }}
+          onHide={() => setShowRenameUser(false)}
+          onSuccess={(name) => setSelectedUsers([name])}
         />
       )}
 

@@ -31,7 +31,13 @@ const UsernameStyled = styled(FormRow)`
   }
 `
 
-const UserDetail = ({ userDetailData, userList, setShowRenameUser, selectedUsers }) => {
+const UserDetail = ({
+  userDetailData,
+  userList,
+  setShowRenameUser,
+  selectedUsers,
+  setShowSetPassword,
+}) => {
   const [formData, setFormData] = useState({})
 
   const userAttrib = {
@@ -118,6 +124,7 @@ const UserDetail = ({ userDetailData, userList, setShowRenameUser, selectedUsers
           },
         }).unwrap()
 
+        toast.success(`Updated user: ${user.name} `)
         console.log('user updated')
       } catch (error) {
         toast.error(`Unable to update user ${user.name} `)
@@ -148,6 +155,15 @@ const UserDetail = ({ userDetailData, userList, setShowRenameUser, selectedUsers
             <UsernameStyled label={'Username'} key={'Username'}>
               <InputText label="Username" value={singleUserEdit.name} disabled={true} />
               <Button icon="edit" onClick={() => setShowRenameUser(true)} />
+            </UsernameStyled>
+            <UsernameStyled label={'Password'} key={'Password'}>
+              <InputText
+                label="Password"
+                value={singleUserEdit.hasPassword ? '1234567890' : ''}
+                disabled={true}
+                type="password"
+              />
+              <Button icon="edit" onClick={() => setShowSetPassword(true)} />
             </UsernameStyled>
             <UserAttrib formData={formData} setFormData={setFormData} attributes={userAttrib} />
           </>
