@@ -7,9 +7,10 @@ import ReactMarkdown from 'react-markdown'
 import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 
 import AddonList from '/src/containers/addonList'
+import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './addonSettingsPanel'
 
-const AddonSettings = ({ projectName }) => {
+const AddonSettings = ({ projectName, showSites = false }) => {
   const [showVersions, setShowVersions] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
@@ -17,6 +18,7 @@ const AddonSettings = ({ projectName }) => {
   const [localData, setLocalData] = useState({})
   const [localOverrides, setLocalOverrides] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
+  const [selectedSite, setSelectedSite] = useState(null)
 
   const projectKey = projectName || 'default'
   const projectSuffix = projectName ? `/${projectName}` : ''
@@ -195,16 +197,21 @@ ${err.response?.data?.detail}`}
 
   return (
     <>
-      <AddonList
-        projectKey={projectKey}
-        showVersions={showVersions}
-        selectedAddons={selectedAddons}
-        setSelectedAddons={setSelectedAddons}
-        changedAddons={Object.keys(localData)}
-        onDismissChanges={onDismissChanges}
-        onRemoveOverrides={onRemoveOverrides}
-        header={addonListHeader}
-      />
+      <Section style={{ maxWidth: 400 }}>
+        <AddonList
+          projectKey={projectKey}
+          showVersions={showVersions}
+          selectedAddons={selectedAddons}
+          setSelectedAddons={setSelectedAddons}
+          changedAddons={Object.keys(localData)}
+          onDismissChanges={onDismissChanges}
+          onRemoveOverrides={onRemoveOverrides}
+          header={addonListHeader}
+        />
+        {showSites && (
+          <SiteList value={selectedSite} onChange={setSelectedSite} style={{ maxHeight: 300 }} />
+        )}
+      </Section>
 
       <Section className={showHelp && 'settings-help-visible'}>
         {settingsListHeader}

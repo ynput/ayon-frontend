@@ -162,7 +162,7 @@ const AddonList = ({
   // metaKeySelection={false}
 
   return (
-    <Section style={{ maxWidth: 400 }}>
+    <Section>
       {header}
       <TablePanel loading={loading}>
         <ContextMenu model={menu} ref={cm} onHide={() => setSelectedNodeKey(null)} />

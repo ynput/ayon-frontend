@@ -13,7 +13,7 @@ import { Column } from 'primereact/column'
 
 import SettingsEditor from '/src/containers/settingsEditor'
 import AddonList from '/src/containers/addonList'
-import SitesDropdown from '/src/containers/SitesDropdown'
+import SiteList from '/src/containers/SiteList'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '/src/services/siteSettings'
 import { useSetSiteSettingsMutation } from '/src/services/siteSettings'
@@ -84,7 +84,7 @@ const ChangeList = ({ changes }) => {
 
 const SiteSettings = () => {
   const [selectedAddons, setSelectedAddons] = useState([])
-  const [selectedSite, setSelectedSite] = useState(null)
+  const [selectedSites, setSelectedSites] = useState([])
   const [showVersions, setShowVersions] = useState(false)
   const [newData, setNewData] = useState({})
 
@@ -98,10 +98,9 @@ const SiteSettings = () => {
           onClick={() => setShowVersions((v) => !v)}
           label={showVersions ? 'Hide all versions' : 'Show all versions'}
         />
-        <SitesDropdown value={selectedSite} onChange={setSelectedSite} style={{ flexGrow: 1 }} />
       </Toolbar>
     )
-  }, [selectedSite])
+  }, [selectedSites])
 
   const saveChanges = () => {
     for (const key in newData) {
@@ -118,8 +117,8 @@ const SiteSettings = () => {
     setNewData({})
   }
 
-  const onChange = (addonName, addonVersion, data) => {
-    const key = `${addonName}|${addonVersion}|${selectedSite}`
+  const onChange = (addonName, addonVersion, siteId, data) => {
+    const key = `${addonName}|${addonVersion}|${siteId}`
     setNewData((newData) => {
       newData[key] = data
       return { ...newData }
@@ -128,41 +127,51 @@ const SiteSettings = () => {
 
   return (
     <main style={{ flexDirection: 'row', flexGrow: 1 }}>
-      <AddonList
-        projectKey="default"
-        showVersions={showVersions}
-        selectedAddons={selectedAddons}
-        setSelectedAddons={setSelectedAddons}
-        changedAddons={[]}
-        onDismissChanges={() => {}}
-        onRemoveOverrides={() => {}}
-        header={listHeader}
-        withSettings="site"
-      />
+      <Section style={{ maxWidth: 400 }}>
+        <AddonList
+          projectKey="default"
+          showVersions={showVersions}
+          selectedAddons={selectedAddons}
+          setSelectedAddons={setSelectedAddons}
+          changedAddons={[]}
+          onDismissChanges={() => {}}
+          onRemoveOverrides={() => {}}
+          header={listHeader}
+          withSettings="site"
+        />
+        <SiteList
+          value={selectedSites}
+          onChange={setSelectedSites}
+          style={{ maxHeight: 300 }}
+          multiselect={true}
+        />
+      </Section>
 
       <Section style={{ flexGrow: 1 }}>
         <Toolbar>
           <Button label="Save" icon="check" onClick={() => saveChanges()} />
         </Toolbar>
 
-        {(selectedSite && (
+        {(selectedSites.length && (
           <ScrollPanel style={{ flexGrow: 1 }} scrollStyle={{ padding: 0 }} className="transparent">
             {selectedAddons.map((addon) => {
-              return (
-                <Panel
-                  key={addon.name}
-                  style={{ flexGrow: 0 }}
-                  className="transparent nopad"
-                  size={1}
-                >
-                  <SiteSettingsEditor
-                    addonName={addon.name}
-                    addonVersion={addon.version}
-                    siteId={selectedSite}
-                    onChange={(data) => onChange(addon.name, addon.version, data)}
-                  />
-                </Panel>
-              )
+              return selectedSites.map((siteId) => {
+                return (
+                  <Panel
+                    key={`${addon.name}|${addon.version}|${siteId}`}
+                    style={{ flexGrow: 0 }}
+                    className="transparent nopad"
+                    size={1}
+                  >
+                    <SiteSettingsEditor
+                      addonName={addon.name}
+                      addonVersion={addon.version}
+                      siteId={siteId}
+                      onChange={(data) => onChange(addon.name, addon.version, siteId, data)}
+                    />
+                  </Panel>
+                )
+              })
             })}
           </ScrollPanel>
         )) ||
