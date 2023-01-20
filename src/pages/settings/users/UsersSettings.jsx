@@ -7,7 +7,7 @@ import NewUserDialog from './newUserDialog'
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
 // utils
-import './users.sass'
+import './users.scss'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useGetUsersQuery } from '../../../services/user/getUsers'
 import { useGetRolesQuery } from '/src/services/getRoles'
