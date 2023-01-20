@@ -40,49 +40,16 @@ const formatRoles = (rowData, selectedProjects) => {
   return { ...rowData, roles: res, rolesList: Object.keys(res) }
 }
 
-const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
-  let roles = []
-  let roleSet = []
-  if (lastSelectedUser) {
-    if (!projectNames) roleSet = lastSelectedUser.defaultRoles || []
-    else {
-      const uroles = JSON.parse(lastSelectedUser.roles) || []
-      for (const projectName of projectNames || []) {
-        roleSet = [...roleSet, ...(uroles[projectName] || [])]
-      }
-    }
-  }
-
-  for (const roleName of roleNames)
-    roles.push({
-      name: roleName,
-      shouldSelect: roleSet.includes(roleName),
-    })
-
-  let userLevel = 'user'
-  if (lastSelectedUser?.isAdmin) userLevel = 'admin'
-  else if (lastSelectedUser?.isService) userLevel = 'service'
-  else if (lastSelectedUser?.isManager) userLevel = 'manager'
-
-  return {
-    users,
-    projectNames,
-    roles,
-    userLevel,
-    userActive: lastSelectedUser?.active,
-    isGuest: lastSelectedUser?.isGuest,
-  }
-}
-
 const UsersSettings = () => {
   const [selectedUsers, setSelectedUsers] = useState([])
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [showNewUser, setShowNewUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
+  const [userDetailData, setUserDetailData] = useState({})
 
   // RTK QUERY HOOKS
-  const { data: userList = [], isLoading, isError } = useGetUsersQuery()
+  const { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery()
   if (isError) toast.error('Unable to load users')
 
   const {
@@ -117,22 +84,12 @@ const UsersSettings = () => {
 
   let userListWithRoles = useMemo(
     () => userList.map((user) => formatRoles(user, selectedProjects)),
-    [userList],
+    [userList, selectedProjects],
   )
 
   const searchableFields = ['name', 'attrib.fullName', 'attrib.email', 'rolesList', 'hasPassword']
 
   const [search, setSearch, filteredData] = useSearchFilter(searchableFields, userListWithRoles)
-
-  const userDetailData = useMemo(() => {
-    let result = []
-    let lastUsr = null
-    for (const user of userList) {
-      if (selectedUsers.includes(user.name)) result.push(user)
-      // if (user?.name === lastSelectedUser?.name) lastUsr = { ...user }
-    }
-    return buildUserDetailData(selectedProjects, rolesList, result, lastUsr)
-  }, [userList, selectedUsers])
 
   // Render
 
@@ -175,6 +132,9 @@ const UsersSettings = () => {
             <UserList
               userList={userList}
               tableList={filteredData}
+              onSelectUsers={setSelectedUsers}
+              isFetching={isFetching}
+              setUserDetailData={setUserDetailData}
               {...{
                 selectedProjects,
                 selectedUsers,
@@ -184,17 +144,17 @@ const UsersSettings = () => {
                 onDelete,
                 isLoading,
                 isLoadingRoles,
-                setSelectedUsers,
               }}
             />
           </SplitterPanel>
           <SplitterPanel size={40} style={{ minWidth: 360 }}>
             <UserDetail
-              userDetailData={userDetailData}
               userList={userList}
               setShowRenameUser={setShowRenameUser}
               selectedUsers={selectedUsers}
               setShowSetPassword={setShowSetPassword}
+              selectedProjects={selectedProjects}
+              userDetailData={userDetailData}
             />
           </SplitterPanel>
         </Splitter>

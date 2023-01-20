@@ -32,11 +32,12 @@ const UsernameStyled = styled(FormRow)`
 `
 
 const UserDetail = ({
-  userDetailData,
   userList,
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
+  selectedProjects,
+  userDetailData,
 }) => {
   const [formData, setFormData] = useState({})
 
@@ -47,6 +48,7 @@ const UserDetail = ({
 
   useEffect(() => {
     let nroles = []
+
     if (isEmpty(userDetailData)) return
     if (userDetailData.roles?.length) {
       for (const nrole of userDetailData.roles) {
@@ -64,7 +66,7 @@ const UserDetail = ({
         formData[attrName] = userDetailData.users[0].attrib[attrName]
     }
     setFormData(formData)
-  }, [userDetailData, selectedUsers])
+  }, [userDetailData, selectedUsers, selectedProjects])
 
   // editing a single user, so show attributes form too
   const singleUserEdit = userDetailData.users?.length === 1 ? userDetailData.users[0] : null

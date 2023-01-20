@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
@@ -7,10 +7,43 @@ import './users.scss'
 import useColumnResize from '/src/hooks/useColumnResize'
 import UserImage from './UserImage'
 
+const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
+  let roles = []
+  let roleSet = []
+  if (lastSelectedUser) {
+    if (!projectNames) roleSet = lastSelectedUser.defaultRoles || []
+    else {
+      const uroles = JSON.parse(lastSelectedUser.roles) || []
+      for (const projectName of projectNames || []) {
+        roleSet = [...roleSet, ...(uroles[projectName] || [])]
+      }
+    }
+  }
+
+  for (const roleName of roleNames)
+    roles.push({
+      name: roleName,
+      shouldSelect: roleSet.includes(roleName),
+    })
+
+  let userLevel = 'user'
+  if (lastSelectedUser?.isAdmin) userLevel = 'admin'
+  else if (lastSelectedUser?.isService) userLevel = 'service'
+  else if (lastSelectedUser?.isManager) userLevel = 'manager'
+
+  return {
+    users,
+    projectNames,
+    roles,
+    userLevel,
+    userActive: lastSelectedUser?.active,
+    isGuest: lastSelectedUser?.isGuest,
+  }
+}
+
 const UserList = ({
   selectedProjects,
   selectedUsers,
-  setSelectedUsers,
   userList,
   tableList,
   setShowRenameUser,
@@ -18,27 +51,40 @@ const UserList = ({
   onDelete,
   isLoading,
   isLoadingRoles,
+  setUserDetailData,
+  rolesList,
+  isFetching,
+  onSelectUsers,
 }) => {
   const contextMenuRef = useRef(null)
 
   // COLUMN WIDTH
   const [columnsWidths, setColumnWidths] = useColumnResize('users')
+  const [lastSelectedUser, setLastSelectedUser] = useState(null)
 
   // Selection
 
   const selection = useMemo(() => {
+    if (isFetching) return []
     let result = []
+    let lastUsr = null
     for (const user of userList) {
       if (selectedUsers.includes(user.name)) result.push(user)
+      if (user?.name === lastSelectedUser?.name) lastUsr = { ...user }
+    }
+    if (setUserDetailData) {
+      setLastSelectedUser(lastUsr)
+
+      setUserDetailData(buildUserDetailData(selectedProjects, rolesList, result, lastUsr))
     }
     return result
-  }, [selectedUsers, selectedProjects, userList])
+  }, [selectedUsers, userList, selectedProjects, isFetching])
 
   const onSelectionChange = (e) => {
-    console.log('onSelectionChange:', e.value)
+    if (!onSelectUsers) return
     let result = []
     for (const user of e.value) result.push(user.name)
-    setSelectedUsers(result)
+    onSelectUsers(result)
   }
 
   // IDEA: Can these go into the details panel aswell?
@@ -77,9 +123,9 @@ const UserList = ({
           onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
           onContextMenuSelectionChange={(e) => {
             if (!selectedUsers.includes(e.value.name)) {
-              console.log('onContextMenuSelectionChange:', e.value.name)
-              setSelectedUsers([e.value.name])
+              onSelectUsers([...selection, e.value.name])
             }
+            setLastSelectedUser(e.data)
           }}
           selection={selection}
           columnResizeMode="expand"
@@ -89,6 +135,9 @@ const UserList = ({
           stateKey="users-datatable"
           stateStorage={'local'}
           reorderableColumns
+          onRowClick={(e) => {
+            setLastSelectedUser(e.data)
+          }}
         >
           <Column
             field="profile"
