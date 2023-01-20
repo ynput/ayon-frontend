@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Section, TablePanel, Toolbar, Button } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -11,17 +11,15 @@ const AddonList = ({
   projectKey,
   selectedAddons,
   setSelectedAddons,
-  showVersions,
   changedAddons,
   onDismissChanges,
   onRemoveOverrides,
   withSettings = 'settings',
-  header,
-  footer,
 }) => {
   const [addons, setAddons] = useState({})
   const [loading, setLoading] = useState(false)
   const [selectedNodeKey, setSelectedNodeKey] = useState(null)
+  const [showVersions, setShowVersions] = useState(false)
   const cm = useRef(null)
 
   // Selection
@@ -161,6 +159,19 @@ const AddonList = ({
   // ctrl+click:
   // metaKeySelection={false}
 
+  const header = useMemo(
+    () => (
+      <Toolbar>
+        <Button
+          checked={showVersions}
+          onClick={() => setShowVersions((v) => !v)}
+          label={showVersions ? 'Hide all versions' : 'Show all versions'}
+        />
+      </Toolbar>
+    ),
+    [showVersions],
+  )
+
   return (
     <Section>
       {header}
@@ -189,7 +200,6 @@ const AddonList = ({
           <Column field="usage" header="" />
         </TreeTable>
       </TablePanel>
-      {footer}
     </Section>
   )
 }

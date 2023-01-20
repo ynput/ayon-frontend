@@ -85,26 +85,13 @@ const ChangeList = ({ changes }) => {
 const SiteSettings = () => {
   const [selectedAddons, setSelectedAddons] = useState([])
   const [selectedSites, setSelectedSites] = useState([])
-  const [showVersions, setShowVersions] = useState(false)
   const [newData, setNewData] = useState({})
-
   const [setSiteSettings] = useSetSiteSettingsMutation()
-
-  const listHeader = useMemo(() => {
-    return (
-      <Toolbar>
-        <Button
-          checked={showVersions}
-          onClick={() => setShowVersions((v) => !v)}
-          label={showVersions ? 'Hide all versions' : 'Show all versions'}
-        />
-      </Toolbar>
-    )
-  }, [selectedSites])
 
   const saveChanges = () => {
     for (const key in newData) {
-      const [addonName, addonVersion, siteId] = key.split('|')
+      // eslint-disable-next-line no-unused-vars
+      const [addonName, addonVersion, siteId, projectName] = key.split('|')
       const data = newData[key]
 
       setSiteSettings({
@@ -118,7 +105,7 @@ const SiteSettings = () => {
   }
 
   const onChange = (addonName, addonVersion, siteId, data) => {
-    const key = `${addonName}|${addonVersion}|${siteId}`
+    const key = `${addonName}|${addonVersion}|${siteId}|_`
     setNewData((newData) => {
       newData[key] = data
       return { ...newData }
@@ -130,13 +117,11 @@ const SiteSettings = () => {
       <Section style={{ maxWidth: 400 }}>
         <AddonList
           projectKey="default"
-          showVersions={showVersions}
           selectedAddons={selectedAddons}
           setSelectedAddons={setSelectedAddons}
           changedAddons={[]}
           onDismissChanges={() => {}}
           onRemoveOverrides={() => {}}
-          header={listHeader}
           withSettings="site"
         />
         <SiteList
