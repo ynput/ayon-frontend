@@ -1,9 +1,7 @@
-import ayonClient from '/src/ayon'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams, NavLink } from 'react-router-dom'
 
-import { Button, Toolbar, Section } from '@ynput/ayon-react-components'
-import { Dropdown } from 'primereact/dropdown'
+import { Button, Toolbar } from '@ynput/ayon-react-components'
 
 import ProjectList from '/src/containers/projectList'
 import AddonSettings from '/src/containers/addonSettings'
@@ -12,35 +10,6 @@ import ProjectDashboard from './ProjectDashboard'
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
-
-const LocalSettings = ({ projectName }) => {
-  const [siteId, setSiteId] = useState(null)
-
-  const siteOptions = useMemo(() => {
-    const options = []
-    for (const site of ayonClient.settings.sites) {
-      options.push({ label: site.hostname, value: site.id })
-    }
-    return options
-  }, [])
-
-  return (
-    <Section>
-      <Toolbar>
-        <Dropdown
-          options={siteOptions}
-          value={siteId}
-          optionLabel="label"
-          optionValue="value"
-          onChange={(e) => setSiteId(e.value)}
-        />
-      </Toolbar>
-      <div style={{ display: 'flex', flexDirection: 'row', flexGrow: 1 }}>
-        <AddonSettings projectName={projectName} />
-      </div>
-    </Section>
-  )
-}
 
 const ProjectManager = () => {
   const navigate = useNavigate()
@@ -84,7 +53,7 @@ const ProjectManager = () => {
         <NavLink to={`/projectManager/dashboard`}>Dashboard</NavLink>
         <NavLink to={`/projectManager/anatomy`}>Anatomy</NavLink>
         <NavLink to={`/projectManager/projectSettings`}>Project settings</NavLink>
-        <NavLink to={`/projectManager/localSettings`}>Local settings</NavLink>
+        <NavLink to={`/projectManager/siteSettings`}>Site settings</NavLink>
         <NavLink to={`/projectManager/roots`}>Roots</NavLink>
       </nav>
       <main>
@@ -109,7 +78,9 @@ const ProjectManager = () => {
             {module === 'dashboard' && <ProjectDashboard projectName={selectedProject} />}
             {module === 'anatomy' && <ProjectAnatomy projectName={selectedProject} />}
             {module === 'projectSettings' && <AddonSettings projectName={selectedProject} />}
-            {module === 'localSettings' && <LocalSettings projectName={selectedProject} />}
+            {module === 'siteSettings' && (
+              <AddonSettings projectName={selectedProject} showSites={true} />
+            )}
             {module === 'roots' && <ProjectRoots projectName={selectedProject} />}
           </>
         )}

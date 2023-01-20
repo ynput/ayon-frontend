@@ -12,16 +12,26 @@ const AddonSettingsPanel = ({
   reloadTrigger,
   onSelect = () => {},
   projectName = null,
+  siteId = null,
 }) => {
   const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [overrides, setOverrides] = useState(null)
 
-  const projectSuffix = projectName ? `/${projectName}` : ''
+  let querySuffix = ''
+  let settingsLevel = 'studio'
+  if (projectName) {
+    querySuffix += `/${projectName}`
+    settingsLevel = 'project'
+    if (siteId) {
+      querySuffix += `?site=${siteId}`
+      settingsLevel = 'site'
+    }
+  }
 
   const loadSchema = () => {
     axios
-      .get(`/api/addons/${addon.name}/${addon.version}/schema${projectSuffix}`)
+      .get(`/api/addons/${addon.name}/${addon.version}/schema${querySuffix}`)
       .then((res) => setSchema(res.data))
       .catch((err) => console.log(err))
   }
@@ -31,7 +41,7 @@ const AddonSettingsPanel = ({
       setOriginalData(localData)
     } else {
       axios
-        .get(`/api/addons/${addon.name}/${addon.version}/settings${projectSuffix}`)
+        .get(`/api/addons/${addon.name}/${addon.version}/settings${querySuffix}`)
         .then((res) => {
           setOriginalData(res.data)
           //setNewData(null)
@@ -40,7 +50,7 @@ const AddonSettingsPanel = ({
     }
 
     axios
-      .get(`/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`)
+      .get(`/api/addons/${addon.name}/${addon.version}/overrides${querySuffix}`)
       .then((res) => setOverrides(res.data))
   }
 
@@ -50,6 +60,7 @@ const AddonSettingsPanel = ({
       addon,
       addonString: `${addon.name}@${addon.version}`,
       path,
+      siteId,
       fieldId,
       hasOverride: overrides && overrides[fieldId] ? true : false,
     })
@@ -71,7 +82,7 @@ const AddonSettingsPanel = ({
         onChange={onChange}
         onSetChangedKeys={onSetChangedKeys}
         onSetBreadcrumbs={onSetBreadcrumbs}
-        level={projectName ? 'project' : 'studio'}
+        level={settingsLevel}
       />
     )
   }, [schema, originalData, overrides])
