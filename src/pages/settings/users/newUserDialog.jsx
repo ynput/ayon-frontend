@@ -3,9 +3,10 @@ import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
 import { Spacer, Button } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
-import { UserAttrib, AccessControl } from './forms'
 import { useAddUserMutation } from '/src/services/user/updateUser'
 import ayonClient from '/src/ayon'
+import UserAttribForm, { DividerSmallStyled } from './UserAttribForm'
+import UserAccessForm from './UserAccessForm'
 
 const NewUserDialog = ({ onHide }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
@@ -89,7 +90,7 @@ const NewUserDialog = ({ onHide }) => {
       }}
     >
       <div style={{ width: '100%', height: '100%' }}>
-        <UserAttrib
+        <UserAttribForm
           formData={formData}
           setFormData={setFormData}
           attributes={[
@@ -100,12 +101,14 @@ const NewUserDialog = ({ onHide }) => {
           password={password}
           setPassword={setPassword}
         />
-        <h2>Access control</h2>
-        <AccessControl formData={formData} setFormData={setFormData} rolesLabel="Default roles" />
-
+        <DividerSmallStyled />
+        <UserAccessForm formData={formData} setFormData={setFormData} rolesLabel="Default roles" />
         {formData.userLevel === 'user' && (
           <>
-            <div style={{ marginTop: 10 }}>Apply default roles to:</div>
+            <DividerSmallStyled />
+            <span style={{ margin: '10px 0' }}>
+              <b>Apply default roles to:</b>
+            </span>
             <ProjectList
               selection={selectedProjects}
               onSelect={setSelectedProjects}

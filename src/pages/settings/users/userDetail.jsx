@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Section, Panel, InputText, FormRow } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
-import { UserAttrib, AccessControl } from './forms'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
 import UserImagesStacked from './UserImagesStacked'
 import ayonClient from '/src/ayon'
+import UserAttribForm from './UserAttribForm'
+import UserAccessForm from './UserAccessForm'
 
 const HeaderStyled = styled(Panel)`
   gap: 10px;
@@ -16,6 +17,11 @@ const HeaderStyled = styled(Panel)`
   h2 {
     font-size: 1.1rem;
     margin: 0;
+    flex: 1;
+  }
+
+  span {
+    cursor: pointer;
   }
 `
 
@@ -57,6 +63,7 @@ const UserDetail = ({
   selectedUsers,
   setShowSetPassword,
   selectedProjects,
+  setSelectedUsers,
   userDetailData,
 }) => {
   const [formData, setFormData] = useState({})
@@ -180,6 +187,14 @@ const UserDetail = ({
     setFormData(initData)
   }
 
+  // onclose, no users selected but check if changes made
+  const onClose = () => {
+    if (changesMade) {
+      return toast.error('Changes not saved')
+    }
+    setSelectedUsers([])
+  }
+
   //
   // Render
   //
@@ -195,6 +210,9 @@ const UserDetail = ({
         ) : (
           <h2>{`${userDetailData.users.length}/${userList.length} Users Selected`}</h2>
         )}
+        <span className="material-symbols-outlined" onClick={onClose}>
+          close
+        </span>
       </HeaderStyled>
       <FormsStyled>
         {formData && singleUserEdit && (
@@ -213,12 +231,12 @@ const UserDetail = ({
               <Button icon="edit" onClick={() => setShowSetPassword(true)} />
             </UsernameStyled>
 
-            <UserAttrib formData={formData} setFormData={setFormData} attributes={attributes} />
+            <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
           </Panel>
         )}
         <Panel>
           {formData && (
-            <AccessControl
+            <UserAccessForm
               formData={formData}
               setFormData={setFormData}
               rolesLabel={userDetailData.projectNames?.length ? 'Project roles' : 'Default roles'}

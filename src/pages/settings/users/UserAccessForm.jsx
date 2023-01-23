@@ -1,75 +1,8 @@
-import {
-  InputSwitch,
-  InputText,
-  FormLayout,
-  FormRow,
-  InputPassword,
-  Divider,
-} from '@ynput/ayon-react-components'
+import { InputSwitch, FormLayout, FormRow } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
-import styled from 'styled-components'
 import RolesDropdown from '/src/containers/rolesDropdown'
 
-const DividerSmallStyled = styled(Divider)`
-  margin: 10px 0;
-`
-
-const UserAttrib = ({ formData, setFormData, attributes, password, setPassword }) => {
-  // separate custom attrib
-  const [builtin, custom] = attributes.reduce(
-    (acc, cur) => {
-      if (!cur.builtin && cur.builtin !== undefined) {
-        // add to custo,
-        acc[1].push(cur)
-      } else {
-        // builtin
-        acc[0].push(cur)
-      }
-
-      return acc
-    },
-    [[], []],
-  )
-
-  const buildForms = (attribs) =>
-    attribs.map(({ name, data }) => (
-      <FormRow label={data.title} key={name}>
-        {name === 'password' && setPassword ? (
-          <InputPassword
-            value={password}
-            feedback={false}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        ) : (
-          <InputText
-            value={formData[name] || ''}
-            onChange={(e) => {
-              const value = e.target.value
-              setFormData((fd) => {
-                return { ...fd, [name]: value }
-              })
-            }}
-          />
-        )}
-      </FormRow>
-    ))
-
-  return (
-    <>
-      <FormLayout>
-        {buildForms(builtin)}
-        {!!custom.length && (
-          <>
-            <DividerSmallStyled />
-            {buildForms(custom)}
-          </>
-        )}
-      </FormLayout>
-    </>
-  )
-}
-
-const AccessControl = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
+const UserAccessForm = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
   const userLevels = [
     { label: 'User', value: 'user' },
     { label: 'Manager', value: 'manager' },
@@ -131,4 +64,4 @@ const AccessControl = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
   )
 }
 
-export { UserAttrib, AccessControl }
+export default UserAccessForm

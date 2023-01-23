@@ -155,6 +155,7 @@ const UsersSettings = () => {
               setShowSetPassword={setShowSetPassword}
               selectedProjects={selectedProjects}
               userDetailData={userDetailData}
+              setSelectedUsers={setSelectedUsers}
             />
           </SplitterPanel>
         </Splitter>
