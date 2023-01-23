@@ -27,7 +27,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [selectedSites, setSelectedSites] = useState([])
 
   const [setAddonSettings] = useSetAddonSettingsMutation()
-
   const projectKey = projectName || '_'
 
   const onSettingsChange = (addonName, addonVersion, siteId, data) => {
@@ -58,46 +57,45 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     })
   }
 
-  const onSave = () => {
+  const onSave = async () => {
+    let updatedKeys = []
+    let allOk = true
+
     for (const key in localData) {
       const [addonName, addonVersion, siteId, projectName] = key.split('|')
       if (projectName !== projectKey) continue
 
-      setAddonSettings({
-        addonName,
-        addonVersion,
-        projectName,
-        siteId,
-        data: localData[key],
-      })
+      try {
+        await setAddonSettings({
+          addonName,
+          addonVersion,
+          projectName,
+          siteId,
+          data: localData[key],
+        }).unwrap()
 
-      /*
-      let url = `/api/addons/${addonName}/${addonVersion}/settings`
-      if (projectName !== '_') {
-        url += `/${projectName}`
-        if (siteId && siteId !== '_') url += `?site=${siteId}`
+        updatedKeys.push(key)
+      } catch (e) {
+        allOk = false
+        toast.error(`Unable to save settings of ${addonName} ${addonVersion} `)
+        console.error(e)
       }
+    } // for key in localData
 
-      axios
-        .post(url, localData[key])
-        .then(() => {
-          setLocalOverrides({})
-          setLocalData({})
-        })
-        .catch((err) => {
-          toast.error(
-            <ReactMarkdown>
-              {`Unable to save ${addonName} ${addonVersion} settings
+    setLocalData((localData) => {
+      const newData = { ...localData }
+      updatedKeys.forEach((key) => delete newData[key])
+      return newData
+    })
 
-${err.response?.data?.detail}`}
-            </ReactMarkdown>,
-          )
-          console.log(err)
-        })
-        .finally(() => {
-          forceAddonReload(addonName, addonVersion, siteId || '_')
-        })
-      */
+    setLocalOverrides((overrides) => {
+      const newOverrides = { ...overrides }
+      updatedKeys.forEach((key) => delete newOverrides[key])
+      return newOverrides
+    })
+
+    if (allOk) {
+      toast.success('Settings saved')
     }
   }
 
