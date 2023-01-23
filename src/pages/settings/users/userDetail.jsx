@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel, InputText, FormRow, Divider } from '@ynput/ayon-react-components'
+import { Button, Section, Panel, InputText, FormRow } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { UserAttrib, AccessControl } from './forms'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
@@ -8,14 +8,27 @@ import styled from 'styled-components'
 import UserImagesStacked from './UserImagesStacked'
 import ayonClient from '/src/ayon'
 
-const HeaderStyled = styled.header`
-  display: flex;
+const HeaderStyled = styled(Panel)`
   gap: 10px;
   align-items: center;
+  flex-direction: row;
 
   h2 {
     font-size: 1.1rem;
     margin: 0;
+  }
+`
+
+const FormsStyled = styled.section`
+  flex: 1;
+  overflow-x: clip;
+  overflow-y: auto;
+  gap: 5px;
+  display: flex;
+  flex-direction: column;
+
+  & > *:last-child {
+    /* flex: 1; */
   }
 `
 
@@ -30,23 +43,12 @@ const UsernameStyled = styled(FormRow)`
   }
 `
 
-const PanelFormStyled = styled(Panel)`
-  padding: 0px;
-  flex: 1 1 0%;
-  overflow-x: clip;
-  overflow-y: auto;
-`
-
 const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
 
   & > * {
     flex: 1;
   }
-`
-
-export const DividerSmallStyled = styled(Divider)`
-  margin: 10px 0;
 `
 
 const UserDetail = ({
@@ -183,57 +185,51 @@ const UserDetail = ({
   //
 
   return (
-    <Section className="wrap">
-      {formData && (
-        <Panel style={{ flex: 1 }}>
-          <PanelFormStyled>
-            <HeaderStyled>
-              <UserImagesStacked
-                users={userDetailData?.users.map((user) => ({ fullName: getUserName(user) }))}
+    <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
+      <HeaderStyled>
+        <UserImagesStacked
+          users={userDetailData?.users.map((user) => ({ fullName: getUserName(user) }))}
+        />
+        {singleUserEdit ? (
+          <h2>{getUserName(singleUserEdit)}</h2>
+        ) : (
+          <h2>{`${userDetailData.users.length}/${userList.length} Users Selected`}</h2>
+        )}
+      </HeaderStyled>
+      <FormsStyled>
+        {formData && singleUserEdit && (
+          <Panel>
+            <UsernameStyled label={'Username'} key={'Username'}>
+              <InputText label="Username" value={singleUserEdit.name} disabled={true} />
+              <Button icon="edit" onClick={() => setShowRenameUser(true)} />
+            </UsernameStyled>
+            <UsernameStyled label={'Password'} key={'Password'}>
+              <InputText
+                label="Password"
+                value={singleUserEdit.hasPassword ? '1234567890' : ''}
+                disabled={true}
+                type="password"
               />
-              {singleUserEdit ? (
-                <h2>{getUserName(singleUserEdit)}</h2>
-              ) : (
-                <h2>{`${userDetailData.users.length}/${userList.length} Users Selected`}</h2>
-              )}
-            </HeaderStyled>
-            {singleUserEdit && (
-              <>
-                <DividerSmallStyled />
-                <UsernameStyled label={'Username'} key={'Username'}>
-                  <InputText label="Username" value={singleUserEdit.name} disabled={true} />
-                  <Button icon="edit" onClick={() => setShowRenameUser(true)} />
-                </UsernameStyled>
-                <UsernameStyled label={'Password'} key={'Password'}>
-                  <InputText
-                    label="Password"
-                    value={singleUserEdit.hasPassword ? '1234567890' : ''}
-                    disabled={true}
-                    type="password"
-                  />
-                  <Button icon="edit" onClick={() => setShowSetPassword(true)} />
-                </UsernameStyled>
+              <Button icon="edit" onClick={() => setShowSetPassword(true)} />
+            </UsernameStyled>
 
-                <UserAttrib formData={formData} setFormData={setFormData} attributes={attributes} />
-              </>
-            )}
+            <UserAttrib formData={formData} setFormData={setFormData} attributes={attributes} />
+          </Panel>
+        )}
+        <Panel>
+          {formData && (
             <AccessControl
               formData={formData}
               setFormData={setFormData}
               rolesLabel={userDetailData.projectNames?.length ? 'Project roles' : 'Default roles'}
             />
-          </PanelFormStyled>
-          <PanelButtonsStyled>
-            <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
-            <Button
-              onClick={onSave}
-              label="Save selected users"
-              icon="check"
-              disabled={!changesMade}
-            />
-          </PanelButtonsStyled>
+          )}
         </Panel>
-      )}
+      </FormsStyled>
+      <PanelButtonsStyled>
+        <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
+        <Button onClick={onSave} label="Save selected users" icon="check" disabled={!changesMade} />
+      </PanelButtonsStyled>
     </Section>
   )
 }

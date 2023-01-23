@@ -4,10 +4,15 @@ import {
   FormLayout,
   FormRow,
   InputPassword,
+  Divider,
 } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
-import { DividerSmallStyled } from './userDetail'
+import styled from 'styled-components'
 import RolesDropdown from '/src/containers/rolesDropdown'
+
+const DividerSmallStyled = styled(Divider)`
+  margin: 10px 0;
+`
 
 const UserAttrib = ({ formData, setFormData, attributes, password, setPassword }) => {
   // separate custom attrib
@@ -56,7 +61,6 @@ const UserAttrib = ({ formData, setFormData, attributes, password, setPassword }
         {!!custom.length && (
           <>
             <DividerSmallStyled />
-            <b>Custom Attributes</b>
             {buildForms(custom)}
           </>
         )}
@@ -86,7 +90,6 @@ const AccessControl = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
 
   return (
     <>
-      <DividerSmallStyled />
       <b>Access Control</b>
       <FormLayout>
         <FormRow label="User active">
