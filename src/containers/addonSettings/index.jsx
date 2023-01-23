@@ -2,13 +2,15 @@ import axios from 'axios'
 
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import ReactMarkdown from 'react-markdown'
+//import ReactMarkdown from 'react-markdown'
 
 import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './addonSettingsPanel'
+
+import { useSetAddonSettingsMutation } from '/src/services/addonSettings'
 
 /*
  * key is {addonName}|{addonVersion}|{siteId}|{projectKey}
@@ -23,6 +25,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [localOverrides, setLocalOverrides] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
+
+  const [setAddonSettings] = useSetAddonSettingsMutation()
 
   const projectKey = projectName || '_'
 
@@ -59,6 +63,15 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       const [addonName, addonVersion, siteId, projectName] = key.split('|')
       if (projectName !== projectKey) continue
 
+      setAddonSettings({
+        addonName,
+        addonVersion,
+        projectName,
+        siteId,
+        data: localData[key],
+      })
+
+      /*
       let url = `/api/addons/${addonName}/${addonVersion}/settings`
       if (projectName !== '_') {
         url += `/${projectName}`
@@ -84,6 +97,7 @@ ${err.response?.data?.detail}`}
         .finally(() => {
           forceAddonReload(addonName, addonVersion, siteId || '_')
         })
+      */
     }
   }
 
