@@ -38,6 +38,7 @@ const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) =
     userLevel,
     userActive: lastSelectedUser?.active,
     isGuest: lastSelectedUser?.isGuest,
+    defaultRoles: lastSelectedUser?.defaultRoles,
   }
 }
 
@@ -55,6 +56,7 @@ const UserList = ({
   rolesList,
   isFetching,
   onSelectUsers,
+  isSelfSelected,
 }) => {
   const contextMenuRef = useRef(null)
 
@@ -101,7 +103,7 @@ const UserList = ({
     },
     {
       label: 'Delete selected',
-      disabled: !selection.length,
+      disabled: !selection.length || isSelfSelected,
       command: () => onDelete(),
     },
   ]
@@ -146,6 +148,7 @@ const UserList = ({
                 fullName={col.attrib.fullName || col.name}
                 size={25}
                 style={{ margin: 'auto', padding: 5, transform: 'scale(0.8)' }}
+                highlight={col.self}
               />
             )}
             resizeable
@@ -154,7 +157,7 @@ const UserList = ({
             field="name"
             header="Username"
             sortable
-
+            body={(rowData) => (rowData.self ? `${rowData.name} (me)` : rowData.name)}
             // resizeable
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />

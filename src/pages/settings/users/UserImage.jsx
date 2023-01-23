@@ -1,6 +1,6 @@
 import React from 'react'
 import Proptypes from 'prop-types'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 const CircleImage = styled.div`
   border-radius: 100%;
@@ -22,9 +22,16 @@ const CircleImage = styled.div`
     height: 100%;
     object-fit: cover;
   }
+
+  /* if highlight true make border green */
+  ${({ highlight }) =>
+    highlight &&
+    css`
+      border-color: var(--toastify-color-success);
+    `}
 `
 
-const UserImage = ({ src, fullName, style, size = 30 }) => {
+const UserImage = ({ src, fullName, style, size = 30, highlight }) => {
   const initials = fullName
     ?.split(' ')
     .map((w) => w[0]?.toUpperCase())
@@ -32,7 +39,7 @@ const UserImage = ({ src, fullName, style, size = 30 }) => {
     .join('')
 
   return (
-    <CircleImage style={{ width: size, maxHeight: size, ...style }}>
+    <CircleImage style={{ width: size, maxHeight: size, ...style }} highlight={highlight}>
       {src ? <img src={src} /> : <span>{initials}</span>}
     </CircleImage>
   )
@@ -42,6 +49,8 @@ UserImage.propTypes = {
   src: Proptypes.string,
   fullName: Proptypes.string.isRequired,
   size: Proptypes.number,
+  style: Proptypes.object,
+  highlight: Proptypes.bool,
 }
 
 export default UserImage

@@ -2,7 +2,7 @@ import { InputSwitch, FormLayout, FormRow } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 
-const UserAccessForm = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
+const UserAccessForm = ({ formData, setFormData, selectedProjects, isSelfSelected }) => {
   const userLevels = [
     { label: 'User', value: 'user' },
     { label: 'Manager', value: 'manager' },
@@ -21,6 +21,8 @@ const UserAccessForm = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
     })
   }
 
+  const userLevel = formData.userLevel === 'user'
+
   return (
     <>
       <b>Access Control</b>
@@ -31,6 +33,7 @@ const UserAccessForm = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
             value={formData.userActive}
             onChange={(e) => updateFormData('userActive', e.value)}
             options={activeOptions}
+            disabled={isSelfSelected}
           />
         </FormRow>
 
@@ -40,6 +43,7 @@ const UserAccessForm = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
             value={formData.userLevel}
             onChange={(e) => updateFormData('userLevel', e.value)}
             options={userLevels}
+            disabled={isSelfSelected}
           />
         </FormRow>
 
@@ -47,18 +51,36 @@ const UserAccessForm = ({ formData, setFormData, rolesLabel = 'Roles' }) => {
           <InputSwitch
             checked={formData.isGuest}
             onChange={(e) => updateFormData('isGuest', e.target.checked)}
+            disabled={isSelfSelected}
           />
         </FormRow>
 
-        <FormRow label={rolesLabel}>
-          <RolesDropdown
-            style={{ flexGrow: 1 }}
-            selectedRoles={formData.roles}
-            setSelectedRoles={(value) => updateFormData('roles', value)}
-            disabled={formData.userLevel !== 'user'}
-            placeholder={formData.userLevel !== 'user' && 'all roles'}
-          />
-        </FormRow>
+        <>
+          <FormRow label={'Default Roles'}>
+            <RolesDropdown
+              style={{ flexGrow: 1 }}
+              selectedRoles={selectedProjects ? formData.defaultRoles : formData.roles}
+              setSelectedRoles={(value) => updateFormData('roles', value)}
+              disabled={selectedProjects || !userLevel || isSelfSelected}
+              placeholder={!userLevel && 'all roles'}
+            />
+          </FormRow>
+          <FormRow label={'Project Roles'}>
+            <RolesDropdown
+              style={{ flexGrow: 1 }}
+              selectedRoles={selectedProjects ? formData.roles : []}
+              setSelectedRoles={(value) => updateFormData('roles', value)}
+              disabled={!selectedProjects || !userLevel || isSelfSelected}
+              placeholder={
+                !userLevel
+                  ? 'all roles'
+                  : !selectedProjects
+                  ? 'select a project'
+                  : 'select roles...'
+              }
+            />
+          </FormRow>
+        </>
       </FormLayout>
     </>
   )

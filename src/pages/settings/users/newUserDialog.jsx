@@ -23,7 +23,7 @@ const NewUserDialog = ({ onHide }) => {
 
   const handleSubmit = async () => {
     const payload = {}
-    if (!formData.name) {
+    if (!formData.Username) {
       toast.error('Login name must be provided')
       return
     }
@@ -33,9 +33,9 @@ const NewUserDialog = ({ onHide }) => {
     payload.attrib = {}
     payload.data = {}
     if (formData.isGuest) payload.data.isGuest = true
-    for (const key in attributes) {
-      if (formData[key]) payload.attrib[key] = formData[key]
-    }
+    attributes.forEach(({ name }) => {
+      if (formData[name]) payload.attrib[name] = formData[name]
+    })
 
     if (formData.userLevel === 'admin') payload.data.isAdmin = true
     else if (formData.userLevel === 'manager') payload.data.isManager = true
@@ -49,12 +49,14 @@ const NewUserDialog = ({ onHide }) => {
       }
     }
 
+    payload.name = formData.Username
+
     try {
-      await addUser({ name: formData.name, user: payload }).unwrap()
+      await addUser({ name: formData.Username, user: payload }).unwrap()
 
       toast.success('User created')
       // set added users to be used for auto selection onHide
-      setAddedUsers([...addedUsers, formData.name])
+      setAddedUsers([...addedUsers, formData.Username])
       // keep re-usable data in the form
       setPassword('')
       setFormData((fd) => {
@@ -102,7 +104,7 @@ const NewUserDialog = ({ onHide }) => {
           setPassword={setPassword}
         />
         <DividerSmallStyled />
-        <UserAccessForm formData={formData} setFormData={setFormData} rolesLabel="Default roles" />
+        <UserAccessForm formData={formData} setFormData={setFormData} />
         {formData.userLevel === 'user' && (
           <>
             <DividerSmallStyled />

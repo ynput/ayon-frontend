@@ -8,6 +8,7 @@ import UserImagesStacked from './UserImagesStacked'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 const HeaderStyled = styled(Panel)`
   gap: 10px;
@@ -65,6 +66,7 @@ const UserDetail = ({
   selectedProjects,
   setSelectedUsers,
   userDetailData,
+  isSelfSelected,
 }) => {
   const [formData, setFormData] = useState({})
   const [initData, setInitData] = useState({})
@@ -82,12 +84,15 @@ const UserDetail = ({
           if (nrole.shouldSelect) nroles.push(nrole.name)
         }
       }
+
       const formData = {
         userActive: data.userActive,
         userLevel: data.userLevel,
         isGuest: data.isGuest,
         roles: nroles,
+        defaultRoles: data.defaultRoles,
       }
+
       // set attributes
       if (data.users.length === 1) {
         attributes.forEach((attr) => {
@@ -106,9 +111,9 @@ const UserDetail = ({
 
   // look for changes when formData changes
   useEffect(() => {
-    const isDiff = JSON.stringify(formData) !== JSON.stringify(initData)
+    const isDiff = JSON.stringify(formData) !== JSON.stringify(initData) || selectedUsers.length > 1
 
-    if (isDiff) {
+    if (isDiff && (!isSelfSelected || selectedUsers.length === 1)) {
       if (!changesMade) setChangesMade(true)
     } else {
       setChangesMade(false)
@@ -130,6 +135,33 @@ const UserDetail = ({
   //
   // API
   //
+
+  const handleMultiSave = () => {
+    // if multiple users are selected confirm the action
+    confirmDialog({
+      // message: `Are you sure you want update all these users to the same values?`,
+      header: 'Update All Selected Users To The Same Values?',
+      icon: 'pi pi-exclamation-triangle',
+      message: (
+        <ul>
+          {/* usuers being updates */}
+          <li>
+            Users:{' '}
+            {userDetailData.users.map((user) => (
+              <span key={user.name}>{user.name}, </span>
+            ))}
+          </li>
+          <li>User Active: {formData.userActive ? 'Yes' : 'No'}</li>
+          <li>User Level: {formData.userLevel}</li>
+          <li>Is Guest: {formData.isGuest ? 'Yes' : 'No'}</li>
+          <li>Roles: {formData.roles?.length ? formData.roles.join(', ') : ''}</li>
+        </ul>
+      ),
+
+      accept: onSave,
+      reject: () => {},
+    })
+  }
 
   const onSave = async () => {
     for (const user of userDetailData.users) {
@@ -162,15 +194,17 @@ const UserDetail = ({
         data.roles = null
       }
 
+      const patch = {
+        active: formData.userActive,
+        attrib,
+        data,
+      }
+
       try {
         // Apply the patch
         await updateUser({
           name: user.name,
-          patch: {
-            active: formData.userActive,
-            attrib,
-            data,
-          },
+          patch,
         }).unwrap()
 
         toast.success(`Updated user: ${user.name} `)
@@ -239,14 +273,25 @@ const UserDetail = ({
             <UserAccessForm
               formData={formData}
               setFormData={setFormData}
-              rolesLabel={userDetailData.projectNames?.length ? 'Project roles' : 'Default roles'}
+              selectedProjects={selectedProjects}
+              isSelfSelected={isSelfSelected}
             />
           )}
         </Panel>
       </FormsStyled>
       <PanelButtonsStyled>
-        <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
-        <Button onClick={onSave} label="Save selected users" icon="check" disabled={!changesMade} />
+        <Button
+          onClick={onCancel}
+          label="Cancel"
+          icon="cancel"
+          disabled={!changesMade || selectedUsers.length > 1}
+        />
+        <Button
+          onClick={() => (selectedUsers.length > 1 ? handleMultiSave() : onSave())}
+          label="Save selected users"
+          icon="check"
+          disabled={!changesMade}
+        />
       </PanelButtonsStyled>
     </Section>
   )

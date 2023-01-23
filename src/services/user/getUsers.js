@@ -93,7 +93,8 @@ const getUsers = ayonApi.injectEndpoints({
           variables: {},
         },
       }),
-      transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
+      transformResponse: (res, meta, { selfName }) =>
+        res?.data?.users.edges.map((e) => ({ ...e.node, self: e.node.name === selfName })),
       providesTags: (res) =>
         res?.data?.users
           ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]

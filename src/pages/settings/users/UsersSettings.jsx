@@ -17,6 +17,7 @@ import UserList from './UserList'
 import { useDeleteUserMutation } from '/src/services/user/updateUser'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { SelectButton } from 'primereact/selectbutton'
+import { useSelector } from 'react-redux'
 
 // TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
@@ -51,8 +52,12 @@ const UsersSettings = () => {
   // show users for selected projects
   const [showProjectUsers, setShowProjectUsers] = useState(false)
 
+  // get user name from redux
+  const selfName = useSelector((state) => state.user.name)
+  const isSelfSelected = selectedUsers.includes(selfName)
+
   // RTK QUERY HOOKS
-  const { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery()
+  const { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery({ selfName })
   if (isError) toast.error('Unable to load users')
 
   const {
@@ -114,6 +119,11 @@ const UsersSettings = () => {
 
   // Render
 
+  // return null
+
+  // log first user
+  console.log(filteredData[0])
+
   return (
     <main>
       <ConfirmDialog />
@@ -124,7 +134,7 @@ const UsersSettings = () => {
             onClick={onDelete}
             label="Delete Users"
             icon="person_remove"
-            disabled={!selectedUsers.length}
+            disabled={!selectedUsers.length || isSelfSelected}
           />
           <SelectButton
             value={showProjectUsers}
@@ -133,6 +143,7 @@ const UsersSettings = () => {
               { label: 'Selected Projects', value: true },
             ]}
             onChange={(e) => setShowProjectUsers(e.value)}
+            disabled={!selectedProjects}
           />
           <InputText
             style={{ width: '200px' }}
@@ -173,6 +184,7 @@ const UsersSettings = () => {
                 onDelete,
                 isLoading,
                 isLoadingRoles,
+                isSelfSelected,
               }}
             />
           </SplitterPanel>
@@ -185,6 +197,7 @@ const UsersSettings = () => {
               selectedProjects={selectedProjects}
               userDetailData={userDetailData}
               setSelectedUsers={setSelectedUsers}
+              isSelfSelected={isSelfSelected}
             />
           </SplitterPanel>
         </Splitter>
