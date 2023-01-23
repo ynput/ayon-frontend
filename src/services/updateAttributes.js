@@ -26,10 +26,7 @@ const updateAttributes = ayonApi.injectEndpoints({
       //       patchResult.undo()
       //     }
       //   },
-      invalidatesTags: (result, error, { patches }) => [
-        patches.map(({ name }) => ({ type: 'attribute', id: name })),
-        'attribute',
-      ],
+      invalidatesTags: () => ['attribute'],
     }),
   }),
 })

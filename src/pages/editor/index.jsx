@@ -30,6 +30,7 @@ import { useLocalStorage } from '../../utils'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import { getFolderTypeIcon } from '/src/utils'
+import useColumnResize from '/src/hooks/useColumnResize'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)
@@ -52,6 +53,9 @@ const EditorPage = () => {
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
+
+  // columns widths
+  const [columnsWidths, setColumnWidths] = useColumnResize('editor')
 
   const contextMenuRef = useRef(null)
 
@@ -783,33 +787,6 @@ const EditorPage = () => {
     localStorage.setItem('editor-columns-order', JSON.stringify(localStorageOrder))
   }
 
-  const storeColumnWidth = (e, key) => {
-    const field = e.column.props.field
-    const width = e.element.offsetWidth
-
-    // set localstorage for column size change
-    let oldWidthState = {}
-    if (localStorage.getItem(key)) {
-      oldWidthState = JSON.parse(localStorage.getItem(key))
-    }
-
-    const newWidthState = { ...oldWidthState, [field]: width }
-
-    localStorage.setItem(key, JSON.stringify(newWidthState))
-
-    return { field, width }
-  }
-
-  const handleColumnResize = (e) => {
-    const key = 'editor-columns-widths'
-    storeColumnWidth(e, key)
-  }
-
-  const columnsWidthsState = useMemo(
-    () => JSON.parse(localStorage.getItem('editor-columns-widths')) || {},
-    [],
-  )
-
   let allColumns = [
     <Column
       field="name"
@@ -817,7 +794,7 @@ const EditorPage = () => {
       header="Name"
       expander={true}
       body={(rowData) => formatName(rowData.data, changes)}
-      style={{ width: columnsWidthsState['name'], maxWidth: 300, height: 33 }}
+      style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
       editor={(options) => {
         return stringEditor(options, updateName, formatName(options.rowData, changes, false))
       }}
@@ -827,7 +804,7 @@ const EditorPage = () => {
       key="type"
       header="Type"
       body={(rowData) => formatType(rowData.data, changes)}
-      style={{ width: columnsWidthsState['type'], maxWidth: 200 }}
+      style={{ width: columnsWidths['type'], maxWidth: 200 }}
       editor={(options) => {
         return typeEditor(options, updateType, formatType(options.rowData, changes, false))
       }}
@@ -837,7 +814,7 @@ const EditorPage = () => {
         key={col.name}
         header={col.title}
         field={col.name}
-        style={{ width: columnsWidthsState[col.name] }}
+        style={{ width: columnsWidths[col.name] }}
         body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
         editor={(options) => {
           return col.editor(
@@ -940,13 +917,10 @@ const EditorPage = () => {
             selectOnEdit={false}
             onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
-            onColumnResizeEnd={handleColumnResize}
+            onColumnResizeEnd={setColumnWidths}
             reorderableColumns
             onColReorder={handleColumnReorder}
             rows={20}
-            paginator
-            lazy
-            totalRecords={20}
           >
             {allColumns}
             <Column
