@@ -292,8 +292,11 @@ const ArrayItemTemplate = (props) => {
 
   if (itemName && (parentSchema.requiredItems || []).includes(itemName)) {
     undeletable = true
-    if (children.props.formData.name === itemName)
-      children.props.schema.properties.name.fixedValue = itemName
+    // TODO: Store this information elsewhere. since swithcing to RTK query
+    // schema props are immutable! use form context maybe?
+
+    //if (children.props.formData.name === itemName)
+    //  children.props.schema.properties.name.fixedValue = itemName
   }
 
   const rmButton = props.hasRemove && (
