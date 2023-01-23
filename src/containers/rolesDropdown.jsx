@@ -4,7 +4,7 @@ import axios from 'axios'
 
 import { MultiSelect } from 'primereact/multiselect'
 
-const RolesDropdown = ({ selectedRoles, setSelectedRoles, style }) => {
+const RolesDropdown = ({ selectedRoles, setSelectedRoles, style, disabled, placeholder }) => {
   const [rolesList, setRolesList] = useState([])
 
   useEffect(() => {
@@ -37,6 +37,8 @@ const RolesDropdown = ({ selectedRoles, setSelectedRoles, style }) => {
       value={selectedRoles || []}
       options={rolesList}
       onChange={onChange}
+      disabled={disabled}
+      placeholder={placeholder}
     />
   )
 }

@@ -1,4 +1,5 @@
 import { ayonApi } from '../ayon'
+import ayonClient from '/src/ayon'
 
 const USERS_LIST_QUERY = `
 query UserList {
@@ -50,14 +51,24 @@ const USERS_QUERY = `
           defaultRoles
           hasPassword
           attrib {
-            fullName
-            email
+            #ATTRS#
           }
         }
       }
     }
   }
 `
+
+const buildUsersQuery = (QUERY) => {
+  let f_attribs = ''
+  for (const attrib of ayonClient.settings.attributes) {
+    if (attrib.scope.includes('user')) f_attribs += `${attrib.name}\n`
+  }
+
+  if (!QUERY) return null
+
+  return QUERY.replace('#ATTRS#', f_attribs)
+}
 
 const getUsers = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -78,7 +89,7 @@ const getUsers = ayonApi.injectEndpoints({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: USERS_QUERY,
+          query: buildUsersQuery(USERS_QUERY),
           variables: {},
         },
       }),

@@ -5,6 +5,7 @@ import { Spacer, Button } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { UserAttrib, AccessControl } from './forms'
 import { useAddUserMutation } from '/src/services/user/updateUser'
+import ayonClient from '/src/ayon'
 
 const NewUserDialog = ({ onHide }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
@@ -17,10 +18,7 @@ const NewUserDialog = ({ onHide }) => {
 
   const [addUser] = useAddUserMutation()
 
-  const userAttrib = {
-    fullName: 'Full name',
-    email: 'Email',
-  }
+  const attributes = ayonClient.getAttribsByScope('user')
 
   const handleSubmit = async () => {
     const payload = {}
@@ -34,7 +32,7 @@ const NewUserDialog = ({ onHide }) => {
     payload.attrib = {}
     payload.data = {}
     if (formData.isGuest) payload.data.isGuest = true
-    for (const key in userAttrib) {
+    for (const key in attributes) {
       if (formData[key]) payload.attrib[key] = formData[key]
     }
 
@@ -94,10 +92,13 @@ const NewUserDialog = ({ onHide }) => {
         <UserAttrib
           formData={formData}
           setFormData={setFormData}
-          attributes={{ name: 'Username', ...userAttrib }}
+          attributes={[
+            { name: 'Username', data: { title: 'Username' } },
+            { name: 'password', data: { title: 'Password' } },
+            ...attributes,
+          ]}
           password={password}
           setPassword={setPassword}
-          showPassword={true}
         />
         <h2>Access control</h2>
         <AccessControl formData={formData} setFormData={setFormData} rolesLabel="Default roles" />
