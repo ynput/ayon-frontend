@@ -224,12 +224,6 @@ const Hierarchy = (props) => {
   // Render
   //
 
-  if (isError) {
-    toast.error(`Unable to load hierarchy. ${error}`)
-
-    return <>Error...</>
-  }
-
   const table = useMemo(
     () => (
       <TreeTable
@@ -252,6 +246,12 @@ const Hierarchy = (props) => {
     ),
     [treeData, selectedFolders, expandedFolders],
   )
+
+  if (isError) {
+    toast.error(`Unable to load hierarchy. ${error}`)
+
+    return <>Error...</>
+  }
 
   return (
     <Section style={props.style}>
