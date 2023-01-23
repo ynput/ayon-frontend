@@ -121,9 +121,6 @@ const UsersSettings = () => {
 
   // return null
 
-  // log first user
-  console.log(filteredData[0])
-
   return (
     <main>
       <ConfirmDialog />
