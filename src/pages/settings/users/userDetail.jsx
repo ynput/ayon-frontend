@@ -237,7 +237,11 @@ const UserDetail = ({
     <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
       <HeaderStyled>
         <UserImagesStacked
-          users={userDetailData?.users.map((user) => ({ fullName: getUserName(user) }))}
+          users={userDetailData?.users.map((user) => ({
+            fullName: getUserName(user),
+            src: user.attrib.avatarUrl,
+            self: user.self,
+          }))}
         />
         {singleUserEdit ? (
           <h2>{getUserName(singleUserEdit)}</h2>

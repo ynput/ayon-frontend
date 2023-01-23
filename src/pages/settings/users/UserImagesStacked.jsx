@@ -15,7 +15,13 @@ const UserImagesStacked = ({ users = [] }) => {
   return (
     <StackedStyled length={users.length}>
       {users.map((user, i) => (
-        <UserImage src={user.src} key={i} fullName={user.fullName} style={{ zIndex: -i }} />
+        <UserImage
+          src={user.src}
+          key={i}
+          fullName={user.fullName}
+          style={{ zIndex: -i }}
+          highlight={user.self}
+        />
       ))}
     </StackedStyled>
   )
