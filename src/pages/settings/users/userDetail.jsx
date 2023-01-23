@@ -223,7 +223,7 @@ const UserDetail = ({
 
   // onclose, no users selected but check if changes made
   const onClose = () => {
-    if (changesMade) {
+    if (changesMade && selectedUsers.length === 1) {
       return toast.error('Changes not saved')
     }
     setSelectedUsers([])
