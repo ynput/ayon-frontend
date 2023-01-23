@@ -16,6 +16,7 @@ import UserDetail from './userDetail'
 import UserList from './UserList'
 import { useDeleteUserMutation } from '/src/services/user/updateUser'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { SelectButton } from 'primereact/selectbutton'
 
 // TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
@@ -47,6 +48,8 @@ const UsersSettings = () => {
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   const [userDetailData, setUserDetailData] = useState({})
+  // show users for selected projects
+  const [showProjectUsers, setShowProjectUsers] = useState(false)
 
   // RTK QUERY HOOKS
   const { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery()
@@ -61,6 +64,24 @@ const UsersSettings = () => {
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()
+
+  let filteredUserList = useMemo(() => {
+    // filter out users that are not in project if showProjectUsers is true
+    if (showProjectUsers && selectedProjects) {
+      return userList.filter((user) => {
+        // user level not user
+        if (user.isManager || user.isAdmin || user.isService) return true
+
+        // check user has role in selected projects
+        const roleSet = JSON.parse(user.roles)
+        let hasRole = selectedProjects.some((project) => roleSet[project]?.length)
+
+        return hasRole
+      })
+    } else {
+      return userList
+    }
+  }, [userList, selectedProjects, showProjectUsers])
 
   // TODO: RTK QUERY
   const onDelete = async () => {
@@ -83,8 +104,8 @@ const UsersSettings = () => {
   }
 
   let userListWithRoles = useMemo(
-    () => userList.map((user) => formatRoles(user, selectedProjects)),
-    [userList, selectedProjects],
+    () => filteredUserList.map((user) => formatRoles(user, selectedProjects)),
+    [filteredUserList, selectedProjects],
   )
 
   const searchableFields = ['name', 'attrib.fullName', 'attrib.email', 'rolesList', 'hasPassword']
@@ -104,6 +125,14 @@ const UsersSettings = () => {
             label="Delete Users"
             icon="person_remove"
             disabled={!selectedUsers.length}
+          />
+          <SelectButton
+            value={showProjectUsers}
+            options={[
+              { label: 'All Users', value: false },
+              { label: 'Selected Projects', value: true },
+            ]}
+            onChange={(e) => setShowProjectUsers(e.value)}
           />
           <InputText
             style={{ width: '200px' }}
