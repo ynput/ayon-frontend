@@ -76,6 +76,59 @@ const addonSettings = ayonApi.injectEndpoints({
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }), // setAddonSettings
+
+    deleteAddonSettings: build.mutation({
+      query: ({ addonName, addonVersion, projectName, siteId }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(projectName, siteId)}`,
+        method: 'DELETE',
+      }),
+      // eslint-disable-next-line no-unused-vars
+      invalidatesTags: (result, error, arg) => [
+        {
+          type: 'addonSettings',
+          addonName: arg.addonName,
+          addonVersion: arg.addonVersion,
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+        },
+        {
+          type: 'addonSettingsOverrides',
+          addonName: arg.addonName,
+          addonVersion: arg.addonVersion,
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+        },
+      ],
+      transformResponse: (response) => response,
+      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+    }), // setAddonSettings
+
+    modifyAddonOverride: build.mutation({
+      query: ({ addonName, addonVersion, projectName, siteId, action, path }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(projectName, siteId)}`,
+        method: 'POST',
+        body: { action, path },
+      }),
+      // eslint-disable-next-line no-unused-vars
+      invalidatesTags: (result, error, arg) => [
+        {
+          type: 'addonSettings',
+          addonName: arg.addonName,
+          addonVersion: arg.addonVersion,
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+        },
+        {
+          type: 'addonSettingsOverrides',
+          addonName: arg.addonName,
+          addonVersion: arg.addonVersion,
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+        },
+      ],
+      transformResponse: (response) => response,
+      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+    }), // setAddonSettings
   }), // endpoints
 }) // addonSettings
 
@@ -84,4 +137,6 @@ export const {
   useGetAddonSettingsQuery,
   useGetAddonSettingsOverridesQuery,
   useSetAddonSettingsMutation,
+  useDeleteAddonSettingsMutation,
+  useModifyAddonOverrideMutation,
 } = addonSettings

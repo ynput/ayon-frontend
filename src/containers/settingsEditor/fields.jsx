@@ -257,7 +257,6 @@ function FieldTemplate(props) {
             className={`form-inline-field-label ${
               props.rawDescription ? 'field-label' : ''
             } ${overrideLevel}`}
-            data-pr-tooltip={`${props.rawDescription ? props.rawDescription : ''}`}
           >
             <span
               onClick={() => {
