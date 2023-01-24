@@ -18,6 +18,7 @@ import { useDeleteUserMutation } from '/src/services/user/updateUser'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { SelectButton } from 'primereact/selectbutton'
 import { useSelector } from 'react-redux'
+import UsersOverview from './UsersOverview'
 
 // TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
@@ -57,7 +58,7 @@ const UsersSettings = () => {
   const isSelfSelected = selectedUsers.includes(selfName)
 
   // RTK QUERY HOOKS
-  const { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery({ selfName })
+  let { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery({ selfName })
   if (isError) toast.error('Unable to load users')
 
   const {
@@ -72,7 +73,7 @@ const UsersSettings = () => {
 
   let filteredUserList = useMemo(() => {
     // filter out users that are not in project if showProjectUsers is true
-    if (showProjectUsers && selectedProjects) {
+    if (selectedProjects) {
       return userList.filter((user) => {
         // user level not user
         if (user.isManager || user.isAdmin || user.isService) return true
@@ -86,9 +87,8 @@ const UsersSettings = () => {
     } else {
       return userList
     }
-  }, [userList, selectedProjects, showProjectUsers])
+  }, [userList, selectedProjects])
 
-  // TODO: RTK QUERY
   const onDelete = async () => {
     confirmDialog({
       message: `Are you sure you want to delete ${selectedUsers.length} user(s)?`,
@@ -108,9 +108,26 @@ const UsersSettings = () => {
     })
   }
 
+  const onTotal = (total) => {
+    // if "total" select all users
+    // else set search to total
+    if (total === 'total') {
+      setSearch('')
+      setSelectedUsers(filteredUserList.map((user) => user.name))
+      if (selectedProjects) setShowProjectUsers(true)
+    } else {
+      setSearch(total)
+    }
+  }
+
+  // use filteredUserList if showProjectUsers
+  // else use userList
+
+  if (showProjectUsers) userList = filteredUserList
+
   let userListWithRoles = useMemo(
-    () => filteredUserList.map((user) => formatRoles(user, selectedProjects)),
-    [filteredUserList, selectedProjects],
+    () => userList.map((user) => formatRoles(user, selectedProjects)),
+    [userList, selectedProjects],
   )
 
   const searchableFields = ['name', 'attrib.fullName', 'attrib.email', 'rolesList', 'hasPassword']
@@ -187,7 +204,6 @@ const UsersSettings = () => {
           </SplitterPanel>
           <SplitterPanel size={40} style={{ minWidth: 370 }}>
             <UserDetail
-              userList={userList}
               setShowRenameUser={setShowRenameUser}
               selectedUsers={selectedUsers}
               setShowSetPassword={setShowSetPassword}
@@ -196,6 +212,15 @@ const UsersSettings = () => {
               setSelectedUsers={setSelectedUsers}
               isSelfSelected={isSelfSelected}
             />
+            {selectedUsers.length === 0 && (
+              <UsersOverview
+                selectedProjects={selectedProjects}
+                userList={filteredUserList}
+                onNewUser={() => setShowNewUser(true)}
+                onUserSelect={(user) => setSelectedUsers([user.name])}
+                onTotal={onTotal}
+              />
+            )}
           </SplitterPanel>
         </Splitter>
       </Section>

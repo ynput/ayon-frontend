@@ -50,6 +50,8 @@ const USERS_QUERY = `
           roles
           defaultRoles
           hasPassword
+          createdAt
+          updatedAt
           attrib {
             #ATTRS#
           }

@@ -50,7 +50,7 @@ const UsernameStyled = styled(FormRow)`
   }
 `
 
-const PanelButtonsStyled = styled(Panel)`
+export const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
 
   & > * {
@@ -59,7 +59,6 @@ const PanelButtonsStyled = styled(Panel)`
 `
 
 const UserDetail = ({
-  userList,
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
@@ -246,7 +245,7 @@ const UserDetail = ({
         {singleUserEdit ? (
           <h2>{getUserName(singleUserEdit)}</h2>
         ) : (
-          <h2>{`${userDetailData.users.length}/${userList.length} Users Selected`}</h2>
+          <h2>{`${userDetailData.users.length} Users Selected`}</h2>
         )}
         <span className="material-symbols-outlined" onClick={onClose}>
           close
