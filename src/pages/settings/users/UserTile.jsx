@@ -64,8 +64,8 @@ const UserTile = ({ user, onClick }) => {
 }
 
 UserTile.propTypes = {
-  user: PropTypes.object.isRequired,
-  onClick: PropTypes.func.isRequired,
+  user: PropTypes.object,
+  onClick: PropTypes.func,
 }
 
 export default UserTile
