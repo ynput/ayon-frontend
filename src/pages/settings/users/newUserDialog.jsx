@@ -41,7 +41,7 @@ const NewUserDialog = ({ onHide }) => {
     else if (formData.userLevel === 'manager') payload.data.isManager = true
     else if (formData.userLevel === 'service') payload.data.isService = true
     else {
-      payload.data.defaultRoles = formData.roles || []
+      payload.data.defaultRoles = formData.defaultRoles || []
       if (selectedProjects) {
         const roles = {}
         for (const projectName of selectedProjects) roles[projectName] = payload.data.defaultRoles
@@ -102,6 +102,7 @@ const NewUserDialog = ({ onHide }) => {
           ]}
           password={password}
           setPassword={setPassword}
+          x
         />
         <DividerSmallStyled />
         <UserAccessForm formData={formData} setFormData={setFormData} />

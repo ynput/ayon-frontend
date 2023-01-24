@@ -221,7 +221,7 @@ const UserDetail = ({
 
       if (!selectedProjects) {
         // no project is selected. update default roles
-        data.defaultRoles = formData.roles
+        data.defaultRoles = formData.defaultRoles
       } else {
         // project(s) selected. update roles
         for (const projectName of selectedProjects) roles[projectName] = formData.roles
