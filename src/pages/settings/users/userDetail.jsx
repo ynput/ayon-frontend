@@ -58,55 +58,101 @@ export const PanelButtonsStyled = styled(Panel)`
   }
 `
 
+const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
+  // find last user selected
+  let lastUser = users.filter((user) => user.name === lastSelectedUser)[0]
+  // no last user then just use last in list
+  if (!lastUser) lastUser = users[0]
+  // still no user then return
+  if (!lastUser) return
+
+  const allRoles =
+    projectNames?.map((projectName) => lastUser.roles[projectName] || []).flat() || []
+
+  // do above in one line
+  let roles = roleNames.map((roleName) => ({
+    name: roleName,
+    shouldSelect: allRoles.includes(roleName),
+  }))
+
+  let userLevel = 'user'
+  if (lastUser?.isAdmin) userLevel = 'admin'
+  else if (lastUser?.isService) userLevel = 'service'
+  else if (lastUser?.isManager) userLevel = 'manager'
+
+  return {
+    users,
+    projectNames,
+    roles,
+    userLevel,
+    userActive: lastUser?.active,
+    isGuest: lastUser?.isGuest,
+    defaultRoles: lastUser?.defaultRoles,
+  }
+}
+
+const buildFormData = (data, attributes) => {
+  let nroles = []
+
+  if (isEmpty(data)) return
+  if (data.roles?.length) {
+    for (const nrole of data.roles) {
+      if (nrole.shouldSelect) nroles.push(nrole.name)
+    }
+  }
+
+  const formData = {
+    userActive: data.userActive,
+    userLevel: data.userLevel,
+    isGuest: data.isGuest,
+    roles: nroles,
+    defaultRoles: data.defaultRoles,
+  }
+
+  // set attributes
+  if (data.users.length === 1) {
+    attributes.forEach((attr) => {
+      formData[attr.name] = data.users[0].attrib[attr.name]
+    })
+  }
+
+  return formData
+}
+
 const UserDetail = ({
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
   selectedProjects,
   setSelectedUsers,
-  userDetailData,
   isSelfSelected,
+  rolesList,
+  lastSelectedUser,
+  userList,
 }) => {
   const [formData, setFormData] = useState({})
   const [initData, setInitData] = useState({})
   const [changesMade, setChangesMade] = useState(false)
+  const [formUsers, setFormUsers] = useState([])
 
   const attributes = ayonClient.getAttribsByScope('user')
 
   useEffect(() => {
-    const buildFormData = (data) => {
-      let nroles = []
+    const userListFiltered = userList.filter((user) => selectedUsers.includes(user.name))
+    setFormUsers(userListFiltered)
 
-      if (isEmpty(data)) return
-      if (data.roles?.length) {
-        for (const nrole of data.roles) {
-          if (nrole.shouldSelect) nroles.push(nrole.name)
-        }
-      }
+    const userDetailData = buildUserDetailData(
+      selectedProjects,
+      rolesList,
+      userListFiltered,
+      lastSelectedUser,
+    )
 
-      const formData = {
-        userActive: data.userActive,
-        userLevel: data.userLevel,
-        isGuest: data.isGuest,
-        roles: nroles,
-        defaultRoles: data.defaultRoles,
-      }
-
-      // set attributes
-      if (data.users.length === 1) {
-        attributes.forEach((attr) => {
-          formData[attr.name] = data.users[0].attrib[attr.name]
-        })
-      }
-
-      return formData
-    }
-
-    const formData = buildFormData(userDetailData)
+    const formData = buildFormData(userDetailData, attributes)
     setFormData(formData)
     // used to compare changes later
     setInitData(formData)
-  }, [userDetailData, selectedUsers, selectedProjects])
+  }, [userList, selectedUsers, selectedProjects])
 
   // look for changes when formData changes
   useEffect(() => {
@@ -120,12 +166,12 @@ const UserDetail = ({
   }, [formData, initData])
 
   // editing a single user, so show attributes form too
-  const singleUserEdit = userDetailData.users?.length === 1 ? userDetailData.users[0] : null
+  const singleUserEdit = selectedUsers.length === 1 ? formUsers[0] : null
 
   const [updateUser] = useUpdateUserMutation()
 
   // no selected user. do not show the panel
-  if (!userDetailData.users?.length) {
+  if (!selectedUsers.length) {
     return <></>
   }
 
@@ -146,7 +192,7 @@ const UserDetail = ({
           {/* usuers being updates */}
           <li>
             Users:{' '}
-            {userDetailData.users.map((user) => (
+            {formUsers.map((user) => (
               <span key={user.name}>{user.name}, </span>
             ))}
           </li>
@@ -163,7 +209,7 @@ const UserDetail = ({
   }
 
   const onSave = async () => {
-    for (const user of userDetailData.users) {
+    for (const user of formUsers) {
       const data = {}
       const attrib = {}
 
@@ -171,14 +217,14 @@ const UserDetail = ({
         attributes.forEach(({ name }) => (attrib[name] = formData[name]))
       }
 
-      const roles = JSON.parse(user.roles || {})
+      let roles = user.roles ? { ...user.roles } : {}
 
-      if (!userDetailData.projectNames) {
+      if (!selectedProjects) {
         // no project is selected. update default roles
         data.defaultRoles = formData.roles
       } else {
         // project(s) selected. update roles
-        for (const projectName of userDetailData.projectNames) roles[projectName] = formData.roles
+        for (const projectName of selectedProjects) roles[projectName] = formData.roles
       }
 
       // update user level && do role clean-up
@@ -236,7 +282,7 @@ const UserDetail = ({
     <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
       <HeaderStyled>
         <UserImagesStacked
-          users={userDetailData?.users.map((user) => ({
+          users={formUsers.map((user) => ({
             fullName: getUserName(user),
             src: user.attrib.avatarUrl,
             self: user.self,
@@ -245,7 +291,7 @@ const UserDetail = ({
         {singleUserEdit ? (
           <h2>{getUserName(singleUserEdit)}</h2>
         ) : (
-          <h2>{`${userDetailData.users.length} Users Selected`}</h2>
+          <h2>{`${selectedUsers.length} Users Selected`}</h2>
         )}
         <span className="material-symbols-outlined" onClick={onClose}>
           close

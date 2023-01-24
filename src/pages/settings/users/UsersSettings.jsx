@@ -29,7 +29,7 @@ const formatRoles = (rowData, selectedProjects) => {
   else if (!selectedProjects) {
     for (const name of rowData.defaultRoles || []) res[name] = { cls: 'role default' }
   } else {
-    const roleSet = JSON.parse(rowData.roles)
+    const roleSet = rowData.roles
     for (const projectName of selectedProjects) {
       for (const roleName of roleSet[projectName] || []) {
         if (roleName in res) res[roleName].count += 1
@@ -49,9 +49,10 @@ const UsersSettings = () => {
   const [showNewUser, setShowNewUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
-  const [userDetailData, setUserDetailData] = useState({})
   // show users for selected projects
   const [showProjectUsers, setShowProjectUsers] = useState(false)
+  // last selected user state
+  const [lastSelectedUser, setLastSelectedUser] = useState(null)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -79,7 +80,7 @@ const UsersSettings = () => {
         if (user.isManager || user.isAdmin || user.isService) return true
 
         // check user has role in selected projects
-        const roleSet = JSON.parse(user.roles)
+        const roleSet = user.roles
         let hasRole = selectedProjects.some((project) => roleSet[project]?.length)
 
         return hasRole
@@ -191,8 +192,8 @@ const UsersSettings = () => {
               tableList={filteredData}
               onSelectUsers={setSelectedUsers}
               isFetching={isFetching}
-              setUserDetailData={setUserDetailData}
               {...{
+                setLastSelectedUser,
                 selectedProjects,
                 selectedUsers,
                 rolesList,
@@ -211,9 +212,11 @@ const UsersSettings = () => {
               selectedUsers={selectedUsers}
               setShowSetPassword={setShowSetPassword}
               selectedProjects={selectedProjects}
-              userDetailData={userDetailData}
               setSelectedUsers={setSelectedUsers}
               isSelfSelected={isSelfSelected}
+              rolesList={rolesList}
+              lastSelectedUser={lastSelectedUser}
+              userList={userList}
             />
             {selectedUsers.length === 0 && (
               <UsersOverview

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
@@ -6,41 +6,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import './users.scss'
 import useColumnResize from '/src/hooks/useColumnResize'
 import UserImage from './UserImage'
-
-const buildUserDetailData = (projectNames, roleNames, users, lastSelectedUser) => {
-  let roles = []
-  let roleSet = []
-  if (lastSelectedUser) {
-    if (!projectNames) roleSet = lastSelectedUser.defaultRoles || []
-    else {
-      const uroles = JSON.parse(lastSelectedUser.roles) || []
-      for (const projectName of projectNames || []) {
-        roleSet = [...roleSet, ...(uroles[projectName] || [])]
-      }
-    }
-  }
-
-  for (const roleName of roleNames)
-    roles.push({
-      name: roleName,
-      shouldSelect: roleSet.includes(roleName),
-    })
-
-  let userLevel = 'user'
-  if (lastSelectedUser?.isAdmin) userLevel = 'admin'
-  else if (lastSelectedUser?.isService) userLevel = 'service'
-  else if (lastSelectedUser?.isManager) userLevel = 'manager'
-
-  return {
-    users,
-    projectNames,
-    roles,
-    userLevel,
-    userActive: lastSelectedUser?.active,
-    isGuest: lastSelectedUser?.isGuest,
-    defaultRoles: lastSelectedUser?.defaultRoles,
-  }
-}
+import { useMemo } from 'react'
 
 const UserList = ({
   selectedProjects,
@@ -52,35 +18,20 @@ const UserList = ({
   onDelete,
   isLoading,
   isLoadingRoles,
-  setUserDetailData,
-  rolesList,
-  isFetching,
   onSelectUsers,
   isSelfSelected,
+  setLastSelectedUser,
 }) => {
   const contextMenuRef = useRef(null)
 
   // COLUMN WIDTH
   const [columnsWidths, setColumnWidths] = useColumnResize('users')
-  const [lastSelectedUser, setLastSelectedUser] = useState(null)
 
   // Selection
-
-  const selection = useMemo(() => {
-    if (isFetching) return []
-    let result = []
-    let lastUsr = null
-    for (const user of userList) {
-      if (selectedUsers.includes(user.name)) result.push(user)
-      if (user?.name === lastSelectedUser?.name) lastUsr = { ...user }
-    }
-    if (setUserDetailData) {
-      setLastSelectedUser(lastUsr)
-
-      setUserDetailData(buildUserDetailData(selectedProjects, rolesList, result, lastUsr))
-    }
-    return result
-  }, [selectedUsers, userList, selectedProjects, isFetching])
+  const selection = useMemo(
+    () => userList.filter((user) => selectedUsers.includes(user.name)),
+    [selectedUsers, selectedProjects, userList],
+  )
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
@@ -127,7 +78,7 @@ const UserList = ({
             if (!selectedUsers.includes(e.value.name)) {
               onSelectUsers([...selection, e.value.name])
             }
-            setLastSelectedUser(e.data)
+            setLastSelectedUser(e.data.name)
           }}
           selection={selection}
           columnResizeMode="expand"
@@ -138,7 +89,7 @@ const UserList = ({
           stateStorage={'local'}
           reorderableColumns
           onRowClick={(e) => {
-            setLastSelectedUser(e.data)
+            setLastSelectedUser(e.data.name)
           }}
         >
           <Column
