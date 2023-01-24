@@ -1,14 +1,18 @@
-import axios from 'axios'
-
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import ReactMarkdown from 'react-markdown'
+//import ReactMarkdown from 'react-markdown'
 
 import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './addonSettingsPanel'
+
+import {
+  useSetAddonSettingsMutation,
+  useDeleteAddonSettingsMutation,
+  useModifyAddonOverrideMutation,
+} from '/src/services/addonSettings'
 
 /*
  * key is {addonName}|{addonVersion}|{siteId}|{projectKey}
@@ -23,6 +27,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [localOverrides, setLocalOverrides] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
+
+  const [setAddonSettings] = useSetAddonSettingsMutation()
+  const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
+  const [modifyAddonOverride] = useModifyAddonOverrideMutation()
 
   const projectKey = projectName || '_'
 
@@ -54,38 +62,47 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     })
   }
 
-  const onSave = () => {
+  const onSave = async () => {
+    let updatedKeys = []
+    let allOk = true
+
     for (const key in localData) {
       const [addonName, addonVersion, siteId, projectName] = key.split('|')
       if (projectName !== projectKey) continue
 
-      let url = `/api/addons/${addonName}/${addonVersion}/settings`
-      if (projectName !== '_') {
-        url += `/${projectName}`
-        if (siteId && siteId !== '_') url += `?site=${siteId}`
+      try {
+        await setAddonSettings({
+          addonName,
+          addonVersion,
+          projectName,
+          siteId,
+          data: localData[key],
+        }).unwrap()
+
+        updatedKeys.push(key)
+      } catch (e) {
+        allOk = false
+        toast.error(`Unable to save settings of ${addonName} ${addonVersion} `)
+        console.error(e)
       }
+    } // for key in localData
 
-      axios
-        .post(url, localData[key])
-        .then(() => {
-          setLocalOverrides({})
-          setLocalData({})
-        })
-        .catch((err) => {
-          toast.error(
-            <ReactMarkdown>
-              {`Unable to save ${addonName} ${addonVersion} settings
+    setLocalData((localData) => {
+      const newData = { ...localData }
+      updatedKeys.forEach((key) => delete newData[key])
+      return newData
+    })
 
-${err.response?.data?.detail}`}
-            </ReactMarkdown>,
-          )
-          console.log(err)
-        })
-        .finally(() => {
-          forceAddonReload(addonName, addonVersion, siteId || '_')
-        })
+    setLocalOverrides((overrides) => {
+      const newOverrides = { ...overrides }
+      updatedKeys.forEach((key) => delete newOverrides[key])
+      return newOverrides
+    })
+
+    if (allOk) {
+      toast.success('Settings saved')
     }
-  }
+  } // onSave
 
   const onDismissChanges = (addonName, addonVersion, siteId) => {
     const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
@@ -105,69 +122,58 @@ ${err.response?.data?.detail}`}
     forceAddonReload(addonName, addonVersion, siteId)
   } // end of onDismissChanges
 
-  const onRemoveOverrides = (addonName, addonVersion, siteId) => {
-    let url = `/api/addons/${addonName}/${addonVersion}/overrides`
-    if (projectKey !== '_') {
-      url += `/${projectKey}`
-      if (siteId && siteId !== '_') url += `?site=${siteId}`
+  const onRemoveOverrides = async (addonName, addonVersion, siteId) => {
+    try {
+      await deleteAddonSettings({
+        addonName,
+        addonVersion,
+        projectName: projectKey,
+        siteId,
+      }).unwrap()
+    } catch (e) {
+      toast.error(`Unable to remove overrides of ${addonName} ${addonVersion} `)
+      console.error(e)
+      return
     }
-    console.log('REMOVE OVERRIDES', url)
-    axios
-      .delete(url)
-      .then(() => {
-        onDismissChanges(addonName, addonVersion, siteId)
-      })
-      .catch((err) => {
-        toast.error(err.response?.data?.detail || 'Unable to remove overrides')
-      })
-      .finally(() => {
-        forceAddonReload(addonName, addonVersion, siteId || '_')
-      })
+    toast.success('Overrides removed')
   }
 
-  const deleteOverride = (addon, siteId, path) => {
-    console.log('DELETING OVERRIDE', path)
-
-    let url = `/api/addons/${addon.name}/${addon.version}/overrides`
-    if (projectKey !== '_') {
-      url += `/${projectKey}`
-      if (siteId && siteId !== '_') url += `?site=${siteId}`
+  const deleteOverride = async (addon, siteId, path) => {
+    try {
+      await modifyAddonOverride({
+        addonName: addon.name,
+        addonVersion: addon.version,
+        projectName: projectKey,
+        siteId,
+        path,
+        action: 'delete',
+      }).unwrap()
+    } catch (e) {
+      toast.error(`Unable to remove override of ${addon.name} ${addon.version} `)
+      console.error(e)
+      return
     }
 
-    axios
-      .post(url, { action: 'delete', path: path })
-      .catch((err) => {
-        toast.error(err.response?.data?.detail || 'Unable to delete a override')
-      })
-      .then(() => {
-        console.log('Override deleted')
-      })
-      .finally(() => {
-        forceAddonReload(addon.name, addon.version, siteId || '_')
-      })
+    toast.success('Override removed')
   }
 
-  const pinOverride = (addon, siteId, path) => {
-    // TODO: support site
-    console.log('PINNING OVERRIDE', path)
-
-    let url = `/api/addons/${addon.name}/${addon.version}/overrides`
-    if (projectKey !== '_') {
-      url += `/${projectKey}`
-      if (siteId && siteId !== '_') url += `?site=${siteId}`
+  const pinOverride = async (addon, siteId, path) => {
+    try {
+      await modifyAddonOverride({
+        addonName: addon.name,
+        addonVersion: addon.version,
+        projectName: projectKey,
+        siteId,
+        path,
+        action: 'pin',
+      }).unwrap()
+    } catch (e) {
+      toast.error(`Unable to pin override of ${addon.name} ${addon.version} `)
+      console.error(e)
+      return
     }
 
-    axios
-      .post(url, { action: 'pin', path: path })
-      .catch((err) => {
-        toast.error(err.response?.data?.detail || 'Unable to pin a override')
-      })
-      .then(() => {
-        console.log('Override deleted')
-      })
-      .finally(() => {
-        forceAddonReload(addon.name, addon.version, siteId || '_')
-      })
+    toast.success('Override pinned')
   }
 
   //
@@ -194,11 +200,7 @@ ${err.response?.data?.detail}`}
         <Button
           icon="push_pin"
           tooltip="Pin default value as an override"
-          disabled={
-            !currentSelection?.addon?.name ||
-            currentSelection.hasOverride ||
-            (localOverrides[currentSelection.addonString] || []).includes(currentSelection.fieldId)
-          }
+          disabled={false}
           onClick={() =>
             pinOverride(currentSelection.addon, currentSelection.siteId, currentSelection.path)
           }
