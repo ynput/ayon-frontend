@@ -109,6 +109,9 @@ const UsersSettings = () => {
   }
 
   const onTotal = (total) => {
+    // if total already in serch, remove it
+    if (search === total) return setSearch('')
+
     // if "total" select all users
     // else set search to total
     if (total === 'total') {
@@ -219,6 +222,7 @@ const UsersSettings = () => {
                 onNewUser={() => setShowNewUser(true)}
                 onUserSelect={(user) => setSelectedUsers([user.name])}
                 onTotal={onTotal}
+                search={search}
               />
             )}
           </SplitterPanel>
