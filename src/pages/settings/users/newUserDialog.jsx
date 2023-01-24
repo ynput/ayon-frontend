@@ -102,10 +102,9 @@ const NewUserDialog = ({ onHide }) => {
           ]}
           password={password}
           setPassword={setPassword}
-          x
         />
         <DividerSmallStyled />
-        <UserAccessForm formData={formData} setFormData={setFormData} />
+        <UserAccessForm formData={formData} setFormData={setFormData} hideProjectRoles />
         {formData.userLevel === 'user' && (
           <>
             <DividerSmallStyled />
