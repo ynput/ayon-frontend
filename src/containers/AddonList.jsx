@@ -57,7 +57,7 @@ const AddonList = ({
   const menu = useMemo(() => {
     const result = [
       {
-        label: showVersions ? 'Hide non-production versions' : 'Show all versions',
+        label: showVersions ? 'Hide unused versions' : 'Show all versions',
         command: () => setShowVersions(!showVersions),
         icon: 'pi pi-cog',
       },
