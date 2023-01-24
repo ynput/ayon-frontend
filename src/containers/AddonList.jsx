@@ -1,11 +1,11 @@
-import axios from 'axios'
-
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
+
+import { useGetAddonListQuery } from '/src/services/addonList'
 
 const AddonList = ({
   selectedAddons,
@@ -13,11 +13,11 @@ const AddonList = ({
   changedAddons,
   withSettings = 'settings',
 }) => {
-  const [addons, setAddons] = useState({})
-  const [loading, setLoading] = useState(false)
   const [selectedNodeKey, setSelectedNodeKey] = useState(null)
   const [showVersions, setShowVersions] = useState(false)
   const cm = useRef(null)
+
+  const { data: addons, loading } = useGetAddonListQuery({ showVersions, withSettings })
 
   // Selection
   // selectedAddons state from the parent component stores "data" of the selected addons
@@ -53,72 +53,6 @@ const AddonList = ({
     }
     setSelectedAddons(result)
   }
-
-  // Load addons from the server
-
-  useEffect(() => {
-    setLoading(true)
-    axios
-      .get('/api/addons')
-      .then((res) => {
-        let result = []
-        for (const addon of res.data.addons) {
-          const selectable = addon.productionVersion !== undefined && !showVersions
-          const row = {
-            key: showVersions ? addon.name : `${addon.name}@${addon.productionVersion}`,
-            selectable: selectable,
-            children: [],
-            data: {
-              name: addon.name,
-              title: addon.title,
-              version: showVersions ? '' : addon.productionVersion,
-            },
-          }
-
-          if (showVersions) {
-            for (const version in addon.versions) {
-              if (withSettings === 'settings' && !addon.versions[version].hasSettings) continue
-              if (withSettings === 'site' && !addon.versions[version].hasSiteSettings) continue
-
-              row.children.push({
-                key: `${addon.name}@${version}`,
-                selectable: true,
-                data: {
-                  name: addon.name,
-                  title: addon.title,
-                  version: version,
-                  usage:
-                    addon.productionVersion === version
-                      ? 'Production'
-                      : addon.stagingVersion === version
-                      ? 'Staging'
-                      : '',
-                },
-              })
-            }
-            if (!row.children.length) continue
-          } // if showVersions
-          else {
-            if (
-              withSettings === 'settings' &&
-              !addon.versions[addon.productionVersion]?.hasSettings
-            )
-              continue
-            if (
-              withSettings === 'site' &&
-              !addon.versions[addon.productionVersion]?.hasSiteSettings
-            )
-              continue
-          }
-
-          result.push(row)
-        }
-        setAddons(result)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [showVersions])
 
   const menu = useMemo(() => {
     const result = [
