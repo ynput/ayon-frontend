@@ -40,11 +40,26 @@ const useSearchFilter = (fields, data) => {
     if (searchArray.length && dataWithKeywords) {
       return dataWithKeywords.filter((user) => {
         const matchingKeys = []
-        user.keywords?.some((key) =>
+        const inverseMatchingKeys = []
+        user.keywords?.forEach((key) => {
           searchArray.forEach((split) => {
-            if (key.includes(split) && !matchingKeys.includes(split)) matchingKeys.push(split)
-          }),
-        )
+            // if split has a ! at the start do opposite
+            if (split[0] === '!') {
+              split = split.slice(1)
+              // if key includes the split without the ! it's not a match
+              if (key.includes(split) && !inverseMatchingKeys.includes(split) && split.length > 2) {
+                inverseMatchingKeys.push(split)
+              } else if (!matchingKeys.includes(split)) {
+                matchingKeys.push(split)
+              }
+            } else {
+              if (key.includes(split) && !matchingKeys.includes(split)) matchingKeys.push(split)
+            }
+          })
+        })
+
+        // if there are any inverse matches return false
+        if (inverseMatchingKeys.length) return false
 
         return matchingKeys.length >= searchArray.length
       })

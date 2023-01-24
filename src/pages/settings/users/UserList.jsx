@@ -147,8 +147,9 @@ const UserList = ({
               <UserImage
                 fullName={col.attrib.fullName || col.name}
                 size={25}
-                style={{ margin: 'auto', padding: 5, transform: 'scale(0.8)' }}
+                style={{ margin: 'auto', transform: 'scale(0.8)' }}
                 highlight={col.self}
+                src={col.attrib.avatarUrl}
               />
             )}
             resizeable

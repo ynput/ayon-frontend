@@ -50,7 +50,7 @@ const UsernameStyled = styled(FormRow)`
   }
 `
 
-const PanelButtonsStyled = styled(Panel)`
+export const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
 
   & > * {
@@ -59,7 +59,6 @@ const PanelButtonsStyled = styled(Panel)`
 `
 
 const UserDetail = ({
-  userList,
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
@@ -223,7 +222,7 @@ const UserDetail = ({
 
   // onclose, no users selected but check if changes made
   const onClose = () => {
-    if (changesMade) {
+    if (changesMade && selectedUsers.length === 1) {
       return toast.error('Changes not saved')
     }
     setSelectedUsers([])
@@ -237,12 +236,16 @@ const UserDetail = ({
     <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
       <HeaderStyled>
         <UserImagesStacked
-          users={userDetailData?.users.map((user) => ({ fullName: getUserName(user) }))}
+          users={userDetailData?.users.map((user) => ({
+            fullName: getUserName(user),
+            src: user.attrib.avatarUrl,
+            self: user.self,
+          }))}
         />
         {singleUserEdit ? (
           <h2>{getUserName(singleUserEdit)}</h2>
         ) : (
-          <h2>{`${userDetailData.users.length}/${userList.length} Users Selected`}</h2>
+          <h2>{`${userDetailData.users.length} Users Selected`}</h2>
         )}
         <span className="material-symbols-outlined" onClick={onClose}>
           close
