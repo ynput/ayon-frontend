@@ -281,3 +281,10 @@ input:-webkit-autofill:focus {
 .p-treetable td.status {
   border-bottom: 1px solid #21252b !important;
 }
+
+// fixes editing with a button next to the input
+.p-cell-editing {
+  button {
+    display: none;
+  }
+}
