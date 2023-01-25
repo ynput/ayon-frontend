@@ -46,7 +46,7 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
   )
 }
 
-SetPasswordDialog.PropTypes = {
+SetPasswordDialog.propTypes = {
   onHide: PropTypes.func,
   selectedUsers: PropTypes.array,
 }

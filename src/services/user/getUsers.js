@@ -52,6 +52,7 @@ const USERS_QUERY = `
           hasPassword
           createdAt
           updatedAt
+          apiKeyPreview
           attrib {
             #ATTRS#
           }

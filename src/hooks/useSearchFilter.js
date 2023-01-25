@@ -17,7 +17,7 @@ const useSearchFilter = (fields, data) => {
             } else if (typeof v === 'boolean' && v) {
               return k.toLowerCase()
             } else return []
-          } else if (typeof v === 'object') {
+          } else if (v && typeof v === 'object') {
             return Object.entries(v).flatMap(([k2, v2]) =>
               fields.includes(`${k}.${k2}`) && v2 ? v2.toLowerCase() : [],
             )

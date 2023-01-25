@@ -56,7 +56,6 @@ const UserList = ({
   ]
 
   // Render
-  // TODO: remove onStateChange handles
 
   return (
     <Section className="wrap">
@@ -87,8 +86,6 @@ const UserList = ({
           onRowClick={(e) => {
             setLastSelectedUser(e.data.name)
           }}
-          onStateRestore={(e) => console.log('state restored', e)}
-          onStateSave={(e) => console.log('state saved', e)}
         >
           <Column
             field="profile"
