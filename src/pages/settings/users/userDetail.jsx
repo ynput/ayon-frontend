@@ -9,8 +9,8 @@ import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
-import LockedInput from '/src/components/LockedInput'
 import ServiceDetails from './ServiceDetails'
+import LockedInputRow from '/src/components/LockedInput'
 
 const HeaderStyled = styled(Panel)`
   gap: 10px;
@@ -318,17 +318,18 @@ const UserDetail = ({
         <FormsStyled>
           {formData && singleUserEdit && (
             <Panel>
-              <LockedInput
+              <LockedInputRow
+                label="Username"
                 value={singleUserEdit.name}
-                label={'Username'}
                 onEdit={() => setShowRenameUser(true)}
               />
-              <LockedInput
+              <LockedInputRow
+                label="Password"
                 value={singleUserEdit.hasPassword ? '1234567890' : ''}
-                label={'Password'}
-                onEdit={() => setShowSetPassword(true)}
                 type="password"
+                onEdit={() => setShowSetPassword(true)}
               />
+
               <UserAttribForm
                 formData={formData}
                 setFormData={setFormData}
