@@ -63,7 +63,7 @@ const TaskDetail = () => {
     )
   }
 
-  const task = tasksData[0].node
+  const task = tasksData[0]?.node
 
   return (
     <Panel>

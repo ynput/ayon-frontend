@@ -16,6 +16,7 @@ import {
   setBreadcrumbs,
   setExpandedFolders,
   setDialog,
+  setFocusedTasks,
 } from '/src/features/context'
 import { getFolderTypeIcon } from '/src//utils'
 import { setFocusedType } from '../features/context'
@@ -185,7 +186,9 @@ const Hierarchy = (props) => {
 
   const onSelectionChange = (event) => {
     const selection = Object.keys(event.value)
+    dispatch(setFocusedTasks([]))
     dispatch(setFocusedFolders(selection))
+    // remove task selection
   }
 
   const onContextMenuSelectionChange = (event) => {
