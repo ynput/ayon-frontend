@@ -14,7 +14,7 @@ const UsernameStyled = styled(FormRow)`
   }
 `
 
-const LockedInputRow = ({ value, onChange, label, disabled, saveLabel = 'save' }) => {
+const LockedInputRow = ({ value, onChange, label, disabled, saveLabel = 'save', onEdit, type }) => {
   const [editingValue, setEditingValue] = useState(value)
   const [editing, setEditing] = useState(false)
 
@@ -39,12 +39,13 @@ const LockedInputRow = ({ value, onChange, label, disabled, saveLabel = 'save' }
         value={editing ? editingValue : value}
         disabled={!editing}
         onChange={handleChange}
+        type={type}
       />
       {!disabled &&
         (editing ? (
           <Button icon="done" onClick={handleClose} label={saveLabel} />
         ) : (
-          <Button icon="edit" onClick={handleOpen} />
+          <Button icon="edit" onClick={onEdit || handleOpen} />
         ))}
     </UsernameStyled>
   )
@@ -56,6 +57,8 @@ LockedInputRow.propTypes = {
   onChange: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
   saveLabel: PropTypes.string,
+  onEdit: PropTypes.func,
+  type: PropTypes.string,
 }
 
 export default LockedInputRow

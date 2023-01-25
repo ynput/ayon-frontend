@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel, InputText, FormRow } from '@ynput/ayon-react-components'
+import { Button, Section, Panel } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
@@ -9,6 +9,7 @@ import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
+import LockedInputRow from '/src/components/LockedInput'
 
 const HeaderStyled = styled(Panel)`
   gap: 10px;
@@ -36,17 +37,6 @@ const FormsStyled = styled.section`
 
   & > *:last-child {
     /* flex: 1; */
-  }
-`
-
-const UsernameStyled = styled(FormRow)`
-  .field {
-    flex-direction: row;
-    gap: 5px;
-
-    input {
-      flex: 1;
-    }
   }
 `
 
@@ -300,20 +290,17 @@ const UserDetail = ({
       <FormsStyled>
         {formData && singleUserEdit && (
           <Panel>
-            <UsernameStyled label={'Username'} key={'Username'}>
-              <InputText label="Username" value={singleUserEdit.name} disabled={true} />
-              <Button icon="edit" onClick={() => setShowRenameUser(true)} />
-            </UsernameStyled>
-            <UsernameStyled label={'Password'} key={'Password'}>
-              <InputText
-                label="Password"
-                value={singleUserEdit.hasPassword ? '1234567890' : ''}
-                disabled={true}
-                type="password"
-              />
-              <Button icon="edit" onClick={() => setShowSetPassword(true)} />
-            </UsernameStyled>
-
+            <LockedInputRow
+              label="Username"
+              value={singleUserEdit.name}
+              onEdit={() => setShowRenameUser(true)}
+            />
+            <LockedInputRow
+              label="Password"
+              value={singleUserEdit.hasPassword ? '1234567890' : ''}
+              type="password"
+              onEdit={() => setShowSetPassword(true)}
+            />
             <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
           </Panel>
         )}
