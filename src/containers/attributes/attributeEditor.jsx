@@ -4,6 +4,8 @@ import { MultiSelect } from 'primereact/multiselect'
 import { Dropdown } from 'primereact/dropdown'
 import { Button, Spacer, FormLayout, FormRow, InputText } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
+import LockedInput from '/src/components/LockedInput'
+import _ from 'lodash'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -16,10 +18,10 @@ const SCOPE_OPTIONS = [
 ]
 
 // Fields used on all types
-const GLOBAL_FIELDS = ['title', 'description', 'example', 'default', 'regex']
+const GLOBAL_FIELDS = ['description', 'example', 'default', 'regex']
 
 const TYPE_OPTIONS = {
-  string: { value: 'string', label: 'String', fields: ['minLength', 'maxLength'] },
+  string: { value: 'string', label: 'String', fields: ['minLength', 'maxLength', 'enum'] },
   integer: {
     value: 'integer',
     label: 'Integer',
@@ -44,11 +46,11 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     () =>
       setFormData(
         attribute || {
-          name: 'newAttribute',
+          name: '',
           builtin: false,
           scope: ['folder', 'task'],
           position: existingNames.length,
-          data: { title: 'New attribute', type: 'string' },
+          data: { type: 'string' },
         },
       ),
     [attribute],
@@ -100,6 +102,15 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     ),
   }
 
+  const handleTitleChange = (e) => {
+    const v = e.target.value
+    setData('title', v)
+
+    if (isNew) {
+      setTopLevelData('name', _.camelCase(v))
+    }
+  }
+
   return (
     <Dialog
       header={formData?.data?.title || formData?.name}
@@ -110,13 +121,15 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     >
       {formData && (
         <FormLayout>
-          <FormRow label="name">
-            <InputText
-              value={formData.name}
-              disabled={!isNew}
-              onChange={(e) => setTopLevelData('name', e.target.value)}
-            />
+          <FormRow label={'title'} key={'title'}>
+            <InputText value={formData?.data['title']} onChange={handleTitleChange} />
           </FormRow>
+          <LockedInput
+            value={formData.name}
+            disabled={!isNew}
+            onChange={(v) => setTopLevelData('name', v)}
+            label="name"
+          />
           <FormRow label="scope">
             <MultiSelect
               options={SCOPE_OPTIONS}
