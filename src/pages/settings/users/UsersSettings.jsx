@@ -100,6 +100,8 @@ const UsersSettings = () => {
           try {
             await deleteUser({ user }).unwrap()
             toast.success(`Deleted user: ${user}`)
+            setSelectedUsers([])
+            setLastSelectedUser(null)
           } catch {
             toast.error(`Unable to delete user: ${user}`)
           }

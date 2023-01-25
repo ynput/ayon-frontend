@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel, InputText, FormRow } from '@ynput/ayon-react-components'
+import { Button, Section, Panel } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
@@ -9,6 +9,8 @@ import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
+import LockedInput from '/src/components/LockedInput'
+import ServiceDetails from './ServiceDetails'
 
 const HeaderStyled = styled(Panel)`
   gap: 10px;
@@ -18,10 +20,12 @@ const HeaderStyled = styled(Panel)`
   h2 {
     font-size: 1.1rem;
     margin: 0;
-    flex: 1;
   }
 
-  span {
+  /* icon */
+  & > span {
+    flex: 1;
+    text-align: end;
     cursor: pointer;
   }
 `
@@ -36,17 +40,6 @@ const FormsStyled = styled.section`
 
   & > *:last-child {
     /* flex: 1; */
-  }
-`
-
-const UsernameStyled = styled(FormRow)`
-  .field {
-    flex-direction: row;
-    gap: 5px;
-
-    input {
-      flex: 1;
-    }
   }
 `
 
@@ -167,6 +160,8 @@ const UserDetail = ({
 
   // editing a single user, so show attributes form too
   const singleUserEdit = selectedUsers.length === 1 ? formUsers[0] : null
+  // check if any users have the userLevel of service
+  const hasServiceUser = formUsers.some((user) => user.isService)
 
   const [updateUser] = useUpdateUserMutation()
 
@@ -221,7 +216,7 @@ const UserDetail = ({
 
       if (!selectedProjects) {
         // no project is selected. update default roles
-        data.defaultRoles = formData.roles
+        data.defaultRoles = formData.defaultRoles
       } else {
         // project(s) selected. update roles
         for (const projectName of selectedProjects) roles[projectName] = formData.roles
@@ -278,6 +273,21 @@ const UserDetail = ({
   // Render
   //
 
+  const headerRoles = formUsers.reduce((acc, user) => {
+    let roles = Object.entries(user.roles)
+      .map(([project, role]) =>
+        selectedProjects ? (selectedProjects?.includes(project) ? role : []) : role,
+      )
+      .flat()
+
+    // add admin, manager, service
+    if (user.isAdmin) roles.push('admin')
+    else if (user.isService) roles.push('service')
+    else if (user.isManager) roles.push('manager')
+
+    return [...new Set([...acc, ...roles])]
+  }, [])
+
   return (
     <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
       <HeaderStyled>
@@ -288,46 +298,56 @@ const UserDetail = ({
             self: user.self,
           }))}
         />
-        {singleUserEdit ? (
-          <h2>{getUserName(singleUserEdit)}</h2>
-        ) : (
-          <h2>{`${selectedUsers.length} Users Selected`}</h2>
-        )}
+        <div>
+          {singleUserEdit ? (
+            <h2>{getUserName(singleUserEdit)}</h2>
+          ) : (
+            <h2>{`${selectedUsers.length} Users Selected`}</h2>
+          )}
+          <span>{headerRoles.length ? headerRoles.join(', ') : 'No Roles'}</span>
+        </div>
         <span className="material-symbols-outlined" onClick={onClose}>
           close
         </span>
       </HeaderStyled>
-      <FormsStyled>
-        {formData && singleUserEdit && (
-          <Panel>
-            <UsernameStyled label={'Username'} key={'Username'}>
-              <InputText label="Username" value={singleUserEdit.name} disabled={true} />
-              <Button icon="edit" onClick={() => setShowRenameUser(true)} />
-            </UsernameStyled>
-            <UsernameStyled label={'Password'} key={'Password'}>
-              <InputText
-                label="Password"
+      {hasServiceUser && singleUserEdit ? (
+        <FormsStyled>
+          <ServiceDetails editName={() => setShowRenameUser(true)} user={singleUserEdit} />
+        </FormsStyled>
+      ) : (
+        <FormsStyled>
+          {formData && singleUserEdit && (
+            <Panel>
+              <LockedInput
+                value={singleUserEdit.name}
+                label={'Username'}
+                onEdit={() => setShowRenameUser(true)}
+              />
+              <LockedInput
                 value={singleUserEdit.hasPassword ? '1234567890' : ''}
-                disabled={true}
+                label={'Password'}
+                onEdit={() => setShowSetPassword(true)}
                 type="password"
               />
-              <Button icon="edit" onClick={() => setShowSetPassword(true)} />
-            </UsernameStyled>
-
-            <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
-          </Panel>
-        )}
-        <Panel>
-          {formData && (
-            <UserAccessForm
-              formData={formData}
-              setFormData={setFormData}
-              selectedProjects={selectedProjects}
-              isSelfSelected={isSelfSelected}
-            />
+              <UserAttribForm
+                formData={formData}
+                setFormData={setFormData}
+                attributes={attributes}
+              />
+            </Panel>
           )}
-        </Panel>
-      </FormsStyled>
+          <Panel>
+            {formData && (
+              <UserAccessForm
+                formData={formData}
+                setFormData={setFormData}
+                selectedProjects={selectedProjects}
+                isSelfSelected={isSelfSelected}
+              />
+            )}
+          </Panel>
+        </FormsStyled>
+      )}
       <PanelButtonsStyled>
         <Button
           onClick={onCancel}

@@ -4,7 +4,6 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 import './users.scss'
-import useColumnResize from '/src/hooks/useColumnResize'
 import UserImage from './UserImage'
 import { useMemo } from 'react'
 
@@ -23,9 +22,6 @@ const UserList = ({
   setLastSelectedUser,
 }) => {
   const contextMenuRef = useRef(null)
-
-  // COLUMN WIDTH
-  const [columnsWidths, setColumnWidths] = useColumnResize('users')
 
   // Selection
   const selection = useMemo(
@@ -83,7 +79,6 @@ const UserList = ({
           selection={selection}
           columnResizeMode="expand"
           resizableColumns
-          onColumnResizeEnd={setColumnWidths}
           responsive="true"
           stateKey="users-datatable"
           stateStorage={'local'}
@@ -110,7 +105,7 @@ const UserList = ({
             header="Username"
             sortable
             body={(rowData) => (rowData.self ? `${rowData.name} (me)` : rowData.name)}
-            // resizeable
+            resizeable
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />
@@ -126,7 +121,6 @@ const UserList = ({
               ))
             }
             sortable
-            style={{ flex: `1 1 ${columnsWidths['rolesList']}px` }}
             resizeable
           />
           <Column
