@@ -124,7 +124,8 @@ const EditorPage = () => {
     // if there are tasks focused, only select those
     if (focusedTasks.length) {
       dispatch(editorSelectionChanged({ selection: focusedTasks }))
-      return
+      // if a task was focused in hierarchy then the folder must have been focused too
+      // and therefore the folder would also have already been expanded in hierarchy
     } else {
       // otherwise, select the focused folders
       dispatch(editorSelectionChanged({ selection: focusedFolders }))

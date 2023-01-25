@@ -63,7 +63,9 @@ const TaskDetail = () => {
     )
   }
 
-  const task = tasksData[0]?.node
+  const task = tasksData && tasksData[0] && tasksData[0].node
+
+  if (!task) return null
 
   return (
     <Panel>
