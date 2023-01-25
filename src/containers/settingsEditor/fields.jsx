@@ -91,7 +91,10 @@ function ObjectFieldTemplate(props) {
         hiddenFields.push(propName)
       }
       if (ppts.conditionalEnum) {
-        hiddenFields = [...hiddenFields, ...ppts.enum.filter((e) => e !== props.formData[propName])]
+        hiddenFields = [
+          ...hiddenFields,
+          ...(ppts?.items?.enum || []).filter((e) => e !== props.formData[propName]),
+        ]
       }
     }
 
