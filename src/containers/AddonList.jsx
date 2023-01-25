@@ -6,6 +6,7 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import { useGetAddonListQuery } from '/src/services/addonList'
+import { useSetAddonVersionMutation } from '/src/services/addonList'
 
 const AddonList = ({
   selectedAddons,
@@ -18,6 +19,7 @@ const AddonList = ({
   const cm = useRef(null)
 
   const { data: addons, loading } = useGetAddonListQuery({ showVersions, withSettings })
+  const [setAddonVersion] = useSetAddonVersionMutation()
 
   // Selection
   // selectedAddons state from the parent component stores "data" of the selected addons
@@ -55,15 +57,68 @@ const AddonList = ({
   }
 
   const menu = useMemo(() => {
-    const result = [
+    let result = [
       {
         label: showVersions ? 'Hide unused versions' : 'Show all versions',
         command: () => setShowVersions(!showVersions),
         icon: 'pi pi-cog',
       },
     ]
+
+    if (showVersions && selectedAddons.length === 1) {
+      const addon = selectedAddons[0]
+
+      if (addon.version === addon.productionVersion) {
+        result.push({
+          label: 'Unset production version',
+          command: () => {
+            setAddonVersion({
+              addonName: addon.name,
+              productionVersion: null,
+              stagingVersion: addon.stagingVersion,
+            })
+          },
+        })
+      } else {
+        result.push({
+          label: 'Set as production version',
+          command: () => {
+            setAddonVersion({
+              addonName: addon.name,
+              productionVersion: addon.version,
+              stagingVersion: addon.stagingVersion,
+            })
+          },
+        })
+      }
+
+      if (addon.version === addon.stagingVersion) {
+        result.push({
+          label: 'Unset staging version',
+          command: () => {
+            setAddonVersion({
+              addonName: addon.name,
+              productionVersion: addon.productionVersion,
+              stagingVersion: null,
+            })
+          },
+        })
+      } else {
+        result.push({
+          label: 'Set as staging version',
+          command: () => {
+            setAddonVersion({
+              addonName: addon.name,
+              productionVersion: addon.productionVersion,
+              stagingVersion: addon.version,
+            })
+          },
+        })
+      }
+    } // Show additional ctx menu items for set/unset production/staging
+
     return result
-  }, [selectedNodeKey])
+  }, [selectedNodeKey, showVersions, { ...selectedAddons }])
 
   return (
     <Section>

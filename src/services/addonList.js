@@ -43,6 +43,8 @@ const addonList = ayonApi.injectEndpoints({
                   name: addon.name,
                   title: addon.title,
                   version: version,
+                  productionVersion: addon.productionVersion,
+                  stagingVersion: addon.stagingVersion,
                   usage:
                     addon.productionVersion === version
                       ? 'Production'
@@ -74,11 +76,20 @@ const addonList = ayonApi.injectEndpoints({
     }), // getAddonList
 
     setAddonVersion: build.mutation({
-      query: ({ projectName, siteId, data }) => ({
-        url: `/api/projects/${projectName}/roots/${siteId}`,
-        method: 'PUT',
-        body: data,
-      }),
+      // eslint-disable-next-line no-unused-vars
+      query: ({ projectName, addonName, productionVersion, stagingVersion }) => {
+        // TODO: per-project addon version overrides
+        const data = {
+          versions: {
+            [addonName]: { productionVersion, stagingVersion },
+          },
+        }
+        return {
+          url: `/api/addons`,
+          method: 'POST',
+          body: data,
+        }
+      },
       invalidatesTags: ['addonList'],
     }), // setAddonVersion
   }), // endpoints
