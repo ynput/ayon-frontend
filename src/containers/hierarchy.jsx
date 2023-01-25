@@ -16,6 +16,7 @@ import {
   setBreadcrumbs,
   setExpandedFolders,
   setDialog,
+  setFocusedTasks,
 } from '/src/features/context'
 import { getFolderTypeIcon } from '/src//utils'
 import { setFocusedType } from '../features/context'
@@ -142,6 +143,27 @@ const Hierarchy = (props) => {
     )
   }
 
+  const createDataObject = (data = []) => {
+    let heirarchyObject = {}
+
+    data.forEach((item) => {
+      console.log(item)
+      heirarchyObject[item.id] = { ...item, isLeaf: !item.children?.length }
+
+      if (item.children?.length > 0) {
+        heirarchyObject = { ...heirarchyObject, ...createDataObject(item.children) }
+      }
+    })
+
+    return heirarchyObject
+  }
+
+  const heirarchyObjectData = useMemo(() => {
+    if (data) {
+      return createDataObject(data)
+    }
+  }, [data])
+
   const treeDataFlat = useMemo(() => {
     if (selectedFolderTypes.length) {
       const filtered = filterArray(treeData, selectedFolderTypes)
@@ -185,7 +207,31 @@ const Hierarchy = (props) => {
 
   const onSelectionChange = (event) => {
     const selection = Object.keys(event.value)
+    // remove task selection
+    dispatch(setFocusedTasks([]))
     dispatch(setFocusedFolders(selection))
+
+    // for each selected folder, if isLeaf then set expandedFolders
+    const newExpandedFolders = {}
+    selection.forEach((id) => {
+      if (heirarchyObjectData[id].isLeaf) {
+        newExpandedFolders[id] = true
+      }
+    })
+
+    let oldExpandedFolders = { ...expandedFolders }
+    // filter out the old expanded folders that are isLeaf
+    oldExpandedFolders = Object.fromEntries(
+      Object.keys(oldExpandedFolders)
+        .filter((id) => !heirarchyObjectData[id] || !heirarchyObjectData[id].isLeaf)
+        .map((id) => [id, true]),
+    )
+
+    // merge the two
+    const mergedExpandedFolders = { ...oldExpandedFolders, ...newExpandedFolders }
+
+    // update redux
+    dispatch(setExpandedFolders(mergedExpandedFolders))
   }
 
   const onContextMenuSelectionChange = (event) => {
