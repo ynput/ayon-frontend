@@ -12,6 +12,7 @@ const contextSlice = createSlice({
       subsets: [],
       versions: [],
       tasks: [],
+      editor: [],
     },
     selectedVersions: {},
     pairing: [],
@@ -56,7 +57,13 @@ const contextSlice = createSlice({
       state.focused.tasks = action.payload
       state.focused.versions = []
     },
-
+    editorSelectionChanged: (state, action) => {
+      // updates focused.editor, focused.folders, focused.tasks
+      if (action.payload.tasks) state.focused.tasks = action.payload.tasks
+      if (action.payload.folders) state.focused.folders = action.payload.folders
+      // // take both above and add to focused.editor
+      state.focused.editor = action.payload.selection
+    },
     setFocusedVersions: (state, action) => {
       if (action.payload === null) {
         state.focused.type = 'folder'
@@ -70,6 +77,7 @@ const contextSlice = createSlice({
     setFocusedType: (state, action) => {
       state.focused.type = action.payload
     },
+
     setSelectedVersions: (state, action) => {
       state.selectedVersions = action.payload
     },
@@ -149,6 +157,7 @@ export const {
   setReload,
   setFocusedType,
   subsetSelected,
+  editorSelectionChanged,
 } = contextSlice.actions
 
 export default contextSlice.reducer

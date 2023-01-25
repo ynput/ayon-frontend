@@ -19,7 +19,12 @@ import { ContextMenu } from 'primereact/contextmenu'
 import usePubSub from '/src/hooks/usePubSub'
 import { getTaskTypeIcon, isEmpty, sortByKey } from '/src/utils'
 
-import { setBreadcrumbs, setExpandedFolders, setFocusedFolders } from '/src/features/context'
+import {
+  editorSelectionChanged,
+  setBreadcrumbs,
+  setExpandedFolders,
+  setFocusedFolders,
+} from '/src/features/context'
 
 import { buildQuery } from './queries'
 import { getColumns, formatName, formatType, formatAttribute } from './utils'
@@ -40,8 +45,10 @@ const EditorPage = () => {
   const context = useSelector((state) => ({ ...state.context }))
   const projectName = useSelector((state) => state.context.projectName)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
-  const focusedTasks = useSelector((state) => state.context.focused.tasks)
+  // focused editor is a mixture of focused folders and tasks
+  const focusedEditor = useSelector((state) => state.context.focused.editor)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
+  const focusedTasks = useSelector((state) => state.context.focused.tasks)
 
   const dispatch = useDispatch()
 
@@ -88,6 +95,10 @@ const EditorPage = () => {
     }
   }
 
+  //
+  // HOOKS
+  //
+
   useEffect(() => {
     console.log('getting new data')
     setLoading(true)
@@ -106,6 +117,20 @@ const EditorPage = () => {
       setLoading(false)
     })
   }, [expandedFolders, newNodes])
+
+  // on first render, get selection from focused folders and tasks
+  // for further selections, focusedEditor is used
+  useEffect(() => {
+    // if there are tasks focused, only select those
+    if (focusedTasks.length) {
+      dispatch(editorSelectionChanged({ selection: focusedTasks }))
+      // if a task was focused in hierarchy then the folder must have been focused too
+      // and therefore the folder would also have already been expanded in hierarchy
+    } else {
+      // otherwise, select the focused folders
+      dispatch(editorSelectionChanged({ selection: focusedFolders }))
+    }
+  }, [])
 
   //
   // External events handling
@@ -235,7 +260,6 @@ const EditorPage = () => {
 
   let foundTasks = []
   const getFolderTaskList = (folders = [], parentId, d) => {
-    console.log('running')
     let searchList = []
     let depth = d || 0
     folders.forEach((folder) => {
@@ -366,12 +390,11 @@ const EditorPage = () => {
     // It has the same structure as nodeData, e.g. {objecId: nodeData, ...}
     // so it is compatible with the treetable selection argument and it
     // also provides complete node information
-
     const result = {}
-    for (const key of focusedFolders) result[key] = nodeData[key]
-    for (const key of focusedTasks) result[key] = nodeData[key]
+    for (const key of focusedEditor) result[key] = nodeData[key]
+
     return result
-  }, [focusedFolders, focusedTasks, nodeData])
+  }, [focusedEditor, nodeData])
 
   //
   // Update handlers
@@ -741,8 +764,26 @@ const EditorPage = () => {
   }
 
   const onSelectionChange = (event) => {
+    // block new selection if the selection is locked
     if (selectionLocked) return
-    dispatch(setFocusedFolders(Object.keys(event.value)))
+
+    const selection = Object.keys(event.value)
+    // reduce into two arrays, one with type folder and one with type task
+    const folders = []
+    const tasks = []
+    for (const [key, value] of Object.entries(event.value)) {
+      if (nodeData[key]?.data.__entityType === 'folder' && value) folders.push(key)
+      else if (nodeData[key]?.data.__entityType === 'task' && value) tasks.push(key)
+    }
+
+    // for each task in tasks, add __parentId to folders if not already there
+    for (const task of tasks) {
+      const folder = nodeData[task].data.__parentId
+      if (!folders.includes(folder)) folders.push(folder)
+    }
+
+    // update redux store
+    dispatch(editorSelectionChanged({ folders, tasks, selection }))
   }
 
   const onRowClick = (event) => {
