@@ -127,7 +127,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
           <LockedInput
             value={formData.name}
             disabled={!isNew}
-            onChange={(v) => setTopLevelData('name', v)}
+            onSubmit={(v) => setTopLevelData('name', v)}
             label="name"
           />
           <FormRow label="scope">
