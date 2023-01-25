@@ -88,6 +88,7 @@ const SelectWidget = (props) => {
       <>
         <MultiSelect
           options={options}
+          display="chip"
           value={value}
           onChange={onChange}
           onFocus={onFocus}
