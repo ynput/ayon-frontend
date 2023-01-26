@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
@@ -7,22 +5,30 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
+import { useGetAddonListQuery } from '/src/services/addonList'
+import { useSetAddonVersionMutation } from '/src/services/addonList'
+
 const AddonList = ({
   selectedAddons,
   setSelectedAddons,
   changedAddons,
   withSettings = 'settings',
 }) => {
-  const [addons, setAddons] = useState({})
-  const [loading, setLoading] = useState(false)
   const [selectedNodeKey, setSelectedNodeKey] = useState(null)
   const [showVersions, setShowVersions] = useState(false)
   const cm = useRef(null)
+
+  const { data: addons, loading } = useGetAddonListQuery({ showVersions, withSettings })
+  const [setAddonVersion] = useSetAddonVersionMutation()
 
   // Selection
   // selectedAddons state from the parent component stores "data" of the selected addons
   // but for the datatable, we only need keys. the following selectedKeys and onSelectionChange
   // functions are used to convert the data to keys and vice versa.
+
+  useEffect(() => {
+    setSelectedAddons([])
+  }, [addons])
 
   const selectedKeys = useMemo(() => {
     const result = {}
@@ -38,7 +44,6 @@ const AddonList = ({
     // to maintain the order of the selected addons as
     // the user selects them.
     let result = []
-    console.log('onSelectionChange', e.value)
     for (const key in e.value) {
       for (const rd of addons) {
         if (rd.key === key) {
@@ -54,82 +59,81 @@ const AddonList = ({
     setSelectedAddons(result)
   }
 
-  // Load addons from the server
-
-  useEffect(() => {
-    setLoading(true)
-    axios
-      .get('/api/addons')
-      .then((res) => {
-        let result = []
-        for (const addon of res.data.addons) {
-          const selectable = addon.productionVersion !== undefined && !showVersions
-          const row = {
-            key: showVersions ? addon.name : `${addon.name}@${addon.productionVersion}`,
-            selectable: selectable,
-            children: [],
-            data: {
-              name: addon.name,
-              title: addon.title,
-              version: showVersions ? '' : addon.productionVersion,
-            },
-          }
-
-          if (showVersions) {
-            for (const version in addon.versions) {
-              if (withSettings === 'settings' && !addon.versions[version].hasSettings) continue
-              if (withSettings === 'site' && !addon.versions[version].hasSiteSettings) continue
-
-              row.children.push({
-                key: `${addon.name}@${version}`,
-                selectable: true,
-                data: {
-                  name: addon.name,
-                  title: addon.title,
-                  version: version,
-                  usage:
-                    addon.productionVersion === version
-                      ? 'Production'
-                      : addon.stagingVersion === version
-                      ? 'Staging'
-                      : '',
-                },
-              })
-            }
-            if (!row.children.length) continue
-          } // if showVersions
-          else {
-            if (
-              withSettings === 'settings' &&
-              !addon.versions[addon.productionVersion]?.hasSettings
-            )
-              continue
-            if (
-              withSettings === 'site' &&
-              !addon.versions[addon.productionVersion]?.hasSiteSettings
-            )
-              continue
-          }
-
-          result.push(row)
-        }
-        setAddons(result)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [showVersions])
-
   const menu = useMemo(() => {
-    const result = [
+    let result = [
       {
-        label: showVersions ? 'Hide non-production versions' : 'Show all versions',
+        label: 'Show all versions',
+        icon: showVersions ? 'pi pi-check-circle' : 'pi pi-circle-off',
         command: () => setShowVersions(!showVersions),
-        icon: 'pi pi-cog',
       },
     ]
+
+    if (showVersions && selectedAddons.length === 1 && withSettings !== 'site') {
+      const addon = selectedAddons[0]
+
+      result.push({
+        separator: true,
+      })
+
+      if (addon.version === addon.productionVersion) {
+        result.push({
+          label: 'Production',
+          icon: 'pi pi-check-circle',
+          tooltip: 'Unset production version',
+          command: () => {
+            setAddonVersion({
+              addonName: addon.name,
+              productionVersion: null,
+              stagingVersion: addon.stagingVersion,
+            })
+          },
+        })
+      } else {
+        result.push({
+          label: 'Production',
+          icon: 'pi pi-circle-off',
+          tooltip: 'Set production version',
+          command: () => {
+            setAddonVersion({
+              addonName: addon.name,
+              productionVersion: addon.version,
+              stagingVersion: addon.stagingVersion,
+            })
+          },
+        })
+      }
+
+      if (addon.version === addon.stagingVersion) {
+        result.push({
+          label: 'Staging',
+          icon: 'pi pi-check-circle',
+          tooltip: 'Unset production version',
+          command: () => {
+            setAddonVersion({
+              addonName: addon.name,
+              productionVersion: addon.productionVersion,
+              stagingVersion: null,
+            })
+          },
+        })
+      } else {
+        result.push({
+          label: 'Staging',
+          icon: 'pi pi-circle-off',
+          tooltip: 'Set production version',
+          command: () => {
+            setAddonVersion({
+              addonName: addon.name,
+              productionVersion: addon.productionVersion,
+              stagingVersion: addon.version,
+            })
+          },
+        })
+      }
+    } // Show additional ctx menu items for set/unset production/staging
+
     return result
-  }, [selectedNodeKey])
+  }, [addons, selectedNodeKey, showVersions, { ...selectedAddons }])
 
   return (
     <Section>
