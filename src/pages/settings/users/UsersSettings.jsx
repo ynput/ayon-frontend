@@ -158,9 +158,8 @@ const UsersSettings = () => {
     return levels
   }, [selectedUserList])
 
-  // managers ccan only update users
-  const managerDisabled =
-    levels.some((l) => ['admin', 'manager'].includes(l)) && !isAdmin && !isSelfSelected
+  // managers can't update admin users
+  const managerDisabled = levels.some((l) => ['admin'].includes(l)) && !isAdmin && !isSelfSelected
 
   // Render
 
