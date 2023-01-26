@@ -5,6 +5,9 @@ const AttributeTableContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 3px;
+
+  overflow: auto;
+  flex: 1;
 `
 
 const AttributeTableRow = styled.div`

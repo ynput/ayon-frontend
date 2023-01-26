@@ -10,6 +10,7 @@ const ThumbnailStyled = styled.div`
   overflow: hidden;
   border-radius: 3px;
   margin: auto;
+  max-width: 250px;
 
   /* icon */
   span {
