@@ -3,7 +3,7 @@ import { Column } from 'primereact/column'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '/src/components/icons'
 import { useSelector } from 'react-redux'
-import { useGetWorkfileListQuery } from '/src/services/getWorkfileList'
+import { useGetWorkfileListQuery } from '../../services/getWorkfiles'
 
 const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
   const taskIds = useSelector((state) => state.context.focused.tasks)

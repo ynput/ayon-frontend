@@ -1,40 +1,32 @@
-import axios from 'axios'
-import { useState, useEffect } from 'react'
 import { Section, Panel } from '@ynput/ayon-react-components'
 import { PathField } from '/src/containers/fieldFormat'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
 import { useSelector } from 'react-redux'
+import { useGetWorkfileByIdQuery } from '/src/services/getWorkfiles'
+import { toast } from 'react-toastify'
 
 const WorkfileDetail = ({ workfileId, style }) => {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(false)
   const projectName = useSelector((state) => state.context.projectName)
 
-  useEffect(() => {
-    if (!workfileId) {
-      setData(null)
-      return
-    }
+  const { data, isLoading, isError, error } = useGetWorkfileByIdQuery(
+    { projectName, id: workfileId },
+    { skip: !workfileId },
+  )
 
-    setLoading(true)
-    axios
-      .get(`/api/projects/${projectName}/workfiles/${workfileId}`)
-      .then((res) => {
-        setData(res.data)
-      })
-      .catch((err) => {
-        console.log(err)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [projectName, workfileId])
+  if (isError) {
+    // log and toast error
+    console.error(error)
+    toast.error(error.message)
+    toast.error('Error fetching workfile details')
+
+    return <div>Error</div>
+  }
 
   return (
     <Section style={style}>
       <Panel>
-        {loading ? (
+        {isLoading ? (
           <div>Loading...</div>
         ) : (
           <>

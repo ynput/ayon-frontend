@@ -17,7 +17,10 @@ query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
 }
 `
 
-const getWorkfileList = ayonApi.injectEndpoints({
+// get workfile by id api
+// `/api/projects/${projectName}/workfiles/${workfileId}`
+
+const getWorkfiles = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getWorkfileList: build.query({
       query: ({ projectName, taskIds }) => ({
@@ -37,7 +40,14 @@ const getWorkfileList = ayonApi.injectEndpoints({
         })),
       transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
     }),
+    getWorkfileById: build.query({
+      query: ({ projectName, id }) => ({
+        url: `/api/projects/${projectName}/workfiles/${id}`,
+      }),
+      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
+      providesTags: (result, error, { id }) => [{ type: 'workfile', id }],
+    }),
   }),
 })
 
-export const { useGetWorkfileListQuery } = getWorkfileList
+export const { useGetWorkfileListQuery, useGetWorkfileByIdQuery } = getWorkfiles

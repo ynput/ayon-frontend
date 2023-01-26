@@ -9,8 +9,8 @@ const WorkfilesPage = () => {
 
   return (
     <main>
-      <Hierarchy style={{ maxWidth: 500, minWidth: 300 }} />
-      <TaskList style={{ maxWidth: 400, minWidth: 400 }} />
+      <Hierarchy style={{ maxWidth: 500, minWidth: 200 }} />
+      <TaskList style={{ maxWidth: 400, minWidth: 300 }} />
       <WorkfileList
         selectedWorkfile={selectedWorkfile}
         setSelectedWorkfile={setSelectedWorkfile}
