@@ -126,7 +126,10 @@ const TextWidget = (props) => {
   }
   // hack for string arrays. to prevent null value passed to the
   // input text widget handled as uncontrolled input
-  const value = useMemo(() => props.value || '', [props.value])
+  const value = useMemo(() => {
+    if (props.type === 'string') return props.value || ''
+    return props.value
+  }, [props.value])
 
   let Input = null
   const opts = {
@@ -142,6 +145,7 @@ const TextWidget = (props) => {
   //
 
   if (['integer', 'number'].includes(props.schema.type)) {
+    console.log(props)
     Input = InputNumber
     if (props.schema.type === 'number') {
       opts.step = 0.1
