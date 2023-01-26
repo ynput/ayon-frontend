@@ -36,6 +36,10 @@ const addonList = ayonApi.injectEndpoints({
               if (withSettings === 'settings' && !addon.versions[version].hasSettings) continue
               if (withSettings === 'site' && !addon.versions[version].hasSiteSettings) continue
 
+              let usage = []
+              if (addon.productionVersion === version) usage.push('PROD')
+              if (addon.stagingVersion === version) usage.push('STAG')
+
               row.children.push({
                 key: `${addon.name}@${version}`,
                 selectable: true,
@@ -45,12 +49,7 @@ const addonList = ayonApi.injectEndpoints({
                   version: version,
                   productionVersion: addon.productionVersion,
                   stagingVersion: addon.stagingVersion,
-                  usage:
-                    addon.productionVersion === version
-                      ? 'Production'
-                      : addon.stagingVersion === version
-                      ? 'Staging'
-                      : '',
+                  usage: usage.join(', '),
                 },
               })
             }

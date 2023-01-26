@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
@@ -26,6 +26,10 @@ const AddonList = ({
   // but for the datatable, we only need keys. the following selectedKeys and onSelectionChange
   // functions are used to convert the data to keys and vice versa.
 
+  useEffect(() => {
+    setSelectedAddons([])
+  }, [addons])
+
   const selectedKeys = useMemo(() => {
     const result = {}
     for (const addon of selectedAddons) {
@@ -40,7 +44,6 @@ const AddonList = ({
     // to maintain the order of the selected addons as
     // the user selects them.
     let result = []
-    console.log('onSelectionChange', e.value)
     for (const key in e.value) {
       for (const rd of addons) {
         if (rd.key === key) {
@@ -59,18 +62,24 @@ const AddonList = ({
   const menu = useMemo(() => {
     let result = [
       {
-        label: showVersions ? 'Hide unused versions' : 'Show all versions',
+        label: 'Show all versions',
+        icon: showVersions ? 'pi pi-check-circle' : 'pi pi-circle-off',
         command: () => setShowVersions(!showVersions),
-        icon: 'pi pi-cog',
       },
     ]
 
-    if (showVersions && selectedAddons.length === 1) {
+    if (showVersions && selectedAddons.length === 1 && withSettings !== 'site') {
       const addon = selectedAddons[0]
+
+      result.push({
+        separator: true,
+      })
 
       if (addon.version === addon.productionVersion) {
         result.push({
-          label: 'Unset production version',
+          label: 'Production',
+          icon: 'pi pi-check-circle',
+          tooltip: 'Unset production version',
           command: () => {
             setAddonVersion({
               addonName: addon.name,
@@ -81,7 +90,9 @@ const AddonList = ({
         })
       } else {
         result.push({
-          label: 'Set as production version',
+          label: 'Production',
+          icon: 'pi pi-circle-off',
+          tooltip: 'Set production version',
           command: () => {
             setAddonVersion({
               addonName: addon.name,
@@ -94,7 +105,9 @@ const AddonList = ({
 
       if (addon.version === addon.stagingVersion) {
         result.push({
-          label: 'Unset staging version',
+          label: 'Staging',
+          icon: 'pi pi-check-circle',
+          tooltip: 'Unset production version',
           command: () => {
             setAddonVersion({
               addonName: addon.name,
@@ -105,7 +118,9 @@ const AddonList = ({
         })
       } else {
         result.push({
-          label: 'Set as staging version',
+          label: 'Staging',
+          icon: 'pi pi-circle-off',
+          tooltip: 'Set production version',
           command: () => {
             setAddonVersion({
               addonName: addon.name,
@@ -118,7 +133,7 @@ const AddonList = ({
     } // Show additional ctx menu items for set/unset production/staging
 
     return result
-  }, [selectedNodeKey, showVersions, { ...selectedAddons }])
+  }, [addons, selectedNodeKey, showVersions, { ...selectedAddons }])
 
   return (
     <Section>
