@@ -47,7 +47,7 @@ const UserTile = ({ user, onClick }) => {
 
   return (
     <PanelStyled onClick={onClick}>
-      <UserImage src={avatarUrl} fullName={fullName} highlight={self} />
+      <UserImage src={avatarUrl} fullName={fullName || name} highlight={self} />
       <div style={{ flex: 1 }}>
         <strong>
           {fullName} ({name})

@@ -56,6 +56,7 @@ const UsersSettings = () => {
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
+  const isAdmin = useSelector((state) => state.user.data.isAdmin)
   const isSelfSelected = selectedUsers.includes(selfName)
 
   // RTK QUERY HOOKS
@@ -140,6 +141,27 @@ const UsersSettings = () => {
 
   const [search, setSearch, filteredData] = useSearchFilter(searchableFields, userListWithRoles)
 
+  const selectedUserList = userList.filter((user) => selectedUsers.includes(user.name))
+
+  const levels = useMemo(() => {
+    let levels = []
+    selectedUserList.forEach((user) => {
+      let res
+      if (user.isAdmin) res = 'admin'
+      else if (user.isService) res = 'service'
+      else if (user.isManager) res = 'manager'
+      else res = 'user'
+
+      if (!levels.includes(res)) levels.push(res)
+    })
+
+    return levels
+  }, [selectedUserList])
+
+  // managers ccan only update users
+  const managerDisabled =
+    levels.some((l) => ['admin', 'manager'].includes(l)) && !isAdmin && !isSelfSelected
+
   // Render
 
   // return null
@@ -154,7 +176,7 @@ const UsersSettings = () => {
             onClick={onDelete}
             label="Delete Users"
             icon="person_remove"
-            disabled={!selectedUsers.length || isSelfSelected}
+            disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
           />
           <SelectButton
             value={showProjectUsers}
@@ -218,7 +240,8 @@ const UsersSettings = () => {
               isSelfSelected={isSelfSelected}
               rolesList={rolesList}
               lastSelectedUser={lastSelectedUser}
-              userList={userList}
+              selectedUserList={selectedUserList}
+              managerDisabled={managerDisabled}
             />
             {selectedUsers.length === 0 && (
               <UsersOverview

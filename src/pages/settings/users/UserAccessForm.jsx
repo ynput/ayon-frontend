@@ -6,15 +6,17 @@ const UserAccessForm = ({
   formData,
   setFormData,
   selectedProjects,
-  isSelfSelected,
   hideProjectRoles,
+  disabled,
 }) => {
   const userLevels = [
     { label: 'User', value: 'user' },
     { label: 'Manager', value: 'manager' },
-    { label: 'Admin', value: 'admin' },
     { label: 'Service', value: 'service' },
   ]
+
+  // only admins can
+  // if (isAdmin) userLevels.push({ label: 'Admin', value: 'admin' })
 
   const activeOptions = [
     { label: 'Active', value: true },
@@ -39,7 +41,7 @@ const UserAccessForm = ({
             value={formData.userActive}
             onChange={(e) => updateFormData('userActive', e.value)}
             options={activeOptions}
-            disabled={isSelfSelected}
+            disabled={disabled}
           />
         </FormRow>
 
@@ -49,7 +51,7 @@ const UserAccessForm = ({
             value={formData.userLevel}
             onChange={(e) => updateFormData('userLevel', e.value)}
             options={userLevels}
-            disabled={isSelfSelected}
+            disabled={disabled}
           />
         </FormRow>
 
@@ -57,7 +59,10 @@ const UserAccessForm = ({
           <InputSwitch
             checked={formData.isGuest}
             onChange={(e) => updateFormData('isGuest', e.target.checked)}
-            disabled={isSelfSelected}
+            disabled={disabled}
+            style={{
+              opacity: disabled ? 0.5 : 1,
+            }}
           />
         </FormRow>
 
@@ -67,7 +72,7 @@ const UserAccessForm = ({
               style={{ flexGrow: 1 }}
               selectedRoles={formData.defaultRoles}
               setSelectedRoles={(value) => updateFormData('defaultRoles', value)}
-              disabled={selectedProjects || !userLevel || isSelfSelected}
+              disabled={selectedProjects || !userLevel || disabled}
               placeholder={!userLevel && 'all roles'}
             />
           </FormRow>
@@ -77,7 +82,7 @@ const UserAccessForm = ({
                 style={{ flexGrow: 1 }}
                 selectedRoles={selectedProjects ? formData.roles : []}
                 setSelectedRoles={(value) => updateFormData('roles', value)}
-                disabled={!selectedProjects || !userLevel || isSelfSelected}
+                disabled={!selectedProjects || !userLevel || disabled}
                 placeholder={
                   !userLevel
                     ? 'all roles'
