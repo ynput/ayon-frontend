@@ -11,7 +11,7 @@ export const DividerSmallStyled = styled(Divider)`
   margin: 10px 0;
 `
 
-const UserAttribForm = ({ formData, setFormData, attributes, password, setPassword }) => {
+const UserAttribForm = ({ formData, setFormData, attributes, password, setPassword, disabled }) => {
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
     (acc, cur) => {
@@ -36,10 +36,12 @@ const UserAttribForm = ({ formData, setFormData, attributes, password, setPasswo
             value={password}
             feedback={false}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={disabled}
           />
         ) : (
           <InputText
             value={formData[name] || ''}
+            disabled={disabled}
             onChange={(e) => {
               const value = e.target.value
               setFormData((fd) => {

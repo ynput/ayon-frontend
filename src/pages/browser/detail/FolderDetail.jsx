@@ -69,7 +69,7 @@ const FolderDetail = () => {
   }
 
   return (
-    <Panel style={{ overflow: 'hidden' }}>
+    <Panel>
       <h3>
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getFolderTypeIcon(folder.folderType)}

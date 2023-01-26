@@ -71,7 +71,7 @@ const LockedInputRow = ({
 LockedInputRow.propTypes = {
   value: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
-  onSubmit: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func,
   disabled: PropTypes.bool,
   saveLabel: PropTypes.string,
   cancelLabel: PropTypes.string,

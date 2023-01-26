@@ -121,7 +121,8 @@ const UserDetail = ({
   isSelfSelected,
   rolesList,
   lastSelectedUser,
-  userList,
+  selectedUserList,
+  managerDisabled,
 }) => {
   const [formData, setFormData] = useState({})
   const [initData, setInitData] = useState({})
@@ -131,13 +132,12 @@ const UserDetail = ({
   const attributes = ayonClient.getAttribsByScope('user')
 
   useEffect(() => {
-    const userListFiltered = userList.filter((user) => selectedUsers.includes(user.name))
-    setFormUsers(userListFiltered)
+    setFormUsers(selectedUserList)
 
     const userDetailData = buildUserDetailData(
       selectedProjects,
       rolesList,
-      userListFiltered,
+      selectedUserList,
       lastSelectedUser,
     )
 
@@ -145,7 +145,7 @@ const UserDetail = ({
     setFormData(formData)
     // used to compare changes later
     setInitData(formData)
-  }, [userList, selectedUsers, selectedProjects])
+  }, [selectedUserList, selectedUsers, selectedProjects])
 
   // look for changes when formData changes
   useEffect(() => {
@@ -322,18 +322,21 @@ const UserDetail = ({
                 label="Username"
                 value={singleUserEdit.name}
                 onEdit={() => setShowRenameUser(true)}
+                disabled={managerDisabled}
               />
               <LockedInputRow
                 label="Password"
                 value={singleUserEdit.hasPassword ? '1234567890' : ''}
                 type="password"
                 onEdit={() => setShowSetPassword(true)}
+                disabled={managerDisabled}
               />
 
               <UserAttribForm
                 formData={formData}
                 setFormData={setFormData}
                 attributes={attributes}
+                disabled={managerDisabled}
               />
             </Panel>
           )}
@@ -343,7 +346,7 @@ const UserDetail = ({
                 formData={formData}
                 setFormData={setFormData}
                 selectedProjects={selectedProjects}
-                isSelfSelected={isSelfSelected}
+                disabled={managerDisabled || isSelfSelected}
               />
             )}
           </Panel>

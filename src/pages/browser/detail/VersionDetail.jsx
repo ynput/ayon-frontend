@@ -118,7 +118,7 @@ const VersionDetail = () => {
   // One version selected. Show the detail
   else {
     versionDetailWidget = (
-      <Panel style={{ overflow: 'hidden' }}>
+      <Panel>
         <h3>
           <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
             {getFamilyIcon(versions[0].family)}
