@@ -8,19 +8,15 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 const AddonList = ({
-  projectKey,
   selectedAddons,
   setSelectedAddons,
-  showVersions,
   changedAddons,
-  onDismissChanges,
-  onRemoveOverrides,
-  header,
-  footer,
+  withSettings = 'settings',
 }) => {
   const [addons, setAddons] = useState({})
   const [loading, setLoading] = useState(false)
   const [selectedNodeKey, setSelectedNodeKey] = useState(null)
+  const [showVersions, setShowVersions] = useState(false)
   const cm = useRef(null)
 
   // Selection
@@ -31,18 +27,18 @@ const AddonList = ({
   const selectedKeys = useMemo(() => {
     const result = {}
     for (const addon of selectedAddons) {
-      const prefix = projectKey ? `${projectKey}-` : ''
-      const key = `${prefix}${addon.name}@${addon.version}`
+      const key = `${addon.name}@${addon.version}`
       result[key] = true
     }
     return result
-  }, [selectedAddons, projectKey])
+  }, [selectedAddons])
 
   const onSelectionChange = (e) => {
     // This nested loop looks a bit weird, but it's necessary
     // to maintain the order of the selected addons as
     // the user selects them.
     let result = []
+    console.log('onSelectionChange', e.value)
     for (const key in e.value) {
       for (const rd of addons) {
         if (rd.key === key) {
@@ -67,12 +63,9 @@ const AddonList = ({
       .then((res) => {
         let result = []
         for (const addon of res.data.addons) {
-          const prefix = projectKey ? `${projectKey}-` : ''
           const selectable = addon.productionVersion !== undefined && !showVersions
           const row = {
-            key: showVersions
-              ? `${prefix}${addon.name}@production`
-              : `${prefix}${addon.name}@${addon.productionVersion}`,
+            key: showVersions ? addon.name : `${addon.name}@${addon.productionVersion}`,
             selectable: selectable,
             children: [],
             data: {
@@ -84,9 +77,11 @@ const AddonList = ({
 
           if (showVersions) {
             for (const version in addon.versions) {
-              if (!addon.versions[version].hasSettings) continue
+              if (withSettings === 'settings' && !addon.versions[version].hasSettings) continue
+              if (withSettings === 'site' && !addon.versions[version].hasSiteSettings) continue
+
               row.children.push({
-                key: `${prefix}${addon.name}@${version}`,
+                key: `${addon.name}@${version}`,
                 selectable: true,
                 data: {
                   name: addon.name,
@@ -101,7 +96,20 @@ const AddonList = ({
                 },
               })
             }
+            if (!row.children.length) continue
           } // if showVersions
+          else {
+            if (
+              withSettings === 'settings' &&
+              !addon.versions[addon.productionVersion]?.hasSettings
+            )
+              continue
+            if (
+              withSettings === 'site' &&
+              !addon.versions[addon.productionVersion]?.hasSiteSettings
+            )
+              continue
+          }
 
           result.push(row)
         }
@@ -110,46 +118,23 @@ const AddonList = ({
       .finally(() => {
         setLoading(false)
       })
-  }, [showVersions, projectKey])
+  }, [showVersions])
 
   const menu = useMemo(() => {
     const result = [
       {
-        label: 'Remove overrides',
-        icon: 'pi pi-times',
-        command: () => {
-          const [addonName, addonVersion] = selectedNodeKey.split('@')
-          onRemoveOverrides(addonName, addonVersion)
-        },
-      },
-      {
-        label: 'Dismiss changes',
+        label: showVersions ? 'Hide non-production versions' : 'Show all versions',
+        command: () => setShowVersions(!showVersions),
         icon: 'pi pi-cog',
-        disabled: !changedAddons.includes(selectedNodeKey),
-        command: () => {
-          const [addonName, addonVersion] = selectedNodeKey.split('@')
-          onDismissChanges(addonName, addonVersion)
-        },
-      },
-      {
-        label: 'Import settings',
-        icon: 'pi pi-cog',
-        disabled: true,
       },
     ]
     return result
   }, [selectedNodeKey])
 
-  // Add this to the treetable to make multiselect work without
-  // ctrl+click:
-  // metaKeySelection={false}
-
   return (
-    <Section style={{ maxWidth: 400 }}>
-      {header}
+    <Section>
       <TablePanel loading={loading}>
         <ContextMenu model={menu} ref={cm} onHide={() => setSelectedNodeKey(null)} />
-
         <TreeTable
           value={addons}
           selectionMode="multiple"
@@ -172,7 +157,6 @@ const AddonList = ({
           <Column field="usage" header="" />
         </TreeTable>
       </TablePanel>
-      {footer}
     </Section>
   )
 }

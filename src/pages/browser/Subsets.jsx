@@ -24,6 +24,8 @@ import StatusSelect from '/src/components/status/statusSelect'
 import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
 import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
+import useSearchFilter from '/src/hooks/useSearchFilter'
+import useColumnResize from '/src/hooks/useColumnResize'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -39,7 +41,7 @@ const Subsets = () => {
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
   // sets size of status based on status column width
-  const [columnsWidths, setColumnWidths] = useLocalStorage('subsets-columns-widths', {})
+  const [columnsWidths, setColumnWidths] = useColumnResize('subsets')
 
   // version overrides
   // Get a list of version overrides for the current set of folders
@@ -273,22 +275,6 @@ const Subsets = () => {
     localStorage.setItem('subsets-columns-order', JSON.stringify(localStorageOrder))
   }
 
-  const handleColumnResize = (e) => {
-    const key = 'subsets-columns-widths'
-    const field = e.column.props.field
-    const width = e.element.offsetWidth
-
-    // set localstorage for column size change
-    let oldWidthState = {}
-    if (localStorage.getItem(key)) {
-      oldWidthState = JSON.parse(localStorage.getItem(key))
-    }
-
-    const newWidthState = { ...oldWidthState, [field]: width }
-
-    setColumnWidths(newWidthState)
-  }
-
   // update status width
 
   //
@@ -336,9 +322,23 @@ const Subsets = () => {
   // Transform the subset data into a TreeTable compatible format
   // by grouping the data by the subset name
 
-  const tableData = useMemo(() => {
+  let tableData = useMemo(() => {
     return groupResult(subsetData, 'name')
   }, [subsetData])
+
+  const searchableFields = [
+    'data.author',
+    'data.family',
+    'data.folder',
+    'data.fps',
+    'data.frames',
+    'data.name',
+    'data.resolution',
+    'data.status',
+    'data.versionName',
+  ]
+
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData)
 
   //
   // Handlers
@@ -407,17 +407,33 @@ const Subsets = () => {
   //
   // Render
   //
+  const getOutOfString = (value, total) => {
+    if (value.length === total.length) return ''
+
+    return `${value.length}/${total.length}`
+  }
+
+  const placeholder = `Show Columns  ${
+    isMultiSelected
+      ? `${getOutOfString(shownColumnsMultiFocused, filterOptions)} (Multiple)`
+      : `${getOutOfString(shownColumnsSingleFocused, filterOptions)} (Single)`
+  }`
 
   return (
     <Section className="wrap">
       <Toolbar>
-        <InputText style={{ width: '200px' }} placeholder="Filter subsets..." />
+        <InputText
+          style={{ width: '200px' }}
+          placeholder="Filter subsets..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
         <MultiSelect
           options={filterOptions}
           value={shownColumns}
           onChange={handleColumnsFilter}
-          placeholder={`Show Columns (${focusedFolders.length > 1 ? 'Multiple' : 'Single'})`}
-          fixedPlaceholder={shownColumns.length + 1 >= filterOptions.length}
+          placeholder={placeholder}
+          fixedPlaceholder
         />
       </Toolbar>
 
@@ -432,12 +448,12 @@ const Subsets = () => {
           versionOverrides={versionOverrides}
         />
         <TreeTable
+          value={filteredData}
           responsive="true"
           scrollHeight="100%"
           scrollable="true"
           resizableColumns
           columnResizeMode="expand"
-          value={tableData}
           emptyMessage="No subset found"
           selectionMode="multiple"
           selectionKeys={selectedRows}
@@ -445,7 +461,7 @@ const Subsets = () => {
           onRowClick={onRowClick}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
-          onColumnResizeEnd={handleColumnResize}
+          onColumnResizeEnd={setColumnWidths}
           reorderableColumns
           onColReorder={handleColumnReorder}
         >
@@ -460,6 +476,7 @@ const Subsets = () => {
                 header={col.header}
                 body={col.body}
                 className={col.field}
+                sortable
               />
             )
           })}

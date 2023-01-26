@@ -11,13 +11,18 @@ export const SocketContext = createContext()
 
 const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
-const wsOpts = {
-  shouldReconnect: () => true,
-}
 
 export const SocketProvider = (props) => {
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
+
+  const wsOpts = {
+    shouldReconnect: () => {
+      setServerRestartingVisible(true)
+      return true
+    },
+  }
+
   const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, wsOpts)
   const context = useSelector((state) => state.context)
   const projectName = context.projectName

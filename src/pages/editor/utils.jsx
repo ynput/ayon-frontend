@@ -4,6 +4,7 @@ import { CellWithIcon } from '/src/components/icons'
 import { getFolderTypeIcon, getTaskTypeIcon } from '/src/utils'
 import { stringEditor, integerEditor, floatEditor, enumEditor } from './editors'
 
+// TODO rename .jsx -> .js
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
   let className = ''

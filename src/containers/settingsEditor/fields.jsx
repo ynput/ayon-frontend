@@ -87,11 +87,14 @@ function ObjectFieldTemplate(props) {
     let hiddenFields = []
     for (const propName in props?.schema?.properties || {}) {
       const ppts = props?.schema?.properties[propName]
-      if (ppts.scope === 'hidden') {
+      if (!(ppts.scope || ['studio', 'project']).includes(props.formContext.level)) {
         hiddenFields.push(propName)
       }
       if (ppts.conditionalEnum) {
-        hiddenFields = [...hiddenFields, ...ppts.enum.filter((e) => e !== props.formData[propName])]
+        hiddenFields = [
+          ...hiddenFields,
+          ...(ppts?.items?.enum || []).filter((e) => e !== props.formData[propName]),
+        ]
       }
     }
 
@@ -169,12 +172,8 @@ function ObjectFieldTemplate(props) {
 }
 
 function FieldTemplate(props) {
-  // Do not render the field if it belongs to a different scope (studio/project) or if it is hidden
-  if (
-    props.schema.scope &&
-    (props.schema.scope !== props.formContext.level || props.schema.scope === 'hidden')
-  )
-    return null
+  // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
+  if (!(props.schema.scope || ['studio', 'project']).includes(props.formContext.level)) return null
 
   const divider = useMemo(() => {
     if (props.schema.section)
@@ -261,7 +260,6 @@ function FieldTemplate(props) {
             className={`form-inline-field-label ${
               props.rawDescription ? 'field-label' : ''
             } ${overrideLevel}`}
-            data-pr-tooltip={`${props.rawDescription ? props.rawDescription : ''}`}
           >
             <span
               onClick={() => {
@@ -296,8 +294,11 @@ const ArrayItemTemplate = (props) => {
 
   if (itemName && (parentSchema.requiredItems || []).includes(itemName)) {
     undeletable = true
-    if (children.props.formData.name === itemName)
-      children.props.schema.properties.name.fixedValue = itemName
+    // TODO: Store this information elsewhere. since swithcing to RTK query
+    // schema props are immutable! use form context maybe?
+
+    //if (children.props.formData.name === itemName)
+    //  children.props.schema.properties.name.fixedValue = itemName
   }
 
   const rmButton = props.hasRemove && (

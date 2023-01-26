@@ -16,6 +16,7 @@ import {
   setBreadcrumbs,
   setExpandedFolders,
   setDialog,
+  setFocusedTasks,
 } from '/src/features/context'
 import { getFolderTypeIcon } from '/src//utils'
 import { setFocusedType } from '../features/context'
@@ -35,7 +36,7 @@ const filterHierarchy = (text, folder) => {
           label: item.label,
           status: item.status,
           folderType: item.folderType,
-          hasSubsets: item.hasSubsets,
+          // hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
           parents: item.parents,
           body: <CellWithIcon icon={getFolderTypeIcon(item.folderType)} text={item.label} />,
@@ -52,7 +53,7 @@ const filterHierarchy = (text, folder) => {
             label: item.label,
             status: item.status,
             folderType: item.folderType,
-            hasSubsets: item.hasSubsets,
+            // hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
             parents: item.parents,
             body: <CellWithIcon icon={getFolderTypeIcon(item.folderType)} text={item.label} />,
@@ -78,22 +79,102 @@ const Hierarchy = (props) => {
   const [showDetail, setShowDetail] = useState(false)
 
   //
+  // Folder types
+  //
+
+  // Transform a list of folder types to a list of objects
+  // compatible with the MultiSelect component
+  const [folderTypeList, folderTypeListNames] = folderTypes.reduce(
+    ([a, b], e) => {
+      a.push({
+        label: e.name,
+        value: e.name,
+      }),
+        b.push(e.name)
+      return [a, b]
+    },
+    [[], []],
+  )
+
+  // Custom "selected folder type" render template for the multiselect
+  // component
+
+  const selectedTypeTemplate = (option) => {
+    if (option) {
+      const folder_type_label = option ? option.replace(/[a-z]/g, '') : '??'
+      return <span style={{ marginRight: '10px' }}>{folder_type_label}</span>
+    }
+    return 'Folder types'
+  }
+
+  //
   // Hooks
   //
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  //TODO: use axios params here
-  // if (selectedFolderTypes) url += `?types=${selectedFolderTypes.join(',')}`
   const { isError, error, isLoading, data } = useGetHierarchyQuery({ projectName })
 
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
 
-  const treeData = useMemo(() => {
+  let treeData = useMemo(() => {
     if (!data) return []
     return filterHierarchy(query, data)
   }, [data, query])
+
+  function filterArray(arr = [], filter = []) {
+    let filteredArr = []
+
+    arr.forEach((item) => {
+      if (filter.includes(item.data.folderType)) {
+        filteredArr.push(item)
+      }
+      if (item.children.length > 0) {
+        filteredArr = filteredArr.concat(filterArray(item.children, filter))
+      }
+    })
+
+    // sort by folderType
+    return filteredArr.sort(
+      (a, b) =>
+        folderTypeListNames.indexOf(a.data.folderType) -
+        folderTypeListNames.indexOf(b.data.folderType),
+    )
+  }
+
+  const createDataObject = (data = []) => {
+    let heirarchyObject = {}
+
+    data.forEach((item) => {
+      console.log(item)
+      heirarchyObject[item.id] = { ...item, isLeaf: !item.children?.length }
+
+      if (item.children?.length > 0) {
+        heirarchyObject = { ...heirarchyObject, ...createDataObject(item.children) }
+      }
+    })
+
+    return heirarchyObject
+  }
+
+  const heirarchyObjectData = useMemo(() => {
+    if (data) {
+      return createDataObject(data)
+    }
+  }, [data])
+
+  const treeDataFlat = useMemo(() => {
+    if (selectedFolderTypes.length) {
+      const filtered = filterArray(treeData, selectedFolderTypes)
+
+      return filtered
+    }
+  }, [treeData, selectedFolderTypes])
+
+  if (treeDataFlat) {
+    treeData = treeDataFlat
+  }
 
   //
   // Selection
@@ -126,7 +207,31 @@ const Hierarchy = (props) => {
 
   const onSelectionChange = (event) => {
     const selection = Object.keys(event.value)
+    // remove task selection
+    dispatch(setFocusedTasks([]))
     dispatch(setFocusedFolders(selection))
+
+    // for each selected folder, if isLeaf then set expandedFolders
+    const newExpandedFolders = {}
+    selection.forEach((id) => {
+      if (heirarchyObjectData[id].isLeaf) {
+        newExpandedFolders[id] = true
+      }
+    })
+
+    let oldExpandedFolders = { ...expandedFolders }
+    // filter out the old expanded folders that are isLeaf
+    oldExpandedFolders = Object.fromEntries(
+      Object.keys(oldExpandedFolders)
+        .filter((id) => !heirarchyObjectData[id] || !heirarchyObjectData[id].isLeaf)
+        .map((id) => [id, true]),
+    )
+
+    // merge the two
+    const mergedExpandedFolders = { ...oldExpandedFolders, ...newExpandedFolders }
+
+    // update redux
+    dispatch(setExpandedFolders(mergedExpandedFolders))
   }
 
   const onContextMenuSelectionChange = (event) => {
@@ -136,29 +241,6 @@ const Hierarchy = (props) => {
 
   const onToggle = (event) => {
     dispatch(setExpandedFolders(event.value))
-  }
-
-  //
-  // Folder types
-  //
-
-  // Transform a list of folder types to a list of objects
-  // compatible with the MultiSelect component
-
-  const folderTypeList = folderTypes.map((e) => ({
-    label: e.name,
-    value: e.name,
-  }))
-
-  // Custom "selected folder type" render template for the multiselect
-  // component
-
-  const selectedTypeTemplate = (option) => {
-    if (option) {
-      const folder_type_label = option ? option.replace(/[a-z]/g, '') : '??'
-      return <span style={{ marginRight: '10px' }}>{folder_type_label}</span>
-    }
-    return 'Folder types'
   }
 
   const handleEditTags = () => {
@@ -188,12 +270,6 @@ const Hierarchy = (props) => {
   // Render
   //
 
-  if (isError) {
-    toast.error(`Unable to load hierarchy. ${error}`)
-
-    return <>Error...</>
-  }
-
   const table = useMemo(
     () => (
       <TreeTable
@@ -204,7 +280,7 @@ const Hierarchy = (props) => {
         selectionMode="multiple"
         selectionKeys={selectedFolders}
         expandedKeys={expandedFolders}
-        emptyMessage=" "
+        emptyMessage={isLoading ? ' ' : 'No folders found'}
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onRowClick={onRowClick}
@@ -216,6 +292,12 @@ const Hierarchy = (props) => {
     ),
     [treeData, selectedFolders, expandedFolders],
   )
+
+  if (isError) {
+    toast.error(`Unable to load hierarchy. ${error}`)
+
+    return <>Error...</>
+  }
 
   return (
     <Section style={props.style}>
@@ -250,6 +332,7 @@ const Hierarchy = (props) => {
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
+
         {table}
       </TablePanel>
     </Section>

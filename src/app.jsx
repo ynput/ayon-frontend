@@ -3,7 +3,7 @@ import axios from 'axios'
 import short from 'short-uuid'
 
 import { LoaderShade } from '@ynput/ayon-react-components'
-import { useEffect, useState, Suspense, lazy } from 'react'
+import { useEffect, useState, Suspense, lazy, useContext } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -22,7 +22,7 @@ const EventViewer = lazy(() => import('./pages/eventViewer'))
 const ServicesPage = lazy(() => import('./pages/services'))
 
 import { login } from './features/user'
-import { SocketProvider } from './context/websocketContext'
+import { SocketContext, SocketProvider } from './context/websocketContext'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -58,6 +58,7 @@ const App = () => {
 
           ayonClient.settings = {
             attributes: response.data.attributes,
+            sites: response.data.sites,
           }
         }
       })
@@ -86,9 +87,19 @@ const App = () => {
   // RENDER THE MAIN APP
   //
 
+  const Reloader = () => {
+    const context = useContext(SocketContext)
+    if (context?.serverRestartingVisible)
+      return (
+        <LoaderShade style={{ backgroundColor: 'transparent' }} message="Server is restarting" />
+      )
+    else return null
+  }
+
   return (
     <Suspense fallback={<LoaderShade />}>
       <SocketProvider>
+        <Reloader />
         <BrowserRouter>
           <Header />
           <Routes>

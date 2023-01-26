@@ -2,12 +2,13 @@ import { useMemo, useEffect, lazy } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
 import { Spacer } from '@ynput/ayon-react-components'
 
-const AnatomyPresets = lazy(() => import('./anatomyPresets'))
-const AddonsSettings = lazy(() => import('./addons'))
-const StudioOverrides = lazy(() => import('./studio'))
-const Users = lazy(() => import('./users'))
+const AnatomyPresets = lazy(() => import('./AnatomyPresets'))
+const AddonsSettings = lazy(() => import('./AddonsSettings'))
+const StudioSettings = lazy(() => import('./StudioSettings'))
+const SiteSettings = lazy(() => import('./SiteSettings'))
+const UsersSettings = lazy(() => import('./users/UsersSettings'))
 const Roles = lazy(() => import('./roles'))
-const Attributes = lazy(() => import('./attributes'))
+const Attributes = lazy(() => import('./Attributes'))
 
 const SettingsPage = () => {
   const { module } = useParams()
@@ -24,11 +25,13 @@ const SettingsPage = () => {
       case 'anatomyPresets':
         return <AnatomyPresets />
       case 'studio':
-        return <StudioOverrides />
+        return <StudioSettings />
+      case 'site':
+        return <SiteSettings />
       case 'addons':
         return <AddonsSettings />
       case 'users':
-        return <Users />
+        return <UsersSettings />
       case 'roles':
         return <Roles />
       case 'attributes':
@@ -43,7 +46,8 @@ const SettingsPage = () => {
       <nav className="secondary">
         <NavLink to={`/settings/anatomyPresets`}>Anatomy presets</NavLink>
         <NavLink to={`/settings/addons`}>Addons</NavLink>
-        <NavLink to={`/settings/studio`}>Studio</NavLink>
+        <NavLink to={`/settings/studio`}>Studio settings</NavLink>
+        <NavLink to={`/settings/site`}>Site settings</NavLink>
         <NavLink to={`/settings/attributes`}>Attributes</NavLink>
         <NavLink to={`/settings/users`}>Users</NavLink>
         <NavLink to={`/settings/roles`}>Roles</NavLink>

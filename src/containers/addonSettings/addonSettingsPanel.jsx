@@ -1,5 +1,10 @@
-import axios from 'axios'
-import { useState, useMemo, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
+
+import {
+  useGetAddonSettingsSchemaQuery,
+  useGetAddonSettingsQuery,
+  useGetAddonSettingsOverridesQuery,
+} from '/src/services/addonSettings'
 
 import SettingsEditor from '/src/containers/settingsEditor'
 
@@ -12,37 +17,56 @@ const AddonSettingsPanel = ({
   reloadTrigger,
   onSelect = () => {},
   projectName = null,
+  siteId = null,
 }) => {
-  const [schema, setSchema] = useState(null)
-  const [originalData, setOriginalData] = useState(null)
-  const [overrides, setOverrides] = useState(null)
-
-  const projectSuffix = projectName ? `/${projectName}` : ''
-
-  const loadSchema = () => {
-    axios
-      .get(`/api/addons/${addon.name}/${addon.version}/schema${projectSuffix}`)
-      .then((res) => setSchema(res.data))
-      .catch((err) => console.log(err))
-  }
-
-  const loadSettings = () => {
-    if (localData) {
-      setOriginalData(localData)
-    } else {
-      axios
-        .get(`/api/addons/${addon.name}/${addon.version}/settings${projectSuffix}`)
-        .then((res) => {
-          setOriginalData(res.data)
-          //setNewData(null)
-        })
-        .catch((err) => console.log(err))
+  let settingsLevel = 'studio'
+  if (projectName && projectName !== '_') {
+    settingsLevel = 'project'
+    if (siteId && siteId !== '_') {
+      settingsLevel = 'site'
     }
-
-    axios
-      .get(`/api/addons/${addon.name}/${addon.version}/overrides${projectSuffix}`)
-      .then((res) => setOverrides(res.data))
   }
+
+  const {
+    data: schema,
+    isLoading: schemaLoading,
+    refetch: refetchSchema,
+  } = useGetAddonSettingsSchemaQuery({
+    addonName: addon.name,
+    addonVersion: addon.version,
+    projectName,
+    siteId,
+  })
+
+  const {
+    data: originalData,
+    isLoading: settingsLoading,
+    refetch: refetchSettings,
+  } = useGetAddonSettingsQuery({
+    addonName: addon.name,
+    addonVersion: addon.version,
+    projectName,
+    siteId,
+  })
+
+  const {
+    data: overrides,
+    isLoading: overridesLoading,
+    refetch: refetchOverrides,
+  } = useGetAddonSettingsOverridesQuery({
+    addonName: addon.name,
+    addonVersion: addon.version,
+    projectName,
+    siteId,
+  })
+
+  useEffect(() => {
+    refetchSchema()
+    refetchSettings()
+    refetchOverrides()
+  }, [addon.name, addon.version, reloadTrigger, projectName])
+
+  const formData = localData ? localData : originalData
 
   const onSetBreadcrumbs = (path) => {
     const fieldId = ['root', ...(path || [])].join('_')
@@ -50,31 +74,31 @@ const AddonSettingsPanel = ({
       addon,
       addonString: `${addon.name}@${addon.version}`,
       path,
+      siteId,
       fieldId,
       hasOverride: overrides && overrides[fieldId] ? true : false,
     })
   }
 
-  useEffect(() => {
-    loadSchema()
-    loadSettings()
-  }, [addon.name, addon.version, reloadTrigger, projectName])
-
   const editor = useMemo(() => {
-    if (!(schema && originalData && overrides)) return <></>
+    if (!(schema && formData && overrides)) return <></>
     return (
       <SettingsEditor
         schema={schema}
-        formData={originalData}
+        formData={formData}
         changedKeys={changedKeys}
         overrides={overrides}
         onChange={onChange}
         onSetChangedKeys={onSetChangedKeys}
         onSetBreadcrumbs={onSetBreadcrumbs}
-        level={projectName ? 'project' : 'studio'}
+        level={settingsLevel}
       />
     )
-  }, [schema, originalData, overrides])
+  }, [schema, formData, overrides])
+
+  if (schemaLoading || settingsLoading || overridesLoading) {
+    return 'Loading...'
+  }
 
   return <div style={{ flexGrow: 0 }}>{editor}</div>
 }

@@ -63,10 +63,12 @@ const TaskDetail = () => {
     )
   }
 
-  const task = tasksData[0].node
+  const task = tasksData && tasksData[0] && tasksData[0].node
+
+  if (!task) return null
 
   return (
-    <Panel>
+    <Panel style={{ overflow: 'hidden' }}>
       <h3>
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getTaskTypeIcon(task.taskType)}

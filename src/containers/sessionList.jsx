@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { TablePanel, Section, LinkButton } from '@ynput/ayon-react-components'
 
 import { TimestampField } from '/src/containers/fieldFormat'
 
@@ -26,6 +26,21 @@ const SessionList = ({ userName }) => {
       })
   }
 
+  const invalidate = (token) => {
+    axios
+      .delete(`/api/users/${userName}/sessions/${token}`)
+      .then(() => {
+        console.log('Session invalidated')
+        if (token === localStorage.getItem('accessToken')) {
+          localStorage.removeItem('accessToken')
+          window.location.reload()
+        } else {
+          loadSessions()
+        }
+      })
+      .catch(() => console.log('Unable to invalidate the session'))
+  }
+
   useEffect(() => {
     loadSessions()
   }, [])
@@ -39,6 +54,11 @@ const SessionList = ({ userName }) => {
           scrollHeight="flex"
           responsive="true"
           selectionMode="single"
+          rowClassName={(rowData) => {
+            return {
+              'p-highlight': rowData.token === localStorage.getItem('accessToken'),
+            }
+          }}
         >
           <Column field="clientInfo.ip" header="IP" />
           <Column field="clientInfo.agent.platform" header="Platform" style={{ maxWidth: 160 }} />
@@ -50,6 +70,13 @@ const SessionList = ({ userName }) => {
             field="lastUsed"
             header="Last active"
             body={(rowData) => rowData.lastUsed && <TimestampField value={rowData.lastUsed} />}
+            style={{ maxWidth: 160 }}
+          />
+          <Column
+            header="Invalidate"
+            body={(rowData) => (
+              <LinkButton label="Invalidate" onClick={() => invalidate(rowData.token)} />
+            )}
             style={{ maxWidth: 160 }}
           />
         </DataTable>
