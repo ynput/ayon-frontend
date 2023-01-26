@@ -6,7 +6,6 @@ const AttributeTableContainer = styled.div`
   flex-direction: column;
   padding: 3px;
 
-  overflow: auto;
   flex: 1;
 `
 

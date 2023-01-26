@@ -68,7 +68,7 @@ const TaskDetail = () => {
   if (!task) return null
 
   return (
-    <Panel style={{ overflow: 'hidden' }}>
+    <Panel>
       <h3>
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
           {getTaskTypeIcon(task.taskType)}
