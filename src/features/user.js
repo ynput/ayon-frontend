@@ -10,8 +10,16 @@ const userSlice = createSlice({
         localStorage.setItem('accessToken', action.payload.accessToken)
         axios.defaults.headers.common['Authorization'] = `Bearer ${action.payloadaccessToken}`
       }
-      state = action.payload.user
-      return state
+
+      const user = action.payload.user
+      // set if isUser
+      let isUser = true
+      if (user.data) {
+        if (user.data.isAdmin || user.data.isManager) isUser = false
+        user.data.isUser = isUser
+      }
+
+      return user
     },
 
     logout: (state) => {

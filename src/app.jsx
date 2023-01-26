@@ -23,6 +23,7 @@ const ServicesPage = lazy(() => import('./pages/services'))
 
 import { login } from './features/user'
 import { SocketContext, SocketProvider } from './context/websocketContext'
+import ProtectedRoute from './containers/ProtectedRoute'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -75,6 +76,8 @@ const App = () => {
   // User is not logged in
   if (!user.name) return <LoginPage />
 
+  const isUser = user.data.isUser
+
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
     window.history.replaceState({}, document.title, '/')
@@ -109,6 +112,7 @@ const App = () => {
               exact
               element={<Navigate replace to="/projectManager/dashboard" />}
             />
+
             <Route path="/projectManager/:module" element={<ProjectManager />} />
             <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
             <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
@@ -118,11 +122,18 @@ const App = () => {
               element={<Navigate replace to="/settings/anatomyPresets" />}
             />
             <Route path="/settings/:module" exact element={<SettingsPage />} />
+            <Route
+              path="/services"
+              element={
+                <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                  <ServicesPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/explorer" element={<ExplorerPage />} />
             <Route path="/doc/api" element={<APIDocsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/events" element={<EventViewer />} />
-            <Route path="/services" element={<ServicesPage />} />
             <Route element={<ErrorPage code="404" />} />
           </Routes>
         </BrowserRouter>
