@@ -66,7 +66,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     let updatedKeys = []
     let allOk = true
 
-    for (const key in localData) {
+    for (const key in localOverrides) {
+      if (!localOverrides[key].length) continue
       const [addonName, addonVersion, siteId, projectName] = key.split('|')
       if (projectName !== projectKey) continue
 
@@ -315,7 +316,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         </Toolbar>
         <ScrollPanel style={{ flexGrow: 1 }}>
           <h3>Form data</h3>
-          <pre style={{ width: '100%', flexGrow: 1 }}>{JSON.stringify(localData, null, 2)}</pre>
+          {/*<pre style={{ width: '100%', flexGrow: 1 }}>{JSON.stringify(localData, null, 2)}</pre>*/}
           <h3>Changed keys</h3>
           <pre style={{ width: '100%', flexGrow: 1 }}>
             {JSON.stringify(localOverrides, null, 2)}

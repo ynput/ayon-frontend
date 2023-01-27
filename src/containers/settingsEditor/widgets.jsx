@@ -10,21 +10,29 @@ import {
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 
+import { arrayEquals } from '/src/utils'
+
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)
   if (!valueString.match(/\./)) return valueString.concat('.0')
   else return valueString
 }
 
-const updateOverrides = (props, changed) => {
+const updateOverrides = (props, changed, path) => {
   if (!props.formContext) {
     return // WARN!
   }
-  if (changed && !props.formContext.changedKeys.includes(props.id))
-    props.formContext.changedKeys.push(props.id)
-  else if (!changed && props.formContext.changedKeys.includes(props.id))
-    props.formContext.changedKeys.splice(props.formContext.changedKeys.indexOf(props.id), 1)
-  props.formContext?.onSetChangedKeys(props.formContext.changedKeys)
+
+  let newChangedKeys
+  if (changed) {
+    newChangedKeys = props.formContext?.changedKeys
+      .filter((key) => !arrayEquals(key, path))
+      .concat([path])
+  } else {
+    newChangedKeys = props.formContext?.changedKeys.filter((key) => !arrayEquals(key, path))
+  }
+
+  props.formContext.onSetChangedKeys(newChangedKeys)
 }
 
 const parseContext = (props) => {
@@ -40,7 +48,7 @@ const CheckboxWidget = function (props) {
   const { originalValue, path } = parseContext(props)
 
   const onChange = (e) => {
-    updateOverrides(props, e.target.checked !== originalValue)
+    updateOverrides(props, e.target.checked !== originalValue, path)
     props.onChange(e.target.checked)
     props.formContext?.onSetBreadcrumbs(path)
   }
@@ -74,7 +82,7 @@ const SelectWidget = (props) => {
   }
 
   const onChange = (e) => {
-    updateOverrides(props, e.value !== originalValue)
+    updateOverrides(props, e.value !== originalValue, path)
     props.onChange(e.value)
   }
 
@@ -162,7 +170,7 @@ const TextWidget = (props) => {
     opts.showButtons = true
     opts.useGrouping = false
     opts.onChange = (e) => {
-      updateOverrides(props, e.value !== originalValue)
+      updateOverrides(props, e.value !== originalValue, path)
       props.onChange(e.target.value)
     }
 
@@ -175,7 +183,7 @@ const TextWidget = (props) => {
     opts.format = props.schema.colorFormat || 'hex'
     opts.alpha = props.schema.colorAlpha || false
     opts.onChange = (e) => {
-      updateOverrides(props, e.target.value !== originalValue)
+      updateOverrides(props, e.target.value !== originalValue, path)
       props.onChange(e.target.value)
     }
 
@@ -188,14 +196,14 @@ const TextWidget = (props) => {
     opts.rows = 8
     opts.value = value
     opts.onChange = (e) => {
-      updateOverrides(props, e.target.value !== originalValue)
+      updateOverrides(props, e.target.value !== originalValue, path)
       props.onChange(e.target.value)
     }
   } else {
     Input = InputText
     opts.value = value
     opts.onChange = (e) => {
-      updateOverrides(props, e.target.value !== originalValue)
+      updateOverrides(props, e.target.value !== originalValue, path)
       props.onChange(e.target.value)
     }
   }
