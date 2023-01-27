@@ -3,10 +3,12 @@ import { toast } from 'react-toastify'
 //import ReactMarkdown from 'react-markdown'
 
 import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './addonSettingsPanel'
+import SettingsChangesTable from './SettingsChangesTable'
 
 import {
   useSetAddonSettingsMutation,
@@ -245,85 +247,85 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }, [showHelp, currentSelection, localOverrides])
 
   return (
-    <>
-      <Section style={{ maxWidth: 400 }}>
-        <AddonList
-          projectKey={projectKey}
-          selectedAddons={selectedAddons}
-          setSelectedAddons={setSelectedAddons}
-          changedAddons={Object.keys(localData)}
-          onDismissChanges={onDismissChanges}
-          onRemoveOverrides={onRemoveOverrides}
-        />
-        {showSites && (
-          <SiteList
-            value={selectedSites}
-            onChange={setSelectedSites}
-            style={{ maxHeight: 300 }}
-            multiselect={true}
+    <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
+      <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
+        <Section style={{ maxWidth: 400 }}>
+          <AddonList
+            projectKey={projectKey}
+            selectedAddons={selectedAddons}
+            setSelectedAddons={setSelectedAddons}
+            changedAddons={Object.keys(localData)}
+            onDismissChanges={onDismissChanges}
+            onRemoveOverrides={onRemoveOverrides}
           />
-        )}
-      </Section>
-
-      <Section className={showHelp && 'settings-help-visible'}>
-        {settingsListHeader}
-        <Section>
-          <ScrollPanel
-            className="transparent nopad"
-            style={{ flexGrow: 1 }}
-            scrollStyle={{ padding: 0 }}
-          >
-            {selectedAddons
-              .filter((addon) => addon.version)
-              .reverse()
-              .map((addon) => {
-                const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
-
-                return sites.map((siteId) => {
-                  const key = `${addon.name}|${addon.version}|${siteId}|${projectKey}`
-                  return (
-                    <Panel key={key} style={{ flexGrow: 0 }} className="transparent nopad" size={1}>
-                      <AddonSettingsPanel
-                        addon={addon}
-                        onChange={(data) =>
-                          onSettingsChange(addon.name, addon.version, siteId, data)
-                        }
-                        onSetChangedKeys={(data) =>
-                          onSetChangedKeys(addon.name, addon.version, siteId, data)
-                        }
-                        localData={localData[key]}
-                        changedKeys={localOverrides[key]}
-                        reloadTrigger={reloadTrigger[key]}
-                        onSelect={setCurrentSelection}
-                        projectName={projectName}
-                        siteId={siteId === '_' ? null : siteId}
-                      />
-                    </Panel>
-                  )
-                })
-              })}
-
-            <Spacer />
-          </ScrollPanel>
+          {showSites && (
+            <SiteList
+              value={selectedSites}
+              onChange={setSelectedSites}
+              style={{ maxHeight: 300 }}
+              multiselect={true}
+            />
+          )}
         </Section>
-      </Section>
+        <Section className={showHelp && 'settings-help-visible'}>
+          {settingsListHeader}
+          <Section>
+            <ScrollPanel
+              className="transparent nopad"
+              style={{ flexGrow: 1 }}
+              scrollStyle={{ padding: 0 }}
+            >
+              {selectedAddons
+                .filter((addon) => addon.version)
+                .reverse()
+                .map((addon) => {
+                  const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
 
-      <Section style={{ maxWidth: 300 }}>
-        <Toolbar>
-          <Spacer />
-          <Button label="Revert changes" icon="refresh" onClick={onDismissChanges} />
-          <Button label="Save changes" icon="check" onClick={onSave} />
-        </Toolbar>
-        <ScrollPanel style={{ flexGrow: 1 }}>
-          <h3>Form data</h3>
-          {/*<pre style={{ width: '100%', flexGrow: 1 }}>{JSON.stringify(localData, null, 2)}</pre>*/}
-          <h3>Changed keys</h3>
-          <pre style={{ width: '100%', flexGrow: 1 }}>
-            {JSON.stringify(localOverrides, null, 2)}
-          </pre>
-        </ScrollPanel>
-      </Section>
-    </>
+                  return sites.map((siteId) => {
+                    const key = `${addon.name}|${addon.version}|${siteId}|${projectKey}`
+                    return (
+                      <Panel
+                        key={key}
+                        style={{ flexGrow: 0 }}
+                        className="transparent nopad"
+                        size={1}
+                      >
+                        <AddonSettingsPanel
+                          addon={addon}
+                          onChange={(data) =>
+                            onSettingsChange(addon.name, addon.version, siteId, data)
+                          }
+                          onSetChangedKeys={(data) =>
+                            onSetChangedKeys(addon.name, addon.version, siteId, data)
+                          }
+                          localData={localData[key]}
+                          changedKeys={localOverrides[key]}
+                          reloadTrigger={reloadTrigger[key]}
+                          onSelect={setCurrentSelection}
+                          projectName={projectName}
+                          siteId={siteId === '_' ? null : siteId}
+                        />
+                      </Panel>
+                    )
+                  })
+                })}
+
+              <Spacer />
+            </ScrollPanel>
+          </Section>
+        </Section>
+      </SplitterPanel>
+      <SplitterPanel>
+        <Section className="wrap" style={{ minWidth: 300 }}>
+          <Toolbar>
+            <Spacer />
+            <Button label="Revert changes" icon="refresh" onClick={onDismissChanges} />
+            <Button label="Save changes" icon="check" onClick={onSave} />
+          </Toolbar>
+          <SettingsChangesTable changes={localOverrides} />
+        </Section>
+      </SplitterPanel>
+    </Splitter>
   )
 }
 

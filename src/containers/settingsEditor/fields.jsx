@@ -205,10 +205,11 @@ function FieldTemplate(props) {
   ) {
     let className
 
-    for (const childId of props.formContext.changedKeys) {
-      if (!arrayStartsWith(childId, `${props.id}_`)) continue // not a child of this object
-      className = 'obj-override-edit group-changed'
-      break
+    for (const changedPath of props.formContext.changedKeys) {
+      if (arrayStartsWith(changedPath, path)) {
+        className = 'obj-override-edit group-changed'
+        break
+      }
     }
 
     if (!className) className = `obj-override-${overrideLevel}`
