@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Panel } from '@ynput/ayon-react-components'
+import { Dialog } from 'primereact/dialog'
 
 const HeaderStyled = styled(Panel)`
   gap: 10px;
@@ -30,16 +31,28 @@ const HeaderStyled = styled(Panel)`
   }
 `
 
-const DetailHeader = ({ children, onClose, style }) => {
+const DetailHeader = ({ children, onClose, style, context }) => {
+  const [showContext, setShowContext] = useState(false)
+
   return (
-    <HeaderStyled style={style}>
-      <div>{children}</div>
-      {onClose && (
-        <span className="material-symbols-outlined" onClick={onClose}>
-          close
-        </span>
-      )}
-    </HeaderStyled>
+    <>
+      <Dialog header="User Context" visible={showContext} onHide={() => setShowContext(false)}>
+        <pre>{JSON.stringify(context, null, 2)}</pre>
+      </Dialog>
+      <HeaderStyled style={style}>
+        <div>{children}</div>
+        {context && (
+          <span className="material-symbols-outlined" onClick={() => setShowContext(!showContext)}>
+            more_vert
+          </span>
+        )}
+        {onClose && (
+          <span className="material-symbols-outlined" onClick={onClose}>
+            close
+          </span>
+        )}
+      </HeaderStyled>
+    </>
   )
 }
 
