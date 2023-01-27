@@ -18,12 +18,28 @@ const PanelStyled = styled(Panel)`
 
 const UserTile = ({ user, onClick }) => {
   if (!user) return null
+
   const {
     name,
-    attrib: { fullName, avatarUrl, email },
+    attrib: { fullName, avatarUrl },
     updatedAt,
     self,
+    isManager,
+    isAdmin,
+    isService,
+    roles,
   } = user
+
+  let rolesHeader = []
+  // add admin, manager, service
+  if (isAdmin) rolesHeader.push('admin')
+  else if (isService) rolesHeader.push('service')
+  else if (isManager) rolesHeader.push('manager')
+  else {
+    Object.values(roles).forEach((roles2) => {
+      roles2.forEach((role) => !rolesHeader.includes(role) && rolesHeader.push(role))
+    })
+  }
 
   //
   // format date number days ago
@@ -53,12 +69,16 @@ const UserTile = ({ user, onClick }) => {
           {fullName} ({name})
         </strong>
         <br />
-        <span style={{ opacity: 0.5 }}>{email}</span>
+        <span style={{ opacity: 0.5 }}>
+          {rolesHeader.length ? rolesHeader.join(', ') : 'No Roles'}
+        </span>
       </div>
-      <span style={{ textAlign: 'end', opacity: 0.5 }}>
-        Updated <br />
-        {dateText}
-      </span>
+      {updatedAt && (
+        <span style={{ textAlign: 'end', opacity: 0.5 }}>
+          Updated <br />
+          {dateText}
+        </span>
+      )}
     </PanelStyled>
   )
 }
