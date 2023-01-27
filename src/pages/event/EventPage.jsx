@@ -1,40 +1,40 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import usePubSub from '/src/hooks/usePubSub'
-import { useGetAllEventsQuery } from '/src/services/events/getEvents'
+import { useGetEventsQuery } from '/src/services/events/getEvents'
 import EventDetailDialog from './EventDetail'
+import { useDispatch } from 'react-redux'
+import { ayonApi } from '/src/services/ayon'
 
 const EventPage = () => {
-  const [eventData, setEventData] = useState([])
+  const dispatch = useDispatch()
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [detailVisible, setDetailVisible] = useState(false)
 
-  const { data, isLoading, isError, error } = useGetAllEventsQuery({ last: 100 })
-
-  // set event data to queried data
-  useEffect(() => {
-    if (data && !isError && !isLoading) {
-      setEventData(data)
-    }
-  }, [data, isLoading])
+  const last = 100
+  const { data: eventData, isLoading, isError, error } = useGetEventsQuery({ last })
 
   const handlePubSub = (topic, message) => {
     if (topic === 'client.connected') {
       return
     }
-    setEventData((ed) => {
-      let updated = false
-      for (const row of ed) {
-        if (row.id !== message.id) continue
-        updated = true
-        Object.assign(row, message)
-      }
-      if (!updated) return [message, ...ed]
-      return [...ed]
-    })
+
+    // patch the new message into the cache
+    dispatch(
+      ayonApi.util.updateQueryData('getEvents', { last }, (draft) => {
+        let updated = false
+        for (const row of draft) {
+          if (row.id !== message.id) continue
+          updated = true
+          Object.assign(row, message)
+        }
+
+        !updated && draft.unshift(message)
+      }),
+    )
   }
 
   usePubSub('*', handlePubSub)

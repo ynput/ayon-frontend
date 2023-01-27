@@ -1,6 +1,6 @@
 import { ayonApi } from '../ayon'
 
-const ALL_EVENTS_QUERY = `
+const EVENTS_QUERY = `
 query Events($last: Int) {
     events(last: $last) {
       edges {
@@ -22,12 +22,12 @@ query Events($last: Int) {
 
 const getEvents = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    getAllEvents: build.query({
+    getEvents: build.query({
       query: ({ last = 100 }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: ALL_EVENTS_QUERY,
+          query: EVENTS_QUERY,
           variables: { last },
         },
       }),
@@ -52,4 +52,4 @@ const getEvents = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useGetAllEventsQuery, useGetEventByIdQuery } = getEvents
+export const { useGetEventsQuery, useGetEventByIdQuery } = getEvents
