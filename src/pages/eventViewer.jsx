@@ -5,27 +5,8 @@ import { TimestampField } from '/src/containers/fieldFormat'
 import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import usePubSub from '/src/hooks/usePubSub'
-
-const EVENTS_QUERY = `
-query Events {
-    events(last: 100) {
-      edges {
-        node {
-          id
-          topic
-          user
-          sender
-          project
-          description
-          dependsOn
-          updatedAt
-          status
-        }
-      }
-    }
-}
-`
+// import usePubSub from '/src/hooks/usePubSub'
+import { useGetAllEventsQuery } from '../services/events/getEvents'
 
 const EventDetailDialog = ({ eventId, onHide }) => {
   const [eventData, setEventData] = useState(null)
@@ -54,63 +35,28 @@ const EventDetailDialog = ({ eventId, onHide }) => {
 }
 
 const EventViewer = () => {
-  const [eventData, setEventData] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [detailVisible, setDetailVisible] = useState(false)
-  const [loading, setLoading] = useState(false)
 
-  const loadEventData = () => {
-    setLoading(true)
-    axios
-      .post('/graphql', {
-        query: EVENTS_QUERY,
-        variables: {},
-      })
-      .then((response) => {
-        if (!response.data?.data?.events) return
+  const { data: eventData, isLoading, isError, error } = useGetAllEventsQuery({ last: 100 })
 
-        let result = []
-        for (const edge of response.data.data.events.edges) {
-          result.push({
-            id: edge.node.id,
-            topic: edge.node.topic,
-            user: edge.node.user,
-            sender: edge.node.sender,
-            dependsOn: edge.node.dependsOn,
-            project: edge.node.project,
-            description: edge.node.description,
-            updatedAt: edge.node.updatedAt,
-            status: edge.node.status,
-          })
-        }
-        setEventData(result)
-      })
-      .finally(() => setLoading(false))
-  }
+  // const handlePubSub = (topic, message) => {
+  //   if (topic === 'client.connected') {
+  //     return
+  //   }
+  //   setEventData((ed) => {
+  //     let updated = false
+  //     for (const row of ed) {
+  //       if (row.id !== message.id) continue
+  //       updated = true
+  //       Object.assign(row, message)
+  //     }
+  //     if (!updated) return [message, ...ed]
+  //     return [...ed]
+  //   })
+  // }
 
-  const handlePubSub = (topic, message) => {
-    if (topic === 'client.connected') {
-      loadEventData()
-      return
-    }
-    setEventData((ed) => {
-      let updated = false
-      for (const row of ed) {
-        if (row.id !== message.id) continue
-        updated = true
-        Object.assign(row, message)
-      }
-      if (!updated) return [message, ...ed]
-      return [...ed]
-    })
-  }
-
-  usePubSub('*', handlePubSub)
-
-  useEffect(() => {
-    loadEventData()
-    // eslint-disable-next-line
-  }, [])
+  // usePubSub('*', handlePubSub)
 
   const formatTime = (rowData) => {
     return <TimestampField value={rowData.updatedAt} />
@@ -122,6 +68,11 @@ const EventViewer = () => {
     }
   }
 
+  // handle error
+  if (isError) {
+    return <div>Error: {error.message}</div>
+  }
+
   return (
     <main>
       {detailVisible && (
@@ -129,7 +80,7 @@ const EventViewer = () => {
       )}
       <Section>
         <Toolbar></Toolbar>
-        <TablePanel loading={loading}>
+        <TablePanel loading={isLoading}>
           <DataTable
             value={eventData}
             scrollable="true"
