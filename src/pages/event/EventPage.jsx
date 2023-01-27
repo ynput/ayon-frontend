@@ -1,62 +1,43 @@
-import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
-import { Dialog } from 'primereact/dialog'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-// import usePubSub from '/src/hooks/usePubSub'
-import { useGetAllEventsQuery } from '../services/events/getEvents'
+import usePubSub from '/src/hooks/usePubSub'
+import { useGetAllEventsQuery } from '/src/services/events/getEvents'
+import EventDetailDialog from './EventDetail'
 
-const EventDetailDialog = ({ eventId, onHide }) => {
-  const [eventData, setEventData] = useState(null)
-
-  useEffect(() => {
-    if (!eventId) {
-      onHide()
-      return
-    }
-
-    axios.get(`/api/events/${eventId}`).then((response) => {
-      const event = response.data
-      if (event.topic.startsWith('log.')) {
-        setEventData(event.payload.message)
-        return
-      }
-      setEventData(JSON.stringify(event.payload, null, 2))
-    })
-  }, [eventId])
-
-  return (
-    <Dialog onHide={onHide} visible={true}>
-      <pre>{eventData}</pre>
-    </Dialog>
-  )
-}
-
-const EventViewer = () => {
+const EventPage = () => {
+  const [eventData, setEventData] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [detailVisible, setDetailVisible] = useState(false)
 
-  const { data: eventData, isLoading, isError, error } = useGetAllEventsQuery({ last: 100 })
+  const { data, isLoading, isError, error } = useGetAllEventsQuery({ last: 100 })
 
-  // const handlePubSub = (topic, message) => {
-  //   if (topic === 'client.connected') {
-  //     return
-  //   }
-  //   setEventData((ed) => {
-  //     let updated = false
-  //     for (const row of ed) {
-  //       if (row.id !== message.id) continue
-  //       updated = true
-  //       Object.assign(row, message)
-  //     }
-  //     if (!updated) return [message, ...ed]
-  //     return [...ed]
-  //   })
-  // }
+  // set event data to queried data
+  useEffect(() => {
+    if (data && !isError && !isLoading) {
+      setEventData(data)
+    }
+  }, [data, isLoading])
 
-  // usePubSub('*', handlePubSub)
+  const handlePubSub = (topic, message) => {
+    if (topic === 'client.connected') {
+      return
+    }
+    setEventData((ed) => {
+      let updated = false
+      for (const row of ed) {
+        if (row.id !== message.id) continue
+        updated = true
+        Object.assign(row, message)
+      }
+      if (!updated) return [message, ...ed]
+      return [...ed]
+    })
+  }
+
+  usePubSub('*', handlePubSub)
 
   const formatTime = (rowData) => {
     return <TimestampField value={rowData.updatedAt} />
@@ -112,4 +93,4 @@ const EventViewer = () => {
   )
 }
 
-export default EventViewer
+export default EventPage
