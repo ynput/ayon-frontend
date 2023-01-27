@@ -96,12 +96,12 @@ const ProjectManager = () => {
       <nav className="secondary">
         {links.map(
           (link, i) =>
-            isUser &&
-            userAccess.includes(link.module) && (
+            (isUser && userAccess.includes(link.module)) ||
+            (!isUser && (
               <NavLink to={link.path} key={i}>
                 {link.name}
               </NavLink>
-            ),
+            )),
         )}
       </nav>
       <main>
