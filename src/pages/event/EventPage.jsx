@@ -57,7 +57,7 @@ const EventPage = () => {
   return (
     <main>
       {detailVisible && (
-        <EventDetailDialog onHide={() => setDetailVisible(false)} eventId={selectedEvent?.id} />
+        <EventDetailDialog onHide={() => setDetailVisible(false)} id={selectedEvent?.id} />
       )}
       <Section>
         <Toolbar></Toolbar>

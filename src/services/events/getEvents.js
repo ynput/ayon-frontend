@@ -44,7 +44,12 @@ const getEvents = ayonApi.injectEndpoints({
           status: edge.node.status,
         })),
     }),
+    getEventById: build.query({
+      query: ({ id }) => ({
+        url: `/api/events/${id}`,
+      }),
+    }),
   }),
 })
 
-export const { useGetAllEventsQuery } = getEvents
+export const { useGetAllEventsQuery, useGetEventByIdQuery } = getEvents

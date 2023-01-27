@@ -1,29 +1,18 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import React from 'react'
+
 import { Dialog } from 'primereact/dialog'
+import { useGetEventByIdQuery } from '/src/services/events/getEvents'
 
-const EventDetail = ({ eventId, onHide }) => {
-  const [eventData, setEventData] = useState(null)
+const EventDetail = ({ id, onHide }) => {
+  const { data: event, isLoading } = useGetEventByIdQuery({ id }, { skip: !id })
 
-  useEffect(() => {
-    if (!eventId) {
-      onHide()
-      return
-    }
+  if (isLoading || !event || !id) return null
 
-    axios.get(`/api/events/${eventId}`).then((response) => {
-      const event = response.data
-      if (event.topic.startsWith('log.')) {
-        setEventData(event.payload.message)
-        return
-      }
-      setEventData(JSON.stringify(event.payload, null, 2))
-    })
-  }, [eventId])
+  // const isLog = event.topic.startsWith('log.')
 
   return (
-    <Dialog onHide={onHide} visible={true}>
-      <pre>{eventData}</pre>
+    <Dialog onHide={onHide} visible>
+      <pre>{event.description}</pre>
     </Dialog>
   )
 }
