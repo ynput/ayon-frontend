@@ -176,6 +176,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     toast.success('Override pinned')
   }
 
+  const copySelection = () => {
+    const key = `${currentSelection.addon.name}|${currentSelection.addon.version}|${
+      currentSelection.siteId || '_'
+    }|${projectKey || '_'}`
+    const data = localData[key]
+    console.log('copySelection', key, data)
+  }
+
   //
   // RENDER
   //
@@ -183,7 +191,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const settingsListHeader = useMemo(() => {
     return (
       <Toolbar>
-        <Button icon="content_copy" disabled={true} />
+        <Button icon="content_copy" onClick={copySelection} />
         <Button icon="content_paste" disabled={true} />
         <Button
           icon="cancel"

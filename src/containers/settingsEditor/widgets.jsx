@@ -145,7 +145,6 @@ const TextWidget = (props) => {
   //
 
   if (['integer', 'number'].includes(props.schema.type)) {
-    console.log(props)
     Input = InputNumber
     if (props.schema.type === 'number') {
       opts.step = 0.1

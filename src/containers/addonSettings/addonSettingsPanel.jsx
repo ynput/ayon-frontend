@@ -66,7 +66,11 @@ const AddonSettingsPanel = ({
     refetchOverrides()
   }, [addon.name, addon.version, reloadTrigger, projectName])
 
-  const formData = localData ? localData : originalData
+  useEffect(() => {
+    if (originalData && !settingsLoading) {
+      onChange(originalData)
+    }
+  }, [originalData])
 
   const onSetBreadcrumbs = (path) => {
     const fieldId = ['root', ...(path || [])].join('_')
@@ -81,11 +85,11 @@ const AddonSettingsPanel = ({
   }
 
   const editor = useMemo(() => {
-    if (!(schema && formData && overrides)) return <></>
+    if (!(schema && localData && overrides)) return <></>
     return (
       <SettingsEditor
         schema={schema}
-        formData={formData}
+        formData={localData}
         changedKeys={changedKeys}
         overrides={overrides}
         onChange={onChange}
@@ -94,7 +98,7 @@ const AddonSettingsPanel = ({
         level={settingsLevel}
       />
     )
-  }, [schema, formData, overrides])
+  }, [schema, localData, overrides])
 
   if (schemaLoading || settingsLoading || overridesLoading) {
     return 'Loading...'
