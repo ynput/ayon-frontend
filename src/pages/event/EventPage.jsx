@@ -55,7 +55,7 @@ const EventPage = () => {
             />
           </SplitterPanel>
           <SplitterPanel size={30}>
-            <EventDetailDialog id={selectedEvent?.id} />
+            <EventDetailDialog id={selectedEvent?.id} setSelectedEvent={setSelectedEvent} />
           </SplitterPanel>
         </Splitter>
       </Section>

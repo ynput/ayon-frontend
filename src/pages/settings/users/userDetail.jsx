@@ -11,24 +11,8 @@ import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import LockedInputRow from '/src/components/LockedInput'
-
-const HeaderStyled = styled(Panel)`
-  gap: 10px;
-  align-items: center;
-  flex-direction: row;
-
-  h2 {
-    font-size: 1.1rem;
-    margin: 0;
-  }
-
-  /* icon */
-  & > span {
-    flex: 1;
-    text-align: end;
-    cursor: pointer;
-  }
-`
+import DetailHeader from '/src/components/DetailHeader'
+import { Dialog } from 'primereact/dialog'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -128,6 +112,7 @@ const UserDetail = ({
   const [initData, setInitData] = useState({})
   const [changesMade, setChangesMade] = useState(false)
   const [formUsers, setFormUsers] = useState([])
+  const [showContextDialog, setShowContextDialog] = useState(false)
 
   const attributes = ayonClient.getAttribsByScope('user')
 
@@ -289,84 +274,97 @@ const UserDetail = ({
   }, [])
 
   return (
-    <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
-      <HeaderStyled>
-        <UserImagesStacked
-          users={formUsers.map((user) => ({
-            fullName: getUserName(user),
-            src: user.attrib.avatarUrl,
-            self: user.self,
-          }))}
-        />
-        <div>
-          {singleUserEdit ? (
-            <h2>{getUserName(singleUserEdit)}</h2>
-          ) : (
-            <h2>{`${selectedUsers.length} Users Selected`}</h2>
-          )}
-          <span>{headerRoles.length ? headerRoles.join(', ') : 'No Roles'}</span>
-        </div>
-        <span className="material-symbols-outlined" onClick={onClose}>
-          close
-        </span>
-      </HeaderStyled>
-      {hasServiceUser && singleUserEdit ? (
-        <FormsStyled>
-          <ServiceDetails editName={() => setShowRenameUser(true)} user={singleUserEdit} />
-        </FormsStyled>
-      ) : (
-        <FormsStyled>
-          {formData && singleUserEdit && (
-            <Panel>
-              <LockedInputRow
-                label="Username"
-                value={singleUserEdit.name}
-                onEdit={() => setShowRenameUser(true)}
-                disabled={managerDisabled}
-              />
-              <LockedInputRow
-                label="Password"
-                value={singleUserEdit.hasPassword ? '1234567890' : ''}
-                type="password"
-                onEdit={() => setShowSetPassword(true)}
-                disabled={managerDisabled}
-              />
-
-              <UserAttribForm
-                formData={formData}
-                setFormData={setFormData}
-                attributes={attributes}
-                disabled={managerDisabled}
-              />
-            </Panel>
-          )}
-          <Panel>
-            {formData && (
-              <UserAccessForm
-                formData={formData}
-                setFormData={setFormData}
-                selectedProjects={selectedProjects}
-                disabled={managerDisabled || isSelfSelected}
-              />
+    <>
+      <Dialog
+        header="User Context"
+        visible={showContextDialog}
+        onHide={() => setShowContextDialog(false)}
+      >
+        <pre>{JSON.stringify(formUsers, null, 2)}</pre>
+      </Dialog>
+      <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
+        <DetailHeader onClose={onClose}>
+          <UserImagesStacked
+            users={formUsers.map((user) => ({
+              fullName: getUserName(user),
+              src: user.attrib.avatarUrl,
+              self: user.self,
+            }))}
+          />
+          <div>
+            {singleUserEdit ? (
+              <h2>{getUserName(singleUserEdit)}</h2>
+            ) : (
+              <h2>{`${selectedUsers.length} Users Selected`}</h2>
             )}
-          </Panel>
-        </FormsStyled>
-      )}
-      <PanelButtonsStyled>
-        <Button
-          onClick={onCancel}
-          label="Cancel"
-          icon="cancel"
-          disabled={!changesMade || selectedUsers.length > 1}
-        />
-        <Button
-          onClick={() => (selectedUsers.length > 1 ? handleMultiSave() : onSave())}
-          label="Save selected users"
-          icon="check"
-          disabled={!changesMade}
-        />
-      </PanelButtonsStyled>
-    </Section>
+            <div>{headerRoles.length ? headerRoles.join(', ') : 'No Roles'}</div>
+          </div>
+          <span
+            style={{ marginLeft: 'auto' }}
+            className="material-symbols-outlined"
+            onClick={() => setShowContextDialog(true)}
+          >
+            more_horiz
+          </span>
+        </DetailHeader>
+        {hasServiceUser && singleUserEdit ? (
+          <FormsStyled>
+            <ServiceDetails editName={() => setShowRenameUser(true)} user={singleUserEdit} />
+          </FormsStyled>
+        ) : (
+          <FormsStyled>
+            {formData && singleUserEdit && (
+              <Panel>
+                <LockedInputRow
+                  label="Username"
+                  value={singleUserEdit.name}
+                  onEdit={() => setShowRenameUser(true)}
+                  disabled={managerDisabled}
+                />
+                <LockedInputRow
+                  label="Password"
+                  value={singleUserEdit.hasPassword ? '1234567890' : ''}
+                  type="password"
+                  onEdit={() => setShowSetPassword(true)}
+                  disabled={managerDisabled}
+                />
+
+                <UserAttribForm
+                  formData={formData}
+                  setFormData={setFormData}
+                  attributes={attributes}
+                  disabled={managerDisabled}
+                />
+              </Panel>
+            )}
+            <Panel>
+              {formData && (
+                <UserAccessForm
+                  formData={formData}
+                  setFormData={setFormData}
+                  selectedProjects={selectedProjects}
+                  disabled={managerDisabled || isSelfSelected}
+                />
+              )}
+            </Panel>
+          </FormsStyled>
+        )}
+        <PanelButtonsStyled>
+          <Button
+            onClick={onCancel}
+            label="Cancel"
+            icon="cancel"
+            disabled={!changesMade || selectedUsers.length > 1}
+          />
+          <Button
+            onClick={() => (selectedUsers.length > 1 ? handleMultiSave() : onSave())}
+            label="Save selected users"
+            icon="check"
+            disabled={!changesMade}
+          />
+        </PanelButtonsStyled>
+      </Section>
+    </>
   )
 }
 
