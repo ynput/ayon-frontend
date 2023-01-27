@@ -12,17 +12,49 @@ const EventDetail = ({ id, setSelectedEvent }) => {
   // const isLog = event.topic.startsWith('log.')
   console.log(event)
 
+  const { description, user, summary, project, payload } = event
+
   return (
     <Section className={'wrap'}>
-      <DetailHeader onClose={() => setSelectedEvent(null)}>
-        <div>
+      <DetailHeader onClose={() => setSelectedEvent(null)} context={event}>
+        <div style={{ overflow: 'hidden' }}>
           <h2>{event.topic}</h2>
           <TimestampField value={event.updatedAt} />
         </div>
       </DetailHeader>
-      <Panel>
-        <h2>Description</h2>
-        <span>{event.description}</span>
+      <Panel
+        style={{
+          overflow: 'hidden',
+        }}
+      >
+        <div>
+          <h2>Description</h2>
+          <span>{description}</span>
+        </div>
+        {payload.message && (
+          <div>
+            <h2>Message</h2>
+            <span>{payload.message}</span>
+          </div>
+        )}
+        {user && (
+          <div>
+            <h2>User</h2>
+            <span>{user}</span>
+          </div>
+        )}
+        {project && (
+          <div>
+            <h2>Project</h2>
+            <span>{project}</span>
+          </div>
+        )}
+        {summary.entityId && (
+          <div>
+            <h2>Entity</h2>
+            <span>{summary.entityId}</span>
+          </div>
+        )}
       </Panel>
     </Section>
   )

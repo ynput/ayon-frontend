@@ -23,6 +23,7 @@ const HeaderStyled = styled(Panel)`
     gap: 10px;
     align-items: center;
     flex: 1;
+    overflow: hidden;
   }
 
   /* icon */
@@ -37,7 +38,13 @@ const DetailHeader = ({ children, onClose, style, context }) => {
   return (
     <>
       <Dialog header="User Context" visible={showContext} onHide={() => setShowContext(false)}>
-        <pre>{JSON.stringify(context, null, 2)}</pre>
+        <pre
+          style={{
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {JSON.stringify(context, null, 2)}
+        </pre>
       </Dialog>
       <HeaderStyled style={style}>
         <div>{children}</div>
