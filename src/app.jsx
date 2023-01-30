@@ -6,6 +6,8 @@ import { LoaderShade } from '@ynput/ayon-react-components'
 import { useEffect, useState, Suspense, lazy, useContext } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
+import { QueryParamProvider } from 'use-query-params'
+import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
 import { toast } from 'react-toastify'
 
 import Header from './containers/header'
@@ -104,38 +106,40 @@ const App = () => {
       <SocketProvider>
         <Reloader />
         <BrowserRouter>
-          <Header />
-          <Routes>
-            <Route path="/" exact element={<Navigate replace to="/manageProjects/dashboard" />} />
-            <Route
-              path="/manageProjects"
-              exact
-              element={<Navigate replace to="/manageProjects/dashboard" />}
-            />
+          <QueryParamProvider adapter={ReactRouter6Adapter}>
+            <Header />
+            <Routes>
+              <Route path="/" exact element={<Navigate replace to="/manageProjects/dashboard" />} />
+              <Route
+                path="/manageProjects"
+                exact
+                element={<Navigate replace to="/manageProjects/dashboard" />}
+              />
 
-            <Route path="/manageProjects/:module" element={<ManageProjects />} />
-            <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-            <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
-            <Route
-              path="/settings"
-              exact
-              element={<Navigate replace to="/settings/anatomyPresets" />}
-            />
-            <Route path="/settings/:module" exact element={<SettingsPage />} />
-            <Route
-              path="/services"
-              element={
-                <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                  <ServicesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/explorer" element={<ExplorerPage />} />
-            <Route path="/doc/api" element={<APIDocsPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/events" element={<EventPage />} />
-            <Route element={<ErrorPage code="404" />} />
-          </Routes>
+              <Route path="/manageProjects/:module" element={<ManageProjects />} />
+              <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+              <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
+              <Route
+                path="/settings"
+                exact
+                element={<Navigate replace to="/settings/anatomyPresets" />}
+              />
+              <Route path="/settings/:module" exact element={<SettingsPage />} />
+              <Route
+                path="/services"
+                element={
+                  <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                    <ServicesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/explorer" element={<ExplorerPage />} />
+              <Route path="/doc/api" element={<APIDocsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/events" element={<EventPage />} />
+              <Route element={<ErrorPage code="404" />} />
+            </Routes>
+          </QueryParamProvider>
         </BrowserRouter>
       </SocketProvider>
     </Suspense>

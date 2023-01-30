@@ -19,6 +19,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { SelectButton } from 'primereact/selectbutton'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
+import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
 
 // TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
@@ -44,7 +45,9 @@ const formatRoles = (rowData, selectedProjects) => {
 }
 
 const UsersSettings = () => {
-  const [selectedUsers, setSelectedUsers] = useState([])
+  // QUERY PARAMS STATE
+  const [selectedUsers, setSelectedUsers] = useQueryParam('name', withDefault(ArrayParam, []))
+  // USE STATE
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [showNewUser, setShowNewUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
