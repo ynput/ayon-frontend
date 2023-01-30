@@ -3,12 +3,20 @@ import { Button } from '@ynput/ayon-react-components'
 
 import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { projectSelected } from '/src/features/context'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const projectName = useSelector((state) => state.context.projectName)
+
+  const onProjectSelect = (projectName) => {
+    // reset selected folders
+    dispatch(projectSelected())
+    navigate(`/projects/${projectName}/browser`)
+  }
 
   const footer = (
     <Button
@@ -32,7 +40,7 @@ const ProjectMenu = ({ visible, onHide }) => {
       >
         <ProjectList
           footer={footer}
-          onSelect={(projectName) => navigate(`/projects/${projectName}/browser`)}
+          onSelect={(projectName) => onProjectSelect(projectName)}
           selection={projectName}
         />
       </div>

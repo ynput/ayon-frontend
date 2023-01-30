@@ -1,7 +1,5 @@
-import axios from 'axios'
-
 import { useState, useEffect } from 'react'
-import { useParams, NavLink } from 'react-router-dom'
+import { useParams, NavLink, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Spacer, Button } from '@ynput/ayon-react-components'
 
@@ -23,6 +21,8 @@ import {
   updateStatusShortNames,
 } from '../utils'
 import usePubSub from '/src/hooks/usePubSub'
+import { useGetProjectQuery } from '../services/getProject'
+import { useGetAddonProjectQuery } from '../services/addonList'
 
 const ProjectContexInfo = () => {
   /**
@@ -39,89 +39,83 @@ const ProjectPage = () => {
    * It parses the url, loads the project data, dispatches the
    * project data to the store, and renders the requested page.
    */
-
-  const [loading, setLoading] = useState(true)
-  const [addons, setAddons] = useState([])
+  const navigate = useNavigate()
   const { projectName, module, addonName } = useParams()
   const dispatch = useDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
+  const { data, isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+
+  const {
+    data: addonsData,
+    isLoading: addonsLoading,
+    isError: addonsIsError,
+    refetch: refetchAddons,
+    isUninitialized: addonsIsUninitialized,
+  } = useGetAddonProjectQuery({}, { skip: !projectName })
+
+  useEffect(() => {
+    if (!isLoading && !isError) {
+      dispatch(setProjectData(data))
+
+      // Icons
+      const r = {}
+      for (const folderType of data.folderTypes) {
+        r[folderType.name] = folderType.icon
+      }
+      updateFolderTypeIcons(r)
+
+      const s = {}
+      for (const taskType of data.taskTypes) {
+        s[taskType.name] = taskType.icon
+      }
+      updateTaskTypeIcons(s)
+
+      const t = {}
+      for (const status of data.statuses) {
+        t[status.name] = status.color
+      }
+      updateStatusColors(t)
+
+      const i = {}
+      for (const status of data.statuses) {
+        i[status.name] = status.icon
+      }
+      updateStatusIcons(i)
+
+      const n = {}
+      for (const status of data.statuses) {
+        n[status.name] = status.shortName
+      }
+      updateStatusShortNames(n)
+
+      const g = {}
+      for (const tag of data.tags) {
+        g[tag.name] = tag.color
+      }
+      updateTagColors(g)
+
+      //TODO: statuses
+
+      localStorage.setItem('lastProject', projectName)
+    }
+  }, [isLoading, isError, data])
+
+  useEffect(() => {
+    if (!addonsLoading && !addonsIsError && addonsData) {
+      dispatch(selectProject(projectName))
+    } else {
+      // redirect to project manager
+    }
+  }, [addonsLoading, addonsIsError, addonsData, projectName])
 
   const loadProjectData = () => {
-    console.log('Loading project data')
-    setLoading(true)
-    axios
-      .get(`/api/projects/${projectName}`)
-      .then((response) => {
-        const data = response.data
-        dispatch(setProjectData(data))
-
-        // Icons
-        const r = {}
-        for (const folderType of data.folderTypes) {
-          r[folderType.name] = folderType.icon
-        }
-        updateFolderTypeIcons(r)
-
-        const s = {}
-        for (const taskType of data.taskTypes) {
-          s[taskType.name] = taskType.icon
-        }
-        updateTaskTypeIcons(s)
-
-        const t = {}
-        for (const status of data.statuses) {
-          t[status.name] = status.color
-        }
-        updateStatusColors(t)
-
-        const i = {}
-        for (const status of data.statuses) {
-          i[status.name] = status.icon
-        }
-        updateStatusIcons(i)
-
-        const n = {}
-        for (const status of data.statuses) {
-          n[status.name] = status.shortName
-        }
-        updateStatusShortNames(n)
-
-        const g = {}
-        for (const tag of data.tags) {
-          g[tag.name] = tag.color
-        }
-        updateTagColors(g)
-
-        //TODO: statuses
-
-        localStorage.setItem('lastProject', projectName)
-
-        // Load addons
-        // Loading it here beceause we can have a version override
-        // from the project data
-
-        axios.get('/api/addons').then((response) => {
-          let result = []
-          for (const definition of response.data.addons) {
-            const versDef = definition.versions[definition.productionVersion]
-            if (!versDef) continue
-            const projectScope = versDef.frontendScopes['project']
-            if (!projectScope) continue
-
-            result.push({
-              name: definition.name,
-              title: definition.title,
-              version: definition.productionVersion,
-              settings: projectScope,
-            })
-          }
-          setAddons(result)
-        })
-      })
-      .finally(() => {
-        dispatch(selectProject(projectName))
-        setLoading(false)
-      })
+    if (!isUninitialized && !addonsIsUninitialized && !isLoading && !addonsLoading) {
+      refetch()
+      refetchAddons()
+    }
   }
 
   const handlePubSub = async (topic, message) => {
@@ -135,33 +129,30 @@ const ProjectPage = () => {
     }
   }
 
-  // Set project data to null when leaving project page
-  useEffect(() => {
-    return () => dispatch(selectProject(null))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   usePubSub('client.connected', handlePubSub)
   usePubSub('entity.project', handlePubSub)
-
-  // Fetch project data
-  useEffect(() => {
-    loadProjectData()
-  }, [dispatch, projectName])
 
   //
   // Render page
   //
 
-  if (loading || !projectName) {
+  if (isLoading || !projectName || addonsLoading) {
     return <LoadingPage />
+  }
+
+  // error
+  if (isError) {
+    setTimeout(() => {
+      navigate('/projectManager/dashboard')
+    }, 1500)
+    return <div className="page">Project Not Found, Redirecting...</div>
   }
 
   let child = null
   if (module === 'editor') child = <EditorPage />
   else if (module === 'workfiles') child = <WorkfilesPage />
   else if (addonName) {
-    for (const addon of addons) {
+    for (const addon of addonsData) {
       if (addon.name === addonName) {
         child = (
           <ProjectAddon
@@ -188,7 +179,7 @@ const ProjectPage = () => {
         <NavLink to={`/projects/${projectName}/browser`}>Browser</NavLink>
         <NavLink to={`/projects/${projectName}/editor`}>Editor</NavLink>
         <NavLink to={`/projects/${projectName}/workfiles`}>Workfiles</NavLink>
-        {addons.map((addon) => (
+        {addonsData.map((addon) => (
           <NavLink to={`/projects/${projectName}/addon/${addon.name}`} key={addon.name}>
             {addon.title}
           </NavLink>

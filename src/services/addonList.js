@@ -3,9 +3,7 @@ import { ayonApi } from './ayon'
 const addonList = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getAddonList: build.query({
-      // arguments are used in transformResponse, so we need to silence eslint here
-      // eslint-disable-next-line no-unused-vars
-      query: ({ showVersions, withSettings }) => ({
+      query: () => ({
         url: `/api/addons`,
         method: 'GET',
       }),
@@ -74,6 +72,33 @@ const addonList = ayonApi.injectEndpoints({
       }, // transformResponse
     }), // getAddonList
 
+    getAddonProject: build.query({
+      query: () => ({
+        url: `/api/addons`,
+        method: 'GET',
+      }),
+      providesTags: ['addonList'],
+      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+      transformResponse: (response) => {
+        let result = []
+        for (const definition of response.addons) {
+          const versDef = definition.versions[definition.productionVersion]
+          if (!versDef) continue
+          const projectScope = versDef.frontendScopes['project']
+          if (!projectScope) continue
+
+          result.push({
+            name: definition.name,
+            title: definition.title,
+            version: definition.productionVersion,
+            settings: projectScope,
+          })
+        }
+
+        return result
+      },
+    }),
+
     setAddonVersion: build.mutation({
       // eslint-disable-next-line no-unused-vars
       query: ({ projectName, addonName, productionVersion, stagingVersion }) => {
@@ -94,4 +119,5 @@ const addonList = ayonApi.injectEndpoints({
   }), // endpoints
 })
 
-export const { useGetAddonListQuery, useSetAddonVersionMutation } = addonList
+export const { useGetAddonListQuery, useGetAddonProjectQuery, useSetAddonVersionMutation } =
+  addonList
