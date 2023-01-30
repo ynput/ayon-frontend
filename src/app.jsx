@@ -13,7 +13,7 @@ import LoginPage from './pages/login'
 import ErrorPage from './pages/error'
 
 const ProjectPage = lazy(() => import('./pages/project'))
-const ProjectManager = lazy(() => import('./pages/projectManager'))
+const ManageProjects = lazy(() => import('./pages/manageProjects'))
 const ExplorerPage = lazy(() => import('./pages/explorer'))
 const APIDocsPage = lazy(() => import('./pages/doc/api'))
 const ProfilePage = lazy(() => import('./pages/profile'))
@@ -106,14 +106,14 @@ const App = () => {
         <BrowserRouter>
           <Header />
           <Routes>
-            <Route path="/" exact element={<Navigate replace to="/projectManager/dashboard" />} />
+            <Route path="/" exact element={<Navigate replace to="/manageProjects/dashboard" />} />
             <Route
-              path="/projectManager"
+              path="/manageProjects"
               exact
-              element={<Navigate replace to="/projectManager/dashboard" />}
+              element={<Navigate replace to="/manageProjects/dashboard" />}
             />
 
-            <Route path="/projectManager/:module" element={<ProjectManager />} />
+            <Route path="/manageProjects/:module" element={<ManageProjects />} />
             <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
             <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
             <Route

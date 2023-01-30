@@ -21,9 +21,9 @@ const ProjectMenu = ({ visible, onHide }) => {
   const footer = (
     <Button
       icon="settings_suggest"
-      label="Project manager"
+      label="Manage Projects"
       style={{ marginTop: 10, width: '100%' }}
-      onClick={() => navigate('/projectManager')}
+      onClick={() => navigate('/manageProjects')}
     />
   )
 
