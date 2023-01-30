@@ -15,7 +15,7 @@ const RowStyled = styled.div`
   }
 `
 
-const EventDetail = ({ id, setSelectedEvent }) => {
+const EventDetail = ({ id, setSelectedEvent, setSearch }) => {
   const { data: event, isLoading, isFetching } = useGetEventByIdQuery({ id }, { skip: !id })
 
   if (isLoading || !event || !id) return null
@@ -52,7 +52,7 @@ const EventDetail = ({ id, setSelectedEvent }) => {
               <Button
                 icon="filter_alt"
                 className="transparent"
-                onClick={() => console.log('filter')}
+                onClick={() => setSearch(userName)}
               />
               <Link to={`/settings/users?name=${userName}`}>
                 <Button icon="manage_accounts" className="transparent" />

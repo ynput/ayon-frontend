@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Section } from '@ynput/ayon-react-components'
+import { Section, Toolbar, InputText } from '@ynput/ayon-react-components'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetEventsQuery } from '/src/services/events/getEvents'
 import EventDetailDialog from './EventDetail'
@@ -7,13 +7,14 @@ import { useDispatch } from 'react-redux'
 import { ayonApi } from '/src/services/ayon'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import EventList from './EventList'
+import useSearchFilter from '/src/hooks/useSearchFilter'
 
 const EventPage = () => {
   const dispatch = useDispatch()
   const [selectedEvent, setSelectedEvent] = useState(null)
 
   const last = 100
-  const { data: eventData, isLoading, isError, error } = useGetEventsQuery({ last })
+  const { data: eventData = [], isLoading, isError, error } = useGetEventsQuery({ last })
 
   const handlePubSub = (topic, message) => {
     if (topic === 'client.connected') {
@@ -37,6 +38,10 @@ const EventPage = () => {
 
   usePubSub('*', handlePubSub)
 
+  const searchableFields = ['topic', 'user', 'project', 'description']
+  // search filter
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, eventData)
+
   // handle error
   if (isError) {
     return <div>Error: {error.message}</div>
@@ -45,17 +50,29 @@ const EventPage = () => {
   return (
     <main>
       <Section>
+        <Toolbar>
+          <InputText
+            style={{ width: '200px' }}
+            placeholder="Filter events..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </Toolbar>
         <Splitter style={{ height: '100%', width: '100%' }}>
           <SplitterPanel size={70}>
             <EventList
-              eventData={eventData}
+              eventData={filteredData}
               isLoading={isLoading}
               selectedEvent={selectedEvent}
               setSelectedEvent={setSelectedEvent}
             />
           </SplitterPanel>
           <SplitterPanel size={30}>
-            <EventDetailDialog id={selectedEvent?.id} setSelectedEvent={setSelectedEvent} />
+            <EventDetailDialog
+              id={selectedEvent?.id}
+              setSelectedEvent={setSelectedEvent}
+              setSearch={setSearch}
+            />
           </SplitterPanel>
         </Splitter>
       </Section>
