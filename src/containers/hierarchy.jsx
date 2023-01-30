@@ -67,7 +67,7 @@ const filterHierarchy = (text, folder) => {
 
 const Hierarchy = (props) => {
   const projectName = useSelector((state) => state.context.projectName)
-  const folderTypes = useSelector((state) => state.context.project.folderTypes)
+  const folderTypes = useSelector((state) => state.context.project.folderTypes || [])
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
@@ -113,7 +113,10 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, isLoading, data } = useGetHierarchyQuery({ projectName })
+  const { isError, error, isLoading, data } = useGetHierarchyQuery(
+    { projectName },
+    { skip: !projectName },
+  )
 
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
@@ -147,7 +150,6 @@ const Hierarchy = (props) => {
     let heirarchyObject = {}
 
     data.forEach((item) => {
-      console.log(item)
       heirarchyObject[item.id] = { ...item, isLeaf: !item.children?.length }
 
       if (item.children?.length > 0) {
@@ -240,6 +242,7 @@ const Hierarchy = (props) => {
   }
 
   const onToggle = (event) => {
+    console.log(event)
     dispatch(setExpandedFolders(event.value))
   }
 
@@ -253,6 +256,48 @@ const Hierarchy = (props) => {
         type: 'tags',
       }),
     )
+  }
+
+  const handleDoubleClick = () => {
+    // folder is always selected when row is double clicked
+
+    // filter out selected folders that are isLeaf
+    let doubleClickedFolders = []
+    for (const id in selectedFolders) {
+      if (!heirarchyObjectData[id].isLeaf) {
+        doubleClickedFolders.push(id)
+      }
+    }
+
+    // return if no folders are selected
+    if (!doubleClickedFolders.length) return
+
+    // separate folders that are already expanded
+    // separate folders that are not expanded
+    const alreadyExpandedFolders = []
+    const notExpandedFolders = []
+    for (const id of doubleClickedFolders) {
+      if (expandedFolders[id]) {
+        alreadyExpandedFolders.push(id)
+      } else {
+        notExpandedFolders.push(id)
+      }
+    }
+
+    // remove already expanded folders
+    const newExpandedFolders = { ...expandedFolders }
+    for (const id of alreadyExpandedFolders) {
+      console.log(newExpandedFolders[id])
+      delete newExpandedFolders[id]
+    }
+
+    // add not expanded folders
+    for (const id of notExpandedFolders) {
+      newExpandedFolders[id] = true
+    }
+
+    // update redux
+    dispatch(setExpandedFolders(newExpandedFolders))
   }
 
   const ctxMenuModel = [
@@ -270,8 +315,8 @@ const Hierarchy = (props) => {
   // Render
   //
 
-  const table = useMemo(
-    () => (
+  const table = useMemo(() => {
+    return (
       <TreeTable
         value={treeData}
         responsive="true"
@@ -286,12 +331,12 @@ const Hierarchy = (props) => {
         onRowClick={onRowClick}
         onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
         onContextMenuSelectionChange={onContextMenuSelectionChange}
+        onDoubleClick={handleDoubleClick}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
-    ),
-    [treeData, selectedFolders, expandedFolders],
-  )
+    )
+  }, [treeData, selectedFolders, expandedFolders])
 
   if (isError) {
     toast.error(`Unable to load hierarchy. ${error}`)

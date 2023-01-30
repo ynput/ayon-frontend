@@ -4,6 +4,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useGetAllProjectsQuery } from '../services/getProject'
+import { useSelector } from 'react-redux'
 
 const formatName = (rowData, defaultTitle) => {
   if (rowData.name === '_') return defaultTitle
@@ -20,9 +21,11 @@ const ProjectList = ({
   style,
   className,
 }) => {
+  const user = useSelector((state) => state.user)
   // QUERY HOOK
   // ( default ) gets added in transformResponse
-  const { data = [], isLoading, isError, error } = useGetAllProjectsQuery()
+  // pass user to force update when user changes
+  const { data = [], isLoading, isError, error } = useGetAllProjectsQuery({ user })
   if (isError) {
     console.error(error)
   }

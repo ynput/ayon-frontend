@@ -13,9 +13,9 @@ query UserList {
 }
 `
 
-const USERS_BY_NAME_QUERY = `
-  query UserList($names:[String!]!) {
-    users(names: [$names]) {
+const USER_BY_NAME_QUERY = `
+  query UserList($name:String!) {
+    users(name: $name) {
       edges {
         node {
           name
@@ -28,8 +28,7 @@ const USERS_BY_NAME_QUERY = `
           defaultRoles
           hasPassword
           attrib {
-            fullName
-            email
+            #ATTRS#
           }
         }
       }
@@ -107,13 +106,19 @@ const getUsers = ayonApi.injectEndpoints({
           ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
           : ['user'],
     }),
-    getUsersByName: build.query({
-      query: ({ names }) => ({
+    getUser: build.query({
+      query: ({ name }) => ({
+        url: `/api/users/${name}`,
+      }),
+      providesTags: (res, g, { name }) => [{ type: 'user', id: name }],
+    }),
+    getUserByName: build.query({
+      query: ({ name }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: USERS_BY_NAME_QUERY,
-          variables: { names },
+          query: buildUsersQuery(USER_BY_NAME_QUERY),
+          variables: { name },
         },
       }),
       transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
@@ -125,4 +130,5 @@ const getUsers = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useGetUsersQuery, useGetUsersListQuery, useGetUsersByNameQuery } = getUsers
+export const { useGetUsersQuery, useGetUsersListQuery, useGetUserByNameQuery, useGetUserQuery } =
+  getUsers

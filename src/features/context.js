@@ -29,6 +29,19 @@ const contextSlice = createSlice({
       return state
     },
 
+    projectSelected: (state) => {
+      ;(state.focused = {
+        type: null,
+        folders: [],
+        subsets: [],
+        versions: [],
+        tasks: [],
+        editor: [],
+      }),
+        (state.projectName = null)
+      state.expandedFolders = {}
+    },
+
     setProjectData: (state, action) => {
       state.project = action.payload
       return state
@@ -158,6 +171,7 @@ export const {
   setFocusedType,
   subsetSelected,
   editorSelectionChanged,
+  projectSelected,
 } = contextSlice.actions
 
 export default contextSlice.reducer
