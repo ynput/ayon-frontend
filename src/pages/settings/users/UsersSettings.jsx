@@ -19,6 +19,9 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { SelectButton } from 'primereact/selectbutton'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
+import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
+import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 // TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
@@ -44,7 +47,17 @@ const formatRoles = (rowData, selectedProjects) => {
 }
 
 const UsersSettings = () => {
-  const [selectedUsers, setSelectedUsers] = useState([])
+  // QUERY PARAMS STATE
+  const [searchParams] = useSearchParams()
+  const queryNames = searchParams.getAll('name')
+  const [selectedUsers, setSelectedUsers] = useQueryParam('name', withDefault(ArrayParam, []))
+
+  // set initial selected users
+  useEffect(() => {
+    if (queryNames.length) setSelectedUsers(queryNames)
+  }, [])
+
+  // USE STATE
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [showNewUser, setShowNewUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)

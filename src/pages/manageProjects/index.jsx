@@ -12,7 +12,7 @@ import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 import { useSelector } from 'react-redux'
 
-const ProjectManager = () => {
+const ManageProjects = () => {
   const navigate = useNavigate()
   // get is user from context
   const isUser = useSelector((state) => state.user.data.isUser)
@@ -60,49 +60,50 @@ const ProjectManager = () => {
 
   // redirect to dashboard if user is not allowed to access this module
   if (isUser && !userAccess.includes(module)) {
-    navigate('/projectManager/dashboard')
+    navigate('/manageProjects/dashboard')
   }
 
-  const links = [
+  let links = [
     {
       name: 'Dashboard',
-      path: '/projectManager/dashboard',
+      path: '/manageProjects/dashboard',
       module: 'dashboard',
     },
     {
       name: 'Anatomy',
-      path: '/projectManager/anatomy',
+      path: '/manageProjects/anatomy',
       module: 'anatomy',
     },
     {
       name: 'Project settings',
-      path: '/projectManager/projectSettings',
+      path: '/manageProjects/projectSettings',
       module: 'projectSettings',
     },
     {
       name: 'Site settings',
-      path: '/projectManager/siteSettings',
+      path: '/manageProjects/siteSettings',
       module: 'siteSettings',
     },
     {
       name: 'Roots',
-      path: '/projectManager/roots',
+      path: '/manageProjects/roots',
       module: 'roots',
     },
   ]
 
+  // filter links if isUser
+  if (isUser) {
+    links = links.filter((link) => userAccess.includes(link.module))
+  }
+
   return (
     <>
       <nav className="secondary">
-        {links.map(
-          (link, i) =>
-            (isUser && userAccess.includes(link.module)) ||
-            (!isUser && (
-              <NavLink to={link.path} key={i}>
-                {link.name}
-              </NavLink>
-            )),
-        )}
+        {links.map((link, i) => (
+          <NavLink to={link.path} key={i}>
+            {link.name}
+          </NavLink>
+        ))}
       </nav>
       <main>
         {showNewProject && (
@@ -137,4 +138,4 @@ const ProjectManager = () => {
   )
 }
 
-export default ProjectManager
+export default ManageProjects

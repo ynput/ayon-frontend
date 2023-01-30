@@ -67,7 +67,7 @@ const filterHierarchy = (text, folder) => {
 
 const Hierarchy = (props) => {
   const projectName = useSelector((state) => state.context.projectName)
-  const folderTypes = useSelector((state) => state.context.project.folderTypes)
+  const folderTypes = useSelector((state) => state.context.project.folderTypes || [])
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
@@ -113,7 +113,10 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, isLoading, data } = useGetHierarchyQuery({ projectName })
+  const { isError, error, isLoading, data } = useGetHierarchyQuery(
+    { projectName },
+    { skip: !projectName },
+  )
 
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
@@ -312,8 +315,8 @@ const Hierarchy = (props) => {
   // Render
   //
 
-  const table = useMemo(
-    () => (
+  const table = useMemo(() => {
+    return (
       <TreeTable
         value={treeData}
         responsive="true"
@@ -332,9 +335,8 @@ const Hierarchy = (props) => {
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
-    ),
-    [treeData, selectedFolders, expandedFolders],
-  )
+    )
+  }, [treeData, selectedFolders, expandedFolders])
 
   if (isError) {
     toast.error(`Unable to load hierarchy. ${error}`)

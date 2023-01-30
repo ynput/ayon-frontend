@@ -33,6 +33,7 @@
     "sass": "^1.52.1",
     "short-uuid": "^4.2.0",
     "styled-components": "^5.3.6",
+    "use-query-params": "^2.1.2",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

@@ -11,24 +11,7 @@ import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import LockedInputRow from '/src/components/LockedInput'
-
-const HeaderStyled = styled(Panel)`
-  gap: 10px;
-  align-items: center;
-  flex-direction: row;
-
-  h2 {
-    font-size: 1.1rem;
-    margin: 0;
-  }
-
-  /* icon */
-  & > span {
-    flex: 1;
-    text-align: end;
-    cursor: pointer;
-  }
-`
+import DetailHeader from '/src/components/DetailHeader'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -290,7 +273,7 @@ const UserDetail = ({
 
   return (
     <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
-      <HeaderStyled>
+      <DetailHeader onClose={onClose} context={formUsers}>
         <UserImagesStacked
           users={formUsers.map((user) => ({
             fullName: getUserName(user),
@@ -304,12 +287,9 @@ const UserDetail = ({
           ) : (
             <h2>{`${selectedUsers.length} Users Selected`}</h2>
           )}
-          <span>{headerRoles.length ? headerRoles.join(', ') : 'No Roles'}</span>
+          <div>{headerRoles.length ? headerRoles.join(', ') : 'No Roles'}</div>
         </div>
-        <span className="material-symbols-outlined" onClick={onClose}>
-          close
-        </span>
-      </HeaderStyled>
+      </DetailHeader>
       {hasServiceUser && singleUserEdit ? (
         <FormsStyled>
           <ServiceDetails editName={() => setShowRenameUser(true)} user={singleUserEdit} />

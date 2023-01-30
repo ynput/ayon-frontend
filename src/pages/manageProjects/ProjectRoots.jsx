@@ -53,7 +53,11 @@ const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
 }
 
 const ProjectRoots = ({ projectName }) => {
-  const { data: project, isLoading: projectLoading } = useGetProjectQuery({ projectName })
+  const {
+    data: project,
+    isLoading: projectLoading,
+    isError,
+  } = useGetProjectQuery({ projectName }, { skip: !projectName })
   const { data: rootOverrides, isLoading: overridesLoading } = useGetCustomRootsQuery({
     projectName,
   })
@@ -83,6 +87,8 @@ const ProjectRoots = ({ projectName }) => {
   }, [project, rootOverrides])
 
   if (projectLoading || overridesLoading) return <>loading</>
+
+  if (isError) return <>error</>
 
   return (
     <Section className="invisible" style={{ maxWidth: 600 }}>
