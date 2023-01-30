@@ -67,6 +67,7 @@ const SettingsChangesTable = ({ changes }) => {
           selectionMode="multiple"
           selectionKeys={selectedKeys}
           onSelectionChange={(e) => setSelectedKeys(e.value)}
+          emptyMessage="No changes"
           dataKey="id"
           scrollable="true"
           scrollHeight="100%"

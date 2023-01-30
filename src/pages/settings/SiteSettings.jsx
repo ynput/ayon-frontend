@@ -1,19 +1,10 @@
 import { useState, useMemo } from 'react'
-import {
-  Section,
-  Panel,
-  Toolbar,
-  ScrollPanel,
-  Button,
-  TablePanel,
-} from '@ynput/ayon-react-components'
-
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
+import { Section, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
 import SettingsEditor from '/src/containers/settingsEditor'
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
+import { SettingsChangesTable } from '/src/containers/addonSettings/SettingsChangesTable'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '/src/services/siteSettings'
 import { useSetSiteSettingsMutation } from '/src/services/siteSettings'
@@ -46,40 +37,6 @@ const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
     return 'Loading...'
   }
   return editor
-}
-
-const ChangeList = ({ changes }) => {
-  const columns = [
-    { field: 'addonName', header: 'Addon' },
-    { field: 'addonVersion', header: 'Version' },
-    { field: 'siteId', header: 'Site' },
-  ]
-
-  const rows = useMemo(() => {
-    return Object.keys(changes).map((key) => {
-      const [addonName, addonVersion, siteId] = key.split('|')
-      return {
-        addonName,
-        addonVersion,
-        siteId,
-      }
-    })
-  }, [changes])
-
-  return (
-    <Section style={{ maxWidth: 400 }}>
-      <Toolbar>
-        <h3>Changes</h3>
-      </Toolbar>
-      <TablePanel>
-        <DataTable value={rows}>
-          {columns.map((col) => (
-            <Column key={col.field} field={col.field} header={col.header} />
-          ))}
-        </DataTable>
-      </TablePanel>
-    </Section>
-  )
 }
 
 const SiteSettings = () => {
@@ -162,7 +119,7 @@ const SiteSettings = () => {
         )) ||
           'Select a site to edit settings'}
       </Section>
-      <ChangeList changes={newData} />
+      <SettingsChangesTable changes={newData} />
     </main>
   )
 }
