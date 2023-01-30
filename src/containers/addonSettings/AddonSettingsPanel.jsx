@@ -39,6 +39,7 @@ const AddonSettingsPanel = ({
   })
 
   const {
+    //eslint-disable-next-line no-unused-vars
     data: originalData,
     isLoading: settingsLoading,
     refetch: refetchSettings,
@@ -60,13 +61,18 @@ const AddonSettingsPanel = ({
     siteId,
   })
 
-  useEffect(() => {
-    refetchSchema()
-    refetchSettings()
-    refetchOverrides()
-  }, [addon.name, addon.version, reloadTrigger, projectName])
+  const reload = async () => {
+    await refetchSchema()
+    await refetchOverrides()
+    //onChange({})
+    const res = await refetchSettings()
+    onChange(res.data)
+  }
 
-  const formData = localData ? localData : originalData
+  useEffect(() => {
+    reload()
+    // eslint-disable-next-line no-unused-vars
+  }, [addon.name, addon.version, reloadTrigger, projectName])
 
   const onSetBreadcrumbs = (path) => {
     const fieldId = ['root', ...(path || [])].join('_')
@@ -81,11 +87,11 @@ const AddonSettingsPanel = ({
   }
 
   const editor = useMemo(() => {
-    if (!(schema && formData && overrides)) return <></>
+    if (!(schema && localData && overrides)) return <></>
     return (
       <SettingsEditor
         schema={schema}
-        formData={formData}
+        formData={localData}
         changedKeys={changedKeys}
         overrides={overrides}
         onChange={onChange}
@@ -94,7 +100,7 @@ const AddonSettingsPanel = ({
         level={settingsLevel}
       />
     )
-  }, [schema, formData, overrides])
+  }, [schema, localData, overrides])
 
   if (schemaLoading || settingsLoading || overridesLoading) {
     return 'Loading...'

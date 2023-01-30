@@ -3,11 +3,25 @@ import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './settingsPanel'
 
+import { isEqual } from 'lodash'
+
+const arrayStartsWith = (arr1, arr2) => {
+  // return true, if first array starts with second array
+  if ((arr2 || []).length > (arr1 || []).length) return false
+  if ((arr2 || []).length === 0) return true
+  for (let i = 0; i < arr2.length; i++) {
+    if (arr1[i] !== arr2[i]) return false
+  }
+  return true
+}
+
+const arrayContainsArray = (arr1, arr2) => {
+  return arr1.some((el) => isEqual(el, arr2))
+}
+
 function ObjectFieldTemplate(props) {
   let className = 'form-object-field'
   if (props.schema.layout) className += ` layout-${props.schema.layout}`
-
-  //console.log(props.title, props.schema)
 
   // Highlight overrides and changed fields
 
@@ -15,49 +29,23 @@ function ObjectFieldTemplate(props) {
   const override = props.formContext.overrides[objId]
   const path = override?.path
 
-  // TODO: actually use overrides
-  // NOTE: after a few days, idk what this todo means
-
-  // TODO: originally used for context menus. I hope we won't need it again.
-  // let labelStyle = {}
-  // let rmOverrideFunc = null
-  // let pinOverrideFunc = null
-  // if (override) {
-  //   if (override?.inGroup) labelStyle.fontStyle = 'italic'
-  //   else if (override.level === props.formContext.level)
-  //     rmOverrideFunc = () => {
-  //       props.formContext.onDeleteOverride(path)
-  //     }
-  // }
-  // if (!override || override.level !== props.formContext.level) {
-  //   pinOverrideFunc = () => {
-  //     props.formContext.onPinOverride(path)
-  //   }
-  // }
-
-  let overrideLevel = useMemo(() => {
-    let res = 'default'
-    for (const childId in props.formContext.overrides) {
-      if (!childId.startsWith(`${objId}_`)) continue // not a child of this object
-      const child = props.formContext.overrides[childId]
-
-      if (props.formContext.changedKeys.includes(childId)) {
-        res = 'edit'
-        break
+  const overrideLevel = useMemo(() => {
+    // check whether a child object is changed locally
+    for (const changedPath of props.formContext.changedKeys) {
+      if (arrayStartsWith(changedPath, path)) {
+        return 'edit'
       }
-
-      if (child.level === 'studio' && res === 'default') res = 'studio'
-      else if (child.level === 'project' && res !== 'edit') res = 'project'
     }
-    return res
-    // form data's here, because formContext.overrides is not triggered :/
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    { ...props.formContext.overrides },
-    [...props.formContext.changedKeys],
-    objId,
-    props.formData,
-  ])
+
+    for (const changedId in props.formContext.overrides) {
+      const changedPath = props.formContext.overrides[changedId].path
+      if (arrayStartsWith(changedPath, path)) {
+        return props.formContext.overrides[changedId].level
+      }
+    }
+
+    return 'default'
+  }, [path, props.formData, props.formContext.changedKeys])
 
   if (props.schema.isgroup && overrideLevel === 'edit') {
     className += ' group-changed'
@@ -93,7 +81,7 @@ function ObjectFieldTemplate(props) {
       if (ppts.conditionalEnum) {
         hiddenFields = [
           ...hiddenFields,
-          ...(ppts?.items?.enum || []).filter((e) => e !== props.formData[propName]),
+          ...(ppts?.enum || []).filter((e) => e !== props.formData[propName]),
         ]
       }
     }
@@ -196,8 +184,9 @@ function FieldTemplate(props) {
   //
 
   const override = props.formContext.overrides ? props.formContext.overrides[props.id] : null
+  const path = override?.path || []
 
-  const fieldChanged = props.formContext.changedKeys.includes(props.id)
+  const fieldChanged = arrayContainsArray(props.formContext.changedKeys, path)
   const overrideLevel = fieldChanged ? 'edit' : override ? override.level : 'default'
 
   let labelStyle = {}
@@ -215,10 +204,11 @@ function FieldTemplate(props) {
   ) {
     let className
 
-    for (const childId of props.formContext.changedKeys) {
-      if (!childId.startsWith(`${props.id}_`)) continue // not a child of this object
-      className = 'obj-override-edit group-changed'
-      break
+    for (const changedPath of props.formContext.changedKeys) {
+      if (arrayStartsWith(changedPath, path)) {
+        className = 'obj-override-edit group-changed'
+        break
+      }
     }
 
     if (!className) className = `obj-override-${overrideLevel}`
@@ -229,8 +219,7 @@ function FieldTemplate(props) {
         description={props.schema.description}
         className={className}
         onClick={() => {
-          if (props.formContext.onSetBreadcrumbs && override?.path)
-            props.formContext.onSetBreadcrumbs(override.path)
+          if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
         }}
       >
         {props.children}
