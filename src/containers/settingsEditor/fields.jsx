@@ -48,7 +48,6 @@ function ObjectFieldTemplate(props) {
   }, [path, props.formData, props.formContext.changedKeys])
 
   if (props.schema.isgroup && overrideLevel === 'edit') {
-    console.log('group changed', objId)
     className += ' group-changed'
   }
 

@@ -39,6 +39,7 @@ const AddonSettingsPanel = ({
   })
 
   const {
+    //eslint-disable-next-line no-unused-vars
     data: originalData,
     isLoading: settingsLoading,
     refetch: refetchSettings,
@@ -60,17 +61,18 @@ const AddonSettingsPanel = ({
     siteId,
   })
 
-  useEffect(() => {
-    refetchSchema()
-    refetchSettings()
-    refetchOverrides()
-  }, [addon.name, addon.version, reloadTrigger, projectName])
+  const reload = async () => {
+    await refetchSchema()
+    await refetchOverrides()
+    onChange({})
+    const res = await refetchSettings()
+    onChange(res.data)
+  }
 
   useEffect(() => {
-    if (originalData && !settingsLoading) {
-      onChange(originalData)
-    }
-  }, [originalData])
+    reload()
+    // eslint-disable-next-line no-unused-vars
+  }, [addon.name, addon.version, reloadTrigger, projectName])
 
   const onSetBreadcrumbs = (path) => {
     const fieldId = ['root', ...(path || [])].join('_')
