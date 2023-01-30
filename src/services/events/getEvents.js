@@ -1,8 +1,8 @@
 import { ayonApi } from '../ayon'
 
 const EVENTS_QUERY = `
-query Events($last: Int) {
-    events(last: $last) {
+query Events($last: Int, $includeLogs: Boolean) {
+    events(last: $last, includeLogs: $includeLogs) {
       edges {
         node {
           id
@@ -23,12 +23,12 @@ query Events($last: Int) {
 const getEvents = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getEvents: build.query({
-      query: ({ last = 100 }) => ({
+      query: ({ last = 100, includeLogs }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: EVENTS_QUERY,
-          variables: { last },
+          variables: { last, includeLogs },
         },
       }),
       transformResponse: (response) =>

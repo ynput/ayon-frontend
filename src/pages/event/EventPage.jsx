@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Section, Toolbar, InputText } from '@ynput/ayon-react-components'
+import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetEventsQuery } from '/src/services/events/getEvents'
 import EventDetailDialog from './EventDetail'
@@ -8,13 +8,21 @@ import { ayonApi } from '/src/services/ayon'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import EventList from './EventList'
 import useSearchFilter from '/src/hooks/useSearchFilter'
+import { toast } from 'react-toastify'
+import { useLocalStorage } from '/src/utils'
 
 const EventPage = () => {
   const dispatch = useDispatch()
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
 
   const last = 100
-  const { data: eventData = [], isLoading, isError, error } = useGetEventsQuery({ last })
+  const {
+    data: eventData = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetEventsQuery({ last, includeLogs: showLogs })
 
   const handlePubSub = (topic, message) => {
     if (topic === 'client.connected') {
@@ -44,7 +52,7 @@ const EventPage = () => {
 
   // handle error
   if (isError) {
-    return <div>Error: {error.message}</div>
+    toast.error(error.message)
   }
 
   return (
@@ -57,6 +65,12 @@ const EventPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <InputSwitch
+            checked={showLogs}
+            onChange={() => setShowLogs(!showLogs)}
+            style={{ width: 40, marginLeft: 10 }}
+          />
+          Show Logs
         </Toolbar>
         <Splitter style={{ height: '100%', width: '100%' }}>
           <SplitterPanel size={70}>
