@@ -98,6 +98,15 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     })
   }
 
+  const reloadAddons = (keys) => {
+    setReloadTrigger((reloadTrigger) => {
+      for (const key of keys) {
+        reloadTrigger[key] = new Date().getTime()
+      }
+      return { ...reloadTrigger }
+    })
+  }
+
   const onSave = async () => {
     let updatedKeys = []
     let allOk = true
@@ -136,11 +145,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return newOverrides
     })
 
-    const toReload = {}
-    for (const key of updatedKeys) {
-      toReload[key] = new Date()
-    }
-    setReloadTrigger(toReload)
+    reloadAddons(updatedKeys)
 
     if (allOk) {
       toast.success('Settings saved')
@@ -150,12 +155,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onDismissAllChanges = () => {
     const keys = Object.keys(localOverrides)
     setLocalOverrides({})
-
-    const toReload = {}
-    for (const key of keys) toReload[key] = new Date()
-
-    console.log('onDismissChanges', toReload)
-    setReloadTrigger(toReload)
+    reloadAddons(keys)
   } // end of onDismissChanges
 
   const onRemoveOverrides = async (addonName, addonVersion, siteId) => {
@@ -172,6 +172,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return
     }
     toast.success('Overrides removed')
+    reloadAddons([`${addonName}|${addonVersion}|${siteId || '_'}|${projectKey}`])
   }
 
   const deleteOverride = async (addon, siteId, path) => {
@@ -191,6 +192,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     }
 
     toast.success('Override removed')
+    reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
   }
 
   const pinOverride = async (addon, siteId, path) => {
@@ -208,8 +210,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       console.error(e)
       return
     }
-
     toast.success('Override pinned')
+    reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
   }
 
   const copySelection = () => {
@@ -229,7 +231,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
     const text = JSON.stringify(value, null, 2)
     navigator.clipboard.writeText(text)
-    console.log('copied', text)
     toast.success('Copied to clipboard')
   }
 
@@ -274,11 +275,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       const newData = { ...localData }
       const nk = setValueByPath(localData[key], currentSelection.path, newValue)
       newData[key] = nk
-      console.log(newData)
       return newData
     })
-
-    console.log('pasted', newValue)
   } // paste
 
   //

@@ -64,7 +64,7 @@ const AddonSettingsPanel = ({
   const reload = async () => {
     await refetchSchema()
     await refetchOverrides()
-    onChange({})
+    //onChange({})
     const res = await refetchSettings()
     onChange(res.data)
   }
