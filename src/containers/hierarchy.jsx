@@ -242,6 +242,7 @@ const Hierarchy = (props) => {
   }
 
   const onToggle = (event) => {
+    console.log(event)
     dispatch(setExpandedFolders(event.value))
   }
 
@@ -255,6 +256,48 @@ const Hierarchy = (props) => {
         type: 'tags',
       }),
     )
+  }
+
+  const handleDoubleClick = () => {
+    // folder is always selected when row is double clicked
+
+    // filter out selected folders that are isLeaf
+    let doubleClickedFolders = []
+    for (const id in selectedFolders) {
+      if (!heirarchyObjectData[id].isLeaf) {
+        doubleClickedFolders.push(id)
+      }
+    }
+
+    // return if no folders are selected
+    if (!doubleClickedFolders.length) return
+
+    // separate folders that are already expanded
+    // separate folders that are not expanded
+    const alreadyExpandedFolders = []
+    const notExpandedFolders = []
+    for (const id of doubleClickedFolders) {
+      if (expandedFolders[id]) {
+        alreadyExpandedFolders.push(id)
+      } else {
+        notExpandedFolders.push(id)
+      }
+    }
+
+    // remove already expanded folders
+    const newExpandedFolders = { ...expandedFolders }
+    for (const id of alreadyExpandedFolders) {
+      console.log(newExpandedFolders[id])
+      delete newExpandedFolders[id]
+    }
+
+    // add not expanded folders
+    for (const id of notExpandedFolders) {
+      newExpandedFolders[id] = true
+    }
+
+    // update redux
+    dispatch(setExpandedFolders(newExpandedFolders))
   }
 
   const ctxMenuModel = [
@@ -288,6 +331,7 @@ const Hierarchy = (props) => {
         onRowClick={onRowClick}
         onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
         onContextMenuSelectionChange={onContextMenuSelectionChange}
+        onDoubleClick={handleDoubleClick}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
