@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { Panel } from '@ynput/ayon-react-components'
+import { Panel, Button } from '@ynput/ayon-react-components'
 import { Dialog } from 'primereact/dialog'
 
 const HeaderStyled = styled(Panel)`
@@ -49,15 +49,13 @@ const DetailHeader = ({ children, onClose, style, context }) => {
       <HeaderStyled style={style}>
         <div>{children}</div>
         {context && (
-          <span className="material-symbols-outlined" onClick={() => setShowContext(!showContext)}>
-            more_vert
-          </span>
+          <Button
+            icon="more_vert"
+            className="transparent"
+            onClick={() => setShowContext(!showContext)}
+          />
         )}
-        {onClose && (
-          <span className="material-symbols-outlined" onClick={onClose}>
-            close
-          </span>
-        )}
+        {onClose && <Button icon="close" className="transparent" onClick={onClose} />}
       </HeaderStyled>
     </>
   )

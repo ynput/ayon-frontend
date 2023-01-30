@@ -106,7 +106,12 @@ const App = () => {
       <SocketProvider>
         <Reloader />
         <BrowserRouter>
-          <QueryParamProvider adapter={ReactRouter6Adapter}>
+          <QueryParamProvider
+            adapter={ReactRouter6Adapter}
+            options={{
+              updateType: 'replaceIn',
+            }}
+          >
             <Header />
             <Routes>
               <Route path="/" exact element={<Navigate replace to="/manageProjects/dashboard" />} />

@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import UserImage from './UserImage'
 import { useGetUserByNameQuery } from '/src/services/user/getUsers'
 import { useSelector } from 'react-redux'
@@ -12,13 +12,18 @@ const PanelStyled = styled(Panel)`
   align-items: center;
   background-color: var(--color-grey-01);
 
-  &:hover {
-    background-color: var(--color-grey-02);
-    cursor: pointer;
-  }
+  /* if not disable hover */
+  ${({ disableHover }) =>
+    !disableHover &&
+    css`
+      &:hover {
+        background-color: var(--color-grey-02);
+        cursor: pointer;
+      }
+    `}
 `
 
-const UserTile = ({ user, onClick, userName, suspence }) => {
+const UserTile = ({ user, onClick, userName, suspence, children, disableHover }) => {
   const currentUser = useSelector((state) => state.user.name)
 
   // RTK QUERY
@@ -77,7 +82,7 @@ const UserTile = ({ user, onClick, userName, suspence }) => {
       : `${diffMinutes} mins ago`
 
   return (
-    <PanelStyled onClick={onClick}>
+    <PanelStyled onClick={onClick} disableHover={disableHover}>
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
       <div style={{ flex: 1 }}>
         <strong>
@@ -94,6 +99,7 @@ const UserTile = ({ user, onClick, userName, suspence }) => {
           {dateText}
         </span>
       )}
+      {children}
     </PanelStyled>
   )
 }
@@ -102,6 +108,9 @@ UserTile.propTypes = {
   user: PropTypes.object,
   onClick: PropTypes.func,
   userName: PropTypes.string,
+  suspence: PropTypes.bool,
+  children: PropTypes.node,
+  disableHover: PropTypes.bool,
 }
 
 export default UserTile

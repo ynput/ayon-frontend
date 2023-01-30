@@ -1,21 +1,29 @@
 import React from 'react'
 import { useGetEventByIdQuery } from '/src/services/events/getEvents'
-import { Section, Panel } from '@ynput/ayon-react-components'
+import { Section, Panel, Button } from '@ynput/ayon-react-components'
 import DetailHeader from '/src/components/DetailHeader'
 import { TimestampField } from '/src/containers/fieldFormat'
+import UserTile from '../settings/users/UserTile'
+import styled from 'styled-components'
+import { Link } from 'react-router-dom'
+
+const RowStyled = styled.div`
+  span {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: block;
+  }
+`
 
 const EventDetail = ({ id, setSelectedEvent }) => {
-  const { data: event, isLoading } = useGetEventByIdQuery({ id }, { skip: !id })
+  const { data: event, isLoading, isFetching } = useGetEventByIdQuery({ id }, { skip: !id })
 
   if (isLoading || !event || !id) return null
 
-  // const isLog = event.topic.startsWith('log.')
-  console.log(event)
-
-  const { description, user, summary, project, payload } = event
+  const { description, user: userName, summary, project, payload } = event
 
   return (
-    <Section className={'wrap'}>
+    <Section className={'wrap'} style={{ gap: 4 }}>
       <DetailHeader onClose={() => setSelectedEvent(null)} context={event}>
         <div style={{ overflow: 'hidden' }}>
           <h2>{event.topic}</h2>
@@ -27,33 +35,42 @@ const EventDetail = ({ id, setSelectedEvent }) => {
           overflow: 'hidden',
         }}
       >
-        <div>
+        <RowStyled>
           <h2>Description</h2>
           <span>{description}</span>
-        </div>
+        </RowStyled>
         {payload.message && (
-          <div>
+          <RowStyled>
             <h2>Message</h2>
             <span>{payload.message}</span>
-          </div>
+          </RowStyled>
         )}
-        {user && (
-          <div>
+        {userName && (
+          <RowStyled>
             <h2>User</h2>
-            <span>{user}</span>
-          </div>
+            <UserTile userName={userName} suspence={isLoading || isFetching} disableHover>
+              <Button
+                icon="filter_alt"
+                className="transparent"
+                onClick={() => console.log('filter')}
+              />
+              <Link to={`/settings/users?name=${userName}`}>
+                <Button icon="manage_accounts" className="transparent" />
+              </Link>
+            </UserTile>
+          </RowStyled>
         )}
         {project && (
-          <div>
+          <RowStyled>
             <h2>Project</h2>
             <span>{project}</span>
-          </div>
+          </RowStyled>
         )}
         {summary.entityId && (
-          <div>
+          <RowStyled>
             <h2>Entity</h2>
             <span>{summary.entityId}</span>
-          </div>
+          </RowStyled>
         )}
       </Panel>
     </Section>
