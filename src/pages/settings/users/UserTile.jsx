@@ -3,6 +3,8 @@ import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import UserImage from './UserImage'
+import { useGetUserByNameQuery } from '/src/services/user/getUsers'
+import { useSelector } from 'react-redux'
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -16,29 +18,42 @@ const PanelStyled = styled(Panel)`
   }
 `
 
-const UserTile = ({ user, onClick }) => {
-  if (!user) return null
+const UserTile = ({ user, onClick, userName, suspence }) => {
+  const currentUser = useSelector((state) => state.user.name)
 
-  const {
-    name,
-    attrib: { fullName, avatarUrl },
-    updatedAt,
-    self,
-    isManager,
-    isAdmin,
-    isService,
-    roles,
-  } = user
+  // RTK QUERY
+  const { data, isLoading, isFetching, isError } = useGetUserByNameQuery(
+    { name: userName },
+    {
+      skip: user || !userName,
+    },
+  )
+
+  // if user is not passed in, use data from query
+  if (!user) {
+    if ((data?.length && !isLoading && !isFetching) || suspence) {
+      // using useGetUserByNameQuery
+      user = { ...data[0] }
+      if (user.roles) {
+        user.roles = JSON.parse(user.roles)
+      }
+    } else if (isError) return <PanelStyled>Not Found</PanelStyled>
+  }
+
+  const { name, attrib, updatedAt, isManager, isAdmin, isService, roles } = user || {}
+  const isSelf = name === currentUser
 
   let rolesHeader = []
-  // add admin, manager, service
-  if (isAdmin) rolesHeader.push('admin')
-  else if (isService) rolesHeader.push('service')
-  else if (isManager) rolesHeader.push('manager')
-  else {
-    Object.values(roles).forEach((roles2) => {
-      roles2.forEach((role) => !rolesHeader.includes(role) && rolesHeader.push(role))
-    })
+  if (!isLoading) {
+    // add admin, manager, service
+    if (isAdmin) rolesHeader.push('admin')
+    else if (isService) rolesHeader.push('service')
+    else if (isManager) rolesHeader.push('manager')
+    else if (roles) {
+      Object.values(roles).forEach((roles2) => {
+        roles2.forEach((role) => !rolesHeader.includes(role) && rolesHeader.push(role))
+      })
+    }
   }
 
   //
@@ -63,10 +78,10 @@ const UserTile = ({ user, onClick }) => {
 
   return (
     <PanelStyled onClick={onClick}>
-      <UserImage src={avatarUrl} fullName={fullName || name} highlight={self} />
+      <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
       <div style={{ flex: 1 }}>
         <strong>
-          {fullName} ({name})
+          {attrib?.fullName} ({name})
         </strong>
         <br />
         <span style={{ opacity: 0.5 }}>
@@ -86,6 +101,7 @@ const UserTile = ({ user, onClick }) => {
 UserTile.propTypes = {
   user: PropTypes.object,
   onClick: PropTypes.func,
+  userName: PropTypes.string,
 }
 
 export default UserTile
