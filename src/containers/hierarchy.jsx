@@ -351,6 +351,7 @@ const Hierarchy = (props) => {
           disabled={!projectName || isLoading}
           value={query}
           onChange={(evt) => setQuery(evt.target.value)}
+          autocomplete="off"
         />
 
         <MultiSelect

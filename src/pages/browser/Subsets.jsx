@@ -427,6 +427,7 @@ const Subsets = () => {
           placeholder="Filter subsets..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          autocomplete="off"
         />
         <MultiSelect
           options={filterOptions}

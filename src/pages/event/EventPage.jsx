@@ -91,6 +91,7 @@ const EventPage = () => {
             placeholder="Filter events..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            autocomplete="off"
           />
           <InputSwitch
             checked={showLogs}

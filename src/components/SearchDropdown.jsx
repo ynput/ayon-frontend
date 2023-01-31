@@ -289,6 +289,7 @@ const SearchDropdown = ({
         onFocus={handleFocus}
         ref={inputRef}
         open={suggestionsOpen}
+        autocomplete="off"
       />
       {suggestionsOpen && (
         <SuggestionsStyled
