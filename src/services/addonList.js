@@ -26,6 +26,8 @@ const addonList = ayonApi.injectEndpoints({
               name: addon.name,
               title: addon.title,
               version: showVersions ? '' : addon.productionVersion,
+              productionVersion: addon.productionVersion,
+              stagingVersion: addon.stagingVersion,
             },
           }
 

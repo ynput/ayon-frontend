@@ -4,6 +4,7 @@ import { Spacer } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets'))
+const AddonVersions = lazy(() => import('./AddonVersions'))
 const StudioSettings = lazy(() => import('./StudioSettings'))
 const SiteSettings = lazy(() => import('./SiteSettings'))
 const UsersSettings = lazy(() => import('./users/UsersSettings'))
@@ -26,6 +27,8 @@ const SettingsPage = () => {
 
   const moduleComponent = useMemo(() => {
     switch (module) {
+      case 'addonVersions':
+        return <AddonVersions />
       case 'anatomyPresets':
         return <AnatomyPresets />
       case 'studio':
@@ -48,6 +51,11 @@ const SettingsPage = () => {
       name: 'Anatomy presets',
       path: '/settings/anatomyPresets',
       module: 'anatomyPresets',
+    },
+    {
+      name: 'Addon versions',
+      path: '/settings/addonVersions',
+      module: 'addonVersions',
     },
     {
       name: 'Studio settings',
