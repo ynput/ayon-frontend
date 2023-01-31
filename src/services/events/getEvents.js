@@ -48,7 +48,7 @@ ${EVENT_FRAGMENT}
 `
 
 const transformEvents = (events) =>
-  events.edges.map((edge) => ({
+  events?.edges?.map((edge) => ({
     id: edge.node.id,
     topic: edge.node.topic,
     user: edge.node.user,
@@ -58,6 +58,7 @@ const transformEvents = (events) =>
     description: edge.node.description,
     updatedAt: edge.node.updatedAt,
     status: edge.node.status,
+    entityId: edge.node.summary?.entityId,
   }))
 
 const getEvents = ayonApi.injectEndpoints({
@@ -71,7 +72,7 @@ const getEvents = ayonApi.injectEndpoints({
           variables: { last, includeLogs },
         },
       }),
-      transformResponse: (response) => transformEvents(response.data.events),
+      transformResponse: (response) => transformEvents(response?.data?.events),
     }),
     getEventsWithLogs: build.query({
       query: ({ last = 100 }) => ({
@@ -83,8 +84,8 @@ const getEvents = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (response) => ({
-        events: transformEvents(response.data.events),
-        logs: transformEvents(response.data.logs),
+        events: transformEvents(response?.data?.events),
+        logs: transformEvents(response?.data?.logs),
       }),
     }),
     getEventById: build.query({

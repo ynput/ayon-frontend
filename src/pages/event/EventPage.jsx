@@ -112,6 +112,7 @@ const EventPage = () => {
             {selectedEvent?.id ? (
               <EventDetail
                 id={selectedEvent?.id}
+                event={selectedEvent}
                 setSelectedEvent={setSelectedEvent}
                 onFilter={handleSearchFilter}
                 events={eventData}

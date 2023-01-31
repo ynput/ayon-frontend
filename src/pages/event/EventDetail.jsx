@@ -8,6 +8,7 @@ import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import EventTile from './EventTile'
 import { getFuzzyDate } from '/src/utils'
+import EntityTile from './EntityTile'
 
 const RowStyled = styled.div`
   span {
@@ -22,17 +23,24 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
 
   if (isLoading || !event || !id) return null
 
-  const { description, user: userName, summary, project, payload } = event
+  const { description, user: userName, summary, project, payload, topic } = event
 
-  let projectLastUpdated
+  let projectLastUpdated, type
   if (project) {
     const projectLastest = events.filter((e) => e.project === project)[0]
     projectLastUpdated = projectLastest.updatedAt
+
+    // get type from topic
+    type = topic.split('.')[1]
   }
 
   return (
     <Section className={'wrap'} style={{ gap: 4 }}>
-      <DetailHeader onClose={() => setSelectedEvent(null)} context={event}>
+      <DetailHeader
+        onClose={() => setSelectedEvent(null)}
+        context={event}
+        dialogTitle="Event Context"
+      >
         <div style={{ overflow: 'hidden' }}>
           <h2>{event.topic}</h2>
           <TimestampField value={event.updatedAt} />
@@ -86,7 +94,12 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
         {summary.entityId && (
           <RowStyled>
             <h2>Entity</h2>
-            <span>{summary.entityId}</span>
+            <EntityTile id={summary.entityId} type={type} disableHover projectName={project}>
+              <Button icon="filter_alt" className="transparent" onClick={() => onFilter(type)} />
+              <Link to={`/projects/${project}/browser?entityId=${summary.entityId}&type=${type}`}>
+                <Button icon="open_in_new" className="transparent" />
+              </Link>
+            </EntityTile>
           </RowStyled>
         )}
       </Panel>

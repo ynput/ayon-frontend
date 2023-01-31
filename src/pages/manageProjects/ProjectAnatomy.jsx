@@ -13,6 +13,7 @@ const ProjectAnatomy = ({ projectName }) => {
     axios.get('/api/anatomy/schema').then((res) => setSchema(res.data))
   }, [])
 
+  // TODO: RTK QUERY
   useEffect(() => {
     axios.get(`/api/projects/${projectName}/anatomy`).then((res) => {
       setNewData(res.data)

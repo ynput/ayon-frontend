@@ -19,7 +19,12 @@ const getProject = ayonApi.injectEndpoints({
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
       providesTags: () => ['project'],
     }),
+    getProjectAnatomy: build.query({
+      query: ({ projectName }) => ({
+        url: `/api/projects/${projectName}/anatomy`,
+      }),
+    }),
   }),
 })
 
-export const { useGetProjectQuery, useGetAllProjectsQuery } = getProject
+export const { useGetProjectQuery, useGetAllProjectsQuery, useGetProjectAnatomyQuery } = getProject

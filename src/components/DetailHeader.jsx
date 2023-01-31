@@ -32,12 +32,12 @@ const HeaderStyled = styled(Panel)`
   }
 `
 
-const DetailHeader = ({ children, onClose, style, context }) => {
+const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) => {
   const [showContext, setShowContext] = useState(false)
 
   return (
     <>
-      <Dialog header="User Context" visible={showContext} onHide={() => setShowContext(false)}>
+      <Dialog header={dialogTitle} visible={showContext} onHide={() => setShowContext(false)}>
         <pre
           style={{
             whiteSpace: 'pre-wrap',
@@ -65,6 +65,7 @@ DetailHeader.propTypes = {
   children: PropTypes.node,
   onClose: PropTypes.func,
   style: PropTypes.object,
+  dialogTitle: PropTypes.string,
 }
 
 export default DetailHeader

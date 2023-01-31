@@ -163,11 +163,13 @@ const updateTaskTypeIcons = (data) => {
   }
 }
 
-const getStatusProps = (status) => {
+const getStatusProps = (status, anatomy = {}) => {
   return {
-    color: STATUS_COLORS[status] || '#c0c0c0',
-    icon: STATUS_ICONS[status] || 'radio_button_checked',
-    shortName: STATUS_SHORT_NAMES[status] || 'ERR',
+    color: STATUS_COLORS[status] || (anatomy[status] && anatomy[status].color) || '#c0c0c0',
+    icon:
+      STATUS_ICONS[status] || (anatomy[status] && anatomy[status].icon) || 'radio_button_checked',
+    shortName:
+      STATUS_SHORT_NAMES[status] || (anatomy[status] && anatomy[status].shortName) || 'ERR',
   }
 }
 

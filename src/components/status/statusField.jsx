@@ -122,8 +122,9 @@ const StatusField = ({
   align = 'left',
   onClick,
   style,
+  anatomy = {},
 }) => {
-  const { color, icon, shortName } = getStatusProps(value)
+  const { color, icon, shortName } = getStatusProps(value, anatomy)
 
   return (
     <StatusStyled
@@ -152,6 +153,7 @@ StatusField.propTypes = {
   align: PropTypes.oneOf(['left', 'right']),
   onClick: PropTypes.func,
   style: PropTypes.object,
+  anatomy: PropTypes.object,
 }
 
 export default StatusField

@@ -273,7 +273,7 @@ const UserDetail = ({
 
   return (
     <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
-      <DetailHeader onClose={onClose} context={formUsers}>
+      <DetailHeader onClose={onClose} context={formUsers} dialogTitle="User Context">
         <UserImagesStacked
           users={formUsers.map((user) => ({
             fullName: getUserName(user),
