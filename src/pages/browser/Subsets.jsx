@@ -338,7 +338,7 @@ const Subsets = () => {
     'data.versionName',
   ]
 
-  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData)
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'subsets')
 
   //
   // Handlers

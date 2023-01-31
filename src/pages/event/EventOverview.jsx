@@ -10,13 +10,13 @@ const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setSho
   const lastUser = users[0]
 
   const handleEventClick = (event) => {
-    setSelectedEvent(event)
-
     if (event.topic.startsWith('log.error')) {
       setShowLogs(true)
     } else {
       setShowLogs(false)
     }
+
+    setSelectedEvent(event.id)
   }
 
   return (

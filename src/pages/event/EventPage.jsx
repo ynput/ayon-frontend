@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetEventsWithLogsQuery } from '/src/services/events/getEvents'
@@ -11,15 +10,36 @@ import useSearchFilter from '/src/hooks/useSearchFilter'
 import { toast } from 'react-toastify'
 import { useLocalStorage } from '/src/utils'
 import EventOverview from './EventOverview'
+import { StringParam, useQueryParam } from 'use-query-params'
+import { useMemo } from 'react'
 
 const EventPage = () => {
   const dispatch = useDispatch()
-  const [selectedEvent, setSelectedEvent] = useState(null)
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
+  // use query param to get selected event
+  let [selectedEventId, setSelectedEvent] = useQueryParam('event', StringParam)
+  // get selectedEvent by id
 
   const last = 100
   const { data, isLoading, isError, error } = useGetEventsWithLogsQuery({ last })
   let { events: eventData = [], logs: logsData = [] } = data || {}
+
+  // create a object of events by id useMemo
+  const eventsById = useMemo(() => {
+    const events = {}
+    for (const event of eventData) {
+      events[event.id] = event
+    }
+    for (const event of logsData) {
+      // skip if already exists
+      if (events[event.id]) continue
+      events[event.id] = event
+    }
+    return events
+  }, [eventData])
+
+  // get selected event by id
+  const selectedEvent = eventsById[selectedEventId]
 
   // use log data if showLogs is true
   let treeData = eventData
@@ -63,7 +83,11 @@ const EventPage = () => {
 
   const searchableFields = ['topic', 'user', 'project', 'description']
   // search filter
-  const [search, setSearch, filteredTreeData] = useSearchFilter(searchableFields, treeData)
+  const [search, setSearch, filteredTreeData] = useSearchFilter(
+    searchableFields,
+    treeData,
+    'events',
+  )
 
   // handle error
   if (isError) {

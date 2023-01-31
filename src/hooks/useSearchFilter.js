@@ -1,7 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
-const useSearchFilter = (fields = [], data = []) => {
-  const [search, setSearch] = useState('')
+const useSearchFilter = (fields = [], data = [], id) => {
+  let key = 'search'
+  id && (key += '-' + id)
+  const [search, setSearch] = useQueryParam(key, withDefault(StringParam, ''))
 
   // create keywords that are used for searching
   const dataWithKeywords = useMemo(

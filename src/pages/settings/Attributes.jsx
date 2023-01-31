@@ -92,7 +92,11 @@ const Attributes = () => {
 
   const searchableFields = ['name', 'data.title', 'scope', 'data.type']
 
-  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, sortableAttributes)
+  const [search, setSearch, filteredData] = useSearchFilter(
+    searchableFields,
+    sortableAttributes,
+    'attributes',
+  )
 
   return (
     <main>

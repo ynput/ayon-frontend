@@ -15,7 +15,7 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent }) =>
           responsive="true"
           dataKey="id"
           selectionMode="single"
-          onSelectionChange={(e) => setSelectedEvent(e.value)}
+          onSelectionChange={(e) => setSelectedEvent(e.value.id)}
           selection={selectedEvent}
           rowClassName={(rowData) => {
             return {
