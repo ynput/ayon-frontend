@@ -1,29 +1,69 @@
 import { ayonApi } from '../ayon'
 
+const EVENT_FRAGMENT = `
+fragment EventFragment on EventNode {
+  id
+  topic
+  user
+  sender
+  project
+  description
+  dependsOn
+  updatedAt
+  status
+}
+`
+
 const EVENTS_QUERY = `
 query Events($last: Int, $includeLogs: Boolean) {
     events(last: $last, includeLogs: $includeLogs) {
       edges {
         node {
-          id
-          topic
-          user
-          sender
-          project
-          description
-          dependsOn
-          updatedAt
-          status
+          ...EventFragment
         }
       }
     }
-}
+  }
+  ${EVENT_FRAGMENT}
 `
+
+const EVENTS_LOGS_QUERY = `
+query EventsWithLogs($last: Int) {
+  events(last: $last, includeLogs: false) {
+    edges {
+      node {
+        ...EventFragment
+      }
+    }
+  }
+  logs: events(last: $last, includeLogs: true) {
+    edges {
+      node {
+        ...EventFragment
+      }
+    }
+  }
+}
+${EVENT_FRAGMENT}
+`
+
+const transformEvents = (events) =>
+  events.edges.map((edge) => ({
+    id: edge.node.id,
+    topic: edge.node.topic,
+    user: edge.node.user,
+    sender: edge.node.sender,
+    dependsOn: edge.node.dependsOn,
+    project: edge.node.project,
+    description: edge.node.description,
+    updatedAt: edge.node.updatedAt,
+    status: edge.node.status,
+  }))
 
 const getEvents = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getEvents: build.query({
-      query: ({ last = 100, includeLogs }) => ({
+      query: ({ last = 100, includeLogs = true }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
@@ -31,18 +71,21 @@ const getEvents = ayonApi.injectEndpoints({
           variables: { last, includeLogs },
         },
       }),
-      transformResponse: (response) =>
-        response.data.events.edges.map((edge) => ({
-          id: edge.node.id,
-          topic: edge.node.topic,
-          user: edge.node.user,
-          sender: edge.node.sender,
-          dependsOn: edge.node.dependsOn,
-          project: edge.node.project,
-          description: edge.node.description,
-          updatedAt: edge.node.updatedAt,
-          status: edge.node.status,
-        })),
+      transformResponse: (response) => transformEvents(response.data.events),
+    }),
+    getEventsWithLogs: build.query({
+      query: ({ last = 100 }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: EVENTS_LOGS_QUERY,
+          variables: { last },
+        },
+      }),
+      transformResponse: (response) => ({
+        events: transformEvents(response.data.events),
+        logs: transformEvents(response.data.logs),
+      }),
     }),
     getEventById: build.query({
       query: ({ id }) => ({
@@ -52,4 +95,4 @@ const getEvents = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useGetEventsQuery, useGetEventByIdQuery } = getEvents
+export const { useGetEventsQuery, useGetEventsWithLogsQuery, useGetEventByIdQuery } = getEvents

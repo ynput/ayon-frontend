@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-const useSearchFilter = (fields, data) => {
+const useSearchFilter = (fields = [], data = []) => {
   const [search, setSearch] = useState('')
 
   // create keywords that are used for searching
@@ -29,7 +29,7 @@ const useSearchFilter = (fields, data) => {
 
   let filtedData = useMemo(() => {
     // separate into array by ,
-    const searchArray = search.split(',').reduce((acc, cur) => {
+    const searchArray = search?.split(',').reduce((acc, cur) => {
       if (cur.trim() === '') return acc
       else {
         acc.push(cur.trim())
@@ -37,7 +37,7 @@ const useSearchFilter = (fields, data) => {
       }
     }, [])
 
-    if (searchArray.length && dataWithKeywords) {
+    if (searchArray?.length && dataWithKeywords) {
       return dataWithKeywords.filter((user) => {
         const matchingKeys = []
         const inverseMatchingKeys = []

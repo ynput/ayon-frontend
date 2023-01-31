@@ -5,6 +5,7 @@ import styled, { css } from 'styled-components'
 import UserImage from './UserImage'
 import { useGetUserByNameQuery } from '/src/services/user/getUsers'
 import { useSelector } from 'react-redux'
+import { getFuzzyDate } from '/src/utils'
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -61,26 +62,6 @@ const UserTile = ({ user, onClick, userName, suspence, children, disableHover })
     }
   }
 
-  //
-  // format date number days ago
-  // if 0 days ago, show hours ago
-  // if 0 hours ago, show minutes ago
-
-  const createdAtDate = new Date(0)
-  createdAtDate.setUTCSeconds(updatedAt)
-  const now = new Date()
-  const diff = now - createdAtDate
-  const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const diffHours = Math.floor(diff / (1000 * 60 * 60))
-  const diffMinutes = Math.floor(diff / (1000 * 60))
-
-  const dateText =
-    diffDays > 0
-      ? `${diffDays} days ago`
-      : diffHours > 0
-      ? `${diffHours} hrs ago`
-      : `${diffMinutes} mins ago`
-
   return (
     <PanelStyled onClick={onClick} disableHover={disableHover}>
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
@@ -96,7 +77,7 @@ const UserTile = ({ user, onClick, userName, suspence, children, disableHover })
       {updatedAt && (
         <span style={{ textAlign: 'end', opacity: 0.5 }}>
           Updated <br />
-          {dateText}
+          {getFuzzyDate(updatedAt)}
         </span>
       )}
       {children}

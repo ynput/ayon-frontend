@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
 import usePubSub from '/src/hooks/usePubSub'
-import { useGetEventsQuery } from '/src/services/events/getEvents'
-import EventDetailDialog from './EventDetail'
+import { useGetEventsWithLogsQuery } from '/src/services/events/getEvents'
+import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
 import { ayonApi } from '/src/services/ayon'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -10,6 +10,7 @@ import EventList from './EventList'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { toast } from 'react-toastify'
 import { useLocalStorage } from '/src/utils'
+import EventOverview from './EventOverview'
 
 const EventPage = () => {
   const dispatch = useDispatch()
@@ -17,12 +18,14 @@ const EventPage = () => {
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
 
   const last = 100
-  const {
-    data: eventData = [],
-    isLoading,
-    isError,
-    error,
-  } = useGetEventsQuery({ last, includeLogs: showLogs })
+  const { data, isLoading, isError, error } = useGetEventsWithLogsQuery({ last })
+  let { events: eventData = [], logs: logsData = [] } = data || {}
+
+  // use log data if showLogs is true
+  let treeData = eventData
+  if (showLogs) {
+    treeData = logsData
+  }
 
   const handlePubSub = (topic, message) => {
     if (topic === 'client.connected') {
@@ -31,15 +34,27 @@ const EventPage = () => {
 
     // patch the new message into the cache
     dispatch(
-      ayonApi.util.updateQueryData('getEvents', { last }, (draft) => {
-        let updated = false
-        for (const row of draft) {
-          if (row.id !== message.id) continue
-          updated = true
-          Object.assign(row, message)
+      ayonApi.util.updateQueryData('getEventsWithLogs', { last }, (draft) => {
+        const patchEvents = (type, message) => {
+          let updated = false
+          for (const row of draft[type]) {
+            if (row.id !== message.id) continue
+            // update existing row
+            updated = true
+            Object.assign(row, message)
+          }
+
+          !updated && draft[type].unshift(message)
         }
 
-        !updated && draft.unshift(message)
+        if (!topic.startsWith('log.')) {
+          // patch only non log messages
+          patchEvents('events', message)
+        }
+
+        // patch all into logs
+
+        patchEvents('logs', message)
       }),
     )
   }
@@ -48,11 +63,23 @@ const EventPage = () => {
 
   const searchableFields = ['topic', 'user', 'project', 'description']
   // search filter
-  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, eventData)
+  const [search, setSearch, filteredTreeData] = useSearchFilter(searchableFields, treeData)
 
   // handle error
   if (isError) {
     toast.error(error.message)
+  }
+
+  const handleTotal = (s) => {
+    if (search === s) {
+      setSearch('')
+      return
+    }
+
+    if (s === 'error') setShowLogs(true)
+    else setShowLogs(false)
+
+    setSearch(s)
   }
 
   return (
@@ -70,23 +97,34 @@ const EventPage = () => {
             onChange={() => setShowLogs(!showLogs)}
             style={{ width: 40, marginLeft: 10 }}
           />
-          Show Logs
+          Show With Logs
         </Toolbar>
         <Splitter style={{ height: '100%', width: '100%' }}>
           <SplitterPanel size={70}>
             <EventList
-              eventData={filteredData}
+              eventData={filteredTreeData}
               isLoading={isLoading}
               selectedEvent={selectedEvent}
               setSelectedEvent={setSelectedEvent}
             />
           </SplitterPanel>
           <SplitterPanel size={30}>
-            <EventDetailDialog
-              id={selectedEvent?.id}
-              setSelectedEvent={setSelectedEvent}
-              setSearch={setSearch}
-            />
+            {selectedEvent?.id ? (
+              <EventDetail
+                id={selectedEvent?.id}
+                setSelectedEvent={setSelectedEvent}
+                setSearch={setSearch}
+              />
+            ) : (
+              <EventOverview
+                onTotal={handleTotal}
+                search={search}
+                events={eventData}
+                logs={logsData}
+                setShowLogs={setShowLogs}
+                setSelectedEvent={setSelectedEvent}
+              />
+            )}
           </SplitterPanel>
         </Splitter>
       </Section>
