@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 import ayonClient from '/src/ayon'
 
 const TASK_QUERY = `
@@ -175,7 +175,7 @@ const buildEntitiesDetailsQuery = (type) => {
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
-const getEntitiesDetails = ayonApi.injectEndpoints({
+const getEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getEntitiesDetails: build.query({
       query: ({ projectName, ids, type, versionOverrides }) => ({
@@ -194,4 +194,4 @@ const getEntitiesDetails = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useGetEntitiesDetailsQuery } = getEntitiesDetails
+export const { useGetEntitiesDetailsQuery } = getEntity
