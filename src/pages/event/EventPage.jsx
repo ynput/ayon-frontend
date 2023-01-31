@@ -70,7 +70,7 @@ const EventPage = () => {
     toast.error(error.message)
   }
 
-  const handleTotal = (s) => {
+  const handleSearchFilter = (s) => {
     if (search === s) {
       setSearch('')
       return
@@ -113,11 +113,12 @@ const EventPage = () => {
               <EventDetail
                 id={selectedEvent?.id}
                 setSelectedEvent={setSelectedEvent}
-                setSearch={setSearch}
+                onFilter={handleSearchFilter}
+                events={eventData}
               />
             ) : (
               <EventOverview
-                onTotal={handleTotal}
+                onTotal={handleSearchFilter}
                 search={search}
                 events={eventData}
                 logs={logsData}

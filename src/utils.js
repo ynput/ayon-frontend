@@ -254,6 +254,7 @@ function useLocalStorage(key, initialValue) {
 }
 
 export const getFuzzyDate = (date) => {
+  if (!date) return ''
   // format date number days ago
   // if 0 days ago, show hours ago
   // if 0 hours ago, show minutes ago

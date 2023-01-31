@@ -6,6 +6,8 @@ import { TimestampField } from '/src/containers/fieldFormat'
 import UserTile from '../settings/users/UserTile'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
+import EventTile from './EventTile'
+import { getFuzzyDate } from '/src/utils'
 
 const RowStyled = styled.div`
   span {
@@ -15,12 +17,18 @@ const RowStyled = styled.div`
   }
 `
 
-const EventDetail = ({ id, setSelectedEvent, setSearch }) => {
+const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
   const { data: event, isLoading, isFetching } = useGetEventByIdQuery({ id }, { skip: !id })
 
   if (isLoading || !event || !id) return null
 
   const { description, user: userName, summary, project, payload } = event
+
+  let projectLastUpdated
+  if (project) {
+    const projectLastest = events.filter((e) => e.project === project)[0]
+    projectLastUpdated = projectLastest.updatedAt
+  }
 
   return (
     <Section className={'wrap'} style={{ gap: 4 }}>
@@ -52,7 +60,7 @@ const EventDetail = ({ id, setSelectedEvent, setSearch }) => {
               <Button
                 icon="filter_alt"
                 className="transparent"
-                onClick={() => setSearch(userName)}
+                onClick={() => onFilter(userName)}
               />
               <Link to={`/settings/users?name=${userName}`}>
                 <Button icon="manage_accounts" className="transparent" />
@@ -63,7 +71,16 @@ const EventDetail = ({ id, setSelectedEvent, setSearch }) => {
         {project && (
           <RowStyled>
             <h2>Project</h2>
-            <span>{project}</span>
+            <EventTile
+              title={project}
+              disableHover
+              subTitle={`Last Updated - ${getFuzzyDate(projectLastUpdated)}`}
+            >
+              <Button icon="filter_alt" className="transparent" onClick={() => onFilter(project)} />
+              <Link to={`/manageProjects/dashboard?project=${project}`}>
+                <Button icon="settings_suggest" className="transparent" />
+              </Link>
+            </EventTile>
           </RowStyled>
         )}
         {summary.entityId && (
