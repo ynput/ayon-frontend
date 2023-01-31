@@ -32,7 +32,7 @@ const useSearchFilter = (fields = [], data = []) => {
     const searchArray = search?.split(',').reduce((acc, cur) => {
       if (cur.trim() === '') return acc
       else {
-        acc.push(cur.trim())
+        acc.push(cur.trim().toLowerCase())
         return acc
       }
     }, [])
