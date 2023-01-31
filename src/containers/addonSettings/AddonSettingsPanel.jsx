@@ -10,14 +10,15 @@ import SettingsEditor from '/src/containers/settingsEditor'
 
 const AddonSettingsPanel = ({
   addon,
-  onChange,
-  onSetChangedKeys,
   localData,
   changedKeys,
   reloadTrigger,
-  onSelect = () => {},
   projectName = null,
   siteId = null,
+  onChange = () => {},
+  onLoad = () => {},
+  onSetChangedKeys = () => {},
+  onSelect = () => {},
 }) => {
   let settingsLevel = 'studio'
   if (projectName && projectName !== '_') {
@@ -67,6 +68,7 @@ const AddonSettingsPanel = ({
     //onChange({})
     const res = await refetchSettings()
     onChange(res.data)
+    onLoad(res.data)
   }
 
   useEffect(() => {

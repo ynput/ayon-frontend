@@ -4,7 +4,6 @@ import { Section, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-
 import SettingsEditor from '/src/containers/settingsEditor'
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
-import { SettingsChangesTable } from '/src/containers/addonSettings/SettingsChangesTable'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '/src/services/siteSettings'
 import { useSetSiteSettingsMutation } from '/src/services/siteSettings'
@@ -119,7 +118,6 @@ const SiteSettings = () => {
         )) ||
           'Select a site to edit settings'}
       </Section>
-      <SettingsChangesTable changes={newData} />
     </main>
   )
 }

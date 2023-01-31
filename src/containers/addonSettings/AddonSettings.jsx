@@ -71,6 +71,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState({})
+  const [originalData, setOriginalData] = useState({})
   const [localData, setLocalData] = useState({})
   const [localOverrides, setLocalOverrides] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
@@ -81,6 +82,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
 
   const projectKey = projectName || '_'
+
+  const onSettingsLoad = (addonName, addonVersion, siteId, data) => {
+    const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
+    setOriginalData((localData) => {
+      localData[key] = data
+      return { ...localData }
+    })
+  }
 
   const onSettingsChange = (addonName, addonVersion, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
@@ -152,11 +161,35 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     }
   } // onSave
 
-  const onDismissAllChanges = () => {
+  const onRevertAllChanges = () => {
     const keys = Object.keys(localOverrides)
     setLocalOverrides({})
     reloadAddons(keys)
   } // end of onDismissChanges
+
+  const onRevertChange = (keysToRevert) => {
+    // keys to revert is a dict {addonKey: [ [path, to, change1], [path, to, change2] ]}
+    for (const addonKey in keysToRevert) {
+      for (const path of keysToRevert[addonKey]) {
+        setLocalData((localData) => {
+          const returnValue = getValueByPath(originalData[addonKey], path)
+          localData[addonKey] = setValueByPath(localData[addonKey], path, returnValue)
+          console.log('REVERT ', path, 'TO', returnValue)
+          return { ...localData }
+        }) // setLocalData
+        setLocalOverrides((localOverrides) => {
+          const index = (localOverrides[addonKey] || []).indexOf(path)
+          if (index > -1) {
+            localOverrides[addonKey].splice(index, 1)
+          }
+          if (!localOverrides[addonKey]?.length) {
+            delete localOverrides[addonKey]
+          }
+          return { ...localOverrides }
+        }) // setLocalOverrides
+      }
+    }
+  }
 
   const onRemoveOverrides = async (addonName, addonVersion, siteId) => {
     try {
@@ -385,6 +418,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           onChange={(data) =>
                             onSettingsChange(addon.name, addon.version, siteId, data)
                           }
+                          onLoad={(data) => onSettingsLoad(addon.name, addon.version, siteId, data)}
                           onSetChangedKeys={(data) =>
                             onSetChangedKeys(addon.name, addon.version, siteId, data)
                           }
@@ -409,10 +443,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className="wrap" style={{ minWidth: 300 }}>
           <Toolbar>
             <Spacer />
-            <Button label="Dismiss all changes" icon="refresh" onClick={onDismissAllChanges} />
+            <Button label="Dismiss all changes" icon="refresh" onClick={onRevertAllChanges} />
             <Button label="Save changes" icon="check" onClick={onSave} />
           </Toolbar>
-          <SettingsChangesTable changes={localOverrides} />
+          <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
         </Section>
       </SplitterPanel>
     </Splitter>
