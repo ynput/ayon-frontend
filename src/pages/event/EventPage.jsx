@@ -1,4 +1,4 @@
-import { Section, Toolbar, InputText, InputSwitch, Button } from '@ynput/ayon-react-components'
+import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetEventsWithLogsQuery } from '/src/services/events/getEvents'
 import EventDetail from './EventDetail'
@@ -47,9 +47,7 @@ const EventPage = () => {
   }
 
   const patchNewEvents = (type, events, draft) => {
-    for (const message of events) {
-      draft[type].unshift(message)
-    }
+    draft[type].concat(events)
   }
 
   const patchOldEvents = (type, events, draft) => {
@@ -149,7 +147,6 @@ const EventPage = () => {
             style={{ width: 40, marginLeft: 10 }}
           />
           Show With Logs
-          <Button label="Load More" onClick={loadPage} disabled={!hasPreviousPage} />
         </Toolbar>
         <Splitter style={{ height: '100%', width: '100%' }}>
           <SplitterPanel size={70}>
@@ -158,6 +155,7 @@ const EventPage = () => {
               isLoading={isLoading}
               selectedEvent={selectedEvent}
               setSelectedEvent={setSelectedEvent}
+              onScrollBottom={loadPage}
             />
           </SplitterPanel>
           <SplitterPanel size={30}>
