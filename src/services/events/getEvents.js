@@ -47,6 +47,9 @@ query EventsWithLogs($last: Int, $before: String, $beforeLogs: String) {
       }
       cursor
     }
+    pageInfo {
+      hasPreviousPage
+    }
   }
 }
 ${EVENT_FRAGMENT}
