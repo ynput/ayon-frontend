@@ -1,4 +1,4 @@
-import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
+import { Section, Toolbar, InputText, InputSwitch, Button } from '@ynput/ayon-react-components'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetEventsWithLogsQuery } from '/src/services/events/getEvents'
 import EventDetail from './EventDetail'
@@ -18,11 +18,10 @@ const EventPage = () => {
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
   // use query param to get selected event
   let [selectedEventId, setSelectedEvent] = useQueryParam('event', StringParam)
-  // get selectedEvent by id
 
-  const last = 100
-  const { data, isLoading, isError, error } = useGetEventsWithLogsQuery({ last })
-  let { events: eventData = [], logs: logsData = [] } = data || {}
+  // default gets the last 100 events
+  const { data, isLoading, isError, error } = useGetEventsWithLogsQuery({})
+  let { events: eventData = [], logs: logsData = [], hasPreviousPage } = data || {}
 
   // create a object of events by id useMemo
   const eventsById = useMemo(() => {
@@ -47,6 +46,18 @@ const EventPage = () => {
     treeData = logsData
   }
 
+  const patchNewEvents = (type, events, draft) => {
+    for (const message of events) {
+      draft[type].unshift(message)
+    }
+  }
+
+  const patchOldEvents = (type, events, draft) => {
+    for (const message of events) {
+      draft[type].push(message)
+    }
+  }
+
   const handlePubSub = (topic, message) => {
     if (topic === 'client.connected') {
       return
@@ -54,32 +65,47 @@ const EventPage = () => {
 
     // patch the new message into the cache
     dispatch(
-      ayonApi.util.updateQueryData('getEventsWithLogs', { last }, (draft) => {
-        const patchEvents = (type, message) => {
-          let updated = false
-          for (const row of draft[type]) {
-            if (row.id !== message.id) continue
-            // update existing row
-            updated = true
-            Object.assign(row, message)
-          }
-
-          !updated && draft[type].unshift(message)
-        }
-
+      ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
         if (!topic.startsWith('log.')) {
           // patch only non log messages
-          patchEvents('events', message)
+          patchNewEvents('events', [message], draft)
         }
 
         // patch all into logs
-
-        patchEvents('logs', message)
+        patchNewEvents('logs', [message], draft)
       }),
     )
   }
 
   usePubSub('*', handlePubSub)
+
+  const loadPage = async () => {
+    try {
+      // no more events to get
+      if (!hasPreviousPage) return
+      // get last cursor
+      const before = eventData[eventData.length - 1].cursor
+      const beforeLog = logsData[logsData.length - 1].cursor
+
+      // get new events data
+      const { data } = await dispatch(
+        ayonApi.endpoints.getEventsWithLogs.initiate({
+          before,
+          beforeLog,
+        }),
+      )
+
+      dispatch(
+        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+          patchOldEvents('events', data.events, draft)
+          patchOldEvents('logs', data.logs, draft)
+          draft.hasPreviousPage = data.hasPreviousPage
+        }),
+      )
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const searchableFields = ['topic', 'user', 'project', 'description']
   // search filter
@@ -123,6 +149,7 @@ const EventPage = () => {
             style={{ width: 40, marginLeft: 10 }}
           />
           Show With Logs
+          <Button label="Load More" onClick={loadPage} disabled={!hasPreviousPage} />
         </Toolbar>
         <Splitter style={{ height: '100%', width: '100%' }}>
           <SplitterPanel size={70}>

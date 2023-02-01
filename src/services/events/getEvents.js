@@ -28,19 +28,24 @@ query Events($last: Int, $includeLogs: Boolean) {
 `
 
 const EVENTS_LOGS_QUERY = `
-query EventsWithLogs($last: Int) {
-  events(last: $last, includeLogs: false) {
+query EventsWithLogs($last: Int, $before: String, $beforeLogs: String) {
+  events(last: $last, before: $before, includeLogs: false) {
     edges {
       node {
         ...EventFragment
       }
+      cursor
+    }
+    pageInfo {
+      hasPreviousPage
     }
   }
-  logs: events(last: $last, includeLogs: true) {
+  logs: events(last: $last, before: $beforeLogs, includeLogs: true) {
     edges {
       node {
         ...EventFragment
       }
+      cursor
     }
   }
 }
@@ -59,6 +64,7 @@ const transformEvents = (events) =>
     updatedAt: edge.node.updatedAt,
     status: edge.node.status,
     entityId: edge.node.summary?.entityId,
+    cursor: edge.cursor,
   }))
 
 const getEvents = ayonApi.injectEndpoints({
@@ -75,17 +81,18 @@ const getEvents = ayonApi.injectEndpoints({
       transformResponse: (response) => transformEvents(response?.data?.events),
     }),
     getEventsWithLogs: build.query({
-      query: ({ last = 100 }) => ({
+      query: ({ last = 100, before = '', beforeLogs = '' }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: EVENTS_LOGS_QUERY,
-          variables: { last },
+          variables: { last, before, beforeLogs },
         },
       }),
       transformResponse: (response) => ({
         events: transformEvents(response?.data?.events),
         logs: transformEvents(response?.data?.logs),
+        hasPreviousPage: response?.data?.events?.pageInfo?.hasPreviousPage,
       }),
     }),
     getEventById: build.query({
