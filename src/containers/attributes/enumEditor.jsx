@@ -81,7 +81,7 @@ const EnumEditor = ({ values = [], onChange }) => {
             error={valuesValues.includes(label)}
             value={label}
           />
-          <label htmlFor="label">label</label>
+          <label htmlFor="label">value</label>
           <LockedInputRow
             id="value"
             value={value}
