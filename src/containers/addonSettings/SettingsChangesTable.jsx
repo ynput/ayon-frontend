@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
+import { ContextMenu } from 'primereact/contextmenu'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
-const SettingsChangesTable = ({ changes }) => {
+const SettingsChangesTable = ({ changes, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
   const [selectedKeys, setSelectedKeys] = useState({})
   const [knownAddonKeys, setKnownAddonKeys] = useState({})
+
+  const cm = useRef(null)
 
   useEffect(() => {
     const newExpandedKeys = {}
@@ -38,11 +41,13 @@ const SettingsChangesTable = ({ changes }) => {
         data: {
           name: change.join(' / '),
           path: change,
+          addonKey: addonKey,
         },
       }))
 
       result.push({
         key: addonKey,
+        selectable: false,
         children,
         data: {
           name,
@@ -57,9 +62,38 @@ const SettingsChangesTable = ({ changes }) => {
     return result
   }, [changes])
 
+  const menu = useMemo(() => {
+    let result = []
+
+    if (onRevert) {
+      result.push({
+        label: 'Revert selected',
+        command: () => {
+          const result = {}
+          for (const addonKey in changes) {
+            console.log('Checking', addonKey)
+
+            console.log('changed', addonKey)
+            for (const change of changes[addonKey]) {
+              const key = `${addonKey}|${change.join('|')}`
+              if (key in selectedKeys) {
+                if (!(addonKey in result)) result[addonKey] = []
+                result[addonKey].push(change)
+              }
+            }
+          }
+
+          onRevert(result)
+        },
+      })
+    }
+    return result
+  }, [selectedKeys])
+
   return (
     <Section>
       <TablePanel>
+        <ContextMenu model={menu} ref={cm} />
         <TreeTable
           value={changesTree}
           expandedKeys={expandedKeys}
@@ -67,6 +101,13 @@ const SettingsChangesTable = ({ changes }) => {
           selectionMode="multiple"
           selectionKeys={selectedKeys}
           onSelectionChange={(e) => setSelectedKeys(e.value)}
+          onContextMenuSelectionChange={(event) => {
+            if (!(event.value in selectedKeys)) {
+              setSelectedKeys(event.value)
+            }
+          }}
+          onContextMenu={(event) => cm.current.show(event.originalEvent)}
+          emptyMessage="No changes"
           dataKey="id"
           scrollable="true"
           scrollHeight="100%"
