@@ -5,7 +5,7 @@ import { Dropdown } from 'primereact/dropdown'
 import { Button, Spacer, FormLayout, FormRow, InputText } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import LockedInput from '/src/components/LockedInput'
-import _ from 'lodash'
+import { camelCase } from 'lodash'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -107,7 +107,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     setData('title', v)
 
     if (isNew) {
-      setTopLevelData('name', _.camelCase(v))
+      setTopLevelData('name', camelCase(v))
     }
   }
 
@@ -124,12 +124,14 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
           <FormRow label={'title'} key={'title'}>
             <InputText value={formData?.data['title']} onChange={handleTitleChange} />
           </FormRow>
-          <LockedInput
-            value={formData.name}
-            disabled={!isNew}
-            onSubmit={(v) => setTopLevelData('name', v)}
-            label="name"
-          />
+          <FormRow label={'name'} key={'name'}>
+            <LockedInput
+              value={formData.name}
+              disabled={!isNew}
+              onSubmit={(v) => setTopLevelData('name', v)}
+              label="name"
+            />
+          </FormRow>
           <FormRow label="scope">
             <MultiSelect
               options={SCOPE_OPTIONS}

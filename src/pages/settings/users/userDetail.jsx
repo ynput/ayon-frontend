@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel } from '@ynput/ayon-react-components'
+import { Button, Section, Panel, FormRow } from '@ynput/ayon-react-components'
 import { isEmpty } from '/src/utils'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
@@ -298,19 +298,22 @@ const UserDetail = ({
         <FormsStyled>
           {formData && singleUserEdit && (
             <Panel>
-              <LockedInputRow
-                label="Username"
-                value={singleUserEdit.name}
-                onEdit={() => setShowRenameUser(true)}
-                disabled={managerDisabled}
-              />
-              <LockedInputRow
-                label="Password"
-                value={singleUserEdit.hasPassword ? '1234567890' : ''}
-                type="password"
-                onEdit={() => setShowSetPassword(true)}
-                disabled={managerDisabled}
-              />
+              <FormRow label="Username" key="Username">
+                <LockedInputRow
+                  value={singleUserEdit.name}
+                  onEdit={() => setShowRenameUser(true)}
+                  disabled={managerDisabled}
+                />
+              </FormRow>
+              <FormRow label="Password" key="Password">
+                <LockedInputRow
+                  label="Password"
+                  value={singleUserEdit.hasPassword ? '1234567890' : ''}
+                  type="password"
+                  onEdit={() => setShowSetPassword(true)}
+                  disabled={managerDisabled}
+                />
+              </FormRow>
 
               <UserAttribForm
                 formData={formData}
