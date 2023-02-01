@@ -31,9 +31,6 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
       if (scrollPosition >= scrollHeight - offset && !atBottom) {
         atBottom = true
 
-        // log
-        console.log('Reached bottom of table!')
-
         // fire on scroll bottom event
         onScrollBottom()
       } else if (scrollPosition < scrollHeight - offset) {
@@ -42,13 +39,13 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
     }
 
     // Assign the throttled function as the scroll event listener
-    const tableScroll = tableWrapper.addEventListener('scroll', throttledHandleScrollEvent)
+    tableWrapper.addEventListener('scroll', throttledHandleScrollEvent)
 
     return () => {
       // remove scroll event listener
-      tableWrapper.removeEventListener('scroll', tableScroll)
+      tableWrapper.removeEventListener('scroll', throttledHandleScrollEvent)
     }
-  }, [dataTableRef.current])
+  }, [dataTableRef.current, onScrollBottom, eventData])
 
   return (
     <Section className={'wrap'}>
