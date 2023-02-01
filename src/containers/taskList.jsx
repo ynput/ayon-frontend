@@ -126,7 +126,7 @@ const TaskList = ({ style = {} }) => {
           value={data}
           scrollable="true"
           scrollHeight="100%"
-          emptyMessage="No tasks found"
+          emptyMessage="No Tasks Found"
           selectionMode="multiple"
           selectionKeys={selectedTasks}
           onSelectionChange={onSelectionChange}

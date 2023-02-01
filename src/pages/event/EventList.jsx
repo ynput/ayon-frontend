@@ -1,10 +1,52 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent }) => {
+const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onScrollBottom }) => {
+  const dataTableRef = useRef(null)
+
+  useEffect(() => {
+    // table has the scrollable parent of the table
+    const tableWrapper = dataTableRef.current.getElement().querySelector('.p-datatable-wrapper')
+
+    let timeoutId = null
+    let atBottom = false
+
+    // Wrap the event listener function in a throttled function
+    const throttledHandleScrollEvent = (e) => {
+      if (timeoutId) {
+        return
+      }
+      timeoutId = setTimeout(() => {
+        timeoutId = null
+      }, 100)
+
+      const { scrollTop, scrollHeight, clientHeight } = e.target
+      const scrollPosition = scrollTop + clientHeight
+
+      const offset = 600
+      // offset pixels from bottom
+      if (scrollPosition >= scrollHeight - offset && !atBottom) {
+        atBottom = true
+
+        // fire on scroll bottom event
+        onScrollBottom()
+      } else if (scrollPosition < scrollHeight - offset) {
+        atBottom = false
+      }
+    }
+
+    // Assign the throttled function as the scroll event listener
+    tableWrapper.addEventListener('scroll', throttledHandleScrollEvent)
+
+    return () => {
+      // remove scroll event listener
+      tableWrapper.removeEventListener('scroll', throttledHandleScrollEvent)
+    }
+  }, [dataTableRef.current, onScrollBottom, eventData])
+
   return (
     <Section className={'wrap'}>
       <TablePanel loading={isLoading}>
@@ -15,7 +57,7 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent }) =>
           responsive="true"
           dataKey="id"
           selectionMode="single"
-          onSelectionChange={(e) => setSelectedEvent(e.value)}
+          onSelectionChange={(e) => setSelectedEvent(e.value.id)}
           selection={selectedEvent}
           rowClassName={(rowData) => {
             return {
@@ -25,6 +67,7 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent }) =>
               'row-success': rowData.topic === 'log.success',
             }
           }}
+          ref={dataTableRef}
         >
           <Column
             header="Time"

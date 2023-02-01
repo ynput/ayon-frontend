@@ -2,8 +2,8 @@ import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setDialog } from '/src/features/context'
 import TagsEditorDialog from './dialog'
-import { useGetEntitiesDetailsQuery } from '/src/services/getEntitiesDetails'
-import { useUpdateEntitiesDetailsMutation } from '/src/services/updateEntitiesDetails'
+import { useGetEntitiesDetailsQuery } from '../../services/entity/getEntity'
+import { useUpdateEntitiesDetailsMutation } from '../../services/entity/updateEntity'
 
 export const TagsEditorContainer = () => {
   const projectTags = useSelector((state) => state.context.project.tags)

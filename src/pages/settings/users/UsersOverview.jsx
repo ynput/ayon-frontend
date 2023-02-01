@@ -19,13 +19,17 @@ const LinkStyled = styled(Link)`
   }
 `
 
-const TotalsStyledPanel = styled(Panel)`
+export const TotalsStyledPanel = styled(Panel)`
   flex-direction: row;
   flex: 4;
+
+  h2 {
+    width: 100%;
+  }
 `
 
 // total styled Button
-const TotalStyledButton = styled(Button)`
+export const TotalStyledButton = styled(Button)`
   flex: 1;
 
   &:focus {
@@ -36,6 +40,7 @@ const TotalStyledButton = styled(Button)`
     highlighted &&
     css`
       background-color: var(--color-grey-04);
+      outline: 1px solid var(--color-hl-00);
       &:focus {
         outline: 1px solid var(--color-hl-00);
       }

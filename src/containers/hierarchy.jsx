@@ -325,7 +325,7 @@ const Hierarchy = (props) => {
         selectionMode="multiple"
         selectionKeys={selectedFolders}
         expandedKeys={expandedFolders}
-        emptyMessage={isLoading ? ' ' : 'No folders found'}
+        emptyMessage={isError && 'No Folders Found'}
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onRowClick={onRowClick}
@@ -340,8 +340,6 @@ const Hierarchy = (props) => {
 
   if (isError) {
     toast.error(`Unable to load hierarchy. ${error}`)
-
-    return <>Error...</>
   }
 
   return (
@@ -353,6 +351,7 @@ const Hierarchy = (props) => {
           disabled={!projectName || isLoading}
           value={query}
           onChange={(evt) => setQuery(evt.target.value)}
+          autocomplete="off"
         />
 
         <MultiSelect

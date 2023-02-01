@@ -338,7 +338,7 @@ const Subsets = () => {
     'data.versionName',
   ]
 
-  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData)
+  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'subsets')
 
   //
   // Handlers
@@ -427,6 +427,7 @@ const Subsets = () => {
           placeholder="Filter subsets..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          autocomplete="off"
         />
         <MultiSelect
           options={filterOptions}

@@ -152,7 +152,11 @@ const UsersSettings = () => {
 
   const searchableFields = ['name', 'attrib.fullName', 'attrib.email', 'rolesList', 'hasPassword']
 
-  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, userListWithRoles)
+  const [search, setSearch, filteredData] = useSearchFilter(
+    searchableFields,
+    userListWithRoles,
+    'users',
+  )
 
   const selectedUserList = userList.filter((user) => selectedUsers.includes(user.name))
 
@@ -204,6 +208,7 @@ const UsersSettings = () => {
             placeholder="Filter users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            autocomplete="off"
           />
         </Toolbar>
         <Splitter

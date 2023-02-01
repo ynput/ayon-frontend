@@ -1,6 +1,6 @@
-import { ayonApi, buildOperations } from './ayon'
+import { ayonApi, buildOperations } from '../ayon'
 
-const updateEntitiesDetails = ayonApi.injectEndpoints({
+const updateEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     updateEntitiesDetails: build.mutation({
       query: ({ projectName, type, patches, data, ids }) => ({
@@ -37,4 +37,4 @@ const updateEntitiesDetails = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useUpdateEntitiesDetailsMutation } = updateEntitiesDetails
+export const { useUpdateEntitiesDetailsMutation } = updateEntity

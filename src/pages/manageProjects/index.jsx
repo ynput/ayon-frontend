@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams, NavLink } from 'react-router-dom'
+import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-dom'
 
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 
@@ -11,6 +11,8 @@ import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 import { useSelector } from 'react-redux'
+import { useEffect } from 'react'
+import { StringParam, useQueryParam } from 'use-query-params'
 
 const ManageProjects = () => {
   const navigate = useNavigate()
@@ -19,9 +21,20 @@ const ManageProjects = () => {
 
   let { module } = useParams()
 
-  const [selectedProject, setSelectedProject] = useState(null)
   const [showNewProject, setShowNewProject] = useState(false)
   const [listReloadTrigger, setListReloadTrigger] = useState(0)
+
+  // QUERY PARAMS STATE
+  const [selectedProject, setSelectedProject] = useQueryParam('project', StringParam)
+
+  // Search params
+  const [searchParams] = useSearchParams()
+  const queryProject = searchParams.get('project')
+
+  //   // set initial selected project
+  useEffect(() => {
+    if (queryProject) setSelectedProject(queryProject)
+  }, [])
 
   const deleteProject = () => {
     setListReloadTrigger((val) => val + 1)

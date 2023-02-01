@@ -47,7 +47,7 @@ const UserImage = ({ src, fullName, style, size = 30, highlight }) => {
 
 UserImage.propTypes = {
   src: Proptypes.string,
-  fullName: Proptypes.string.isRequired,
+  fullName: Proptypes.string,
   size: Proptypes.number,
   style: Proptypes.object,
   highlight: Proptypes.bool,

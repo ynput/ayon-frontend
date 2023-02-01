@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 import ayonClient from '/src/ayon'
 
 const TASK_QUERY = `
@@ -146,10 +146,27 @@ query Subset($projectName: String!, $ids: [String!]!, $versionOverrides: [String
 }
 `
 
-const buildEntitiesDetailsQuery = (type) => {
-  let f_attribs = ''
-  for (const attrib of ayonClient.settings.attributes) {
-    if (attrib.scope.includes(type)) f_attribs += `${attrib.name}\n`
+const buildEventTileQuery = (type) => {
+  return `
+  query EventTile($projectName: String!, $id: String!) {
+    project(name: $projectName) {
+      ${type}(id: $id) {
+        id
+        name
+        status
+        updatedAt
+      }
+    }
+  }
+  `
+}
+
+const buildEntitiesQuery = (type, attribs) => {
+  let f_attribs = attribs || ''
+  if (!attribs) {
+    for (const attrib of ayonClient.settings.attributes) {
+      if (attrib.scope.includes(type)) f_attribs += `${attrib.name}\n`
+    }
   }
 
   let QUERY
@@ -175,14 +192,20 @@ const buildEntitiesDetailsQuery = (type) => {
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
-const getEntitiesDetails = ayonApi.injectEndpoints({
+const getEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getEntitiesDetails: build.query({
-      query: ({ projectName, ids, type, versionOverrides }) => ({
+      query: ({
+        projectName,
+        ids,
+        type,
+        versionOverrides = ['00000000000000000000000000000000'],
+        attribs,
+      }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: buildEntitiesDetailsQuery(type),
+          query: buildEntitiesQuery(type, attribs),
           variables: { projectName, ids, versionOverrides },
         },
       }),
@@ -191,7 +214,18 @@ const getEntitiesDetails = ayonApi.injectEndpoints({
       providesTags: (result, error, { type }) =>
         result ? [...result.map(({ node }) => ({ type: type, id: node.id }))] : [type],
     }),
+    getEventTile: build.query({
+      query: ({ projectName, id, type }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: buildEventTileQuery(type),
+          variables: { projectName, id },
+        },
+      }),
+      transformResponse: (response, meta, { type }) => response.data.project[type],
+    }),
   }),
 })
 
-export const { useGetEntitiesDetailsQuery } = getEntitiesDetails
+export const { useGetEntitiesDetailsQuery, useGetEventTileQuery } = getEntity
