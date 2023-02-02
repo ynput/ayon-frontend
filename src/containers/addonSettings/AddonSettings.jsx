@@ -2,8 +2,17 @@ import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 //import ReactMarkdown from 'react-markdown'
 
-import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Spacer,
+  Section,
+  Panel,
+  Toolbar,
+  ScrollPanel,
+  InputSwitch,
+} from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { SelectButton } from 'primereact/selectbutton'
 
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
@@ -76,6 +85,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [localOverrides, setLocalOverrides] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
+  const [environment, setEnvironment] = useState('production')
+  const [showAllAddons, setShowAllAddons] = useState(false)
 
   const [setAddonSettings] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
@@ -316,6 +327,31 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   // RENDER
   //
 
+  const addonListHeader = useMemo(() => {
+    const environmentOptions = [
+      { label: 'Production', value: 'production' },
+      { label: 'Staging', value: 'staging' },
+    ]
+
+    return (
+      <Toolbar>
+        <SelectButton
+          unselectable={true}
+          value={environment}
+          options={environmentOptions}
+          onChange={(e) => setEnvironment(e.value)}
+        />
+        <Spacer />
+        Show all
+        <InputSwitch
+          checked={showAllAddons}
+          onChange={() => setShowAllAddons(!showAllAddons)}
+          tooltip="Show all addons"
+        />
+      </Toolbar>
+    )
+  }, [showAllAddons, environment])
+
   const settingsListHeader = useMemo(() => {
     return (
       <Toolbar>
@@ -375,11 +411,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
       <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
         <Section style={{ maxWidth: 400 }}>
+          {addonListHeader}
           <AddonList
             projectKey={projectKey}
             selectedAddons={selectedAddons}
             setSelectedAddons={setSelectedAddons}
             changedAddons={Object.keys(localData) /* Unused, AddonList doesn't have project&site */}
+            environment={environment}
+            showAllAddons={showAllAddons}
           />
           {showSites && (
             <SiteList
