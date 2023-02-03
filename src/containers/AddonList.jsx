@@ -47,7 +47,7 @@ const AddonList = ({
   }, [data, environment, withSettings, showAllAddons])
 
   useEffect(() => {
-    console.log('changedAddons', changedAddons)
+    ///
   }, [changedAddons])
 
   // Context menu

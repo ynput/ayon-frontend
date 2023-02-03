@@ -464,6 +464,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           localData={localData[key]}
                           changedKeys={localOverrides[key]}
                           reloadTrigger={reloadTrigger[key]}
+                          currentSelection={currentSelection}
                           onSelect={setCurrentSelection}
                           projectName={projectName}
                           siteId={siteId === '_' ? null : siteId}

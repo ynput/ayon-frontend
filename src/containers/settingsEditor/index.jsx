@@ -51,6 +51,7 @@ const SettingsEditor = ({
   formData,
   onChange,
   overrides,
+  breadcrumbs,
   onSetBreadcrumbs,
   onSetChangedKeys,
   level,
@@ -67,6 +68,7 @@ const SettingsEditor = ({
     onSetBreadcrumbs: onSetBreadcrumbs || (() => {}),
     changedKeys: changedKeys || [], // source of all problems
     onSetChangedKeys: onSetChangedKeys || (() => {}),
+    breadcrumbs: breadcrumbs || [],
   }
 
   return (
