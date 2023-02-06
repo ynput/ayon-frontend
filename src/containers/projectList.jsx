@@ -37,12 +37,14 @@ const ProjectList = ({
 
   // if selection does not exist in data, set selection to null
   useEffect(() => {
+    if (isLoading) return
+
     if (onNoProject && !data.map((project) => project.name).includes(selection)) {
-      console.log('selected project does not exist')
+      console.log('selected project does not exist: ', selection)
       const defaultProject = autoSelect ? data[0]?.name : null
       onNoProject(defaultProject)
     } else if (isSuccess && onSuccess) onSuccess()
-  }, [selection, data, onNoProject])
+  }, [selection, data, onNoProject, isLoading])
 
   const projectList = [...data]
 
@@ -95,6 +97,7 @@ const ProjectList = ({
 
   return (
     <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
+      {footer}
       <TablePanel loading={isLoading}>
         <DataTable
           value={projectList}
@@ -115,7 +118,6 @@ const ProjectList = ({
           {!hideCode && <Column field="code" header="Code" style={{ maxWidth: 80 }} />}
         </DataTable>
       </TablePanel>
-      {footer}
     </Section>
   )
 }
