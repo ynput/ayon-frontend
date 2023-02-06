@@ -6,21 +6,96 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import { useGetAddonListQuery } from '/src/services/addonList'
-import { useSetAddonVersionMutation } from '/src/services/addonList'
+import { useSetAddonVersionsMutation } from '/src/services/addonList'
+
+function sortSemver(arr) {
+  arr.sort(function (a, b) {
+    const aParts = a.split('.')
+    const bParts = b.split('.')
+    const len = Math.max(aParts.length, bParts.length)
+    for (let i = 0; i < len; i++) {
+      const aPart = aParts[i] || ''
+      const bPart = bParts[i] || ''
+      if (aPart === bPart) {
+        continue
+      }
+      if (!isNaN(aPart) && !isNaN(bPart)) {
+        return parseInt(aPart) - parseInt(bPart)
+      }
+      return aPart.localeCompare(bPart)
+    }
+    return 0
+  })
+  return arr
+}
 
 const createContextMenu = (environment, selectedAddons) => {
-  const [setAddonVersion] = useSetAddonVersionMutation()
-  return [
+  const [setAddonVersions] = useSetAddonVersionsMutation()
+  const result = []
+
+  // Set to version
+
+  const versionItems = [
     {
-      label: 'Unset ' + environment + ' version',
+      label: 'Disable ' + environment,
       command: () => {
+        const versions = {}
         for (const addon of selectedAddons) {
-          setAddonVersion({ addonName: addon.name, [environment + 'Version']: null })
+          versions[addon.name] = { [environment + 'Version']: null }
         }
+        setAddonVersions(versions)
       },
     },
+    {
+      label: 'Latest',
+      command: () => {
+        const versions = {}
+        for (const addon of selectedAddons) {
+          versions[addon.name] = { [environment + 'Version']: addon.latestVersion }
+        }
+        setAddonVersions(versions)
+      }, // set to latest
+    },
   ]
+
+  if (selectedAddons.length === 1) {
+    versionItems.push({
+      separator: true,
+    })
+
+    for (const version in selectedAddons[0].versions || {}) {
+      versionItems.push({
+        label: version,
+        command: () => {},
+      })
+    }
+  }
+
+  result.push({
+    label: 'Set version',
+    items: versionItems,
+  })
+
+  // Copy from other environment
+
+  if (environment === 'production') {
+    result.push({
+      label: 'Copy from staging',
+      command: () => {},
+    })
+  } else {
+    result.push({
+      label: 'Copy from production',
+      command: () => {},
+    })
+  }
+
+  return result
 }
+
+//
+//
+//
 
 const AddonList = ({
   selectedAddons,
@@ -40,7 +115,11 @@ const AddonList = ({
     let result = []
     for (const addon of data || []) {
       if (addon[environment + 'Version'] || showAllAddons) {
-        result.push({ ...addon, version: addon[environment + 'Version'] })
+        result.push({
+          ...addon,
+          version: addon[environment + 'Version'],
+          latestVersion: sortSemver(Object.keys(addon.versions || {})).pop(),
+        })
       }
     }
     return result

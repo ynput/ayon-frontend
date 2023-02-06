@@ -61,9 +61,27 @@ const addonList = ayonApi.injectEndpoints({
         },
       }),
       invalidatesTags: ['addonList'],
-    }),
+    }), // setAddonVersion
+
+    // Set production and staging versions of multiple addons
+    // at once. syntax is { [addonName]: { stagingVersion, productionVersion } }
+
+    setAddonVersions: build.mutation({
+      query: (versions) => ({
+        url: '/api/addons',
+        method: 'POST',
+        body: {
+          versions,
+        },
+      }),
+      invalidatesTags: ['addonList'],
+    }), // setAddonVersions
   }), // endpoints
 })
 
-export const { useGetAddonListQuery, useGetAddonProjectQuery, useSetAddonVersionMutation } =
-  addonList
+export const {
+  useGetAddonListQuery,
+  useGetAddonProjectQuery,
+  useSetAddonVersionMutation,
+  useSetAddonVersionsMutation,
+} = addonList
