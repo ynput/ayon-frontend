@@ -76,6 +76,21 @@ const addonList = ayonApi.injectEndpoints({
       }),
       invalidatesTags: ['addonList'],
     }), // setAddonVersions
+
+    setCopyAddonVariant: build.mutation({
+      query: ({ addonName, copyFrom, copyTo }) => ({
+        url: '/api/addons',
+        method: 'POST',
+        body: {
+          copyVariant: {
+            addonName,
+            copyFrom,
+            copyTo,
+          },
+        },
+      }),
+      invalidatesTags: ['addonList'],
+    }), // setCopyAddonVariant
   }), // endpoints
 })
 
@@ -84,4 +99,5 @@ export const {
   useGetAddonProjectQuery,
   useSetAddonVersionMutation,
   useSetAddonVersionsMutation,
+  useSetCopyAddonVariantMutation,
 } = addonList

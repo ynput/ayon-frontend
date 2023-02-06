@@ -15,6 +15,7 @@ const AddonSettingsPanel = ({
   reloadTrigger,
   projectName = null,
   siteId = null,
+  environment,
   onChange = () => {},
   onLoad = () => {},
   onSetChangedKeys = () => {},
@@ -49,6 +50,7 @@ const AddonSettingsPanel = ({
     addonName: addon.name,
     addonVersion: addon.version,
     projectName,
+    environment,
     siteId,
   })
 
@@ -60,6 +62,7 @@ const AddonSettingsPanel = ({
     addonName: addon.name,
     addonVersion: addon.version,
     projectName,
+    environment,
     siteId,
   })
 
@@ -75,7 +78,7 @@ const AddonSettingsPanel = ({
   useEffect(() => {
     reload()
     // eslint-disable-next-line no-unused-vars
-  }, [addon.name, addon.version, reloadTrigger, projectName])
+  }, [addon.name, addon.version, reloadTrigger, projectName, environment, siteId])
 
   const breadcrumbs = useMemo(() => {
     if (!currentSelection) return null

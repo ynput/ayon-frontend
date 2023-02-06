@@ -127,6 +127,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     })
   }
 
+  const onAddonChanged = (addonName) => {
+    for (const key in localData) {
+      if (addonName === key.split('|')[0]) {
+        reloadAddons([key])
+      }
+    }
+  }
+
   const onSave = async () => {
     let updatedKeys = []
     let allOk = true
@@ -137,13 +145,15 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       if (projectName !== projectKey) continue
 
       try {
-        await setAddonSettings({
+        const payload = {
           addonName,
           addonVersion,
           projectName,
           siteId,
+          environment,
           data: localData[key],
-        }).unwrap()
+        }
+        await setAddonSettings(payload).unwrap()
 
         updatedKeys.push(key)
       } catch (e) {
@@ -208,6 +218,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         addonName,
         addonVersion,
         projectName: projectKey,
+        environment,
         siteId,
       }).unwrap()
     } catch (e) {
@@ -227,6 +238,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         projectName: projectKey,
         siteId,
         path,
+        environment,
         action: 'delete',
       }).unwrap()
     } catch (e) {
@@ -247,6 +259,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         projectName: projectKey,
         siteId,
         path,
+        environment,
         action: 'pin',
       }).unwrap()
     } catch (e) {
@@ -336,10 +349,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     return (
       <Toolbar>
         <SelectButton
-          unselectable={true}
+          unselectable={false}
           value={environment}
           options={environmentOptions}
-          onChange={(e) => setEnvironment(e.value)}
+          onChange={(e) => {
+            if (Object.keys(localOverrides).length) {
+              toast.error('Cannot change environment with unsaved changes')
+              return
+            }
+            setEnvironment(e.value)
+          }}
         />
         <Spacer />
         Show all
@@ -350,7 +369,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         />
       </Toolbar>
     )
-  }, [showAllAddons, environment])
+  }, [showAllAddons, environment, localOverrides])
 
   const settingsListHeader = useMemo(() => {
     return (
@@ -419,6 +438,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             changedAddons={Object.keys(localData) /* Unused, AddonList doesn't have project&site */}
             environment={environment}
             showAllAddons={showAllAddons}
+            onAddonChanged={onAddonChanged}
           />
           {showSites && (
             <SiteList
@@ -468,6 +488,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           onSelect={setCurrentSelection}
                           projectName={projectName}
                           siteId={siteId === '_' ? null : siteId}
+                          environment={environment}
                         />
                       </Panel>
                     )

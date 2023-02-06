@@ -6,7 +6,10 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import { useGetAddonListQuery } from '/src/services/addonList'
-import { useSetAddonVersionsMutation } from '/src/services/addonList'
+import {
+  useSetAddonVersionsMutation,
+  useSetCopyAddonVariantMutation,
+} from '/src/services/addonList'
 
 const sortSemver = (arr) => {
   arr.sort(function (a, b) {
@@ -29,8 +32,9 @@ const sortSemver = (arr) => {
   return arr
 }
 
-const createContextMenu = (environment, selectedAddons) => {
+const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {}) => {
   const [setAddonVersions] = useSetAddonVersionsMutation()
+  const [setCopyAddonVariant] = useSetCopyAddonVariantMutation()
   const result = []
 
   // Set to version
@@ -86,12 +90,38 @@ const createContextMenu = (environment, selectedAddons) => {
   if (environment === 'production') {
     result.push({
       label: 'Copy from staging',
-      command: () => {},
+      command: async () => {
+        for (const addon of selectedAddons) {
+          try {
+            await setCopyAddonVariant({
+              addonName: addon.name,
+              copyFrom: 'staging',
+              copyTo: 'production',
+            }).unwrap()
+          } catch (e) {
+            console.error(e)
+          }
+          onAddonChanged(addon.name)
+        }
+      },
     })
   } else {
     result.push({
       label: 'Copy from production',
-      command: () => {},
+      command: async () => {
+        for (const addon of selectedAddons) {
+          try {
+            await setCopyAddonVariant({
+              addonName: addon.name,
+              copyFrom: 'production',
+              copyTo: 'staging',
+            }).unwrap()
+          } catch (e) {
+            console.error(e)
+          }
+          onAddonChanged(addon.name)
+        }
+      },
     })
   }
 
@@ -109,6 +139,7 @@ const AddonList = ({
   showAllAddons = true,
   environment = 'production',
   withSettings = 'settings',
+  onAddonChanged = () => {},
 }) => {
   const cm = useRef(null)
 
@@ -137,7 +168,7 @@ const AddonList = ({
   // Context menu
   //const menu = useMemo(() => createContextMenu(environment, selectedAddons), [selectedAddons, environment])
   //
-  const menu = createContextMenu(environment, selectedAddons)
+  const menu = createContextMenu(environment, selectedAddons, onAddonChanged)
 
   return (
     <Section>
