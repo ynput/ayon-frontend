@@ -1,6 +1,6 @@
 import { ayonApi } from './ayon'
 
-const apiSuffix = (projectName, siteId) => {
+const apiSuffix = (projectName, siteId, environment) => {
   let suffix = ''
   if (projectName && projectName !== '_') {
     suffix += `/${projectName}`
@@ -8,6 +8,14 @@ const apiSuffix = (projectName, siteId) => {
       suffix += `?site=${siteId}`
     }
   }
+  if (environment) {
+    if (siteId && siteId !== '_') {
+      suffix += `&variant=${environment}`
+    } else {
+      suffix += `?variant=${environment}`
+    }
+  }
+  console.log('Suffix: ' + suffix)
   return suffix
 }
 
@@ -26,8 +34,12 @@ const addonSettings = ayonApi.injectEndpoints({
     }),
 
     getAddonSettings: build.query({
-      query: ({ addonName, addonVersion, projectName, siteId }) => ({
-        url: `/api/addons/${addonName}/${addonVersion}/settings${apiSuffix(projectName, siteId)}`,
+      query: ({ addonName, addonVersion, projectName, siteId, environment }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/settings${apiSuffix(
+          projectName,
+          siteId,
+          environment,
+        )}`,
         method: 'GET',
       }),
 
@@ -38,8 +50,12 @@ const addonSettings = ayonApi.injectEndpoints({
     }),
 
     getAddonSettingsOverrides: build.query({
-      query: ({ addonName, addonVersion, projectName, siteId }) => ({
-        url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(projectName, siteId)}`,
+      query: ({ addonName, addonVersion, projectName, siteId, environment }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(
+          projectName,
+          siteId,
+          environment,
+        )}`,
         method: 'GET',
       }),
 
@@ -50,8 +66,12 @@ const addonSettings = ayonApi.injectEndpoints({
     }),
 
     setAddonSettings: build.mutation({
-      query: ({ addonName, addonVersion, projectName, siteId, data }) => ({
-        url: `/api/addons/${addonName}/${addonVersion}/settings${apiSuffix(projectName, siteId)}`,
+      query: ({ addonName, addonVersion, projectName, siteId, data, environment }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/settings${apiSuffix(
+          projectName,
+          siteId,
+          environment,
+        )}`,
         method: 'POST',
         body: data,
       }),
@@ -64,6 +84,7 @@ const addonSettings = ayonApi.injectEndpoints({
           addonVersion: arg.addonVersion,
           projectName: arg.projectName,
           siteId: arg.siteId,
+          environment: arg.environment,
         },
         {
           type: 'addonSettingsOverrides',
@@ -71,6 +92,7 @@ const addonSettings = ayonApi.injectEndpoints({
           addonVersion: arg.addonVersion,
           projectName: arg.projectName,
           siteId: arg.siteId,
+          environment: arg.environment,
         },
       ],
       transformResponse: (response) => response,
@@ -78,8 +100,12 @@ const addonSettings = ayonApi.injectEndpoints({
     }), // setAddonSettings
 
     deleteAddonSettings: build.mutation({
-      query: ({ addonName, addonVersion, projectName, siteId }) => ({
-        url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(projectName, siteId)}`,
+      query: ({ addonName, addonVersion, projectName, siteId, environment }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(
+          projectName,
+          siteId,
+          environment,
+        )}`,
         method: 'DELETE',
       }),
       // eslint-disable-next-line no-unused-vars
@@ -90,6 +116,7 @@ const addonSettings = ayonApi.injectEndpoints({
           addonVersion: arg.addonVersion,
           projectName: arg.projectName,
           siteId: arg.siteId,
+          environment: arg.environment,
         },
         {
           type: 'addonSettingsOverrides',
@@ -97,6 +124,7 @@ const addonSettings = ayonApi.injectEndpoints({
           addonVersion: arg.addonVersion,
           projectName: arg.projectName,
           siteId: arg.siteId,
+          environment: arg.environment,
         },
       ],
       transformResponse: (response) => response,
@@ -104,8 +132,12 @@ const addonSettings = ayonApi.injectEndpoints({
     }), // setAddonSettings
 
     modifyAddonOverride: build.mutation({
-      query: ({ addonName, addonVersion, projectName, siteId, action, path }) => ({
-        url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(projectName, siteId)}`,
+      query: ({ addonName, addonVersion, projectName, siteId, action, path, environment }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(
+          projectName,
+          siteId,
+          environment,
+        )}`,
         method: 'POST',
         body: { action, path },
       }),
@@ -117,6 +149,7 @@ const addonSettings = ayonApi.injectEndpoints({
           addonVersion: arg.addonVersion,
           projectName: arg.projectName,
           siteId: arg.siteId,
+          environment: arg.environment,
         },
         {
           type: 'addonSettingsOverrides',
@@ -124,6 +157,7 @@ const addonSettings = ayonApi.injectEndpoints({
           addonVersion: arg.addonVersion,
           projectName: arg.projectName,
           siteId: arg.siteId,
+          environment: arg.environment,
         },
       ],
       transformResponse: (response) => response,

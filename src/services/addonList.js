@@ -2,6 +2,8 @@ import { ayonApi } from './ayon'
 
 const addonList = ayonApi.injectEndpoints({
   endpoints: (build) => ({
+    //  Return a list of all addons installed on the server
+
     getAddonList: build.query({
       query: () => ({
         url: `/api/addons`,
@@ -10,76 +12,18 @@ const addonList = ayonApi.injectEndpoints({
 
       providesTags: ['addonList'],
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      transformResponse: (response, meta, arg) => {
-        let result = []
-
-        const showVersions = arg.showVersions || false
-        const withSettings = arg.withSettings || 'settings'
-
-        for (const addon of response.addons) {
-          const selectable = addon.productionVersion !== undefined && !showVersions
-          const row = {
-            key: showVersions ? addon.name : `${addon.name}@${addon.productionVersion}`,
-            selectable: selectable,
-            children: [],
-            data: {
-              name: addon.name,
-              title: addon.title,
-              version: showVersions ? '' : addon.productionVersion,
-              productionVersion: addon.productionVersion,
-              stagingVersion: addon.stagingVersion,
-            },
-          }
-
-          if (showVersions) {
-            for (const version in addon.versions) {
-              if (withSettings === 'settings' && !addon.versions[version].hasSettings) continue
-              if (withSettings === 'site' && !addon.versions[version].hasSiteSettings) continue
-
-              let usage = []
-              if (addon.productionVersion === version) usage.push('PROD')
-              if (addon.stagingVersion === version) usage.push('STAG')
-
-              row.children.push({
-                key: `${addon.name}@${version}`,
-                selectable: true,
-                data: {
-                  name: addon.name,
-                  title: addon.title,
-                  version: version,
-                  productionVersion: addon.productionVersion,
-                  stagingVersion: addon.stagingVersion,
-                  usage: usage.join(', '),
-                },
-              })
-            }
-            if (!row.children.length) continue
-          } // if showVersions
-          else {
-            if (
-              withSettings === 'settings' &&
-              !addon.versions[addon.productionVersion]?.hasSettings
-            )
-              continue
-            if (
-              withSettings === 'site' &&
-              !addon.versions[addon.productionVersion]?.hasSiteSettings
-            )
-              continue
-          }
-
-          result.push(row)
-        }
-        return result
-      }, // transformResponse
+      transformResponse: (response) => response.addons || [],
     }), // getAddonList
+
+    // Return a list of addons which have project-scoped frontend
+    // TODO: Refactor: rename to getProjectAddons (probably)
 
     getAddonProject: build.query({
       query: () => ({
         url: `/api/addons`,
         method: 'GET',
       }),
-      providesTags: ['addonList'],
+      providesTags: ['projectAddons'],
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
       transformResponse: (response) => {
         let result = []
@@ -101,25 +45,59 @@ const addonList = ayonApi.injectEndpoints({
       },
     }),
 
+    // Set production and staging version of an addon
+    // Set to null to disable the addon in the respective environment
+    // When productionVersion or stagingVersion is not set,
+    // the respective environment is not changed.
+
     setAddonVersion: build.mutation({
-      // eslint-disable-next-line no-unused-vars
-      query: ({ projectName, addonName, productionVersion, stagingVersion }) => {
-        // TODO: per-project addon version overrides
-        const data = {
+      query: ({ addonName, stagingVersion, productionVersion }) => ({
+        url: '/api/addons',
+        method: 'POST',
+        body: {
           versions: {
-            [addonName]: { productionVersion, stagingVersion },
+            [addonName]: { stagingVersion, productionVersion },
           },
-        }
-        return {
-          url: `/api/addons`,
-          method: 'POST',
-          body: data,
-        }
-      },
+        },
+      }),
       invalidatesTags: ['addonList'],
     }), // setAddonVersion
+
+    // Set production and staging versions of multiple addons
+    // at once. syntax is { [addonName]: { stagingVersion, productionVersion } }
+
+    setAddonVersions: build.mutation({
+      query: (versions) => ({
+        url: '/api/addons',
+        method: 'POST',
+        body: {
+          versions,
+        },
+      }),
+      invalidatesTags: ['addonList'],
+    }), // setAddonVersions
+
+    setCopyAddonVariant: build.mutation({
+      query: ({ addonName, copyFrom, copyTo }) => ({
+        url: '/api/addons',
+        method: 'POST',
+        body: {
+          copyVariant: {
+            addonName,
+            copyFrom,
+            copyTo,
+          },
+        },
+      }),
+      invalidatesTags: ['addonList'],
+    }), // setCopyAddonVariant
   }), // endpoints
 })
 
-export const { useGetAddonListQuery, useGetAddonProjectQuery, useSetAddonVersionMutation } =
-  addonList
+export const {
+  useGetAddonListQuery,
+  useGetAddonProjectQuery,
+  useSetAddonVersionMutation,
+  useSetAddonVersionsMutation,
+  useSetCopyAddonVariantMutation,
+} = addonList
