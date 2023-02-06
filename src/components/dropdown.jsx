@@ -48,7 +48,7 @@ const ContainerStyled = styled.div`
         z-index: 10;
         display: flex;
         align-items: center;
-        padding: 6px 0;
+        padding: 4px 0;
         right: 0;
         left: 0;
         outline: 1px solid #383838;
