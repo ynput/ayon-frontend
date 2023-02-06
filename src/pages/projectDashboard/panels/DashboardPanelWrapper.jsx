@@ -6,6 +6,8 @@ import styled, { css } from 'styled-components'
 const PanelStyled = styled(Panel)`
   padding: 8px;
   gap: 8px;
+  min-height: 64px;
+  overflow: hidden;
 
   h1 {
     margin: 5px 0;
@@ -21,22 +23,24 @@ const PanelStyled = styled(Panel)`
     `}
 `
 
-const DashboardPanel = ({ title, children, isError }) => {
+const DashboardPanelWrapper = ({ title, children, isError }) => {
   return (
     <PanelStyled isError={isError}>
-      <h1>
-        {title}
-        {isError && ' - Error'}
-      </h1>
+      {title && (
+        <h1>
+          {title}
+          {isError && ' - Error'}
+        </h1>
+      )}
       {children}
     </PanelStyled>
   )
 }
 
-DashboardPanel.propTypes = {
-  title: PropTypes.string.isRequired,
+DashboardPanelWrapper.propTypes = {
+  title: PropTypes.string,
   children: PropTypes.node.isRequired,
   isError: PropTypes.bool,
 }
 
-export default DashboardPanel
+export default DashboardPanelWrapper
