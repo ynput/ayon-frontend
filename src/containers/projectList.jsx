@@ -5,6 +5,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useGetAllProjectsQuery } from '../services/getProject'
 import { useSelector } from 'react-redux'
+import { useEffect } from 'react'
 
 const formatName = (rowData, defaultTitle) => {
   if (rowData.name === '_') return defaultTitle
@@ -16,19 +17,30 @@ const ProjectList = ({
   onSelect,
   showNull,
   multiselect,
-  header,
   footer,
   style,
+  styleSection,
   className,
+  hideCode,
+  onNoProject,
+  onSuccess,
 }) => {
   const user = useSelector((state) => state.user)
   // QUERY HOOK
   // ( default ) gets added in transformResponse
   // pass user to force update when user changes
-  const { data = [], isLoading, isError, error } = useGetAllProjectsQuery({ user })
+  const { data = [], isLoading, isError, error, isSuccess } = useGetAllProjectsQuery({ user })
   if (isError) {
     console.error(error)
   }
+
+  // if selection does not exist in data, set selection to null
+  useEffect(() => {
+    if (onNoProject && !data.map((project) => project.name).includes(selection)) {
+      console.log('selected project does not exist')
+      onNoProject()
+    } else if (isSuccess && onSuccess) onSuccess()
+  }, [selection, data, onNoProject])
 
   const projectList = [...data]
 
@@ -80,8 +92,7 @@ const ProjectList = ({
   } // onSelectionChange
 
   return (
-    <Section style={{ maxWidth: 400, ...style }} className={className}>
-      {header}
+    <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
       <TablePanel loading={isLoading}>
         <DataTable
           value={projectList}
@@ -97,9 +108,9 @@ const ProjectList = ({
             field="name"
             header="Project name"
             body={(rowData) => formatName(rowData, showNull)}
-            style={{ minWidth: 150 }}
+            style={{ minWidth: 150, ...style }}
           />
-          <Column field="code" header="Code" style={{ maxWidth: 80 }} />
+          {!hideCode && <Column field="code" header="Code" style={{ maxWidth: 80 }} />}
         </DataTable>
       </TablePanel>
       {footer}

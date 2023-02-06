@@ -6,13 +6,13 @@ import { Button, Toolbar } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import AddonSettings from '/src/containers/addonSettings'
 
-import ProjectDashboard from './ProjectDashboard'
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 import { useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import { StringParam, useQueryParam } from 'use-query-params'
+import ProjectDashboard from '../projectDashboard/ProjectDashboard'
 
 const ManageProjects = () => {
   const navigate = useNavigate()
@@ -26,6 +26,8 @@ const ManageProjects = () => {
 
   // QUERY PARAMS STATE
   const [selectedProject, setSelectedProject] = useQueryParam('project', StringParam)
+  // has project list been loaded and selection vaidated?
+  const [isProjectValid, setIsProjectValid] = useState(false)
 
   // Search params
   const [searchParams] = useSearchParams()
@@ -39,35 +41,6 @@ const ManageProjects = () => {
   const deleteProject = () => {
     setListReloadTrigger((val) => val + 1)
   }
-
-  const toolbar = (
-    <Toolbar>
-      <Button
-        label="Open project"
-        icon="folder_open"
-        disabled={!selectedProject}
-        onClick={() => navigate(`/projects/${selectedProject}/browser`)}
-      />
-
-      {!isUser && (
-        <>
-          <Button
-            label="New project"
-            icon="create_new_folder"
-            onClick={() => setShowNewProject(true)}
-          />
-
-          <Button
-            label="Delete project"
-            icon="delete"
-            className="p-button-danger"
-            disabled={true || !selectedProject}
-            onClick={deleteProject}
-          />
-        </>
-      )}
-    </Toolbar>
-  )
 
   const userAccess = ['dashboard', 'siteSettings']
 
@@ -118,6 +91,32 @@ const ManageProjects = () => {
           </NavLink>
         ))}
       </nav>
+      <Toolbar style={{ padding: 8 }}>
+        <Button
+          label="Open project"
+          icon="folder_open"
+          disabled={!selectedProject}
+          onClick={() => navigate(`/projects/${selectedProject}/browser`)}
+        />
+
+        {!isUser && (
+          <>
+            <Button
+              label="New project"
+              icon="create_new_folder"
+              onClick={() => setShowNewProject(true)}
+            />
+
+            <Button
+              label="Delete project"
+              icon="delete"
+              className="p-button-danger"
+              disabled={true || !selectedProject}
+              onClick={deleteProject}
+            />
+          </>
+        )}
+      </Toolbar>
       <main>
         {showNewProject && (
           <NewProjectDialog
@@ -129,13 +128,17 @@ const ManageProjects = () => {
         )}
 
         <ProjectList
-          header={toolbar}
           selection={selectedProject}
           onSelect={setSelectedProject}
           reloadTrigger={listReloadTrigger}
+          style={{ minWidth: 100 }}
+          styleSection={{ maxWidth: 150 }}
+          hideCode
+          onNoProject={() => setSelectedProject(null)}
+          onSuccess={() => setIsProjectValid(true)}
         />
 
-        {selectedProject && (
+        {selectedProject && isProjectValid && (
           <>
             {module === 'dashboard' && <ProjectDashboard projectName={selectedProject} />}
             {module === 'anatomy' && <ProjectAnatomy projectName={selectedProject} />}
