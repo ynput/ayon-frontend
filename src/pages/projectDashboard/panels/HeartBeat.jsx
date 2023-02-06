@@ -2,7 +2,7 @@ import React from 'react'
 import { Chart } from 'primereact/chart'
 import styled from 'styled-components'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectHeartbeatQuery } from '/src/services/projectDashboard/getProjectHeartbeat'
+import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 
 const ChartStyled = styled(Chart)`
   width: 100%;
@@ -38,7 +38,7 @@ const HeartBeat = ({ projectName }) => {
     data: chartData,
     isLoading,
     isError,
-  } = useGetProjectHeartbeatQuery({ projectName }, { skip: useDemoData })
+  } = useGetProjectDashboardQuery({ projectName, panel: 'activity' }, { skip: useDemoData })
 
   if (useDemoData) {
     chartData = createDemoData(80)

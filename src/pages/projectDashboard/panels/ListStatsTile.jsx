@@ -11,6 +11,7 @@ const TileStyled = styled.div`
   border-radius: var(--base-input-border-radius);
   user-select: none;
   cursor: pointer;
+  width: 100%;
 
   &:hover {
     background-color: var(--color-grey-02);
@@ -31,7 +32,7 @@ const ListStatsTile = ({ title, stat, icon, isLoading, onClick }) => {
     <TileStyled onClick={onClick}>
       {icon && <span className="material-symbols-outlined">{icon}</span>}
       <h2>{title}</h2>
-      <span>{isLoading ? '...' : stat || 'unknown'}</span>
+      <span>{isLoading ? '' : stat || 'unknown'}</span>
     </TileStyled>
   )
 }

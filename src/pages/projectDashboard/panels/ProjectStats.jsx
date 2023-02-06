@@ -1,15 +1,61 @@
 import React from 'react'
+import { useEffect } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ListStatsTile from './ListStatsTile'
-import { useGetProjectStatsQuery } from '/src/services/projectDashboard/getProjectStats'
+import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 
 const ProjectStats = ({ projectName }) => {
-  const { data = {}, isLoading, isFetching, isError } = useGetProjectStatsQuery({ projectName })
+  const [counters, setCounters] = useState({})
+
+  const {
+    data = {},
+    isLoading,
+    isError,
+  } = useGetProjectDashboardQuery({ projectName, panel: 'stats' })
 
   const { folders, subsets, tasks, versions, representations, workfiles } = data.counts || {}
 
-  const loading = isLoading || isFetching
+  useEffect(() => {
+    // when data loaded use a setInterval to count up to the actual number
+    const intervals = 100
+    let count = 0
+    let interval
+    if (!isLoading) {
+      let tempCounters = {
+        folders: 0,
+        subsets: 0,
+        tasks: 0,
+        versions: 0,
+        representations: 0,
+        workfiles: 0,
+      }
+
+      interval = setInterval(() => {
+        count++
+
+        tempCounters = {
+          folders: Math.round((folders / intervals) * count),
+          subsets: Math.round((subsets / intervals) * count),
+          tasks: Math.round((tasks / intervals) * count),
+          versions: Math.round((versions / intervals) * count),
+          representations: Math.round((representations / intervals) * count),
+          workfiles: Math.round((workfiles / intervals) * count),
+        }
+
+        setCounters(tempCounters)
+        if (count === intervals) {
+          clearInterval(interval)
+        }
+      }, 5)
+    }
+
+    //   clear
+    return () => {
+      clearInterval(interval)
+    }
+  }, [isLoading, data])
 
   // convert above to object
   const stats = {
@@ -32,13 +78,14 @@ const ProjectStats = ({ projectName }) => {
   return (
     <DashboardPanelWrapper title="Project Stats" isError={isError}>
       {statsOrder.map((id) => {
-        const { label, stat, icon } = stats[id]
+        const { label, icon } = stats[id]
+
         return (
           <ListStatsTile
             title={label}
-            stat={stat}
+            stat={counters[id] || stats[id].stat}
             icon={icon}
-            isLoading={loading}
+            isLoading={isLoading}
             key={id}
             onClick={() => copyToClipboard(id)}
           />
