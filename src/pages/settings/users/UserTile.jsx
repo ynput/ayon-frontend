@@ -12,6 +12,8 @@ const PanelStyled = styled(Panel)`
   flex-direction: row;
   align-items: center;
   background-color: var(--color-grey-01);
+  padding: 8px;
+  gap: 8px;
 
   /* if not disable hover */
   ${({ disableHover }) =>
