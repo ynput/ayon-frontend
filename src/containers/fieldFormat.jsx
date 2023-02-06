@@ -14,7 +14,7 @@ const AttributeField = ({ value }) => {
 const TagsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 `
 
 const TagsField = ({ value }) => {

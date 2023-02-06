@@ -22,7 +22,7 @@ const defaultStyle = css`
 const StatusStyled = styled.div`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-size: var(--base-font-size);
   position: relative;
   cursor: pointer;

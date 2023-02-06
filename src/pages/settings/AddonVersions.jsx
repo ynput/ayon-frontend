@@ -41,7 +41,7 @@ const AddonListItem = ({ addonName, addonTitle, productionVersion, stagingVersio
   }
 
   return (
-    <Panel style={{ width: 800, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+    <Panel style={{ width: 800, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       <div style={{ flexBasis: 300 }}>{addonTitle}</div>
       <Spacer />
       <span>Production</span>
@@ -81,7 +81,7 @@ const AddonVersions = ({ projectName }) => {
         <Spacer>
           <section
             className="invisible"
-            style={{ gap: 6, display: 'flex', flexDirection: 'column' }}
+            style={{ gap: 8, display: 'flex', flexDirection: 'column' }}
           >
             {data.map((addon) => (
               <AddonListItem

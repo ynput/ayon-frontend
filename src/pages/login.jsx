@@ -25,7 +25,7 @@ const OAuth2Links = ({ options }) => {
       style={{
         display: 'flex',
         flexDirection: 'row',
-        gap: 12,
+        gap: 8,
         fontSize: '1.8em',
       }}
     >

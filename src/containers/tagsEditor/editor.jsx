@@ -9,7 +9,7 @@ const EditorContainerStyled = styled.div`
   width: 90vw;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 
   /* enable scrolling om avaible section */
   overflow-y: hidden;
@@ -19,7 +19,7 @@ const EditorContainerStyled = styled.div`
 const ButtonsContainerStyled = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   margin-top: 8px;
   min-height: 65px;
 
@@ -126,7 +126,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
                 onClick={() => handleRemove(v)}
                 key={v}
                 style={{
-                  gap: 3,
+                  gap: 4,
                   borderLeft: !isArtist && `solid 4px ${value.color}`,
                   order: isArtist && 1,
                 }}
@@ -160,7 +160,7 @@ const TagsEditor = ({ options = [], value = [], onChange }) => {
                   onClick={() => handleAdd(name)}
                   key={name}
                   style={{
-                    gap: 3,
+                    gap: 4,
                     borderLeft: `solid 4px ${color}`,
                   }}
                 />

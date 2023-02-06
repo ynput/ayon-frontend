@@ -70,7 +70,7 @@ const SuggestionItemStyled = styled.li`
 
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 
   /* ICON STYLES */
   span.icon {

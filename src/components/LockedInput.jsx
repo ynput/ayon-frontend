@@ -6,7 +6,7 @@ import styled from 'styled-components'
 const UsernameStyled = styled(FormRow)`
   .field {
     flex-direction: row;
-    gap: 5px;
+    gap: 4px;
 
     input {
       flex: 1;
