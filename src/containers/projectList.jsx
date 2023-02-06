@@ -24,6 +24,7 @@ const ProjectList = ({
   hideCode,
   onNoProject,
   onSuccess,
+  autoSelect,
 }) => {
   const user = useSelector((state) => state.user)
   // QUERY HOOK
@@ -38,7 +39,8 @@ const ProjectList = ({
   useEffect(() => {
     if (onNoProject && !data.map((project) => project.name).includes(selection)) {
       console.log('selected project does not exist')
-      onNoProject()
+      const defaultProject = autoSelect ? data[0]?.name : null
+      onNoProject(defaultProject)
     } else if (isSuccess && onSuccess) onSuccess()
   }, [selection, data, onNoProject])
 

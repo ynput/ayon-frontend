@@ -134,7 +134,8 @@ const ManageProjects = () => {
           style={{ minWidth: 100 }}
           styleSection={{ maxWidth: 150 }}
           hideCode
-          onNoProject={() => setSelectedProject(null)}
+          onNoProject={(s) => setSelectedProject(s)}
+          autoSelect
           onSuccess={() => setIsProjectValid(true)}
         />
 
