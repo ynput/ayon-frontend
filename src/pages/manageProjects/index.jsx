@@ -91,7 +91,7 @@ const ManageProjects = () => {
     <>
       <nav className="secondary">
         {links.map((link, i) => (
-          <NavLink to={link.path} key={i}>
+          <NavLink to={link.path + (selectedProject ? `?project=${selectedProject}` : '')} key={i}>
             {link.name}
           </NavLink>
         ))}
@@ -137,7 +137,7 @@ const ManageProjects = () => {
           onSelect={setSelectedProject}
           reloadTrigger={listReloadTrigger}
           style={{ minWidth: 100 }}
-          styleSection={{ maxWidth: 150 }}
+          styleSection={{ maxWidth: 150, minWidth: 150 }}
           hideCode
           onNoProject={(s) => setSelectedProject(s)}
           autoSelect
