@@ -8,7 +8,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 import { useGetAddonListQuery } from '/src/services/addonList'
 import { useSetAddonVersionsMutation } from '/src/services/addonList'
 
-function sortSemver(arr) {
+const sortSemver = (arr) => {
   arr.sort(function (a, b) {
     const aParts = a.split('.')
     const bParts = b.split('.')
@@ -63,10 +63,15 @@ const createContextMenu = (environment, selectedAddons) => {
       separator: true,
     })
 
-    for (const version in selectedAddons[0].versions || {}) {
+    const versions = sortSemver(Object.keys(selectedAddons[0].versions)).reverse()
+
+    for (const version of versions) {
       versionItems.push({
         label: version,
-        command: () => {},
+        command: () => {
+          const versions = { [selectedAddons[0].name]: { [environment + 'Version']: version } }
+          setAddonVersions(versions)
+        },
       })
     }
   }
