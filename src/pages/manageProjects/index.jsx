@@ -11,13 +11,14 @@ import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 import { useSelector } from 'react-redux'
 import { useEffect } from 'react'
-import { StringParam, useQueryParam } from 'use-query-params'
+import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import ProjectDashboard from '../projectDashboard/ProjectDashboard'
 
 const ManageProjects = () => {
   const navigate = useNavigate()
   // get is user from context
   const isUser = useSelector((state) => state.user.data.isUser)
+  const projectName = useSelector((state) => state.context.projectName)
 
   let { module } = useParams()
 
@@ -25,7 +26,11 @@ const ManageProjects = () => {
   const [listReloadTrigger, setListReloadTrigger] = useState(0)
 
   // QUERY PARAMS STATE
-  const [selectedProject, setSelectedProject] = useQueryParam('project', StringParam)
+  const [selectedProject, setSelectedProject] = useQueryParam(
+    'project',
+    withDefault(StringParam, projectName),
+  )
+
   // has project list been loaded and selection vaidated?
   const [isProjectValid, setIsProjectValid] = useState(false)
 
@@ -134,7 +139,8 @@ const ManageProjects = () => {
           style={{ minWidth: 100 }}
           styleSection={{ maxWidth: 150 }}
           hideCode
-          onNoProject={() => setSelectedProject(null)}
+          onNoProject={(s) => setSelectedProject(s)}
+          autoSelect
           onSuccess={() => setIsProjectValid(true)}
         />
 
