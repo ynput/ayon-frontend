@@ -20,6 +20,9 @@ const TileStyled = styled.div`
     flex: 1;
     margin: 0;
     height: 16px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 `
 

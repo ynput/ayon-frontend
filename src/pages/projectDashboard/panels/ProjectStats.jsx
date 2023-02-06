@@ -1,6 +1,6 @@
 import React from 'react'
 import { toast } from 'react-toastify'
-import DashboardPanel from './DashboardPanel'
+import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ListStatsTile from './ListStatsTile'
 import { useGetProjectStatsQuery } from '/src/services/projectDashboard/getProjectStats'
 
@@ -30,7 +30,7 @@ const ProjectStats = ({ projectName }) => {
   }
 
   return (
-    <DashboardPanel title="Project Stats" isError={isError}>
+    <DashboardPanelWrapper title="Project Stats" isError={isError}>
       {statsOrder.map((id) => {
         const { label, stat, icon } = stats[id]
         return (
@@ -44,7 +44,7 @@ const ProjectStats = ({ projectName }) => {
           />
         )
       })}
-    </DashboardPanel>
+    </DashboardPanelWrapper>
   )
 }
 
