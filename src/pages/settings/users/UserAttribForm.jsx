@@ -8,7 +8,7 @@ import {
 import styled from 'styled-components'
 
 export const DividerSmallStyled = styled(Divider)`
-  margin: 10px 0;
+  margin: 8px 0;
 `
 
 const UserAttribForm = ({ formData, setFormData, attributes, password, setPassword, disabled }) => {

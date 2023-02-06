@@ -102,7 +102,7 @@ const Hierarchy = (props) => {
   const selectedTypeTemplate = (option) => {
     if (option) {
       const folder_type_label = option ? option.replace(/[a-z]/g, '') : '??'
-      return <span style={{ marginRight: '10px' }}>{folder_type_label}</span>
+      return <span style={{ marginRight: '8px' }}>{folder_type_label}</span>
     }
     return 'Folder types'
   }

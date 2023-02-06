@@ -5,7 +5,7 @@ import { Panel, Button } from '@ynput/ayon-react-components'
 import { Dialog } from 'primereact/dialog'
 
 const HeaderStyled = styled(Panel)`
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
@@ -20,7 +20,7 @@ const HeaderStyled = styled(Panel)`
 
   & > div {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     flex: 1;
     overflow: hidden;

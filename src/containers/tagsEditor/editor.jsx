@@ -20,7 +20,7 @@ const ButtonsContainerStyled = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin-top: 10px;
+  margin-top: 8px;
   min-height: 65px;
 
   /* form fills whole row to push artist tags to a new line */
