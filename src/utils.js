@@ -255,6 +255,12 @@ function useLocalStorage(key, initialValue) {
   return [storedValue, setValue]
 }
 
+export const convertDate = (date) => {
+  if (!date) return ''
+  const createdAtDate = new Date(0)
+  return createdAtDate.setUTCSeconds(date)
+}
+
 export const getFuzzyDate = (date) => {
   if (!date) return ''
   // format date number days ago

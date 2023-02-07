@@ -6,11 +6,17 @@ import styled, { css } from 'styled-components'
 const PanelStyled = styled(Panel)`
   padding: 8px;
   gap: 8px;
+  min-height: 64px;
+  overflow: hidden;
+  align-items: center;
 
   h1 {
     margin: 5px 0;
     font-size: 16px;
   }
+
+  /* set span */
+  grid-column: ${({ span }) => `span ${span}`};
 
   /* if isError make title red */
   ${({ isError }) =>
@@ -21,22 +27,26 @@ const PanelStyled = styled(Panel)`
     `}
 `
 
-const DashboardPanel = ({ title, children, isError }) => {
+const DashboardPanelWrapper = ({ title, children, isError, span = 1, style }) => {
   return (
-    <PanelStyled isError={isError}>
-      <h1>
-        {title}
-        {isError && ' - Error'}
-      </h1>
+    <PanelStyled isError={isError} span={span} style={style}>
+      {title && (
+        <h1>
+          {title}
+          {isError && ' - Error'}
+        </h1>
+      )}
       {children}
     </PanelStyled>
   )
 }
 
-DashboardPanel.propTypes = {
-  title: PropTypes.string.isRequired,
+DashboardPanelWrapper.propTypes = {
+  title: PropTypes.string,
   children: PropTypes.node.isRequired,
   isError: PropTypes.bool,
+  span: PropTypes.number,
+  style: PropTypes.object,
 }
 
-export default DashboardPanel
+export default DashboardPanelWrapper
