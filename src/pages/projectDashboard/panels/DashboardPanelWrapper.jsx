@@ -15,12 +15,12 @@ const PanelStyled = styled(Panel)`
   max-height: 100%;
 
   h1 {
-    padding-top: 8px;
     font-size: 16px;
     background-color: var(--panel-background);
     margin: 0;
     width: 100%;
-    padding: 0 8px;
+
+    padding: 8px;
   }
 
   h2 {
@@ -44,6 +44,7 @@ const ContentStyled = styled.div`
   gap: 8px;
   width: 100%;
   padding: 8px;
+  padding-top: 0;
 
   overflow-y: auto;
   overflow-x: clip;
