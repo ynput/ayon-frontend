@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components'
 
 const PanelStyled = styled(Panel)`
   padding: 0;
-  padding-top: 8px;
+
   gap: 0;
   min-height: 64px;
   height: fit-content;
@@ -15,6 +15,7 @@ const PanelStyled = styled(Panel)`
   max-height: 100%;
 
   h1 {
+    padding-top: 8px;
     font-size: 16px;
     background-color: var(--panel-background);
     margin: 0;
