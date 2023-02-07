@@ -4,7 +4,7 @@ const getProjectDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getProjectDashboard: build.query({
       query: ({ projectName, panel }) => ({
-        url: `project/${projectName}/dashboard/${panel}`,
+        url: `/api/projects/${projectName}/dashboard/${panel}`,
       }),
     }),
   }),

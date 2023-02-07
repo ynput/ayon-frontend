@@ -13,9 +13,9 @@ const ProjectStats = ({ projectName }) => {
     data = {},
     isLoading,
     isError,
-  } = useGetProjectDashboardQuery({ projectName, panel: 'stats' })
+  } = useGetProjectDashboardQuery({ projectName, panel: 'entities' })
 
-  const { folders, subsets, tasks, versions, representations, workfiles } = data.counts || {}
+  const { folders, subsets, tasks, versions, representations, workfiles } = data
 
   useEffect(() => {
     // when data loaded use a setInterval to count up to the actual number

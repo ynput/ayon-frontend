@@ -17,42 +17,24 @@ const ChartStyled = styled(Chart)`
   }
 `
 
-// create demo data function
-const createDemoData = (length) => {
-  // DEMO DATA
-  let demoData = []
-  for (let i = 0; i < length; i++) {
-    let v = Math.floor(Math.random() * (length - i * 10)) + i * 10
-    if (i < length / 2) v = v / 1.5
-    if (i < length / 4) v = v / 1.5
-    demoData[i] = v
-  }
-
-  return demoData
-}
-
 const HeartBeat = ({ projectName }) => {
-  const useDemoData = true
-
-  let {
-    data: chartData,
+  const {
+    data = {},
     isLoading,
     isError,
-  } = useGetProjectDashboardQuery({ projectName, panel: 'activity' }, { skip: useDemoData })
+  } = useGetProjectDashboardQuery({ projectName, panel: 'activity' })
 
-  if (useDemoData) {
-    chartData = createDemoData(80)
-  }
+  let { activity } = data
 
   if (isError || isLoading) {
-    chartData = [0, 0]
+    activity = [0, 0]
   }
 
   const chart = {
-    labels: chartData,
+    labels: activity,
     datasets: [
       {
-        data: chartData,
+        data: activity,
         fill: false,
         borderColor: '#47b7da',
         borderWidth: 3,
