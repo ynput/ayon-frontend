@@ -17,9 +17,10 @@ const TileStyled = styled.div`
     background-color: var(--color-grey-02);
   }
 
-  h2 {
+  h3 {
     flex: 1;
     margin: 0;
+    padding: 0;
     height: 16px;
     overflow: hidden;
     white-space: nowrap;
@@ -31,7 +32,7 @@ const ListStatsTile = ({ title, stat, icon, isLoading, onClick }) => {
   return (
     <TileStyled onClick={onClick}>
       {icon && <span className="material-symbols-outlined">{icon}</span>}
-      <h2>{title}</h2>
+      <h3>{title}</h3>
       <span>{isLoading ? '' : stat || 'unknown'}</span>
     </TileStyled>
   )

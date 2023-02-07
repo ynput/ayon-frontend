@@ -122,7 +122,7 @@ const ManageProjects = () => {
           </>
         )}
       </Toolbar>
-      <main>
+      <main style={{ overflowY: 'clip' }}>
         {showNewProject && (
           <NewProjectDialog
             onHide={() => {

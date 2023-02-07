@@ -26,7 +26,7 @@ const PanelStyled = styled(Panel)`
     `}
 `
 
-const UserTile = ({ user, onClick, userName, suspence, children, disableHover }) => {
+const UserTile = ({ user, onClick, userName, suspence, children, disableHover, style }) => {
   const currentUser = useSelector((state) => state.user.name)
 
   // RTK QUERY
@@ -65,7 +65,7 @@ const UserTile = ({ user, onClick, userName, suspence, children, disableHover })
   }
 
   return (
-    <PanelStyled onClick={onClick} disableHover={disableHover}>
+    <PanelStyled onClick={onClick} disableHover={disableHover} style={style}>
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
       <div style={{ flex: 1 }}>
         <strong>

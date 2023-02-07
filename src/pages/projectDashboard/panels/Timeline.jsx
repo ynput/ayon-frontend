@@ -111,36 +111,28 @@ const LineStyled = styled.hr`
 `
 
 const Timeline = ({ projectName }) => {
-  const isDemo = true
-
   // animation played
   const [animation, setAnimation] = useState(true)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setLoading] = useState(true)
+  const [data, setData] = useState({})
 
-  let { data = {}, isError } = useGetProjectAttribsQuery(
-    {
-      projectName,
-      attribs: ['start', 'end'],
-    },
-    {
-      skip: isDemo,
-    },
-  )
+  let {
+    // data = {},
+    isError,
+    // isLoading,
+  } = useGetProjectAttribsQuery({
+    projectName,
+    attribs: ['start', 'end'],
+  })
   let { start, end } = data.attrib || {}
 
-  if (isDemo && !loading) {
-    if (projectName === 'demo_Big_Episodic') {
-      start = 1667660629
-      end = 1676905429
-    } else {
-      start = 1673017429
-      end = 1682435029
-    }
-  }
-
+  // fake API call
   useEffect(() => {
     const timeout = setTimeout(() => {
       setLoading(false)
+      const start = 1667660629,
+        end = 1676905429
+      setData({ attrib: { start, end } })
     }, 200)
 
     //   clear
@@ -155,7 +147,7 @@ const Timeline = ({ projectName }) => {
     startString = '',
     endString = ''
 
-  if (!loading) {
+  if (!isLoading) {
     //   convert to dates
     start = convertDate(start)
     end = convertDate(end)
@@ -178,7 +170,7 @@ const Timeline = ({ projectName }) => {
       <TailsStyled>{startString}</TailsStyled>
       <ProgressStyled animation={animation} onAnimationEnd={() => setAnimation(false)}>
         <LineStyled flex={percentage} />
-        <MarkerStyled left={percentage}>{!loading && `${today}/${length} Days`} </MarkerStyled>
+        <MarkerStyled left={percentage}>{!isLoading && `${today}/${length} Days`} </MarkerStyled>
         <LineStyled flex={100 - percentage} end="true" />
       </ProgressStyled>
       <TailsStyled end="true">{endString}</TailsStyled>
