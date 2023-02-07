@@ -5,6 +5,7 @@ import ProjectStats from './panels/ProjectStats'
 import ProjectUsers from './panels/ProjectUsers'
 import Timeline from './panels/Timeline'
 import { Section } from '@ynput/ayon-react-components'
+import ProjectHealth from './panels/ProjectHealth'
 
 // top grid
 const HeaderGridStyled = styled.div`
@@ -37,11 +38,12 @@ const ProjectDashboard = ({ projectName }) => {
           <GridStyled>
             <ProjectStats {...{ projectName }} />
             <ProjectUsers {...{ projectName }} />
+            <ProjectHealth {...{ projectName }} />
           </GridStyled>
         </SplitterPanel>
-        <SplitterPanel size={25}>
+        {/* <SplitterPanel size={25}>
           <h1>Project Details</h1>
-        </SplitterPanel>
+        </SplitterPanel> */}
       </Splitter>
     </Section>
   )

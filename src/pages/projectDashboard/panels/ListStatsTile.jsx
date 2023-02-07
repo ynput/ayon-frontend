@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 
-const TileStyled = styled.div`
+export const TileStyled = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
@@ -25,6 +25,7 @@ const TileStyled = styled.div`
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    border-bottom: unset;
   }
 `
 

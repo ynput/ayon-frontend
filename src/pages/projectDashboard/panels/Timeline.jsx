@@ -166,6 +166,7 @@ const Timeline = ({ projectName }) => {
         flexDirection: 'row',
         gap: 0,
         alignItems: 'center',
+        padding: '0 8px',
         flex: 1,
       }}
     >
