@@ -165,6 +165,8 @@ const Timeline = ({ projectName }) => {
       style={{
         flexDirection: 'row',
         gap: 0,
+        alignItems: 'center',
+        flex: 1,
       }}
     >
       <TailsStyled>{startString}</TailsStyled>

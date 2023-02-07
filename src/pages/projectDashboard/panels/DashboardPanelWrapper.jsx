@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components'
 
 const PanelStyled = styled(Panel)`
   padding: 0;
-  padding-top: 8px;
+
   gap: 0;
   min-height: 64px;
   height: fit-content;
@@ -19,7 +19,8 @@ const PanelStyled = styled(Panel)`
     background-color: var(--panel-background);
     margin: 0;
     width: 100%;
-    padding: 0 8px;
+
+    padding: 8px;
   }
 
   h2 {
@@ -43,6 +44,7 @@ const ContentStyled = styled.div`
   gap: 8px;
   width: 100%;
   padding: 8px;
+  padding-top: 0;
 
   overflow-y: auto;
   overflow-x: clip;
