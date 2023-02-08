@@ -11,15 +11,6 @@ const ProgressStyled = styled.div`
   width: 100%;
   border-radius: 2px;
   background-color: black;
-
-  /* block all animations once played once */
-  ${({ animation }) =>
-    !animation &&
-    css`
-      & > * {
-        animation: none !important;
-      }
-    `}
 `
 
 const LinesAnimation = (left) => keyframes`
@@ -47,6 +38,12 @@ const LineStyled = styled.hr`
 
   transform-origin: left;
   animation: ${({ left }) => LinesAnimation(left)} 1s forwards;
+  /* block all animations once played once */
+  ${({ animation }) =>
+    !animation &&
+    css`
+      animation: none !important;
+    `}
 
   &::before {
     /* expand the hover zone but keep hidden */
@@ -100,19 +97,20 @@ const LineStyled = styled.hr`
           left: 50%;
           transform: translateX(-50%);
         }
-
-        /* flex below 25 and index either start or end */
-        ${({ index, length }) =>
-          (index === 0 || index === length - 1) &&
-          css`
-            transform-origin: ${index === 0 ? 'left' : 'right'};
-
+      }
+      /* flex below 25 and index either start or end */
+      ${({ index, length, animation }) =>
+        (index === 0 || index === length - 1) &&
+        !animation &&
+        css`
+          transform-origin: ${index === 0 ? 'left' : 'right'} !important;
+          :hover {
             ::after {
               left: ${index === 0 ? '0' : '100%'};
               transform: translateX(${index === 0 ? '0' : '-100%'});
             }
-          `}
-      }
+          }
+        `}
     `}
 `
 
@@ -136,14 +134,11 @@ const ProgressBar = ({ values = [], backgroundColor, isLoading }) => {
   }
 
   return (
-    <ProgressStyled
-      style={{ backgroundColor }}
-      animation={animation}
-      onAnimationEnd={() => setAnimation(false)}
-    >
+    <ProgressStyled style={{ backgroundColor }} onAnimationEnd={() => setAnimation(false)}>
       {!isLoading &&
         values.map(({ value, color, label }, i, arr) => (
           <LineStyled
+            animation={animation}
             color={color}
             flex={value}
             label={label}
