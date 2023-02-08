@@ -7,6 +7,7 @@ import { convertDate } from '/src/utils'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
 import { useEffect } from 'react'
+import ProgressBar from './ProgressBar'
 
 const TailsStyled = styled.div`
   border-radius: var(--panel-border-radius);
@@ -36,10 +37,11 @@ const TailsStyled = styled.div`
   ${({ end }) =>
     end &&
     css`
-      background-color: var(--color-grey-07);
+      background-color: var(--color-grey-08);
+      z-index: 10;
 
       :hover {
-        background-color: var(--color-grey-08);
+        background-color: var(--color-grey-09);
       }
     `}
 `
@@ -58,6 +60,39 @@ const ProgressStyled = styled.div`
         animation: none !important;
       }
     `}
+
+  :hover {
+    div:last-child {
+      scale: 0;
+    }
+  }
+
+  /* overide some line styles */
+
+  div:first-child {
+    border-radius: 0 !important;
+  }
+
+  hr {
+    border-radius: 0 !important;
+
+    :hover {
+      scale: 1 !important;
+
+      ::after {
+        transform: translateX(-50%) scale(1.1) !important;
+      }
+    }
+
+    /* custom label */
+    ::after {
+      left: 50% !important;
+      transform: translateX(-50%) scale(0.5) !important;
+      transform-origin: center !important;
+      color: black;
+      font-weight: bold;
+    }
+  }
 `
 const MarkerAnimation = (left) => keyframes`
     from {
@@ -76,38 +111,13 @@ const MarkerStyled = styled(TailsStyled)`
   min-height: 24px;
   min-width: unset;
   padding: 4px;
-  transition: left 1s, translate 1s;
+  transition: left 1s, translate 1s, scale 0.3s;
   position: absolute;
   left: ${({ left }) => left}%;
   translate: ${({ left }) => -left}%;
-  z-index: 10;
+  z-index: 30;
 
   animation: ${({ left }) => MarkerAnimation(left)} 1s forwards;
-`
-
-const LinesAnimation = (from, to) => keyframes`
-    from {
-        flex: ${from};
-    } to {
-        flex: ${to};
-    }
-`
-
-const LineStyled = styled.hr`
-  border: 1px solid var(--color-hl-00);
-  flex: 1;
-  margin: 0;
-  transition: flex 1s;
-
-  flex: ${({ flex }) => flex};
-
-  animation: ${({ flex, end }) => LinesAnimation(end ? 100 : 0, flex)} 1s forwards;
-
-  ${({ end }) =>
-    end &&
-    css`
-      border: 1px solid var(--color-grey-07);
-    `}
 `
 
 const Timeline = ({ projectName }) => {
@@ -141,7 +151,8 @@ const Timeline = ({ projectName }) => {
     }
   })
 
-  let today = 0,
+  let done = 0,
+    left = 0,
     length = 0,
     percentage = 0,
     startString = '',
@@ -154,8 +165,9 @@ const Timeline = ({ projectName }) => {
     startString = format(start, 'd MMM yyyy')
     endString = format(end, 'd MMM yyyy')
     length = differenceInDays(end, start)
-    today = differenceInDays(new Date(), start)
-    percentage = Math.round((today / length) * 100)
+    done = differenceInDays(new Date(), start)
+    left = length - done
+    percentage = Math.round((done / length) * 100)
   }
 
   return (
@@ -166,14 +178,21 @@ const Timeline = ({ projectName }) => {
         flexDirection: 'row',
         gap: 0,
         alignItems: 'center',
+        padding: '0 8px',
         flex: 1,
       }}
     >
       <TailsStyled>{startString}</TailsStyled>
       <ProgressStyled animation={animation} onAnimationEnd={() => setAnimation(false)}>
-        <LineStyled flex={percentage} />
-        <MarkerStyled left={percentage}>{!isLoading && `${today}/${length} Days`} </MarkerStyled>
-        <LineStyled flex={100 - percentage} end="true" />
+        <ProgressBar
+          isLoading={isLoading}
+          values={[
+            { value: done, label: `${done}/${length}` },
+            { value: left, label: `${length - done} Left`, color: 'var(--color-grey-08)' },
+          ]}
+          backgroundColor="var(--color-grey-08)"
+        />
+        <MarkerStyled left={percentage}>{!isLoading && `Day ${done}`}</MarkerStyled>
       </ProgressStyled>
       <TailsStyled end="true">{endString}</TailsStyled>
     </DashboardPanelWrapper>

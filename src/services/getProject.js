@@ -63,7 +63,7 @@ const getProject = ayonApi.injectEndpoints({
           variables: { projectName },
         },
       }),
-      transformResponse: (res) => res.data.project,
+      transformResponse: (res) => res.data?.project,
     }),
   }),
 })

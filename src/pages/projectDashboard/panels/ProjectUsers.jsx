@@ -6,6 +6,7 @@ import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
 import { useEffect } from 'react'
+import { Fragment } from 'react'
 
 const usersDemo = {
   active: 10,
@@ -88,29 +89,28 @@ const ProjectUsers = ({ projectName }) => {
 
   return (
     <DashboardPanelWrapper title={title} isError={isError}>
-      {leaders.map((user) => (
-        <>
+      {leaders.map((user, i) => (
+        <Fragment key={i}>
           <h2>{user?.attrib?.position}</h2>
           <UserTile
-            key={user.name}
             user={user}
             style={{ width: '100%' }}
             onClick={() => navigator(`/settings/users?name=${user.name}`)}
           />
-        </>
+        </Fragment>
       ))}
       <h2>Managers</h2>
-      {managers.map((user) => (
+      {managers.map((user, i) => (
         <UserTile
-          key={user.name}
+          key={i}
           user={user}
           style={{ width: '100%' }}
           onClick={() => navigator(`/settings/users?name=${user.name}`)}
         />
       ))}
       <h2>Roles</h2>
-      {Object.entries(roles).map(([role, stat]) => (
-        <ListStatsTile key={role} title={role} stat={stat} isLoading={isLoading} />
+      {Object.entries(roles).map(([role, stat], i) => (
+        <ListStatsTile key={i} title={role} stat={stat} isLoading={isLoading} />
       ))}
     </DashboardPanelWrapper>
   )
