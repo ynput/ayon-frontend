@@ -6,24 +6,13 @@ import ProjectUsers from './panels/ProjectUsers'
 import Timeline from './panels/Timeline'
 import { Section } from '@ynput/ayon-react-components'
 import ProjectHealth from './panels/ProjectHealth'
+import GridLayout from './panels/GridLayout'
 
 // top grid
 const HeaderGridStyled = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
-`
-
-// styled grid
-const GridStyled = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-
-  /* overflow y */
-  overflow-y: clip;
-  padding-top: 1px;
-  margin-top: -1px;
 `
 
 const ProjectDashboard = ({ projectName }) => {
@@ -35,15 +24,16 @@ const ProjectDashboard = ({ projectName }) => {
             <HeartBeat {...{ projectName }} />
             <Timeline {...{ projectName }} />
           </HeaderGridStyled>
-          <GridStyled>
-            <ProjectStats {...{ projectName }} />
-            <ProjectUsers {...{ projectName }} />
-            <ProjectHealth {...{ projectName }} />
-          </GridStyled>
+          <GridLayout projectName={projectName}>
+            <ProjectStats rows={1} />
+            <ProjectUsers rows={2} />
+            <ProjectUsers rows={2} />
+            <ProjectHealth rows={1} />
+          </GridLayout>
         </SplitterPanel>
-        {/* <SplitterPanel size={25}>
+        <SplitterPanel size={25}>
           <h1>Project Details</h1>
-        </SplitterPanel> */}
+        </SplitterPanel>
       </Splitter>
     </Section>
   )
