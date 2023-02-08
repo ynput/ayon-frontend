@@ -33,6 +33,7 @@ const LineStyled = styled.hr`
   transition: flex 1s, scale 0.3s;
   position: relative;
   overflow: visible;
+  cursor: pointer;
 
   flex: ${({ flex }) => flex};
 
@@ -54,6 +55,28 @@ const LineStyled = styled.hr`
     height: 20px;
     position: absolute;
     opacity: 0;
+  }
+
+  /* HOVER LABEL */
+  &::after {
+    opacity: 0;
+    /* default hide */
+    transform-origin: center;
+    transition: transform 0.3s;
+    content: ${({ label }) => `'${label}'`};
+    position: absolute;
+    bottom: 8px;
+    z-index: 20;
+
+    background-color: var(--color-hl-00);
+    background-color: ${({ color }) => color};
+    padding: 0 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+
+    /* center label */
+    left: 50%;
+    transform: translateX(-50%) scale(0.5);
   }
 
   /* border radius on start and end */
@@ -81,21 +104,9 @@ const LineStyled = styled.hr`
         z-index: 20;
 
         &::after {
-          /* HOVER LABEL */
-          content: ${({ label }) => `'${label}'`};
-          position: absolute;
-          bottom: 8px;
-          z-index: 20;
-
-          background-color: var(--color-hl-00);
-          background-color: ${({ color }) => color};
-          padding: 0 4px;
-          border-radius: 3px;
-          white-space: nowrap;
-
-          /* center label */
-          left: 50%;
-          transform: translateX(-50%);
+          /* reveal on hover */
+          transform: translateX(-50%) scale(1);
+          opacity: 1;
         }
       }
       /* flex below 25 and index either start or end */
@@ -107,7 +118,8 @@ const LineStyled = styled.hr`
           :hover {
             ::after {
               left: ${index === 0 ? '0' : '100%'};
-              transform: translateX(${index === 0 ? '0' : '-100%'});
+              transform: translateX(${index === 0 ? '0' : '-100%'}) scale(1);
+              transform-origin: ${index === 0 ? 'right' : 'left'};
             }
           }
         `}
