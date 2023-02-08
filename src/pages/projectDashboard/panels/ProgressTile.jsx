@@ -16,7 +16,12 @@ const HeaderStyled = styled.div`
 
 const ProgressStyled = styled(TileStyled)`
   flex-direction: column;
-  gap: 8px; ;
+  gap: 8px;
+  overflow: hidden;
+
+  &:hover {
+    background-color: var(--color-grey-01);
+  }
 `
 
 const ProgressTile = ({

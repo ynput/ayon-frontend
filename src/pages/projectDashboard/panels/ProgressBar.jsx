@@ -11,7 +11,6 @@ const ProgressStyled = styled.div`
   width: 100%;
   border-radius: 2px;
   background-color: black;
-  overflow: hidden;
 
   /* block all animations once played once */
   ${({ animation }) =>
@@ -35,18 +34,86 @@ const LinesAnimation = (left) => keyframes`
 
 const LineStyled = styled.hr`
   /* default border color */
-  border: 2px solid var(--color-hl-00);
+  border: 2.5px solid var(--color-hl-00);
   /* custom line color */
   border-color: ${({ color }) => color};
   flex: 1;
   margin: 0;
-  transition: flex 1s;
+  transition: flex 1s, scale 0.3s;
   position: relative;
+  overflow: visible;
 
   flex: ${({ flex }) => flex};
 
   transform-origin: left;
   animation: ${({ left }) => LinesAnimation(left)} 1s forwards;
+
+  &::before {
+    /* expand the hover zone but keep hidden */
+    background-color: red;
+    bottom: -10px;
+    width: 100%;
+    content: '';
+    height: 20px;
+    position: absolute;
+    opacity: 0;
+  }
+
+  /* border radius on start and end */
+  ${({ index }) =>
+    index === 0 &&
+    css`
+      border-top-left-radius: 2px;
+      border-bottom-left-radius: 2px;
+    `}
+  ${({ index, length }) =>
+    index === length - 1 &&
+    css`
+      border-top-right-radius: 2px;
+      border-bottom-right-radius: 2px;
+    `}
+
+
+  /* HOVER */
+  ${({ label }) =>
+    label &&
+    css`
+      :hover {
+        scale: 1.2;
+        transform-origin: center;
+        z-index: 20;
+
+        &::after {
+          /* HOVER LABEL */
+          content: ${({ label }) => `'${label}'`};
+          position: absolute;
+          bottom: 8px;
+          z-index: 20;
+
+          background-color: var(--color-hl-00);
+          background-color: ${({ color }) => color};
+          padding: 0 4px;
+          border-radius: 3px;
+          white-space: nowrap;
+
+          /* center label */
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        /* flex below 25 and index either start or end */
+        ${({ index, length }) =>
+          (index === 0 || index === length - 1) &&
+          css`
+            transform-origin: ${index === 0 ? 'left' : 'right'};
+
+            ::after {
+              left: ${index === 0 ? '0' : '100%'};
+              transform: translateX(${index === 0 ? '0' : '-100%'});
+            }
+          `}
+      }
+    `}
 `
 
 const ProgressBar = ({ values = [], backgroundColor, isLoading }) => {
@@ -57,7 +124,7 @@ const ProgressBar = ({ values = [], backgroundColor, isLoading }) => {
     values.push({
       value: 100 - values[0].value,
       color: 'transparent',
-      label: 'none',
+      label: null,
     })
   } else {
     // normalize values between 0 and 100
@@ -79,7 +146,9 @@ const ProgressBar = ({ values = [], backgroundColor, isLoading }) => {
           <LineStyled
             color={color}
             flex={value}
+            label={label}
             index={i}
+            length={arr.length}
             key={label + i}
             left={arr.slice(0, i).reduce((acc, { value }) => acc + value, 0)}
           />

@@ -86,21 +86,23 @@ const ProjectHealth = ({ projectName }) => {
         title={`${complete.percentage}% Complete`}
         subTitle={complete.subTitle}
         icon="schedule"
-        values={[{ value: complete.percentage, label: 'complete' }]}
+        values={[{ value: complete.percentage, label: 'Complete' }]}
         isLoading={isLoading}
       />
       <ProgressTile
         title={`${storage.percentage}% Storge Full`}
         icon="database"
-        values={[{ value: storage.percentage, label: 'full', color: storage.color }]}
+        values={[{ value: storage.percentage, label: 'Full', color: storage.color }]}
         isLoading={isLoading}
       />
       <ProgressTile
         title={`${overdue} Overdue Tasks`}
         subTitle={`${onTrack}% On track`}
         icon="notification_important"
-        values={[{ value: onTrack, label: 'on-track' }]}
-        backgroundColor="var(--color-hl-01)"
+        values={[
+          { value: onTrack, label: 'On Track' },
+          { value: 100 - onTrack, label: 'Overdue', color: 'var(--color-hl-01)' },
+        ]}
         isLoading={isLoading}
       />
       <ProgressTile
