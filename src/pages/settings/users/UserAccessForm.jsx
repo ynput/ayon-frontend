@@ -1,3 +1,4 @@
+import { useSelector } from 'react-redux'
 import { InputSwitch, FormLayout, FormRow } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
@@ -9,14 +10,18 @@ const UserAccessForm = ({
   hideProjectRoles,
   disabled,
 }) => {
+  const isAdmin = useSelector((state) => state.user.data.isAdmin)
+
   const userLevels = [
     { label: 'User', value: 'user' },
     { label: 'Manager', value: 'manager' },
-    { label: 'Service', value: 'service' },
   ]
 
   // only admins can
-  // if (isAdmin) userLevels.push({ label: 'Admin', value: 'admin' })
+  if (isAdmin) {
+    userLevels.push({ label: 'Admin', value: 'admin' })
+    userLevels.push({ label: 'Service', value: 'service' })
+  }
 
   const activeOptions = [
     { label: 'Active', value: true },
