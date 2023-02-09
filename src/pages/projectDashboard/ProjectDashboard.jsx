@@ -32,9 +32,9 @@ const ProjectDashboard = ({ projectName }) => {
             <ProjectHealth rows={1} />
           </GridLayout>
         </SplitterPanel>
-        <SplitterPanel size={25}>
+        {/* <SplitterPanel size={25}>
           <h1>Project Details</h1>
-        </SplitterPanel>
+        </SplitterPanel> */}
       </Splitter>
     </Section>
   )

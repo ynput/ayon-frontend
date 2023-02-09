@@ -111,6 +111,14 @@ const formatEntityTiles = (project, entities) => {
   // sort entities by updatedAt
   allEntities.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
 
+  // which entity type to use for thumbnail
+  const thumbnailTypes = {
+    version: 'version',
+    subset: 'version',
+    folder: 'folder',
+    task: 'folder',
+  }
+
   // loop through each entity and child and if it is an array or object, use first child value as value
   for (const entity of allEntities) {
     for (const attrib in entity) {
@@ -120,7 +128,12 @@ const formatEntityTiles = (project, entities) => {
       } else if (typeof entity[attrib] === 'object') {
         entity[attrib] = Object.values(entity[attrib])[0]
       }
+      // if entity type is version, add 0 prefix to version number 1 -> v001, 12 -> v012
+      if (entity.type === 'version' && attrib === 'subTitle') {
+        entity[attrib] = 'v' + entity[attrib].toString().padStart(3, '0')
+      }
     }
+    entity.thumbnailEntityType = thumbnailTypes[entity.type]
   }
 
   return allEntities

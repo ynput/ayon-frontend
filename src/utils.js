@@ -154,12 +154,14 @@ const updateFolderTypeIcons = (data) => {
 }
 
 const getTaskTypeIcon = (taskType) => {
-  return TASK_TYPE_ICONS[taskType.toLowerCase()] || 'help_center'
+  // make sure first letter is always capitalized
+  taskType = taskType.charAt(0).toUpperCase() + taskType.slice(1)
+  return TASK_TYPE_ICONS[taskType] || 'help_center'
 }
 
 const updateTaskTypeIcons = (data) => {
   for (const name in data) {
-    TASK_TYPE_ICONS[name.toLowerCase()] = data[name]
+    TASK_TYPE_ICONS[name] = data[name]
   }
 }
 

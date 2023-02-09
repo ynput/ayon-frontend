@@ -149,8 +149,8 @@ fragment taskTileFragment on TaskNode {
   name
   status
   icon: taskType
-  thumbnailId: folder {
-    thumbnailId
+  thumbnailEntityId: folder {
+    id
   }
   subTitle: folder {
     name
@@ -172,7 +172,7 @@ fragment versionTileFragment on VersionNode {
   icon: subset {
     family
   }
-  thumbnailId
+  thumbnailEntityId: id
   subTitle: version
   profile: author
   footer: subset {
@@ -188,8 +188,8 @@ fragment subsetTileFragment on SubsetNode {
   name
   status
   icon: family
-  thumbnailId: latestVersion {
-    thumbnailId
+  thumbnailEntityId: latestVersion {
+    id
   }
   subTitle: folder {
     name
@@ -205,7 +205,7 @@ fragment folderTileFragment on FolderNode {
   name
   status
   icon: folderType
-  thumbnailId
+  thumbnailEntityId: id
   subTitle: path
   footer: folderType
   updatedAt

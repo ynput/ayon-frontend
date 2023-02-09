@@ -58,9 +58,11 @@ const Thumbnail = ({ projectName, entityType, entityId }) => {
       setThumbData(null)
       return
     }
-    axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
-      setThumbData(parseThumbnail(response))
-    })
+    if ((projectName, entityType, entityId)) {
+      axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
+        setThumbData(parseThumbnail(response))
+      })
+    }
   }, [url, entityId])
 
   return (
