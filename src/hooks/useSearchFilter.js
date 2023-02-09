@@ -14,15 +14,15 @@ const useSearchFilter = (fields = [], data = [], id) => {
         keywords: Object.entries(user).flatMap(([k, v]) => {
           if (fields.includes(k)) {
             if (typeof v === 'string') {
-              return v.toLowerCase()
+              return v?.toLowerCase()
             } else if (Array.isArray(v)) {
-              return v.flatMap((v) => v)
+              return v?.flatMap((v) => v)
             } else if (typeof v === 'boolean' && v) {
               return k.toLowerCase()
             } else return []
           } else if (v && typeof v === 'object') {
             return Object.entries(v).flatMap(([k2, v2]) =>
-              fields.includes(`${k}.${k2}`) && v2 ? v2.toLowerCase() : [],
+              fields.includes(`${k}.${k2}`) && v2 ? v2?.toString().toLowerCase() : [],
             )
           } else return []
         }),
