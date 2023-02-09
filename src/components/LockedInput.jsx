@@ -1,16 +1,15 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
-import { Button, FormRow, InputText } from '@ynput/ayon-react-components'
+import { Button, InputText } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
-const UsernameStyled = styled(FormRow)`
-  .field {
-    flex-direction: row;
-    gap: 5px;
+const UsernameStyled = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
 
-    input {
-      flex: 1;
-    }
+  input {
+    flex: 1;
   }
 `
 
@@ -22,7 +21,9 @@ const LockedInputRow = ({
   saveLabel = 'Save',
   cancelLabel = 'Cancel',
   onEdit,
+  fullUnlock,
   type,
+  style,
 }) => {
   const [editingValue, setEditingValue] = useState(value)
   const [editing, setEditing] = useState(false)
@@ -39,6 +40,10 @@ const LockedInputRow = ({
 
   const handleChange = (e) => {
     setEditingValue(e.target.value)
+
+    if (fullUnlock) {
+      onSubmit(e.target.value)
+    }
   }
 
   const handleCancel = () => {
@@ -47,9 +52,9 @@ const LockedInputRow = ({
   }
 
   return (
-    <UsernameStyled label={label} key={label}>
+    <UsernameStyled key={label} style={style}>
       <InputText
-        label={label}
+        label={'test' || false}
         value={editing ? editingValue : value}
         disabled={!editing}
         onChange={handleChange}
@@ -58,8 +63,12 @@ const LockedInputRow = ({
       {!disabled &&
         (editing ? (
           <>
-            <Button icon="cancel" onClick={handleCancel} label={cancelLabel} />
-            <Button icon="done" onClick={handleSubmit} label={saveLabel} />
+            <Button
+              icon={fullUnlock ? 'lock' : 'cancel'}
+              onClick={handleCancel}
+              label={cancelLabel}
+            />
+            {!fullUnlock && <Button icon="done" onClick={handleSubmit} label={saveLabel} />}
           </>
         ) : (
           <Button icon="edit" onClick={onEdit || handleOpen} />
@@ -77,6 +86,8 @@ LockedInputRow.propTypes = {
   cancelLabel: PropTypes.string,
   onEdit: PropTypes.func,
   type: PropTypes.string,
+  style: PropTypes.object,
+  labelStyle: PropTypes.object,
 }
 
 export default LockedInputRow

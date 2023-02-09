@@ -83,13 +83,13 @@ const EventPage = () => {
       if (!hasPreviousPage) return console.log('no more events data to get')
       // get last cursor
       const before = eventData[eventData.length - 1].cursor
-      const beforeLog = logsData[logsData.length - 1].cursor
+      const beforeLogs = logsData[logsData.length - 1].cursor
 
       // get new events data
       const { data } = await dispatch(
         ayonApi.endpoints.getEventsWithLogs.initiate({
           before,
-          beforeLog,
+          beforeLogs,
         }),
       )
 
