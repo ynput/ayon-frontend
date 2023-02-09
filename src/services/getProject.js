@@ -30,6 +30,15 @@ const createProjectQuery = (attribs, fields) => {
   `
 }
 
+const PROJECT_LATEST_QUERY = `
+query Project($projectName: String!) {
+  project(name: $projectName) {
+    name
+
+  }
+}
+`
+
 const getProject = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getProject: build.query({
@@ -65,6 +74,17 @@ const getProject = ayonApi.injectEndpoints({
       }),
       transformResponse: (res) => res.data?.project,
     }),
+    getProjectLatest: build.query({
+      query: ({ projectName }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: PROJECT_LATEST_QUERY,
+          variables: { projectName },
+        },
+      }),
+      transformResponse: (res) => res.data?.project,
+    }),
   }),
 })
 
@@ -73,4 +93,5 @@ export const {
   useGetAllProjectsQuery,
   useGetProjectAnatomyQuery,
   useGetProjectAttribsQuery,
+  useGetProjectLatestQuery,
 } = getProject

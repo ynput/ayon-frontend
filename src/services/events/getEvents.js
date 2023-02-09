@@ -55,6 +55,19 @@ query EventsWithLogs($last: Int, $before: String, $beforeLogs: String) {
 ${EVENT_FRAGMENT}
 `
 
+const EVENTS_BY_TOPICS_QUERY = `
+query EventsByTopics($topics: [String!]!, $last: Int, $projects: [String!]!) {
+  events(topics: $topics, last: $last, projects: $projects) {
+    edges {
+      node {
+        ...EventFragment
+      }
+    }
+  }
+}
+${EVENT_FRAGMENT}
+`
+
 const transformEvents = (events) =>
   events?.edges?.map((edge) => ({
     id: edge.node.id,
@@ -103,7 +116,23 @@ const getEvents = ayonApi.injectEndpoints({
         url: `/api/events/${id}`,
       }),
     }),
+    getEventsByTopic: build.query({
+      query: ({ topics, projects, last = 10 }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: EVENTS_BY_TOPICS_QUERY,
+          variables: { topics, projects, last },
+        },
+      }),
+      transformResponse: (response) => transformEvents(response?.data?.events),
+    }),
   }),
 })
 
-export const { useGetEventsQuery, useGetEventsWithLogsQuery, useGetEventByIdQuery } = getEvents
+export const {
+  useGetEventsQuery,
+  useGetEventsWithLogsQuery,
+  useGetEventByIdQuery,
+  useGetEventsByTopicQuery,
+} = getEvents

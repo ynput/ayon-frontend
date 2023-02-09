@@ -7,6 +7,7 @@ import Timeline from './panels/Timeline'
 import { Section } from '@ynput/ayon-react-components'
 import ProjectHealth from './panels/ProjectHealth'
 import GridLayout from './panels/GridLayout'
+import ProjectLatest from './panels/ProjectLatest'
 
 // top grid
 const HeaderGridStyled = styled.div`
@@ -27,7 +28,7 @@ const ProjectDashboard = ({ projectName }) => {
           <GridLayout projectName={projectName}>
             <ProjectStats rows={1} />
             <ProjectUsers rows={2} />
-            <ProjectUsers rows={2} />
+            <ProjectLatest rows={2} />
             <ProjectHealth rows={1} />
           </GridLayout>
         </SplitterPanel>
