@@ -44,9 +44,12 @@ const ProjectLatestRow = ({
 
   // TODO: clean up this mess up
   // get project anatomy for project name for status
-  const { data: anatomy = {} } = useGetProjectAnatomyQuery({
-    projectName,
-  })
+  const { data: anatomy = {} } = useGetProjectAnatomyQuery(
+    {
+      projectName,
+    },
+    { skip: !projectName },
+  )
 
   //   create topics array
   // topic = entity.[entity].[event]
@@ -69,11 +72,14 @@ const ProjectLatestRow = ({
     isLoading: isLoadingEvents,
     isError: isErrorEvents,
     isFetching: isFetchingEvents,
-  } = useGetEventsByTopicQuery({
-    projects: [projectName],
-    topics,
-    last: numEvents,
-  })
+  } = useGetEventsByTopicQuery(
+    {
+      projects: [projectName],
+      topics,
+      last: numEvents,
+    },
+    { skip: !projectName || !topics.length },
+  )
 
   // log the events
   // console.log({ eventsData })
@@ -102,7 +108,7 @@ const ProjectLatestRow = ({
 
   // get event object for each event Id, we need to do this to get the entity id off summary
   useEffect(() => {
-    if (!isLoadingEvents && !isErrorEvents && !isFetchingEvents) {
+    if (!isLoadingEvents && !isErrorEvents && !isFetchingEvents && projectName) {
       setIsEventsLoading(true)
       getEntityIds(eventsData)
         .then((data) => {
@@ -162,7 +168,7 @@ const ProjectLatestRow = ({
       projectName,
       entities: entityIds,
     },
-    { skip: isEventsLoading || isErrorEvents },
+    { skip: isEventsLoading || isErrorEvents || !projectName },
   )
 
   // used to get icons and color
