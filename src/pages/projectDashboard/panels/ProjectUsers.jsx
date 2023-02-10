@@ -88,7 +88,11 @@ const ProjectUsers = ({ projectName }) => {
   const title = `Users - ${total} - ${active} Active`
 
   return (
-    <DashboardPanelWrapper title={title} isError={isError}>
+    <DashboardPanelWrapper
+      title={title}
+      isError={isError}
+      link={{ link: '/settings/users', icon: 'manage_accounts' }}
+    >
       {leaders.map((user, i) => (
         <Fragment key={i}>
           <h2>{user?.attrib?.position}</h2>

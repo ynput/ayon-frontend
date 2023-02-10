@@ -1,7 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Panel } from '@ynput/ayon-react-components'
+import { Panel, Button } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
+import { Link } from 'react-router-dom'
 
 const PanelStyled = styled(Panel)`
   padding: 0;
@@ -14,13 +15,23 @@ const PanelStyled = styled(Panel)`
 
   max-height: 100%;
 
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    width: 100%;
+  }
+
   h1 {
     font-size: 16px;
     background-color: var(--panel-background);
     margin: 0;
-    width: 100%;
+    text-align: left;
 
-    padding: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   h2 {
@@ -50,10 +61,39 @@ const ContentStyled = styled.div`
   overflow-x: clip;
 `
 
-const DashboardPanelWrapper = ({ title, children, isError, span = 1, style }) => {
+const IconStyled = styled(Button)`
+  background-color: var(--panel-background);
+  padding: 1px;
+  width: 100%;
+  height: 100%;
+  min-width: unset;
+  min-height: unset;
+`
+
+const DashboardPanelWrapper = ({
+  title,
+  children,
+  isError,
+  span = 1,
+  style,
+  stylePanel,
+  header,
+  link,
+}) => {
   return (
-    <PanelStyled isError={isError} span={span}>
-      {title && <h1>{title}</h1>}
+    <PanelStyled isError={isError} span={span} style={stylePanel}>
+      {title && (
+        <header>
+          <h1>{title}</h1>
+          {header && header}
+          {link && (
+            <Link to={link.link}>
+              <IconStyled icon={link.icon} />
+            </Link>
+          )}
+        </header>
+      )}
+
       <ContentStyled style={style}>{children}</ContentStyled>
     </PanelStyled>
   )
@@ -65,6 +105,12 @@ DashboardPanelWrapper.propTypes = {
   isError: PropTypes.bool,
   span: PropTypes.number,
   style: PropTypes.object,
+  stylePanel: PropTypes.object,
+  header: PropTypes.node,
+  link: PropTypes.shape({
+    link: PropTypes.string.isRequired,
+    icon: PropTypes.string.isRequired,
+  }),
 }
 
 export default DashboardPanelWrapper

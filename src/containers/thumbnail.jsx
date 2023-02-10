@@ -59,7 +59,6 @@ const Thumbnail = ({ projectName, entityType, entityId, isLoading }) => {
       return
     }
     if (projectName && entityType && entityId) {
-      console.log('fetching thumbnail')
       axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
         setThumbData(parseThumbnail(response))
       })

@@ -4,7 +4,13 @@ import ProjectLatestRow from './ProjectLatestRow'
 
 const ProjectLatest = ({ projectName }) => {
   return (
-    <DashboardPanelWrapper title="Latest">
+    <DashboardPanelWrapper
+      title="Latest"
+      link={{
+        link: '/events',
+        icon: 'history',
+      }}
+    >
       <h2>Recent Activity</h2>
       <ProjectLatestRow
         projectName={projectName}

@@ -21,7 +21,7 @@ const AttributeTableRow = styled.div`
   }
 `
 
-const AttributeTable = ({ entityType, data, additionalData, style }) => {
+const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib }) => {
   return (
     <AttributeTableContainer style={style}>
       {additionalData &&
@@ -46,6 +46,14 @@ const AttributeTable = ({ entityType, data, additionalData, style }) => {
               {data[attr.name]}
             </AttributeTableRow>
           ))}
+
+      {projectAttrib &&
+        projectAttrib.map(({ name, value }) => (
+          <AttributeTableRow key={name}>
+            <span>{name}</span>
+            <span>{value}</span>
+          </AttributeTableRow>
+        ))}
     </AttributeTableContainer>
   )
 }

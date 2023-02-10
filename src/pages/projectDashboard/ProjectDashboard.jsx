@@ -8,6 +8,7 @@ import { Section } from '@ynput/ayon-react-components'
 import ProjectHealth from './panels/ProjectHealth'
 import GridLayout from './panels/GridLayout'
 import ProjectLatest from './panels/ProjectLatest'
+import ProjectDetails from './panels/ProjectDetails'
 
 // top grid
 const HeaderGridStyled = styled.div`
@@ -33,7 +34,7 @@ const ProjectDashboard = ({ projectName }) => {
           </GridLayout>
         </SplitterPanel>
         <SplitterPanel size={25}>
-          <h1>Project Details</h1>
+          <ProjectDetails projectName={projectName} />
         </SplitterPanel>
       </Splitter>
     </Section>
