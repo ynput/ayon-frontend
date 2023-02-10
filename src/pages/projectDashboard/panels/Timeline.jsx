@@ -5,7 +5,6 @@ import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetProjectAttribsQuery } from '/src/services/getProject'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
-import { useEffect } from 'react'
 import ProgressBar from './ProgressBar'
 
 const TailsStyled = styled.div`
@@ -120,39 +119,16 @@ const MarkerStyled = styled(TailsStyled)`
 const Timeline = ({ projectName }) => {
   // animation played
   const [animation, setAnimation] = useState(true)
-  const [isLoading, setLoading] = useState(true)
-  const [data, setData] = useState({})
 
   let {
-    // data = {},
+    data = {},
     isError,
-    // isLoading,
+    isLoading,
   } = useGetProjectAttribsQuery({
     projectName,
-    attribs: ['start', 'end'],
+    attribs: ['startDate', 'endDate'],
   })
   let { startDate, endDate } = data.attrib || {}
-
-  // fake API call
-  useEffect(() => {
-    let timeout
-    if (isLoading) {
-      timeout = setTimeout(() => {
-        setLoading(false)
-        // start date ISO string format, 09-09-2022
-        const start = '2021-09-09'
-        // end date ISO string format, 10-03-2023
-        const end = '2023-10-03'
-
-        setData({ attrib: { startDate: start, endDate: end } })
-      }, 200)
-    }
-
-    //   clear
-    return () => {
-      clearTimeout(timeout)
-    }
-  }, [isLoading])
 
   let done = 0,
     left = 0,
