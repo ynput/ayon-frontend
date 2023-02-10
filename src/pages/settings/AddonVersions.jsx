@@ -24,20 +24,12 @@ const AddonListItem = ({ addonName, addonTitle, productionVersion, stagingVersio
   }, [versions])
 
   const onProductionChange = (e) => {
-    console.log('stagingRef', stagingRef.current)
-    setAddonVersion({
-      addonName,
-      productionVersion: e.value,
-      stagingVersion: stagingRef.current.props.value,
-    })
+    console.log('SET VER', e.value)
+    setAddonVersion({ addonName, productionVersion: e.value })
   }
 
   const onStagingChange = (e) => {
-    setAddonVersion({
-      addonName,
-      productionVersion: productionRef.current.props.value,
-      stagingVersion: e.value,
-    })
+    setAddonVersion({ addonName, stagingVersion: e.value })
   }
 
   return (
@@ -68,12 +60,9 @@ const AddonListItem = ({ addonName, addonTitle, productionVersion, stagingVersio
 
 // eslint-disable-next-line no-unused-vars
 const AddonVersions = ({ projectName }) => {
-  const { data, loading } = useGetAddonListQuery({ showVersions: true })
+  const { data: addons, loading } = useGetAddonListQuery({ showVersions: true })
 
-  // TODO: use original data to show changes
-  // TODO: project specific overrides
-  //
-  if (loading || !data?.length) return <div>Loading...</div>
+  if (loading) return <div>Loading...</div>
 
   return (
     <>
@@ -83,16 +72,17 @@ const AddonVersions = ({ projectName }) => {
             className="invisible"
             style={{ gap: 8, display: 'flex', flexDirection: 'column' }}
           >
-            {data.map((addon) => (
-              <AddonListItem
-                key={addon.key}
-                addonName={addon.data?.name}
-                addonTitle={addon.data?.title}
-                productionVersion={addon.data?.productionVersion}
-                stagingVersion={addon.data?.stagingVersion}
-                versions={addon.children.map((version) => version.data.version)}
-              />
-            ))}
+            {addons?.length &&
+              addons.map((addon) => (
+                <AddonListItem
+                  key={addon.key}
+                  addonName={addon.name}
+                  addonTitle={addon.title}
+                  productionVersion={addon.productionVersion}
+                  stagingVersion={addon.stagingVersion}
+                  versions={Object.keys(addon.versions || {})}
+                />
+              ))}
           </section>
         </Spacer>
       </ScrollPanel>

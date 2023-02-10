@@ -43,14 +43,9 @@ const DateTimeContainer = styled.div`
   }
 `
 
-const timestampToTime = (timestamp) => {
-  // convert unix timestamp (in seconds) to a list ["YYYY-MM-DD", "HH:MM:SS"]
-  // assume timestamp is in UTC, return local time
-  //
-  if (!timestamp) return ['-', '-']
-  const jsTimestamp = Math.trunc(timestamp * 1000)
-
-  const date = new Date(jsTimestamp)
+const isoToTime = (isoTime) => {
+  if (!isoTime) return ['-', '-']
+  const date = new Date(isoTime)
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -61,7 +56,7 @@ const timestampToTime = (timestamp) => {
 }
 
 const TimestampField = ({ value }) => {
-  const [dd, tt] = timestampToTime(value)
+  const [dd, tt] = isoToTime(value)
   return (
     <DateTimeContainer>
       <span>{dd}</span>

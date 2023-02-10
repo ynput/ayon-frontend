@@ -169,6 +169,8 @@ function FieldTemplate(props) {
     else return <></>
   }, [props.schema.section])
 
+  //
+
   // Object fields
 
   if (props.schema.type === 'object')
@@ -185,6 +187,12 @@ function FieldTemplate(props) {
 
   const override = props.formContext.overrides ? props.formContext.overrides[props.id] : null
   const path = override?.path || []
+
+  const isSelected = useMemo(() => {
+    if (!props.formContext.breadcrumbs) return false
+    if (isEqual(props.formContext.breadcrumbs, path)) return true
+    return false
+  }, [props.formContext.breadcrumbs, path])
 
   const fieldChanged = arrayContainsArray(props.formContext.changedKeys, path)
   const overrideLevel = fieldChanged ? 'edit' : override ? override.level : 'default'
@@ -203,6 +211,7 @@ function FieldTemplate(props) {
     props.schema.layout !== 'compact'
   ) {
     let className
+    if (isSelected) className = 'selected'
 
     for (const changedPath of props.formContext.changedKeys) {
       if (arrayStartsWith(changedPath, path)) {
@@ -236,9 +245,11 @@ function FieldTemplate(props) {
 
   // do not show error for color widgets (they are declared as strings, but
   // contains arrays. The error is not relevant for the user)
-  const className = `form-inline-field ${
+  let className = `form-inline-field ${
     props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
   }`
+
+  if (isSelected) className += ' selected'
 
   return (
     <>
