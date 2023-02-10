@@ -77,9 +77,6 @@ const ProjectHealth = ({ projectName }) => {
     color: getStatusProps(key, statusAnatomy).color,
   }))
 
-  //   log data
-  console.log(data)
-
   return (
     <DashboardPanelWrapper title="Health" isError={isError}>
       <ProgressTile
@@ -92,7 +89,7 @@ const ProjectHealth = ({ projectName }) => {
       <ProgressTile
         title={`${storage.percentage}% Storge Full`}
         icon="database"
-        values={[{ value: storage.percentage, label: 'Full', color: storage.color }]}
+        values={[{ value: storage.percentage, label: 'Storage Used', color: storage.color }]}
         isLoading={isLoading}
       />
       <ProgressTile

@@ -25,7 +25,7 @@ const PanelStyled = styled(Panel)`
 
   h2 {
     width: 100%;
-    margin: 7px 0;
+    margin: 4px 0;
   }
 
   /* set span */

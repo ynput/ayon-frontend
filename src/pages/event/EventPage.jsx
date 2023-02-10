@@ -47,7 +47,7 @@ const EventPage = () => {
   }
 
   const patchNewEvents = (type, events, draft) => {
-    draft[type].concat(events)
+    draft[type] = [...events, ...draft[type]]
   }
 
   const patchOldEvents = (type, events, draft) => {

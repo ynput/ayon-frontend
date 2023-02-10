@@ -1,150 +1,15 @@
 import { ayonApi } from '../ayon'
+import {
+  FOLDER_QUERY,
+  SUBSET_QUERY,
+  TASK_QUERY,
+  VERSION_QUERY,
+  SUBSET_TILE_FRAGMENT,
+  FOLDER_TILE_FRAGMENT,
+  VERSION_TILE_FRAGMENT,
+  TASK_TILE_FRAGMENT,
+} from './entityQueries'
 import ayonClient from '/src/ayon'
-
-const TASK_QUERY = `
-  query Tasks($projectName: String!, $ids: [String!]!) {
-      project(name: $projectName) {
-          tasks(ids: $ids) {
-              edges {
-                  node {
-                      id
-                      name
-                      label
-                      status
-                      tags
-                      taskType
-                      assignees
-                      attrib {
-                        #ATTRS#
-                      }
-                  }
-              }
-          }
-      }
-  }
-`
-
-const FOLDER_QUERY = `
-    query Folders($projectName: String!, $ids: [String!]!) {
-        project(name: $projectName) {
-            folders(ids: $ids) {
-                edges {
-                    node {
-                        id
-                        name
-                        label
-                        folderType
-                        path
-                        status
-                        tags
-                        attrib {
-                          #ATTRS#
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-`
-
-const VERSION_QUERY = `
-    query Versions($projectName: String!, $ids: [String!]!) {
-        project(name: $projectName) {
-            versions(ids: $ids) {
-                edges {
-                    node {
-                        id
-                        version
-                        name
-                        author
-                        status
-                        tags
-                        attrib {
-                          #ATTRS#
-                        }
-                        subset {
-                            name
-                            family
-                            folder {
-                                name
-                                parents
-                            }
-                        }
-                        representations{
-                            edges {
-                                node {
-                                    id
-                                    name
-                                    fileCount
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-`
-
-const SUBSET_QUERY = `
-query Subset($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
-    project(name: $projectName){
-        subsets(ids: $ids){
-            edges {
-                node {
-                    id
-                    name
-                    family
-                    status
-                    createdAt
-                    versionList{
-                      id
-                      version
-                      name
-                    }
-                    
-                    versions(ids: $versionOverrides){
-                      edges{
-                        node{
-                          id
-                          version
-                          name
-                          author
-                          createdAt
-                          taskId
-                          attrib {
-                              fps
-                              resolutionWidth
-                              resolutionHeight
-                              frameStart
-                              frameEnd
-                          }
-                        }
-                      }
-                    }
-
-                    latestVersion{
-                        id
-                        version
-                        name
-                        author
-                        createdAt
-                        taskId
-                        attrib {
-                            fps
-                            resolutionWidth
-                            resolutionHeight
-                            frameStart
-                            frameEnd
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-`
 
 const buildEventTileQuery = (type) => {
   return `
@@ -192,6 +57,88 @@ const buildEntitiesQuery = (type, attribs) => {
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
+const buildEntityTilesQuery = (entities) => {
+  // const entities =  {[type]: [id, id, id]}
+
+  const typesQuery = Object.entries(entities).reduce(
+    (acc, [type, ids]) =>
+      acc +
+      ` ${type}s(ids: ${JSON.stringify(ids)}) {
+      edges {
+        node {
+          ...${type}TileFragment
+        }
+      }
+    }
+    `,
+    '',
+  )
+
+  let query = `
+  query EntityTiles($projectName: String!) {
+    project(name: $projectName) {
+      ${typesQuery}
+    }
+  }
+  `
+
+  const fragments = {
+    folder: FOLDER_TILE_FRAGMENT,
+    subset: SUBSET_TILE_FRAGMENT,
+    version: VERSION_TILE_FRAGMENT,
+    task: TASK_TILE_FRAGMENT,
+  }
+
+  // Add fragments
+  for (const type in entities) {
+    query += fragments[type]
+  }
+
+  return query
+}
+
+const formatEntityTiles = (project, entities) => {
+  // data = {project: {folders: {edges: [{node: {id}}]}}}
+  const allEntities = []
+  for (const type in entities) {
+    let entities = project[type + 's']
+    // If no entities of this type
+    if (!entities) continue
+    entities = entities.edges.map(({ node }) => ({ ...node, type }))
+    allEntities.push(...entities)
+  }
+
+  // sort entities by updatedAt
+  allEntities.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+
+  // which entity type to use for thumbnail
+  const thumbnailTypes = {
+    version: 'version',
+    subset: 'version',
+    folder: 'folder',
+    task: 'folder',
+  }
+
+  // loop through each entity and child and if it is an array or object, use first child value as value
+  for (const entity of allEntities) {
+    for (const attrib in entity) {
+      if (!entity[attrib]) continue
+      if (Array.isArray(entity[attrib])) {
+        entity[attrib] = entity[attrib][0]
+      } else if (typeof entity[attrib] === 'object') {
+        entity[attrib] = Object.values(entity[attrib])[0]
+      }
+      // if entity type is version, add 0 prefix to version number 1 -> v001, 12 -> v012
+      if (entity.type === 'version' && attrib === 'subTitle') {
+        entity[attrib] = 'v' + entity[attrib].toString().padStart(3, '0')
+      }
+    }
+    entity.thumbnailEntityType = thumbnailTypes[entity.type]
+  }
+
+  return allEntities
+}
+
 const getEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getEntitiesDetails: build.query({
@@ -223,9 +170,22 @@ const getEntity = ayonApi.injectEndpoints({
           variables: { projectName, id },
         },
       }),
-      transformResponse: (response, meta, { type }) => response.data.project[type],
+      transformResponse: (response, meta, { type }) => response.data?.project[type],
+    }),
+    getEntityTiles: build.query({
+      query: ({ projectName, entities }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: buildEntityTilesQuery(entities),
+          variables: { projectName },
+        },
+      }),
+      transformResponse: (response, meta, { entities }) =>
+        formatEntityTiles(response.data?.project, entities),
     }),
   }),
 })
 
-export const { useGetEntitiesDetailsQuery, useGetEventTileQuery } = getEntity
+export const { useGetEntitiesDetailsQuery, useGetEventTileQuery, useGetEntityTilesQuery } =
+  getEntity
