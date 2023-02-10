@@ -1,21 +1,26 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { Panel } from '@ynput/ayon-react-components'
 import UserImage from '/src/pages/settings/users/UserImage'
 import Thumbnail from '../containers/thumbnail'
+import { useRef } from 'react'
 
 const PanelStyled = styled(Panel)`
   padding: 8px;
   background-color: var(--color-grey-01);
-  max-width: 100%;
-  max-height: 100%;
-  aspect-ratio: 140/127;
+  max-height: 400px;
+  height: 100%;
+  width: 100%;
+  min-height: 120px;
   gap: 0;
+  cursor: pointer;
+  user-select: none;
 
   footer {
     display: flex;
     justify-content: space-between;
+    min-height: 17.5px;
   }
 
   /* name */
@@ -23,12 +28,24 @@ const PanelStyled = styled(Panel)`
     font-weight: bold;
   }
 
+  :hover {
+    background-color: var(--color-grey-02);
+  }
+
   /* overflows */
-  span {
+  & > span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-height: 17.5px;
   }
+
+  /* isError border */
+  ${({ isError }) =>
+    isError &&
+    css`
+      border: 1px solid var(--color-hl-error);
+    `}
 `
 
 const ThumbnailStyled = styled.div`
@@ -71,13 +88,13 @@ const ThumbnailStyled = styled.div`
 
 const IconStyled = styled.span`
   background-color: var(--color-grey-01);
-  width: 17%;
+  width: 25px;
   min-width: 25px;
   max-width: 40px;
   aspect-ratio: 1/1;
   border-radius: 3px;
   overflow: hidden;
-  font-size: 25px;
+  font-size: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -96,14 +113,20 @@ const EntityGridTile = ({
   subTitle,
   footer,
   profile,
+  onClick,
+  isLoading,
+  isError,
 }) => {
+  const ref = useRef()
+
   return (
-    <PanelStyled>
+    <PanelStyled ref={ref} onClick={onClick} isError={isError}>
       <ThumbnailStyled>
         <Thumbnail
           entityType={thumbnailEntityType}
           entityId={thumbnailEntityId}
           projectName={projectName}
+          isLoading={isLoading}
         />
         <div>
           <IconStyled className="material-symbols-outlined">{typeIcon}</IconStyled>
@@ -113,7 +136,7 @@ const EntityGridTile = ({
         </div>
       </ThumbnailStyled>
       <span>{name}</span>
-      <span>{subTitle}</span>
+      {subTitle && <span>{subTitle}</span>}
       <footer>
         <span>{footer}</span>
         {profile && <UserImage fullName="Test Test" size={20} />}
@@ -127,7 +150,7 @@ EntityGridTile.propTypes = {
   statusIcon: PropTypes.string,
   statusColor: PropTypes.string,
   name: PropTypes.string,
-
+  onClick: PropTypes.func,
   thumbnailEntityId: PropTypes.string,
   thumbnailEntityType: PropTypes.string,
   projectName: PropTypes.string,

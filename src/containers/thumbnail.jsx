@@ -49,21 +49,22 @@ const parseThumbnail = (response) => {
   return `data:${mime};base64,${base64}`
 }
 
-const Thumbnail = ({ projectName, entityType, entityId }) => {
+const Thumbnail = ({ projectName, entityType, entityId, isLoading }) => {
   const [thumbData, setThumbData] = useState(null)
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
 
   useEffect(() => {
-    if (!entityId) {
+    if (!entityId || isLoading) {
       setThumbData(null)
       return
     }
-    if ((projectName, entityType, entityId)) {
+    if (projectName && entityType && entityId) {
+      console.log('fetching thumbnail')
       axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
         setThumbData(parseThumbnail(response))
       })
     }
-  }, [url, entityId])
+  }, [entityId, entityType, projectName, isLoading])
 
   return (
     <ThumbnailStyled>
