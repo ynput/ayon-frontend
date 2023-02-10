@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components'
 import UserImage from './UserImage'
 import { useGetUserByNameQuery } from '/src/services/user/getUsers'
 import { useSelector } from 'react-redux'
-import { getFuzzyDate } from '/src/utils'
+import { formatDistance } from 'date-fns'
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -79,7 +79,10 @@ const UserTile = ({ user, onClick, userName, suspense, children, disableHover, s
       {updatedAt && (
         <span style={{ textAlign: 'end', opacity: 0.5 }}>
           Updated <br />
-          {getFuzzyDate(updatedAt)}
+          {formatDistance(new Date(updatedAt), new Date(), {
+            addSuffix: true,
+            includeSeconds: true,
+          })}
         </span>
       )}
       {children}

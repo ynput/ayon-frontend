@@ -257,35 +257,6 @@ function useLocalStorage(key, initialValue) {
   return [storedValue, setValue]
 }
 
-export const convertDate = (date) => {
-  if (!date) return ''
-  const createdAtDate = new Date(0)
-  return createdAtDate.setUTCSeconds(date)
-}
-
-export const getFuzzyDate = (date) => {
-  if (!date) return ''
-  // format date number days ago
-  // if 0 days ago, show hours ago
-  // if 0 hours ago, show minutes ago
-  const createdAtDate = new Date(0)
-  createdAtDate.setUTCSeconds(date)
-  const now = new Date()
-  const diff = now - createdAtDate
-  const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const diffHours = Math.floor(diff / (1000 * 60 * 60))
-  const diffMinutes = Math.floor(diff / (1000 * 60))
-
-  const dateText =
-    diffDays > 0
-      ? `${diffDays} days ago`
-      : diffHours > 0
-      ? `${diffHours} hrs ago`
-      : `${diffMinutes} mins ago`
-
-  return dateText
-}
-
 //
 // Export
 //

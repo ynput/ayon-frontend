@@ -7,8 +7,8 @@ import UserTile from '../settings/users/UserTile'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import EventTile from './EventTile'
-import { getFuzzyDate } from '/src/utils'
 import EntityTile from './EntityTile'
+import { formatDistance } from 'date-fns'
 
 const RowStyled = styled.div`
   span {
@@ -64,7 +64,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
         {userName && (
           <RowStyled>
             <h2>User</h2>
-            <UserTile userName={userName} suspence={isLoading || isFetching} disableHover>
+            <UserTile userName={userName} suspense={isLoading || isFetching} disableHover>
               <Button
                 icon="filter_alt"
                 className="transparent"
@@ -82,7 +82,9 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
             <EventTile
               title={project}
               disableHover
-              subTitle={`Last Updated - ${getFuzzyDate(projectLastUpdated)}`}
+              subTitle={`last updated - ${formatDistance(new Date(projectLastUpdated), new Date(), {
+                addSuffix: true,
+              })}`}
             >
               <Button icon="filter_alt" className="transparent" onClick={() => onFilter(project)} />
               <Link to={`/manageProjects/dashboard?project=${project}`}>

@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
-import { getFuzzyDate } from '/src/utils'
+import { formatDistance } from 'date-fns'
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -44,7 +44,11 @@ const EventTile = ({ title = '', subTitle = '', time, children, onClick, disable
         <br />
         <span style={{ opacity: 0.5 }}>{subTitle}</span>
       </header>
-      {time && <span style={{ textAlign: 'end', opacity: 0.5 }}>{getFuzzyDate(time)}</span>}
+      {time && (
+        <span style={{ textAlign: 'end', opacity: 0.5 }}>
+          {formatDistance(new Date(time), new Date(), { addSuffix: true })}
+        </span>
+      )}
       {children}
     </PanelStyled>
   )
