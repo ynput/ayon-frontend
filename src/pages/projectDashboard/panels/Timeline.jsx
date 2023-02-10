@@ -3,7 +3,6 @@ import { format, differenceInDays } from 'date-fns'
 
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetProjectAttribsQuery } from '/src/services/getProject'
-import { convertDate } from '/src/utils'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
 import { useEffect } from 'react'
@@ -66,8 +65,6 @@ const ProgressStyled = styled.div`
       scale: 0;
     }
   }
-
-  /* overide some line styles */
 
   div:first-child {
     border-radius: 0 !important;
@@ -134,22 +131,28 @@ const Timeline = ({ projectName }) => {
     projectName,
     attribs: ['start', 'end'],
   })
-  let { start, end } = data.attrib || {}
+  let { startDate, endDate } = data.attrib || {}
 
   // fake API call
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setLoading(false)
-      const start = 1667660629,
-        end = 1676905429
-      setData({ attrib: { start, end } })
-    }, 200)
+    let timeout
+    if (isLoading) {
+      timeout = setTimeout(() => {
+        setLoading(false)
+        // start date ISO string format, 09-09-2022
+        const start = '2021-09-09'
+        // end date ISO string format, 10-03-2023
+        const end = '2023-10-03'
+
+        setData({ attrib: { startDate: start, endDate: end } })
+      }, 200)
+    }
 
     //   clear
     return () => {
       clearTimeout(timeout)
     }
-  })
+  }, [isLoading])
 
   let done = 0,
     left = 0,
@@ -159,9 +162,11 @@ const Timeline = ({ projectName }) => {
     endString = ''
 
   if (!isLoading) {
-    //   convert to dates
-    start = convertDate(start)
-    end = convertDate(end)
+    const start = new Date(startDate || '')
+    const end = new Date(endDate || '')
+
+    console.log(start, end)
+
     startString = format(start, 'd MMM yyyy')
     endString = format(end, 'd MMM yyyy')
     length = differenceInDays(end, start)
