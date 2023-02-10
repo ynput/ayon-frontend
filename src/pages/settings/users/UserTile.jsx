@@ -26,7 +26,7 @@ const PanelStyled = styled(Panel)`
     `}
 `
 
-const UserTile = ({ user, onClick, userName, suspence, children, disableHover, style }) => {
+const UserTile = ({ user, onClick, userName, suspense, children, disableHover, style }) => {
   const currentUser = useSelector((state) => state.user.name)
 
   // RTK QUERY
@@ -39,7 +39,7 @@ const UserTile = ({ user, onClick, userName, suspence, children, disableHover, s
 
   // if user is not passed in, use data from query
   if (!user) {
-    if ((data?.length && !isLoading && !isFetching) || suspence) {
+    if ((data?.length && !isLoading && !isFetching) || suspense) {
       // using useGetUserByNameQuery
       user = { ...data[0] }
       if (user.roles) {
@@ -91,7 +91,7 @@ UserTile.propTypes = {
   user: PropTypes.object,
   onClick: PropTypes.func,
   userName: PropTypes.string,
-  suspence: PropTypes.bool,
+  suspense: PropTypes.bool,
   children: PropTypes.node,
   disableHover: PropTypes.bool,
 }
