@@ -8,7 +8,7 @@ import AddonSettings from '/src/containers/addonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
-import NewProjectDialog from './NewProjectDialog'
+import NewProjectDialog from './newProject/NewProjectDialog'
 import { useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
