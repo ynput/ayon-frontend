@@ -289,3 +289,8 @@ input:-webkit-autofill:focus {
     display: none;
   }
 }
+
+// remove text decoration from a tags
+a {
+  text-decoration: none;
+}
