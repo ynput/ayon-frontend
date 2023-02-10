@@ -15,6 +15,7 @@ const formatName = (rowData, defaultTitle) => {
 const ProjectList = ({
   selection,
   onSelect,
+  onRowClick,
   showNull,
   multiselect,
   footer,
@@ -77,7 +78,6 @@ const ProjectList = ({
   }, [selection, projectList])
 
   const onSelectionChange = (e) => {
-    if (!onSelect) return
     if (multiselect) {
       let result = []
       for (const node of e.value) {
@@ -107,7 +107,8 @@ const ProjectList = ({
           responsive="true"
           dataKey="name"
           selection={selectionObj}
-          onSelectionChange={onSelectionChange}
+          onSelectionChange={onSelect && onSelectionChange}
+          onRowClick={onRowClick}
         >
           <Column
             field="name"

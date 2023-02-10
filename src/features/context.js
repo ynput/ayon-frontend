@@ -29,7 +29,7 @@ const contextSlice = createSlice({
       return state
     },
 
-    projectSelected: (state) => {
+    projectSelected: (state, action) => {
       ;(state.focused = {
         type: null,
         folders: [],
@@ -38,7 +38,7 @@ const contextSlice = createSlice({
         tasks: [],
         editor: [],
       }),
-        (state.projectName = null)
+        (state.projectName = action.payload.projectName)
       state.expandedFolders = {}
     },
 
