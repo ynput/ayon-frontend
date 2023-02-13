@@ -15,7 +15,7 @@ const ProjectUsers = ({ projectName }) => {
     isError,
   } = useGetProjectDashboardQuery({ projectName, panel: 'users' })
 
-  const { active = 0, total = 0, roles = {}, managers = [], leaders = [] } = data
+  const { active = 0, total = 0, counts = {}, managers = [], leaders = [] } = data
 
   const title = `Users - ${total} - ${active} Active`
 
@@ -49,7 +49,7 @@ const ProjectUsers = ({ projectName }) => {
         </>
       )}
       <h2>Roles</h2>
-      {Object.entries(roles).map(([role, stat], i) => (
+      {Object.entries(counts).map(([role, stat], i) => (
         <ListStatsTile key={i} title={role} stat={stat} isLoading={isLoading} />
       ))}
     </DashboardPanelWrapper>
