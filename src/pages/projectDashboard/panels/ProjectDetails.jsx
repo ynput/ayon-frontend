@@ -1,5 +1,5 @@
 import React from 'react'
-import { useGetProjectQuery } from '/src/services/getProject'
+import { useGetProjectQuery } from '/src/services/project/getProject'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import Thumbnail from '/src/containers/thumbnail'
 import styled from 'styled-components'

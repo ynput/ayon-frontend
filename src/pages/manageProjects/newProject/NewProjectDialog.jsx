@@ -2,11 +2,11 @@ import { useState, useMemo } from 'react'
 import { Dialog } from 'primereact/dialog'
 import { toast } from 'react-toastify'
 
-import axios from 'axios'
 import { Button, Spacer, InputText, Toolbar } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 import PresetDropdown from './PresentDropdown'
 import { useGetAnatomyPresetsQuery, useGetAnatomySchemaQuery } from '/src/services/getAnatomy'
+import { useCreateProjectMutation } from '/src/services/project/updateProject'
 
 const NewProjectDialog = ({ onHide }) => {
   const [name, setName] = useState('')
@@ -28,19 +28,23 @@ const NewProjectDialog = ({ onHide }) => {
   // Logic
   //
 
+  const [createProject] = useCreateProjectMutation()
+
   const handleSubmit = () => {
-    axios
-      .post('/api/projects', {
-        name,
-        code,
-        anatomy: newAnatomy || originalAnatomy,
-      })
+    createProject({
+      name,
+      code,
+      anatomy: newAnatomy || originalAnatomy,
+    })
+      .unwrap()
       .then(() => {
         toast.success('Project created')
-        onHide()
+        onHide(name)
       })
       .catch((error) => {
-        toast.error(`Unable to create project ${error.response.data.detail}`)
+        // log
+        console.log(error)
+        toast.error(`Unable to create project ${error}`)
       })
   }
 

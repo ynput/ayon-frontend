@@ -21,7 +21,7 @@ import {
   updateStatusShortNames,
 } from '../utils'
 import usePubSub from '/src/hooks/usePubSub'
-import { useGetProjectQuery } from '../services/getProject'
+import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetAddonProjectQuery } from '../services/addonList'
 
 const ProjectContexInfo = () => {

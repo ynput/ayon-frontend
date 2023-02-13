@@ -8,9 +8,8 @@ import EntityGridTile from '/src/components/EntityGridTile'
 import { ayonApi } from '/src/services/ayon'
 import { useGetEntityTilesQuery } from '/src/services/entity/getEntity'
 import { useGetEventsByTopicQuery } from '/src/services/events/getEvents'
-import { useGetProjectAnatomyQuery } from '/src/services/getProject'
+import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { getFamilyIcon } from '/src/utils'
-// import { useGetProjectLatestQuery } from '/src/services/getProject'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */

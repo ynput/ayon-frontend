@@ -3,8 +3,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { useGetAllProjectsQuery } from '../services/getProject'
-import { useSelector } from 'react-redux'
+import { useGetAllProjectsQuery } from '../services/project/getProject'
 import { useEffect } from 'react'
 
 const formatName = (rowData, defaultTitle) => {
@@ -27,18 +26,17 @@ const ProjectList = ({
   onSuccess,
   autoSelect,
 }) => {
-  const user = useSelector((state) => state.user)
+  // const user = useSelector((state) => state.user)
   // QUERY HOOK
   // ( default ) gets added in transformResponse
-  // pass user to force update when user changes
-  const { data = [], isLoading, isError, error, isSuccess } = useGetAllProjectsQuery({ user })
+  const { data = [], isLoading, isFetching, isError, error, isSuccess } = useGetAllProjectsQuery()
   if (isError) {
     console.error(error)
   }
 
   // if selection does not exist in data, set selection to null
   useEffect(() => {
-    if (isLoading) return
+    if (isLoading || isFetching) return
 
     if (onNoProject && !data.map((project) => project.name).includes(selection)) {
       console.log('selected project does not exist: ', selection)
@@ -75,7 +73,7 @@ const ProjectList = ({
         //  if (!selection && project.name === localStorage.getItem('lastProject')) return project
       }
     } // single select
-  }, [selection, projectList])
+  }, [selection, projectList, isFetching])
 
   const onSelectionChange = (e) => {
     if (multiselect) {

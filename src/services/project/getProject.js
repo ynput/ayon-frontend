@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 
 const createProjectQuery = (attribs, fields) => {
   const attribFragment = `
@@ -56,7 +56,7 @@ const getProject = ayonApi.injectEndpoints({
       }),
       transformResponse: (res) => res.projects,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      providesTags: () => ['project'],
+      providesTags: () => ['project', 'projects'],
     }),
     getProjectAnatomy: build.query({
       query: ({ projectName }) => ({

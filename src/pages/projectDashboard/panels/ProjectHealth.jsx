@@ -1,7 +1,7 @@
 import React from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProgressTile from './ProgressTile'
-import { useGetProjectAnatomyQuery } from '/src/services/getProject'
+import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 import { getStatusProps } from '/src/utils'
 
@@ -87,14 +87,14 @@ const ProjectHealth = ({ projectName }) => {
         isLoading={isLoading}
       />
       <ProgressTile
-        title={`${storage.percentage}% Storge Full`}
+        title={`${storage.percentage}% Storage Full`}
         icon="database"
         values={[{ value: storage.percentage, label: 'Storage Used', color: storage.color }]}
         isLoading={isLoading}
       />
       <ProgressTile
         title={`${overdue} Overdue Tasks`}
-        subTitle={`${onTrack}% On track`}
+        subTitle={onTrack ? `${onTrack}% On track` : ''}
         icon="notification_important"
         values={[
           { value: onTrack, label: 'On Track' },
@@ -102,12 +102,14 @@ const ProjectHealth = ({ projectName }) => {
         ]}
         isLoading={isLoading}
       />
-      <ProgressTile
-        title={'Statuses'}
-        icon="check_circle"
-        values={statusValues}
-        isLoading={isLoading}
-      />
+      {!!statusValues.length && (
+        <ProgressTile
+          title={'Statuses'}
+          icon="check_circle"
+          values={statusValues}
+          isLoading={isLoading}
+        />
+      )}
     </DashboardPanelWrapper>
   )
 }
