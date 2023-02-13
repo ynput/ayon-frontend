@@ -34,6 +34,7 @@ export const ayonApi = createApi({
     'subset',
     'tag',
     'project',
+    'projects',
     'attribute',
     'user',
     'workfile',

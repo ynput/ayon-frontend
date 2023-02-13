@@ -1,9 +1,10 @@
 import React from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProgressTile from './ProgressTile'
-import { useGetProjectAnatomyQuery } from '/src/services/getProject'
+import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 import { getStatusProps } from '/src/utils'
+import copyToClipboard from '/src/helpers/copyToClipboard'
 
 // format complete data
 const getComplete = (completion) => {
@@ -42,7 +43,7 @@ const getStorage = (storageUsage) => {
   return { percentage, color }
 }
 
-const ProjectHealth = ({ projectName }) => {
+const ProjectHealth = ({ projectName, share }) => {
   const {
     data = {},
     isLoading,
@@ -71,43 +72,76 @@ const ProjectHealth = ({ projectName }) => {
 
   const onTrack = Math.round(((total - overdue) / total) * 100)
 
+  const taskValues = [
+    { value: onTrack, label: 'On Track' },
+    { value: 100 - onTrack, label: 'Overdue', color: 'var(--color-hl-01)' },
+  ]
+
   const statusValues = Object.entries(statuses).map(([key, value]) => ({
     value,
     label: key,
     color: getStatusProps(key, statusAnatomy).color,
   }))
 
+  const percentageCopy = (v, suffix) => {
+    const { value } = v
+    const message = `${projectName}: ${value}% ${suffix}.`
+    copyToClipboard(message)
+  }
+
+  const tasksCopy = (v, type) => {
+    const { value, label } = v
+    const message = `${projectName}: ${value} ${type} ${label}.`
+    copyToClipboard(message)
+  }
+
+  const shareData = {
+    project: projectName,
+    complete: `${complete.percentage}% Complete - ${complete.subTitle}`,
+    storage: `${storage.percentage}% Storage Full`,
+    overdue: `${overdue} Overdue Tasks`,
+    onTrack: `${onTrack}% On Track`,
+    statuses: statuses,
+  }
+
   return (
-    <DashboardPanelWrapper title="Health" isError={isError}>
+    <DashboardPanelWrapper
+      title="Health"
+      isError={isError}
+      icon={{ icon: 'share', onClick: () => share('Health', shareData) }}
+    >
       <ProgressTile
-        title={`${complete.percentage}% Complete`}
+        title={shareData.complete}
         subTitle={complete.subTitle}
         icon="schedule"
         values={[{ value: complete.percentage, label: 'Complete' }]}
         isLoading={isLoading}
+        onProgressClick={(v) => percentageCopy(v, 'Project Complete')}
       />
       <ProgressTile
-        title={`${storage.percentage}% Storge Full`}
+        title={shareData.storage}
         icon="database"
         values={[{ value: storage.percentage, label: 'Storage Used', color: storage.color }]}
         isLoading={isLoading}
+        onProgressClick={(v) => percentageCopy(v, 'Storage Used')}
       />
       <ProgressTile
-        title={`${overdue} Overdue Tasks`}
-        subTitle={`${onTrack}% On track`}
+        title={shareData.overdue}
+        subTitle={onTrack ? shareData.onTrack : ''}
         icon="notification_important"
-        values={[
-          { value: onTrack, label: 'On Track' },
-          { value: 100 - onTrack, label: 'Overdue', color: 'var(--color-hl-01)' },
-        ]}
+        values={taskValues}
         isLoading={isLoading}
+        onProgressClick={(v) => tasksCopy(v, 'Tasks')}
       />
-      <ProgressTile
-        title={'Statuses'}
-        icon="check_circle"
-        values={statusValues}
-        isLoading={isLoading}
-      />
+      {!!statusValues.length && (
+        <ProgressTile
+          title={'Statuses'}
+          icon="check_circle"
+          values={statusValues}
+          isLoading={isLoading}
+          onProgressClick={(v) => tasksCopy(v, 'Statuses')}
+        />
+      )}
     </DashboardPanelWrapper>
   )
 }

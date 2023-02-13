@@ -26,6 +26,7 @@ const ServicesPage = lazy(() => import('./pages/services'))
 import { login } from './features/user'
 import { SocketContext, SocketProvider } from './context/websocketContext'
 import ProtectedRoute from './containers/ProtectedRoute'
+import ShareDialog from './components/ShareDialog'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -113,6 +114,7 @@ const App = () => {
             }}
           >
             <Header />
+            <ShareDialog />
             <Routes>
               <Route path="/" exact element={<Navigate replace to="/manageProjects/dashboard" />} />
               <Route

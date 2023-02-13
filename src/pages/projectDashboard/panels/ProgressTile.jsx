@@ -32,6 +32,7 @@ const ProgressTile = ({
   isLoading,
   values = [],
   backgroundColor,
+  onProgressClick,
 }) => {
   return (
     <ProgressStyled onClick={onClick}>
@@ -41,7 +42,12 @@ const ProgressTile = ({
         <span>{isLoading ? '' : subTitle}</span>
       </HeaderStyled>
       {!!values.length && (
-        <ProgressBar values={values} backgroundColor={backgroundColor} isLoading={isLoading} />
+        <ProgressBar
+          values={values}
+          backgroundColor={backgroundColor}
+          isLoading={isLoading}
+          onClick={onProgressClick}
+        />
       )}
     </ProgressStyled>
   )
@@ -54,6 +60,7 @@ ProgressTile.propTypes = {
   onClick: PropTypes.func,
   backgroundColor: PropTypes.string,
   isLoading: PropTypes.bool,
+  onProgressClick: PropTypes.func,
   values: PropTypes.oneOfType([
     PropTypes.arrayOf(
       PropTypes.shape({

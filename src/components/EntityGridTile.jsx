@@ -7,7 +7,7 @@ import Thumbnail from '../containers/thumbnail'
 import { useRef } from 'react'
 
 const PanelStyled = styled(Panel)`
-  padding: 8px;
+  padding: 4px;
   background-color: var(--color-grey-01);
   max-height: 400px;
   height: 100%;
@@ -44,7 +44,11 @@ const PanelStyled = styled(Panel)`
   ${({ isError }) =>
     isError &&
     css`
-      border: 1px solid var(--color-hl-error);
+      opacity: 0.25;
+
+      :hover {
+        background-color: var(--color-grey-01);
+      }
     `}
 `
 
@@ -74,9 +78,9 @@ const ThumbnailStyled = styled.div`
     display: flex;
     justify-content: space-between;
     position: absolute;
-    top: 8px;
-    left: 8px;
-    right: 8px;
+    top: 4px;
+    left: 4px;
+    right: 4px;
     height: 25px;
 
     /* status */
@@ -120,7 +124,7 @@ const EntityGridTile = ({
   const ref = useRef()
 
   return (
-    <PanelStyled ref={ref} onClick={onClick} isError={isError}>
+    <PanelStyled ref={ref} onClick={onClick} isError={isError || isLoading}>
       <ThumbnailStyled>
         <Thumbnail
           entityType={thumbnailEntityType}

@@ -78,7 +78,7 @@ const DashboardPanelWrapper = ({
   style,
   stylePanel,
   header,
-  link,
+  icon,
 }) => {
   return (
     <PanelStyled isError={isError} span={span} style={stylePanel}>
@@ -86,9 +86,10 @@ const DashboardPanelWrapper = ({
         <header>
           <h1>{title}</h1>
           {header && header}
-          {link && (
-            <Link to={link.link}>
-              <IconStyled icon={link.icon} />
+          {icon?.onClick && <IconStyled icon={icon.icon} onClick={icon.onClick} />}
+          {icon?.link && (
+            <Link to={icon.link} onClick={icon.onClick}>
+              <IconStyled icon={icon.icon} />
             </Link>
           )}
         </header>
@@ -107,8 +108,9 @@ DashboardPanelWrapper.propTypes = {
   style: PropTypes.object,
   stylePanel: PropTypes.object,
   header: PropTypes.node,
-  link: PropTypes.shape({
-    link: PropTypes.string.isRequired,
+  icon: PropTypes.shape({
+    link: PropTypes.string,
+    onClick: PropTypes.func,
     icon: PropTypes.string.isRequired,
   }),
 }

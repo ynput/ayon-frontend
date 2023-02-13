@@ -4,7 +4,7 @@ import { Panel } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 import StatusField from '/src/components/status/statusField'
 import { useGetEventTileQuery } from '/src/services/entity/getEntity'
-import { useGetProjectAnatomyQuery } from '/src/services/getProject'
+import { useGetProjectAnatomyQuery } from '../../services/project/getProject'
 import { formatDistance } from 'date-fns'
 
 // styled panel

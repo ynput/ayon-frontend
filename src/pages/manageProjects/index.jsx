@@ -8,11 +8,14 @@ import AddonSettings from '/src/containers/addonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
-import NewProjectDialog from './NewProjectDialog'
+import NewProjectDialog from './newProject/NewProjectDialog'
 import { useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import ProjectDashboard from '../projectDashboard/ProjectDashboard'
+import { useDeleteProjectMutation } from '/src/services/project/updateProject'
+import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
+import { toast } from 'react-toastify'
 
 const ManageProjects = () => {
   const navigate = useNavigate()
@@ -23,7 +26,6 @@ const ManageProjects = () => {
   let { module } = useParams()
 
   const [showNewProject, setShowNewProject] = useState(false)
-  const [listReloadTrigger, setListReloadTrigger] = useState(0)
 
   // QUERY PARAMS STATE
   const [selectedProject, setSelectedProject] = useQueryParam(
@@ -43,8 +45,30 @@ const ManageProjects = () => {
     if (queryProject) setSelectedProject(queryProject)
   }, [])
 
-  const deleteProject = () => {
-    setListReloadTrigger((val) => val + 1)
+  const [deleteProject] = useDeleteProjectMutation()
+
+  const deletePreset = () => {
+    confirmDialog({
+      header: 'Delete Preset',
+      message: `Are you sure you want to delete the project: ${selectedProject}?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete',
+      accept: () => {
+        deleteProject({ projectName: selectedProject })
+          .unwrap()
+          .then(() => {
+            toast.info(`Project ${selectedProject} deleted`)
+            setSelectedProject(null)
+          })
+          .catch((err) => {
+            toast.error(err.message)
+          })
+      },
+      rejectLabel: 'Cancel',
+      reject: () => {
+        // do nothing
+      },
+    })
   }
 
   const userAccess = ['dashboard', 'siteSettings']
@@ -89,6 +113,7 @@ const ManageProjects = () => {
 
   return (
     <>
+      <ConfirmDialog />
       <nav className="secondary">
         {links.map((link, i) => (
           <NavLink to={link.path + (selectedProject ? `?project=${selectedProject}` : '')} key={i}>
@@ -116,8 +141,8 @@ const ManageProjects = () => {
               label="Delete project"
               icon="delete"
               className="p-button-danger"
-              disabled={true || !selectedProject}
-              onClick={deleteProject}
+              disabled={!selectedProject}
+              onClick={deletePreset}
             />
           </>
         )}
@@ -125,9 +150,9 @@ const ManageProjects = () => {
       <main style={{ overflowY: 'clip' }}>
         {showNewProject && (
           <NewProjectDialog
-            onHide={() => {
+            onHide={(name) => {
               setShowNewProject(false)
-              setListReloadTrigger((val) => val + 1)
+              setSelectedProject(name)
             }}
           />
         )}
@@ -135,7 +160,6 @@ const ManageProjects = () => {
         <ProjectList
           selection={selectedProject}
           onSelect={setSelectedProject}
-          reloadTrigger={listReloadTrigger}
           style={{ minWidth: 100 }}
           styleSection={{ maxWidth: 150, minWidth: 150 }}
           hideCode

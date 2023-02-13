@@ -2,7 +2,7 @@ import React from 'react'
 import { format, differenceInDays } from 'date-fns'
 
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectAttribsQuery } from '/src/services/getProject'
+import { useGetProjectAttribsQuery } from '/src/services/project/getProject'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
 import ProgressBar from './ProgressBar'
@@ -138,10 +138,15 @@ const Timeline = ({ projectName }) => {
     endString = ''
 
   if (!isLoading) {
-    const start = new Date(startDate || '')
-    const end = new Date(endDate || '')
+    let start = new Date(startDate || '')
+    let end = new Date(endDate || '')
 
-    console.log(start, end)
+    // check dates are valid using date-fns
+    if (isNaN(start) || isNaN(end)) {
+      start = new Date()
+      // 10 days later
+      end = new Date(start.getTime() + 10 * 24 * 60 * 60 * 1000)
+    }
 
     startString = format(start, 'd MMM yyyy')
     endString = format(end, 'd MMM yyyy')
