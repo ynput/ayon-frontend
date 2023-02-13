@@ -22,12 +22,39 @@ const ShareStyled = styled.div`
   /* top right corner */
   button {
     position: absolute;
-    top: 8px;
+    top: 16px;
     right: 8px;
+  }
+
+  pre {
+    background-color: var(--color-grey-00);
+    padding: 16px;
+    border-radius: 3px;
+    margin-top: 0;
+  }
+
+  background-color: unset;
+  padding-right: 48px;
+
+  button {
+    background-color: var(--color-grey-00);
   }
 
   img {
     max-width: 30vw;
+    box-shadow: 0 0 10px 0px var(--color-grey-01);
+  }
+
+  /* if panel is url link */
+  :has(> span) {
+    background-color: var(--color-grey-00);
+    padding: 16px 48px 16px 16px;
+
+    button {
+      padding: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
   }
 `
 
@@ -54,7 +81,7 @@ const ShareDialog = () => {
   return (
     <Dialog header={`Share: ${name}`} visible onHide={() => dispatch(closeShare())}>
       <ShareStyled>
-        {link}
+        <span>{link}</span>
         <Button icon="content_copy" onClick={() => copyToClipboard(link)} />
       </ShareStyled>
       <br />

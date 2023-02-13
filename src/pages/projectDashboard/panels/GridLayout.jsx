@@ -9,7 +9,7 @@ import { useRef } from 'react'
 const GridStyled = styled.div`
   display: grid;
   grid-template-columns: 1fr 0.8fr 1.2fr;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: 1fr auto;
   gap: 8px;
 
   /* overflow y */
@@ -42,11 +42,17 @@ const GridLayout = ({ children, projectName }) => {
     let img
     if (childRef) {
       dispatch(onShare(share))
+      // remove overflows
+      ref.current.style.overflowY = 'visible'
+      childRef.style.minWidth = 'fit-content'
       // hide share icon
-      childRef.querySelector('header button').style.display = 'none'
+      childRef.querySelector('header button').style.opacity = 0
       img = await toPng(childRef).catch((err) => console.log(err))
       // show share icon
-      childRef.querySelector('header button').style.display = 'block'
+      childRef.querySelector('header button').style.opacity = 1
+      // restore overflows
+      ref.current.style.overflowY = 'clip'
+      childRef.style.minWidth = null
       dispatch(onShare({ ...share, img }))
     } else {
       dispatch(onShare(share))

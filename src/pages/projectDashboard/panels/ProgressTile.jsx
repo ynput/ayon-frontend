@@ -12,6 +12,10 @@ const HeaderStyled = styled.div`
   h3 {
     flex: 1;
   }
+
+  & > * {
+    white-space: nowrap;
+  }
 `
 
 const ProgressStyled = styled(TileStyled)`

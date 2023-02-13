@@ -48,7 +48,7 @@ const LineStyled = styled.hr`
 
   &::before {
     /* expand the hover zone but keep hidden */
-    background-color: red;
+    background-color: transparent;
     bottom: -10px;
     width: 100%;
     content: '';
