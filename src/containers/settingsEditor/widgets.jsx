@@ -50,7 +50,7 @@ const CheckboxWidget = function (props) {
   const onChange = (e) => {
     updateOverrides(props, e.target.checked !== originalValue, path)
     props.onChange(e.target.checked)
-    props.formContext?.onSetBreadcrumbs(path)
+    setTimeout(() => props.formContext?.onSetBreadcrumbs(path), 100)
   }
 
   return <InputSwitch checked={props.value} onChange={onChange} />
