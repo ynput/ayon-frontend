@@ -32,6 +32,8 @@ const CircleImage = styled.div`
 `
 
 const UserImage = ({ src, fullName, style, size = 30, highlight }) => {
+  const fontSize = Math.round((13 / 30) * size)
+
   const initials = fullName
     ?.split(' ')
     .map((w) => w[0]?.toUpperCase())
@@ -40,7 +42,7 @@ const UserImage = ({ src, fullName, style, size = 30, highlight }) => {
 
   return (
     <CircleImage style={{ width: size, maxHeight: size, ...style }} highlight={highlight}>
-      {src ? <img src={src} /> : <span>{initials}</span>}
+      {src ? <img src={src} /> : <span style={{ fontSize: `${fontSize}px` }}>{initials}</span>}
     </CircleImage>
   )
 }

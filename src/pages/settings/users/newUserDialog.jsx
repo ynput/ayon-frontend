@@ -108,7 +108,7 @@ const NewUserDialog = ({ onHide }) => {
         {formData.userLevel === 'user' && (
           <>
             <DividerSmallStyled />
-            <span style={{ margin: '10px 0' }}>
+            <span style={{ margin: '8px 0' }}>
               <b>Apply default roles to:</b>
             </span>
             <ProjectList

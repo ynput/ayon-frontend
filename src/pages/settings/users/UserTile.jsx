@@ -5,13 +5,15 @@ import styled, { css } from 'styled-components'
 import UserImage from './UserImage'
 import { useGetUserByNameQuery } from '/src/services/user/getUsers'
 import { useSelector } from 'react-redux'
-import { getFuzzyDate } from '/src/utils'
+import { formatDistance } from 'date-fns'
 
 // styled panel
 const PanelStyled = styled(Panel)`
   flex-direction: row;
   align-items: center;
   background-color: var(--color-grey-01);
+  padding: 8px;
+  gap: 8px;
 
   /* if not disable hover */
   ${({ disableHover }) =>
@@ -24,7 +26,7 @@ const PanelStyled = styled(Panel)`
     `}
 `
 
-const UserTile = ({ user, onClick, userName, suspence, children, disableHover }) => {
+const UserTile = ({ user, onClick, userName, suspense, children, disableHover, style }) => {
   const currentUser = useSelector((state) => state.user.name)
 
   // RTK QUERY
@@ -37,7 +39,7 @@ const UserTile = ({ user, onClick, userName, suspence, children, disableHover })
 
   // if user is not passed in, use data from query
   if (!user) {
-    if ((data?.length && !isLoading && !isFetching) || suspence) {
+    if ((data?.length && !isLoading && !isFetching) || suspense) {
       // using useGetUserByNameQuery
       user = { ...data[0] }
       if (user.roles) {
@@ -63,7 +65,7 @@ const UserTile = ({ user, onClick, userName, suspence, children, disableHover })
   }
 
   return (
-    <PanelStyled onClick={onClick} disableHover={disableHover}>
+    <PanelStyled onClick={onClick} disableHover={disableHover} style={style}>
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
       <div style={{ flex: 1 }}>
         <strong>
@@ -77,7 +79,10 @@ const UserTile = ({ user, onClick, userName, suspence, children, disableHover })
       {updatedAt && (
         <span style={{ textAlign: 'end', opacity: 0.5 }}>
           Updated <br />
-          {getFuzzyDate(updatedAt)}
+          {formatDistance(new Date(updatedAt), new Date(), {
+            addSuffix: true,
+            includeSeconds: true,
+          })}
         </span>
       )}
       {children}
@@ -89,7 +94,7 @@ UserTile.propTypes = {
   user: PropTypes.object,
   onClick: PropTypes.func,
   userName: PropTypes.string,
-  suspence: PropTypes.bool,
+  suspense: PropTypes.bool,
   children: PropTypes.node,
   disableHover: PropTypes.bool,
 }

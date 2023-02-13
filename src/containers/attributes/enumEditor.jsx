@@ -7,7 +7,7 @@ import { camelCase } from 'lodash'
 
 const RowStyled = styled.form`
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
 
   button {
@@ -21,7 +21,7 @@ const RowStyled = styled.form`
 const ContainerStyled = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 `
 
 const EnumEditor = ({ values = [], onChange }) => {

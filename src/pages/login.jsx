@@ -8,6 +8,7 @@ import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-compo
 import { login } from '/src/features/user'
 
 import OAuth2ProviderIcon from '/src/components/oauthIcons'
+import { ayonApi } from '../services/ayon'
 
 const constructOAuth2Url = (url, clientId, redirectUri, scope) => {
   const query = new URLSearchParams({
@@ -25,7 +26,7 @@ const OAuth2Links = ({ options }) => {
       style={{
         display: 'flex',
         flexDirection: 'row',
-        gap: 12,
+        gap: 8,
         fontSize: '1.8em',
       }}
     >
@@ -74,6 +75,8 @@ const LoginPage = () => {
             // login successful
             toast.info(data.detail)
             dispatch(login({ user: data.user, accessToken: data.token }))
+            // invalidate all rtk queries cache
+            dispatch(ayonApi.util.resetApiState())
           } else {
             toast.error('Unable to login using OAUTH')
           }

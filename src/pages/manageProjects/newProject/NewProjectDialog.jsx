@@ -1,75 +1,50 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Dialog } from 'primereact/dialog'
-import { Dropdown } from 'primereact/dropdown'
 import { toast } from 'react-toastify'
 
-import axios from 'axios'
 import { Button, Spacer, InputText, Toolbar } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
-import { loadAnatomyPresets } from '/src/utils'
-
-const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
-  const [presetList, setPresetList] = useState([])
-
-  useEffect(() => {
-    loadAnatomyPresets().then((r) => {
-      setPresetList(r)
-      if (!selectedPreset) {
-        setSelectedPreset(r[0].name)
-      }
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  return (
-    <Dropdown
-      value={selectedPreset}
-      onChange={(e) => setSelectedPreset(e.value)}
-      options={presetList}
-      optionValue="name"
-      optionLabel="title"
-      tooltip="Preset"
-      tooltipOptions={{ position: 'bottom' }}
-      style={{ minWidth: 200 }}
-    />
-  )
-}
+import PresetDropdown from './PresentDropdown'
+import { useGetAnatomyPresetsQuery, useGetAnatomySchemaQuery } from '/src/services/getAnatomy'
+import { useCreateProjectMutation } from '/src/services/project/updateProject'
 
 const NewProjectDialog = ({ onHide }) => {
-  const [schema, setSchema] = useState(null)
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
-  const [originalAnatomy, setOriginalAnatomy] = useState(null)
   const [newAnatomy, setNewAnatomy] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState(null)
 
-  useEffect(() => {
-    axios.get('/api/anatomy/schema').then((res) => setSchema(res.data))
-  }, [])
+  // GET SCHEMA DATA
+  // '/api/anatomy/schema'
+  const { data: schema, isLoading: isSchemaLoading } = useGetAnatomySchemaQuery()
 
-  useEffect(() => {
-    if (!selectedPreset) return
-    axios.get(`/api/anatomy/presets/${selectedPreset}`).then((res) => {
-      setOriginalAnatomy(res.data)
-    })
-  }, [selectedPreset])
+  // GET PRESET DATA
+  // `/api/anatomy/presets/${selectedPreset}`
+  const { data: originalAnatomy, isLoading: isOriginalAnatomyLoading } = useGetAnatomyPresetsQuery(
+    { preset: selectedPreset },
+    { skip: !selectedPreset },
+  )
 
   // Logic
   //
 
+  const [createProject] = useCreateProjectMutation()
+
   const handleSubmit = () => {
-    axios
-      .post('/api/projects', {
-        name,
-        code,
-        anatomy: newAnatomy || originalAnatomy,
-      })
+    createProject({
+      name,
+      code,
+      anatomy: newAnatomy || originalAnatomy,
+    })
+      .unwrap()
       .then(() => {
         toast.success('Project created')
-        onHide()
+        onHide(name)
       })
       .catch((error) => {
-        toast.error(`Unable to create project ${error.response.data.detail}`)
+        // log
+        console.log(error)
+        toast.error(`Unable to create project ${error}`)
       })
   }
 
@@ -78,7 +53,7 @@ const NewProjectDialog = ({ onHide }) => {
   //
 
   const editor = useMemo(() => {
-    if (!(originalAnatomy && schema)) return 'Loading editor...'
+    if (isSchemaLoading || isOriginalAnatomyLoading) return 'Loading editor...'
     return <SettingsEditor schema={schema} formData={originalAnatomy} onChange={setNewAnatomy} />
   }, [schema, originalAnatomy])
 

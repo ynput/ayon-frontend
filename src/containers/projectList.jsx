@@ -3,8 +3,8 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { useGetAllProjectsQuery } from '../services/getProject'
-import { useSelector } from 'react-redux'
+import { useGetAllProjectsQuery } from '../services/project/getProject'
+import { useEffect } from 'react'
 
 const formatName = (rowData, defaultTitle) => {
   if (rowData.name === '_') return defaultTitle
@@ -14,21 +14,36 @@ const formatName = (rowData, defaultTitle) => {
 const ProjectList = ({
   selection,
   onSelect,
+  onRowClick,
   showNull,
   multiselect,
-  header,
   footer,
   style,
+  styleSection,
   className,
+  hideCode,
+  onNoProject,
+  onSuccess,
+  autoSelect,
 }) => {
-  const user = useSelector((state) => state.user)
+  // const user = useSelector((state) => state.user)
   // QUERY HOOK
   // ( default ) gets added in transformResponse
-  // pass user to force update when user changes
-  const { data = [], isLoading, isError, error } = useGetAllProjectsQuery({ user })
+  const { data = [], isLoading, isFetching, isError, error, isSuccess } = useGetAllProjectsQuery()
   if (isError) {
     console.error(error)
   }
+
+  // if selection does not exist in data, set selection to null
+  useEffect(() => {
+    if (isLoading || isFetching) return
+
+    if (onNoProject && !data.map((project) => project.name).includes(selection)) {
+      console.log('selected project does not exist: ', selection)
+      const defaultProject = autoSelect ? data[0]?.name : null
+      onNoProject(defaultProject)
+    } else if (isSuccess && onSuccess) onSuccess()
+  }, [selection, data, onNoProject, isLoading])
 
   const projectList = [...data]
 
@@ -58,10 +73,9 @@ const ProjectList = ({
         //  if (!selection && project.name === localStorage.getItem('lastProject')) return project
       }
     } // single select
-  }, [selection, projectList])
+  }, [selection, projectList, isFetching])
 
   const onSelectionChange = (e) => {
-    if (!onSelect) return
     if (multiselect) {
       let result = []
       for (const node of e.value) {
@@ -80,8 +94,8 @@ const ProjectList = ({
   } // onSelectionChange
 
   return (
-    <Section style={{ maxWidth: 400, ...style }} className={className}>
-      {header}
+    <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
+      {footer}
       <TablePanel loading={isLoading}>
         <DataTable
           value={projectList}
@@ -91,18 +105,18 @@ const ProjectList = ({
           responsive="true"
           dataKey="name"
           selection={selectionObj}
-          onSelectionChange={onSelectionChange}
+          onSelectionChange={onSelect && onSelectionChange}
+          onRowClick={onRowClick}
         >
           <Column
             field="name"
             header="Project name"
             body={(rowData) => formatName(rowData, showNull)}
-            style={{ minWidth: 150 }}
+            style={{ minWidth: 150, ...style }}
           />
-          <Column field="code" header="Code" style={{ maxWidth: 80 }} />
+          {!hideCode && <Column field="code" header="Code" style={{ maxWidth: 80 }} />}
         </DataTable>
       </TablePanel>
-      {footer}
     </Section>
   )
 }

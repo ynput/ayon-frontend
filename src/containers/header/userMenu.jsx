@@ -7,6 +7,7 @@ import { Button, Spacer } from '@ynput/ayon-react-components'
 import { Sidebar } from 'primereact/sidebar'
 import { logout } from '/src/features/user'
 import { useSelector } from 'react-redux'
+import { ayonApi } from '/src/services/ayon'
 
 const UserMenu = ({ visible, onHide }) => {
   const dispatch = useDispatch()
@@ -22,6 +23,8 @@ const UserMenu = ({ visible, onHide }) => {
       .then((response) => {
         toast.info(response.data.detail)
         dispatch(logout())
+        // reset global state
+        dispatch(ayonApi.util.resetApiState())
       })
       .catch(() => {
         toast.error('Unable to log out. Weird.')
@@ -36,7 +39,7 @@ const UserMenu = ({ visible, onHide }) => {
           display: 'flex',
           flexDirection: 'column',
           padding: 4,
-          gap: 3,
+          gap: 4,
         }}
       >
         <Button

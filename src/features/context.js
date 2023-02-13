@@ -21,6 +21,7 @@ const contextSlice = createSlice({
     },
     reload: {},
     breadcrumbs: {},
+    share: { name: null, data: null, link: null, img: null },
   },
   reducers: {
     selectProject: (state, action) => {
@@ -29,7 +30,7 @@ const contextSlice = createSlice({
       return state
     },
 
-    projectSelected: (state) => {
+    projectSelected: (state, action) => {
       ;(state.focused = {
         type: null,
         folders: [],
@@ -38,7 +39,7 @@ const contextSlice = createSlice({
         tasks: [],
         editor: [],
       }),
-        (state.projectName = null)
+        (state.projectName = action.payload.projectName)
       state.expandedFolders = {}
     },
 
@@ -152,6 +153,20 @@ const contextSlice = createSlice({
         [action.payload.type]: action.payload.reload,
       }
     },
+    onShare: (state, action) => {
+      state.share.name = action.payload?.name
+      state.share.data = action.payload?.data
+      state.share.img = action.payload?.img
+      state.share.link = action.payload?.link
+    },
+    closeShare: (state) => {
+      state.share = {
+        name: null,
+        data: null,
+        img: null,
+        link: null,
+      }
+    },
   }, // reducers
 })
 
@@ -172,6 +187,8 @@ export const {
   subsetSelected,
   editorSelectionChanged,
   projectSelected,
+  onShare,
+  closeShare,
 } = contextSlice.actions
 
 export default contextSlice.reducer

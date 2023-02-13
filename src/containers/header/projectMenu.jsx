@@ -13,8 +13,16 @@ const ProjectMenu = ({ visible, onHide }) => {
   const projectName = useSelector((state) => state.context.projectName)
 
   const onProjectSelect = (projectName) => {
+    console.log('row clicked: ', projectName)
+
+    onHide()
+
+    // if already on project page, do not navigate
+    if (window.location.pathname.includes(projectName)) return
+
     // reset selected folders
-    dispatch(projectSelected())
+    dispatch(projectSelected({ projectName }))
+
     navigate(`/projects/${projectName}/browser`)
   }
 
@@ -40,7 +48,7 @@ const ProjectMenu = ({ visible, onHide }) => {
       >
         <ProjectList
           footer={footer}
-          onSelect={(projectName) => onProjectSelect(projectName)}
+          onRowClick={(e) => onProjectSelect(e.data.name)}
           selection={projectName}
         />
       </div>

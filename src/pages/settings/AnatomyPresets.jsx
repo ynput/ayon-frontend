@@ -19,6 +19,7 @@ import {
   ScrollPanel,
 } from '@ynput/ayon-react-components'
 import { loadAnatomyPresets } from '/src/utils'
+import { useGetAnatomyPresetsQuery, useGetAnatomySchemaQuery } from '/src/services/getAnatomy'
 
 const PresetList = ({
   selectedPreset,
@@ -81,7 +82,6 @@ const PresetList = ({
 }
 
 const AnatomyPresets = () => {
-  const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [newData, setNewData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState('_')
@@ -93,16 +93,19 @@ const AnatomyPresets = () => {
   // Hooks
   //
 
-  useEffect(() => {
-    axios.get('/api/anatomy/schema').then((res) => setSchema(res.data))
-  }, [])
+  const { data: schema } = useGetAnatomySchemaQuery()
+
+  const { data: anatomyData, isSuccess } = useGetAnatomyPresetsQuery(
+    { preset: selectedPreset },
+    { skip: !selectedPreset },
+  )
 
   useEffect(() => {
-    axios.get(`/api/anatomy/presets/${selectedPreset}`).then((res) => {
-      setNewData(res.data)
-      setOriginalData(res.data)
-    })
-  }, [selectedPreset])
+    if ((isSuccess, anatomyData)) {
+      setNewData(anatomyData)
+      setOriginalData(anatomyData)
+    }
+  }, [selectedPreset, isSuccess, anatomyData])
 
   //
   // Actions

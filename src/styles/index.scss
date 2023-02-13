@@ -1,6 +1,7 @@
 :root {
   // TODO: move this to the rest of the variables
   --color-hl-site: #efa0a8;
+  --color-hl-02: #53d2f9;
 }
 #root {
   position: absolute;
@@ -17,14 +18,14 @@
     flex-grow: 1;
     display: flex;
     flex-direction: row;
-    gap: 10px;
-    padding: 10px;
+    gap: 8px;
+    padding: 8px;
 
     &.center {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12;
+      gap: 16;
     }
 
     // Navigation
@@ -32,15 +33,15 @@
 }
 nav.primary {
   background-color: var(--color-grey-01);
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 8px;
+  padding-right: 8px;
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
 nav.secondary {
   background-color: var(--color-grey-00);
-  padding-right: 10px;
+  padding-right: 8px;
 }
 nav.primary,
 nav.secondary {
@@ -51,7 +52,7 @@ nav.secondary {
   a,
   button {
     display: block;
-    padding: 10px 14px;
+    padding: 8px 14px;
     text-decoration: none;
     transition: text-shadow 0.2s;
     user-select: none !important;
@@ -99,7 +100,7 @@ h4 {
     margin-bottom: 20px;
   }
   &h4 {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   //
   // Hacks
@@ -286,5 +287,52 @@ input:-webkit-autofill:focus {
 .p-cell-editing {
   button {
     display: none;
+  }
+}
+
+// remove text decoration from a tags
+a {
+  text-decoration: none;
+}
+
+.p-tabview {
+  .p-tabview-panels {
+    background-color: var(--color-grey-02);
+    display: flex;
+    justify-content: center;
+    border-radius: 3px;
+  }
+
+  .p-tabview-nav {
+    border: 0;
+    li {
+      .p-tabview-nav-link {
+        background-color: var(--color-grey-01);
+
+        &:focus {
+          box-shadow: none !important;
+        }
+      }
+    }
+
+    li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+      background-color: var(--color-grey-01);
+      text-shadow: 0 0 5px var(--color-text);
+      transition: text-shadow 0.2s;
+    }
+
+    li.p-highlight {
+      .p-tabview-nav-link {
+        background-color: var(--color-grey-02);
+
+        span {
+          color: var(--color-text);
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+  .p-tabview-panel {
+    border: 0;
   }
 }

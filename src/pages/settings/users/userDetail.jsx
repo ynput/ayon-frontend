@@ -17,7 +17,7 @@ const FormsStyled = styled.section`
   flex: 1;
   overflow-x: clip;
   overflow-y: auto;
-  gap: 5px;
+  gap: 4px;
   display: flex;
   flex-direction: column;
 

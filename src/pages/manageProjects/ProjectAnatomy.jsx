@@ -3,15 +3,13 @@ import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
 import { Section, ScrollPanel, Toolbar, Button } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
+import { useGetAnatomySchemaQuery } from '/src/services/getAnatomy'
 
 const ProjectAnatomy = ({ projectName }) => {
-  const [schema, setSchema] = useState(null)
   const [originalData, setOriginalData] = useState(null)
   const [newData, setNewData] = useState(null)
 
-  useEffect(() => {
-    axios.get('/api/anatomy/schema').then((res) => setSchema(res.data))
-  }, [])
+  const { data: schema } = useGetAnatomySchemaQuery()
 
   // TODO: RTK QUERY
   useEffect(() => {

@@ -72,7 +72,7 @@ const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, 
   }
 
   const footer = (
-    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
       <Button label={'Cancel'} onClick={handleCancel} />
       <Button
         label={isOverwrite ? 'Overwite All' : 'Save'}

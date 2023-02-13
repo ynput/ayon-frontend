@@ -6,26 +6,35 @@ import { Button, Toolbar } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import AddonSettings from '/src/containers/addonSettings'
 
-import ProjectDashboard from './ProjectDashboard'
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
-import NewProjectDialog from './NewProjectDialog'
+import NewProjectDialog from './newProject/NewProjectDialog'
 import { useSelector } from 'react-redux'
 import { useEffect } from 'react'
-import { StringParam, useQueryParam } from 'use-query-params'
+import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+import ProjectDashboard from '../projectDashboard/ProjectDashboard'
+import { useDeleteProjectMutation } from '/src/services/project/updateProject'
+import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
+import { toast } from 'react-toastify'
 
 const ManageProjects = () => {
   const navigate = useNavigate()
   // get is user from context
   const isUser = useSelector((state) => state.user.data.isUser)
+  const projectName = useSelector((state) => state.context.projectName)
 
   let { module } = useParams()
 
   const [showNewProject, setShowNewProject] = useState(false)
-  const [listReloadTrigger, setListReloadTrigger] = useState(0)
 
   // QUERY PARAMS STATE
-  const [selectedProject, setSelectedProject] = useQueryParam('project', StringParam)
+  const [selectedProject, setSelectedProject] = useQueryParam(
+    'project',
+    withDefault(StringParam, projectName),
+  )
+
+  // has project list been loaded and selection vaidated?
+  const [isProjectValid, setIsProjectValid] = useState(false)
 
   // Search params
   const [searchParams] = useSearchParams()
@@ -36,38 +45,31 @@ const ManageProjects = () => {
     if (queryProject) setSelectedProject(queryProject)
   }, [])
 
-  const deleteProject = () => {
-    setListReloadTrigger((val) => val + 1)
+  const [deleteProject] = useDeleteProjectMutation()
+
+  const deletePreset = () => {
+    confirmDialog({
+      header: 'Delete Preset',
+      message: `Are you sure you want to delete the project: ${selectedProject}?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete',
+      accept: () => {
+        deleteProject({ projectName: selectedProject })
+          .unwrap()
+          .then(() => {
+            toast.info(`Project ${selectedProject} deleted`)
+            setSelectedProject(null)
+          })
+          .catch((err) => {
+            toast.error(err.message)
+          })
+      },
+      rejectLabel: 'Cancel',
+      reject: () => {
+        // do nothing
+      },
+    })
   }
-
-  const toolbar = (
-    <Toolbar>
-      <Button
-        label="Open project"
-        icon="folder_open"
-        disabled={!selectedProject}
-        onClick={() => navigate(`/projects/${selectedProject}/browser`)}
-      />
-
-      {!isUser && (
-        <>
-          <Button
-            label="New project"
-            icon="create_new_folder"
-            onClick={() => setShowNewProject(true)}
-          />
-
-          <Button
-            label="Delete project"
-            icon="delete"
-            className="p-button-danger"
-            disabled={true || !selectedProject}
-            onClick={deleteProject}
-          />
-        </>
-      )}
-    </Toolbar>
-  )
 
   const userAccess = ['dashboard', 'siteSettings']
 
@@ -111,31 +113,62 @@ const ManageProjects = () => {
 
   return (
     <>
+      <ConfirmDialog />
       <nav className="secondary">
         {links.map((link, i) => (
-          <NavLink to={link.path} key={i}>
+          <NavLink to={link.path + (selectedProject ? `?project=${selectedProject}` : '')} key={i}>
             {link.name}
           </NavLink>
         ))}
       </nav>
-      <main>
+      <Toolbar style={{ padding: 8 }}>
+        <Button
+          label="Open project"
+          icon="folder_open"
+          disabled={!selectedProject}
+          onClick={() => navigate(`/projects/${selectedProject}/browser`)}
+        />
+
+        {!isUser && (
+          <>
+            <Button
+              label="New project"
+              icon="create_new_folder"
+              onClick={() => setShowNewProject(true)}
+            />
+
+            <Button
+              label="Delete project"
+              icon="delete"
+              className="p-button-danger"
+              disabled={!selectedProject}
+              onClick={deletePreset}
+            />
+          </>
+        )}
+      </Toolbar>
+      <main style={{ overflowY: 'clip' }}>
         {showNewProject && (
           <NewProjectDialog
-            onHide={() => {
+            onHide={(name) => {
               setShowNewProject(false)
-              setListReloadTrigger((val) => val + 1)
+              setSelectedProject(name)
             }}
           />
         )}
 
         <ProjectList
-          header={toolbar}
           selection={selectedProject}
           onSelect={setSelectedProject}
-          reloadTrigger={listReloadTrigger}
+          style={{ minWidth: 100 }}
+          styleSection={{ maxWidth: 150, minWidth: 150 }}
+          hideCode
+          onNoProject={(s) => setSelectedProject(s)}
+          autoSelect
+          onSuccess={() => setIsProjectValid(true)}
         />
 
-        {selectedProject && (
+        {selectedProject && isProjectValid && (
           <>
             {module === 'dashboard' && <ProjectDashboard projectName={selectedProject} />}
             {module === 'anatomy' && <ProjectAnatomy projectName={selectedProject} />}

@@ -2,10 +2,10 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
-import { getFuzzyDate } from '/src/utils'
 import StatusField from '/src/components/status/statusField'
 import { useGetEventTileQuery } from '/src/services/entity/getEntity'
-import { useGetProjectAnatomyQuery } from '/src/services/getProject'
+import { useGetProjectAnatomyQuery } from '../../services/project/getProject'
+import { formatDistance } from 'date-fns'
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -75,7 +75,9 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
           {type} - {name}
         </strong>
         <br />
-        <span style={{ opacity: 0.5 }}>Last Updated {getFuzzyDate(updatedAt)}</span>
+        <span style={{ opacity: 0.5 }}>
+          Last Updated {formatDistance(new Date(updatedAt), new Date(), { addSuffix: true })}
+        </span>
       </header>
       {children}
     </PanelStyled>

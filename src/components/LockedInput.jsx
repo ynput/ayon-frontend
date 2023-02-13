@@ -6,7 +6,7 @@ import styled from 'styled-components'
 const UsernameStyled = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 5px;
+  gap: 4px;
 
   input {
     flex: 1;
