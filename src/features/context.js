@@ -21,7 +21,7 @@ const contextSlice = createSlice({
     },
     reload: {},
     breadcrumbs: {},
-    share: { name: null, data: null },
+    share: { name: null, data: null, link: null, img: null },
   },
   reducers: {
     selectProject: (state, action) => {
@@ -156,11 +156,15 @@ const contextSlice = createSlice({
     onShare: (state, action) => {
       state.share.name = action.payload?.name
       state.share.data = action.payload?.data
+      state.share.img = action.payload?.img
+      state.share.link = action.payload?.link
     },
     closeShare: (state) => {
       state.share = {
         name: null,
         data: null,
+        img: null,
+        link: null,
       }
     },
   }, // reducers

@@ -43,7 +43,7 @@ const getStorage = (storageUsage) => {
   return { percentage, color }
 }
 
-const ProjectHealth = ({ projectName, share }) => {
+const ProjectHealth = ({ projectName, share, index }) => {
   const {
     data = {},
     isLoading,
@@ -97,7 +97,7 @@ const ProjectHealth = ({ projectName, share }) => {
 
   const shareData = {
     project: projectName,
-    complete: `${complete.percentage}% Complete - ${complete.subTitle}`,
+    complete: `${complete.percentage}% Complete`,
     storage: `${storage.percentage}% Storage Full`,
     overdue: `${overdue} Overdue Tasks`,
     onTrack: `${onTrack}% On Track`,
@@ -108,7 +108,7 @@ const ProjectHealth = ({ projectName, share }) => {
     <DashboardPanelWrapper
       title="Health"
       isError={isError}
-      icon={{ icon: 'share', onClick: () => share('Health', shareData) }}
+      icon={{ icon: 'share', onClick: () => share('Health', shareData, index) }}
     >
       <ProgressTile
         title={shareData.complete}

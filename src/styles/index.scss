@@ -294,3 +294,45 @@ input:-webkit-autofill:focus {
 a {
   text-decoration: none;
 }
+
+.p-tabview {
+  .p-tabview-panels {
+    background-color: var(--color-grey-02);
+    display: flex;
+    justify-content: center;
+    border-radius: 3px;
+  }
+
+  .p-tabview-nav {
+    border: 0;
+    li {
+      .p-tabview-nav-link {
+        background-color: var(--color-grey-01);
+
+        &:focus {
+          box-shadow: none !important;
+        }
+      }
+    }
+
+    li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+      background-color: var(--color-grey-01);
+      text-shadow: 0 0 5px var(--color-text);
+      transition: text-shadow 0.2s;
+    }
+
+    li.p-highlight {
+      .p-tabview-nav-link {
+        background-color: var(--color-grey-02);
+
+        span {
+          color: var(--color-text);
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+  .p-tabview-panel {
+    border: 0;
+  }
+}

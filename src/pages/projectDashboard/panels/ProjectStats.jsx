@@ -7,7 +7,7 @@ import ListStatsTile from './ListStatsTile'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 
-const ProjectStats = ({ projectName, share }) => {
+const ProjectStats = ({ projectName, share, index }) => {
   const [counters, setCounters] = useState({})
   const [isCounting, setIsCounting] = useState(true)
 
@@ -88,7 +88,7 @@ const ProjectStats = ({ projectName, share }) => {
     <DashboardPanelWrapper
       title="Project Stats"
       isError={isError}
-      icon={{ icon: 'share', onClick: () => share('stats', shareData) }}
+      icon={{ icon: 'share', onClick: () => share('stats', shareData, index) }}
     >
       {statsOrder.map((id) => {
         const { label, icon } = stats[id]
