@@ -126,7 +126,7 @@ const LineStyled = styled.hr`
     `}
 `
 
-const ProgressBar = ({ values = [], backgroundColor, isLoading }) => {
+const ProgressBar = ({ values = [], backgroundColor, isLoading, onClick }) => {
   // block all animations once played once
   const [animation, setAnimation] = useState(true)
   // add placeholder line if only one value is provided
@@ -158,6 +158,7 @@ const ProgressBar = ({ values = [], backgroundColor, isLoading }) => {
             length={arr.length}
             key={label + i}
             left={arr.slice(0, i).reduce((acc, { value }) => acc + value, 0)}
+            onClick={() => onClick && onClick({ value, label })}
           />
         ))}
     </ProgressStyled>
@@ -167,6 +168,7 @@ const ProgressBar = ({ values = [], backgroundColor, isLoading }) => {
 ProgressBar.propTypes = {
   backgroundColor: PropTypes.string,
   isLoading: PropTypes.bool,
+  onClick: PropTypes.func,
   values: PropTypes.oneOfType([
     PropTypes.arrayOf(
       PropTypes.shape({

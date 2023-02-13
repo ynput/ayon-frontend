@@ -4,6 +4,7 @@ import ProgressTile from './ProgressTile'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 import { getStatusProps } from '/src/utils'
+import copyToClipboard from '/src/helpers/copyToClipboard'
 
 // format complete data
 const getComplete = (completion) => {
@@ -71,11 +72,28 @@ const ProjectHealth = ({ projectName }) => {
 
   const onTrack = Math.round(((total - overdue) / total) * 100)
 
+  const taskValues = [
+    { value: onTrack, label: 'On Track' },
+    { value: 100 - onTrack, label: 'Overdue', color: 'var(--color-hl-01)' },
+  ]
+
   const statusValues = Object.entries(statuses).map(([key, value]) => ({
     value,
     label: key,
     color: getStatusProps(key, statusAnatomy).color,
   }))
+
+  const percentageCopy = (v, suffix) => {
+    const { value } = v
+    const message = `${projectName}: ${value}% ${suffix}.`
+    copyToClipboard(message)
+  }
+
+  const tasksCopy = (v, type) => {
+    const { value, label } = v
+    const message = `${projectName}: ${value} ${type} ${label}.`
+    copyToClipboard(message)
+  }
 
   return (
     <DashboardPanelWrapper title="Health" isError={isError}>
@@ -85,22 +103,22 @@ const ProjectHealth = ({ projectName }) => {
         icon="schedule"
         values={[{ value: complete.percentage, label: 'Complete' }]}
         isLoading={isLoading}
+        onProgressClick={(v) => percentageCopy(v, 'Project Complete')}
       />
       <ProgressTile
         title={`${storage.percentage}% Storage Full`}
         icon="database"
         values={[{ value: storage.percentage, label: 'Storage Used', color: storage.color }]}
         isLoading={isLoading}
+        onProgressClick={(v) => percentageCopy(v, 'Storage Used')}
       />
       <ProgressTile
         title={`${overdue} Overdue Tasks`}
         subTitle={onTrack ? `${onTrack}% On track` : ''}
         icon="notification_important"
-        values={[
-          { value: onTrack, label: 'On Track' },
-          { value: 100 - onTrack, label: 'Overdue', color: 'var(--color-hl-01)' },
-        ]}
+        values={taskValues}
         isLoading={isLoading}
+        onProgressClick={(v) => tasksCopy(v, 'Tasks')}
       />
       {!!statusValues.length && (
         <ProgressTile
@@ -108,6 +126,7 @@ const ProjectHealth = ({ projectName }) => {
           icon="check_circle"
           values={statusValues}
           isLoading={isLoading}
+          onProgressClick={(v) => tasksCopy(v, 'Statuses')}
         />
       )}
     </DashboardPanelWrapper>

@@ -1,9 +1,9 @@
 import React from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
-import { toast } from 'react-toastify'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ListStatsTile from './ListStatsTile'
+import copyToClipboard from '/src/helpers/copyToClipboard'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 
 const ProjectStats = ({ projectName }) => {
@@ -69,10 +69,11 @@ const ProjectStats = ({ projectName }) => {
 
   const statsOrder = ['folders', 'subsets', 'versions', 'representations', 'tasks', 'workfiles']
 
-  const copyToClipboard = (id) => {
-    const { stat } = stats[id]
-    navigator.clipboard.writeText(stat)
-    toast.info(`Copied ${stat} to clipboard`)
+  const copyStatMessage = (id) => {
+    const { label, stat } = stats[id]
+    // demo_Commercial has 10 folders
+    const message = `${projectName} has ${stat} ${label}`
+    copyToClipboard(message)
   }
 
   return (
@@ -87,7 +88,7 @@ const ProjectStats = ({ projectName }) => {
             icon={icon}
             isLoading={isLoading}
             key={id}
-            onClick={() => copyToClipboard(id)}
+            onClick={() => copyStatMessage(id)}
           />
         )
       })}
