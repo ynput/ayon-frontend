@@ -2,11 +2,12 @@ import React from 'react'
 import { useDispatch } from 'react-redux'
 import styled, { css } from 'styled-components'
 import { onShare } from '/src/features/context'
+import { toPng } from 'html-to-image'
 
 // styled grid
 const GridStyled = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 0.8fr 1.2fr;
   grid-template-rows: 1fr 1fr;
   gap: 8px;
 
@@ -30,8 +31,13 @@ const GridStyled = styled.div`
 const GridLayout = ({ children, projectName }) => {
   const dispatch = useDispatch()
 
-  const handleShareLink = (name, data) => {
-    dispatch(onShare({ name, data }))
+  const handleShareLink = async (name, data, ref) => {
+    let img
+    if (ref) {
+      img = await toPng(ref).catch((err) => console.log(err))
+    }
+
+    dispatch(onShare({ name, data, img }))
   }
   // get rows props from children
   const rows = React.Children.map(children, (child) => child.props.rows || 1)
