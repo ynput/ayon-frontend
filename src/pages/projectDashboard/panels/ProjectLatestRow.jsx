@@ -15,11 +15,20 @@ const GridStyled = styled.div`
   /* 1 row, 3 columns */
   /* columns minWidth 150px, max width 250px */
   display: grid;
+  position: relative;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   grid-template-rows: auto;
   grid-auto-rows: 0;
   overflow-y: clip;
   column-gap: 8px;
+
+  /* span error message */
+  & > span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 `
 
 const ProjectLatestRow = ({
@@ -200,8 +209,9 @@ const ProjectLatestRow = ({
     return { ...entity, typeIcon, statusIcon, statusColor, projectName }
   })
 
+  const isNoData = !data || data.length === 0
   //   if no data return 3 error tiles
-  if (!data || data.length === 0) {
+  if (isNoData) {
     data = [
       {
         isError: true,
@@ -239,6 +249,7 @@ const ProjectLatestRow = ({
             isLoading={isLoadingWhole}
           />
         ))}
+        {isNoData && <span>No Recent Data</span>}
       </GridStyled>
     </div>
   )
