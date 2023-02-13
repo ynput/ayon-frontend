@@ -21,12 +21,13 @@ const HeartBeat = ({ projectName }) => {
   const {
     data = {},
     isLoading,
+    isFetching,
     isError,
   } = useGetProjectDashboardQuery({ projectName, panel: 'activity' })
 
   let { activity } = data
 
-  if (isError || isLoading) {
+  if (isError || isLoading || isFetching) {
     activity = [0, 0]
   }
 
