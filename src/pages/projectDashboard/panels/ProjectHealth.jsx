@@ -43,7 +43,7 @@ const getStorage = (storageUsage) => {
   return { percentage, color }
 }
 
-const ProjectHealth = ({ projectName }) => {
+const ProjectHealth = ({ projectName, share }) => {
   const {
     data = {},
     isLoading,
@@ -95,10 +95,23 @@ const ProjectHealth = ({ projectName }) => {
     copyToClipboard(message)
   }
 
+  const shareData = {
+    project: projectName,
+    complete: `${complete.percentage}% Complete - ${complete.subTitle}`,
+    storage: `${storage.percentage}% Storage Full`,
+    overdue: `${overdue} Overdue Tasks`,
+    onTrack: `${onTrack}% On Track`,
+    statuses: statuses,
+  }
+
   return (
-    <DashboardPanelWrapper title="Health" isError={isError}>
+    <DashboardPanelWrapper
+      title="Health"
+      isError={isError}
+      icon={{ icon: 'share', onClick: () => share('Health', shareData) }}
+    >
       <ProgressTile
-        title={`${complete.percentage}% Complete`}
+        title={shareData.complete}
         subTitle={complete.subTitle}
         icon="schedule"
         values={[{ value: complete.percentage, label: 'Complete' }]}
@@ -106,15 +119,15 @@ const ProjectHealth = ({ projectName }) => {
         onProgressClick={(v) => percentageCopy(v, 'Project Complete')}
       />
       <ProgressTile
-        title={`${storage.percentage}% Storage Full`}
+        title={shareData.storage}
         icon="database"
         values={[{ value: storage.percentage, label: 'Storage Used', color: storage.color }]}
         isLoading={isLoading}
         onProgressClick={(v) => percentageCopy(v, 'Storage Used')}
       />
       <ProgressTile
-        title={`${overdue} Overdue Tasks`}
-        subTitle={onTrack ? `${onTrack}% On track` : ''}
+        title={shareData.overdue}
+        subTitle={onTrack ? shareData.onTrack : ''}
         icon="notification_important"
         values={taskValues}
         isLoading={isLoading}

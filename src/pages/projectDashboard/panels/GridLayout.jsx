@@ -1,5 +1,7 @@
 import React from 'react'
+import { useDispatch } from 'react-redux'
 import styled, { css } from 'styled-components'
+import { onShare } from '/src/features/context'
 
 // styled grid
 const GridStyled = styled.div`
@@ -26,11 +28,16 @@ const GridStyled = styled.div`
 `
 
 const GridLayout = ({ children, projectName }) => {
+  const dispatch = useDispatch()
+
+  const handleShareLink = (name, data) => {
+    dispatch(onShare({ name, data }))
+  }
   // get rows props from children
   const rows = React.Children.map(children, (child) => child.props.rows || 1)
 
   const childrenWithProps = React.Children.map(children, (child) =>
-    React.cloneElement(child, { projectName }),
+    React.cloneElement(child, { projectName, share: handleShareLink }),
   )
 
   return <GridStyled rows={rows}>{childrenWithProps}</GridStyled>

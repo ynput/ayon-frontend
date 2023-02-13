@@ -6,7 +6,7 @@ const ProjectLatest = ({ projectName }) => {
   return (
     <DashboardPanelWrapper
       title="Latest"
-      link={{
+      icon={{
         link: '/events',
         icon: 'history',
       }}

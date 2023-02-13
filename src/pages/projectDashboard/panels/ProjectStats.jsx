@@ -1,4 +1,5 @@
 import React from 'react'
+import { useMemo } from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
@@ -6,8 +7,9 @@ import ListStatsTile from './ListStatsTile'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 
-const ProjectStats = ({ projectName }) => {
+const ProjectStats = ({ projectName, share }) => {
   const [counters, setCounters] = useState({})
+  const [isCounting, setIsCounting] = useState(true)
 
   const {
     data = {},
@@ -31,6 +33,7 @@ const ProjectStats = ({ projectName }) => {
         representations: 0,
         workfiles: 0,
       }
+      setIsCounting(true)
 
       interval = setInterval(() => {
         count++
@@ -46,6 +49,7 @@ const ProjectStats = ({ projectName }) => {
 
         setCounters(tempCounters)
         if (count === intervals) {
+          setIsCounting(false)
           clearInterval(interval)
         }
       }, 5)
@@ -76,8 +80,16 @@ const ProjectStats = ({ projectName }) => {
     copyToClipboard(message)
   }
 
+  const shareData = useMemo(() => {
+    return { project: projectName, ...data }
+  }, [isCounting])
+
   return (
-    <DashboardPanelWrapper title="Project Stats" isError={isError}>
+    <DashboardPanelWrapper
+      title="Project Stats"
+      isError={isError}
+      icon={{ icon: 'share', onClick: () => share('stats', shareData) }}
+    >
       {statsOrder.map((id) => {
         const { label, icon } = stats[id]
 

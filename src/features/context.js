@@ -21,6 +21,7 @@ const contextSlice = createSlice({
     },
     reload: {},
     breadcrumbs: {},
+    share: { name: null, data: null },
   },
   reducers: {
     selectProject: (state, action) => {
@@ -152,6 +153,16 @@ const contextSlice = createSlice({
         [action.payload.type]: action.payload.reload,
       }
     },
+    onShare: (state, action) => {
+      state.share.name = action.payload?.name
+      state.share.data = action.payload?.data
+    },
+    closeShare: (state) => {
+      state.share = {
+        name: null,
+        data: null,
+      }
+    },
   }, // reducers
 })
 
@@ -172,6 +183,8 @@ export const {
   subsetSelected,
   editorSelectionChanged,
   projectSelected,
+  onShare,
+  closeShare,
 } = contextSlice.actions
 
 export default contextSlice.reducer

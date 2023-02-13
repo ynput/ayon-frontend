@@ -91,7 +91,7 @@ const ProjectUsers = ({ projectName }) => {
     <DashboardPanelWrapper
       title={title}
       isError={isError}
-      link={{ link: '/settings/users', icon: 'manage_accounts' }}
+      icon={{ link: '/settings/users', icon: 'manage_accounts' }}
     >
       {leaders.map((user, i) => (
         <Fragment key={i}>
