@@ -34,6 +34,7 @@ const SiteList = ({ value, onChange, style, multiselect = false }) => {
           dataKey="id"
           selection={selection}
           onSelectionChange={onSelectionChange}
+          emptyMessage="No sites found"
         >
           <Column field="id" header="Site ID" />
           <Column field="platform" header="Platform" />

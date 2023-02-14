@@ -82,7 +82,6 @@ const ProjectRoots = ({ projectName }) => {
         roots,
       })
     } // sites iter
-    console.log(forms)
     return forms
   }, [project, rootOverrides])
 
@@ -90,6 +89,7 @@ const ProjectRoots = ({ projectName }) => {
 
   if (isError) return <>error</>
 
+  if (forms.length === 0) return <h1>No sites configured</h1>
   return (
     <Section className="invisible" style={{ maxWidth: 600 }}>
       {forms.map((form) => (

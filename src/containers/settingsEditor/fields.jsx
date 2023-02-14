@@ -227,7 +227,7 @@ function FieldTemplate(props) {
         title={props.schema.title}
         description={props.schema.description}
         className={className}
-        onClick={() => {
+        onMouseUp={() => {
           if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
         }}
       >
