@@ -176,7 +176,7 @@ const ProjectLatestRow = ({
       projectName,
       entities: entityIds,
     },
-    { skip: isEventsLoading || isErrorEvents || !projectName },
+    { skip: isEventsLoading || isErrorEvents || !projectName || !entityIds },
   )
 
   // used to get icons and color
@@ -209,7 +209,7 @@ const ProjectLatestRow = ({
     return { ...entity, typeIcon, statusIcon, statusColor, projectName }
   })
 
-  const isNoData = !data || data.length === 0
+  const isNoData = !data || data.length === 0 || (!isEventsLoading && !entityIds)
   //   if no data return 3 error tiles
   if (isNoData) {
     data = [
