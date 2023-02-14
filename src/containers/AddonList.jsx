@@ -32,7 +32,7 @@ const sortSemver = (arr) => {
   return arr
 }
 
-const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {}) => {
+const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {}, projectName) => {
   const [setAddonVersions] = useSetAddonVersionsMutation()
   const [setCopyAddonVariant] = useSetCopyAddonVariantMutation()
   const result = []
@@ -80,10 +80,12 @@ const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {
     }
   }
 
-  result.push({
-    label: 'Set version',
-    items: versionItems,
-  })
+  if (!projectName) {
+    result.push({
+      label: 'Set version',
+      items: versionItems,
+    })
+  }
 
   // Copy from other environment
 
@@ -136,6 +138,7 @@ const AddonList = ({
   selectedAddons,
   setSelectedAddons,
   changedAddons,
+  projectName,
   showAllAddons = true,
   environment = 'production',
   withSettings = 'settings',
@@ -166,9 +169,7 @@ const AddonList = ({
   }, [changedAddons])
 
   // Context menu
-  //const menu = useMemo(() => createContextMenu(environment, selectedAddons), [selectedAddons, environment])
-  //
-  const menu = createContextMenu(environment, selectedAddons, onAddonChanged)
+  const menu = createContextMenu(environment, selectedAddons, onAddonChanged, projectName)
 
   return (
     <Section>

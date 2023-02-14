@@ -143,6 +143,12 @@ function ObjectFieldTemplate(props) {
     title = label || props.formData.name || <span className="new-object">Unnamed item</span>
   }
 
+  const isSelected = useMemo(() => {
+    if (!props.formContext.breadcrumbs) return false
+    if (isEqual(props.formContext.breadcrumbs, path)) return true
+    return false
+  }, [props.formContext.breadcrumbs, path])
+
   return (
     <SettingsPanel
       objId={objId}
@@ -151,7 +157,7 @@ function ObjectFieldTemplate(props) {
       }}
       title={title}
       description={shortDescription}
-      className={`obj-override-${overrideLevel}`}
+      className={`obj-override-${overrideLevel} ${isSelected ? 'selected' : ''}`}
       enabledToggler={enabledToggler}
     >
       {fields}
@@ -210,23 +216,25 @@ function FieldTemplate(props) {
     props.schema.items.type !== 'string' &&
     props.schema.layout !== 'compact'
   ) {
-    let className
-    if (isSelected) className = 'selected'
+    let classes = []
+    if (isSelected) className.push('selected')
 
     for (const changedPath of props.formContext.changedKeys) {
       if (arrayStartsWith(changedPath, path)) {
-        className = 'obj-override-edit group-changed'
+        classes.push('obj-override-edit')
+        classes.push('group-changed')
         break
       }
     }
 
-    if (!className) className = `obj-override-${overrideLevel}`
+    if (!classes.includes('obj-override-edit')) classes.push(`obj-override-${overrideLevel}`)
+
     return (
       <SettingsPanel
         objId={props.id}
         title={props.schema.title}
         description={props.schema.description}
-        className={className}
+        className={classes.join(' ')}
         onMouseUp={() => {
           if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
         }}

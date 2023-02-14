@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
+import styled from 'styled-components'
 //import ReactMarkdown from 'react-markdown'
 
 import {
@@ -24,6 +25,28 @@ import {
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
+
+const BreadcrumbsContainer = styled.div`
+  flex-grow: 1;
+  display: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+    span {
+      max-width: 95&;
+      margin-top: -10px
+      height: 100%
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+`
+
+const Breadcrumbs = (props) => (
+  <BreadcrumbsContainer>
+    <span>{props.children}</span>
+  </BreadcrumbsContainer>
+)
 
 /*
  * key is {addonName}|{addonVersion}|{siteId}|{projectKey}
@@ -361,12 +384,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           }}
         />
         <Spacer />
-        Show all
-        <InputSwitch
-          checked={showAllAddons}
-          onChange={() => setShowAllAddons(!showAllAddons)}
-          tooltip="Show all addons"
-        />
+        {!projectName && (
+          <>
+            Show all
+            <InputSwitch
+              checked={showAllAddons}
+              onChange={() => setShowAllAddons(!showAllAddons)}
+              tooltip="Show all addons"
+            />
+          </>
+        )}
       </Toolbar>
     )
   }, [showAllAddons, environment, localOverrides])
@@ -405,7 +432,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           }
         />
 
-        <Spacer>
+        <Breadcrumbs>
           {currentSelection && (
             <ul className="settings-breadcrumbs">
               <li>{currentSelection.addon?.name}</li>
@@ -414,7 +441,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
               ))}
             </ul>
           )}
-        </Spacer>
+        </Breadcrumbs>
 
         <Button
           onClick={() => {
@@ -439,6 +466,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             environment={environment}
             showAllAddons={showAllAddons}
             onAddonChanged={onAddonChanged}
+            projectName={projectName}
           />
           {showSites && (
             <SiteList
@@ -454,7 +482,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           <Section>
             <ScrollPanel
               className="transparent nopad"
-              style={{ flexGrow: 1 }}
+              style={{ flexGrow: 1, minWidth: 750 }}
               scrollStyle={{ padding: 0 }}
             >
               {selectedAddons
