@@ -51,7 +51,7 @@ const transformVersionsData = (versions) => {
 }
 
 const VersionDetail = () => {
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
 
   // GET RTK QUERY

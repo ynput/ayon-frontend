@@ -24,8 +24,8 @@ export const SocketProvider = (props) => {
   }
 
   const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, wsOpts)
-  const context = useSelector((state) => state.context)
-  const projectName = context.projectName
+  const project = useSelector((state) => state.project)
+  const projectName = project.name
 
   const subscribe = () => {
     sendMessage(

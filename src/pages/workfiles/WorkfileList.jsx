@@ -8,7 +8,7 @@ import { useGetWorkfileListQuery } from '../../services/getWorkfiles'
 const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
   const taskIds = useSelector((state) => state.context.focused.tasks)
   const pairing = useSelector((state) => state.context.pairing)
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
 
   const { data, isLoading, isError, error } = useGetWorkfileListQuery(
     { projectName, taskIds },

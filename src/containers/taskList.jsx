@@ -16,7 +16,7 @@ import { useGetTasksQuery } from '/src/services/getTasks'
 const TaskList = ({ style = {} }) => {
   const dispatch = useDispatch()
 
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
   const folderIds = useSelector((state) => state.context.focused.folders)
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
   const pairing = useSelector((state) => state.context.pairing)

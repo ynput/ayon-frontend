@@ -11,7 +11,7 @@ import LoadingPage from './loading'
 import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles/WorkfilesPage'
 
-import { selectProject, setProjectData } from '../features/context'
+import { selectProject } from '../features/project'
 import {
   updateFolderTypeIcons,
   updateTaskTypeIcons,
@@ -58,8 +58,6 @@ const ProjectPage = () => {
 
   useEffect(() => {
     if (!isLoading && !isError) {
-      dispatch(setProjectData(data))
-
       // Icons
       const r = {}
       for (const folderType of data.folderTypes) {

@@ -35,7 +35,19 @@ const updateProject = ayonApi.injectEndpoints({
       }),
       invalidatesTags: () => ['projects'],
     }),
+    updateProjectAnatomy: build.mutation({
+      query: ({ projectName, anatomy }) => ({
+        url: `/api/projects/${projectName}/anatomy`,
+        method: 'POST',
+        body: anatomy,
+      }),
+      invalidatesTags: (result, error, { projectName }) => [{ type: 'project', name: projectName }],
+    }),
   }),
 })
 
-export const { useCreateProjectMutation, useDeleteProjectMutation } = updateProject
+export const {
+  useCreateProjectMutation,
+  useDeleteProjectMutation,
+  useUpdateProjectAnatomyMutation,
+} = updateProject

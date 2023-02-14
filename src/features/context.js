@@ -24,30 +24,6 @@ const contextSlice = createSlice({
     share: { name: null, data: null, link: null, img: null },
   },
   reducers: {
-    selectProject: (state, action) => {
-      window.localStorage.setItem('currentProject', action.name)
-      state.projectName = action.payload
-      return state
-    },
-
-    projectSelected: (state, action) => {
-      ;(state.focused = {
-        type: null,
-        folders: [],
-        subsets: [],
-        versions: [],
-        tasks: [],
-        editor: [],
-      }),
-        (state.projectName = action.payload.projectName)
-      state.expandedFolders = {}
-    },
-
-    setProjectData: (state, action) => {
-      state.project = action.payload
-      return state
-    },
-
     setExpandedFolders: (state, action) => {
       state.expandedFolders = action.payload
     },
@@ -171,8 +147,6 @@ const contextSlice = createSlice({
 })
 
 export const {
-  selectProject,
-  setProjectData,
   setFocusedFolders,
   setFocusedSubsets,
   setFocusedVersions,

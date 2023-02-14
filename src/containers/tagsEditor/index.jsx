@@ -6,8 +6,10 @@ import { useGetEntitiesDetailsQuery } from '../../services/entity/getEntity'
 import { useUpdateEntitiesDetailsMutation } from '../../services/entity/updateEntity'
 
 export const TagsEditorContainer = () => {
-  const projectTags = useSelector((state) => state.context.project.tags)
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectTagsOrder = useSelector((state) => state.project.tagsOrder)
+  const projectTagsObject = useSelector((state) => state.project.tags)
+  const projectTags = projectTagsOrder.map((tag) => projectTagsObject[tag])
+  const projectName = useSelector((state) => state.project.name)
   // entity type folder, version, subset, task
   const type = useSelector((state) => state.context.focused.type)
   const dialogType = useSelector((state) => state.context.dialog.type)

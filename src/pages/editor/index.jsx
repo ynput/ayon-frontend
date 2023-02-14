@@ -43,7 +43,7 @@ const EditorPage = () => {
   // BUG: this is required for editing to work
   // eslint-disable-next-line no-unused-vars
   const context = useSelector((state) => ({ ...state.context }))
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   // focused editor is a mixture of focused folders and tasks
   const focusedEditor = useSelector((state) => state.context.focused.editor)

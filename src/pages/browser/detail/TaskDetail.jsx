@@ -9,7 +9,7 @@ import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
 const TaskDetail = () => {
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
   const taskId = focusedTasks.length === 1 ? focusedTasks[0] : null
 

@@ -30,7 +30,7 @@ import useColumnResize from '/src/hooks/useColumnResize'
 const Subsets = () => {
   const dispatch = useDispatch()
 
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   const selectedVersions = useSelector((state) => state.context.selectedVersions)

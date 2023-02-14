@@ -10,7 +10,7 @@ import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
 const FolderDetail = () => {
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   const folderId = focusedFolders.length === 1 ? focusedFolders[0] : null
 

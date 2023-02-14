@@ -4,13 +4,13 @@ import { Button } from '@ynput/ayon-react-components'
 import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
-import { projectSelected } from '/src/features/context'
+import { selectProject } from '/src/features/project'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
 
   const onProjectSelect = (projectName) => {
     console.log('row clicked: ', projectName)
@@ -21,7 +21,7 @@ const ProjectMenu = ({ visible, onHide }) => {
     if (window.location.pathname.includes(projectName)) return
 
     // reset selected folders
-    dispatch(projectSelected({ projectName }))
+    dispatch(selectProject(projectName))
 
     navigate(`/projects/${projectName}/browser`)
   }

@@ -15,7 +15,7 @@ const Breadcrumbs = () => {
 
   const crumbData = useSelector((state) => state.context.breadcrumbs)
 
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
 
   const [breadcrumbs, uri] = useMemo(() => {
     let crumbs = [projectName]
