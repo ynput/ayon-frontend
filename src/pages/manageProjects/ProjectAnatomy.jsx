@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
 import { Section, ScrollPanel, Toolbar, Button } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
-import { useGetAnatomySchemaQuery } from '/src/services/getAnatomy'
+import { useGetAnatomySchemaQuery } from '../../services/anatomy/getAnatomy'
 
 const ProjectAnatomy = ({ projectName }) => {
   const [originalData, setOriginalData] = useState(null)

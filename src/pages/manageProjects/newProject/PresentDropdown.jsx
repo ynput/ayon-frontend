@@ -1,22 +1,19 @@
-import { useEffect, useState } from 'react'
-import { loadAnatomyPresets } from '/src/utils'
 import { Dropdown } from 'primereact/dropdown'
+import { useEffect } from 'react'
+import { useGetAnatomyPresetsQuery } from '../../../services/anatomy/getAnatomy'
 
 const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
-  const [presetList, setPresetList] = useState([])
-
+  // get presets lists data
+  const { data: presetList = [], isLoading, isSuccess } = useGetAnatomyPresetsQuery()
+  // Set initial preset when data is loaded
   useEffect(() => {
-    loadAnatomyPresets().then((r) => {
-      setPresetList(r)
-      if (!selectedPreset) {
-        setSelectedPreset(r[0].name)
-      }
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (isLoading || !isSuccess) return
+    if (!selectedPreset) setSelectedPreset(presetList[0].name)
+  }, [presetList, isLoading, isSuccess])
 
   return (
     <Dropdown
+      disabled={isLoading}
       value={selectedPreset}
       onChange={(e) => setSelectedPreset(e.value)}
       options={presetList}

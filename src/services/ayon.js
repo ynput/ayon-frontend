@@ -38,6 +38,7 @@ export const ayonApi = createApi({
     'attribute',
     'user',
     'workfile',
+    'anatomyPresets',
   ],
   endpoints: () => ({}),
 })

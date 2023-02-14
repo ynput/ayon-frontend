@@ -5,7 +5,10 @@ import { toast } from 'react-toastify'
 import { Button, Spacer, InputText, Toolbar } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
 import PresetDropdown from './PresentDropdown'
-import { useGetAnatomyPresetsQuery, useGetAnatomySchemaQuery } from '/src/services/getAnatomy'
+import {
+  useGetAnatomyPresetQuery,
+  useGetAnatomySchemaQuery,
+} from '../../../services/anatomy/getAnatomy'
 import { useCreateProjectMutation } from '/src/services/project/updateProject'
 
 const NewProjectDialog = ({ onHide }) => {
@@ -20,7 +23,7 @@ const NewProjectDialog = ({ onHide }) => {
 
   // GET PRESET DATA
   // `/api/anatomy/presets/${selectedPreset}`
-  const { data: originalAnatomy, isLoading: isOriginalAnatomyLoading } = useGetAnatomyPresetsQuery(
+  const { data: originalAnatomy, isLoading: isOriginalAnatomyLoading } = useGetAnatomyPresetQuery(
     { preset: selectedPreset },
     { skip: !selectedPreset },
   )

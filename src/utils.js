@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import axios from 'axios'
 import { isEmpty, isEqual, xorWith, cloneDeep, sortBy } from 'lodash'
 
 const arrayEquals = (x, y) => isEmpty(xorWith(x, y, isEqual))
@@ -72,28 +71,6 @@ const groupResult = (data, groupBy, key = 'id') => {
     }
   }
   return result
-}
-
-const loadAnatomyPresets = async () => {
-  const defaultPreset = { name: '_', title: '<default (built-in)>' }
-  let response
-  try {
-    response = await axios.get('/api/anatomy/presets')
-  } catch (error) {
-    return []
-  }
-  let primaryPreset = defaultPreset
-  let presets = []
-  for (const preset of response.data.presets) {
-    if (preset.primary) primaryPreset = { name: preset.name, title: `<default (${preset.name})>` }
-    presets.push({
-      name: preset.name,
-      title: preset.name,
-      version: preset.version,
-      primary: preset.primary ? 'PRIMARY' : '',
-    })
-  }
-  return [primaryPreset, ...presets]
 }
 
 export const parseTasksList = (tasks, userName) => {
@@ -264,7 +241,6 @@ function useLocalStorage(key, initialValue) {
 export {
   arrayEquals,
   deepCopy,
-  loadAnatomyPresets,
   groupResult,
   sortByKey,
   getFolderTypeIcon,
