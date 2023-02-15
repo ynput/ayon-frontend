@@ -17,7 +17,8 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { getTaskTypeIcon, isEmpty, sortByKey } from '/src/utils'
+import { getTaskTypeIcon, isEmpty } from '/src/utils'
+import sortByKey from '/src/helpers/sortByKey'
 
 import {
   editorSelectionChanged,
