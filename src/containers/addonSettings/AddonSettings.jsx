@@ -364,6 +364,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   //
 
   const addonListHeader = useMemo(() => {
+    // do not use staging or version overrides on project level settings
+    if (projectName) {
+      return <></>
+    }
+
     const environmentOptions = [
       { label: 'Production', value: 'production' },
       { label: 'Staging', value: 'staging' },
@@ -384,16 +389,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           }}
         />
         <Spacer />
-        {!projectName && (
-          <>
-            Show all
-            <InputSwitch
-              checked={showAllAddons}
-              onChange={() => setShowAllAddons(!showAllAddons)}
-              tooltip="Show all addons"
-            />
-          </>
-        )}
+        <>
+          Show all
+          <InputSwitch
+            checked={showAllAddons}
+            onChange={() => setShowAllAddons(!showAllAddons)}
+            tooltip="Show all addons"
+          />
+        </>
       </Toolbar>
     )
   }, [showAllAddons, environment, localOverrides])

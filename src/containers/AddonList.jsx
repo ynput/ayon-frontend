@@ -37,6 +37,30 @@ const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {
   const [setCopyAddonVariant] = useSetCopyAddonVariantMutation()
   const result = []
 
+  if (projectName) {
+    result.push({
+      label: 'From project',
+      icon: 'pi pi-copy',
+      disabled: true,
+      items: [],
+    })
+
+    result.push({
+      label: 'From snapshot',
+      icon: 'pi pi-copy',
+      disabled: true,
+      items: [],
+    })
+
+    result.push({
+      label: 'Save snapshot',
+      icon: 'pi pi-save',
+      disabled: true,
+    })
+
+    return result
+  }
+
   // Set to version
 
   const versionItems = [
@@ -80,12 +104,10 @@ const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {
     }
   }
 
-  if (!projectName) {
-    result.push({
-      label: 'Set version',
-      items: versionItems,
-    })
-  }
+  result.push({
+    label: 'Set version',
+    items: versionItems,
+  })
 
   // Copy from other environment
 
@@ -172,7 +194,7 @@ const AddonList = ({
   const menu = createContextMenu(environment, selectedAddons, onAddonChanged, projectName)
 
   return (
-    <Section>
+    <Section style={{ minWidth: 250 }}>
       <TablePanel loading={loading}>
         <ContextMenu model={menu} ref={cm} />
         <DataTable
