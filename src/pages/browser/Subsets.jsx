@@ -27,14 +27,12 @@ import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
-import { useContext } from 'react'
-import { UtilContext } from '/src/context/utilsContext'
 
 const Subsets = () => {
   const dispatch = useDispatch()
 
   // context
-  const { getTypeField } = useContext(UtilContext) || {}
+  const families = useSelector((state) => state.project.families)
 
   const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
@@ -153,7 +151,7 @@ const Subsets = () => {
 
         const icon = node.data.isGroup
           ? 'folder'
-          : getTypeField('families', node.data.family, 'icon')
+          : families[node.data.family]?.icon || 'help_center'
 
         return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
       },

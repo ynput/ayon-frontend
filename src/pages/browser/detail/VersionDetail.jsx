@@ -9,8 +9,6 @@ import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
 
 import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
-import { useContext } from 'react'
-import { UtilContext } from '/src/context/utilsContext'
 import styled from 'styled-components'
 
 const LoadingPanelStyled = styled.div`
@@ -60,7 +58,7 @@ const transformVersionsData = (versions) => {
 const VersionDetail = () => {
   const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
-  const { getTypeField } = useContext(UtilContext) || {}
+  const families = useSelector((state) => state.project.families)
 
   // GET RTK QUERY
   const {
@@ -122,7 +120,7 @@ const VersionDetail = () => {
         <Panel>
           <h3>
             <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
-              {getTypeField('families', versions[0].family, 'icon')}
+              {(versions[0].family && families[versions[0].family]?.icon) || 'help_center'}
             </span>
             <span style={{ marginLeft: 10 }}>
               {versions[0].subsetName} | {versions[0].name}

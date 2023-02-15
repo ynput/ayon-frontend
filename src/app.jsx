@@ -27,7 +27,6 @@ import { login } from './features/user'
 import { SocketContext, SocketProvider } from './context/websocketContext'
 import ProtectedRoute from './containers/ProtectedRoute'
 import ShareDialog from './components/ShareDialog'
-import { UtilProvider } from './context/utilsContext'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -106,55 +105,49 @@ const App = () => {
   return (
     <Suspense fallback={<LoaderShade />}>
       <SocketProvider>
-        <UtilProvider>
-          <Reloader />
-          <BrowserRouter>
-            <QueryParamProvider
-              adapter={ReactRouter6Adapter}
-              options={{
-                updateType: 'replaceIn',
-              }}
-            >
-              <Header />
-              <ShareDialog />
-              <Routes>
-                <Route
-                  path="/"
-                  exact
-                  element={<Navigate replace to="/manageProjects/dashboard" />}
-                />
-                <Route
-                  path="/manageProjects"
-                  exact
-                  element={<Navigate replace to="/manageProjects/dashboard" />}
-                />
+        <Reloader />
+        <BrowserRouter>
+          <QueryParamProvider
+            adapter={ReactRouter6Adapter}
+            options={{
+              updateType: 'replaceIn',
+            }}
+          >
+            <Header />
+            <ShareDialog />
+            <Routes>
+              <Route path="/" exact element={<Navigate replace to="/manageProjects/dashboard" />} />
+              <Route
+                path="/manageProjects"
+                exact
+                element={<Navigate replace to="/manageProjects/dashboard" />}
+              />
 
-                <Route path="/manageProjects/:module" element={<ManageProjects />} />
-                <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-                <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
-                <Route
-                  path="/settings"
-                  exact
-                  element={<Navigate replace to="/settings/anatomyPresets" />}
-                />
-                <Route path="/settings/:module" exact element={<SettingsPage />} />
-                <Route
-                  path="/services"
-                  element={
-                    <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                      <ServicesPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/explorer" element={<ExplorerPage />} />
-                <Route path="/doc/api" element={<APIDocsPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/events" element={<EventPage />} />
-                <Route element={<ErrorPage code="404" />} />
-              </Routes>
-            </QueryParamProvider>
-          </BrowserRouter>
-        </UtilProvider>
+              <Route path="/manageProjects/:module" element={<ManageProjects />} />
+              <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+              <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
+              <Route
+                path="/settings"
+                exact
+                element={<Navigate replace to="/settings/anatomyPresets" />}
+              />
+              <Route path="/settings/:module" exact element={<SettingsPage />} />
+              <Route
+                path="/services"
+                element={
+                  <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                    <ServicesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/explorer" element={<ExplorerPage />} />
+              <Route path="/doc/api" element={<APIDocsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/events" element={<EventPage />} />
+              <Route element={<ErrorPage code="404" />} />
+            </Routes>
+          </QueryParamProvider>
+        </BrowserRouter>
       </SocketProvider>
     </Suspense>
   )

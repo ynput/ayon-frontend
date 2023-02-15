@@ -4,8 +4,7 @@ import ProgressTile from './ProgressTile'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 import copyToClipboard from '/src/helpers/copyToClipboard'
-import { useContext } from 'react'
-import { UtilContext } from '/src/context/utilsContext'
+import { useSelector } from 'react-redux'
 
 // format complete data
 const getComplete = (completion) => {
@@ -45,7 +44,7 @@ const getStorage = (storageUsage) => {
 }
 
 const ProjectHealth = ({ projectName, share, index }) => {
-  const { getTypeField } = useContext(UtilContext)
+  const statusesObject = useSelector((state) => state.project.statuses) || {}
   const {
     data = {},
     isLoading,
@@ -82,7 +81,7 @@ const ProjectHealth = ({ projectName, share, index }) => {
   const statusValues = Object.entries(statuses).map(([key, value]) => ({
     value,
     label: key,
-    color: getTypeField('statuses', key, 'color'),
+    color: statusesObject[key]?.color || 'white',
   }))
 
   const percentageCopy = (v, suffix) => {

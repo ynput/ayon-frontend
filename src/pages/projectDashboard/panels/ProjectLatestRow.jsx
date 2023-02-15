@@ -1,16 +1,13 @@
 import React from 'react'
-import { useEffect } from 'react'
-import { useContext } from 'react'
-import { useState } from 'react'
-import { useDispatch } from 'react-redux'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router'
 import styled from 'styled-components'
 import EntityGridTile from '/src/components/EntityGridTile'
-import { UtilContext } from '/src/context/utilsContext'
 import { ayonApi } from '/src/services/ayon'
 import { useGetEntityTilesQuery } from '/src/services/entity/getEntity'
 import { useGetEventsByTopicQuery } from '/src/services/events/getEvents'
-import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
+import { useGetProjectQuery } from '/src/services/project/getProject'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
@@ -38,7 +35,9 @@ const ProjectLatestRow = ({
   events = [],
   banTopics = [],
 }) => {
-  const { getTypeField } = useContext(UtilContext) || {}
+  const project = useSelector((state) => state.project)
+  const { families, folders, tasks, statuses } = project
+
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [projectName, setProjectName] = useState(null)
@@ -52,14 +51,8 @@ const ProjectLatestRow = ({
     setProjectName(projectNameInit)
   }, [projectNameInit])
 
-  // TODO: clean up this mess up
-  // get project anatomy for project name for status
-  const { data: anatomy = {} } = useGetProjectAnatomyQuery(
-    {
-      projectName,
-    },
-    { skip: !projectName },
-  )
+  // project
+  useGetProjectQuery({ projectName }, { skip: !projectName })
 
   //   create topics array
   // topic = entity.[entity].[event]
@@ -169,33 +162,20 @@ const ProjectLatestRow = ({
     { skip: isEventsLoading || isErrorEvents || !projectName || !entityIds },
   )
 
-  // used to get icons and color
-  function transformArrayToObject(anatomy, propertyName) {
-    return anatomy?.[propertyName]?.reduce((acc, item) => {
-      acc[item.name] = item
-      return acc
-    }, {})
-  }
-
-  // TODO: getting anatomy should set project redux state
-  const statusObject = transformArrayToObject(anatomy, 'statuses')
-  const folderTypesObject = transformArrayToObject(anatomy, 'folder_types')
-  const taskTypesObject = transformArrayToObject(anatomy, 'task_types')
-
   data = data.map((entity) => {
     let { type, icon, status } = entity
     let typeIcon = ''
 
     if (type === 'subset' || type === 'version') {
-      typeIcon = getTypeField('families', icon, 'icon')
+      typeIcon = families?.[icon]?.icon || 'help_center'
     } else if (type === 'folder') {
-      typeIcon = folderTypesObject?.[icon]?.icon
+      typeIcon = folders?.[icon]?.icon
     } else if (type === 'task') {
-      typeIcon = taskTypesObject?.[icon]?.icon
+      typeIcon = tasks?.[icon]?.icon
     }
 
-    const statusIcon = statusObject?.[status]?.icon
-    const statusColor = statusObject?.[status]?.color
+    const statusIcon = statuses?.[status]?.icon || 'radio_button_checked'
+    const statusColor = statuses?.[status]?.color || 'white'
 
     return { ...entity, typeIcon, statusIcon, statusColor, projectName }
   })

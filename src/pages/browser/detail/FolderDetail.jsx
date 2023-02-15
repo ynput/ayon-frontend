@@ -7,11 +7,9 @@ import { useUpdateEntitiesDetailsMutation } from '../../../services/entity/updat
 import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
 import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
-import { useContext } from 'react'
-import { UtilContext } from '/src/context/utilsContext'
 
 const FolderDetail = () => {
-  const { getTypeField } = useContext(UtilContext) || {}
+  const folders = useSelector((state) => state.project.folders)
   const projectName = useSelector((state) => state.project.name)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   const folderId = focusedFolders.length === 1 ? focusedFolders[0] : null
@@ -74,7 +72,7 @@ const FolderDetail = () => {
     <Panel>
       <h3>
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
-          {getTypeField('folders', folder.folderType, 'icon')}
+          {folders[folder.folderType]?.icon || 'folder'}
         </span>
         <span style={{ marginLeft: 10 }}>{folder.label || folder.name}</span>
       </h3>

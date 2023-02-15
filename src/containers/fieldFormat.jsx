@@ -1,7 +1,6 @@
 // Various components for formatting fields in the UI
 import styled from 'styled-components'
-import { useContext } from 'react'
-import { UtilContext } from '../context/utilsContext'
+import { useSelector } from 'react-redux'
 
 // Attributes
 
@@ -18,13 +17,13 @@ const TagsContainer = styled.div`
 `
 
 const TagsField = ({ value }) => {
-  const { getTypeField } = useContext(UtilContext)
+  const tags = useSelector((state) => state.project.tags)
   if (!value?.length) return '-'
 
   return (
     <TagsContainer>
       {value.map((tag) => (
-        <span key={tag} style={{ color: getTypeField('tags', value, 'color') }}>
+        <span key={tag} style={{ color: tags[tag]?.color }}>
           {tag}
         </span>
       ))}

@@ -20,15 +20,13 @@ import {
 } from '/src/features/context'
 import { setFocusedType } from '../features/context'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
-import { useContext } from 'react'
-import { UtilContext } from '../context/utilsContext'
 
-const filterHierarchy = (text, folder, getTypeField) => {
+const filterHierarchy = (text, folder, folders) => {
   let result = []
   if (!folder) return []
   for (const item of folder) {
     if (item.name && (!text || item.name.toLowerCase().includes(text.toLowerCase()))) {
-      const newChildren = filterHierarchy(false, item.children, getTypeField)
+      const newChildren = filterHierarchy(false, item.children, folders)
       result.push({
         key: item.id,
         children: newChildren,
@@ -40,16 +38,11 @@ const filterHierarchy = (text, folder, getTypeField) => {
           // hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: (
-            <CellWithIcon
-              icon={getTypeField('folders', item.folderType, 'icon')}
-              text={item.label}
-            />
-          ),
+          body: <CellWithIcon icon={folders[item.folderType]?.icon} text={item.label} />,
         },
       })
     } else if (item.children) {
-      const newChildren = filterHierarchy(text, item.children, getTypeField)
+      const newChildren = filterHierarchy(text, item.children, folders)
       if (newChildren.length > 0) {
         result.push({
           key: item.id,
@@ -62,12 +55,7 @@ const filterHierarchy = (text, folder, getTypeField) => {
             // hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
             parents: item.parents,
-            body: (
-              <CellWithIcon
-                icon={getTypeField('folders', item.folderType, 'icon')}
-                text={item.label}
-              />
-            ),
+            body: <CellWithIcon icon={folders[item.folderType]?.icon} text={item.label} />,
           },
         })
       }
@@ -77,10 +65,9 @@ const filterHierarchy = (text, folder, getTypeField) => {
 }
 
 const Hierarchy = (props) => {
-  const { getTypeField } = useContext(UtilContext) || {}
   const projectName = useSelector((state) => state.project.name)
   const foldersOrder = useSelector((state) => state.project.foldersOrder || [])
-  // const foldersObject = useSelector((state) => state.project.folders || {})
+  const folders = useSelector((state) => state.project.folders || {})
   const folderTypeList = foldersOrder.map((f) => ({ label: f, value: f }))
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
@@ -123,7 +110,7 @@ const Hierarchy = (props) => {
 
   let treeData = useMemo(() => {
     if (!data) return []
-    return filterHierarchy(query, data, getTypeField)
+    return filterHierarchy(query, data, folders)
   }, [data, query])
 
   function filterArray(arr = [], filter = []) {

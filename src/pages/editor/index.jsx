@@ -36,11 +36,10 @@ import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { isEmpty } from 'lodash'
-import { useContext } from 'react'
-import { UtilContext } from '/src/context/utilsContext'
 
 const EditorPage = () => {
-  const { getTypeField } = useContext(UtilContext) || {}
+  const project = useSelector((state) => state.project)
+  const { folders: foldersObject, tasks } = project
   const [loading, setLoading] = useState(false)
 
   // BUG: this is required for editing to work
@@ -275,7 +274,7 @@ const EditorPage = () => {
         taskNames: folder.taskNames,
         keywords: [folder.name, folder.folderType].map((k) => k.toLowerCase()),
         depth: depth,
-        icon: getTypeField('folders', folder.folderType, 'icon'),
+        icon: foldersObject[folder.folderType]?.icon || 'folder',
         isTask: false,
       })
 
@@ -287,7 +286,7 @@ const EditorPage = () => {
             id: folder.id + task,
             label: task,
             value: task,
-            icon: getTypeField('tasks', task, 'icon'),
+            icon: tasks[folder.taskType]?.icon || 'task',
             depth: depth + 1,
             keywords: [task],
             taskNames: [],
@@ -837,13 +836,13 @@ const EditorPage = () => {
       key="name"
       header="Name"
       expander={true}
-      body={(rowData) => formatName(rowData.data, changes, true, getTypeField)}
+      body={(rowData) => formatName(rowData.data, changes, true, project)}
       style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
       editor={(options) => {
         return stringEditor(
           options,
           updateName,
-          formatName(options.rowData, changes, false, getTypeField),
+          formatName(options.rowData, changes, false, project),
         )
       }}
     />,

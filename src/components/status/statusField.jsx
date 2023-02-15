@@ -1,8 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { useContext } from 'react'
-import { UtilContext } from '/src/context/utilsContext'
+import { useSelector } from 'react-redux'
 
 const hoverStyle = css`
   background-color: var(--color-grey-02);
@@ -124,8 +123,9 @@ const StatusField = ({
   onClick,
   style,
 }) => {
-  const { getTypeField } = useContext(UtilContext)
-  const [color, icon, shortName] = getTypeField('statuses', value, ['color', 'icon', 'shortName'])
+  // TODO: move to context to a higher level component?
+  const statuses = useSelector((state) => state.project.statuses)
+  const { shortName, color, icon } = statuses[value]
 
   return (
     <StatusStyled

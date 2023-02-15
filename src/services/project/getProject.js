@@ -82,7 +82,6 @@ const getProject = ayonApi.injectEndpoints({
           const folders = transformArrayToObject(project.folderTypes, 'folders')
           const statuses = transformArrayToObject(project.statuses, 'statuses')
           const tags = transformArrayToObject(project.tags, 'tags')
-          // const families = transformArrayToObject(project.families, 'name')
 
           // set project state
           dispatch(setProjectData({ tasks, folders, statuses, tags, order }))

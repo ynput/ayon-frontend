@@ -18,7 +18,7 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   return <span className={`editor-field ${className}`}>{value}</span>
 }
 
-const formatName = (node, changes, styled = true, getTypeField) => {
+const formatName = (node, changes, styled = true, project) => {
   const chobj = changes[node.id]
   let value = chobj?._name ? chobj._name : node.name
 
@@ -30,11 +30,11 @@ const formatName = (node, changes, styled = true, getTypeField) => {
   if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-changed)'
 
   if (node.__entityType === 'task') {
-    icon = getTypeField('tasks', node.taskType, 'icon')
+    icon = project.tasks[node.taskType]?.icon
     textStyle.fontStyle = 'italic'
     value = value || 'Unnamed task'
   } else {
-    icon = getTypeField('folders', node.folderType, 'icon')
+    icon = project.folders[node.folderType]?.icon
     value = value || 'Unnamed folder'
   }
 
