@@ -3,8 +3,9 @@ import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProgressTile from './ProgressTile'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
-import { getStatusProps } from '/src/utils'
 import copyToClipboard from '/src/helpers/copyToClipboard'
+import { useContext } from 'react'
+import { UtilContext } from '/src/context/utilsContext'
 
 // format complete data
 const getComplete = (completion) => {
@@ -44,6 +45,7 @@ const getStorage = (storageUsage) => {
 }
 
 const ProjectHealth = ({ projectName, share, index }) => {
+  const { getTypeField } = useContext(UtilContext)
   const {
     data = {},
     isLoading,
@@ -80,7 +82,7 @@ const ProjectHealth = ({ projectName, share, index }) => {
   const statusValues = Object.entries(statuses).map(([key, value]) => ({
     value,
     label: key,
-    color: getStatusProps(key, statusAnatomy).color,
+    color: getTypeField('statuses', key, 'color'),
   }))
 
   const percentageCopy = (v, suffix) => {

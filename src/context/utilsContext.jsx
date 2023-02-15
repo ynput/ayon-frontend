@@ -11,6 +11,7 @@ export const UtilProvider = (props) => {
   const errors = {
     icon: 'error',
     color: 'red',
+    shortName: 'ERR',
   }
 
   const defaults = {
@@ -26,12 +27,22 @@ export const UtilProvider = (props) => {
     tags: {
       color: 'white',
     },
+    statuses: {
+      color: '#c0c0c0',
+      icon: 'radio_button_checked',
+      shortName: 'ERR',
+    },
   }
 
   // type = 'folders' or 'families'
   // subType = 'shot' or 'render'
   // field = 'icon' or 'color'
   const getTypeField = (type, subType, field) => {
+    // if field is an array, start recursion
+    if (Array.isArray(field)) {
+      return field.map((f) => getTypeField(type, subType, f))
+    }
+
     // check field is valid
     if (!field || !(field in errors)) return console.log('No Field Provided')
 

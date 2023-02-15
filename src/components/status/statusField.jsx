@@ -1,7 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { getStatusProps } from '../../utils'
+import { useContext } from 'react'
+import { UtilContext } from '/src/context/utilsContext'
 
 const hoverStyle = css`
   background-color: var(--color-grey-02);
@@ -122,9 +123,9 @@ const StatusField = ({
   align = 'left',
   onClick,
   style,
-  anatomy = {},
 }) => {
-  const { color, icon, shortName } = getStatusProps(value, anatomy)
+  const { getTypeField } = useContext(UtilContext)
+  const [color, icon, shortName] = getTypeField('statuses', value, ['color', 'icon', 'shortName'])
 
   return (
     <StatusStyled

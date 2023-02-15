@@ -12,7 +12,6 @@ import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles/WorkfilesPage'
 
 import { selectProject } from '../features/project'
-import { updateStatusColors, updateStatusIcons, updateStatusShortNames } from '../utils'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetAddonProjectQuery } from '../services/addonList'
@@ -36,7 +35,7 @@ const ProjectPage = () => {
   const { projectName, module, addonName } = useParams()
   const dispatch = useDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
-  const { data, isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
+  const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -48,34 +47,6 @@ const ProjectPage = () => {
     refetch: refetchAddons,
     isUninitialized: addonsIsUninitialized,
   } = useGetAddonProjectQuery({}, { skip: !projectName })
-
-  useEffect(() => {
-    if (!isLoading && !isError) {
-      // Icons
-
-      const t = {}
-      for (const status of data.statuses) {
-        t[status.name] = status.color
-      }
-      updateStatusColors(t)
-
-      const i = {}
-      for (const status of data.statuses) {
-        i[status.name] = status.icon
-      }
-      updateStatusIcons(i)
-
-      const n = {}
-      for (const status of data.statuses) {
-        n[status.name] = status.shortName
-      }
-      updateStatusShortNames(n)
-
-      //TODO: statuses
-
-      localStorage.setItem('lastProject', projectName)
-    }
-  }, [isLoading, isError, data])
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
