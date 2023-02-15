@@ -1,81 +1,4 @@
-import { isEmpty, isEqual, xorWith, cloneDeep, sortBy } from 'lodash'
-
-const arrayEquals = (x, y) => isEmpty(xorWith(x, y, isEqual))
-const deepCopy = (obj) => cloneDeep(obj)
-
-const isGroupable = (data, key, value) => {
-  // Returns true if the key with the given value is
-  // presented multiple times in the array
-  // and therefore can be grouped.
-  let count = 0
-  for (const item of data) {
-    if (item[key] === value) {
-      count++
-      if (count > 1) return true
-    }
-  }
-  return false
-}
-
-const groupResult = (data, groupBy, key = 'id') => {
-  // Transform a list of records to a TreeTable-compatible structure
-  // with grouped records.
-  let result = []
-  let existingGroups = []
-  for (const item of data) {
-    // Unique items. Just add to root
-    if (!isGroupable(data, groupBy, item[groupBy])) {
-      result.push({ key: item[key], data: item })
-    }
-
-    // Item of an existing group
-    else if (existingGroups.includes(item[groupBy])) {
-      for (const group of result) {
-        if (group.data[groupBy] === item[groupBy]) {
-          group.children.push({
-            key: item[key],
-            data: item,
-          })
-          break
-        }
-      }
-    }
-
-    // New group
-    else {
-      existingGroups.push(item[groupBy])
-      result.push({
-        key: `group-${item[groupBy]}`,
-        data: {
-          [groupBy]: item[groupBy],
-          isGroup: true,
-        },
-        children: [
-          {
-            key: item[key],
-            data: item,
-          },
-        ],
-      })
-    }
-  }
-  return result
-}
-
-export const parseTasksList = (tasks, userName) => {
-  const parsed = tasks.map(({ node: { id, name, label, folder, taskType, assignees } }) => ({
-    id: id,
-    name: name,
-    label: label,
-    folderName: folder.label || folder.name,
-    taskType: taskType,
-    isMine: assignees.includes(userName) ? 'yes' : '',
-  }))
-
-  const grouped = groupResult(parsed, 'name')
-
-  return grouped
-}
+import { sortBy } from 'lodash'
 
 //
 // Icons
@@ -166,16 +89,12 @@ const getTaskTypes = () => {
 //
 
 export {
-  arrayEquals,
-  deepCopy,
-  groupResult,
   getFolderTypeIcon,
   getTaskTypeIcon,
   getStatusProps,
   getTagColor,
   getFolderTypes,
   getTaskTypes,
-  isEmpty,
   updateFolderTypeIcons,
   updateTaskTypeIcons,
   updateStatusColors,

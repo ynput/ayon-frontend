@@ -3,7 +3,7 @@ import { useEffect, useState, createContext } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import PubSub from '/src/pubsub'
-import { arrayEquals } from '/src/utils'
+import arrayEquals from '../helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
 

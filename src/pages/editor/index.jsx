@@ -17,7 +17,7 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { getTaskTypeIcon, isEmpty } from '/src/utils'
+import { getTaskTypeIcon } from '/src/utils'
 import sortByKey from '/src/helpers/sortByKey'
 
 import {
@@ -37,6 +37,7 @@ import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import { getFolderTypeIcon } from '/src/utils'
 import useColumnResize from '/src/hooks/useColumnResize'
+import { isEmpty } from 'lodash'
 
 const EditorPage = () => {
   const [loading, setLoading] = useState(false)

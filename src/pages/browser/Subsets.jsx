@@ -9,7 +9,8 @@ import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
 import usePubSub from '/src/hooks/usePubSub'
 
-import { groupResult, useLocalStorage } from '/src/utils'
+import groupResult from '/src/helpers/groupResult'
+import useLocalStorage from '/src/hooks/useLocalStorage'
 import {
   setFocusedVersions,
   setFocusedSubsets,
@@ -444,7 +445,7 @@ const Subsets = () => {
         />
       </Toolbar>
 
-      <TablePanel loading={isLoading}>
+      <TablePanel loading={isLoading || isFetching}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
@@ -471,7 +472,6 @@ const Subsets = () => {
           onColumnResizeEnd={setColumnWidths}
           reorderableColumns
           onColReorder={handleColumnReorder}
-          loading={isLoading | isFetching}
         >
           {columns.map((col, i) => {
             return (

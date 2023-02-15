@@ -1,4 +1,4 @@
-import { parseTasksList } from '../utils'
+import parseTasksList from '/src//helpers/parseTasksList'
 import { ayonApi } from './ayon'
 
 const TASKS_QUERY = `
