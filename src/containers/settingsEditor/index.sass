@@ -108,6 +108,12 @@ $field-gap: 8px
     justify-content: left
     gap: 8px
     padding-right: 2px // fix for right outline
+    border-left: 1px solid transparent
+
+    
+    &.selected
+      border-left: 1px solid var(--color-hl-00) 
+      border-radius: 4px
 
     .form-inline-field-label
       flex-basis: 200px
@@ -192,12 +198,13 @@ $field-gap: 8px
   // Prime theme overrides
 
   .p-panel 
+    
+    &.selected
+      >.p-toggleable-content>.p-panel-content
+        border-left-color: var(--color-hl-00) !important
+
     .p-panel-content
       padding: 0 !important
       padding-left: 20px !important
       margin: 0
       border-left: 1px dashed #434a56 !important
-
-.selected
-  outline: 1px solid red
-  background-color: #444
