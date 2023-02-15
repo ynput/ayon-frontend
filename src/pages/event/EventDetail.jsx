@@ -82,9 +82,12 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
             <EventTile
               title={project}
               disableHover
-              subTitle={`last updated - ${formatDistance(new Date(projectLastUpdated), new Date(), {
-                addSuffix: true,
-              })}`}
+              subTitle={`last updated -  ${
+                new Date(projectLastUpdated).getDate() &&
+                formatDistance(new Date(projectLastUpdated), new Date(), {
+                  addSuffix: true,
+                })
+              }`}
             >
               <Button icon="filter_alt" className="transparent" onClick={() => onFilter(project)} />
               <Link to={`/manageProjects/dashboard?project=${project}`}>

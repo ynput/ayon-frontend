@@ -4,7 +4,7 @@ import { Panel } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 import StatusField from '/src/components/status/statusField'
 import { useGetEventTileQuery } from '/src/services/entity/getEntity'
-import { useGetProjectAnatomyQuery } from '../../services/project/getProject'
+import { useGetProjectQuery } from '../../services/project/getProject'
 import { formatDistance } from 'date-fns'
 
 // styled panel
@@ -42,15 +42,9 @@ const PanelStyled = styled(Panel)`
 const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) => {
   const skip = !id || !type || !projectName
 
-  // get project anatomy for project name for status
-  const { data: anatomy } = useGetProjectAnatomyQuery({ projectName })
-
-  let statusAnatomy = {}
-  if (anatomy) {
-    for (const stat of anatomy.statuses) {
-      statusAnatomy[stat.name] = stat
-    }
-  }
+  // get project for status anatomy
+  // it will only be used if the projectName has changed or if the project is not loaded
+  useGetProjectQuery({ projectName }, { skip: !projectName })
 
   const { data = {}, isError } = useGetEventTileQuery({
     projectName,
@@ -64,19 +58,16 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
 
   return (
     <PanelStyled onClick={onClick} disableHover={disableHover}>
-      <StatusField
-        value={status}
-        size="icon"
-        style={{ order: 0, width: 'unset' }}
-        anatomy={statusAnatomy}
-      />
+      <StatusField value={status} size="icon" style={{ order: 0, width: 'unset' }} />
       <header style={{ flex: 1 }}>
         <strong>
           {type} - {name}
         </strong>
         <br />
         <span style={{ opacity: 0.5 }}>
-          Last Updated {formatDistance(new Date(updatedAt), new Date(), { addSuffix: true })}
+          Last Updated{' '}
+          {new Date(updatedAt).getDate() &&
+            formatDistance(new Date(updatedAt), new Date(), { addSuffix: true })}
         </span>
       </header>
       {children}
