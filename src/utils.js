@@ -98,26 +98,6 @@ const STATUS_COLORS = {}
 const STATUS_ICONS = {}
 const STATUS_SHORT_NAMES = {}
 const TAG_COLORS = {}
-const FAMILY_ICONS = {
-  image: 'imagesmode',
-  render: 'photo_library',
-  plate: 'camera_roll',
-  camera: 'videocam',
-  model: 'language',
-  texture: 'texture',
-  look: 'ev_shadow',
-  rig: 'accessibility',
-  animation: 'directions_run',
-  cache: 'animation',
-  layout: 'nature_people',
-  setdress: 'forest',
-  groom: 'content_cut',
-  matchmove: 'switch_video',
-  vdb: 'local_fire_department',
-  lightrig: 'wb_incandescent',
-  lut: 'opacity',
-  workfile: 'home_repair_service',
-}
 
 const getFolderTypeIcon = (folderType) => {
   if (!folderType) return 'folder'
@@ -176,10 +156,6 @@ const updateTagColors = (data) => {
   for (const name in data) {
     TAG_COLORS[name] = data[name]
   }
-}
-
-const getFamilyIcon = (family) => {
-  return FAMILY_ICONS[family] || 'help_center'
 }
 
 const getFolderTypes = () => {
@@ -247,7 +223,6 @@ export {
   getTaskTypeIcon,
   getStatusProps,
   getTagColor,
-  getFamilyIcon,
   getFolderTypes,
   getTaskTypes,
   isEmpty,

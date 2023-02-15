@@ -9,7 +9,7 @@ import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
 import usePubSub from '/src/hooks/usePubSub'
 
-import { groupResult, getFamilyIcon, useLocalStorage } from '/src/utils'
+import { groupResult, useLocalStorage } from '/src/utils'
 import {
   setFocusedVersions,
   setFocusedSubsets,
@@ -26,9 +26,14 @@ import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
+import { useContext } from 'react'
+import { UtilContext } from '/src/context/utilsContext'
 
 const Subsets = () => {
   const dispatch = useDispatch()
+
+  // context
+  const { getFamilyField } = useContext(UtilContext) || {}
 
   const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
@@ -65,6 +70,7 @@ const Subsets = () => {
     isLoading,
     isSuccess,
     refetch,
+    isFetching,
   } = useGetSubsetsListQuery(
     {
       ids: focusedFolders,
@@ -144,7 +150,7 @@ const Subsets = () => {
           }
         }
 
-        const icon = node.data.isGroup ? 'folder' : getFamilyIcon(node.data.family)
+        const icon = node.data.isGroup ? 'folder' : getFamilyField(node.data.family, 'icon')
 
         return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
       },
@@ -465,6 +471,7 @@ const Subsets = () => {
           onColumnResizeEnd={setColumnWidths}
           reorderableColumns
           onColReorder={handleColumnReorder}
+          loading={isLoading | isFetching}
         >
           {columns.map((col, i) => {
             return (

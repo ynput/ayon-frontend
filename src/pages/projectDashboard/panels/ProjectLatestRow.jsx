@@ -1,15 +1,16 @@
 import React from 'react'
 import { useEffect } from 'react'
+import { useContext } from 'react'
 import { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router'
 import styled from 'styled-components'
 import EntityGridTile from '/src/components/EntityGridTile'
+import { UtilContext } from '/src/context/utilsContext'
 import { ayonApi } from '/src/services/ayon'
 import { useGetEntityTilesQuery } from '/src/services/entity/getEntity'
 import { useGetEventsByTopicQuery } from '/src/services/events/getEvents'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
-import { getFamilyIcon } from '/src/utils'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
@@ -37,6 +38,7 @@ const ProjectLatestRow = ({
   events = [],
   banTopics = [],
 }) => {
+  const { getFamilyField } = useContext(UtilContext) || {}
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [projectName, setProjectName] = useState(null)
@@ -153,18 +155,6 @@ const ProjectLatestRow = ({
     }
   }
 
-  // check unique entity ids length is at least 3
-  //   useEffect(() => {
-  //     if (uniqueEntityIds.length < 3 && !isEventsLoading && !isFetchingEvents && numEvents < 20) {
-  //       // this is when the latest events are for the same entity
-  //       // so we need to get more events
-  //       // this will cause a re fetch of the events with a higher last value
-  //       setNumEvents(numEvents + 1)
-  //     }
-  //   }, [uniqueEntityIds, numEvents, isEventsLoading, isFetchingEvents])
-
-  // get
-
   // get entity tiles data for each entity type
   // [entity1, entity2, entity3]
   let {
@@ -187,6 +177,7 @@ const ProjectLatestRow = ({
     }, {})
   }
 
+  // TODO: getting anatomy should set project redux state
   const statusObject = transformArrayToObject(anatomy, 'statuses')
   const folderTypesObject = transformArrayToObject(anatomy, 'folder_types')
   const taskTypesObject = transformArrayToObject(anatomy, 'task_types')
@@ -196,7 +187,7 @@ const ProjectLatestRow = ({
     let typeIcon = ''
 
     if (type === 'subset' || type === 'version') {
-      typeIcon = getFamilyIcon(icon)
+      typeIcon = getFamilyField(icon, 'icon')
     } else if (type === 'folder') {
       typeIcon = folderTypesObject?.[icon]?.icon
     } else if (type === 'task') {
