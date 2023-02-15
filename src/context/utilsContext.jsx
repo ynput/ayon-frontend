@@ -10,6 +10,7 @@ export const UtilProvider = (props) => {
 
   const errors = {
     icon: 'error',
+    color: 'red',
   }
 
   const defaults = {
@@ -21,6 +22,9 @@ export const UtilProvider = (props) => {
     },
     tasks: {
       icon: 'task',
+    },
+    tags: {
+      color: 'white',
     },
   }
 

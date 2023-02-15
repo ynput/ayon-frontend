@@ -5,7 +5,6 @@
 const STATUS_COLORS = {}
 const STATUS_ICONS = {}
 const STATUS_SHORT_NAMES = {}
-const TAG_COLORS = {}
 
 const getStatusProps = (status, anatomy = {}) => {
   return {
@@ -33,25 +32,8 @@ const updateStatusShortNames = (data) => {
   }
 }
 
-const getTagColor = (status) => {
-  return TAG_COLORS[status] || '#c0c0c0'
-}
-
-const updateTagColors = (data) => {
-  for (const name in data) {
-    TAG_COLORS[name] = data[name]
-  }
-}
-
 //
 // Export
 //
 
-export {
-  getStatusProps,
-  getTagColor,
-  updateStatusColors,
-  updateStatusIcons,
-  updateStatusShortNames,
-  updateTagColors,
-}
+export { getStatusProps, updateStatusColors, updateStatusIcons, updateStatusShortNames }

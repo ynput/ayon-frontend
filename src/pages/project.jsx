@@ -12,12 +12,7 @@ import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles/WorkfilesPage'
 
 import { selectProject } from '../features/project'
-import {
-  updateStatusColors,
-  updateTagColors,
-  updateStatusIcons,
-  updateStatusShortNames,
-} from '../utils'
+import { updateStatusColors, updateStatusIcons, updateStatusShortNames } from '../utils'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetAddonProjectQuery } from '../services/addonList'
@@ -75,12 +70,6 @@ const ProjectPage = () => {
         n[status.name] = status.shortName
       }
       updateStatusShortNames(n)
-
-      const g = {}
-      for (const tag of data.tags) {
-        g[tag.name] = tag.color
-      }
-      updateTagColors(g)
 
       //TODO: statuses
 
