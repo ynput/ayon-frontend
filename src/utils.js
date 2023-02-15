@@ -4,23 +4,11 @@ import { sortBy } from 'lodash'
 // Icons
 //
 
-const FOLDER_TYPE_ICONS = {}
 const TASK_TYPE_ICONS = {}
 const STATUS_COLORS = {}
 const STATUS_ICONS = {}
 const STATUS_SHORT_NAMES = {}
 const TAG_COLORS = {}
-
-const getFolderTypeIcon = (folderType) => {
-  if (!folderType) return 'folder'
-  return FOLDER_TYPE_ICONS[folderType] || 'help_center'
-}
-
-const updateFolderTypeIcons = (data) => {
-  for (const name in data) {
-    FOLDER_TYPE_ICONS[name] = data[name]
-  }
-}
 
 const getTaskTypeIcon = (taskType) => {
   // make sure first letter is always capitalized
@@ -70,13 +58,6 @@ const updateTagColors = (data) => {
   }
 }
 
-const getFolderTypes = () => {
-  let result = []
-  for (const name in FOLDER_TYPE_ICONS)
-    result.push({ name, label: name, icon: FOLDER_TYPE_ICONS[name] })
-  return sortBy(result, 'name')
-}
-
 const getTaskTypes = () => {
   let result = []
   for (const name in TASK_TYPE_ICONS)
@@ -89,13 +70,10 @@ const getTaskTypes = () => {
 //
 
 export {
-  getFolderTypeIcon,
   getTaskTypeIcon,
   getStatusProps,
   getTagColor,
-  getFolderTypes,
   getTaskTypes,
-  updateFolderTypeIcons,
   updateTaskTypeIcons,
   updateStatusColors,
   updateStatusIcons,

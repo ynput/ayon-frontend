@@ -60,7 +60,7 @@ const transformVersionsData = (versions) => {
 const VersionDetail = () => {
   const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
-  const { getFamilyField } = useContext(UtilContext) || {}
+  const { getTypeField } = useContext(UtilContext) || {}
 
   // GET RTK QUERY
   const {
@@ -122,7 +122,7 @@ const VersionDetail = () => {
         <Panel>
           <h3>
             <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
-              {getFamilyField(versions[0].family, 'icon')}
+              {getTypeField('families', versions[0].family, 'icon')}
             </span>
             <span style={{ marginLeft: 10 }}>
               {versions[0].subsetName} | {versions[0].name}

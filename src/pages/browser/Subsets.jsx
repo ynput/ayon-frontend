@@ -34,7 +34,7 @@ const Subsets = () => {
   const dispatch = useDispatch()
 
   // context
-  const { getFamilyField } = useContext(UtilContext) || {}
+  const { getTypeField } = useContext(UtilContext) || {}
 
   const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
@@ -151,7 +151,9 @@ const Subsets = () => {
           }
         }
 
-        const icon = node.data.isGroup ? 'folder' : getFamilyField(node.data.family, 'icon')
+        const icon = node.data.isGroup
+          ? 'folder'
+          : getTypeField('families', node.data.family, 'icon')
 
         return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
       },

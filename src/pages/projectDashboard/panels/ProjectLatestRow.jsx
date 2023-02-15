@@ -38,7 +38,7 @@ const ProjectLatestRow = ({
   events = [],
   banTopics = [],
 }) => {
-  const { getFamilyField } = useContext(UtilContext) || {}
+  const { getTypeField } = useContext(UtilContext) || {}
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [projectName, setProjectName] = useState(null)
@@ -187,7 +187,7 @@ const ProjectLatestRow = ({
     let typeIcon = ''
 
     if (type === 'subset' || type === 'version') {
-      typeIcon = getFamilyField(icon, 'icon')
+      typeIcon = getTypeField('families', icon, 'icon')
     } else if (type === 'folder') {
       typeIcon = folderTypesObject?.[icon]?.icon
     } else if (type === 'task') {

@@ -6,27 +6,46 @@ export const UtilContext = createContext()
 
 // export context provider
 export const UtilProvider = (props) => {
-  const families = useSelector((state) => state.project.families) || {}
+  const project = useSelector((state) => state.project) || {}
 
-  const error = 'error'
-
-  const familiesDefaults = {
-    icon: 'help_center',
+  const errors = {
+    icon: 'error',
   }
-  const getFamilyField = (family, field) => {
-    if (!field) {
-      console.log('No field provided to getFamily')
-      return error
-    }
-    const icon = (families[family] && families[family][field]) || familiesDefaults[field]
 
-    return icon
+  const defaults = {
+    families: {
+      icon: 'help_center',
+    },
+    folders: {
+      icon: 'folder',
+    },
+    tasks: {
+      icon: 'task',
+    },
+  }
+
+  // type = 'folders' or 'families'
+  // subType = 'shot' or 'render'
+  // field = 'icon' or 'color'
+  const getTypeField = (type, subType, field) => {
+    // check field is valid
+    if (!field || !(field in errors)) return console.log('No Field Provided')
+
+    // check if type is valid
+    if (!type || !(type in defaults) || !(type in project)) return errors[field]
+
+    // check if subType and field is valid on project
+    if (!subType || !(subType in project[type] && field in project[type][subType]))
+      return defaults[type][field]
+
+    // get field from project type
+    return project[type][subType][field]
   }
 
   return (
     <UtilContext.Provider
       value={{
-        getFamilyField,
+        getTypeField,
       }}
     >
       {props.children}

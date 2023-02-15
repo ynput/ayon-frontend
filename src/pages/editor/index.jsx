@@ -35,11 +35,13 @@ import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
-import { getFolderTypeIcon } from '/src/utils'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { isEmpty } from 'lodash'
+import { useContext } from 'react'
+import { UtilContext } from '/src/context/utilsContext'
 
 const EditorPage = () => {
+  const { getTypeField } = useContext(UtilContext) || {}
   const [loading, setLoading] = useState(false)
 
   // BUG: this is required for editing to work
@@ -274,7 +276,7 @@ const EditorPage = () => {
         taskNames: folder.taskNames,
         keywords: [folder.name, folder.folderType].map((k) => k.toLowerCase()),
         depth: depth,
-        icon: getFolderTypeIcon(folder.folderType),
+        icon: getTypeField('folders', folder.folderType, 'icon'),
         isTask: false,
       })
 
@@ -836,10 +838,14 @@ const EditorPage = () => {
       key="name"
       header="Name"
       expander={true}
-      body={(rowData) => formatName(rowData.data, changes)}
+      body={(rowData) => formatName(rowData.data, changes, true, getTypeField)}
       style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
       editor={(options) => {
-        return stringEditor(options, updateName, formatName(options.rowData, changes, false))
+        return stringEditor(
+          options,
+          updateName,
+          formatName(options.rowData, changes, false, getTypeField),
+        )
       }}
     />,
     <Column

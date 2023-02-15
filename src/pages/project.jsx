@@ -13,7 +13,6 @@ import WorkfilesPage from './workfiles/WorkfilesPage'
 
 import { selectProject } from '../features/project'
 import {
-  updateFolderTypeIcons,
   updateTaskTypeIcons,
   updateStatusColors,
   updateTagColors,
@@ -59,11 +58,6 @@ const ProjectPage = () => {
   useEffect(() => {
     if (!isLoading && !isError) {
       // Icons
-      const r = {}
-      for (const folderType of data.folderTypes) {
-        r[folderType.name] = folderType.icon
-      }
-      updateFolderTypeIcons(r)
 
       const s = {}
       for (const taskType of data.taskTypes) {
