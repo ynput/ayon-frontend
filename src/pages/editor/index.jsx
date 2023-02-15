@@ -17,7 +17,6 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { getTaskTypeIcon } from '/src/utils'
 import sortByKey from '/src/helpers/sortByKey'
 
 import {
@@ -288,7 +287,7 @@ const EditorPage = () => {
             id: folder.id + task,
             label: task,
             value: task,
-            icon: getTaskTypeIcon(task),
+            icon: getTypeField('tasks', task, 'icon'),
             depth: depth + 1,
             keywords: [task],
             taskNames: [],

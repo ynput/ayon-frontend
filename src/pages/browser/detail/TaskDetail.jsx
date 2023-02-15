@@ -1,14 +1,16 @@
 import { useSelector } from 'react-redux'
 import AttributeTable from '/src/containers/attributeTable'
-import { getTaskTypeIcon } from '/src/utils'
 import { TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
 import { useUpdateEntitiesDetailsMutation } from '../../../services/entity/updateEntity'
 import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
 import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
+import { useContext } from 'react'
+import { UtilContext } from '/src/context/utilsContext'
 
 const TaskDetail = () => {
+  const { getTypeField } = useContext(UtilContext) || {}
   const projectName = useSelector((state) => state.project.name)
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
   const taskId = focusedTasks.length === 1 ? focusedTasks[0] : null
@@ -71,7 +73,7 @@ const TaskDetail = () => {
     <Panel>
       <h3>
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
-          {getTaskTypeIcon(task.taskType)}
+          {getTypeField('tasks', task.taskType, 'icon')}
         </span>
         <span style={{ marginLeft: 10 }}>{task.label || task.name}</span>
       </h3>

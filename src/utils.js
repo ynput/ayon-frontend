@@ -1,26 +1,11 @@
-import { sortBy } from 'lodash'
-
 //
 // Icons
 //
 
-const TASK_TYPE_ICONS = {}
 const STATUS_COLORS = {}
 const STATUS_ICONS = {}
 const STATUS_SHORT_NAMES = {}
 const TAG_COLORS = {}
-
-const getTaskTypeIcon = (taskType) => {
-  // make sure first letter is always capitalized
-  taskType = taskType.charAt(0).toUpperCase() + taskType.slice(1)
-  return TASK_TYPE_ICONS[taskType] || 'help_center'
-}
-
-const updateTaskTypeIcons = (data) => {
-  for (const name in data) {
-    TASK_TYPE_ICONS[name] = data[name]
-  }
-}
 
 const getStatusProps = (status, anatomy = {}) => {
   return {
@@ -58,23 +43,13 @@ const updateTagColors = (data) => {
   }
 }
 
-const getTaskTypes = () => {
-  let result = []
-  for (const name in TASK_TYPE_ICONS)
-    result.push({ name, label: name, icon: TASK_TYPE_ICONS[name] })
-  return sortBy(result, 'name')
-}
-
 //
 // Export
 //
 
 export {
-  getTaskTypeIcon,
   getStatusProps,
   getTagColor,
-  getTaskTypes,
-  updateTaskTypeIcons,
   updateStatusColors,
   updateStatusIcons,
   updateStatusShortNames,
