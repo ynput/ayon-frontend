@@ -1,4 +1,3 @@
-import { Splitter, SplitterPanel } from 'primereact/splitter'
 import styled from 'styled-components'
 import HeartBeat from './panels/HeartBeat'
 import ProjectStats from './panels/ProjectStats'
@@ -17,26 +16,30 @@ const HeaderGridStyled = styled.div`
   gap: 8px;
 `
 
+const PanelsContainerStyled = styled.div`
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  align-self: baseline;
+  flex: 3;
+`
+
 const ProjectDashboard = ({ projectName }) => {
   return (
-    <Section>
-      <Splitter gutterSize={8} style={{ maxHeight: '100%' }}>
-        <SplitterPanel size={75} style={{ gap: 8, display: 'flex', flexDirection: 'column' }}>
-          <HeaderGridStyled>
-            <HeartBeat {...{ projectName }} />
-            <Timeline {...{ projectName }} />
-          </HeaderGridStyled>
-          <GridLayout projectName={projectName}>
-            <ProjectStats rows={1} />
-            <ProjectUsers rows={2} />
-            <ProjectLatest rows={2} />
-            <ProjectHealth rows={1} />
-          </GridLayout>
-        </SplitterPanel>
-        <SplitterPanel size={25}>
-          <ProjectDetails projectName={projectName} />
-        </SplitterPanel>
-      </Splitter>
+    <Section style={{ flexDirection: 'row' }}>
+      <PanelsContainerStyled>
+        <HeaderGridStyled>
+          <HeartBeat {...{ projectName }} />
+          <Timeline {...{ projectName }} />
+        </HeaderGridStyled>
+        <GridLayout projectName={projectName}>
+          <ProjectStats rows={1} />
+          <ProjectUsers rows={2} />
+          <ProjectLatest rows={2} />
+          <ProjectHealth rows={1} />
+        </GridLayout>
+      </PanelsContainerStyled>
+      <ProjectDetails projectName={projectName} />
     </Section>
   )
 }
