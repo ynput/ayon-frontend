@@ -2,7 +2,6 @@ import { useSelector } from 'react-redux'
 import { Panel } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
-import { getFolderTypeIcon } from '/src/utils'
 import { TagsField } from '/src/containers/fieldFormat'
 import { useUpdateEntitiesDetailsMutation } from '../../../services/entity/updateEntity'
 import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
@@ -10,7 +9,8 @@ import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
 const FolderDetail = () => {
-  const projectName = useSelector((state) => state.context.projectName)
+  const folders = useSelector((state) => state.project.folders)
+  const projectName = useSelector((state) => state.project.name)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   const folderId = focusedFolders.length === 1 ? focusedFolders[0] : null
 
@@ -72,7 +72,7 @@ const FolderDetail = () => {
     <Panel>
       <h3>
         <span className="material-symbols-outlined" style={{ verticalAlign: 'bottom' }}>
-          {getFolderTypeIcon(folder.folderType)}
+          {folders[folder.folderType]?.icon || 'folder'}
         </span>
         <span style={{ marginLeft: 10 }}>{folder.label || folder.name}</span>
       </h3>

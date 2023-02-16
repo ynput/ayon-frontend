@@ -7,7 +7,7 @@ import { useGetWorkfileByIdQuery } from '/src/services/getWorkfiles'
 import { toast } from 'react-toastify'
 
 const WorkfileDetail = ({ workfileId, style }) => {
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
 
   const { data, isLoading, isError, error } = useGetWorkfileByIdQuery(
     { projectName, id: workfileId },

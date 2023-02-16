@@ -6,7 +6,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import { setBreadcrumbs } from '/src/features/context'
-import { groupResult } from '/src/utils'
+import groupResult from '/src/helpers/groupResult'
 
 const columns = [
   {

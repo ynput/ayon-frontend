@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { getStatusProps } from '../../utils'
+import { useSelector } from 'react-redux'
 
 const hoverStyle = css`
   background-color: var(--color-grey-02);
@@ -122,9 +122,10 @@ const StatusField = ({
   align = 'left',
   onClick,
   style,
-  anatomy = {},
 }) => {
-  const { color, icon, shortName } = getStatusProps(value, anatomy)
+  // TODO: move to context to a higher level component?
+  const statuses = useSelector((state) => state.project.statuses)
+  const { shortName, color, icon } = statuses[value]
 
   return (
     <StatusStyled

@@ -1,7 +1,5 @@
 import ayonClient from '/src/ayon'
-
 import { CellWithIcon } from '/src/components/icons'
-import { getFolderTypeIcon, getTaskTypeIcon } from '/src/utils'
 import { stringEditor, integerEditor, floatEditor, enumEditor } from './editors'
 
 // TODO rename .jsx -> .js
@@ -20,7 +18,7 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   return <span className={`editor-field ${className}`}>{value}</span>
 }
 
-const formatName = (node, changes, styled = true) => {
+const formatName = (node, changes, styled = true, project) => {
   const chobj = changes[node.id]
   let value = chobj?._name ? chobj._name : node.name
 
@@ -32,11 +30,11 @@ const formatName = (node, changes, styled = true) => {
   if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-changed)'
 
   if (node.__entityType === 'task') {
-    icon = getTaskTypeIcon(node.taskType)
+    icon = project.tasks[node.taskType]?.icon
     textStyle.fontStyle = 'italic'
     value = value || 'Unnamed task'
   } else {
-    icon = getFolderTypeIcon(node.folderType)
+    icon = project.folders[node.folderType]?.icon
     value = value || 'Unnamed folder'
   }
 

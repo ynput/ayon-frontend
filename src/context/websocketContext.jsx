@@ -3,7 +3,7 @@ import { useEffect, useState, createContext } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import PubSub from '/src/pubsub'
-import { arrayEquals } from '/src/utils'
+import arrayEquals from '../helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
 
@@ -24,8 +24,8 @@ export const SocketProvider = (props) => {
   }
 
   const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, wsOpts)
-  const context = useSelector((state) => state.context)
-  const projectName = context.projectName
+  const project = useSelector((state) => state.project)
+  const projectName = project.name
 
   const subscribe = () => {
     sendMessage(

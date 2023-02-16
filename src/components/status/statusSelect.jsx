@@ -14,8 +14,12 @@ const StatusSelect = ({
   multipleSelected,
   onClick,
 }) => {
-  const statuses = useSelector((state) => state.context.project.statuses)
   const [changedValue, setChangedValue] = useState(null)
+
+  const statusesObject = useSelector((state) => state.project.statuses)
+  const statusesOrder = useSelector((state) => state.project.statusesOrder)
+  // ordered array of statuses objects
+  const statuses = statusesOrder.map((status) => statusesObject[status])
 
   useEffect(() => {
     if (changedValue && value === changedValue) {

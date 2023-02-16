@@ -21,7 +21,7 @@ const ManageProjects = () => {
   const navigate = useNavigate()
   // get is user from context
   const isUser = useSelector((state) => state.user.data.isUser)
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
 
   let { module } = useParams()
 

@@ -1,5 +1,5 @@
 import { Panel } from 'primereact/panel'
-import { useLocalStorage } from '/src/utils'
+import useLocalStorage from '/src/hooks/useLocalStorage'
 
 const SettingsPanel = ({
   objId,

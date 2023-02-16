@@ -9,14 +9,15 @@ import { ContextMenu } from 'primereact/contextmenu'
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { setFocusedTasks, setPairing, setDialog } from '/src/features/context'
-import { getTaskTypeIcon } from '/src/utils'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '/src/services/getTasks'
 
 const TaskList = ({ style = {} }) => {
+  const tasks = useSelector((state) => state.project.tasks)
+
   const dispatch = useDispatch()
 
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
   const folderIds = useSelector((state) => state.context.focused.folders)
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
   const pairing = useSelector((state) => state.context.pairing)
@@ -69,7 +70,7 @@ const TaskList = ({ style = {} }) => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup ? 'folder' : getTaskTypeIcon(node.data.taskType)
+    const icon = node.data.isGroup ? 'folder' : tasks[node.data.taskType].icon
     let className = ''
     let i = 0
     for (const pair of pairing) {

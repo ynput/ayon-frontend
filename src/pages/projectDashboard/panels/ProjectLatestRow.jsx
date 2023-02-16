@@ -1,15 +1,13 @@
 import React from 'react'
-import { useEffect } from 'react'
-import { useState } from 'react'
-import { useDispatch } from 'react-redux'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router'
 import styled from 'styled-components'
 import EntityGridTile from '/src/components/EntityGridTile'
 import { ayonApi } from '/src/services/ayon'
 import { useGetEntityTilesQuery } from '/src/services/entity/getEntity'
 import { useGetEventsByTopicQuery } from '/src/services/events/getEvents'
-import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
-import { getFamilyIcon } from '/src/utils'
+import { useGetProjectQuery } from '/src/services/project/getProject'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
@@ -37,6 +35,9 @@ const ProjectLatestRow = ({
   events = [],
   banTopics = [],
 }) => {
+  const project = useSelector((state) => state.project)
+  const { families, folders, tasks, statuses } = project
+
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [projectName, setProjectName] = useState(null)
@@ -50,14 +51,8 @@ const ProjectLatestRow = ({
     setProjectName(projectNameInit)
   }, [projectNameInit])
 
-  // TODO: clean up this mess up
-  // get project anatomy for project name for status
-  const { data: anatomy = {} } = useGetProjectAnatomyQuery(
-    {
-      projectName,
-    },
-    { skip: !projectName },
-  )
+  // project
+  useGetProjectQuery({ projectName }, { skip: !projectName })
 
   //   create topics array
   // topic = entity.[entity].[event]
@@ -153,18 +148,6 @@ const ProjectLatestRow = ({
     }
   }
 
-  // check unique entity ids length is at least 3
-  //   useEffect(() => {
-  //     if (uniqueEntityIds.length < 3 && !isEventsLoading && !isFetchingEvents && numEvents < 20) {
-  //       // this is when the latest events are for the same entity
-  //       // so we need to get more events
-  //       // this will cause a re fetch of the events with a higher last value
-  //       setNumEvents(numEvents + 1)
-  //     }
-  //   }, [uniqueEntityIds, numEvents, isEventsLoading, isFetchingEvents])
-
-  // get
-
   // get entity tiles data for each entity type
   // [entity1, entity2, entity3]
   let {
@@ -176,40 +159,28 @@ const ProjectLatestRow = ({
       projectName,
       entities: entityIds,
     },
-    { skip: isEventsLoading || isErrorEvents || !projectName },
+    { skip: isEventsLoading || isErrorEvents || !projectName || !entityIds },
   )
-
-  // used to get icons and color
-  function transformArrayToObject(anatomy, propertyName) {
-    return anatomy?.[propertyName]?.reduce((acc, item) => {
-      acc[item.name] = item
-      return acc
-    }, {})
-  }
-
-  const statusObject = transformArrayToObject(anatomy, 'statuses')
-  const folderTypesObject = transformArrayToObject(anatomy, 'folder_types')
-  const taskTypesObject = transformArrayToObject(anatomy, 'task_types')
 
   data = data.map((entity) => {
     let { type, icon, status } = entity
     let typeIcon = ''
 
     if (type === 'subset' || type === 'version') {
-      typeIcon = getFamilyIcon(icon)
+      typeIcon = families?.[icon]?.icon || 'help_center'
     } else if (type === 'folder') {
-      typeIcon = folderTypesObject?.[icon]?.icon
+      typeIcon = folders?.[icon]?.icon
     } else if (type === 'task') {
-      typeIcon = taskTypesObject?.[icon]?.icon
+      typeIcon = tasks?.[icon]?.icon
     }
 
-    const statusIcon = statusObject?.[status]?.icon
-    const statusColor = statusObject?.[status]?.color
+    const statusIcon = statuses?.[status]?.icon || 'radio_button_checked'
+    const statusColor = statuses?.[status]?.color || 'white'
 
     return { ...entity, typeIcon, statusIcon, statusColor, projectName }
   })
 
-  const isNoData = !data || data.length === 0
+  const isNoData = !data || data.length === 0 || (!isEventsLoading && !entityIds)
   //   if no data return 3 error tiles
   if (isNoData) {
     data = [

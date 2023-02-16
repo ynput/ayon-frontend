@@ -11,15 +11,7 @@ import LoadingPage from './loading'
 import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles/WorkfilesPage'
 
-import { selectProject, setProjectData } from '../features/context'
-import {
-  updateFolderTypeIcons,
-  updateTaskTypeIcons,
-  updateStatusColors,
-  updateTagColors,
-  updateStatusIcons,
-  updateStatusShortNames,
-} from '../utils'
+import { selectProject } from '../features/project'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetAddonProjectQuery } from '../services/addonList'
@@ -43,7 +35,7 @@ const ProjectPage = () => {
   const { projectName, module, addonName } = useParams()
   const dispatch = useDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
-  const { data, isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
+  const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -55,53 +47,6 @@ const ProjectPage = () => {
     refetch: refetchAddons,
     isUninitialized: addonsIsUninitialized,
   } = useGetAddonProjectQuery({}, { skip: !projectName })
-
-  useEffect(() => {
-    if (!isLoading && !isError) {
-      dispatch(setProjectData(data))
-
-      // Icons
-      const r = {}
-      for (const folderType of data.folderTypes) {
-        r[folderType.name] = folderType.icon
-      }
-      updateFolderTypeIcons(r)
-
-      const s = {}
-      for (const taskType of data.taskTypes) {
-        s[taskType.name] = taskType.icon
-      }
-      updateTaskTypeIcons(s)
-
-      const t = {}
-      for (const status of data.statuses) {
-        t[status.name] = status.color
-      }
-      updateStatusColors(t)
-
-      const i = {}
-      for (const status of data.statuses) {
-        i[status.name] = status.icon
-      }
-      updateStatusIcons(i)
-
-      const n = {}
-      for (const status of data.statuses) {
-        n[status.name] = status.shortName
-      }
-      updateStatusShortNames(n)
-
-      const g = {}
-      for (const tag of data.tags) {
-        g[tag.name] = tag.color
-      }
-      updateTagColors(g)
-
-      //TODO: statuses
-
-      localStorage.setItem('lastProject', projectName)
-    }
-  }, [isLoading, isError, data])
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {

@@ -58,10 +58,6 @@ const ProjectList = ({
             result.push(project)
             break
           }
-          // if (project.name === localStorage.getItem('lastProject')) {
-          //   result.push(project)
-          //   break
-          // }
         }
         if (selection?.includes(project.name)) result.push(project)
       }
@@ -70,7 +66,6 @@ const ProjectList = ({
       for (const project of projectList) {
         if (project.name === selection) return project
         if (!selection && project.name === '_') return project
-        //  if (!selection && project.name === localStorage.getItem('lastProject')) return project
       }
     } // single select
   }, [selection, projectList, isFetching])

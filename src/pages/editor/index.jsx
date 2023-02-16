@@ -17,7 +17,7 @@ import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { getTaskTypeIcon, isEmpty, sortByKey } from '/src/utils'
+import sortByKey from '/src/helpers/sortByKey'
 
 import {
   editorSelectionChanged,
@@ -31,19 +31,21 @@ import { getColumns, formatName, formatType, formatAttribute } from './utils'
 import { stringEditor, typeEditor } from './editors'
 import { loadBranch, getUpdatedNodeData } from './loader'
 import { MultiSelect } from 'primereact/multiselect'
-import { useLocalStorage } from '../../utils'
+import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
-import { getFolderTypeIcon } from '/src/utils'
 import useColumnResize from '/src/hooks/useColumnResize'
+import { isEmpty } from 'lodash'
 
 const EditorPage = () => {
+  const project = useSelector((state) => state.project)
+  const { folders: foldersObject, tasks } = project
   const [loading, setLoading] = useState(false)
 
   // BUG: this is required for editing to work
   // eslint-disable-next-line no-unused-vars
   const context = useSelector((state) => ({ ...state.context }))
-  const projectName = useSelector((state) => state.context.projectName)
+  const projectName = useSelector((state) => state.project.name)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   // focused editor is a mixture of focused folders and tasks
   const focusedEditor = useSelector((state) => state.context.focused.editor)
@@ -272,7 +274,7 @@ const EditorPage = () => {
         taskNames: folder.taskNames,
         keywords: [folder.name, folder.folderType].map((k) => k.toLowerCase()),
         depth: depth,
-        icon: getFolderTypeIcon(folder.folderType),
+        icon: foldersObject[folder.folderType]?.icon || 'folder',
         isTask: false,
       })
 
@@ -284,7 +286,7 @@ const EditorPage = () => {
             id: folder.id + task,
             label: task,
             value: task,
-            icon: getTaskTypeIcon(task),
+            icon: tasks[folder.taskType]?.icon || 'task',
             depth: depth + 1,
             keywords: [task],
             taskNames: [],
@@ -834,10 +836,14 @@ const EditorPage = () => {
       key="name"
       header="Name"
       expander={true}
-      body={(rowData) => formatName(rowData.data, changes)}
+      body={(rowData) => formatName(rowData.data, changes, true, project)}
       style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
       editor={(options) => {
-        return stringEditor(options, updateName, formatName(options.rowData, changes, false))
+        return stringEditor(
+          options,
+          updateName,
+          formatName(options.rowData, changes, false, project),
+        )
       }}
     />,
     <Column

@@ -3,7 +3,7 @@ import { useParams, NavLink, Navigate } from 'react-router-dom'
 import { Spacer } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
 
-const AnatomyPresets = lazy(() => import('./AnatomyPresets'))
+const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const AddonVersions = lazy(() => import('./AddonVersions'))
 const StudioSettings = lazy(() => import('./StudioSettings'))
 const SiteSettings = lazy(() => import('./SiteSettings'))

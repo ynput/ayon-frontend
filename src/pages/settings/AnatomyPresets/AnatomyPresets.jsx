@@ -1,85 +1,24 @@
-import { useEffect, useState, useMemo, useRef } from 'react'
-import axios from 'axios'
+import { useEffect, useState, useMemo } from 'react'
 
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
 import { Dialog } from 'primereact/dialog'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { InputText } from 'primereact/inputtext'
-import { ContextMenu } from 'primereact/contextmenu'
+
 import { toast } from 'react-toastify'
 
 import SettingsEditor from '/src/containers/settingsEditor'
+import { Spacer, Button, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+
 import {
-  Spacer,
-  Button,
-  Section,
-  Toolbar,
-  TablePanel,
-  ScrollPanel,
-} from '@ynput/ayon-react-components'
-import { loadAnatomyPresets } from '/src/utils'
-import { useGetAnatomyPresetsQuery, useGetAnatomySchemaQuery } from '/src/services/getAnatomy'
-
-const PresetList = ({
-  selectedPreset,
-  setSelectedPreset,
-  timestamp,
-  onSetPrimary,
-  onUnsetPrimary,
-  onDelete,
-}) => {
-  const [presetList, setPresetList] = useState([])
-  const [loading, setLoading] = useState(false)
-  const contextMenuRef = useRef(null)
-
-  useEffect(() => {
-    setLoading(true)
-    loadAnatomyPresets()
-      .then((r) => setPresetList(r))
-      .finally(() => setLoading(false))
-  }, [timestamp])
-
-  const contextMenuModel = useMemo(() => {
-    return [
-      {
-        label: 'Set as primary',
-        command: onSetPrimary,
-      },
-      {
-        label: 'Unset primary preset',
-        command: onUnsetPrimary,
-      },
-      {
-        label: 'Delete',
-        disabled: selectedPreset === '_',
-        command: onDelete,
-      },
-    ]
-  }, [selectedPreset, presetList])
-
-  return (
-    <TablePanel loading={loading}>
-      <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-      <DataTable
-        value={presetList}
-        scrollable
-        scrollHeight="flex"
-        selectionMode="single"
-        responsive="true"
-        dataKey="name"
-        selection={{ name: selectedPreset }}
-        onSelectionChange={(e) => setSelectedPreset(e.value.name)}
-        onContextMenuSelectionChange={(e) => setSelectedPreset(e.value.name)}
-        onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-      >
-        <Column field="title" header="Name" />
-        <Column field="primary" header="Primary" style={{ maxWidth: 70 }} />
-        <Column field="version" header="Version" style={{ maxWidth: 80 }} />
-      </DataTable>
-    </TablePanel>
-  )
-}
+  useGetAnatomyPresetQuery,
+  useGetAnatomySchemaQuery,
+} from '../../../services/anatomy/getAnatomy'
+import PresetList from './PresetList'
+import {
+  useDeletePresetMutation,
+  useUpdatePresetMutation,
+  useUpdatePrimaryPresetMutation,
+} from '/src/services/anatomy/updateAnatomy'
 
 const AnatomyPresets = () => {
   const [originalData, setOriginalData] = useState(null)
@@ -87,7 +26,6 @@ const AnatomyPresets = () => {
   const [selectedPreset, setSelectedPreset] = useState('_')
   const [showNameDialog, setShowNameDialog] = useState(false)
   const [newPresetName, setNewPresetName] = useState('')
-  const [presetListTimestamp, setPresetListTimestamp] = useState(0)
 
   //
   // Hooks
@@ -95,7 +33,7 @@ const AnatomyPresets = () => {
 
   const { data: schema } = useGetAnatomySchemaQuery()
 
-  const { data: anatomyData, isSuccess } = useGetAnatomyPresetsQuery(
+  const { data: anatomyData, isSuccess } = useGetAnatomyPresetQuery(
     { preset: selectedPreset },
     { skip: !selectedPreset },
   )
@@ -111,11 +49,16 @@ const AnatomyPresets = () => {
   // Actions
   //
 
+  // RTK Query updateAnatomy.js mutations
+  const [updatePreset] = useUpdatePresetMutation()
+  const [deletePreset] = useDeletePresetMutation()
+  const [updatePrimaryPreset] = useUpdatePrimaryPresetMutation()
+
+  // SAVE PRESET
   const savePreset = (name) => {
-    axios
-      .put(`/api/anatomy/presets/${name}`, newData)
+    updatePreset({ name, data: newData })
+      .unwrap()
       .then(() => {
-        setPresetListTimestamp(presetListTimestamp + 1)
         setSelectedPreset(name)
         setShowNameDialog(false)
         toast.info(`Preset ${name} saved`)
@@ -125,18 +68,18 @@ const AnatomyPresets = () => {
       })
   }
 
-  const deletePreset = () => {
-    console.log('deletePreset')
+  // DELETE PRESET
+  const handleDeletePreset = () => {
+    console.log('handleDeletePreset')
     confirmDialog({
       header: 'Delete Preset',
       message: `Are you sure you want to delete the preset ${selectedPreset}?`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Delete',
       accept: () => {
-        axios
-          .delete(`/api/anatomy/presets/${selectedPreset}`)
+        deletePreset({ name: selectedPreset })
+          .unwrap()
           .then(() => {
-            setPresetListTimestamp(presetListTimestamp + 1)
             setSelectedPreset('_')
             toast.info(`Preset ${selectedPreset} deleted`)
           })
@@ -151,24 +94,19 @@ const AnatomyPresets = () => {
     })
   }
 
-  const setPrimaryPreset = () => {
-    axios
-      .post(`/api/anatomy/presets/${selectedPreset}/primary`)
-      .then(() => {
-        setPresetListTimestamp(presetListTimestamp + 1)
-        toast.info(`Preset ${selectedPreset} set as primary`)
-      })
-      .catch((err) => {
-        toast.error(err.message)
-      })
-  }
+  // SET PRIMARY PRESET
+  const setPrimaryPreset = (name = '_') => {
+    // if name is not provided, set primary preset to "_"
+    // this is used to unset the primary preset
 
-  const unsetPrimaryPreset = () => {
-    axios
-      .post(`/api/anatomy/presets/_/primary`)
+    updatePrimaryPreset({ name })
+      .unwrap()
       .then(() => {
-        setPresetListTimestamp(presetListTimestamp + 1)
-        toast.info(`Unset primary preset`)
+        if (name) {
+          toast.info(`Preset ${selectedPreset} set as primary`)
+        } else {
+          toast.info(`Unset primary preset`)
+        }
       })
       .catch((err) => {
         toast.error(err.message)
@@ -203,10 +141,9 @@ const AnatomyPresets = () => {
         <PresetList
           selectedPreset={selectedPreset}
           setSelectedPreset={setSelectedPreset}
-          timestamp={presetListTimestamp}
-          onSetPrimary={setPrimaryPreset}
-          onUnsetPrimary={unsetPrimaryPreset}
-          onDelete={deletePreset}
+          onSetPrimary={() => setPrimaryPreset(selectedPreset)}
+          onUnsetPrimary={setPrimaryPreset}
+          onDelete={handleDeletePreset}
         />
       </Section>
 
@@ -230,9 +167,13 @@ const AnatomyPresets = () => {
             label="Delete the preset"
             icon="delete"
             disabled={selectedPreset === '_'}
-            onClick={deletePreset}
+            onClick={handleDeletePreset}
           />
-          <Button label="Set as primary preset" icon="bolt" onClick={setPrimaryPreset} />
+          <Button
+            label="Set as primary preset"
+            icon="bolt"
+            onClick={() => setPrimaryPreset(selectedPreset)}
+          />
           <Spacer />
         </Toolbar>
 

@@ -9,7 +9,8 @@ import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
 import usePubSub from '/src/hooks/usePubSub'
 
-import { groupResult, getFamilyIcon, useLocalStorage } from '/src/utils'
+import groupResult from '/src/helpers/groupResult'
+import useLocalStorage from '/src/hooks/useLocalStorage'
 import {
   setFocusedVersions,
   setFocusedSubsets,
@@ -30,7 +31,10 @@ import useColumnResize from '/src/hooks/useColumnResize'
 const Subsets = () => {
   const dispatch = useDispatch()
 
-  const projectName = useSelector((state) => state.context.projectName)
+  // context
+  const families = useSelector((state) => state.project.families)
+
+  const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
@@ -65,6 +69,7 @@ const Subsets = () => {
     isLoading,
     isSuccess,
     refetch,
+    isFetching,
   } = useGetSubsetsListQuery(
     {
       ids: focusedFolders,
@@ -144,7 +149,9 @@ const Subsets = () => {
           }
         }
 
-        const icon = node.data.isGroup ? 'folder' : getFamilyIcon(node.data.family)
+        const icon = node.data.isGroup
+          ? 'folder'
+          : families[node.data.family]?.icon || 'help_center'
 
         return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
       },
@@ -438,7 +445,7 @@ const Subsets = () => {
         />
       </Toolbar>
 
-      <TablePanel loading={isLoading}>
+      <TablePanel loading={isLoading || isFetching}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}

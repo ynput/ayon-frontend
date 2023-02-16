@@ -9,8 +9,7 @@ import {
 
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
-
-import { arrayEquals } from '/src/utils'
+import arrayEquals from '/src/helpers/arrayEquals'
 
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)

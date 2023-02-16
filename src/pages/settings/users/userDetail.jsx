@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Section, Panel, FormRow } from '@ynput/ayon-react-components'
-import { isEmpty } from '/src/utils'
+import { isEmpty } from 'lodash'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
 import UserImagesStacked from './UserImagesStacked'

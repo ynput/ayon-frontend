@@ -18,16 +18,15 @@ import {
   setDialog,
   setFocusedTasks,
 } from '/src/features/context'
-import { getFolderTypeIcon } from '/src//utils'
 import { setFocusedType } from '../features/context'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 
-const filterHierarchy = (text, folder) => {
+const filterHierarchy = (text, folder, folders) => {
   let result = []
   if (!folder) return []
   for (const item of folder) {
     if (item.name && (!text || item.name.toLowerCase().includes(text.toLowerCase()))) {
-      const newChildren = filterHierarchy(false, item.children)
+      const newChildren = filterHierarchy(false, item.children, folders)
       result.push({
         key: item.id,
         children: newChildren,
@@ -39,11 +38,11 @@ const filterHierarchy = (text, folder) => {
           // hasSubsets: item.hasSubsets,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: <CellWithIcon icon={getFolderTypeIcon(item.folderType)} text={item.label} />,
+          body: <CellWithIcon icon={folders[item.folderType]?.icon} text={item.label} />,
         },
       })
     } else if (item.children) {
-      const newChildren = filterHierarchy(text, item.children)
+      const newChildren = filterHierarchy(text, item.children, folders)
       if (newChildren.length > 0) {
         result.push({
           key: item.id,
@@ -56,7 +55,7 @@ const filterHierarchy = (text, folder) => {
             // hasSubsets: item.hasSubsets,
             hasTasks: item.hasTasks,
             parents: item.parents,
-            body: <CellWithIcon icon={getFolderTypeIcon(item.folderType)} text={item.label} />,
+            body: <CellWithIcon icon={folders[item.folderType]?.icon} text={item.label} />,
           },
         })
       }
@@ -66,8 +65,10 @@ const filterHierarchy = (text, folder) => {
 }
 
 const Hierarchy = (props) => {
-  const projectName = useSelector((state) => state.context.projectName)
-  const folderTypes = useSelector((state) => state.context.project.folderTypes || [])
+  const projectName = useSelector((state) => state.project.name)
+  const foldersOrder = useSelector((state) => state.project.foldersOrder || [])
+  const folders = useSelector((state) => state.project.folders || {})
+  const folderTypeList = foldersOrder.map((f) => ({ label: f, value: f }))
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
@@ -81,20 +82,6 @@ const Hierarchy = (props) => {
   //
   // Folder types
   //
-
-  // Transform a list of folder types to a list of objects
-  // compatible with the MultiSelect component
-  const [folderTypeList, folderTypeListNames] = folderTypes.reduce(
-    ([a, b], e) => {
-      a.push({
-        label: e.name,
-        value: e.name,
-      }),
-        b.push(e.name)
-      return [a, b]
-    },
-    [[], []],
-  )
 
   // Custom "selected folder type" render template for the multiselect
   // component
@@ -123,7 +110,7 @@ const Hierarchy = (props) => {
 
   let treeData = useMemo(() => {
     if (!data) return []
-    return filterHierarchy(query, data)
+    return filterHierarchy(query, data, folders)
   }, [data, query])
 
   function filterArray(arr = [], filter = []) {
@@ -140,27 +127,25 @@ const Hierarchy = (props) => {
 
     // sort by folderType
     return filteredArr.sort(
-      (a, b) =>
-        folderTypeListNames.indexOf(a.data.folderType) -
-        folderTypeListNames.indexOf(b.data.folderType),
+      (a, b) => foldersOrder.indexOf(a.data.folderType) - foldersOrder.indexOf(b.data.folderType),
     )
   }
 
   const createDataObject = (data = []) => {
-    let heirarchyObject = {}
+    let hierarchyObject = {}
 
     data.forEach((item) => {
-      heirarchyObject[item.id] = { ...item, isLeaf: !item.children?.length }
+      hierarchyObject[item.id] = { ...item, isLeaf: !item.children?.length }
 
       if (item.children?.length > 0) {
-        heirarchyObject = { ...heirarchyObject, ...createDataObject(item.children) }
+        hierarchyObject = { ...hierarchyObject, ...createDataObject(item.children) }
       }
     })
 
-    return heirarchyObject
+    return hierarchyObject
   }
 
-  const heirarchyObjectData = useMemo(() => {
+  const hierarchyObjectData = useMemo(() => {
     if (data) {
       return createDataObject(data)
     }
@@ -216,7 +201,7 @@ const Hierarchy = (props) => {
     // for each selected folder, if isLeaf then set expandedFolders
     const newExpandedFolders = {}
     selection.forEach((id) => {
-      if (heirarchyObjectData[id].isLeaf) {
+      if (hierarchyObjectData[id].isLeaf) {
         newExpandedFolders[id] = true
       }
     })
@@ -225,7 +210,7 @@ const Hierarchy = (props) => {
     // filter out the old expanded folders that are isLeaf
     oldExpandedFolders = Object.fromEntries(
       Object.keys(oldExpandedFolders)
-        .filter((id) => !heirarchyObjectData[id] || !heirarchyObjectData[id].isLeaf)
+        .filter((id) => !hierarchyObjectData[id] || !hierarchyObjectData[id].isLeaf)
         .map((id) => [id, true]),
     )
 
@@ -242,7 +227,6 @@ const Hierarchy = (props) => {
   }
 
   const onToggle = (event) => {
-    console.log(event)
     dispatch(setExpandedFolders(event.value))
   }
 
@@ -264,7 +248,7 @@ const Hierarchy = (props) => {
     // filter out selected folders that are isLeaf
     let doubleClickedFolders = []
     for (const id in selectedFolders) {
-      if (!heirarchyObjectData[id].isLeaf) {
+      if (!hierarchyObjectData[id].isLeaf) {
         doubleClickedFolders.push(id)
       }
     }

@@ -3,8 +3,8 @@ import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProgressTile from './ProgressTile'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
-import { getStatusProps } from '/src/utils'
 import copyToClipboard from '/src/helpers/copyToClipboard'
+import { useSelector } from 'react-redux'
 
 // format complete data
 const getComplete = (completion) => {
@@ -44,6 +44,7 @@ const getStorage = (storageUsage) => {
 }
 
 const ProjectHealth = ({ projectName, share, index }) => {
+  const statusesObject = useSelector((state) => state.project.statuses) || {}
   const {
     data = {},
     isLoading,
@@ -80,7 +81,7 @@ const ProjectHealth = ({ projectName, share, index }) => {
   const statusValues = Object.entries(statuses).map(([key, value]) => ({
     value,
     label: key,
-    color: getStatusProps(key, statusAnatomy).color,
+    color: statusesObject[key]?.color || 'white',
   }))
 
   const percentageCopy = (v, suffix) => {
