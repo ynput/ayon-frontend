@@ -156,7 +156,7 @@ const ProgressBar = ({ values = [], backgroundColor, isLoading, onClick }) => {
             label={label}
             index={i}
             length={arr.length}
-            key={label + i}
+            key={i}
             left={arr.slice(0, i).reduce((acc, { value }) => acc + value, 0)}
             onClick={() => onClick && onClick({ value, label })}
           />
