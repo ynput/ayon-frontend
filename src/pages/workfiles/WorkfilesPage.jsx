@@ -9,15 +9,18 @@ const WorkfilesPage = () => {
 
   return (
     <main>
-      <Hierarchy style={{ maxWidth: 500, minWidth: 200 }} />
-      <TaskList style={{ maxWidth: 400, minWidth: 300 }} />
+      <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
+      <TaskList style={{ flex: 0.75, minWidth: 250, maxWidth: 500 }} />
       <WorkfileList
         selectedWorkfile={selectedWorkfile}
         setSelectedWorkfile={setSelectedWorkfile}
-        style={{ maxWidth: 500, minWidth: 300 }}
+        style={{ flex: 1, minWidth: 300, maxWidth: 500 }}
       />
 
-      <WorkfileDetail workfileId={selectedWorkfile?.id} />
+      <WorkfileDetail
+        workfileId={selectedWorkfile?.id}
+        style={{ flex: 1.5, overflow: 'hidden', maxWidth: 500 }}
+      />
     </main>
   )
 }

@@ -1,5 +1,6 @@
 import ayonClient from '/src/ayon'
 import styled from 'styled-components'
+import OverflowString from '../components/OverflowString'
 
 const AttributeTableContainer = styled.div`
   display: flex;
@@ -15,9 +16,13 @@ const AttributeTableRow = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 3px 0;
+  gap: 8px;
   border-top: 1px solid var(--color-grey-01);
   &:first-child {
     border-top: none !important;
+  }
+  span:first-child {
+    white-space: nowrap;
   }
 `
 
@@ -28,7 +33,7 @@ const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib
         additionalData.map((data, index) => (
           <AttributeTableRow key={index}>
             <span>{data.title}</span>
-            {data.value}
+            <OverflowString>{data.value}</OverflowString>
           </AttributeTableRow>
         ))}
 
@@ -43,7 +48,7 @@ const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib
           .map((attr) => (
             <AttributeTableRow key={attr.name}>
               <span>{attr.data.title}</span>
-              {data[attr.name]}
+              <OverflowString>{data[attr.name]}</OverflowString>
             </AttributeTableRow>
           ))}
 
@@ -51,7 +56,7 @@ const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib
         projectAttrib.map(({ name, value }) => (
           <AttributeTableRow key={name}>
             <span>{name}</span>
-            <span>{value}</span>
+            <OverflowString>{value}</OverflowString>
           </AttributeTableRow>
         ))}
     </AttributeTableContainer>

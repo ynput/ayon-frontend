@@ -58,7 +58,7 @@ const ProjectDetails = ({ projectName }) => {
     <DashboardPanelWrapper
       title={projectName}
       header={activeIcon}
-      stylePanel={{ height: '100%' }}
+      stylePanel={{ height: '100%', flex: 1 }}
       isError={isError}
     >
       <ThumbnailStyled>
