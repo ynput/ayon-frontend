@@ -68,7 +68,6 @@ const TableRow = ({ name, value }) => {
 
 TableRow.propTypes = {
   name: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
 }
 
 export default TableRow

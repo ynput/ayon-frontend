@@ -1,57 +1,52 @@
 import React from 'react'
-import UserTile from '/src/pages/settings/users/UserTile'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import ListStatsTile from './ListStatsTile'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
-import { useNavigate } from 'react-router'
-import { Fragment } from 'react'
+import { Button } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
+import { Link } from 'react-router-dom'
+
+const RowStyled = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+
+  :first-child {
+    margin-top: 8px;
+
+    button:nth-child(2) {
+      flex: 0.5;
+      min-width: fit-content;
+    }
+  }
+
+  button {
+    flex: 1;
+    overflow: hidden;
+  }
+`
 
 const ProjectUsers = ({ projectName }) => {
-  const navigator = useNavigate()
+  let { data = {}, isError } = useGetProjectDashboardQuery({ projectName, panel: 'users' })
 
-  let {
-    data = {},
-    isLoading,
-    isError,
-  } = useGetProjectDashboardQuery({ projectName, panel: 'users' })
-
-  const { active = 0, total = 0, counts = {}, managers = [], leaders = [] } = data
-
-  const title = `Users - ${total} - ${active} Active`
+  const { total = 0, active = 0, admins = 0, managers = 0, services = 0 } = data
 
   return (
-    <DashboardPanelWrapper
-      title={title}
-      isError={isError}
-      icon={{ link: '/settings/users', icon: 'manage_accounts' }}
-    >
-      {leaders.map((user, i) => (
-        <Fragment key={i}>
-          <h2>{user?.attrib?.position}</h2>
-          <UserTile
-            user={user}
-            style={{ width: '100%' }}
-            onClick={() => navigator(`/settings/users?name=${user.name}`)}
-          />
-        </Fragment>
-      ))}
-      {!!managers.length && (
-        <>
-          <h2>Managers</h2>
-          {managers.map((user, i) => (
-            <UserTile
-              key={i}
-              user={user}
-              style={{ width: '100%' }}
-              onClick={() => navigator(`/settings/users?name=${user.name}`)}
-            />
-          ))}
-        </>
-      )}
-      <h2>Roles</h2>
-      {Object.entries(counts).map(([role, stat], i) => (
-        <ListStatsTile key={i} title={role} stat={stat} isLoading={isLoading} />
-      ))}
+    <DashboardPanelWrapper isError={isError}>
+      <RowStyled>
+        <Button label={`Total Users - ${total}`} />
+        <Button label={`Active - ${active}`} />
+        <Link to={'/settings/users'}>
+          <Button icon="manage_accounts" />
+        </Link>
+      </RowStyled>
+      <RowStyled>
+        <Button label={`Admins - ${admins}`} />
+        <Button label={`Managers - ${managers}`} />
+        <Button label={`Services - ${services}`} />
+      </RowStyled>
     </DashboardPanelWrapper>
   )
 }

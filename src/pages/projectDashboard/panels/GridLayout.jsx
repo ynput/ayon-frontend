@@ -8,7 +8,7 @@ import { useRef } from 'react'
 // styled grid
 const GridStyled = styled.div`
   display: grid;
-  grid-template-columns: 1fr 0.8fr 1.2fr;
+  grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr auto;
   gap: 8px;
 
