@@ -59,10 +59,6 @@ const GridLayout = ({ children, projectName }) => {
     }
   }
 
-  // const childrenWithProps = React.Children.map(children, (child, index) =>
-  //   React.cloneElement(child, { projectName, share: handleShareLink, index }),
-  // )
-
   // separate children into columns
   const columns = []
   React.Children.forEach(children, (child, index) => {
@@ -71,7 +67,7 @@ const GridLayout = ({ children, projectName }) => {
       React.cloneElement(child, {
         projectName,
         share: handleShareLink,
-        position: [child.props.column, columns[child.props.column - 1].length],
+        position: [child.props.column - 1, columns[child.props.column - 1].length],
         key: `${index}-${child.props.column}`,
       }),
     )
