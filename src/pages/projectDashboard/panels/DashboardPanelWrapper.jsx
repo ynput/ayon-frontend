@@ -33,9 +33,16 @@ const PanelStyled = styled(Panel)`
     white-space: nowrap;
   }
 
+  /* sub title */
   h2 {
     width: 100%;
     margin: 4px 0;
+    display: flex;
+    justify-content: space-between;
+
+    span:last-child {
+      font-weight: normal;
+    }
   }
 
   /* set span */

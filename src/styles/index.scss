@@ -293,6 +293,7 @@ input:-webkit-autofill:focus {
 // remove text decoration from a tags
 a {
   text-decoration: none;
+  color: initial;
 }
 
 .p-tabview {
