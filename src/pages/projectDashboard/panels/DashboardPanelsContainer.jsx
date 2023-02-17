@@ -29,7 +29,7 @@ const GridStyled = styled.div`
   }
 `
 
-const GridLayout = ({ children, projectName }) => {
+const DashboardPanelsContainer = ({ children, projectName }) => {
   const dispatch = useDispatch()
   const ref = useRef()
 
@@ -82,4 +82,4 @@ const GridLayout = ({ children, projectName }) => {
   )
 }
 
-export default GridLayout
+export default DashboardPanelsContainer

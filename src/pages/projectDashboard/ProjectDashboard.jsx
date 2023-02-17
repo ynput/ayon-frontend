@@ -5,7 +5,7 @@ import ProjectUsers from './panels/ProjectUsers'
 import Timeline from './panels/Timeline'
 import { Section } from '@ynput/ayon-react-components'
 import ProjectHealth from './panels/ProjectHealth'
-import GridLayout from './panels/GridLayout'
+import DashboardPanelsContainer from './panels/DashboardPanelsContainer'
 import ProjectLatest from './panels/ProjectLatest'
 import ProjectDetails from './panels/ProjectDetails'
 import ProjectTeams from './panels/ProjectTeams'
@@ -42,13 +42,13 @@ const ProjectDashboard = ({ projectName }) => {
           <HeartBeat {...{ projectName }} />
           <Timeline {...{ projectName }} />
         </HeaderGridStyled>
-        <GridLayout projectName={projectName}>
+        <DashboardPanelsContainer projectName={projectName}>
           <ProjectStats column={1} />
           <ProjectHealth column={1} />
           <ProjectUsers column={2} />
           <ProjectTeams column={2} />
           <ProjectLatest column={3} />
-        </GridLayout>
+        </DashboardPanelsContainer>
       </PanelsContainerStyled>
       <ProjectDetails projectName={projectName} />
     </Section>
