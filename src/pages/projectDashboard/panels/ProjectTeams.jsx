@@ -110,9 +110,15 @@ const subTitle = (members, leaders) => {
 }
 
 const ProjectTeams = ({ projectName }) => {
-  let { data, isError } = useGetTeamsQuery({ projectName })
+  let { data = [], isError } = useGetTeamsQuery({ projectName })
 
-  data = demoData
+  let useDemo
+  useDemo = true
+
+  if (useDemo) {
+    data = demoData
+    isError = false
+  }
 
   return (
     <DashboardPanelWrapper isError={isError} title={`Teams - ${data.length}`}>
