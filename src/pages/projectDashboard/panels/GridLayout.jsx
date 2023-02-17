@@ -1,6 +1,6 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { onShare } from '/src/features/context'
 import { toPng } from 'html-to-image'
 import { useRef } from 'react'
@@ -8,34 +8,34 @@ import { useRef } from 'react'
 // styled grid
 const GridStyled = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr auto;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 8px;
+  height: 100%;
+  overflow: hidden;
 
-  /* overflow y */
-  overflow-y: clip;
-  padding-top: 1px;
-  margin-top: -1px;
+  /* media max 977px */
+  @media (max-width: 977px) {
+    overflow: auto;
+  }
 
-  /* grid rows */
-  ${({ rows }) =>
-    rows &&
-    rows.map(
-      (row, index) => css`
-        & > *:nth-child(${index + 1}) {
-          grid-row: span ${row};
-        }
-      `,
-    )}
+  /* panels in the grid */
+  & > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: auto;
+    height: 100%;
+    padding-bottom: 8px;
+  }
 `
 
 const GridLayout = ({ children, projectName }) => {
   const dispatch = useDispatch()
   const ref = useRef()
 
-  const handleShareLink = async (name, data, index) => {
+  const handleShareLink = async (name, data, position) => {
     // get ref of child using index
-    const childRef = ref.current.children[index]
+    const childRef = ref.current.children[position[0]]?.children[position[1]]
 
     const share = { name, data, img: null, link: window.location.href }
 
@@ -58,16 +58,30 @@ const GridLayout = ({ children, projectName }) => {
       dispatch(onShare(share))
     }
   }
-  // get rows props from children
-  const rows = React.Children.map(children, (child) => child.props.rows || 1)
 
-  const childrenWithProps = React.Children.map(children, (child, index) =>
-    React.cloneElement(child, { projectName, share: handleShareLink, index }),
-  )
+  // const childrenWithProps = React.Children.map(children, (child, index) =>
+  //   React.cloneElement(child, { projectName, share: handleShareLink, index }),
+  // )
+
+  // separate children into columns
+  const columns = []
+  React.Children.forEach(children, (child, index) => {
+    if (!columns[child.props.column - 1]) columns[child.props.column - 1] = []
+    columns[child.props.column - 1].push(
+      React.cloneElement(child, {
+        projectName,
+        share: handleShareLink,
+        position: [child.props.column, columns[child.props.column - 1].length],
+        key: `${index}-${child.props.column}`,
+      }),
+    )
+  })
 
   return (
-    <GridStyled rows={rows} ref={ref}>
-      {childrenWithProps}
+    <GridStyled ref={ref}>
+      {columns.map((rows, i) => (
+        <div key={i}>{rows.map((child) => child)}</div>
+      ))}
     </GridStyled>
   )
 }

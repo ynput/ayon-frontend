@@ -8,6 +8,7 @@ import ProjectHealth from './panels/ProjectHealth'
 import GridLayout from './panels/GridLayout'
 import ProjectLatest from './panels/ProjectLatest'
 import ProjectDetails from './panels/ProjectDetails'
+import ProjectTeams from './panels/ProjectTeams'
 
 // top grid
 const HeaderGridStyled = styled.div`
@@ -22,21 +23,31 @@ const PanelsContainerStyled = styled.div`
   flex-direction: column;
   align-self: baseline;
   flex: 3;
+  height: 100%;
+  overflow: hidden;
 `
 
 const ProjectDashboard = ({ projectName }) => {
   return (
-    <Section style={{ flexDirection: 'row' }}>
+    <Section
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '3fr minmax(300px, 25vw)',
+        height: `calc(100% + 8px)`,
+        alignItems: 'start',
+      }}
+    >
       <PanelsContainerStyled>
         <HeaderGridStyled>
           <HeartBeat {...{ projectName }} />
           <Timeline {...{ projectName }} />
         </HeaderGridStyled>
         <GridLayout projectName={projectName}>
-          <ProjectStats rows={1} />
-          <ProjectUsers rows={2} />
-          <ProjectLatest rows={2} />
-          <ProjectHealth rows={1} />
+          <ProjectStats column={1} />
+          <ProjectHealth column={1} />
+          <ProjectUsers column={2} />
+          <ProjectTeams column={2} />
+          <ProjectLatest column={3} />
         </GridLayout>
       </PanelsContainerStyled>
       <ProjectDetails projectName={projectName} />

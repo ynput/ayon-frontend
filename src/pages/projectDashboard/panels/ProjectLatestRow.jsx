@@ -209,20 +209,18 @@ const ProjectLatestRow = ({
   }
 
   return (
-    <div>
-      <GridStyled>
-        {data.map((entity, index) => (
-          <EntityGridTile
-            key={`${entity.id}-${index}`}
-            {...entity}
-            subTitle={null}
-            onClick={() => handleClick(entity)}
-            isLoading={isLoadingWhole}
-          />
-        ))}
-        {isNoData && <span>No Recent Data</span>}
-      </GridStyled>
-    </div>
+    <GridStyled>
+      {data.map((entity, index) => (
+        <EntityGridTile
+          key={`${entity.id}-${index}`}
+          {...entity}
+          subTitle={null}
+          onClick={() => handleClick(entity)}
+          isLoading={isLoadingWhole}
+        />
+      ))}
+      {isNoData && <span>No Recent Data</span>}
+    </GridStyled>
   )
 }
 

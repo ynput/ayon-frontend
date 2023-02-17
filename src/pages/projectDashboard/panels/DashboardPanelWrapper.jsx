@@ -10,10 +10,9 @@ const PanelStyled = styled(Panel)`
   gap: 0;
   min-height: 64px;
   height: fit-content;
-  overflow: hidden;
   align-items: center;
 
-  max-height: 100%;
+  min-height: fit-content;
 
   header {
     display: flex;
@@ -57,8 +56,8 @@ const ContentStyled = styled.div`
   padding: 8px;
   padding-top: 0;
 
-  overflow-y: auto;
-  overflow-x: clip;
+  /* overflow-y: auto;
+  overflow-x: clip; */
 `
 
 const IconStyled = styled(Button)`

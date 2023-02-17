@@ -58,13 +58,19 @@ const ProjectDetails = ({ projectName }) => {
     <DashboardPanelWrapper
       title={projectName}
       header={activeIcon}
-      stylePanel={{ height: '100%', flex: 1 }}
+      stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden' }}
       isError={isError}
+      style={{ height: '100%', overflow: 'hidden' }}
     >
       <ThumbnailStyled>
         <Thumbnail projectName={projectName} />
       </ThumbnailStyled>
-      <AttributeTable projectAttrib={attribArray} />
+      <AttributeTable
+        projectAttrib={attribArray}
+        style={{
+          overflow: 'auto',
+        }}
+      />
     </DashboardPanelWrapper>
   )
 }
