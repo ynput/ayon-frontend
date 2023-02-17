@@ -97,8 +97,18 @@ const buildEntityTilesQuery = (entities) => {
   return query
 }
 
-const formatEntityTiles = (project, entities) => {
+export const formatEntityTiles = (project, entities) => {
   // data = {project: {folders: {edges: [{node: {id}}]}}}
+
+  // if entities is an array, convert to object
+  if (Array.isArray(entities)) {
+    const obj = {}
+    for (const entity of entities) {
+      obj[entity] = []
+    }
+    entities = obj
+  }
+
   const allEntities = []
   for (const type in entities) {
     let entities = project[type + 's']
@@ -107,9 +117,6 @@ const formatEntityTiles = (project, entities) => {
     entities = entities.edges.map(({ node }) => ({ ...node, type }))
     allEntities.push(...entities)
   }
-
-  // sort entities by updatedAt
-  allEntities.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
 
   // which entity type to use for thumbnail
   const thumbnailTypes = {
