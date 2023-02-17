@@ -26,6 +26,7 @@ export const TileStyled = styled.div`
     white-space: nowrap;
     text-overflow: ellipsis;
     border-bottom: unset;
+    display: block;
   }
 `
 

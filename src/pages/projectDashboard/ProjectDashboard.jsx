@@ -32,7 +32,7 @@ const ProjectDashboard = ({ projectName }) => {
     <Section
       style={{
         display: 'grid',
-        gridTemplateColumns: '3fr minmax(300px, 25vw)',
+        gridTemplateColumns: 'auto minmax(300px, 20vw)',
         height: `calc(100% + 8px)`,
         alignItems: 'start',
       }}

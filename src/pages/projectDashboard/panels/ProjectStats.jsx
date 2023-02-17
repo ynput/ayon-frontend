@@ -40,6 +40,10 @@ const ProjectStats = ({ projectName, share, position }) => {
       title="Project Stats"
       isError={isError}
       icon={{ icon: 'share', onClick: () => share('stats', shareData, position) }}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+      }}
     >
       {statsOrder.map((id) => {
         const { label, icon } = stats[id]
