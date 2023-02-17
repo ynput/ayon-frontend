@@ -50,18 +50,24 @@ const RevealString = styled.span`
   :hover {
     opacity: 1;
     height: auto;
-    padding: 4px;
     box-shadow: 0 0 8px 0 rgb(0 0 0 / 20%);
     transition: opacity 0.2s;
   }
 `
 
 const TableRow = ({ name, value }) => {
+  let isNode
+  // check if value if $$typeof: Symbol(react.element)
+  if (typeof value === 'object' && !Array.isArray(value) && value.$$typeof) {
+    isNode = true
+  }
+
   return (
     <AttributeTableRow>
       <span>{name}</span>
-      <OverflowString>{value}</OverflowString>
-      <RevealString onClick={() => copyToClipboard(value)}>{value}</RevealString>
+
+      {isNode ? value : <OverflowString>{value}</OverflowString>}
+      {!isNode && <RevealString onClick={() => copyToClipboard(value)}>{value}</RevealString>}
     </AttributeTableRow>
   )
 }
