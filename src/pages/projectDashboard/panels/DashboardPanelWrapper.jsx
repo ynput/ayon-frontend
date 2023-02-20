@@ -10,10 +10,9 @@ const PanelStyled = styled(Panel)`
   gap: 0;
   min-height: 64px;
   height: fit-content;
-  overflow: hidden;
   align-items: center;
 
-  max-height: 100%;
+  min-height: fit-content;
 
   header {
     display: flex;
@@ -34,9 +33,16 @@ const PanelStyled = styled(Panel)`
     white-space: nowrap;
   }
 
+  /* sub title */
   h2 {
     width: 100%;
     margin: 4px 0;
+    display: flex;
+    justify-content: space-between;
+
+    span:last-child {
+      font-weight: normal;
+    }
   }
 
   /* set span */
@@ -57,8 +63,8 @@ const ContentStyled = styled.div`
   padding: 8px;
   padding-top: 0;
 
-  overflow-y: auto;
-  overflow-x: clip;
+  /* overflow-y: auto;
+  overflow-x: clip; */
 `
 
 const IconStyled = styled(Button)`

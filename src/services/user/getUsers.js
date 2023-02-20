@@ -1,18 +1,6 @@
 import { ayonApi } from '../ayon'
 import ayonClient from '/src/ayon'
 
-const USERS_LIST_QUERY = `
-query UserList {
-  users {
-    edges {
-      node {
-        name
-      }
-    }
-  }
-}
-`
-
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
     users(name: $name) {
@@ -76,12 +64,7 @@ const getUsers = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getUsersList: build.query({
       query: () => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: USERS_LIST_QUERY,
-          variables: {},
-        },
+        url: '/api/users',
       }),
       transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
       providesTags: () => ['user'],

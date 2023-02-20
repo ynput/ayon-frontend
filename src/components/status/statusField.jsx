@@ -125,7 +125,7 @@ const StatusField = ({
 }) => {
   // TODO: move to context to a higher level component?
   const statuses = useSelector((state) => state.project.statuses)
-  const { shortName, color, icon } = statuses[value]
+  const { shortName, color, icon } = statuses[value] || {}
 
   return (
     <StatusStyled

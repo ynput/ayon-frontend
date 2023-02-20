@@ -1,13 +1,9 @@
 import React from 'react'
-import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router'
+import { useSelector } from 'react-redux'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import EntityGridTile from '/src/components/EntityGridTile'
-import { ayonApi } from '/src/services/ayon'
-import { useGetEntityTilesQuery } from '/src/services/entity/getEntity'
-import { useGetEventsByTopicQuery } from '/src/services/events/getEvents'
-import { useGetProjectQuery } from '/src/services/project/getProject'
+import { useGetProjectDashboardActivityQuery } from '/src/services/getProjectDashboard'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
@@ -29,138 +25,33 @@ const GridStyled = styled.div`
   }
 `
 
-const ProjectLatestRow = ({
-  projectName: projectNameInit,
-  types = [],
-  events = [],
-  banTopics = [],
-}) => {
+const ProjectLatestRow = ({ projectName, entities, args = {}, filter }) => {
   const project = useSelector((state) => state.project)
   const { families, folders, tasks, statuses } = project
+  // transform args object to graphql arguments string
+  // {sortBy: "updatedAt", last: 4, statuses: ["On hold"]} => `sortBy: "updatedAt", last: 4, statuses: ["On hold"]`
+  const argsString = Object.keys(args)
+    .map((key) => `${key}: ${JSON.stringify(args[key])}`)
+    .join(', ')
 
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const [projectName, setProjectName] = useState(null)
-
-  const [isLoadingWhole, setIsLoadingWhole] = useState(true)
-  //   const { data = {}, isLoading, isError } = useGetProjectLatestQuery({ projectName })
-
-  //   update project name state
-  useEffect(() => {
-    setIsLoadingWhole(true)
-    setProjectName(projectNameInit)
-  }, [projectNameInit])
-
-  // project
-  useGetProjectQuery({ projectName }, { skip: !projectName })
-
-  //   create topics array
-  // topic = entity.[entity].[event]
-  const topics = []
-  for (const entity of types) {
-    for (const event of events) {
-      const topic = `entity.${entity}.${event}`
-      if (banTopics.includes(topic)) continue
-      topics.push(topic)
-    }
-  }
-
-  // number of events to get state
-  //   const [numEvents, setNumEvents] = useState()
-  const numEvents = 4
-
-  //  get latest events for project and topics
-  const {
-    data: eventsData = [],
-    isLoading: isLoadingEvents,
-    isError: isErrorEvents,
-    isFetching: isFetchingEvents,
-  } = useGetEventsByTopicQuery(
-    {
-      projects: [projectName],
-      topics,
-      last: numEvents,
-    },
-    { skip: !projectName || !topics.length },
-  )
-
-  // log the events
-  // console.log({ eventsData })
-
-  //   get summary.id for each event
-  // events loading state
-  const [isEventsLoading, setIsEventsLoading] = useState(true)
-  // data state
-  const [eventData, setEntityData] = useState([])
-
-  // async func that gets the entity id for each event
-  const getEntityIds = async (events) => {
-    try {
-      const eventsDataPromises = []
-      for (const { id } of events) {
-        const promises = dispatch(ayonApi.endpoints.getEventById.initiate({ id }))
-        eventsDataPromises.push(promises)
-      }
-
-      const eventsData = await Promise.all(eventsDataPromises)
-      return eventsData
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  // get event object for each event Id, we need to do this to get the entity id off summary
-  useEffect(() => {
-    if (!isLoadingEvents && !isErrorEvents && !isFetchingEvents && projectName) {
-      setIsEventsLoading(true)
-      getEntityIds(eventsData)
-        .then((data) => {
-          setEntityData(data)
-          setIsEventsLoading(false)
-        })
-        .catch((error) => console.error(error))
-    }
-  }, [isLoadingEvents, isErrorEvents, isFetchingEvents, projectName])
-
-  // create entityIds object with entity type as key and array of entity ids as value
-  // { subset: [id1, id2, id3], version: [id1, id2, id3] }
-  const entityIds = {}
-  const uniqueEntityIds = []
-  for (let { data } of eventData) {
-    data = data || {}
-    const { summary = {}, topic } = data
-    const { entityId } = summary
-
-    // check if entity id is unique
-    if (entityId && uniqueEntityIds.includes(entityId)) continue
-
-    uniqueEntityIds.push(entityId)
-
-    if (entityId && topic) {
-      // split topic to get type
-      let [, type] = topic.split('.')
-      // add to entityIds
-      if (entityIds[type]) {
-        entityIds[type].push(entityId)
-      } else {
-        entityIds[type] = [entityId]
-      }
-    }
-  }
-
-  // get entity tiles data for each entity type
-  // [entity1, entity2, entity3]
   let {
-    data = [{}, {}, {}],
-    isError,
+    data = [{}, {}, {}, {}],
+    isLoading,
     isFetching,
-  } = useGetEntityTilesQuery(
+  } = useGetProjectDashboardActivityQuery(
     {
       projectName,
-      entities: entityIds,
+      entities,
+      args: argsString,
+      name: 'Latest',
     },
-    { skip: isEventsLoading || isErrorEvents || !projectName || !entityIds },
+    { skip: !projectName },
   )
+
+  // use filter function to transform data if provided
+  if (filter && typeof filter === 'function' && !isLoading && !isFetching) {
+    data = filter([...data])
+  }
 
   data = data.map((entity) => {
     let { type, icon, status } = entity
@@ -174,13 +65,13 @@ const ProjectLatestRow = ({
       typeIcon = tasks?.[icon]?.icon
     }
 
-    const statusIcon = statuses?.[status]?.icon || 'radio_button_checked'
+    const statusIcon = statuses?.[status]?.icon
     const statusColor = statuses?.[status]?.color || 'white'
 
     return { ...entity, typeIcon, statusIcon, statusColor, projectName }
   })
 
-  const isNoData = !data || data.length === 0 || (!isEventsLoading && !entityIds)
+  const isNoData = (!data || data.length === 0) && !isFetching && !isLoading
   //   if no data return 3 error tiles
   if (isNoData) {
     data = [
@@ -196,33 +87,22 @@ const ProjectLatestRow = ({
     ]
   }
 
-  //   if all data is loaded, setIsLoadingWhole to false
-  useEffect(() => {
-    if (!isEventsLoading && !isErrorEvents && !isFetchingEvents && !isError && !isFetching) {
-      setIsLoadingWhole(false)
-    }
-  }, [isEventsLoading, isErrorEvents, isFetchingEvents, isError, isFetching, projectName])
-
-  const handleClick = (ent) => {
-    const path = `/projects/${projectName}/browser?entity=${ent.id}&type=${ent.type}`
-    navigate(path)
-  }
-
   return (
-    <div>
-      <GridStyled>
-        {data.map((entity, index) => (
+    <GridStyled>
+      {data.map((entity, index) => (
+        <Link
+          key={`${entity.id}-${index}`}
+          to={`/projects/${projectName}/browser?entity=${entity.id}&type=${entity.type}`}
+        >
           <EntityGridTile
-            key={`${entity.id}-${index}`}
             {...entity}
             subTitle={null}
-            onClick={() => handleClick(entity)}
-            isLoading={isLoadingWhole}
+            isLoading={isLoading || isFetching || !projectName}
           />
-        ))}
-        {isNoData && <span>No Recent Data</span>}
-      </GridStyled>
-    </div>
+        </Link>
+      ))}
+      {isNoData && <span>No Recent Data</span>}
+    </GridStyled>
   )
 }
 

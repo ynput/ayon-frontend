@@ -43,7 +43,7 @@ const getStorage = (storageUsage) => {
   return { percentage, color }
 }
 
-const ProjectHealth = ({ projectName, share, index }) => {
+const ProjectHealth = ({ projectName, share, position }) => {
   const statusesObject = useSelector((state) => state.project.statuses) || {}
   const {
     data = {},
@@ -109,7 +109,7 @@ const ProjectHealth = ({ projectName, share, index }) => {
     <DashboardPanelWrapper
       title="Health"
       isError={isError}
-      icon={{ icon: 'share', onClick: () => share('Health', shareData, index) }}
+      icon={{ icon: 'share', onClick: () => share('Health', shareData, position) }}
     >
       <ProgressTile
         title={shareData.complete}

@@ -40,7 +40,7 @@ const PanelStyled = styled(Panel)`
     min-height: 17.5px;
   }
 
-  /* isError border */
+  /* isError */
   ${({ isError }) =>
     isError &&
     css`
@@ -157,7 +157,6 @@ EntityGridTile.propTypes = {
   onClick: PropTypes.func,
   thumbnailEntityId: PropTypes.string,
   thumbnailEntityType: PropTypes.string,
-  projectName: PropTypes.string,
   subTitle: PropTypes.string,
   footer: PropTypes.string,
   profile: PropTypes.string,

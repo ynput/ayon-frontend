@@ -167,6 +167,7 @@ const Timeline = ({ projectName }) => {
         padding: '0 8px',
         flex: 1,
       }}
+      stylePanel={{ height: '100%' }}
     >
       <TailsStyled>{startString}</TailsStyled>
       <ProgressStyled animation={animation} onAnimationEnd={() => setAnimation(false)}>

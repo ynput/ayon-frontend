@@ -6,6 +6,7 @@ import UserImage from './UserImage'
 import { useGetUserByNameQuery } from '/src/services/user/getUsers'
 import { useSelector } from 'react-redux'
 import { formatDistance } from 'date-fns'
+import { isObject } from 'lodash'
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -57,7 +58,7 @@ const UserTile = ({ user, onClick, userName, suspense, children, disableHover, s
     if (isAdmin) rolesHeader.push('admin')
     else if (isService) rolesHeader.push('service')
     else if (isManager) rolesHeader.push('manager')
-    else if (roles) {
+    else if (isObject(roles) && !Array.isArray(roles)) {
       Object.values(roles).forEach((roles2) => {
         roles2.forEach((role) => !rolesHeader.includes(role) && rolesHeader.push(role))
       })

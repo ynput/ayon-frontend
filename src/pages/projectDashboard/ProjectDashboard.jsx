@@ -5,9 +5,10 @@ import ProjectUsers from './panels/ProjectUsers'
 import Timeline from './panels/Timeline'
 import { Section } from '@ynput/ayon-react-components'
 import ProjectHealth from './panels/ProjectHealth'
-import GridLayout from './panels/GridLayout'
+import DashboardPanelsContainer from './panels/DashboardPanelsContainer'
 import ProjectLatest from './panels/ProjectLatest'
 import ProjectDetails from './panels/ProjectDetails'
+import ProjectTeams from './panels/ProjectTeams'
 
 // top grid
 const HeaderGridStyled = styled.div`
@@ -22,22 +23,32 @@ const PanelsContainerStyled = styled.div`
   flex-direction: column;
   align-self: baseline;
   flex: 3;
+  height: 100%;
+  overflow: hidden;
 `
 
 const ProjectDashboard = ({ projectName }) => {
   return (
-    <Section style={{ flexDirection: 'row' }}>
+    <Section
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'auto minmax(300px, 20vw)',
+        height: `calc(100% + 8px)`,
+        alignItems: 'start',
+      }}
+    >
       <PanelsContainerStyled>
         <HeaderGridStyled>
           <HeartBeat {...{ projectName }} />
           <Timeline {...{ projectName }} />
         </HeaderGridStyled>
-        <GridLayout projectName={projectName}>
-          <ProjectStats rows={1} />
-          <ProjectUsers rows={2} />
-          <ProjectLatest rows={2} />
-          <ProjectHealth rows={1} />
-        </GridLayout>
+        <DashboardPanelsContainer projectName={projectName}>
+          <ProjectStats column={1} />
+          <ProjectHealth column={1} />
+          <ProjectUsers column={2} />
+          <ProjectTeams column={2} />
+          <ProjectLatest column={3} />
+        </DashboardPanelsContainer>
       </PanelsContainerStyled>
       <ProjectDetails projectName={projectName} />
     </Section>
