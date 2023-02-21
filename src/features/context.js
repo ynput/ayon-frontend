@@ -1,29 +1,39 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+const initialState = {
+  projectName: null,
+  project: {},
+  expandedFolders: {},
+  focused: {
+    type: null,
+    folders: [],
+    subsets: [],
+    versions: [],
+    tasks: [],
+    editor: [],
+  },
+  selectedVersions: {},
+  pairing: [],
+  dialog: {
+    type: null,
+  },
+  reload: {},
+  breadcrumbs: {},
+  share: { name: null, data: null, link: null, img: null },
+}
+
 const contextSlice = createSlice({
   name: 'context',
-  initialState: {
-    projectName: null,
-    project: {},
-    expandedFolders: {},
-    focused: {
-      type: null,
-      folders: [],
-      subsets: [],
-      versions: [],
-      tasks: [],
-      editor: [],
-    },
-    selectedVersions: {},
-    pairing: [],
-    dialog: {
-      type: null,
-    },
-    reload: {},
-    breadcrumbs: {},
-    share: { name: null, data: null, link: null, img: null },
-  },
+  initialState,
   reducers: {
+    selectProject: (state) => {
+      // reset expandedFolders, focused, selectedVersions, pairing
+      state.expandedFolders = initialState.expandedFolders
+      state.focused = initialState.focused
+      state.selectedVersions = initialState.selectedVersions
+      state.pairing = initialState.pairing
+    },
+
     setExpandedFolders: (state, action) => {
       state.expandedFolders = action.payload
     },
@@ -163,6 +173,7 @@ export const {
   projectSelected,
   onShare,
   closeShare,
+  selectProject,
 } = contextSlice.actions
 
 export default contextSlice.reducer

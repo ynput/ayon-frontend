@@ -100,7 +100,7 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, isLoading, data } = useGetHierarchyQuery(
+  const { isError, error, isLoading, data, isFetching } = useGetHierarchyQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -111,7 +111,7 @@ const Hierarchy = (props) => {
   let treeData = useMemo(() => {
     if (!data) return []
     return filterHierarchy(query, data, folders)
-  }, [data, query])
+  }, [data, query, isFetching])
 
   function filterArray(arr = [], filter = []) {
     let filteredArr = []
@@ -149,7 +149,7 @@ const Hierarchy = (props) => {
     if (data) {
       return createDataObject(data)
     }
-  }, [data])
+  }, [data, isFetching])
 
   const treeDataFlat = useMemo(() => {
     if (selectedFolderTypes.length) {
@@ -157,7 +157,7 @@ const Hierarchy = (props) => {
 
       return filtered
     }
-  }, [treeData, selectedFolderTypes])
+  }, [treeData, selectedFolderTypes, isFetching])
 
   if (treeDataFlat) {
     treeData = treeDataFlat
@@ -175,7 +175,7 @@ const Hierarchy = (props) => {
     const r = {}
     for (const tid of focusedFolders) r[tid] = true
     return r
-  }, [focusedFolders])
+  }, [focusedFolders, isFetching])
 
   // Set breadcrumbs on row click (the latest selected folder,
   // will be the one that is displayed in the breadcrumbs)
@@ -320,7 +320,7 @@ const Hierarchy = (props) => {
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
     )
-  }, [treeData, selectedFolders, expandedFolders])
+  }, [treeData, selectedFolders, expandedFolders, isFetching])
 
   if (isError) {
     toast.error(`Unable to load hierarchy. ${error}`)
@@ -332,7 +332,7 @@ const Hierarchy = (props) => {
         <InputText
           style={{ flexGrow: 1, minWidth: 100 }}
           placeholder="Filter folders..."
-          disabled={!projectName || isLoading}
+          disabled={!projectName || isLoading || isFetching}
           value={query}
           onChange={(evt) => setQuery(evt.target.value)}
           autocomplete="off"
@@ -344,14 +344,14 @@ const Hierarchy = (props) => {
           placeholder="Select folder types"
           showClear={true}
           optionLabel="label"
-          disabled={!projectName || isLoading}
+          disabled={!projectName || isLoading || isFetching}
           selectedItemTemplate={selectedTypeTemplate}
           onChange={(e) => setSelectedFolderTypes(e.value)}
           style={{ flexBasis: 150 }}
         />
       </Toolbar>
 
-      <TablePanel loading={isLoading}>
+      <TablePanel loading={isLoading || isFetching}>
         <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
