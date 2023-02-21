@@ -38,6 +38,15 @@ const PanelStyled = styled(Panel)`
     `}
 `
 
+const TitleStyled = styled.strong`
+  white-space: nowrap;
+  width: 100%;
+  position: relative;
+  display: inline-block;
+  overflow-x: clip;
+  text-overflow: ellipsis;
+`
+
 const UserTile = ({
   user,
   onClick,
@@ -93,8 +102,10 @@ const UserTile = ({
       isError={isError || isLoading}
     >
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
-      <div style={{ flex: 1 }}>
-        <strong>{!isLoading && `${attrib?.fullName} (${name})`}</strong>
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <TitleStyled style={{ whiteSpace: 'nowrap' }}>
+          {!isLoading && `${attrib?.fullName} (${name})`}
+        </TitleStyled>
         <br />
         <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
           {!isLoading ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}

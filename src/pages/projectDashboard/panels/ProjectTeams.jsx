@@ -20,6 +20,9 @@ const subTitle = (members, leaders) => {
 const ProjectTeams = ({ projectName }) => {
   let { data = [], isError } = useGetTeamsQuery({ projectName })
 
+  // no teams return null
+  if (!data.length) return null
+
   return (
     <DashboardPanelWrapper isError={isError} title={`Teams - ${data.length}`}>
       {data.map(
@@ -28,9 +31,7 @@ const ProjectTeams = ({ projectName }) => {
             <Fragment key={i}>
               <h2>
                 <span>{team.name}</span>
-                <span>
-                  {subTitle(team.membersCount - team.leaders.length, team.leaders.length)}
-                </span>
+                <span>{subTitle(team.memberCount - team.leaders.length, team.leaders.length)}</span>
               </h2>
               {team.leaders.map((leader, i) => (
                 <Link key={`${leader.name}-${i}`} to={`/settings/users?name=${leader.name}`}>
