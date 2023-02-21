@@ -25,9 +25,29 @@ const PanelStyled = styled(Panel)`
         cursor: pointer;
       }
     `}
+
+  /* isError */
+  ${({ isError }) =>
+    isError &&
+    css`
+      opacity: 0.25;
+
+      :hover {
+        background-color: var(--color-grey-01);
+      }
+    `}
 `
 
-const UserTile = ({ user, onClick, userName, suspense, children, disableHover, style }) => {
+const UserTile = ({
+  user,
+  onClick,
+  userName,
+  suspense,
+  children,
+  disableHover,
+  style,
+  leaderRoles,
+}) => {
   const currentUser = useSelector((state) => state.user.name)
 
   // RTK QUERY
@@ -52,8 +72,8 @@ const UserTile = ({ user, onClick, userName, suspense, children, disableHover, s
   const { name, attrib, updatedAt, isManager, isAdmin, isService, roles } = user || {}
   const isSelf = name === currentUser
 
-  let rolesHeader = []
-  if (!isLoading) {
+  let rolesHeader = leaderRoles || []
+  if (!isLoading && !leaderRoles) {
     // add admin, manager, service
     if (isAdmin) rolesHeader.push('admin')
     else if (isService) rolesHeader.push('service')
@@ -66,15 +86,18 @@ const UserTile = ({ user, onClick, userName, suspense, children, disableHover, s
   }
 
   return (
-    <PanelStyled onClick={onClick} disableHover={disableHover} style={style}>
+    <PanelStyled
+      onClick={onClick}
+      disableHover={disableHover}
+      style={style}
+      isError={isError || isLoading}
+    >
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
       <div style={{ flex: 1 }}>
-        <strong>
-          {attrib?.fullName} ({name})
-        </strong>
+        <strong>{!isLoading && `${attrib?.fullName} (${name})`}</strong>
         <br />
-        <span style={{ opacity: 0.5 }}>
-          {rolesHeader.length ? rolesHeader.join(', ') : 'No Roles'}
+        <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
+          {!isLoading ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
         </span>
       </div>
       {updatedAt && (
@@ -86,7 +109,7 @@ const UserTile = ({ user, onClick, userName, suspense, children, disableHover, s
           })}
         </span>
       )}
-      {children}
+      {!isLoading && children}
     </PanelStyled>
   )
 }
