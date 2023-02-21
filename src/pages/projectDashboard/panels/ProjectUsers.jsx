@@ -14,9 +14,12 @@ const RowStyled = styled.div`
 `
 
 const ProjectUsers = ({ projectName }) => {
-  let { data = {}, isError } = useGetProjectDashboardQuery({ projectName, panel: 'users' })
+  let { data: { counts = {} } = {}, isError } = useGetProjectDashboardQuery({
+    projectName,
+    panel: 'users',
+  })
 
-  const { total = 0, active = 0 } = data
+  const { total = 0, active = 0 } = counts
 
   return (
     <DashboardPanelWrapper isError={isError}>
