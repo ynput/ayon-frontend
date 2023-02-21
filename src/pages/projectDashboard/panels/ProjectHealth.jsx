@@ -134,15 +134,13 @@ const ProjectHealth = ({ projectName, share, position }) => {
         isLoading={isLoading}
         onProgressClick={(v) => tasksCopy(v, 'Tasks')}
       />
-      {!!statusValues.length && (
-        <ProgressTile
-          title={'Statuses'}
-          icon="check_circle"
-          values={statusValues}
-          isLoading={isLoading}
-          onProgressClick={(v) => tasksCopy(v, 'Statuses')}
-        />
-      )}
+      <ProgressTile
+        title={'Statuses'}
+        icon="check_circle"
+        values={statusValues || []}
+        isLoading={isLoading}
+        onProgressClick={(v) => tasksCopy(v, 'Statuses')}
+      />
     </DashboardPanelWrapper>
   )
 }
