@@ -12,6 +12,9 @@ const StackedStyled = styled.div`
 `
 
 const UserImagesStacked = ({ users = [] }) => {
+  // limit to 5 users
+  users = users.slice(0, 5)
+
   return (
     <StackedStyled length={users.length}>
       {users.map((user, i) => (
