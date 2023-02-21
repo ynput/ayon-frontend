@@ -276,6 +276,7 @@ const EditorPage = () => {
         depth: depth,
         icon: foldersObject[folder.folderType]?.icon || 'folder',
         isTask: false,
+        parents: folder.parents,
       })
 
       // add tasks to list if not already found
@@ -304,21 +305,26 @@ const EditorPage = () => {
   }
 
   // create a flat list of everything searchable, folders and tasks
-  let searchabledFolders = useMemo(
+  let searchableFolders = useMemo(
     () => getFolderTaskList(hierarchyData).sort((a, b) => a.depth - b.depth),
     [hierarchyData],
   )
 
   // create a set that can be used to look up a specific id
-  const searchabledFoldersSet = useMemo(() => {
+  const searchableFoldersSet = useMemo(() => {
     const res = new Map()
 
-    for (const folder of searchabledFolders) {
-      res.set(folder.id, { parent: folder.parentId, childrenLength: folder.childrenLength })
+    for (const folder of searchableFolders) {
+      res.set(folder.id, {
+        parent: folder.parentId,
+        childrenLength: folder.childrenLength,
+        name: folder.value,
+        parents: folder.parents,
+      })
     }
 
     return res
-  }, [searchabledFolders])
+  }, [searchableFolders])
 
   const searchFilter = (search, suggestions) => {
     // filter through suggestions
@@ -338,7 +344,7 @@ const EditorPage = () => {
       if (!res.isTask) return
 
       // find all
-      searchabledFolders.forEach(
+      searchableFolders.forEach(
         (folder) =>
           folder.taskNames.includes(res.value) &&
           !folderIds.includes(folder.id) &&
@@ -363,7 +369,7 @@ const EditorPage = () => {
       // get folders parentId
       const getAllParents = (folder, id) => {
         const childId = id || folder.id
-        const parentId = searchabledFoldersSet.get(childId).parent
+        const parentId = searchableFoldersSet.get(childId).parent
         if (parentId && !folderIds.includes(parentId)) {
           // add parent id
           folderIds.push(parentId)
@@ -789,14 +795,23 @@ const EditorPage = () => {
   }
 
   const onRowClick = (event) => {
-    const node = event.node.data
-    if (node.__entityType !== 'folder') return
-    dispatch(
-      setBreadcrumbs({
-        parents: node.parents,
-        folder: node.name,
-      }),
-    )
+    let node = event.node.data
+    if (node.__entityType === 'folder') {
+      node = event.node.data
+    } else if (node.__entityType === 'task') {
+      // find the parent folder
+      node = searchableFoldersSet.get(node.__parentId)
+      console.log(node)
+    }
+
+    if (node) {
+      dispatch(
+        setBreadcrumbs({
+          parents: node.parents,
+          folder: node.name,
+        }),
+      )
+    }
   }
 
   const filterOptions = [{ name: 'name' }, { name: 'type' }, ...columns].map(({ name }) => ({
@@ -919,7 +934,7 @@ const EditorPage = () => {
         <Toolbar>
           <SearchDropdown
             filter={searchFilter}
-            suggestions={searchabledFolders}
+            suggestions={searchableFolders}
             suggestionsLimit={5}
             onSubmit={handleSearchComplete}
             onClear={() => searchIds && setSearchIds({})}
