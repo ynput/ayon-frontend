@@ -217,7 +217,7 @@ function FieldTemplate(props) {
     props.schema.layout !== 'compact'
   ) {
     let classes = []
-    if (isSelected) className.push('selected')
+    if (isSelected) classes.push('selected')
 
     for (const changedPath of props.formContext.changedKeys) {
       if (arrayStartsWith(changedPath, path)) {
