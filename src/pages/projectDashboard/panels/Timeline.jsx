@@ -124,6 +124,7 @@ const Timeline = ({ projectName }) => {
     data = {},
     isError,
     isLoading,
+    isFetching,
   } = useGetProjectAttribsQuery({
     projectName,
     attribs: ['startDate', 'endDate'],
@@ -167,12 +168,14 @@ const Timeline = ({ projectName }) => {
         padding: '0 8px',
         flex: 1,
       }}
+      isLoading={isLoading || isFetching}
       stylePanel={{ height: '100%' }}
     >
       <TailsStyled>{startString}</TailsStyled>
       <ProgressStyled animation={animation} onAnimationEnd={() => setAnimation(false)}>
         <ProgressBar
           isLoading={isLoading}
+          is
           values={[
             { value: done, label: `${done}/${length}` },
             { value: left, label: `${length - done} Left`, color: 'var(--color-grey-08)' },

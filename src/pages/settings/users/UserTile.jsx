@@ -27,8 +27,8 @@ const PanelStyled = styled(Panel)`
     `}
 
   /* isError */
-  ${({ isError }) =>
-    isError &&
+  ${({ isLoading }) =>
+    isLoading &&
     css`
       opacity: 0.25;
 
@@ -56,6 +56,7 @@ const UserTile = ({
   disableHover,
   style,
   leaderRoles,
+  isWaiting,
 }) => {
   const currentUser = useSelector((state) => state.user.name)
 
@@ -63,9 +64,11 @@ const UserTile = ({
   const { data, isLoading, isFetching, isError } = useGetUserByNameQuery(
     { name: userName },
     {
-      skip: user || !userName,
+      skip: user || !userName || isWaiting,
     },
   )
+
+  const loadingState = isLoading || isFetching || isWaiting
 
   // if user is not passed in, use data from query
   if (!user) {
@@ -99,16 +102,16 @@ const UserTile = ({
       onClick={onClick}
       disableHover={disableHover}
       style={style}
-      isError={isError || isLoading}
+      isLoading={isError || loadingState}
     >
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
       <div style={{ flex: 1, overflow: 'hidden' }}>
         <TitleStyled style={{ whiteSpace: 'nowrap' }}>
-          {!isLoading && `${attrib?.fullName} (${name})`}
+          {!loadingState && `${attrib?.fullName} (${name})`}
         </TitleStyled>
         <br />
         <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
-          {!isLoading ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
+          {!loadingState ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
         </span>
       </div>
       {updatedAt && (
@@ -120,7 +123,7 @@ const UserTile = ({
           })}
         </span>
       )}
-      {!isLoading && children}
+      {!loadingState && children}
     </PanelStyled>
   )
 }
@@ -132,6 +135,9 @@ UserTile.propTypes = {
   suspense: PropTypes.bool,
   children: PropTypes.node,
   disableHover: PropTypes.bool,
+  style: PropTypes.object,
+  leaderRoles: PropTypes.array,
+  isWaiting: PropTypes.bool,
 }
 
 export default UserTile

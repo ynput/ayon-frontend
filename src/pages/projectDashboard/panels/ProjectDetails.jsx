@@ -29,7 +29,7 @@ const ActiveStyled = styled.span`
 `
 
 const ProjectDetails = ({ projectName }) => {
-  const { data = {}, isError } = useGetProjectQuery({ projectName })
+  const { data = {}, isError, isLoading, isFetching } = useGetProjectQuery({ projectName })
 
   const { attrib = {}, active } = data
 
@@ -70,6 +70,7 @@ const ProjectDetails = ({ projectName }) => {
         style={{
           overflow: 'auto',
         }}
+        isLoading={isLoading || isFetching}
       />
     </DashboardPanelWrapper>
   )

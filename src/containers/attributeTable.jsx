@@ -8,11 +8,13 @@ const AttributeTableContainer = styled.div`
   padding: 3px;
 
   flex: 1;
+
+  ${({ isLoading }) => isLoading && 'opacity: 0.25;'}
 `
 
-const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib }) => {
+const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib, isLoading }) => {
   return (
-    <AttributeTableContainer style={style}>
+    <AttributeTableContainer style={style} isLoading={isLoading}>
       {additionalData &&
         additionalData.map((data, index) => (
           <TableRow key={index} name={data.title} value={data.value} />

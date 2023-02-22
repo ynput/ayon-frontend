@@ -18,7 +18,7 @@ const subTitle = (members, leaders) => {
 }
 
 const ProjectTeams = ({ projectName }) => {
-  let { data = [], isError } = useGetTeamsQuery({ projectName })
+  let { data = [], isError, isLoading, isFetching } = useGetTeamsQuery({ projectName })
 
   // no teams return null
   if (!data.length) return null
@@ -35,7 +35,11 @@ const ProjectTeams = ({ projectName }) => {
               </h2>
               {team.leaders.map((leader, i) => (
                 <Link key={`${leader.name}-${i}`} to={`/settings/users?name=${leader.name}`}>
-                  <UserTile userName={leader.name} leaderRoles={leader.roles} />
+                  <UserTile
+                    userName={leader.name}
+                    leaderRoles={leader.roles}
+                    isWaiting={isLoading || isFetching}
+                  />
                 </Link>
               ))}
             </Fragment>

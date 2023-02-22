@@ -26,6 +26,9 @@ const ProgressStyled = styled(TileStyled)`
   &:hover {
     background-color: var(--color-grey-01);
   }
+
+  /* isLoading 50$ opacity */
+  ${({ isLoading }) => isLoading && 'opacity: 0.5;'}
 `
 
 const ProgressTile = ({
@@ -34,16 +37,17 @@ const ProgressTile = ({
   icon,
   onClick,
   isLoading,
+  isFetching,
   values = [],
   backgroundColor,
   onProgressClick,
 }) => {
   return (
-    <ProgressStyled onClick={onClick}>
+    <ProgressStyled onClick={onClick} isLoading={isLoading || isFetching}>
       <HeaderStyled>
         {icon && <span className="material-symbols-outlined">{icon}</span>}
-        <h3>{isLoading ? '' : title}</h3>
-        <span>{isLoading ? '' : subTitle}</span>
+        <h3>{title || ''}</h3>
+        <span>{subTitle || ''}</span>
       </HeaderStyled>
       {!!values.length && (
         <ProgressBar
@@ -64,6 +68,7 @@ ProgressTile.propTypes = {
   onClick: PropTypes.func,
   backgroundColor: PropTypes.string,
   isLoading: PropTypes.bool,
+  isFetching: PropTypes.bool,
   onProgressClick: PropTypes.func,
   values: PropTypes.oneOfType([
     PropTypes.arrayOf(
