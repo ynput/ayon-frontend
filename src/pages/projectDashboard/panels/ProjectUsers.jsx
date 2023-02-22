@@ -14,7 +14,12 @@ const RowStyled = styled.div`
 `
 
 const ProjectUsers = ({ projectName }) => {
-  let { data: { counts = {} } = {}, isError } = useGetProjectDashboardQuery({
+  let {
+    data: { counts = {} } = {},
+    isError,
+    isFetching,
+    isLoading,
+  } = useGetProjectDashboardQuery({
     projectName,
     panel: 'users',
   })
@@ -22,7 +27,7 @@ const ProjectUsers = ({ projectName }) => {
   const { total = 0, active = 0 } = counts
 
   return (
-    <DashboardPanelWrapper isError={isError}>
+    <DashboardPanelWrapper isError={isError} isLoading={isLoading || isFetching}>
       <RowStyled>
         <strong>Total Users - {total}</strong> | <strong>Active Users - {active}</strong>
       </RowStyled>

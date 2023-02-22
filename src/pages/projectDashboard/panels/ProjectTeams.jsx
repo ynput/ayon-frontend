@@ -24,7 +24,11 @@ const ProjectTeams = ({ projectName }) => {
   if (!data.length) return null
 
   return (
-    <DashboardPanelWrapper isError={isError} title={`Teams - ${data.length}`}>
+    <DashboardPanelWrapper
+      isError={isError}
+      title={`Teams - ${data.length}`}
+      isLoading={isLoading || isFetching}
+    >
       {data.map(
         (team, i) =>
           !!team.leaders.length && (
@@ -35,11 +39,7 @@ const ProjectTeams = ({ projectName }) => {
               </h2>
               {team.leaders.map((leader, i) => (
                 <Link key={`${leader.name}-${i}`} to={`/settings/users?name=${leader.name}`}>
-                  <UserTile
-                    userName={leader.name}
-                    leaderRoles={leader.roles}
-                    isWaiting={isLoading || isFetching}
-                  />
+                  <UserTile userName={leader.name} leaderRoles={leader.roles} />
                 </Link>
               ))}
             </Fragment>

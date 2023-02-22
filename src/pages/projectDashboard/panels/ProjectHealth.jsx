@@ -111,6 +111,7 @@ const ProjectHealth = ({ projectName, share, position }) => {
       title="Health"
       isError={isError}
       icon={{ icon: 'share', onClick: () => share('Health', shareData, position) }}
+      isLoading={isLoading || isFetching}
     >
       <ProgressTile
         title={shareData.complete}

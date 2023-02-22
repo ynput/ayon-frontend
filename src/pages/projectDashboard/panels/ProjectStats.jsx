@@ -45,6 +45,7 @@ const ProjectStats = ({ projectName, share, position }) => {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
       }}
+      isLoading={isLoading || isFetching}
     >
       {statsOrder.map((id) => {
         const { label, icon } = stats[id]

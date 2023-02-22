@@ -28,14 +28,11 @@ export const TileStyled = styled.div`
     border-bottom: unset;
     display: block;
   }
-
-  /* isLoading */
-  ${({ isLoading }) => isLoading && 'opacity: 0.25;'}
 `
 
 const ListStatsTile = ({ title, stat, icon, isLoading, onClick }) => {
   return (
-    <TileStyled onClick={onClick} isLoading={isLoading}>
+    <TileStyled onClick={onClick}>
       {icon && <span className="material-symbols-outlined">{icon}</span>}
       <h3>{title}</h3>
       <span>{isLoading ? '' : stat || 'unknown'}</span>

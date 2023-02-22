@@ -61,6 +61,7 @@ const ProjectDetails = ({ projectName }) => {
       stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden' }}
       isError={isError}
       style={{ height: '100%', overflow: 'hidden' }}
+      isLoading={isLoading || isFetching}
     >
       <ThumbnailStyled>
         <Thumbnail projectName={projectName} />
@@ -70,7 +71,6 @@ const ProjectDetails = ({ projectName }) => {
         style={{
           overflow: 'auto',
         }}
-        isLoading={isLoading || isFetching}
       />
     </DashboardPanelWrapper>
   )
