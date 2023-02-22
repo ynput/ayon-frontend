@@ -15,6 +15,7 @@ import { selectProject } from '../features/project'
 import usePubSub from '/src/hooks/usePubSub'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetAddonProjectQuery } from '../services/addonList'
+import { TabPanel, TabView } from 'primereact/tabview'
 
 const ProjectContexInfo = () => {
   /**
@@ -22,7 +23,17 @@ const ProjectContexInfo = () => {
    * this is for develompent only
    */
   const context = useSelector((state) => state.context)
-  return <pre>{JSON.stringify(context, null, 2)}</pre>
+  const project = useSelector((state) => state.project)
+  return (
+    <TabView>
+      <TabPanel header="context">
+        <pre>{JSON.stringify({ context }, null, 2)}</pre>
+      </TabPanel>
+      <TabPanel header="project">
+        <pre>{JSON.stringify({ project }, null, 2)}</pre>
+      </TabPanel>
+    </TabView>
+  )
 }
 
 const ProjectPage = () => {

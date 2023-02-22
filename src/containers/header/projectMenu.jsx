@@ -5,6 +5,7 @@ import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectProject } from '/src/features/project'
+import { selectProject as selectProjectContext } from '/src/features/context'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
@@ -22,6 +23,8 @@ const ProjectMenu = ({ visible, onHide }) => {
 
     // reset selected folders
     dispatch(selectProject(projectName))
+    // reset context for projects
+    dispatch(selectProjectContext(projectName))
 
     navigate(`/projects/${projectName}/browser`)
   }

@@ -6,7 +6,7 @@ import { useGetProjectQuery } from '/src/services/project/getProject'
 
 const ProjectLatest = ({ projectName }) => {
   // project
-  const { isLoading } = useGetProjectQuery({ projectName }, { skip: !projectName })
+  const { isLoading, isFetching } = useGetProjectQuery({ projectName }, { skip: !projectName })
   // {Approved: {name: "Approved", state: "done"}, ...}}
   const statuses = useSelector((state) => state.project.statuses)
   // create an object of status states {done: ["Approved", "Omitted"], ...}
@@ -74,6 +74,7 @@ const ProjectLatest = ({ projectName }) => {
         link: '/events',
         icon: 'history',
       }}
+      isLoading={isLoading || isFetching}
     >
       {rows.map((row, i) => (
         <Fragment key={i}>

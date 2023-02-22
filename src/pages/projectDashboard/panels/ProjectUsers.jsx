@@ -14,14 +14,23 @@ const RowStyled = styled.div`
 `
 
 const ProjectUsers = ({ projectName }) => {
-  let { data = {}, isError } = useGetProjectDashboardQuery({ projectName, panel: 'users' })
+  let {
+    data = {},
+    isError,
+    isFetching,
+    isLoading,
+  } = useGetProjectDashboardQuery({
+    projectName,
+    panel: 'users',
+  })
 
-  const { total = 0, active = 0 } = data
+  const { teamSizeActive = 0, teamSizeTotal = 0, usersWithAccessTotal = 0 } = data
 
   return (
-    <DashboardPanelWrapper isError={isError}>
+    <DashboardPanelWrapper isError={isError} isLoading={isLoading || isFetching}>
       <RowStyled>
-        <strong>Total Users - {total}</strong> | <strong>Active Users - {active}</strong>
+        <strong>Teams Total - {teamSizeTotal}</strong> | <strong>Active - {teamSizeActive}</strong>{' '}
+        | <strong>Access - {usersWithAccessTotal}</strong>
       </RowStyled>
     </DashboardPanelWrapper>
   )

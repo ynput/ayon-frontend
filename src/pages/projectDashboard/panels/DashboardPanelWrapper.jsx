@@ -54,6 +54,15 @@ const PanelStyled = styled(Panel)`
     css`
       border: 1px solid var(--color-hl-error);
     `}
+
+  /* isLoading children opacity 0.25  */
+  ${({ isLoading }) =>
+    isLoading &&
+    css`
+      & > *:not(header) {
+        opacity: 0.25;
+      }
+    `}
 `
 const ContentStyled = styled.div`
   display: flex;
@@ -85,9 +94,10 @@ const DashboardPanelWrapper = ({
   stylePanel,
   header,
   icon,
+  isLoading,
 }) => {
   return (
-    <PanelStyled isError={isError} span={span} style={stylePanel}>
+    <PanelStyled isError={isError} span={span} style={stylePanel} isLoading={isLoading}>
       {title && (
         <header>
           <h1>{title}</h1>

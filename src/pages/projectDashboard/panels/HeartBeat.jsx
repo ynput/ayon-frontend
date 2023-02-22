@@ -69,7 +69,7 @@ const HeartBeat = ({ projectName }) => {
   }
 
   return (
-    <DashboardPanelWrapper isError={isError}>
+    <DashboardPanelWrapper isError={isError} isLoading={isLoading || isFetching}>
       <ChartStyled data={chart} type={'line'} options={options} />
     </DashboardPanelWrapper>
   )

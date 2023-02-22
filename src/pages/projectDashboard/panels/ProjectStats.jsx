@@ -9,6 +9,7 @@ const ProjectStats = ({ projectName, share, position }) => {
     data = {},
     isLoading,
     isError,
+    isFetching,
   } = useGetProjectDashboardQuery({ projectName, panel: 'entities' })
 
   const { folders, subsets, tasks, versions, representations, workfiles } = data
@@ -44,6 +45,7 @@ const ProjectStats = ({ projectName, share, position }) => {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
       }}
+      isLoading={isLoading || isFetching}
     >
       {statsOrder.map((id) => {
         const { label, icon } = stats[id]
@@ -53,7 +55,7 @@ const ProjectStats = ({ projectName, share, position }) => {
             title={label}
             stat={stats[id].stat}
             icon={icon}
-            isLoading={isLoading}
+            isLoading={isLoading || isFetching}
             key={id}
             onClick={() => copyStatMessage(id)}
           />
