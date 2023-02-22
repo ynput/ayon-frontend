@@ -16,7 +16,6 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
-import usePubSub from '/src/hooks/usePubSub'
 import sortByKey from '/src/helpers/sortByKey'
 
 import {
@@ -29,22 +28,21 @@ import {
 import { buildQuery } from './queries'
 import { getColumns, formatName, formatType, formatAttribute } from './utils'
 import { stringEditor, typeEditor } from './editors'
-import { loadBranch, getUpdatedNodeData } from './loader'
+import { loadBranch } from './loader'
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { isEmpty } from 'lodash'
+import { useGetEditorRootQuery } from '/src/services/editor/getEditor'
+import { ayonApi } from '/src/services/ayon'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
   const { folders: foldersObject, tasks } = project
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  // BUG: this is required for editing to work
-  // eslint-disable-next-line no-unused-vars
-  const context = useSelector((state) => ({ ...state.context }))
   const projectName = useSelector((state) => state.project.name)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
   // focused editor is a mixture of focused folders and tasks
@@ -54,7 +52,8 @@ const EditorPage = () => {
 
   const dispatch = useDispatch()
 
-  let [nodeData, setNodeData] = useState({})
+  let [setNodeData] = useState({})
+
   const [changes, setChanges] = useState({})
   const [newNodes, setNewNodes] = useState([])
   const [errors, setErrors] = useState({})
@@ -70,6 +69,53 @@ const EditorPage = () => {
 
   // Hierarchy data is used for fast searching
   const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery({ projectName })
+
+  // get root folders/tasks for tree
+  const { data: rootData = {}, isSuccess } = useGetEditorRootQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+
+  // call loadNewBranches with an array of folder ids to get the branches and patch them into the rootData cache
+  const loadNewBranches = async (folderIds) => {
+    if (!folderIds.length) return
+
+    // get new branches using id
+    // if branches are already in cache, then rtk query won't be executed again
+    try {
+      !loading && setLoading(true)
+      // get new branches using id
+      // get new events data
+      for (const id of folderIds) {
+        // once the branch is fetched, it will be patched into the rootData cache
+        // getExpandedBranch is in getEditor.js query file
+        await dispatch(
+          ayonApi.endpoints.getExpandedBranch.initiate({
+            projectName,
+            parentId: id,
+          }),
+        )
+      }
+
+      setLoading(false)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // when rootData is loaded, load expandedFolders for first time
+  useEffect(() => {
+    if (isSuccess) {
+      // load expanded folders from initial context
+      if (Object.keys(expandedFolders).length) {
+        console.log('loading expanded folders context', expandedFolders)
+        loadNewBranches(Object.keys(expandedFolders))
+      } else {
+        // no expanded folders, so set loading to false
+        setLoading(false)
+      }
+    }
+  }, [isSuccess])
 
   //
   // Helpers
@@ -97,29 +143,6 @@ const EditorPage = () => {
     }
   }
 
-  //
-  // HOOKS
-  //
-
-  useEffect(() => {
-    console.log('getting new data')
-    setLoading(true)
-    const expandedKeys = [...Object.keys(expandedFolders), 'root']
-
-    getUpdatedNodeData(
-      nodeData,
-      newNodes,
-      expandedKeys,
-      parents,
-      query,
-      projectName,
-      searchIds,
-    ).then((result) => {
-      setNodeData(result)
-      setLoading(false)
-    })
-  }, [expandedFolders, newNodes])
-
   // on first render, get selection from focused folders and tasks
   // for further selections, focusedEditor is used
   useEffect(() => {
@@ -138,53 +161,7 @@ const EditorPage = () => {
   // External events handling
   //
 
-  const handlePubSub = async (topic, message) => {
-    // TODO add this to RTK QUERY
-    if (topic !== 'entity.update') return
-    if (message.project?.toLowerCase() !== projectName.toLowerCase()) return
-
-    const getEntity = async (entityType, entityId) => {
-      let data = {}
-      try {
-        const result = await axios.get(`/api/projects/${projectName}/${entityType}s/${entityId}`)
-        data = result.data
-      } catch {
-        toast.error(`Error loading ${entityType} ${entityId}`)
-      }
-      return data
-    }
-
-    const updateEntities = async (entityType, ids) => {
-      const patch = {}
-      for (const entityId of ids) {
-        const newEntity = await getEntity(entityType, entityId)
-        patch[entityId] = newEntity
-      }
-      if (isEmpty(patch)) return
-
-      setNodeData((nd) => {
-        const result = { ...nd }
-        for (const entityId in patch) {
-          const row = { ...result[entityId] }
-          Object.assign(row.data, patch[entityId])
-          result[entityId] = row
-        }
-        return result
-      })
-    }
-
-    // This is used just to get the current list of nodes to be updated
-    setNodeData((nd) => {
-      const toUpdate = message.summary.ids.filter((id) => id in nd)
-      if (toUpdate.length) updateEntities(message.summary.entityType, toUpdate)
-      return nd
-    })
-  } // handlePubSub
-
-  // PUBSUB HOOK (Currently broken handlePubSub)
-  usePubSub('entity.task', handlePubSub)
-
-  usePubSub('entity.folder', handlePubSub)
+  // TODO - pubsub
 
   //
   // Build hierarchy
@@ -195,7 +172,7 @@ const EditorPage = () => {
   // SEARCH FILTER
   // if search results filter out nodes
   const filteredNodeData = useMemo(() => {
-    const filtered = { ...nodeData }
+    const filtered = { ...rootData }
     if (searchIds) {
       const { folderIds = [], taskNames = [] } = searchIds
       for (const key in filtered) {
@@ -210,12 +187,12 @@ const EditorPage = () => {
     }
 
     return filtered
-  }, [nodeData, searchIds])
+  }, [rootData, searchIds])
 
   const parents = useMemo(() => {
     // This is an auto-generated object in the form of:
     //   { parentId: [child1Id, child2Id....]
-    // It is updated when nodeData changes and it speeds up
+    // It is updated when rootData changes and it speeds up
     // building hierarchy
 
     const result = {}
@@ -229,7 +206,7 @@ const EditorPage = () => {
 
   // Build hierarchical data for the TreeTable component
   // Trigger the rebuild when parents are updated (which are
-  // updated after nodeData update. Both nodeData and parents
+  // updated after rootData update. Both rootData and parents
   // are needed for the hierarchy, so thi cascading makes
   // it possible)
 
@@ -244,9 +221,9 @@ const EditorPage = () => {
       for (const childId of parents[parentId]) {
         const node = {
           key: childId,
-          name: nodeData[childId].data.name,
-          data: nodeData[childId].data,
-          leaf: nodeData[childId].leaf,
+          name: rootData[childId].data.name,
+          data: rootData[childId].data,
+          leaf: rootData[childId].leaf,
         }
         if (!node.leaf) {
           node.children = []
@@ -258,7 +235,7 @@ const EditorPage = () => {
 
     buildHierarchy('root', result)
     return sortByKey(result, 'name')
-  }, [parents])
+  }, [parents, expandedFolders, rootData])
 
   let foundTasks = []
   const getFolderTaskList = (folders = [], parentId, d) => {
@@ -304,21 +281,21 @@ const EditorPage = () => {
   }
 
   // create a flat list of everything searchable, folders and tasks
-  let searchabledFolders = useMemo(
+  let searchableFolders = useMemo(
     () => getFolderTaskList(hierarchyData).sort((a, b) => a.depth - b.depth),
     [hierarchyData],
   )
 
   // create a set that can be used to look up a specific id
-  const searchabledFoldersSet = useMemo(() => {
+  const searchableFoldersSet = useMemo(() => {
     const res = new Map()
 
-    for (const folder of searchabledFolders) {
+    for (const folder of searchableFolders) {
       res.set(folder.id, { parent: folder.parentId, childrenLength: folder.childrenLength })
     }
 
     return res
-  }, [searchabledFolders])
+  }, [searchableFolders])
 
   const searchFilter = (search, suggestions) => {
     // filter through suggestions
@@ -338,7 +315,7 @@ const EditorPage = () => {
       if (!res.isTask) return
 
       // find all
-      searchabledFolders.forEach(
+      searchableFolders.forEach(
         (folder) =>
           folder.taskNames.includes(res.value) &&
           !folderIds.includes(folder.id) &&
@@ -363,7 +340,7 @@ const EditorPage = () => {
       // get folders parentId
       const getAllParents = (folder, id) => {
         const childId = id || folder.id
-        const parentId = searchabledFoldersSet.get(childId).parent
+        const parentId = searchableFoldersSet.get(childId).parent
         if (parentId && !folderIds.includes(parentId)) {
           // add parent id
           folderIds.push(parentId)
@@ -389,14 +366,14 @@ const EditorPage = () => {
 
   const currentSelection = useMemo(() => {
     // This object holds the information on current selected nodes.
-    // It has the same structure as nodeData, e.g. {objecId: nodeData, ...}
+    // It has the same structure as rootData, e.g. {objecId: rootData, ...}
     // so it is compatible with the treetable selection argument and it
     // also provides complete node information
     const result = {}
-    for (const key of focusedEditor) result[key] = nodeData[key]
+    for (const key of focusedEditor) result[key] = rootData[key]
 
     return result
-  }, [focusedEditor, nodeData])
+  }, [focusedEditor, rootData])
 
   //
   // Update handlers
@@ -406,8 +383,8 @@ const EditorPage = () => {
     setChanges((changes) => {
       for (const id in currentSelection) {
         changes[id] = changes[id] || {
-          __entityType: nodeData[id].data.__entityType,
-          __parentId: nodeData[id].data.__parentId,
+          __entityType: rootData[id].data.__entityType,
+          __parentId: rootData[id].data.__parentId,
         }
         changes[id][options.field] = value
       }
@@ -456,6 +433,7 @@ const EditorPage = () => {
     return result
   }
 
+  // TODO: rewrite this to use the new RTK QUERY, patching the cache directly
   const onCommit = useCallback(() => {
     const branchesToReload = []
     const operations = []
@@ -576,7 +554,7 @@ const EditorPage = () => {
           return result
         }) // setChanges
 
-        // Create a new nodeData object with the updated data. Reload the
+        // Create a new rootData object with the updated data. Reload the
         // branches that were affected by the changes
         setNodeData(async (nodes) => {
           for (const id in nodes) {
@@ -640,9 +618,9 @@ const EditorPage = () => {
     if (!root) {
       // Adding children to existing nodes, so
       // ensure the parents are not leaves
-      setNodeData((nodeData) => {
-        for (const parentId of parents) nodeData[parentId].leaf = false
-        return nodeData
+      setNodeData((rootData) => {
+        for (const parentId of parents) rootData[parentId].leaf = false
+        return rootData
       })
     }
 
@@ -653,7 +631,7 @@ const EditorPage = () => {
         const id = `newnode${nodes.length + i}`
         const newNode = {
           id,
-          attrib: { ...(nodeData[parentId]?.data.attrib || {}) },
+          attrib: { ...(rootData[parentId]?.data.attrib || {}) },
           ownAttrib: [],
           __entityType: entityType,
           __parentId: parentId || 'root',
@@ -691,8 +669,8 @@ const EditorPage = () => {
       for (const id in currentSelection) {
         if (id.startsWith('newnode')) continue
         changes[id] = changes[id] || {
-          __entityType: nodeData[id].data.__entityType,
-          __parentId: nodeData[id].data.__parentId,
+          __entityType: rootData[id].data.__entityType,
+          __parentId: rootData[id].data.__parentId,
         }
         changes[id].__action = 'delete'
       }
@@ -761,8 +739,16 @@ const EditorPage = () => {
   // Table event handlers
   //
 
-  const onToggle = (event) => {
+  const onToggle = async (event) => {
+    // updated expanded folders context object
     dispatch(setExpandedFolders(event.value))
+
+    let newIds = Object.keys(event.value)
+    // filter out ids that are already in the expandedFolders object
+    newIds = newIds.filter((id) => !(id in expandedFolders))
+
+    // load new branches
+    loadNewBranches(newIds)
   }
 
   const onSelectionChange = (event) => {
@@ -774,13 +760,13 @@ const EditorPage = () => {
     const folders = []
     const tasks = []
     for (const [key, value] of Object.entries(event.value)) {
-      if (nodeData[key]?.data.__entityType === 'folder' && value) folders.push(key)
-      else if (nodeData[key]?.data.__entityType === 'task' && value) tasks.push(key)
+      if (rootData[key]?.data.__entityType === 'folder' && value) folders.push(key)
+      else if (rootData[key]?.data.__entityType === 'task' && value) tasks.push(key)
     }
 
     // for each task in tasks, add __parentId to folders if not already there
     for (const task of tasks) {
-      const folder = nodeData[task].data.__parentId
+      const folder = rootData[task].data.__parentId
       if (!folders.includes(folder)) folders.push(folder)
     }
 
@@ -919,7 +905,7 @@ const EditorPage = () => {
         <Toolbar>
           <SearchDropdown
             filter={searchFilter}
-            suggestions={searchabledFolders}
+            suggestions={searchableFolders}
             suggestionsLimit={5}
             onSubmit={handleSearchComplete}
             onClear={() => searchIds && setSearchIds({})}

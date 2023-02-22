@@ -1,9 +1,9 @@
 import ayonClient from '/src/ayon'
 
 const BASE_QUERY = `
-  query FolderTree($projectName: String!, $parent: String!) {
+  query FolderTree($projectName: String!, $parents: [String!]!) {
     project(name: $projectName) {
-      folders(parentId: $parent) {
+      folders(parentIds: $parents) {
         edges {
           node {
             id
@@ -20,13 +20,14 @@ const BASE_QUERY = `
           }
         }
       }
-      tasks(folderIds: [$parent]){
+      tasks(folderIds: $parents){
         edges {
           node {
             id
             name
             taskType
             ownAttrib
+            folderId
             attrib {
               #TASK_ATTRS#
             }
