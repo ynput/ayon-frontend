@@ -27,10 +27,10 @@ const ProjectContexInfo = () => {
   return (
     <TabView>
       <TabPanel header="context">
-        <pre>{JSON.stringify({ context }, null, 2)}</pre>)
+        <pre>{JSON.stringify({ context }, null, 2)}</pre>
       </TabPanel>
       <TabPanel header="project">
-        <pre>{JSON.stringify({ project }, null, 2)}</pre>)
+        <pre>{JSON.stringify({ project }, null, 2)}</pre>
       </TabPanel>
     </TabView>
   )
