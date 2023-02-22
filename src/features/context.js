@@ -1,8 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-  projectName: null,
-  project: {},
   expandedFolders: {},
   focused: {
     type: null,
