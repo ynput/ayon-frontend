@@ -29,7 +29,7 @@ const ActiveStyled = styled.span`
 `
 
 const ProjectDetails = ({ projectName }) => {
-  const { data = {}, isError } = useGetProjectQuery({ projectName })
+  const { data = {}, isError, isLoading, isFetching } = useGetProjectQuery({ projectName })
 
   const { attrib = {}, active } = data
 
@@ -61,6 +61,7 @@ const ProjectDetails = ({ projectName }) => {
       stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden' }}
       isError={isError}
       style={{ height: '100%', overflow: 'hidden' }}
+      isLoading={isLoading || isFetching}
     >
       <ThumbnailStyled>
         <Thumbnail projectName={projectName} />

@@ -40,9 +40,8 @@ const PanelStyled = styled(Panel)`
     min-height: 17.5px;
   }
 
-  /* isError */
-  ${({ isError }) =>
-    isError &&
+  ${({ isLoading }) =>
+    isLoading &&
     css`
       opacity: 0.25;
 
@@ -124,7 +123,7 @@ const EntityGridTile = ({
   const ref = useRef()
 
   return (
-    <PanelStyled ref={ref} onClick={onClick} isError={isError || isLoading}>
+    <PanelStyled ref={ref} onClick={onClick} isLoading={isError || isLoading}>
       <ThumbnailStyled>
         <Thumbnail
           entityType={thumbnailEntityType}

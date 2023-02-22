@@ -25,18 +25,50 @@ const PanelStyled = styled(Panel)`
         cursor: pointer;
       }
     `}
+
+  /* isError */
+  ${({ isLoading }) =>
+    isLoading &&
+    css`
+      opacity: 0.25;
+
+      :hover {
+        background-color: var(--color-grey-01);
+      }
+    `}
 `
 
-const UserTile = ({ user, onClick, userName, suspense, children, disableHover, style }) => {
+const TitleStyled = styled.strong`
+  white-space: nowrap;
+  width: 100%;
+  position: relative;
+  display: inline-block;
+  overflow-x: clip;
+  text-overflow: ellipsis;
+`
+
+const UserTile = ({
+  user,
+  onClick,
+  userName,
+  suspense,
+  children,
+  disableHover,
+  style,
+  leaderRoles,
+  isWaiting,
+}) => {
   const currentUser = useSelector((state) => state.user.name)
 
   // RTK QUERY
   const { data, isLoading, isFetching, isError } = useGetUserByNameQuery(
     { name: userName },
     {
-      skip: user || !userName,
+      skip: user || !userName || isWaiting,
     },
   )
+
+  const loadingState = isLoading || isFetching || isWaiting
 
   // if user is not passed in, use data from query
   if (!user) {
@@ -52,8 +84,8 @@ const UserTile = ({ user, onClick, userName, suspense, children, disableHover, s
   const { name, attrib, updatedAt, isManager, isAdmin, isService, roles } = user || {}
   const isSelf = name === currentUser
 
-  let rolesHeader = []
-  if (!isLoading) {
+  let rolesHeader = leaderRoles || []
+  if (!isLoading && !leaderRoles) {
     // add admin, manager, service
     if (isAdmin) rolesHeader.push('admin')
     else if (isService) rolesHeader.push('service')
@@ -66,15 +98,20 @@ const UserTile = ({ user, onClick, userName, suspense, children, disableHover, s
   }
 
   return (
-    <PanelStyled onClick={onClick} disableHover={disableHover} style={style}>
+    <PanelStyled
+      onClick={onClick}
+      disableHover={disableHover}
+      style={style}
+      isLoading={isError || loadingState}
+    >
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
-      <div style={{ flex: 1 }}>
-        <strong>
-          {attrib?.fullName} ({name})
-        </strong>
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <TitleStyled style={{ whiteSpace: 'nowrap' }}>
+          {!loadingState && `${attrib?.fullName} (${name})`}
+        </TitleStyled>
         <br />
-        <span style={{ opacity: 0.5 }}>
-          {rolesHeader.length ? rolesHeader.join(', ') : 'No Roles'}
+        <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
+          {!loadingState ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
         </span>
       </div>
       {updatedAt && (
@@ -86,7 +123,7 @@ const UserTile = ({ user, onClick, userName, suspense, children, disableHover, s
           })}
         </span>
       )}
-      {children}
+      {!loadingState && children}
     </PanelStyled>
   )
 }
@@ -98,6 +135,9 @@ UserTile.propTypes = {
   suspense: PropTypes.bool,
   children: PropTypes.node,
   disableHover: PropTypes.bool,
+  style: PropTypes.object,
+  leaderRoles: PropTypes.array,
+  isWaiting: PropTypes.bool,
 }
 
 export default UserTile

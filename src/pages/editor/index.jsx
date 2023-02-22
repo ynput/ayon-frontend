@@ -253,6 +253,7 @@ const EditorPage = () => {
         depth: depth,
         icon: foldersObject[folder.folderType]?.icon || 'folder',
         isTask: false,
+        parents: folder.parents,
       })
 
       // add tasks to list if not already found
@@ -291,7 +292,12 @@ const EditorPage = () => {
     const res = new Map()
 
     for (const folder of searchableFolders) {
-      res.set(folder.id, { parent: folder.parentId, childrenLength: folder.childrenLength })
+      res.set(folder.id, {
+        parent: folder.parentId,
+        childrenLength: folder.childrenLength,
+        name: folder.value,
+        parents: folder.parents,
+      })
     }
 
     return res
@@ -775,14 +781,23 @@ const EditorPage = () => {
   }
 
   const onRowClick = (event) => {
-    const node = event.node.data
-    if (node.__entityType !== 'folder') return
-    dispatch(
-      setBreadcrumbs({
-        parents: node.parents,
-        folder: node.name,
-      }),
-    )
+    let node = event.node.data
+    if (node.__entityType === 'folder') {
+      node = event.node.data
+    } else if (node.__entityType === 'task') {
+      // find the parent folder
+      node = searchableFoldersSet.get(node.__parentId)
+      console.log(node)
+    }
+
+    if (node) {
+      dispatch(
+        setBreadcrumbs({
+          parents: node.parents,
+          folder: node.name,
+        }),
+      )
+    }
   }
 
   const filterOptions = [{ name: 'name' }, { name: 'type' }, ...columns].map(({ name }) => ({

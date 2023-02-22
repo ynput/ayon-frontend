@@ -48,6 +48,7 @@ const ProjectHealth = ({ projectName, share, position }) => {
   const {
     data = {},
     isLoading,
+    isFetching,
     isError,
   } = useGetProjectDashboardQuery({ projectName, panel: 'health' })
 
@@ -110,6 +111,7 @@ const ProjectHealth = ({ projectName, share, position }) => {
       title="Health"
       isError={isError}
       icon={{ icon: 'share', onClick: () => share('Health', shareData, position) }}
+      isLoading={isLoading || isFetching}
     >
       <ProgressTile
         title={shareData.complete}
@@ -117,6 +119,7 @@ const ProjectHealth = ({ projectName, share, position }) => {
         icon="schedule"
         values={[{ value: complete.percentage, label: 'Complete' }]}
         isLoading={isLoading}
+        isFetching={isFetching}
         onProgressClick={(v) => percentageCopy(v, 'Project Complete')}
       />
       <ProgressTile
@@ -124,6 +127,7 @@ const ProjectHealth = ({ projectName, share, position }) => {
         icon="database"
         values={[{ value: storage.percentage, label: 'Storage Used', color: storage.color }]}
         isLoading={isLoading}
+        isFetching={isFetching}
         onProgressClick={(v) => percentageCopy(v, 'Storage Used')}
       />
       <ProgressTile
@@ -132,17 +136,17 @@ const ProjectHealth = ({ projectName, share, position }) => {
         icon="notification_important"
         values={taskValues}
         isLoading={isLoading}
+        isFetching={isFetching}
         onProgressClick={(v) => tasksCopy(v, 'Tasks')}
       />
-      {!!statusValues.length && (
-        <ProgressTile
-          title={'Statuses'}
-          icon="check_circle"
-          values={statusValues}
-          isLoading={isLoading}
-          onProgressClick={(v) => tasksCopy(v, 'Statuses')}
-        />
-      )}
+      <ProgressTile
+        title={'Statuses'}
+        icon="check_circle"
+        values={statusValues || []}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        onProgressClick={(v) => tasksCopy(v, 'Statuses')}
+      />
     </DashboardPanelWrapper>
   )
 }

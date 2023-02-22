@@ -41,7 +41,10 @@ const UserImage = ({ src, fullName, style, size = 30, highlight }) => {
     .join('')
 
   return (
-    <CircleImage style={{ width: size, maxHeight: size, ...style }} highlight={highlight}>
+    <CircleImage
+      style={{ width: size, maxHeight: size, minHeight: size, ...style }}
+      highlight={highlight}
+    >
       {src ? <img src={src} /> : <span style={{ fontSize: `${fontSize}px` }}>{initials}</span>}
     </CircleImage>
   )

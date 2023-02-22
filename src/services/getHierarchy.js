@@ -8,7 +8,7 @@ const getHierarchy = ayonApi.injectEndpoints({
       }),
       transformResponse: (response) => response.hierarchy,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      providesTags: ['project'],
+      providesTags: ['hierarchy'],
     }),
   }),
 })

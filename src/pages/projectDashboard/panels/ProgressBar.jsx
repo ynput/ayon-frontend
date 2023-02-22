@@ -7,6 +7,7 @@ const ProgressStyled = styled.div`
   position: relative;
   display: flex;
   flex: 1;
+  min-height: 4px;
   align-items: center;
   width: 100%;
   border-radius: 2px;
