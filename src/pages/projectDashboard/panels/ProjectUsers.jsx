@@ -15,7 +15,7 @@ const RowStyled = styled.div`
 
 const ProjectUsers = ({ projectName }) => {
   let {
-    data: { counts = {} } = {},
+    data = {},
     isError,
     isFetching,
     isLoading,
@@ -24,12 +24,13 @@ const ProjectUsers = ({ projectName }) => {
     panel: 'users',
   })
 
-  const { total = 0, active = 0 } = counts
+  const { teamSizeActive = 0, teamSizeTotal = 0, usersWithAccessTotal = 0 } = data
 
   return (
     <DashboardPanelWrapper isError={isError} isLoading={isLoading || isFetching}>
       <RowStyled>
-        <strong>Total Users - {total}</strong> | <strong>Active Users - {active}</strong>
+        <strong>Teams Total - {teamSizeTotal}</strong> | <strong>Active - {teamSizeActive}</strong>{' '}
+        | <strong>Access - {usersWithAccessTotal}</strong>
       </RowStyled>
     </DashboardPanelWrapper>
   )
