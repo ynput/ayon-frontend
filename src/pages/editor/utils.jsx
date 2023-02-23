@@ -22,6 +22,8 @@ const formatName = (node, changes, styled = true, project) => {
   const chobj = changes[node.id]
   let value = chobj?._name ? chobj._name : node.name
 
+  console.log(chobj)
+
   if (!styled) return value
 
   let icon
@@ -30,11 +32,11 @@ const formatName = (node, changes, styled = true, project) => {
   if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-changed)'
 
   if (node.__entityType === 'task') {
-    icon = project.tasks[node.taskType]?.icon
+    icon = project.tasks[chobj?._taskType || node.taskType]?.icon || 'help_center'
     textStyle.fontStyle = 'italic'
     value = value || 'Unnamed task'
   } else {
-    icon = project.folders[node.folderType]?.icon
+    icon = project.folders[chobj?._folderType || node.folderType]?.icon || 'help_center'
     value = value || 'Unnamed folder'
   }
 

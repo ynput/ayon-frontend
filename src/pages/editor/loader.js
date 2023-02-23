@@ -2,7 +2,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const loadBranch = async (query, projectName, parentId) => {
-  const variables = { projectName, parent: parentId || 'root' }
+  const variables = { projectName, parents: [parentId || 'root'] }
   //console.log('Branch load', parentId)
   const response = await axios.post('/graphql', { query, variables })
 
@@ -14,7 +14,7 @@ const loadBranch = async (query, projectName, parentId) => {
   const data = response.data
   const nodes = {}
 
-  console.log('loaded branch', data)
+  // console.log('loaded branch', data)
 
   // Add folders
   for (const edge of data.data.project.folders.edges) {
@@ -22,7 +22,7 @@ const loadBranch = async (query, projectName, parentId) => {
     nodes[node.id] = {
       data: {
         ...node,
-        __parentId: parentId || 'root',
+        __parentId: node.parentId || 'root',
         __entityType: 'folder',
       },
       leaf: !(node.hasChildren || node.hasTasks),
@@ -35,7 +35,7 @@ const loadBranch = async (query, projectName, parentId) => {
     nodes[node.id] = {
       data: {
         ...node,
-        __parentId: parentId || 'root',
+        __parentId: node.folderId || 'root',
         __entityType: 'task',
       },
       leaf: true, // Tasks never have children
