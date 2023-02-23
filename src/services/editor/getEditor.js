@@ -45,13 +45,7 @@ const getEditor = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (response) => transformEditorData(response.data?.project),
-      providesTags: (res) => [
-        'project',
-        'folder',
-        'subset',
-        'task',
-        ...Object.keys(res).map((id) => ({ type: 'branch', id })),
-      ],
+      providesTags: () => ['project', 'folder', 'subset', 'task'],
     }),
     getExpandedBranch: build.query({
       query: ({ projectName, parentId }) => ({
@@ -90,4 +84,5 @@ const getEditor = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useGetEditorRootQuery, useGetExpandedBranchQuery } = getEditor
+export const { useGetEditorRootQuery, useGetExpandedBranchQuery, useLazyGetExpandedBranchQuery } =
+  getEditor

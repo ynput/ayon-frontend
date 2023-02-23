@@ -22,8 +22,6 @@ const formatName = (node, changes, styled = true, project) => {
   const chobj = changes[node.id]
   let value = chobj?._name ? chobj._name : node.name
 
-  console.log(chobj)
-
   if (!styled) return value
 
   let icon

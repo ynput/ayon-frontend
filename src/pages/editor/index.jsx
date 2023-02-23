@@ -32,14 +32,18 @@ import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { isEmpty } from 'lodash'
-import { useGetEditorRootQuery } from '/src/services/editor/getEditor'
+import {
+  useGetEditorRootQuery,
+  useLazyGetExpandedBranchQuery,
+} from '/src/services/editor/getEditor'
 import { ayonApi } from '/src/services/ayon'
 import { useUpdateEditorMutation } from '/src/services/editor/updateEditor'
+import usePubSub from '/src/hooks/usePubSub'
+import { useLazyGetEntityQuery } from '/src/services/entity/getEntity'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
   const { folders: foldersObject, tasks, folders } = project
-  const [loading, setLoading] = useState(true)
 
   // eslint-disable-next-line no-unused-vars
   const context = useSelector((state) => ({ ...state.context }))
@@ -66,40 +70,95 @@ const EditorPage = () => {
   const contextMenuRef = useRef(null)
 
   // Hierarchy data is used for fast searching
-  const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery({ projectName })
-
-  // get root folders/tasks for tree
-  const { data: rootDataCache = {}, isSuccess } = useGetEditorRootQuery(
+  const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery(
     { projectName },
     { skip: !projectName },
   )
 
+  // get root folders/tasks for tree
+  const {
+    data: rootDataCache = {},
+    isSuccess,
+    isFetching,
+    isLoading: isLoadingRoot,
+  } = useGetEditorRootQuery({ projectName }, { skip: !projectName })
+
+  // used to update nodes
+  const [updateEditor, { isLoading: isUpdating }] = useUpdateEditorMutation()
+
+  // use later on for loading new branches
+  const [triggerGetExpandedBranch, { isFetching: isLoadingBranches }] =
+    useLazyGetExpandedBranchQuery()
+
+  const [triggerGetEntity] = useLazyGetEntityQuery()
+
+  const loading = isLoadingRoot || isLoadingBranches || isSearchLoading || isUpdating
+
+  // TODO changes aren't propagated to children
+
   // call loadNewBranches with an array of folder ids to get the branches and patch them into the rootData cache
-  const loadNewBranches = async (folderIds) => {
+  const loadNewBranches = async (folderIds, force) => {
     if (!folderIds.length) return
 
     // get new branches using id
     // if branches are already in cache, then rtk query won't be executed again
     try {
-      !loading && setLoading(true)
       // get new branches using id
       // get new events data
       for (const id of folderIds) {
-        // once the branch is fetched, it will be patched into the rootData cache
-        // getExpandedBranch is in getEditor.js query file
-        await dispatch(
-          ayonApi.endpoints.getExpandedBranch.initiate({
+        await triggerGetExpandedBranch(
+          {
             projectName,
             parentId: id,
-          }),
+          },
+          !force,
         )
       }
-
-      setLoading(false)
     } catch (error) {
       console.error(error)
     }
   }
+
+  // OVERVIEW
+  // 1. check entity has been expanded
+  // 2. get entity data
+  // 3. patch new entity data into rootDataCache
+  const handlePubSub = async (topic = '', message) => {
+    // check entity changing on current project
+    if (!topic.includes('entity')) return
+    if (message.project?.toLowerCase() !== projectName.toLowerCase()) return
+
+    const entityId = message.summary.entityId
+    const entityType = topic.split('.')[1]
+
+    // check entityId is visible
+    if (!(entityId in rootDataCache)) return console.log('entity not visible yet')
+
+    // get entity data
+    const res = await triggerGetEntity({ projectName, entityId, entityType }, false)
+      .unwrap()
+      .catch((err) => console.error(err))
+
+    console.log('patching in new websocket entityData', res)
+    // now patch in new data
+    dispatch(
+      ayonApi.util.updateQueryData('getEditorRoot', { projectName }, (draft) => {
+        draft[entityId] = {
+          data: {
+            ...res,
+            __parentId: res.folderId || res.parentId || 'root',
+            __entityType: entityType,
+          },
+          leaf: rootDataCache[entityId].leaf,
+        }
+      }),
+    )
+  }
+
+  const ids = useMemo(() => Object.keys(rootDataCache), [rootDataCache])
+
+  usePubSub('entity.task', handlePubSub, ids, false)
+  usePubSub('entity.folder', handlePubSub, ids, false)
 
   // when rootData is loaded, load expandedFolders for first time
   useEffect(() => {
@@ -108,12 +167,9 @@ const EditorPage = () => {
       if (Object.keys(expandedFolders).length) {
         console.log('loading expanded folders context', expandedFolders)
         loadNewBranches(Object.keys(expandedFolders))
-      } else {
-        // no expanded folders, so set loading to false
-        setLoading(false)
       }
     }
-  }, [isSuccess])
+  }, [isSuccess, isFetching])
 
   //
   // Helpers
@@ -445,8 +501,6 @@ const EditorPage = () => {
   // Commit changes
   //
 
-  const [updateEditor] = useUpdateEditorMutation()
-
   const onCommit = () => {
     const updates = []
 
@@ -570,8 +624,6 @@ const EditorPage = () => {
 
     // Send the changes to the server
 
-    setLoading(true)
-
     updateEditor({ updates, projectName })
       .unwrap()
       .then((res) => {
@@ -597,9 +649,6 @@ const EditorPage = () => {
       .catch((err) => {
         toast.error("Unable to save changes. This shouldn't happen.")
         console.error(err)
-      })
-      .finally(() => {
-        setLoading(false)
       })
   }
 
