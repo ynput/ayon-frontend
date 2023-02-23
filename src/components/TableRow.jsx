@@ -58,7 +58,8 @@ const RevealString = styled.span`
 const TableRow = ({ name, value }) => {
   let isNode
   // check if value if $$typeof: Symbol(react.element)
-  if (typeof value === 'object' && !Array.isArray(value) && value.$$typeof) {
+
+  if (value && typeof value === 'object' && !Array.isArray(value) && value.$$typeof) {
     isNode = true
   }
 
