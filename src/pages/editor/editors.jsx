@@ -1,17 +1,18 @@
 import { InputText, InputNumber } from '@ynput/ayon-react-components'
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
-
 import ayonClient from '/src/ayon'
-import { useSelector } from 'react-redux'
 
 //eslint-disable-next-line no-unused-vars
-const typeEditor = (options, callback, value, settings) => {
-  const { folders, tasks } = useSelector((state) => state.project) || {}
+const typeEditor = (options, callback, value, folders, tasks) => {
   const rowData = options.node.data
-  if (!rowData) return <></>
 
-  const types = rowData.__entityType === 'folder' ? folders : tasks
+  let types = rowData.__entityType === 'folder' ? folders : tasks
+  const optionsTypes = Object.values(types).map((t) => ({
+    name: t.name,
+    label: t.name,
+    icon: t.icon,
+  }))
 
   const onChange = (event) => callback(options, event.value)
 
@@ -36,10 +37,12 @@ const typeEditor = (options, callback, value, settings) => {
     return <span>{props.placeholder}</span>
   }
 
+  if (!rowData) return <></>
+
   // showClear={ rowData.__entityType === "folder" }
   return (
     <Dropdown
-      options={types}
+      options={optionsTypes}
       optionLabel="label"
       optionValue="name"
       dataKey="name"

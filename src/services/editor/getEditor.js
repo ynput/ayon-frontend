@@ -45,7 +45,13 @@ const getEditor = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (response) => transformEditorData(response.data?.project),
-      providesTags: () => ['project', 'folder', 'subset', 'task'],
+      providesTags: (res) => [
+        'project',
+        'folder',
+        'subset',
+        'task',
+        ...Object.keys(res).map((id) => ({ type: 'branch', id })),
+      ],
     }),
     getExpandedBranch: build.query({
       query: ({ projectName, parentId }) => ({
@@ -57,6 +63,7 @@ const getEditor = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (response) => transformEditorData(response.data?.project),
+      providesTags: (res, error, { parentId }) => [{ type: 'branch', id: parentId }],
       async onCacheEntryAdded({ projectName }, { cacheDataLoaded, getCacheEntry, dispatch }) {
         try {
           // wait for the initial query to resolve before proceeding
@@ -64,8 +71,10 @@ const getEditor = ayonApi.injectEndpoints({
 
           // get new branches from query result
           const newBranches = getCacheEntry().data
+          console.log('new branch loaded')
 
           if (newBranches) {
+            console.log('patching in branches to root', newBranches)
             //   patch new branches into root cache
             dispatch(
               ayonApi.util.updateQueryData('getEditorRoot', { projectName }, (draft) => {
