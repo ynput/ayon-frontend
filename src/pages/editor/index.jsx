@@ -31,7 +31,7 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import useColumnResize from '/src/hooks/useColumnResize'
-import { camelCase, isEmpty } from 'lodash'
+import { camelCase, capitalize, isEmpty } from 'lodash'
 import { useLazyGetExpandedBranchQuery } from '/src/services/editor/getEditor'
 import { useUpdateEditorMutation } from '/src/services/editor/updateEditor'
 import usePubSub from '/src/hooks/usePubSub'
@@ -654,18 +654,22 @@ const EditorPage = () => {
       let patchAttrib = { ...parent?.data?.attrib } || {}
       for (const key in entityChanges || {}) {
         if (key.startsWith('__')) continue
-        if (key.startsWith('_')) newEntity[key.substring(1)] = entityChanges[key]
-        else {
+        if (key.startsWith('_')) {
+          newEntity[key.substring(1)] = entityChanges[key]
+        } else {
           newEntity.attrib[key] = entityChanges[key]
           ownAttrib.push(key)
           patchAttrib[key] = entityChanges[key]
         }
       }
 
+      // name always camelCase
+      newEntity.name = camelCase(newEntity.name)
+
       const patch = {
         data: {
           ...newEntity,
-          name: camelCase(newEntity.name),
+          name: newEntity.name,
           attrib: patchAttrib,
           ownAttrib,
         },
@@ -702,6 +706,7 @@ const EditorPage = () => {
     // can't have same name as sibling
     const changesErrors = []
     const errorMessages = []
+
     for (const op of updates) {
       if (op.type === 'delete') continue
       const name = op.data.name
@@ -711,7 +716,7 @@ const EditorPage = () => {
         const data = rootData[id]?.data
         if (data.__parentId === parentId) {
           // found sibling (same parent) check name is different
-          if (name === data.name) {
+          if (name === data.name && id !== op.entityId) {
             const msg = 'Sibling entities can not have the same name.'
             // ERROR SAME NAME
             changesErrors.push({
@@ -802,13 +807,16 @@ const EditorPage = () => {
 
     // create new nodes objects
     // selecting multiple parents creates a new node for each one
-    const newNodes = []
+    const addingNewNodes = []
     const folderIds = []
     const taskIds = []
     for (const parentId of parents) {
       const newNode = {
         leaf: true,
-        name: `New${entityType}`,
+        name: `new${capitalize(entityType)}${
+          Object.values(newNodes).filter((n) => n?.name?.includes(`new${capitalize(entityType)}`))
+            .length + parents.indexOf(parentId)
+        }`,
         id: uuid1().replace(/-/g, ''),
         attrib: { ...(rootData[parentId]?.data.attrib || {}) },
         ownAttrib: [],
@@ -823,11 +831,11 @@ const EditorPage = () => {
         newNode['taskType'] = 'Generic'
         taskIds.push(newNode.id)
       }
-      newNodes.push(newNode)
+      addingNewNodes.push(newNode)
     }
 
     // update new nodes state
-    dispatch(newNodesAdded(newNodes))
+    dispatch(newNodesAdded(addingNewNodes))
 
     // set selection to new node
     dispatch(
@@ -860,7 +868,9 @@ const EditorPage = () => {
 
   const onDelete = () => {
     const newIds = Object.keys(newNodes).filter((i) => i in currentSelection)
-    const modifiedIds = Object.keys(currentSelection).filter((i) => !newIds.includes(i))
+    const modifiedIds = Object.keys(currentSelection).filter(
+      (i) => !newIds.includes(i) && i in currentSelection,
+    )
 
     // remove from newNodes state
     dispatch(onRevert(newIds))

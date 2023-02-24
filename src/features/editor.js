@@ -41,9 +41,9 @@ const editorSlice = createSlice({
         state.changes[id] = node
       }
     },
-    onRevert: (state, { payload = [] }) => {
+    onRevert: (state, { payload }) => {
       // if ids are provided only delete those
-      if (payload.length) {
+      if (payload) {
         for (const id of payload) {
           if (state.new[id]) delete state.new[id]
           if (state.changes[id]) delete state.changes[id]
