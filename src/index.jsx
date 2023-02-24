@@ -9,7 +9,7 @@ import { ToastContainer, Flip } from 'react-toastify'
 import userReducer from './features/user'
 import contextReducer from './features/context'
 import projectReducer from './features/project'
-// import editorReducer from './features/editor'
+import editorReducer from './features/editor'
 
 import App from './app'
 
@@ -31,7 +31,7 @@ const store = configureStore({
     user: userReducer,
     context: contextReducer,
     project: projectReducer,
-
+    editor: editorReducer,
     [ayonApi.reducerPath]: ayonApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(ayonApi.middleware),
