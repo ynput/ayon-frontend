@@ -126,6 +126,53 @@ const EditorPage = () => {
     loadNewBranches(branches)
   }, [])
 
+  // get and update children attrib that use it's parents attribs
+  const getChildAttribUpdates = (updates) => {
+    const childrenUpdated = []
+    // create object of updated/new branches
+    for (const update of updates) {
+      const updateId = update.entityId || update.data.id
+
+      // find all children of patch
+      for (const id in rootData) {
+        const childData = rootData[id].data
+
+        if (childData?.__parentId === updateId) {
+          const newAttrib = {}
+          const currentAttrib = childData?.attrib || {}
+
+          // is childData, check ownAttribs for updates
+          for (const key in update?.data?.attrib) {
+            if (
+              !childData?.ownAttrib?.includes(key) &&
+              currentAttrib[key] !== update.data.attrib[key]
+            ) {
+              newAttrib[key] = update.data.attrib[key]
+            }
+          }
+
+          if (!isEmpty(newAttrib)) {
+            // add new child to updates
+            childrenUpdated.push({
+              ...rootData[id],
+              data: {
+                ...childData,
+                attrib: { ...currentAttrib, ...newAttrib },
+              },
+            })
+          }
+        }
+      }
+    }
+
+    return childrenUpdated
+  }
+
+  const patchInNewNodes = (patches = []) => {
+    const childUpdates = getChildAttribUpdates(patches)
+    dispatch(nodesUpdated({ updated: [...patches, ...childUpdates] }))
+  }
+
   // OVERVIEW
   // 1. check entity has been expanded
   // 2. get entity data
@@ -157,7 +204,7 @@ const EditorPage = () => {
       leaf: rootDataCache[entityId].leaf,
     }
 
-    dispatch(nodesUpdated({ updated: [patch] }))
+    patchInNewNodes([{ data: patch.data }])
   }
 
   const ids = useMemo(() => Object.keys(rootDataCache), [rootDataCache])
@@ -667,6 +714,9 @@ const EditorPage = () => {
           toast.warn('Errors occurred during save')
         } else {
           toast.success('Changes saved')
+          // update children
+          const childUpdates = getChildAttribUpdates(updates)
+          dispatch(nodesUpdated({ updated: childUpdates }))
         }
 
         setErrors(() => {
