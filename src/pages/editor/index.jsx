@@ -31,7 +31,7 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import useColumnResize from '/src/hooks/useColumnResize'
-import { isEmpty } from 'lodash'
+import { camelCase, isEmpty } from 'lodash'
 import { useLazyGetExpandedBranchQuery } from '/src/services/editor/getEditor'
 import { useUpdateEditorMutation } from '/src/services/editor/updateEditor'
 import usePubSub from '/src/hooks/usePubSub'
@@ -129,7 +129,7 @@ const EditorPage = () => {
   // OVERVIEW
   // 1. check entity has been expanded
   // 2. get entity data
-  // 3. patch new entity data into rootDataCache
+  // 3. patch new entity data into editor nodes state
   const handlePubSub = async (topic = '', message) => {
     // check entity changing on current project
     if (!topic.includes('entity')) return
@@ -521,8 +521,13 @@ const EditorPage = () => {
 
         for (const key in changes[entityId]) {
           if (key.startsWith('__')) continue
-          if (key.startsWith('_')) entityChanges[key.substring(1)] = changes[entityId][key]
-          else attribChanges[key] = changes[entityId][key]
+          if (key.startsWith('_')) {
+            if (key === '_name') {
+              entityChanges[key.substring(1)] = camelCase(changes[entityId][key])
+            } else {
+              entityChanges[key.substring(1)] = changes[entityId][key]
+            }
+          } else attribChanges[key] = changes[entityId][key]
         }
 
         // patch is original data with updated data
@@ -579,6 +584,7 @@ const EditorPage = () => {
       const patch = {
         data: {
           ...newEntity,
+          name: camelCase(newEntity.name),
           attrib: patchAttrib,
           ownAttrib,
         },
