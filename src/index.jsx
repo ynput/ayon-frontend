@@ -9,6 +9,7 @@ import { ToastContainer, Flip } from 'react-toastify'
 import userReducer from './features/user'
 import contextReducer from './features/context'
 import projectReducer from './features/project'
+// import editorReducer from './features/editor'
 
 import App from './app'
 
@@ -20,12 +21,17 @@ import '@ynput/ayon-react-components/dist/style.css'
 import './styles/index.scss'
 import { ayonApi } from './services/ayon'
 import { setupListeners } from '@reduxjs/toolkit/dist/query'
+import short from 'short-uuid'
+
+// generate unique session id
+window.senderId = short.generate()
 
 const store = configureStore({
   reducer: {
     user: userReducer,
     context: contextReducer,
     project: projectReducer,
+
     [ayonApi.reducerPath]: ayonApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(ayonApi.middleware),

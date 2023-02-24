@@ -1,4 +1,3 @@
-import axios from 'axios'
 import { useEffect, useState, createContext } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
@@ -57,7 +56,7 @@ export const SocketProvider = (props) => {
 
     if (data.topic === 'server.restart_requested') setServerRestartingVisible(true)
 
-    if (data.sender === axios.defaults.headers.common['X-Sender']) {
+    if (data.sender === window.senderId) {
       return // my own message. ignore
     }
     if (data.topic === 'shout' && data?.summary?.text) toast.info(data.summary.text)
