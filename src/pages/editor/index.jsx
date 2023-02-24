@@ -168,11 +168,6 @@ const EditorPage = () => {
     return childrenUpdated
   }
 
-  const patchInNewNodes = (patches = []) => {
-    const childUpdates = getChildAttribUpdates(patches)
-    dispatch(nodesUpdated({ updated: [...patches, ...childUpdates] }))
-  }
-
   // OVERVIEW
   // 1. check entity has been expanded
   // 2. get entity data
@@ -185,32 +180,71 @@ const EditorPage = () => {
     const entityId = message.summary.entityId
     const entityType = topic.split('.')[1]
 
-    // check entityId is visible
-    if (!(entityId in rootDataCache)) return console.log('entity not visible yet')
+    // check entityId is visible or newly created
+    if (!(entityId in rootDataCache) && !topic.includes('created'))
+      return console.log('entity not visible yet')
+
+    // let user know when entity created/deleted
+    if (topic.includes('created') || topic.includes('deleted'))
+      toast.info(message.description + ' by ' + message.user)
+
+    if (topic.includes('deleted')) {
+      // entity has been deleted
+      dispatch(nodesUpdated({ deleted: [entityId] }))
+      return
+    }
 
     // get entity data
     const res = await triggerGetEntity({ projectName, entityId, entityType }, false)
       .unwrap()
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err)
+        if (err.status === 404) {
+          // entity doesn't exist?
+          dispatch(nodesUpdated({ deleted: [entityId] }))
+        }
+      })
+
+    // creating new nodes on an empty parent
+    // we need to make parent expandable
+    let parentPatch = []
+    const __parentId = res.folderId || res.parentId || 'root'
+    if (__parentId in rootData && rootData[__parentId].leaf) {
+      parentPatch.push({
+        leaf: false,
+        data: {
+          ...rootData[__parentId]?.data,
+          hasChildren: true,
+          hasTasks: entityType === 'task',
+        },
+      })
+    }
 
     console.log('patching in new websocket entityData', res)
     // now patch in new data
     const patch = {
       data: {
         ...res,
-        __parentId: res.folderId || res.parentId || 'root',
+        __parentId: __parentId,
         __entityType: entityType,
       },
-      leaf: rootDataCache[entityId].leaf,
+      leaf: rootDataCache[entityId]?.leaf || true,
     }
 
-    patchInNewNodes([{ data: patch.data }])
+    const childUpdates = getChildAttribUpdates([{ data: patch.data }])
+    dispatch(nodesUpdated({ updated: [patch, ...childUpdates, ...parentPatch] }))
   }
 
   const ids = useMemo(() => Object.keys(rootDataCache), [rootDataCache])
 
-  usePubSub('entity.task', handlePubSub, ids, false)
-  usePubSub('entity.folder', handlePubSub, ids, false)
+  usePubSub('entity.task', handlePubSub, ids, {
+    disableDebounce: true,
+    acceptNew: true,
+  })
+  usePubSub('entity.folder', handlePubSub, ids, {
+    disableDebounce: true,
+    acceptNew: true,
+  })
 
   //
   // Helpers
@@ -669,6 +703,7 @@ const EditorPage = () => {
     const changesErrors = []
     const errorMessages = []
     for (const op of updates) {
+      if (op.type === 'delete') continue
       const name = op.data.name
       const parentId = op.data.__parentId
 
