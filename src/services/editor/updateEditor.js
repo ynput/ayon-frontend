@@ -1,4 +1,5 @@
 import { ayonApi } from '../ayon'
+import { nodesUpdated } from '/src/features/editor'
 
 const updateEditor = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -18,32 +19,26 @@ const updateEditor = ayonApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { updates }) =>
         updates.map((op) => ({ type: 'branch', id: op.id })),
-      async onQueryStarted({ projectName, updates = [] }, { dispatch, queryFulfilled }) {
-        if (!updates) return
-
-        // now patch in new branches into rootData
-        const patchResult = dispatch(
-          ayonApi.util.updateQueryData('getEditorRoot', { projectName }, (draft) => {
-            const updatedBranches = {}
-
-            // create object of updated/new branches
-            for (const op of updates) {
-              if (op.type === 'delete') {
-                delete draft[op.entityId]
-              } else {
-                updatedBranches[op.entityId] = op.patch
-              }
-            }
-
-            console.log('patching root data')
-            console.log(updatedBranches)
-            Object.assign(draft, { ...draft, ...updatedBranches })
-          }),
-        )
+      async onCacheEntryAdded({ updates }, { cacheDataLoaded, dispatch }) {
         try {
-          await queryFulfilled
-        } catch {
-          patchResult.undo()
+          // wait for the initial query to resolve before proceeding
+          await cacheDataLoaded
+
+          const updated = []
+          const deleted = []
+
+          // create object of updated/new branches
+          for (const op of updates) {
+            if (op.type === 'delete') {
+              deleted.push(op.id)
+            } else {
+              updated.push(op.patch)
+            }
+          }
+          // add new branches to redux editor slice
+          dispatch(nodesUpdated({ updated: updated, deleted }))
+        } catch (error) {
+          console.error(error)
         }
       },
     }),

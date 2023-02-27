@@ -191,8 +191,19 @@ const getEntity = ayonApi.injectEndpoints({
       transformResponse: (response, meta, { entities }) =>
         formatEntityTiles(response.data?.project, entities),
     }),
+    getEntity: build.query({
+      query: ({ projectName, entityType, entityId }) => ({
+        url: `/api/projects/${projectName}/${entityType}s/${entityId}`,
+      }),
+      providesTags: (res, error, { entityId }) => [{ type: 'entity', id: entityId }],
+    }),
   }),
 })
 
-export const { useGetEntitiesDetailsQuery, useGetEventTileQuery, useGetEntityTilesQuery } =
-  getEntity
+export const {
+  useGetEntitiesDetailsQuery,
+  useGetEventTileQuery,
+  useGetEntityTilesQuery,
+  useGetEntityQuery,
+  useLazyGetEntityQuery,
+} = getEntity

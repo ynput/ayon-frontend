@@ -1,6 +1,5 @@
 import ayonClient from '/src/ayon'
 import axios from 'axios'
-import short from 'short-uuid'
 
 import { LoaderShade } from '@ynput/ayon-react-components'
 import { useEffect, useState, Suspense, lazy, useContext } from 'react'
@@ -38,7 +37,7 @@ const App = () => {
   if (storedAccessToken) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${storedAccessToken}`
   }
-  axios.defaults.headers.common['X-Sender'] = short.generate()
+  axios.defaults.headers.common['X-Sender'] = window.senderId
 
   // Call /api/info to check whether the user is logged in
   // and to acquire server settings

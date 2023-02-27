@@ -6,7 +6,7 @@ import { stringEditor, integerEditor, floatEditor, enumEditor } from './editors'
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
   let className = ''
-  let value = node.attrib[fieldName]
+  let value = node.attrib && node.attrib[fieldName]
   if (chobj && fieldName in chobj) {
     value = chobj[fieldName]
     className = 'changed'
@@ -20,15 +20,16 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
 
 const formatName = (node, changes, styled = true, project) => {
   const chobj = changes[node.id]
-  let value = chobj?._name ? chobj._name : node.name
-
-  console.log(chobj)
+  let value = chobj?._name || chobj?._name === '' ? chobj._name : node.name
 
   if (!styled) return value
 
   let icon
   const textStyle = {}
-  if (!value) textStyle.color = 'var(--color-hl-error)'
+  // check for errors
+  if (chobj?.errors?._name) {
+    textStyle.color = 'var(--color-hl-error)'
+  }
   if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-changed)'
 
   if (node.__entityType === 'task') {

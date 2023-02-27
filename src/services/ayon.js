@@ -1,6 +1,5 @@
 // Need to use the React-specific entry point to allow generating React hooks
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import short from 'short-uuid'
 
 // Util function
 export const buildOperations = (ids, type, data) =>
@@ -22,7 +21,7 @@ export const ayonApi = createApi({
         headers.set('Authorization', `Bearer ${storedAccessToken}`)
       }
       //   headers.common['X-Sender'] = short.generate()
-      headers.set('X-Sender', short.generate())
+      headers.set('X-Sender', window.senderId)
 
       return headers
     },
@@ -41,6 +40,7 @@ export const ayonApi = createApi({
     'anatomyPresets',
     'hierarchy',
     'branch',
+    'entity',
   ],
   endpoints: () => ({}),
 })
