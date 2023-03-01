@@ -70,7 +70,7 @@ const TaskList = ({ style = {} }) => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup ? 'folder' : tasks[node.data.taskType].icon
+    const icon = node.data.isGroup ? 'folder' : tasks[node.data.taskType]?.icon
     let className = ''
     let i = 0
     for (const pair of pairing) {

@@ -312,7 +312,9 @@ const SearchDropdown = ({
                   onMouseEnter={() => handleMouseEnter(i)}
                   onMouseLeave={() => handleMouseLeave(i)}
                 >
-                  {item.icon && <span className="material-symbols-outlined icon">{item.icon}</span>}
+                  {item?.icon && (
+                    <span className="material-symbols-outlined icon">{item?.icon}</span>
+                  )}
                   <span className="text">{item.label || item.value}</span>
                 </SuggestionItemStyled>
               ),
