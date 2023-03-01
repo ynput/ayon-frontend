@@ -102,7 +102,7 @@ const DashboardPanelWrapper = ({
         <header>
           <h1>{title}</h1>
           {header && header}
-          {icon?.onClick && <IconStyled icon={icon.icon} onClick={icon.onClick} />}
+          {icon?.onClick && <IconStyled icon={icon?.icon} onClick={icon.onClick} />}
           {icon?.link && (
             <Link to={icon.link} onClick={icon.onClick}>
               <IconStyled icon={icon.icon} />
