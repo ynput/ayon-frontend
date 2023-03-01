@@ -4,17 +4,12 @@ import { MultiSelect } from 'primereact/multiselect'
 import ayonClient from '/src/ayon'
 
 //eslint-disable-next-line no-unused-vars
-const typeEditor = (options, callback, value, folders, tasks) => {
-  const rowData = options.node.data
-
-  let types = rowData.__entityType === 'folder' ? folders : tasks
-  const optionsTypes = Object.values(types).map((t) => ({
+const TypeEditor = ({ value, options, onChange, isChanged }) => {
+  const optionsTypes = Object.values(options).map((t) => ({
     name: t?.name,
     label: t?.name,
     icon: t?.icon,
   }))
-
-  const onChange = (event) => callback(options, event.value)
 
   const itemTemplate = (option, props) => {
     if (option) {
@@ -37,9 +32,6 @@ const typeEditor = (options, callback, value, folders, tasks) => {
     return <span>{props.placeholder}</span>
   }
 
-  if (!rowData) return <></>
-
-  // showClear={ rowData.__entityType === "folder" }
   return (
     <Dropdown
       options={optionsTypes}
@@ -49,8 +41,8 @@ const typeEditor = (options, callback, value, folders, tasks) => {
       value={value || '_'}
       emptyMessage="Folder"
       itemTemplate={itemTemplate}
-      onChange={onChange}
-      style={{ width: '100%' }}
+      onChange={(e) => onChange(e.value)}
+      style={{ width: '100%', backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial' }}
     />
   )
 }
@@ -163,4 +155,4 @@ const floatEditor = (options, callback, value, settings) => {
   )
 }
 
-export { typeEditor, stringEditor, integerEditor, floatEditor, enumEditor }
+export { TypeEditor, stringEditor, integerEditor, floatEditor, enumEditor }

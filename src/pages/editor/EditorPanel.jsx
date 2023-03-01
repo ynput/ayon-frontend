@@ -19,6 +19,25 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import getFieldInObject from '/src/helpers/getFieldInObject'
 import { isEmpty } from 'lodash'
+import { TypeEditor } from './editors'
+import { format } from 'date-fns'
+
+const inputTypes = {
+  datetime: { type: 'date' },
+  integer: { type: 'number', step: 1 },
+  float: { type: 'number', step: 1 },
+}
+
+const getInputProps = (attrib = {}) => {
+  let props = {}
+
+  if (attrib.type) {
+    const type = inputTypes[attrib.type] || { type: 'string' }
+    props = { ...type }
+  }
+
+  return props
+}
 
 const EditorPanel = ({
   onDelete,
@@ -36,6 +55,8 @@ const EditorPanel = ({
   const [nodeIds, setNodeIds] = useState([])
   const [nodes, setNodes] = useState({})
   const [form, setForm] = useState({})
+  // used to rebuild fields for when the type changes
+  const [type, setType] = useState(null)
   // just used to avoid having an uncontrolled input
   const [multiValue] = useState('')
   const changes = useSelector((state) => state.editor.changes)
@@ -64,7 +85,6 @@ const EditorPanel = ({
   }
 
   const hasLeaf = nodeIds.some((id) => nodes[id]?.leaf)
-  const type = nodes[nodeIds[0]]?.data.__entityType
   const types = []
 
   for (const id of nodeIds) {
@@ -101,20 +121,28 @@ const EditorPanel = ({
         type: 'string',
         disabled: !singleSelect,
         placeholder: !singleSelect && 'Names Can Not Be The Same...',
+        attrib: {
+          type: 'string',
+        },
       },
     }
 
+    const type = nodes[nodeIds[0]]?.data.__entityType
+
     if (type) {
-      const changeKey = '_' + type
+      setType(type)
       // field = folderType or taskType
       const field = `${type}Type`
+      const changeKey = '_' + field
+      const formRow = getFieldValue(field, changeKey)
+
       initialForm[changeKey] = {
         changeKey: changeKey,
         label: 'Type',
         field: field,
         disabled: hasMixedTypes,
         placeholder: hasMixedTypes && 'Mixed Entity Types...',
-        formRow: getFieldValue(field, changeKey),
+        formRow: formRow,
       }
     }
 
@@ -126,10 +154,10 @@ const EditorPanel = ({
       const newRow = {
         changeKey: changeKey,
         label: data?.title,
-        type: data?.type,
         field: field,
         formRow: getFieldValue(field, changeKey),
         disabled: !types.every((t) => scope.includes(t)),
+        attrib: attrib.data,
       }
 
       initialForm[changeKey] = newRow
@@ -142,8 +170,9 @@ const EditorPanel = ({
     // resets every time selection is changed
     // changes saved to global state will show up here
     console.log('creating initial form')
+
     setForm(createInitialForm())
-  }, [nodeIds])
+  }, [nodeIds, type])
 
   //   Handlers
 
@@ -218,19 +247,32 @@ const EditorPanel = ({
   }
 
   // update the local form on changes
-  const handleLocalChange = (value, changeKey, field) => {
-    const newForm = { ...form }
+  const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
+    // console.log('local change', value, changeKey, field, form)
+
+    let newForm = { ...form }
+    if (formState) {
+      newForm = formState
+    }
     // check key is in form
     if (changeKey in form) {
       const oldValue = newForm[changeKey]
+      const type = oldValue?.attrib?.type
+      let newValue = value
+
+      if (type === 'datetime') {
+        newValue = new Date(value)
+        newValue = newValue.toISOString()
+      }
 
       let isChanged = true
 
       if (!oldValue.formRow[3]) {
         for (const id of nodeIds) {
           const ogValue = getFieldInObject(field, nodes[id]?.data)
+
           // dif value or isMultiple
-          isChanged = ogValue.toString() !== value
+          isChanged = ogValue.toString() !== newValue
 
           // stop looping if isChanged is ever true
           if (isChanged) break
@@ -239,11 +281,12 @@ const EditorPanel = ({
 
       newForm[changeKey] = {
         ...newForm[changeKey],
-        formRow: [value, isChanged, true, oldValue.formRow[3]],
+        formRow: [newValue, isChanged, true, oldValue.formRow[3]],
       }
 
       setLocalChange(true)
 
+      if (setFormNew) return setFormNew(newForm)
       // update state
       setForm(newForm)
     }
@@ -272,6 +315,7 @@ const EditorPanel = ({
   }
 
   const handleFormChanged = () => {
+    console.log('handling form change')
     setLocalChange(false)
     // loop through form and get any changes
     for (const key in form) {
@@ -388,10 +432,39 @@ const EditorPanel = ({
           <Panel>
             <FormLayout>
               {Object.values(form).map(
-                ({ formRow, label, leafDisabled, changeKey, disabled, placeholder, field }, i) => {
-                  const [value, isChanged, isOwn, isMultiple] = formRow
-                  return (
-                    <FormRow key={i} label={label}>
+                (
+                  { formRow, label, leafDisabled, changeKey, disabled, placeholder, field, attrib },
+                  i,
+                ) => {
+                  let [value, isChanged, isOwn, isMultiple] = formRow
+                  // input type, step, max, min
+                  const extraProps = getInputProps(attrib)
+                  const typeOptions = type === 'folder' ? folders : tasks
+
+                  if (attrib?.type === 'datetime' && value) {
+                    // convert date to right format
+                    value = new Date(value)
+                    if (value) {
+                      value = format(value, 'yyyy-MM-dd')
+                    }
+                  }
+
+                  // pick a react input
+                  let input
+
+                  if (field.includes('Type')) {
+                    input = (
+                      <TypeEditor
+                        value={value}
+                        onChange={(v) => handleLocalChange(v, changeKey, field)}
+                        options={typeOptions}
+                        isChanged={isChanged}
+                      />
+                    )
+                  } else if (field === 'status') {
+                    input = null
+                  } else {
+                    input = (
                       <InputText
                         value={value || ''}
                         disabled={(hasLeaf && leafDisabled) || disabled}
@@ -401,7 +474,15 @@ const EditorPanel = ({
                           backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
                           color: !isOwn ? 'var(--color-grey-06)' : 'initial',
                         }}
+                        {...extraProps}
                       />
+                    )
+                  }
+
+                  if (!input) return null
+                  return (
+                    <FormRow key={i} label={label}>
+                      {input}
                     </FormRow>
                   )
                 },
