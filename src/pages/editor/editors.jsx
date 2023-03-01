@@ -9,9 +9,9 @@ const typeEditor = (options, callback, value, folders, tasks) => {
 
   let types = rowData.__entityType === 'folder' ? folders : tasks
   const optionsTypes = Object.values(types).map((t) => ({
-    name: t.name,
-    label: t.name,
-    icon: t.icon,
+    name: t?.name,
+    label: t?.name,
+    icon: t?.icon,
   }))
 
   const onChange = (event) => callback(options, event.value)
@@ -27,7 +27,7 @@ const typeEditor = (options, callback, value, folders, tasks) => {
           }}
         >
           <span className={`material-symbols-outlined`} style={{ marginRight: '0.6rem' }}>
-            {option.icon}
+            {option?.icon}
           </span>
           <span>{option.label}</span>
         </div>
