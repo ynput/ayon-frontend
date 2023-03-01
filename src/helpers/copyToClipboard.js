@@ -7,7 +7,7 @@ const copyToClipboard = (message) => {
   if (!navigator.clipboard) return
 
   navigator.clipboard.writeText(message)
-  toast.info(`Copied To Clipboard: "${message}"`)
+  toast.success(`Copied To Clipboard: "${message}"`)
 }
 
 export default copyToClipboard

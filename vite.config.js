@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-const SERVER_URL = "http://localhost:5000"
+const SERVER_URL = 'https://ayon.dev'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -14,7 +14,7 @@ export default defineConfig({
       '/ws': {
         target: SERVER_URL,
         changeOrigin: true,
-        ws: true
+        ws: true,
       },
       '/addons': {
         target: SERVER_URL,
@@ -36,7 +36,7 @@ export default defineConfig({
         target: SERVER_URL,
         changeOrigin: true,
       },
-    }
+    },
   },
-  plugins: [react()]
+  plugins: [react()],
 })

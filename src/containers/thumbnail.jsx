@@ -49,12 +49,14 @@ const parseThumbnail = (response) => {
   return `data:${mime};base64,${base64}`
 }
 
-const Thumbnail = ({ projectName, entityType, entityId, isLoading }) => {
+const Thumbnail = ({ projectName, entityType, entityId, isLoading, style }) => {
   const [thumbData, setThumbData] = useState(null)
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
 
+  const isWrongEntity = ['task', 'subset'].includes(entityType)
+
   useEffect(() => {
-    if (!entityId || isLoading) {
+    if (!entityId || isLoading || isWrongEntity) {
       setThumbData(null)
       return
     }
@@ -66,7 +68,7 @@ const Thumbnail = ({ projectName, entityType, entityId, isLoading }) => {
   }, [entityId, entityType, projectName, isLoading])
 
   return (
-    <ThumbnailStyled>
+    <ThumbnailStyled style={style}>
       {thumbData ? (
         <ImageStyled alt={`Entity thumbnail ${entityId}`} src={thumbData} />
       ) : (

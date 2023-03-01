@@ -2,14 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
-import {
-  Spacer,
-  Button,
-  Section,
-  Toolbar,
-  TablePanel,
-  InputSwitch,
-} from '@ynput/ayon-react-components'
+import { Spacer, Button, Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -24,8 +17,7 @@ import {
   setFocusedFolders,
 } from '/src/features/context'
 
-import { getColumns, formatName, formatType, formatAttribute } from './utils'
-import { stringEditor, typeEditor } from './editors'
+import { getColumns, formatType, formatAttribute } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
@@ -36,11 +28,21 @@ import { useLazyGetExpandedBranchQuery } from '/src/services/editor/getEditor'
 import { useUpdateEditorMutation } from '/src/services/editor/updateEditor'
 import usePubSub from '/src/hooks/usePubSub'
 import { useLazyGetEntityQuery } from '/src/services/entity/getEntity'
-import { newNodesAdded, nodesUpdated, onNewChanges, onRevert } from '/src/features/editor'
+import {
+  newNodesAdded,
+  newProject,
+  nodesUpdated,
+  onNewChanges,
+  onRevert,
+} from '/src/features/editor'
+import EditorPanel from './EditorPanel'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
+import NameField from './fields/NameField'
+import { useGetAttributesQuery } from '/src/services/getAttributes'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
-  const { folders: foldersObject, tasks, folders } = project
+  const { folders: foldersObject, tasks } = project
 
   // eslint-disable-next-line no-unused-vars
   // const context = useSelector((state) => ({ ...state.context }))
@@ -51,13 +53,21 @@ const EditorPage = () => {
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
 
+  const changes = useSelector((state) => state.editor.changes)
+
   const dispatch = useDispatch()
 
   const newNodes = useSelector((state) => state.editor.new)
-  const changes = useSelector((state) => state.editor.changes)
+  const editorProjectName = useSelector((state) => state.editor.projectName)
+
+  // get attrib fields
+  let { data: attribsData = [] } = useGetAttributesQuery()
+  //   filter out scopes
+  const attribFields = attribsData.filter((a) =>
+    a.scope.some((s) => ['folder', 'task'].includes(s)),
+  )
 
   const [errors, setErrors] = useState({})
-  const [selectionLocked, setSelectionLocked] = useState(false)
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
@@ -87,8 +97,6 @@ const EditorPage = () => {
 
   const loading = isLoadingBranches || isSearchLoading || isUpdating
 
-  // TODO changes aren't propagated to children
-
   // call loadNewBranches with an array of folder ids to get the branches and patch them into the rootData cache
   const loadNewBranches = async (folderIds, force) => {
     if (!folderIds.length) return
@@ -117,13 +125,18 @@ const EditorPage = () => {
   useEffect(() => {
     const branches = ['root']
 
+    let isNewProject = editorProjectName !== projectName
+    if (isNewProject) {
+      dispatch(newProject(projectName))
+    }
+
     // load expanded folders from initial context
     if (Object.keys(expandedFolders).length) branches.concat(Object.keys(expandedFolders))
 
     // load initial branches
     console.log('loading initial branches', branches)
 
-    loadNewBranches(branches)
+    loadNewBranches(branches, isNewProject)
   }, [])
 
   // get and update children attrib that use it's parents attribs
@@ -172,68 +185,72 @@ const EditorPage = () => {
   // 1. check entity has been expanded
   // 2. get entity data
   // 3. patch new entity data into editor nodes state
-  const handlePubSub = async (topic = '', message) => {
-    // check entity changing on current project
-    if (!topic.includes('entity')) return
-    if (message.project?.toLowerCase() !== projectName.toLowerCase()) return
+  const handlePubSub = useMemo(
+    () =>
+      async (topic = '', message) => {
+        // check entity changing on current project
+        if (!topic.includes('entity')) return
+        if (message.project?.toLowerCase() !== projectName.toLowerCase()) return
 
-    const entityId = message.summary.entityId
-    const entityType = topic.split('.')[1]
+        const entityId = message.summary.entityId
+        const entityType = topic.split('.')[1]
 
-    // check entityId is visible or newly created
-    if (!(entityId in rootDataCache) && !topic.includes('created'))
-      return console.log('entity not visible yet')
+        // check entityId is visible or newly created
+        if (!(entityId in rootDataCache) && !topic.includes('created'))
+          return console.log('entity not visible yet')
 
-    // let user know when entity created/deleted
-    if (topic.includes('created') || topic.includes('deleted'))
-      toast.info(message.description + ' by ' + message.user)
+        // let user know when entity created/deleted
+        if (topic.includes('created') || topic.includes('deleted'))
+          toast.info(message.description + ' by ' + message.user)
 
-    if (topic.includes('deleted')) {
-      // entity has been deleted
-      dispatch(nodesUpdated({ deleted: [entityId] }))
-      return
-    }
-
-    // get entity data
-    const res = await triggerGetEntity({ projectName, entityId, entityType }, false)
-      .unwrap()
-      .catch((err) => {
-        console.error(err)
-        if (err.status === 404) {
-          // entity doesn't exist?
+        if (topic.includes('deleted')) {
+          // entity has been deleted
           dispatch(nodesUpdated({ deleted: [entityId] }))
+          return
         }
-      })
 
-    // creating new nodes on an empty parent
-    // we need to make parent expandable
-    let parentPatch = []
-    const __parentId = res.folderId || res.parentId || 'root'
-    if (__parentId in rootData && rootData[__parentId].leaf) {
-      parentPatch.push({
-        leaf: false,
-        data: {
-          ...rootData[__parentId]?.data,
-          hasChildren: true,
-          hasTasks: entityType === 'task',
-        },
-      })
-    }
+        // get entity data
+        const res = await triggerGetEntity({ projectName, entityId, entityType }, false)
+          .unwrap()
+          .catch((err) => {
+            console.error(err)
+            if (err.status === 404) {
+              // entity doesn't exist?
+              dispatch(nodesUpdated({ deleted: [entityId] }))
+            }
+          })
 
-    console.log('patching in new websocket entityData', res)
-    // now patch in new data
-    const patch = {
-      data: {
-        ...res,
-        __parentId: __parentId,
-        __entityType: entityType,
+        // creating new nodes on an empty parent
+        // we need to make parent expandable
+        let parentPatch = []
+        const __parentId = res.folderId || res.parentId || 'root'
+        if (__parentId in rootData && rootData[__parentId].leaf) {
+          parentPatch.push({
+            leaf: false,
+            data: {
+              ...rootData[__parentId]?.data,
+              hasChildren: true,
+              hasTasks: entityType === 'task',
+            },
+          })
+        }
+
+        console.log('patching in new websocket entityData', res)
+        // now patch in new data
+        const patch = {
+          data: {
+            ...res,
+            __parentId: __parentId,
+            __entityType: entityType,
+          },
+          leaf: rootDataCache[entityId]?.leaf || true,
+        }
+
+        const childUpdates = getChildAttribUpdates([{ data: patch.data }])
+        dispatch(nodesUpdated({ updated: [patch, ...childUpdates, ...parentPatch] }))
       },
-      leaf: rootDataCache[entityId]?.leaf || true,
-    }
-
-    const childUpdates = getChildAttribUpdates([{ data: patch.data }])
-    dispatch(nodesUpdated({ updated: [patch, ...childUpdates, ...parentPatch] }))
-  }
+    [rootDataCache],
+  )
 
   const ids = useMemo(() => Object.keys(rootDataCache), [rootDataCache])
 
@@ -524,56 +541,6 @@ const EditorPage = () => {
   }, [focusedEditor, rootData])
 
   //
-  // Update handlers
-  //
-
-  const updateAttribute = (options, value) => {
-    const newChanges = []
-    for (const id in currentSelection) {
-      const currentChanges = changes[id] || {
-        __entityType: rootData[id].data.__entityType,
-        __parentId: rootData[id].data.__parentId,
-      }
-      newChanges.push({
-        id,
-        ...currentChanges,
-        [options.field]: value || '',
-      })
-    }
-
-    dispatch(onNewChanges(newChanges))
-
-    // Force table render when selection is locked
-    if (selectionLocked) dispatch(setFocusedFolders(focusedFolders))
-  }
-
-  const updateName = (options, value) => {
-    const currentChanges = changes[options.rowData.id] || {
-      __entityType: options.rowData.__entityType,
-      __parentId: rootData[options.rowData.id].data.__parentId,
-    }
-    const rowChanges = {
-      id: options.rowData.id,
-      ...currentChanges,
-      _name: value,
-    }
-    dispatch(onNewChanges([rowChanges]))
-  }
-
-  const updateType = (options, value) => {
-    const currentChanges = changes[options.rowData.id] || {
-      __entityType: options.rowData.__entityType,
-      __parentId: rootData[options.rowData.id].data.__parentId,
-    }
-    const rowChanges = {
-      id: options.rowData.id,
-      ...currentChanges,
-      [options.rowData.__entityType === 'folder' ? '_folderType' : '_taskType']: value,
-    }
-    dispatch(onNewChanges([rowChanges]))
-  }
-
-  //
   // Commit changes
   //
 
@@ -794,7 +761,6 @@ const EditorPage = () => {
     return parents
   }, [currentSelection])
 
-  const canAdd = futureParents.length > 0
   const canCommit = !isEmpty(changes) || !isEmpty(newNodes)
 
   const addNode = (entityType, root) => {
@@ -955,9 +921,6 @@ const EditorPage = () => {
   }
 
   const onSelectionChange = (event) => {
-    // block new selection if the selection is locked
-    if (selectionLocked) return
-
     const selection = Object.keys(event.value)
     // reduce into two arrays, one with type folder and one with type task
     const folders = []
@@ -1028,56 +991,43 @@ const EditorPage = () => {
     localStorage.setItem('editor-columns-order', JSON.stringify(localStorageOrder))
   }
 
-  let allColumns = [
-    <Column
-      field="name"
-      key="name"
-      header="Name"
-      expander={true}
-      body={(rowData) => formatName(rowData.data, changes, true, project)}
-      style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
-      editor={(options) => {
-        return stringEditor(
-          options,
-          updateName,
-          formatName(options.rowData, changes, false, project),
-        )
-      }}
-    />,
-    <Column
-      field="type"
-      key="type"
-      header="Type"
-      body={(rowData) => formatType(rowData.data, changes)}
-      style={{ width: columnsWidths['type'], maxWidth: 200 }}
-      editor={(options) => {
-        return typeEditor(
-          options,
-          updateType,
-          formatType(options.rowData, changes, false),
-          folders,
-          tasks,
-        )
-      }}
-    />,
-    ...columns.map((col) => (
+  let allColumns = useMemo(
+    () => [
       <Column
-        key={col.name}
-        header={col.title}
-        field={col.name}
-        style={{ width: columnsWidths[col.name] }}
-        body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
-        editor={(options) => {
-          return col.editor(
-            options,
-            updateAttribute,
-            formatAttribute(options.rowData, changes, col.name, false),
-            col.editorSettings,
-          )
-        }}
-      />
-    )),
-  ]
+        field="name"
+        key="name"
+        header="Name"
+        expander={true}
+        body={(rowData) => (
+          <NameField
+            node={rowData.data}
+            changes={changes}
+            styled
+            tasks={tasks}
+            folders={foldersObject}
+          />
+        )}
+        style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
+      />,
+      <Column
+        field="type"
+        key="type"
+        header="Type"
+        body={(rowData) => formatType(rowData.data, changes)}
+        style={{ width: columnsWidths['type'], maxWidth: 200 }}
+      />,
+      ...columns.map((col) => (
+        <Column
+          key={col.name}
+          header={col.title}
+          field={col.name}
+          style={{ width: columnsWidths[col.name] }}
+          body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
+        />
+      )),
+    ],
+    [rootData],
+  )
 
   // sort columns if localstorage set
   let columnsOrder = localStorage.getItem('editor-columns-order')
@@ -1097,6 +1047,15 @@ const EditorPage = () => {
     allColumns = allColumns.filter(({ props }) => shownColumns.includes(props.field))
   }
 
+  // filter nodes that are undefined for editor
+  const editorNodes = {}
+  // filter out undefined nodes
+  for (const id in currentSelection) {
+    if (currentSelection[id] && !isEmpty(currentSelection[id])) {
+      editorNodes[id] = currentSelection[id]
+    }
+  }
+
   // sort columns
 
   //
@@ -1106,34 +1065,7 @@ const EditorPage = () => {
     <main>
       <Section>
         <Toolbar>
-          <Button
-            icon="create_new_folder"
-            label="Add folder"
-            disabled={!canAdd}
-            onClick={onAddFolder}
-          />
-          <Button icon="add_task" label="Add task" disabled={!canAdd} onClick={onAddTask} />
           <Button icon="create_new_folder" label="Add root folder" onClick={onAddRootFolder} />
-          <Button label="Delete selected" icon="delete" onClick={onDelete} />
-
-          <Spacer />
-          <Button
-            icon="close"
-            label="Revert Changes"
-            onClick={handleRevert}
-            disabled={!canCommit}
-          />
-          <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
-        </Toolbar>
-        <Toolbar>
-          <SearchDropdown
-            filter={searchFilter}
-            suggestions={searchableFolders}
-            suggestionsLimit={5}
-            onSubmit={handleSearchComplete}
-            onClear={() => searchIds && setSearchIds({})}
-            isLoading={isSearchLoading}
-          />
           <MultiSelect
             options={filterOptions}
             value={shownColumns}
@@ -1142,51 +1074,81 @@ const EditorPage = () => {
             fixedPlaceholder={shownColumns.length >= filterOptions.length}
             style={{ maxWidth: 200 }}
           />
-          <InputSwitch
-            checked={selectionLocked}
-            onChange={() => setSelectionLocked(!selectionLocked)}
-            style={{ width: 40, marginLeft: 10 }}
+          <SearchDropdown
+            filter={searchFilter}
+            suggestions={searchableFolders}
+            suggestionsLimit={5}
+            onSubmit={handleSearchComplete}
+            onClear={() => searchIds && setSearchIds({})}
+            isLoading={isSearchLoading}
           />
-          Lock selection
+          <Spacer />
+          <Button
+            icon="replay"
+            label="Revert All Changes"
+            onClick={handleRevert}
+            disabled={!canCommit}
+          />
+          <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
         </Toolbar>
-        <TablePanel loading={loading}>
-          <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-          <TreeTable
-            responsive="true"
-            scrollable
-            scrollHeight="100%"
-            value={treeData}
-            resizableColumns
-            columnResizeMode="expand"
-            expandedKeys={expandedFolders}
-            onToggle={onToggle}
-            selectionMode="multiple"
-            selectionKeys={currentSelection}
-            onSelectionChange={onSelectionChange}
-            onRowClick={onRowClick}
-            rowClassName={(rowData) => {
-              return {
-                changed: rowData.key in changes || rowData.key?.startsWith('newnode'),
-                deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
-              }
-            }}
-            selectOnEdit={false}
-            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-            onContextMenuSelectionChange={onContextMenuSelectionChange}
-            onColumnResizeEnd={setColumnWidths}
-            reorderableColumns
-            onColReorder={handleColumnReorder}
-            rows={20}
-          >
-            {allColumns}
-            <Column
-              field="error"
-              header=""
-              body={(rowData) => formatError(rowData.data)}
-              style={{ width: 24 }}
+        <Splitter
+          style={{ width: '100%', height: '100%' }}
+          layout="horizontal"
+          stateKey="editor-panels"
+          stateStorage="local"
+        >
+          <SplitterPanel size={70}>
+            <TablePanel loading={loading} style={{ height: '100%' }}>
+              <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+              <TreeTable
+                responsive="true"
+                scrollable
+                scrollHeight="100%"
+                value={treeData}
+                resizableColumns
+                columnResizeMode="expand"
+                expandedKeys={expandedFolders}
+                onToggle={onToggle}
+                selectionMode="multiple"
+                selectionKeys={currentSelection}
+                onSelectionChange={onSelectionChange}
+                onRowClick={onRowClick}
+                rowClassName={(rowData) => {
+                  return {
+                    changed: rowData.key in changes || rowData.key in newNodes,
+                    deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
+                  }
+                }}
+                onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+                onContextMenuSelectionChange={onContextMenuSelectionChange}
+                onColumnResizeEnd={setColumnWidths}
+                reorderableColumns
+                onColReorder={handleColumnReorder}
+                rows={20}
+              >
+                {allColumns}
+                <Column
+                  field="error"
+                  header=""
+                  body={(rowData) => formatError(rowData.data)}
+                  style={{ width: 24 }}
+                />
+              </TreeTable>
+            </TablePanel>
+          </SplitterPanel>
+          <SplitterPanel size={30} minSize={30}>
+            <EditorPanel
+              editorMode
+              nodes={editorNodes}
+              onChange={(c) => dispatch(onNewChanges(c))}
+              onDelete={onDelete}
+              onRevert={revertChangesOnSelection}
+              onAddFolder={onAddFolder}
+              onAddTask={onAddTask}
+              attribs={attribFields}
             />
-          </TreeTable>
-        </TablePanel>
+          </SplitterPanel>
+        </Splitter>
       </Section>
     </main>
   )
