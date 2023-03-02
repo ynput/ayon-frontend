@@ -113,24 +113,27 @@ const EditorPanel = ({
   }
 
   const createInitialForm = () => {
+    const statusValues = getFieldValue('status', '_status')
+    const nameValues = getFieldValue('name', '_name')
     const initialForm = {
       _status: {
         changeKey: '_status',
         label: 'Status',
         field: 'status',
-        formRow: getFieldValue('status', '_status'),
+        placeholder: `Multiple (${statusValues.isMultiple && statusValues.isMultiple.join(', ')})`,
+        ...statusValues,
       },
       _name: {
         changeKey: '_name',
         label: 'Name',
         field: 'name',
-        formRow: getFieldValue('name', '_name'),
         type: 'string',
         disabled: !singleSelect,
-        placeholder: !singleSelect && 'Names Can Not Be The Same...',
+        placeholder: !singleSelect ? 'Names Can Not Be The Same...' : '',
         attrib: {
           type: 'string',
         },
+        ...nameValues,
       },
     }
 
@@ -141,15 +144,25 @@ const EditorPanel = ({
       // field = folderType or taskType
       const field = `${type}Type`
       const changeKey = '_' + field
-      const formRow = getFieldValue(field, changeKey)
+      const { isMultiple, isChanged, isOwn, value } = getFieldValue(field, changeKey)
+
+      let placeholder = ''
+      if (hasMixedTypes) {
+        placeholder = 'Mixed Entity Types...'
+      } else if (isMultiple) {
+        placeholder = `Multiple (${isMultiple.join(', ')})`
+      }
 
       initialForm[changeKey] = {
-        changeKey: changeKey,
+        changeKey,
+        field,
+        placeholder,
+        isMultiple,
+        isChanged,
+        isOwn,
+        value,
         label: 'Type',
-        field: field,
         disabled: hasMixedTypes,
-        placeholder: hasMixedTypes && 'Mixed Entity Types...',
-        formRow: formRow,
       }
     }
 
@@ -158,12 +171,21 @@ const EditorPanel = ({
       const { name, scope, data } = attrib
       const changeKey = name
       const field = 'attrib.' + name
+      const { isMultiple, isChanged, isOwn, value } = getFieldValue(field, changeKey)
+      const disabled = !types.every((t) => scope.includes(t))
+      const placeholder = isMultiple && !disabled ? `Multiple (${isMultiple.join(', ')})` : ''
+
+      // create object
       const newRow = {
-        changeKey: changeKey,
+        changeKey,
+        field,
+        disabled,
+        placeholder,
+        isMultiple,
+        isChanged,
+        isOwn,
+        value,
         label: data?.title,
-        field: field,
-        formRow: getFieldValue(field, changeKey),
-        disabled: !types.every((t) => scope.includes(t)),
         attrib: attrib.data,
       }
 
@@ -196,7 +218,7 @@ const EditorPanel = ({
   // returns [value, isChanged, isOwn]
   const getFieldValue = (field, changeKey) => {
     let finalValue = '',
-      multiple = false,
+      isMultiple = false,
       isChanged = false,
       isOwn = false
     for (const id of nodeIds) {
@@ -235,28 +257,33 @@ const EditorPanel = ({
         isOwn = true
       }
 
-      if (finalValue && finalValue !== nodeValue) {
-        // different values, this is a multiple filed
-        multiple = true
-        break
+      if ((finalValue && finalValue !== nodeValue) || isMultiple) {
+        // different values, this is a isMultiple filed
+        // assign array of those values
+        if (!isMultiple) {
+          // first time there has been a dif value
+          isMultiple = [finalValue, nodeValue]
+        } else if (!isMultiple?.includes(nodeValue)) {
+          // add any more new diff values
+          isMultiple?.push(nodeValue)
+        }
+      } else {
+        // final value
+        finalValue = nodeValue
       }
-
-      // final value
-      finalValue = nodeValue
     }
 
-    if (multiple) {
+    if (isMultiple) {
       // values are different
       finalValue = multiValue
     }
 
-    return [finalValue, isChanged, isOwn, multiple]
+    return { value: finalValue, isChanged, isOwn, isMultiple }
   }
 
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
     // console.log('local change', value, changeKey, field, form)
-    console.log(form)
 
     let newForm = { ...form }
     if (formState) {
@@ -275,7 +302,7 @@ const EditorPanel = ({
 
       let isChanged = true
 
-      if (!oldValue.formRow[3]) {
+      if (!oldValue?.isMultiple) {
         for (const id of nodeIds) {
           const ogValue = getFieldInObject(field, nodes[id]?.data)
 
@@ -289,7 +316,10 @@ const EditorPanel = ({
 
       newForm[changeKey] = {
         ...newForm[changeKey],
-        formRow: [newValue, isChanged, true, oldValue.formRow[3]],
+        value: newValue,
+        isChanged,
+        isOwn: true,
+        isMultiple: oldValue?.isMultiple,
       }
 
       setLocalChange(true)
@@ -330,15 +360,15 @@ const EditorPanel = ({
       const row = form[key]
 
       // check isChanged
-      if (row.formRow[1]) {
+      if (row.isChanged) {
         let oldChanges
         if (changes[nodeIds[0]] && key in changes[nodeIds[0]]) {
           oldChanges = changes[nodeIds[0]][key]
         }
         // only update again if old !== new
-        if (oldChanges !== row.formRow[0]) {
+        if (oldChanges !== row.value) {
           console.log('change')
-          handleGlobalChange(row.formRow[0], row.changeKey)
+          handleGlobalChange(row.value, row.changeKey)
         }
       } else {
         // nothing has changed so now check if there are changes in global state
@@ -420,7 +450,7 @@ const EditorPanel = ({
         <>
           <DetailHeader>
             <StackedThumbnails thumbnails={thumbnails} />
-            <div style={{ overflowX: 'clip' }}>
+            <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
               {singleSelect ? (
                 <NameField
                   node={singleSelect}
@@ -439,78 +469,97 @@ const EditorPanel = ({
           </DetailHeader>
           <Panel>
             <FormLayout>
-              {Object.values(form).map(
-                (
-                  { formRow, label, leafDisabled, changeKey, disabled, placeholder, field, attrib },
-                  i,
-                ) => {
-                  let [value, isChanged, isOwn, isMultiple] = formRow
-                  // input type, step, max, min
-                  const extraProps = getInputProps(attrib)
-                  const typeOptions = type === 'folder' ? folders : tasks
+              {Object.values(form).map((row, i) => {
+                let {
+                  label,
+                  leafDisabled,
+                  changeKey,
+                  disabled,
+                  placeholder,
+                  field,
+                  attrib,
+                  value,
+                  isChanged,
+                  isOwn,
+                  isMultiple,
+                } = row || {}
 
-                  if (attrib?.type === 'datetime' && value) {
-                    // convert date to right format
-                    value = new Date(value)
-                    if (value) {
-                      value = format(value, 'yyyy-MM-dd')
-                    }
+                // input type, step, max, min
+                const extraProps = getInputProps(attrib)
+                const typeOptions = type === 'folder' ? folders : tasks
+
+                if (attrib?.type === 'datetime' && value) {
+                  // convert date to right format
+                  value = new Date(value)
+                  if (value) {
+                    value = format(value, 'yyyy-MM-dd')
                   }
+                }
 
-                  const changedStyles = {
-                    backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
-                  }
+                const changedStyles = {
+                  backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
+                }
 
-                  // pick a react input
-                  let input
+                // pick a react input
+                let input
 
-                  if (field.includes('Type')) {
-                    input = (
-                      <TypeEditor
-                        value={value}
-                        onChange={(v) => handleLocalChange(v, changeKey, field)}
-                        options={typeOptions}
-                        style={changedStyles}
-                      />
-                    )
-                  } else if (field === 'status') {
-                    input = (
-                      <StatusSelect
-                        value={isMultiple ? 'Multiple...' : value}
-                        multipleSelected={nodeIds.length}
-                        onChange={(v) => handleLocalChange(v, changeKey, field)}
-                        maxWidth={'100%'}
-                        style={{
-                          ...changedStyles,
-                          border: '1px solid var(--color-grey-03)',
-                        }}
-                        height={30}
-                      />
-                    )
-                  } else {
-                    input = (
-                      <InputText
-                        value={value || ''}
-                        disabled={(hasLeaf && leafDisabled) || disabled}
-                        onChange={(e) => handleLocalChange(e.target.value, changeKey, field)}
-                        placeholder={isMultiple && !disabled ? `Multiple...` : placeholder || ' '}
-                        style={{
-                          ...changedStyles,
-                          color: !isOwn ? 'var(--color-grey-06)' : 'initial',
-                        }}
-                        {...extraProps}
-                      />
-                    )
-                  }
-
-                  if (!input) return null
-                  return (
-                    <FormRow key={i} label={label}>
-                      {input}
-                    </FormRow>
+                if (field.includes('Type')) {
+                  input = (
+                    <TypeEditor
+                      value={!isMultiple && value}
+                      onChange={(v) => handleLocalChange(v, changeKey, field)}
+                      options={typeOptions}
+                      style={{ ...changedStyles }}
+                      disabled={disabled}
+                      placeholder={placeholder}
+                    />
                   )
-                },
-              )}
+                } else if (field === 'status') {
+                  input = (
+                    <StatusSelect
+                      value={!isMultiple && value}
+                      multipleSelected={nodeIds.length}
+                      onChange={(v) => handleLocalChange(v, changeKey, field)}
+                      maxWidth={'100%'}
+                      style={{
+                        ...changedStyles,
+                        border: '1px solid var(--color-grey-03)',
+                      }}
+                      height={30}
+                      placeholder={placeholder}
+                    />
+                  )
+                } else {
+                  input = (
+                    <InputText
+                      value={value || ''}
+                      disabled={(hasLeaf && leafDisabled) || disabled}
+                      onChange={(e) => handleLocalChange(e.target.value, changeKey, field)}
+                      placeholder={placeholder}
+                      style={{
+                        ...changedStyles,
+                        color: !isOwn ? 'var(--color-grey-06)' : 'initial',
+                      }}
+                      {...extraProps}
+                    />
+                  )
+                }
+
+                if (!input) return null
+                return (
+                  <FormRow
+                    key={i}
+                    label={label}
+                    className={`editor-form ${disabled ? 'disabled' : ''}${
+                      isOwn ? '' : 'inherited'
+                    } ${attrib?.type} ${isMultiple ? 'isMultiple' : ''} ${
+                      isChanged ? 'isChanged' : ''
+                    }`}
+                  >
+                    {input}
+                  </FormRow>
+                )
+              })}
             </FormLayout>
           </Panel>
         </>

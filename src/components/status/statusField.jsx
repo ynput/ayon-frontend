@@ -124,10 +124,13 @@ const StatusField = ({
   onClick,
   style,
   height,
+  placeholder,
 }) => {
   // TODO: move to context to a higher level component?
   const statuses = useSelector((state) => state.project.statuses)
   const { shortName, color, icon } = statuses[value] || {}
+
+  let shownValue = value || placeholder || ''
 
   return (
     <StatusStyled
@@ -135,20 +138,21 @@ const StatusField = ({
       onClick={onClick}
       color={color}
       isActive={isActive}
-      id={value}
+      id={shownValue}
       isSelecting={isSelecting}
       align={align}
       isChanging={isChanging}
       size={size}
+      placeholder={!value && placeholder ? placeholder : ''}
     >
       <span className="material-symbols-outlined">{icon}</span>
-      {size !== 'icon' && (size === 'full' ? value : shortName)}
+      {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
     </StatusStyled>
   )
 }
 
 StatusField.propTypes = {
-  value: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   isActive: PropTypes.bool,
   isChanging: PropTypes.bool,
   isSelecting: PropTypes.bool,
@@ -157,6 +161,7 @@ StatusField.propTypes = {
   onClick: PropTypes.func,
   style: PropTypes.object,
   anatomy: PropTypes.object,
+  placeholder: PropTypes.string,
 }
 
 export default StatusField

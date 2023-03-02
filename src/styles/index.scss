@@ -330,3 +330,66 @@ a {
     border: 0;
   }
 }
+
+.editor-form {
+  .field {
+    position: relative;
+  }
+
+  &.disabled {
+    .field {
+      cursor: not-allowed;
+    }
+  }
+
+  input::placeholder {
+    transition: color 0.1s;
+  }
+
+  &:not(.disabled):not(.inherited) {
+    input:not(:focus) {
+      &::placeholder {
+        color: white;
+      }
+    }
+  }
+
+  // &.inherited {
+  //   .field {
+  //     &::before {
+  //       content: 'inherited';
+  //       display: block;
+  //       position: absolute;
+  //       right: 30px;
+  //       top: 50%;
+  //       translate: 0 -50%;
+  //       opacity: 0.5;
+  //     }
+  //     &::after {
+  //       opacity: 0.5;
+  //     }
+  //   }
+  // }
+
+  .p-dropdown .p-dropdown-label.p-placeholder {
+    color: white;
+  }
+
+  .p-disabled,
+  .p-component:disabled {
+    font-style: italic;
+  }
+
+  &.datetime.isMultiple:not(.isChanged) {
+    .field {
+      &::after {
+        content: 'Multiple';
+        display: block;
+        position: absolute;
+        left: 90px;
+        top: 52%;
+        translate: 0 -50%;
+      }
+    }
+  }
+}

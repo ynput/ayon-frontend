@@ -151,7 +151,7 @@ const Dropdown = ({ children, value, style, options, message, onOpen, onClose })
 
 Dropdown.propTypes = {
   children: PropTypes.func.isRequired,
-  value: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   style: PropTypes.object,
   options: PropTypes.array.isRequired,
   message: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),

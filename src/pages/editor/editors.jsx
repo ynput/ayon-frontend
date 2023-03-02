@@ -4,7 +4,7 @@ import { MultiSelect } from 'primereact/multiselect'
 import ayonClient from '/src/ayon'
 
 //eslint-disable-next-line no-unused-vars
-const TypeEditor = ({ value, options, onChange, style }) => {
+const TypeEditor = ({ value, options, onChange, style, disabled, placeholder }) => {
   const optionsTypes = Object.values(options).map((t) => ({
     name: t?.name,
     label: t?.name,
@@ -43,6 +43,8 @@ const TypeEditor = ({ value, options, onChange, style }) => {
       itemTemplate={itemTemplate}
       onChange={(e) => onChange(e.value)}
       style={style}
+      disabled={disabled}
+      placeholder={placeholder}
     />
   )
 }

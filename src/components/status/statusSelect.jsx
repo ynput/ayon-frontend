@@ -14,6 +14,7 @@ const StatusSelect = ({
   multipleSelected,
   onClick,
   style,
+  placeholder,
 }) => {
   const [changedValue, setChangedValue] = useState(null)
 
@@ -28,7 +29,7 @@ const StatusSelect = ({
     }
   }, [value, changedValue, setChangedValue])
 
-  if (!value) return null
+  if (!value && !placeholder) return null
 
   const handleChange = (status) => {
     if (status === value) return
@@ -77,6 +78,7 @@ const StatusSelect = ({
             size={size}
             style={style}
             height={height}
+            placeholder={placeholder}
           />
         )
       }
@@ -87,7 +89,7 @@ const StatusSelect = ({
 StatusSelect.propTypes = {
   size: PropTypes.oneOf(['full', 'short', 'icon']),
   align: PropTypes.oneOf(['left', 'right']),
-  value: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   statuses: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
