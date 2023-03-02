@@ -21,6 +21,7 @@ import getFieldInObject from '/src/helpers/getFieldInObject'
 import { isEmpty } from 'lodash'
 import { TypeEditor } from './editors'
 import { format } from 'date-fns'
+import StatusSelect from '/src/components/status/statusSelect'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -113,6 +114,12 @@ const EditorPanel = ({
 
   const createInitialForm = () => {
     const initialForm = {
+      _status: {
+        changeKey: '_status',
+        label: 'Status',
+        field: 'status',
+        formRow: getFieldValue('status', '_status'),
+      },
       _name: {
         changeKey: '_name',
         label: 'Name',
@@ -249,6 +256,7 @@ const EditorPanel = ({
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
     // console.log('local change', value, changeKey, field, form)
+    console.log(form)
 
     let newForm = { ...form }
     if (formState) {
@@ -449,6 +457,10 @@ const EditorPanel = ({
                     }
                   }
 
+                  const changedStyles = {
+                    backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
+                  }
+
                   // pick a react input
                   let input
 
@@ -458,11 +470,23 @@ const EditorPanel = ({
                         value={value}
                         onChange={(v) => handleLocalChange(v, changeKey, field)}
                         options={typeOptions}
-                        isChanged={isChanged}
+                        style={changedStyles}
                       />
                     )
                   } else if (field === 'status') {
-                    input = null
+                    input = (
+                      <StatusSelect
+                        value={isMultiple ? 'Multiple...' : value}
+                        multipleSelected={nodeIds.length}
+                        onChange={(v) => handleLocalChange(v, changeKey, field)}
+                        maxWidth={'100%'}
+                        style={{
+                          ...changedStyles,
+                          border: '1px solid var(--color-grey-03)',
+                        }}
+                        height={30}
+                      />
+                    )
                   } else {
                     input = (
                       <InputText
@@ -471,7 +495,7 @@ const EditorPanel = ({
                         onChange={(e) => handleLocalChange(e.target.value, changeKey, field)}
                         placeholder={isMultiple && !disabled ? `Multiple...` : placeholder || ' '}
                         style={{
-                          backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
+                          ...changedStyles,
                           color: !isOwn ? 'var(--color-grey-06)' : 'initial',
                         }}
                         {...extraProps}

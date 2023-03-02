@@ -26,6 +26,7 @@ const StatusStyled = styled.div`
   font-size: var(--base-font-size);
   position: relative;
   cursor: pointer;
+  user-select: none;
 
   /* ICON */
   .material-symbols-outlined {
@@ -122,6 +123,7 @@ const StatusField = ({
   align = 'left',
   onClick,
   style,
+  height,
 }) => {
   // TODO: move to context to a higher level component?
   const statuses = useSelector((state) => state.project.statuses)
@@ -129,7 +131,7 @@ const StatusField = ({
 
   return (
     <StatusStyled
-      style={{ ...style }}
+      style={{ ...style, height }}
       onClick={onClick}
       color={color}
       isActive={isActive}

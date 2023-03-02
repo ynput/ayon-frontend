@@ -4,7 +4,7 @@ import { MultiSelect } from 'primereact/multiselect'
 import ayonClient from '/src/ayon'
 
 //eslint-disable-next-line no-unused-vars
-const TypeEditor = ({ value, options, onChange, isChanged }) => {
+const TypeEditor = ({ value, options, onChange, style }) => {
   const optionsTypes = Object.values(options).map((t) => ({
     name: t?.name,
     label: t?.name,
@@ -42,7 +42,7 @@ const TypeEditor = ({ value, options, onChange, isChanged }) => {
       emptyMessage="Folder"
       itemTemplate={itemTemplate}
       onChange={(e) => onChange(e.value)}
-      style={{ width: '100%', backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial' }}
+      style={style}
     />
   )
 }

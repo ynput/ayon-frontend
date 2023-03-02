@@ -14,6 +14,7 @@ const BASE_QUERY = `
             parents
             parentId
             ownAttrib
+            status
             attrib {
               #FOLDER_ATTRS#
             }
@@ -28,6 +29,7 @@ const BASE_QUERY = `
             taskType
             ownAttrib
             folderId
+            status
             attrib {
               #TASK_ATTRS#
             }

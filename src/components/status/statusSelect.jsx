@@ -13,6 +13,7 @@ const StatusSelect = ({
   onChange,
   multipleSelected,
   onClick,
+  style,
 }) => {
   const [changedValue, setChangedValue] = useState(null)
 
@@ -65,6 +66,7 @@ const StatusSelect = ({
               isActive={props.selected === status.name}
               onClick={() => handleChange(status.name)}
               align={align}
+              height={height}
             />
           ))
         ) : (
@@ -73,6 +75,8 @@ const StatusSelect = ({
             align={align}
             isChanging={!!changedValue}
             size={size}
+            style={style}
+            height={height}
           />
         )
       }
@@ -95,6 +99,7 @@ StatusSelect.propTypes = {
   maxWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   multipleSelected: PropTypes.number,
   onClick: PropTypes.func,
+  isChanged: PropTypes.object,
 }
 
 export default StatusSelect
