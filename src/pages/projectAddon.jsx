@@ -16,7 +16,10 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   const addonRef = useRef(null)
   const [loading, setLoading] = useState(true)
 
-  const context = useSelector((state) => ({ ...state.context }))
+  let context = useSelector((state) => state.context)
+  const projectName = useSelector((state) => state.project.name)
+  // merge in project name
+  context.projectName = projectName
   const focusedFolders = context.focused.folders
 
   const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/`
