@@ -341,7 +341,7 @@ const EditorPanel = ({
         value: newValue,
         isChanged,
         isOwn: true,
-        isMultiple: oldValue?.isMultiple,
+        isMultiple: oldValue?.isMultiple && !isChanged,
       }
 
       setLocalChange(true)
@@ -505,6 +505,10 @@ const EditorPanel = ({
                   isOwn,
                   isMultiple,
                 } = row || {}
+
+                if (label === 'Type') {
+                  // console.log(value)
+                }
 
                 // input type, step, max, min
                 const extraProps = getInputProps(attrib)
