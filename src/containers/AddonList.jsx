@@ -174,11 +174,21 @@ const AddonList = ({
   // add 'version' property to each addon
   const addons = useMemo(() => {
     let result = []
+    console.log('With settings: ', withSettings)
     for (const addon of data || []) {
-      if (addon[environment + 'Version'] || showAllAddons) {
+      const envVersion = addon[environment + 'Version']
+
+      if (envVersion || showAllAddons) {
+        if (withSettings === 'site') {
+          const hasSiteSettings = addon.versions[envVersion]?.hasSiteSettings || false
+          if (!hasSiteSettings) {
+            continue
+          }
+        }
+
         result.push({
           ...addon,
-          version: addon[environment + 'Version'],
+          version: envVersion,
           latestVersion: sortSemver(Object.keys(addon.versions || {})).pop(),
         })
       }

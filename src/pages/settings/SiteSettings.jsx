@@ -1,5 +1,15 @@
 import { useState, useMemo } from 'react'
-import { Section, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
+import {
+  Section,
+  Spacer,
+  InputSwitch,
+  Panel,
+  Toolbar,
+  ScrollPanel,
+  Button,
+} from '@ynput/ayon-react-components'
+
+import { SelectButton } from 'primereact/selectbutton'
 
 import SettingsEditor from '/src/containers/settingsEditor'
 import AddonList from '/src/containers/AddonList'
@@ -43,6 +53,8 @@ const SiteSettings = () => {
   const [selectedSites, setSelectedSites] = useState([])
   const [newData, setNewData] = useState({})
   const [setSiteSettings] = useSetSiteSettingsMutation()
+  const [environment, setEnvironment] = useState('production')
+  const [showAllAddons, setShowAllAddons] = useState(false)
 
   const saveChanges = () => {
     for (const key in newData) {
@@ -68,9 +80,39 @@ const SiteSettings = () => {
     })
   }
 
+  const addonListHeader = useMemo(() => {
+    const environmentOptions = [
+      { label: 'Production', value: 'production' },
+      { label: 'Staging', value: 'staging' },
+    ]
+
+    return (
+      <Toolbar>
+        <SelectButton
+          unselectable={false}
+          value={environment}
+          options={environmentOptions}
+          onChange={(e) => {
+            setEnvironment(e.value)
+          }}
+        />
+        <Spacer />
+        <>
+          Show all
+          <InputSwitch
+            checked={showAllAddons}
+            onChange={() => setShowAllAddons(!showAllAddons)}
+            tooltip="Show all addons"
+          />
+        </>
+      </Toolbar>
+    )
+  }, [showAllAddons, environment])
+
   return (
     <main style={{ flexDirection: 'row', flexGrow: 1 }}>
       <Section style={{ maxWidth: 400 }}>
+        {addonListHeader}
         <AddonList
           projectKey="default"
           selectedAddons={selectedAddons}
@@ -78,6 +120,8 @@ const SiteSettings = () => {
           changedAddons={[]}
           onDismissChanges={() => {}}
           onRemoveOverrides={() => {}}
+          environment={environment}
+          showAllAddons={showAllAddons}
           withSettings="site"
         />
         <SiteList
