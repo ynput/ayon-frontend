@@ -16,9 +16,9 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   const addonRef = useRef(null)
   const [loading, setLoading] = useState(true)
 
-  const context = useSelector((state) => ({ ...state.context }))
+  const context = useSelector((state) => state.context)
+  const projectName = useSelector((state) => state.project.name)
   const focusedFolders = context.focused.folders
-
   const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/`
 
   const pushContext = () => {
@@ -26,7 +26,10 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
     addonWnd.postMessage({
       scope: 'project',
       accessToken: localStorage.getItem('accessToken'),
-      context,
+      context: {
+        ...context,
+        projectName,
+      },
       addonName,
       addonVersion,
     })
