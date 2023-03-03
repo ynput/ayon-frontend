@@ -16,7 +16,7 @@ const transformEditorData = (project) => {
         __parentId: node.parentId || 'root',
         __entityType: 'folder',
       },
-      leaf: !(node.hasChildren || node.hasTasks),
+      leaf: false,
     }
   }
 

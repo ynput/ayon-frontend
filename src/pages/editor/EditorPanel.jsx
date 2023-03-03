@@ -92,7 +92,10 @@ const EditorPanel = ({
     singleSelect = nodes[nodeIds[0]]?.data || {}
   }
 
-  const hasLeaf = nodeIds.some((id) => nodes[id]?.leaf)
+  const hasLeaf = nodeIds.some((id) => nodes[id]?.leaf && nodes[id]?.data?.__entityType === 'task')
+  const hasChildren = nodeIds.some(
+    (id) => nodes[id]?.data?.hasChildren || nodes[id]?.data?.hasTasks,
+  )
   const types = []
 
   for (const id of nodeIds) {
@@ -106,13 +109,13 @@ const EditorPanel = ({
   const thumbnails = nodeIds.map((id) => ({ id, type: nodes[id]?.data?.__entityType }))
   let subTitle = ''
   if (singleSelect) {
-    subTitle = `/ ${breadcrumbs.parents?.join(' / ')} ${breadcrumbs.parents.length ? ' / ' : ''} ${
+    subTitle = `/ ${breadcrumbs.parents?.join(' / ')} ${breadcrumbs.parents?.length ? ' / ' : ''} ${
       breadcrumbs.folder
     }`
 
     if (singleSelect.__entityType === 'task') {
       // add on task at end
-      if (breadcrumbs.parents.length) subTitle += ' / '
+      if (breadcrumbs.parents?.length) subTitle += ' / '
       subTitle += singleSelect.name
     }
   } else {
@@ -444,7 +447,7 @@ const EditorPanel = ({
             label={'Delete'}
             icon="delete"
             onClick={() => onDelete(nodes)}
-            disabled={noSelection}
+            disabled={noSelection || hasChildren}
           />
           <Button label={`Revert`} icon="replay" onClick={handleRevert} disabled={noSelection} />
         </Toolbar>

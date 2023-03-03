@@ -319,9 +319,6 @@ const EditorPage = () => {
     Object.values(newNodes).forEach((n) => {
       // add new node
       data[n.id] = { leaf: n.__entityType !== 'folder', data: n }
-      // make sure parent leaf = false
-      if (data[n.parentId || n.folderId])
-        data[n.parentId || n.folderId] = { ...data[n.parentId || n.folderId], leaf: false }
     })
     return data
   }, [rootDataCache, newNodes, changes])
@@ -544,6 +541,7 @@ const EditorPage = () => {
 
   const onCommit = () => {
     const updates = []
+    const parentPatches = []
 
     // PATCH / DELETE EXISTING ENTITIES
 
@@ -608,7 +606,6 @@ const EditorPage = () => {
     //
 
     const newNodesParentIds = Object.values(newNodes).map((n) => n.parentId || n.folderId)
-    const parentPatches = []
 
     for (const id in newNodes) {
       const entity = newNodes[id]
@@ -618,18 +615,23 @@ const EditorPage = () => {
 
       // it is a new entity, so only valid attributes are those
       // stored in `changes`. The rest are inherited ones
-      newEntity.attrib = {}
-      let ownAttrib = []
+      let ownAttrib = entity.ownAttrib || []
       const parent = rootData[entity.parentId || entity.folderId]
-      let patchAttrib = { ...parent?.data?.attrib } || {}
+      // copy over own attrib
+      let patchAttrib = entity.attrib || {}
+      // copy over parents if they have any
+      if (parent) {
+        patchAttrib = parent?.data?.attrib || {}
+      }
       for (const key in entityChanges || {}) {
         if (key.startsWith('__')) continue
         if (key.startsWith('_')) {
           newEntity[key.substring(1)] = entityChanges[key]
         } else {
-          newEntity.attrib[key] = entityChanges[key]
-          ownAttrib.push(key)
-          patchAttrib[key] = entityChanges[key]
+          if (entityChanges[key]) {
+            ownAttrib.push(key)
+            patchAttrib[key] = entityChanges[key]
+          }
         }
       }
 
@@ -661,7 +663,7 @@ const EditorPage = () => {
         patch,
       })
 
-      if (!parent?.data?.hasChildren && entity.__parentId !== 'root') {
+      if (!parent?.data?.hasChildren && entity.__parentId !== 'root' && parent) {
         const parentPatch = {
           data: { ...parent.data, hasTasks: entityType === 'task', hasChildren: true },
           leaf: false,
@@ -782,7 +784,35 @@ const EditorPage = () => {
     const folderIds = []
     const taskIds = []
     for (const parentId of parents) {
-      const parentData = rootData[parentId]?.data || {}
+      let parentData
+
+      const findFirstFolder = (ids) => {
+        let folder
+        // first root node
+        for (const id in ids) {
+          if (rootData[id]?.data?.__parentId === 'root') {
+            // found first root folder
+            folder = rootData[id]?.data
+            // break out of loop
+            break
+          }
+        }
+
+        return folder
+      }
+
+      // if null (root) parentData is first selected node or just node
+      if (parentId === null) {
+        if (isEmpty(currentSelection)) {
+          // first root node
+          parentData = findFirstFolder(rootData) || {}
+        } else {
+          // copy first selected folder node, otherwise first root folder
+          parentData = findFirstFolder(currentSelection) || findFirstFolder(rootData) || {}
+        }
+      } else {
+        parentData = rootData[parentId]?.data || {}
+      }
 
       const newNode = {
         leaf: true,
@@ -801,6 +831,10 @@ const EditorPage = () => {
       if (entityType === 'folder') {
         newNode['parentId'] = parentId
         newNode['folderType'] = parentData?.folderType
+        if (newNode.__parentId === 'root') {
+          // all attrib are it's own
+          newNode['ownAttrib'] = Object.keys(newNode.attrib)
+        }
         folderIds.push(newNode.id)
       } else if (entityType === 'task') {
         newNode['folderId'] = parentId
@@ -850,12 +884,32 @@ const EditorPage = () => {
 
     // remove from newNodes state and the tree table
     dispatch(onRevert(newIds))
-    // remove newIds from selection
-    const newSelection = { ...currentSelection }
-    for (const id in currentSelection) {
-      if (newIds.includes(id)) delete newSelection[id]
+
+    if (newIds.length) {
+      // remove newIds from selection
+      let newSelection = {}
+
+      if (!modifiedIds.length) {
+        // only newIds are being deleted
+        // selection will go to first deleted parent
+        newSelection = {}
+        for (const id in currentSelection) {
+          const parent = rootData[id]?.data?.__parentId
+          if (parent) {
+            newSelection = { [parent]: true }
+            break
+          }
+        }
+      } else {
+        // preserve selection of non newItems
+        newSelection = { ...currentSelection }
+        for (const id in currentSelection) {
+          if (newIds.includes(id)) delete newSelection[id]
+        }
+      }
+
+      handleSelectionChange(newSelection)
     }
-    handleSelectionChange(newSelection)
 
     // for NOT new nodes, add to changes
     // keeps entity in the tree table but shows red strikethrough
