@@ -371,6 +371,12 @@ a {
   //   }
   // }
 
+  .p-dropdown {
+    span {
+      min-width: unset;
+    }
+  }
+
   .p-dropdown .p-dropdown-label.p-placeholder {
     color: white;
   }

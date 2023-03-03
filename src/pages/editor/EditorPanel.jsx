@@ -489,7 +489,7 @@ const EditorPanel = ({
               <OverflowField value={subTitle} style={{ left: -3 }} align="left" />
             </div>
           </DetailHeader>
-          <Panel>
+          <Panel style={{ overflowY: 'auto', height: '100%' }}>
             <FormLayout>
               {Object.values(form).map((row, i) => {
                 let {
@@ -531,7 +531,7 @@ const EditorPanel = ({
                       value={!isMultiple && value}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       options={typeOptions}
-                      style={{ ...changedStyles }}
+                      style={{ ...changedStyles, width: '100%', minWidth: 'unset' }}
                       disabled={disabled}
                       placeholder={placeholder}
                     />
@@ -561,6 +561,7 @@ const EditorPanel = ({
                       style={{
                         ...changedStyles,
                         color: !isOwn ? 'var(--color-grey-06)' : 'initial',
+                        width: '100%',
                       }}
                       {...extraProps}
                     />
