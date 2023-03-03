@@ -1,10 +1,10 @@
 import ayonClient from '/src/ayon'
-import { CellWithIcon } from '/src/components/icons'
 import { stringEditor, integerEditor, floatEditor, enumEditor } from './editors'
 
 // TODO rename .jsx -> .js
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
+
   let className = ''
   let value = node.attrib && node.attrib[fieldName]
   if (chobj && fieldName in chobj) {
@@ -16,32 +16,6 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   if (!styled) return value
 
   return <span className={`editor-field ${className}`}>{value}</span>
-}
-
-const formatName = (node, changes, styled = true, project) => {
-  const chobj = changes[node.id]
-  let value = chobj?._name || chobj?._name === '' ? chobj._name : node.name
-
-  if (!styled) return value
-
-  let icon
-  const textStyle = {}
-  // check for errors
-  if (chobj?.errors?._name) {
-    textStyle.color = 'var(--color-hl-error)'
-  }
-  if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-changed)'
-
-  if (node.__entityType === 'task') {
-    icon = project.tasks[chobj?._taskType || node.taskType]?.icon || 'help_center'
-    textStyle.fontStyle = 'italic'
-    value = value || 'Unnamed task'
-  } else {
-    icon = project.folders[chobj?._folderType || node.folderType]?.icon || 'help_center'
-    value = value || 'Unnamed folder'
-  }
-
-  return <CellWithIcon icon={icon} text={value} textStyle={textStyle} />
 }
 
 const formatType = (node, changes, styled = true) => {
@@ -93,4 +67,4 @@ const getColumns = () => {
   return cols
 }
 
-export { getColumns, formatName, formatType, formatAttribute }
+export { getColumns, formatType, formatAttribute }

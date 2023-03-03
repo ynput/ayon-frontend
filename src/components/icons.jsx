@@ -1,9 +1,18 @@
-const CellWithIcon = ({ icon, iconClassName, text, textStyle, textClassName, className }) => {
+const CellWithIcon = ({
+  icon,
+  iconClassName,
+  text,
+  textStyle,
+  textClassName,
+  className,
+  style,
+  iconStyle,
+}) => {
   return (
-    <span className={className || ''}>
+    <span className={className || ''} style={{ alignItems: 'center', ...style }}>
       <span
         className={`material-symbols-outlined ${iconClassName || ''}`}
-        style={{ marginRight: '0.6rem' }}
+        style={{ marginRight: '0.6rem', ...iconStyle }}
       >
         {icon}
       </span>

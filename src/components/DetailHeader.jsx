@@ -23,7 +23,7 @@ const HeaderStyled = styled(Panel)`
     gap: 8px;
     align-items: center;
     flex: 1;
-    overflow: hidden;
+    overflow-x: clip;
   }
 
   /* icon */

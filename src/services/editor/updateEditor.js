@@ -17,8 +17,10 @@ const updateEditor = ayonApi.injectEndpoints({
           })),
         },
       }),
-      invalidatesTags: (result, error, { updates }) =>
-        updates.map((op) => ({ type: 'branch', id: op.id })),
+      invalidatesTags: (result, error, { updates }) => [
+        ...updates.map((op) => [{ type: 'branch', id: op.id }]),
+        'hierarchy',
+      ],
       async onCacheEntryAdded({ updates }, { cacheDataLoaded, dispatch }) {
         try {
           // wait for the initial query to resolve before proceeding

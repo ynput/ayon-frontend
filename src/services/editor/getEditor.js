@@ -5,6 +5,8 @@ import { buildQuery } from '/src/pages/editor/queries'
 const transformEditorData = (project) => {
   const nodes = {}
 
+  if (!project) return {}
+
   // Add folders
   for (const edge of project.folders.edges) {
     const node = edge.node
@@ -14,7 +16,7 @@ const transformEditorData = (project) => {
         __parentId: node.parentId || 'root',
         __entityType: 'folder',
       },
-      leaf: !(node.hasChildren || node.hasTasks),
+      leaf: false,
     }
   }
 

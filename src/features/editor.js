@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit'
 const editorSlice = createSlice({
   name: 'editor',
   initialState: {
+    projectName: null,
     nodes: {},
     new: {},
     changes: {},
@@ -34,6 +35,12 @@ const editorSlice = createSlice({
         state.new[id] = node
       }
     },
+    newProject: (state, action) => {
+      state.nodes = {}
+      state.new = {}
+      state.changes = {}
+      state.projectName = action.payload
+    },
     onNewChanges: (state, { payload = [] }) => {
       for (const node of payload) {
         const id = node.id
@@ -57,6 +64,6 @@ const editorSlice = createSlice({
   },
 })
 
-export const { branchesLoaded, nodesUpdated, onRevert, newNodesAdded, onNewChanges } =
+export const { branchesLoaded, nodesUpdated, onRevert, newNodesAdded, onNewChanges, newProject } =
   editorSlice.actions
 export default editorSlice.reducer
