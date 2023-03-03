@@ -49,9 +49,17 @@ const EditorPanel = ({
   onAddTask,
   attribs,
 }) => {
-  // used to throttle changes to redux changes state and keep input fast
+  // SELECTORS
   const selected = useSelector((state) => state.context.focused.editor)
   const editorNodes = useSelector((state) => state.editor.nodes)
+  const newNodes = useSelector((state) => state.editor.new)
+  const changes = useSelector((state) => state.editor.changes)
+  const breadcrumbs = useSelector((state) => state.context.breadcrumbs) || {}
+  const tasks = useSelector((state) => state.project.tasks)
+  const folders = useSelector((state) => state.project.folders)
+
+  // STATES
+  // used to throttle changes to redux changes state and keep input fast
   const [localChange, setLocalChange] = useState(false)
   const [nodeIds, setNodeIds] = useState([])
   const [nodes, setNodes] = useState({})
@@ -60,11 +68,8 @@ const EditorPanel = ({
   const [type, setType] = useState(null)
   // just used to avoid having an uncontrolled input
   const [multiValue] = useState('')
-  const changes = useSelector((state) => state.editor.changes)
-  const breadcrumbs = useSelector((state) => state.context.breadcrumbs) || {}
-  const tasks = useSelector((state) => state.project.tasks)
-  const folders = useSelector((state) => state.project.folders)
 
+  // when selection or nodes change, update nodes state
   useEffect(() => {
     setNodeIds([...selected])
     // set nodes for selection
@@ -73,6 +78,8 @@ const EditorPanel = ({
     for (const id of selected) {
       if (id in editorNodes) {
         formNodes[id] = editorNodes[id]
+      } else if (id in newNodes) {
+        formNodes[id] = { leaf: newNodes[id]?.__entityType !== 'folder', data: newNodes[id] }
       }
     }
 
@@ -89,14 +96,14 @@ const EditorPanel = ({
   const types = []
 
   for (const id of nodeIds) {
-    if (!types.includes(nodes[id]?.data.__entityType)) types.push(nodes[id]?.data.__entityType)
+    if (!types.includes(nodes[id]?.data?.__entityType)) types.push(nodes[id]?.data?.__entityType)
   }
 
   //   checking if any other types don't match the first one
   const hasMixedTypes = types.length > 1
 
   //   header
-  const thumbnails = nodeIds.map((id) => ({ id, type: nodes[id]?.data.__entityType }))
+  const thumbnails = nodeIds.map((id) => ({ id, type: nodes[id]?.data?.__entityType }))
   let subTitle = ''
   if (singleSelect) {
     subTitle = `/ ${breadcrumbs.parents?.join(' / ')} ${breadcrumbs.parents.length ? ' / ' : ''} ${
@@ -109,7 +116,7 @@ const EditorPanel = ({
       subTitle += singleSelect.name
     }
   } else {
-    subTitle = nodeIds.map((id) => nodes[id]?.data.name).join(', ')
+    subTitle = nodeIds.map((id) => nodes[id]?.data?.name).join(', ')
   }
 
   const createInitialForm = () => {
@@ -137,7 +144,7 @@ const EditorPanel = ({
       },
     }
 
-    const type = nodes[nodeIds[0]]?.data.__entityType
+    const type = nodes[nodeIds[0]]?.data?.__entityType
 
     if (type) {
       setType(type)
@@ -281,6 +288,14 @@ const EditorPanel = ({
     return { value: finalValue, isChanged, isOwn, isMultiple }
   }
 
+  const handleAddNew = (type) => {
+    if (type === 'task') {
+      onAddTask()
+    } else {
+      onAddFolder()
+    }
+  }
+
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
     // console.log('local change', value, changeKey, field, form)
@@ -302,12 +317,16 @@ const EditorPanel = ({
 
       let isChanged = true
 
-      if (!oldValue?.isMultiple) {
+      if (!oldValue?.isMultiple && !oldValue?.__new) {
         for (const id of nodeIds) {
           const ogValue = getFieldInObject(field, nodes[id]?.data)
 
+          // if value undefined or it's a new node skip
+          // (always changed)
+          if (!ogValue || nodes[id]?.__new) break
+
           // dif value or isMultiple
-          isChanged = ogValue.toString() !== newValue
+          isChanged = ogValue?.toString() !== newValue
 
           // stop looping if isChanged is ever true
           if (isChanged) break
@@ -435,13 +454,13 @@ const EditorPanel = ({
               icon="create_new_folder"
               label="Add folder"
               disabled={noSelection || hasLeaf}
-              onClick={onAddFolder}
+              onClick={() => handleAddNew('folder')}
             />
             <Button
               icon="add_task"
               label="Add task"
               disabled={noSelection || hasLeaf}
-              onClick={onAddTask}
+              onClick={() => handleAddNew('task')}
             />
           </Toolbar>
         )}
@@ -550,7 +569,7 @@ const EditorPanel = ({
                   <FormRow
                     key={i}
                     label={label}
-                    className={`editor-form ${disabled ? 'disabled' : ''}${
+                    className={`editor-form ${field} ${disabled ? 'disabled' : ''}${
                       isOwn ? '' : 'inherited'
                     } ${attrib?.type} ${isMultiple ? 'isMultiple' : ''} ${
                       isChanged ? 'isChanged' : ''

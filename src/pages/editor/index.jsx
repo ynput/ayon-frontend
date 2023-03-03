@@ -306,8 +306,6 @@ const EditorPage = () => {
   // External events handling
   //
 
-  // TODO - pubsub
-
   //
   // Build hierarchy
   //
@@ -549,6 +547,8 @@ const EditorPage = () => {
 
     // PATCH / DELETE EXISTING ENTITIES
 
+    const newSelection = { ...currentSelection }
+
     for (const entityId in changes) {
       // check not changing new node
       if (entityId in newNodes) continue
@@ -562,6 +562,9 @@ const EditorPage = () => {
           entityType,
           entityId,
         })
+
+        // remove from selection
+        delete newSelection[entityId]
       } else {
         // End delete, begin patch
         const attribChanges = {}
@@ -724,6 +727,8 @@ const EditorPage = () => {
           // update children
           const childUpdates = getChildAttribUpdates(updates)
           dispatch(nodesUpdated({ updated: childUpdates }))
+          // update selection (remove from deleted)
+          handleSelectionChange(newSelection)
         }
 
         setErrors(() => {
@@ -777,6 +782,8 @@ const EditorPage = () => {
     const folderIds = []
     const taskIds = []
     for (const parentId of parents) {
+      const parentData = rootData[parentId]?.data || {}
+
       const newNode = {
         leaf: true,
         name: `new${capitalize(entityType)}${
@@ -784,13 +791,16 @@ const EditorPage = () => {
             .length + parents.indexOf(parentId)
         }`,
         id: uuid1().replace(/-/g, ''),
-        attrib: { ...(rootData[parentId]?.data.attrib || {}) },
+        status: parentData?.status || 'Not ready',
+        attrib: parentData?.attrib || {},
         ownAttrib: [],
         __entityType: entityType,
         __parentId: parentId || 'root',
+        __isNew: true,
       }
       if (entityType === 'folder') {
         newNode['parentId'] = parentId
+        newNode['folderType'] = parentData?.folderType
         folderIds.push(newNode.id)
       } else if (entityType === 'task') {
         newNode['folderId'] = parentId
@@ -838,9 +848,17 @@ const EditorPage = () => {
       (i) => !newIds.includes(i) && i in currentSelection,
     )
 
-    // remove from newNodes state
+    // remove from newNodes state and the tree table
     dispatch(onRevert(newIds))
+    // remove newIds from selection
+    const newSelection = { ...currentSelection }
+    for (const id in currentSelection) {
+      if (newIds.includes(id)) delete newSelection[id]
+    }
+    handleSelectionChange(newSelection)
 
+    // for NOT new nodes, add to changes
+    // keeps entity in the tree table but shows red strikethrough
     const changes = []
 
     for (const id of modifiedIds) {
@@ -920,14 +938,14 @@ const EditorPage = () => {
     loadNewBranches(newIds)
   }
 
-  const onSelectionChange = (event) => {
-    const selection = Object.keys(event.value)
+  const handleSelectionChange = (value) => {
+    const selection = Object.keys(value)
     // reduce into two arrays, one with type folder and one with type task
     const folders = []
     const tasks = []
-    for (const [key, value] of Object.entries(event.value)) {
-      if (rootData[key]?.data.__entityType === 'folder' && value) folders.push(key)
-      else if (rootData[key]?.data.__entityType === 'task' && value) tasks.push(key)
+    for (const [key, v] of Object.entries(value)) {
+      if (rootData[key]?.data.__entityType === 'folder' && v) folders.push(key)
+      else if (rootData[key]?.data.__entityType === 'task' && v) tasks.push(key)
     }
 
     // for each task in tasks, add __parentId to folders if not already there
@@ -1111,7 +1129,7 @@ const EditorPage = () => {
                 onToggle={onToggle}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
-                onSelectionChange={onSelectionChange}
+                onSelectionChange={(e) => handleSelectionChange(e.value)}
                 onRowClick={onRowClick}
                 rowClassName={(rowData) => {
                   return {
