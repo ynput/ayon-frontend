@@ -23,7 +23,7 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import useColumnResize from '/src/hooks/useColumnResize'
-import { camelCase, capitalize, isEmpty } from 'lodash'
+import { camelCase, capitalize, debounce, isEmpty } from 'lodash'
 import { useLazyGetExpandedBranchQuery } from '/src/services/editor/getEditor'
 import { useUpdateEditorMutation } from '/src/services/editor/updateEditor'
 import usePubSub from '/src/hooks/usePubSub'
@@ -1145,6 +1145,10 @@ const EditorPage = () => {
     }
   }
 
+  // only updates global changes every 500ms trailing to limit expensive tree table rerenders
+  // keeps editor form fast
+  const throttledEditorChanges = debounce((c) => dispatch(onNewChanges(c)), 500)
+
   // sort columns
 
   //
@@ -1245,7 +1249,7 @@ const EditorPage = () => {
             <EditorPanel
               editorMode
               nodes={editorNodes}
-              onChange={(c) => dispatch(onNewChanges(c))}
+              onChange={(c) => throttledEditorChanges(c)}
               onDelete={onDelete}
               onRevert={revertChangesOnSelection}
               attribs={attribFields}
