@@ -535,6 +535,10 @@ const EditorPage = () => {
     return result
   }, [focusedEditor, rootData])
 
+  // disable adding new nodes
+  const disableAddNew =
+    isEmpty(currentSelection) || Object.keys(currentSelection).some((id) => rootData[id]?.leaf)
+
   //
   // Commit changes
   //
@@ -940,9 +944,22 @@ const EditorPage = () => {
     dispatch(onRevert(Object.keys(currentSelection)))
   }, [currentSelection, changes, newNodes])
 
-  const onAddFolder = () => addNode('folder')
-  const onAddRootFolder = () => addNode('folder', true)
-  const onAddTask = () => addNode('task')
+  const handleAddNew = (type) => {
+    switch (type) {
+      case 'folder':
+        addNode('folder')
+        break
+      case 'root':
+        addNode('folder', true)
+        break
+      case 'task':
+        addNode('task')
+        break
+
+      default:
+        break
+    }
+  }
 
   // Context menu
 
@@ -1137,7 +1154,23 @@ const EditorPage = () => {
     <main>
       <Section>
         <Toolbar>
-          <Button icon="create_new_folder" label="Add root folder" onClick={onAddRootFolder} />
+          <Button
+            icon="create_new_folder"
+            label="Add root folder"
+            onClick={() => handleAddNew('root')}
+          />
+          <Button
+            icon="create_new_folder"
+            label="Add folder"
+            disabled={disableAddNew}
+            onClick={() => handleAddNew('folder')}
+          />
+          <Button
+            icon="add_task"
+            label="Add task"
+            disabled={disableAddNew}
+            onClick={() => handleAddNew('task')}
+          />
           <MultiSelect
             options={filterOptions}
             value={shownColumns}
@@ -1215,8 +1248,6 @@ const EditorPage = () => {
               onChange={(c) => dispatch(onNewChanges(c))}
               onDelete={onDelete}
               onRevert={revertChangesOnSelection}
-              onAddFolder={onAddFolder}
-              onAddTask={onAddTask}
               attribs={attribFields}
             />
           </SplitterPanel>

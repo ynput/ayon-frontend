@@ -40,15 +40,7 @@ const getInputProps = (attrib = {}) => {
   return props
 }
 
-const EditorPanel = ({
-  onDelete,
-  onChange,
-  onRevert,
-  editorMode = false,
-  onAddFolder,
-  onAddTask,
-  attribs,
-}) => {
+const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   // SELECTORS
   const selected = useSelector((state) => state.context.focused.editor)
   const editorNodes = useSelector((state) => state.editor.nodes)
@@ -291,14 +283,6 @@ const EditorPanel = ({
     return { value: finalValue, isChanged, isOwn, isMultiple }
   }
 
-  const handleAddNew = (type) => {
-    if (type === 'task') {
-      onAddTask()
-    } else {
-      onAddFolder()
-    }
-  }
-
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
     // console.log('local change', value, changeKey, field, form)
@@ -451,22 +435,6 @@ const EditorPanel = ({
           />
           <Button label={`Revert`} icon="replay" onClick={handleRevert} disabled={noSelection} />
         </Toolbar>
-        {editorMode && (
-          <Toolbar>
-            <Button
-              icon="create_new_folder"
-              label="Add folder"
-              disabled={noSelection || hasLeaf}
-              onClick={() => handleAddNew('folder')}
-            />
-            <Button
-              icon="add_task"
-              label="Add task"
-              disabled={noSelection || hasLeaf}
-              onClick={() => handleAddNew('task')}
-            />
-          </Toolbar>
-        )}
       </Panel>
       {!noSelection && (
         <>
