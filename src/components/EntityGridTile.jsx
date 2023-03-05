@@ -122,6 +122,8 @@ const EntityGridTile = ({
 }) => {
   const ref = useRef()
 
+  // TODO: get full user
+
   return (
     <PanelStyled ref={ref} onClick={onClick} isLoading={isError || isLoading}>
       <ThumbnailStyled>
@@ -142,7 +144,7 @@ const EntityGridTile = ({
       {subTitle && <span>{subTitle}</span>}
       <footer>
         <span>{footer}</span>
-        {profile && <UserImage fullName="Test Test" size={20} />}
+        {profile && <UserImage fullName={profile} size={20} />}
       </footer>
     </PanelStyled>
   )
