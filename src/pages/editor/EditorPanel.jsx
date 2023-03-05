@@ -85,9 +85,9 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   }
 
   const hasLeaf = nodeIds.some((id) => nodes[id]?.leaf && nodes[id]?.data?.__entityType === 'task')
-  const hasChildren = nodeIds.some(
-    (id) => nodes[id]?.data?.hasChildren || nodes[id]?.data?.hasTasks,
-  )
+  // const hasChildren = nodeIds.some(
+  //   (id) => nodes[id]?.data?.hasChildren || nodes[id]?.data?.hasTasks,
+  // )
   const types = []
 
   for (const id of nodeIds) {
@@ -200,7 +200,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   useEffect(() => {
     // resets every time selection is changed
     // changes saved to global state will show up here
-    console.log('creating initial form')
+    // console.log('creating initial form')
 
     setForm(createInitialForm())
   }, [nodeIds, type])
@@ -359,7 +359,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   }
 
   const handleFormChanged = () => {
-    console.log('handling form change')
+    // console.log('handling form change')
     setLocalChange(false)
     // loop through form and get any changes
     for (const key in form) {
@@ -373,7 +373,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
         }
         // only update again if old !== new
         if (oldChanges !== row.value) {
-          console.log('change')
+          // console.log('change')
           handleGlobalChange(row.value, row.changeKey)
         }
       } else {
@@ -395,7 +395,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                 // remove changes object completely
                 onRevert(nodes[id])
               } else {
-                console.log('remove key from changes', newChanges)
+                // console.log('remove key from changes', newChanges)
 
                 onChange([newChanges])
               }
@@ -431,7 +431,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
             label={'Delete'}
             icon="delete"
             onClick={() => onDelete(nodes)}
-            disabled={noSelection || hasChildren}
+            disabled={noSelection}
           />
           <Button label={`Revert`} icon="replay" onClick={handleRevert} disabled={noSelection} />
         </Toolbar>
