@@ -117,6 +117,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   const createInitialForm = () => {
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
+    const disableMessage = 'Names Can Not Be The Same...'
     const initialForm = {
       _status: {
         changeKey: '_status',
@@ -131,11 +132,12 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
         field: 'name',
         type: 'string',
         disabled: !singleSelect,
-        placeholder: !singleSelect ? 'Names Can Not Be The Same...' : '',
+        placeholder: !singleSelect ? disableMessage : '',
         attrib: {
           type: 'string',
         },
         ...nameValues,
+        value: singleSelect ? nameValues.value : disableMessage,
       },
     }
 
@@ -494,6 +496,14 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                   backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
                 }
 
+                let disabledStyles = {}
+                if (disabled) {
+                  disabledStyles = {
+                    color: 'var(--color-text-dim)',
+                    backgroundColor: 'var(--input-disabled-background-color)',
+                  }
+                }
+
                 // pick a react input
                 let input
 
@@ -533,6 +543,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       style={{
                         ...changedStyles,
                         color: !isOwn ? 'var(--color-grey-06)' : 'initial',
+                        ...disabledStyles,
                         width: '100%',
                       }}
                       {...extraProps}
