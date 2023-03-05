@@ -39,10 +39,11 @@ import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '/src/services/getAttributes'
+import NewEntity from './NewEntity'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
-  const { folders: foldersObject, tasks } = project
+  const { folders: foldersObject, tasks = [], folders = [] } = project
 
   // eslint-disable-next-line no-unused-vars
   // const context = useSelector((state) => ({ ...state.context }))
@@ -71,6 +72,10 @@ const EditorPage = () => {
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
+
+  // NEW STATES
+  const [newEntity, setNewEntity] = useState('')
+  const [newEntityData, setNewEntityData] = useState({})
 
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
@@ -774,7 +779,29 @@ const EditorPage = () => {
 
   const canCommit = !isEmpty(changes) || !isEmpty(newNodes)
 
-  const addNode = (entityType, root) => {
+  const addNewEntity = (eType, root) => {
+    setNewEntity(eType)
+
+    // set any default data
+    const initData = {}
+
+    let type = eType === 'task' ? tasks : folders
+    if (type) {
+      initData.type = Object.keys(type)[0]
+    }
+    if (root) {
+      initData.parentIds = ['root']
+    }
+
+    setNewEntityData(initData)
+  }
+
+  const handleCloseNew = () => {
+    setNewEntity('')
+    setNewEntityData({})
+  }
+
+  const addNode = (entityType, root, data = {}) => {
     const parents = root ? [null] : futureParents
 
     if (!parents.length) {
@@ -845,7 +872,7 @@ const EditorPage = () => {
         newNode['taskType'] = 'Generic'
         taskIds.push(newNode.id)
       }
-      addingNewNodes.push(newNode)
+      addingNewNodes.push({ ...newNode, ...data })
     }
 
     // update new nodes state
@@ -888,13 +915,6 @@ const EditorPage = () => {
         // only newIds are being deleted
         // selection will go to first deleted parent
         newSelection = {}
-        for (const id in currentSelection) {
-          const parent = rootData[id]?.data?.__parentId
-          if (parent) {
-            newSelection = { [parent]: true }
-            break
-          }
-        }
       } else {
         // preserve selection of non newItems
         newSelection = { ...currentSelection }
@@ -928,29 +948,14 @@ const EditorPage = () => {
   const handleRevert = () => {
     // reset everything
     dispatch(onRevert())
+
+    handleSelectionChange({})
   }
 
   const revertChangesOnSelection = useCallback(() => {
     // remove from newNodes and changes from state
     dispatch(onRevert(Object.keys(currentSelection)))
   }, [currentSelection, changes, newNodes])
-
-  const handleAddNew = (type) => {
-    switch (type) {
-      case 'folder':
-        addNode('folder')
-        break
-      case 'root':
-        addNode('folder', true)
-        break
-      case 'task':
-        addNode('task')
-        break
-
-      default:
-        break
-    }
-  }
 
   // Context menu
 
@@ -1147,24 +1152,31 @@ const EditorPage = () => {
 
   return (
     <main>
+      <NewEntity
+        type={newEntity}
+        data={newEntityData}
+        visible={!!newEntity}
+        onHide={handleCloseNew}
+        onConfirm={addNode}
+      />
       <Section>
         <Toolbar>
           <Button
             icon="create_new_folder"
             label="Add root folder"
-            onClick={() => handleAddNew('root')}
+            onClick={() => addNewEntity('folder', true)}
           />
           <Button
             icon="create_new_folder"
             label="Add folder"
             disabled={disableAddNew}
-            onClick={() => handleAddNew('folder')}
+            onClick={() => addNewEntity('folder')}
           />
           <Button
             icon="add_task"
             label="Add task"
             disabled={disableAddNew}
-            onClick={() => handleAddNew('task')}
+            onClick={() => addNewEntity('task')}
           />
           <MultiSelect
             options={filterOptions}
