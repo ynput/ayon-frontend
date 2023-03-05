@@ -288,7 +288,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
     // console.log('local change', value, changeKey, field, form)
-
     let newForm = { ...form }
     if (formState) {
       newForm = formState
@@ -548,6 +547,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                         width: '100%',
                       }}
                       {...extraProps}
+                      onFocus={(e) => e.target?.select()}
                     />
                   )
                 }
