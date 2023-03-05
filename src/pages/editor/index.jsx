@@ -851,15 +851,6 @@ const EditorPage = () => {
     // update new nodes state
     dispatch(newNodesAdded(addingNewNodes))
 
-    // set selection to new node
-    dispatch(
-      editorSelectionChanged({
-        folders: folderIds,
-        selection: [...folderIds, ...taskIds],
-        tasks: taskIds,
-      }),
-    )
-
     if (!root) {
       // Update expanded folders context object
       const exps = { ...expandedFolders }
