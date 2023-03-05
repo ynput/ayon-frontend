@@ -531,6 +531,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       }}
                       height={30}
                       placeholder={placeholder}
+                      disableMessage
                     />
                   )
                 } else {

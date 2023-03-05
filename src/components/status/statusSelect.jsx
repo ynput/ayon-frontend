@@ -15,6 +15,7 @@ const StatusSelect = ({
   onClick,
   style,
   placeholder,
+  disableMessage,
 }) => {
   const [changedValue, setChangedValue] = useState(null)
 
@@ -53,7 +54,7 @@ const StatusSelect = ({
       value={value}
       options={statuses}
       style={{ maxWidth, height }}
-      message={multipleSelected > 1 && `${multipleSelected} Selected`}
+      message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
       onOpen={onClick}
     >
       {(props) =>
@@ -102,6 +103,7 @@ StatusSelect.propTypes = {
   multipleSelected: PropTypes.number,
   onClick: PropTypes.func,
   isChanged: PropTypes.object,
+  disableMessage: PropTypes.bool,
 }
 
 export default StatusSelect
