@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './settingsPanel'
 
 import { isEqual } from 'lodash'
+import arrayEquals from '/src/helpers/arrayEquals'
 
 const arrayStartsWith = (arr1, arr2) => {
   // return true, if first array starts with second array
@@ -309,24 +310,40 @@ const ArrayItemTemplate = (props) => {
     //  children.props.schema.properties.name.fixedValue = itemName
   }
 
+  const onArrayChanged = () => {
+    const parentId = props.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
+    const formContext = props.children._owner.memoizedProps.formContext
+    const path = formContext.overrides[parentId].path
+    const newChangedKeys = formContext.changedKeys
+      .filter((key) => !arrayEquals(key, path))
+      .concat([path])
+    console.log('onArrayChanged', newChangedKeys)
+    formContext.onSetChangedKeys(newChangedKeys)
+  }
+
+  const onRemoveItem = () => {
+    onArrayChanged()
+    const r = props.onDropIndexClick(props.index)
+    r()
+  }
+
+  const onMoveUp = () => {
+    onArrayChanged()
+    const r = props.onReorderClick(props.index, props.index - 1)
+    r()
+  }
+
+  const onMoveDown = () => {
+    onArrayChanged()
+    const r = props.onReorderClick(props.index, props.index + 1)
+    r()
+  }
+
   const rmButton = props.hasRemove && (
     <div className="array-item-controls">
-      <Button
-        onClick={props.onDropIndexClick(props.index)}
-        className="circle"
-        icon="close"
-        disabled={undeletable}
-      />
-      <Button
-        onClick={props.onReorderClick(props.index, props.index - 1)}
-        className="circle"
-        icon="arrow_upward"
-      />
-      <Button
-        onClick={props.onReorderClick(props.index, props.index + 1)}
-        className="circle"
-        icon="arrow_downward"
-      />
+      <Button onClick={onRemoveItem} className="circle" icon="close" disabled={undeletable} />
+      <Button onClick={onMoveUp} className="circle" icon="arrow_upward" />
+      <Button onClick={onMoveDown} className="circle" icon="arrow_downward" />
     </div>
   )
 
