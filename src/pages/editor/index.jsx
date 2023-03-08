@@ -662,6 +662,10 @@ const EditorPage = () => {
         patch.data.hasChildren = true
         patch.leaf = false
       }
+      // if it's a folder, leaf is false
+      if (entityType === 'folder') {
+        patch.leaf = false
+      }
 
       updates.push({
         id: entity.id,
