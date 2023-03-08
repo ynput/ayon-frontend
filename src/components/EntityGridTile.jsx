@@ -14,7 +14,7 @@ const PanelStyled = styled(Panel)`
   width: 100%;
   min-height: 120px;
   gap: 0;
-  cursor: pointer;
+  /* cursor: pointer; */
   user-select: none;
 
   footer {
