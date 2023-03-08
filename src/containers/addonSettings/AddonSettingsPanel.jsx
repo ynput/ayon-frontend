@@ -103,6 +103,7 @@ const AddonSettingsPanel = ({
     return (
       <SettingsEditor
         schema={schema}
+        originalData={originalData}
         formData={localData}
         changedKeys={changedKeys}
         overrides={overrides}

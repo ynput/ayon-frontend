@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useRef } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 
 const SettingsChangesTable = ({ changes, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
@@ -42,6 +42,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
           name: change.join(' / '),
           path: change,
           addonKey: addonKey,
+          isKey: true,
         },
       }))
 
@@ -90,6 +91,16 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
     return result
   }, [selectedKeys])
 
+  const actionRenderer = (rowData) => {
+    if (!rowData.data.isKey) return null
+    const delChange = () => {
+      onRevert({
+        [rowData.data.addonKey]: [rowData.data.path],
+      })
+    }
+    return <Button className="transparent" icon="delete" onClick={delChange} />
+  }
+
   return (
     <Section>
       <TablePanel>
@@ -113,6 +124,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
           scrollHeight="100%"
         >
           <Column header="Name" field="name" expander />
+          <Column header="" body={actionRenderer} style={{ width: 28 }} />
         </TreeTable>
       </TablePanel>
     </Section>

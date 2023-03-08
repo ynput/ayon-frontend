@@ -46,7 +46,7 @@ function ObjectFieldTemplate(props) {
     }
 
     return 'default'
-  }, [path, props.formData, props.formContext.changedKeys])
+  }, [path, props.formContext.changedKeys]) // props.formData was there too? do we need it?
 
   if (props.schema.isgroup && overrideLevel === 'edit') {
     className += ' group-changed'
@@ -56,11 +56,14 @@ function ObjectFieldTemplate(props) {
 
   const shortDescription = props.schema.description && props.schema.description.split('\n')[0]
 
-  const longDescription = props.schema.description && (
-    <div className="form-object-field-help">
-      <ReactMarkdown>{props.schema.description}</ReactMarkdown>
-    </div>
-  )
+  const longDescription = useMemo(() => {
+    if (!props.schema.description) return null
+    return (
+      <div className="form-object-field-help">
+        <ReactMarkdown>{props.schema.description}</ReactMarkdown>
+      </div>
+    )
+  }, [props.schema.description])
 
   // memoize the fields
 
@@ -144,12 +147,6 @@ function ObjectFieldTemplate(props) {
     title = label || props.formData.name || <span className="new-object">Unnamed item</span>
   }
 
-  const isSelected = useMemo(() => {
-    if (!props.formContext.breadcrumbs) return false
-    if (isEqual(props.formContext.breadcrumbs, path)) return true
-    return false
-  }, [props.formContext.breadcrumbs, path])
-
   return (
     <SettingsPanel
       objId={objId}
@@ -158,7 +155,7 @@ function ObjectFieldTemplate(props) {
       }}
       title={title}
       description={shortDescription}
-      className={`obj-override-${overrideLevel} ${isSelected ? 'selected' : ''}`}
+      className={`obj-override-${overrideLevel}`}
       enabledToggler={enabledToggler}
     >
       {fields}
@@ -180,13 +177,14 @@ function FieldTemplate(props) {
 
   // Object fields
 
-  if (props.schema.type === 'object')
+  if (props.schema.type === 'object') {
     return (
       <>
         {divider}
         {props.children}
       </>
     )
+  }
 
   //
   // Solve overrides for lists and leaves
@@ -195,13 +193,10 @@ function FieldTemplate(props) {
   const override = props.formContext.overrides ? props.formContext.overrides[props.id] : null
   const path = override?.path || []
 
-  const isSelected = useMemo(() => {
-    if (!props.formContext.breadcrumbs) return false
-    if (isEqual(props.formContext.breadcrumbs, path)) return true
-    return false
-  }, [props.formContext.breadcrumbs, path])
+  const fieldChanged = useMemo(() => {
+    return arrayContainsArray(props.formContext.changedKeys, path)
+  }, [props.formContext.changedKeys, path])
 
-  const fieldChanged = arrayContainsArray(props.formContext.changedKeys, path)
   const overrideLevel = fieldChanged ? 'edit' : override ? override.level : 'default'
 
   let labelStyle = {}
@@ -218,10 +213,10 @@ function FieldTemplate(props) {
     props.schema.layout !== 'compact'
   ) {
     let classes = []
-    if (isSelected) classes.push('selected')
 
     for (const changedPath of props.formContext.changedKeys) {
       if (arrayStartsWith(changedPath, path)) {
+        console.log(changedPath, 'starts with', path)
         classes.push('obj-override-edit')
         classes.push('group-changed')
         break
@@ -258,12 +253,10 @@ function FieldTemplate(props) {
     props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
   }`
 
-  if (isSelected) className += ' selected'
-
   return (
     <>
       {divider}
-      <div className={className}>
+      <div className={className} data-fieldid={props.id}>
         {props.label && (
           <div
             className={`form-inline-field-label ${
@@ -317,7 +310,6 @@ const ArrayItemTemplate = (props) => {
     const newChangedKeys = formContext.changedKeys
       .filter((key) => !arrayEquals(key, path))
       .concat([path])
-    console.log('onArrayChanged', newChangedKeys)
     formContext.onSetChangedKeys(newChangedKeys)
   }
 
@@ -357,14 +349,20 @@ const ArrayItemTemplate = (props) => {
 
 const ArrayFieldTemplate = (props) => {
   /* Complete array including the add button */
-  return (
-    <div className="form-array-field">
-      {props.items.map((element) => (
-        <ArrayItemTemplate key={element.name} {...element} />
-      ))}
-      {props.canAdd && <Button onClick={props.onAddClick} className="circle" icon="add" />}
-    </div>
+
+  const res = useMemo(
+    () => (
+      <div className="form-array-field">
+        {props.items.map((element) => (
+          <ArrayItemTemplate key={element.name} {...element} />
+        ))}
+        {props.canAdd && <Button onClick={props.onAddClick} className="circle" icon="add" />}
+      </div>
+    ),
+    [props.items, props.canAdd],
   )
+
+  return res
 }
 
 export { ObjectFieldTemplate, FieldTemplate, ArrayFieldTemplate }

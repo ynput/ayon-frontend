@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
   InputText,
   InputNumber,
@@ -10,6 +10,7 @@ import {
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 import arrayEquals from '/src/helpers/arrayEquals'
+//import { debounce } from 'lodash'
 
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)
@@ -37,7 +38,7 @@ const updateOverrides = (props, changed, path) => {
 const parseContext = (props) => {
   const result = { originalValue: null, path: [] }
   if (props.formContext?.overrides && props.formContext.overrides[props.id]) {
-    result.originalValue = props.formContext.overrides[props.id].value
+    result.originalValue = props.formContext.overrides[props.id].originalValue
     result.path = props.formContext.overrides[props.id].path
   }
   return result
@@ -45,14 +46,20 @@ const parseContext = (props) => {
 
 const CheckboxWidget = function (props) {
   const { originalValue, path } = parseContext(props)
+  const [value, setValue] = useState(false)
+
+  useEffect(() => {
+    setValue(props.value || false)
+  }, [props.value])
 
   const onChange = (e) => {
-    updateOverrides(props, e.target.checked !== originalValue, path)
+    const isChanged = e.target.checked !== originalValue
+    updateOverrides(props, isChanged, path)
     props.onChange(e.target.checked)
     setTimeout(() => props.formContext?.onSetBreadcrumbs(path), 100)
   }
 
-  return <InputSwitch checked={props.value} onChange={onChange} />
+  return <InputSwitch checked={value} onChange={onChange} />
 }
 
 const SelectWidget = (props) => {
@@ -169,7 +176,8 @@ const TextWidget = (props) => {
     opts.showButtons = true
     opts.useGrouping = false
     opts.onChange = (e) => {
-      updateOverrides(props, e.value !== originalValue, path)
+      const newValue = parseFloat(e.target.value)
+      updateOverrides(props, newValue !== originalValue, path)
       props.onChange(e.target.value)
     }
 

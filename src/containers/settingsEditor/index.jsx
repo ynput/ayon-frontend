@@ -1,9 +1,21 @@
 import Form from '@rjsf/core'
+import { useMemo } from 'react'
 
 import { Tooltip } from 'primereact/tooltip'
 import { TextWidget, SelectWidget, CheckboxWidget } from './widgets'
 import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
 import './index.sass'
+
+import styled from 'styled-components'
+
+const FormWrapper = styled.div`
+  [data-fieldid="${(props) => props.currentSelection}"]{
+    border-left: 1px solid var(--color-hl-00) !important;
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.2);
+  }
+}
+`
 
 const widgets = {
   TextWidget,
@@ -16,7 +28,7 @@ const uiSchema = {
   'ui:FieldTemplate': (props) => <div className="form-root-field">{props.children}</div>,
 }
 
-const buildOverrides = (formData) => {
+const buildOverrides = (formData, saveOriginalValue = false) => {
   let result = {}
 
   const crawl = (obj, path = []) => {
@@ -38,6 +50,9 @@ const buildOverrides = (formData) => {
           level: 'default',
           value: value,
         }
+        if (saveOriginalValue) {
+          result[objId].originalValue = value
+        }
       }
     }
   }
@@ -46,8 +61,11 @@ const buildOverrides = (formData) => {
   return result
 }
 
+const noop = () => {}
+
 const SettingsEditor = ({
   schema,
+  originalData,
   formData,
   onChange,
   overrides,
@@ -62,17 +80,37 @@ const SettingsEditor = ({
     return <div></div>
   }
 
-  const formContext = {
-    overrides: { ...buildOverrides(formData), ...(overrides || {}) },
-    level: level || 'studio',
-    onSetBreadcrumbs: onSetBreadcrumbs || (() => {}),
-    changedKeys: changedKeys || [], // source of all problems
-    onSetChangedKeys: onSetChangedKeys || (() => {}),
-    breadcrumbs: breadcrumbs || [],
-  }
+  const originalOverrides = useMemo(() => buildOverrides(originalData, true), [originalData])
+
+  const formContext = useMemo(() => {
+    const formOverrides = buildOverrides(formData)
+    for (const key in formOverrides) {
+      if (formOverrides[key].type === 'leaf') {
+        formOverrides[key].originalValue = originalOverrides[key]?.originalValue
+      }
+    }
+
+    return {
+      overrides: formOverrides,
+      changedKeys: changedKeys || [],
+      level: level || 'studio',
+
+      onSetBreadcrumbs: null,
+      onSetChangedKeys: null,
+      breadcrumbs: [],
+    }
+  }, [schema, formData, overrides, level, changedKeys])
+
+  //console.log("formContext", formContext)
+
+  formContext.onSetBreadcrumbs = onSetBreadcrumbs || noop
+  formContext.onSetChangedKeys = onSetChangedKeys || noop
+  formContext.breadcrumbs = breadcrumbs || []
+
+  const currentId = breadcrumbs && `root_${breadcrumbs.join('_')}`
 
   return (
-    <>
+    <FormWrapper currentSelection={currentId}>
       <Form
         schema={schema}
         uiSchema={uiSchema}
@@ -88,7 +126,7 @@ const SettingsEditor = ({
         <div />
       </Form>
       <Tooltip target=".form-inline-field-label" />
-    </>
+    </FormWrapper>
   )
 }
 
