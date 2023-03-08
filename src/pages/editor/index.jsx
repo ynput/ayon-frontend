@@ -722,10 +722,6 @@ const EditorPage = () => {
       return
     }
 
-    if (parentPatches.length) {
-      dispatch(nodesUpdated({ updated: parentPatches }))
-    }
-
     // Send the changes to the server
 
     updateEditor({ updates, projectName, rootData })
@@ -735,6 +731,23 @@ const EditorPage = () => {
           toast.warn('Errors occurred during save')
         } else {
           toast.success('Changes saved')
+          const updated = []
+          const deleted = []
+
+          // create object of updated/new branches
+          for (const op of updates) {
+            if (op.type === 'delete') {
+              deleted.push(op.id)
+            } else {
+              updated.push(op.patch)
+            }
+          }
+
+          // add new branches to redux editor slice
+          dispatch(nodesUpdated({ updated: updated, deleted }))
+          if (parentPatches.length) {
+            dispatch(nodesUpdated({ updated: parentPatches }))
+          }
           // update children
           const childUpdates = getChildAttribUpdates(updates)
           dispatch(nodesUpdated({ updated: childUpdates }))
