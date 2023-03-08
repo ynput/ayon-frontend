@@ -43,7 +43,7 @@ import NewEntity from './NewEntity'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
-  const { folders: foldersObject, tasks = [], folders = [] } = project
+  const { folders: foldersObject, tasks = [], folders = [], attrib } = project
 
   // eslint-disable-next-line no-unused-vars
   // const context = useSelector((state) => ({ ...state.context }))
@@ -834,30 +834,9 @@ const EditorPage = () => {
     for (const parentId of parents) {
       let parentData
 
-      const findFirstFolder = (ids) => {
-        let folder
-        // first root node
-        for (const id in ids) {
-          if (rootData[id]?.data?.__parentId === 'root') {
-            // found first root folder
-            folder = rootData[id]?.data
-            // break out of loop
-            break
-          }
-        }
-
-        return folder
-      }
-
-      // if null (root) parentData is first selected node or just node
+      // if null (root) parentData is project default attrib
       if (parentId === null) {
-        if (isEmpty(currentSelection)) {
-          // first root node
-          parentData = findFirstFolder(rootData) || {}
-        } else {
-          // copy first selected folder node, otherwise first root folder
-          parentData = findFirstFolder(currentSelection) || findFirstFolder(rootData) || {}
-        }
+        parentData = { attrib }
       } else {
         parentData = rootData[parentId]?.data || {}
       }

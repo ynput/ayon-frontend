@@ -34,6 +34,7 @@ const projectSlice = createSlice({
     tags: {},
     tagsOrder: [],
     families: families,
+    attrib: {},
   },
   reducers: {
     selectProject: (state, action) => {
@@ -50,6 +51,8 @@ const projectSlice = createSlice({
       state.tasksOrder = action.payload.order?.tasks || []
       state.statusesOrder = action.payload.order?.statuses || []
       state.tagsOrder = action.payload.order?.tags || []
+      // other project data
+      state.attrib = action.payload.attrib
     },
   },
 })
