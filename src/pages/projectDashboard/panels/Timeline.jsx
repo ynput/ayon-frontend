@@ -13,7 +13,7 @@ const TailsStyled = styled.div`
   white-space: nowrap;
   min-width: 126px;
   min-height: 38px;
-  z-index: 20;
+  z-index: 50;
 
   &:hover {
     background-color: var(--color-hl-02);
@@ -143,16 +143,18 @@ const Timeline = ({ projectName }) => {
     let end = new Date(endDate || '')
 
     // check dates are valid using date-fns
-    if (isNaN(start) || isNaN(end)) {
+    if (isNaN(start)) {
       start = new Date()
-      // 10 days later
+    }
+
+    if (isNaN(end)) {
       end = new Date(start.getTime() + 10 * 24 * 60 * 60 * 1000)
     }
 
     startString = format(start, 'd MMM yyyy')
     endString = format(end, 'd MMM yyyy')
     length = differenceInDays(end, start)
-    done = differenceInDays(new Date(), start)
+    done = Math.max(0, Math.min(differenceInDays(new Date(), start), length))
     left = length - done
     percentage = Math.round((done / length) * 100)
   }

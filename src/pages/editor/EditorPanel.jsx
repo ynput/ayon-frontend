@@ -85,9 +85,9 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   }
 
   const hasLeaf = nodeIds.some((id) => nodes[id]?.leaf && nodes[id]?.data?.__entityType === 'task')
-  const hasChildren = nodeIds.some(
-    (id) => nodes[id]?.data?.hasChildren || nodes[id]?.data?.hasTasks,
-  )
+  // const hasChildren = nodeIds.some(
+  //   (id) => nodes[id]?.data?.hasChildren || nodes[id]?.data?.hasTasks,
+  // )
   const types = []
 
   for (const id of nodeIds) {
@@ -117,6 +117,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   const createInitialForm = () => {
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
+    const disableMessage = 'Names Can Not Be The Same...'
     const initialForm = {
       _status: {
         changeKey: '_status',
@@ -131,11 +132,12 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
         field: 'name',
         type: 'string',
         disabled: !singleSelect,
-        placeholder: !singleSelect ? 'Names Can Not Be The Same...' : '',
+        placeholder: !singleSelect ? disableMessage : '',
         attrib: {
           type: 'string',
         },
         ...nameValues,
+        value: singleSelect ? nameValues.value : disableMessage,
       },
     }
 
@@ -200,7 +202,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   useEffect(() => {
     // resets every time selection is changed
     // changes saved to global state will show up here
-    console.log('creating initial form')
+    // console.log('creating initial form')
 
     setForm(createInitialForm())
   }, [nodeIds, type])
@@ -286,7 +288,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
     // console.log('local change', value, changeKey, field, form)
-
     let newForm = { ...form }
     if (formState) {
       newForm = formState
@@ -359,7 +360,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   }
 
   const handleFormChanged = () => {
-    console.log('handling form change')
+    // console.log('handling form change')
     setLocalChange(false)
     // loop through form and get any changes
     for (const key in form) {
@@ -373,7 +374,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
         }
         // only update again if old !== new
         if (oldChanges !== row.value) {
-          console.log('change')
+          // console.log('change')
           handleGlobalChange(row.value, row.changeKey)
         }
       } else {
@@ -395,7 +396,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                 // remove changes object completely
                 onRevert(nodes[id])
               } else {
-                console.log('remove key from changes', newChanges)
+                // console.log('remove key from changes', newChanges)
 
                 onChange([newChanges])
               }
@@ -431,7 +432,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
             label={'Delete'}
             icon="delete"
             onClick={() => onDelete(nodes)}
-            disabled={noSelection || hasChildren}
+            disabled={noSelection}
           />
           <Button label={`Revert`} icon="replay" onClick={handleRevert} disabled={noSelection} />
         </Toolbar>
@@ -494,6 +495,14 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                   backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
                 }
 
+                let disabledStyles = {}
+                if (disabled) {
+                  disabledStyles = {
+                    color: 'var(--color-text-dim)',
+                    backgroundColor: 'var(--input-disabled-background-color)',
+                  }
+                }
+
                 // pick a react input
                 let input
 
@@ -521,6 +530,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       }}
                       height={30}
                       placeholder={placeholder}
+                      disableMessage
                     />
                   )
                 } else {
@@ -533,9 +543,11 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       style={{
                         ...changedStyles,
                         color: !isOwn ? 'var(--color-grey-06)' : 'initial',
+                        ...disabledStyles,
                         width: '100%',
                       }}
                       {...extraProps}
+                      onFocus={(e) => e.target?.select()}
                     />
                   )
                 }

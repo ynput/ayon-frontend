@@ -39,10 +39,11 @@ import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '/src/services/getAttributes'
+import NewEntity from './NewEntity'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
-  const { folders: foldersObject, tasks } = project
+  const { folders: foldersObject, tasks = [], folders = [], attrib } = project
 
   // eslint-disable-next-line no-unused-vars
   // const context = useSelector((state) => ({ ...state.context }))
@@ -71,6 +72,10 @@ const EditorPage = () => {
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
+
+  // NEW STATES
+  const [newEntity, setNewEntity] = useState('')
+  const [newEntityData, setNewEntityData] = useState({})
 
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
@@ -657,6 +662,10 @@ const EditorPage = () => {
         patch.data.hasChildren = true
         patch.leaf = false
       }
+      // if it's a folder, leaf is false
+      if (entityType === 'folder') {
+        patch.leaf = false
+      }
 
       updates.push({
         id: entity.id,
@@ -717,10 +726,6 @@ const EditorPage = () => {
       return
     }
 
-    if (parentPatches.length) {
-      dispatch(nodesUpdated({ updated: parentPatches }))
-    }
-
     // Send the changes to the server
 
     updateEditor({ updates, projectName, rootData })
@@ -730,6 +735,23 @@ const EditorPage = () => {
           toast.warn('Errors occurred during save')
         } else {
           toast.success('Changes saved')
+          const updated = []
+          const deleted = []
+
+          // create object of updated/new branches
+          for (const op of updates) {
+            if (op.type === 'delete') {
+              deleted.push(op.id)
+            } else {
+              updated.push(op.patch)
+            }
+          }
+
+          // add new branches to redux editor slice
+          dispatch(nodesUpdated({ updated: updated, deleted }))
+          if (parentPatches.length) {
+            dispatch(nodesUpdated({ updated: parentPatches }))
+          }
           // update children
           const childUpdates = getChildAttribUpdates(updates)
           dispatch(nodesUpdated({ updated: childUpdates }))
@@ -774,7 +796,29 @@ const EditorPage = () => {
 
   const canCommit = !isEmpty(changes) || !isEmpty(newNodes)
 
-  const addNode = (entityType, root) => {
+  const addNewEntity = (eType, root) => {
+    setNewEntity(eType)
+
+    // set any default data
+    const initData = {}
+
+    let type = eType === 'task' ? tasks : folders
+    if (type) {
+      initData.type = Object.keys(type)[0]
+    }
+    if (root) {
+      initData.parentIds = ['root']
+    }
+
+    setNewEntityData(initData)
+  }
+
+  const handleCloseNew = () => {
+    setNewEntity('')
+    setNewEntityData({})
+  }
+
+  const addNode = (entityType, root, data = {}) => {
     const parents = root ? [null] : futureParents
 
     if (!parents.length) {
@@ -790,30 +834,9 @@ const EditorPage = () => {
     for (const parentId of parents) {
       let parentData
 
-      const findFirstFolder = (ids) => {
-        let folder
-        // first root node
-        for (const id in ids) {
-          if (rootData[id]?.data?.__parentId === 'root') {
-            // found first root folder
-            folder = rootData[id]?.data
-            // break out of loop
-            break
-          }
-        }
-
-        return folder
-      }
-
-      // if null (root) parentData is first selected node or just node
+      // if null (root) parentData is project default attrib
       if (parentId === null) {
-        if (isEmpty(currentSelection)) {
-          // first root node
-          parentData = findFirstFolder(rootData) || {}
-        } else {
-          // copy first selected folder node, otherwise first root folder
-          parentData = findFirstFolder(currentSelection) || findFirstFolder(rootData) || {}
-        }
+        parentData = { attrib }
       } else {
         parentData = rootData[parentId]?.data || {}
       }
@@ -845,20 +868,11 @@ const EditorPage = () => {
         newNode['taskType'] = 'Generic'
         taskIds.push(newNode.id)
       }
-      addingNewNodes.push(newNode)
+      addingNewNodes.push({ ...newNode, ...data })
     }
 
     // update new nodes state
     dispatch(newNodesAdded(addingNewNodes))
-
-    // set selection to new node
-    dispatch(
-      editorSelectionChanged({
-        folders: folderIds,
-        selection: [...folderIds, ...taskIds],
-        tasks: taskIds,
-      }),
-    )
 
     if (!root) {
       // Update expanded folders context object
@@ -897,13 +911,6 @@ const EditorPage = () => {
         // only newIds are being deleted
         // selection will go to first deleted parent
         newSelection = {}
-        for (const id in currentSelection) {
-          const parent = rootData[id]?.data?.__parentId
-          if (parent) {
-            newSelection = { [parent]: true }
-            break
-          }
-        }
       } else {
         // preserve selection of non newItems
         newSelection = { ...currentSelection }
@@ -937,29 +944,14 @@ const EditorPage = () => {
   const handleRevert = () => {
     // reset everything
     dispatch(onRevert())
+
+    handleSelectionChange({})
   }
 
   const revertChangesOnSelection = useCallback(() => {
     // remove from newNodes and changes from state
     dispatch(onRevert(Object.keys(currentSelection)))
   }, [currentSelection, changes, newNodes])
-
-  const handleAddNew = (type) => {
-    switch (type) {
-      case 'folder':
-        addNode('folder')
-        break
-      case 'root':
-        addNode('folder', true)
-        break
-      case 'task':
-        addNode('task')
-        break
-
-      default:
-        break
-    }
-  }
 
   // Context menu
 
@@ -1156,24 +1148,31 @@ const EditorPage = () => {
 
   return (
     <main>
+      <NewEntity
+        type={newEntity}
+        data={newEntityData}
+        visible={!!newEntity}
+        onHide={handleCloseNew}
+        onConfirm={addNode}
+      />
       <Section>
         <Toolbar>
           <Button
             icon="create_new_folder"
             label="Add root folder"
-            onClick={() => handleAddNew('root')}
+            onClick={() => addNewEntity('folder', true)}
           />
           <Button
             icon="create_new_folder"
             label="Add folder"
             disabled={disableAddNew}
-            onClick={() => handleAddNew('folder')}
+            onClick={() => addNewEntity('folder')}
           />
           <Button
             icon="add_task"
             label="Add task"
             disabled={disableAddNew}
-            onClick={() => handleAddNew('task')}
+            onClick={() => addNewEntity('task')}
           />
           <MultiSelect
             options={filterOptions}

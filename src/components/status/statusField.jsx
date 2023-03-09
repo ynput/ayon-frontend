@@ -27,6 +27,9 @@ const StatusStyled = styled.div`
   position: relative;
   cursor: pointer;
   user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 
   /* ICON */
   .material-symbols-outlined {

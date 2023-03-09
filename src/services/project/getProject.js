@@ -82,9 +82,10 @@ const getProject = ayonApi.injectEndpoints({
           const folders = transformArrayToObject(project.folderTypes, 'folders')
           const statuses = transformArrayToObject(project.statuses, 'statuses')
           const tags = transformArrayToObject(project.tags, 'tags')
+          const attrib = project?.attrib || {}
 
           // set project state
-          dispatch(setProjectData({ tasks, folders, statuses, tags, order }))
+          dispatch(setProjectData({ tasks, folders, statuses, tags, order, attrib }))
         } catch (error) {
           console.error(error)
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,

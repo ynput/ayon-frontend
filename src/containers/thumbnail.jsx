@@ -61,9 +61,12 @@ const Thumbnail = ({ projectName, entityType, entityId, isLoading, style }) => {
       return
     }
     if (projectName && entityType && entityId) {
-      axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
-        setThumbData(parseThumbnail(response))
-      })
+      axios
+        .get(url, { responseType: 'arraybuffer' })
+        .then((response) => {
+          setThumbData(parseThumbnail(response))
+        })
+        .catch(() => console.log('no thumbnail'))
     }
   }, [entityId, entityType, projectName, isLoading])
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
+// import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import EntityGridTile from '/src/components/EntityGridTile'
 import { useGetProjectDashboardActivityQuery } from '/src/services/getProjectDashboard'
@@ -90,16 +90,17 @@ const ProjectLatestRow = ({ projectName, entities, args = {}, filter }) => {
   return (
     <GridStyled>
       {data.map((entity, index) => (
-        <Link
+        // <Link
+        //   key={`${entity.id}-${index}`}
+        //   to={`/projects/${projectName}/browser?entity=${entity.id}&type=${entity.type}`}
+        // >
+        <EntityGridTile
           key={`${entity.id}-${index}`}
-          to={`/projects/${projectName}/browser?entity=${entity.id}&type=${entity.type}`}
-        >
-          <EntityGridTile
-            {...entity}
-            subTitle={null}
-            isLoading={isLoading || isFetching || !projectName}
-          />
-        </Link>
+          {...entity}
+          subTitle={null}
+          isLoading={isLoading || isFetching || !projectName}
+        />
+        // </Link>
       ))}
       {isNoData && <span>No Recent Data</span>}
     </GridStyled>
