@@ -140,7 +140,10 @@ const TextWidget = (props) => {
   const [value, setValue] = useState('')
 
   useEffect(() => {
-    if (props.type === 'string') setValue(props.value || '')
+    console.log('TextWidget useEffect', props.value, props)
+    if (props.schema.type === 'string' && props.schema.widget !== 'color')
+      setValue(props.value || '')
+    else if (props.schema.type === 'integer') setValue(props.value || 0)
     else setValue(props.value || false)
   }, [props.value])
 
