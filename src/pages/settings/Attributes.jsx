@@ -159,6 +159,7 @@ const Attributes = () => {
             <Column field="data.type" header="Type" style={{ maxWidth: 150 }} sortable />
             <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
             <Column field="data.description" header="Description" sortable />
+            <Column field="data.inherit" header="Inherit" sortable style={{ maxWidth: 80 }} />
           </DataTable>
         </TablePanel>
       </Section>

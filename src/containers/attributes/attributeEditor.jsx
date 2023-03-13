@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react'
 import { Dialog } from 'primereact/dialog'
 import { MultiSelect } from 'primereact/multiselect'
 import { Dropdown } from 'primereact/dropdown'
-import { Button, Spacer, FormLayout, FormRow, InputText } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Spacer,
+  FormLayout,
+  FormRow,
+  InputText,
+  InputSwitch,
+} from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import LockedInput from '/src/components/LockedInput'
 import { camelCase } from 'lodash'
@@ -18,10 +25,14 @@ const SCOPE_OPTIONS = [
 ]
 
 // Fields used on all types
-const GLOBAL_FIELDS = ['description', 'example', 'default', 'regex']
+const GLOBAL_FIELDS = ['description', 'example', 'default', 'inherit']
 
 const TYPE_OPTIONS = {
-  string: { value: 'string', label: 'String', fields: ['minLength', 'maxLength', 'enum'] },
+  string: {
+    value: 'string',
+    label: 'String',
+    fields: ['minLength', 'maxLength', 'enum', 'regex'],
+  },
   integer: {
     value: 'integer',
     label: 'Integer',
@@ -100,6 +111,9 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     enum: (value = [], onChange) => (
       <EnumEditor values={value} onChange={(value) => onChange({ target: { value: value } })} />
     ),
+    inherit: (value, onChange) => (
+      <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />
+    ),
   }
 
   const handleTitleChange = (e) => {
@@ -151,7 +165,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
           {dataFields.map((field) => (
             <FormRow label={field} key={field}>
               {field in customFields ? (
-                customFields[field](formData?.data[field], (e) => setData(field, e.target.value))
+                customFields[field](formData?.data[field], (value) => setData(field, value))
               ) : (
                 <InputText
                   value={formData?.data[field] || ''}
