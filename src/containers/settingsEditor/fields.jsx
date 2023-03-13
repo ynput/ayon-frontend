@@ -216,7 +216,6 @@ function FieldTemplate(props) {
 
     for (const changedPath of props.formContext.changedKeys) {
       if (arrayStartsWith(changedPath, path)) {
-        console.log(changedPath, 'starts with', path)
         classes.push('obj-override-edit')
         classes.push('group-changed')
         break

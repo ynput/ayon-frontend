@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   InputText,
   InputNumber,
@@ -10,7 +10,6 @@ import {
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 import arrayEquals from '/src/helpers/arrayEquals'
-//import { debounce } from 'lodash'
 
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)
@@ -53,10 +52,14 @@ const CheckboxWidget = function (props) {
   }, [props.value])
 
   const onChange = (e) => {
-    const isChanged = e.target.checked !== originalValue
-    updateOverrides(props, isChanged, path)
-    props.onChange(e.target.checked)
-    setTimeout(() => props.formContext?.onSetBreadcrumbs(path), 100)
+    const newValue = e.target.checked
+    setValue(newValue)
+    setTimeout(() => {
+      const isChanged = newValue !== originalValue
+      props.onChange(newValue)
+      props.formContext?.onSetBreadcrumbs(path)
+      updateOverrides(props, isChanged, path)
+    }, 100)
   }
 
   return <InputSwitch checked={value} onChange={onChange} />
@@ -134,16 +137,29 @@ const SelectWidget = (props) => {
 
 const TextWidget = (props) => {
   const { originalValue, path } = parseContext(props)
+  const [value, setValue] = useState('')
+
+  useEffect(() => {
+    if (props.type === 'string') setValue(props.value || '')
+    else setValue(props.value || false)
+  }, [props.value])
+
+  const onChange = (newValue) => {
+    setValue(newValue)
+  }
+
+  const onChangeCommit = () => {
+    if (value === props.value) return
+    const isChanged = value !== originalValue
+    props.onChange(value)
+    props.formContext?.onSetBreadcrumbs(path)
+    updateOverrides(props, isChanged, path)
+  }
+
   const tooltip = []
   if (props.rawErrors?.length) {
     for (const err of props.rawErrors) tooltip.push(err)
   }
-  // hack for string arrays. to prevent null value passed to the
-  // input text widget handled as uncontrolled input
-  const value = useMemo(() => {
-    if (props.type === 'string') return props.value || ''
-    return props.value
-  }, [props.value])
 
   let Input = null
   const opts = {
@@ -175,10 +191,10 @@ const TextWidget = (props) => {
       opts.max = props.schema.exclusiveMaximum - opts.step
     opts.showButtons = true
     opts.useGrouping = false
+    opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
       const newValue = parseFloat(e.target.value)
-      updateOverrides(props, newValue !== originalValue, path)
-      props.onChange(e.target.value)
+      onChange(newValue)
     }
 
     //
@@ -190,6 +206,8 @@ const TextWidget = (props) => {
     opts.format = props.schema.colorFormat || 'hex'
     opts.alpha = props.schema.colorAlpha || false
     opts.onChange = (e) => {
+      // internal state is handled by the color picker,
+      // so we shouldn't need to debounce this
       updateOverrides(props, e.target.value !== originalValue, path)
       props.onChange(e.target.value)
     }
@@ -202,16 +220,16 @@ const TextWidget = (props) => {
     opts.autoResize = true
     opts.rows = 8
     opts.value = value
+    opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
-      updateOverrides(props, e.target.value !== originalValue, path)
-      props.onChange(e.target.value)
+      onChange(e.target.value)
     }
   } else {
     Input = InputText
     opts.value = value
+    opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
-      updateOverrides(props, e.target.value !== originalValue, path)
-      props.onChange(e.target.value)
+      onChange(e.target.value)
     }
   }
 
@@ -224,7 +242,6 @@ const TextWidget = (props) => {
     <>
       <Input
         className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
-        onBlur={props.onBlur}
         onFocus={onFocus}
         tooltip={tooltip.join('\n')}
         tooltipOptions={{ position: 'bottom' }}
