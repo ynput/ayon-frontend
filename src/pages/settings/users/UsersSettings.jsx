@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
@@ -51,6 +51,8 @@ const UsersSettings = () => {
   const [searchParams] = useSearchParams()
   const queryNames = searchParams.getAll('name')
   const [selectedUsers, setSelectedUsers] = useQueryParam('name', withDefault(ArrayParam, []))
+
+  const toastId = useRef(null)
 
   // set initial selected users
   useEffect(() => {
@@ -110,16 +112,23 @@ const UsersSettings = () => {
       header: 'Delete users',
       icon: 'pi pi-exclamation-triangle',
       accept: async () => {
+        toastId.current = toast.info('Deleting users...')
+        let i = 0
         for (const user of selectedUsers) {
           try {
             await deleteUser({ user }).unwrap()
-            toast.success(`Deleted user: ${user}`)
+            toast.update(toastId.current, {
+              render: `Deleted user: ${user}`,
+              type: toast.TYPE.SUCCESS,
+            })
             setSelectedUsers([])
             setLastSelectedUser(null)
+            i += 1
           } catch {
             toast.error(`Unable to delete user: ${user}`)
           }
         }
+        toast.update(toastId.current, { render: `Deleted ${i} user(s)`, type: toast.TYPE.SUCCESS })
       },
       reject: () => {},
     })
