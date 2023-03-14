@@ -70,7 +70,12 @@ const CheckboxWidget = function (props) {
     setValue(newValue)
   }
 
-  return <InputSwitch checked={value} onChange={onChange} />
+  // we need value || false here. in the useeffect above
+  // it is necessarty to check against null (which happens
+  // right after the component is mounted), but during the
+  // same render, we need the value here...
+
+  return <InputSwitch checked={value || false} onChange={onChange} />
 }
 
 const SelectWidget = (props) => {

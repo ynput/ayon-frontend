@@ -40,14 +40,14 @@ const buildOverrides = (formData, saveOriginalValue = false) => {
         result[objId] = {
           path: newPath,
           type: Array.isArray(value) ? 'array' : 'branch',
-          level: 'default',
+          //level: 'default',
         }
         crawl(value, newPath)
       } else {
         result[objId] = {
           path: newPath,
           type: 'leaf',
-          level: 'default',
+          //level: 'default',
           value: value,
         }
         if (saveOriginalValue) {
@@ -80,11 +80,23 @@ const SettingsEditor = ({
     return <div></div>
   }
 
-  const originalOverrides = useMemo(() => buildOverrides(originalData, true), [originalData])
+  const originalOverrides = useMemo(() => {
+    const result = buildOverrides(originalData, true)
+    for (const key in overrides) {
+      result[key].level = overrides[key].level
+      result[key].inGroup = overrides[key].inGroup
+    }
+    return result
+  }, [originalData, overrides])
 
   const formContext = useMemo(() => {
     const formOverrides = buildOverrides(formData)
+
     for (const key in formOverrides) {
+      if (key in (overrides || {})) {
+        formOverrides[key].level = overrides[key]?.level || 'default'
+        formOverrides[key].inGroup = overrides[key]?.inGroup || false
+      }
       if (formOverrides[key].type === 'leaf') {
         formOverrides[key].originalValue = originalOverrides[key]?.originalValue
       }

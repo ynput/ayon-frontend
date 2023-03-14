@@ -119,7 +119,6 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
           }}
           onContextMenu={(event) => cm.current.show(event.originalEvent)}
           emptyMessage="No changes"
-          dataKey="id"
           scrollable="true"
           scrollHeight="100%"
         >

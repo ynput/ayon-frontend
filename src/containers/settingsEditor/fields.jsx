@@ -46,7 +46,7 @@ function ObjectFieldTemplate(props) {
     }
 
     return 'default'
-  }, [path, props.formContext.changedKeys]) // props.formData was there too? do we need it?
+  }, [path, props.formContext.changedKeys, props.formContext.overrides]) // props.formData was there too? do we need it?
 
   if (props.schema.isgroup && overrideLevel === 'edit') {
     className += ' group-changed'
@@ -173,8 +173,6 @@ function FieldTemplate(props) {
     else return <></>
   }, [props.schema.section])
 
-  //
-
   // Object fields
 
   if (props.schema.type === 'object') {
@@ -186,9 +184,7 @@ function FieldTemplate(props) {
     )
   }
 
-  //
   // Solve overrides for lists and leaves
-  //
 
   const override = props.formContext.overrides ? props.formContext.overrides[props.id] : null
   const path = override?.path || []
@@ -197,8 +193,7 @@ function FieldTemplate(props) {
     return arrayContainsArray(props.formContext.changedKeys, path)
   }, [props.formContext.changedKeys, path])
 
-  const overrideLevel = fieldChanged ? 'edit' : override ? override.level : 'default'
-
+  const overrideLevel = fieldChanged ? 'edit' : override?.level || 'default'
   let labelStyle = {}
 
   if (override) {
@@ -252,16 +247,22 @@ function FieldTemplate(props) {
     props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
   }`
 
+  const inlineHelp = useMemo(() => {
+    return (
+      props.rawDescription && (
+        <div>
+          <ReactMarkdown>{props.rawDescription}</ReactMarkdown>
+        </div>
+      )
+    )
+  }, [props.rawDescription])
+
   return (
     <>
       {divider}
       <div className={className} data-fieldid={props.id}>
         {props.label && (
-          <div
-            className={`form-inline-field-label ${
-              props.rawDescription ? 'field-label' : ''
-            } ${overrideLevel}`}
-          >
+          <div className={`form-inline-field-label ${overrideLevel}`}>
             <span
               onClick={() => {
                 if (props.formContext.onSetBreadcrumbs)
@@ -274,13 +275,7 @@ function FieldTemplate(props) {
           </div>
         )}
         <div className={`form-inline-field-widget ${widgetClass}`}>{props.children}</div>
-        <div className="form-inline-field-help">
-          {props.rawDescription && (
-            <div>
-              <ReactMarkdown>{props.rawDescription}</ReactMarkdown>
-            </div>
-          )}
-        </div>
+        <div className="form-inline-field-help">{inlineHelp}</div>
       </div>
     </>
   )
