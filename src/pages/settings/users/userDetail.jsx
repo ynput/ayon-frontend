@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Section, Panel, FormRow } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
@@ -111,6 +111,7 @@ const UserDetail = ({
   const [initData, setInitData] = useState({})
   const [changesMade, setChangesMade] = useState(false)
   const [formUsers, setFormUsers] = useState([])
+  const toastId = useRef(null)
 
   const attributes = ayonClient.getAttribsByScope('user')
 
@@ -187,6 +188,8 @@ const UserDetail = ({
   }
 
   const onSave = async () => {
+    toastId.current = toast.info('Updating user(s)...')
+    let i = 0
     for (const user of formUsers) {
       const data = {}
       const attrib = {}
@@ -230,13 +233,14 @@ const UserDetail = ({
           patch,
         }).unwrap()
 
-        toast.success(`Updated user: ${user.name} `)
-        console.log('user updated')
+        toast.update(toastId.current, { render: `Updated user: ${user.name} ` })
+        i += 1
       } catch (error) {
         toast.error(`Unable to update user ${user.name} `)
         console.error(error)
       }
     } // for user
+    toast.update(toastId.current, { render: `Updated ${i} user(s) `, type: toast.TYPE.SUCCESS })
   }
 
   const onCancel = () => {

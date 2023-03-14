@@ -125,6 +125,14 @@ const EditorPage = () => {
     }
   }
 
+  const inheritableAttribs = useMemo(() => {
+    let result = []
+    for (const attr of attribsData) {
+      if (attr.data.inherit) result.push(attr.name)
+    }
+    return result
+  }, [attribsData])
+
   // on mount only load root
   // and any other expanded folders
   useEffect(() => {
@@ -161,6 +169,7 @@ const EditorPage = () => {
 
           // is childData, check ownAttribs for updates
           for (const key in update?.data?.attrib) {
+            if (!inheritableAttribs.includes(key)) continue
             if (
               !childData?.ownAttrib?.includes(key) &&
               currentAttrib[key] !== update.data.attrib[key]
