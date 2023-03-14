@@ -45,21 +45,29 @@ const parseContext = (props) => {
 
 const CheckboxWidget = function (props) {
   const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState(false)
+  const [value, setValue] = useState(null)
 
   useEffect(() => {
     setValue(props.value || false)
   }, [props.value])
 
+  useEffect(() => {
+    if (value === null) return
+    if (value !== props.value) {
+      props.onChange(value)
+      // this timeout must be here. idk why. if not,
+      // the value will be set to the original value or smth
+      setTimeout(() => {
+        const isChanged = value !== originalValue
+        updateOverrides(props, isChanged, path)
+        props.formContext?.onSetBreadcrumbs(path)
+      }, 100)
+    }
+  }, [value])
+
   const onChange = (e) => {
     const newValue = e.target.checked
     setValue(newValue)
-    setTimeout(() => {
-      const isChanged = newValue !== originalValue
-      props.onChange(newValue)
-      props.formContext?.onSetBreadcrumbs(path)
-      updateOverrides(props, isChanged, path)
-    }, 100)
   }
 
   return <InputSwitch checked={value} onChange={onChange} />
@@ -140,7 +148,6 @@ const TextWidget = (props) => {
   const [value, setValue] = useState('')
 
   useEffect(() => {
-    console.log('TextWidget useEffect', props.value, props)
     if (props.schema.type === 'string' && props.schema.widget !== 'color')
       setValue(props.value || '')
     else if (props.schema.type === 'integer') setValue(props.value || 0)
