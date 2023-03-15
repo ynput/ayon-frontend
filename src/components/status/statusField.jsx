@@ -1,7 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { useSelector } from 'react-redux'
 
 const hoverStyle = css`
   background-color: var(--color-grey-02);
@@ -30,6 +29,7 @@ const StatusStyled = styled.div`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  padding: 0 8px;
 
   /* ICON */
   .material-symbols-outlined {
@@ -128,9 +128,8 @@ const StatusField = ({
   style,
   height,
   placeholder,
+  statuses = {},
 }) => {
-  // TODO: move to context to a higher level component?
-  const statuses = useSelector((state) => state.project.statuses)
   const { shortName, color, icon } = statuses[value] || {}
 
   let shownValue = value || placeholder || ''
@@ -165,6 +164,7 @@ StatusField.propTypes = {
   style: PropTypes.object,
   anatomy: PropTypes.object,
   placeholder: PropTypes.string,
+  statuses: PropTypes.object,
 }
 
 export default StatusField

@@ -7,7 +7,7 @@ import RepresentationList from '../RepresentationList'
 import { useUpdateEntitiesDetailsMutation } from '../../../services/entity/updateEntity'
 import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
 
-import StatusSelect from '/src/components/status/statusSelect'
+import StatusSelect from '/src/components/status/StatusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 import styled from 'styled-components'
 

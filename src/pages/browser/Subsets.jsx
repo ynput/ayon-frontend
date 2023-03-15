@@ -21,7 +21,7 @@ import {
   subsetSelected,
 } from '/src/features/context'
 import VersionList from './VersionList'
-import StatusSelect from '/src/components/status/statusSelect'
+import StatusSelect from '/src/components/status/StatusSelect'
 import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
 import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
@@ -175,9 +175,10 @@ const Subsets = () => {
                 : 'full'
             }
             onChange={(v) => handleStatusChange(v, node.data.id)}
-            maxWidth="100%"
             multipleSelected={focusedSubsets.length}
-            onClick={() => handleStatusOpen(node.data.id)}
+            onOpen={() => handleStatusOpen(node.data.id)}
+            style={{ maxWidth: '100%' }}
+            widthExpand
           />
         )
       },

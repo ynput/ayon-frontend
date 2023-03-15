@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
-import Dropdown from '../dropdown'
-import StatusField from './statusField'
+import Dropdown from '../Dropdown'
+import StatusField from './StatusField'
 import { useSelector } from 'react-redux'
 
 const StatusSelect = ({
@@ -11,11 +11,12 @@ const StatusSelect = ({
   height,
   align,
   onChange,
+  onOpen,
   multipleSelected,
-  onClick,
   style,
   placeholder,
   disableMessage,
+  widthExpand,
 }) => {
   const [changedValue, setChangedValue] = useState(null)
 
@@ -50,40 +51,41 @@ const StatusSelect = ({
   maxWidth = maxWidth || calcMaxWidth
 
   return (
-    <Dropdown
-      value={value}
-      options={statuses}
-      style={{ maxWidth, height }}
-      message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
-      onOpen={onClick}
-    >
-      {(props) =>
-        props.isOpen ? (
-          statuses.map((status) => (
-            <StatusField
-              value={status.name}
-              key={status.name}
-              size={size}
-              isSelecting
-              isActive={props.selected === status.name}
-              onClick={() => handleChange(status.name)}
-              align={align}
-              height={height}
-            />
-          ))
-        ) : (
+    <>
+      <Dropdown
+        value={value}
+        options={statuses}
+        message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
+        widthExpand={widthExpand}
+        onOpen={onOpen}
+        align={align}
+        closed={
           <StatusField
             value={changedValue || value}
             align={align}
             isChanging={!!changedValue}
             size={size}
-            style={style}
+            style={{ maxWidth, ...style }}
             height={height}
             placeholder={placeholder}
+            statuses={statusesObject}
           />
-        )
-      }
-    </Dropdown>
+        }
+        opened={statuses.map((status) => (
+          <StatusField
+            value={status.name}
+            key={status.name}
+            size={size}
+            isSelecting
+            isActive={value === status.name}
+            onClick={() => handleChange(status.name)}
+            align={align}
+            height={height}
+            statuses={statusesObject}
+          />
+        ))}
+      ></Dropdown>
+    </>
   )
 }
 
