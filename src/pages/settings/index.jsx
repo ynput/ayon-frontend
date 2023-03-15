@@ -2,6 +2,9 @@ import { useMemo, useEffect, lazy } from 'react'
 import { useParams, NavLink, Navigate } from 'react-router-dom'
 import { Spacer } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
+import { useGetSettingsAddonsQuery } from '/src/services/addonList'
+
+import SettingsAddon from './settingsAddon'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const AddonVersions = lazy(() => import('./AddonVersions'))
@@ -12,8 +15,14 @@ const Roles = lazy(() => import('./roles'))
 const Attributes = lazy(() => import('./Attributes'))
 
 const SettingsPage = () => {
-  let { module } = useParams()
+  const { module, addonName } = useParams()
   const isUser = useSelector((state) => state.user.data.isUser)
+
+  const {
+    data: addonsData,
+    //isLoading: addonsLoading,
+    //isError: addonsIsError,
+  } = useGetSettingsAddonsQuery({})
 
   useEffect(() => {
     //document.title = 'Settings'
@@ -26,6 +35,20 @@ const SettingsPage = () => {
   const userAccess = ['site']
 
   const moduleComponent = useMemo(() => {
+    if (addonName) {
+      for (const addon of addonsData || []) {
+        if (addon.name === addonName) {
+          return (
+            <SettingsAddon
+              addonName={addonName}
+              addonVersion={addon.version}
+              sidebar={addon.settings.sidebar}
+            />
+          )
+        }
+      }
+    }
+
     switch (module) {
       case 'addonVersions':
         return <AddonVersions />
@@ -44,47 +67,62 @@ const SettingsPage = () => {
       default:
         return <div>Not implemented</div>
     }
-  }, [module])
+  }, [module, addonName, addonsData])
 
-  const Links = [
-    {
-      name: 'Anatomy presets',
-      path: '/settings/anatomyPresets',
-      module: 'anatomyPresets',
-    },
-    {
-      name: 'Addon versions',
-      path: '/settings/addonVersions',
-      module: 'addonVersions',
-    },
-    {
-      name: 'Studio settings',
-      path: '/settings/studio',
-      module: 'studio',
-    },
-    {
-      name: 'Site settings',
-      path: '/settings/site',
-      module: 'site',
-    },
-    {
-      name: 'Attributes',
-      path: '/settings/attributes',
-      module: 'attributes',
-    },
-    {
-      name: 'Users',
-      path: '/settings/users',
-      module: 'users',
-    },
-    {
-      name: 'Roles',
-      path: '/settings/roles',
-      module: 'roles',
-    },
-  ]
+  const links = useMemo(() => {
+    console.log('ADDONS DATA: ', addonsData)
+    let result = [
+      {
+        name: 'Anatomy presets',
+        path: '/settings/anatomyPresets',
+        module: 'anatomyPresets',
+      },
+      {
+        name: 'Addon versions',
+        path: '/settings/addonVersions',
+        module: 'addonVersions',
+      },
+      {
+        name: 'Studio settings',
+        path: '/settings/studio',
+        module: 'studio',
+      },
+      {
+        name: 'Site settings',
+        path: '/settings/site',
+        module: 'site',
+      },
+      {
+        name: 'Attributes',
+        path: '/settings/attributes',
+        module: 'attributes',
+      },
+      {
+        name: 'Users',
+        path: '/settings/users',
+        module: 'users',
+      },
+      {
+        name: 'Roles',
+        path: '/settings/roles',
+        module: 'roles',
+      },
+    ]
 
-  const navLinks = Links.map((link, idx) => {
+    if (!addonsData) return result
+
+    for (const addon of addonsData) {
+      result.push({
+        name: addon.title,
+        path: `/settings/addon/${addon.name}`,
+        module: addon.name,
+      })
+    }
+
+    return result
+  }, [addonsData])
+
+  const navLinks = links.map((link, idx) => {
     if (isUser && !userAccess.includes(link.module)) return null
     return (
       <NavLink key={idx} to={link.path}>

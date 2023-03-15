@@ -16,9 +16,8 @@ const addonList = ayonApi.injectEndpoints({
     }), // getAddonList
 
     // Return a list of addons which have project-scoped frontend
-    // TODO: Refactor: rename to getProjectAddons (probably)
 
-    getAddonProject: build.query({
+    getProjectAddons: build.query({
       query: () => ({
         url: `/api/addons`,
         method: 'GET',
@@ -40,7 +39,34 @@ const addonList = ayonApi.injectEndpoints({
             settings: projectScope,
           })
         }
+        return result
+      },
+    }),
 
+    // Return a list of addons with settings-scoped frontend
+
+    getSettingsAddons: build.query({
+      query: () => ({
+        url: `/api/addons`,
+        method: 'GET',
+      }),
+      providesTags: ['settingsAddons'],
+      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+      transformResponse: (response) => {
+        let result = []
+        for (const definition of response.addons) {
+          const versDef = definition.versions[definition.productionVersion]
+          if (!versDef) continue
+          const settingsScope = versDef.frontendScopes['settings']
+          if (!settingsScope) continue
+
+          result.push({
+            name: definition.name,
+            title: definition.title,
+            version: definition.productionVersion,
+            settings: settingsScope,
+          })
+        }
         return result
       },
     }),
@@ -96,7 +122,8 @@ const addonList = ayonApi.injectEndpoints({
 
 export const {
   useGetAddonListQuery,
-  useGetAddonProjectQuery,
+  useGetProjectAddonsQuery,
+  useGetSettingsAddonsQuery,
   useSetAddonVersionMutation,
   useSetAddonVersionsMutation,
   useSetCopyAddonVariantMutation,
