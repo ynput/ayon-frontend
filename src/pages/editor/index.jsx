@@ -136,7 +136,7 @@ const EditorPage = () => {
   // on mount only load root
   // and any other expanded folders
   useEffect(() => {
-    const branches = ['root']
+    let branches = ['root']
 
     let isNewProject = editorProjectName !== projectName
     if (isNewProject) {
@@ -144,7 +144,8 @@ const EditorPage = () => {
     }
 
     // load expanded folders from initial context
-    if (Object.keys(expandedFolders).length) branches.concat(Object.keys(expandedFolders))
+    if (Object.keys(expandedFolders).length)
+      branches = branches.concat(Object.keys(expandedFolders))
 
     // load initial branches
     console.log('loading initial branches', branches)
