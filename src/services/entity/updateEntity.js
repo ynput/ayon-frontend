@@ -31,8 +31,6 @@ const updateEntity = ayonApi.injectEndpoints({
           patchResult.undo()
         }
       },
-      invalidatesTags: (result, error, { type, ids, patches }) =>
-        ids ? ids.flatMap((id) => [{ type, id }]) : patches.flatMap(({ id }) => [{ type, id }]),
     }),
   }),
 })
