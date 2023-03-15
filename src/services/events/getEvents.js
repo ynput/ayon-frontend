@@ -1,4 +1,5 @@
 import { ayonApi } from '../ayon'
+import PubSub from '/src/pubsub'
 
 const EVENT_FRAGMENT = `
 fragment EventFragment on EventNode {
@@ -83,6 +84,10 @@ const transformEvents = (events) =>
     cursor: edge.cursor,
   }))
 
+const patchNewEvents = (type, events, draft) => {
+  draft[type] = [...events, ...draft[type]]
+}
+
 const getEvents = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getEvents: build.query({
@@ -110,6 +115,40 @@ const getEvents = ayonApi.injectEndpoints({
         logs: transformEvents(response?.data?.logs),
         hasPreviousPage: response?.data?.events?.pageInfo?.hasPreviousPage,
       }),
+      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
+        let token
+        try {
+          // wait for the initial query to resolve before proceeding
+          await cacheDataLoaded
+
+          const handlePubSub = (topic, message) => {
+            if (topic === 'client.connected') {
+              return
+            }
+
+            updateCachedData((draft) => {
+              console.log('new ws')
+              if (!topic.startsWith('log.')) {
+                // patch only non log messages
+                patchNewEvents('events', [message], draft)
+              }
+
+              // patch all into logs
+              patchNewEvents('logs', [message], draft)
+            })
+          }
+
+          // sub to websocket topic
+          token = PubSub.subscribe('*', handlePubSub)
+        } catch {
+          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
+          // in which case `cacheDataLoaded` will throw
+        }
+        // cacheEntryRemoved will resolve when the cache subscription is no longer active
+        await cacheEntryRemoved
+        // perform cleanup steps once the `cacheEntryRemoved` promise resolves
+        PubSub.unsubscribe(token)
+      },
     }),
     getEventById: build.query({
       query: ({ id }) => ({
@@ -133,6 +172,7 @@ const getEvents = ayonApi.injectEndpoints({
 export const {
   useGetEventsQuery,
   useGetEventsWithLogsQuery,
+  useLazyGetEventsWithLogsQuery,
   useGetEventByIdQuery,
   useGetEventsByTopicQuery,
 } = getEvents

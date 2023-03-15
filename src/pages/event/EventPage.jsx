@@ -1,5 +1,4 @@
 import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
-import usePubSub from '/src/hooks/usePubSub'
 import { useGetEventsWithLogsQuery } from '/src/services/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
@@ -12,6 +11,7 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 import EventOverview from './EventOverview'
 import { StringParam, useQueryParam } from 'use-query-params'
 import { useMemo } from 'react'
+import { useEffect } from 'react'
 
 const EventPage = () => {
   const dispatch = useDispatch()
@@ -20,8 +20,13 @@ const EventPage = () => {
   let [selectedEventId, setSelectedEvent] = useQueryParam('event', StringParam)
 
   // default gets the last 100 events
-  const { data, isLoading, isError, error } = useGetEventsWithLogsQuery({})
+  const { data, isLoading, isError, error, refetch } = useGetEventsWithLogsQuery({}, {})
   let { events: eventData = [], logs: logsData = [], hasPreviousPage } = data || {}
+
+  // always refetch with new date to force new data onMount
+  useEffect(() => {
+    refetch(new Date().toDateString())
+  }, [])
 
   // create a object of events by id useMemo
   const eventsById = useMemo(() => {
@@ -46,36 +51,11 @@ const EventPage = () => {
     treeData = logsData
   }
 
-  const patchNewEvents = (type, events, draft) => {
-    draft[type] = [...events, ...draft[type]]
-  }
-
   const patchOldEvents = (type, events, draft) => {
     for (const message of events) {
       draft[type].push(message)
     }
   }
-
-  const handlePubSub = (topic, message) => {
-    if (topic === 'client.connected') {
-      return
-    }
-
-    // patch the new message into the cache
-    dispatch(
-      ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
-        if (!topic.startsWith('log.')) {
-          // patch only non log messages
-          patchNewEvents('events', [message], draft)
-        }
-
-        // patch all into logs
-        patchNewEvents('logs', [message], draft)
-      }),
-    )
-  }
-
-  usePubSub('*', handlePubSub)
 
   const loadPage = async () => {
     try {
