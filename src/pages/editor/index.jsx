@@ -214,10 +214,6 @@ const EditorPage = () => {
         if (!(entityId in rootDataCache) && !topic.includes('created'))
           return console.log('entity not visible yet')
 
-        // let user know when entity created/deleted
-        if (topic.includes('created') || topic.includes('deleted'))
-          toast.info(message.description + ' by ' + message.user)
-
         if (topic.includes('deleted')) {
           // entity has been deleted
           dispatch(nodesUpdated({ deleted: [entityId] }))
