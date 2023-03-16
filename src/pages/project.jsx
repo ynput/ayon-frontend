@@ -11,10 +11,10 @@ import LoadingPage from './loading'
 import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles/WorkfilesPage'
 
-import { selectProject } from '../features/project'
 import usePubSub from '/src/hooks/usePubSub'
+import { selectProject } from '../features/project'
 import { useGetProjectQuery } from '../services/project/getProject'
-import { useGetAddonProjectQuery } from '../services/addonList'
+import { useGetProjectAddonsQuery } from '../services/addonList'
 import { TabPanel, TabView } from 'primereact/tabview'
 
 const ProjectContexInfo = () => {
@@ -57,7 +57,7 @@ const ProjectPage = () => {
     isError: addonsIsError,
     refetch: refetchAddons,
     isUninitialized: addonsIsUninitialized,
-  } = useGetAddonProjectQuery({}, { skip: !projectName })
+  } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {

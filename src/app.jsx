@@ -131,6 +131,7 @@ const App = () => {
                 element={<Navigate replace to="/settings/anatomyPresets" />}
               />
               <Route path="/settings/:module" exact element={<SettingsPage />} />
+              <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
               <Route
                 path="/services"
                 element={
