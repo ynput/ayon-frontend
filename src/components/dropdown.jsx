@@ -110,7 +110,7 @@ const Dropdown = ({
   const optionsRef = useRef(null)
 
   useEffect(() => {
-    if (isOpen && options) {
+    if (isOpen && valueRef.current && optionsRef.current) {
       const valueRec = valueRef.current.getBoundingClientRect()
       const valueWidth = valueRec.width
 
@@ -139,7 +139,7 @@ const Dropdown = ({
     } else {
       setStartAnimation(false)
     }
-  }, [isOpen])
+  }, [isOpen, valueRef, optionsRef, setMinWidth, setStartAnimation, setPos])
 
   const handleOpen = (e) => {
     e.stopPropagation()
