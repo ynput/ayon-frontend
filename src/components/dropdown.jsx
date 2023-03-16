@@ -106,33 +106,33 @@ const Dropdown = ({
   const [startAnimation, setStartAnimation] = useState(false)
   const [minWidth, setMinWidth] = useState()
 
-  const closedRef = useRef(null)
-  const openedRef = useRef(null)
+  const valueRef = useRef(null)
+  const optionsRef = useRef(null)
 
   useEffect(() => {
-    if (isOpen) {
-      const closedRec = closedRef.current.getBoundingClientRect()
-      const closedWidth = closedRec.width
+    if (isOpen && options) {
+      const valueRec = valueRef.current.getBoundingClientRect()
+      const valueWidth = valueRec.width
 
-      const openedRec = openedRef.current.getBoundingClientRect()
-      const openedWidth = openedRec.width
-      const openedheight = openedRec.height
+      const optionsRec = optionsRef.current.getBoundingClientRect()
+      const optionsWidth = optionsRec.width
+      const optionsheight = optionsRec.height
 
-      let x = closedRec.x
-      let y = closedRec.y
+      let x = valueRec.x
+      let y = valueRec.y
 
       if (align === 'right') {
-        x = x + closedRec - openedWidth
+        x = x + valueRec - optionsWidth
       }
 
       // check it's not vertically off screen
-      if (openedheight + y > window.innerHeight) {
-        y = window.innerHeight - openedheight
+      if (optionsheight + y > window.innerHeight) {
+        y = window.innerHeight - optionsheight
       }
 
       // first set position
       setPos({ x, y })
-      if (widthExpand) setMinWidth(closedWidth)
+      if (widthExpand) setMinWidth(valueWidth)
 
       // then start animation
       setStartAnimation(true)
@@ -157,7 +157,7 @@ const Dropdown = ({
   return (
     <>
       {value && (
-        <div ref={closedRef} onClick={handleOpen}>
+        <div ref={valueRef} onClick={handleOpen}>
           {value}
         </div>
       )}
@@ -170,7 +170,7 @@ const Dropdown = ({
           isOpen={true}
           startAnimation={startAnimation}
         >
-          <OptionsStyled isOpen={true} message={message} ref={openedRef} style={{ minWidth }}>
+          <OptionsStyled isOpen={true} message={message} ref={optionsRef} style={{ minWidth }}>
             {options}
           </OptionsStyled>
         </ContainerStyled>

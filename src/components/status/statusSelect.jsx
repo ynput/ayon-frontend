@@ -69,7 +69,7 @@ const StatusSelect = ({
             statuses={statusesObject}
           />
         }
-        opened={statuses.map((status) => (
+        options={statuses.map((status) => (
           <StatusField
             value={status.name}
             key={status.name}
