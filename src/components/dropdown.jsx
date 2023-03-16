@@ -122,7 +122,7 @@ const Dropdown = ({
       let y = valueRec.y
 
       if (align === 'right') {
-        x = x + valueRec - optionsWidth
+        x = x + valueWidth - optionsWidth
       }
 
       // check it's not vertically off screen
