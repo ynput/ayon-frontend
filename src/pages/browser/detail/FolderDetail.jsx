@@ -5,7 +5,7 @@ import AttributeTable from '/src/containers/attributeTable'
 import { TagsField } from '/src/containers/fieldFormat'
 import { useUpdateEntitiesDetailsMutation } from '../../../services/entity/updateEntity'
 import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
-import StatusSelect from '/src/components/status/StatusSelect'
+import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
 const FolderDetail = () => {

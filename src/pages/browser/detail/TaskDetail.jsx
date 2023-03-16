@@ -4,7 +4,7 @@ import { TagsField } from '/src/containers/fieldFormat'
 import { Panel } from '@ynput/ayon-react-components'
 import { useUpdateEntitiesDetailsMutation } from '../../../services/entity/updateEntity'
 import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
-import StatusSelect from '/src/components/status/StatusSelect'
+import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
 
 const TaskDetail = () => {

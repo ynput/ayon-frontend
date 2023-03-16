@@ -84,25 +84,20 @@ const OptionsStyled = styled.div`
     message ? '0 0 var(--border-radius) var(--border-radius)' : 'var(--border-radius)'};
   overflow: clip;
 
-  ${({ index }) =>
-    css`
-      *:nth-child(${index + 1}) {
-        animation: unset;
-      }
-    `}
-
   transition: height 0.15s;
+
+  /* scrolling */
+  max-height: 300px;
+  overflow-y: auto;
 `
 
 const Dropdown = ({
-  opened,
   value,
-  style,
   options,
+  style,
   message,
   onClose,
   onOpen,
-  closed,
   widthExpand,
   align = 'left',
 }) => {
@@ -110,9 +105,6 @@ const Dropdown = ({
   const [pos, setPos] = useState({ x: null, y: null })
   const [startAnimation, setStartAnimation] = useState(false)
   const [minWidth, setMinWidth] = useState()
-
-  // get index of current value
-  const index = options.map(({ name }) => name).indexOf(value)
 
   const closedRef = useRef(null)
   const openedRef = useRef(null)
@@ -164,13 +156,13 @@ const Dropdown = ({
 
   return (
     <>
-      {closed && (
+      {value && (
         <div ref={closedRef} onClick={handleOpen}>
-          {closed}
+          {value}
         </div>
       )}
       {isOpen && <BackdropStyled onClick={handleClose} />}
-      {isOpen && opened && (
+      {isOpen && options && (
         <ContainerStyled
           onClick={handleClose}
           style={{ left: pos?.x, top: pos?.y, ...style }}
@@ -178,14 +170,8 @@ const Dropdown = ({
           isOpen={true}
           startAnimation={startAnimation}
         >
-          <OptionsStyled
-            isOpen={true}
-            message={message}
-            index={index}
-            ref={openedRef}
-            style={{ minWidth }}
-          >
-            {opened}
+          <OptionsStyled isOpen={true} message={message} ref={openedRef} style={{ minWidth }}>
+            {options}
           </OptionsStyled>
         </ContainerStyled>
       )}
@@ -194,14 +180,12 @@ const Dropdown = ({
 }
 
 Dropdown.propTypes = {
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-  style: PropTypes.object,
-  options: PropTypes.array.isRequired,
   message: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
+  style: PropTypes.object,
   onOpen: PropTypes.func,
   onClose: PropTypes.func,
-  closed: PropTypes.node.isRequired,
-  opened: PropTypes.node.isRequired,
+  value: PropTypes.node.isRequired,
+  options: PropTypes.node.isRequired,
   align: PropTypes.oneOf(['left', 'right']),
 }
 

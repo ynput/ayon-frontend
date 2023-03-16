@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
-import Dropdown from '../Dropdown'
-import StatusField from './StatusField'
+import Dropdown from '../dropdown'
+import StatusField from './statusField'
 import { useSelector } from 'react-redux'
 
 const StatusSelect = ({
@@ -53,13 +53,11 @@ const StatusSelect = ({
   return (
     <>
       <Dropdown
-        value={value}
-        options={statuses}
         message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
         widthExpand={widthExpand}
         onOpen={onOpen}
         align={align}
-        closed={
+        value={
           <StatusField
             value={changedValue || value}
             align={align}
@@ -75,7 +73,6 @@ const StatusSelect = ({
           <StatusField
             value={status.name}
             key={status.name}
-            size={size}
             isSelecting
             isActive={value === status.name}
             onClick={() => handleChange(status.name)}

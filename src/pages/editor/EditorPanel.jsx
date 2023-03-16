@@ -21,7 +21,7 @@ import getFieldInObject from '/src/helpers/getFieldInObject'
 import { isEmpty } from 'lodash'
 import { TypeEditor } from './editors'
 import { format } from 'date-fns'
-import StatusSelect from '/src/components/status/StatusSelect'
+import StatusSelect from '/src/components/status/statusSelect'
 
 const inputTypes = {
   datetime: { type: 'date' },
