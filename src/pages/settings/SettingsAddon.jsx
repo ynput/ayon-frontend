@@ -10,7 +10,7 @@ const AddonWrapper = styled.iframe`
   overflow: auto;
 `
 
-const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
+const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
   const addonRef = useRef(null)
   const [loading, setLoading] = useState(true)
 
@@ -20,7 +20,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   const pushContext = () => {
     const addonWnd = addonRef.current.contentWindow
     addonWnd.postMessage({
-      scope: 'project',
+      scope: 'settings',
       accessToken: localStorage.getItem('accessToken'),
       context,
       addonName,
@@ -37,10 +37,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   const onAddonLoad = () => {
     setLoading(false)
     pushContext()
-  }
-
-  if (loading) {
-    return <div>Loading...</div>
+    console.log(loading)
   }
 
   return (
@@ -53,4 +50,4 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   )
 }
 
-export default ProjectAddon
+export default SettingsAddon

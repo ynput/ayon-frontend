@@ -2,7 +2,7 @@ import { Dropdown } from 'primereact/dropdown'
 import { useEffect } from 'react'
 import { useGetAnatomyPresetsQuery } from '../../../services/anatomy/getAnatomy'
 
-const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
+const AnatomyPresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
   // get presets lists data
   const { data: presetList = [], isLoading, isSuccess } = useGetAnatomyPresetsQuery()
   // Set initial preset when data is loaded
@@ -26,4 +26,4 @@ const PresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
   )
 }
 
-export default PresetDropdown
+export default AnatomyPresetDropdown

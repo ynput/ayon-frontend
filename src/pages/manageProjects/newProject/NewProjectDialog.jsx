@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 
 import { Button, Spacer, InputText, Toolbar } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/settingsEditor'
-import PresetDropdown from './PresentDropdown'
+import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import {
   useGetAnatomyPresetQuery,
   useGetAnatomySchemaQuery,
@@ -99,7 +99,7 @@ const NewProjectDialog = ({ onHide }) => {
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
-          <PresetDropdown
+          <AnatomyPresetDropdown
             selectedPreset={selectedPreset}
             setSelectedPreset={setSelectedPreset}
             tooltip="Project anatomy preset"

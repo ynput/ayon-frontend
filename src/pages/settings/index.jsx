@@ -4,7 +4,7 @@ import { Spacer } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
 import { useGetSettingsAddonsQuery } from '/src/services/addonList'
 
-import SettingsAddon from './settingsAddon'
+import SettingsAddon from './SettingsAddon'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const AddonVersions = lazy(() => import('./AddonVersions'))
