@@ -49,9 +49,23 @@ const USERS_QUERY = `
   }
 `
 
-const ASSIGNEES_QUERY = `
+const ASSIGNEES_BY_NAME_QUERY = `
 query Assignees($names: [String!]!){
   users(names: $names) {
+  edges {
+    node {
+      name
+      attrib {
+        avatarUrl
+        fullName
+      }
+    }
+  }
+}
+}`
+const ASSIGNEES_QUERY = `
+query Assignees {
+  users {
   edges {
     node {
       name
@@ -126,11 +140,11 @@ const getUsers = ayonApi.injectEndpoints({
           : ['user'],
     }),
     getUsersAssignee: build.query({
-      query: ({ names = [] }) => ({
+      query: ({ names }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: ASSIGNEES_QUERY,
+          query: names ? ASSIGNEES_BY_NAME_QUERY : ASSIGNEES_QUERY,
           variables: { names },
         },
       }),

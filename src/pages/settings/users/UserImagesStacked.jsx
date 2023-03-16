@@ -28,7 +28,7 @@ const UserImagesStacked = ({ users = [], size = 30, gap = -1, max = 5 }) => {
         <UserImage
           src={user.avatarUrl}
           key={i}
-          fullName={user.fullName}
+          fullName={user.fullName || ''}
           style={{ zIndex: -i }}
           highlight={user.self}
           size={size}

@@ -18,11 +18,11 @@ import NameField from './fields/NameField'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import getFieldInObject from '/src/helpers/getFieldInObject'
-import { difference, isEmpty, union } from 'lodash'
+import { isEmpty, isEqual, union } from 'lodash'
 import { TypeEditor } from './editors'
 import { format } from 'date-fns'
 import StatusSelect from '/src/components/status/statusSelect'
-import AssigneeFieldWrapper from '/src/components/assignee/AssigneeFieldWrapper'
+import AssigneeSelect from '../../components/assignee/AssigneeSelect'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -106,7 +106,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
 
     if (singleSelect.__entityType === 'task') {
       // add on task at end
-      if (breadcrumbs.parents?.length) subTitle += ' / '
+      subTitle += ' / '
       subTitle += singleSelect.name
     }
   } else {
@@ -213,8 +213,10 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
     // changes saved to global state will show up here
     // console.log('creating initial form')
 
+    console.log(editorNodes['9a3a9040c41511edb8920b11c777c69f'])
+
     setForm(createInitialForm())
-  }, [nodeIds, type])
+  }, [nodeIds, type, editorNodes])
 
   //   Handlers
 
@@ -230,7 +232,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   // compare both values and use changedValue if there is one
   // returns [value, isChanged, isOwn]
   const getFieldValue = (field, changeKey, type = '') => {
-    let finalValue = type,
+    let finalValue = '',
       isMultiple = false,
       isChanged = false,
       isOwn = false
@@ -270,15 +272,14 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
         isOwn = true
       }
 
-      if (field === 'assignees') {
-        console.log(finalValue, nodeValue)
-      }
-
       if ((finalValue && finalValue !== nodeValue) || isMultiple) {
         // if type arrays check dif
         if (Array.isArray(finalValue)) {
           // if not different skip
-          if (!difference(finalValue, nodeValue).length) continue
+          if (isEqual(finalValue, nodeValue)) {
+            finalValue = nodeValue
+            continue
+          }
         }
         // different values, this is a isMultiple filed
         // assign array of those values
@@ -559,13 +560,16 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                   )
                 } else if (field === 'assignees') {
                   input = (
-                    <AssigneeFieldWrapper
-                      names={isMultiple ? union(isMultiple) : value || []}
+                    <AssigneeSelect
+                      names={isMultiple ? union(...isMultiple) : value || []}
                       isMultiple={!!isMultiple}
                       placeholder={placeholder}
                       disabled={disabled}
                       emptyMessage={'None Assigned'}
                       emptyIcon={false}
+                      widthExpand
+                      onChange={(v) => handleLocalChange(v, changeKey, field)}
+                      editor
                       style={{
                         ...changedStyles,
                         border: '1px solid var(--color-grey-03)',

@@ -29,6 +29,18 @@ const editorSlice = createSlice({
       state.new = {}
       state.changes = {}
     },
+    updateNodes: (state, action) => {
+      // only updates provided fields
+      const { updated } = action.payload
+      // add new updated nodes
+      for (const node of updated) {
+        if (state.nodes[node?.id]) {
+          for (const key in node) {
+            state.nodes[node?.id].data[key] = node[key]
+          }
+        }
+      }
+    },
     newNodesAdded: (state, { payload = [] }) => {
       for (const node of payload) {
         const id = node.id
@@ -64,6 +76,13 @@ const editorSlice = createSlice({
   },
 })
 
-export const { branchesLoaded, nodesUpdated, onRevert, newNodesAdded, onNewChanges, newProject } =
-  editorSlice.actions
+export const {
+  branchesLoaded,
+  nodesUpdated,
+  onRevert,
+  newNodesAdded,
+  onNewChanges,
+  newProject,
+  updateNodes,
+} = editorSlice.actions
 export default editorSlice.reducer

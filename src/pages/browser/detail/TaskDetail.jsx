@@ -6,7 +6,7 @@ import { useUpdateEntitiesDetailsMutation } from '../../../services/entity/updat
 import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
 import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
-import AssigneeFieldWrapper from '/src/components/assignee/AssigneeFieldWrapper'
+import AssigneeSelect from '../../../components/assignee/AssigneeSelect'
 
 const TaskDetail = () => {
   const tasks = useSelector((state) => state.project.tasks)
@@ -39,14 +39,14 @@ const TaskDetail = () => {
 
   if (isError) return 'ERROR: Soemthing went wrong...'
 
-  const handleStatusChange = async (value, entity) => {
+  const handleChange = async (value, field, entity) => {
     try {
-      const patches = [{ ...entity, status: value }]
+      const patches = [{ ...entity, [field]: value }]
 
       const payload = await updateTask({
         projectName,
         type: 'task',
-        data: { status: value },
+        data: { [field]: value },
         patches,
       }).unwrap()
 
@@ -87,14 +87,21 @@ const TaskDetail = () => {
               <StatusSelect
                 value={task.status}
                 align={'right'}
-                onChange={(v) => handleStatusChange(v, task)}
+                onChange={(v) => handleChange(v, 'status', task)}
               />
             ),
           },
           { title: 'Tags', value: <TagsField value={task.tags} /> },
           {
             title: 'Assignees',
-            value: <AssigneeFieldWrapper names={task.assignees} />,
+            value: (
+              <AssigneeSelect
+                names={task.assignees}
+                editor
+                align={'right'}
+                onChange={(v) => handleChange(v, 'assignees', task)}
+              />
+            ),
           },
         ]}
       />

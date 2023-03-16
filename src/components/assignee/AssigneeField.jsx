@@ -12,6 +12,12 @@ const FieldStyled = styled.div`
   display: flex;
   align-items: center;
   height: 30px;
+  gap: 4px;
+
+  span {
+    position: relative;
+    top: 1px;
+  }
 
   &:not(:hover) {
     transition: background-color 0.1s;
@@ -62,7 +68,10 @@ const AssigneeField = ({
     >
       {!(disabled && placeholder) ? (
         value.length ? (
-          <UserImagesStacked users={value} size={21} gap={-0.3} />
+          <>
+            <UserImagesStacked users={value} size={21} gap={-0.3} />
+            {value.length < 2 && <span>{value[0]?.fullName}</span>}
+          </>
         ) : (
           <>
             {emptyIcon && <span className="material-symbols-outlined">add_circle</span>}
@@ -80,8 +89,8 @@ AssigneeField.propTypes = {
   value: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
-      fullName: PropTypes.string.isRequired,
-      avatarUrl: PropTypes.string.isRequired,
+      fullName: PropTypes.string,
+      avatarUrl: PropTypes.string,
     }),
   ).isRequired,
   onClick: PropTypes.func,

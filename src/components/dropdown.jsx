@@ -84,7 +84,7 @@ const OptionsStyled = styled.div`
     message ? '0 0 var(--border-radius) var(--border-radius)' : 'var(--border-radius)'};
   overflow: clip;
 
-  transition: height 0.15s;
+  transition: max-height 0.15s;
 
   /* scrolling */
   max-height: 300px;
@@ -100,6 +100,7 @@ const Dropdown = ({
   onOpen,
   widthExpand,
   align = 'left',
+  multiSelect,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [pos, setPos] = useState({ x: null, y: null })
@@ -164,13 +165,13 @@ const Dropdown = ({
       {isOpen && <BackdropStyled onClick={handleClose} />}
       {isOpen && options && (
         <ContainerStyled
-          onClick={handleClose}
+          onClick={!multiSelect ? handleClose : undefined}
           style={{ left: pos?.x, top: pos?.y, ...style }}
           message={message}
           isOpen={true}
           startAnimation={startAnimation}
         >
-          <OptionsStyled isOpen={true} message={message} ref={optionsRef} style={{ minWidth }}>
+          <OptionsStyled isOpen={isOpen} message={message} ref={optionsRef} style={{ minWidth }}>
             {options}
           </OptionsStyled>
         </ContainerStyled>
@@ -187,6 +188,7 @@ Dropdown.propTypes = {
   value: PropTypes.node.isRequired,
   options: PropTypes.node.isRequired,
   align: PropTypes.oneOf(['left', 'right']),
+  multiSelect: PropTypes.bool,
 }
 
 export default Dropdown
