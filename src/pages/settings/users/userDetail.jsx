@@ -281,7 +281,7 @@ const UserDetail = ({
         <UserImagesStacked
           users={formUsers.map((user) => ({
             fullName: getUserName(user),
-            src: user.attrib.avatarUrl,
+            avatarUrl: user.attrib.avatarUrl,
             self: user.self,
           }))}
         />

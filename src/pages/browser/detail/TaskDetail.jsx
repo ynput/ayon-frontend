@@ -6,6 +6,7 @@ import { useUpdateEntitiesDetailsMutation } from '../../../services/entity/updat
 import { useGetEntitiesDetailsQuery } from '../../../services/entity/getEntity'
 import StatusSelect from '/src/components/status/statusSelect'
 import usePubSub from '/src/hooks/usePubSub'
+import AssigneeFieldWrapper from '/src/components/assignee/AssigneeFieldWrapper'
 
 const TaskDetail = () => {
   const tasks = useSelector((state) => state.project.tasks)
@@ -93,7 +94,7 @@ const TaskDetail = () => {
           { title: 'Tags', value: <TagsField value={task.tags} /> },
           {
             title: 'Assignees',
-            value: task.assignees?.length ? task.assignees.join(', ') : '-',
+            value: <AssigneeFieldWrapper users={task.assignees} />,
           },
         ]}
       />

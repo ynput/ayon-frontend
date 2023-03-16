@@ -69,7 +69,9 @@ const StatusStyled = styled.div`
     ${({ isSelecting }) =>
     !isSelecting &&
     css`
-      transition: background-color 0.3s, color 0.3s;
+      &:not(:hover) {
+        transition: background-color 0.1s, color 0.3s;
+      }
     `}
 
 

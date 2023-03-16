@@ -51,38 +51,36 @@ const StatusSelect = ({
   maxWidth = maxWidth || calcMaxWidth
 
   return (
-    <>
-      <Dropdown
-        message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
-        widthExpand={widthExpand}
-        onOpen={onOpen}
-        align={align}
-        value={
-          <StatusField
-            value={changedValue || value}
-            align={align}
-            isChanging={!!changedValue}
-            size={size}
-            style={{ maxWidth, ...style }}
-            height={height}
-            placeholder={placeholder}
-            statuses={statusesObject}
-          />
-        }
-        options={statuses.map((status) => (
-          <StatusField
-            value={status.name}
-            key={status.name}
-            isSelecting
-            isActive={value === status.name}
-            onClick={() => handleChange(status.name)}
-            align={align}
-            height={height}
-            statuses={statusesObject}
-          />
-        ))}
-      ></Dropdown>
-    </>
+    <Dropdown
+      message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
+      widthExpand={widthExpand}
+      onOpen={onOpen}
+      align={align}
+      value={
+        <StatusField
+          value={changedValue || value}
+          align={align}
+          isChanging={!!changedValue}
+          size={size}
+          style={{ maxWidth, ...style }}
+          height={height}
+          placeholder={placeholder}
+          statuses={statusesObject}
+        />
+      }
+      options={statuses.map((status) => (
+        <StatusField
+          value={status.name}
+          key={status.name}
+          isSelecting
+          isActive={value === status.name}
+          onClick={() => handleChange(status.name)}
+          align={align}
+          height={height}
+          statuses={statusesObject}
+        />
+      ))}
+    />
   )
 }
 
