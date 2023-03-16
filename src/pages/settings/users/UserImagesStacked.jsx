@@ -12,9 +12,15 @@ const StackedStyled = styled.div`
   }
 `
 
-const UserImagesStacked = ({ users = [], size = 30, gap = -1 }) => {
+const UserImagesStacked = ({ users = [], size = 30, gap = -1, max = 5 }) => {
+  const length = users.length
   // limit to 5 users
-  users = users.slice(0, 5)
+  users = users.slice(0, max)
+
+  // show extras
+  if (length > max) {
+    users.push({ fullName: `+ ${length - max > 9 ? '+' : length - max}` })
+  }
 
   return (
     <StackedStyled length={users.length} gap={(gap * 30) / 2}>
@@ -41,6 +47,7 @@ UserImagesStacked.propTypes = {
   ).isRequired,
   size: PropTypes.number,
   gap: PropTypes.number,
+  max: PropTypes.number,
 }
 
 export default UserImagesStacked

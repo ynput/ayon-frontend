@@ -332,8 +332,15 @@ a {
 }
 
 .editor-form {
+  overflow-x: clip;
+  margin: 0 -1px;
+  padding: 0 1px;
   .field {
     position: relative;
+
+    margin: 0 -1px;
+    padding: 0 1px;
+    overflow-x: clip;
   }
 
   &.disabled {

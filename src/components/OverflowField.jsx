@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import copyToClipboard from '../helpers/copyToClipboard'
 
 const OverflowFieldStyled = styled.div`
@@ -14,6 +14,12 @@ const OverflowFieldStyled = styled.div`
   span:first-child {
     white-space: nowrap;
   }
+
+  ${({ isNode }) =>
+    !isNode &&
+    css`
+      margin-right: 4px;
+    `}
 `
 
 const OverflowStringStyled = styled.span`
@@ -60,7 +66,7 @@ const OverflowField = ({ value = '', style, align = 'right' }) => {
   }
 
   return (
-    <OverflowFieldStyled style={style} align={align}>
+    <OverflowFieldStyled style={style} align={align} isNode={isNode}>
       {isNode ? value : <OverflowStringStyled>{value}</OverflowStringStyled>}
       {!isNode && (
         <RevealStringStyled onClick={() => copyToClipboard(value)} align={align}>

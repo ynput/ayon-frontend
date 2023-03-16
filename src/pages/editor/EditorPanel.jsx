@@ -18,10 +18,11 @@ import NameField from './fields/NameField'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import getFieldInObject from '/src/helpers/getFieldInObject'
-import { isEmpty } from 'lodash'
+import { difference, isEmpty, union } from 'lodash'
 import { TypeEditor } from './editors'
 import { format } from 'date-fns'
 import StatusSelect from '/src/components/status/statusSelect'
+import AssigneeFieldWrapper from '/src/components/assignee/AssigneeFieldWrapper'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -58,8 +59,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   const [form, setForm] = useState({})
   // used to rebuild fields for when the type changes
   const [type, setType] = useState(null)
-  // just used to avoid having an uncontrolled input
-  const [multiValue] = useState('')
 
   // when selection or nodes change, update nodes state
   useEffect(() => {
@@ -117,6 +116,8 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   const createInitialForm = () => {
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
+    const assigneesValues = getFieldValue('assignees', '_assignees', [])
+
     const disableMessage = 'Names Can Not Be The Same...'
     const initialForm = {
       _status: {
@@ -138,6 +139,14 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
         },
         ...nameValues,
         value: singleSelect ? nameValues.value : disableMessage,
+      },
+      _assignees: {
+        changeKey: '_assignees',
+        label: 'Assignees',
+        field: 'assignees',
+        disabled: types.includes('folder'),
+        placeholder: `Folders Can Not Have Assignees...`,
+        ...assigneesValues,
       },
     }
 
@@ -220,8 +229,8 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   // look up any changes using changeKey
   // compare both values and use changedValue if there is one
   // returns [value, isChanged, isOwn]
-  const getFieldValue = (field, changeKey) => {
-    let finalValue = '',
+  const getFieldValue = (field, changeKey, type = '') => {
+    let finalValue = type,
       isMultiple = false,
       isChanged = false,
       isOwn = false
@@ -261,7 +270,16 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
         isOwn = true
       }
 
+      if (field === 'assignees') {
+        console.log(finalValue, nodeValue)
+      }
+
       if ((finalValue && finalValue !== nodeValue) || isMultiple) {
+        // if type arrays check dif
+        if (Array.isArray(finalValue)) {
+          // if not different skip
+          if (!difference(finalValue, nodeValue).length) continue
+        }
         // different values, this is a isMultiple filed
         // assign array of those values
         if (!isMultiple) {
@@ -279,7 +297,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
 
     if (isMultiple) {
       // values are different
-      finalValue = multiValue
+      finalValue = type
     }
 
     return { value: finalValue, isChanged, isOwn, isMultiple }
@@ -500,6 +518,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                   disabledStyles = {
                     color: 'var(--color-text-dim)',
                     backgroundColor: 'var(--input-disabled-background-color)',
+                    fontStyle: 'italic',
                   }
                 }
 
@@ -512,7 +531,11 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       value={!isMultiple && value}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       options={typeOptions}
-                      style={{ ...changedStyles, width: '100%', minWidth: 'unset' }}
+                      style={{
+                        ...changedStyles,
+                        width: '100%',
+                        minWidth: 'unset',
+                      }}
                       disabled={disabled}
                       placeholder={placeholder}
                     />
@@ -531,6 +554,23 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       height={30}
                       placeholder={placeholder}
                       disableMessage
+                      widthExpand
+                    />
+                  )
+                } else if (field === 'assignees') {
+                  input = (
+                    <AssigneeFieldWrapper
+                      names={isMultiple ? union(isMultiple) : value || []}
+                      isMultiple={!!isMultiple}
+                      placeholder={placeholder}
+                      disabled={disabled}
+                      emptyMessage={'None Assigned'}
+                      emptyIcon={false}
+                      style={{
+                        ...changedStyles,
+                        border: '1px solid var(--color-grey-03)',
+                        ...disabledStyles,
+                      }}
                     />
                   )
                 } else {

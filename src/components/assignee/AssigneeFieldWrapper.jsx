@@ -3,32 +3,15 @@ import PropTypes from 'prop-types'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import AssigneeField from './AssigneeField'
 
-const AssigneeFieldWrapper = ({ names }) => {
-  let { data: users } = useGetUsersAssigneeQuery({ names })
+const AssigneeFieldWrapper = (props) => {
+  const { names } = props
+  let { data: users = [] } = useGetUsersAssigneeQuery({ names })
 
-  users = [
-    {
-      name: 'demouser00',
-      avatarUrl: 'https://repo.imm.cz/avatars/demouser00.jpg',
-      fullName: 'Wiktor Hokstad',
-    },
-    {
-      name: 'demouser10',
-      avatarUrl: '',
-      fullName: 'Frank Hokstad',
-    },
-    {
-      name: 'demouser20',
-      avatarUrl: 'https://repo.imm.cz/avatars/demouser20.jpg',
-      fullName: 'Frank Hokstad',
-    },
-  ]
-
-  return <AssigneeField value={users} />
+  return <AssigneeField value={[...users, ...users, ...users]} {...props} />
 }
 
 AssigneeFieldWrapper.propTypes = {
-  users: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  names: PropTypes.arrayOf(PropTypes.string).isRequired,
 }
 
 export default AssigneeFieldWrapper

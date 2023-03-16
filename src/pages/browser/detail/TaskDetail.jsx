@@ -94,7 +94,7 @@ const TaskDetail = () => {
           { title: 'Tags', value: <TagsField value={task.tags} /> },
           {
             title: 'Assignees',
-            value: <AssigneeFieldWrapper users={task.assignees} />,
+            value: <AssigneeFieldWrapper names={task.assignees} />,
           },
         ]}
       />

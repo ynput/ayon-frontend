@@ -30,6 +30,7 @@ const BASE_QUERY = `
             ownAttrib
             folderId
             status
+            assignees
             attrib {
               #TASK_ATTRS#
             }
