@@ -16,6 +16,7 @@ const StatusSelect = ({
   style,
   placeholder,
   disableMessage,
+  disabled,
   widthExpand,
 }) => {
   const statusesObject = useSelector((state) => state.project.statuses)
@@ -47,7 +48,8 @@ const StatusSelect = ({
       align={align}
       value={[value]}
       onChange={handleChange}
-      valueItem={() => (
+      disabled={disabled}
+      valueTemplate={() => (
         <StatusField
           value={value}
           align={align}
@@ -58,9 +60,9 @@ const StatusSelect = ({
           statuses={statusesObject}
         />
       )}
-      valueField={'name'}
+      dataKey={'name'}
       options={statuses}
-      optionsItem={(status, isActive) => (
+      itemTemplate={(status, isActive) => (
         <StatusField
           value={status.name}
           isSelecting

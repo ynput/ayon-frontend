@@ -6,7 +6,7 @@ import Dropdown from '../dropdown'
 import AssigneeDropdown from './AssigneeDropdown'
 
 const AssigneeSelect = (props) => {
-  const { names, editor, align, onChange, widthExpand } = props
+  const { names, editor, align, onChange, widthExpand, disabled } = props
   //   Queries
   const { data: users = [] } = useGetUsersAssigneeQuery({ names }, { skip: !names.length })
   const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined }, { skip: !editor })
@@ -16,10 +16,11 @@ const AssigneeSelect = (props) => {
   return (
     <Dropdown
       value={names}
-      valueItem={() => <AssigneeField value={users} {...props} />}
+      valueTemplate={() => <AssigneeField value={users} {...props} />}
       options={allUsers}
-      valueField={'name'}
-      optionsItem={(user, isActive, isSelected) => (
+      dataKey={'name'}
+      disabled={disabled}
+      itemTemplate={(user, isActive, isSelected) => (
         <AssigneeDropdown {...user} isActive={isActive} isSelected={isSelected} />
       )}
       onChange={onChange}

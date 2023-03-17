@@ -19,10 +19,10 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import getFieldInObject from '/src/helpers/getFieldInObject'
 import { isEmpty, isEqual, union } from 'lodash'
-import { TypeEditor } from './editors'
 import { format } from 'date-fns'
 import StatusSelect from '/src/components/status/statusSelect'
 import AssigneeSelect from '../../components/assignee/AssigneeSelect'
+import TypeEditor from './TypeEditor'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -529,14 +529,14 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                 if (field.includes('Type')) {
                   input = (
                     <TypeEditor
-                      value={!isMultiple && value}
+                      value={isMultiple ? isMultiple : [value]}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       options={typeOptions}
                       style={{
-                        ...changedStyles,
                         width: '100%',
                         minWidth: 'unset',
                       }}
+                      isChanged={isChanged}
                       disabled={disabled}
                       placeholder={placeholder}
                     />

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRef } from 'react'
 import styled, { css, keyframes } from 'styled-components'
 import { InputText } from '@ynput/ayon-react-components'
-import { isEqual, isNull } from 'lodash'
+import { compact, isEqual, isNull } from 'lodash'
 import { useMemo } from 'react'
 
 // background acts as a blocker
@@ -43,16 +43,34 @@ const ButtonStyled = styled.button`
   }
 
   border-radius: var(--border-radius);
+
+  ${({ isChanged }) =>
+    isChanged &&
+    css`
+      background-color: var(--color-row-hl);
+    `}
+
+  ${({ disabled }) =>
+    disabled &&
+    css`
+      background-color: var(--input-disabled-background-color) !important;
+      color: var(--color-text-dim);
+      font-style: italic;
+    `}
 `
 
 const DropdownStyled = styled.div`
   position: relative;
-  height: ${({ height }) => `${height}px`};
+  height: 30px;
   /* width: 100%; */
   display: inline-block;
 
-  & > * {
+  button {
     width: 100%;
+  }
+
+  & > * {
+    height: 100%;
   }
 `
 
@@ -132,6 +150,8 @@ const OptionsStyled = styled.ul`
 `
 
 const ListItemStyled = styled.li`
+  cursor: pointer;
+
   ${({ usingKeyboard }) =>
     !usingKeyboard &&
     css`
@@ -150,6 +170,45 @@ const ListItemStyled = styled.li`
       & > * {
         outline: solid #93cbf9 1px;
         outline-offset: -1px;
+      }
+    `}
+`
+
+const DefaultItemStyled = styled.span`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 30px;
+  padding: 0 4px;
+
+  ${({ isSelected }) =>
+    isSelected &&
+    css`
+      background-color: var(--color-row-hl);
+    `}
+`
+
+const DefaultValueStyled = styled.div`
+  border: 1px solid var(--color-grey-03);
+  border-radius: var(--border-radius);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  ${({ isMultiple }) =>
+    isMultiple &&
+    css`
+      ::before {
+        content: 'Multiple ( ';
+      }
+      ::after {
+        content: ' )';
       }
     `}
 `
@@ -188,13 +247,16 @@ const SearchStyled = styled.div`
 
 const Dropdown = ({
   value = [],
-  valueItem,
-  valueField = 'value',
+  valueTemplate,
+  valueStyle,
+  dataKey = 'value',
   options = [],
-  optionsItem,
-  style,
+  itemTemplate,
+  itemStyle,
   searchFields = ['value'],
+  valueIcon,
   message,
+  disabled,
   onClose,
   onChange,
   onOpen,
@@ -202,7 +264,18 @@ const Dropdown = ({
   align = 'left',
   multiSelect,
   search,
+  placeholder,
+  emptyMessage,
+  isChanged,
 }) => {
+  value = useMemo(() => compact(value), [value])
+
+  // if there are multiple but multiSelect is false
+  let isMultiple
+  if (!multiSelect && value.length > 1) {
+    isMultiple = true
+  }
+
   const [isOpen, setIsOpen] = useState(false)
   // Style states
   const [pos, setPos] = useState({ x: null, y: null })
@@ -276,7 +349,7 @@ const Dropdown = ({
 
   // reorder options to put active at the top
   options = useMemo(
-    () => [...options].sort((a, b) => value.indexOf(b[valueField]) - value.indexOf(a[valueField])),
+    () => [...options].sort((a, b) => value.indexOf(b[dataKey]) - value.indexOf(a[dataKey])),
     [value, options],
   )
 
@@ -333,6 +406,7 @@ const Dropdown = ({
   }
 
   const handleOpen = (e) => {
+    if (disabled) return
     e.stopPropagation()
     setIsOpen(true)
 
@@ -367,7 +441,7 @@ const Dropdown = ({
       }
     }
 
-    const selected = options[activeIndex][valueField]
+    const selected = options[activeIndex || 0][dataKey]
 
     if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
       e.preventDefault()
@@ -391,6 +465,8 @@ const Dropdown = ({
         handleChange(undefined, selected)
       } else {
         handleClose(undefined, [selected])
+        // focus back on button
+        valueRef.current.focus()
       }
     }
 
@@ -410,14 +486,25 @@ const Dropdown = ({
       onMouseMove={() => usingKeyboard && setUsingKeyboard(false)}
     >
       {value && (
-        <ButtonStyled ref={valueRef} onClick={handleOpen}>
-          {valueItem()}
+        <ButtonStyled ref={valueRef} onClick={handleOpen} disabled={disabled} isChanged={isChanged}>
+          {valueTemplate ? (
+            valueTemplate()
+          ) : (
+            <DefaultValueStyled style={valueStyle} isMultiple={isMultiple}>
+              {valueIcon && <span className="material-symbols-outlined">{valueIcon}</span>}
+              {disabled && placeholder
+                ? placeholder
+                : value.length
+                ? value.join(', ')
+                : emptyMessage}
+            </DefaultValueStyled>
+          )}
         </ButtonStyled>
       )}
       {isOpen && <BackdropStyled onClick={handleClose} />}
       {isOpen && options && (
         <ContainerStyled
-          style={{ left: pos?.x, top: pos?.y, ...style }}
+          style={{ left: pos?.x, top: pos?.y, ...itemStyle }}
           message={message}
           isOpen={true}
           startAnimation={startAnimation}
@@ -438,12 +525,26 @@ const Dropdown = ({
           <OptionsStyled isOpen={isOpen} message={message} ref={optionsRef} style={{ minWidth }}>
             {options.map((option, i) => (
               <ListItemStyled
-                key={option[valueField]}
-                onClick={(e) => handleChange(e, option[valueField])}
+                key={option[dataKey]}
+                onClick={(e) => handleChange(e, option[dataKey])}
                 focused={usingKeyboard && activeIndex === i}
                 usingKeyboard={usingKeyboard}
               >
-                {optionsItem(option, value.includes(option.name), selected.includes(option.name))}
+                {itemTemplate ? (
+                  itemTemplate(
+                    option,
+                    value.includes(option[dataKey]),
+                    selected.includes(option[dataKey]),
+                  )
+                ) : (
+                  <DefaultItemStyled isSelected={selected.includes(option[dataKey])}>
+                    {option.icon && (
+                      <span className="material-symbols-outlined">{option.icon}</span>
+                    )}
+
+                    {option[dataKey]}
+                  </DefaultItemStyled>
+                )}
               </ListItemStyled>
             ))}
           </OptionsStyled>
@@ -455,17 +556,23 @@ const Dropdown = ({
 
 Dropdown.propTypes = {
   message: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
-  style: PropTypes.object,
+  itemStyle: PropTypes.object,
+  valueStyle: PropTypes.object,
   onOpen: PropTypes.func,
   onClose: PropTypes.func,
   value: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  valueItem: PropTypes.func,
-  valueField: PropTypes.string,
+  valueTemplate: PropTypes.func,
+  dataKey: PropTypes.string,
   options: PropTypes.array.isRequired,
-  optionsItem: PropTypes.func,
+  itemTemplate: PropTypes.func,
   align: PropTypes.oneOf(['left', 'right']),
   multiSelect: PropTypes.bool,
   search: PropTypes.bool,
+  disabled: PropTypes.bool,
+  valueIcon: PropTypes.string,
+  emptyMessage: PropTypes.string,
+  placeholder: PropTypes.string,
+  isChanged: PropTypes.bool,
 }
 
 export default Dropdown

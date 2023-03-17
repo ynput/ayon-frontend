@@ -128,11 +128,7 @@ const StatusField = ({
   placeholder,
   statuses = {},
 }) => {
-  const { shortName, color, icon } = statuses[value] || {
-    icon: 'help',
-    shortName: 'NONE',
-    color: 'red',
-  }
+  const { shortName, color, icon } = statuses[value] || {}
 
   let shownValue = value || placeholder || 'None'
 
