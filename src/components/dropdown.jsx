@@ -367,9 +367,16 @@ const Dropdown = ({
       }
     }
 
+    const selected = options[activeIndex][valueField]
+
     if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
       e.preventDefault()
-      if (!usingKeyboard) setUsingKeyboard(true)
+      if (isOpen) {
+        if (!usingKeyboard) setUsingKeyboard(true)
+      } else if (!multiSelect) {
+        // flick through options without opening
+        onChange && onChange([selected])
+      }
     }
 
     // SUBMIT WITH ENTER
@@ -379,8 +386,6 @@ const Dropdown = ({
 
       // open
       if (!isOpen) return setIsOpen(true)
-
-      const selected = options[activeIndex][valueField]
 
       if (multiSelect) {
         handleChange(undefined, selected)
