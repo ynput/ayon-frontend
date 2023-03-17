@@ -120,13 +120,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
 
     const disableMessage = 'Names Can Not Be The Same...'
     const initialForm = {
-      _status: {
-        changeKey: '_status',
-        label: 'Status',
-        field: 'status',
-        placeholder: `Multiple (${statusValues.isMultiple && statusValues.isMultiple.join(', ')})`,
-        ...statusValues,
-      },
       _name: {
         changeKey: '_name',
         label: 'Name',
@@ -139,6 +132,13 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
         },
         ...nameValues,
         value: singleSelect ? nameValues.value : disableMessage,
+      },
+      _status: {
+        changeKey: '_status',
+        label: 'Status',
+        field: 'status',
+        placeholder: `Multiple (${statusValues.isMultiple && statusValues.isMultiple.join(', ')})`,
+        ...statusValues,
       },
       _assignees: {
         changeKey: '_assignees',
@@ -544,7 +544,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                 } else if (field === 'status') {
                   input = (
                     <StatusSelect
-                      value={!isMultiple && value}
+                      value={isMultiple || value}
                       multipleSelected={nodeIds.length}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       maxWidth={'100%'}

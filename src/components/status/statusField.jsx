@@ -29,7 +29,7 @@ const StatusStyled = styled.div`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding: 0 8px;
+  padding: 0 4px;
 
   /* ICON */
   .material-symbols-outlined {
@@ -145,7 +145,7 @@ const StatusField = ({
       size={size}
       placeholder={!value && placeholder ? placeholder : ''}
     >
-      <span className="material-symbols-outlined">{icon}</span>
+      {icon && <span className="material-symbols-outlined">{icon}</span>}
       {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
     </StatusStyled>
   )

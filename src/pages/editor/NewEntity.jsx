@@ -112,6 +112,7 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
           value={[entityData.type]}
           onChange={(v) => handleChange(v, 'type')}
           options={typeOptions}
+          style={{ width: 160 }}
         />
       </ContentStyled>
     </Dialog>

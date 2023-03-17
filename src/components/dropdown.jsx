@@ -131,7 +131,7 @@ const OptionsStyled = styled.ul`
 
   margin: 0px;
   /* same border used as primereact dropdowns */
-  outline: 1px solid #383838;
+  outline: 1px solid var(--color-grey-03);
   background-color: var(--color-grey-00);
   z-index: 20;
   border-radius: ${({ message }) =>
@@ -343,7 +343,7 @@ const Dropdown = ({
   if (search && searchForm) {
     // filter out search matches
     options = options.filter((o) =>
-      searchFields.some((key) => o[key]?.toLowerCase()?.includes(searchForm)),
+      searchFields.some((key) => o[key]?.toLowerCase()?.includes(searchForm.toLowerCase())),
     )
   }
 
@@ -441,15 +441,19 @@ const Dropdown = ({
       }
     }
 
-    const selected = options[activeIndex || 0][dataKey]
+    let selectedValue
+
+    if (options[activeIndex] && options[activeIndex][dataKey]) {
+      selectedValue = options[activeIndex][dataKey]
+    }
 
     if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
       e.preventDefault()
       if (isOpen) {
         if (!usingKeyboard) setUsingKeyboard(true)
-      } else if (!multiSelect) {
+      } else if (!multiSelect && selectedValue) {
         // flick through options without opening
-        onChange && onChange([selected])
+        onChange && onChange([selectedValue])
       }
     }
 
@@ -462,9 +466,19 @@ const Dropdown = ({
       if (!isOpen) return setIsOpen(true)
 
       if (multiSelect) {
-        handleChange(undefined, selected)
+        handleChange(undefined, selectedValue)
+
+        // nothing selected and only one option
+        if (options.length === 1) {
+          handleClose(undefined, [...selected, options[0][dataKey]])
+        }
       } else {
-        handleClose(undefined, [selected])
+        // only one option and no keyboard
+        if (options.length === 1) {
+          selectedValue = options[0][dataKey]
+        }
+
+        handleClose(undefined, [selectedValue])
         // focus back on button
         valueRef.current.focus()
       }

@@ -51,7 +51,7 @@ const StatusSelect = ({
       disabled={disabled}
       valueTemplate={() => (
         <StatusField
-          value={value}
+          value={Array.isArray(value) ? `Multiple ( ${value.join(', ')} )` : value}
           align={align}
           size={size}
           style={{ maxWidth, ...style }}
