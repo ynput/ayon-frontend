@@ -3,6 +3,8 @@ import { useEffect } from 'react'
 import { useState } from 'react'
 import { useRef } from 'react'
 import styled, { css, keyframes } from 'styled-components'
+import { InputText } from '@ynput/ayon-react-components'
+import { isEqual } from 'lodash'
 
 // background acts as a blocker
 const BackdropStyled = styled.div`
@@ -69,8 +71,10 @@ const ContainerStyled = styled.div`
     `}
 `
 
-const OptionsStyled = styled.div`
+const OptionsStyled = styled.ul`
   width: auto;
+  list-style-type: none;
+  padding: unset;
 
   display: flex;
   flex-direction: column;
@@ -88,28 +92,76 @@ const OptionsStyled = styled.div`
 
   /* scrolling */
   max-height: 300px;
-  overflow-y: auto;
+  overflow-y: scroll;
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+`
+
+const SearchStyled = styled.form`
+  /* put to top of list */
+  order: -2;
+  position: relative;
+  height: 29px;
+  width: 100%;
+
+  /* search icon */
+  span {
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    translate: 0 -50%;
+    z-index: 10;
+  }
+
+  /* input */
+  input {
+    width: calc(100% + 2px);
+    position: relative;
+    left: -1px;
+    height: 100%;
+    text-indent: 24px;
+
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+
+    &:focus {
+      outline: unset;
+    }
+  }
 `
 
 const Dropdown = ({
-  value,
-  options,
+  value = [],
+  valueItem,
+  valueField = 'value',
+  options = [],
+  optionsItem,
   style,
+  searchFields = ['value'],
   message,
   onClose,
+  onChange,
   onOpen,
   widthExpand,
   align = 'left',
   multiSelect,
+  search,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
+  // Style states
   const [pos, setPos] = useState({ x: null, y: null })
   const [startAnimation, setStartAnimation] = useState(false)
   const [minWidth, setMinWidth] = useState()
+  // search
+  const [searchForm, setSearchForm] = useState('')
+  // selection
+  const [selected, setSelected] = useState([])
 
   const valueRef = useRef(null)
   const optionsRef = useRef(null)
 
+  // sets the correct position and height
   useEffect(() => {
     if (isOpen && valueRef.current && optionsRef.current) {
       const valueRec = valueRef.current.getBoundingClientRect()
@@ -142,6 +194,66 @@ const Dropdown = ({
     }
   }, [isOpen, valueRef, optionsRef, setMinWidth, setStartAnimation, setPos])
 
+  useEffect(() => {
+    setSelected(value)
+  }, [value, setSelected])
+
+  if (search && searchForm) {
+    // filter out search matches
+    options = options.filter((o) =>
+      searchFields.some((key) => o[key]?.toLowerCase()?.includes(searchForm)),
+    )
+  }
+
+  // HANDLERS
+
+  const handleClose = (e, changeValue) => {
+    // changeValue is used on single select
+    changeValue = changeValue || selected
+
+    e?.stopPropagation()
+
+    // close dropdown
+    setIsOpen(false)
+
+    // callback
+    onClose && onClose()
+
+    // reset search
+    setSearchForm('')
+
+    // check for difs
+    if (isEqual(changeValue, value)) return
+    // commit changes
+    onChange && onChange(changeValue)
+    //   reset selected
+    setSelected([])
+  }
+
+  const handleChange = (e, value) => {
+    e?.stopPropagation()
+
+    let newSelected = [...selected]
+
+    if (!multiSelect) {
+      // replace current value with new one
+      newSelected = [value]
+    } else {
+      // add/remove from selected
+      if (newSelected.includes(value)) {
+        // remove
+        newSelected.splice(newSelected.indexOf(value), 1)
+      } else {
+        // add
+        newSelected.push(value)
+      }
+    }
+    // update state
+    setSelected(newSelected)
+    // if not multi, close
+    if (!multiSelect) handleClose(undefined, newSelected)
+  }
+
   const handleOpen = (e) => {
     e.stopPropagation()
     setIsOpen(true)
@@ -149,30 +261,56 @@ const Dropdown = ({
     onOpen && onOpen()
   }
 
-  const handleClose = (e) => {
-    e.stopPropagation()
-    setIsOpen(false)
-    onClose && onClose()
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+
+    // if we started with none and none select, pick to one
+    if (!value.length && !selected.length) {
+      if (options.length) {
+        handleClose(undefined, [options[0][valueField]])
+      }
+    } else {
+      // close normally
+      handleClose()
+    }
   }
 
   return (
     <>
       {value && (
         <div ref={valueRef} onClick={handleOpen}>
-          {value}
+          {valueItem()}
         </div>
       )}
       {isOpen && <BackdropStyled onClick={handleClose} />}
       {isOpen && options && (
         <ContainerStyled
-          onClick={!multiSelect ? handleClose : undefined}
           style={{ left: pos?.x, top: pos?.y, ...style }}
           message={message}
           isOpen={true}
           startAnimation={startAnimation}
         >
+          {search && (
+            <SearchStyled onSubmit={handleSearchSubmit}>
+              <span className="material-symbols-outlined">search</span>
+              <InputText
+                label="search"
+                value={searchForm}
+                onChange={(e) => setSearchForm(e.target.value)}
+                autoFocus
+              />
+            </SearchStyled>
+          )}
           <OptionsStyled isOpen={isOpen} message={message} ref={optionsRef} style={{ minWidth }}>
-            {options}
+            {options.map((option) => (
+              <li
+                key={option[valueField]}
+                onClick={(e) => handleChange(e, option[valueField])}
+                style={{ order: value.includes(option.name) ? -1 : 0 }}
+              >
+                {optionsItem(option, value.includes(option.name), selected.includes(option.name))}
+              </li>
+            ))}
           </OptionsStyled>
         </ContainerStyled>
       )}
@@ -185,10 +323,14 @@ Dropdown.propTypes = {
   style: PropTypes.object,
   onOpen: PropTypes.func,
   onClose: PropTypes.func,
-  value: PropTypes.node.isRequired,
-  options: PropTypes.node.isRequired,
+  value: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  valueItem: PropTypes.func,
+  valueField: PropTypes.string,
+  options: PropTypes.array.isRequired,
+  optionsItem: PropTypes.func,
   align: PropTypes.oneOf(['left', 'right']),
   multiSelect: PropTypes.bool,
+  search: PropTypes.bool,
 }
 
 export default Dropdown

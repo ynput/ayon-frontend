@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import Dropdown from '../dropdown'
 import StatusField from './statusField'
@@ -18,27 +18,16 @@ const StatusSelect = ({
   disableMessage,
   widthExpand,
 }) => {
-  const [changedValue, setChangedValue] = useState(null)
-
   const statusesObject = useSelector((state) => state.project.statuses)
   const statusesOrder = useSelector((state) => state.project.statusesOrder)
   // ordered array of statuses objects
   const statuses = statusesOrder.map((status) => statusesObject[status])
 
-  useEffect(() => {
-    if (changedValue && value === changedValue) {
-      setChangedValue(null)
-    }
-  }, [value, changedValue, setChangedValue])
-
   if (!value && !placeholder) return null
 
   const handleChange = (status) => {
-    if (status === value) return
-    onChange(status)
-
-    // creates a highlighted effect of new
-    setChangedValue(status)
+    if (status[0] === value || !status?.length) return
+    onChange(status[0])
   }
 
   // calculate max width based off longest status name
@@ -56,30 +45,31 @@ const StatusSelect = ({
       widthExpand={widthExpand}
       onOpen={onOpen}
       align={align}
-      value={
+      value={[value]}
+      onChange={handleChange}
+      valueItem={() => (
         <StatusField
-          value={changedValue || value}
+          value={value}
           align={align}
-          isChanging={!!changedValue}
           size={size}
           style={{ maxWidth, ...style }}
           height={height}
           placeholder={placeholder}
           statuses={statusesObject}
         />
-      }
-      options={statuses.map((status) => (
+      )}
+      valueField={'name'}
+      options={statuses}
+      optionsItem={(status, isActive) => (
         <StatusField
           value={status.name}
-          key={status.name}
           isSelecting
-          isActive={value === status.name}
-          onClick={() => handleChange(status.name)}
+          isActive={isActive}
           align={align}
           height={height}
           statuses={statusesObject}
         />
-      ))}
+      )}
     />
   )
 }

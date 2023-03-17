@@ -80,14 +80,10 @@ const StatusStyled = styled.div`
     ${hoverStyle}
   }
 
-  /* keeps the active field at the top */
-  order: 2;
   ${({ isActive, isSelecting }) =>
     isActive &&
     isSelecting &&
     css`
-      /* hover always on at top */
-      order: 1;
       ${invertHoverStyle}
 
       :hover {
@@ -132,9 +128,13 @@ const StatusField = ({
   placeholder,
   statuses = {},
 }) => {
-  const { shortName, color, icon } = statuses[value] || {}
+  const { shortName, color, icon } = statuses[value] || {
+    icon: 'help',
+    shortName: 'NONE',
+    color: 'red',
+  }
 
-  let shownValue = value || placeholder || ''
+  let shownValue = value || placeholder || 'None'
 
   return (
     <StatusStyled

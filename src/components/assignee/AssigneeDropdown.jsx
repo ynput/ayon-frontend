@@ -9,11 +9,6 @@ const RowStyled = styled.span`
   gap: 4px;
   padding: 4px;
 
-  ${({ isActive }) =>
-    isActive &&
-    css`
-      order: -1;
-    `}
   ${({ isSelected }) =>
     isSelected &&
     css`
@@ -21,9 +16,9 @@ const RowStyled = styled.span`
     `}
 `
 
-const AssigneeDropdown = ({ name, avatarUrl, fullName, isSelected, isActive, onClick }) => {
+const AssigneeDropdown = ({ name, avatarUrl, fullName, isSelected, onClick }) => {
   return (
-    <RowStyled {...{ isSelected, isActive, onClick }}>
+    <RowStyled {...{ isSelected, onClick }}>
       <UserImage src={avatarUrl} fullName={fullName || name} size={21} />
       {fullName || name}
     </RowStyled>
@@ -36,7 +31,7 @@ AssigneeDropdown.propTypes = {
   avatarUrl: PropTypes.string,
   isSelected: PropTypes.bool,
   isActive: PropTypes.bool,
-  onClick: PropTypes.func.isRequired,
+  onClick: PropTypes.func,
 }
 
 export default AssigneeDropdown
