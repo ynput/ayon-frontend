@@ -19,14 +19,6 @@ const FieldStyled = styled.div`
     top: 1px;
   }
 
-  &:not(:hover) {
-    transition: background-color 0.1s;
-  }
-
-  &:hover {
-    background-color: var(--color-grey-02);
-  }
-
   ${({ disabled }) =>
     disabled &&
     css`

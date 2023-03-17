@@ -77,7 +77,7 @@ const StatusStyled = styled.div`
 
   /* sets for hover and when active whilst open (top one) */
   :hover {
-    ${hoverStyle}
+    /* ${hoverStyle} */
   }
 
   ${({ isActive, isSelecting }) =>

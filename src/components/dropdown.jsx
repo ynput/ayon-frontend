@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRef } from 'react'
 import styled, { css, keyframes } from 'styled-components'
 import { InputText } from '@ynput/ayon-react-components'
-import { isEqual } from 'lodash'
+import { isEqual, isNull } from 'lodash'
+import { useMemo } from 'react'
 
 // background acts as a blocker
 const BackdropStyled = styled.div`
@@ -25,7 +26,38 @@ const dropdownMenuAnimation = keyframes`
 }
 `
 
-const ContainerStyled = styled.div`
+const ButtonStyled = styled.button`
+  /* remove defaults */
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  &:not(:focus) {
+    outline: inherit;
+  }
+
+  &:hover {
+    background-color: var(--color-grey-02);
+  }
+
+  border-radius: var(--border-radius);
+`
+
+const DropdownStyled = styled.div`
+  position: relative;
+  height: ${({ height }) => `${height}px`};
+  /* width: 100%; */
+  display: inline-block;
+
+  & > * {
+    width: 100%;
+  }
+`
+
+const ContainerStyled = styled.form`
+  width: 100%;
   position: relative;
   height: ${({ height }) => `${height}px`};
   width: auto;
@@ -99,7 +131,30 @@ const OptionsStyled = styled.ul`
   }
 `
 
-const SearchStyled = styled.form`
+const ListItemStyled = styled.li`
+  ${({ usingKeyboard }) =>
+    !usingKeyboard &&
+    css`
+      &:hover {
+        background-color: var(--color-grey-02);
+      }
+    `}
+
+  /* focused */
+  outline-offset: -1px;
+  ${({ focused }) =>
+    focused &&
+    css`
+      background-color: var(--color-grey-02);
+
+      & > * {
+        outline: solid #93cbf9 1px;
+        outline-offset: -1px;
+      }
+    `}
+`
+
+const SearchStyled = styled.div`
   /* put to top of list */
   order: -2;
   position: relative;
@@ -157,10 +212,15 @@ const Dropdown = ({
   const [searchForm, setSearchForm] = useState('')
   // selection
   const [selected, setSelected] = useState([])
+  // keyboard states
+  const [activeIndex, setActiveIndex] = useState(null)
+  const [usingKeyboard, setUsingKeyboard] = useState(false)
 
+  // REFS
   const valueRef = useRef(null)
   const optionsRef = useRef(null)
 
+  // USE EFFECTS
   // sets the correct position and height
   useEffect(() => {
     if (isOpen && valueRef.current && optionsRef.current) {
@@ -194,9 +254,18 @@ const Dropdown = ({
     }
   }, [isOpen, valueRef, optionsRef, setMinWidth, setStartAnimation, setPos])
 
+  // set initial selected from value
   useEffect(() => {
     setSelected(value)
   }, [value, setSelected])
+
+  // keyboard support
+  useEffect(() => {
+    // focus element
+    if (usingKeyboard) {
+      optionsRef.current?.childNodes[activeIndex]?.scrollIntoView(false)
+    }
+  }, [activeIndex, options, usingKeyboard, optionsRef])
 
   if (search && searchForm) {
     // filter out search matches
@@ -204,6 +273,12 @@ const Dropdown = ({
       searchFields.some((key) => o[key]?.toLowerCase()?.includes(searchForm)),
     )
   }
+
+  // reorder options to put active at the top
+  options = useMemo(
+    () => [...options].sort((a, b) => value.indexOf(b[valueField]) - value.indexOf(a[valueField])),
+    [value, options],
+  )
 
   // HANDLERS
 
@@ -215,6 +290,9 @@ const Dropdown = ({
 
     // close dropdown
     setIsOpen(false)
+
+    // reset keyboard
+    setActiveIndex(null)
 
     // callback
     onClose && onClose()
@@ -263,24 +341,73 @@ const Dropdown = ({
 
   const handleSearchSubmit = (e) => {
     e.preventDefault()
+  }
 
-    // if we started with none and none select, pick to one
-    if (!value.length && !selected.length) {
-      if (options.length) {
-        handleClose(undefined, [options[0][valueField]])
+  // KEY BOARD CONTROL
+  const handleKeyPress = (e) => {
+    // NAVIGATE DOWN
+    if (e.code === 'ArrowDown') {
+      if (activeIndex === null || activeIndex >= options.length - 1) {
+        // got to top
+        setActiveIndex(0)
+      } else {
+        // go down one
+        setActiveIndex((isNull(activeIndex) ? -1 : activeIndex) + 1)
       }
-    } else {
-      // close normally
+    }
+
+    // NAVIGATE UP
+    if (e.code === 'ArrowUp') {
+      if (!activeIndex || activeIndex <= 0) {
+        // go to bottom
+        setActiveIndex(options.length - 1)
+      } else {
+        // go one up
+        setActiveIndex(activeIndex - 1)
+      }
+    }
+
+    if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
+      e.preventDefault()
+      if (!usingKeyboard) setUsingKeyboard(true)
+    }
+
+    // SUBMIT WITH ENTER
+    if (e.code === 'Enter') {
+      // prevent reloads
+      e.preventDefault()
+
+      // open
+      if (!isOpen) return setIsOpen(true)
+
+      const selected = options[activeIndex][valueField]
+
+      if (multiSelect) {
+        handleChange(undefined, selected)
+      } else {
+        handleClose(undefined, [selected])
+      }
+    }
+
+    // CLOSE WITH ESC or TAB
+    if (e.code === 'Escape' || (e.code === 'Tab' && isOpen)) {
+      if (e.code === 'Escape') {
+        // focus back on button
+        valueRef.current.focus()
+      }
       handleClose()
     }
   }
 
   return (
-    <>
+    <DropdownStyled
+      onKeyDown={handleKeyPress}
+      onMouseMove={() => usingKeyboard && setUsingKeyboard(false)}
+    >
       {value && (
-        <div ref={valueRef} onClick={handleOpen}>
+        <ButtonStyled ref={valueRef} onClick={handleOpen}>
           {valueItem()}
-        </div>
+        </ButtonStyled>
       )}
       {isOpen && <BackdropStyled onClick={handleClose} />}
       {isOpen && options && (
@@ -289,32 +416,35 @@ const Dropdown = ({
           message={message}
           isOpen={true}
           startAnimation={startAnimation}
+          onSubmit={handleSearchSubmit}
         >
           {search && (
-            <SearchStyled onSubmit={handleSearchSubmit}>
+            <SearchStyled>
               <span className="material-symbols-outlined">search</span>
               <InputText
                 label="search"
                 value={searchForm}
                 onChange={(e) => setSearchForm(e.target.value)}
                 autoFocus
+                tabindex={0}
               />
             </SearchStyled>
           )}
           <OptionsStyled isOpen={isOpen} message={message} ref={optionsRef} style={{ minWidth }}>
-            {options.map((option) => (
-              <li
+            {options.map((option, i) => (
+              <ListItemStyled
                 key={option[valueField]}
                 onClick={(e) => handleChange(e, option[valueField])}
-                style={{ order: value.includes(option.name) ? -1 : 0 }}
+                focused={usingKeyboard && activeIndex === i}
+                usingKeyboard={usingKeyboard}
               >
                 {optionsItem(option, value.includes(option.name), selected.includes(option.name))}
-              </li>
+              </ListItemStyled>
             ))}
           </OptionsStyled>
         </ContainerStyled>
       )}
-    </>
+    </DropdownStyled>
   )
 }
 
