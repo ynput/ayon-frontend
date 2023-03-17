@@ -88,6 +88,7 @@ const TaskDetail = () => {
                 value={task.status}
                 align={'right'}
                 onChange={(v) => handleChange(v, 'status', task)}
+                widthExpand={false}
               />
             ),
           },

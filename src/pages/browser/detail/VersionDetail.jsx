@@ -139,6 +139,7 @@ const VersionDetail = () => {
                     value={versions[0].status}
                     align={'right'}
                     onChange={(v) => handleStatusChange(v, versions[0])}
+                    widthExpand={false}
                   />
                 ),
               },

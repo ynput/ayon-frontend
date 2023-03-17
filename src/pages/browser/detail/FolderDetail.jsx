@@ -89,6 +89,7 @@ const FolderDetail = () => {
                 value={folder.status}
                 align={'right'}
                 onChange={(v) => handleStatusChange(v, folder)}
+                widthExpand={false}
               />
             ),
           },

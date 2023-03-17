@@ -23,6 +23,7 @@ import { format } from 'date-fns'
 import StatusSelect from '/src/components/status/statusSelect'
 import AssigneeSelect from '../../components/assignee/AssigneeSelect'
 import TypeEditor from './TypeEditor'
+import DropdownExample from '/src/components/dropdownexample'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -479,6 +480,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
           </DetailHeader>
           <Panel style={{ overflowY: 'auto', height: '100%' }}>
             <FormLayout>
+              <DropdownExample />
               {Object.values(form).map((row, i) => {
                 let {
                   label,
@@ -555,7 +557,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       height={30}
                       placeholder={placeholder}
                       disableMessage
-                      widthExpand
                     />
                   )
                 } else if (field === 'assignees') {
@@ -567,7 +568,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       disabled={disabled}
                       emptyMessage={'None Assigned'}
                       emptyIcon={false}
-                      widthExpand
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       editor
                       style={{
