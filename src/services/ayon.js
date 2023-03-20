@@ -41,6 +41,7 @@ export const ayonApi = createApi({
     'hierarchy',
     'branch',
     'entity',
+    'login',
   ],
   endpoints: () => ({}),
 })
