@@ -1,43 +1,37 @@
 import axios from 'axios'
-
 import { useEffect, useState, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
-
 import { login } from '/src/features/user'
+import { ayonApi } from '../../services/ayon'
+import styled from 'styled-components'
+import AuthLink from './AuthLink'
+import constructOAuthToUrl from '/src/helpers/constructOAuthToUrl'
 
-import OAuth2ProviderIcon from '/src/components/oauthIcons'
-import { ayonApi } from '../services/ayon'
+const LoginFormStyled = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-const constructOAuth2Url = (url, clientId, redirectUri, scope) => {
-  const query = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    scope: scope,
-    response_type: 'code',
-  })
-  return `${url}?${query}`
-}
+  & > div {
+    width: 100%;
+  }
 
-const OAuth2Links = ({ options }) => {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        gap: 8,
-        fontSize: '1.8em',
-      }}
-    >
-      {options.map(({ name, url }) => (
-        <a href={url} key={name} title={name}>
-          <OAuth2ProviderIcon name={name} />
-        </a>
-      ))}
-    </div>
-  )
-}
+  button {
+    padding: 8px 12px;
+    height: 45px;
+    max-height: unset;
+
+    svg {
+      width: 24px;
+    }
+
+    span {
+      font-size: 24px !important;
+    }
+  }
+`
 
 const LoginPage = () => {
   const dispatch = useDispatch()
@@ -128,7 +122,7 @@ const LoginPage = () => {
         const redirectUri = `${window.location.origin}/login/${option.name}`
         result.push({
           name: option.name,
-          url: constructOAuth2Url(option.url, option.client_id, redirectUri, option.scope),
+          url: constructOAuthToUrl(option.url, option.client_id, redirectUri, option.scope),
         })
       }
       setOauthOptions(result)
@@ -139,29 +133,38 @@ const LoginPage = () => {
 
   return (
     <main className="center">
-      <h1>Ayon server</h1>
-      <Panel>
-        <InputText
-          ref={loginRef}
-          placeholder="Username"
-          name="username"
-          aria-label="Username"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={onLoginKeyDown}
-        />
-        <InputPassword
-          ref={passwordRef}
-          placeholder="Password"
-          name="password"
-          aria-label="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={onLoginKeyDown}
-        />
-        <Button label="Login" icon="login" onClick={doLogin} />
-      </Panel>
-      {oauthOptions && <OAuth2Links options={oauthOptions} />}
+      <LoginFormStyled>
+        <h1>Ayon server</h1>
+        <Panel>
+          <InputText
+            ref={loginRef}
+            placeholder="Username"
+            name="username"
+            aria-label="Username"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={onLoginKeyDown}
+          />
+          <InputPassword
+            ref={passwordRef}
+            placeholder="Password"
+            name="password"
+            aria-label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={onLoginKeyDown}
+          />
+          <Button label={<strong>Login</strong>} icon="login" onClick={doLogin} />
+        </Panel>
+        <h2>or</h2>
+        {oauthOptions && (
+          <Panel>
+            {oauthOptions.map(({ name, url }) => (
+              <AuthLink key={name} name={name} url={url} />
+            ))}
+          </Panel>
+        )}
+      </LoginFormStyled>
     </main>
   )
 }

@@ -3,8 +3,8 @@
 const DiscordIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="48"
-    height="48"
+    width="16"
+    height="16"
     fill="currentColor"
     className="oauth-icon"
     viewBox="0 0 16 16"

@@ -10,7 +10,7 @@ import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
 import { toast } from 'react-toastify'
 
 import Header from './containers/header'
-import LoginPage from './pages/login'
+import LoginPage from './pages/LoginPage/LoginPage'
 import ErrorPage from './pages/error'
 
 const ProjectPage = lazy(() => import('./pages/project'))
