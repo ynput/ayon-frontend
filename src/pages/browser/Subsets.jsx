@@ -175,9 +175,9 @@ const Subsets = () => {
                 : 'full'
             }
             onChange={(v) => handleStatusChange(v, node.data.id)}
-            maxWidth="100%"
             multipleSelected={focusedSubsets.length}
-            onClick={() => handleStatusOpen(node.data.id)}
+            onOpen={() => handleStatusOpen(node.data.id)}
+            style={{ maxWidth: '100%' }}
           />
         )
       },

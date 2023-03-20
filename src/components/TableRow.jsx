@@ -15,6 +15,7 @@ const AttributeTableRow = styled.div`
   &:first-child {
     border-top: none !important;
   }
+
   span:first-child {
     white-space: nowrap;
   }

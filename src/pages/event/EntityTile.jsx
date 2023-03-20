@@ -6,6 +6,7 @@ import StatusField from '/src/components/status/statusField'
 import { useGetEventTileQuery } from '/src/services/entity/getEntity'
 import { useGetProjectQuery } from '../../services/project/getProject'
 import { formatDistance } from 'date-fns'
+import { useSelector } from 'react-redux'
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -41,6 +42,7 @@ const PanelStyled = styled(Panel)`
 
 const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) => {
   const skip = !id || !type || !projectName
+  const statusesObject = useSelector((state) => state.project.statuses)
 
   // get project for status anatomy
   // it will only be used if the projectName has changed or if the project is not loaded
@@ -58,7 +60,12 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
 
   return (
     <PanelStyled onClick={onClick} disableHover={disableHover}>
-      <StatusField value={status} size="icon" style={{ order: 0, width: 'unset' }} />
+      <StatusField
+        value={status}
+        size="icon"
+        style={{ order: 0, width: 'unset' }}
+        statuses={statusesObject}
+      />
       <header style={{ flex: 1 }}>
         <strong>
           {type} - {name}

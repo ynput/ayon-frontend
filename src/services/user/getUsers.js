@@ -49,6 +49,35 @@ const USERS_QUERY = `
   }
 `
 
+const ASSIGNEES_BY_NAME_QUERY = `
+query Assignees($names: [String!]!){
+  users(names: $names) {
+  edges {
+    node {
+      name
+      attrib {
+        avatarUrl
+        fullName
+      }
+    }
+  }
+}
+}`
+const ASSIGNEES_QUERY = `
+query Assignees {
+  users {
+  edges {
+    node {
+      name
+      attrib {
+        avatarUrl
+        fullName
+      }
+    }
+  }
+}
+}`
+
 const buildUsersQuery = (QUERY) => {
   let f_attribs = ''
   for (const attrib of ayonClient.settings.attributes) {
@@ -110,8 +139,39 @@ const getUsers = ayonApi.injectEndpoints({
           ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
           : ['user'],
     }),
+    getUsersAssignee: build.query({
+      query: ({ names }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: names ? ASSIGNEES_BY_NAME_QUERY : ASSIGNEES_QUERY,
+          variables: { names },
+        },
+      }),
+      transformResponse: (res) =>
+        res?.data?.users.edges.flatMap((u) => {
+          if (!u.node) return []
+
+          const n = u.node
+
+          return {
+            name: n.name,
+            avatarUrl: n.attrib?.avatarUrl,
+            fullName: n.attrib?.fullName,
+          }
+        }),
+      providesTags: (res) =>
+        res?.data?.users
+          ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
+          : ['user'],
+    }),
   }),
 })
 
-export const { useGetUsersQuery, useGetUsersListQuery, useGetUserByNameQuery, useGetUserQuery } =
-  getUsers
+export const {
+  useGetUsersQuery,
+  useGetUsersListQuery,
+  useGetUserByNameQuery,
+  useGetUserQuery,
+  useGetUsersAssigneeQuery,
+} = getUsers

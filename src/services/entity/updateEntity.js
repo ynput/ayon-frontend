@@ -1,4 +1,5 @@
 import { ayonApi, buildOperations } from '../ayon'
+import { updateNodes } from '/src/features/editor'
 
 const updateEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -10,7 +11,7 @@ const updateEntity = ayonApi.injectEndpoints({
           operations: buildOperations(ids || patches.map((p) => p.id), type, data),
         },
       }),
-      async onQueryStarted({ projectName, type, patches }, { dispatch, queryFulfilled }) {
+      async onQueryStarted({ projectName, type, patches, data }, { dispatch, queryFulfilled }) {
         if (!patches) return
 
         const patchResult = dispatch(
@@ -25,14 +26,19 @@ const updateEntity = ayonApi.injectEndpoints({
             },
           ),
         )
+
+        // update editor
+        const editorPatch = dispatch(
+          updateNodes({ updated: patches.map((p) => ({ id: p.id, ...data })) }),
+        )
+
         try {
           await queryFulfilled
         } catch {
           patchResult.undo()
+          editorPatch.undo()
         }
       },
-      invalidatesTags: (result, error, { type, ids, patches }) =>
-        ids ? ids.flatMap((id) => [{ type, id }]) : patches.flatMap(({ id }) => [{ type, id }]),
     }),
   }),
 })

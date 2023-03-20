@@ -4,26 +4,34 @@ import styled from 'styled-components'
 import UserImage from './UserImage'
 
 const StackedStyled = styled.div`
+  position: relative;
   display: flex;
   z-index: 10;
   & > * + * {
-    margin-left: ${({ length }) => `${Math.max(-20, -length * 1.5 - 8)}px`};
+    margin-left: ${({ gap }) => `${gap}px`};
   }
 `
 
-const UserImagesStacked = ({ users = [] }) => {
+const UserImagesStacked = ({ users = [], size = 30, gap = -1, max = 5 }) => {
+  const length = users.length
   // limit to 5 users
-  users = users.slice(0, 5)
+  users = users.slice(0, max)
+
+  // show extras
+  if (length > max) {
+    users.push({ fullName: `+ ${length - max > 9 ? '+' : length - max}` })
+  }
 
   return (
-    <StackedStyled length={users.length}>
+    <StackedStyled length={users.length} gap={(gap * 30) / 2}>
       {users.map((user, i) => (
         <UserImage
-          src={user.src}
+          src={user.avatarUrl}
           key={i}
-          fullName={user.fullName}
+          fullName={user.fullName || ''}
           style={{ zIndex: -i }}
           highlight={user.self}
+          size={size}
         />
       ))}
     </StackedStyled>
@@ -33,10 +41,13 @@ const UserImagesStacked = ({ users = [] }) => {
 UserImagesStacked.propTypes = {
   users: PropTypes.arrayOf(
     PropTypes.shape({
-      src: PropTypes.string,
+      avatarUrl: PropTypes.string,
       fullName: PropTypes.string.isRequired,
     }).isRequired,
   ).isRequired,
+  size: PropTypes.number,
+  gap: PropTypes.number,
+  max: PropTypes.number,
 }
 
 export default UserImagesStacked

@@ -31,6 +31,10 @@ const StackedStyled = styled.div`
       `}
   }
 
+  img {
+    object-fit: cover;
+  }
+
   & > * + * {
     margin-left: ${({ length }) => `${Math.max(-20, -length * 1.5 - 8)}px`};
   }

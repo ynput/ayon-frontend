@@ -1,7 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { useSelector } from 'react-redux'
 
 const hoverStyle = css`
   background-color: var(--color-grey-02);
@@ -30,6 +29,7 @@ const StatusStyled = styled.div`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  padding: 0 4px;
 
   /* ICON */
   .material-symbols-outlined {
@@ -69,23 +69,21 @@ const StatusStyled = styled.div`
     ${({ isSelecting }) =>
     !isSelecting &&
     css`
-      transition: background-color 0.3s, color 0.3s;
+      &:not(:hover) {
+        transition: background-color 0.1s, color 0.3s;
+      }
     `}
 
 
   /* sets for hover and when active whilst open (top one) */
   :hover {
-    ${hoverStyle}
+    /* ${hoverStyle} */
   }
 
-  /* keeps the active field at the top */
-  order: 2;
   ${({ isActive, isSelecting }) =>
     isActive &&
     isSelecting &&
     css`
-      /* hover always on at top */
-      order: 1;
       ${invertHoverStyle}
 
       :hover {
@@ -128,12 +126,11 @@ const StatusField = ({
   style,
   height,
   placeholder,
+  statuses = {},
 }) => {
-  // TODO: move to context to a higher level component?
-  const statuses = useSelector((state) => state.project.statuses)
   const { shortName, color, icon } = statuses[value] || {}
 
-  let shownValue = value || placeholder || ''
+  let shownValue = value || placeholder || 'None'
 
   return (
     <StatusStyled
@@ -148,7 +145,7 @@ const StatusField = ({
       size={size}
       placeholder={!value && placeholder ? placeholder : ''}
     >
-      <span className="material-symbols-outlined">{icon}</span>
+      {icon && <span className="material-symbols-outlined">{icon}</span>}
       {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
     </StatusStyled>
   )
@@ -165,6 +162,7 @@ StatusField.propTypes = {
   style: PropTypes.object,
   anatomy: PropTypes.object,
   placeholder: PropTypes.string,
+  statuses: PropTypes.object,
 }
 
 export default StatusField

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import Dropdown from '../dropdown'
 import StatusField from './statusField'
@@ -11,33 +11,24 @@ const StatusSelect = ({
   height,
   align,
   onChange,
+  onOpen,
   multipleSelected,
-  onClick,
   style,
   placeholder,
   disableMessage,
+  disabled,
+  widthExpand,
 }) => {
-  const [changedValue, setChangedValue] = useState(null)
-
   const statusesObject = useSelector((state) => state.project.statuses)
   const statusesOrder = useSelector((state) => state.project.statusesOrder)
   // ordered array of statuses objects
   const statuses = statusesOrder.map((status) => statusesObject[status])
 
-  useEffect(() => {
-    if (changedValue && value === changedValue) {
-      setChangedValue(null)
-    }
-  }, [value, changedValue, setChangedValue])
-
   if (!value && !placeholder) return null
 
   const handleChange = (status) => {
-    if (status === value) return
-    onChange(status)
-
-    // creates a highlighted effect of new
-    setChangedValue(status)
+    if (status[0] === value || !status?.length) return
+    onChange(status[0])
   }
 
   // calculate max width based off longest status name
@@ -45,45 +36,43 @@ const StatusSelect = ({
   const gap = 5
   const iconWidth = 20
   const longestStatus = [...statuses].sort((a, b) => b.name.length - a.name.length)[0].name.length
-  const calcMaxWidth = longestStatus * charWidth + gap + iconWidth
+  const calcMaxWidth = longestStatus * charWidth + gap + iconWidth + 16
 
   maxWidth = maxWidth || calcMaxWidth
 
   return (
     <Dropdown
-      value={value}
-      options={statuses}
-      style={{ maxWidth, height }}
       message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
-      onOpen={onClick}
-    >
-      {(props) =>
-        props.isOpen ? (
-          statuses.map((status) => (
-            <StatusField
-              value={status.name}
-              key={status.name}
-              size={size}
-              isSelecting
-              isActive={props.selected === status.name}
-              onClick={() => handleChange(status.name)}
-              align={align}
-              height={height}
-            />
-          ))
-        ) : (
-          <StatusField
-            value={changedValue || value}
-            align={align}
-            isChanging={!!changedValue}
-            size={size}
-            style={style}
-            height={height}
-            placeholder={placeholder}
-          />
-        )
-      }
-    </Dropdown>
+      widthExpand={widthExpand}
+      onOpen={onOpen}
+      align={align}
+      value={[value]}
+      onChange={handleChange}
+      disabled={disabled}
+      valueTemplate={() => (
+        <StatusField
+          value={Array.isArray(value) ? `Multiple ( ${value.join(', ')} )` : value}
+          align={align}
+          size={size}
+          style={{ maxWidth, ...style }}
+          height={height}
+          placeholder={placeholder}
+          statuses={statusesObject}
+        />
+      )}
+      dataKey={'name'}
+      options={statuses}
+      itemTemplate={(status, isActive) => (
+        <StatusField
+          value={status.name}
+          isSelecting
+          isActive={isActive}
+          align={align}
+          height={height}
+          statuses={statusesObject}
+        />
+      )}
+    />
   )
 }
 

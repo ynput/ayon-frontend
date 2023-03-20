@@ -19,6 +19,8 @@ const updateEditor = ayonApi.injectEndpoints({
       invalidatesTags: (result, error, { updates }) => [
         ...updates.map((op) => [{ type: 'branch', id: op.id }]),
         'hierarchy',
+        'folder',
+        'task',
       ],
     }),
   }),

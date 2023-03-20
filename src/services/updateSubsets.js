@@ -31,9 +31,6 @@ const updateSubsets = ayonApi.injectEndpoints({
           patchResult.undo()
         }
       },
-      invalidatesTags: (result, error, { patches }) => [
-        ...patches.map(({ id }) => ({ type: 'subset', id })),
-      ],
     }),
   }),
 })

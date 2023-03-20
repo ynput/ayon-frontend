@@ -1,53 +1,8 @@
 import { InputText, InputNumber } from '@ynput/ayon-react-components'
-import { Dropdown } from 'primereact/dropdown'
+import { Dropdown as DropdownPrime } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 import ayonClient from '/src/ayon'
-
-//eslint-disable-next-line no-unused-vars
-const TypeEditor = ({ value, options, onChange, style, disabled, placeholder }) => {
-  const optionsTypes = Object.values(options).map((t) => ({
-    name: t?.name,
-    label: t?.name,
-    icon: t?.icon,
-  }))
-
-  const itemTemplate = (option, props) => {
-    if (option) {
-      return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-        >
-          <span className={`material-symbols-outlined`} style={{ marginRight: '0.6rem' }}>
-            {option?.icon}
-          </span>
-          <span>{option.label}</span>
-        </div>
-      )
-    }
-
-    return <span>{props.placeholder}</span>
-  }
-
-  return (
-    <Dropdown
-      options={optionsTypes}
-      optionLabel="label"
-      optionValue="name"
-      dataKey="name"
-      value={value || '_'}
-      emptyMessage="Folder"
-      itemTemplate={itemTemplate}
-      onChange={(e) => onChange(e.value)}
-      style={style}
-      disabled={disabled}
-      placeholder={placeholder}
-    />
-  )
-}
+// import Dropdown from '/src/components/dropdown'
 
 //eslint-disable-next-line no-unused-vars
 const stringEditor = (options, callback, value, settings) => {
@@ -67,7 +22,7 @@ const enumEditor = (options, callback, value, settings) => {
 
   if (settings.type === 'string') {
     return (
-      <Dropdown
+      <DropdownPrime
         value={value || ''}
         options={enumData}
         optionLabel="label"
@@ -157,4 +112,4 @@ const floatEditor = (options, callback, value, settings) => {
   )
 }
 
-export { TypeEditor, stringEditor, integerEditor, floatEditor, enumEditor }
+export { stringEditor, integerEditor, floatEditor, enumEditor }

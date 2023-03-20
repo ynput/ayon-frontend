@@ -6,9 +6,9 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import { InputText, Button } from '@ynput/ayon-react-components'
 import { useRef } from 'react'
-import { TypeEditor } from './editors'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
+import TypeEditor from './TypeEditor'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -109,9 +109,10 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
           />
         </form>
         <TypeEditor
-          value={entityData.type}
+          value={[entityData.type]}
           onChange={(v) => handleChange(v, 'type')}
           options={typeOptions}
+          style={{ width: 160 }}
         />
       </ContentStyled>
     </Dialog>
