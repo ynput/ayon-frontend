@@ -13,9 +13,14 @@ const getAuth = ayonApi.injectEndpoints({
           url: constructOAuthToUrl(option.url, option.client_id, option.name, option.scope),
         })),
     }),
+    getInfo: build.query({
+      query: () => ({
+        url: '/api/info',
+      }),
+    }),
   }),
 })
 
 //
 
-export const { useGetOAuthOptionsQuery, useLazyLoginQuery } = getAuth
+export const { useGetOAuthOptionsQuery, useGetInfoQuery } = getAuth

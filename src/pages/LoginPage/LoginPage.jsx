@@ -7,15 +7,48 @@ import { login } from '/src/features/user'
 import { ayonApi } from '../../services/ayon'
 import styled from 'styled-components'
 import AuthLink from './AuthLink'
-import { useGetOAuthOptionsQuery } from '/src/services/auth/getAuth'
+import { useGetInfoQuery, useGetOAuthOptionsQuery } from '/src/services/auth/getAuth'
+import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
 
 const LoginFormStyled = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 64px;
+  position: relative;
+  background-color: var(--color-grey-00);
+  padding: 64px;
+  border-radius: 6px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
 
+  /* panel */
   & > div {
-    width: 100%;
+    align-items: center;
+    padding: 32px;
+    gap: 32px;
+    width: 350px;
+
+    p {
+      margin: 0;
+      text-align: center;
+
+      a {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  /* company */
+  & > div:first-child {
+    p {
+      text-align: left;
+    }
+  }
+
+  /* login */
+  & > div:last-child {
+    background-color: var(--color-grey-01);
   }
 
   button {
@@ -46,6 +79,35 @@ const LoginFormStyled = styled.div`
   }
 `
 
+const MethodsStyled = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px;
+  gap: 16px;
+  width: 100%;
+
+  a,
+  button {
+    width: 100%;
+  }
+`
+
+// AYON Logo
+const AyonStyled = styled.img`
+  height: 60px;
+`
+const LogoStyled = styled.img`
+  height: 60px;
+`
+
+const BGStyled = styled.img`
+  position: fixed;
+  z-index: -10;
+  inset: 0;
+  object-fit: cover;
+`
+
 const LoginPage = () => {
   const dispatch = useDispatch()
   const [name, setName] = useState('')
@@ -55,6 +117,9 @@ const LoginPage = () => {
 
   // Oauth Options
   const { data: oauthOptions = [], isLoading: isLoadingOptions } = useGetOAuthOptionsQuery()
+
+  const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery()
+  const { motd } = info
 
   // OAuth2 handler after redirect from provider
   useEffect(() => {
@@ -119,40 +184,48 @@ const LoginPage = () => {
     doLogin()
   }
 
-  if (isLoading || isLoadingOptions) return <LoaderShade />
+  if (isLoading || isLoadingOptions || isLoadingInfo) return <LoaderShade />
 
   return (
     <main className="center">
+      <BGStyled />
       <LoginFormStyled>
-        <h1>Ayon server</h1>
         <Panel>
-          <form onSubmit={handleSubmit}>
-            <InputText
-              autoFocus
-              placeholder="Username"
-              name="username"
-              aria-label="Username"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <InputPassword
-              placeholder="Password"
-              name="password"
-              aria-label="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <Button label={<strong>Login</strong>} icon="login" type="submit" />
-          </form>
+          <LogoStyled src="/ynput.svg" />
+          {motd && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <ReactMarkdown>{motd}</ReactMarkdown>
+            </div>
+          )}
         </Panel>
-        <h2>or</h2>
-        {oauthOptions && (
-          <Panel>
-            {oauthOptions.map(({ name, url }) => (
-              <AuthLink key={name} name={name} url={url} />
-            ))}
-          </Panel>
-        )}
+        <Panel>
+          <AyonStyled src="/AYON.svg" />
+          <MethodsStyled>
+            <form onSubmit={handleSubmit}>
+              <label id="username">Username</label>
+              <InputText
+                autoFocus
+                placeholder="Enter your username"
+                name="username"
+                aria-label="Username"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <label id="password">Password</label>
+              <InputPassword
+                placeholder="Enter password"
+                name="password"
+                aria-label="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button label={<strong>Login</strong>} type="submit" />
+            </form>
+            <span>or</span>
+            {oauthOptions &&
+              oauthOptions.map(({ name, url }) => <AuthLink key={name} name={name} url={url} />)}
+          </MethodsStyled>
+        </Panel>
       </LoginFormStyled>
     </main>
   )
