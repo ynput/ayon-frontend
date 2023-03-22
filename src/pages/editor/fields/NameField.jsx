@@ -7,6 +7,7 @@ const NameField = ({
   styled = true,
   tasks = {},
   folders = {},
+  families = {},
   style,
   iconStyle,
 }) => {
@@ -27,9 +28,11 @@ const NameField = ({
     icon = tasks[chobj?._taskType || node.taskType]?.icon || 'help_center'
     textStyle.fontStyle = 'italic'
     value = value || 'Unnamed task'
-  } else {
+  } else if (node.__entityType === 'folder') {
     icon = folders[chobj?._folderType || node.folderType]?.icon || 'help_center'
     value = value || 'Unnamed folder'
+  } else if (['subset', 'version'].includes(node.__entityType)) {
+    icon = families[node.family]?.icon || 'help_center'
   }
 
   return <CellWithIcon icon={icon} text={value} {...{ style, iconStyle, textStyle }} />

@@ -11,10 +11,6 @@ import {
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
-import DetailHeader from '/src/components/DetailHeader'
-import StackedThumbnails from './StackedThumbnails'
-import OverflowField from '/src/components/OverflowField'
-import NameField from './fields/NameField'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import getFieldInObject from '/src/helpers/getFieldInObject'
@@ -24,6 +20,7 @@ import StatusSelect from '/src/components/status/statusSelect'
 import AssigneeSelect from '../../components/assignee/AssigneeSelect'
 import TypeEditor from './TypeEditor'
 import Dropdown from '/src/components/dropdown'
+import EntityDetailsHeader from '../../components/Details/EntityDetailsHeader'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -48,7 +45,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
   const editorNodes = useSelector((state) => state.editor.nodes)
   const newNodes = useSelector((state) => state.editor.new)
   const changes = useSelector((state) => state.editor.changes)
-  const breadcrumbs = useSelector((state) => state.context.breadcrumbs) || {}
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
 
@@ -96,23 +92,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
 
   //   checking if any other types don't match the first one
   const hasMixedTypes = types.length > 1
-
-  //   header
-  const thumbnails = nodeIds.map((id) => ({ id, type: nodes[id]?.data?.__entityType }))
-  let subTitle = ''
-  if (singleSelect) {
-    subTitle = `/ ${breadcrumbs.parents?.join(' / ')} ${breadcrumbs.parents?.length ? ' / ' : ''} ${
-      breadcrumbs.folder
-    }`
-
-    if (singleSelect.__entityType === 'task') {
-      // add on task at end
-      subTitle += ' / '
-      subTitle += singleSelect.name
-    }
-  } else {
-    subTitle = nodeIds.map((id) => nodes[id]?.data?.name).join(', ')
-  }
 
   const createInitialForm = () => {
     const statusValues = getFieldValue('status', '_status')
@@ -459,25 +438,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
       </Panel>
       {!noSelection && (
         <>
-          <DetailHeader>
-            <StackedThumbnails thumbnails={thumbnails} />
-            <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
-              {singleSelect ? (
-                <NameField
-                  node={singleSelect}
-                  changes={changes}
-                  styled
-                  tasks={tasks}
-                  folders={folders}
-                  style={{ display: 'flex', gap: 4 }}
-                  iconStyle={{ fontSize: 19, marginRight: 0 }}
-                />
-              ) : (
-                <h2>Multiple Selected ({nodeIds.length})</h2>
-              )}
-              <OverflowField value={subTitle} style={{ left: -3 }} align="left" />
-            </div>
-          </DetailHeader>
+          <EntityDetailsHeader values={nodeIds.map((id) => nodes[id]?.data)} />
           <Panel style={{ overflowY: 'auto', height: '100%' }}>
             <FormLayout>
               {Object.values(form).map((row, i) => {
