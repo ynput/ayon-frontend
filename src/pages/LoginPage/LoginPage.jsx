@@ -108,7 +108,7 @@ const BGStyled = styled.img`
   object-fit: cover;
 `
 
-const LoginPage = () => {
+const LoginPage = ({ loading }) => {
   const dispatch = useDispatch()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -125,6 +125,7 @@ const LoginPage = () => {
   useEffect(() => {
     const provider = window.location.pathname.split('/')[2]
     const code = new URLSearchParams(window.location.search).get('code')
+
     if (code && provider) {
       setIsLoading(true)
 
@@ -184,7 +185,7 @@ const LoginPage = () => {
     doLogin()
   }
 
-  if (isLoading || isLoadingOptions || isLoadingInfo) return <LoaderShade />
+  if (isLoading || isLoadingOptions || isLoadingInfo || loading) return <LoaderShade />
 
   return (
     <main className="center">

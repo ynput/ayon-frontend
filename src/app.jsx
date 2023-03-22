@@ -73,10 +73,8 @@ const App = () => {
       })
   }, [dispatch, storedAccessToken])
 
-  if (loading) return <LoaderShade />
-
   // User is not logged in
-  if (!user.name) return <LoginPage />
+  if (!user.name) return <LoginPage loading={loading} />
 
   const isUser = user.data.isUser
 
