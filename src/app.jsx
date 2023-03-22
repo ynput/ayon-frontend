@@ -10,7 +10,7 @@ import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
 import { toast } from 'react-toastify'
 
 import Header from './containers/header'
-import LoginPage from './pages/login'
+import LoginPage from './pages/LoginPage/LoginPage'
 import ErrorPage from './pages/error'
 
 const ProjectPage = lazy(() => import('./pages/project'))
@@ -73,10 +73,8 @@ const App = () => {
       })
   }, [dispatch, storedAccessToken])
 
-  if (loading) return <LoaderShade />
-
   // User is not logged in
-  if (!user.name) return <LoginPage />
+  if (!user.name) return <LoginPage loading={loading} />
 
   const isUser = user.data.isUser
 

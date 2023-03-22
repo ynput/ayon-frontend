@@ -44,6 +44,10 @@ export default ({ mode }) => {
           target: SERVER_URL,
           changeOrigin: true,
         },
+        '/static': {
+          target: SERVER_URL,
+          changeOrigin: true,
+        },
       },
     },
     plugins: [react()],

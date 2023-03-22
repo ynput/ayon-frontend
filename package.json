@@ -26,7 +26,7 @@
     "primereact": "^8.7.3",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-markdown": "^8.0.3",
+    "react-markdown": "^8.0.6",
     "react-redux": "^8.0.2",
     "react-router": "^6.3.0",
     "react-router-dom": "^6.3.0",

@@ -555,6 +555,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                       height={30}
                       placeholder={placeholder}
                       disableMessage
+                      widthExpand
                     />
                   )
                 } else if (field === 'assignees') {
@@ -573,6 +574,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                         border: '1px solid var(--color-grey-03)',
                         ...disabledStyles,
                       }}
+                      widthExpand
                     />
                   )
                 } else {
