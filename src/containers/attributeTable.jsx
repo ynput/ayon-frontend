@@ -34,7 +34,14 @@ const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib
             value = format(new Date(value), 'dd/MM/yyyy')
           }
 
-          return <TableRow key={name} value={value} name={attribData.title} />
+          return (
+            <TableRow
+              key={name}
+              value={value}
+              name={attribData.title}
+              tooltip={attribData.description}
+            />
+          )
         })}
 
       {projectAttrib &&
