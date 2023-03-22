@@ -23,6 +23,7 @@ import { format } from 'date-fns'
 import StatusSelect from '/src/components/status/statusSelect'
 import AssigneeSelect from '../../components/assignee/AssigneeSelect'
 import TypeEditor from './TypeEditor'
+import Dropdown from '/src/components/dropdown'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -575,6 +576,28 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                         ...disabledStyles,
                       }}
                       widthExpand
+                    />
+                  )
+                } else if (attrib?.enum) {
+                  // dropdown
+                  const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
+                  let enumValue = value ? (isMultiSelect ? value : [value]) : []
+                  if (isMultiple) {
+                    enumValue = isMultiSelect ? union(...isMultiple) : isMultiple
+                  }
+
+                  input = (
+                    <Dropdown
+                      value={enumValue}
+                      isChanged={isChanged}
+                      options={attrib?.enum}
+                      onChange={(v) =>
+                        handleLocalChange(isMultiSelect ? v : v[0], changeKey, field)
+                      }
+                      multiSelect={isMultiSelect}
+                      widthExpand
+                      emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
+                      isMultiple={!!isMultiple}
                     />
                   )
                 } else {

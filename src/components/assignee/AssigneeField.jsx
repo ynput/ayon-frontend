@@ -17,6 +17,9 @@ const FieldStyled = styled.div`
   span {
     position: relative;
     top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   ${({ disabled }) =>

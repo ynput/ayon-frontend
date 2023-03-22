@@ -263,6 +263,7 @@ const Dropdown = ({
   widthExpand,
   align = 'left',
   multiSelect,
+  isMultiple,
   search,
   placeholder,
   emptyMessage,
@@ -271,7 +272,6 @@ const Dropdown = ({
   value = useMemo(() => compact(value), [value])
 
   // if there are multiple but multiSelect is false
-  let isMultiple
   if (!multiSelect && value.length > 1) {
     isMultiple = true
   }
@@ -312,8 +312,8 @@ const Dropdown = ({
       }
 
       // check it's not vertically off screen
-      if (optionsheight + y > window.innerHeight) {
-        y = window.innerHeight - optionsheight
+      if (optionsheight + y + 20 > window.innerHeight) {
+        y = window.innerHeight - optionsheight - 20
       }
 
       // first set position
@@ -587,6 +587,7 @@ Dropdown.propTypes = {
   emptyMessage: PropTypes.string,
   placeholder: PropTypes.string,
   isChanged: PropTypes.bool,
+  isMultiple: PropTypes.bool,
 }
 
 export default Dropdown
