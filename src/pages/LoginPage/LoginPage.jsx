@@ -104,8 +104,9 @@ const LogoStyled = styled.img`
 const BGStyled = styled.img`
   position: fixed;
   z-index: -10;
-  inset: 0;
   object-fit: cover;
+  width: 100vw;
+  height: 100vh;
 `
 
 const LoginPage = ({ loading }) => {
