@@ -190,11 +190,11 @@ const LoginPage = ({ loading }) => {
 
   return (
     <main className="center">
-      <BGStyled src={loginPageBackground} />
+      {loginPageBackground && <BGStyled src={loginPageBackground} />}
       <LoginFormStyled>
         {motd && (
           <Panel>
-            <LogoStyled src={loginPageBrand} />
+            {loginPageBrand && <LogoStyled src={loginPageBrand} />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <ReactMarkdown>{motd}</ReactMarkdown>
             </div>
