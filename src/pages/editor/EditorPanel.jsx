@@ -495,10 +495,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
                   isMultiple,
                 } = row || {}
 
-                if (label === 'Type') {
-                  // console.log(value)
-                }
-
                 // input type, step, max, min
                 const extraProps = getInputProps(attrib)
                 const typeOptions = type === 'folder' ? folders : tasks

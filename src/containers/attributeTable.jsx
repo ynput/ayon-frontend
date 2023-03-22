@@ -1,6 +1,6 @@
-import ayonClient from '/src/ayon'
 import styled from 'styled-components'
 import TableRow from '../components/TableRow'
+import { useGetAttributesQuery } from '../services/getAttributes'
 
 const AttributeTableContainer = styled.div`
   display: flex;
@@ -11,6 +11,13 @@ const AttributeTableContainer = styled.div`
 `
 
 const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib }) => {
+  // get attrib fields
+  let { data: attribsData = [], isLoading } = useGetAttributesQuery()
+  //   filter out scopes
+  const attribFields = attribsData.filter((a) => a.scope.some((s) => s === entityType))
+
+  if (isLoading) return null
+
   return (
     <AttributeTableContainer style={style}>
       {additionalData &&
@@ -19,14 +26,9 @@ const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib
         ))}
 
       {data &&
-        ayonClient.settings.attributes
-          .filter(
-            (attr) =>
-              attr.scope.includes(entityType) &&
-              data[attr.name] !== undefined &&
-              data[attr.name] !== null,
-          )
-          .map((attr) => <TableRow key={attr.name} value={data[attr.name]} name={attr.name} />)}
+        attribFields.map(({ name, data: attribData = {} }) => (
+          <TableRow key={name} value={data[name]} name={attribData.title} />
+        ))}
 
       {projectAttrib &&
         projectAttrib.map(({ name, value }) => <TableRow key={name} name={name} value={value} />)}
