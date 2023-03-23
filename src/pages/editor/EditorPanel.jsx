@@ -4,7 +4,6 @@ import {
   Panel,
   Button,
   Section,
-  Toolbar,
   FormLayout,
   FormRow,
   InputText,
@@ -21,6 +20,7 @@ import AssigneeSelect from '../../components/assignee/AssigneeSelect'
 import TypeEditor from './TypeEditor'
 import Dropdown from '/src/components/dropdown'
 import EntityDetailsHeader from '../../components/Details/EntityDetailsHeader'
+import { Link } from 'react-router-dom'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -39,7 +39,7 @@ const getInputProps = (attrib = {}) => {
   return props
 }
 
-const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
+const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => {
   // SELECTORS
   const selected = useSelector((state) => state.context.focused.editor)
   const editorNodes = useSelector((state) => state.editor.nodes)
@@ -419,26 +419,20 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs }) => {
 
   return (
     <Section className="wrap">
-      <Panel
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Toolbar>
-          <Button
-            label={'Delete'}
-            icon="delete"
-            onClick={() => onDelete(nodes)}
-            disabled={noSelection}
-          />
-          <Button label={`Revert`} icon="replay" onClick={handleRevert} disabled={noSelection} />
-        </Toolbar>
-      </Panel>
       {!noSelection && (
         <>
-          <EntityDetailsHeader values={nodeIds.map((id) => nodes[id]?.data)} />
+          <EntityDetailsHeader
+            values={nodeIds.map((id) => nodes[id]?.data)}
+            tools={
+              <>
+                <Button icon="replay" onClick={handleRevert} disabled={noSelection} />
+                <Button icon="delete" onClick={() => onDelete(nodes)} disabled={noSelection} />
+                <Link to={`/projects/${projectName}/browser`}>
+                  <Button icon="visibility" disabled={noSelection} />
+                </Link>
+              </>
+            }
+          />
           <Panel style={{ overflowY: 'auto', height: '100%' }}>
             <FormLayout>
               {Object.values(form).map((row, i) => {

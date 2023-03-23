@@ -5,8 +5,18 @@ import StackedThumbnails from '/src/pages/editor/StackedThumbnails'
 import NameField from '/src/pages/editor/fields/NameField'
 import { useSelector } from 'react-redux'
 import OverflowField from '../OverflowField'
+import styled from 'styled-components'
 
-const EntityDetailsHeader = ({ values = [] }) => {
+const ToolsStyled = styled.div`
+  display: flex;
+  gap: 4px;
+  justify-content: end;
+
+  flex: 1;
+  margin-right: 1px;
+`
+
+const EntityDetailsHeader = ({ values = [], tools }) => {
   const { folders, tasks, families } = useSelector((state) => state.project)
   const changes = useSelector((state) => state.editor.changes)
   const breadcrumbs = useSelector((state) => state.context.breadcrumbs) || {}
@@ -69,6 +79,7 @@ const EntityDetailsHeader = ({ values = [] }) => {
         )}
         <OverflowField value={subTitle} style={{ left: -3 }} align="left" />
       </div>
+      {tools && <ToolsStyled>{tools}</ToolsStyled>}
     </DetailHeader>
   )
 }

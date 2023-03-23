@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { Section, LoaderShade } from '@ynput/ayon-react-components'
+import { Section, LoaderShade, Button } from '@ynput/ayon-react-components'
 import { useGetEntitiesDetailsQuery } from '/src/services/entity/getEntity'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import EntityDetails from '/src/components/Details/EntityDetails'
@@ -11,6 +11,7 @@ import { union } from 'lodash'
 import transformVersionsData from '/src/helpers/transformVersionsData'
 import RepresentationList from '../RepresentationList'
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 
 const EntityDetailsContainer = ({ type, ids = [], isRep }) => {
   const projectName = useSelector((state) => state.project.name)
@@ -173,10 +174,20 @@ const EntityDetailsContainer = ({ type, ids = [], isRep }) => {
     } else return []
   })
 
+  // show edit tool button if task or folder
+  const enableEdit = type === 'task' || type === 'folder'
+
   return (
     <Section style={{ overflow: 'hidden', borderRadius: 3 }}>
       {isFetching && <LoaderShade />}
-      <EntityDetailsHeader values={nodes} />
+      <EntityDetailsHeader
+        values={nodes}
+        tools={
+          <Link to={enableEdit ? `/projects/${projectName}/editor` : '#'}>
+            <Button icon="edit" disabled={!enableEdit} />
+          </Link>
+        }
+      />
       {isRep ? (
         <RepresentationList representations={representations} />
       ) : (
