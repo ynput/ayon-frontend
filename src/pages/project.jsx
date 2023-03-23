@@ -12,7 +12,8 @@ import ProjectAddon from './projectAddon'
 import WorkfilesPage from './workfiles/WorkfilesPage'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { selectProject } from '../features/project'
+import { setBreadcrumbs } from '/src/features/context'
+import { selectProject } from '/src/features/project'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetProjectAddonsQuery } from '../services/addonList'
 import { TabPanel, TabView } from 'primereact/tabview'
@@ -58,6 +59,14 @@ const ProjectPage = () => {
     refetch: refetchAddons,
     isUninitialized: addonsIsUninitialized,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
+
+  useEffect(() => {
+    return () => {
+      // clear breadcrumbs on unmount
+      dispatch(setBreadcrumbs({}))
+      dispatch(selectProject(null))
+    }
+  }, [])
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
