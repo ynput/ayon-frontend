@@ -11,6 +11,8 @@ const EntityDetailsHeader = ({ values = [] }) => {
   const changes = useSelector((state) => state.editor.changes)
   const breadcrumbs = useSelector((state) => state.context.breadcrumbs) || {}
 
+  if (!values.length) return null
+
   const isMultiple = values.length > 1
 
   let subTitle = ''
@@ -21,14 +23,22 @@ const EntityDetailsHeader = ({ values = [] }) => {
       breadcrumbs.folder
     }`
 
-    if (values[0].__entityType === 'task') {
+    if (values[0]?.__entityType === 'task') {
       // add on task at end
       subTitle += ' / '
       subTitle += values[0].name
     }
+
+    if (values[0]?.__entityType === 'version') {
+      // add on family at end
+      subTitle += ' / '
+      subTitle += breadcrumbs.subset
+      subTitle += ' / '
+      subTitle += breadcrumbs.version
+    }
   }
 
-  const thumbnails = values.map((node) => ({ id: node.id, type: node.__entityType }))
+  const thumbnails = values.map((node) => (node ? { id: node.id, type: node.__entityType } : {}))
 
   return (
     <DetailHeader>

@@ -93,6 +93,8 @@ StatusSelect.propTypes = {
   onClick: PropTypes.func,
   isChanged: PropTypes.object,
   disableMessage: PropTypes.bool,
+  disabled: PropTypes.bool,
+  widthExpand: PropTypes.bool,
 }
 
 export default StatusSelect

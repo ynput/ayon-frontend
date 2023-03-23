@@ -31,8 +31,7 @@ const TitleStyled = styled.span`
         display: block;
         position: absolute;
         top: -38px; /* adjust as needed */
-        left: 50%;
-        transform: translateX(-50%);
+        left: 0;
         padding: 8px;
         background-color: var(--color-grey-01);
         color: white;

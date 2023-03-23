@@ -18,15 +18,33 @@ const TagsContainer = styled.div`
 
 const TagsField = ({ value }) => {
   const tags = useSelector((state) => state.project.tags)
+
+  let isMulti = false
+  // check if value is an array of arrays
+  if (value[0] && Array.isArray(value[0])) {
+    if (value.length > 1) isMulti = true
+    // flatten the array with unique values
+    value = [...new Set(value.flat())]
+    if (isMulti) {
+      // more than 5, splice to 5 and add '+x more'
+      if (value.length > 4) {
+        value[4] = `+${value.length - 4}`
+        value = value.slice(0, 5)
+      }
+    }
+  }
+
   if (!value?.length) return '-'
 
   return (
     <TagsContainer>
+      {isMulti && <span>{'Multiple ('}</span>}
       {value.map((tag) => (
         <span key={tag} style={{ color: tags[tag]?.color }}>
           {tag}
         </span>
       ))}
+      {isMulti && <span>{')'}</span>}
     </TagsContainer>
   )
 }

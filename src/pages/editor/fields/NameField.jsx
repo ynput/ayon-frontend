@@ -11,6 +11,8 @@ const NameField = ({
   style,
   iconStyle,
 }) => {
+  if (!node) return null
+
   const chobj = changes[node.id]
   let value = chobj?._name || chobj?._name === '' ? chobj._name : node.name
 
@@ -29,10 +31,10 @@ const NameField = ({
     textStyle.fontStyle = 'italic'
     value = value || 'Unnamed task'
   } else if (node.__entityType === 'folder') {
-    icon = folders[chobj?._folderType || node.folderType]?.icon || 'help_center'
+    icon = folders[chobj?._folderType || node.folderType]?.icon || 'folder'
     value = value || 'Unnamed folder'
   } else if (['subset', 'version'].includes(node.__entityType)) {
-    icon = families[node.family]?.icon || 'help_center'
+    icon = families[node.family || node.subset?.family]?.icon || 'help_center'
   }
 
   return <CellWithIcon icon={icon} text={value} {...{ style, iconStyle, textStyle }} />

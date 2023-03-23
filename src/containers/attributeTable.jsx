@@ -11,7 +11,14 @@ const AttributeTableContainer = styled.div`
   flex: 1;
 `
 
-const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib }) => {
+const AttributeTable = ({
+  entityType,
+  data,
+  additionalData,
+  style,
+  projectAttrib,
+  extraFields = [],
+}) => {
   // get attrib fields
   let { data: attribsData = [], isLoading } = useGetAttributesQuery()
   //   filter out scopes
@@ -27,12 +34,19 @@ const AttributeTable = ({ entityType, data, additionalData, style, projectAttrib
         ))}
 
       {data &&
-        attribFields.map(({ name, data: attribData = {} }) => {
+        [...extraFields, ...attribFields].map(({ name, data: attribData = {} }) => {
           let value = data[name]
 
           if (value && name.includes('Date')) {
             value = format(new Date(value), 'dd/MM/yyyy')
           }
+
+          // if value is an array
+          if (Array.isArray(value)) {
+            value = value.join(', ')
+          }
+
+          if (!attribData) return null
 
           return (
             <TableRow

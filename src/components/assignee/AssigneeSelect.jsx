@@ -38,6 +38,9 @@ AssigneeSelect.propTypes = {
   editor: PropTypes.bool,
   onChange: PropTypes.func,
   widthExpand: PropTypes.bool,
+  disabled: PropTypes.bool,
+  align: PropTypes.oneOf(['left', 'right']),
+  isMultiple: PropTypes.bool,
 }
 
 export default AssigneeSelect
