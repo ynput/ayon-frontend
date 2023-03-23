@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import LoadingPage from '/src/pages/loading'
+import LoadingPage from '/src/pages/LoadingPage'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import SessionList from '/src/containers/sessionList'
+import SessionList from '/src/containers/SessionList'
 
 import {
   FormLayout,
@@ -13,25 +13,6 @@ import {
   Section,
   Panel,
 } from '@ynput/ayon-react-components'
-
-// const SessionItem = ({ session, userName, onChange }) => {
-//   const invalidate = () => {
-//     axios
-//       .delete(`/api/users/${userName}/sessions/${session.token}`)
-//       .then(() => {
-//         toast.success('Session invalidated')
-//         onChange()
-//       })
-//       .catch(() => toast.error('Unable to invalidate the session'))
-//   }
-//
-//   return (
-//     <Panel>
-//       {session.token} {session.token === localStorage.getItem('accessToken') && '(this session)'}
-//       <Button label="Invalidate" onClick={invalidate} />
-//     </Panel>
-//   )
-// }
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null)

@@ -16,7 +16,6 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
 
   useEffect(() => {
     axios.get('/api/addons?details=1').then((response) => setAddonData(response.data.addons))
-
     axios.get('/api/hosts').then((response) => setHostData(response.data.hosts))
   }, [])
 

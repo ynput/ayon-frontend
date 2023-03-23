@@ -8,7 +8,7 @@ import { Dialog } from 'primereact/dialog'
 import BrowserPage from './browser/BrowserPage'
 import EditorPage from './editor'
 import LoadingPage from './loading'
-import ProjectAddon from './projectAddon'
+import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './workfiles/WorkfilesPage'
 
 import usePubSub from '/src/hooks/usePubSub'
