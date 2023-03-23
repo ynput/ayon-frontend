@@ -39,7 +39,7 @@ const Detail = () => {
 
   let tabs = [type]
   // set tabs for different types
-  if (focused.subsets?.length) {
+  if ((focused.subsets?.length && queryType === 'version') || queryType === 'subset') {
     tabs = ['subset', 'version', 'representation']
   }
 
