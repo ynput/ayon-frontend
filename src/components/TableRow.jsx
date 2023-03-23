@@ -48,7 +48,7 @@ const TableRow = ({ name, value, tooltip }) => {
   return (
     <AttributeTableRow>
       <TitleStyled tooltip={tooltip}>{name}</TitleStyled>
-      <OverflowField value={value} />
+      {value ? <OverflowField value={value} /> : '-'}
     </AttributeTableRow>
   )
 }

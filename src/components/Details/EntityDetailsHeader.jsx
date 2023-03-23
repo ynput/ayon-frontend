@@ -29,12 +29,19 @@ const EntityDetailsHeader = ({ values = [] }) => {
       subTitle += values[0].name
     }
 
-    if (values[0]?.__entityType === 'version') {
+    if (values[0]?.__entityType === 'version' || values[0]?.__entityType === 'representation') {
       // add on family at end
       subTitle += ' / '
       subTitle += breadcrumbs.subset
       subTitle += ' / '
       subTitle += breadcrumbs.version
+    }
+
+    // subset
+    if (values[0]?.__entityType === 'subset') {
+      // add on family at end
+      subTitle += ' / '
+      subTitle += breadcrumbs.subset
     }
   }
 

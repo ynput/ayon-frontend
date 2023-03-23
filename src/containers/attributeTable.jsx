@@ -46,6 +46,11 @@ const AttributeTable = ({
             value = value.join(', ')
           }
 
+          // if value is an object
+          if (typeof value === 'object' && value !== null) {
+            value = JSON.stringify(value)
+          }
+
           if (!attribData) return null
 
           return (

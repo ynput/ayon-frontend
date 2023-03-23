@@ -8,12 +8,15 @@ import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEnt
 import { TagsField } from '/src/containers/fieldFormat'
 import AssigneeSelect from '/src/components/assignee/AssigneeSelect'
 import { union } from 'lodash'
+import transformVersionsData from '/src/helpers/transformVersionsData'
+import RepresentationList from '../RepresentationList'
+import { useMemo } from 'react'
 
-const EntityDetailsContainer = ({ type, ids = [] }) => {
+const EntityDetailsContainer = ({ type, ids = [], isRep }) => {
   const projectName = useSelector((state) => state.project.name)
 
   // GET RTK QUERY
-  const {
+  let {
     data: entitiesData = [],
     isError,
     isFetching,
@@ -21,9 +24,15 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
     {
       projectName,
       ids: ids,
-      type,
+      type: type,
     },
     { skip: !ids.length || !type },
+  )
+
+  // if representation, get the representations from the versions
+  const representations = useMemo(
+    () => (!isFetching && !isError && isRep && transformVersionsData(entitiesData)) || [],
+    [entitiesData, isError, isFetching, type],
   )
 
   // PATCH ENTITY DATA
@@ -53,6 +62,7 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
 
   const nodes = entitiesData.map((entity) => ({
     ...entity?.node,
+    attrib: entity?.node?.attrib || {},
     __entityType: type,
     extraAttrib: {},
   }))
@@ -63,7 +73,7 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
   // extra fields for specific types
   const typeFieldNames = {
     version: ['author', 'subset.family'],
-    subset: ['family', 'latestVersion'],
+    subset: ['family', 'latestVersion.name'],
     folder: ['folderType', 'path'],
     task: ['taskType', 'assignees'],
   }
@@ -128,19 +138,18 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
     const useString = !fieldComponents[fieldName]?.value
 
     // extra field to extraAttribFields
-    if (useString && fieldComponents[fieldName]) {
+    if (useString && fieldComponents[fieldParts[0]]) {
       extraAttribFields.push({
         name: fieldName,
-        data: { title: fieldComponents[fieldName]?.title },
+        data: { title: fieldComponents[fieldParts[0]]?.title },
       })
     }
 
-    if (fieldComponents[fieldName]) {
+    if (fieldComponents[fieldParts[0]]) {
       // get all values for the field
       const values = entitiesData.map((entity, i) => {
         let value = entity.node[fieldName]
 
-        // if field is nested, get the value
         if (fieldParts.length > 1) {
           value = fieldParts.reduce((acc, part) => acc && acc[part], entity.node)
         }
@@ -158,8 +167,8 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
 
       // return the title and value
       return {
-        title: fieldComponents[fieldName]?.title,
-        value: fieldComponents[fieldName]?.value(values),
+        title: fieldComponents[fieldParts[0]]?.title,
+        value: fieldComponents[fieldParts[0]]?.value(values),
       }
     } else return []
   })
@@ -168,13 +177,17 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
     <Section style={{ overflow: 'hidden', borderRadius: 3 }}>
       {isFetching && <LoaderShade />}
       <EntityDetailsHeader values={nodes} />
-      <EntityDetails
-        nodes={nodes}
-        extraAttrib={extraAttribFields}
-        type={type}
-        typeFields={typeFields}
-        isError={isError}
-      />
+      {isRep ? (
+        <RepresentationList representations={representations} />
+      ) : (
+        <EntityDetails
+          nodes={nodes}
+          extraAttrib={extraAttribFields}
+          type={type}
+          typeFields={typeFields}
+          isError={isError}
+        />
+      )}
     </Section>
   )
 }

@@ -92,7 +92,10 @@ const contextSlice = createSlice({
       state.pairing = action.payload
     },
     subsetSelected: (state, action) => {
-      state.focused.type = 'version'
+      if (!['subset', 'version', 'representation'].includes(state.focused.type)) {
+        // only change type if it's not already a subset, version or representation
+        state.focused.type = 'subset'
+      }
       state.focused.versions = action.payload.versions
       state.focused.subsets = action.payload.subsets
     },

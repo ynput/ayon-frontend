@@ -100,7 +100,9 @@ query Subset($projectName: String!, $ids: [String!]!, $versionOverrides: [String
                       version
                       name
                     }
-                    
+                    attrib {
+                      #ATTRS#
+                    }
                     versions(ids: $versionOverrides){
                       edges{
                         node{

@@ -39,11 +39,14 @@ const TagsField = ({ value }) => {
   return (
     <TagsContainer>
       {isMulti && <span>{'Multiple ('}</span>}
-      {value.map((tag) => (
-        <span key={tag} style={{ color: tags[tag]?.color }}>
-          {tag}
-        </span>
-      ))}
+      {value.map(
+        (tag) =>
+          typeof tag === 'string' && (
+            <span key={tag} style={{ color: tags[tag]?.color }}>
+              {tag}
+            </span>
+          ),
+      )}
       {isMulti && <span>{')'}</span>}
     </TagsContainer>
   )
