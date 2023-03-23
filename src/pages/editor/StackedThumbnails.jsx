@@ -58,6 +58,7 @@ const StackedThumbnails = ({ thumbnails = [] }) => {
               entityId={thumb.id}
               key={thumb.id}
               style={{ zIndex: -i }}
+              entityUpdatedAt={thumb.updatedAt}
             />
           ),
       )}
@@ -70,6 +71,7 @@ StackedThumbnails.propTypes = {
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       type: PropTypes.string.isRequired,
+      updatedAt: PropTypes.string.isRequired,
     }).isRequired,
   ).isRequired,
 }

@@ -9,10 +9,12 @@ import { toast } from 'react-toastify'
 const WorkfileDetail = ({ workfileId, style }) => {
   const projectName = useSelector((state) => state.project.name)
 
-  const { data, isLoading, isError, error } = useGetWorkfileByIdQuery(
-    { projectName, id: workfileId },
-    { skip: !workfileId },
-  )
+  const {
+    data = {},
+    isLoading,
+    isError,
+    error,
+  } = useGetWorkfileByIdQuery({ projectName, id: workfileId }, { skip: !workfileId })
 
   if (isError) {
     // log and toast error
@@ -30,7 +32,12 @@ const WorkfileDetail = ({ workfileId, style }) => {
           <div>Loading...</div>
         ) : (
           <>
-            <Thumbnail project={projectName} entityType="workfile" entityId={workfileId} />
+            <Thumbnail
+              project={projectName}
+              entityType="workfile"
+              entityId={workfileId}
+              entityUpdatedAt={data?.updatedAt}
+            />
             <AttributeTable
               entityType="workfile"
               data={data?.attrib || {}}

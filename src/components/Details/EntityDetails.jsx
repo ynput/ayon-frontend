@@ -58,6 +58,7 @@ const EntityDetails = ({ nodes = [], typeFields = [], type, extraAttrib = [] }) 
         thumbnails={nodes.map((n) => ({
           id: n.id,
           name: n.name,
+          updatedAt: n.updatedAt,
         }))}
         type={type}
       />

@@ -45,7 +45,9 @@ const EntityDetailsHeader = ({ values = [] }) => {
     }
   }
 
-  const thumbnails = values.map((node) => (node ? { id: node.id, type: node.__entityType } : {}))
+  const thumbnails = values.map((node) =>
+    node ? { id: node.id, type: node.__entityType, updatedAt: node.updatedAt } : {},
+  )
 
   return (
     <DetailHeader>

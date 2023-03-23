@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
+import { useEffect } from 'react'
 
 const GalleryStyled = styled.div`
   display: flex;
@@ -34,6 +35,10 @@ const ThumbnailGallery = ({ thumbnails = [], type }) => {
   const projectName = useSelector((state) => state.project.name)
   const [index, setIndex] = useState(0)
 
+  useEffect(() => {
+    setIndex(0)
+  }, [thumbnails, type])
+
   const handleClick = (i) => {
     const newIndex = index + i
     if (newIndex < 0) {
@@ -59,6 +64,7 @@ const ThumbnailGallery = ({ thumbnails = [], type }) => {
             style={{
               margin: 'unset',
             }}
+            entityUpdatedAt={thumbnails[index].updatedAt}
           />
           <span style={{ opacity: isMultiple ? 1 : 0 }}>{thumbnails[index].name}</span>
         </ImageStyled>
@@ -73,6 +79,7 @@ ThumbnailGallery.propTypes = {
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
+      updatedAt: PropTypes.string.isRequired,
     }),
   ),
 }

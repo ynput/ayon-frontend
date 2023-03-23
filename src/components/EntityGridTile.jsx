@@ -112,6 +112,7 @@ const EntityGridTile = ({
   name,
   thumbnailEntityId,
   thumbnailEntityType,
+  updatedAt,
   projectName,
   subTitle,
   footer,
@@ -132,6 +133,7 @@ const EntityGridTile = ({
           entityId={thumbnailEntityId}
           projectName={projectName}
           isLoading={isLoading}
+          entityUpdatedAt={updatedAt}
         />
         <div>
           <IconStyled className="material-symbols-outlined">{typeIcon}</IconStyled>
@@ -161,6 +163,7 @@ EntityGridTile.propTypes = {
   subTitle: PropTypes.string,
   footer: PropTypes.string,
   profile: PropTypes.string,
+  entityUpdatedAt: PropTypes.string,
 }
 
 export default EntityGridTile

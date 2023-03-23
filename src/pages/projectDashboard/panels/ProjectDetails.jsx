@@ -54,6 +54,8 @@ const ProjectDetails = ({ projectName }) => {
     </ActiveStyled>
   )
 
+  // TODO: projects don't currently have a thumbnail
+
   return (
     <DashboardPanelWrapper
       title={projectName}
