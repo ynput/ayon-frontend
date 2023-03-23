@@ -7,7 +7,7 @@ import { Dialog } from 'primereact/dialog'
 
 import BrowserPage from './browser/BrowserPage'
 import EditorPage from './editor'
-import LoadingPage from './loading'
+import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './workfiles/WorkfilesPage'
 
