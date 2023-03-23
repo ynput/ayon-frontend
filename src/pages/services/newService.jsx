@@ -56,7 +56,8 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
         hostname: selectedHost,
       })
       .then((response) => {
-        toast.success(`Service ${response.data.id} spawned`)
+        console.log('SPAWN RESPONSE', response.data)
+        toast.success(`Service spawned`)
         onSpawn()
       })
   }
