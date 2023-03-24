@@ -9,14 +9,20 @@ const CellWithIcon = ({
   iconStyle,
 }) => {
   return (
-    <span className={className || ''} style={{ alignItems: 'center', ...style }}>
+    <span
+      className={className || ''}
+      style={{ alignItems: 'center', position: 'relative', overflow: 'hidden', ...style }}
+    >
       <span
         className={`material-symbols-outlined ${iconClassName || ''}`}
         style={{ marginRight: '0.6rem', ...iconStyle }}
       >
         {icon}
       </span>
-      <span style={textStyle} className={`cell-with-icon-text ${textClassName}`}>
+      <span
+        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...textStyle }}
+        className={`cell-with-icon-text ${textClassName}`}
+      >
         {text}
       </span>
     </span>

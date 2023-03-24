@@ -71,8 +71,9 @@ const EntityDetailsHeader = ({ values = [], tools }) => {
             tasks={tasks}
             folders={folders}
             families={families}
-            style={{ display: 'flex', gap: 4 }}
+            style={{ display: 'flex', gap: 4, fontWeight: 'bold' }}
             iconStyle={{ fontSize: 19, marginRight: 0 }}
+            prefix={`${values[0]?.subset?.name}`}
           />
         ) : (
           <h2>Multiple Selected ({values.length})</h2>
