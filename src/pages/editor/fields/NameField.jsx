@@ -10,6 +10,7 @@ const NameField = ({
   families = {},
   style,
   iconStyle,
+  prefix,
 }) => {
   if (!node) return null
 
@@ -27,17 +28,27 @@ const NameField = ({
   if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-changed)'
 
   if (node.__entityType === 'task') {
-    icon = tasks[chobj?._taskType || node.taskType]?.icon || 'help_center'
-    textStyle.fontStyle = 'italic'
+    icon = tasks[chobj?._taskType || node.taskType]?.icon || 'check_circle'
+    // textStyle.fontStyle = 'italic'
     value = value || 'Unnamed task'
   } else if (node.__entityType === 'folder') {
     icon = folders[chobj?._folderType || node.folderType]?.icon || 'folder'
     value = value || 'Unnamed folder'
   } else if (['subset', 'version'].includes(node.__entityType)) {
-    icon = families[node.family || node.subset?.family]?.icon || 'help_center'
+    icon = families[node.family || node.subset?.family]?.icon || 'layers'
   }
 
-  return <CellWithIcon icon={icon} text={value} {...{ style, iconStyle, textStyle }} />
+  console.log(prefix)
+
+  return (
+    <CellWithIcon
+      icon={icon}
+      text={`${
+        prefix && !['undefined', 'null', ''].includes(prefix) ? prefix + ' | ' : ''
+      }${value}`}
+      {...{ style, iconStyle, textStyle }}
+    />
+  )
 }
 
 export default NameField

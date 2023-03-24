@@ -22,7 +22,9 @@ const AttributeTable = ({
   // get attrib fields
   let { data: attribsData = [], isLoading } = useGetAttributesQuery()
   //   filter out scopes
-  const attribFields = attribsData.filter((a) => a.scope.some((s) => s === entityType))
+  const attribFields = attribsData.filter(
+    (a) => a.scope.some((s) => s === entityType) && a.name in data,
+  )
 
   if (isLoading) return null
 

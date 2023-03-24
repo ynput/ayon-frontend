@@ -37,8 +37,6 @@ const RepresentationList = ({ representations = [] }) => {
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
   //const [focusedRepresentation, setFocusedRepresentation] = useState(null)
 
-  console.log(representations)
-
   const data = useMemo(() => {
     return groupResult(representations, 'name')
   }, [representations])

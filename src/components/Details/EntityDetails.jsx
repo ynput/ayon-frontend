@@ -4,7 +4,14 @@ import { Panel } from '@ynput/ayon-react-components'
 import ThumbnailGallery from './ThumbnailGallery'
 import AttributeTable from '/src/containers/attributeTable'
 
-const EntityDetails = ({ nodes = [], typeFields = [], type, extraAttrib = [] }) => {
+const EntityDetails = ({
+  nodes = [],
+  typeFields = [],
+  type,
+  extraAttrib = [],
+  hideNull,
+  style,
+}) => {
   if (nodes.length === 0) return null
 
   const isMultiple = nodes.length > 1
@@ -52,8 +59,16 @@ const EntityDetails = ({ nodes = [], typeFields = [], type, extraAttrib = [] }) 
     attribsData = { ...nodes[0].extraAttrib, ...nodes[0].attrib }
   }
 
+  if (hideNull) {
+    for (const key in attribsData) {
+      if (attribsData[key] === null) {
+        delete attribsData[key]
+      }
+    }
+  }
+
   return (
-    <Panel style={{ height: '100%', overflow: 'hidden' }}>
+    <Panel style={{ height: '100%', overflow: 'hidden', ...style }}>
       <ThumbnailGallery
         thumbnails={nodes.map((n) => ({
           id: n.id,
@@ -86,6 +101,9 @@ EntityDetails.propTypes = {
     }),
   ),
   extraAttrib: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string.isRequired })),
+  hideNull: PropTypes.bool,
+  typeFields: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string })),
+  style: PropTypes.object,
 }
 
 export default EntityDetails

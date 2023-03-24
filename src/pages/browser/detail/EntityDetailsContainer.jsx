@@ -13,7 +13,7 @@ import RepresentationList from '../RepresentationList'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 
-const EntityDetailsContainer = ({ type, ids = [], isRep }) => {
+const EntityDetailsContainer = ({ type, ids = [] }) => {
   const projectName = useSelector((state) => state.project.name)
 
   // GET RTK QUERY
@@ -30,9 +30,11 @@ const EntityDetailsContainer = ({ type, ids = [], isRep }) => {
     { skip: !ids.length || !type },
   )
 
+  const isVersion = type === 'version'
+
   // if representation, get the representations from the versions
   const representations = useMemo(
-    () => (!isFetching && !isError && isRep && transformVersionsData(entitiesData)) || [],
+    () => (!isFetching && !isError && isVersion && transformVersionsData(entitiesData)) || [],
     [entitiesData, isError, isFetching, type],
   )
 
@@ -139,14 +141,14 @@ const EntityDetailsContainer = ({ type, ids = [], isRep }) => {
     const useString = !fieldComponents[fieldName]?.value
 
     // extra field to extraAttribFields
-    if (useString && fieldComponents[fieldParts[0]]) {
+    if (useString && fieldComponents[fieldName]) {
       extraAttribFields.push({
         name: fieldName,
-        data: { title: fieldComponents[fieldParts[0]]?.title },
+        data: { title: fieldComponents[fieldName]?.title },
       })
     }
 
-    if (fieldComponents[fieldParts[0]]) {
+    if (fieldComponents[fieldName]) {
       // get all values for the field
       const values = entitiesData.map((entity, i) => {
         let value = entity.node[fieldName]
@@ -188,17 +190,16 @@ const EntityDetailsContainer = ({ type, ids = [], isRep }) => {
           </Link>
         }
       />
-      {isRep ? (
-        <RepresentationList representations={representations} />
-      ) : (
-        <EntityDetails
-          nodes={nodes}
-          extraAttrib={extraAttribFields}
-          type={type}
-          typeFields={typeFields}
-          isError={isError}
-        />
-      )}
+      <EntityDetails
+        nodes={nodes}
+        extraAttrib={extraAttribFields}
+        type={type}
+        typeFields={typeFields}
+        isError={isError}
+        hideNull={isVersion}
+        style={{ height: isVersion ? 'unset' : '100%' }}
+      />
+      {isVersion && <RepresentationList representations={representations} />}
     </Section>
   )
 }
