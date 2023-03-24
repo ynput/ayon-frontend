@@ -25,11 +25,6 @@ const HeaderStyled = styled(Panel)`
     flex: 1;
     overflow-x: clip;
   }
-
-  /* icon */
-  span {
-    cursor: pointer;
-  }
 `
 
 const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) => {

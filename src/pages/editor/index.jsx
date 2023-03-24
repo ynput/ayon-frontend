@@ -1258,6 +1258,7 @@ const EditorPage = () => {
               onDelete={onDelete}
               onRevert={revertChangesOnSelection}
               attribs={attribFields}
+              projectName={projectName}
             />
           </SplitterPanel>
         </Splitter>

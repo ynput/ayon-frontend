@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import { Toolbar, TablePanel } from '@ynput/ayon-react-components'
+import { TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -32,10 +32,12 @@ const columns = [
   },
 ]
 
-const RepresentationList = ({ representations }) => {
+const RepresentationList = ({ representations = [] }) => {
   const dispatch = useDispatch()
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
   //const [focusedRepresentation, setFocusedRepresentation] = useState(null)
+
+  console.log(representations)
 
   const data = useMemo(() => {
     return groupResult(representations, 'name')
@@ -68,9 +70,6 @@ const RepresentationList = ({ representations }) => {
         />
       )*/}
 
-      <Toolbar>
-        <span className="section-header">Representations</span>
-      </Toolbar>
       <TablePanel>
         <TreeTable
           scrollable="true"

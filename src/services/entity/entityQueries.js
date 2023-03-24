@@ -11,6 +11,7 @@ export const TASK_QUERY = `
                       tags
                       taskType
                       assignees
+                      updatedAt
                       attrib {
                         #ATTRS#
                       }
@@ -34,6 +35,7 @@ export const FOLDER_QUERY = `
                         path
                         status
                         tags
+                        updatedAt
                         attrib {
                           #ATTRS#
                         }
@@ -57,6 +59,7 @@ export const VERSION_QUERY = `
                         author
                         status
                         tags
+                        updatedAt
                         attrib {
                           #ATTRS#
                         }
@@ -95,12 +98,15 @@ query Subset($projectName: String!, $ids: [String!]!, $versionOverrides: [String
                     family
                     status
                     createdAt
+                    updatedAt
                     versionList{
                       id
                       version
                       name
                     }
-                    
+                    attrib {
+                      #ATTRS#
+                    }
                     versions(ids: $versionOverrides){
                       edges{
                         node{

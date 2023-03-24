@@ -1,38 +1,72 @@
-import { useSelector } from 'react-redux'
-import { Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
+import { useDispatch, useSelector } from 'react-redux'
+import { Section, Toolbar, Button } from '@ynput/ayon-react-components'
 
-import FolderDetail from './FolderDetail'
-import VersionDetail from './VersionDetail'
-import TaskDetail from './TaskDetail'
+import EntityDetailsContainer from './EntityDetailsContainer'
+import styled, { css } from 'styled-components'
+import { upperFirst } from 'lodash'
+import { setFocusedType } from '/src/features/context'
+
+const TabStyled = styled(Button)`
+  font-size: 1.1rem;
+  padding: 8px 14px;
+
+  /* isActive */
+  ${({ isActive }) =>
+    isActive &&
+    css`
+      background-color: var(--panel-background);
+      text-decoration: underline;
+
+      /* remove hover effect */
+      &:hover {
+        background-color: var(--panel-background);
+      }
+      /* remove focus outline */
+      &:focus {
+        outline: none;
+      }
+    `}
+`
 
 const Detail = () => {
-  const type = useSelector((state) => state.context.focused.type)
+  const focused = useSelector((state) => state.context.focused)
+  const dispatch = useDispatch()
 
-  let detailComponent = null
+  const { type } = focused
+  const queryType = type === 'representation' ? 'version' : type
 
-  switch (type) {
-    case 'folder':
-      detailComponent = <FolderDetail />
-      break
-    case 'version':
-      detailComponent = <VersionDetail />
-      break
-    case 'task':
-      detailComponent = <TaskDetail />
-      break
-    default:
-      break
+  const ids = focused[queryType + 's'] || []
+
+  let tabs = [type]
+  // set tabs for different types
+  if ((focused.subsets?.length && queryType === 'version') || queryType === 'subset') {
+    tabs = ['subset', 'version', 'representation']
   }
 
-  const header = type ? type.charAt(0).toUpperCase() + type.slice(1) : 'No selection'
+  // plural tabs
+  const pluralTabs = ['version', 'representation']
+
+  const handleTabClick = (tab) => {
+    if (tab == type) return
+    dispatch(setFocusedType(tab))
+  }
 
   return (
     <Section className="wrap">
       <Toolbar>
-        <span className="section-header">{header}</span>
-        <Spacer />
+        {tabs.map(
+          (tab) =>
+            tab && (
+              <TabStyled
+                label={upperFirst(tab) + (pluralTabs.includes(tab) ? 's' : '')}
+                isActive={tab == type}
+                key={tab}
+                onClick={() => handleTabClick(tab)}
+              />
+            ),
+        )}
       </Toolbar>
-      {detailComponent}
+      <EntityDetailsContainer ids={ids} type={queryType} isRep={type === 'representation'} />
     </Section>
   )
 }

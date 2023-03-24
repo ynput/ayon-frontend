@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useState } from 'react'
 import styled from 'styled-components'
 
 const ThumbnailStyled = styled.div`
@@ -36,46 +35,28 @@ const ImageStyled = styled.img`
   inset: 0;
 `
 
-const parseThumbnail = (response) => {
-  // Create base64 image from axios response
-  if (response.status !== 200) {
-    return null
-  }
+const ImagePlaceholder = () => <span className="material-symbols-outlined">image</span>
 
-  const mime = response.headers['content-type']
-  const base64 = btoa(
-    new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), ''),
-  )
-  return `data:${mime};base64,${base64}`
-}
+const Thumbnail = ({ projectName, entityType, entityId, style, entityUpdatedAt }) => {
+  // Display image only when loaded to avoid flickering and displaying,
+  // ugly border around the image (when it's not loaded yet)
+  const [thumbLoaded, setThumbLoaded] = useState(false)
 
-const Thumbnail = ({ projectName, entityType, entityId, isLoading, style }) => {
-  const [thumbData, setThumbData] = useState(null)
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-
+  const queryArgs = `?updatedAt=${entityUpdatedAt}&token=${localStorage.getItem('accessToken')}`
   const isWrongEntity = ['task', 'subset'].includes(entityType)
-
-  useEffect(() => {
-    if (!entityId || isLoading || isWrongEntity) {
-      setThumbData(null)
-      return
-    }
-    if (projectName && entityType && entityId) {
-      axios
-        .get(url, { responseType: 'arraybuffer' })
-        .then((response) => {
-          setThumbData(parseThumbnail(response))
-        })
-        .catch(() => console.log('no thumbnail'))
-    }
-  }, [entityId, entityType, projectName, isLoading])
 
   return (
     <ThumbnailStyled style={style}>
-      {thumbData ? (
-        <ImageStyled alt={`Entity thumbnail ${entityId}`} src={thumbData} />
-      ) : (
-        <span className="material-symbols-outlined">image</span>
+      <ImagePlaceholder />
+      {!(isWrongEntity || !entityId) && (
+        <ImageStyled
+          alt={`Entity thumbnail ${entityId}`}
+          src={`${url}${queryArgs}`}
+          style={{ display: thumbLoaded ? 'block' : 'none' }}
+          onError={() => setThumbLoaded(false)}
+          onLoad={() => setThumbLoaded(true)}
+        />
       )}
     </ThumbnailStyled>
   )

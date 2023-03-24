@@ -10,6 +10,7 @@ query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
           taskId
           name
           path
+          updatedAt
         }
       }
     }

@@ -17,12 +17,21 @@ const FieldStyled = styled.div`
   span {
     position: relative;
     top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   ${({ disabled }) =>
     disabled &&
     css`
       color: var(--color-text-dim);
+      span {
+        color: var(--color-text-dim);
+      }
+      img {
+        opacity: 0.75;
+      }
       background-color: var(--input-disabled-background-color);
     `}
 
@@ -56,7 +65,7 @@ const AssigneeField = ({
       onClick={!disabled ? onClick : undefined}
       style={style}
       disabled={disabled}
-      isMultiple={isMultiple && !disabled}
+      isMultiple={isMultiple && (!disabled || !placeholder)}
     >
       {!(disabled && placeholder) ? (
         value.length ? (
@@ -66,7 +75,9 @@ const AssigneeField = ({
           </>
         ) : (
           <>
-            {emptyIcon && <span className="material-symbols-outlined">add_circle</span>}
+            {emptyIcon && !isMultiple && (
+              <span className="material-symbols-outlined">add_circle</span>
+            )}
             {emptyMessage && <span>{emptyMessage}</span>}
           </>
         )

@@ -15,6 +15,7 @@ const BASE_QUERY = `
             parentId
             ownAttrib
             status
+            updatedAt
             attrib {
               #FOLDER_ATTRS#
             }
@@ -31,6 +32,7 @@ const BASE_QUERY = `
             folderId
             status
             assignees
+            updatedAt
             attrib {
               #TASK_ATTRS#
             }

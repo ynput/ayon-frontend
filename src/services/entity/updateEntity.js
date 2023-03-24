@@ -11,13 +11,17 @@ const updateEntity = ayonApi.injectEndpoints({
           operations: buildOperations(ids || patches.map((p) => p.id), type, data),
         },
       }),
-      async onQueryStarted({ projectName, type, patches, data }, { dispatch, queryFulfilled }) {
+      invalidatesTags: (result, error, { ids, type }) => ids.map((id) => [{ type, id }]),
+      async onQueryStarted(
+        { projectName, type, patches, data, ids },
+        { dispatch, queryFulfilled },
+      ) {
         if (!patches) return
 
         const patchResult = dispatch(
           ayonApi.util.updateQueryData(
             'getEntitiesDetails',
-            { projectName, ids: patches.map((p) => p.id), type },
+            { projectName, ids: ids, type },
             (draft) => {
               Object.assign(
                 draft,
