@@ -1,16 +1,11 @@
 import axios from 'axios'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import { DateTime } from 'luxon'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './newService'
-
-const formatTime = (rowData) => {
-  return rowData.lastSeen ? DateTime.fromSeconds(rowData.lastSeen).toRelative() : 'Never'
-}
 
 const formatStatus = (rowData) => {
   if (!rowData.shouldRun) return rowData.isRunning ? 'STOPPING' : 'DISABLED'
@@ -19,21 +14,14 @@ const formatStatus = (rowData) => {
 
 const ServicesPage = () => {
   const [services, setServices] = useState([])
-  const [loading, setLoading] = useState(false)
   const [showNewService, setShowNewService] = useState(false)
   const [selectedServices, setSelectedServices] = useState([])
   const contextMenuRef = useRef(null)
 
   const loadServices = () => {
-    setLoading(true)
-    axios
-      .get('/api/services')
-      .then((response) => {
-        setServices(response.data.services)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+    axios.get('/api/services').then((response) => {
+      setServices(response.data.services)
+    })
   }
 
   const deleteSelected = () => {
@@ -104,10 +92,10 @@ const ServicesPage = () => {
       )}
       <Section>
         <Toolbar>
-          <Button label="New service" onClick={() => setShowNewService(true)} />
+          <Button icon="add" label="New service" onClick={() => setShowNewService(true)} />
           <Spacer />
         </Toolbar>
-        <TablePanel loading={loading}>
+        <TablePanel>
           <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
           <DataTable
             value={services}
@@ -134,7 +122,7 @@ const ServicesPage = () => {
               body={formatStatus}
               style={{ maxWidth: 120 }}
             />
-            <Column field="lastSeen" header="Last seen" body={formatTime} />
+            <Column field="lastSeen" header="Last seen" />
           </DataTable>
         </TablePanel>
       </Section>

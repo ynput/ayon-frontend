@@ -16,7 +16,6 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
 
   useEffect(() => {
     axios.get('/api/addons?details=1').then((response) => setAddonData(response.data.addons))
-
     axios.get('/api/hosts').then((response) => setHostData(response.data.hosts))
   }, [])
 
@@ -56,7 +55,8 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
         hostname: selectedHost,
       })
       .then((response) => {
-        toast.success(`Service ${response.data.id} spawned`)
+        console.log('SPAWN RESPONSE', response.data)
+        toast.success(`Service spawned`)
         onSpawn()
       })
   }

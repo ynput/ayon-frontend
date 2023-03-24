@@ -11,13 +11,13 @@ import { toast } from 'react-toastify'
 
 import Header from './containers/header'
 import LoginPage from './pages/LoginPage/LoginPage'
-import ErrorPage from './pages/error'
+import ErrorPage from './pages/ErrorPage'
 
-const ProjectPage = lazy(() => import('./pages/project'))
+const ProjectPage = lazy(() => import('./pages/ProjectPage'))
 const ManageProjects = lazy(() => import('./pages/manageProjects'))
 const ExplorerPage = lazy(() => import('./pages/explorer'))
 const APIDocsPage = lazy(() => import('./pages/doc/api'))
-const ProfilePage = lazy(() => import('./pages/profile'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const SettingsPage = lazy(() => import('./pages/settings'))
 const EventPage = lazy(() => import('./pages/event/EventPage'))
 const ServicesPage = lazy(() => import('./pages/services'))

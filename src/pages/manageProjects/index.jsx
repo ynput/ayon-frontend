@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-dom'
+import { useSelector, useDispatch } from 'react-redux'
 
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 
@@ -9,8 +10,7 @@ import AddonSettings from '/src/containers/addonSettings'
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './newProject/NewProjectDialog'
-import { useSelector } from 'react-redux'
-import { useEffect } from 'react'
+import { selectProject } from '/src/features/context'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import ProjectDashboard from '../projectDashboard/ProjectDashboard'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
@@ -22,6 +22,7 @@ const ManageProjects = () => {
   // get is user from context
   const isUser = useSelector((state) => state.user.data.isUser)
   const projectName = useSelector((state) => state.project.name)
+  const dispatch = useDispatch()
 
   let { module } = useParams()
 
@@ -32,6 +33,11 @@ const ManageProjects = () => {
     'project',
     withDefault(StringParam, projectName),
   )
+
+  useEffect(() => {
+    // Update project name in header
+    dispatch(selectProject(selectedProject))
+  }, [selectedProject])
 
   // has project list been loaded and selection vaidated?
   const [isProjectValid, setIsProjectValid] = useState(false)
