@@ -223,9 +223,14 @@ const LoginPage = ({ loading }) => {
               />
               <Button label={<strong>Login</strong>} type="submit" />
             </form>
-            <span>or</span>
-            {oauthOptions &&
-              oauthOptions.map(({ name, url }) => <AuthLink key={name} name={name} url={url} />)}
+            {oauthOptions?.length ? (
+              <>
+                <span>or</span>
+                {oauthOptions.map(({ name, url }) => (
+                  <AuthLink key={name} name={name} url={url} />
+                ))}
+              </>
+            ) : null}
           </MethodsStyled>
         </Panel>
       </LoginFormStyled>
