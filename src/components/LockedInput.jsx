@@ -21,6 +21,7 @@ const LockedInputRow = ({
   saveLabel = 'Save',
   cancelLabel = 'Cancel',
   onEdit,
+  editIcon = 'edit',
   fullUnlock,
   type,
   style,
@@ -71,7 +72,7 @@ const LockedInputRow = ({
             {!fullUnlock && <Button icon="done" onClick={handleSubmit} label={saveLabel} />}
           </>
         ) : (
-          <Button icon="edit" onClick={onEdit || handleOpen} />
+          <Button icon={editIcon} onClick={onEdit || handleOpen} />
         ))}
     </UsernameStyled>
   )

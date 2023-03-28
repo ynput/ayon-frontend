@@ -74,8 +74,8 @@ const ApiKeyManager = ({ preview, name }) => {
       <>
         <LockedInput
           value={preview || newKey.preview}
-          icon={'delete'}
           onEdit={handleDelete}
+          editIcon={'delete'}
           label={'Api Key'}
         />
         {newKey && (
@@ -96,7 +96,12 @@ const ApiKeyManager = ({ preview, name }) => {
     )
 
   return (
-    <LockedInput onEdit={createNewKey} label="API Key" icon="add" placeholder="Create API Key..." />
+    <LockedInput
+      onEdit={createNewKey}
+      label="API Key"
+      editIcon="add"
+      placeholder="Create API Key..."
+    />
   )
 }
 
