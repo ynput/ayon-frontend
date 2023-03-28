@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Dropdown from '../dropdown'
+import { Dropdown } from '@ynput/ayon-react-components'
 import StatusField from './statusField'
 import { useSelector } from 'react-redux'
 

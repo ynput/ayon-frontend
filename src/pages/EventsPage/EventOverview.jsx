@@ -1,6 +1,9 @@
 import React from 'react'
 import { Section, Panel } from '@ynput/ayon-react-components'
-import { TotalsStyledPanel, TotalStyledButton } from '../settings/users/UsersOverview'
+import {
+  TotalsStyledPanel,
+  TotalStyledButton,
+} from '/src/pages/SettingsPage/UsersSettings/UsersOverview'
 import EventTile from './EventTile'
 
 const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setShowLogs }) => {

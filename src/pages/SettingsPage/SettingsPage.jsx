@@ -10,8 +10,8 @@ const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const AddonVersions = lazy(() => import('./AddonVersions'))
 const StudioSettings = lazy(() => import('./StudioSettings'))
 const SiteSettings = lazy(() => import('./SiteSettings'))
-const UsersSettings = lazy(() => import('./users/UsersSettings'))
-const Roles = lazy(() => import('./roles'))
+const UsersSettings = lazy(() => import('./UsersSettings'))
+const Roles = lazy(() => import('./Roles'))
 const Attributes = lazy(() => import('./Attributes'))
 
 const SettingsPage = () => {

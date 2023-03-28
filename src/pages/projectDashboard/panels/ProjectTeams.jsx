@@ -1,7 +1,7 @@
 import React from 'react'
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
-import UserTile from '../../settings/users/UserTile'
+import UserTile from '/src/pages/SettingsPage/UsersSettings/UserTile'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetTeamsQuery } from '/src/services/getTeams'
 

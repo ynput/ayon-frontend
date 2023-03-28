@@ -13,7 +13,7 @@ import { StringParam, useQueryParam } from 'use-query-params'
 import { useMemo } from 'react'
 import { useEffect } from 'react'
 
-const EventPage = () => {
+const EventsPage = () => {
   const dispatch = useDispatch()
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
   // use query param to get selected event
@@ -164,4 +164,4 @@ const EventPage = () => {
   )
 }
 
-export default EventPage
+export default EventsPage
