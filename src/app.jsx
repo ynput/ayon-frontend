@@ -10,17 +10,17 @@ import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
 import { toast } from 'react-toastify'
 
 import Header from './containers/header'
-import LoginPage from './pages/LoginPage/LoginPage'
+import LoginPage from './pages/LoginPage'
 import ErrorPage from './pages/ErrorPage'
 
 const ProjectPage = lazy(() => import('./pages/ProjectPage'))
-const ManageProjects = lazy(() => import('./pages/manageProjects'))
-const ExplorerPage = lazy(() => import('./pages/explorer'))
-const APIDocsPage = lazy(() => import('./pages/doc/api'))
+const ProjectManagerPage = lazy(() => import('./pages/ProjectManagerPage'))
+const ExplorerPage = lazy(() => import('./pages/ExplorerPage'))
+const APIDocsPage = lazy(() => import('./pages/APIDocsPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
-const SettingsPage = lazy(() => import('./pages/settings'))
-const EventPage = lazy(() => import('./pages/event/EventPage'))
-const ServicesPage = lazy(() => import('./pages/services'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const EventsPage = lazy(() => import('./pages/EventsPage'))
+const ServicesPage = lazy(() => import('./pages/ServicesPage'))
 
 import { login } from './features/user'
 import { SocketContext, SocketProvider } from './context/websocketContext'
@@ -120,7 +120,7 @@ const App = () => {
                 element={<Navigate replace to="/manageProjects/dashboard" />}
               />
 
-              <Route path="/manageProjects/:module" element={<ManageProjects />} />
+              <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
               <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
               <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
               <Route
@@ -141,7 +141,7 @@ const App = () => {
               <Route path="/explorer" element={<ExplorerPage />} />
               <Route path="/doc/api" element={<APIDocsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/events" element={<EventPage />} />
+              <Route path="/events" element={<EventsPage />} />
               <Route element={<ErrorPage code="404" />} />
             </Routes>
           </QueryParamProvider>

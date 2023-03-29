@@ -7,6 +7,7 @@ import {
   FormLayout,
   FormRow,
   InputText,
+  Dropdown,
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -16,10 +17,9 @@ import getFieldInObject from '/src/helpers/getFieldInObject'
 import { isEmpty, isEqual, union } from 'lodash'
 import { format } from 'date-fns'
 import StatusSelect from '/src/components/status/statusSelect'
-import AssigneeSelect from '../../components/assignee/AssigneeSelect'
+import AssigneeSelect from '/src/components/assignee/AssigneeSelect'
 import TypeEditor from './TypeEditor'
-import Dropdown from '/src/components/dropdown'
-import EntityDetailsHeader from '../../components/Details/EntityDetailsHeader'
+import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import { Link } from 'react-router-dom'
 
 const inputTypes = {

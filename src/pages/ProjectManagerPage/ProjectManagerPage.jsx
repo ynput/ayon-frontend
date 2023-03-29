@@ -1,23 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
+import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
 import { Button, Toolbar } from '@ynput/ayon-react-components'
+import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
+import { toast } from 'react-toastify'
 
 import ProjectList from '/src/containers/projectList'
 import AddonSettings from '/src/containers/addonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
-import NewProjectDialog from './newProject/NewProjectDialog'
-import { selectProject } from '/src/features/context'
-import { StringParam, useQueryParam, withDefault } from 'use-query-params'
-import ProjectDashboard from '../projectDashboard/ProjectDashboard'
-import { useDeleteProjectMutation } from '/src/services/project/updateProject'
-import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
-import { toast } from 'react-toastify'
+import NewProjectDialog from './NewProjectDialog'
+import ProjectDashboard from '/src/pages/ProjectDashboard'
 
-const ManageProjects = () => {
+import { selectProject } from '/src/features/context'
+import { useDeleteProjectMutation } from '/src/services/project/updateProject'
+
+const ProjectManagerPage = () => {
   const navigate = useNavigate()
   // get is user from context
   const isUser = useSelector((state) => state.user.data.isUser)
@@ -190,4 +191,4 @@ const ManageProjects = () => {
   )
 }
 
-export default ManageProjects
+export default ProjectManagerPage

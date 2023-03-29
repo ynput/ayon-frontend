@@ -5,7 +5,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
-import NewServiceDialog from './newService'
+import NewServiceDialog from './NewServiceDialog'
 
 const formatStatus = (rowData) => {
   if (!rowData.shouldRun) return rowData.isRunning ? 'STOPPING' : 'DISABLED'

@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import UserImagesStacked from '/src/pages/settings/users/UserImagesStacked'
+import UserImagesStacked from '/src/pages/SettingsPage/UsersSettings/UserImagesStacked'
 import styled, { css } from 'styled-components'
 
 const FieldStyled = styled.div`

@@ -5,11 +5,11 @@ import { Spacer, Button } from '@ynput/ayon-react-components'
 
 import { Dialog } from 'primereact/dialog'
 
-import BrowserPage from './browser/BrowserPage'
-import EditorPage from './editor'
+import BrowserPage from './BrowserPage'
+import EditorPage from './EditorPage'
 import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
-import WorkfilesPage from './workfiles/WorkfilesPage'
+import WorkfilesPage from './WorkfilesPage'
 
 import usePubSub from '/src/hooks/usePubSub'
 import { setBreadcrumbs } from '/src/features/context'

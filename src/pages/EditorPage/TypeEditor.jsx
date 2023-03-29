@@ -1,4 +1,4 @@
-import Dropdown from '/src/components/dropdown'
+import { Dropdown } from '@ynput/ayon-react-components'
 
 //eslint-disable-next-line no-unused-vars
 const TypeEditor = ({ value, options, onChange, style, disabled, placeholder, isChanged }) => {

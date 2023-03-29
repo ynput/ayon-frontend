@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import UserImage from '/src/pages/settings/users/UserImage'
+import UserImage from '/src/pages/SettingsPage/UsersSettings/UserImage'
 
 const RowStyled = styled.span`
   cursor: pointer;
