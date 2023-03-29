@@ -13,7 +13,7 @@ import AddonSettings from '/src/containers/addonSettings'
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
-import ProjectDashboard from '../projectDashboard/ProjectDashboard'
+import ProjectDashboard from '/src/pages/ProjectDashboard'
 
 import { selectProject } from '/src/features/context'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
