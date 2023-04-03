@@ -101,6 +101,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
         ...context,
         projectName,
       },
+      projectName,
       addonName,
       addonVersion,
     })
