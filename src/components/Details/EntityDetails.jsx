@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
 import ThumbnailGallery from './ThumbnailGallery'
 import AttributeTable from '/src/containers/attributeTable'
+import { format } from 'date-fns'
 
 const EntityDetails = ({
   nodes = [],
@@ -48,9 +49,15 @@ const EntityDetails = ({
 
       // compare arrays if they are arrays
       if (uniqueValues.length > 1 && uniqueValues.flat().length > 1) {
-        attribsData[key] = `Multiple(${uniqueValues
-          .map((v) => (v?.length || typeof v === 'number' ? v : 'null'))
-          .join(', ')})`
+        if (key.includes('Date')) {
+          attribsData[key] = `Multiple(${uniqueValues
+            .map((v) => (v ? format(new Date(v), 'dd/MM/yyyy') : 'null'))
+            .join(', ')})`
+        } else {
+          attribsData[key] = `Multiple(${uniqueValues
+            .map((v) => (v?.length || typeof v === 'number' ? v : 'null'))
+            .join(', ')})`
+        }
       } else {
         attribsData[key] = uniqueValues[0]
       }
