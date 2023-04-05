@@ -38,8 +38,6 @@ const NameField = ({
     icon = families[node.family || node.subset?.family]?.icon || 'layers'
   }
 
-  console.log(prefix)
-
   return (
     <CellWithIcon
       icon={icon}
