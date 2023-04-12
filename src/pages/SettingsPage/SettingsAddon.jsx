@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Section } from '@ynput/ayon-react-components'
+import { Section } from 'ayon-react-components-test'
 import styled from 'styled-components'
 
 const AddonWrapper = styled.iframe`

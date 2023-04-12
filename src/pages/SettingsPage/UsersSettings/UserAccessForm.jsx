@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { InputSwitch, FormLayout, FormRow } from '@ynput/ayon-react-components'
+import { InputSwitch, FormLayout, FormRow } from 'ayon-react-components-test'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 

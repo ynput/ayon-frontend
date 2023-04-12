@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { Section, Toolbar } from '@ynput/ayon-react-components'
+import { Section, Toolbar } from 'ayon-react-components-test'
 
 import EntityDetailsContainer from './EntityDetailsContainer'
 import { upperFirst } from 'lodash'

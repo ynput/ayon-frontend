@@ -7,7 +7,7 @@ import {
   Toolbar,
   ScrollPanel,
   Button,
-} from '@ynput/ayon-react-components'
+} from 'ayon-react-components-test'
 
 import { SelectButton } from 'primereact/selectbutton'
 

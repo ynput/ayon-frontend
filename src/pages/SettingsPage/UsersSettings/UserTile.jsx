@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Panel } from '@ynput/ayon-react-components'
+import { Panel } from 'ayon-react-components-test'
 import styled, { css } from 'styled-components'
 import UserImage from './UserImage'
 import { useGetUserByNameQuery } from '/src/services/user/getUsers'

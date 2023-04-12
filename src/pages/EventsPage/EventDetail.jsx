@@ -1,6 +1,6 @@
 import React from 'react'
 import { useGetEventByIdQuery } from '/src/services/events/getEvents'
-import { Section, Panel, Button } from '@ynput/ayon-react-components'
+import { Section, Panel, Button } from 'ayon-react-components-test'
 import DetailHeader from '/src/components/DetailHeader'
 import { TimestampField } from '/src/containers/fieldFormat'
 import UserTile from '/src/pages/SettingsPage/UsersSettings/UserTile'

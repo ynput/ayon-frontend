@@ -4,7 +4,7 @@ import Thumbnail from '/src/containers/thumbnail'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { Button } from '@ynput/ayon-react-components'
+import { Button } from 'ayon-react-components-test'
 import { useEffect } from 'react'
 
 const GalleryStyled = styled.div`

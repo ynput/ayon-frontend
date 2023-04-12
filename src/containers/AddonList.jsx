@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Section, TablePanel } from 'ayon-react-components-test'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'

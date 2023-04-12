@@ -2,14 +2,7 @@ import ayonClient from '/src/ayon'
 import { useState, useMemo, useEffect } from 'react'
 import { useGetProjectQuery } from '../../services/project/getProject'
 import { useGetCustomRootsQuery, useSetCustomRootsMutation } from '/src/services/customRoots'
-import {
-  InputText,
-  Button,
-  FormLayout,
-  FormRow,
-  Panel,
-  Section,
-} from '@ynput/ayon-react-components'
+import { InputText, Button, FormLayout, FormRow, Panel, Section } from 'ayon-react-components-test'
 
 const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots] = useSetCustomRootsMutation()

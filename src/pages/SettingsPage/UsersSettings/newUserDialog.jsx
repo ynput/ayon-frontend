@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
-import { Spacer, Button } from '@ynput/ayon-react-components'
+import { Spacer, Button } from 'ayon-react-components-test'
 import ProjectList from '/src/containers/projectList'
 import { useAddUserMutation } from '/src/services/user/updateUser'
 import ayonClient from '/src/ayon'

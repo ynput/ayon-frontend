@@ -2,8 +2,9 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import AssigneeField from './AssigneeField'
-import { Dropdown } from '@ynput/ayon-react-components'
+
 import AssigneeDropdown from './AssigneeDropdown'
+import { Dropdown } from 'ayon-react-components-test'
 
 const AssigneeSelect = (props) => {
   const { names, editor, align, onChange, widthExpand, disabled } = props

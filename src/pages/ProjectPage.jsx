@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, NavLink, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Spacer, Button } from '@ynput/ayon-react-components'
+import { Spacer, Button } from 'ayon-react-components-test'
 
 import { Dialog } from 'primereact/dialog'
 

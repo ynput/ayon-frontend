@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { Button, InputText } from '@ynput/ayon-react-components'
+import { Button, InputText } from 'ayon-react-components-test'
 import styled from 'styled-components'
 import CreateButton from './createButton'
 

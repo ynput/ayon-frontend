@@ -1,6 +1,6 @@
 import { useRef, useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Section, Button } from '@ynput/ayon-react-components'
+import { Section, Button } from 'ayon-react-components-test'
 import { Dialog } from 'primereact/dialog'
 import styled from 'styled-components'
 

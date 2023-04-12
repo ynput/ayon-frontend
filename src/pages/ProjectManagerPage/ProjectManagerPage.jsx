@@ -3,7 +3,7 @@ import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-d
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
-import { Button, Toolbar } from '@ynput/ayon-react-components'
+import { Button, Toolbar } from 'ayon-react-components-test'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 

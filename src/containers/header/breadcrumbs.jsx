@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { Button } from '@ynput/ayon-react-components'
+import { Button } from 'ayon-react-components-test'
 import { toast } from 'react-toastify'
 
 const Breadcrumbs = () => {

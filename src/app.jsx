@@ -1,7 +1,7 @@
 import ayonClient from '/src/ayon'
 import axios from 'axios'
 
-import { LoaderShade } from '@ynput/ayon-react-components'
+import { LoaderShade } from 'ayon-react-components-test'
 import { useEffect, useState, Suspense, lazy, useContext } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'

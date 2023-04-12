@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Button, Spacer } from '@ynput/ayon-react-components'
+import { Button, Spacer } from 'ayon-react-components-test'
 
 import Breadcrumbs from './breadcrumbs'
 import UserMenu from './userMenu'

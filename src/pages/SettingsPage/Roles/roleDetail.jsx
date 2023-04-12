@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { Button, Spacer, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+import { Button, Spacer, Section, Toolbar, ScrollPanel } from 'ayon-react-components-test'
 import SettingsEditor from '/src/containers/settingsEditor'
 
 const RoleDetail = ({ projectName, role, onChange }) => {

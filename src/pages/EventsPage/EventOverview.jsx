@@ -1,5 +1,5 @@
 import React from 'react'
-import { Section, Panel } from '@ynput/ayon-react-components'
+import { Section, Panel } from 'ayon-react-components-test'
 import {
   TotalsStyledPanel,
   TotalStyledButton,

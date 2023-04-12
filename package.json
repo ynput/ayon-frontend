@@ -17,6 +17,7 @@
     "@rtk-query/graphql-request-base-query": "^2.2.0",
     "@ynput/ayon-react-components": "^0.2.0",
     "axios": "^0.27.2",
+    "ayon-react-components-test": "^0.2.2",
     "chart.js": "^4.2.0",
     "date-fns": "^2.29.3",
     "html-to-image": "^1.11.11",

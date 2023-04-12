@@ -11,7 +11,7 @@ import {
   Toolbar,
   ScrollPanel,
   InputSwitch,
-} from '@ynput/ayon-react-components'
+} from 'ayon-react-components-test'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { SelectButton } from 'primereact/selectbutton'
 

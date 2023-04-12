@@ -1,9 +1,9 @@
-import { Shade } from '@ynput/ayon-react-components'
+import { LoaderShade } from 'ayon-react-components-test'
 
 const LoadingPage = () => {
   return (
     <main className="center">
-      <Shade />
+      <LoaderShade />
     </main>
   )
 }

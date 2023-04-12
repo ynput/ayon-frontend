@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Dialog } from 'primereact/dialog'
 import { toast } from 'react-toastify'
 
-import { Button, Spacer, InputText, Toolbar } from '@ynput/ayon-react-components'
+import { Button, Spacer, InputText, Toolbar } from 'ayon-react-components-test'
 import SettingsEditor from '/src/containers/settingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import {

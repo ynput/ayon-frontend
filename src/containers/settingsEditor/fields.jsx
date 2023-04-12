@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Button, Divider } from '@ynput/ayon-react-components'
+import { Button, Divider } from 'ayon-react-components-test'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './settingsPanel'
 

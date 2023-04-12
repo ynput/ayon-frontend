@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
-import { Spacer, Button, Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
+import { Spacer, Button, Section, Toolbar, TablePanel } from 'ayon-react-components-test'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'

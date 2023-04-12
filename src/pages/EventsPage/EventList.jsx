@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Section, TablePanel } from 'ayon-react-components-test'
 import { TimestampField } from '/src/containers/fieldFormat'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'

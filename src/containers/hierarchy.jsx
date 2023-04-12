@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
+import { Section, Toolbar, InputText, TablePanel } from 'ayon-react-components-test'
 
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'

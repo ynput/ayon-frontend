@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
-import { InputText, Button } from '@ynput/ayon-react-components'
+import { InputText, Button } from 'ayon-react-components-test'
 import styled from 'styled-components'
 import LockedInputRow from '/src/components/LockedInput'
 import { camelCase } from 'lodash'

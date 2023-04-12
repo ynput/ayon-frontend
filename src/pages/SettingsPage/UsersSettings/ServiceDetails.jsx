@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Panel } from '@ynput/ayon-react-components'
+import { Panel } from 'ayon-react-components-test'
 import LockedInputRow from '/src/components/LockedInput'
 import ApiKeyManager from '/src/components/ApiKeyManager'
 

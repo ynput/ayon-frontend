@@ -12,7 +12,7 @@ import {
   FormRow,
   Section,
   Toolbar,
-} from '@ynput/ayon-react-components'
+} from 'ayon-react-components-test'
 import axios from 'axios'
 
 const NewRoleDialog = ({ onClose, rolesList }) => {

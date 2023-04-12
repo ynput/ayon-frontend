@@ -1,5 +1,5 @@
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Section } from '@ynput/ayon-react-components'
+import { Section } from 'ayon-react-components-test'
 
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'

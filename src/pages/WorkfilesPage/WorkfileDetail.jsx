@@ -1,4 +1,4 @@
-import { Section, Panel } from '@ynput/ayon-react-components'
+import { Section, Panel } from 'ayon-react-components-test'
 import { PathField } from '/src/containers/fieldFormat'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'

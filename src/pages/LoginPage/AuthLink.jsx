@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import OAuth2ProviderIcon from '/src/components/oauthIcons'
 import { upperFirst } from 'lodash'
-import { Button } from '@ynput/ayon-react-components'
+import { Button } from 'ayon-react-components-test'
 
 const AuthLink = ({ url, name }) => {
   const colours = {

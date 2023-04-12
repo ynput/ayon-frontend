@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import PropTypes from 'prop-types'
 import { Dialog } from 'primereact/dialog'
 
-import { Button, InputPassword, FormLayout, FormRow } from '@ynput/ayon-react-components'
+import { Button, InputPassword, FormLayout, FormRow } from 'ayon-react-components-test'
 
 import { useUpdateUserPasswordMutation } from '/src/services/user/updateUser'
 

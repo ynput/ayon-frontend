@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
-import { Section, ScrollPanel, Toolbar, Button } from '@ynput/ayon-react-components'
+import { Section, ScrollPanel, Toolbar, Button } from 'ayon-react-components-test'
 import SettingsEditor from '/src/containers/settingsEditor'
 import { useGetAnatomySchemaQuery } from '../../services/anatomy/getAnatomy'
 import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'

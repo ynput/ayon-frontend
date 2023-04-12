@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel, FormRow } from '@ynput/ayon-react-components'
+import { Button, Section, Panel, FormRow } from 'ayon-react-components-test'
 import { isEmpty } from 'lodash'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'

@@ -1,6 +1,6 @@
 import { useMemo, useEffect, lazy } from 'react'
 import { useParams, NavLink, Navigate } from 'react-router-dom'
-import { Spacer } from '@ynput/ayon-react-components'
+import { Spacer } from 'ayon-react-components-test'
 import { useSelector } from 'react-redux'
 import { useGetSettingsAddonsQuery } from '/src/services/addonList'
 

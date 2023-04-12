@@ -1,10 +1,4 @@
-import {
-  InputText,
-  FormLayout,
-  FormRow,
-  InputPassword,
-  Divider,
-} from '@ynput/ayon-react-components'
+import { InputText, FormLayout, FormRow, InputPassword, Divider } from 'ayon-react-components-test'
 import styled from 'styled-components'
 
 export const DividerSmallStyled = styled(Divider)`

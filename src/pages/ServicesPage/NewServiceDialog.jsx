@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
 import { Dropdown } from 'primereact/dropdown'
-import { FormLayout, FormRow, Spacer, Button, InputText } from '@ynput/ayon-react-components'
+import { FormLayout, FormRow, Spacer, Button, InputText } from 'ayon-react-components-test'
 
 const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [addonData, setAddonData] = useState([])

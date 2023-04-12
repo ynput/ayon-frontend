@@ -8,7 +8,7 @@ import {
   FormRow,
   InputText,
   Dropdown,
-} from '@ynput/ayon-react-components'
+} from 'ayon-react-components-test'
 
 import { useSelector } from 'react-redux'
 import { useState } from 'react'

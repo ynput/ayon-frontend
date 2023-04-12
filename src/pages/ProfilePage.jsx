@@ -12,7 +12,7 @@ import {
   Button,
   Section,
   Panel,
-} from '@ynput/ayon-react-components'
+} from 'ayon-react-components-test'
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null)

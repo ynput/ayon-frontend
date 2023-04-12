@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
-import { Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
+import { Button, Section, Toolbar, InputText } from 'ayon-react-components-test'
 // Comps
 import NewUserDialog from './newUserDialog'
 import SetPasswordDialog from './SetPasswordDialog'

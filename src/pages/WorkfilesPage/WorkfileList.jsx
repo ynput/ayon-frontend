@@ -1,6 +1,6 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Section, TablePanel } from 'ayon-react-components-test'
 import { CellWithIcon } from '/src/components/icons'
 import { useSelector } from 'react-redux'
 import { useGetWorkfileListQuery } from '../../services/getWorkfiles'

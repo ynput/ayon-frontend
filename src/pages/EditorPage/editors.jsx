@@ -1,4 +1,4 @@
-import { InputText, InputNumber } from '@ynput/ayon-react-components'
+import { InputText, InputNumber } from 'ayon-react-components-test'
 import { Dropdown as DropdownPrime } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 import ayonClient from '/src/ayon'

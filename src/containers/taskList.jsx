@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { TablePanel, Section } from 'ayon-react-components-test'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'

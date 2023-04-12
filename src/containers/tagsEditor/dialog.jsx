@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { Dialog } from 'primereact/dialog'
-import { Button } from '@ynput/ayon-react-components'
+import { Button } from 'ayon-react-components-test'
 import TagsEditor from './editor'
 
 const TagsEditorDialog = ({ visible, onHide, onSuccess, value, tags, isLoading, isError }) => {

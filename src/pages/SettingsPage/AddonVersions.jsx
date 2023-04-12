@@ -1,5 +1,5 @@
 import { Dropdown } from 'primereact/dropdown'
-import { Spacer, Panel, ScrollPanel } from '@ynput/ayon-react-components'
+import { Spacer, Panel, ScrollPanel } from 'ayon-react-components-test'
 
 import { useMemo, useRef } from 'react'
 

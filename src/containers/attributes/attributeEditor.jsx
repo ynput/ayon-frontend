@@ -9,7 +9,7 @@ import {
   FormRow,
   InputText,
   InputSwitch,
-} from '@ynput/ayon-react-components'
+} from 'ayon-react-components-test'
 import EnumEditor from './enumEditor'
 import LockedInput from '/src/components/LockedInput'
 import { camelCase } from 'lodash'

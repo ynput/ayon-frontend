@@ -1,4 +1,4 @@
-import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
+import { Section, Toolbar, InputText, InputSwitch } from 'ayon-react-components-test'
 import { useGetEventsWithLogsQuery } from '/src/services/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'

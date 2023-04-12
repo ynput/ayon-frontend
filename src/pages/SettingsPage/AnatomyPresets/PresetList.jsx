@@ -3,7 +3,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
 
-import { TablePanel } from '@ynput/ayon-react-components'
+import { TablePanel } from 'ayon-react-components-test'
 
 import { useGetAnatomyPresetsQuery } from '../../../services/anatomy/getAnatomy'
 

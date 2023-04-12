@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { Section, LoaderShade, Button } from '@ynput/ayon-react-components'
+import { Section, LoaderShade, Button } from 'ayon-react-components-test'
 import { useGetEntitiesDetailsQuery } from '/src/services/entity/getEntity'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import EntityDetails from '/src/components/Details/EntityDetails'

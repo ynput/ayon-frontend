@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
-import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
+import { TablePanel, Button, Spacer, Section, Toolbar } from 'ayon-react-components-test'
 import NewServiceDialog from './NewServiceDialog'
 
 const formatStatus = (rowData) => {

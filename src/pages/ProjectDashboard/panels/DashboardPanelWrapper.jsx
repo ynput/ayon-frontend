@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Panel, Button } from '@ynput/ayon-react-components'
+import { Panel, Button } from 'ayon-react-components-test'
 import styled, { css } from 'styled-components'
 import { Link } from 'react-router-dom'
 
