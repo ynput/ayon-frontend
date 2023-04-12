@@ -10,7 +10,6 @@ import {
 import { Dropdown } from 'primereact/dropdown'
 import { MultiSelect } from 'primereact/multiselect'
 import arrayEquals from '/src/helpers/arrayEquals'
-import IconSelect from '/src/components/IconSelect/IconSelect'
 
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)
@@ -239,27 +238,6 @@ const TextWidget = (props) => {
     opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
       onChange(e.target.value)
-    }
-  }
-  //
-  // Icon Picker
-  //
-  else if (props.schema.widget === 'icon') {
-    const featuredIcons = [
-      'block',
-      'back_hand',
-      'task_alt',
-      'visibility',
-      'play_arrow',
-      'timer',
-      'fiber_new',
-      'folder',
-    ]
-    Input = IconSelect
-    opts.value = value
-    opts.featured = featuredIcons
-    opts.onChange = (v) => {
-      onChange(v[0])
     }
   } else {
     Input = InputText
