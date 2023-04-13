@@ -24,7 +24,6 @@ const AddonListItem = ({ addonName, addonTitle, productionVersion, stagingVersio
   }, [versions])
 
   const onProductionChange = (e) => {
-    console.log('SET VER', e.value)
     setAddonVersion({ addonName, productionVersion: e.value })
   }
 

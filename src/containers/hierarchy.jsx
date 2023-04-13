@@ -271,7 +271,6 @@ const Hierarchy = (props) => {
     // remove already expanded folders
     const newExpandedFolders = { ...expandedFolders }
     for (const id of alreadyExpandedFolders) {
-      console.log(newExpandedFolders[id])
       delete newExpandedFolders[id]
     }
 

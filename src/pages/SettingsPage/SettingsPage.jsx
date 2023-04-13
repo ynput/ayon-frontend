@@ -27,7 +27,7 @@ const SettingsPage = () => {
   useEffect(() => {
     //document.title = 'Settings'
     return () => {
-      console.log('unmounting settings page')
+      //console.log('unmounting settings page')
     }
   }, [])
 

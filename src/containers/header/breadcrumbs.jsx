@@ -17,7 +17,6 @@ const Breadcrumbs = () => {
   const projectName = useSelector((state) => state.project.name)
 
   const [breadcrumbs, uri] = useMemo(() => {
-    console.log('NEW BREADCRUMBS', projectName, crumbData)
     let crumbs = [projectName]
     let uri = `op://${projectName}/`
     for (const h of crumbData.parents || []) {

@@ -15,7 +15,6 @@ const apiSuffix = (projectName, siteId, environment) => {
       suffix += `?variant=${environment}`
     }
   }
-  console.log('Suffix: ' + suffix)
   return suffix
 }
 

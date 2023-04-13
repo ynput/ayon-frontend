@@ -54,10 +54,12 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
         service: selectedService,
         hostname: selectedHost,
       })
-      .then((response) => {
-        console.log('SPAWN RESPONSE', response.data)
+      .then(() => {
         toast.success(`Service spawned`)
         onSpawn()
+      })
+      .catch((err) => {
+        toast.error(`Unable to spawn service ${err.message}`)
       })
   }
 

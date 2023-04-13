@@ -28,7 +28,6 @@ const ProjectAnatomy = ({ projectName }) => {
   const [updateProjectAnatomy] = useUpdateProjectAnatomyMutation()
 
   const saveAnatomy = () => {
-    console.log(newData)
     updateProjectAnatomy({ projectName, anatomy: newData })
       .unwrap()
       .then(() => {

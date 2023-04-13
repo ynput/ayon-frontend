@@ -37,13 +37,13 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
   const onAddonLoad = () => {
     setLoading(false)
     pushContext()
-    console.log(loading)
   }
 
   return (
     <main>
       {sidebarComponent}
       <Section>
+        {loading && <div style={{ display: 'none' }}>Loading...</div>}
         <AddonWrapper src={addonUrl} ref={addonRef} onLoad={onAddonLoad} />
       </Section>
     </main>
