@@ -46,7 +46,7 @@ const OAuth2ProviderIcon = ({ name }) => {
     google: <GoogleIcon />,
   }
   if (name.toLowerCase() in data) return data[name.toLowerCase()]
-  return <span>{name}</span>
+  return null
 }
 
 export default OAuth2ProviderIcon

@@ -73,6 +73,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
 
   const context = useSelector((state) => state.context)
   const projectName = useSelector((state) => state.project.name)
+  const userName = useSelector((state) => state.user.name)
   const focusedFolders = context.focused.folders
   const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/`
 
@@ -99,8 +100,9 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
       accessToken: localStorage.getItem('accessToken'),
       context: {
         ...context,
-        projectName,
+        projectName, //deprecated i guess
       },
+      userName,
       projectName,
       addonName,
       addonVersion,

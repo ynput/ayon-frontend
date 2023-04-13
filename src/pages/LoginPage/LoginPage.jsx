@@ -125,7 +125,8 @@ const LoginPage = ({ loading }) => {
   // OAuth2 handler after redirect from provider
   useEffect(() => {
     const provider = window.location.pathname.split('/')[2]
-    const code = new URLSearchParams(window.location.search).get('code')
+    const qs = new URLSearchParams(window.location.search)
+    const code = qs.get('code')
 
     if (code && provider) {
       setIsLoading(true)
@@ -153,9 +154,44 @@ const LoginPage = ({ loading }) => {
         .finally(() => {
           setIsLoading(false)
         })
+    } else if (info?.ssoOptions?.length) {
+      const providerConfig = info.ssoOptions.find((o) => o.name === provider)
+
+      if (!providerConfig) {
+        return
+      }
+
+      setIsLoading(true)
+      axios
+        .get(providerConfig.callback, { params: qs })
+        .then((response) => {
+          const data = response.data
+          if (data.user) {
+            // login successful
+            toast.info(data.detail)
+            dispatch(login({ user: data.user, accessToken: data.token }))
+            // invalidate all rtk queries cache
+            dispatch(ayonApi.util.resetApiState())
+          } else {
+            toast.error('Unable to login using SSO')
+          }
+        })
+        .catch((err) => {
+          console.error('SSO Callback error', err.response.data)
+          toast.error(
+            <>
+              <p>Unable to login using {providerConfig.name}:</p>
+              <p>{err.response?.data?.detail || `Error ${err.response.status}`}</p>
+            </>,
+          )
+        })
+        .finally(() => {
+          setIsLoading(false)
+        })
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [info.ssoOptions])
 
   // Login form
 
@@ -231,6 +267,32 @@ const LoginPage = ({ loading }) => {
                 ))}
               </>
             ) : null}
+
+            {
+              info.ssoOptions?.length
+                ? info.ssoOptions.map(
+                    ({ name, title, url, args, redirectKey, icon, color, textColor }) => {
+                      const queryDict = { ...args }
+                      const redirect_uri = `${window.location.origin}/login/${name}`
+                      queryDict[redirectKey] = redirect_uri
+
+                      const query = new URLSearchParams(queryDict)
+                      const fullUrl = `${url}?${query}`
+
+                      return (
+                        <AuthLink
+                          key={name}
+                          name={title || name}
+                          url={fullUrl}
+                          icon={icon}
+                          color={color}
+                          textColor={textColor}
+                        />
+                      )
+                    },
+                  )
+                : null // ssoOptions.map
+            }
           </MethodsStyled>
         </Panel>
       </LoginFormStyled>
