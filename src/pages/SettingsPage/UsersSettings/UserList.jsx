@@ -2,9 +2,9 @@ import { useRef } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
 import './users.scss'
-import UserImage from './UserImage'
+
 import { useMemo } from 'react'
 
 const UserList = ({
@@ -93,7 +93,7 @@ const UserList = ({
               <UserImage
                 fullName={col.attrib.fullName || col.name}
                 size={25}
-                style={{ margin: 'auto', transform: 'scale(0.8)' }}
+                style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
                 highlight={col.self}
                 src={col.attrib.avatarUrl}
               />

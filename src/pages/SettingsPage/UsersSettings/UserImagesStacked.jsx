@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import UserImage from './UserImage'
+import { UserImage } from '@ynput/ayon-react-components'
 
 const StackedStyled = styled.div`
   position: relative;
