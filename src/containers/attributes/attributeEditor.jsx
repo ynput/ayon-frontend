@@ -9,9 +9,9 @@ import {
   FormRow,
   InputText,
   InputSwitch,
+  LockedInput,
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
-import LockedInput from '/src/components/LockedInput'
 import { camelCase } from 'lodash'
 
 const SCOPE_OPTIONS = [
@@ -109,7 +109,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   const customFields = {
     enum: (value = [], onChange) => (
-      <EnumEditor values={value} onChange={(value) => onChange({ target: { value: value } })} />
+      <EnumEditor values={value} onChange={(value) => onChange(value)} />
     ),
     inherit: (value, onChange) => (
       <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />
@@ -163,7 +163,13 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
             />
           </FormRow>
           {dataFields.map((field) => (
-            <FormRow label={field} key={field}>
+            <FormRow
+              label={field}
+              key={field}
+              style={{
+                alignItems: 'flex-start',
+              }}
+            >
               {field in customFields ? (
                 customFields[field](formData?.data[field], (value) => setData(field, value))
               ) : (

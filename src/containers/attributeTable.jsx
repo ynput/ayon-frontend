@@ -1,7 +1,8 @@
 import { format } from 'date-fns'
 import styled from 'styled-components'
-import TableRow from '../components/TableRow'
+import { TableRow } from '@ynput/ayon-react-components'
 import { useGetAttributesQuery } from '../services/getAttributes'
+import copyToClipboard from '../helpers/copyToClipboard'
 
 const AttributeTableContainer = styled.div`
   display: flex;
@@ -32,7 +33,7 @@ const AttributeTable = ({
     <AttributeTableContainer style={style}>
       {additionalData &&
         additionalData.map((data, index) => (
-          <TableRow key={index} name={data.title} value={data.value} />
+          <TableRow key={index} name={data.title} value={data.value} onCopy={copyToClipboard} />
         ))}
 
       {data &&
@@ -61,12 +62,15 @@ const AttributeTable = ({
               value={value}
               name={attribData.title}
               tooltip={attribData.description}
+              onCopy={copyToClipboard}
             />
           )
         })}
 
       {projectAttrib &&
-        projectAttrib.map(({ name, value }) => <TableRow key={name} name={name} value={value} />)}
+        projectAttrib.map(({ name, value }) => (
+          <TableRow key={name} name={name} value={value} onCopy={copyToClipboard} />
+        ))}
     </AttributeTableContainer>
   )
 }

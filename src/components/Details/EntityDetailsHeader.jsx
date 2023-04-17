@@ -4,8 +4,9 @@ import DetailHeader from '../DetailHeader'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
 import NameField from '/src/pages/EditorPage/fields/NameField'
 import { useSelector } from 'react-redux'
-import OverflowField from '../OverflowField'
 import styled from 'styled-components'
+import { OverflowField } from '@ynput/ayon-react-components'
+import copyToClipboard from '/src/helpers/copyToClipboard'
 
 const ToolsStyled = styled.div`
   display: flex;
@@ -78,7 +79,12 @@ const EntityDetailsHeader = ({ values = [], tools }) => {
         ) : (
           <h2>Multiple Selected ({values.length})</h2>
         )}
-        <OverflowField value={subTitle} style={{ left: -3 }} align="left" />
+        <OverflowField
+          value={subTitle}
+          style={{ left: -3 }}
+          align="left"
+          onClick={copyToClipboard}
+        />
       </div>
       {tools && <ToolsStyled>{tools}</ToolsStyled>}
     </DetailHeader>

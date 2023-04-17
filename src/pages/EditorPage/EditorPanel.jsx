@@ -8,6 +8,7 @@ import {
   FormRow,
   InputText,
   Dropdown,
+  AssigneeSelect,
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -17,10 +18,10 @@ import getFieldInObject from '/src/helpers/getFieldInObject'
 import { isEmpty, isEqual, union } from 'lodash'
 import { format } from 'date-fns'
 import StatusSelect from '/src/components/status/statusSelect'
-import AssigneeSelect from '/src/components/assignee/AssigneeSelect'
 import TypeEditor from './TypeEditor'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import { Link } from 'react-router-dom'
+import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -47,6 +48,9 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
   const changes = useSelector((state) => state.editor.changes)
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
+
+  // RTK QUERY
+  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined })
 
   // STATES
   // used to throttle changes to redux changes state and keep input fast
@@ -513,7 +517,8 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                 } else if (field === 'assignees') {
                   input = (
                     <AssigneeSelect
-                      names={isMultiple ? union(...isMultiple) : value || []}
+                      value={isMultiple ? union(...isMultiple) : value || []}
+                      options={allUsers}
                       isMultiple={!!isMultiple}
                       placeholder={placeholder}
                       disabled={disabled}

@@ -1,8 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { Panel } from '@ynput/ayon-react-components'
-import UserImage from '/src/pages/SettingsPage/UsersSettings/UserImage'
+import { Panel, UserImage } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
 import { useRef } from 'react'
 
