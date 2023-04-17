@@ -13,6 +13,7 @@ const SiteSettings = lazy(() => import('./SiteSettings'))
 const UsersSettings = lazy(() => import('./UsersSettings'))
 const Roles = lazy(() => import('./Roles'))
 const Attributes = lazy(() => import('./Attributes'))
+const Secrets = lazy(() => import('./Secrets'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
@@ -64,6 +65,8 @@ const SettingsPage = () => {
         return <Roles />
       case 'attributes':
         return <Attributes />
+      case 'secrets':
+        return <Secrets />
       default:
         return <div>Not implemented</div>
     }
@@ -106,6 +109,11 @@ const SettingsPage = () => {
         name: 'Roles',
         path: '/settings/roles',
         module: 'roles',
+      },
+      {
+        name: 'Secrets',
+        path: '/settings/secrets',
+        module: 'secrets',
       },
     ]
 
