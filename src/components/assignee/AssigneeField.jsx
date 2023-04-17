@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import UserImagesStacked from '/src/pages/SettingsPage/UsersSettings/UserImagesStacked'
 import styled, { css } from 'styled-components'
+import { UserImagesStacked } from '@ynput/ayon-react-components'
 
 const FieldStyled = styled.div`
   position: relative;

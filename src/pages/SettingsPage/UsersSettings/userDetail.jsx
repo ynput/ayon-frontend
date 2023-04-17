@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel, FormRow, LockedInput } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Section,
+  Panel,
+  FormRow,
+  LockedInput,
+  UserImagesStacked,
+} from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
-import UserImagesStacked from './UserImagesStacked'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
