@@ -1,7 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import OverflowField from './OverflowField'
+import { OverflowField } from '@ynput/ayon-react-components'
+import copyToClipboard from '../helpers/copyToClipboard'
 
 const AttributeTableRow = styled.div`
   display: flex;
@@ -48,7 +49,7 @@ const TableRow = ({ name, value, tooltip }) => {
   return (
     <AttributeTableRow>
       <TitleStyled tooltip={tooltip}>{name}</TitleStyled>
-      {value ? <OverflowField value={value} /> : '-'}
+      {value ? <OverflowField value={value} onClick={copyToClipboard} /> : '-'}
     </AttributeTableRow>
   )
 }
