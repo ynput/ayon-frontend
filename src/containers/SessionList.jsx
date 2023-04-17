@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TablePanel, Section, LinkButton } from '@ynput/ayon-react-components'
+import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { TimestampField } from '/src/containers/fieldFormat'
 
@@ -75,7 +75,7 @@ const SessionList = ({ userName }) => {
           <Column
             header="Invalidate"
             body={(rowData) => (
-              <LinkButton label="Invalidate" onClick={() => invalidate(rowData.token)} />
+              <Button link label="Invalidate" onClick={() => invalidate(rowData.token)} />
             )}
             style={{ maxWidth: 160 }}
           />

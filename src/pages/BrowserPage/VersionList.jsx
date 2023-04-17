@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState } from 'react'
-import { LinkButton } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import { Menu } from 'primereact/menu'
 
 const VersionList = (row, onSelectVersion) => {
@@ -22,7 +22,7 @@ const VersionList = (row, onSelectVersion) => {
   return (
     <>
       <Menu model={versions} popup ref={menu} />
-      <LinkButton label={currentVersion} onClick={(e) => menu.current.toggle(e)} />
+      <Button link label={currentVersion} onClick={(e) => menu.current.toggle(e)} />
     </>
   )
 }
