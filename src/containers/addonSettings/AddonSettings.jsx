@@ -486,7 +486,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             <ScrollPanel
               className="transparent nopad"
               style={{ flexGrow: 1, minWidth: 750 }}
-              scrollStyle={{ padding: 0 }}
+              scrollStyle={{ padding: 0, backgroundColor: 'transparent' }}
             >
               {selectedAddons
                 .filter((addon) => addon.version)

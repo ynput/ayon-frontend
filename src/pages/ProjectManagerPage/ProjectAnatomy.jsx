@@ -53,7 +53,7 @@ const ProjectAnatomy = ({ projectName }) => {
         <ScrollPanel
           className="transparent nopad"
           style={{ flexGrow: 1 }}
-          scrollStyle={{ padding: 0 }}
+          scrollStyle={{ padding: 0, backgroundColor: 'transparent' }}
         >
           {editor}
         </ScrollPanel>

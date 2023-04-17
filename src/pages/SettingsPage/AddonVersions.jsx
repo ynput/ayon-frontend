@@ -65,7 +65,10 @@ const AddonVersions = ({ projectName }) => {
 
   return (
     <>
-      <ScrollPanel style={{ flexGrow: 1, backgroundColor: 'transparent' }}>
+      <ScrollPanel
+        style={{ flexGrow: 1, backgroundColor: 'transparent' }}
+        scrollStyle={{ backgroundColor: 'transparent' }}
+      >
         <Spacer>
           <section
             className="invisible"
