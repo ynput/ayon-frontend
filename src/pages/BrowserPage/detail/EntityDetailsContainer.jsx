@@ -1,17 +1,17 @@
 import { useSelector } from 'react-redux'
-import { Section, LoaderShade, Button } from '@ynput/ayon-react-components'
+import { Section, LoaderShade, Button, AssigneeSelect } from '@ynput/ayon-react-components'
 import { useGetEntitiesDetailsQuery } from '/src/services/entity/getEntity'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import EntityDetails from '/src/components/Details/EntityDetails'
 import StatusSelect from '/src/components/status/statusSelect'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
 import { TagsField } from '/src/containers/fieldFormat'
-import AssigneeSelect from '/src/components/assignee/AssigneeSelect'
 import { union } from 'lodash'
 import transformVersionsData from '/src/helpers/transformVersionsData'
 import RepresentationList from '../RepresentationList'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 
 const EntityDetailsContainer = ({ type, ids = [] }) => {
   const projectName = useSelector((state) => state.project.name)
@@ -29,6 +29,8 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
     },
     { skip: !ids.length || !type },
   )
+
+  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined })
 
   const isVersion = type === 'version'
 
@@ -121,7 +123,8 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
       title: 'Assignees',
       value: (values) => (
         <AssigneeSelect
-          names={values?.length > 1 ? union(...values) : values[0] || []}
+          value={values?.length > 1 ? union(...values) : values[0] || []}
+          options={allUsers}
           isMultiple={new Set(...values)?.length > 1}
           editor
           align={'right'}
