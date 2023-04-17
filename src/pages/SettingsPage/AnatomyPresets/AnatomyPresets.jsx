@@ -177,7 +177,11 @@ const AnatomyPresets = () => {
           <Spacer />
         </Toolbar>
 
-        <ScrollPanel style={{ flexGrow: 1 }} scrollStyle={{ padding: 0 }} className="transparent">
+        <ScrollPanel
+          style={{ flexGrow: 1 }}
+          scrollStyle={{ padding: 0, backgroundColor: 'transparent' }}
+          className="transparent"
+        >
           {editor}
         </ScrollPanel>
       </Section>

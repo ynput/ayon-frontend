@@ -2,9 +2,16 @@ import { useMemo } from 'react'
 import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './settingsPanel'
+import styled from 'styled-components'
 
 import { isEqual } from 'lodash'
 import arrayEquals from '/src/helpers/arrayEquals'
+
+const CircleButton = styled(Button)`
+  border-radius: 50%;
+  width: 30px;
+  height: 22px;
+`
 
 const arrayStartsWith = (arr1, arr2) => {
   // return true, if first array starts with second array
@@ -327,9 +334,9 @@ const ArrayItemTemplate = (props) => {
 
   const rmButton = props.hasRemove && (
     <div className="array-item-controls">
-      <Button onClick={onRemoveItem} className="circle" icon="close" disabled={undeletable} />
-      <Button onClick={onMoveUp} className="circle" icon="arrow_upward" />
-      <Button onClick={onMoveDown} className="circle" icon="arrow_downward" />
+      <CircleButton onClick={onRemoveItem} icon="close" disabled={undeletable} />
+      <CircleButton onClick={onMoveUp} icon="arrow_upward" />
+      <CircleButton onClick={onMoveDown} icon="arrow_downward" />
     </div>
   )
 
@@ -350,7 +357,7 @@ const ArrayFieldTemplate = (props) => {
         {props.items.map((element) => (
           <ArrayItemTemplate key={element.name} {...element} />
         ))}
-        {props.canAdd && <Button onClick={props.onAddClick} className="circle" icon="add" />}
+        {props.canAdd && <CircleButton onClick={props.onAddClick} icon="add" />}
       </div>
     ),
     [props.items, props.canAdd],
