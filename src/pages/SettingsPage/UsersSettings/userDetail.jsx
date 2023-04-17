@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel, FormRow } from '@ynput/ayon-react-components'
+import { Button, Section, Panel, FormRow, LockedInput } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
@@ -10,7 +10,6 @@ import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
-import LockedInputRow from '/src/components/LockedInput'
 import DetailHeader from '/src/components/DetailHeader'
 
 const FormsStyled = styled.section`
@@ -303,14 +302,14 @@ const UserDetail = ({
           {formData && singleUserEdit && (
             <Panel>
               <FormRow label="Username" key="Username">
-                <LockedInputRow
+                <LockedInput
                   value={singleUserEdit.name}
                   onEdit={() => setShowRenameUser(true)}
                   disabled={managerDisabled}
                 />
               </FormRow>
               <FormRow label="Password" key="Password">
-                <LockedInputRow
+                <LockedInput
                   label="Password"
                   value={singleUserEdit.hasPassword ? '1234567890' : ''}
                   type="password"

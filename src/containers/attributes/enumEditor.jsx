@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
-import { InputText, Button } from '@ynput/ayon-react-components'
+import { InputText, Button, LockedInput } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import LockedInputRow from '/src/components/LockedInput'
 import { camelCase } from 'lodash'
 
 const RowStyled = styled.form`
@@ -12,7 +11,7 @@ const RowStyled = styled.form`
 
   button {
     border: none;
-    padding: 0;
+    /* padding: 0; */
     background-color: unset;
     cursor: pointer;
   }
@@ -82,7 +81,7 @@ const EnumEditor = ({ values = [], onChange }) => {
             value={label}
           />
           <label htmlFor="label">value</label>
-          <LockedInputRow
+          <LockedInput
             id="value"
             value={value}
             onSubmit={(v) => handleValueChange(v, index)}

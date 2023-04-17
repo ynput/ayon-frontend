@@ -1,13 +1,12 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Panel } from '@ynput/ayon-react-components'
-import LockedInputRow from '/src/components/LockedInput'
+import { LockedInput, Panel } from '@ynput/ayon-react-components'
 import ApiKeyManager from '/src/components/ApiKeyManager'
 
 const ServiceDetails = ({ user, editName }) => {
   return (
     <Panel>
-      <LockedInputRow value={user.name} label={'Username'} onEdit={editName} />
+      <LockedInput value={user.name} label={'Username'} onEdit={editName} />
       <ApiKeyManager preview={user.apiKeyPreview} name={user.name} />
     </Panel>
   )

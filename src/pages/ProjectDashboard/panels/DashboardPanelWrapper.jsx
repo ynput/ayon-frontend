@@ -79,7 +79,6 @@ const ContentStyled = styled.div`
 const IconStyled = styled(Button)`
   background-color: var(--panel-background);
   padding: 1px;
-  width: 100%;
   height: 100%;
   min-width: unset;
   min-height: unset;
