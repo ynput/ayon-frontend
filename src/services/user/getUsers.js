@@ -115,7 +115,7 @@ const getUsers = ayonApi.injectEndpoints({
         })),
       providesTags: (res) =>
         res?.data?.users
-          ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
+          ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
           : ['user'],
     }),
     getUser: build.query({
@@ -136,7 +136,7 @@ const getUsers = ayonApi.injectEndpoints({
       transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
       providesTags: (res) =>
         res?.data?.users
-          ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
+          ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
           : ['user'],
     }),
     getUsersAssignee: build.query({
@@ -162,8 +162,21 @@ const getUsers = ayonApi.injectEndpoints({
         }),
       providesTags: (res) =>
         res?.data?.users
-          ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
+          ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
           : ['user'],
+    }),
+    getMe: build.query({
+      query: () => ({
+        url: '/api/users/me',
+      }),
+      providesTags: (res) => [{ type: 'user', id: res?.name }],
+    }),
+    getUserSessions: build.query({
+      query: ({ name }) => ({
+        url: `/api/users/${name}/sessions`,
+      }),
+      transformResponse: (res) => res?.sessions,
+      providesTags: (res, g, { token }) => [{ type: 'session', id: token }],
     }),
   }),
 })
@@ -174,4 +187,6 @@ export const {
   useGetUserByNameQuery,
   useGetUserQuery,
   useGetUsersAssigneeQuery,
+  useGetMeQuery,
+  useGetUserSessionsQuery,
 } = getUsers

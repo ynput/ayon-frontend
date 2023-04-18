@@ -1,53 +1,42 @@
-import axios from 'axios'
-import { useState, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { TimestampField } from '/src/containers/fieldFormat'
+import { useGetUserSessionsQuery } from '../services/user/getUsers'
+import { useInvalidateUserSessionMutation } from '../services/user/updateUser'
 
 const SessionList = ({ userName }) => {
-  const [sessionList, setSessionList] = useState([])
-  const [loading, setLoading] = useState(false)
+  const {
+    data: sessionList,
+    isLoading,
+    isUninitialized,
+    refetch,
+  } = useGetUserSessionsQuery({ name: userName }, { skip: !userName })
 
-  const loadSessions = () => {
-    setLoading(true)
-    axios
-      .get(`/api/users/${userName}/sessions`)
-      .then((response) => {
-        console.log(response.data)
-        setSessionList(response.data.sessions)
-      })
-      .catch(() => {
-        console.log('Unable to load sessions')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }
+  const [invalidateToken] = useInvalidateUserSessionMutation()
 
   const invalidate = (token) => {
-    axios
-      .delete(`/api/users/${userName}/sessions/${token}`)
+    invalidateToken({
+      name: userName,
+      token,
+    })
+      .unwrap()
       .then(() => {
         console.log('Session invalidated')
         if (token === localStorage.getItem('accessToken')) {
           localStorage.removeItem('accessToken')
           window.location.reload()
         } else {
-          loadSessions()
+          refetch()
         }
       })
-      .catch(() => console.log('Unable to invalidate the session'))
+      .catch((err) => console.log('Unable to invalidate the session', err))
   }
-
-  useEffect(() => {
-    loadSessions()
-  }, [])
 
   return (
     <Section style={{ flexGrow: 2 }}>
-      <TablePanel loading={loading}>
+      <TablePanel loading={isLoading || isUninitialized ? 'true' : undefined}>
         <DataTable
           value={sessionList}
           scrollable="true"

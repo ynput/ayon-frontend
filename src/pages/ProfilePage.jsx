@@ -1,131 +1,163 @@
-import { useState, useEffect } from 'react'
-import LoadingPage from '/src/pages/LoadingPage'
-import axios from 'axios'
+import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import SessionList from '/src/containers/SessionList'
 
-import {
-  FormLayout,
-  FormRow,
-  InputText,
-  InputPassword,
-  Button,
-  Section,
-  Panel,
-} from '@ynput/ayon-react-components'
+import { FormRow, Section, Panel, LockedInput, Button } from '@ynput/ayon-react-components'
+import { useGetMeQuery } from '../services/user/getUsers'
+import { useUpdateUserMutation } from '../services/user/updateUser'
+import UserDetailsHeader from '../components/User/UserDetailsHeader'
+import styled from 'styled-components'
+import UserAttribForm from './SettingsPage/UsersSettings/UserAttribForm'
+import SetPasswordDialog from './SettingsPage/UsersSettings/SetPasswordDialog'
+import ayonClient from '../ayon'
+
+const FormsStyled = styled.section`
+  flex: 1;
+  overflow-x: clip;
+  overflow-y: auto;
+  gap: 4px;
+  display: flex;
+  flex-direction: column;
+
+  & > *:last-child {
+    /* flex: 1; */
+  }
+`
+
+export const PanelButtonsStyled = styled(Panel)`
+  flex-direction: row;
+
+  & > * {
+    flex: 1;
+  }
+`
 
 const ProfilePage = () => {
-  const [userData, setUserData] = useState(null)
-  const [formData, setFormData] = useState({})
+  const attributes = ayonClient.getAttribsByScope('user')
+  // RTK QUERIES
+  // GET USER DATA
+  const { data: userData, isLoading, isError } = useGetMeQuery()
+  const [showSetPassword, setShowSetPassword] = useState(false)
 
-  const [pass1, setPass1] = useState('')
-  const [pass2, setPass2] = useState('')
+  // UPDATE USER DATA
+  const [updateUser] = useUpdateUserMutation()
 
-  const loadUserData = () => {
-    axios
-      .get('/api/users/me')
-      .then((result) => {
-        setUserData(result.data)
-        setFormData({
-          fullName: result.data.attrib.fullName,
-          email: result.data.attrib.email,
-        })
+  // build initial form data
+  const initialFormData = {}
+  attributes.forEach((attrib) => {
+    initialFormData[attrib.name] = ''
+  })
+
+  const [name, setName] = useState('')
+  const [password] = useState('randompasswor')
+  const [initData, setInitData] = useState(initialFormData)
+  const [formData, setFormData] = useState(initialFormData)
+  const [changesMade, setChangesMade] = useState(false)
+
+  // once user data is loaded, set form data
+  useEffect(() => {
+    if (userData && !isLoading) {
+      const { attrib } = userData
+
+      const newFormData = {}
+      attributes.forEach((att) => {
+        newFormData[att.name] = attrib[att.name] || ''
       })
-      .catch(() => toast.error('Unable to load user data'))
+
+      setFormData(newFormData)
+      // used to reset form
+      setInitData(newFormData)
+
+      // // set name
+      setName(userData.name)
+    }
+
+    return () => {
+      // reset forms
+      setFormData(initialFormData)
+      setName('')
+    }
+  }, [isLoading, userData])
+
+  // look for changes when formData changes
+  useEffect(() => {
+    const isDiff = JSON.stringify(formData) !== JSON.stringify(initData)
+
+    if (isDiff) {
+      if (!changesMade) setChangesMade(true)
+    } else {
+      setChangesMade(false)
+    }
+  }, [formData, initData])
+
+  if (isError) {
+    toast.error('Unable to load user data')
   }
 
-  useEffect(loadUserData, [])
-
-  if (!userData) return <LoadingPage />
-
-  let passInvalid = false
-  if (!pass1) passInvalid = 'Password unchanged'
-  else if (pass1 !== pass2) passInvalid = 'Passwords mismatch'
-
-  const setAttrib = (key, value) => {
-    setFormData((fd) => {
-      return { ...fd, [key]: value }
-    })
+  const onCancel = () => {
+    // reset data back to init
+    setFormData(initData)
   }
 
-  const saveProfile = () => {
-    axios
-      .patch(`/api/users/${userData.name}`, {
-        attrib: {
-          fullName: formData.fullName,
-          email: formData.email,
+  const onSave = async () => {
+    try {
+      await updateUser({
+        name: userData.name,
+        patch: {
+          attrib: formData,
         },
-      })
-      .then(() => {
-        toast.success('Profile updated')
-        loadUserData()
-      })
-  }
+      }).unwrap()
 
-  const savePassword = () => {
-    axios
-      .patch(`/api/users/${userData.name}/password`, { password: pass1 })
-      .then(() => {
-        toast.success('Password changed')
-      })
-      .catch(() => {
-        toast.error('Unable to change password')
-      })
+      toast.success('Profile updated')
+
+      // reset form
+      setInitData(formData)
+      setChangesMade(false)
+    } catch (error) {
+      console.log(error)
+      toast.error('Unable to update profile')
+      toast.error(error.details)
+    }
   }
 
   return (
     <main>
-      <Section style={{ flexGrow: 0 }}>
-        <h2>Basic information</h2>
-        <Panel>
-          <FormLayout>
-            <FormRow label="User name">
-              <InputText value={userData.name} disabled={true} />
-            </FormRow>
-            <FormRow label="Full name">
-              <InputText
-                value={formData.fullName}
-                onChange={(e) => setAttrib('fullName', e.target.value)}
-              />
-            </FormRow>
-            <FormRow label="Email">
-              <InputText
-                value={formData.email}
-                onChange={(e) => setAttrib('email', e.target.value)}
-              />
-            </FormRow>
-            <FormRow>
-              <Button label="Update profile" icon="check" onClick={saveProfile} />
-            </FormRow>
-          </FormLayout>
-        </Panel>
-
-        <h2>Change password</h2>
-
-        <Panel>
-          <FormLayout>
-            <FormRow label="New password">
-              <InputPassword value={pass1} onChange={(e) => setPass1(e.target.value)} />
-            </FormRow>
-            <FormRow label="Confirm password">
-              <InputPassword value={pass2} onChange={(e) => setPass2(e.target.value)} />
-            </FormRow>
-            <FormRow>
-              <Button
-                label="Update password"
-                icon="lock"
-                onClick={savePassword}
-                disabled={passInvalid}
-              />
-            </FormRow>
-          </FormLayout>
-        </Panel>
+      <Section style={{ flex: 2 }}>
+        <h2>Active sessions</h2>
+        <SessionList userName={userData?.name} />
       </Section>
-      {userData.name && (
-        <Section style={{ flexGrow: 1 }}>
-          <h2>Active sessions</h2>
-          <SessionList userName={userData.name} />
-        </Section>
+      <Section style={{ flex: 1, maxWidth: 500, minWidth: 370 }}>
+        <h2>Profile</h2>
+        <UserDetailsHeader users={[userData]} />
+        <FormsStyled>
+          <Panel>
+            <FormRow label="Username" key="Username">
+              <LockedInput value={name} disabled />
+            </FormRow>
+            <FormRow label="Password" key="Password">
+              <LockedInput
+                label="Password"
+                value={password}
+                type="password"
+                onEdit={() => setShowSetPassword(true)}
+              />
+            </FormRow>
+            <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
+          </Panel>
+          <PanelButtonsStyled>
+            <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
+            <Button onClick={onSave} label="Save" icon="check" disabled={!changesMade} />
+          </PanelButtonsStyled>
+        </FormsStyled>
+      </Section>
+      {showSetPassword && (
+        <SetPasswordDialog
+          selectedUsers={[userData?.name]}
+          onHide={() => {
+            setShowSetPassword(false)
+          }}
+          disabled={isLoading}
+        />
       )}
     </main>
   )

@@ -9,7 +9,7 @@ const updateUser = ayonApi.injectEndpoints({
         body: patch,
       }),
       transformErrorResponse: (res) => res.data,
-      invalidatesTags: (result, error, { name }) => [{ type: 'user', name }],
+      invalidatesTags: (result, error, { name }) => [{ type: 'user', id: name }],
     }),
     updateUserName: build.mutation({
       query: ({ name, newName }) => ({
@@ -17,7 +17,7 @@ const updateUser = ayonApi.injectEndpoints({
         method: 'PATCH',
         body: { newName },
       }),
-      invalidatesTags: (result, error, { name }) => [{ type: 'user', name }],
+      invalidatesTags: (result, error, { name }) => [{ type: 'user', id: name }],
       transformErrorResponse: (res) => res.data,
     }),
     updateUserPassword: build.mutation({
@@ -55,6 +55,13 @@ const updateUser = ayonApi.injectEndpoints({
       transformErrorResponse: (res) => res.data,
       invalidatesTags: () => ['user'],
     }),
+    invalidateUserSession: build.mutation({
+      query: ({ name, token }) => ({
+        url: `/api/users/${name}/sessions/${token}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (res, err, { token }) => [{ type: 'session', id: token }],
+    }),
   }),
 })
 
@@ -65,4 +72,5 @@ export const {
   useAddUserMutation,
   useDeleteUserMutation,
   useUpdateUserAPIKeyMutation,
+  useInvalidateUserSessionMutation,
 } = updateUser

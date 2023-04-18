@@ -47,13 +47,15 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
+            id="password"
           />
         </FormRow>
         <FormRow label="Confirm Password">
           <InputPassword
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
-            autoComplete="confirm-password"
+            autoComplete="new-password"
+            id="password"
             pattern={`^${password}$`}
           />
         </FormRow>

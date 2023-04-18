@@ -1,13 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
-import {
-  Button,
-  Section,
-  Panel,
-  FormRow,
-  LockedInput,
-  UserImagesStacked,
-} from '@ynput/ayon-react-components'
+import { Button, Section, Panel, FormRow, LockedInput } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
@@ -16,7 +9,7 @@ import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
-import DetailHeader from '/src/components/DetailHeader'
+import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -159,8 +152,6 @@ const UserDetail = ({
     return <></>
   }
 
-  const getUserName = (user) => user.attrib.fullName || user.name
-
   //
   // API
   //
@@ -282,23 +273,11 @@ const UserDetail = ({
 
   return (
     <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
-      <DetailHeader onClose={onClose} context={formUsers} dialogTitle="User Context">
-        <UserImagesStacked
-          users={formUsers.map((user) => ({
-            fullName: getUserName(user),
-            avatarUrl: user.attrib.avatarUrl,
-            self: user.self,
-          }))}
-        />
-        <div>
-          {singleUserEdit ? (
-            <h2>{getUserName(singleUserEdit)}</h2>
-          ) : (
-            <h2>{`${selectedUsers.length} Users Selected`}</h2>
-          )}
-          <div>{headerRoles.length ? headerRoles.join(', ') : 'No Roles'}</div>
-        </div>
-      </DetailHeader>
+      <UserDetailsHeader
+        users={formUsers}
+        onClose={onClose}
+        subTitle={headerRoles.length ? headerRoles.join(', ') : 'No Roles'}
+      />
       {hasServiceUser && singleUserEdit ? (
         <FormsStyled>
           <ServiceDetails editName={() => setShowRenameUser(true)} user={singleUserEdit} />
