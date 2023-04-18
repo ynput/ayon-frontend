@@ -138,7 +138,7 @@ const SiteSettings = () => {
         </Toolbar>
 
         {(selectedSites.length && (
-          <ScrollPanel style={{ flexGrow: 1 }} scrollStyle={{ padding: 0 }} className="transparent">
+          <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
             {selectedAddons.map((addon) => {
               return selectedSites.map((siteId) => {
                 return (
