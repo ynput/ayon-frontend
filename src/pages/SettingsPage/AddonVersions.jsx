@@ -69,7 +69,7 @@ const AddonVersions = ({ projectName }) => {
         <Spacer>
           <section
             className="invisible"
-            style={{ gap: 8, display: 'flex', flexDirection: 'column' }}
+            style={{ gap: 8, display: 'flex', flexDirection: 'column', paddingTop: 20 }}
           >
             {addons?.length &&
               addons.map((addon) => (
