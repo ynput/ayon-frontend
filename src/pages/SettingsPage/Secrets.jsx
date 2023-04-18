@@ -5,7 +5,8 @@ import {
   useDeleteSecretMutation,
 } from '/src/services/secrets'
 import styled from 'styled-components'
-import { InputText, Button } from '@ynput/ayon-react-components'
+import { InputText, Button, ScrollPanel, Section } from '@ynput/ayon-react-components'
+import { toast } from 'react-toastify'
 
 const SecretList = styled.div`
   display: flex;
@@ -35,16 +36,31 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
   const [setSecret] = useSetSecretMutation()
   const [deleteSecret] = useDeleteSecretMutation()
 
+  // console.log(isError, isLoading)
+
+  const resetForm = () => {
+    setName('')
+    setValue('')
+  }
+
   useEffect(() => {
     setName(initialName)
     setValue(initialValue)
   }, [initialName, initialValue])
 
-  const handleSave = () => {
-    setSecret({ name, value })
-    if (!stored) {
-      setName('')
-      setValue('')
+  const handleSave = async () => {
+    try {
+      await setSecret({ name, value }).unwrap()
+
+      if (!stored) {
+        resetForm()
+      }
+    } catch (error) {
+      console.error(error)
+
+      if (error.data?.detail) {
+        toast.error(error.data.detail)
+      }
     }
   }
 
@@ -59,13 +75,16 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
         onChange={(e) => setName(e.target.value)}
         readOnly={stored}
         placeholder="Secret name"
+        pattern="^\S+$"
       />
+
       <InputText
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Secret value"
       />
-      <Button icon="check" onClick={handleSave} />
+
+      <Button icon={'check'} onClick={handleSave} />
       <Button icon="delete" onClick={handleDelete} disabled={!stored} />
     </StyledSecretItem>
   )
@@ -75,15 +94,24 @@ const Secrets = () => {
   const { data } = useGetSecretsQuery()
 
   return (
-    <SecretList>
-      <h2>New secret</h2>
-      <SecretItem name="" value="" stored={false} />
-      <h2>Stored secrets</h2>
-      {data?.length &&
-        data.map((secret) => (
-          <SecretItem key={secret.name} name={secret.name} value={secret.value} stored={true} />
-        ))}
-    </SecretList>
+    <Section>
+      <ScrollPanel
+        style={{
+          height: '100%',
+          backgroundColor: 'transparent',
+        }}
+      >
+        <SecretList>
+          <h2>New secret</h2>
+          <SecretItem name="" value="" stored={false} />
+          <h2>Stored secrets</h2>
+          {data?.length &&
+            data.map((secret) => (
+              <SecretItem key={secret.name} name={secret.name} value={secret.value} stored={true} />
+            ))}
+        </SecretList>
+      </ScrollPanel>
+    </Section>
   )
 }
 

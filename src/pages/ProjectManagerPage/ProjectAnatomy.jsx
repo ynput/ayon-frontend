@@ -50,11 +50,7 @@ const ProjectAnatomy = ({ projectName }) => {
         <Button label="Update anatomy" icon="save" onClick={saveAnatomy} />
       </Toolbar>
       <Section>
-        <ScrollPanel
-          className="transparent nopad"
-          style={{ flexGrow: 1 }}
-          scrollStyle={{ padding: 0, backgroundColor: 'transparent' }}
-        >
+        <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
           {editor}
         </ScrollPanel>
       </Section>

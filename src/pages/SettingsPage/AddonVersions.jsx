@@ -65,14 +65,11 @@ const AddonVersions = ({ projectName }) => {
 
   return (
     <>
-      <ScrollPanel
-        style={{ flexGrow: 1, backgroundColor: 'transparent' }}
-        scrollStyle={{ backgroundColor: 'transparent' }}
-      >
+      <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
         <Spacer>
           <section
             className="invisible"
-            style={{ gap: 8, display: 'flex', flexDirection: 'column' }}
+            style={{ gap: 8, display: 'flex', flexDirection: 'column', paddingTop: 20 }}
           >
             {addons?.length &&
               addons.map((addon) => (

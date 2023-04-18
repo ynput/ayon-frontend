@@ -483,11 +483,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className={showHelp && 'settings-help-visible'}>
           {settingsListHeader}
           <Section>
-            <ScrollPanel
-              className="transparent nopad"
-              style={{ flexGrow: 1, minWidth: 750 }}
-              scrollStyle={{ padding: 0, backgroundColor: 'transparent' }}
-            >
+            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1, minWidth: 750 }}>
               {selectedAddons
                 .filter((addon) => addon.version)
                 .reverse()

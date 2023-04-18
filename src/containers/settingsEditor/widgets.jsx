@@ -7,8 +7,7 @@ import {
   InputColor,
 } from '@ynput/ayon-react-components'
 
-import { Dropdown } from 'primereact/dropdown'
-import { MultiSelect } from 'primereact/multiselect'
+import { Dropdown } from '@ynput/ayon-react-components'
 import arrayEquals from '/src/helpers/arrayEquals'
 
 const addDecimalPoint = (value) => {
@@ -103,9 +102,10 @@ const SelectWidget = (props) => {
     for (const err of props.rawErrors) tooltip.push(err)
   }
 
-  const onChange = (e) => {
-    updateOverrides(props, e.value !== originalValue, path)
-    props.onChange(e.value)
+  const onChange = (value) => {
+    console.log(value)
+    updateOverrides(props, value !== originalValue, path)
+    props.onChange(value)
   }
 
   const onFocus = (e) => {
@@ -116,15 +116,16 @@ const SelectWidget = (props) => {
   if (props.multiple) {
     return (
       <>
-        <MultiSelect
+        <Dropdown
+          multiSelect
+          widthExpand
           options={options}
-          display="chip"
           value={value}
           onChange={onChange}
           onFocus={onFocus}
           placeholder={props.schema?.placeholder}
           disabled={props.schema?.disabled}
-          className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
+          className={`form-field`}
         />
       </>
     )
@@ -132,9 +133,10 @@ const SelectWidget = (props) => {
 
   return (
     <Dropdown
+      widthExpand
       options={options}
-      value={value}
-      onChange={onChange}
+      value={[value]}
+      onChange={(e) => onChange(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
       optionLabel="label"
@@ -143,7 +145,7 @@ const SelectWidget = (props) => {
       tooltipOptions={{ position: 'bottom' }}
       placeholder={props.schema?.placeholder}
       disabled={props.schema?.disabled}
-      className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
+      className={`form-field`}
     />
   )
 }
