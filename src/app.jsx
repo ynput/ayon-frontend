@@ -1,6 +1,6 @@
 import ayonClient from '/src/ayon'
 import axios from 'axios'
-
+import { ErrorBoundary } from 'react-error-boundary'
 import { LoaderShade } from '@ynput/ayon-react-components'
 import { useEffect, useState, Suspense, lazy, useContext } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
@@ -26,6 +26,7 @@ import { login } from './features/user'
 import { SocketContext, SocketProvider } from './context/websocketContext'
 import ProtectedRoute from './containers/ProtectedRoute'
 import ShareDialog from './components/ShareDialog'
+import ErrorFallback from './components/ErrorFallback'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -100,54 +101,60 @@ const App = () => {
   }
 
   return (
-    <Suspense fallback={<LoaderShade />}>
-      <SocketProvider>
-        <Reloader />
-        <BrowserRouter>
-          <QueryParamProvider
-            adapter={ReactRouter6Adapter}
-            options={{
-              updateType: 'replaceIn',
-            }}
-          >
-            <Header />
-            <ShareDialog />
-            <Routes>
-              <Route path="/" exact element={<Navigate replace to="/manageProjects/dashboard" />} />
-              <Route
-                path="/manageProjects"
-                exact
-                element={<Navigate replace to="/manageProjects/dashboard" />}
-              />
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <Suspense fallback={<LoaderShade />}>
+        <SocketProvider>
+          <Reloader />
+          <BrowserRouter>
+            <QueryParamProvider
+              adapter={ReactRouter6Adapter}
+              options={{
+                updateType: 'replaceIn',
+              }}
+            >
+              <Header />
+              <ShareDialog />
+              <Routes>
+                <Route
+                  path="/"
+                  exact
+                  element={<Navigate replace to="/manageProjects/dashboard" />}
+                />
+                <Route
+                  path="/manageProjects"
+                  exact
+                  element={<Navigate replace to="/manageProjects/dashboard" />}
+                />
 
-              <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-              <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-              <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
-              <Route
-                path="/settings"
-                exact
-                element={<Navigate replace to="/settings/anatomyPresets" />}
-              />
-              <Route path="/settings/:module" exact element={<SettingsPage />} />
-              <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
-              <Route
-                path="/services"
-                element={
-                  <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                    <ServicesPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/explorer" element={<ExplorerPage />} />
-              <Route path="/doc/api" element={<APIDocsPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/events" element={<EventsPage />} />
-              <Route element={<ErrorPage code="404" />} />
-            </Routes>
-          </QueryParamProvider>
-        </BrowserRouter>
-      </SocketProvider>
-    </Suspense>
+                <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
+                <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+                <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
+                <Route
+                  path="/settings"
+                  exact
+                  element={<Navigate replace to="/settings/anatomyPresets" />}
+                />
+                <Route path="/settings/:module" exact element={<SettingsPage />} />
+                <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
+                <Route
+                  path="/services"
+                  element={
+                    <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                      <ServicesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/explorer" element={<ExplorerPage />} />
+                <Route path="/doc/api" element={<APIDocsPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route element={<ErrorPage code="404" />} />
+              </Routes>
+            </QueryParamProvider>
+          </BrowserRouter>
+        </SocketProvider>
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
