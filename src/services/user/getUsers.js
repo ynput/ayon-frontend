@@ -115,7 +115,7 @@ const getUsers = ayonApi.injectEndpoints({
         })),
       providesTags: (res) =>
         res?.data?.users
-          ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
+          ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
           : ['user'],
     }),
     getUser: build.query({
@@ -136,7 +136,7 @@ const getUsers = ayonApi.injectEndpoints({
       transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
       providesTags: (res) =>
         res?.data?.users
-          ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
+          ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
           : ['user'],
     }),
     getUsersAssignee: build.query({
@@ -162,7 +162,7 @@ const getUsers = ayonApi.injectEndpoints({
         }),
       providesTags: (res) =>
         res?.data?.users
-          ? [...res.data.users.edges.map((e) => ({ type: 'user', name: e.name }))]
+          ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
           : ['user'],
     }),
   }),

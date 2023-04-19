@@ -48,7 +48,7 @@ const getProject = ayonApi.injectEndpoints({
         method: 'GET',
       }),
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      providesTags: (res, error, { projectName }) => [{ type: 'project', name: projectName }],
+      providesTags: (res, error, { projectName }) => [{ type: 'project', id: projectName }],
       async onCacheEntryAdded(arg, { cacheDataLoaded, getCacheEntry, dispatch }) {
         try {
           // set redux project state name
@@ -106,7 +106,7 @@ const getProject = ayonApi.injectEndpoints({
       query: ({ projectName }) => ({
         url: `/api/projects/${projectName}/anatomy`,
       }),
-      providesTags: (res, error, { projectName }) => [{ type: 'project', name: projectName }],
+      providesTags: (res, error, { projectName }) => [{ type: 'project', id: projectName }],
     }),
     getProjectAttribs: build.query({
       query: ({ projectName, attribs = [], fields = [] }) => ({
@@ -118,7 +118,7 @@ const getProject = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (res) => res.data?.project,
-      providesTags: (res, error, { projectName }) => [{ type: 'project', name: projectName }],
+      providesTags: (res, error, { projectName }) => [{ type: 'project', id: projectName }],
     }),
     getProjectLatest: build.query({
       query: ({ projectName }) => ({

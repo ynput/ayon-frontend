@@ -34,8 +34,8 @@ const getAnatomy = ayonApi.injectEndpoints({
       }),
       transformResponse: (response) => transformAnatomyPresets(response.presets),
       providesTags: (result) => [
-        ...result.map(({ name }) => ({ type: 'anatomyPresets', name })),
-        { type: 'anatomyPresets', name: 'LIST' },
+        ...result.map(({ name }) => ({ type: 'anatomyPresets', id: name })),
+        { type: 'anatomyPresets', id: 'LIST' },
       ],
     }),
   }),
