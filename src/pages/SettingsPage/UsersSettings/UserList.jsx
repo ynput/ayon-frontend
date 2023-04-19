@@ -6,6 +6,7 @@ import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
 import './users.scss'
 
 import { useMemo } from 'react'
+import styled from 'styled-components'
 
 const UserList = ({
   selectedProjects,
@@ -55,6 +56,25 @@ const UserList = ({
     },
   ]
 
+  const StyledProfileRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `
+
+  const ProfileRow = ({ rowData }) => (
+    <StyledProfileRow>
+      <UserImage
+        fullName={rowData.attrib.fullName || rowData.name}
+        size={25}
+        style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
+        highlight={rowData.self}
+        src={rowData.attrib.avatarUrl}
+      />
+      <span>{rowData.self ? `${rowData.name} (me)` : rowData.name}</span>
+    </StyledProfileRow>
+  )
+
   // Render
 
   return (
@@ -88,24 +108,12 @@ const UserList = ({
           }}
         >
           <Column
-            field="profile"
-            body={(col) => (
-              <UserImage
-                fullName={col.attrib.fullName || col.name}
-                size={25}
-                style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
-                highlight={col.self}
-                src={col.attrib.avatarUrl}
-              />
-            )}
-            resizeable
-          />
-          <Column
             field="name"
             header="Username"
             sortable
-            body={(rowData) => (rowData.self ? `${rowData.name} (me)` : rowData.name)}
+            body={(rowData) => ProfileRow({ rowData })}
             resizeable
+            style={{ width: 150 }}
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />
