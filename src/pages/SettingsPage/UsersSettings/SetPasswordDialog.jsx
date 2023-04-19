@@ -9,6 +9,7 @@ import { useUpdateUserPasswordMutation } from '/src/services/user/updateUser'
 
 const SetPasswordDialog = ({ onHide, selectedUsers }) => {
   const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
 
   // mutation hook
   const [updateUserPassword] = useUpdateUserPasswordMutation()
@@ -21,6 +22,12 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
 
   const name = selectedUsers[0]
   const onSubmit = async () => {
+    // check passwords match
+    if (password !== passwordConfirm && password.length > 0) {
+      toast.error('Passwords do not match')
+      return
+    }
+
     try {
       await updateUserPassword({ name, password }).unwrap()
       // SUCCESS
@@ -29,17 +36,31 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
     } catch (error) {
       // FAIL
       console.error(error)
-      toast.error('Unable to change password')
+      toast.error(error.detail)
     }
   }
   return (
-    <Dialog header={`Set password for: ${name} `} visible={true} onHide={onHide}>
+    <Dialog header={`Set password for: ${name}`} visible={true} onHide={onHide}>
       <FormLayout>
-        <FormRow label="New password">
-          <InputPassword value={password} onChange={(e) => setPassword(e.target.value)} />
+        <FormRow label="New Password">
+          <InputPassword
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            id="password"
+          />
+        </FormRow>
+        <FormRow label="Confirm Password">
+          <InputPassword
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            autoComplete="new-password"
+            id="password"
+            pattern={`^${password}$`}
+          />
         </FormRow>
         <FormRow>
-          <Button label="Set password" onClick={onSubmit} />
+          <Button label="Set Password" onClick={onSubmit} />
         </FormRow>
       </FormLayout>
     </Dialog>
