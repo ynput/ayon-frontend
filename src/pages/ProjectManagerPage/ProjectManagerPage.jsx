@@ -17,6 +17,7 @@ import ProjectDashboard from '/src/pages/ProjectDashboard'
 
 import { selectProject } from '/src/features/context'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
+import TeamsPage from '../TeamsPage'
 
 const ProjectManagerPage = () => {
   const navigate = useNavigate()
@@ -111,6 +112,11 @@ const ProjectManagerPage = () => {
       path: '/manageProjects/roots',
       module: 'roots',
     },
+    {
+      name: 'Teams',
+      path: '/manageProjects/teams',
+      module: 'teams',
+    },
   ]
 
   // filter links if isUser
@@ -184,6 +190,7 @@ const ProjectManagerPage = () => {
               <AddonSettings projectName={selectedProject} showSites={true} />
             )}
             {module === 'roots' && <ProjectRoots projectName={selectedProject} />}
+            {module === 'teams' && <TeamsPage projectName={selectedProject} />}
           </>
         )}
       </main>

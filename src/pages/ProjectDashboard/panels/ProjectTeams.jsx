@@ -3,7 +3,7 @@ import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import UserTile from '/src/pages/SettingsPage/UsersSettings/UserTile'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetTeamsQuery } from '/src/services/getTeams'
+import { useGetTeamsQuery } from '../../../services/team/getTeams'
 
 const subTitle = (members, leaders) => {
   let mt = ''

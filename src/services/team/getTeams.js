@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 
 const getTeams = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -6,6 +6,10 @@ const getTeams = ayonApi.injectEndpoints({
       query: ({ projectName }) => ({
         url: `/api/projects/${projectName}/teams`,
       }),
+      providesTags: (result) => [
+        ...result.map(({ name }) => ({ type: 'team', id: name })),
+        { type: 'teams', id: 'LIST' },
+      ],
     }),
   }),
 })
