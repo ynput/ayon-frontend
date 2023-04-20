@@ -1,17 +1,40 @@
 import axios from 'axios'
 
 import { useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { Button, Spacer } from '@ynput/ayon-react-components'
+import { Button, Spacer, UserImage } from '@ynput/ayon-react-components'
 import { Sidebar } from 'primereact/sidebar'
 import { logout } from '/src/features/user'
 import { useSelector } from 'react-redux'
 import { ayonApi } from '/src/services/ayon'
+import styled, { css } from 'styled-components'
+
+const StyledButton = styled(Button)`
+  width: 100%;
+  padding: 8px 12px;
+  /* height: 100%; */
+  max-height: unset;
+
+  justify-content: start;
+  gap: 8px;
+
+  /* isActive */
+  ${({ isActive }) =>
+    isActive &&
+    css`
+      background-color: var(--color-row-hl);
+
+      &:hover {
+        background-color: var(--color-row-hl);
+      }
+    `}
+`
 
 const UserMenu = ({ visible, onHide }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
   // get user from redux store
   const user = useSelector((state) => state.user)
   // check if user is logged in and is manager or admin
@@ -31,6 +54,50 @@ const UserMenu = ({ visible, onHide }) => {
       })
   }
 
+  const allLinks = [
+    {
+      link: '/settings',
+      label: 'Settings',
+      icon: 'settings',
+    },
+    {
+      link: '/manageProjects',
+      label: 'Manage Projects',
+      icon: 'settings_suggest',
+    },
+    {
+      link: '/doc/api',
+      label: 'REST API Docs',
+      icon: 'help',
+    },
+    {
+      link: '/explorer',
+      label: 'GraphQL Explorer',
+      icon: 'account_tree',
+    },
+  ]
+
+  const protectedLinks = [
+    {
+      link: '/events',
+      label: 'Event Viewer',
+      icon: 'history',
+    },
+    {
+      link: '/services',
+      label: 'Services',
+      icon: 'home_repair_service',
+    },
+    {
+      link: '/system/restart',
+      label: 'Restart Server',
+      icon: 'restart_alt',
+    },
+  ]
+
+  // add protected links if user is manager or admin
+  if (!isUser) allLinks.push(...protectedLinks)
+
   return (
     <Sidebar position="right" visible={visible} onHide={onHide} icons={() => <h3>User menu</h3>}>
       <div
@@ -39,67 +106,32 @@ const UserMenu = ({ visible, onHide }) => {
           display: 'flex',
           flexDirection: 'column',
           padding: 4,
-          gap: 4,
+          gap: 8,
         }}
       >
-        <Button
-          onClick={() => {
-            navigate('/profile')
-          }}
-          label={`Profile (${user.name})`}
-          icon="manage_accounts"
-        />
-        <Button
-          onClick={() => {
-            navigate('/settings')
-          }}
-          label="Settings"
-          icon="settings"
-        />
-        <Button
-          onClick={() => {
-            navigate('/doc/api')
-          }}
-          label="REST API docs"
-          icon="help"
-        />
-        <Button
-          onClick={() => {
-            navigate('/explorer')
-          }}
-          label="GraphQL explorer"
-          icon="account_tree"
-        />
-        {!isUser && (
-          <>
-            <Button
-              onClick={() => {
-                navigate('/events')
-              }}
-              label="Event viewer"
-              icon="history"
-            />
-            <Button
-              onClick={() => {
-                navigate('/services')
-              }}
-              label="Services"
-              icon="home_repair_service"
-            />
-
-            <Button
-              onClick={() => {
-                axios.post('/api/system/restart').finally(() => {
-                  onHide()
-                })
-              }}
-              label="Server restart"
-              icon="restart_alt"
-            />
-          </>
-        )}
+        <StyledButton
+          onClick={() => navigate('/profile')}
+          isActive={location.pathname.includes('/profile')}
+        >
+          <UserImage size={19.5} src={user?.attrib?.avatarUrl} fullName={user?.attrib?.fullName} />
+          Profile ({user.name})
+        </StyledButton>
+        {allLinks.map(({ icon, link, label }) => (
+          <StyledButton
+            key={link}
+            onClick={() => navigate(link)}
+            label={label}
+            icon={icon}
+            isActive={location.pathname.includes(link)}
+          />
+        ))}
         <Spacer />
-        <Button onClick={doLogout} label="Sign Out" icon="logout" />
+        <StyledButton
+          style={{ justifyContent: 'center' }}
+          onClick={doLogout}
+          label="Sign Out"
+          icon="logout"
+        />
       </div>
     </Sidebar>
   )

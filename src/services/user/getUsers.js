@@ -165,6 +165,19 @@ const getUsers = ayonApi.injectEndpoints({
           ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
           : ['user'],
     }),
+    getMe: build.query({
+      query: () => ({
+        url: '/api/users/me',
+      }),
+      providesTags: (res) => [{ type: 'user', id: res?.name }],
+    }),
+    getUserSessions: build.query({
+      query: ({ name }) => ({
+        url: `/api/users/${name}/sessions`,
+      }),
+      transformResponse: (res) => res?.sessions,
+      providesTags: (res, g, { token }) => [{ type: 'session', id: token }],
+    }),
   }),
 })
 
@@ -174,4 +187,6 @@ export const {
   useGetUserByNameQuery,
   useGetUserQuery,
   useGetUsersAssigneeQuery,
+  useGetMeQuery,
+  useGetUserSessionsQuery,
 } = getUsers
