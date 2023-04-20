@@ -17,7 +17,6 @@ const TeamList = ({
   style,
   styleSection,
   className,
-  hideCode,
   onNoProject,
   onSuccess,
   autoSelect,
@@ -77,7 +76,7 @@ const TeamList = ({
   } // onSelectionChange
 
   return (
-    <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
+    <Section style={{ maxWidth: 200, ...styleSection }} className={className}>
       {footer}
       <TablePanel loading={isLoading}>
         <DataTable
@@ -92,7 +91,6 @@ const TeamList = ({
           onRowClick={onRowClick}
         >
           <Column field="name" header="Team" style={{ minWidth: 150, ...style }} />
-          {!hideCode && <Column field="code" header="Code" style={{ maxWidth: 80 }} />}
         </DataTable>
       </TablePanel>
     </Section>

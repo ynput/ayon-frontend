@@ -3,11 +3,9 @@ import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-d
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
-import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
-import ProjectList from '/src/containers/projectList'
 import AddonSettings from '/src/containers/addonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
@@ -18,6 +16,7 @@ import ProjectDashboard from '/src/pages/ProjectDashboard'
 import { selectProject } from '/src/features/context'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
 import TeamsPage from '../TeamsPage'
+import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 
 const ProjectManagerPage = () => {
   const navigate = useNavigate()
@@ -40,9 +39,6 @@ const ProjectManagerPage = () => {
     // Update project name in header
     dispatch(selectProject(selectedProject))
   }, [selectedProject])
-
-  // has project list been loaded and selection vaidated?
-  const [isProjectValid, setIsProjectValid] = useState(false)
 
   // Search params
   const [searchParams] = useSearchParams()
@@ -134,66 +130,32 @@ const ProjectManagerPage = () => {
           </NavLink>
         ))}
       </nav>
-      <Toolbar style={{ padding: 8 }}>
-        <Button
-          label="Open project"
-          icon="folder_open"
-          disabled={!selectedProject}
-          onClick={() => navigate(`/projects/${selectedProject}/browser`)}
-        />
-
-        {!isUser && (
-          <>
-            <Button
-              label="New project"
-              icon="create_new_folder"
-              onClick={() => setShowNewProject(true)}
-            />
-
-            <Button
-              label="Delete project"
-              icon="delete"
-              className="p-button-danger"
-              disabled={!selectedProject}
-              onClick={deletePreset}
-            />
-          </>
-        )}
-      </Toolbar>
-      <main style={{ overflowY: 'clip' }}>
-        {showNewProject && (
-          <NewProjectDialog
-            onHide={(name) => {
-              setShowNewProject(false)
-              setSelectedProject(name)
-            }}
-          />
-        )}
-
-        <ProjectList
+      {/* container wraps all modules and provides selectedProject, ProjectList comp and Toolbar comp as props */}
+      {
+        <ProjectManagerPageContainer
           selection={selectedProject}
           onSelect={setSelectedProject}
-          style={{ minWidth: 100 }}
-          styleSection={{ maxWidth: 150, minWidth: 150 }}
-          hideCode
           onNoProject={(s) => setSelectedProject(s)}
-          autoSelect
-          onSuccess={() => setIsProjectValid(true)}
+          isUser={isUser}
+          onNewProject={() => setShowNewProject(true)}
+          onDeleteProject={deletePreset}
+        >
+          {module === 'dashboard' && <ProjectDashboard />}
+          {module === 'anatomy' && <ProjectAnatomy />}
+          {module === 'projectSettings' && <AddonSettings />}
+          {module === 'siteSettings' && <AddonSettings showSites />}
+          {module === 'roots' && <ProjectRoots />}
+          {module === 'teams' && <TeamsPage />}
+        </ProjectManagerPageContainer>
+      }
+      {showNewProject && (
+        <NewProjectDialog
+          onHide={(name) => {
+            setShowNewProject(false)
+            setSelectedProject(name)
+          }}
         />
-
-        {selectedProject && isProjectValid && (
-          <>
-            {module === 'dashboard' && <ProjectDashboard projectName={selectedProject} />}
-            {module === 'anatomy' && <ProjectAnatomy projectName={selectedProject} />}
-            {module === 'projectSettings' && <AddonSettings projectName={selectedProject} />}
-            {module === 'siteSettings' && (
-              <AddonSettings projectName={selectedProject} showSites={true} />
-            )}
-            {module === 'roots' && <ProjectRoots projectName={selectedProject} />}
-            {module === 'teams' && <TeamsPage projectName={selectedProject} />}
-          </>
-        )}
-      </main>
+      )}
     </>
   )
 }

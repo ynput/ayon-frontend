@@ -6,10 +6,13 @@ const getTeams = ayonApi.injectEndpoints({
       query: ({ projectName }) => ({
         url: `/api/projects/${projectName}/teams`,
       }),
-      providesTags: (result) => [
-        ...result.map(({ name }) => ({ type: 'team', id: name })),
-        { type: 'teams', id: 'LIST' },
-      ],
+      providesTags: (result) =>
+        result?.length
+          ? [
+              ...result.map(({ name }) => ({ type: 'team', id: name })),
+              { type: 'teams', id: 'LIST' },
+            ]
+          : ['team'],
     }),
   }),
 })
