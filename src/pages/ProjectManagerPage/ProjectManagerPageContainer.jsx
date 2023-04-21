@@ -18,6 +18,7 @@ const ProjectManagerPageContainer = ({
     if (React.isValidElement(child)) {
       return React.cloneElement(child, {
         projectName: selection,
+        isUser: isUser,
         projectList: (
           <ProjectList
             style={{ minWidth: 100 }}

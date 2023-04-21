@@ -75,7 +75,7 @@ const ProjectManagerPage = () => {
     })
   }
 
-  const userAccess = ['dashboard', 'siteSettings']
+  const userAccess = ['dashboard', 'siteSettings', 'teams']
 
   // redirect to dashboard if user is not allowed to access this module
   if (isUser && !userAccess.includes(module)) {
@@ -131,23 +131,22 @@ const ProjectManagerPage = () => {
         ))}
       </nav>
       {/* container wraps all modules and provides selectedProject, ProjectList comp and Toolbar comp as props */}
-      {
-        <ProjectManagerPageContainer
-          selection={selectedProject}
-          onSelect={setSelectedProject}
-          onNoProject={(s) => setSelectedProject(s)}
-          isUser={isUser}
-          onNewProject={() => setShowNewProject(true)}
-          onDeleteProject={deletePreset}
-        >
-          {module === 'dashboard' && <ProjectDashboard />}
-          {module === 'anatomy' && <ProjectAnatomy />}
-          {module === 'projectSettings' && <AddonSettings />}
-          {module === 'siteSettings' && <AddonSettings showSites />}
-          {module === 'roots' && <ProjectRoots />}
-          {module === 'teams' && <TeamsPage />}
-        </ProjectManagerPageContainer>
-      }
+      <ProjectManagerPageContainer
+        selection={selectedProject}
+        onSelect={setSelectedProject}
+        onNoProject={(s) => setSelectedProject(s)}
+        isUser={isUser}
+        onNewProject={() => setShowNewProject(true)}
+        onDeleteProject={deletePreset}
+      >
+        {module === 'dashboard' && <ProjectDashboard />}
+        {module === 'anatomy' && <ProjectAnatomy />}
+        {module === 'projectSettings' && <AddonSettings />}
+        {module === 'siteSettings' && <AddonSettings showSites />}
+        {module === 'roots' && <ProjectRoots />}
+        {module === 'teams' && <TeamsPage />}
+      </ProjectManagerPageContainer>
+
       {showNewProject && (
         <NewProjectDialog
           onHide={(name) => {

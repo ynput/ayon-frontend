@@ -186,6 +186,7 @@ export const {
   useGetUsersListQuery,
   useGetUserByNameQuery,
   useGetUserQuery,
+  useLazyGetUserQuery,
   useGetUsersAssigneeQuery,
   useGetMeQuery,
   useGetUserSessionsQuery,
