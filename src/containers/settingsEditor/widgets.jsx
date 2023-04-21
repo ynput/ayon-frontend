@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
+  Dropdown,
   InputText,
   InputNumber,
   InputTextarea,
@@ -7,7 +8,6 @@ import {
   InputColor,
 } from '@ynput/ayon-react-components'
 
-import { Dropdown } from '@ynput/ayon-react-components'
 import arrayEquals from '/src/helpers/arrayEquals'
 
 const addDecimalPoint = (value) => {
@@ -247,6 +247,14 @@ const TextWidget = (props) => {
     opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
       onChange(e.target.value)
+    }
+  }
+
+  opts.onKeyDown = (e) => {
+    if (e.keyCode === 13) {
+      e.preventDefault()
+      e.stopPropagation()
+      onChangeCommit()
     }
   }
 

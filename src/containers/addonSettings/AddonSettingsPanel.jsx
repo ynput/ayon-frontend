@@ -117,7 +117,7 @@ const AddonSettingsPanel = ({
   }, [schema, localData, overrides, breadcrumbs])
 
   if (schemaLoading || settingsLoading || overridesLoading) {
-    return 'Loading...'
+    return `Loading... ${projectName}`
   }
 
   return <div style={{ flexGrow: 0 }}>{editor}</div>
