@@ -8,14 +8,22 @@ import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
 import TeamUsersDetails from './TeamUsersDetails'
 import TeamDetails from './TeamDetails'
+import { useUpdateTeamMutation } from '/src/services/team/updateTeams'
+import { toast } from 'react-toastify'
+import { ayonApi } from '/src/services/ayon'
+import { useDispatch } from 'react-redux'
 
 const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
+  // REDUX STATE
+  const dispatch = useDispatch()
+
   // STATES
   const [selectedUsers, setSelectedUsers] = useState([])
   const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   // RTK QUERY HOOKS
-  const { data: teams = [], isLoading } = useGetTeamsQuery(
+  const { data: teams = [], isLoading: isLoadingTeams } = useGetTeamsQuery(
     { projectName, showMembers: true },
     { skip: !projectName },
   )
@@ -25,36 +33,17 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
     { skip: !projectName || isUser },
   )
 
+  // RTK MUTATIONS
+  // update team
+  const [updateTeam] = useUpdateTeamMutation()
+  // update team member
+  // const [updateTeamMember] = useUpdateTeamMutation()
+  // delete team
+  // const [deleteTeam] = useUpdateTeamMutation()
+  // delete team member
+  // const [deleteTeamMember] = useUpdateTeamMutation()
+
   // const [getUser] = useLazyGetUserQuery()
-
-  // const getUsersForTeams = async () => {
-  //   const users = []
-  //   const loadedUsers = []
-  //   teams.forEach(async (team) => {
-  //     await (async () => {
-  //       for (const member of team.members) {
-  //         if (!loadedUsers.find((user) => user === member.name)) {
-  //           try {
-  //             const res = await getUser({ name: member.name }).unwrap()
-  //             users.push(res)
-  //             loadedUsers.push(member.name)
-  //           } catch (error) {
-  //             // do nothing
-  //           }
-  //         }
-  //       }
-  //     })()
-  //   })
-
-  //   setUsers(users)
-  //   setIsLoadingUsers(false)
-  // }
-  // console.log(users)
-
-  // // for each team, get the users
-  // useEffect(() => {
-  //   if (!isLoading && teams.length) getUsersForTeams()
-  // }, [teams, isLoading])
 
   const [selectedTeams, setSelectedTeams] = useQueryParam(
     ['teams'],
@@ -166,10 +155,71 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
     return Array.from(roles)
   }, [teams])
 
+  // find all roles on all teams, with the team name as a key
+  // {[teamName]: [roles], ...}
+  // const rolesObject = useMemo(() => {
+  //   const roles = {}
+  //   teams.forEach((team) => {
+  //     roles[team.name] = []
+  //     team.members.forEach((member) => {
+  //       member.roles.forEach((role) => {
+  //         if (!roles[team.name].includes(role)) roles[team.name].push(role)
+  //       })
+  //     })
+  //   })
+  //   return roles
+  // })
+
   // only show selected users in the user details panel
   const selectedUsersArray = useMemo(() => {
     return userList.filter((user) => selectedUsers.includes(user.name))
   }, [userList, selectedUsers])
+
+  // HANDLERS
+
+  const handleUpdateTeam = async (teamName, teamObject, disableInvalidate) => {
+    try {
+      await updateTeam({
+        projectName,
+        teamName,
+        team: teamObject,
+        disableInvalidate,
+      }).unwrap()
+
+      return { error: false, success: true }
+    } catch (error) {
+      console.error(error)
+      // toast
+      return { error: true, success: false }
+    }
+  }
+
+  const handleUpdateTeams = async (teams = {}) => {
+    const errors = []
+    const success = []
+
+    setIsUpdating(true)
+    // return console.log(teams)
+    // disable invalidate for all teams and then invalidate at the end
+    for (const teamName of Object.keys(teams)) {
+      const res = await handleUpdateTeam(teamName, teams[teamName], true)
+      if (res.error) errors.push(teamName)
+      if (res.success) success.push(teamName)
+    }
+
+    // trigger invalidate
+    dispatch(ayonApi.util.invalidateTags(['teams']))
+
+    setIsUpdating(false)
+
+    // toast error errors
+    if (errors.length) toast.error(`Failed to update ${errors.join(', ')}`)
+
+    // success toast
+    if (success.length) toast.success(`Updated ${success.join(', ')}`)
+  }
+
+  const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
 
   return (
     <ProjectManagerPageLayout
@@ -200,7 +250,7 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
         <TeamList
           teams={teams}
           selection={selectedTeams}
-          isLoading={isLoading}
+          isLoading={isLoadingTeams}
           multiselect
           onSelect={(teams) => setSelectedTeams(teams)}
           styleSection={{ height: '100%', flex: 0.4 }}
@@ -210,7 +260,7 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
           selectedUsers={selectedUsers}
           onSelectUsers={(users) => setSelectedUsers(users)}
           userList={userList}
-          isLoading={isLoadingUsers}
+          isLoading={isLoading}
           selectedTeams={selectedTeams}
         />
         <Section
@@ -227,6 +277,8 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
             teams={teams}
             selectedTeams={selectedTeams}
             rolesList={rolesList}
+            onUpdateTeams={handleUpdateTeams}
+            isFetching={isUpdating || isLoading}
           />
           <TeamDetails teams={teams} selectedTeams={selectedTeams} />
         </Section>

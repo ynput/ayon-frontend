@@ -58,7 +58,14 @@ const getFieldValues = (users, field, selectedTeams) => {
   return [values, isMultiple]
 }
 
-const TeamUsersDetails = ({ users = [], teams = [], selectedTeams = [], rolesList = [] }) => {
+const TeamUsersDetails = ({
+  users = [],
+  teams = [],
+  selectedTeams = [],
+  rolesList = [],
+  onUpdateTeams,
+  isFetching,
+}) => {
   const noUsers = users.length === 0
 
   //   check if at least one user is on at least one selected team
@@ -69,7 +76,7 @@ const TeamUsersDetails = ({ users = [], teams = [], selectedTeams = [], rolesLis
     return false
   })
 
-  const disableForm = noUsers || !isOnAllTeams
+  const disableForm = noUsers || !isOnAllTeams || isFetching
 
   const [teamsValue, teamMultiple] = useMemo(() => getFieldValues(users), [users])
 
@@ -98,6 +105,50 @@ const TeamUsersDetails = ({ users = [], teams = [], selectedTeams = [], rolesLis
       ? teamsValue.join(', ')
       : 'No team'
 
+  //   HANDLERS
+
+  const handleTeamChange = async (newTeams = []) => {
+    const addedTeams = newTeams.filter((team) => !teamsValue.includes(team))
+    const removedTeams = teamsValue.filter((team) => !newTeams.includes(team))
+
+    // add/remove all users to teams
+    const updatedTeamsWithNewMembers = {}
+    teams.forEach((team) => {
+      // remove out the selected users from the team
+      const membersWithRemovedUsers = team.members.filter(
+        (member) => !users.some((user) => user.name === member.name),
+      )
+
+      if (addedTeams.includes(team.name)) {
+        // create new users array with updated roles and leader
+        // if user is already on team, keep their roles and leader
+        const newUsersToAdd = users.map((user) => ({
+          name: user.name,
+          leader: false,
+          roles: [],
+          ...user.teams[team.name],
+        }))
+
+        // now merge new users with existing team members
+        const newMembers = [...membersWithRemovedUsers, ...newUsersToAdd]
+
+        // add selected members to new team
+        updatedTeamsWithNewMembers[team.name] = {
+          ...team,
+          members: newMembers,
+        }
+      } else if (removedTeams.includes(team.name)) {
+        // remove members from team
+        updatedTeamsWithNewMembers[team.name] = {
+          ...team,
+          members: membersWithRemovedUsers,
+        }
+      }
+    })
+
+    onUpdateTeams(updatedTeamsWithNewMembers)
+  }
+
   return (
     <>
       <UserDetailsHeader
@@ -116,7 +167,8 @@ const TeamUsersDetails = ({ users = [], teams = [], selectedTeams = [], rolesLis
               widthExpand
               multiSelect
               isMultiple={teamMultiple}
-              disabled={noUsers}
+              disabled={noUsers || isFetching}
+              onChange={handleTeamChange}
             />
           </FormRow>
           <h2>{formSubtitle}</h2>
@@ -148,22 +200,6 @@ const TeamUsersDetails = ({ users = [], teams = [], selectedTeams = [], rolesLis
 }
 
 TeamUsersDetails.propTypes = {
-  users: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string,
-      roles: PropTypes.arrayOf(PropTypes.string),
-      leader: PropTypes.bool,
-    }),
-  ),
-
-  teams: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string,
-      roles: PropTypes.arrayOf(PropTypes.string),
-      leader: PropTypes.bool,
-    }),
-  ),
-
   selectedTeams: PropTypes.arrayOf(PropTypes.string),
   rolesList: PropTypes.arrayOf(PropTypes.string),
 }

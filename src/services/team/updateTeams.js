@@ -8,14 +8,16 @@ const updateTeams = ayonApi.injectEndpoints({
         method: 'PUT',
         body: team,
       }),
-      invalidatesTags: (result, error, { teamName }) => [{ type: 'anatomyPresets', id: teamName }],
+      invalidatesTags: (result, error, { teamName, disableInvalidate }) =>
+        !disableInvalidate ? [{ type: 'team', id: teamName }] : [],
     }),
     deleteTeam: build.mutation({
       query: ({ projectName, teamName }) => ({
         url: `/api/projects/${projectName}/teams/${teamName}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, { teamName }) => [{ type: 'anatomyPresets', id: teamName }],
+      invalidatesTags: (result, error, { teamName, disableInvalidate }) =>
+        !disableInvalidate ? [{ type: 'team', id: teamName }] : [],
     }),
     updateTeamMember: build.mutation({
       query: ({ projectName, teamName, memberName, member }) => ({
@@ -23,14 +25,14 @@ const updateTeams = ayonApi.injectEndpoints({
         method: 'PUT',
         body: member,
       }),
-      invalidatesTags: (result, error, { teamName }) => [{ type: 'anatomyPresets', id: teamName }],
+      invalidatesTags: (result, error, { teamName }) => [{ type: 'team', id: teamName }],
     }),
     deleteTeamMember: build.mutation({
       query: ({ projectName, teamName, memberName }) => ({
         url: `/api/projects/${projectName}/teams/${teamName}/members/${memberName}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, { teamName }) => [{ type: 'anatomyPresets', id: teamName }],
+      invalidatesTags: (result, error, { teamName }) => [{ type: 'team', id: teamName }],
     }),
   }),
 })
