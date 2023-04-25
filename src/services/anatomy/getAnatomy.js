@@ -27,6 +27,7 @@ const getAnatomy = ayonApi.injectEndpoints({
       query: ({ preset }) => ({
         url: `/api/anatomy/presets/${preset}`,
       }),
+      providesTags: (result, error, { preset }) => [{ type: 'anatomyPresets', name: preset }],
     }),
     getAnatomyPresets: build.query({
       query: () => ({

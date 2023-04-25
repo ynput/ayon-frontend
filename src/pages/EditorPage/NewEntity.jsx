@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Dialog } from 'primereact/dialog'
-import { camelCase, capitalize } from 'lodash'
+import { capitalize } from 'lodash'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import { InputText, Button } from '@ynput/ayon-react-components'
@@ -9,6 +9,7 @@ import { useRef } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
+import checkName from '/src/helpers/checkName'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -70,7 +71,7 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
     const newData = {
       ...entityData,
       [`${type}Type`]: entityData.type,
-      name: camelCase(entityData.name),
+      name: checkName(entityData.name),
     }
 
     // clear states

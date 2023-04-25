@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { Button, Spacer, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
-import SettingsEditor from '/src/containers/settingsEditor'
+import SettingsEditor from '/src/containers/SettingsEditor'
 
 const RoleDetail = ({ projectName, role, onChange }) => {
   const [originalData, setOriginalData] = useState(null)

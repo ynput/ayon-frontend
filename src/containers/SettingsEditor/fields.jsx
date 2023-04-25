@@ -1,16 +1,43 @@
 import { useMemo } from 'react'
 import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
-import SettingsPanel from './settingsPanel'
+import SettingsPanel from './SettingsPanel'
 import styled from 'styled-components'
 
 import { isEqual } from 'lodash'
 import arrayEquals from '/src/helpers/arrayEquals'
 
-const CircleButton = styled(Button)`
-  border-radius: 50%;
-  width: 30px;
-  height: 22px;
+const FormArrayField = styled.div`
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+
+const FormArrayFieldItem = styled.div`
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  margin-right: 4px;
+
+  .panel-content {
+    flex-grow: 1;
+  }
+`
+
+const ArrayItemControls = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 5px;
+
+  button {
+    border-radius: 50%;
+    width: 30px;
+    height: 22px;
+  }
 `
 
 const arrayStartsWith = (arr1, arr2) => {
@@ -53,7 +80,7 @@ function ObjectFieldTemplate(props) {
     }
 
     return 'default'
-  }, [path, props.formContext.changedKeys, props.formContext.overrides]) // props.formData was there too? do we need it?
+  }, [path, props.formContext.changedKeys, props.formContext.overrides])
 
   if (props.schema.isgroup && overrideLevel === 'edit') {
     className += ' group-changed'
@@ -333,18 +360,18 @@ const ArrayItemTemplate = (props) => {
   }
 
   const rmButton = props.hasRemove && (
-    <div className="array-item-controls">
-      <CircleButton onClick={onRemoveItem} icon="close" disabled={undeletable} />
-      <CircleButton onClick={onMoveUp} icon="arrow_upward" />
-      <CircleButton onClick={onMoveDown} icon="arrow_downward" />
-    </div>
+    <ArrayItemControls>
+      <Button onClick={onRemoveItem} icon="close" disabled={undeletable} />
+      <Button onClick={onMoveUp} icon="arrow_upward" />
+      <Button onClick={onMoveDown} icon="arrow_downward" />
+    </ArrayItemControls>
   )
 
   return (
-    <div className="form-array-field-item">
+    <FormArrayFieldItem>
       {children}
       {rmButton}
-    </div>
+    </FormArrayFieldItem>
   )
 }
 
@@ -353,12 +380,17 @@ const ArrayFieldTemplate = (props) => {
 
   const res = useMemo(
     () => (
-      <div className="form-array-field">
+      <FormArrayField>
         {props.items.map((element) => (
           <ArrayItemTemplate key={element.name} {...element} />
         ))}
-        {props.canAdd && <CircleButton onClick={props.onAddClick} icon="add" />}
-      </div>
+
+        {props.canAdd && (
+          <ArrayItemControls>
+            <Button onClick={props.onAddClick} icon="add" />
+          </ArrayItemControls>
+        )}
+      </FormArrayField>
     ),
     [props.items, props.canAdd],
   )

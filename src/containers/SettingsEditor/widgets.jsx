@@ -6,6 +6,7 @@ import {
   InputTextarea,
   InputSwitch,
   InputColor,
+  IconSelect,
 } from '@ynput/ayon-react-components'
 
 import arrayEquals from '/src/helpers/arrayEquals'
@@ -103,7 +104,6 @@ const SelectWidget = (props) => {
   }
 
   const onChange = (value) => {
-    console.log(value)
     updateOverrides(props, value !== originalValue, path)
     props.onChange(value)
   }
@@ -213,11 +213,10 @@ const TextWidget = (props) => {
       const newValue = parseFloat(e.target.value)
       onChange(newValue)
     }
-
+  } else if (props.schema.widget === 'color') {
     //
     // Color picker
     //
-  } else if (props.schema.widget === 'color') {
     Input = InputColor
     opts.value = value
     opts.format = props.schema.colorFormat || 'hex'
@@ -228,11 +227,17 @@ const TextWidget = (props) => {
       updateOverrides(props, e.target.value !== originalValue, path)
       props.onChange(e.target.value)
     }
+  } else if (props.schema.widget === 'icon') {
+    Input = IconSelect
 
+    opts.value = value ? [value] : []
+    opts.onChange = (e) => {
+      props.onChange(e[0])
+    }
+  } else if (props.schema.widget === 'textarea') {
     //
     // Textarea
     //
-  } else if (props.schema.widget === 'textarea') {
     Input = InputTextarea
     opts.autoResize = true
     opts.rows = 8
@@ -241,6 +246,10 @@ const TextWidget = (props) => {
     opts.onChange = (e) => {
       onChange(e.target.value)
     }
+
+    //
+    // Default text input
+    //
   } else {
     Input = InputText
     opts.value = value
@@ -250,6 +259,8 @@ const TextWidget = (props) => {
     }
   }
 
+  // Disable propagation of enter key
+  // to prevent form submission. Just commit the change instead.
   opts.onKeyDown = (e) => {
     if (e.keyCode === 13) {
       e.preventDefault()
@@ -272,7 +283,6 @@ const TextWidget = (props) => {
         tooltipOptions={{ position: 'bottom' }}
         {...opts}
       />
-      {/*JSON.stringify(value)*/}
     </>
   )
 }

@@ -11,7 +11,7 @@ import {
 
 import { SelectButton } from 'primereact/selectbutton'
 
-import SettingsEditor from '/src/containers/settingsEditor'
+import SettingsEditor from '/src/containers/SettingsEditor'
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 

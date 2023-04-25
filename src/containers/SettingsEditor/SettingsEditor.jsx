@@ -1,18 +1,26 @@
 import Form from '@rjsf/core'
 import { useMemo } from 'react'
+import styled from 'styled-components'
 
 import { Tooltip } from 'primereact/tooltip'
 import { TextWidget, SelectWidget, CheckboxWidget } from './widgets'
 import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
-import './index.sass'
-
-import styled from 'styled-components'
+import './SettingsEditor.sass'
 
 const FormWrapper = styled.div`
   [data-fieldid="${(props) => props.currentSelection}"]{
     border-left: 1px solid var(--color-hl-00) !important;
     border-radius: 4px;
     background-color: rgba(0,0,0,.2);
+  }
+
+  .rjsf {
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+    .errors {
+      display: none;
+    }
   }
 }
 `

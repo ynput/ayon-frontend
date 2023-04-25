@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
 import { Section, ScrollPanel, Toolbar, Button } from '@ynput/ayon-react-components'
-import SettingsEditor from '/src/containers/settingsEditor'
+import SettingsEditor from '/src/containers/SettingsEditor'
 import { useGetAnatomySchemaQuery } from '../../services/anatomy/getAnatomy'
 import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
