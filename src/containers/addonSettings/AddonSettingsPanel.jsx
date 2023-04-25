@@ -6,7 +6,7 @@ import {
   useGetAddonSettingsOverridesQuery,
 } from '/src/services/addonSettings'
 
-import SettingsEditor from '/src/containers/settingsEditor'
+import SettingsEditor from '/src/containers/SettingsEditor'
 
 const AddonSettingsPanel = ({
   addon,

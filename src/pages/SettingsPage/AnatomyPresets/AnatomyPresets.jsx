@@ -6,7 +6,7 @@ import { InputText } from 'primereact/inputtext'
 
 import { toast } from 'react-toastify'
 
-import SettingsEditor from '/src/containers/settingsEditor'
+import SettingsEditor from '/src/containers/SettingsEditor'
 import { Spacer, Button, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 
 import {

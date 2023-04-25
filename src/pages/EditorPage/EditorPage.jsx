@@ -23,7 +23,7 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import SearchDropdown from '/src/components/SearchDropdown'
 import useColumnResize from '/src/hooks/useColumnResize'
-import { camelCase, capitalize, debounce, isEmpty } from 'lodash'
+import { capitalize, debounce, isEmpty } from 'lodash'
 import { useLazyGetExpandedBranchQuery } from '/src/services/editor/getEditor'
 import { useUpdateEditorMutation } from '/src/services/editor/updateEditor'
 import usePubSub from '/src/hooks/usePubSub'
@@ -40,6 +40,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '/src/services/getAttributes'
 import NewEntity from './NewEntity'
+import checkName from '/src/helpers/checkName'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -587,7 +588,7 @@ const EditorPage = () => {
           if (key.startsWith('__')) continue
           if (key.startsWith('_')) {
             if (key === '_name') {
-              entityChanges[key.substring(1)] = camelCase(changes[entityId][key])
+              entityChanges[key.substring(1)] = checkName(changes[entityId][key])
             } else {
               entityChanges[key.substring(1)] = changes[entityId][key]
             }
@@ -650,8 +651,8 @@ const EditorPage = () => {
         }
       }
 
-      // name always camelCase
-      newEntity.name = camelCase(newEntity.name)
+      // check name
+      newEntity.name = checkName(newEntity.name)
 
       const patch = {
         data: {

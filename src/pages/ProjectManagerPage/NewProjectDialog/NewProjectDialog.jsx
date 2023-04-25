@@ -3,7 +3,7 @@ import { Dialog } from 'primereact/dialog'
 import { toast } from 'react-toastify'
 
 import { Button, Spacer, InputText, Toolbar } from '@ynput/ayon-react-components'
-import SettingsEditor from '/src/containers/settingsEditor'
+import SettingsEditor from '/src/containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import {
   useGetAnatomyPresetQuery,
