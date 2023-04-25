@@ -159,7 +159,10 @@ const TeamUsersDetails = ({
     // removed roles
     const removedRoles = rolesValue.filter((role) => !newRoles.includes(role))
     // added roles
-    const addedRoles = newRoles.filter((role) => !rolesValue.includes(role))
+    const addedRoles = newRoles.filter((role) => role && !rolesValue.includes(role))
+
+    // no changes to roles return
+    if (!removedRoles.length && !addedRoles.length) return
 
     const updatedTeamsWithNewRoles = {}
     // for each team and each user, update roles
@@ -188,6 +191,7 @@ const TeamUsersDetails = ({
       updatedTeamsWithNewRoles[team.name] = newTeam
     })
 
+    console.log('updating teams')
     onUpdateTeams(updatedTeamsWithNewRoles)
   }
 
@@ -241,7 +245,6 @@ const TeamUsersDetails = ({
               value={teamsValue}
               options={teams}
               dataKey="name"
-              dataLabel="name"
               widthExpand
               multiSelect
               isMultiple={teamMultiple}
@@ -255,7 +258,6 @@ const TeamUsersDetails = ({
               value={rolesValue}
               options={rolesOptions}
               dataKey="name"
-              dataLabel="name"
               widthExpand
               multiSelect
               isMultiple={rolesMultiple}

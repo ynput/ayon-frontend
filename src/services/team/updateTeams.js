@@ -18,7 +18,6 @@ const updateTeams = ayonApi.injectEndpoints({
 
         const patchResult = dispatch(
           ayonApi.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
-            console.log('opt')
             draft.forEach((t) => {
               if (t.name === teamName) {
                 Object.assign(t, team)
@@ -30,7 +29,6 @@ const updateTeams = ayonApi.injectEndpoints({
           await queryFulfilled
         } catch (err) {
           patchResult.undo()
-          console.log(err)
 
           /**
            * Alternatively, on failure you can invalidate the corresponding cache tags
