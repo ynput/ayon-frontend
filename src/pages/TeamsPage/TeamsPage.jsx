@@ -357,7 +357,11 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   onUpdateTeams={handleUpdateTeams}
                   isFetching={isUpdating || isLoading}
                 />
-                <TeamDetails teams={teams} selectedTeams={selectedTeams} />
+                <TeamDetails
+                  teams={teams}
+                  selectedTeams={selectedTeams}
+                  onUpdateTeams={handleUpdateTeams}
+                />
               </>
             )}
           </Section>
