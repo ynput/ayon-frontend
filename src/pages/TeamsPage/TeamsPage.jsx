@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
@@ -8,13 +8,14 @@ import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
 import TeamUsersDetails from './TeamUsersDetails'
 import TeamDetails from './TeamDetails'
-import { useUpdateTeamMutation } from '/src/services/team/updateTeams'
+import { useDeleteTeamMutation, useUpdateTeamMutation } from '/src/services/team/updateTeams'
 import { toast } from 'react-toastify'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 import CreateNewTeam from './CreateNewTeam'
+import { confirmDialog } from 'primereact/confirmdialog'
 
-const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
+const TeamsPage = ({ projectName, projectList, isUser }) => {
   // REDUX STATE
   const dispatch = useDispatch()
 
@@ -38,14 +39,8 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
   // RTK MUTATIONS
   // update team
   const [updateTeam] = useUpdateTeamMutation()
-  // update team member
-  // const [updateTeamMember] = useUpdateTeamMutation()
   // delete team
-  // const [deleteTeam] = useUpdateTeamMutation()
-  // delete team member
-  // const [deleteTeamMember] = useUpdateTeamMutation()
-
-  // const [getUser] = useLazyGetUserQuery()
+  const [deleteTeam] = useDeleteTeamMutation()
 
   const [selectedTeams, setSelectedTeams] = useQueryParam(
     ['teams'],
@@ -179,6 +174,7 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
 
   // HANDLERS
 
+  // UPDATE TEAM
   const handleUpdateTeam = async (teamName, teamObject, disableInvalidate, optimisticUpdate) => {
     try {
       await updateTeam({
@@ -197,6 +193,7 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
     }
   }
 
+  // UPDATE TEAMS
   const handleUpdateTeams = async (teams = {}) => {
     const useOptimisticUpdate = Object.keys(teams).length === 1
     const errors = []
@@ -224,6 +221,7 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
     if (success.length) toast.success(`Updated ${success.join(', ')}`)
   }
 
+  // CREATE TEAM
   const handleNewTeam = async (team) => {
     let { name } = team
 
@@ -246,89 +244,125 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
     }
   }
 
+  const toastId = useRef(null)
+  // DELETE TEAM
+  const onDelete = async () => {
+    confirmDialog({
+      message: `Are you sure you want to delete ${selectedTeams.length} team(s)?`,
+      header: 'Delete Teams',
+      icon: 'pi pi-exclamation-triangle',
+      accept: async () => {
+        toastId.current = toast.info('Deleting teams...')
+        let i = 0
+        for (const team of selectedTeams) {
+          try {
+            setSelectedUsers([])
+            await deleteTeam({ projectName, teamName: team }).unwrap()
+            toast.update(toastId.current, {
+              render: `Deleted team: ${team}`,
+              type: toast.TYPE.SUCCESS,
+            })
+            setSelectedTeams((teams) => teams.filter((t) => t !== team))
+            i += 1
+          } catch {
+            toast.error(`Unable to delete team: ${team}`)
+          }
+        }
+        toast.update(toastId.current, { render: `Deleted ${i} teams(s)`, type: toast.TYPE.SUCCESS })
+      },
+      reject: () => {},
+    })
+  }
+
   const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
 
   return (
-    <ProjectManagerPageLayout
-      projectList={projectList}
-      toolbar={toolbar}
-      toolbarMore={
-        <>
-          {!isUser && (
-            <>
-              <Button
-                icon={'group_add'}
-                label="Create New Team"
-                onClick={() => setCreateTeamOpen(true)}
-              />
-              <Button icon={'content_copy'} label="Duplicate Team" />
-              <Button icon={'delete'} label="Delete Teams" />
-            </>
-          )}
-          <InputSwitch
-            checked={!showTeamUsersOnly}
-            onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
-          />
-          Show All Users
-        </>
-      }
-    >
-      <Section
-        style={{
-          flexDirection: 'row',
-        }}
+    <>
+      <ProjectManagerPageLayout
+        projectList={projectList}
+        toolbarMore={
+          <>
+            {!isUser && (
+              <>
+                <Button
+                  icon={'group_add'}
+                  label="Create New Team"
+                  onClick={() => setCreateTeamOpen(true)}
+                />
+                <Button icon={'content_copy'} label="Duplicate Team" />
+                <Button
+                  icon={'delete'}
+                  label="Delete Teams"
+                  onClick={onDelete}
+                  disabled={!selectedTeams.length}
+                />
+              </>
+            )}
+            <InputSwitch
+              checked={!showTeamUsersOnly}
+              onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
+            />
+            Show All Users
+          </>
+        }
       >
-        <TeamList
-          teams={teams}
-          selection={selectedTeams}
-          isLoading={isLoadingTeams}
-          multiselect
-          onSelect={(teams) => setSelectedTeams(teams)}
-          styleSection={{ height: '100%', flex: 0.4 }}
-        />
-        <UserListTeams
-          selectedProjects={[projectName]}
-          selectedUsers={selectedUsers}
-          onSelectUsers={(users) => setSelectedUsers(users)}
-          userList={userList}
-          isLoading={isLoading}
-          selectedTeams={selectedTeams}
-        />
         <Section
           style={{
-            alignItems: 'start',
-            height: '100%',
-            flex: 1,
-            maxWidth: 480,
-            minWidth: 480,
+            flexDirection: 'row',
           }}
         >
-          {createTeamOpen ? (
-            <CreateNewTeam
-              rolesList={rolesList}
-              isOpen={createTeamOpen}
-              onClose={setCreateTeamOpen}
-              selectedUsers={selectedUsers}
-              setSelectedUsers={setSelectedUsers}
-              allUsers={userList}
-              onCreate={handleNewTeam}
-            />
-          ) : (
-            <>
-              <TeamUsersDetails
-                users={selectedUsersArray}
-                teams={teams}
-                selectedTeams={selectedTeams}
+          <TeamList
+            teams={teams}
+            selection={selectedTeams}
+            isLoading={isLoadingTeams}
+            multiselect
+            onSelect={(teams) => setSelectedTeams(teams)}
+            styleSection={{ height: '100%', flex: 0.4 }}
+          />
+          <UserListTeams
+            selectedProjects={[projectName]}
+            selectedUsers={selectedUsers}
+            onSelectUsers={(users) => setSelectedUsers(users)}
+            userList={userList}
+            isLoading={isLoading}
+            selectedTeams={selectedTeams}
+          />
+          <Section
+            style={{
+              alignItems: 'start',
+              height: '100%',
+              flex: 1,
+              maxWidth: 480,
+              minWidth: 480,
+            }}
+          >
+            {createTeamOpen ? (
+              <CreateNewTeam
                 rolesList={rolesList}
-                onUpdateTeams={handleUpdateTeams}
-                isFetching={isUpdating || isLoading}
+                isOpen={createTeamOpen}
+                onClose={setCreateTeamOpen}
+                selectedUsers={selectedUsers}
+                setSelectedUsers={setSelectedUsers}
+                allUsers={userList}
+                onCreate={handleNewTeam}
               />
-              <TeamDetails teams={teams} selectedTeams={selectedTeams} />
-            </>
-          )}
+            ) : (
+              <>
+                <TeamUsersDetails
+                  users={selectedUsersArray}
+                  teams={teams}
+                  selectedTeams={selectedTeams}
+                  rolesList={rolesList}
+                  onUpdateTeams={handleUpdateTeams}
+                  isFetching={isUpdating || isLoading}
+                />
+                <TeamDetails teams={teams} selectedTeams={selectedTeams} />
+              </>
+            )}
+          </Section>
         </Section>
-      </Section>
-    </ProjectManagerPageLayout>
+      </ProjectManagerPageLayout>
+    </>
   )
 }
 

@@ -53,8 +53,7 @@ const updateTeams = ayonApi.injectEndpoints({
         url: `/api/projects/${projectName}/teams/${teamName}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, { teamName, disableInvalidate }) =>
-        !disableInvalidate ? [{ type: 'team', id: teamName }] : [],
+      invalidatesTags: () => ['teams'],
     }),
     updateTeamMember: build.mutation({
       query: ({ projectName, teamName, memberName, member }) => ({
@@ -74,4 +73,5 @@ const updateTeams = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useUpdateTeamMutation, useUpdateTeamMemberMutation } = updateTeams
+export const { useUpdateTeamMutation, useUpdateTeamMemberMutation, useDeleteTeamMutation } =
+  updateTeams
