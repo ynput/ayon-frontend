@@ -318,6 +318,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             multiselect
             onSelect={(teams) => setSelectedTeams(teams)}
             styleSection={{ height: '100%', flex: 0.4 }}
+            onDelete={onDelete}
           />
           <UserListTeams
             selectedProjects={[projectName]}

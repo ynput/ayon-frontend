@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useEffect } from 'react'
+import { ContextMenu } from 'primereact/contextmenu'
 
 const TeamList = ({
   teams,
@@ -20,7 +21,9 @@ const TeamList = ({
   onNoProject,
   onSuccess,
   autoSelect,
+  onDelete,
 }) => {
+  const contextMenuRef = useRef(null)
   // if selection does not exist in data, set selection to null
   useEffect(() => {
     if (isLoading) return
@@ -75,10 +78,18 @@ const TeamList = ({
     } // single select
   } // onSelectionChange
 
+  const contextMenuModel = [
+    {
+      label: 'Delete selected',
+      command: () => onDelete(),
+    },
+  ]
+
   return (
     <Section style={{ maxWidth: 200, ...styleSection }} className={className}>
       {footer}
       <TablePanel loading={isLoading}>
+        <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable
           value={teamList}
           scrollable="true"
@@ -89,6 +100,7 @@ const TeamList = ({
           selection={selectionObj}
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
+          onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
         >
           <Column field="name" header="Team" style={{ minWidth: 150, ...style }} />
         </DataTable>
