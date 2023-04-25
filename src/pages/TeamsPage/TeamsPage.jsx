@@ -177,13 +177,14 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
 
   // HANDLERS
 
-  const handleUpdateTeam = async (teamName, teamObject, disableInvalidate) => {
+  const handleUpdateTeam = async (teamName, teamObject, disableInvalidate, optimisticUpdate) => {
     try {
       await updateTeam({
         projectName,
         teamName,
         team: teamObject,
         disableInvalidate,
+        optimisticUpdate,
       }).unwrap()
 
       return { error: false, success: true }
@@ -195,22 +196,24 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
   }
 
   const handleUpdateTeams = async (teams = {}) => {
+    const useOptimisticUpdate = Object.keys(teams).length === 1
     const errors = []
     const success = []
 
-    setIsUpdating(true)
-    // return console.log(teams)
+    if (!useOptimisticUpdate) setIsUpdating(true)
+
     // disable invalidate for all teams and then invalidate at the end
     for (const teamName of Object.keys(teams)) {
-      const res = await handleUpdateTeam(teamName, teams[teamName], true)
+      const res = await handleUpdateTeam(teamName, teams[teamName], true, useOptimisticUpdate)
       if (res.error) errors.push(teamName)
       if (res.success) success.push(teamName)
     }
 
-    // trigger invalidate
-    dispatch(ayonApi.util.invalidateTags(['teams']))
-
-    setIsUpdating(false)
+    if (!useOptimisticUpdate) {
+      // trigger invalidate
+      dispatch(ayonApi.util.invalidateTags(['teams']))
+      setIsUpdating(false)
+    }
 
     // toast error errors
     if (errors.length) toast.error(`Failed to update ${errors.join(', ')}`)

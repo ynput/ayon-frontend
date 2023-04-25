@@ -263,6 +263,9 @@ const TeamUsersDetails = ({
               search
               searchFields={['name']}
               onChange={handleRolesChange}
+              valueTemplate={'tags'}
+              editable
+              placeholder="Add a Role..."
             />
           </FormRow>
           <FormRow label="Leader" style={{ overflow: 'hidden' }}>
