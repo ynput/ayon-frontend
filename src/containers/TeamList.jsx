@@ -32,14 +32,14 @@ const TeamList = ({
     } else if (onSuccess) onSuccess()
   }, [selection, teams, onNoProject, isLoading])
 
-  const projectList = [...teams]
+  const teamList = [...teams].sort((a, b) => a.name.localeCompare(b.name))
 
-  if (showNull) projectList.unshift({ name: '_' })
+  if (showNull) teamList.unshift({ name: '_' })
 
   const selectionObj = useMemo(() => {
     if (multiselect) {
       let result = []
-      for (const project of projectList) {
+      for (const project of teamList) {
         if (selection === null) {
           if (project.name === '_') {
             result.push(project)
@@ -50,12 +50,12 @@ const TeamList = ({
       }
       return result
     } else {
-      for (const project of projectList) {
+      for (const project of teamList) {
         if (project.name === selection) return project
         if (!selection && project.name === '_') return project
       }
     } // single select
-  }, [selection, projectList])
+  }, [selection, teamList])
 
   const onSelectionChange = (e) => {
     if (multiselect) {
@@ -80,7 +80,7 @@ const TeamList = ({
       {footer}
       <TablePanel loading={isLoading}>
         <DataTable
-          value={projectList}
+          value={teamList}
           scrollable="true"
           scrollHeight="flex"
           selectionMode={multiselect ? 'multiple' : 'single'}

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
 import {
@@ -66,6 +66,9 @@ const TeamUsersDetails = ({
   onUpdateTeams,
   isFetching,
 }) => {
+  // STATES
+  const [leader, setLeader] = useState(false)
+
   const noUsers = users.length === 0
 
   // filter out selectedTeams no users are on
@@ -99,6 +102,13 @@ const TeamUsersDetails = ({
       : teamsValue.length
       ? teamsValue.join(', ')
       : 'No team'
+
+  const leaderInit = leaderValue.some((v) => v) && !leaderMultiple
+  // EFFECTS
+  // set initial leader state
+  useEffect(() => {
+    setLeader(leaderInit)
+  }, [leaderInit, leaderMultiple, setLeader])
 
   //   HANDLERS
 
@@ -181,6 +191,42 @@ const TeamUsersDetails = ({
     onUpdateTeams(updatedTeamsWithNewRoles)
   }
 
+  // LEADER CHECKBOX CHANGE
+  const handleLeaderChange = (e) => {
+    // make local state change for faster UI
+    setLeader(e.target.checked)
+
+    const value = e.target.checked
+    const updatedTeamsWithNewLeaders = {}
+    // for each team and each user, update roles
+    teams.forEach((team) => {
+      // if team is not selected, skip
+      if (!usersOnTeams.includes(team.name)) return
+
+      const updatedMembers = []
+
+      team.members.forEach((member) => {
+        // if user is not selected, keep their roles
+        if (!users.some((user) => user.name === member.name)) {
+          updatedMembers.push(member)
+          return
+        } else {
+          // otherwise, update their roles
+          updatedMembers.push({
+            ...member,
+            leader: value,
+          })
+        }
+      })
+
+      const newTeam = { ...team, members: updatedMembers }
+
+      updatedTeamsWithNewLeaders[team.name] = newTeam
+    })
+
+    onUpdateTeams(updatedTeamsWithNewLeaders)
+  }
+
   return (
     <>
       <UserDetailsHeader
@@ -220,11 +266,7 @@ const TeamUsersDetails = ({
             />
           </FormRow>
           <FormRow label="Leader" style={{ overflow: 'hidden' }}>
-            <InputSwitch
-              checked={leaderValue.some((v) => v) && !leaderMultiple}
-              onChange={() => console.log('checked')}
-              disabled={disableForm}
-            />
+            <InputSwitch checked={leader} onChange={handleLeaderChange} disabled={disableForm} />
           </FormRow>
         </FormLayout>
       </Panel>
