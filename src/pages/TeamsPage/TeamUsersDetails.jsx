@@ -68,15 +68,10 @@ const TeamUsersDetails = ({
 }) => {
   const noUsers = users.length === 0
 
-  //   check if at least one user is on at least one selected team
-  const isOnAllTeams = users.some((user) => {
-    for (const teamName in user.teams) {
-      if (selectedTeams.includes(teamName)) return true
-    }
-    return false
-  })
+  // filter out selectedTeams no users are on
+  const usersOnTeams = selectedTeams.filter((team) => users.some((user) => user.teams[team]))
 
-  const disableForm = noUsers || !isOnAllTeams || isFetching
+  const disableForm = noUsers || !usersOnTeams.length || isFetching
 
   const [teamsValue, teamMultiple] = useMemo(() => getFieldValues(users), [users])
 
@@ -94,8 +89,8 @@ const TeamUsersDetails = ({
 
   const formSubtitle = noUsers
     ? 'No Users Selected'
-    : isOnAllTeams
-    ? 'Setting On Selected Teams'
+    : usersOnTeams.length
+    ? 'Setting On Team' + (usersOnTeams.length > 1 ? 's' : '') + ': ' + usersOnTeams.join(', ')
     : `Not on ${selectedTeams.join(', ')}`
 
   const subTitle =
@@ -107,7 +102,8 @@ const TeamUsersDetails = ({
 
   //   HANDLERS
 
-  const handleTeamChange = async (newTeams = []) => {
+  // ON TEAMS DROPDOWN CHANGE
+  const handleTeamChange = (newTeams = []) => {
     const addedTeams = newTeams.filter((team) => !teamsValue.includes(team))
     const removedTeams = teamsValue.filter((team) => !newTeams.includes(team))
 
@@ -126,7 +122,6 @@ const TeamUsersDetails = ({
           name: user.name,
           leader: false,
           roles: [],
-          ...user.teams[team.name],
         }))
 
         // now merge new users with existing team members
@@ -147,6 +142,43 @@ const TeamUsersDetails = ({
     })
 
     onUpdateTeams(updatedTeamsWithNewMembers)
+  }
+
+  // ROLES DROPDOWN CHANGE
+  const handleRolesChange = (newRoles = []) => {
+    // removed roles
+    const removedRoles = rolesValue.filter((role) => !newRoles.includes(role))
+    // added roles
+    const addedRoles = newRoles.filter((role) => !rolesValue.includes(role))
+
+    const updatedTeamsWithNewRoles = {}
+    // for each team and each user, update roles
+    teams.forEach((team) => {
+      // if team is not selected, skip
+      if (!usersOnTeams.includes(team.name)) return
+
+      const updatedMembers = []
+
+      team.members.forEach((member) => {
+        // if user is not selected, keep their roles
+        if (!users.some((user) => user.name === member.name)) {
+          updatedMembers.push(member)
+          return
+        } else {
+          // otherwise, update their roles
+          updatedMembers.push({
+            ...member,
+            roles: member.roles.filter((role) => !removedRoles.includes(role)).concat(addedRoles),
+          })
+        }
+      })
+
+      const newTeam = { ...team, members: updatedMembers }
+
+      updatedTeamsWithNewRoles[team.name] = newTeam
+    })
+
+    onUpdateTeams(updatedTeamsWithNewRoles)
   }
 
   return (
@@ -184,6 +216,7 @@ const TeamUsersDetails = ({
               disabled={disableForm}
               search
               searchFields={['name']}
+              onChange={handleRolesChange}
             />
           </FormRow>
           <FormRow label="Leader" style={{ overflow: 'hidden' }}>
