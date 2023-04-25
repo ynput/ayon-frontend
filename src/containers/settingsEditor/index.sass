@@ -20,29 +20,6 @@ $field-gap: 8px
   .errors
     display: none
 
-  // PANEL HEADER
-
-  .form-panel-header
-    display: flex
-    flex-direction: row
-    justify-content: space-between
-    align-items: baseline
-    font-size: 1.2rem
-
-    h4
-      margin: 0
-      padding:0
-      margin-left: 8px
-      border: 0
-      font-size: 1rem
-
-      .new-object
-        font-style: italic
-        color: var(--color-hl-error)
-
-    small
-      margin-left: 20px
-      opacity: 0.4
 
   // OBJECT
 
@@ -51,7 +28,7 @@ $field-gap: 8px
       display: none
 
   .group-changed
-    .p-panel-header
+    .panel-header
       border-style: dashed 
       border-left: 4px solid var(--color-hl-changed) !important
     .form-inline-field-label
@@ -63,16 +40,16 @@ $field-gap: 8px
     gap: $field-gap
 
     // color for overrides
-    .obj-override-studio > .p-panel-header
+    .obj-override-studio > .panel-header
         border-left: 4px solid var(--color-hl-studio)
 
-    .obj-override-project > .p-panel-header
+    .obj-override-project > .panel-header
         border-left: 4px solid var(--color-hl-project)
 
-    .obj-override-site > .p-panel-header
+    .obj-override-site > .panel-header
         border-left: 4px solid var(--color-hl-site)
 
-    .obj-override-edit > .p-panel-header
+    .obj-override-edit > .panel-header
         border-left: 4px solid var(--color-hl-changed)
 
     &.layout-compact       
@@ -183,7 +160,7 @@ $field-gap: 8px
 
       margin-right: 4px
 
-      .p-panel
+      .panel-content
         flex-grow: 1
 
   // BUTTONS
@@ -194,17 +171,3 @@ $field-gap: 8px
     align-items: flex-start
     gap: 4px
 
-  // Prime theme overrides
-
-  .p-panel 
-    
-    &.selected
-      >.p-toggleable-content>.p-panel-content
-        border-left-color: var(--color-hl-00) !important
-
-    .p-panel-content
-      padding: 0 !important
-      padding-left: 20px !important
-      margin: 0
-      border-left: 1px dashed #434a56 !important
-      background-color: transparent !important
