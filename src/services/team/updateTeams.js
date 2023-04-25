@@ -18,11 +18,19 @@ const updateTeams = ayonApi.injectEndpoints({
 
         const patchResult = dispatch(
           ayonApi.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
-            draft.forEach((t) => {
-              if (t.name === teamName) {
-                Object.assign(t, team)
-              }
-            })
+            const notInDraft = draft.every((t) => t.name !== teamName)
+
+            if (notInDraft) {
+              // add new team to draft
+              draft.push(team)
+            } else {
+              // update existing team in draft
+              draft.forEach((t) => {
+                if (t.name === teamName) {
+                  Object.assign(t, team)
+                }
+              })
+            }
           }),
         )
         try {

@@ -46,7 +46,7 @@ const EntityDetail = ({
 }
 
 EntityDetail.propTypes = {
-  projectName: PropTypes.string.isRequired,
+  projectName: PropTypes.string,
   entityType: PropTypes.string.isRequired,
   entityIds: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   visible: PropTypes.bool.isRequired,

@@ -12,6 +12,7 @@ import { useUpdateTeamMutation } from '/src/services/team/updateTeams'
 import { toast } from 'react-toastify'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
+import CreateNewTeam from './CreateNewTeam'
 
 const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
   // REDUX STATE
@@ -21,6 +22,7 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
   const [selectedUsers, setSelectedUsers] = useState([])
   const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [createTeamOpen, setCreateTeamOpen] = useState(false)
 
   // RTK QUERY HOOKS
   const { data: teams = [], isLoading: isLoadingTeams } = useGetTeamsQuery(
@@ -222,6 +224,28 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
     if (success.length) toast.success(`Updated ${success.join(', ')}`)
   }
 
+  const handleNewTeam = async (team) => {
+    let { name } = team
+
+    // check if name is already taken
+    if (teams.some((team) => team.name === name)) {
+      toast.warning('Team name already taken')
+      return
+    }
+
+    const { error, success } = await handleUpdateTeam(name, team, true, true)
+
+    // toast error errors
+    if (error) toast.error(`Failed to create ${name}`)
+
+    // success toast
+    if (success) {
+      setCreateTeamOpen(false)
+      setSelectedTeams([name])
+      toast.success(`Created ${name}`)
+    }
+  }
+
   const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
 
   return (
@@ -232,7 +256,11 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
         <>
           {!isUser && (
             <>
-              <Button icon={'playlist_add'} label="Create New Team" />
+              <Button
+                icon={'group_add'}
+                label="Create New Team"
+                onClick={() => setCreateTeamOpen(true)}
+              />
               <Button icon={'content_copy'} label="Duplicate Team" />
               <Button icon={'delete'} label="Delete Teams" />
             </>
@@ -275,15 +303,29 @@ const TeamsPage = ({ projectName, projectList, toolbar, isUser }) => {
             minWidth: 480,
           }}
         >
-          <TeamUsersDetails
-            users={selectedUsersArray}
-            teams={teams}
-            selectedTeams={selectedTeams}
-            rolesList={rolesList}
-            onUpdateTeams={handleUpdateTeams}
-            isFetching={isUpdating || isLoading}
-          />
-          <TeamDetails teams={teams} selectedTeams={selectedTeams} />
+          {createTeamOpen ? (
+            <CreateNewTeam
+              rolesList={rolesList}
+              isOpen={createTeamOpen}
+              onClose={setCreateTeamOpen}
+              selectedUsers={selectedUsers}
+              setSelectedUsers={setSelectedUsers}
+              allUsers={userList}
+              onCreate={handleNewTeam}
+            />
+          ) : (
+            <>
+              <TeamUsersDetails
+                users={selectedUsersArray}
+                teams={teams}
+                selectedTeams={selectedTeams}
+                rolesList={rolesList}
+                onUpdateTeams={handleUpdateTeams}
+                isFetching={isUpdating || isLoading}
+              />
+              <TeamDetails teams={teams} selectedTeams={selectedTeams} />
+            </>
+          )}
         </Section>
       </Section>
     </ProjectManagerPageLayout>
