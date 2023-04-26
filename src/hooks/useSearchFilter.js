@@ -16,7 +16,7 @@ const useSearchFilter = (fields = [], data = [], id) => {
             if (typeof v === 'string') {
               return v?.toLowerCase()
             } else if (Array.isArray(v)) {
-              return v?.flatMap((v) => v)
+              return v?.flatMap((v) => v.toLowerCase())
             } else if (typeof v === 'boolean' && v) {
               return k.toLowerCase()
             } else return []
