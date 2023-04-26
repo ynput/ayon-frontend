@@ -1,0 +1,421 @@
+import React, { useMemo, useRef, useState } from 'react'
+import { useGetTeamsQuery } from '../../services/team/getTeams'
+import TeamList from '/src/containers/TeamList'
+import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
+import { Button, InputSwitch, InputText, Section } from '@ynput/ayon-react-components'
+import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
+import UserListTeams from './UserListTeams'
+import { useGetUsersQuery } from '/src/services/user/getUsers'
+import TeamUsersDetails from './TeamUsersDetails'
+import TeamDetails from './TeamDetails'
+import { useDeleteTeamMutation, useUpdateTeamsMutation } from '/src/services/team/updateTeams'
+import { toast } from 'react-toastify'
+import CreateNewTeam from './CreateNewTeam'
+import { confirmDialog } from 'primereact/confirmdialog'
+import styled from 'styled-components'
+import useSearchFilter from '/src/hooks/useSearchFilter'
+
+const SectionStyled = styled(Section)`
+  align-items: start;
+  height: 100%;
+  flex: 1 1 0%;
+
+  min-width: 450px;
+  max-width: 450px;
+
+  /* maxWidth smaller min-width */
+  @media (max-width: 1200px) {
+    min-width: 370px;
+  }
+
+  /* maxWidth smaller min-width */
+  @media (max-width: 1024px) {
+    min-width: 320px;
+  }
+`
+
+const TeamsPage = ({ projectName, projectList, isUser }) => {
+  // STATES
+  const [selectedUsers, setSelectedUsers] = useState([])
+  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(isUser)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [createTeamOpen, setCreateTeamOpen] = useState(false)
+
+  // RTK QUERY HOOKS
+  const { data: teams = [], isLoading: isLoadingTeams } = useGetTeamsQuery(
+    { projectName, showMembers: true },
+    { skip: !projectName },
+  )
+
+  let { data: users = [], isLoading: isLoadingUsers } = useGetUsersQuery(
+    {},
+    { skip: !projectName || isUser },
+  )
+
+  // RTK MUTATIONS
+  // delete team
+  const [deleteTeam] = useDeleteTeamMutation()
+  // update multiple teams
+  const [updateTeams] = useUpdateTeamsMutation()
+
+  const [selectedTeams, setSelectedTeams] = useQueryParam(
+    ['teams'],
+    withDefault(ArrayParam, [teams[0]?.name]),
+  )
+
+  // Merge users and teams data
+  // NOTE: there is a usersObject bellow [userList, usersObject]
+  let [userList] = useMemo(() => {
+    const usersObject = {}
+    const userList = []
+
+    // isUser doesn't have access to users list
+    if (!isUser || !users) {
+      // admins and managers for editing
+      users.forEach((user) => {
+        usersObject[user.name] = { teams: {} }
+        const teamsList = []
+        let rolesList = []
+        let leader = false
+
+        teams.forEach((team) => {
+          const member = team.members.find((member) => member.name === user.name)
+          if (member) {
+            usersObject[user.name].teams[team.name] = {
+              leader: member.leader,
+              roles: member.roles,
+            }
+            teamsList.push(team.name)
+            rolesList = [...rolesList, ...member.roles]
+            leader = member.leader
+          }
+        })
+
+        // Include any other user data in the merged object
+        usersObject[user.name] = {
+          ...usersObject[user.name],
+          ...user,
+          teamsList,
+          rolesList,
+          leader,
+        }
+
+        userList.push(usersObject[user.name])
+      })
+    } else {
+      // users for viewing
+      // we need to get the users from the teams
+      teams.forEach((team) => {
+        team.members.forEach((member) => {
+          if (!usersObject[member.name]) {
+            const user = {
+              name: member.name,
+              teams: {
+                [team.name]: {
+                  leader: member.leader,
+                  roles: member.roles,
+                },
+              },
+            }
+            usersObject[member.name] = user
+            userList.push(user)
+          } else {
+            usersObject[member.name].teams[team.name] = {
+              leader: member.leader,
+              roles: member.roles,
+            }
+          }
+        })
+      })
+    }
+    return [userList, usersObject]
+  }, [users, teams])
+
+  // filter users by team if showTeamUsersOnly is true
+  userList = useMemo(() => {
+    let filteredUsers = userList
+
+    if (showTeamUsersOnly) {
+      filteredUsers = filteredUsers.filter((user) => selectedTeams.some((team) => user.teams[team]))
+    }
+
+    return filteredUsers
+  }, [showTeamUsersOnly, userList, selectedTeams])
+
+  const searchableFields = ['name', 'attrib.fullName', 'teamsList', 'rolesList', 'leader']
+  // filter users using search
+  const [search, setSearch, searchedUsers] = useSearchFilter(searchableFields, userList, 'users')
+  userList = useMemo(() => searchedUsers, [searchedUsers])
+
+  // find all roles on all teams
+  const rolesList = useMemo(() => {
+    const roles = new Set()
+    teams.forEach((team) => {
+      team.members.forEach((member) => {
+        member.roles.forEach((role) => {
+          roles.add(role)
+        })
+      })
+    })
+    return Array.from(roles)
+  }, [teams])
+
+  //   create array of all roles for selected teams
+  const selectedTeamsRoles = useMemo(() => {
+    const roles = []
+    teams.forEach((team) => {
+      if (selectedTeams.includes(team.name)) {
+        team.members.forEach((member) => {
+          member.roles.forEach((role) => {
+            if (!roles.includes(role)) {
+              roles.push(role)
+            }
+          })
+        })
+      }
+    })
+    return roles
+  }, [teams, selectedTeams])
+
+  // only show selected users in the user details panel
+  const selectedUsersArray = useMemo(() => {
+    return userList.filter((user) => selectedUsers.includes(user.name))
+  }, [userList, selectedUsers])
+
+  // HANDLERS
+
+  // UPDATE TEAMS (MULTIPLE) 2
+  const handleUpdateTeams = async (teams = [], config = {}) => {
+    // const { noToast = false, noOpt = false, noInvalidate = false } = config || {}
+    // filter out duplicate team names
+    teams = teams.filter((team, index, self) => {
+      return index === self.findIndex((t) => t.name === team.name)
+    })
+
+    try {
+      await updateTeams({
+        projectName,
+        teams,
+        ...config,
+      }).unwrap()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // CREATE TEAM
+  const handleNewTeam = async (team, config) => {
+    const { noToast = false } = config || {}
+    let { name } = team
+
+    // check if name is already taken
+    if (teams.some((team) => team.name.toLowerCase() === name.toLowerCase())) {
+      toast.warning('Team name already taken')
+      return
+    }
+
+    try {
+      await handleUpdateTeams([team], config)
+      // Success
+      setCreateTeamOpen(false)
+      setSelectedTeams([name])
+      setShowTeamUsersOnly(true)
+      !noToast && toast.success(`Created ${name}`)
+    } catch (error) {
+      toast.error(`Failed to create ${name}`)
+    }
+  }
+
+  // HANDLE DELETE TEAMS
+  const handleDeleteTeams = async (names = [], config) => {
+    const { noToast = false } = config || {}
+    toastId.current = !noToast && toast.info('Deleting teams...')
+    setSelectedUsers([])
+    let i = 0
+    for (const teamName of names) {
+      try {
+        await deleteTeam({ projectName, teamName }).unwrap()
+        !noToast &&
+          toast.update(toastId.current, {
+            render: `Deleted team: ${teamName}`,
+            type: toast.TYPE.SUCCESS,
+          })
+        setSelectedTeams((teams) => teams.filter((t) => t !== teamName))
+        i += 1
+      } catch {
+        toast.error(`Unable to delete team: ${teamName}`)
+      }
+    }
+    !noToast &&
+      toast.update(toastId.current, { render: `Deleted ${i} teams(s)`, type: toast.TYPE.SUCCESS })
+  }
+
+  // HANDLE RENAME TEAM
+  const handleRenameTeam = async (oldName, newName) => {
+    // check it's not the oldName
+    if (oldName === newName) return
+
+    // check if name is already taken
+    if (teams.some((team) => team.name.toLowerCase() === newName.toLowerCase())) {
+      toast.warning('Team name already taken')
+      return
+    }
+
+    const oldTeam = teams.find((team) => team.name === oldName)
+
+    const newTeam = {
+      members: oldTeam.members,
+      name: newName,
+    }
+
+    try {
+      setIsUpdating(true)
+      // first create duplicate team with new name
+      await handleNewTeam(newTeam, { noToast: true, noOpt: true, noInvalidate: true })
+      // then delete old team
+      await handleDeleteTeams([oldName], { noToast: true, noOpt: true })
+
+      toast.success(`Renamed team: ${oldName} to ${newName}`)
+    } catch {
+      toast.error(`Unable to rename team: ${oldName}`)
+    }
+    setIsUpdating(false)
+  }
+
+  const toastId = useRef(null)
+  // DELETE TEAM
+  const onDelete = async () => {
+    confirmDialog({
+      message: `Are you sure you want to delete ${selectedTeams.length} team(s)?`,
+      header: 'Delete Teams',
+      icon: 'pi pi-exclamation-triangle',
+      accept: async () => {
+        handleDeleteTeams(selectedTeams)
+      },
+      reject: () => {},
+    })
+  }
+
+  // DUPLICATE TEAM
+  const onDuplicate = async () => {
+    // preselect all users on selected team
+    const teamUsers = userList
+      .filter((user) => selectedTeams.some((team) => user.teams[team]))
+      .map((user) => user.name)
+
+    setSelectedUsers(teamUsers)
+
+    setCreateTeamOpen({
+      roles: selectedTeamsRoles,
+      subTitle: `Duplicating ${selectedTeams[0]}`,
+      duplicate: selectedTeams[0],
+    })
+  }
+
+  const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
+
+  return (
+    <>
+      <ProjectManagerPageLayout
+        projectList={projectList}
+        toolbarMore={
+          <>
+            {!isUser && (
+              <>
+                <Button
+                  icon={'group_add'}
+                  label="Create New Team"
+                  onClick={() => setCreateTeamOpen(true)}
+                />
+                <Button
+                  icon={'content_copy'}
+                  label="Duplicate Team"
+                  disabled={selectedTeams.length !== 1}
+                  onClick={onDuplicate}
+                />
+                <Button
+                  icon={'delete'}
+                  label="Delete Teams"
+                  disabled={!selectedTeams.length}
+                  onClick={onDelete}
+                />
+                <InputText
+                  style={{ width: '200px' }}
+                  placeholder="Filter users..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  autocomplete="off"
+                />
+                <InputSwitch
+                  checked={!showTeamUsersOnly}
+                  onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
+                />
+                Show All Users
+              </>
+            )}
+          </>
+        }
+      >
+        <Section
+          style={{
+            flexDirection: 'row',
+            width: 'calc(100% - 230px)',
+          }}
+        >
+          <TeamList
+            teams={teams}
+            selection={selectedTeams}
+            isLoading={isLoadingTeams}
+            multiselect
+            onSelect={(teams) => setSelectedTeams(teams)}
+            styleSection={{ height: '100%', flex: 0.4 }}
+            onDelete={onDelete}
+          />
+          <UserListTeams
+            selectedProjects={[projectName]}
+            selectedUsers={selectedUsers}
+            onSelectUsers={(users) => setSelectedUsers(users)}
+            userList={userList}
+            isLoading={isLoading}
+            selectedTeams={selectedTeams}
+          />
+          {!isUser && (
+            <SectionStyled>
+              {createTeamOpen ? (
+                <CreateNewTeam
+                  rolesList={rolesList}
+                  createTeamOpen={createTeamOpen}
+                  onClose={setCreateTeamOpen}
+                  selectedUsers={selectedUsers}
+                  setSelectedUsers={setSelectedUsers}
+                  allUsers={userList}
+                  onCreate={handleNewTeam}
+                />
+              ) : (
+                <>
+                  <TeamUsersDetails
+                    users={selectedUsersArray}
+                    teams={teams}
+                    selectedTeams={selectedTeams}
+                    rolesList={rolesList}
+                    onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                    isFetching={isUpdating || isLoading}
+                  />
+                  <TeamDetails
+                    teams={teams}
+                    selectedTeams={selectedTeams}
+                    onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                    roles={selectedTeamsRoles}
+                    onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
+                  />
+                </>
+              )}
+            </SectionStyled>
+          )}
+        </Section>
+      </ProjectManagerPageLayout>
+    </>
+  )
+}
+
+export default TeamsPage

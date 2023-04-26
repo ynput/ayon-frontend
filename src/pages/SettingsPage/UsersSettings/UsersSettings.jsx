@@ -19,7 +19,6 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { SelectButton } from 'primereact/selectbutton'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
-import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
@@ -50,7 +49,8 @@ const UsersSettings = () => {
   // QUERY PARAMS STATE
   const [searchParams] = useSearchParams()
   const queryNames = searchParams.getAll('name')
-  const [selectedUsers, setSelectedUsers] = useQueryParam('name', withDefault(ArrayParam, []))
+
+  const [selectedUsers, setSelectedUsers] = useState([])
 
   const toastId = useRef(null)
 

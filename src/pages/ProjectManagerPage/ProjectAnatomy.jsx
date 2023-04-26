@@ -1,12 +1,13 @@
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
-import { Section, ScrollPanel, Toolbar, Button } from '@ynput/ayon-react-components'
+import { Section, ScrollPanel, Button } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
 import { useGetAnatomySchemaQuery } from '../../services/anatomy/getAnatomy'
 import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
+import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 
-const ProjectAnatomy = ({ projectName }) => {
+const ProjectAnatomy = ({ projectName, toolbar, projectList }) => {
   const [newData, setNewData] = useState(null)
 
   const { data: schema, isLoading: isLoadingSchema } = useGetAnatomySchemaQuery()
@@ -45,16 +46,18 @@ const ProjectAnatomy = ({ projectName }) => {
   }, [schema, originalData, isLoadingSchema, isLoadingAnatomy, isSuccess, isFetching])
 
   return (
-    <Section>
-      <Toolbar>
-        <Button label="Update anatomy" icon="save" onClick={saveAnatomy} />
-      </Toolbar>
+    <ProjectManagerPageLayout
+      {...{ toolbar, projectList }}
+      toolbarMore={<Button label="Update anatomy" icon="save" onClick={saveAnatomy} />}
+    >
       <Section>
-        <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
-          {editor}
-        </ScrollPanel>
+        <Section>
+          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
+            {editor}
+          </ScrollPanel>
+        </Section>
       </Section>
-    </Section>
+    </ProjectManagerPageLayout>
   )
 }
 

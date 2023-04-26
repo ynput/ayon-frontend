@@ -8,6 +8,12 @@ import './users.scss'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 
+const StyledProfileRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`
+
 const UserList = ({
   selectedProjects,
   selectedUsers,
@@ -55,12 +61,6 @@ const UserList = ({
       command: () => onDelete(),
     },
   ]
-
-  const StyledProfileRow = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  `
 
   const ProfileRow = ({ rowData }) => (
     <StyledProfileRow>

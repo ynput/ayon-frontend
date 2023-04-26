@@ -4,10 +4,15 @@ import styled from 'styled-components'
 
 const StyledPanel = styled(Panel)`
   max-width: 300px;
+  min-width: min-content;
   position: absolute;
   top: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
+
+  pre {
+    white-space: pre-wrap;
+  }
 `
 
 const ErrorFallback = ({ error }) => {

@@ -16,7 +16,7 @@ const useSearchFilter = (fields = [], data = [], id) => {
             if (typeof v === 'string') {
               return v?.toLowerCase()
             } else if (Array.isArray(v)) {
-              return v?.flatMap((v) => v)
+              return v?.flatMap((v) => v.toLowerCase())
             } else if (typeof v === 'boolean' && v) {
               return k.toLowerCase()
             } else return []
@@ -30,7 +30,7 @@ const useSearchFilter = (fields = [], data = [], id) => {
     [data],
   )
 
-  let filtedData = useMemo(() => {
+  let filteredData = useMemo(() => {
     // separate into array by ,
     const searchArray = search?.split(',').reduce((acc, cur) => {
       if (cur.trim() === '') return acc
@@ -69,11 +69,11 @@ const useSearchFilter = (fields = [], data = [], id) => {
     } else return null
   }, [dataWithKeywords, search])
 
-  if (!filtedData) {
-    filtedData = data
+  if (!filteredData) {
+    filteredData = data
   }
 
-  return [search, setSearch, filtedData]
+  return [search, setSearch, filteredData]
 }
 
 export default useSearchFilter

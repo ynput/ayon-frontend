@@ -10,6 +10,7 @@ import {
   Panel,
   Section,
 } from '@ynput/ayon-react-components'
+import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 
 const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots] = useSetCustomRootsMutation()
@@ -52,7 +53,7 @@ const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   )
 }
 
-const ProjectRoots = ({ projectName }) => {
+const ProjectRoots = ({ projectName, toolbar, projectList }) => {
   const {
     data: project,
     isLoading: projectLoading,
@@ -89,13 +90,15 @@ const ProjectRoots = ({ projectName }) => {
 
   if (isError) return <>error</>
 
-  if (forms.length === 0) return <h1>No sites configured</h1>
+  // if (forms.length === 0) return <h1>No sites configured</h1>
   return (
-    <Section className="invisible" style={{ maxWidth: 600 }}>
-      {forms.map((form) => (
-        <ProjectRootForm key={form.siteId} {...form} />
-      ))}
-    </Section>
+    <ProjectManagerPageLayout {...{ toolbar, projectList }}>
+      <Section className="invisible" style={{ maxWidth: 600 }}>
+        {forms.map((form) => (
+          <ProjectRootForm key={form.siteId} {...form} />
+        ))}
+      </Section>
+    </ProjectManagerPageLayout>
   )
 }
 

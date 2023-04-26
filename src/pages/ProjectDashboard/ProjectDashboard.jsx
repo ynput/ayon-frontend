@@ -9,6 +9,7 @@ import DashboardPanelsContainer from './panels/DashboardPanelsContainer'
 import ProjectLatest from './panels/ProjectLatest'
 import ProjectDetails from './panels/ProjectDetails'
 import ProjectTeams from './panels/ProjectTeams'
+import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 
 // top grid
 const HeaderGridStyled = styled.div`
@@ -27,31 +28,33 @@ const PanelsContainerStyled = styled.div`
   overflow: hidden;
 `
 
-const ProjectDashboard = ({ projectName }) => {
+const ProjectDashboard = ({ projectName, toolbar, projectList }) => {
   return (
-    <Section
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'auto minmax(300px, 20vw)',
-        height: `calc(100% + 8px)`,
-        alignItems: 'start',
-      }}
-    >
-      <PanelsContainerStyled>
-        <HeaderGridStyled>
-          <HeartBeat {...{ projectName }} />
-          <Timeline {...{ projectName }} />
-        </HeaderGridStyled>
-        <DashboardPanelsContainer projectName={projectName}>
-          <ProjectStats column={1} />
-          <ProjectHealth column={1} />
-          <ProjectUsers column={2} />
-          <ProjectTeams column={2} />
-          <ProjectLatest column={3} />
-        </DashboardPanelsContainer>
-      </PanelsContainerStyled>
-      <ProjectDetails projectName={projectName} />
-    </Section>
+    <ProjectManagerPageLayout projectList={projectList} toolbar={toolbar}>
+      <Section
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto minmax(300px, 20vw)',
+          height: `calc(100% + 8px)`,
+          alignItems: 'start',
+        }}
+      >
+        <PanelsContainerStyled>
+          <HeaderGridStyled>
+            <HeartBeat {...{ projectName }} />
+            <Timeline {...{ projectName }} />
+          </HeaderGridStyled>
+          <DashboardPanelsContainer projectName={projectName}>
+            <ProjectStats column={1} />
+            <ProjectHealth column={1} />
+            <ProjectUsers column={2} />
+            <ProjectTeams column={2} />
+            <ProjectLatest column={3} />
+          </DashboardPanelsContainer>
+        </PanelsContainerStyled>
+        <ProjectDetails projectName={projectName} />
+      </Section>
+    </ProjectManagerPageLayout>
   )
 }
 
