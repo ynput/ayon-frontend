@@ -2,7 +2,8 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Toolbar } from '@ynput/ayon-react-components'
 
-const ProjectManagerPageLayout = ({ toolbar, projectList, children, toolbarMore }) => {
+const ProjectManagerPageLayout = ({ toolbar, projectList, children, toolbarMore, passthrough }) => {
+  if (passthrough) return children
   return (
     <>
       <Toolbar style={{ padding: 8, paddingBottom: 0 }}>

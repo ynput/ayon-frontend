@@ -98,7 +98,13 @@ const sameKeysStructure = (obj1, obj2) => {
   return true
 }
 
-const AddonSettings = ({ projectName, showSites = false, toolbar, projectList }) => {
+const AddonSettings = ({
+  projectName,
+  showSites = false,
+  toolbar,
+  projectList,
+  projectManager,
+}) => {
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState({})
@@ -455,16 +461,22 @@ const AddonSettings = ({ projectName, showSites = false, toolbar, projectList })
     )
   }, [showHelp, currentSelection, localOverrides])
 
+  const commitToolbar = useMemo(
+    () => (
+      <>
+        <Spacer />
+        <Button label="Dismiss all changes" icon="refresh" onClick={onRevertAllChanges} />
+        <Button label="Save changes" icon="check" onClick={onSave} />
+      </>
+    ),
+    [onRevertAllChanges, onSave],
+  )
+
   return (
     <ProjectManagerPageLayout
       {...{ toolbar, projectList }}
-      toolbarMore={
-        <>
-          <Spacer />
-          <Button label="Dismiss all changes" icon="refresh" onClick={onRevertAllChanges} />
-          <Button label="Save changes" icon="check" onClick={onSave} />
-        </>
-      }
+      toolbarMore={commitToolbar}
+      passthrough={!projectManager}
     >
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
         <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
@@ -542,6 +554,7 @@ const AddonSettings = ({ projectName, showSites = false, toolbar, projectList })
         </SplitterPanel>
         <SplitterPanel>
           <Section className="wrap" style={{ minWidth: 300 }}>
+            {!projectManager && <Toolbar>{commitToolbar}</Toolbar>}
             <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
           </Section>
         </SplitterPanel>
