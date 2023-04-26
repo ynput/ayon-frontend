@@ -17,6 +17,7 @@ const ProjectManagerPageContainer = ({
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
       return React.cloneElement(child, {
+        projectManager: true,
         projectName: selection,
         isUser: isUser,
         projectList: (
