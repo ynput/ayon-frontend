@@ -118,7 +118,7 @@ const TeamUsersDetails = ({
     const removedTeams = teamsValue.filter((team) => !newTeams.includes(team))
 
     // add/remove all users to teams
-    const updatedTeamsWithNewMembers = {}
+    const updatedTeamsWithNewMembers = []
     teams.forEach((team) => {
       // remove out the selected users from the team
       const membersWithRemovedUsers = team.members.filter(
@@ -138,16 +138,16 @@ const TeamUsersDetails = ({
         const newMembers = [...membersWithRemovedUsers, ...newUsersToAdd]
 
         // add selected members to new team
-        updatedTeamsWithNewMembers[team.name] = {
-          ...team,
+        updatedTeamsWithNewMembers.push({
+          name: team.name,
           members: newMembers,
-        }
+        })
       } else if (removedTeams.includes(team.name)) {
         // remove members from team
-        updatedTeamsWithNewMembers[team.name] = {
-          ...team,
+        updatedTeamsWithNewMembers.push({
+          name: team.name,
           members: membersWithRemovedUsers,
-        }
+        })
       }
     })
 
@@ -164,34 +164,30 @@ const TeamUsersDetails = ({
     // no changes to roles return
     if (!removedRoles.length && !addedRoles.length) return
 
-    const updatedTeamsWithNewRoles = {}
+    const updatedTeamsWithNewRoles = []
     // for each team and each user, update roles
     teams.forEach((team) => {
       // if team is not selected, skip
       if (!usersOnTeams.includes(team.name)) return
 
-      const updatedMembers = []
-
-      team.members.forEach((member) => {
+      const updatedMembers = team.members.map((member) => {
         // if user is not selected, keep their roles
         if (!users.some((user) => user.name === member.name)) {
-          updatedMembers.push(member)
-          return
+          return member
         } else {
           // otherwise, update their roles
-          updatedMembers.push({
+          return {
             ...member,
             roles: member.roles.filter((role) => !removedRoles.includes(role)).concat(addedRoles),
-          })
+          }
         }
       })
 
-      const newTeam = { ...team, members: updatedMembers }
+      const teamPatch = { name: team.name, members: updatedMembers }
 
-      updatedTeamsWithNewRoles[team.name] = newTeam
+      updatedTeamsWithNewRoles.push(teamPatch)
     })
 
-    console.log('updating teams')
     onUpdateTeams(updatedTeamsWithNewRoles)
   }
 
@@ -201,7 +197,7 @@ const TeamUsersDetails = ({
     setLeader(e.target.checked)
 
     const value = e.target.checked
-    const updatedTeamsWithNewLeaders = {}
+    const updatedTeamsWithNewLeaders = []
     // for each team and each user, update roles
     teams.forEach((team) => {
       // if team is not selected, skip
@@ -223,9 +219,9 @@ const TeamUsersDetails = ({
         }
       })
 
-      const newTeam = { ...team, members: updatedMembers }
+      const newTeam = { name: team.name, members: updatedMembers }
 
-      updatedTeamsWithNewLeaders[team.name] = newTeam
+      updatedTeamsWithNewLeaders.push(newTeam)
     })
 
     onUpdateTeams(updatedTeamsWithNewLeaders)

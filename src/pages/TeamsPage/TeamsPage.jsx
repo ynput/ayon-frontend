@@ -8,10 +8,8 @@ import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
 import TeamUsersDetails from './TeamUsersDetails'
 import TeamDetails from './TeamDetails'
-import { useDeleteTeamMutation, useUpdateTeamMutation } from '/src/services/team/updateTeams'
+import { useDeleteTeamMutation, useUpdateTeamsMutation } from '/src/services/team/updateTeams'
 import { toast } from 'react-toastify'
-import { ayonApi } from '/src/services/ayon'
-import { useDispatch } from 'react-redux'
 import CreateNewTeam from './CreateNewTeam'
 import { confirmDialog } from 'primereact/confirmdialog'
 import styled from 'styled-components'
@@ -36,9 +34,6 @@ const SectionStyled = styled(Section)`
 `
 
 const TeamsPage = ({ projectName, projectList, isUser }) => {
-  // REDUX STATE
-  const dispatch = useDispatch()
-
   // STATES
   const [selectedUsers, setSelectedUsers] = useState([])
   const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(false)
@@ -57,10 +52,10 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   )
 
   // RTK MUTATIONS
-  // update team
-  const [updateTeam] = useUpdateTeamMutation()
   // delete team
   const [deleteTeam] = useDeleteTeamMutation()
+  // update multiple teams
+  const [updateTeams] = useUpdateTeamsMutation()
 
   const [selectedTeams, setSelectedTeams] = useQueryParam(
     ['teams'],
@@ -123,31 +118,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     return [userList, usersObject]
   }, [users, teams])
 
-  // // teams might have users no longer exist
-  // const missingUsers = []
-  // // find users in teams that are not in the users list
-  // if (!isUser) {
-  //   teams.forEach((team) => {
-  //     team.members.forEach((member) => {
-  //       if (!usersObject[member.name]) {
-  //         const missingUser = {
-  //           name: member.name,
-  //           isMissing: true,
-  //           teams: {
-  //             [team.name]: {
-  //               leader: member.leader,
-  //               roles: member.roles,
-  //             },
-  //           },
-  //         }
-  //         missingUsers.push(missingUser)
-  //         usersObject[member.name] = missingUser
-  //         userList.push(missingUser)
-  //       }
-  //     })
-  //   })
-  // }
-
   // filter users by team if showTeamUsersOnly is true
   userList = useMemo(() => {
     let filteredUsers = userList
@@ -189,21 +159,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     return roles
   }, [teams, selectedTeams])
 
-  // find all roles on all teams, with the team name as a key
-  // {[teamName]: [roles], ...}
-  // const rolesObject = useMemo(() => {
-  //   const roles = {}
-  //   teams.forEach((team) => {
-  //     roles[team.name] = []
-  //     team.members.forEach((member) => {
-  //       member.roles.forEach((role) => {
-  //         if (!roles[team.name].includes(role)) roles[team.name].push(role)
-  //       })
-  //     })
-  //   })
-  //   return roles
-  // })
-
   // only show selected users in the user details panel
   const selectedUsersArray = useMemo(() => {
     return userList.filter((user) => selectedUsers.includes(user.name))
@@ -211,51 +166,23 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   // HANDLERS
 
-  // UPDATE TEAM
-  const handleUpdateTeam = async (teamName, teamObject, disableInvalidate, optimisticUpdate) => {
-    try {
-      await updateTeam({
-        projectName,
-        teamName,
-        team: teamObject,
-        disableInvalidate,
-        optimisticUpdate,
-      }).unwrap()
+  // UPDATE TEAMS (MULTIPLE) 2
+  const handleUpdateTeams = async (teams = [], config = {}) => {
+    // const { noToast = false, noOpt = false, noInvalidate = false } = config || {}
+    // filter out duplicate team names
+    teams = teams.filter((team, index, self) => {
+      return index === self.findIndex((t) => t.name === team.name)
+    })
 
-      return { error: false, success: true }
+    try {
+      await updateTeams({
+        projectName,
+        teams,
+        ...config,
+      }).unwrap()
     } catch (error) {
       console.error(error)
-      // toast
-      return { error: true, success: false }
     }
-  }
-
-  // UPDATE TEAMS
-  const handleUpdateTeams = async (teams = {}) => {
-    const useOptimisticUpdate = Object.keys(teams).length === 1
-    const errors = []
-    const success = []
-
-    if (!useOptimisticUpdate) setIsUpdating(true)
-
-    // disable invalidate for all teams and then invalidate at the end
-    for (const teamName of Object.keys(teams)) {
-      const res = await handleUpdateTeam(teamName, teams[teamName], true, useOptimisticUpdate)
-      if (res.error) errors.push(teamName)
-      if (res.success) success.push(teamName)
-    }
-
-    if (!useOptimisticUpdate) {
-      // trigger invalidate
-      dispatch(ayonApi.util.invalidateTags(['teams']))
-      setIsUpdating(false)
-    }
-
-    // toast error errors
-    if (errors.length) toast.error(`Failed to update ${errors.join(', ')}`)
-
-    // success toast
-    if (success.length) toast.success(`Updated ${success.join(', ')}`)
   }
 
   // CREATE TEAM
@@ -269,16 +196,15 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
       return
     }
 
-    const { error, success } = await handleUpdateTeam(name, team, true, true)
-
-    // toast error errors
-    if (error) toast.error(`Failed to create ${name}`)
-
-    // success toast
-    if (success && !noToast) {
+    try {
+      await handleUpdateTeams([team], config)
+      // Success
       setCreateTeamOpen(false)
       setSelectedTeams([name])
-      toast.success(`Created ${name}`)
+      setShowTeamUsersOnly(true)
+      !noToast && toast.success(`Created ${name}`)
+    } catch (error) {
+      toast.error(`Failed to create ${name}`)
     }
   }
 
@@ -327,11 +253,10 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     try {
       setIsUpdating(true)
       // first create duplicate team with new name
-      await handleNewTeam(newTeam, { noToast: true })
+      await handleNewTeam(newTeam, { noToast: true, noOpt: true, noInvalidate: true })
       // then delete old team
-      await handleDeleteTeams([oldName], { noToast: true })
-      // then select new team
-      setSelectedTeams([newName])
+      await handleDeleteTeams([oldName], { noToast: true, noOpt: true })
+
       toast.success(`Renamed team: ${oldName} to ${newName}`)
     } catch {
       toast.error(`Unable to rename team: ${oldName}`)
@@ -447,13 +372,13 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   teams={teams}
                   selectedTeams={selectedTeams}
                   rolesList={rolesList}
-                  onUpdateTeams={handleUpdateTeams}
+                  onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
                   isFetching={isUpdating || isLoading}
                 />
                 <TeamDetails
                   teams={teams}
                   selectedTeams={selectedTeams}
-                  onUpdateTeams={handleUpdateTeams}
+                  onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
                   roles={selectedTeamsRoles}
                   onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
                 />

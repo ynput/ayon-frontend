@@ -70,8 +70,64 @@ const updateTeams = ayonApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { teamName }) => [{ type: 'team', id: teamName }],
     }),
+    updateTeams: build.mutation({
+      query: ({ projectName, teams }) => ({
+        url: `/api/projects/${projectName}/teams`,
+        method: 'PATCH',
+        body: teams,
+      }),
+      invalidatesTags: (result, error, { noInvalidate }) => (!noInvalidate ? ['team'] : []),
+      async onQueryStarted({ teams, noOpt, projectName }, { dispatch, queryFulfilled }) {
+        if (noOpt) return
+
+        const patchResult = dispatch(
+          ayonApi.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
+            teams.forEach((team) => {
+              const notInDraft = draft.every((t) => t.name !== team.name)
+
+              // create leaders array
+              const leaders = team.members.filter((m) => m.isLeader)
+              const newTeam = {
+                ...team,
+                leaders,
+                membersCount: team.members.length - leaders.length,
+              }
+
+              if (notInDraft) {
+                // add new team to draft
+                draft.push(newTeam)
+              } else {
+                // update existing team in draft
+                draft.forEach((t) => {
+                  if (t.name === team.name) {
+                    Object.assign(t, newTeam)
+                  }
+                })
+              }
+            })
+          }),
+        )
+        try {
+          await queryFulfilled
+        } catch (err) {
+          patchResult.undo()
+
+          /**
+           * Alternatively, on failure you can invalidate the corresponding cache tags
+           * to trigger a re-fetch:
+           */
+
+          // trigger invalidate
+          dispatch(ayonApi.util.invalidateTags(['teams']))
+        }
+      },
+    }),
   }),
 })
 
-export const { useUpdateTeamMutation, useUpdateTeamMemberMutation, useDeleteTeamMutation } =
-  updateTeams
+export const {
+  useUpdateTeamMutation,
+  useUpdateTeamMemberMutation,
+  useDeleteTeamMutation,
+  useUpdateTeamsMutation,
+} = updateTeams

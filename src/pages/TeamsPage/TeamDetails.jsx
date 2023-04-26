@@ -68,13 +68,6 @@ const TeamDetails = ({
       if (rolesChanged) updatedTeams.push({ ...team, members: updatedMembers })
     })
 
-    // updatedTeams to object with key of team name
-    // { [teamName]: { [memberName]: [roles] } }
-    updatedTeams = updatedTeams.reduce((acc, team) => {
-      acc[team.name] = team
-      return acc
-    }, {})
-
     onUpdateTeams(updatedTeams)
   }
 
@@ -97,7 +90,13 @@ const TeamDetails = ({
       >
         <FormLayout>
           <FormRow label="Team Name">
-            <LockedInput value={name} disabled={disableName} onSubmit={onRenameTeam} />
+            <LockedInput
+              value={name}
+              disabled={disableName}
+              onSubmit={onRenameTeam}
+              saveLabel=""
+              cancelLabel=""
+            />
           </FormRow>
           <h2>Roles</h2>
           {roles.map((role) => (
@@ -113,6 +112,8 @@ const TeamDetails = ({
                 value={role}
                 style={{ flex: 1 }}
                 onSubmit={(v) => handleRoleRename(role, v)}
+                saveLabel=""
+                cancelLabel=""
               />{' '}
               <Button icon={'delete'} onClick={() => handleRoleRename(role, null)} />
             </div>
