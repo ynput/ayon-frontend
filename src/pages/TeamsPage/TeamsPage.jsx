@@ -14,6 +14,26 @@ import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 import CreateNewTeam from './CreateNewTeam'
 import { confirmDialog } from 'primereact/confirmdialog'
+import styled from 'styled-components'
+
+const SectionStyled = styled(Section)`
+  align-items: start;
+  height: 100%;
+  flex: 1 1 0%;
+
+  min-width: 450px;
+  max-width: 450px;
+
+  /* maxWidth smaller min-width */
+  @media (max-width: 1200px) {
+    min-width: 370px;
+  }
+
+  /* maxWidth smaller min-width */
+  @media (max-width: 1024px) {
+    min-width: 320px;
+  }
+`
 
 const TeamsPage = ({ projectName, projectList, isUser }) => {
   // REDUX STATE
@@ -152,6 +172,23 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     return Array.from(roles)
   }, [teams])
 
+  //   create array of all roles for selected teams
+  const selectedTeamsRoles = useMemo(() => {
+    const roles = []
+    teams.forEach((team) => {
+      if (selectedTeams.includes(team.name)) {
+        team.members.forEach((member) => {
+          member.roles.forEach((role) => {
+            if (!roles.includes(role)) {
+              roles.push(role)
+            }
+          })
+        })
+      }
+    })
+    return roles
+  }, [teams, selectedTeams])
+
   // find all roles on all teams, with the team name as a key
   // {[teamName]: [roles], ...}
   // const rolesObject = useMemo(() => {
@@ -226,7 +263,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     let { name } = team
 
     // check if name is already taken
-    if (teams.some((team) => team.name === name)) {
+    if (teams.some((team) => team.name.toLowerCase() === name.toLowerCase())) {
       toast.warning('Team name already taken')
       return
     }
@@ -274,6 +311,22 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     })
   }
 
+  // DUPLICATE TEAM
+  const onDuplicate = async () => {
+    // preselect all users on selected team
+    const teamUsers = userList
+      .filter((user) => selectedTeams.some((team) => user.teams[team]))
+      .map((user) => user.name)
+
+    setSelectedUsers(teamUsers)
+
+    setCreateTeamOpen({
+      roles: selectedTeamsRoles,
+      subTitle: `Duplicating ${selectedTeams[0]}`,
+      duplicate: selectedTeams[0],
+    })
+  }
+
   const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
 
   return (
@@ -289,12 +342,17 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   label="Create New Team"
                   onClick={() => setCreateTeamOpen(true)}
                 />
-                <Button icon={'content_copy'} label="Duplicate Team" />
+                <Button
+                  icon={'content_copy'}
+                  label="Duplicate Team"
+                  disabled={selectedTeams.length !== 1}
+                  onClick={onDuplicate}
+                />
                 <Button
                   icon={'delete'}
                   label="Delete Teams"
-                  onClick={onDelete}
                   disabled={!selectedTeams.length}
+                  onClick={onDelete}
                 />
               </>
             )}
@@ -309,6 +367,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
         <Section
           style={{
             flexDirection: 'row',
+            width: 'calc(100% - 230px)',
           }}
         >
           <TeamList
@@ -328,19 +387,11 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             isLoading={isLoading}
             selectedTeams={selectedTeams}
           />
-          <Section
-            style={{
-              alignItems: 'start',
-              height: '100%',
-              flex: 1,
-              maxWidth: 480,
-              minWidth: 480,
-            }}
-          >
+          <SectionStyled>
             {createTeamOpen ? (
               <CreateNewTeam
                 rolesList={rolesList}
-                isOpen={createTeamOpen}
+                createTeamOpen={createTeamOpen}
                 onClose={setCreateTeamOpen}
                 selectedUsers={selectedUsers}
                 setSelectedUsers={setSelectedUsers}
@@ -361,10 +412,11 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   teams={teams}
                   selectedTeams={selectedTeams}
                   onUpdateTeams={handleUpdateTeams}
+                  roles={selectedTeamsRoles}
                 />
               </>
             )}
-          </Section>
+          </SectionStyled>
         </Section>
       </ProjectManagerPageLayout>
     </>

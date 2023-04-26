@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { Button, FormLayout, FormRow, LockedInput, Panel } from '@ynput/ayon-react-components'
 import DetailHeader from '/src/components/DetailHeader'
 
-const TeamDetails = ({ teams = [], selectedTeams = [], onUpdateTeams }) => {
+const TeamDetails = ({ teams = [], selectedTeams = [], onUpdateTeams, roles = [] }) => {
   const noneSelected = selectedTeams.length === 0
   const disableName = noneSelected || selectedTeams.length > 1
 
@@ -16,23 +16,6 @@ const TeamDetails = ({ teams = [], selectedTeams = [], onUpdateTeams }) => {
       setName(selectedTeams.join(', '))
     }
   }, [selectedTeams])
-
-  //   create array of all roles for selected teams
-  const teamsRoles = useMemo(() => {
-    const roles = []
-    teams.forEach((team) => {
-      if (selectedTeams.includes(team.name)) {
-        team.members.forEach((member) => {
-          member.roles.forEach((role) => {
-            if (!roles.includes(role)) {
-              roles.push(role)
-            }
-          })
-        })
-      }
-    })
-    return roles
-  }, [teams, selectedTeams])
 
   const totalMembers = teams.reduce((total, team) => {
     if (selectedTeams.includes(team.name)) {
@@ -101,13 +84,17 @@ const TeamDetails = ({ teams = [], selectedTeams = [], onUpdateTeams }) => {
           <span>{subTitle}</span>
         </div>
       </DetailHeader>
-      <Panel>
+      <Panel
+        style={{
+          overflow: 'auto',
+        }}
+      >
         <FormLayout>
           <FormRow label="Team Name">
             <LockedInput value={name} disabled={disableName} />
           </FormRow>
           <h2>Roles</h2>
-          {teamsRoles.map((role) => (
+          {roles.map((role) => (
             <div
               key={role}
               style={{

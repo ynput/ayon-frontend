@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import {
   AssigneeSelect,
@@ -19,10 +19,28 @@ const CreateNewTeam = ({
   setSelectedUsers,
   onClose,
   onCreate,
+  createTeamOpen,
 }) => {
   const rolesOptions = useMemo(() => rolesList.map((role) => ({ name: role })), [rolesList])
-  const [name, setName] = useState('')
-  const [roles, setRoles] = useState([])
+  const [nameForm, setNameForm] = useState('')
+  const [rolesForm, setRolesForm] = useState([])
+
+  // get data from open state or defaults
+  const {
+    title = 'Create New Team',
+    duplicate = null,
+    subTitle = '',
+    roles = [],
+    name = '',
+  } = createTeamOpen || {}
+
+  // set any initial state
+  useEffect(() => {
+    if (createTeamOpen) {
+      setNameForm(name)
+      setRolesForm(roles)
+    }
+  }, [createTeamOpen])
 
   //   create list of users names in object format
   const usersOptions = useMemo(
@@ -35,26 +53,62 @@ const CreateNewTeam = ({
     [allUsers],
   )
 
-  const handleSubmit = () => {
+  const duplicateTeam = () => {
+    const addedRoles = rolesForm.filter((role) => !roles.includes(role))
+    const removedRoles = roles.filter((role) => !rolesForm.includes(role))
+
+    return {
+      name: checkName(nameForm),
+      members: allUsers
+        .filter((user) => selectedUsers.includes(user.name))
+        .map((user) => {
+          const teamMember = user.teams[duplicate] || {}
+          const originalRoles = teamMember.roles || []
+          // remove any roles that were removed
+          const newRoles = originalRoles.filter((role) => !removedRoles.includes(role))
+          // add on any new roles
+          newRoles.push(...addedRoles)
+
+          return {
+            name: user.name,
+            roles: newRoles,
+            leader: teamMember.leader || false,
+          }
+        }),
+    }
+  }
+
+  const createNewTeam = () => {
     const newTeam = {
-      name: checkName(name),
+      name: checkName(nameForm),
       members: selectedUsers.map((name) => ({
         name,
-        roles: roles.filter((r) => r),
+        roles: rolesForm.filter((r) => r),
         leader: false,
       })),
-      leaders: [],
-      memberCount: selectedUsers.length,
     }
 
-    onCreate(newTeam)
+    return newTeam
+  }
+
+  const handleSubmit = () => {
+    let newTeam
+
+    if (duplicate) {
+      newTeam = duplicateTeam()
+    } else {
+      newTeam = createNewTeam()
+    }
+
+    // update
+    if (newTeam) onCreate(newTeam)
   }
 
   //   clears the form
   const handleClear = () => {
-    setName('')
+    setNameForm('')
     setSelectedUsers([])
-    setRoles([])
+    setRolesForm([])
   }
 
   return (
@@ -65,14 +119,14 @@ const CreateNewTeam = ({
             overflow: 'hidden',
           }}
         >
-          <h2>Create New Team</h2>
-          {/* <span>{usersList.join(', ')}</span> */}
+          <h2>{title}</h2>
+          <span>{subTitle}</span>
         </div>
       </DetailHeader>
       <Panel>
         <FormLayout>
           <FormRow label="Team Name">
-            <InputText value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+            <InputText value={nameForm} onChange={(e) => setNameForm(e.target.value)} autoFocus />
           </FormRow>
           <FormRow label="Team Members">
             <AssigneeSelect
@@ -96,9 +150,9 @@ const CreateNewTeam = ({
 
           <FormRow label="Member Roles">
             <Dropdown
-              value={roles}
+              value={rolesForm}
               options={rolesOptions}
-              onChange={setRoles}
+              onChange={setRolesForm}
               dataKey="name"
               valueTemplate={'tags'}
               search
@@ -124,14 +178,14 @@ const CreateNewTeam = ({
             label="Clear"
             icon="clear"
             style={{ flex: 1 }}
-            disabled={!name}
+            disabled={!nameForm}
           />
           <Button
             onClick={handleSubmit}
             label="Create New Team"
             icon="group_add"
             style={{ flex: 1 }}
-            disabled={!name}
+            disabled={!nameForm}
           />
         </div>
       </Panel>
