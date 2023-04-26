@@ -36,7 +36,7 @@ const SectionStyled = styled(Section)`
 const TeamsPage = ({ projectName, projectList, isUser }) => {
   // STATES
   const [selectedUsers, setSelectedUsers] = useState([])
-  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(false)
+  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(isUser)
   const [isUpdating, setIsUpdating] = useState(false)
   const [createTeamOpen, setCreateTeamOpen] = useState(false)
 
@@ -117,6 +117,11 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     }
     return [userList, usersObject]
   }, [users, teams])
+
+  // filter users by if they have a role (permissions) on the project
+  userList = useMemo(() => {
+    return userList.filter((user) => projectName in user.roles)
+  }, [userList, projectName])
 
   // filter users by team if showTeamUsersOnly is true
   userList = useMemo(() => {
@@ -321,13 +326,13 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   disabled={!selectedTeams.length}
                   onClick={onDelete}
                 />
+                <InputSwitch
+                  checked={!showTeamUsersOnly}
+                  onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
+                />
+                Show All Users
               </>
             )}
-            <InputSwitch
-              checked={!showTeamUsersOnly}
-              onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
-            />
-            Show All Users
           </>
         }
       >
@@ -354,37 +359,39 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             isLoading={isLoading}
             selectedTeams={selectedTeams}
           />
-          <SectionStyled>
-            {createTeamOpen ? (
-              <CreateNewTeam
-                rolesList={rolesList}
-                createTeamOpen={createTeamOpen}
-                onClose={setCreateTeamOpen}
-                selectedUsers={selectedUsers}
-                setSelectedUsers={setSelectedUsers}
-                allUsers={userList}
-                onCreate={handleNewTeam}
-              />
-            ) : (
-              <>
-                <TeamUsersDetails
-                  users={selectedUsersArray}
-                  teams={teams}
-                  selectedTeams={selectedTeams}
+          {!isUser && (
+            <SectionStyled>
+              {createTeamOpen ? (
+                <CreateNewTeam
                   rolesList={rolesList}
-                  onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
-                  isFetching={isUpdating || isLoading}
+                  createTeamOpen={createTeamOpen}
+                  onClose={setCreateTeamOpen}
+                  selectedUsers={selectedUsers}
+                  setSelectedUsers={setSelectedUsers}
+                  allUsers={userList}
+                  onCreate={handleNewTeam}
                 />
-                <TeamDetails
-                  teams={teams}
-                  selectedTeams={selectedTeams}
-                  onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
-                  roles={selectedTeamsRoles}
-                  onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
-                />
-              </>
-            )}
-          </SectionStyled>
+              ) : (
+                <>
+                  <TeamUsersDetails
+                    users={selectedUsersArray}
+                    teams={teams}
+                    selectedTeams={selectedTeams}
+                    rolesList={rolesList}
+                    onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                    isFetching={isUpdating || isLoading}
+                  />
+                  <TeamDetails
+                    teams={teams}
+                    selectedTeams={selectedTeams}
+                    onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                    roles={selectedTeamsRoles}
+                    onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
+                  />
+                </>
+              )}
+            </SectionStyled>
+          )}
         </Section>
       </ProjectManagerPageLayout>
     </>
