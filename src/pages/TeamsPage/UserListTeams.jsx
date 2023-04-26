@@ -128,6 +128,14 @@ const UserListTeams = ({
             }}
           />
           <Column
+            field="attrib.fullName"
+            header="Full Name"
+            sortable
+            style={{
+              width: '20%',
+            }}
+          />
+          <Column
             header="Teams"
             body={(rowData) => {
               // sort teams by leader and sort teams by if they are selected
@@ -155,6 +163,8 @@ const UserListTeams = ({
                 </span>
               )
             }}
+            sortable
+            sortField="teamsList"
           />
           <Column
             header="Roles"
@@ -184,6 +194,8 @@ const UserListTeams = ({
                 </span>
               )
             }}
+            sortable
+            sortField="rolesList"
           />
         </DataTable>
       </TablePanel>

@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
-import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, InputText, Section } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
@@ -13,6 +13,7 @@ import { toast } from 'react-toastify'
 import CreateNewTeam from './CreateNewTeam'
 import { confirmDialog } from 'primereact/confirmdialog'
 import styled from 'styled-components'
+import useSearchFilter from '/src/hooks/useSearchFilter'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -73,6 +74,9 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
       // admins and managers for editing
       users.forEach((user) => {
         usersObject[user.name] = { teams: {} }
+        const teamsList = []
+        let rolesList = []
+        let leader = false
 
         teams.forEach((team) => {
           const member = team.members.find((member) => member.name === user.name)
@@ -81,11 +85,20 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
               leader: member.leader,
               roles: member.roles,
             }
+            teamsList.push(team.name)
+            rolesList = [...rolesList, ...member.roles]
+            leader = member.leader
           }
         })
 
         // Include any other user data in the merged object
-        usersObject[user.name] = { ...usersObject[user.name], ...user }
+        usersObject[user.name] = {
+          ...usersObject[user.name],
+          ...user,
+          teamsList,
+          rolesList,
+          leader,
+        }
 
         userList.push(usersObject[user.name])
       })
@@ -118,11 +131,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     return [userList, usersObject]
   }, [users, teams])
 
-  // filter users by if they have a role (permissions) on the project
-  userList = useMemo(() => {
-    return userList.filter((user) => projectName in user.roles)
-  }, [userList, projectName])
-
   // filter users by team if showTeamUsersOnly is true
   userList = useMemo(() => {
     let filteredUsers = userList
@@ -133,6 +141,11 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
     return filteredUsers
   }, [showTeamUsersOnly, userList, selectedTeams])
+
+  const searchableFields = ['name', 'attrib.fullName', 'teamsList', 'rolesList', 'leader']
+  // filter users using search
+  const [search, setSearch, searchedUsers] = useSearchFilter(searchableFields, userList, 'users')
+  userList = useMemo(() => searchedUsers, [searchedUsers])
 
   // find all roles on all teams
   const rolesList = useMemo(() => {
@@ -325,6 +338,13 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   label="Delete Teams"
                   disabled={!selectedTeams.length}
                   onClick={onDelete}
+                />
+                <InputText
+                  style={{ width: '200px' }}
+                  placeholder="Filter users..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  autocomplete="off"
                 />
                 <InputSwitch
                   checked={!showTeamUsersOnly}
