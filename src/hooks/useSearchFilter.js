@@ -30,7 +30,7 @@ const useSearchFilter = (fields = [], data = [], id) => {
     [data],
   )
 
-  let filtedData = useMemo(() => {
+  let filteredData = useMemo(() => {
     // separate into array by ,
     const searchArray = search?.split(',').reduce((acc, cur) => {
       if (cur.trim() === '') return acc
@@ -69,11 +69,11 @@ const useSearchFilter = (fields = [], data = [], id) => {
     } else return null
   }, [dataWithKeywords, search])
 
-  if (!filtedData) {
-    filtedData = data
+  if (!filteredData) {
+    filteredData = data
   }
 
-  return [search, setSearch, filtedData]
+  return [search, setSearch, filteredData]
 }
 
 export default useSearchFilter
