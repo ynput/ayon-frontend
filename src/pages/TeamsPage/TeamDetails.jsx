@@ -3,7 +3,13 @@ import PropTypes from 'prop-types'
 import { Button, FormLayout, FormRow, LockedInput, Panel } from '@ynput/ayon-react-components'
 import DetailHeader from '/src/components/DetailHeader'
 
-const TeamDetails = ({ teams = [], selectedTeams = [], onUpdateTeams, roles = [] }) => {
+const TeamDetails = ({
+  teams = [],
+  selectedTeams = [],
+  onUpdateTeams,
+  roles = [],
+  onRenameTeam,
+}) => {
   const noneSelected = selectedTeams.length === 0
   const disableName = noneSelected || selectedTeams.length > 1
 
@@ -91,7 +97,7 @@ const TeamDetails = ({ teams = [], selectedTeams = [], onUpdateTeams, roles = []
       >
         <FormLayout>
           <FormRow label="Team Name">
-            <LockedInput value={name} disabled={disableName} />
+            <LockedInput value={name} disabled={disableName} onSubmit={onRenameTeam} />
           </FormRow>
           <h2>Roles</h2>
           {roles.map((role) => (

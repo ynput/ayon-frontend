@@ -259,7 +259,8 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   }
 
   // CREATE TEAM
-  const handleNewTeam = async (team) => {
+  const handleNewTeam = async (team, config) => {
+    const { noToast = false } = config || {}
     let { name } = team
 
     // check if name is already taken
@@ -274,11 +275,68 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     if (error) toast.error(`Failed to create ${name}`)
 
     // success toast
-    if (success) {
+    if (success && !noToast) {
       setCreateTeamOpen(false)
       setSelectedTeams([name])
       toast.success(`Created ${name}`)
     }
+  }
+
+  // HANDLE DELETE TEAMS
+  const handleDeleteTeams = async (names = [], config) => {
+    const { noToast = false } = config || {}
+    toastId.current = !noToast && toast.info('Deleting teams...')
+    setSelectedUsers([])
+    let i = 0
+    for (const teamName of names) {
+      try {
+        await deleteTeam({ projectName, teamName }).unwrap()
+        !noToast &&
+          toast.update(toastId.current, {
+            render: `Deleted team: ${teamName}`,
+            type: toast.TYPE.SUCCESS,
+          })
+        setSelectedTeams((teams) => teams.filter((t) => t !== teamName))
+        i += 1
+      } catch {
+        toast.error(`Unable to delete team: ${teamName}`)
+      }
+    }
+    !noToast &&
+      toast.update(toastId.current, { render: `Deleted ${i} teams(s)`, type: toast.TYPE.SUCCESS })
+  }
+
+  // HANDLE RENAME TEAM
+  const handleRenameTeam = async (oldName, newName) => {
+    // check it's not the oldName
+    if (oldName === newName) return
+
+    // check if name is already taken
+    if (teams.some((team) => team.name.toLowerCase() === newName.toLowerCase())) {
+      toast.warning('Team name already taken')
+      return
+    }
+
+    const oldTeam = teams.find((team) => team.name === oldName)
+
+    const newTeam = {
+      members: oldTeam.members,
+      name: newName,
+    }
+
+    try {
+      setIsUpdating(true)
+      // first create duplicate team with new name
+      await handleNewTeam(newTeam, { noToast: true })
+      // then delete old team
+      await handleDeleteTeams([oldName], { noToast: true })
+      // then select new team
+      setSelectedTeams([newName])
+      toast.success(`Renamed team: ${oldName} to ${newName}`)
+    } catch {
+      toast.error(`Unable to rename team: ${oldName}`)
+    }
+    setIsUpdating(false)
   }
 
   const toastId = useRef(null)
@@ -289,23 +347,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
       header: 'Delete Teams',
       icon: 'pi pi-exclamation-triangle',
       accept: async () => {
-        toastId.current = toast.info('Deleting teams...')
-        let i = 0
-        for (const team of selectedTeams) {
-          try {
-            setSelectedUsers([])
-            await deleteTeam({ projectName, teamName: team }).unwrap()
-            toast.update(toastId.current, {
-              render: `Deleted team: ${team}`,
-              type: toast.TYPE.SUCCESS,
-            })
-            setSelectedTeams((teams) => teams.filter((t) => t !== team))
-            i += 1
-          } catch {
-            toast.error(`Unable to delete team: ${team}`)
-          }
-        }
-        toast.update(toastId.current, { render: `Deleted ${i} teams(s)`, type: toast.TYPE.SUCCESS })
+        handleDeleteTeams(selectedTeams)
       },
       reject: () => {},
     })
@@ -413,6 +455,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   selectedTeams={selectedTeams}
                   onUpdateTeams={handleUpdateTeams}
                   roles={selectedTeamsRoles}
+                  onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
                 />
               </>
             )}
