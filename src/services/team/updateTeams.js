@@ -54,6 +54,29 @@ const updateTeams = ayonApi.injectEndpoints({
         method: 'DELETE',
       }),
       invalidatesTags: () => ['teams'],
+      async onQueryStarted({ projectName, teamName }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          ayonApi.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
+            const index = draft.findIndex((t) => t.name === teamName)
+            if (index > -1) {
+              draft.splice(index, 1)
+            }
+          }),
+        )
+        try {
+          await queryFulfilled
+        } catch (err) {
+          patchResult.undo()
+
+          /**
+           * Alternatively, on failure you can invalidate the corresponding cache tags
+           * to trigger a re-fetch:
+           */
+
+          // trigger invalidate
+          dispatch(ayonApi.util.invalidateTags(['teams']))
+        }
+      },
     }),
     updateTeamMember: build.mutation({
       query: ({ projectName, teamName, memberName, member }) => ({
