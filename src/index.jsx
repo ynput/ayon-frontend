@@ -17,6 +17,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import 'primereact/resources/primereact.min.css'
 import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
+import 'react-datepicker/dist/react-datepicker.css'
 
 import './styles/index.scss'
 import { ayonApi } from './services/ayon'

@@ -16,12 +16,12 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import getFieldInObject from '/src/helpers/getFieldInObject'
 import { isEmpty, isEqual, union } from 'lodash'
-import { format } from 'date-fns'
 import StatusSelect from '/src/components/status/statusSelect'
 import TypeEditor from './TypeEditor'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import { Link } from 'react-router-dom'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
+import InputDate from '/src/components/InputDate'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -458,12 +458,10 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                 const extraProps = getInputProps(attrib)
                 const typeOptions = type === 'folder' ? folders : tasks
 
-                if (attrib?.type === 'datetime' && value) {
+                const isDate = attrib?.type === 'datetime'
+                if (isDate && value) {
                   // convert date to right format
                   value = new Date(value)
-                  if (value) {
-                    value = format(value, 'yyyy-MM-dd')
-                  }
                 }
 
                 const changedStyles = {
@@ -556,7 +554,22 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                       isMultiple={!!isMultiple}
                     />
                   )
+                } else if (isDate) {
+                  input = (
+                    <InputDate
+                      selected={value || undefined}
+                      disabled={(hasLeaf && leafDisabled) || disabled}
+                      onChange={(date) => handleLocalChange(date, changeKey, field)}
+                      style={{
+                        ...changedStyles,
+                        color: !isOwn ? 'var(--color-grey-06)' : 'initial',
+                        ...disabledStyles,
+                        width: '100%',
+                      }}
+                    />
+                  )
                 } else {
+                  // input type (text, number, password, etc.) stored in extraProps
                   input = (
                     <InputText
                       value={value || ''}
@@ -585,6 +598,9 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                     } ${attrib?.type} ${isMultiple ? 'isMultiple' : ''} ${
                       isChanged ? 'isChanged' : ''
                     }`}
+                    fieldStyle={{
+                      overflow: !isDate ? 'hidden' : 'visible',
+                    }}
                   >
                     {input}
                   </FormRow>
