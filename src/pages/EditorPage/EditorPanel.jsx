@@ -9,6 +9,7 @@ import {
   InputText,
   Dropdown,
   AssigneeSelect,
+  InputDate,
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -21,7 +22,6 @@ import TypeEditor from './TypeEditor'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import { Link } from 'react-router-dom'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import InputDate from '../../components/InputDate/InputDate'
 
 const inputTypes = {
   datetime: { type: 'date' },
