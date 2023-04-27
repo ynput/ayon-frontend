@@ -21,7 +21,7 @@ import TypeEditor from './TypeEditor'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import { Link } from 'react-router-dom'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import InputDate from '/src/components/InputDate'
+import InputDate from '../../components/InputDate/InputDate'
 
 const inputTypes = {
   datetime: { type: 'date' },

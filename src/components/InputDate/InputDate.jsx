@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDatePicker from 'react-datepicker'
 import styled from 'styled-components'
+import './InputDate.scss'
 
 const StyledInputDate = styled(ReactDatePicker)`
   width: 100%;
