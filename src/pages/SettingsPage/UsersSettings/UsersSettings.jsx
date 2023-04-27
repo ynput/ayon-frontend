@@ -3,7 +3,6 @@ import { toast } from 'react-toastify'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
 // Comps
-import NewUserDialog from './newUserDialog'
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
 // utils
@@ -21,6 +20,7 @@ import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import NewUser from './newUser'
 
 // TODO: Remove classname assignments and do in styled components
 const formatRoles = (rowData, selectedProjects) => {
@@ -149,6 +149,11 @@ const UsersSettings = () => {
     }
   }
 
+  const openNewUser = () => {
+    setShowNewUser(true)
+    setSelectedUsers([])
+  }
+
   // use filteredUserList if showProjectUsers
   // else use userList
 
@@ -196,7 +201,7 @@ const UsersSettings = () => {
       <ConfirmDialog />
       <Section>
         <Toolbar>
-          <Button onClick={() => setShowNewUser(true)} label="Add New User" icon="person_add" />
+          <Button onClick={openNewUser} label="Add New User" icon="person_add" />
           <Button
             onClick={onDelete}
             label="Delete Users"
@@ -257,41 +262,42 @@ const UsersSettings = () => {
             />
           </SplitterPanel>
           <SplitterPanel size={40} style={{ minWidth: 370 }}>
-            <UserDetail
-              setShowRenameUser={setShowRenameUser}
-              selectedUsers={selectedUsers}
-              setShowSetPassword={setShowSetPassword}
-              selectedProjects={selectedProjects}
-              setSelectedUsers={setSelectedUsers}
-              isSelfSelected={isSelfSelected}
-              rolesList={rolesList}
-              lastSelectedUser={lastSelectedUser}
-              selectedUserList={selectedUserList}
-              managerDisabled={managerDisabled}
-            />
-            {selectedUsers.length === 0 && (
-              <UsersOverview
+            {selectedUsers.length ? (
+              <UserDetail
+                setShowRenameUser={setShowRenameUser}
+                selectedUsers={selectedUsers}
+                setShowSetPassword={setShowSetPassword}
                 selectedProjects={selectedProjects}
-                userList={filteredUserList}
-                onNewUser={() => setShowNewUser(true)}
-                onUserSelect={(user) => setSelectedUsers([user.name])}
-                onTotal={onTotal}
-                search={search}
+                setSelectedUsers={setSelectedUsers}
+                isSelfSelected={isSelfSelected}
+                rolesList={rolesList}
+                lastSelectedUser={lastSelectedUser}
+                selectedUserList={selectedUserList}
+                managerDisabled={managerDisabled}
               />
+            ) : (
+              !showNewUser && (
+                <UsersOverview
+                  selectedProjects={selectedProjects}
+                  userList={filteredUserList}
+                  onNewUser={openNewUser}
+                  onUserSelect={(user) => setSelectedUsers([user.name])}
+                  onTotal={onTotal}
+                  search={search}
+                />
+              )
             )}
+            <NewUser
+              rolesList={rolesList}
+              onHide={(newUsers) => {
+                setShowNewUser(false)
+                if (newUsers.length) setSelectedUsers(newUsers)
+              }}
+              open={showNewUser && !selectedUsers.length}
+            />
           </SplitterPanel>
         </Splitter>
       </Section>
-
-      {showNewUser && (
-        <NewUserDialog
-          rolesList={rolesList}
-          onHide={(newUsers) => {
-            setShowNewUser(false)
-            if (newUsers.length) setSelectedUsers(newUsers)
-          }}
-        />
-      )}
 
       {showRenameUser && (
         <RenameUserDialog

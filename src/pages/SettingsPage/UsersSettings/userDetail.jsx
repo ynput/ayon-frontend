@@ -147,11 +147,6 @@ const UserDetail = ({
 
   const [updateUser] = useUpdateUserMutation()
 
-  // no selected user. do not show the panel
-  if (!selectedUsers.length) {
-    return <></>
-  }
-
   //
   // API
   //

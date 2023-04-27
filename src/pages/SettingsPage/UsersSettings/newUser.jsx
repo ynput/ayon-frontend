@@ -1,21 +1,36 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Dialog } from 'primereact/dialog'
-import { Spacer, Button } from '@ynput/ayon-react-components'
+import { Button, Panel, Section, UserImage } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { useAddUserMutation } from '/src/services/user/updateUser'
 import ayonClient from '/src/ayon'
 import UserAttribForm, { DividerSmallStyled } from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
+import DetailHeader from '/src/components/DetailHeader'
+import { PanelButtonsStyled } from './userDetail'
 
-const NewUserDialog = ({ onHide }) => {
+const NewUser = ({ onHide, open }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [formData, setFormData] = useState({
     userLevel: 'user',
     userActive: true,
+    UserImage: '',
   })
+
+  const initialFormData = () => {
+    return {
+      userLevel: 'user',
+      userActive: true,
+      UserImage: '',
+    }
+  }
+  useEffect(() => {
+    // set initial form data
+    setFormData(initialFormData())
+  }, [])
 
   const [addUser] = useAddUserMutation()
 
@@ -68,40 +83,40 @@ const NewUserDialog = ({ onHide }) => {
     }
   }
 
-  const footer = (
-    <div style={{ display: 'flex' }}>
-      <Spacer />
-      <Button
-        label="Create"
-        className="p-button-info"
-        onClick={handleSubmit}
-        style={{ width: 120 }}
-      />
-    </div>
-  )
+  const handleCancel = () => {
+    // clear all forms
+    setFormData(initialFormData())
+    setPassword('')
+    setPasswordConfirm('')
+  }
+
+  // When hide the dialog here so that state is maintained
+  // even when the dialog is closed
+  if (!open) return null
 
   return (
-    <Dialog
-      header="New user"
-      footer={footer}
-      visible={true}
-      onHide={() => onHide(addedUsers)}
-      style={{
-        width: '50vw',
-        height: '80%',
-      }}
-    >
-      <div style={{ width: '100%', height: '100%' }}>
+    <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
+      <DetailHeader onClose={onHide}>
+        <UserImage
+          src={formData?.avatarUrl}
+          fullName={formData.fullName || formData.Username || '+'}
+        />
+        <div>
+          <h2>Create New User</h2>
+          <span>Creating: </span>
+        </div>
+      </DetailHeader>
+      <Panel>
         <UserAttribForm
           formData={formData}
           setFormData={setFormData}
           attributes={[
             { name: 'Username', data: { title: 'Username' } },
             { name: 'password', data: { title: 'Password' } },
+            { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
             ...attributes,
           ]}
-          password={password}
-          setPassword={setPassword}
+          {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
         />
         <DividerSmallStyled />
         <UserAccessForm formData={formData} setFormData={setFormData} hideProjectRoles />
@@ -118,9 +133,13 @@ const NewUserDialog = ({ onHide }) => {
             />
           </>
         )}
-      </div>
-    </Dialog>
+      </Panel>
+      <PanelButtonsStyled>
+        <Button onClick={handleCancel} label="Cancel" icon="cancel" disabled={formData.Username} />
+        <Button onClick={handleSubmit} label="Create New User" icon="person_add" />
+      </PanelButtonsStyled>
+    </Section>
   )
 }
 
-export default NewUserDialog
+export default NewUser
