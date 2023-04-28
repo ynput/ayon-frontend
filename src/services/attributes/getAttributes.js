@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 
 const getAttributes = ayonApi.injectEndpoints({
   endpoints: (build) => ({

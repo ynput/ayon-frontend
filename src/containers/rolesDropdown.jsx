@@ -1,44 +1,25 @@
-import { useState, useEffect } from 'react'
-import { toast } from 'react-toastify'
-import axios from 'axios'
-
-import { MultiSelect } from 'primereact/multiselect'
+import { useGetRolesQuery } from '/src/services/getRoles'
+import { Dropdown } from '@ynput/ayon-react-components'
 
 const RolesDropdown = ({ selectedRoles, setSelectedRoles, style, disabled, placeholder }) => {
-  const [rolesList, setRolesList] = useState([])
-
-  useEffect(() => {
-    let result = []
-    axios
-      .get(`/api/roles/_`)
-      .then((response) => {
-        for (const role of response.data)
-          result.push({
-            value: role.name,
-            label: role.name,
-          })
-      })
-      .catch(() => {
-        toast.error('Unable to load roles')
-      })
-      .finally(() => {
-        setRolesList(result)
-      })
-  }, [])
+  const { data: rolesList = [], isLoading: rolesLoading } = useGetRolesQuery()
 
   const onChange = (e) => {
     if (!setSelectedRoles) return
-    setSelectedRoles(e.value)
+    setSelectedRoles(e)
   }
 
   return (
-    <MultiSelect
+    <Dropdown
       style={{ style }}
       value={selectedRoles || []}
-      options={rolesList}
+      options={rolesList.map((r) => ({ value: r }))}
       onChange={onChange}
       disabled={disabled}
       placeholder={placeholder}
+      widthExpand
+      disable={rolesLoading}
+      multiSelect
     />
   )
 }

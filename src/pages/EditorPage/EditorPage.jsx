@@ -38,7 +38,7 @@ import {
 import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
-import { useGetAttributesQuery } from '/src/services/getAttributes'
+import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
 

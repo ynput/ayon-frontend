@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Button, Section, Panel } from '@ynput/ayon-react-components'
 import { PanelButtonsStyled } from './userDetail'
-import { Link } from 'react-router-dom'
+// import { Link } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 import UserTile from './UserTile'
 
@@ -10,14 +10,14 @@ import UserTile from './UserTile'
 // - one to add a new user
 // - add a new user attribute
 
-const LinkStyled = styled(Link)`
-  text-decoration: none;
-  color: unset;
+// const LinkStyled = styled(Link)`
+//   text-decoration: none;
+//   color: unset;
 
-  button {
-    width: 100%;
-  }
-`
+//   button {
+//     width: 100%;
+//   }
+// `
 
 export const TotalsStyledPanel = styled(Panel)`
   flex-direction: row;
@@ -115,9 +115,9 @@ const UsersOverview = ({
       </Panel>
       <PanelButtonsStyled>
         <Button label="Add New User" icon="person_add" onClick={onNewUser} />
-        <LinkStyled to={'/settings/attributes'}>
+        {/* <LinkStyled to={'/settings/attributes'}>
           <Button label="Add New User Attribute" icon="add" />
-        </LinkStyled>
+        </LinkStyled> */}
       </PanelButtonsStyled>
     </Section>
   )

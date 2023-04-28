@@ -4,9 +4,11 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
 import AttributeEditor from '../../containers/attributes/attributeEditor'
-import { useGetAttributesQuery } from '/src/services/getAttributes'
-import { useUpdateAttributesMutation } from '/src/services/updateAttributes'
+import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
+import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttributes'
 import useSearchFilter from '/src/hooks/useSearchFilter'
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
+import { useRestartServerMutation } from '/src/services/restartServer'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -36,11 +38,24 @@ const Attributes = () => {
     [attributes],
   )
 
+  const [restartServer] = useRestartServerMutation()
+
+  // ask if the user wants to restart the server after saving
+  const confirmRestart = () =>
+    confirmDialog({
+      message: 'Restart the server to apply changes?',
+      header: 'Restart Server',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => restartServer(),
+      reject: () => {},
+    })
+
   const onSave = async () => {
     await updateAttributes({ attributes, deleteMissing: true, patches: attributes })
       .unwrap()
       .then(() => {
         toast.success('Attribute set saved')
+        confirmRestart()
       })
       .catch((err) => {
         console.error(err)
@@ -99,71 +114,74 @@ const Attributes = () => {
   )
 
   return (
-    <main>
-      {showEditor && (
-        <AttributeEditor
-          attribute={selectedAttribute}
-          existingNames={existingAttrNames}
-          onEdit={onEdit}
-          onHide={() => setShowEditor(false)}
-        />
-      )}
-      <Section>
-        <Toolbar>
-          <Button label="Save settings" icon="check" onClick={onSave} />
-          <Button label="Add attribute" icon="add" onClick={onNewAttribute} />
-          <Button
-            label="Delete attribute"
-            icon="delete"
-            disabled={selectedAttribute?.builtin}
-            onClick={onDelete}
+    <>
+      <ConfirmDialog />
+      <main>
+        {showEditor && (
+          <AttributeEditor
+            attribute={selectedAttribute}
+            existingNames={existingAttrNames}
+            onEdit={onEdit}
+            onHide={() => setShowEditor(false)}
           />
-          <InputText
-            style={{ width: '200px' }}
-            placeholder="Filter attributes..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </Toolbar>
-        <TablePanel loading={isLoading || updateLoading || isFetching}>
-          <DataTable
-            scrollable="true"
-            scrollHeight="flex"
-            dataKey="name"
-            value={filteredData}
-            reorderableRows
-            onRowReorder={onRowReorder}
-            selectionMode="single"
-            selection={selectedAttribute}
-            onSelectionChange={(e) => setSelectedAttribute(e.value)}
-            onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
-            resizableColumns
-          >
-            <Column rowReorder style={{ maxWidth: 30 }} />
-            <Column field="name" header="Name" style={{ maxWidth: 130 }} sortable />
-            <Column field="data.title" header="Title" style={{ maxWidth: 130 }} sortable />
-            <Column
-              field="builtin"
-              header=""
-              style={{ maxWidth: 60 }}
-              body={(rowData) => (rowData?.builtin ? 'built-in' : '')}
-              sortable
+        )}
+        <Section>
+          <Toolbar>
+            <Button label="Save Attributes" icon="check" onClick={onSave} />
+            <Button label="Add Attribute" icon="add" onClick={onNewAttribute} />
+            <Button
+              label="Delete attribute"
+              icon="delete"
+              disabled={selectedAttribute?.builtin}
+              onClick={onDelete}
             />
-            <Column
-              header="Scopes"
-              field="scopeLength"
-              body={(rowData) => rowData.scope.join(', ')}
-              style={{ maxWidth: 330 }}
-              sortable
+            <InputText
+              style={{ width: '200px' }}
+              placeholder="Filter attributes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
-            <Column field="data.type" header="Type" style={{ maxWidth: 150 }} sortable />
-            <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
-            <Column field="data.description" header="Description" sortable />
-            <Column field="data.inherit" header="Inherit" sortable style={{ maxWidth: 80 }} />
-          </DataTable>
-        </TablePanel>
-      </Section>
-    </main>
+          </Toolbar>
+          <TablePanel loading={isLoading || updateLoading || isFetching}>
+            <DataTable
+              scrollable="true"
+              scrollHeight="flex"
+              dataKey="name"
+              value={filteredData}
+              reorderableRows
+              onRowReorder={onRowReorder}
+              selectionMode="single"
+              selection={selectedAttribute}
+              onSelectionChange={(e) => setSelectedAttribute(e.value)}
+              onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
+              resizableColumns
+            >
+              <Column rowReorder style={{ maxWidth: 30 }} />
+              <Column field="name" header="Name" style={{ maxWidth: 130 }} sortable />
+              <Column field="data.title" header="Title" style={{ maxWidth: 130 }} sortable />
+              <Column
+                field="builtin"
+                header=""
+                style={{ maxWidth: 60 }}
+                body={(rowData) => (rowData?.builtin ? 'built-in' : '')}
+                sortable
+              />
+              <Column
+                header="Scopes"
+                field="scopeLength"
+                body={(rowData) => rowData.scope.join(', ')}
+                style={{ maxWidth: 330 }}
+                sortable
+              />
+              <Column field="data.type" header="Type" style={{ maxWidth: 150 }} sortable />
+              <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
+              <Column field="data.description" header="Description" sortable />
+              <Column field="data.inherit" header="Inherit" sortable style={{ maxWidth: 80 }} />
+            </DataTable>
+          </TablePanel>
+        </Section>
+      </main>
+    </>
   )
 }
 

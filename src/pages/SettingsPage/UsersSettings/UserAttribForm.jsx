@@ -4,6 +4,7 @@ import {
   FormRow,
   InputPassword,
   Divider,
+  Dropdown,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -11,7 +12,16 @@ export const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
 `
 
-const UserAttribForm = ({ formData, setFormData, attributes, password, setPassword, disabled }) => {
+const UserAttribForm = ({
+  formData,
+  setFormData,
+  attributes,
+  password,
+  passwordConfirm,
+  setPasswordConfirm,
+  setPassword,
+  disabled,
+}) => {
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
     (acc, cur) => {
@@ -31,12 +41,30 @@ const UserAttribForm = ({ formData, setFormData, attributes, password, setPasswo
   const buildForms = (attribs) =>
     attribs.map(({ name, data }) => (
       <FormRow label={data.title} key={name}>
-        {name === 'password' && setPassword ? (
+        {name.includes('password') && setPassword ? (
           <InputPassword
-            value={password}
+            value={name.includes('Confirm') ? passwordConfirm : password}
             feedback={false}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) =>
+              name.includes('Confirm')
+                ? setPasswordConfirm(e.target.value)
+                : setPassword(e.target.value)
+            }
             disabled={disabled}
+            autoComplete="new-password"
+          />
+        ) : data.enum ? (
+          <Dropdown
+            widthExpand
+            value={(data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []}
+            options={data.enum}
+            multiSelect={data.type === 'list_of_strings'}
+            onChange={(v) =>
+              setFormData((fd) => {
+                const nv = data.type === 'list_of_strings' ? v : v[0]
+                return { ...fd, [name]: nv }
+              })
+            }
           />
         ) : (
           <InputText
@@ -48,6 +76,7 @@ const UserAttribForm = ({ formData, setFormData, attributes, password, setPasswo
                 return { ...fd, [name]: value }
               })
             }}
+            autoComplete="cc-csc"
           />
         )}
       </FormRow>

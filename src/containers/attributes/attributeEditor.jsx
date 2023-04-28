@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Dialog } from 'primereact/dialog'
-import { MultiSelect } from 'primereact/multiselect'
-import { Dropdown } from 'primereact/dropdown'
 import {
   Button,
   Spacer,
@@ -10,6 +8,7 @@ import {
   InputText,
   InputSwitch,
   LockedInput,
+  Dropdown,
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'
@@ -147,19 +146,23 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
             />
           </FormRow>
           <FormRow label="scope">
-            <MultiSelect
+            <Dropdown
               options={SCOPE_OPTIONS}
               disabled={formData.builtin}
               value={formData.scope}
-              onChange={(e) => setTopLevelData('scope', e.target.value)}
+              onChange={(v) => setTopLevelData('scope', v)}
+              multiSelect
+              widthExpand
             />
           </FormRow>
           <FormRow label="type">
             <Dropdown
-              value={formData?.data?.type}
+              value={[formData?.data?.type]}
               disabled={formData.builtin}
               options={Object.values(TYPE_OPTIONS)}
-              onChange={(e) => setData('type', e.target.value)}
+              onChange={(v) => setData('type', v[0])}
+              minSelected={1}
+              widthExpand
             />
           </FormRow>
           {dataFields.map((field) => (
