@@ -11,7 +11,7 @@ const userSlice = createSlice({
         axios.defaults.headers.common['Authorization'] = `Bearer ${action.payloadaccessToken}`
       }
 
-      const user = action.payload.user
+      const user = { ...action.payload.user, data: { ...action.payload.user?.data } }
       // set if isUser
       let isUser = true
       if (user.data) {

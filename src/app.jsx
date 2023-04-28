@@ -27,6 +27,7 @@ import { SocketContext, SocketProvider } from './context/websocketContext'
 import ProtectedRoute from './containers/ProtectedRoute'
 import ShareDialog from './components/ShareDialog'
 import ErrorFallback from './components/ErrorFallback'
+import { useLazyGetInfoQuery } from './services/auth/getAuth'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -42,32 +43,34 @@ const App = () => {
 
   // Call /api/info to check whether the user is logged in
   // and to acquire server settings
+  const [getInfo] = useLazyGetInfoQuery()
 
   useEffect(() => {
     setLoading(true)
-    axios
-      .get('/api/info')
+    getInfo()
+      .unwrap()
       .then((response) => {
-        if (response.data.user) {
+        if (response.user) {
           dispatch(
             login({
-              user: response.data.user,
+              user: response.user,
               accessToken: storedAccessToken,
             }),
           )
 
-          if (!response.data.attributes.length) {
+          if (!response.attributes.length) {
             toast.error('Unable to load attributes. Something is wrong')
           }
 
           ayonClient.settings = {
-            attributes: response.data.attributes,
-            sites: response.data.sites,
+            attributes: response.attributes,
+            sites: response.sites,
           }
         }
       })
       .catch((err) => {
-        setServerError(err.response.status)
+        console.error(err)
+        setServerError(err?.status)
       })
       .finally(() => {
         setLoading(false)

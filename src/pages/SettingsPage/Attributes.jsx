@@ -8,7 +8,7 @@ import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttributes'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
-import axios from 'axios'
+import { useRestartServerMutation } from '/src/services/restartServer'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -37,13 +37,16 @@ const Attributes = () => {
     () => (attributes ? attributes.map((i) => i.name) : []),
     [attributes],
   )
+
+  const [restartServer] = useRestartServerMutation()
+
   // ask if the user wants to restart the server after saving
   const confirmRestart = () =>
     confirmDialog({
       message: 'Restart the server to apply changes?',
       header: 'Restart Server',
       icon: 'pi pi-exclamation-triangle',
-      accept: () => axios.post('/api/system/restart'),
+      accept: () => restartServer(),
       reject: () => {},
     })
 

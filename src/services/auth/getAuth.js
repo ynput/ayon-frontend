@@ -17,10 +17,11 @@ const getAuth = ayonApi.injectEndpoints({
       query: () => ({
         url: '/api/info',
       }),
+      providesTags: ['info'],
     }),
   }),
 })
 
 //
 
-export const { useGetOAuthOptionsQuery, useGetInfoQuery } = getAuth
+export const { useGetOAuthOptionsQuery, useGetInfoQuery, useLazyGetInfoQuery } = getAuth
