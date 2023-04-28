@@ -89,7 +89,10 @@ const UserMenu = ({ visible, onHide }) => {
       icon: 'home_repair_service',
     },
     {
-      link: '/system/restart',
+      onClick: () =>
+        axios.post('/api/system/restart').finally(() => {
+          onHide()
+        }),
       label: 'Restart Server',
       icon: 'restart_alt',
     },
@@ -116,10 +119,13 @@ const UserMenu = ({ visible, onHide }) => {
           <UserImage size={19.5} src={user?.attrib?.avatarUrl} fullName={user?.attrib?.fullName} />
           Profile ({user.name})
         </StyledButton>
-        {allLinks.map(({ icon, link, label }) => (
+        {allLinks.map(({ icon, link, label, onClick }, i) => (
           <StyledButton
-            key={link}
-            onClick={() => navigate(link)}
+            key={`${label}-${i}`}
+            onClick={() => {
+              if (link) navigate(link)
+              else if (onClick) onClick()
+            }}
             label={label}
             icon={icon}
             isActive={location.pathname.includes(link)}
