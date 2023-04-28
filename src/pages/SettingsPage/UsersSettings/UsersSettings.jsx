@@ -217,13 +217,15 @@ const UsersSettings = () => {
             onChange={(e) => setShowProjectUsers(e.value)}
             disabled={!selectedProjects}
           />
-          <InputText
-            style={{ width: '200px' }}
-            placeholder="Filter users..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autocomplete="off"
-          />
+          <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+            <InputText
+              style={{ width: '200px' }}
+              placeholder="Filter users..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autocomplete="search-users"
+            />
+          </form>
         </Toolbar>
         <Splitter
           style={{ width: '100%', height: '100%' }}

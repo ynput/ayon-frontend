@@ -9,7 +9,7 @@ import UserAccessForm from './UserAccessForm'
 import DetailHeader from '/src/components/DetailHeader'
 import { PanelButtonsStyled } from './userDetail'
 
-const NewUser = ({ onHide, open }) => {
+const NewUser = ({ onHide, open, onSuccess }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
@@ -40,6 +40,12 @@ const NewUser = ({ onHide, open }) => {
     const payload = {}
     if (!formData.Username) {
       toast.error('Login name must be provided')
+      return
+    }
+
+    // check passwords are the same
+    if (password !== passwordConfirm) {
+      toast.error('Passwords do not match')
       return
     }
 
@@ -77,6 +83,8 @@ const NewUser = ({ onHide, open }) => {
       setFormData((fd) => {
         return { roles: fd.roles, userLevel: fd.userLevel }
       })
+
+      onSuccess && onSuccess(formData.Username)
     } catch (error) {
       console.error(error)
       toast.error(`Unable to create user: ${error.detail}`)
@@ -90,20 +98,33 @@ const NewUser = ({ onHide, open }) => {
     setPasswordConfirm('')
   }
 
+  const handleClose = () => {
+    // clear all forms
+    setFormData(initialFormData())
+    setPassword('')
+    setPasswordConfirm('')
+    // reset added users
+    setAddedUsers([])
+    // close the dialog
+    onHide(addedUsers)
+  }
+
   // When hide the dialog here so that state is maintained
   // even when the dialog is closed
   if (!open) return null
 
   return (
     <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
-      <DetailHeader onClose={onHide}>
+      <DetailHeader onClose={handleClose}>
         <UserImage
           src={formData?.avatarUrl}
           fullName={formData.fullName || formData.Username || '+'}
         />
         <div>
           <h2>Create New User</h2>
-          <span>Creating: </span>
+          <span style={{ opacity: addedUsers.length ? 1 : 0 }}>
+            Previously Created: {addedUsers.join(', ')}
+          </span>
         </div>
       </DetailHeader>
       <Panel>
@@ -130,12 +151,13 @@ const NewUser = ({ onHide, open }) => {
               selection={selectedProjects}
               onSelect={setSelectedProjects}
               multiselect={true}
+              styleSection={{ maxWidth: 'unset' }}
             />
           </>
         )}
       </Panel>
       <PanelButtonsStyled>
-        <Button onClick={handleCancel} label="Cancel" icon="cancel" disabled={formData.Username} />
+        <Button onClick={handleCancel} label="Clear" icon="cancel" />
         <Button onClick={handleSubmit} label="Create New User" icon="person_add" />
       </PanelButtonsStyled>
     </Section>

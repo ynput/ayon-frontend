@@ -50,6 +50,7 @@ const UserAttribForm = ({
                 : setPassword(e.target.value)
             }
             disabled={disabled}
+            autoComplete="new-password"
           />
         ) : (
           <InputText
