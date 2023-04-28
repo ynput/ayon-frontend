@@ -4,7 +4,7 @@ import { Button, Panel, Section, UserImage } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { useAddUserMutation } from '/src/services/user/updateUser'
 import ayonClient from '/src/ayon'
-import UserAttribForm, { DividerSmallStyled } from './UserAttribForm'
+import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import DetailHeader from '/src/components/DetailHeader'
 import { PanelButtonsStyled } from './userDetail'
@@ -114,7 +114,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
   if (!open) return null
 
   return (
-    <Section className="wrap" style={{ gap: '4px', maxHeight: '100%', height: '100%' }}>
+    <Section className="wrap" style={{ gap: 4, maxHeight: '100%', bottom: 'unset' }}>
       <DetailHeader onClose={handleClose}>
         <UserImage
           src={formData?.avatarUrl}
@@ -127,23 +127,25 @@ const NewUser = ({ onHide, open, onSuccess }) => {
           </span>
         </div>
       </DetailHeader>
-      <Panel style={{ height: '100%', overflow: 'auto' }}>
-        <UserAttribForm
-          formData={formData}
-          setFormData={setFormData}
-          attributes={[
-            { name: 'Username', data: { title: 'Username' } },
-            { name: 'password', data: { title: 'Password' } },
-            { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
-            ...attributes,
-          ]}
-          {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
-        />
-        <DividerSmallStyled />
-        <UserAccessForm formData={formData} setFormData={setFormData} hideProjectRoles />
+      <Section style={{ overflow: 'auto', gap: 4 }}>
+        <Panel>
+          <UserAttribForm
+            formData={formData}
+            setFormData={setFormData}
+            attributes={[
+              { name: 'Username', data: { title: 'Username' } },
+              { name: 'password', data: { title: 'Password' } },
+              { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
+              ...attributes,
+            ]}
+            {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
+          />
+        </Panel>
+        <Panel>
+          <UserAccessForm formData={formData} setFormData={setFormData} hideProjectRoles />
+        </Panel>
         {formData.userLevel === 'user' && (
-          <>
-            <DividerSmallStyled />
+          <Panel>
             <span style={{ margin: '8px 0' }}>
               <b>Apply default roles to:</b>
             </span>
@@ -153,9 +155,9 @@ const NewUser = ({ onHide, open, onSuccess }) => {
               multiselect={true}
               styleSection={{ maxWidth: 'unset' }}
             />
-          </>
+          </Panel>
         )}
-      </Panel>
+      </Section>
       <PanelButtonsStyled>
         <Button onClick={handleCancel} label="Clear" icon="cancel" />
         <Button onClick={handleSubmit} label="Create New User" icon="person_add" />
