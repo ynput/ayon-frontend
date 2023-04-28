@@ -4,6 +4,7 @@ import {
   FormRow,
   InputPassword,
   Divider,
+  Dropdown,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -51,6 +52,19 @@ const UserAttribForm = ({
             }
             disabled={disabled}
             autoComplete="new-password"
+          />
+        ) : data.enum ? (
+          <Dropdown
+            widthExpand
+            value={(data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []}
+            options={data.enum}
+            multiSelect={data.type === 'list_of_strings'}
+            onChange={(v) =>
+              setFormData((fd) => {
+                const nv = data.type === 'list_of_strings' ? v : v[0]
+                return { ...fd, [name]: nv }
+              })
+            }
           />
         ) : (
           <InputText
