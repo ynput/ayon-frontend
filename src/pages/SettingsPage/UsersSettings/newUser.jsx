@@ -114,7 +114,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
   if (!open) return null
 
   return (
-    <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
+    <Section className="wrap" style={{ gap: '4px', maxHeight: '100%', height: '100%' }}>
       <DetailHeader onClose={handleClose}>
         <UserImage
           src={formData?.avatarUrl}
@@ -127,7 +127,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
           </span>
         </div>
       </DetailHeader>
-      <Panel>
+      <Panel style={{ height: '100%', overflow: 'auto' }}>
         <UserAttribForm
           formData={formData}
           setFormData={setFormData}
