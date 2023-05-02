@@ -85,7 +85,19 @@ const transformEvents = (events) =>
   }))
 
 const patchNewEvents = (type, events, draft) => {
-  draft[type] = [...events, ...draft[type]]
+  // loop through events and add to draft if not already exists
+  // if already exists, replace it
+  for (const message of events) {
+    const index = draft[type].findIndex((e) => e.id === message.id)
+    let patch = { ...draft }
+    if (index === -1) {
+      patch[type].unshift(message)
+    } else {
+      patch[type][index] = message
+    }
+
+    Object.assign(draft, patch)
+  }
 }
 
 const getEvents = ayonApi.injectEndpoints({
@@ -127,7 +139,7 @@ const getEvents = ayonApi.injectEndpoints({
             }
 
             updateCachedData((draft) => {
-              console.log('new ws')
+              console.log('new ws event')
               if (!topic.startsWith('log.')) {
                 // patch only non log messages
                 patchNewEvents('events', [message], draft)
