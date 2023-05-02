@@ -27,6 +27,7 @@ import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
+import { ayonApi } from '/src/services/ayon'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -94,6 +95,7 @@ const Subsets = () => {
     subsetData.map(({ id }) => id),
   )
 
+  console.log(subsetData)
   const [updateEntity] = useUpdateEntitiesDetailsMutation()
 
   // update subset status
@@ -114,8 +116,25 @@ const Subsets = () => {
         data: { ['status']: value },
       }).unwrap()
 
-      // invalidate subsets query
-      refetch()
+      // create new patch data of subsets
+      const patchData = subsetData.map(({ versionId, versionStatus, ...subset }) => ({
+        ...subset,
+        versionStatus: ids.includes(versionId) ? value : versionStatus,
+        versionId,
+      }))
+
+      console.log(patchData)
+
+      // update subsets cache
+      dispatch(
+        ayonApi.util.updateQueryData(
+          'getSubsetsList',
+          { projectName, ids: focusedFolders, versionOverrides },
+          (draft) => {
+            Object.assign(draft, patchData)
+          },
+        ),
+      )
 
       console.log('fulfilled', payload)
     } catch (error) {
