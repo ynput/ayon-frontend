@@ -1,5 +1,8 @@
 import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
-import { useGetEventsWithLogsQuery } from '/src/services/events/getEvents'
+import {
+  useGetEventsWithLogsQuery,
+  useLazyGetEventsWithLogsQuery,
+} from '/src/services/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
 import { ayonApi } from '/src/services/ayon'
@@ -10,8 +13,9 @@ import { toast } from 'react-toastify'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import EventOverview from './EventOverview'
 import { StringParam, useQueryParam } from 'use-query-params'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useEffect } from 'react'
+import { debounce } from 'lodash'
 
 const EventsPage = () => {
   const dispatch = useDispatch()
@@ -19,6 +23,7 @@ const EventsPage = () => {
   // use query param to get selected event
   let [selectedEventId, setSelectedEvent] = useQueryParam('event', StringParam)
 
+  const [loadMoreEvents, { isFetching }] = useLazyGetEventsWithLogsQuery()
   // default gets the last 100 events
   const { data, isLoading, isError, error, refetch } = useGetEventsWithLogsQuery({}, {})
   let { events: eventData = [], logs: logsData = [], hasPreviousPage } = data || {}
@@ -52,37 +57,20 @@ const EventsPage = () => {
   }
 
   const patchOldEvents = (type, events, draft) => {
+    // loop through events and add to draft if not already exists
+    // if already exists, replace it
     for (const message of events) {
-      draft[type].push(message)
+      const index = draft[type].findIndex((e) => e.id === message.id)
+      if (index === -1) {
+        draft[type].push(message)
+      } else {
+        draft[type][index] = message
+      }
     }
-  }
 
-  const loadPage = async () => {
-    try {
-      // no more events to get
-      if (!hasPreviousPage) return console.log('no more events data to get')
-      // get last cursor
-      const before = eventData[eventData.length - 1].cursor
-      const beforeLogs = logsData[logsData.length - 1].cursor
-
-      // get new events data
-      const { data } = await dispatch(
-        ayonApi.endpoints.getEventsWithLogs.initiate({
-          before,
-          beforeLogs,
-        }),
-      )
-
-      dispatch(
-        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
-          patchOldEvents('events', data.events, draft)
-          patchOldEvents('logs', data.logs, draft)
-          draft.hasPreviousPage = data.hasPreviousPage
-        }),
-      )
-    } catch (error) {
-      console.log(error)
-    }
+    // for (const message of events) {
+    //   draft[type].push(message)
+    // }
   }
 
   const searchableFields = ['topic', 'user', 'project', 'description']
@@ -92,6 +80,44 @@ const EventsPage = () => {
     treeData,
     'events',
   )
+
+  const loadPage = async (isSearch) => {
+    try {
+      // no more events to get
+      if (!hasPreviousPage && !isSearch) return console.log('no more events data to get')
+      // get last cursor
+      const before = eventData[eventData.length - 1]?.cursor
+      const beforeLogs = logsData[logsData.length - 1]?.cursor
+
+      const data = await loadMoreEvents({
+        before,
+        beforeLogs,
+        filter: search ? search : '',
+      }).unwrap()
+
+      dispatch(
+        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+          patchOldEvents('events', data.events, draft, isSearch)
+          patchOldEvents('logs', data.logs, draft, isSearch)
+          draft.hasPreviousPage = data.hasPreviousPage
+        }),
+      )
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const bouncedLoad = useCallback(
+    debounce(() => loadPage(true), 100),
+    [eventData, hasPreviousPage],
+  )
+
+  useEffect(() => {
+    if (search && !isLoading) {
+      // throttled load page
+      bouncedLoad()
+    }
+  }, [search, isLoading])
 
   // handle error
   if (isError) {
@@ -132,7 +158,7 @@ const EventsPage = () => {
           <SplitterPanel size={70}>
             <EventList
               eventData={filteredTreeData}
-              isLoading={isLoading}
+              isLoading={isLoading || isFetching}
               selectedEvent={selectedEvent}
               setSelectedEvent={setSelectedEvent}
               onScrollBottom={loadPage}

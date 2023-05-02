@@ -16,8 +16,8 @@ fragment EventFragment on EventNode {
 `
 
 const EVENTS_QUERY = `
-query Events($last: Int, $includeLogs: Boolean) {
-    events(last: $last, includeLogs: $includeLogs) {
+query Events($last: Int, $includeLogs: Boolean, filter: String) {
+    events(last: $last, includeLogs: $includeLogs, filter: $filter) {
       edges {
         node {
           ...EventFragment
@@ -29,8 +29,8 @@ query Events($last: Int, $includeLogs: Boolean) {
 `
 
 const EVENTS_LOGS_QUERY = `
-query EventsWithLogs($last: Int, $before: String, $beforeLogs: String) {
-  events(last: $last, before: $before, includeLogs: false) {
+query EventsWithLogs($last: Int, $before: String, $beforeLogs: String, $filter: String) {
+  events(last: $last, before: $before, includeLogs: false, filter: $filter) {
     edges {
       node {
         ...EventFragment
@@ -41,7 +41,7 @@ query EventsWithLogs($last: Int, $before: String, $beforeLogs: String) {
       hasPreviousPage
     }
   }
-  logs: events(last: $last, before: $beforeLogs, includeLogs: true) {
+  logs: events(last: $last, before: $beforeLogs, includeLogs: true,  filter: $filter) {
     edges {
       node {
         ...EventFragment
@@ -91,23 +91,23 @@ const patchNewEvents = (type, events, draft) => {
 const getEvents = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getEvents: build.query({
-      query: ({ last = 100, includeLogs = true }) => ({
+      query: ({ last = 100, includeLogs = true, filter = '' }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: EVENTS_QUERY,
-          variables: { last, includeLogs },
+          variables: { last, includeLogs, filter },
         },
       }),
       transformResponse: (response) => transformEvents(response?.data?.events),
     }),
     getEventsWithLogs: build.query({
-      query: ({ last = 100, before = '', beforeLogs = '' }) => ({
+      query: ({ last = 100, before = '', beforeLogs = '', filter = '' }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: EVENTS_LOGS_QUERY,
-          variables: { last, before, beforeLogs },
+          variables: { last, before, beforeLogs, filter },
         },
       }),
       transformResponse: (response) => ({
