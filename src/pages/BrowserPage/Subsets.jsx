@@ -21,11 +21,12 @@ import {
 } from '/src/features/context'
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
-import { useUpdateSubsetsMutation } from '/src/services/updateSubsets'
+
 import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
+import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
 
 const Subsets = () => {
   const dispatch = useDispatch()
@@ -93,29 +94,28 @@ const Subsets = () => {
     subsetData.map(({ id }) => id),
   )
 
-  // PATCH FOLDERS DATA
-  const [updateSubsets] = useUpdateSubsetsMutation()
+  const [updateEntity] = useUpdateEntitiesDetailsMutation()
 
   // update subset status
   const handleStatusChange = async (value, selectedId) => {
     try {
-      // get selected ids
-      let ids = focusedSubsets.includes(selectedId) ? focusedSubsets : [selectedId]
+      // get selected subset ids based on focused selection
+      let subsetIds = focusedSubsets.includes(selectedId) ? focusedSubsets : [selectedId]
+      const subsets = subsetData.filter(({ id }) => subsetIds.includes(id))
+      // get version ids from selected subsets
+      const ids = subsets.map(({ versionId }) => versionId)
 
-      // delete outdated subsets and push new ones to state
-      const patches = [...subsetData].map((data) =>
-        ids.includes(data.id) ? { ...data, status: value } : data,
-      )
+      // update version status
 
-      // need to give versionOverrides for optimistic updates
-      const payload = await updateSubsets({
+      const payload = await updateEntity({
         projectName,
-        data: { status: value },
-        patches,
-        ids,
-        focusedFolders,
-        versionOverrides,
+        type: 'version',
+        ids: ids,
+        data: { ['status']: value },
       }).unwrap()
+
+      // invalidate subsets query
+      refetch()
 
       console.log('fulfilled', payload)
     } catch (error) {
@@ -165,7 +165,7 @@ const Subsets = () => {
         const statusMaxWidth = 120
         return (
           <StatusSelect
-            value={node.data.status}
+            value={node.data.versionStatus}
             size={
               columnsWidths['status'] < statusMaxWidth
                 ? columnsWidths['status'] < 60

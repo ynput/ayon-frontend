@@ -166,7 +166,14 @@ const getEntity = ayonApi.injectEndpoints({
       transformResponse: (response, meta, { type }) => response.data.project[type + 's'].edges,
       transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       providesTags: (result, error, { type }) =>
-        result ? [...result.map(({ node }) => ({ type: type, id: node.id }))] : [type],
+        result
+          ? [
+              ...result.map(({ node }) => {
+                console.log({ type: type, id: node.id })
+                return { type: type, id: node.id }
+              }),
+            ]
+          : [type],
     }),
     getEventTile: build.query({
       query: ({ projectName, id, type }) => ({
