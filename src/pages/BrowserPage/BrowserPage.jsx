@@ -6,7 +6,6 @@ import TaskList from '/src/containers/taskList'
 
 import Subsets from './Subsets'
 import Detail from './detail/Detail'
-import TagsEditorContainer from '/src/containers/tagsEditor'
 
 const BrowserPage = () => {
   return (
@@ -33,8 +32,6 @@ const BrowserPage = () => {
           </Splitter>
         </SplitterPanel>
       </Splitter>
-
-      <TagsEditorContainer />
     </main>
   )
 }

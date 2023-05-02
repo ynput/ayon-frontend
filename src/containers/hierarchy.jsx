@@ -15,10 +15,8 @@ import {
   setFocusedFolders,
   setBreadcrumbs,
   setExpandedFolders,
-  setDialog,
   setFocusedTasks,
 } from '/src/features/context'
-import { setFocusedType } from '../features/context'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 
 const filterHierarchy = (text, folder, folders) => {
@@ -230,18 +228,6 @@ const Hierarchy = (props) => {
     dispatch(setExpandedFolders(event.value))
   }
 
-  const handleEditTags = () => {
-    // set focused type if not already
-    dispatch(setFocusedType('folder'))
-
-    // open dialog
-    dispatch(
-      setDialog({
-        type: 'tags',
-      }),
-    )
-  }
-
   const handleDoubleClick = () => {
     // folder is always selected when row is double clicked
 
@@ -287,10 +273,6 @@ const Hierarchy = (props) => {
     {
       label: 'Detail',
       command: () => setShowDetail(true),
-    },
-    {
-      label: 'Edit Tags',
-      command: handleEditTags,
     },
   ]
 
