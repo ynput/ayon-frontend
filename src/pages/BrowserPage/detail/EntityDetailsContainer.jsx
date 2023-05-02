@@ -1,11 +1,16 @@
 import { useSelector } from 'react-redux'
-import { Section, LoaderShade, Button, AssigneeSelect } from '@ynput/ayon-react-components'
+import {
+  Section,
+  LoaderShade,
+  Button,
+  AssigneeSelect,
+  TagsSelect,
+} from '@ynput/ayon-react-components'
 import { useGetEntitiesDetailsQuery } from '/src/services/entity/getEntity'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import EntityDetails from '/src/components/Details/EntityDetails'
 import StatusSelect from '/src/components/status/statusSelect'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
-import { TagsField } from '/src/containers/fieldFormat'
 import { union } from 'lodash'
 import transformVersionsData from '/src/helpers/transformVersionsData'
 import RepresentationList from '../RepresentationList'
@@ -15,6 +20,9 @@ import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 
 const EntityDetailsContainer = ({ type, ids = [] }) => {
   const projectName = useSelector((state) => state.project.name)
+
+  const projectTagsOrder = useSelector((state) => state.project.tagsOrder)
+  const projectTagsObject = useSelector((state) => state.project.tags)
 
   // GET RTK QUERY
   let {
@@ -117,7 +125,17 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
     },
     tags: {
       title: 'Tags',
-      value: (values) => <TagsField value={values} />,
+      value: (values) => (
+        <TagsSelect
+          value={union(...values)}
+          tags={projectTagsObject}
+          tagsOrder={projectTagsOrder}
+          onChange={(v) => handleEntityChange('tags', v)}
+          align="right"
+          styleDropdown={{ overflow: 'hidden' }}
+          width={200}
+        />
+      ),
     },
     assignees: {
       title: 'Assignees',
