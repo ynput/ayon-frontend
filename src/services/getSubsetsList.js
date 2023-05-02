@@ -61,6 +61,7 @@ const parseSubsetData = (data) => {
       version: vers ? vers.version : null,
       versionId: vers && vers.id ? vers.id : null,
       versionName: vers && vers.name ? vers.name : '',
+      versionStatus: vers.status || null,
       taskId: vers && vers.taskId ? vers.taskId : null,
       frames: parseSubsetFrames(subset),
       createdAt: vers ? vers.createdAt : subset.createdAt,
@@ -96,6 +97,7 @@ query SubsetsList($projectName: String!, $ids: [String!]!, $versionOverrides: [S
                           author
                           createdAt
                           taskId
+                          status
                           attrib {
                               fps
                               resolutionWidth
@@ -114,6 +116,7 @@ query SubsetsList($projectName: String!, $ids: [String!]!, $versionOverrides: [S
                         author
                         createdAt
                         taskId
+                        status
                         attrib {
                             fps
                             resolutionWidth
