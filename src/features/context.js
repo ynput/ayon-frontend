@@ -12,9 +12,6 @@ const initialState = {
   },
   selectedVersions: {},
   pairing: [],
-  dialog: {
-    type: null,
-  },
   reload: {},
   breadcrumbs: {},
   share: { name: null, data: null, link: null, img: null },
@@ -128,10 +125,6 @@ const contextSlice = createSlice({
       state.breadcrumbs = bc
       return state
     }, // setBreadcrumbs
-    setDialog: (state, action) => {
-      if (action.payload) state.dialog = action.payload
-      else state.dialog = {}
-    },
     setReload: (state, action) => {
       state.reload = {
         ...state.reload,
@@ -164,7 +157,6 @@ export const {
   setExpandedFolders,
   setBreadcrumbs,
   setPairing,
-  setDialog,
   setReload,
   setFocusedType,
   subsetSelected,

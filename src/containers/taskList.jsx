@@ -8,7 +8,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
-import { setFocusedTasks, setPairing, setDialog } from '/src/features/context'
+import { setFocusedTasks, setPairing } from '/src/features/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '/src/services/getTasks'
 
@@ -94,15 +94,6 @@ const TaskList = ({ style = {} }) => {
     {
       label: 'Detail',
       command: () => setShowDetail(true),
-    },
-    {
-      label: 'Edit Tags',
-      command: () =>
-        dispatch(
-          setDialog({
-            type: 'tags',
-          }),
-        ),
     },
   ]
 

@@ -17,7 +17,6 @@ import {
   setSelectedVersions,
   setBreadcrumbs,
   setPairing,
-  setDialog,
   subsetSelected,
 } from '/src/features/context'
 import VersionList from './VersionList'
@@ -399,15 +398,6 @@ const Subsets = () => {
     {
       label: 'Version detail',
       command: () => setShowDetail('version'),
-    },
-    {
-      label: 'Edit Version Tags',
-      command: () =>
-        dispatch(
-          setDialog({
-            type: 'tags',
-          }),
-        ),
     },
   ]
 
