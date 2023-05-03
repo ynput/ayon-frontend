@@ -67,7 +67,7 @@ const useSearchFilter = (fields = [], data = [], id) => {
         return matchingKeys.length >= searchArray.length
       })
     } else return null
-  }, [dataWithKeywords, search])
+  }, [dataWithKeywords, search, data])
 
   if (!filteredData) {
     filteredData = data

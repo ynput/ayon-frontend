@@ -1,5 +1,8 @@
 import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
-import { useGetEventsWithLogsQuery } from '/src/services/events/getEvents'
+import {
+  useGetEventsWithLogsQuery,
+  useLazyGetEventsWithLogsQuery,
+} from '/src/services/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
 import { ayonApi } from '/src/services/ayon'
@@ -10,8 +13,9 @@ import { toast } from 'react-toastify'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import EventOverview from './EventOverview'
 import { StringParam, useQueryParam } from 'use-query-params'
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
+import { debounce } from 'lodash'
 
 const EventsPage = () => {
   const dispatch = useDispatch()
@@ -19,9 +23,14 @@ const EventsPage = () => {
   // use query param to get selected event
   let [selectedEventId, setSelectedEvent] = useQueryParam('event', StringParam)
 
+  const [loadMoreEvents, { isFetching }] = useLazyGetEventsWithLogsQuery()
   // default gets the last 100 events
   const { data, isLoading, isError, error, refetch } = useGetEventsWithLogsQuery({}, {})
   let { events: eventData = [], logs: logsData = [], hasPreviousPage } = data || {}
+
+  const [pagination, setPagination] = useState({})
+  const [searchPagination, setSearchPagination] = useState({})
+  const [searched, setSearched] = useState('')
 
   // always refetch with new date to force new data onMount
   useEffect(() => {
@@ -51,38 +60,28 @@ const EventsPage = () => {
     treeData = logsData
   }
 
+  // sort treeData by updatedAt
+  treeData = useMemo(() => {
+    return [...treeData].sort((a, b) => {
+      return new Date(b.updatedAt) - new Date(a.updatedAt)
+    })
+  }, [treeData])
+
   const patchOldEvents = (type, events, draft) => {
+    // loop through events and add to draft if not already exists
+    // if already exists, replace it
     for (const message of events) {
-      draft[type].push(message)
+      const index = draft[type].findIndex((e) => e.id === message.id)
+      if (index === -1) {
+        draft[type].push(message)
+      } else {
+        draft[type][index] = message
+      }
     }
-  }
 
-  const loadPage = async () => {
-    try {
-      // no more events to get
-      if (!hasPreviousPage) return console.log('no more events data to get')
-      // get last cursor
-      const before = eventData[eventData.length - 1].cursor
-      const beforeLogs = logsData[logsData.length - 1].cursor
-
-      // get new events data
-      const { data } = await dispatch(
-        ayonApi.endpoints.getEventsWithLogs.initiate({
-          before,
-          beforeLogs,
-        }),
-      )
-
-      dispatch(
-        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
-          patchOldEvents('events', data.events, draft)
-          patchOldEvents('logs', data.logs, draft)
-          draft.hasPreviousPage = data.hasPreviousPage
-        }),
-      )
-    } catch (error) {
-      console.log(error)
-    }
+    // for (const message of events) {
+    //   draft[type].push(message)
+    // }
   }
 
   const searchableFields = ['topic', 'user', 'project', 'description']
@@ -92,6 +91,105 @@ const EventsPage = () => {
     treeData,
     'events',
   )
+
+  useEffect(() => {
+    // on first load, set pagination for _default
+    if (isLoading) return
+    setPagination({
+      hasPreviousPage,
+      before: eventData[eventData.length - 1]?.cursor,
+      after: eventData[0]?.cursor,
+    })
+  }, [isLoading])
+
+  const loadPage = async () => {
+    try {
+      // use pagination or search pagination if searching
+      const { before, beforeLogs, hasPreviousPage } = search ? searchPagination : pagination || {}
+      // no more events to get
+      if (!hasPreviousPage) return console.log('no more events data to get')
+
+      const data = await loadMoreEvents({
+        before,
+        beforeLogs,
+        last: 100,
+        filter: search,
+      }).unwrap()
+
+      if (search) {
+        setSearchPagination({
+          hasPreviousPage: data.hasPreviousPage,
+          before: data.events[data.events.length - 1]?.cursor,
+          beforeLogs: data.logs[data.logs.length - 1]?.cursor,
+        })
+      } else {
+        // update pagination
+        setPagination({
+          hasPreviousPage: data.hasPreviousPage,
+          before: data.events[data.events.length - 1]?.cursor,
+          beforeLogs: data.logs[data.logs.length - 1]?.cursor,
+        })
+      }
+
+      dispatch(
+        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+          patchOldEvents('events', data.events, draft, false)
+          patchOldEvents('logs', data.logs, draft, false)
+          draft.hasPreviousPage = data.hasPreviousPage
+        }),
+      )
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const loadSearch = async (newSearch, oldSearch) => {
+    if (newSearch === oldSearch) return console.log('same search')
+
+    try {
+      setSearched(search)
+      const data = await loadMoreEvents({
+        filter: newSearch,
+        last: 100,
+      }).unwrap()
+
+      // set new search pagination
+      setSearchPagination({
+        hasPreviousPage: data.hasPreviousPage,
+        before: data.events[data.events.length - 1]?.cursor,
+        beforeLogs: data.logs[data.logs.length - 1]?.cursor,
+      })
+
+      dispatch(
+        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+          patchOldEvents('events', data.events, draft, true)
+          patchOldEvents('logs', data.logs, draft, true)
+          draft.hasPreviousPage = data.hasPreviousPage
+        }),
+      )
+    } catch (error) {
+      console.log(error)
+      setSearched('')
+    }
+  }
+
+  const throttledSearchLoad = useRef(
+    debounce((newSearch, oldSearch) => loadSearch(newSearch, oldSearch), 1200),
+  )
+
+  useEffect(() => {
+    if (search && !isLoading) {
+      // throttled load page
+      throttledSearchLoad.current(search, searched)
+    }
+  }, [search, isLoading, searched])
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    if (search) {
+      loadSearch(search, searched)
+    }
+  }
 
   // handle error
   if (isError) {
@@ -114,13 +212,15 @@ const EventsPage = () => {
     <main>
       <Section>
         <Toolbar>
-          <InputText
-            style={{ width: '200px' }}
-            placeholder="Filter events..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autocomplete="off"
-          />
+          <form onSubmit={handleSearchSubmit}>
+            <InputText
+              style={{ width: '200px' }}
+              placeholder="Filter events..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autocomplete="off"
+            />
+          </form>
           <InputSwitch
             checked={showLogs}
             onChange={() => setShowLogs(!showLogs)}
@@ -132,7 +232,7 @@ const EventsPage = () => {
           <SplitterPanel size={70}>
             <EventList
               eventData={filteredTreeData}
-              isLoading={isLoading}
+              isLoading={isLoading || isFetching}
               selectedEvent={selectedEvent}
               setSelectedEvent={setSelectedEvent}
               onScrollBottom={loadPage}
