@@ -15,7 +15,7 @@ import EventOverview from './EventOverview'
 import { StringParam, useQueryParam } from 'use-query-params'
 import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
-import { throttle } from 'lodash'
+import { debounce } from 'lodash'
 
 const EventsPage = () => {
   const dispatch = useDispatch()
@@ -168,7 +168,7 @@ const EventsPage = () => {
     }
   }
 
-  const throttledSearchLoad = useRef(throttle((newSearch) => loadSearch(newSearch), 800))
+  const throttledSearchLoad = useRef(debounce((newSearch) => loadSearch(newSearch), 800))
 
   useEffect(() => {
     if (search && !isLoading) {
