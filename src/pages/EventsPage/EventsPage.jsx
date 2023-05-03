@@ -129,6 +129,7 @@ const EventsPage = () => {
     try {
       const data = await loadMoreEvents({
         filter: newSearch,
+        last: 250,
       }).unwrap()
 
       dispatch(
