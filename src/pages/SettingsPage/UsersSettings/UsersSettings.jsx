@@ -56,7 +56,12 @@ const UsersSettings = () => {
 
   // set initial selected users
   useEffect(() => {
-    if (queryNames.length) setSelectedUsers(queryNames)
+    if (queryNames.length) {
+      setSelectedUsers(queryNames)
+      // remove from url
+      searchParams.delete('name')
+      window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}`)
+    }
   }, [])
 
   // USE STATE

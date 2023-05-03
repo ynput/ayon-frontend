@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
@@ -14,6 +14,7 @@ import CreateNewTeam from './CreateNewTeam'
 import { confirmDialog } from 'primereact/confirmdialog'
 import styled from 'styled-components'
 import useSearchFilter from '/src/hooks/useSearchFilter'
+import { useSearchParams } from 'react-router-dom'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -35,11 +36,26 @@ const SectionStyled = styled(Section)`
 `
 
 const TeamsPage = ({ projectName, projectList, isUser }) => {
+  // QUERY PARAMS STATE
+  const [searchParams] = useSearchParams()
+  const queryNames = searchParams.getAll('name')
+
   // STATES
   const [selectedUsers, setSelectedUsers] = useState([])
   const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [createTeamOpen, setCreateTeamOpen] = useState(false)
+
+  // Set selected users based on query params
+  // set initial selected users
+  useEffect(() => {
+    if (queryNames.length) {
+      setSelectedUsers(queryNames)
+      // remove from url
+      searchParams.delete('name')
+      window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}`)
+    }
+  }, [])
 
   // RTK QUERY HOOKS
   const { data: teams = [], isLoading: isLoadingTeams } = useGetTeamsQuery(

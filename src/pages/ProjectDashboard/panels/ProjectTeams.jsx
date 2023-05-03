@@ -38,7 +38,10 @@ const ProjectTeams = ({ projectName }) => {
                 <span>{subTitle(team.memberCount - team.leaders.length, team.leaders.length)}</span>
               </h2>
               {team.leaders.map((leader, i) => (
-                <Link key={`${leader.name}-${i}`} to={`/settings/users?name=${leader.name}`}>
+                <Link
+                  key={`${leader.name}-${i}`}
+                  to={`/manageProjects/teams?project=${projectName}&teams=${team.name}&name=${leader.name}`}
+                >
                   <UserTile userName={leader.name} leaderRoles={leader.roles} />
                 </Link>
               ))}
