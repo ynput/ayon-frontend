@@ -8,6 +8,18 @@ import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import DetailHeader from '/src/components/DetailHeader'
 import { PanelButtonsStyled } from './userDetail'
+import styled from 'styled-components'
+
+const SectionStyled = styled(Section)`
+  & > div {
+    :first-child {
+      border-top: 2px solid var(--color-hl-studio);
+    }
+    :last-child {
+      border-bottom: 2px solid var(--color-hl-studio);
+    }
+  }
+`
 
 const NewUser = ({ onHide, open, onSuccess }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
@@ -114,7 +126,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
   if (!open) return null
 
   return (
-    <Section className="wrap" style={{ gap: 4, maxHeight: '100%', bottom: 'unset' }}>
+    <SectionStyled className="wrap" style={{ gap: 4, maxHeight: '100%', bottom: 'unset' }}>
       <DetailHeader onClose={handleClose}>
         <UserImage
           src={formData?.avatarUrl}
@@ -162,7 +174,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
         <Button onClick={handleCancel} label="Clear" icon="cancel" />
         <Button onClick={handleSubmit} label="Create New User" icon="person_add" />
       </PanelButtonsStyled>
-    </Section>
+    </SectionStyled>
   )
 }
 

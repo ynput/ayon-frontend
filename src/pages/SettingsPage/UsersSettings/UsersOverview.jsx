@@ -1,8 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Button, Section, Panel } from '@ynput/ayon-react-components'
-import { PanelButtonsStyled } from './userDetail'
-// import { Link } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 import UserTile from './UserTile'
 
@@ -47,14 +45,7 @@ export const TotalStyledButton = styled(Button)`
     `}
 `
 
-const UsersOverview = ({
-  userList = [],
-  onNewUser,
-  onUserSelect,
-  onTotal,
-  selectedProjects,
-  search,
-}) => {
+const UsersOverview = ({ userList = [], onUserSelect, onTotal, selectedProjects, search }) => {
   // get last createdAt user
   const lastUser = userList.reduce((acc, user) => {
     if (!acc) return user
@@ -113,12 +104,6 @@ const UsersOverview = ({
         <h2>Me</h2>
         <UserTile user={selfUser} onClick={() => onUserSelect(selfUser)} />
       </Panel>
-      <PanelButtonsStyled>
-        <Button label="Add New User" icon="person_add" onClick={onNewUser} />
-        {/* <LinkStyled to={'/settings/attributes'}>
-          <Button label="Add New User Attribute" icon="add" />
-        </LinkStyled> */}
-      </PanelButtonsStyled>
     </Section>
   )
 }

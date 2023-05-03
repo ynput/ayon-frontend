@@ -1,8 +1,8 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
-import { Button, InputSwitch, InputText, Section } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, InputText, Section, Spacer } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
@@ -14,6 +14,7 @@ import CreateNewTeam from './CreateNewTeam'
 import { confirmDialog } from 'primereact/confirmdialog'
 import styled from 'styled-components'
 import useSearchFilter from '/src/hooks/useSearchFilter'
+import { useSearchParams } from 'react-router-dom'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -35,11 +36,26 @@ const SectionStyled = styled(Section)`
 `
 
 const TeamsPage = ({ projectName, projectList, isUser }) => {
+  // QUERY PARAMS STATE
+  const [searchParams] = useSearchParams()
+  const queryNames = searchParams.getAll('name')
+
   // STATES
   const [selectedUsers, setSelectedUsers] = useState([])
-  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(isUser)
+  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [createTeamOpen, setCreateTeamOpen] = useState(false)
+
+  // Set selected users based on query params
+  // set initial selected users
+  useEffect(() => {
+    if (queryNames.length) {
+      setSelectedUsers(queryNames)
+      // remove from url
+      searchParams.delete('name')
+      window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}`)
+    }
+  }, [])
 
   // RTK QUERY HOOKS
   const { data: teams = [], isLoading: isLoadingTeams } = useGetTeamsQuery(
@@ -322,23 +338,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           <>
             {!isUser && (
               <>
-                <Button
-                  icon={'group_add'}
-                  label="Create New Team"
-                  onClick={() => setCreateTeamOpen(true)}
-                />
-                <Button
-                  icon={'content_copy'}
-                  label="Duplicate Team"
-                  disabled={selectedTeams.length !== 1}
-                  onClick={onDuplicate}
-                />
-                <Button
-                  icon={'delete'}
-                  label="Delete Teams"
-                  disabled={!selectedTeams.length}
-                  onClick={onDelete}
-                />
                 <InputText
                   style={{ width: '200px' }}
                   placeholder="Filter users..."
@@ -351,6 +350,24 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
                 />
                 Show All Users
+                <Spacer />
+                <Button
+                  icon={'delete'}
+                  label="Delete Teams"
+                  disabled={!selectedTeams.length}
+                  onClick={onDelete}
+                />
+                <Button
+                  icon={'content_copy'}
+                  label="Duplicate Team"
+                  disabled={selectedTeams.length !== 1}
+                  onClick={onDuplicate}
+                />
+                <Button
+                  icon={'group_add'}
+                  label="Create New Team"
+                  onClick={() => setCreateTeamOpen(true)}
+                />
               </>
             )}
           </>
