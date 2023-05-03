@@ -30,6 +30,7 @@ const EventsPage = () => {
 
   const [pagination, setPagination] = useState({})
   const [searchPagination, setSearchPagination] = useState({})
+  const [searched, setSearched] = useState('')
 
   // always refetch with new date to force new data onMount
   useEffect(() => {
@@ -142,8 +143,11 @@ const EventsPage = () => {
     }
   }
 
-  const loadSearch = async (newSearch) => {
+  const loadSearch = async (newSearch, oldSearch) => {
+    if (newSearch === oldSearch) return console.log('same search')
+
     try {
+      setSearched(search)
       const data = await loadMoreEvents({
         filter: newSearch,
         last: 100,
@@ -165,17 +169,27 @@ const EventsPage = () => {
       )
     } catch (error) {
       console.log(error)
+      setSearched('')
     }
   }
 
-  const throttledSearchLoad = useRef(debounce((newSearch) => loadSearch(newSearch), 800))
+  const throttledSearchLoad = useRef(
+    debounce((newSearch, oldSearch) => loadSearch(newSearch, oldSearch), 1200),
+  )
 
   useEffect(() => {
     if (search && !isLoading) {
       // throttled load page
-      throttledSearchLoad.current(search)
+      throttledSearchLoad.current(search, searched)
     }
-  }, [search, isLoading])
+  }, [search, isLoading, searched])
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    if (search) {
+      loadSearch(search, searched)
+    }
+  }
 
   // handle error
   if (isError) {
@@ -198,13 +212,15 @@ const EventsPage = () => {
     <main>
       <Section>
         <Toolbar>
-          <InputText
-            style={{ width: '200px' }}
-            placeholder="Filter events..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autocomplete="off"
-          />
+          <form onSubmit={handleSearchSubmit}>
+            <InputText
+              style={{ width: '200px' }}
+              placeholder="Filter events..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autocomplete="off"
+            />
+          </form>
           <InputSwitch
             checked={showLogs}
             onChange={() => setShowLogs(!showLogs)}
