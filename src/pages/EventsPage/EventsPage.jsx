@@ -103,6 +103,7 @@ const EventsPage = () => {
       const data = await loadMoreEvents({
         before,
         beforeLogs,
+        last: search ? 250 : 100,
       }).unwrap()
 
       // update pagination
