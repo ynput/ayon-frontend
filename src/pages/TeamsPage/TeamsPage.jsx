@@ -37,7 +37,7 @@ const SectionStyled = styled(Section)`
 const TeamsPage = ({ projectName, projectList, isUser }) => {
   // STATES
   const [selectedUsers, setSelectedUsers] = useState([])
-  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(isUser)
+  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [createTeamOpen, setCreateTeamOpen] = useState(false)
 
