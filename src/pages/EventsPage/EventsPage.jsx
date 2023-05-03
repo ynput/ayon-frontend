@@ -29,6 +29,7 @@ const EventsPage = () => {
   let { events: eventData = [], logs: logsData = [], hasPreviousPage } = data || {}
 
   const [pagination, setPagination] = useState({})
+  const [searchPagination, setSearchPagination] = useState({})
 
   // always refetch with new date to force new data onMount
   useEffect(() => {
@@ -57,6 +58,13 @@ const EventsPage = () => {
   if (showLogs) {
     treeData = logsData
   }
+
+  // sort treeData by updatedAt
+  treeData = useMemo(() => {
+    return [...treeData].sort((a, b) => {
+      return new Date(b.updatedAt) - new Date(a.updatedAt)
+    })
+  }, [treeData])
 
   const patchOldEvents = (type, events, draft) => {
     // loop through events and add to draft if not already exists
@@ -95,23 +103,32 @@ const EventsPage = () => {
 
   const loadPage = async () => {
     try {
-      // use search pagination
-      const { before, beforeLogs, hasPreviousPage } = pagination || {}
+      // use pagination or search pagination if searching
+      const { before, beforeLogs, hasPreviousPage } = search ? searchPagination : pagination || {}
       // no more events to get
       if (!hasPreviousPage) return console.log('no more events data to get')
 
       const data = await loadMoreEvents({
         before,
         beforeLogs,
-        last: search ? 250 : 100,
+        last: 100,
+        filter: search,
       }).unwrap()
 
-      // update pagination
-      setPagination({
-        hasPreviousPage: data.hasPreviousPage,
-        before: data.events[data.events.length - 1]?.cursor,
-        beforeLogs: data.logs[data.logs.length - 1]?.cursor,
-      })
+      if (search) {
+        setSearchPagination({
+          hasPreviousPage: data.hasPreviousPage,
+          before: data.events[data.events.length - 1]?.cursor,
+          beforeLogs: data.logs[data.logs.length - 1]?.cursor,
+        })
+      } else {
+        // update pagination
+        setPagination({
+          hasPreviousPage: data.hasPreviousPage,
+          before: data.events[data.events.length - 1]?.cursor,
+          beforeLogs: data.logs[data.logs.length - 1]?.cursor,
+        })
+      }
 
       dispatch(
         ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
@@ -129,8 +146,15 @@ const EventsPage = () => {
     try {
       const data = await loadMoreEvents({
         filter: newSearch,
-        last: 250,
+        last: 100,
       }).unwrap()
+
+      // set new search pagination
+      setSearchPagination({
+        hasPreviousPage: data.hasPreviousPage,
+        before: data.events[data.events.length - 1]?.cursor,
+        beforeLogs: data.logs[data.logs.length - 1]?.cursor,
+      })
 
       dispatch(
         ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
