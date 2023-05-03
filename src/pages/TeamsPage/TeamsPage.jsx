@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
-import { Button, InputSwitch, InputText, Section } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, InputText, Section, Spacer } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
@@ -322,23 +322,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           <>
             {!isUser && (
               <>
-                <Button
-                  icon={'group_add'}
-                  label="Create New Team"
-                  onClick={() => setCreateTeamOpen(true)}
-                />
-                <Button
-                  icon={'content_copy'}
-                  label="Duplicate Team"
-                  disabled={selectedTeams.length !== 1}
-                  onClick={onDuplicate}
-                />
-                <Button
-                  icon={'delete'}
-                  label="Delete Teams"
-                  disabled={!selectedTeams.length}
-                  onClick={onDelete}
-                />
                 <InputText
                   style={{ width: '200px' }}
                   placeholder="Filter users..."
@@ -351,6 +334,24 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
                 />
                 Show All Users
+                <Spacer />
+                <Button
+                  icon={'delete'}
+                  label="Delete Teams"
+                  disabled={!selectedTeams.length}
+                  onClick={onDelete}
+                />
+                <Button
+                  icon={'content_copy'}
+                  label="Duplicate Team"
+                  disabled={selectedTeams.length !== 1}
+                  onClick={onDuplicate}
+                />
+                <Button
+                  icon={'group_add'}
+                  label="Create New Team"
+                  onClick={() => setCreateTeamOpen(true)}
+                />
               </>
             )}
           </>

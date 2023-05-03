@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
-import { Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
+import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
@@ -201,13 +201,6 @@ const UsersSettings = () => {
       <ConfirmDialog />
       <Section>
         <Toolbar>
-          <Button onClick={openNewUser} label="Add New User" icon="person_add" />
-          <Button
-            onClick={onDelete}
-            label="Delete Users"
-            icon="person_remove"
-            disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
-          />
           <SelectButton
             value={showProjectUsers}
             options={[
@@ -226,6 +219,14 @@ const UsersSettings = () => {
               autocomplete="search-users"
             />
           </form>
+          <Spacer />
+          <Button
+            onClick={onDelete}
+            label="Delete Users"
+            icon="person_remove"
+            disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
+          />
+          <Button onClick={openNewUser} label="Add New User" icon="person_add" />
         </Toolbar>
         <Splitter
           style={{ width: '100%', height: '100%' }}
@@ -282,7 +283,6 @@ const UsersSettings = () => {
                 <UsersOverview
                   selectedProjects={selectedProjects}
                   userList={filteredUserList}
-                  onNewUser={openNewUser}
                   onUserSelect={(user) => setSelectedUsers([user.name])}
                   onTotal={onTotal}
                   search={search}

@@ -113,7 +113,10 @@ const CreateNewTeam = ({
 
   return (
     <>
-      <DetailHeader onClose={() => onClose(false)}>
+      <DetailHeader
+        onClose={() => onClose(false)}
+        style={{ borderTop: '2px solid var(--color-hl-studio)' }}
+      >
         <div
           style={{
             overflow: 'hidden',
@@ -165,12 +168,17 @@ const CreateNewTeam = ({
             />
           </FormRow>
         </FormLayout>
+      </Panel>
+      <Panel
+        style={{
+          borderBottom: '2px solid var(--color-hl-studio)',
+        }}
+      >
         <div
           style={{
             display: 'flex',
             gap: 4,
             width: '100%',
-            marginTop: 8,
           }}
         >
           <Button
