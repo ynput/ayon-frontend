@@ -13,9 +13,9 @@ import { toast } from 'react-toastify'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import EventOverview from './EventOverview'
 import { StringParam, useQueryParam } from 'use-query-params'
-import { useCallback, useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
-import { debounce } from 'lodash'
+import { throttle } from 'lodash'
 
 const EventsPage = () => {
   const dispatch = useDispatch()
@@ -27,6 +27,8 @@ const EventsPage = () => {
   // default gets the last 100 events
   const { data, isLoading, isError, error, refetch } = useGetEventsWithLogsQuery({}, {})
   let { events: eventData = [], logs: logsData = [], hasPreviousPage } = data || {}
+
+  const [pagination, setPagination] = useState({})
 
   // always refetch with new date to force new data onMount
   useEffect(() => {
@@ -81,24 +83,39 @@ const EventsPage = () => {
     'events',
   )
 
-  const loadPage = async (isSearch) => {
+  useEffect(() => {
+    // on first load, set pagination for _default
+    if (isLoading) return
+    setPagination({
+      hasPreviousPage,
+      before: eventData[eventData.length - 1]?.cursor,
+      after: eventData[0]?.cursor,
+    })
+  }, [isLoading])
+
+  const loadPage = async () => {
     try {
+      // use search pagination
+      const { before, beforeLogs, hasPreviousPage } = pagination || {}
       // no more events to get
-      if (!hasPreviousPage && !isSearch) return console.log('no more events data to get')
-      // get last cursor
-      const before = eventData[eventData.length - 1]?.cursor
-      const beforeLogs = logsData[logsData.length - 1]?.cursor
+      if (!hasPreviousPage) return console.log('no more events data to get')
 
       const data = await loadMoreEvents({
         before,
         beforeLogs,
-        filter: search ? search : '',
       }).unwrap()
+
+      // update pagination
+      setPagination({
+        hasPreviousPage: data.hasPreviousPage,
+        before: data.events[data.events.length - 1]?.cursor,
+        beforeLogs: data.logs[data.logs.length - 1]?.cursor,
+      })
 
       dispatch(
         ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
-          patchOldEvents('events', data.events, draft, isSearch)
-          patchOldEvents('logs', data.logs, draft, isSearch)
+          patchOldEvents('events', data.events, draft, false)
+          patchOldEvents('logs', data.logs, draft, false)
           draft.hasPreviousPage = data.hasPreviousPage
         }),
       )
@@ -107,15 +124,30 @@ const EventsPage = () => {
     }
   }
 
-  const bouncedLoad = useCallback(
-    debounce(() => loadPage(true), 100),
-    [eventData, hasPreviousPage],
-  )
+  const loadSearch = async (newSearch) => {
+    try {
+      const data = await loadMoreEvents({
+        filter: newSearch,
+      }).unwrap()
+
+      dispatch(
+        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+          patchOldEvents('events', data.events, draft, true)
+          patchOldEvents('logs', data.logs, draft, true)
+          draft.hasPreviousPage = data.hasPreviousPage
+        }),
+      )
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const throttledSearchLoad = useRef(throttle((newSearch) => loadSearch(newSearch), 800))
 
   useEffect(() => {
     if (search && !isLoading) {
       // throttled load page
-      bouncedLoad()
+      throttledSearchLoad.current(search)
     }
   }, [search, isLoading])
 
