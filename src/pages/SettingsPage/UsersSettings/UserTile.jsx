@@ -106,7 +106,7 @@ const UserTile = ({
       <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
       <div style={{ flex: 1, overflow: 'hidden' }}>
         <TitleStyled style={{ whiteSpace: 'nowrap' }}>
-          {!loadingState && `${attrib?.fullName} (${name})`}
+          {!loadingState && (attrib?.fullName ? `${attrib?.fullName} (${name})` : name)}
         </TitleStyled>
         <br />
         <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
