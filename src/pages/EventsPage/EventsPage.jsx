@@ -12,7 +12,6 @@ import useSearchFilter from '/src/hooks/useSearchFilter'
 import { toast } from 'react-toastify'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import EventOverview from './EventOverview'
-import { StringParam, useQueryParam } from 'use-query-params'
 import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
 import { debounce } from 'lodash'
@@ -21,7 +20,8 @@ const EventsPage = () => {
   const dispatch = useDispatch()
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
   // use query param to get selected event
-  let [selectedEventId, setSelectedEvent] = useQueryParam('event', StringParam)
+  //let [selectedEventId, setSelectedEvent] = useQueryParam('event', StringParam)
+  let [selectedEventId, setSelectedEvent] = useState()
 
   const [loadMoreEvents, { isFetching }] = useLazyGetEventsWithLogsQuery()
   // default gets the last 100 events

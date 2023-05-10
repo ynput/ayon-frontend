@@ -1,7 +1,5 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import styled from 'styled-components'
-//import ReactMarkdown from 'react-markdown'
 
 import {
   Button,
@@ -26,26 +24,6 @@ import {
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
 import ProjectManagerPageLayout from '/src/pages/ProjectManagerPage/ProjectManagerPageLayout'
-
-const BreadcrumbsContainer = styled.div`
-  flex-grow: 1;
-  display: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  span {
-    height: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-`
-
-const Breadcrumbs = (props) => (
-  <BreadcrumbsContainer>
-    <span>{props.children}</span>
-  </BreadcrumbsContainer>
-)
 
 /*
  * key is {addonName}|{addonVersion}|{siteId}|{projectKey}
@@ -439,17 +417,6 @@ const AddonSettings = ({
             deleteOverride(currentSelection.addon, currentSelection.siteId, currentSelection.path)
           }
         />
-
-        <Breadcrumbs>
-          {currentSelection && (
-            <ul className="settings-breadcrumbs">
-              <li>{currentSelection.addon?.name}</li>
-              {(currentSelection?.path || []).map((breadcrumb, index) => (
-                <li key={index}>{breadcrumb}</li>
-              ))}
-            </ul>
-          )}
-        </Breadcrumbs>
 
         <Button
           onClick={() => {

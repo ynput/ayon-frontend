@@ -61,10 +61,9 @@ const ProjectPage = () => {
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
   useEffect(() => {
+    dispatch(setBreadcrumbs({ scope: 'project' }))
     return () => {
-      // clear breadcrumbs on unmount
-      dispatch(setBreadcrumbs({}))
-      dispatch(selectProject(null))
+      dispatch(setBreadcrumbs({ scope: '' }))
     }
   }, [])
 

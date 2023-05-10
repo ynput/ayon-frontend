@@ -1,4 +1,5 @@
 import { useMemo, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 
 import {
   useGetAddonSettingsSchemaQuery,
@@ -6,6 +7,7 @@ import {
   useGetAddonSettingsOverridesQuery,
 } from '/src/services/addonSettings'
 
+import { setBreadcrumbs } from '/src/features/context'
 import SettingsEditor from '/src/containers/SettingsEditor'
 
 const AddonSettingsPanel = ({
@@ -22,6 +24,8 @@ const AddonSettingsPanel = ({
   onSelect = () => {},
   currentSelection = null,
 }) => {
+  const dispatch = useDispatch()
+
   let settingsLevel = 'studio'
   if (projectName && projectName !== '_') {
     settingsLevel = 'project'
@@ -85,6 +89,23 @@ const AddonSettingsPanel = ({
     if (currentSelection.addonString !== `${addon.name}@${addon.version}`) return null
     return currentSelection.path
   }, [currentSelection])
+
+  useEffect(() => {
+    dispatch(
+      setBreadcrumbs({
+        scope: 'settings',
+        path: currentSelection?.path || [],
+        addonName: addon.name,
+        addonVersion: addon.version,
+      }),
+    )
+  }, [currentSelection, addon.name, addon.version])
+
+  useEffect(() => {
+    return () => {
+      dispatch(setBreadcrumbs({ scope: '' }))
+    }
+  }, [])
 
   const onSetBreadcrumbs = (path) => {
     const fieldId = ['root', ...(path || [])].join('_')

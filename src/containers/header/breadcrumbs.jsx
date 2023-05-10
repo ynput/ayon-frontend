@@ -3,19 +3,39 @@ import { useSelector } from 'react-redux'
 import { Button } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 
-const Breadcrumbs = () => {
-  /*
-    Breadcrums component used in the browser view.
+import styled from 'styled-components'
 
-    Current location is taken from the redux store as an Object
-    containing all the components of the current path.
-    This allows to render the breadcrumbs as well as compile the
-    op:// USD uri.
-    */
+const Crumbtainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 
-  const crumbData = useSelector((state) => state.context.breadcrumbs)
-  const projectName = useSelector((state) => state.project.name)
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0;
+    padding: 0;
 
+    & > li {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4em;
+
+      &:not(:last-child) {
+        &::after {
+          margin: 0 5px;
+          content: '/';
+        }
+      }
+    }
+  }
+`
+
+const ProjectBreadcrumbs = ({ crumbData, projectName }) => {
   const [breadcrumbs, uri] = useMemo(() => {
     let crumbs = [projectName]
     let uri = `op://${projectName}/`
@@ -67,14 +87,8 @@ const Breadcrumbs = () => {
   if (!projectName) return <></>
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-      }}
-    >
-      <ul className="breadcrumbs">
+    <Crumbtainer>
+      <ul>
         {breadcrumbs.map((crumb, index) => (
           <li key={index}>{crumb}</li>
         ))}
@@ -88,8 +102,53 @@ const Breadcrumbs = () => {
         tooltipPosition="bottom"
         disabled={!breadcrumbs}
       />
-    </div>
+    </Crumbtainer>
   )
+}
+
+const SettingsBreadcrumbs = ({ crumbData }) => {
+  let crumbs = []
+  if (crumbData?.addonName && crumbData?.addonVersion) {
+    crumbs.push(`${crumbData.addonName}@${crumbData.addonVersion}`)
+  } else if (crumbData?.addonName) {
+    crumbs.push(crumbData.addonName)
+  }
+
+  crumbs = [...crumbs, ...crumbData.path]
+  return (
+    <Crumbtainer>
+      <ul>
+        {crumbs.map((crumb, index) => (
+          <li key={index}>{crumb}</li>
+        ))}
+      </ul>
+    </Crumbtainer>
+  )
+}
+
+const Breadcrumbs = () => {
+  /*
+    Breadcrums component used in the browser view.
+
+    Current location is taken from the redux store as an Object
+    containing all the components of the current path.
+    This allows to render the breadcrumbs as well as compile the
+    op:// USD uri.
+    */
+
+  const crumbData = useSelector((state) => state.context.breadcrumbs)
+  const projectName = useSelector((state) => state.project.name)
+
+  const scope = crumbData.scope
+
+  if (scope === 'project') {
+    return <ProjectBreadcrumbs crumbData={crumbData} projectName={projectName} />
+  } else if (scope === 'settings') {
+    return <SettingsBreadcrumbs crumbData={crumbData} />
+  }
+
+  return null
+  // return JSON.stringify(crumbData)
 }
 
 export default Breadcrumbs
