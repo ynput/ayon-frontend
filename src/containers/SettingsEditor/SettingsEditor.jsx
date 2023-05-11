@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import styled from 'styled-components'
 
 import { Tooltip } from 'primereact/tooltip'
-import { TextWidget, SelectWidget, CheckboxWidget } from './widgets'
+import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
 import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
 import './SettingsEditor.sass'
 
@@ -29,6 +29,7 @@ const widgets = {
   TextWidget,
   SelectWidget,
   CheckboxWidget,
+  DateTimeWidget,
 }
 
 // Just close the top-level object to a simple div

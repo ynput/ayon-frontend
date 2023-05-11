@@ -6,6 +6,7 @@ import {
   InputTextarea,
   InputSwitch,
   InputColor,
+  InputDate,
   IconSelect,
 } from '@ynput/ayon-react-components'
 
@@ -287,4 +288,39 @@ const TextWidget = (props) => {
   )
 }
 
-export { TextWidget, SelectWidget, CheckboxWidget }
+const DateTimeWidget = (props) => {
+  const { originalValue, path } = parseContext(props)
+  const [value, setValue] = useState(null)
+
+  useEffect(() => {
+    if (!props.value) {
+      setValue(undefined)
+      return
+    }
+    try {
+      const date = new Date(props.value)
+      setValue(date)
+    } catch {
+      setValue(undefined)
+    }
+  }, [props.value])
+
+  const onFocus = (e) => {
+    props.formContext?.onSetBreadcrumbs(path)
+    props.onFocus(e)
+  }
+
+  const onChange = (value) => {
+    setValue(value)
+    const newValue = value.toISOString()
+    if (newValue === props.value) return
+    const isChanged = newValue !== originalValue
+    props.onChange(newValue)
+    props.formContext?.onSetBreadcrumbs(path)
+    updateOverrides(props, isChanged, path)
+  }
+
+  return <InputDate selected={value || undefined} onChange={onChange} onFocus={onFocus} />
+}
+
+export { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget }

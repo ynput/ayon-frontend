@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Dialog } from 'primereact/dialog'
 import { toast } from 'react-toastify'
 
@@ -37,7 +37,7 @@ const NewProjectDialog = ({ onHide }) => {
     createProject({
       name,
       code,
-      anatomy: newAnatomy || originalAnatomy,
+      anatomy: newAnatomy, // || originalAnatomy,
     })
       .unwrap()
       .then(() => {
@@ -46,7 +46,6 @@ const NewProjectDialog = ({ onHide }) => {
       })
       .catch((error) => {
         // log
-        console.log(error)
         toast.error(`Unable to create project ${error}`)
       })
   }
@@ -54,6 +53,10 @@ const NewProjectDialog = ({ onHide }) => {
   //
   // Render
   //
+
+  useEffect(() => {
+    setNewAnatomy(originalAnatomy)
+  }, [originalAnatomy])
 
   const editor = useMemo(() => {
     if (isSchemaLoading || isOriginalAnatomyLoading) return 'Loading editor...'

@@ -8,7 +8,10 @@ const getAnatomy = ayonApi.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: (result, error, { name }) => [{ type: 'anatomyPresets', id: name }],
+      invalidatesTags: (result, error, { name }) => [
+        { type: 'anatomyPresets', id: name },
+        { type: 'anatomyPresets', id: 'LIST' },
+      ],
     }),
     deletePreset: build.mutation({
       query: ({ name }) => ({
