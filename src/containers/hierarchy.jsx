@@ -182,6 +182,7 @@ const Hierarchy = (props) => {
     const node = event.node.data
     dispatch(
       setBreadcrumbs({
+        scope: 'project',
         parents: node.parents,
         folder: node.name,
       }),

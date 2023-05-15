@@ -1041,6 +1041,7 @@ const EditorPage = () => {
     if (node) {
       dispatch(
         setBreadcrumbs({
+          scope: 'project',
           parents: node.parents,
           folder: node.name,
         }),

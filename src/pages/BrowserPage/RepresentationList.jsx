@@ -44,6 +44,7 @@ const RepresentationList = ({ representations = [] }) => {
   const onRowClick = (e) => {
     dispatch(
       setBreadcrumbs({
+        scope: 'project',
         parents: e.node.data.folderParents,
         folder: e.node.data.folderName,
         subset: e.node.data.subsetName,

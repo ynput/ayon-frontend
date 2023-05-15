@@ -377,6 +377,7 @@ const Subsets = () => {
 
     dispatch(
       setBreadcrumbs({
+        scope: 'project',
         parents: event.node.data.parents,
         folder: event.node.data.folder,
         subset: event.node.data.name,
