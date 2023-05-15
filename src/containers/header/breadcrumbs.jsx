@@ -114,7 +114,7 @@ const SettingsBreadcrumbs = ({ crumbData }) => {
     crumbs.push(crumbData.addonName)
   }
 
-  crumbs = [...crumbs, ...crumbData.path]
+  crumbs = [...crumbs, ...(crumbData.path || [])]
   return (
     <Crumbtainer>
       <ul>
