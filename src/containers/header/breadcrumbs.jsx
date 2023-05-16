@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { Button } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 
 import styled from 'styled-components'
@@ -9,6 +8,7 @@ const Crumbtainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
+  cursor: pointer;
 
   ul {
     list-style: none;
@@ -38,7 +38,7 @@ const Crumbtainer = styled.div`
 const ProjectBreadcrumbs = ({ crumbData, projectName }) => {
   const [breadcrumbs, uri] = useMemo(() => {
     let crumbs = [projectName]
-    let uri = `op://${projectName}/`
+    let uri = `ayon://${projectName}/`
     for (const h of crumbData.parents || []) {
       crumbs.push(h)
       uri += `${h}/`
@@ -87,21 +87,12 @@ const ProjectBreadcrumbs = ({ crumbData, projectName }) => {
   if (!projectName) return <></>
 
   return (
-    <Crumbtainer>
+    <Crumbtainer onClick={copyURI}>
       <ul>
         {breadcrumbs.map((crumb, index) => (
           <li key={index}>{crumb}</li>
         ))}
       </ul>
-
-      <Button
-        icon="content_copy"
-        className="transparent copy-uri-button"
-        onClick={copyURI}
-        tooltip="Copy URI to clipboard"
-        tooltipPosition="bottom"
-        disabled={!breadcrumbs}
-      />
     </Crumbtainer>
   )
 }
@@ -115,8 +106,16 @@ const SettingsBreadcrumbs = ({ crumbData }) => {
   }
 
   crumbs = [...crumbs, ...(crumbData.path || [])]
+
+  const copyBreadcrumbs = () => {
+    navigator.clipboard.writeText(crumbs.join('/')).then(
+      () => toast.success('Breadcrumbs copied'),
+      (err) => toast.error('Could not copy text: ', err),
+    )
+  }
+
   return (
-    <Crumbtainer>
+    <Crumbtainer onClick={copyBreadcrumbs}>
       <ul>
         {crumbs.map((crumb, index) => (
           <li key={index}>{crumb}</li>

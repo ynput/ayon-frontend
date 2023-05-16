@@ -39,6 +39,9 @@ const UserMenu = ({ visible, onHide }) => {
   const user = useSelector((state) => state.user)
   // check if user is logged in and is manager or admin
   const isUser = user.data.isUser
+  const isAdmin = user.data.isAdmin
+
+  console.log('IsAdmin: ', isAdmin)
 
   const doLogout = () => {
     axios
@@ -88,18 +91,21 @@ const UserMenu = ({ visible, onHide }) => {
       label: 'Services',
       icon: 'home_repair_service',
     },
-    {
+  ]
+
+  // add protected links if user is manager or admin
+  if (!isUser) allLinks.push(...protectedLinks)
+
+  // server restart is only available to admins
+  if (isAdmin)
+    allLinks.push({
       onClick: () =>
         axios.post('/api/system/restart').finally(() => {
           onHide()
         }),
       label: 'Restart Server',
       icon: 'restart_alt',
-    },
-  ]
-
-  // add protected links if user is manager or admin
-  if (!isUser) allLinks.push(...protectedLinks)
+    })
 
   return (
     <Sidebar position="right" visible={visible} onHide={onHide} icons={() => <h3>User menu</h3>}>
