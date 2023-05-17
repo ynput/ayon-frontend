@@ -92,6 +92,7 @@ const SettingsEditor = ({
   const originalOverrides = useMemo(() => {
     const result = buildOverrides(originalData, true)
     for (const key in overrides) {
+      if (!(key in result)) result[key] = {}
       result[key].level = overrides[key].level
       result[key].inGroup = overrides[key].inGroup
     }
@@ -103,6 +104,7 @@ const SettingsEditor = ({
 
     for (const key in formOverrides) {
       if (key in (overrides || {})) {
+        if (!formOverrides[key]) formOverrides[key] = {}
         formOverrides[key].level = overrides[key]?.level || 'default'
         formOverrides[key].inGroup = overrides[key]?.inGroup || false
       }
