@@ -64,7 +64,7 @@ const UserMenu = ({ visible, onHide }) => {
     {
       link: '/manageProjects',
       label: 'Manage Projects',
-      icon: 'settings_suggest',
+      icon: 'empty_dashboard',
     },
     {
       link: '/doc/api',

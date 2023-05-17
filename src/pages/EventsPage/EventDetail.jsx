@@ -91,7 +91,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
             >
               <Button icon="filter_alt" className="transparent" onClick={() => onFilter(project)} />
               <Link to={`/manageProjects/dashboard?project=${project}`}>
-                <Button icon="settings_suggest" className="transparent" />
+                <Button icon="empty_dashboard" className="transparent" />
               </Link>
             </EventTile>
           </RowStyled>
