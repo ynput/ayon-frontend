@@ -25,7 +25,7 @@ const USER_BY_NAME_QUERY = `
 `
 const USERS_QUERY = `
   query UserList {
-    users {
+    users(last: 2000) {
       edges {
         node {
           name
@@ -65,7 +65,7 @@ query Assignees($names: [String!]!){
 }`
 const ASSIGNEES_QUERY = `
 query Assignees {
-  users {
+  users(last: 2000) {
   edges {
     node {
       name
