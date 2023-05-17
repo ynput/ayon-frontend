@@ -69,7 +69,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   const footer = (
     <>
       <Spacer />
-      <Button label="Spawn" disabled={!canSubmit} onClick={submit} />
+      <Button label="Spawn" icon="settings_slow_motion" disabled={!canSubmit} onClick={submit} />
     </>
   )
 

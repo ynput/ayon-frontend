@@ -48,7 +48,7 @@ const ProjectAnatomy = ({ projectName, toolbar, projectList }) => {
   return (
     <ProjectManagerPageLayout
       {...{ toolbar, projectList }}
-      toolbarMore={<Button label="Update anatomy" icon="save" onClick={saveAnatomy} />}
+      toolbarMore={<Button label="Save changes" icon="save" onClick={saveAnatomy} />}
     >
       <Section>
         <Section>

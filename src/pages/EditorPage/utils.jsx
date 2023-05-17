@@ -1,5 +1,6 @@
 import ayonClient from '/src/ayon'
 import { stringEditor, integerEditor, floatEditor, enumEditor } from './editors'
+import { TimestampField } from '/src/containers/fieldFormat'
 
 // TODO rename .jsx -> .js
 const formatAttribute = (node, changes, fieldName, styled = true) => {
@@ -14,6 +15,12 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
     className = 'inherited'
   }
   if (!styled) return value
+
+  if (ayonClient.settings.attributes.length) {
+    const fieldType = ayonClient.settings.attributes.find((attrib) => attrib.name === fieldName)
+      .data.type
+    if (fieldType === 'datetime') return <TimestampField value={value} />
+  }
 
   return <span className={`editor-field ${className}`}>{value}</span>
 }
@@ -61,6 +68,7 @@ const getColumns = () => {
         title: attrib.data.title,
         editor: editor,
         editorSettings: attrib.data,
+        type: attrib.data.type,
       })
     }
   }

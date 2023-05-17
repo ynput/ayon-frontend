@@ -27,6 +27,7 @@ import { SocketContext, SocketProvider } from './context/websocketContext'
 import ProtectedRoute from './containers/ProtectedRoute'
 import ShareDialog from './components/ShareDialog'
 import ErrorFallback from './components/ErrorFallback'
+import ServerRestartBanner from './components/ServerRestartBanner'
 import { useLazyGetInfoQuery } from './services/auth/getAuth'
 
 const App = () => {
@@ -90,24 +91,20 @@ const App = () => {
 
   if (serverError) return <ErrorPage code={serverError} message="Server connection failed" />
 
+  const RestartIndicator = () => {
+    const serverIsRestarting = useContext(SocketContext)?.serverRestartingVisible || false
+    return serverIsRestarting && <ServerRestartBanner />
+  }
+
   //
   // RENDER THE MAIN APP
   //
-
-  const Reloader = () => {
-    const context = useContext(SocketContext)
-    if (context?.serverRestartingVisible)
-      return (
-        <LoaderShade style={{ backgroundColor: 'transparent' }} message="Server is restarting" />
-      )
-    else return null
-  }
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Suspense fallback={<LoaderShade />}>
         <SocketProvider>
-          <Reloader />
+          <RestartIndicator />
           <BrowserRouter>
             <QueryParamProvider
               adapter={ReactRouter6Adapter}

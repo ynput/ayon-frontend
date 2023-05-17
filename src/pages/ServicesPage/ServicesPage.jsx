@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
+import { TimestampField } from '/src/containers/fieldFormat'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './NewServiceDialog'
 
@@ -122,7 +123,11 @@ const ServicesPage = () => {
               body={formatStatus}
               style={{ maxWidth: 120 }}
             />
-            <Column field="lastSeen" header="Last seen" />
+            <Column
+              field="lastSeen"
+              header="Last seen"
+              body={(rowData) => rowData.lastSeen && <TimestampField value={rowData.lastSeen} />}
+            />
           </DataTable>
         </TablePanel>
       </Section>
