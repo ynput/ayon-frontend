@@ -39,7 +39,7 @@ const ProjectMenu = ({ visible, onHide }) => {
   )
 
   return (
-    <Sidebar position="left" visible={visible} onHide={onHide} icons={() => <h3>Project menu</h3>}>
+    <Sidebar position="left" visible={visible} onHide={onHide} icons={() => <h3>Project Menu</h3>}>
       <div
         style={{
           display: 'flex',

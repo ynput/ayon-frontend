@@ -22,7 +22,16 @@ const Header = () => {
       <ProjectMenu visible={projectMenuVisible} onHide={() => setProjectMenuVisible(false)} />
       <UserMenu visible={userMenuVisible} onHide={() => setUserMenuVisible(false)} />
 
-      <Button icon="dataset" className="transparent" onClick={() => setProjectMenuVisible(true)} />
+      <Button
+        icon="dataset"
+        label="Project Menu"
+        onClick={() => setProjectMenuVisible(true)}
+        className="transparent"
+        style={{
+          alignItems: 'center',
+          display: 'flex',
+        }}
+      />
 
       <Spacer>
         <Breadcrumbs />
