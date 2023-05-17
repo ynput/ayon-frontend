@@ -44,7 +44,7 @@ const Header = () => {
       <UserMenu visible={userMenuVisible} onHide={() => setUserMenuVisible(false)} />
 
       <StyledButton
-        icon="dataset"
+        icon="event_list"
         label="Projects"
         onClick={() => setProjectMenuVisible(true)}
         style={{
