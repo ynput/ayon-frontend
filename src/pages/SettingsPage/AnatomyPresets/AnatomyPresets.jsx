@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useDispatch } from 'react-redux'
 
 import { Dialog } from 'primereact/dialog'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
@@ -10,7 +9,6 @@ import { toast } from 'react-toastify'
 import SettingsEditor from '/src/containers/SettingsEditor'
 import { Spacer, Button, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 
-import { setBreadcrumbs } from '/src/features/context'
 import {
   useGetAnatomyPresetQuery,
   useGetAnatomySchemaQuery,
@@ -23,7 +21,6 @@ import {
 } from '/src/services/anatomy/updateAnatomy'
 
 const AnatomyPresets = () => {
-  const dispatch = useDispatch()
   const [originalData, setOriginalData] = useState(null)
   const [newData, setNewData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState('_')
@@ -117,25 +114,8 @@ const AnatomyPresets = () => {
   }
 
   const onSetBreadcrumbs = (e) => {
-    dispatch(
-      setBreadcrumbs({
-        scope: 'settings',
-        path: [selectedPreset === '_' ? 'default' : selectedPreset, ...(e || [])],
-        addonName: 'Anatomy presets',
-        addonVersion: '',
-      }),
-    )
+    console.log('onSetBreadcrumbs', e)
   }
-
-  useEffect(() => {
-    onSetBreadcrumbs([])
-  }, [selectedPreset])
-
-  useEffect(() => {
-    return () => {
-      dispatch(setBreadcrumbs({ scope: '' }))
-    }
-  }, [])
 
   //
   // Render

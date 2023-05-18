@@ -12,7 +12,7 @@ import sortByKey from '/src/helpers/sortByKey'
 
 import {
   editorSelectionChanged,
-  setBreadcrumbs,
+  setUri,
   setExpandedFolders,
   setFocusedFolders,
 } from '/src/features/context'
@@ -1039,13 +1039,12 @@ const EditorPage = () => {
     }
 
     if (node) {
-      dispatch(
-        setBreadcrumbs({
-          scope: 'project',
-          parents: node.parents,
-          folder: node.name,
-        }),
-      )
+      let uri = `ayon+entity://${projectName}`
+      uri += `/${node.parents.join('/')}/${node.name}`
+      if (event.node.data.__entityType === 'task') {
+        uri += `?task=${event.node?.data?.name}`
+      }
+      dispatch(setUri(uri))
     }
   }
 

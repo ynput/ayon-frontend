@@ -1,12 +1,10 @@
+import { useMemo, useRef } from 'react'
+
 import { Dropdown } from 'primereact/dropdown'
 import { Spacer, Panel, ScrollPanel } from '@ynput/ayon-react-components'
 
-import { useEffect, useMemo, useRef } from 'react'
-import { useDispatch } from 'react-redux'
-
 import { useGetAddonListQuery } from '/src/services/addonList'
 import { useSetAddonVersionMutation } from '/src/services/addonList'
-import { setBreadcrumbs } from '/src/features/context'
 
 const AddonListItem = ({ addonName, addonTitle, productionVersion, stagingVersion, versions }) => {
   const [setAddonVersion] = useSetAddonVersionMutation()
@@ -61,15 +59,7 @@ const AddonListItem = ({ addonName, addonTitle, productionVersion, stagingVersio
 
 // eslint-disable-next-line no-unused-vars
 const AddonVersions = ({ projectName }) => {
-  const dispatch = useDispatch()
   const { data: addons, loading } = useGetAddonListQuery({ showVersions: true })
-
-  useEffect(() => {
-    dispatch(setBreadcrumbs({ scope: 'settings', addonName: 'Addon Versions' }))
-    return () => {
-      dispatch(setBreadcrumbs({ scope: '' }))
-    }
-  }, [])
 
   if (loading) return <div>Loading...</div>
 

@@ -15,7 +15,7 @@ import {
   setFocusedVersions,
   setFocusedSubsets,
   setSelectedVersions,
-  setBreadcrumbs,
+  setUri,
   setPairing,
   subsetSelected,
 } from '/src/features/context'
@@ -375,15 +375,11 @@ const Subsets = () => {
       return
     }
 
-    dispatch(
-      setBreadcrumbs({
-        scope: 'project',
-        parents: event.node.data.parents,
-        folder: event.node.data.folder,
-        subset: event.node.data.name,
-        version: event.node.data.versionName,
-      }),
-    )
+    let uri = `ayon+entity://${projectName}/`
+    uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
+    uri += `?subset=${event.node.data.name}`
+    uri += `&version=${event.node.data.versionName}`
+    dispatch(setUri(uri))
   }
 
   const onSelectionChange = (event) => {

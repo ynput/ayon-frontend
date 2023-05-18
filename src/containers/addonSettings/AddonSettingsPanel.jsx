@@ -7,7 +7,7 @@ import {
   useGetAddonSettingsOverridesQuery,
 } from '/src/services/addonSettings'
 
-import { setBreadcrumbs } from '/src/features/context'
+import { setUri } from '/src/features/context'
 import SettingsEditor from '/src/containers/SettingsEditor'
 
 const AddonSettingsPanel = ({
@@ -91,19 +91,17 @@ const AddonSettingsPanel = ({
   }, [currentSelection])
 
   useEffect(() => {
-    dispatch(
-      setBreadcrumbs({
-        scope: 'settings',
-        path: currentSelection?.path || [],
-        addonName: addon.name,
-        addonVersion: addon.version,
-      }),
-    )
+    let uri = `ayon+settings://${addon.name}`
+    if (addon.version) uri += `:${addon.version}`
+    if (currentSelection?.path) uri += `/${currentSelection.path.join('/')}`
+    if (projectName) uri += `?project=${projectName}`
+    if (siteId) uri += `&site=${siteId}`
+    dispatch(setUri(uri))
   }, [currentSelection, addon.name, addon.version])
 
   useEffect(() => {
     return () => {
-      dispatch(setBreadcrumbs({ scope: '' }))
+      dispatch(setUri(null))
     }
   }, [])
 

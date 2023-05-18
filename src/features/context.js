@@ -13,9 +13,9 @@ const initialState = {
   selectedVersions: {},
   pairing: [],
   reload: {},
-  scope: null,
   breadcrumbs: { scope: '' },
   share: { name: null, data: null, link: null, img: null },
+  uri: null,
 }
 
 const contextSlice = createSlice({
@@ -99,6 +99,10 @@ const contextSlice = createSlice({
     //   state.scope = action.payload
     // },
 
+    setUri: (state, action) => {
+      state.uri = action.payload
+    },
+
     setBreadcrumbs: (state, action) => {
       if (action.payload?.scope === 'project') {
         let bc = state.breadcrumbs || {}
@@ -174,8 +178,8 @@ export const {
   setBreadcrumbs,
   setPairing,
   setReload,
-  //setScope,
   setFocusedType,
+  setUri,
   subsetSelected,
   editorSelectionChanged,
   projectSelected,

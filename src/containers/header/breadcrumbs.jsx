@@ -1,6 +1,4 @@
-import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
 
 import styled from 'styled-components'
 
@@ -34,7 +32,7 @@ const Crumbtainer = styled.div`
     }
   }
 `
-
+/*
 const ProjectBreadcrumbs = ({ crumbData, projectName }) => {
   const [breadcrumbs, uri] = useMemo(() => {
     let crumbs = [projectName]
@@ -124,7 +122,7 @@ const SettingsBreadcrumbs = ({ crumbData }) => {
     </Crumbtainer>
   )
 }
-
+*/
 const Breadcrumbs = () => {
   /*
     Breadcrums component used in the browser view.
@@ -134,6 +132,12 @@ const Breadcrumbs = () => {
     This allows to render the breadcrumbs as well as compile the
     op:// USD uri.
     */
+
+  const uri = useSelector((state) => state.context.uri) || ''
+
+  return <Crumbtainer>{uri}</Crumbtainer>
+
+  /*
 
   const crumbData = useSelector((state) => state.context.breadcrumbs)
   const projectName = useSelector((state) => state.project.name)
@@ -148,6 +152,7 @@ const Breadcrumbs = () => {
 
   return null
   // return JSON.stringify(crumbData)
+ */
 }
 
 export default Breadcrumbs

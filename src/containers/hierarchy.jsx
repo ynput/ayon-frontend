@@ -13,7 +13,7 @@ import EntityDetail from '/src/containers/entityDetail'
 
 import {
   setFocusedFolders,
-  setBreadcrumbs,
+  setUri,
   setExpandedFolders,
   setFocusedTasks,
 } from '/src/features/context'
@@ -180,13 +180,7 @@ const Hierarchy = (props) => {
 
   const onRowClick = (event) => {
     const node = event.node.data
-    dispatch(
-      setBreadcrumbs({
-        scope: 'project',
-        parents: node.parents,
-        folder: node.name,
-      }),
-    )
+    dispatch(setUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`))
   }
 
   // Update the folder selection in the project context

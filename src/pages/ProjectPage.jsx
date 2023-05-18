@@ -12,7 +12,7 @@ import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { setBreadcrumbs } from '/src/features/context'
+import { setUri } from '/src/features/context'
 import { selectProject } from '/src/features/project'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetProjectAddonsQuery } from '../services/addonList'
@@ -61,9 +61,9 @@ const ProjectPage = () => {
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
   useEffect(() => {
-    dispatch(setBreadcrumbs({ scope: 'project' }))
+    dispatch(setUri(`ayon+entity://${projectName}`))
     return () => {
-      dispatch(setBreadcrumbs({ scope: '' }))
+      dispatch(setUri(null))
     }
   }, [])
 
