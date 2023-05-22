@@ -631,13 +631,13 @@ const EditorPage = () => {
 
       // it is a new entity, so only valid attributes are those
       // stored in `changes`. The rest are inherited ones
-      let ownAttrib = entity.ownAttrib || []
+      let ownAttrib = [...entity.ownAttrib] || []
       const parent = rootData[entity.parentId || entity.folderId]
       // copy over own attrib
-      let patchAttrib = entity.attrib || {}
+      let patchAttrib = { ...entity.attrib } || {}
       // copy over parents if they have any
       if (parent) {
-        patchAttrib = parent?.data?.attrib || {}
+        patchAttrib = { ...parent?.data?.attrib } || {}
       }
       for (const key in entityChanges || {}) {
         if (key.startsWith('__')) continue
@@ -653,6 +653,15 @@ const EditorPage = () => {
 
       // check name
       newEntity.name = checkName(newEntity.name)
+
+      // we use a different set of attributes for the newEntity than the patch
+      const newEntityAttribs = { ...patchAttrib }
+      // remove any attribs that are not ownAttrib
+      for (const key in newEntityAttribs) {
+        if (!ownAttrib.includes(key)) delete newEntityAttribs[key]
+      }
+      // add to newEntity
+      newEntity.attrib = newEntityAttribs
 
       const patch = {
         data: {
