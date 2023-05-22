@@ -15,6 +15,7 @@ const ProjectList = ({
   selection,
   onSelect,
   onRowClick,
+  onRowDoubleClick,
   showNull,
   multiselect,
   footer,
@@ -102,6 +103,7 @@ const ProjectList = ({
           selection={selectionObj}
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
+          onRowDoubleClick={onRowDoubleClick}
         >
           <Column
             field="name"
