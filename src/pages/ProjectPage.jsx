@@ -61,11 +61,17 @@ const ProjectPage = () => {
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
   useEffect(() => {
-    dispatch(setUri(`ayon+entity://${projectName}`))
+    // originally, i thought we could dispatch bare project name
+    // to set breadcrumbs, but that resets the uri, when the project change
+    // is done by pasting a new uri.
+    // so i commented this out - this means project change won't trigger
+    // breadcrumbs update, until something is clicked. but i think that's ok for now.
+
+    //dispatch(setUri(`ayon+entity://${projectName}`))
     return () => {
       dispatch(setUri(null))
     }
-  }, [])
+  }, [projectName])
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {

@@ -5,9 +5,9 @@ const transformVersionsData = (versions) => {
     console.log(versionEdge)
     const version = versionEdge.node
     const subset = version.subset
-    const folder = subset.folder
+    const folder = subset?.folder
 
-    for (const representationEdge of version.representations.edges) {
+    for (const representationEdge of version.representations?.edges || []) {
       const representation = representationEdge.node
       rArr.push({
         id: representation.id,
