@@ -174,7 +174,7 @@ const Subsets = () => {
       },
     },
     {
-      field: 'status',
+      field: 'versionStatus',
       header: 'Status',
       width: 150,
       style: { overflow: 'visible' },
