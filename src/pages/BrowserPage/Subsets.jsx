@@ -95,7 +95,6 @@ const Subsets = () => {
     subsetData.map(({ id }) => id),
   )
 
-  console.log(subsetData)
   const [updateEntity] = useUpdateEntitiesDetailsMutation()
 
   // update subset status
