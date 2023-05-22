@@ -605,7 +605,7 @@ const EditorPage = () => {
               const index = ownAttrib.indexOf(key)
               if (index > -1) ownAttrib.splice(index, 1)
               // inherit from parent and add to patchAttrib
-              patchAttrib[key] = parent.data.attrib[key]
+              parent?.data?.attrib[key] && (patchAttrib[key] = parent.data.attrib[key])
             } else {
               attribChanges[key] = change
               // add to ownAttrib if not already there
