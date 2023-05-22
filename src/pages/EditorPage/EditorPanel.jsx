@@ -301,7 +301,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
       const type = oldValue?.attrib?.type
       let newValue = value
 
-      if (type === 'datetime') {
+      if (type === 'datetime' && value) {
         newValue = new Date(value)
         newValue = newValue.toISOString()
       }
@@ -566,6 +566,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                         ...disabledStyles,
                         width: '100%',
                       }}
+                      isClearable={isOwn}
                     />
                   )
                 } else {

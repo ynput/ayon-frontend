@@ -19,7 +19,7 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   if (ayonClient.settings.attributes.length) {
     const fieldType = ayonClient.settings.attributes.find((attrib) => attrib.name === fieldName)
       .data.type
-    if (fieldType === 'datetime') return <TimestampField value={value} />
+    if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
   }
 
   return <span className={`editor-field ${className}`}>{value}</span>
