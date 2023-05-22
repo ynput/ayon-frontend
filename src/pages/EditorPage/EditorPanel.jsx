@@ -197,7 +197,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
     // changes saved to global state will show up here
     // console.log('creating initial form')
 
-    console.log(editorNodes['9a3a9040c41511edb8920b11c777c69f'])
+    // console.log(editorNodes['9a3a9040c41511edb8920b11c777c69f'])
 
     setForm(createInitialForm())
   }, [nodeIds, type, editorNodes])

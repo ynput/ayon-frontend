@@ -40,6 +40,7 @@ const getWorkfiles = ayonApi.injectEndpoints({
           path: edge.node.path,
         })),
       transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
+      providesTags: () => ['workfile'],
     }),
     getWorkfileById: build.query({
       query: ({ projectName, id }) => ({
