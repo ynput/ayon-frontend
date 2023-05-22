@@ -564,6 +564,8 @@ const EditorPage = () => {
       if (entityId in newNodes) continue
 
       const entityType = changes[entityId].__entityType
+      const parent =
+        rootData[rootData[entityId]?.data?.parentId || rootData[entityId]?.data?.folderId]
 
       if (changes[entityId].__action === 'delete') {
         updates.push({
@@ -578,7 +580,9 @@ const EditorPage = () => {
       } else {
         // End delete, begin patch
         const attribChanges = {}
+        const patchAttrib = {}
         const entityChanges = {}
+        const ownAttrib = [...rootData[entityId].data.ownAttrib]
 
         for (const key in changes[entityId]) {
           if (key.startsWith('__')) continue
@@ -588,7 +592,24 @@ const EditorPage = () => {
             } else {
               entityChanges[key.substring(1)] = changes[entityId][key]
             }
-          } else attribChanges[key] = changes[entityId][key]
+          } else {
+            const change = changes[entityId][key]
+            // if value is empty, set to null and use inherited value
+            if (!change) {
+              attribChanges[key] = null
+              // remove from ownAttrib if already there
+              const index = ownAttrib.indexOf(key)
+              if (index > -1) ownAttrib.splice(index, 1)
+              // inherit from parent and add to patchAttrib
+              parent?.data?.attrib[key] && (patchAttrib[key] = parent.data.attrib[key])
+            } else {
+              attribChanges[key] = change
+              // add to ownAttrib if not already there
+              if (!ownAttrib.includes(key)) ownAttrib.push(key)
+              // add to patchAttrib
+              patchAttrib[key] = change
+            }
+          }
         }
 
         // patch is original data with updated data
@@ -596,8 +617,8 @@ const EditorPage = () => {
           data: {
             ...rootData[entityId]?.data,
             ...entityChanges,
-            attrib: { ...rootData[entityId]?.data?.attrib, ...attribChanges },
-            ownAttrib: [...rootData[entityId].data.ownAttrib, ...Object.keys(attribChanges)],
+            attrib: { ...rootData[entityId]?.data?.attrib, ...patchAttrib },
+            ownAttrib: ownAttrib,
           },
           leaf: rootData[entityId]?.leaf,
         }
@@ -627,13 +648,13 @@ const EditorPage = () => {
 
       // it is a new entity, so only valid attributes are those
       // stored in `changes`. The rest are inherited ones
-      let ownAttrib = entity.ownAttrib || []
+      let ownAttrib = [...entity.ownAttrib] || []
       const parent = rootData[entity.parentId || entity.folderId]
       // copy over own attrib
-      let patchAttrib = entity.attrib || {}
+      let patchAttrib = { ...entity.attrib } || {}
       // copy over parents if they have any
       if (parent) {
-        patchAttrib = parent?.data?.attrib || {}
+        patchAttrib = { ...parent?.data?.attrib } || {}
       }
       for (const key in entityChanges || {}) {
         if (key.startsWith('__')) continue
@@ -649,6 +670,15 @@ const EditorPage = () => {
 
       // check name
       newEntity.name = checkName(newEntity.name)
+
+      // we use a different set of attributes for the newEntity than the patch
+      const newEntityAttribs = { ...patchAttrib }
+      // remove any attribs that are not ownAttrib
+      for (const key in newEntityAttribs) {
+        if (!ownAttrib.includes(key)) delete newEntityAttribs[key]
+      }
+      // add to newEntity
+      newEntity.attrib = newEntityAttribs
 
       const patch = {
         data: {

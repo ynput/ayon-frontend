@@ -405,10 +405,17 @@ a {
         content: 'Multiple';
         display: block;
         position: absolute;
-        left: 90px;
+        left: 8px;
         top: 52%;
         translate: 0 -50%;
       }
     }
+  }
+}
+
+// clearing a date input
+.react-datepicker__close-icon {
+  &::after {
+    background-color: var(--button-background);
   }
 }
