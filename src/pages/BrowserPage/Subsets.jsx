@@ -228,8 +228,8 @@ const Subsets = () => {
         }), // end VersionList
     },
     {
-      field: 'time',
-      header: 'Time',
+      field: 'createdAt',
+      header: 'Created At',
       width: 150,
       body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
     },
