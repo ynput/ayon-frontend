@@ -568,6 +568,8 @@ const EditorPage = () => {
       if (entityId in newNodes) continue
 
       const entityType = changes[entityId].__entityType
+      const parent =
+        rootData[rootData[entityId]?.data?.parentId || rootData[entityId]?.data?.folderId]
 
       if (changes[entityId].__action === 'delete') {
         updates.push({
@@ -582,7 +584,9 @@ const EditorPage = () => {
       } else {
         // End delete, begin patch
         const attribChanges = {}
+        const patchAttrib = {}
         const entityChanges = {}
+        const ownAttrib = [...rootData[entityId].data.ownAttrib]
 
         for (const key in changes[entityId]) {
           if (key.startsWith('__')) continue
@@ -592,7 +596,24 @@ const EditorPage = () => {
             } else {
               entityChanges[key.substring(1)] = changes[entityId][key]
             }
-          } else attribChanges[key] = changes[entityId][key]
+          } else {
+            const change = changes[entityId][key]
+            // if value is empty, set to null and use inherited value
+            if (!change) {
+              attribChanges[key] = null
+              // remove from ownAttrib if already there
+              const index = ownAttrib.indexOf(key)
+              if (index > -1) ownAttrib.splice(index, 1)
+              // inherit from parent and add to patchAttrib
+              patchAttrib[key] = parent.data.attrib[key]
+            } else {
+              attribChanges[key] = change
+              // add to ownAttrib if not already there
+              if (!ownAttrib.includes(key)) ownAttrib.push(key)
+              // add to patchAttrib
+              patchAttrib[key] = change
+            }
+          }
         }
 
         // patch is original data with updated data
@@ -600,8 +621,8 @@ const EditorPage = () => {
           data: {
             ...rootData[entityId]?.data,
             ...entityChanges,
-            attrib: { ...rootData[entityId]?.data?.attrib, ...attribChanges },
-            ownAttrib: [...rootData[entityId].data.ownAttrib, ...Object.keys(attribChanges)],
+            attrib: { ...rootData[entityId]?.data?.attrib, ...patchAttrib },
+            ownAttrib: ownAttrib,
           },
           leaf: rootData[entityId]?.leaf,
         }
