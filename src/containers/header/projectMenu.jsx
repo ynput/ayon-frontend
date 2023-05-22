@@ -26,7 +26,12 @@ const ProjectMenu = ({ visible, onHide }) => {
     // reset context for projects
     dispatch(selectProjectContext(projectName))
 
-    navigate(`/projects/${projectName}/browser`)
+    // if projects/[project] is null, projects/[projectName]/browser, else projects/[projectName]/[module]
+    const link = window.location.pathname.includes('projects')
+      ? `/projects/${projectName}/${window.location.pathname.split('/')[3] || 'browser'}`
+      : `/projects/${projectName}/browser`
+
+    navigate(link)
   }
 
   const footer = (
