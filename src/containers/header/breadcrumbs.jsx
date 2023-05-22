@@ -18,9 +18,10 @@ const Crumbtainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  cursor: pointer;
+  gap: 8px;
 
   ul {
+    cursor: pointer;
     list-style: none;
     display: flex;
     flex-direction: row;
@@ -45,11 +46,38 @@ const Crumbtainer = styled.div`
   }
 `
 
+const uri2crumbs = (uri) => {
+  if (!uri) return []
+
+  // parse uri to path and query params
+
+  const [path, query] = uri.split('://')[1].split('?')
+  const crumbs = path.split('/').filter((crumb) => crumb)
+  const qp = {}
+
+  if (query) {
+    const params = query.split('&')
+    for (const param of params) {
+      const [key, value] = param.split('=')
+      qp[key] = value
+    }
+  }
+
+  for (const level of ['subset', 'task', 'workfile', 'version', 'representation']) {
+    if (qp[level]) {
+      crumbs.push(qp[level])
+    }
+  }
+
+  return crumbs
+}
+
 const Breadcrumbs = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
   const [localUri, setLocalUri] = useState('')
+  const [editMode, setEditMode] = useState(false)
   const ctxUri = useSelector((state) => state.context.uri) || ''
 
   const focusEntities = (entities) => {
@@ -111,14 +139,27 @@ const Breadcrumbs = () => {
     setLocalUri(ctxUri)
   }, [ctxUri])
 
+  if (editMode) {
+    return (
+      <Crumbtainer>
+        <InputText
+          value={localUri}
+          onChange={(e) => setLocalUri(e.target.value)}
+          style={{ width: 800 }}
+        />
+        <Button onClick={() => goThere()}>Go</Button>
+        <Button onClick={() => setEditMode(false)}>Cancel</Button>
+      </Crumbtainer>
+    )
+  }
+
   return (
     <Crumbtainer>
-      <InputText
-        value={localUri}
-        onChange={(e) => setLocalUri(e.target.value)}
-        style={{ width: 800 }}
-      />
-      <Button onClick={() => goThere()}>Go</Button>
+      <ul onClick={() => setEditMode(true)}>
+        {uri2crumbs(ctxUri).map((crumb, idx) => (
+          <li key={idx}>{crumb}</li>
+        ))}
+      </ul>
     </Crumbtainer>
   )
 }
