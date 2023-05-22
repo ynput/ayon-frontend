@@ -986,8 +986,8 @@ const EditorPage = () => {
         disabled: disableAddNew,
       },
       {
-        label: 'Revert Changes',
-        icon: 'replay',
+        label: 'Clear Changes',
+        icon: 'clear',
         command: revertChangesOnSelection,
       },
       {
@@ -1210,12 +1210,12 @@ const EditorPage = () => {
           />
           <Spacer />
           <Button
-            icon="replay"
-            label="Revert All Changes"
+            icon="clear"
+            label="Clear All Changes"
             onClick={handleRevert}
             disabled={!canCommit}
           />
-          <Button icon="check" label="Commit Changes" onClick={onCommit} disabled={!canCommit} />
+          <Button icon="check" label="Save Changes" onClick={onCommit} disabled={!canCommit} />
         </Toolbar>
         <Splitter
           style={{ width: '100%', height: '100%' }}
