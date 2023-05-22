@@ -813,6 +813,9 @@ const EditorPage = () => {
       initData.parentIds = ['root']
     }
 
+    // set name to type
+    initData.name = initData.type.toLowerCase()
+
     setNewEntityData(initData)
   }
 
