@@ -970,16 +970,6 @@ const EditorPage = () => {
   const contextMenuModel = useMemo(() => {
     return [
       {
-        label: 'Copy attributes',
-        disabled: Object.keys(currentSelection) !== 1,
-        command: () => alert('Not implemented'),
-      },
-      {
-        label: 'Paste attributes',
-        disabled: true,
-        command: () => alert('Not implemented'),
-      },
-      {
         label: 'Revert changes',
         command: revertChangesOnSelection,
       },
