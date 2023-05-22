@@ -10,12 +10,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import sortByKey from '/src/helpers/sortByKey'
 
-import {
-  editorSelectionChanged,
-  setBreadcrumbs,
-  setExpandedFolders,
-  setFocusedFolders,
-} from '/src/features/context'
+import { editorSelectionChanged, setBreadcrumbs, setExpandedFolders } from '/src/features/context'
 
 import { getColumns, formatType, formatAttribute } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
@@ -41,6 +36,7 @@ import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
+import ContextMenuItem from '/src/components/ContextMenuItem'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -817,6 +813,9 @@ const EditorPage = () => {
       initData.parentIds = ['root']
     }
 
+    // set name to type
+    initData.name = initData.type.toLowerCase()
+
     setNewEntityData(initData)
   }
 
@@ -963,33 +962,44 @@ const EditorPage = () => {
   // Context menu
 
   const onContextMenuSelectionChange = (event) => {
-    // TODO: handle tasks
     if (!(event.value in currentSelection)) {
-      dispatch(setFocusedFolders([event.value]))
+      let newSelection = {
+        [event.value]: true,
+      }
+
+      handleSelectionChange(newSelection)
     }
   }
 
   const contextMenuModel = useMemo(() => {
-    return [
+    const menuItems = [
       {
-        label: 'Copy attributes',
-        disabled: Object.keys(currentSelection) !== 1,
-        command: () => alert('Not implemented'),
+        label: 'Add Folder',
+        icon: 'create_new_folder',
+        command: () => addNewEntity('folder'),
+        disabled: disableAddNew,
       },
       {
-        label: 'Paste attributes',
-        disabled: true,
-        command: () => alert('Not implemented'),
+        label: 'Add Task',
+        icon: 'add_task',
+        command: () => addNewEntity('task'),
+        disabled: disableAddNew,
       },
       {
-        label: 'Clear changes',
+        label: 'Clear Changes',
+        icon: 'clear',
         command: revertChangesOnSelection,
       },
       {
         label: 'Delete',
+        icon: 'delete',
         command: onDelete,
       },
     ]
+
+    return menuItems.map((item) => ({
+      template: <ContextMenuItem key={item.label} contextMenuRef={contextMenuRef} {...item} />,
+    }))
   }, [currentSelection])
 
   //
