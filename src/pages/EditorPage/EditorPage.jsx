@@ -36,6 +36,7 @@ import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
+import ContextMenuItem from '/src/components/ContextMenuItem'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -968,16 +969,34 @@ const EditorPage = () => {
   }
 
   const contextMenuModel = useMemo(() => {
-    return [
+    const menuItems = [
       {
-        label: 'Revert changes',
+        label: 'Add Folder',
+        icon: 'create_new_folder',
+        command: () => addNewEntity('folder'),
+        disabled: disableAddNew,
+      },
+      {
+        label: 'Add Task',
+        icon: 'add_task',
+        command: () => addNewEntity('task'),
+        disabled: disableAddNew,
+      },
+      {
+        label: 'Revert Changes',
+        icon: 'replay',
         command: revertChangesOnSelection,
       },
       {
         label: 'Delete',
+        icon: 'delete',
         command: onDelete,
       },
     ]
+
+    return menuItems.map((item) => ({
+      template: <ContextMenuItem key={item.label} contextMenuRef={contextMenuRef} {...item} />,
+    }))
   }, [currentSelection])
 
   //
