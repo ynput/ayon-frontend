@@ -76,12 +76,12 @@ const isoToTime = (isoTime) => {
   return [`${year}-${month}-${day}`, `${hours}:${minutes}:${seconds}`]
 }
 
-const TimestampField = ({ value }) => {
+const TimestampField = ({ value, ddOnly }) => {
   const [dd, tt] = isoToTime(value)
   return (
     <DateTimeContainer>
       <span>{dd}</span>
-      <span>{tt}</span>
+      {!ddOnly && <span>{tt}</span>}
     </DateTimeContainer>
   )
 }
