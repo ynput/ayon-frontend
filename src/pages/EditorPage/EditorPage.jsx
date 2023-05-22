@@ -10,12 +10,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import sortByKey from '/src/helpers/sortByKey'
 
-import {
-  editorSelectionChanged,
-  setBreadcrumbs,
-  setExpandedFolders,
-  setFocusedFolders,
-} from '/src/features/context'
+import { editorSelectionChanged, setBreadcrumbs, setExpandedFolders } from '/src/features/context'
 
 import { getColumns, formatType, formatAttribute } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
@@ -963,9 +958,12 @@ const EditorPage = () => {
   // Context menu
 
   const onContextMenuSelectionChange = (event) => {
-    // TODO: handle tasks
     if (!(event.value in currentSelection)) {
-      dispatch(setFocusedFolders([event.value]))
+      let newSelection = {
+        [event.value]: true,
+      }
+
+      handleSelectionChange(newSelection)
     }
   }
 
