@@ -52,9 +52,15 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
   // handlers
 
   const handleChange = (value, id) => {
+    let newState = { ...entityData }
     if (id) {
-      setEntityData({ ...entityData, [id]: value })
+      newState[id] = value
+      if (value && id === 'type' && entityData.name === entityData.type.toLowerCase()) {
+        // if name is same as type, update name
+        newState.name = value.toLowerCase()
+      }
     }
+    setEntityData(newState)
   }
 
   const handleShow = () => {

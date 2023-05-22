@@ -2,7 +2,14 @@ import { toast } from 'react-toastify'
 import { useState, useMemo, useEffect } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TablePanel, Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
+import {
+  TablePanel,
+  Button,
+  Section,
+  Toolbar,
+  InputText,
+  Spacer,
+} from '@ynput/ayon-react-components'
 import AttributeEditor from '../../containers/attributes/attributeEditor'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttributes'
@@ -127,7 +134,6 @@ const Attributes = () => {
         )}
         <Section>
           <Toolbar>
-            <Button label="Save Attributes" icon="check" onClick={onSave} />
             <Button label="Add Attribute" icon="add" onClick={onNewAttribute} />
             <Button
               label="Delete attribute"
@@ -141,6 +147,8 @@ const Attributes = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            <Spacer />
+            <Button label="Save Attributes" icon="check" onClick={onSave} />
           </Toolbar>
           <TablePanel loading={isLoading || updateLoading || isFetching}>
             <DataTable

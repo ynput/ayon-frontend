@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
-import { Section, ScrollPanel, Button } from '@ynput/ayon-react-components'
+import { Section, ScrollPanel, Button, Spacer } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
 import { useGetAnatomySchemaQuery } from '../../services/anatomy/getAnatomy'
 import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
@@ -48,7 +48,12 @@ const ProjectAnatomy = ({ projectName, toolbar, projectList }) => {
   return (
     <ProjectManagerPageLayout
       {...{ toolbar, projectList }}
-      toolbarMore={<Button label="Save changes" icon="save" onClick={saveAnatomy} />}
+      toolbarMore={
+        <>
+          <Spacer />
+          <Button label="Save Changes" icon="check" onClick={saveAnatomy} />
+        </>
+      }
     >
       <Section>
         <Section>

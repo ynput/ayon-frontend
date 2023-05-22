@@ -171,7 +171,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
         )}
       </Section>
       <PanelButtonsStyled>
-        <Button onClick={handleCancel} label="Clear" icon="cancel" />
+        <Button onClick={handleCancel} label="Clear" icon="clear" />
         <Button onClick={handleSubmit} label="Create New User" icon="person_add" />
       </PanelButtonsStyled>
     </SectionStyled>

@@ -161,11 +161,17 @@ const AnatomyPresets = () => {
       <Section>
         <Toolbar>
           <Button
-            label="Save current preset"
-            icon="check"
-            disabled={selectedPreset === '_'}
-            onClick={() => savePreset(selectedPreset)}
+            label="Set as primary preset"
+            icon="bolt"
+            onClick={() => setPrimaryPreset(selectedPreset)}
           />
+          <Button
+            label="Delete the preset"
+            icon="delete"
+            disabled={selectedPreset === '_'}
+            onClick={handleDeletePreset}
+          />
+          <Spacer />
           <Button
             label="Save as a new preset"
             icon="add"
@@ -175,17 +181,11 @@ const AnatomyPresets = () => {
             }}
           />
           <Button
-            label="Delete the preset"
-            icon="delete"
+            label="Save Current Preset"
+            icon="check"
             disabled={selectedPreset === '_'}
-            onClick={handleDeletePreset}
+            onClick={() => savePreset(selectedPreset)}
           />
-          <Button
-            label="Set as primary preset"
-            icon="bolt"
-            onClick={() => setPrimaryPreset(selectedPreset)}
-          />
-          <Spacer />
         </Toolbar>
 
         <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
