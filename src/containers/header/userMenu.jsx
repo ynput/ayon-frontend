@@ -41,8 +41,6 @@ const UserMenu = ({ visible, onHide }) => {
   const isUser = user.data.isUser
   const isAdmin = user.data.isAdmin
 
-  console.log('IsAdmin: ', isAdmin)
-
   const doLogout = () => {
     axios
       .post('/api/auth/logout')
@@ -66,7 +64,7 @@ const UserMenu = ({ visible, onHide }) => {
     {
       link: '/manageProjects',
       label: 'Manage Projects',
-      icon: 'settings_suggest',
+      icon: 'empty_dashboard',
     },
     {
       link: '/doc/api',
@@ -108,7 +106,7 @@ const UserMenu = ({ visible, onHide }) => {
     })
 
   return (
-    <Sidebar position="right" visible={visible} onHide={onHide} icons={() => <h3>User menu</h3>}>
+    <Sidebar position="right" visible={visible} onHide={onHide} icons={() => <h3>User Menu</h3>}>
       <div
         style={{
           height: '100%',

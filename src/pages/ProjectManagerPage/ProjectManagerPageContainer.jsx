@@ -26,6 +26,7 @@ const ProjectManagerPageContainer = ({
             styleSection={{ maxWidth: 150, minWidth: 150 }}
             hideCode
             autoSelect
+            onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
             selection={selection}
             {...props}
           />

@@ -48,7 +48,13 @@ nav.secondary {
   display: flex;
   flex-direction: row;
   align-items: center;
+}
 
+nav.primary {
+  gap: 4px;
+}
+
+nav.secondary {
   a,
   button {
     display: block;
