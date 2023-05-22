@@ -93,7 +93,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     <div style={{ display: 'flex', width: '100%', flexDirection: 'row' }}>
       <Spacer />
       <Button
-        label={isNew ? 'Create attribute' : 'Update attribute'}
+        label={isNew ? 'Create Attribute' : 'Save Attribute'}
         icon="check"
         disabled={!!error}
         onClick={() => onEdit(formData)}

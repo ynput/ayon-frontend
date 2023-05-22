@@ -67,7 +67,6 @@ const RoleDetail = ({ projectName, role, onChange }) => {
   return (
     <Section>
       <Toolbar>
-        <Button onClick={onSave} label={`Save ${projectName ? 'project ' : ''}role`} icon="check" />
         <Button
           onClick={onDelete}
           label="Delete project role"
@@ -75,6 +74,7 @@ const RoleDetail = ({ projectName, role, onChange }) => {
           icon="group_remove"
         />
         <Spacer />
+        <Button onClick={onSave} label={`Save ${projectName ? 'project ' : ''}role`} icon="check" />
       </Toolbar>
       <ScrollPanel
         className="nopad transparent"

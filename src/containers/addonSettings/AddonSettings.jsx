@@ -432,8 +432,8 @@ const AddonSettings = ({
     () => (
       <>
         <Spacer />
-        <Button label="Dismiss all changes" icon="refresh" onClick={onRevertAllChanges} />
-        <Button label="Save changes" icon="check" onClick={onSave} />
+        <Button label="Clear All Changes" icon="clear" onClick={onRevertAllChanges} />
+        <Button label="Save Changes" icon="check" onClick={onSave} />
       </>
     ),
     [onRevertAllChanges, onSave],

@@ -64,10 +64,10 @@ const NewProjectDialog = ({ onHide }) => {
   }, [schema, originalAnatomy])
 
   const footer = (
-    <div style={{}}>
+    <Toolbar style={{}}>
       <Spacer />
-      <Button icon="add" label="Create" onClick={handleSubmit} />
-    </div>
+      <Button icon="add" label="Create Project" onClick={handleSubmit} />
+    </Toolbar>
   )
 
   return (

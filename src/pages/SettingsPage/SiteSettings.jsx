@@ -134,7 +134,8 @@ const SiteSettings = () => {
 
       <Section style={{ flexGrow: 1 }}>
         <Toolbar>
-          <Button label="Save" icon="check" onClick={() => saveChanges()} />
+          <Spacer />
+          <Button label="Save Changes" icon="check" onClick={() => saveChanges()} />
         </Toolbar>
 
         {(selectedSites.length && (
