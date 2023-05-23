@@ -1075,10 +1075,9 @@ const EditorPage = () => {
     } else if (node.__entityType === 'task') {
       // find the parent folder
       node = searchableFoldersSet.get(node.__parentId)
-      console.log(node)
     }
 
-    if (node) {
+    if (node?.parents) {
       let uri = `ayon+entity://${projectName}`
       uri += `/${node.parents.join('/')}/${node.name}`
       if (event.node.data.__entityType === 'task') {

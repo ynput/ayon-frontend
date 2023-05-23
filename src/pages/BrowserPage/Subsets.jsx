@@ -434,6 +434,7 @@ const Subsets = () => {
   return (
     <Section className="wrap">
       <Toolbar>
+        {projectName}
         <InputText
           style={{ width: '200px' }}
           placeholder="Filter subsets..."

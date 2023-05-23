@@ -3,7 +3,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { InputText, Button } from '@ynput/ayon-react-components'
+import { InputText } from '@ynput/ayon-react-components'
+import HeaderButton from './HeaderButton'
 
 import {
   setFocusedFolders,
@@ -98,14 +99,14 @@ const UriEditor = ({ uri, setUri, onAccept, onCopy }) => {
         }}
         onBlur={(e) => e.preventDefault()}
       />
-      <Button
+      <HeaderButton
         onClick={onAccept}
         icon="my_location"
         onBlur={(e) => {
           e.preventDefault()
         }}
       />
-      <Button
+      <HeaderButton
         onClick={onCopy}
         icon="content_copy"
         onBlur={(e) => {
@@ -208,8 +209,8 @@ const Breadcrumbs = () => {
           <li key={idx}>{crumb}</li>
         ))}
       </ul>
-      <Button icon="edit" onClick={() => setEditMode(true)} />
-      <Button icon="content_copy" onClick={onCopy} />
+      <HeaderButton icon="edit" onClick={() => setEditMode(true)} />
+      <HeaderButton icon="content_copy" onClick={onCopy} />
     </Crumbtainer>
   )
 }

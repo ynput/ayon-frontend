@@ -43,6 +43,8 @@ const ProjectPage = () => {
    * It parses the url, loads the project data, dispatches the
    * project data to the store, and renders the requested page.
    */
+
+  const uri = useSelector((state) => state.context.uri)
   const navigate = useNavigate()
   const { projectName, module, addonName } = useParams()
   const dispatch = useDispatch()
@@ -67,7 +69,10 @@ const ProjectPage = () => {
     // so i commented this out - this means project change won't trigger
     // breadcrumbs update, until something is clicked. but i think that's ok for now.
 
-    //dispatch(setUri(`ayon+entity://${projectName}`))
+    // this might work
+    if (!uri) {
+      dispatch(setUri(`ayon+entity://${projectName}`))
+    }
     return () => {
       dispatch(setUri(null))
     }
