@@ -81,7 +81,10 @@ const UsersSettings = () => {
 
   // RTK QUERY HOOKS
   let { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery({ selfName })
-  if (isError) toast.error('Unable to load users')
+  if (isError || !Array.isArray(userList)) {
+    userList = []
+    toast.error('Unable to load users')
+  }
 
   const {
     data: rolesList = [],
