@@ -1,11 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'
 import WorkfileList from './WorkfileList'
 import WorkfileDetail from './WorkfileDetail'
+import { useSelector } from 'react-redux'
 
 const WorkfilesPage = () => {
+  const projectName = useSelector((state) => state.project.name)
   const [selectedWorkfile, setSelectedWorkfile] = useState(null)
+
+  // set SelectedWorkfile to null when projectName changes
+  useEffect(() => {
+    setSelectedWorkfile(null)
+  }, [projectName])
 
   return (
     <main>

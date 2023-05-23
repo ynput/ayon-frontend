@@ -6,6 +6,8 @@ import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectProject } from '/src/features/project'
 import { selectProject as selectProjectContext } from '/src/features/context'
+import { onProjectChange } from '/src/features/editor'
+import { ayonApi } from '/src/services/ayon'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
@@ -25,6 +27,10 @@ const ProjectMenu = ({ visible, onHide }) => {
     dispatch(selectProject(projectName))
     // reset context for projects
     dispatch(selectProjectContext(projectName))
+    // reset editor
+    dispatch(onProjectChange(projectName))
+    // remove editor query caches
+    dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project']))
 
     // if projects/[project] is null, projects/[projectName]/browser, else projects/[projectName]/[module]
     const link = window.location.pathname.includes('projects')
