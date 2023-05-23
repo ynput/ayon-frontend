@@ -66,6 +66,8 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
   const handleShow = () => {
     // focus name input
     nameRef.current?.focus()
+    // select name
+    nameRef.current?.select()
   }
 
   const handleSubmit = (e) => {
