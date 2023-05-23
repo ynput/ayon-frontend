@@ -70,7 +70,12 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     isLoading: isLoadingUsers,
     isError: isErrorUsers,
   } = useGetUsersQuery({}, { skip: !projectName || isUser })
-  if (isErrorUsers) toast.error('Unable to load users')
+
+  console.log(users)
+  if (isErrorUsers || !Array.isArray(users)) {
+    toast.error('Unable to load users')
+    users = []
+  }
 
   // RTK MUTATIONS
   // delete team
