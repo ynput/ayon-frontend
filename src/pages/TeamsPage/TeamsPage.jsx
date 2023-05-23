@@ -58,15 +58,19 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   }, [])
 
   // RTK QUERY HOOKS
-  const { data: teams = [], isLoading: isLoadingTeams } = useGetTeamsQuery(
-    { projectName, showMembers: true },
-    { skip: !projectName },
-  )
+  const {
+    data: teams = [],
+    isLoading: isLoadingTeams,
+    isError: isErrorTeams,
+  } = useGetTeamsQuery({ projectName, showMembers: true }, { skip: !projectName })
+  if (isErrorTeams) toast.error('Unable to load teams')
 
-  let { data: users = [], isLoading: isLoadingUsers } = useGetUsersQuery(
-    {},
-    { skip: !projectName || isUser },
-  )
+  let {
+    data: users = [],
+    isLoading: isLoadingUsers,
+    isError: isErrorUsers,
+  } = useGetUsersQuery({}, { skip: !projectName || isUser })
+  if (isErrorUsers) toast.error('Unable to load users')
 
   // RTK MUTATIONS
   // delete team
