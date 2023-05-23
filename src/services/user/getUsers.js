@@ -107,18 +107,17 @@ const getUsers = ayonApi.injectEndpoints({
           variables: {},
         },
       }),
-      transformResponse: (res, meta, { name }) => {
+      transformResponse: (res, meta, { selfName }) => {
         if (res?.errors) {
+          console.log(res.errors)
           throw new Error(res.errors[0].message)
         }
 
-        return res?.data?.user
-          ? {
-              ...res.data.user,
-              self: res.data.user.name === name,
-              roles: res.data.user.roles ? JSON.parse(res.data.user.roles) : {},
-            }
-          : null
+        return res?.data?.users.edges.map((e) => ({
+          ...e.node,
+          self: e.node.name === selfName,
+          roles: e.node.roles ? JSON.parse(e.node.roles) : {},
+        }))
       },
       providesTags: (users) =>
         users ? [...users.map((e) => ({ type: 'user', id: e.name }))] : ['user'],
