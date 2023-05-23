@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -72,6 +72,50 @@ const uri2crumbs = (uri) => {
   return crumbs
 }
 
+const UriEditor = ({ uri, setUri, onAccept, onCopy }) => {
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    inputRef.current.focus()
+    inputRef.current.select()
+  }, [])
+
+  const onBlur = () => {
+    setTimeout(() => {
+      onAccept()
+    }, 200)
+  }
+
+  return (
+    <Crumbtainer onBlur={onBlur}>
+      <InputText
+        ref={inputRef}
+        value={uri}
+        onChange={(e) => setUri(e.target.value)}
+        style={{ width: 800 }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') onAccept()
+        }}
+        onBlur={(e) => e.preventDefault()}
+      />
+      <Button
+        onClick={onAccept}
+        icon="my_location"
+        onBlur={(e) => {
+          e.preventDefault()
+        }}
+      />
+      <Button
+        onClick={onCopy}
+        icon="content_copy"
+        onBlur={(e) => {
+          e.preventDefault()
+        }}
+      />
+    </Crumbtainer>
+  )
+}
+
 const Breadcrumbs = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -125,6 +169,7 @@ const Breadcrumbs = () => {
           return
         }
         focusEntities(entities)
+        setEditMode(false)
         setTimeout(() => {
           dispatch(setUri(res.data[0].uri))
         }, 100)
@@ -134,6 +179,11 @@ const Breadcrumbs = () => {
       })
   }
 
+  const onCopy = () => {
+    navigator.clipboard.writeText(localUri)
+    toast.success('Copied to clipboard')
+  }
+
   useEffect(() => {
     if (ctxUri === localUri) return
     setLocalUri(ctxUri)
@@ -141,15 +191,13 @@ const Breadcrumbs = () => {
 
   if (editMode) {
     return (
-      <Crumbtainer>
-        <InputText
-          value={localUri}
-          onChange={(e) => setLocalUri(e.target.value)}
-          style={{ width: 800 }}
-        />
-        <Button onClick={() => goThere()}>Go</Button>
-        <Button onClick={() => setEditMode(false)}>Cancel</Button>
-      </Crumbtainer>
+      <UriEditor
+        uri={localUri}
+        setUri={setLocalUri}
+        onAccept={goThere}
+        onCancel={() => setEditMode(false)}
+        onCopy={onCopy}
+      />
     )
   }
 
@@ -160,6 +208,8 @@ const Breadcrumbs = () => {
           <li key={idx}>{crumb}</li>
         ))}
       </ul>
+      <Button icon="edit" onClick={() => setEditMode(true)} />
+      <Button icon="content_copy" onClick={onCopy} />
     </Crumbtainer>
   )
 }

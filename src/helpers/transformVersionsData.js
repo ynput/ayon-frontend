@@ -2,7 +2,6 @@ const transformVersionsData = (versions) => {
   let rArr = []
 
   for (const versionEdge of versions) {
-    console.log(versionEdge)
     const version = versionEdge.node
     const subset = version.subset
     const folder = subset?.folder
