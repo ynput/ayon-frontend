@@ -148,7 +148,7 @@ const EditorPage = () => {
     console.log('loading initial branches', branches)
 
     loadNewBranches(branches, isNewProject)
-  }, [])
+  }, [projectName])
 
   // get and update children attrib that use it's parents attribs
   const getChildAttribUpdates = (updates) => {
@@ -320,6 +320,8 @@ const EditorPage = () => {
 
   // console.log(searchIds)
 
+  console.log(rootDataCache)
+
   // make new copy of root data
   const rootData = useMemo(() => {
     let data = { ...rootDataCache }
@@ -329,7 +331,7 @@ const EditorPage = () => {
       data[n.id] = { leaf: n.__entityType !== 'folder', data: n }
     })
     return data
-  }, [rootDataCache, newNodes, changes])
+  }, [rootDataCache, newNodes, changes, projectName])
 
   // SEARCH FILTER
   // if search results filter out nodes
@@ -349,7 +351,7 @@ const EditorPage = () => {
     }
 
     return filtered
-  }, [rootData, searchIds])
+  }, [rootData, searchIds, projectName])
 
   const parents = useMemo(() => {
     // This is an auto-generated object in the form of:
@@ -397,7 +399,7 @@ const EditorPage = () => {
 
     buildHierarchy('root', result)
     return sortByKey(result, 'name')
-  }, [parents, expandedFolders, rootData])
+  }, [parents, expandedFolders, rootData, projectName])
 
   let foundTasks = []
   const getFolderTaskList = (folders = [], parentId, d) => {

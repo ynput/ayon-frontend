@@ -73,6 +73,11 @@ const editorSlice = createSlice({
         state.changes = {}
       }
     },
+    onProjectChange: (state) => {
+      state.nodes = {}
+      state.new = {}
+      state.changes = {}
+    },
   },
 })
 
@@ -84,5 +89,6 @@ export const {
   onNewChanges,
   newProject,
   updateNodes,
+  onProjectChange,
 } = editorSlice.actions
 export default editorSlice.reducer
