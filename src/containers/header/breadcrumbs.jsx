@@ -157,27 +157,69 @@ const Breadcrumbs = () => {
   }
 
   const goThere = () => {
-    axios
-      .post('/api/resolve', { uris: [localUri] })
-      .then((res) => {
-        if (!res.data.length) {
-          toast.error('Could not resolve uri')
-          return
-        }
-        const entities = res.data[0].entities
-        if (!entities.length) {
-          toast.error('No entities found')
-          return
-        }
-        focusEntities(entities)
-        setEditMode(false)
-        setTimeout(() => {
-          dispatch(setUri(res.data[0].uri))
-        }, 100)
-      })
-      .catch((err) => {
-        toast.error(err)
-      })
+    if (!localUri) return
+
+    if (['ayon', 'ayon+entity'].includes(localUri.split('://')[0])) {
+      axios
+        .post('/api/resolve', { uris: [localUri] })
+        .then((res) => {
+          if (!res.data.length) {
+            toast.error('Could not resolve uri')
+            return
+          }
+          const entities = res.data[0].entities
+          if (!entities.length) {
+            toast.error('No entities found')
+            return
+          }
+          focusEntities(entities)
+          setTimeout(() => {
+            dispatch(setUri(res.data[0].uri))
+          }, 100)
+        })
+        .catch((err) => {
+          toast.error(err)
+        })
+        .finally(() => {
+          setEditMode(false)
+        })
+    } else if (localUri.startsWith('ayon+settings')) {
+      setEditMode(false)
+
+      //split query params
+
+      const [baseUri, query] = localUri.split('://')[1].split('?')
+
+      // extract addon name and version from uri
+      // ayon+settings://<addonName>:<addonVersion>/<settingsPathIncludingMoreSlashes>
+
+      const [addonName, addonVersion, ...settingsPath] = baseUri.split('/')
+
+      console.log(addonName, addonVersion, settingsPath)
+
+      // parse query params
+
+      const qp = {}
+      for (const param of query.split('&')) {
+        const [key, value] = param.split('=')
+        qp[key] = value
+      }
+
+      if ('project' in qp && 'site' in qp) {
+        navigate(`manageProjects/siteSettings?project=${qp.project}&site=${qp.site}`)
+      } else if ('project' in qp) {
+        navigate(`manageProjects/projectSettings?project=${qp.project}`)
+      } else if ('site' in qp) {
+        navigate(`settings/site?site=${qp.siteName}`)
+      }
+
+      dispatch(setUri(localUri))
+      setEditMode(false)
+    } else {
+      toast.error('Invalid uri')
+      setLocalUri(ctxUri)
+      setEditMode(false)
+    }
   }
 
   const onCopy = () => {

@@ -77,7 +77,7 @@ const Subsets = () => {
       projectName,
       versionOverrides,
     },
-    { skip: !focusedFolders.length },
+    { skip: !projectName },
   )
 
   // refocus version subset after reload

@@ -30,7 +30,7 @@ const ProjectMenu = ({ visible, onHide }) => {
     // reset editor
     dispatch(onProjectChange(projectName))
     // remove editor query caches
-    dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project']))
+    dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'subset']))
 
     // if projects/[project] is null, projects/[projectName]/browser, else projects/[projectName]/[module]
     const link = window.location.pathname.includes('projects')
