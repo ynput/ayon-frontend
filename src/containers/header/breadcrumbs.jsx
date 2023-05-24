@@ -1,6 +1,17 @@
-import { useMemo } from 'react'
-import { useSelector } from 'react-redux'
+import axios from 'axios'
+import { useEffect, useState, useRef } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { InputText } from '@ynput/ayon-react-components'
+import HeaderButton from './HeaderButton'
+
+import {
+  setFocusedFolders,
+  setFocusedSubsets,
+  setFocusedVersions,
+  setUri,
+} from '/src/features/context'
 
 import styled from 'styled-components'
 
@@ -8,9 +19,10 @@ const Crumbtainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  cursor: pointer;
+  gap: 8px;
 
   ul {
+    cursor: pointer;
     list-style: none;
     display: flex;
     flex-direction: row;
@@ -35,119 +47,214 @@ const Crumbtainer = styled.div`
   }
 `
 
-const ProjectBreadcrumbs = ({ crumbData, projectName }) => {
-  const [breadcrumbs, uri] = useMemo(() => {
-    let crumbs = [projectName]
-    let uri = `ayon://${projectName}/`
-    for (const h of crumbData.parents || []) {
-      crumbs.push(h)
-      uri += `${h}/`
-    }
-    if (crumbData.folder) {
-      crumbs.push(crumbData.folder)
-      uri += crumbData.folder
-    }
+const uri2crumbs = (uri) => {
+  if (!uri) return []
 
-    if (crumbData.subset) {
-      crumbs.push(crumbData.subset)
-      uri += `?subset=${crumbData.subset}`
+  // parse uri to path and query params
+
+  const [path, query] = uri.split('://')[1].split('?')
+  const crumbs = path.split('/').filter((crumb) => crumb)
+  const qp = {}
+
+  if (query) {
+    const params = query.split('&')
+    for (const param of params) {
+      const [key, value] = param.split('=')
+      qp[key] = value
     }
-
-    if (crumbData.version) {
-      crumbs.push(crumbData.version)
-      uri += `?version=${crumbData.version}`
-    }
-
-    if (crumbData.representation) {
-      crumbs.push(crumbData.representation)
-      uri += `?representation=${crumbData.representation}`
-    }
-
-    return [crumbs, uri]
-  }, [
-    crumbData.parents,
-    crumbData.folder,
-    crumbData.subset,
-    crumbData.version,
-    crumbData.representation,
-    projectName,
-  ])
-
-  const copyURI = () => {
-    navigator.clipboard.writeText(uri).then(
-      () => {
-        toast.success('URI copied')
-      },
-      (err) => {
-        toast.error('Could not copy text: ', err)
-      },
-    )
   }
 
-  if (!projectName) return <></>
+  for (const level of ['subset', 'task', 'workfile', 'version', 'representation']) {
+    if (qp[level]) {
+      crumbs.push(qp[level])
+    }
+  }
 
-  return (
-    <Crumbtainer onClick={copyURI}>
-      <ul>
-        {breadcrumbs.map((crumb, index) => (
-          <li key={index}>{crumb}</li>
-        ))}
-      </ul>
-    </Crumbtainer>
-  )
+  return crumbs
 }
 
-const SettingsBreadcrumbs = ({ crumbData }) => {
-  let crumbs = []
-  if (crumbData?.addonName && crumbData?.addonVersion) {
-    crumbs.push(`${crumbData.addonName}@${crumbData.addonVersion}`)
-  } else if (crumbData?.addonName) {
-    crumbs.push(crumbData.addonName)
-  }
+const UriEditor = ({ uri, setUri, onAccept, onCopy }) => {
+  const inputRef = useRef(null)
 
-  crumbs = [...crumbs, ...(crumbData.path || [])]
+  useEffect(() => {
+    inputRef.current.focus()
+    inputRef.current.select()
+  }, [])
 
-  const copyBreadcrumbs = () => {
-    navigator.clipboard.writeText(crumbs.join('/')).then(
-      () => toast.success('Breadcrumbs copied'),
-      (err) => toast.error('Could not copy text: ', err),
-    )
+  const onBlur = () => {
+    setTimeout(() => {
+      onAccept()
+    }, 200)
   }
 
   return (
-    <Crumbtainer onClick={copyBreadcrumbs}>
-      <ul>
-        {crumbs.map((crumb, index) => (
-          <li key={index}>{crumb}</li>
-        ))}
-      </ul>
+    <Crumbtainer onBlur={onBlur}>
+      <InputText
+        ref={inputRef}
+        value={uri}
+        onChange={(e) => setUri(e.target.value)}
+        style={{ width: 800 }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') onAccept()
+        }}
+        onBlur={(e) => e.preventDefault()}
+      />
+      <HeaderButton
+        onClick={onAccept}
+        icon="my_location"
+        onBlur={(e) => {
+          e.preventDefault()
+        }}
+      />
+      <HeaderButton
+        onClick={onCopy}
+        icon="content_copy"
+        onBlur={(e) => {
+          e.preventDefault()
+        }}
+      />
     </Crumbtainer>
   )
 }
 
 const Breadcrumbs = () => {
-  /*
-    Breadcrums component used in the browser view.
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
-    Current location is taken from the redux store as an Object
-    containing all the components of the current path.
-    This allows to render the breadcrumbs as well as compile the
-    op:// USD uri.
-    */
+  const [localUri, setLocalUri] = useState('')
+  const [editMode, setEditMode] = useState(false)
+  const ctxUri = useSelector((state) => state.context.uri) || ''
 
-  const crumbData = useSelector((state) => state.context.breadcrumbs)
-  const projectName = useSelector((state) => state.project.name)
+  const focusEntities = (entities) => {
+    const focusedFolders = []
+    const focusedSubsets = []
+    const focusedVersions = []
 
-  const scope = crumbData.scope
+    const project = entities[0].projectName
 
-  if (scope === 'project') {
-    return <ProjectBreadcrumbs crumbData={crumbData} projectName={projectName} />
-  } else if (scope === 'settings') {
-    return <SettingsBreadcrumbs crumbData={crumbData} />
+    // assert we current url starts with projects/<projectName>
+    // if not, redirect
+
+    const path = window.location.pathname
+    if (!path.startsWith(`/projects/${project}`)) {
+      navigate(`/projects/${project}/browser`)
+    }
+
+    for (const entity of entities) {
+      if (entity.folderId) focusedFolders.push(entity.folderId)
+      if (entity.subsetId) focusedSubsets.push(entity.subsetId)
+      if (entity.versionId) focusedVersions.push(entity.versionId)
+
+      if (entity.projectName !== project) {
+        toast.error('Entities must be from the same project')
+        continue
+      }
+    }
+
+    dispatch(setFocusedFolders(focusedFolders))
+    dispatch(setFocusedSubsets(focusedSubsets))
+    dispatch(setFocusedVersions(focusedVersions))
   }
 
-  return null
-  // return JSON.stringify(crumbData)
+  const goThere = () => {
+    if (!localUri) return
+
+    if (['ayon', 'ayon+entity'].includes(localUri.split('://')[0])) {
+      axios
+        .post('/api/resolve', { uris: [localUri] })
+        .then((res) => {
+          if (!res.data.length) {
+            toast.error('Could not resolve uri')
+            return
+          }
+          const entities = res.data[0].entities
+          if (!entities.length) {
+            toast.error('No entities found')
+            return
+          }
+          focusEntities(entities)
+          setTimeout(() => {
+            dispatch(setUri(res.data[0].uri))
+          }, 100)
+        })
+        .catch((err) => {
+          toast.error(err)
+        })
+        .finally(() => {
+          setEditMode(false)
+        })
+    } else if (localUri.startsWith('ayon+settings')) {
+      setEditMode(false)
+
+      //split query params
+
+      const [baseUri, query] = localUri.split('://')[1].split('?')
+
+      // extract addon name and version from uri
+      // ayon+settings://<addonName>:<addonVersion>/<settingsPathIncludingMoreSlashes>
+
+      const [addonName, addonVersion, ...settingsPath] = baseUri.split('/')
+
+      console.log(addonName, addonVersion, settingsPath)
+
+      // parse query params
+
+      const qp = {}
+      for (const param of query.split('&')) {
+        const [key, value] = param.split('=')
+        qp[key] = value
+      }
+
+      if ('project' in qp && 'site' in qp) {
+        navigate(`manageProjects/siteSettings?project=${qp.project}&site=${qp.site}`)
+      } else if ('project' in qp) {
+        navigate(`manageProjects/projectSettings?project=${qp.project}`)
+      } else if ('site' in qp) {
+        navigate(`settings/site?site=${qp.siteName}`)
+      }
+
+      dispatch(setUri(localUri))
+      setEditMode(false)
+    } else {
+      toast.error('Invalid uri')
+      setLocalUri(ctxUri)
+      setEditMode(false)
+    }
+  }
+
+  const onCopy = () => {
+    navigator.clipboard.writeText(localUri)
+    toast.success('Copied to clipboard')
+  }
+
+  useEffect(() => {
+    if (ctxUri === localUri) return
+    setLocalUri(ctxUri)
+  }, [ctxUri])
+
+  if (editMode) {
+    return (
+      <UriEditor
+        uri={localUri}
+        setUri={setLocalUri}
+        onAccept={goThere}
+        onCancel={() => setEditMode(false)}
+        onCopy={onCopy}
+      />
+    )
+  }
+
+  return (
+    <Crumbtainer>
+      <ul onClick={() => setEditMode(true)}>
+        {uri2crumbs(ctxUri).map((crumb, idx) => (
+          <li key={idx}>{crumb}</li>
+        ))}
+      </ul>
+      <HeaderButton icon="edit" onClick={() => setEditMode(true)} />
+      <HeaderButton icon="content_copy" onClick={onCopy} />
+    </Crumbtainer>
+  )
 }
 
 export default Breadcrumbs

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
@@ -13,7 +13,7 @@ import EntityDetail from '/src/containers/entityDetail'
 
 import {
   setFocusedFolders,
-  setBreadcrumbs,
+  setUri,
   setExpandedFolders,
   setFocusedTasks,
 } from '/src/features/context'
@@ -106,6 +106,28 @@ const Hierarchy = (props) => {
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
 
+  const parents = useMemo(() => {
+    if (!data) return []
+
+    const result = {}
+
+    const crawl = (folder, ex) => {
+      const parents = [...(ex || []), folder.parentId]
+      result[folder.id] = parents
+      if (folder.children) {
+        folder.children.forEach((child) => {
+          crawl(child, parents)
+        })
+      }
+    }
+
+    data.forEach((folder) => {
+      crawl(folder)
+    })
+
+    return result
+  }, [data])
+
   let treeData = useMemo(() => {
     if (!data) return []
     return filterHierarchy(query, data, folders)
@@ -165,6 +187,31 @@ const Hierarchy = (props) => {
   // Selection
   //
 
+  // when selection changes programatically, expand the parent folders
+  useEffect(() => {
+    // TODO: This prevents closing the branch if there's a focused folder inside
+    // This might be a problem...
+    if (!focusedFolders?.length) return
+
+    let toExpand = [...Object.keys(expandedFolders)]
+    for (const id of focusedFolders) {
+      toExpand = toExpand.concat(parents[id])
+    }
+    // de-duplicate toExpand and remove null/undefined
+    toExpand = [...new Set(toExpand)]
+    toExpand = toExpand.filter((x) => x)
+
+    // abort if there's no change
+    if (toExpand.length === Object.keys(expandedFolders).length) return
+
+    //create a map of the expanded folders
+    const newExpandedFolders = {}
+    for (const id of toExpand) {
+      newExpandedFolders[id] = true
+    }
+    dispatch(setExpandedFolders(newExpandedFolders))
+  }, [focusedFolders, expandedFolders])
+
   // Transform the plain list of focused folder ids to a map
   // {id: true}, which is needed for the Treetable
 
@@ -180,13 +227,7 @@ const Hierarchy = (props) => {
 
   const onRowClick = (event) => {
     const node = event.node.data
-    dispatch(
-      setBreadcrumbs({
-        scope: 'project',
-        parents: node.parents,
-        folder: node.name,
-      }),
-    )
+    dispatch(setUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`))
   }
 
   // Update the folder selection in the project context

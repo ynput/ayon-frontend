@@ -1,29 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Button, Spacer, UserImage } from '@ynput/ayon-react-components'
+import { Spacer, UserImage } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from './breadcrumbs'
+import HeaderButton from './HeaderButton'
 import UserMenu from './userMenu'
 import ProjectMenu from './projectMenu'
 import { useSelector } from 'react-redux'
-import styled from 'styled-components'
-
-const StyledButton = styled(Button)`
-  max-height: unset;
-  min-height: unset;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-
-  background-color: transparent;
-  padding: 4px;
-
-  & > span {
-    font-size: 26px !important;
-  }
-`
 
 const Header = () => {
   const [projectMenuVisible, setProjectMenuVisible] = useState(false)
@@ -43,7 +26,7 @@ const Header = () => {
       <ProjectMenu visible={projectMenuVisible} onHide={() => setProjectMenuVisible(false)} />
       <UserMenu visible={userMenuVisible} onHide={() => setUserMenuVisible(false)} />
 
-      <StyledButton
+      <HeaderButton
         icon="event_list"
         label="Projects"
         onClick={() => setProjectMenuVisible(true)}
@@ -56,11 +39,11 @@ const Header = () => {
       <Spacer>
         <Breadcrumbs />
       </Spacer>
-      <StyledButton icon="apps" onClick={() => setUserMenuVisible(true)} />
+      <HeaderButton icon="apps" onClick={() => setUserMenuVisible(true)} />
       <Link to="/profile">
-        <StyledButton>
+        <HeaderButton>
           <UserImage size={26} src={user?.attrib?.avatarUrl} fullName={user?.attrib?.fullName} />
-        </StyledButton>
+        </HeaderButton>
       </Link>
     </nav>
   )

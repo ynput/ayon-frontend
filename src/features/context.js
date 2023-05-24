@@ -13,9 +13,9 @@ const initialState = {
   selectedVersions: {},
   pairing: [],
   reload: {},
-  scope: null,
   breadcrumbs: { scope: '' },
   share: { name: null, data: null, link: null, img: null },
+  uri: null,
 }
 
 const contextSlice = createSlice({
@@ -95,51 +95,11 @@ const contextSlice = createSlice({
       state.focused.versions = action.payload.versions
       state.focused.subsets = action.payload.subsets
     },
-    // setScope: (state, action) =>{
-    //   state.scope = action.payload
-    // },
 
-    setBreadcrumbs: (state, action) => {
-      if (action.payload?.scope === 'project') {
-        let bc = state.breadcrumbs || {}
-        bc.scope = action.payload.scope
-        if (action.payload.parents) {
-          bc.parents = action.payload.parents
-          bc.folder = null
-          bc.subset = null
-          bc.version = null
-          bc.representation = null
-        }
-        if (action.payload.folder) {
-          bc.folder = action.payload.folder
-          bc.subset = null
-          bc.version = null
-          bc.representation = null
-        }
-        if (action.payload.subset) {
-          bc.subset = action.payload.subset
-          bc.version = null
-          bc.representation = null
-        }
-        if (action.payload.version) {
-          bc.version = action.payload.version
-          bc.representation = null
-        }
-        if (action.payload.representation) {
-          bc.representation = action.payload.representation
-        }
-
-        state.breadcrumbs = bc
-        return state
-      } // project scope breadcrumbs
-
-      if (action.payload?.scope === 'settings') {
-        state.breadcrumbs = action.payload
-        return state
-      } else {
-        state.breadcrumbs = { scope: '' }
-      }
-    }, // setBreadcrumbs
+    setUri: (state, action) => {
+      //console.log('setUri', action.payload)
+      state.uri = action.payload
+    },
 
     setReload: (state, action) => {
       state.reload = {
@@ -171,11 +131,10 @@ export const {
   setFocusedTasks,
   setSelectedVersions,
   setExpandedFolders,
-  setBreadcrumbs,
   setPairing,
   setReload,
-  //setScope,
   setFocusedType,
+  setUri,
   subsetSelected,
   editorSelectionChanged,
   projectSelected,

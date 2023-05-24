@@ -10,7 +10,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import sortByKey from '/src/helpers/sortByKey'
 
-import { editorSelectionChanged, setBreadcrumbs, setExpandedFolders } from '/src/features/context'
+import { editorSelectionChanged, setUri, setExpandedFolders } from '/src/features/context'
 
 import { getColumns, formatType, formatAttribute } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
@@ -1077,17 +1077,15 @@ const EditorPage = () => {
     } else if (node.__entityType === 'task') {
       // find the parent folder
       node = searchableFoldersSet.get(node.__parentId)
-      console.log(node)
     }
 
-    if (node) {
-      dispatch(
-        setBreadcrumbs({
-          scope: 'project',
-          parents: node.parents,
-          folder: node.name,
-        }),
-      )
+    if (node?.parents) {
+      let uri = `ayon+entity://${projectName}`
+      uri += `/${node.parents.join('/')}/${node.name}`
+      if (event.node.data.__entityType === 'task') {
+        uri += `?task=${event.node?.data?.name}`
+      }
+      dispatch(setUri(uri))
     }
   }
 

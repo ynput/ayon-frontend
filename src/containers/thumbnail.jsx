@@ -49,7 +49,7 @@ const Thumbnail = ({ projectName, entityType, entityId, style, entityUpdatedAt }
   return (
     <ThumbnailStyled style={style}>
       <ImagePlaceholder />
-      {!(isWrongEntity || !entityId) && (
+      {entityType && !(isWrongEntity || !entityId) && (
         <ImageStyled
           alt={`Entity thumbnail ${entityId}`}
           src={`${url}${queryArgs}`}

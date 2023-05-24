@@ -7,7 +7,7 @@ import { login } from '/src/features/user'
 import { ayonApi } from '../../services/ayon'
 import styled from 'styled-components'
 import AuthLink from './AuthLink'
-import { useGetInfoQuery, useGetOAuthOptionsQuery } from '/src/services/auth/getAuth'
+import { useGetInfoQuery } from '/src/services/auth/getAuth'
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
 
 const LoginFormStyled = styled.div`
@@ -116,9 +116,6 @@ const LoginPage = ({ loading }) => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  // Oauth Options
-  const { data: oauthOptions = [], isLoading: isLoadingOptions } = useGetOAuthOptionsQuery()
-
   const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery()
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
 
@@ -126,35 +123,8 @@ const LoginPage = ({ loading }) => {
   useEffect(() => {
     const provider = window.location.pathname.split('/')[2]
     const qs = new URLSearchParams(window.location.search)
-    const code = qs.get('code')
 
-    if (code && provider) {
-      setIsLoading(true)
-
-      axios
-        .get(`/api/oauth2/login/${provider}`, {
-          params: {
-            code: code,
-            redirect_uri: `${window.location.origin}/login/${provider}`,
-          },
-        })
-        .then((response) => {
-          const data = response.data
-
-          if (data.user) {
-            // login successful
-            toast.info(data.detail)
-            dispatch(login({ user: data.user, accessToken: data.token }))
-            // invalidate all rtk queries cache
-            dispatch(ayonApi.util.resetApiState())
-          } else {
-            toast.error('Unable to login using OAUTH')
-          }
-        })
-        .finally(() => {
-          setIsLoading(false)
-        })
-    } else if (info?.ssoOptions?.length) {
+    if (info?.ssoOptions?.length) {
       const providerConfig = info.ssoOptions.find((o) => o.name === provider)
 
       if (!providerConfig) {
@@ -222,7 +192,7 @@ const LoginPage = ({ loading }) => {
     doLogin()
   }
 
-  if (isLoading || isLoadingOptions || isLoadingInfo || loading) return <LoaderShade />
+  if (isLoading || isLoadingInfo || loading) return <LoaderShade />
 
   return (
     <main className="center">
@@ -259,14 +229,6 @@ const LoginPage = ({ loading }) => {
               />
               <Button label={<strong>Login</strong>} type="submit" />
             </form>
-            {oauthOptions?.length ? (
-              <>
-                <span>or</span>
-                {oauthOptions.map(({ name, url }) => (
-                  <AuthLink key={name} name={name} url={url} />
-                ))}
-              </>
-            ) : null}
 
             {
               info.ssoOptions?.length
