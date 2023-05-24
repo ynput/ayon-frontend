@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import {
@@ -98,7 +99,38 @@ const AddonSettings = ({
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
 
+  const uriChanged = useSelector((state) => state.context.uriChanged)
+
   const projectKey = projectName || '_'
+
+  // useEffect(() => {
+  //   setCurrentSelection(null)
+  // }, [projectKey, selectedAddons])
+
+  useEffect(() => {
+    console.log('Current Selection: ', currentSelection)
+
+    const url = new URL(window.location.href)
+    const addonName = url.searchParams.get('addonName')
+    const addonVersion = url.searchParams.get('addonVersion')
+    const addonString = `${addonName}@${addonVersion}`
+    const siteId = url.searchParams.get('site')
+    const path = url.searchParams.get('settingsPath')?.split('|') || []
+    const fieldId = path.length ? `root_${path.join('_')}` : 'root'
+
+    if (addonName && addonVersion) {
+      setCurrentSelection({
+        addonName,
+        addonVersion,
+        addonString,
+        siteId,
+        path,
+        fieldId,
+      })
+    } else {
+      setCurrentSelection(null)
+    }
+  }, [uriChanged])
 
   const onSettingsLoad = (addonName, addonVersion, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
@@ -439,6 +471,11 @@ const AddonSettings = ({
     [onRevertAllChanges, onSave],
   )
 
+  const onSelectAddon = (newSelection) => {
+    setSelectedAddons(newSelection)
+    setCurrentSelection(null)
+  }
+
   return (
     <ProjectManagerPageLayout
       {...{ toolbar, projectList }}
@@ -452,7 +489,7 @@ const AddonSettings = ({
             <AddonList
               projectKey={projectKey}
               selectedAddons={selectedAddons}
-              setSelectedAddons={setSelectedAddons}
+              setSelectedAddons={onSelectAddon}
               changedAddons={
                 Object.keys(localData) /* Unused, AddonList doesn't have project&site */
               }

@@ -11,6 +11,7 @@ import {
   setFocusedSubsets,
   setFocusedVersions,
   setUri,
+  setUriChanged,
 } from '/src/features/context'
 
 import styled from 'styled-components'
@@ -193,27 +194,47 @@ const Breadcrumbs = () => {
       // extract addon name and version from uri
       // ayon+settings://<addonName>:<addonVersion>/<settingsPathIncludingMoreSlashes>
 
-      const [addonName, addonVersion, ...settingsPath] = baseUri.split('/')
+      const [addonStr, ...settingsPath] = baseUri.split('/')
+      const [addonName, addonVersion] = addonStr.split(':')
 
       console.log(addonName, addonVersion, settingsPath)
 
       // parse query params
 
       const qp = {}
-      for (const param of query.split('&')) {
-        const [key, value] = param.split('=')
-        qp[key] = value
+      if (query) {
+        for (const param of query.split('&')) {
+          const [key, value] = param.split('=')
+          qp[key] = value
+        }
       }
+
+      let targetUrl = ''
 
       if ('project' in qp && 'site' in qp) {
-        navigate(`manageProjects/siteSettings?project=${qp.project}&site=${qp.site}`)
+        targetUrl = `manageProjects/siteSettings?`
+        targetUrl += `project=${qp.project}&site=${qp.site}`
+        targetUrl += `&addonName=${addonName}&addonVersion=${addonVersion}`
+        targetUrl += `&settingsPath=${settingsPath.join('|')}`
       } else if ('project' in qp) {
-        navigate(`manageProjects/projectSettings?project=${qp.project}`)
+        targetUrl = `manageProjects/projectSettings?`
+        targetUrl += `project=${qp.project}`
+        targetUrl += `&addonName=${addonName}&addonVersion=${addonVersion}`
+        targetUrl += `&settingsPath=${settingsPath.join('|')}`
       } else if ('site' in qp) {
-        navigate(`settings/site?site=${qp.siteName}`)
+        targetUrl = `settings/site?`
+        targetUrl += `site=${qp.site}`
+        targetUrl += `&addonName=${addonName}&addonVersion=${addonVersion}`
+        targetUrl += `&settingsPath=${settingsPath.join('|')}`
+      } else {
+        targetUrl = `settings/studio`
+        targetUrl += `?addonName=${addonName}&addonVersion=${addonVersion}`
+        targetUrl += `&settingsPath=${settingsPath.join('|')}`
       }
 
+      navigate(targetUrl)
       dispatch(setUri(localUri))
+      dispatch(setUriChanged())
       setEditMode(false)
     } else {
       toast.error('Invalid uri')

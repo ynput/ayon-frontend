@@ -16,6 +16,7 @@ const initialState = {
   breadcrumbs: { scope: '' },
   share: { name: null, data: null, link: null, img: null },
   uri: null,
+  uriChanged: 0,
 }
 
 const contextSlice = createSlice({
@@ -101,6 +102,11 @@ const contextSlice = createSlice({
       state.uri = action.payload
     },
 
+    // eslint-disable-next-line no-unused-vars
+    setUriChanged: (state, action) => {
+      state.uriChanged = state.uriChanged + 1
+    },
+
     setReload: (state, action) => {
       state.reload = {
         ...state.reload,
@@ -135,6 +141,7 @@ export const {
   setReload,
   setFocusedType,
   setUri,
+  setUriChanged,
   subsetSelected,
   editorSelectionChanged,
   projectSelected,

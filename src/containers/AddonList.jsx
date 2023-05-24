@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react'
+import { useSelector } from 'react-redux'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
@@ -169,6 +170,7 @@ const AddonList = ({
   const cm = useRef(null)
 
   const { data, loading } = useGetAddonListQuery()
+  const uriChanged = useSelector((state) => state.context.uriChanged)
 
   // Filter addons by environment
   // add 'version' property to each addon
@@ -200,6 +202,24 @@ const AddonList = ({
     ///
   }, [changedAddons])
 
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const addonName = url.searchParams.get('addonName')
+    const addonVersion = url.searchParams.get('addonVersion')
+
+    if (addonName && addonVersion) {
+      const addon = addons.find((a) => a.name === addonName && a.version === addonVersion)
+      if (addon) {
+        setSelectedAddons([addon])
+        onAddonChanged(addonName)
+      }
+    }
+  }, [addons, uriChanged])
+
+  const onSelectionChange = (e) => {
+    setSelectedAddons(e.value)
+  }
+
   // Context menu
   const menu = createContextMenu(environment, selectedAddons, onAddonChanged, projectName)
 
@@ -213,7 +233,7 @@ const AddonList = ({
           scrollable="true"
           scrollHeight="flex"
           selection={selectedAddons}
-          onSelectionChange={(e) => setSelectedAddons(e.value)}
+          onSelectionChange={onSelectionChange}
           onContextMenu={(e) => cm.current.show(e.originalEvent)}
         >
           <Column field="title" header="Addon" />
