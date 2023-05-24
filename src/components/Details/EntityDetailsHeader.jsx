@@ -20,7 +20,7 @@ const ToolsStyled = styled.div`
 const EntityDetailsHeader = ({ values = [], tools }) => {
   const { folders, tasks, families } = useSelector((state) => state.project)
   const changes = useSelector((state) => state.editor.changes)
-  const breadcrumbs = useSelector((state) => state.context.breadcrumbs) || {}
+  const uri = useSelector((state) => state.context.uri)
 
   if (!values.length) return null
 
@@ -29,31 +29,32 @@ const EntityDetailsHeader = ({ values = [], tools }) => {
   let subTitle = ''
   if (isMultiple) {
     subTitle = values.map((v) => v?.name).join(', ')
-  } else {
-    subTitle = `/ ${breadcrumbs.parents?.join(' / ')} ${breadcrumbs.parents?.length ? ' / ' : ''} ${
-      breadcrumbs.folder
-    }`
+  } else if (uri) {
+    const [path, qs] = uri.split('://')[1].split('?')
+    //eslint-disable-next-line
+    const [_, ...breadcrumbs] = path.split('/').filter((p) => p)
+    const qp = qs
+      ? qs.split('&').reduce((acc, curr) => {
+          if (!curr) return acc
+          const [key, value] = curr.split('=')
+          acc[key] = value
+          return acc
+        }, {})
+      : {}
+
+    // if (values[0]?.__entityType === 'folder'){
+    //   // remove last crumb
+    //   breadcrumbs.pop()
+    // }
 
     if (values[0]?.__entityType === 'task') {
-      // add on task at end
-      subTitle += ' / '
-      subTitle += values[0].name
+      breadcrumbs.push(qp.task)
+    } else {
+      if (qp.subset) breadcrumbs.push(qp.subset)
+      if (qp.version) breadcrumbs.push(qp.version)
     }
 
-    if (values[0]?.__entityType === 'version' || values[0]?.__entityType === 'representation') {
-      // add on family at end
-      subTitle += ' / '
-      subTitle += breadcrumbs.subset
-      subTitle += ' / '
-      subTitle += breadcrumbs.version
-    }
-
-    // subset
-    if (values[0]?.__entityType === 'subset') {
-      // add on family at end
-      subTitle += ' / '
-      subTitle += breadcrumbs.subset
-    }
+    subTitle = `/ ${breadcrumbs.join(' / ')}`
   }
 
   const thumbnails = values.map((node) =>
