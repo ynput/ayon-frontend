@@ -5,7 +5,7 @@ import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectProject } from '/src/features/project'
-import { selectProject as selectProjectContext } from '/src/features/context'
+import { selectProject as selectProjectContext, setUri } from '/src/features/context'
 import { onProjectChange } from '/src/features/editor'
 import { ayonApi } from '/src/services/ayon'
 
@@ -16,8 +16,6 @@ const ProjectMenu = ({ visible, onHide }) => {
   const projectName = useSelector((state) => state.project.name)
 
   const onProjectSelect = (projectName) => {
-    console.log('row clicked: ', projectName)
-
     onHide()
 
     // if already on project page, do not navigate
@@ -31,6 +29,8 @@ const ProjectMenu = ({ visible, onHide }) => {
     dispatch(onProjectChange(projectName))
     // remove editor query caches
     dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'subset']))
+    // reset uri
+    dispatch(setUri(`ayon+entity://${projectName}`))
 
     // if projects/[project] is null, projects/[projectName]/browser, else projects/[projectName]/[module]
     const link = window.location.pathname.includes('projects')

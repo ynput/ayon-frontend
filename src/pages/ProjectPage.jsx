@@ -73,10 +73,12 @@ const ProjectPage = () => {
     if (!uri) {
       dispatch(setUri(`ayon+entity://${projectName}`))
     }
-    return () => {
-      dispatch(setUri(null))
-    }
   }, [projectName])
+
+  useEffect(() => {
+    // Clear URI when project page is unmounted
+    return () => dispatch(setUri(null))
+  }, [])
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {

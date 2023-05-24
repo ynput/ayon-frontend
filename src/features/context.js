@@ -97,6 +97,7 @@ const contextSlice = createSlice({
     },
 
     setUri: (state, action) => {
+      //console.log('setUri', action.payload)
       state.uri = action.payload
     },
 
