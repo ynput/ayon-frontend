@@ -47,10 +47,10 @@ const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setSho
 
         <TotalsStyledPanel style={{ padding: 0 }}>
           <TotalStyledButton
-            label={`Subset - ${events.filter((u) => u.topic.startsWith('entity.subset')).length}
+            label={`Product - ${events.filter((u) => u.topic.startsWith('entity.product')).length}
         `}
-            onClick={() => onTotal('subset')}
-            highlighted={search === 'subset'}
+            onClick={() => onTotal('product')}
+            highlighted={search === 'product'}
           />
           <TotalStyledButton
             label={`Task - ${events.filter((u) => u.topic.startsWith('entity.task')).length}

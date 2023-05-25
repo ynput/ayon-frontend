@@ -17,7 +17,7 @@ const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
   { value: 'folder', label: 'Folder' },
   { value: 'task', label: 'Task' },
-  { value: 'subset', label: 'Subset' },
+  { value: 'product', label: 'Product' },
   { value: 'version', label: 'Version' },
   { value: 'representation', label: 'Representation' },
   { value: 'user', label: 'User' },

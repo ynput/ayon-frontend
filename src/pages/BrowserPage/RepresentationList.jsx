@@ -21,13 +21,13 @@ const columns = [
     width: 130,
   },
   {
-    field: 'subsetName',
-    header: 'Subset',
+    field: 'productName',
+    header: 'Product',
     width: 130,
   },
   {
-    field: 'family',
-    header: 'Family',
+    field: 'productType',
+    header: 'productType',
     width: 110,
   },
 ]
@@ -45,7 +45,7 @@ const RepresentationList = ({ representations = [] }) => {
   const onRowClick = (e) => {
     let uri = `ayon+entity://${projectName}/`
     uri += `${e.node.data.folderParents.join('/')}/${e.node.data.folderName}`
-    uri += `?subset=${e.node.data.subsetName}`
+    uri += `?product=${e.node.data.productName}`
     uri += `&version=${e.node.data.versionName}`
     uri += `&representation=${e.node.data.name}`
     dispatch(setUri(uri))

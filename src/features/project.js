@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const families = {
+const productTypes = {
   image: { name: 'image', icon: 'imagesmode' },
   render: { name: 'render', icon: 'photo_library' },
   plate: { name: 'plate', icon: 'camera_roll' },
@@ -33,7 +33,7 @@ const projectSlice = createSlice({
     statusesOrder: [],
     tags: {},
     tagsOrder: [],
-    families: families,
+    productTypes: productTypes,
     attrib: {},
   },
   reducers: {
@@ -46,7 +46,7 @@ const projectSlice = createSlice({
       state.tasks = action.payload.tasks || {}
       state.statuses = action.payload.statuses || {}
       state.tags = action.payload.tags || {}
-      // state.families = action.payload.families || {}
+      // state.productTypes = action.payload.productTypes || {}
       state.foldersOrder = action.payload.order?.folders || []
       state.tasksOrder = action.payload.order?.tasks || []
       state.statusesOrder = action.payload.order?.statuses || []

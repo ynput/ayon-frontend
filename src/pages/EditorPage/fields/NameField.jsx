@@ -7,7 +7,7 @@ const NameField = ({
   styled = true,
   tasks = {},
   folders = {},
-  families = {},
+  productTypes = {},
   style,
   iconStyle,
   prefix,
@@ -34,8 +34,8 @@ const NameField = ({
   } else if (node.__entityType === 'folder') {
     icon = folders[chobj?._folderType || node.folderType]?.icon || 'folder'
     value = value || 'Unnamed folder'
-  } else if (['subset', 'version'].includes(node.__entityType)) {
-    icon = families[node.family || node.subset?.family]?.icon || 'layers'
+  } else if (['product', 'version'].includes(node.__entityType)) {
+    icon = productTypes[node.productType || node.product?.productType]?.icon || 'layers'
   }
 
   return (

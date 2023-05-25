@@ -98,7 +98,7 @@ const EntityDetails = ({
 }
 
 EntityDetails.propTypes = {
-  type: PropTypes.oneOf(['version', 'subset', 'folder', 'task']),
+  type: PropTypes.oneOf(['version', 'product', 'folder', 'task']),
   nodes: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,

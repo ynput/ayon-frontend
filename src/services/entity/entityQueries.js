@@ -63,9 +63,9 @@ export const VERSION_QUERY = `
                         attrib {
                           #ATTRS#
                         }
-                        subset {
+                        product {
                             name
-                            family
+                            productType
                             folder {
                                 name
                                 parents
@@ -87,15 +87,15 @@ export const VERSION_QUERY = `
     }
 `
 
-export const SUBSET_QUERY = `
-query Subset($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
+export const PRODUCT_QUERY = `
+query Product($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
     project(name: $projectName){
-        subsets(ids: $ids){
+        products(ids: $ids){
             edges {
                 node {
                     id
                     name
-                    family
+                    productType
                     status
                     createdAt
                     updatedAt
@@ -171,36 +171,36 @@ fragment taskTileFragment on TaskNode {
 export const VERSION_TILE_FRAGMENT = `
 fragment versionTileFragment on VersionNode {
   id
-  name: subset {
+  name: product {
     name
   }
   status
-  icon: subset {
-    family
+  icon: product {
+    productType
   }
   thumbnailEntityId: id
   subTitle: version
   profile: author
-  footer: subset {
-    family
+  footer: product {
+    productType
   }
   updatedAt
 }
 `
 
-export const SUBSET_TILE_FRAGMENT = `
-fragment subsetTileFragment on SubsetNode {
+export const PRODUCT_TILE_FRAGMENT = `
+fragment productTileFragment on ProductNode {
   id
   name
   status
-  icon: family
+  icon: productType
   thumbnailEntityId: latestVersion {
     id
   }
   subTitle: folder {
     name
   }
-  footer: family
+  footer: productType
   updatedAt
 }
 `

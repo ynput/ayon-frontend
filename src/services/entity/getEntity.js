@@ -1,10 +1,10 @@
 import { ayonApi } from '../ayon'
 import {
   FOLDER_QUERY,
-  SUBSET_QUERY,
+  PRODUCT_QUERY,
   TASK_QUERY,
   VERSION_QUERY,
-  SUBSET_TILE_FRAGMENT,
+  PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
@@ -45,8 +45,8 @@ const buildEntitiesQuery = (type, attribs) => {
     case 'version':
       QUERY = VERSION_QUERY
       break
-    case 'subset':
-      QUERY = SUBSET_QUERY
+    case 'product':
+      QUERY = PRODUCT_QUERY
       break
     default:
       break
@@ -84,7 +84,7 @@ const buildEntityTilesQuery = (entities) => {
 
   const fragments = {
     folder: FOLDER_TILE_FRAGMENT,
-    subset: SUBSET_TILE_FRAGMENT,
+    product: PRODUCT_TILE_FRAGMENT,
     version: VERSION_TILE_FRAGMENT,
     task: TASK_TILE_FRAGMENT,
   }
@@ -121,7 +121,7 @@ export const formatEntityTiles = (project, entities) => {
   // which entity type to use for thumbnail
   const thumbnailTypes = {
     version: 'version',
-    subset: 'version',
+    product: 'version',
     folder: 'folder',
     task: 'folder',
   }

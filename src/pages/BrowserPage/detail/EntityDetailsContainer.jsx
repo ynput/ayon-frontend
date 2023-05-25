@@ -85,8 +85,8 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
 
   // extra fields for specific types
   const typeFieldNames = {
-    version: ['author', 'subset.family'],
-    subset: ['family', 'latestVersion.name'],
+    version: ['author', 'product.productType'],
+    product: ['productType', 'latestVersion.name'],
     folder: ['folderType', 'path'],
     task: ['taskType', 'assignees'],
   }
@@ -96,8 +96,8 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
     author: {
       title: 'Author',
     },
-    family: {
-      title: 'Family',
+    productType: {
+      title: 'productType',
     },
     latestVersion: {
       title: 'Latest Version',

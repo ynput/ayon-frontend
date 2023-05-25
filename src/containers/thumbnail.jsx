@@ -44,7 +44,7 @@ const Thumbnail = ({ projectName, entityType, entityId, style, entityUpdatedAt }
 
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
   const queryArgs = `?updatedAt=${entityUpdatedAt}&token=${localStorage.getItem('accessToken')}`
-  const isWrongEntity = ['task', 'subset'].includes(entityType)
+  const isWrongEntity = ['task', 'product'].includes(entityType)
 
   return (
     <ThumbnailStyled style={style}>
