@@ -26,7 +26,7 @@ const columns = [
     width: 130,
   },
   {
-    field: 'productType',
+    field: 'Product type',
     header: 'productType',
     width: 110,
   },

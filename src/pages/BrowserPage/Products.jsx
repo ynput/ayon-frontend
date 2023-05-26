@@ -206,7 +206,7 @@ const Products = () => {
     },
     {
       field: 'productType',
-      header: 'productType',
+      header: 'Product type',
       width: 120,
     },
     {
