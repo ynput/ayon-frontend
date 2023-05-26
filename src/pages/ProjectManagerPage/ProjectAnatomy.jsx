@@ -57,9 +57,13 @@ const ProjectAnatomy = ({ projectName, toolbar, projectList }) => {
     >
       <Section>
         <Section>
-          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
-            {editor}
-          </ScrollPanel>
+          {projectName ? (
+            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
+              {editor}
+            </ScrollPanel>
+          ) : (
+            'Select a project to view its anatomy'
+          )}
         </Section>
       </Section>
     </ProjectManagerPageLayout>
