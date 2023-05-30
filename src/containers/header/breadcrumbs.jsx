@@ -10,6 +10,9 @@ import {
   setFocusedFolders,
   setFocusedProducts,
   setFocusedVersions,
+  setFocusedRepresentations,
+  setFocusedTasks,
+  setFocusedWorkfiles,
   setUri,
   setUriChanged,
 } from '/src/features/context'
@@ -130,6 +133,9 @@ const Breadcrumbs = () => {
     const focusedFolders = []
     const focusedProducts = []
     const focusedVersions = []
+    const focusedRepresentations = []
+    const focusedTasks = []
+    const focusedWorkfiles = []
 
     const project = entities[0].projectName
 
@@ -145,6 +151,9 @@ const Breadcrumbs = () => {
       if (entity.folderId) focusedFolders.push(entity.folderId)
       if (entity.productId) focusedProducts.push(entity.productId)
       if (entity.versionId) focusedVersions.push(entity.versionId)
+      if (entity.representationId) focusedRepresentations.push(entity.representationId)
+      if (entity.taskId) focusedTasks.push(entity.taskId)
+      if (entity.workfileId) focusedWorkfiles.push(entity.workfileId)
 
       if (entity.projectName !== project) {
         toast.error('Entities must be from the same project')
@@ -155,6 +164,9 @@ const Breadcrumbs = () => {
     dispatch(setFocusedFolders(focusedFolders))
     dispatch(setFocusedProducts(focusedProducts))
     dispatch(setFocusedVersions(focusedVersions))
+    dispatch(setFocusedRepresentations(focusedRepresentations))
+    dispatch(setFocusedTasks(focusedTasks))
+    dispatch(setFocusedWorkfiles(focusedWorkfiles))
   }
 
   const goThere = () => {
@@ -196,8 +208,6 @@ const Breadcrumbs = () => {
 
       const [addonStr, ...settingsPath] = baseUri.split('/')
       const [addonName, addonVersion] = addonStr.split(':')
-
-      console.log(addonName, addonVersion, settingsPath)
 
       // parse query params
 

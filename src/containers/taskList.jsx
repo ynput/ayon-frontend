@@ -8,7 +8,7 @@ import { ContextMenu } from 'primereact/contextmenu'
 
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
-import { setFocusedTasks, setPairing } from '/src/features/context'
+import { setFocusedTasks, setPairing, setUri } from '/src/features/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '/src/services/getTasks'
 
@@ -103,6 +103,13 @@ const TaskList = ({ style = {} }) => {
     return <>Error</>
   }
 
+  const onRowClick = (event) => {
+    const node = event.node.data
+    let uri = `ayon+entity://${projectName}/${node.folderPath}`
+    uri += `?task=${node.name}`
+    dispatch(setUri(uri))
+  }
+
   return (
     <Section style={style}>
       <TablePanel loading={isLoading}>
@@ -124,6 +131,7 @@ const TaskList = ({ style = {} }) => {
           onSelectionChange={onSelectionChange}
           onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
+          onRowClick={onRowClick}
         >
           <Column field="name" header="Task" expander="true" body={nameRenderer} />
           {folderIds.length > 1 && <Column field="folderName" header="Folder" />}

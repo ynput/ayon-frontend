@@ -7,7 +7,9 @@ const initialState = {
     folders: [],
     products: [],
     versions: [],
+    representations: [],
     tasks: [],
+    workfiles: [],
     editor: [],
   },
   selectedVersions: {},
@@ -54,6 +56,17 @@ const contextSlice = createSlice({
       state.focused.tasks = action.payload
       state.focused.versions = []
     },
+
+    setFocusedWorkfiles: (state, action) => {
+      state.focused.type = 'workfile'
+      state.focused.workfiles = action.payload
+    },
+
+    setFocusedRepresentations: (state, action) => {
+      state.focused.type = 'representation'
+      state.focused.representations = action.payload
+    },
+
     editorSelectionChanged: (state, action) => {
       // updates focused.editor, focused.folders, focused.tasks
       if (action.payload.tasks) state.focused.tasks = action.payload.tasks
@@ -135,6 +148,8 @@ export const {
   setFocusedProducts,
   setFocusedVersions,
   setFocusedTasks,
+  setFocusedWorkfiles,
+  setFocusedRepresentations,
   setSelectedVersions,
   setExpandedFolders,
   setPairing,
