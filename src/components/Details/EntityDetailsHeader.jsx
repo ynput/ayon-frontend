@@ -18,7 +18,7 @@ const ToolsStyled = styled.div`
 `
 
 const EntityDetailsHeader = ({ values = [], tools }) => {
-  const { folders, tasks, families } = useSelector((state) => state.project)
+  const { folders, tasks, productTypes } = useSelector((state) => state.project)
   const changes = useSelector((state) => state.editor.changes)
   const uri = useSelector((state) => state.context.uri)
 
@@ -50,7 +50,7 @@ const EntityDetailsHeader = ({ values = [], tools }) => {
     if (values[0]?.__entityType === 'task') {
       breadcrumbs.push(qp.task)
     } else {
-      if (qp.subset) breadcrumbs.push(qp.subset)
+      if (qp.product) breadcrumbs.push(qp.product)
       if (qp.version) breadcrumbs.push(qp.version)
     }
 
@@ -72,10 +72,10 @@ const EntityDetailsHeader = ({ values = [], tools }) => {
             styled
             tasks={tasks}
             folders={folders}
-            families={families}
+            productTypes={productTypes}
             style={{ display: 'flex', gap: 4, fontWeight: 'bold' }}
             iconStyle={{ fontSize: 19, marginRight: 0 }}
-            prefix={`${values[0]?.subset?.name}`}
+            prefix={`${values[0]?.product?.name}`}
           />
         ) : (
           <h2>Multiple Selected ({values.length})</h2>

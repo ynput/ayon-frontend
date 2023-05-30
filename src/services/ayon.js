@@ -30,7 +30,7 @@ export const ayonApi = createApi({
     'folder',
     'task',
     'version',
-    'subset',
+    'product',
     'tag',
     'project',
     'projects',

@@ -28,7 +28,7 @@ const ProjectMenu = ({ visible, onHide }) => {
     // reset editor
     dispatch(onProjectChange(projectName))
     // remove editor query caches
-    dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'subset']))
+    dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
     // reset uri
     dispatch(setUri(`ayon+entity://${projectName}`))
 

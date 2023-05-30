@@ -3,8 +3,8 @@ const transformVersionsData = (versions) => {
 
   for (const versionEdge of versions) {
     const version = versionEdge.node
-    const subset = version.subset
-    const folder = subset?.folder
+    const product = version.product
+    const folder = product?.folder
 
     for (const representationEdge of version.representations?.edges || []) {
       const representation = representationEdge.node
@@ -12,8 +12,8 @@ const transformVersionsData = (versions) => {
         id: representation.id,
         name: representation.name,
         folderName: folder.name,
-        subsetName: subset.name,
-        family: subset.family,
+        productName: product.name,
+        productType: product.productType,
         fileCount: representation.fileCount,
         // for breadcrumbs
         versionName: version.name,

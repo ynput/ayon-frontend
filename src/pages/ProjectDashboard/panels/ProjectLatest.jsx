@@ -26,7 +26,7 @@ const ProjectLatest = ({ projectName }) => {
   const rows = [
     {
       title: 'Latest',
-      entities: ['folder', 'subset', 'version', 'task'],
+      entities: ['folder', 'product', 'version', 'task'],
       args: {
         sortBy: 'updatedAt',
         last: 2,
@@ -36,7 +36,7 @@ const ProjectLatest = ({ projectName }) => {
     },
     {
       title: 'Recently Approved',
-      entities: ['folder', 'subset', 'version', 'task'],
+      entities: ['folder', 'product', 'version', 'task'],
       args: {
         sortBy: 'updatedAt',
         last: 2,
@@ -47,7 +47,7 @@ const ProjectLatest = ({ projectName }) => {
     },
     {
       title: 'Urgent',
-      entities: ['folder', 'subset', 'version', 'task'],
+      entities: ['folder', 'product', 'version', 'task'],
       args: {
         sortBy: 'attrib.endDate',
         first: 2,

@@ -59,7 +59,7 @@ const SessionList = ({ userName }) => {
             field="lastUsed"
             header="Last active"
             body={(rowData) => {
-              if (!rowData.lastUsed) return ''
+              if (!rowData?.lastUsed) return ''
               const date = new Date(rowData.lastUsed * 1000)
               return <TimestampField value={date.toLocaleString()} />
             }}

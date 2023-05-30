@@ -1,85 +1,85 @@
 import { ayonApi } from './ayon'
 
-const parseSubsetFps = (subset) => {
-  const folderFps = subset.folder.attrib.fps || ''
-  if (!subset) return folderFps
-  if (!subset.latestVersion) return folderFps
-  if (!subset.latestVersion.attrib) return folderFps
-  return subset.latestVersion.attrib.fps || ''
+const parseProductFps = (product) => {
+  const folderFps = product.folder.attrib.fps || ''
+  if (!product) return folderFps
+  if (!product.latestVersion) return folderFps
+  if (!product.latestVersion.attrib) return folderFps
+  return product.latestVersion.attrib.fps || ''
 }
 
-const parseSubsetResolution = (subset) => {
+const parseProductResolution = (product) => {
   /* 
-    Return the resolution of the latest version of the given subset, 
+    Return the resolution of the latest version of the given product, 
     or resolution of the folder if the version has no resolution 
     */
-  const folderWidth = subset.folder.attrib.resolutionWidth || null
-  const folderHeight = subset.folder.attrib.resolutionHeight || null
+  const folderWidth = product.folder.attrib.resolutionWidth || null
+  const folderHeight = product.folder.attrib.resolutionHeight || null
   const folderResolution = folderWidth && folderHeight ? `${folderWidth}x${folderHeight}` : ''
 
-  if (!subset?.latestVersion?.attrib) return folderResolution
+  if (!product?.latestVersion?.attrib) return folderResolution
 
-  const width = subset.latestVersion.attrib.resolutionWidth || null
-  const height = subset.latestVersion.attrib.resolutionHeight || null
+  const width = product.latestVersion.attrib.resolutionWidth || null
+  const height = product.latestVersion.attrib.resolutionHeight || null
   const resolution = width && height ? `${width}x${height}` : ''
   return resolution || folderResolution
 }
 
-const parseSubsetFrames = (subset) => {
-  const folderStart = subset.folder.attrib.frameStart || null
-  const folderEnd = subset.folder.attrib.frameEnd || null
+const parseProductFrames = (product) => {
+  const folderStart = product.folder.attrib.frameStart || null
+  const folderEnd = product.folder.attrib.frameEnd || null
   const folderFrames = folderStart && folderEnd ? `${folderStart}-${folderEnd}` : ''
 
-  if (!subset?.latestVersion?.attrib) return ''
-  const frameStart = subset.latestVersion.attrib.frameStart || ''
-  const frameEnd = subset.latestVersion.attrib.frameEnd || ''
+  if (!product?.latestVersion?.attrib) return ''
+  const frameStart = product.latestVersion.attrib.frameStart || ''
+  const frameEnd = product.latestVersion.attrib.frameEnd || ''
   const frames = frameStart && frameEnd ? `${frameStart}-${frameEnd}` : ''
   return frames || folderFrames
 }
 
-const parseSubsetData = (data) => {
+const parseProductData = (data) => {
   let s = []
-  for (let subsetEdge of data.project.subsets.edges) {
-    let subset = subsetEdge.node
+  for (let productEdge of data.project.products.edges) {
+    let product = productEdge.node
 
     let vers
-    if (subset.versions.edges.length === 1) vers = subset.versions.edges[0].node
-    else if (subset.latestVersion) vers = subset.latestVersion
+    if (product.versions.edges.length === 1) vers = product.versions.edges[0].node
+    else if (product.latestVersion) vers = product.latestVersion
     else vers = null
     let sub = {
-      id: subset.id,
-      name: subset.name,
-      family: subset.family,
-      status: subset.status,
-      fps: parseSubsetFps(subset),
-      resolution: parseSubsetResolution(subset),
-      folder: subset.folder.label || subset.folder.name,
-      folderId: subset.folder.id,
+      id: product.id,
+      name: product.name,
+      productType: product.productType,
+      status: product.status,
+      fps: parseProductFps(product),
+      resolution: parseProductResolution(product),
+      folder: product.folder.label || product.folder.name,
+      folderId: product.folder.id,
       author: vers ? vers.author : null,
-      parents: subset.folder.parents,
-      versionList: subset.versionList || [],
+      parents: product.folder.parents,
+      versionList: product.versionList || [],
       version: vers ? vers.version : null,
       versionId: vers && vers.id ? vers.id : null,
       versionName: vers && vers.name ? vers.name : '',
       versionStatus: vers.status || null,
       taskId: vers && vers.taskId ? vers.taskId : null,
-      frames: parseSubsetFrames(subset),
-      createdAt: vers ? vers.createdAt : subset.createdAt,
+      frames: parseProductFrames(product),
+      createdAt: vers ? vers.createdAt : product.createdAt,
     }
     s.push(sub)
   }
   return s
 }
 
-const SUBSETS_LIST_QUERY = `
-query SubsetsList($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
+const PRODUCTS_LIST_QUERY = `
+query ProductsList($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
     project(name: $projectName){
-        subsets(folderIds: $ids){
+        products(folderIds: $ids){
             edges {
                 node {
                     id
                     name
-                    family
+                    productType
                     status
                     createdAt
                     versionList{
@@ -144,22 +144,22 @@ query SubsetsList($projectName: String!, $ids: [String!]!, $versionOverrides: [S
 }
 `
 
-const getSubsetsList = ayonApi.injectEndpoints({
+const getProductList = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    getSubsetsList: build.query({
+    getProductList: build.query({
       query: ({ projectName, ids, versionOverrides }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: SUBSETS_LIST_QUERY,
+          query: PRODUCTS_LIST_QUERY,
           variables: { projectName, ids, versionOverrides },
         },
       }),
-      transformResponse: (response) => parseSubsetData(response.data),
+      transformResponse: (response) => parseProductData(response.data),
       providesTags: (result) =>
-        result ? [...result.map(({ id }) => ({ type: 'subset', id }))] : ['subset'],
+        result ? [...result.map(({ id }) => ({ type: 'product', id }))] : ['product'],
     }),
   }),
 })
 
-export const { useGetSubsetsListQuery } = getSubsetsList
+export const { useGetProductListQuery } = getProductList

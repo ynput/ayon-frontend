@@ -15,6 +15,8 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
           folder {
             name
             label
+            parents
+            path
           }
         }
       }

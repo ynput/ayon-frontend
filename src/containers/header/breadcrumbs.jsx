@@ -8,8 +8,11 @@ import HeaderButton from './HeaderButton'
 
 import {
   setFocusedFolders,
-  setFocusedSubsets,
+  setFocusedProducts,
   setFocusedVersions,
+  setFocusedRepresentations,
+  setFocusedTasks,
+  setFocusedWorkfiles,
   setUri,
   setUriChanged,
 } from '/src/features/context'
@@ -65,7 +68,7 @@ const uri2crumbs = (uri) => {
     }
   }
 
-  for (const level of ['subset', 'task', 'workfile', 'version', 'representation']) {
+  for (const level of ['product', 'task', 'workfile', 'version', 'representation']) {
     if (qp[level]) {
       crumbs.push(qp[level])
     }
@@ -128,8 +131,11 @@ const Breadcrumbs = () => {
 
   const focusEntities = (entities) => {
     const focusedFolders = []
-    const focusedSubsets = []
+    const focusedProducts = []
     const focusedVersions = []
+    const focusedRepresentations = []
+    const focusedTasks = []
+    const focusedWorkfiles = []
 
     const project = entities[0].projectName
 
@@ -143,8 +149,11 @@ const Breadcrumbs = () => {
 
     for (const entity of entities) {
       if (entity.folderId) focusedFolders.push(entity.folderId)
-      if (entity.subsetId) focusedSubsets.push(entity.subsetId)
+      if (entity.productId) focusedProducts.push(entity.productId)
       if (entity.versionId) focusedVersions.push(entity.versionId)
+      if (entity.representationId) focusedRepresentations.push(entity.representationId)
+      if (entity.taskId) focusedTasks.push(entity.taskId)
+      if (entity.workfileId) focusedWorkfiles.push(entity.workfileId)
 
       if (entity.projectName !== project) {
         toast.error('Entities must be from the same project')
@@ -153,8 +162,11 @@ const Breadcrumbs = () => {
     }
 
     dispatch(setFocusedFolders(focusedFolders))
-    dispatch(setFocusedSubsets(focusedSubsets))
+    dispatch(setFocusedProducts(focusedProducts))
     dispatch(setFocusedVersions(focusedVersions))
+    dispatch(setFocusedRepresentations(focusedRepresentations))
+    dispatch(setFocusedTasks(focusedTasks))
+    dispatch(setFocusedWorkfiles(focusedWorkfiles))
   }
 
   const goThere = () => {
@@ -196,8 +208,6 @@ const Breadcrumbs = () => {
 
       const [addonStr, ...settingsPath] = baseUri.split('/')
       const [addonName, addonVersion] = addonStr.split(':')
-
-      console.log(addonName, addonVersion, settingsPath)
 
       // parse query params
 

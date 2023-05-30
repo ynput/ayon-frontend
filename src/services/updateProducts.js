@@ -1,13 +1,13 @@
 import { ayonApi, buildOperations } from './ayon'
 
-const updateSubsets = ayonApi.injectEndpoints({
+const updateProducts = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    updateSubsets: build.mutation({
+    updateProducts: build.mutation({
       query: ({ projectName, data, ids }) => ({
         url: `/api/projects/${projectName}/operations`,
         method: 'POST',
         body: {
-          operations: buildOperations(ids, 'subset', data),
+          operations: buildOperations(ids, 'product', data),
         },
       }),
       async onQueryStarted(
@@ -18,7 +18,7 @@ const updateSubsets = ayonApi.injectEndpoints({
 
         const patchResult = dispatch(
           ayonApi.util.updateQueryData(
-            'getSubsetsList',
+            'getProductList',
             { projectName, ids: focusedFolders, versionOverrides },
             (draft) => {
               Object.assign(draft, patches)
@@ -35,4 +35,4 @@ const updateSubsets = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useUpdateSubsetsMutation } = updateSubsets
+export const { useUpdateProductsMutation } = updateProducts
