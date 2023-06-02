@@ -77,8 +77,6 @@ const EditorPage = () => {
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
 
-  const contextMenuRef = useRef(null)
-
   // Hierarchy data is used for fast searching
   const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery(
     { projectName },
@@ -319,8 +317,6 @@ const EditorPage = () => {
   //
 
   // console.log(searchIds)
-
-  console.log(rootDataCache)
 
   // make new copy of root data
   const rootData = useMemo(() => {
@@ -1003,7 +999,40 @@ const EditorPage = () => {
     }
   }
 
-  const contextMenuModel = useMemo(() => {
+  // CONTEXT MENUS
+
+  const globalContextMenuRef = useRef(null)
+  // Context menu outside of table items
+  const globalContextModel = useMemo(() => {
+    const menuItems = [
+      {
+        label: 'Add Folder',
+        icon: 'create_new_folder',
+        command: () => addNewEntity('folder', true),
+      },
+      {
+        label: 'Save All Changes',
+        icon: 'check',
+        command: onCommit,
+        disabled: !canCommit,
+      },
+      {
+        label: 'Clear All Changes',
+        icon: 'clear',
+        command: handleRevert,
+        disabled: !canCommit,
+      },
+    ]
+    return menuItems.map((item) => ({
+      template: (
+        <ContextMenuItem key={item.label} contextMenuRef={globalContextMenuRef} {...item} />
+      ),
+    }))
+  })
+
+  const tableContextMenuRef = useRef(null)
+  // Context menu items on table items
+  const tableContextModel = useMemo(() => {
     const menuItems = [
       {
         label: 'Add Folder',
@@ -1018,21 +1047,39 @@ const EditorPage = () => {
         disabled: disableAddNew,
       },
       {
-        label: 'Clear Changes',
-        icon: 'clear',
-        command: revertChangesOnSelection,
-      },
-      {
         label: 'Delete',
         icon: 'delete',
         command: onDelete,
       },
+      {
+        label: 'Save All Changes',
+        icon: 'check',
+        command: onCommit,
+        disabled: !canCommit,
+      },
+      {
+        label: 'Clear Changes',
+        icon: 'clear',
+        command: revertChangesOnSelection,
+      },
     ]
 
     return menuItems.map((item) => ({
-      template: <ContextMenuItem key={item.label} contextMenuRef={contextMenuRef} {...item} />,
+      template: <ContextMenuItem key={item.label} contextMenuRef={tableContextMenuRef} {...item} />,
     }))
   }, [currentSelection])
+
+  const contextMenuRefs = useMemo(
+    () => [tableContextMenuRef, globalContextMenuRef],
+    [tableContextMenuRef, globalContextMenuRef],
+  )
+
+  const handleContext = (e, id) => {
+    // show context menu and hide others
+    contextMenuRefs.forEach((ref) =>
+      ref?.current.props.id !== id ? ref.current?.hide() : ref.current?.show(e),
+    )
+  }
 
   //
   // Table event handlers
@@ -1189,8 +1236,6 @@ const EditorPage = () => {
   // keeps editor form fast
   const throttledEditorChanges = debounce((c) => dispatch(onNewChanges(c)), 500)
 
-  // sort columns
-
   //
   // Render the TreeTable
 
@@ -1207,14 +1252,8 @@ const EditorPage = () => {
         <Toolbar>
           <Button
             icon="create_new_folder"
-            label="Add root folder"
-            onClick={() => addNewEntity('folder', true)}
-          />
-          <Button
-            icon="create_new_folder"
             label="Add folder"
-            disabled={disableAddNew}
-            onClick={() => addNewEntity('folder')}
+            onClick={() => addNewEntity('folder', disableAddNew)}
           />
           <Button
             icon="add_task"
@@ -1247,15 +1286,21 @@ const EditorPage = () => {
           />
           <Button icon="check" label="Save Changes" onClick={onCommit} disabled={!canCommit} />
         </Toolbar>
+        <ContextMenu model={globalContextModel} ref={globalContextMenuRef} id="global" />
         <Splitter
           style={{ width: '100%', height: '100%' }}
           layout="horizontal"
           stateKey="editor-panels"
           stateStorage="local"
         >
-          <SplitterPanel size={70}>
+          <SplitterPanel
+            size={70}
+            ref={globalContextMenuRef}
+            id="global"
+            onContextMenu={(e) => handleContext(e, 'global')}
+          >
             <TablePanel loading={loading} style={{ height: '100%' }}>
-              <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+              <ContextMenu model={tableContextModel} ref={tableContextMenuRef} id="table" />
               <TreeTable
                 responsive="true"
                 scrollable
@@ -1275,7 +1320,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}
-                onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+                onContextMenu={(e) => handleContext(e.originalEvent, 'table')}
                 onContextMenuSelectionChange={onContextMenuSelectionChange}
                 onColumnResizeEnd={setColumnWidths}
                 reorderableColumns

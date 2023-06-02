@@ -65,7 +65,13 @@ const RepresentationList = ({ representations = [] }) => {
           onHide={() => setFocusedRepresentation(null)}
         />
       )*/}
-
+      <h4
+        style={{
+          margin: 0,
+        }}
+      >
+        Representations
+      </h4>
       <TablePanel>
         <TreeTable
           scrollable="true"
