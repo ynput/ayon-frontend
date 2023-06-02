@@ -95,7 +95,7 @@ const UserMenu = ({ visible, onHide }) => {
     })
 
   return (
-    <Sidebar position="right" visible={visible} onHide={onHide} icons={() => <h3>User Menu</h3>}>
+    <Sidebar position="right" visible={visible} onHide={onHide}>
       <div
         style={{
           height: '100%',
