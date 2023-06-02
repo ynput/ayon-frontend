@@ -18,7 +18,6 @@ const ProjectList = ({
   onRowDoubleClick,
   showNull,
   multiselect,
-  footer,
   style,
   styleSection,
   className,
@@ -91,7 +90,6 @@ const ProjectList = ({
 
   return (
     <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
-      {footer}
       <TablePanel loading={isLoading}>
         <DataTable
           value={projectList}

@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom'
-import { Button } from '@ynput/ayon-react-components'
 
 import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
@@ -40,15 +39,6 @@ const ProjectMenu = ({ visible, onHide }) => {
     navigate(link)
   }
 
-  const footer = (
-    <Button
-      icon="empty_dashboard"
-      label="Manage Projects"
-      style={{ marginTop: 10, width: '100%' }}
-      onClick={() => navigate('/manageProjects')}
-    />
-  )
-
   return (
     <Sidebar position="left" visible={visible} onHide={onHide} icons={() => <h3>Project Menu</h3>}>
       <div
@@ -60,11 +50,7 @@ const ProjectMenu = ({ visible, onHide }) => {
           height: '100%',
         }}
       >
-        <ProjectList
-          footer={footer}
-          onRowClick={(e) => onProjectSelect(e.data.name)}
-          selection={projectName}
-        />
+        <ProjectList onRowClick={(e) => onProjectSelect(e.data.name)} selection={projectName} />
       </div>
     </Sidebar>
   )
