@@ -1253,8 +1253,7 @@ const EditorPage = () => {
           <Button
             icon="create_new_folder"
             label="Add folder"
-            disabled={disableAddNew}
-            onClick={() => addNewEntity('folder')}
+            onClick={() => addNewEntity('folder', disableAddNew)}
           />
           <Button
             icon="add_task"
