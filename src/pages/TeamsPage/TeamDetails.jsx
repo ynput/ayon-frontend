@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
-import { Button, FormLayout, FormRow, LockedInput, Panel } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Divider,
+  FormLayout,
+  FormRow,
+  LockedInput,
+  Panel,
+} from '@ynput/ayon-react-components'
 import DetailHeader from '/src/components/DetailHeader'
 
 const TeamDetails = ({
@@ -73,21 +80,28 @@ const TeamDetails = ({
 
   return (
     <>
-      <DetailHeader>
-        <div
-          style={{
-            overflow: 'hidden',
-          }}
-        >
-          <h2>{title}</h2>
-          <span>{subTitle}</span>
-        </div>
-      </DetailHeader>
       <Panel
         style={{
           overflow: 'auto',
         }}
       >
+        <h2 style={{ marginTop: 0 }}>Team Settings</h2>
+        <DetailHeader
+          style={{
+            padding: 0,
+          }}
+        >
+          <div
+            style={{
+              overflow: 'hidden',
+            }}
+          >
+            <h2>{title}</h2>
+            <span>{subTitle}</span>
+          </div>
+        </DetailHeader>
+        <Divider style={{ margin: '10px 0' }} />
+
         <FormLayout>
           <FormRow label="Team Name">
             <LockedInput

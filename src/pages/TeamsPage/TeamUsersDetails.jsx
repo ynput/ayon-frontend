@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
 import {
+  Divider,
   Dropdown,
   FormLayout,
   FormRow,
@@ -229,12 +230,14 @@ const TeamUsersDetails = ({
 
   return (
     <>
-      <UserDetailsHeader
-        users={users}
-        style={{ flex: 'unset' }}
-        subTitle={<OverflowField value={subTitle} align="left" />}
-      />
       <Panel>
+        <h2 style={{ marginTop: 0 }}>Member Settings</h2>
+        <UserDetailsHeader
+          users={users}
+          style={{ flex: 'unset', padding: 0 }}
+          subTitle={<OverflowField value={subTitle} align="left" />}
+        />
+        <Divider style={{ margin: '10px 0' }} />
         <FormLayout>
           <FormRow label="On Teams" style={{ overflow: 'hidden' }}>
             <Dropdown

@@ -320,16 +320,16 @@ const UserDetail = ({
       )}
       <PanelButtonsStyled>
         <Button
-          onClick={onCancel}
-          label="Cancel"
-          icon="cancel"
-          disabled={!changesMade || selectedUsers.length > 1}
-        />
-        <Button
           onClick={() => (selectedUsers.length > 1 ? handleMultiSave() : onSave())}
           label="Save selected users"
           icon="check"
           disabled={!changesMade}
+        />
+        <Button
+          onClick={onCancel}
+          label="Cancel"
+          icon="cancel"
+          disabled={!changesMade || selectedUsers.length > 1}
         />
       </PanelButtonsStyled>
     </Section>

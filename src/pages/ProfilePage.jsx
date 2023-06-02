@@ -145,8 +145,8 @@ const ProfilePage = () => {
             <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
           </Panel>
           <PanelButtonsStyled>
-            <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
             <Button onClick={onSave} label="Save" icon="check" disabled={!changesMade} />
+            <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
           </PanelButtonsStyled>
         </FormsStyled>
       </Section>
