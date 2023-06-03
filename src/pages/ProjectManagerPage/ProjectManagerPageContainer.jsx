@@ -33,13 +33,6 @@ const ProjectManagerPageContainer = ({
         ),
         toolbar: (
           <>
-            <Button
-              label="Open project"
-              icon="folder_open"
-              disabled={!selection}
-              onClick={() => navigate(`/projects/${selection}/browser`)}
-            />
-
             {!isUser && (
               <>
                 <Button label="New project" icon="create_new_folder" onClick={onNewProject} />
