@@ -7,6 +7,7 @@ import { selectProject } from '/src/features/project'
 import { selectProject as selectProjectContext, setUri } from '/src/features/context'
 import { onProjectChange } from '/src/features/editor'
 import { ayonApi } from '/src/services/ayon'
+import { Button } from '@ynput/ayon-react-components'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
@@ -40,7 +41,7 @@ const ProjectMenu = ({ visible, onHide }) => {
   }
 
   return (
-    <Sidebar position="left" visible={visible} onHide={onHide} icons={() => <h3>Project Menu</h3>}>
+    <Sidebar position="left" visible={visible} onHide={onHide}>
       <div
         style={{
           display: 'flex',
@@ -48,8 +49,15 @@ const ProjectMenu = ({ visible, onHide }) => {
           position: 'relative',
           width: '100%',
           height: '100%',
+          gap: 8,
         }}
       >
+        <Button
+          icon="empty_dashboard"
+          label="Manage Projects"
+          style={{ marginTop: 1, width: '100%' }}
+          onClick={() => navigate('/manageProjects')}
+        />
         <ProjectList
           onRowClick={(e) => onProjectSelect(e.data.name)}
           selection={projectName}
