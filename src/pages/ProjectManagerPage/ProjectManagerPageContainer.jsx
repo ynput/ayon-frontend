@@ -1,9 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import ProjectList from '/src/containers/projectList'
-import { Button } from '@ynput/ayon-react-components'
 import { useNavigate } from 'react-router'
 
+// Wraps every page on projectManager and provides the project list
+// and other useful props
 const ProjectManagerPageContainer = ({
   children,
   isUser,
@@ -28,26 +29,14 @@ const ProjectManagerPageContainer = ({
             autoSelect
             onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
             selection={selection}
+            onDeleteProject={onDeleteProject}
+            onNewProject={onNewProject}
+            isProjectManager
             {...props}
           />
         ),
-        toolbar: (
-          <>
-            {!isUser && (
-              <>
-                <Button label="New project" icon="create_new_folder" onClick={onNewProject} />
-
-                <Button
-                  label="Delete project"
-                  icon="delete"
-                  className="p-button-danger"
-                  disabled={!selection}
-                  onClick={onDeleteProject}
-                />
-              </>
-            )}
-          </>
-        ),
+        onDeleteProject,
+        onNewProject,
       })
     }
     return child

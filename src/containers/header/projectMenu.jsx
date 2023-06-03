@@ -50,7 +50,11 @@ const ProjectMenu = ({ visible, onHide }) => {
           height: '100%',
         }}
       >
-        <ProjectList onRowClick={(e) => onProjectSelect(e.data.name)} selection={projectName} />
+        <ProjectList
+          onRowClick={(e) => onProjectSelect(e.data.name)}
+          selection={projectName}
+          onHide={onHide}
+        />
       </div>
     </Sidebar>
   )

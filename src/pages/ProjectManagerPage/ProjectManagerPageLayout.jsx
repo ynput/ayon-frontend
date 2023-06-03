@@ -1,20 +1,21 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Toolbar } from '@ynput/ayon-react-components'
+import { Section, Toolbar } from '@ynput/ayon-react-components'
 
-const ProjectManagerPageLayout = ({ toolbar, projectList, children, toolbarMore, passthrough }) => {
+const ProjectManagerPageLayout = ({ projectList, children, passthrough, toolbar }) => {
   if (passthrough) return children
   return (
-    <>
-      <Toolbar style={{ padding: 8, paddingBottom: 0 }}>
-        {toolbar}
-        {toolbarMore && <>{toolbarMore}</>}
-      </Toolbar>
-      <main style={{ overflowY: 'clip' }}>
-        {projectList}
+    <main style={{ overflowY: 'clip' }}>
+      {projectList}
+      <Section
+        style={{
+          alignItems: 'start',
+        }}
+      >
+        {toolbar && <Toolbar>{toolbar}</Toolbar>}
         {children}
-      </main>
-    </>
+      </Section>
+    </main>
   )
 }
 
@@ -22,7 +23,6 @@ ProjectManagerPageLayout.propTypes = {
   toolbar: PropTypes.node,
   projectList: PropTypes.node,
   children: PropTypes.node,
-  toolbarMore: PropTypes.node,
 }
 
 export default ProjectManagerPageLayout

@@ -28,9 +28,9 @@ const PanelsContainerStyled = styled.div`
   overflow: hidden;
 `
 
-const ProjectDashboard = ({ projectName, toolbar, projectList }) => {
+const ProjectDashboard = ({ projectName, projectList }) => {
   return (
-    <ProjectManagerPageLayout projectList={projectList} toolbar={toolbar}>
+    <ProjectManagerPageLayout projectList={projectList}>
       {projectName && (
         <Section
           style={{

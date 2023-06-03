@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+import { Spacer } from '@ynput/ayon-react-components'
 
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
@@ -113,6 +114,14 @@ const ProjectManagerPage = () => {
       path: '/manageProjects/teams',
       module: 'teams',
     },
+    { node: <Spacer /> },
+    {
+      node: (
+        <a onClick={() => setShowNewProject(true)} href="#" className="nav.secondary">
+          Create New Project
+        </a>
+      ),
+    },
   ]
 
   // filter links if isUser
@@ -124,11 +133,18 @@ const ProjectManagerPage = () => {
     <>
       <ConfirmDialog />
       <nav className="secondary">
-        {links.map((link, i) => (
-          <NavLink to={link.path + (selectedProject ? `?project=${selectedProject}` : '')} key={i}>
-            {link.name}
-          </NavLink>
-        ))}
+        {links.map((link, i) =>
+          link.node ? (
+            link.node
+          ) : (
+            <NavLink
+              to={link.path + (selectedProject ? `?project=${selectedProject}` : '')}
+              key={i}
+            >
+              {link.name}
+            </NavLink>
+          ),
+        )}
       </nav>
       {/* container wraps all modules and provides selectedProject, ProjectList comp and Toolbar comp as props */}
       <ProjectManagerPageContainer

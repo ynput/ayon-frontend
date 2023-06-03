@@ -9,7 +9,7 @@ import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { setUri } from '/src/features/context'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 
-const ProjectAnatomy = ({ projectName, toolbar, projectList }) => {
+const ProjectAnatomy = ({ projectName, projectList }) => {
   const [newData, setNewData] = useState(null)
   const dispatch = useDispatch()
 
@@ -64,8 +64,8 @@ const ProjectAnatomy = ({ projectName, toolbar, projectList }) => {
 
   return (
     <ProjectManagerPageLayout
-      {...{ toolbar, projectList }}
-      toolbarMore={
+      projectList={projectList}
+      toolbar={
         <>
           <Spacer />
           <Button label="Save Changes" icon="check" onClick={saveAnatomy} />

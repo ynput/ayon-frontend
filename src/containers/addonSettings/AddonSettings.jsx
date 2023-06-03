@@ -77,13 +77,7 @@ const sameKeysStructure = (obj1, obj2) => {
   return true
 }
 
-const AddonSettings = ({
-  projectName,
-  showSites = false,
-  toolbar,
-  projectList,
-  projectManager,
-}) => {
+const AddonSettings = ({ projectName, showSites = false, projectList, projectManager }) => {
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState({})
@@ -478,8 +472,8 @@ const AddonSettings = ({
 
   return (
     <ProjectManagerPageLayout
-      {...{ toolbar, projectList }}
-      toolbarMore={commitToolbar}
+      projectList={projectList}
+      toolbar={commitToolbar}
       passthrough={!projectManager}
     >
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
