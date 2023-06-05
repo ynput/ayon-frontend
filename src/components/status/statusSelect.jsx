@@ -27,7 +27,7 @@ const StatusSelect = ({
   if (!value && !placeholder) return null
 
   const handleChange = (status) => {
-    if (status[0] === value || !status?.length) return
+    if (!status?.length) return
     onChange(status[0])
   }
 
