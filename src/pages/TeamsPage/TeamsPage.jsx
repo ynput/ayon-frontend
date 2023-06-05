@@ -348,7 +348,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
               <>
                 <Button
                   icon={'group_add'}
-                  label="Create New Team"
+                  label="Add New Team"
                   onClick={() => setCreateTeamOpen(true)}
                   style={{ width: 200 }}
                 />

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -194,6 +194,7 @@ const ProjectList = ({
     <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
       <ContextMenu model={globalContextMenuModel} ref={globalContextMenuRef} id="global" />
       <ContextMenu model={tableContextMenuModel} ref={tableContextMenuRef} id="table" />
+      {isProjectManager && <Button label="Add New Project" icon="create_new_folder" />}
       <TablePanel loading={isLoading} onContextMenu={(e) => handleContext(e, 'global')}>
         <DataTable
           value={projectList}

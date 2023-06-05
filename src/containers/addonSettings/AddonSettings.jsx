@@ -457,8 +457,7 @@ const AddonSettings = ({ projectName, showSites = false, projectList, projectMan
   const commitToolbar = useMemo(
     () => (
       <>
-        <Spacer />
-        <Button label="Clear All Changes" icon="clear" onClick={onRevertAllChanges} />
+        <Button label="Clear Changes" icon="clear" onClick={onRevertAllChanges} />
         <Button label="Save Changes" icon="check" onClick={onSave} />
       </>
     ),
