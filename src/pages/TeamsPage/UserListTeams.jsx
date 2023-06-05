@@ -100,11 +100,15 @@ const UserListTeams = ({
           tableStyle={{
             width: '100%',
           }}
+          groupRowsBy={'group'}
+          rowGroupMode="subheader"
+          rowGroupHeaderTemplate={(data) => {
+            return <div>{data.group}</div>
+          }}
         >
           <Column
             field="name"
             header="Username"
-            sortable
             body={(rowData) => ProfileRow({ rowData })}
             style={{
               width: '20%',
@@ -113,7 +117,6 @@ const UserListTeams = ({
           <Column
             field="attrib.fullName"
             header="Full Name"
-            sortable
             style={{
               width: '20%',
             }}
@@ -146,7 +149,6 @@ const UserListTeams = ({
                 </span>
               )
             }}
-            sortable
             sortField="teamsList"
           />
           <Column
@@ -177,7 +179,6 @@ const UserListTeams = ({
                 </span>
               )
             }}
-            sortable
             sortField="rolesList"
           />
         </DataTable>

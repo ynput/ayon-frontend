@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
-import { ArrayParam, useQueryParam, withDefault } from 'use-query-params'
+import { ArrayParam, useQueryParam } from 'use-query-params'
 import { Button, InputSwitch, InputText, Section, Spacer } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
@@ -42,7 +42,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   // STATES
   const [selectedUsers, setSelectedUsers] = useState([])
-  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(true)
+  const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [createTeamOpen, setCreateTeamOpen] = useState(false)
 
@@ -82,10 +82,18 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   // update multiple teams
   const [updateTeams] = useUpdateTeamsMutation()
 
-  const [selectedTeams, setSelectedTeams] = useQueryParam(
-    ['teams'],
-    withDefault(ArrayParam, [teams[0]?.name]),
-  )
+  const [selectedTeams = [], setSelectedTeams] = useQueryParam(['teams'], ArrayParam)
+
+  // When a team is selected, select all users on that team
+  useEffect(() => {
+    if (selectedTeams.length) {
+      const newSelectedUsers = userList
+        .filter((user) => user.teamsList.some((team) => selectedTeams.includes(team)))
+        .map((user) => user.name)
+
+      setSelectedUsers(newSelectedUsers)
+    }
+  }, [selectedTeams])
 
   // Merge users and teams data
   // NOTE: there is a usersObject bellow [userList, usersObject]
@@ -115,12 +123,24 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           }
         })
 
+        const isTeamSelected = selectedTeams.some((team) => teamsList.includes(team))
+
+        const group = isTeamSelected
+          ? 'In A Selected Team'
+          : teamsList.filter((t) => !selectedTeams.includes(t)).length
+          ? selectedTeams.length
+            ? 'In Other Teams'
+            : 'In Teams'
+          : 'In No Teams'
+
         // Include any other user data in the merged object
         usersObject[user.name] = {
           ...usersObject[user.name],
           ...user,
           teamsList,
           rolesList,
+          isTeamSelected: isTeamSelected,
+          group,
           leader,
         }
 
@@ -152,11 +172,41 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
         })
       })
     }
+
     return [userList, usersObject]
-  }, [users, teams])
+  }, [users, teams, selectedTeams])
+
+  // SORTING
+  userList = useMemo(() => {
+    const sortedList = [...userList]
+    // sort users by name
+    sortedList.sort((a, b) => a.name.localeCompare(b.name))
+
+    // then sort by how many teams they are on
+    sortedList.sort((a, b) => {
+      const aTeams = Object.keys(a.teams).length
+      const bTeams = Object.keys(b.teams).length
+
+      if (aTeams > bTeams) return -1
+      if (aTeams < bTeams) return 1
+      return 0
+    })
+
+    // sort by if on selected teams
+    sortedList.sort((a, b) => {
+      const aOnTeam = selectedTeams.some((team) => a.teamsList.includes(team))
+      const bOnTeam = selectedTeams.some((team) => b.teamsList.includes(team))
+
+      if (aOnTeam && !bOnTeam) return -1
+      if (!aOnTeam && bOnTeam) return 1
+      return 0
+    })
+
+    return sortedList
+  }, [userList, selectedTeams])
 
   // filter users by team if showTeamUsersOnly is true
-  userList = useMemo(() => {
+  let filteredUserList = useMemo(() => {
     let filteredUsers = userList
 
     if (showTeamUsersOnly) {
@@ -168,8 +218,12 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   const searchableFields = ['name', 'attrib.fullName', 'teamsList', 'rolesList', 'leader']
   // filter users using search
-  const [search, setSearch, searchedUsers] = useSearchFilter(searchableFields, userList, 'users')
-  userList = useMemo(() => searchedUsers, [searchedUsers])
+  const [search, setSearch, searchedUsers] = useSearchFilter(
+    searchableFields,
+    filteredUserList,
+    'users',
+  )
+  filteredUserList = useMemo(() => searchedUsers, [searchedUsers])
 
   // find all roles on all teams
   const rolesList = useMemo(() => {
@@ -360,10 +414,10 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   autocomplete="off"
                 />
                 <InputSwitch
-                  checked={!showTeamUsersOnly}
+                  checked={showTeamUsersOnly}
                   onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
                 />
-                Show All Users
+                Hide Other Team Members
                 <Spacer />
               </>
             )}
@@ -390,7 +444,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             selectedProjects={[projectName]}
             selectedUsers={selectedUsers}
             onSelectUsers={(users) => setSelectedUsers(users)}
-            userList={userList}
+            userList={filteredUserList}
             isLoading={isLoading}
             selectedTeams={selectedTeams}
             onShowAllUsers={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
