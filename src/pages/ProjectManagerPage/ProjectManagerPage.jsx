@@ -124,11 +124,18 @@ const ProjectManagerPage = () => {
     <>
       <ConfirmDialog />
       <nav className="secondary">
-        {links.map((link, i) => (
-          <NavLink to={link.path + (selectedProject ? `?project=${selectedProject}` : '')} key={i}>
-            {link.name}
-          </NavLink>
-        ))}
+        {links.map((link, i) =>
+          link.node ? (
+            link.node
+          ) : (
+            <NavLink
+              to={link.path + (selectedProject ? `?project=${selectedProject}` : '')}
+              key={i}
+            >
+              {link.name}
+            </NavLink>
+          ),
+        )}
       </nav>
       {/* container wraps all modules and provides selectedProject, ProjectList comp and Toolbar comp as props */}
       <ProjectManagerPageContainer

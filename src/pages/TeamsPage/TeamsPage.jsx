@@ -71,7 +71,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     isError: isErrorUsers,
   } = useGetUsersQuery({}, { skip: !projectName || isUser })
 
-  console.log(users)
   if (isErrorUsers || !Array.isArray(users)) {
     toast.error('Unable to load users')
     users = []
@@ -343,10 +342,16 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     <>
       <ProjectManagerPageLayout
         projectList={projectList}
-        toolbarMore={
+        toolbar={
           <>
             {!isUser && (
               <>
+                <Button
+                  icon={'group_add'}
+                  label="Add New Team"
+                  onClick={() => setCreateTeamOpen(true)}
+                  style={{ width: 200 }}
+                />
                 <InputText
                   style={{ width: '200px' }}
                   placeholder="Filter users..."
@@ -360,23 +365,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                 />
                 Show All Users
                 <Spacer />
-                <Button
-                  icon={'delete'}
-                  label="Delete Teams"
-                  disabled={!selectedTeams.length}
-                  onClick={onDelete}
-                />
-                <Button
-                  icon={'content_copy'}
-                  label="Duplicate Team"
-                  disabled={selectedTeams.length !== 1}
-                  onClick={onDuplicate}
-                />
-                <Button
-                  icon={'group_add'}
-                  label="Create New Team"
-                  onClick={() => setCreateTeamOpen(true)}
-                />
               </>
             )}
           </>
@@ -385,7 +373,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
         <Section
           style={{
             flexDirection: 'row',
-            width: 'calc(100% - 230px)',
           }}
         >
           <TeamList
@@ -396,6 +383,8 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             onSelect={(teams) => setSelectedTeams(teams)}
             styleSection={{ height: '100%', flex: 0.4 }}
             onDelete={onDelete}
+            onDuplicate={onDuplicate}
+            onNewTeam={() => setCreateTeamOpen(true)}
           />
           <UserListTeams
             selectedProjects={[projectName]}
@@ -404,6 +393,8 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             userList={userList}
             isLoading={isLoading}
             selectedTeams={selectedTeams}
+            onShowAllUsers={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
+            showAllUsers={showTeamUsersOnly}
           />
           {!isUser && (
             <SectionStyled>

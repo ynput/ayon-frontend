@@ -41,11 +41,6 @@ const UserMenu = ({ visible, onHide }) => {
 
   const allLinks = [
     {
-      link: '/manageProjects',
-      label: 'Manage Projects',
-      icon: 'empty_dashboard',
-    },
-    {
       link: '/settings',
       label: 'Settings',
       icon: 'settings',

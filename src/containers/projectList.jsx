@@ -1,10 +1,13 @@
-import { useMemo } from 'react'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { useMemo, useRef, useState } from 'react'
+import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useGetAllProjectsQuery } from '../services/project/getProject'
 import { useEffect } from 'react'
+import { ContextMenu } from 'primereact/contextmenu'
+import ContextMenuItem from '../components/ContextMenuItem'
+import { useNavigate } from 'react-router'
 
 const formatName = (rowData, defaultTitle) => {
   if (rowData.name === '_') return defaultTitle
@@ -25,7 +28,13 @@ const ProjectList = ({
   onNoProject,
   onSuccess,
   autoSelect,
+  isProjectManager,
+  onDeleteProject,
+  onNewProject,
+  onHide,
 }) => {
+  const [contextProject, setContextProject] = useState()
+  const navigate = useNavigate()
   // const user = useSelector((state) => state.user)
   // QUERY HOOK
   // ( default ) gets added in transformResponse
@@ -88,9 +97,107 @@ const ProjectList = ({
     } // single select
   } // onSelectionChange
 
+  // Context menu outside of table items
+  const globalContextMenuRef = useRef(null)
+
+  const manage = {
+    label: 'Manage Project',
+    icon: 'empty_dashboard',
+    command: () => {
+      navigate(`/manageProjects/dashboard?project=${contextProject ? contextProject : selection}`)
+      onHide()
+    },
+  }
+
+  const globalContextMenuModel = useMemo(() => {
+    const menuItems = []
+
+    if (!isProjectManager) menuItems.push({ ...manage, label: 'Manage Projects' })
+
+    if (onNewProject)
+      menuItems.push({
+        label: 'Create Project',
+        icon: 'create_new_folder',
+        command: onNewProject,
+      })
+
+    return menuItems.map((item) => ({
+      template: (
+        <ContextMenuItem key={item.label} contextMenuRef={globalContextMenuRef} {...item} />
+      ),
+    }))
+  }, [])
+
+  const tableContextMenuRef = useRef(null)
+  const tableContextMenuModel = useMemo(() => {
+    const managerMenuItems = [
+      {
+        label: 'Open Project',
+        icon: 'event_list',
+        command: () => onRowDoubleClick({ data: { name: selection } }),
+      },
+      {
+        label: 'Create Project',
+        icon: 'create_new_folder',
+        command: onNewProject,
+      },
+      {
+        label: 'Delete Project',
+        icon: 'delete',
+        command: onDeleteProject,
+      },
+    ]
+
+    const globalMenuItems = [
+      {
+        label: 'Open Project',
+        icon: 'event_list',
+        command: () => onRowClick({ data: { name: contextProject || selection } }),
+      },
+      manage,
+    ]
+
+    if (onNewProject)
+      globalMenuItems.push({
+        label: 'Create Project',
+        icon: 'create_new_folder',
+        command: onNewProject,
+      })
+
+    let menuItems = managerMenuItems
+    if (!isProjectManager) menuItems = globalMenuItems
+
+    return menuItems.map((item) => ({
+      template: <ContextMenuItem key={item.label} contextMenuRef={tableContextMenuRef} {...item} />,
+    }))
+  }, [data, selection, contextProject])
+
+  const contextMenuRefs = useMemo(
+    () => [tableContextMenuRef, globalContextMenuRef],
+    [tableContextMenuRef, globalContextMenuRef],
+  )
+
+  const handleContext = (e, id) => {
+    // show context menu and hide others
+    contextMenuRefs.forEach((ref) =>
+      ref?.current?.props?.id !== id ? ref.current?.hide() : ref.current?.show(e),
+    )
+  }
+
+  const onContextMenuSelectionChange = (event) => {
+    if (!selection.includes(event.value.name)) {
+      onSelect ? onSelect(event.value.name) : setContextProject(event.value.name)
+    }
+  }
+
   return (
     <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
-      <TablePanel loading={isLoading}>
+      <ContextMenu model={globalContextMenuModel} ref={globalContextMenuRef} id="global" />
+      <ContextMenu model={tableContextMenuModel} ref={tableContextMenuRef} id="table" />
+      {isProjectManager && (
+        <Button label="Add New Project" icon="create_new_folder" onClick={onNewProject} />
+      )}
+      <TablePanel loading={isLoading} onContextMenu={(e) => handleContext(e, 'global')}>
         <DataTable
           value={projectList}
           scrollable="true"
@@ -102,6 +209,8 @@ const ProjectList = ({
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
           onRowDoubleClick={onRowDoubleClick}
+          onContextMenu={(e) => handleContext(e.originalEvent, 'table')}
+          onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
           <Column
             field="name"

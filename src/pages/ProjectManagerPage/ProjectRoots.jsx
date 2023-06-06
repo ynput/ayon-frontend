@@ -53,7 +53,7 @@ const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   )
 }
 
-const ProjectRoots = ({ projectName, toolbar, projectList }) => {
+const ProjectRoots = ({ projectName, projectList }) => {
   const {
     data: project,
     isLoading: projectLoading,
@@ -92,7 +92,7 @@ const ProjectRoots = ({ projectName, toolbar, projectList }) => {
 
   // if (forms.length === 0) return <h1>No sites configured</h1>
   return (
-    <ProjectManagerPageLayout {...{ toolbar, projectList }}>
+    <ProjectManagerPageLayout {...{ projectList }}>
       <Section className="invisible" style={{ maxWidth: 600 }}>
         {forms.map((form) => (
           <ProjectRootForm key={form.siteId} {...form} />

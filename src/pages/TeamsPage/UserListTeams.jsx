@@ -47,9 +47,10 @@ const UserListTeams = ({
   selectedUsers = [],
   userList = [],
   onSelectUsers,
-  setLastSelectedUser,
   isLoading,
   selectedTeams,
+  showAllUsers,
+  onShowAllUsers,
 }) => {
   const contextMenuRef = useRef(null)
 
@@ -67,21 +68,10 @@ const UserListTeams = ({
   }
 
   const contextMenuModel = [
-    // {
-    //   label: 'Set username',
-    //   disabled: selection.length !== 1,
-    //   command: () => setShowRenameUser(true),
-    // },
-    // {
-    //   label: 'Set password',
-    //   disabled: selection.length !== 1,
-    //   command: () => setShowSetPassword(true),
-    // },
-    // {
-    //   label: 'Delete selected',
-    //   disabled: !selection.length || isSelfSelected,
-    //   command: () => onDelete(),
-    // },
+    {
+      label: showAllUsers ? 'Show All Users' : 'Show Members Only',
+      command: onShowAllUsers,
+    },
   ]
 
   // Render
@@ -93,8 +83,8 @@ const UserListTeams = ({
         flex: 1.5,
       }}
     >
-      <TablePanel loading={isLoading}>
-        <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+      <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+      <TablePanel loading={isLoading} onContextMenu={(e) => contextMenuRef.current.show(e)}>
         <DataTable
           value={userList}
           scrollable="true"
@@ -103,13 +93,6 @@ const UserListTeams = ({
           selectionMode="multiple"
           className="user-list-table"
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-          onContextMenuSelectionChange={(e) => {
-            if (!selectedUsers.includes(e.value.name)) {
-              onSelectUsers([...selection, e.value.name])
-            }
-            setLastSelectedUser(e.data.name)
-          }}
           selection={selection}
           resizableColumns
           responsive="true"

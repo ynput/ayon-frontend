@@ -111,6 +111,7 @@ export const formatEntityTiles = (project, entities) => {
 
   const allEntities = []
   for (const type in entities) {
+    if (!project) continue
     let entities = project[type + 's']
     // If no entities of this type
     if (!entities) continue
