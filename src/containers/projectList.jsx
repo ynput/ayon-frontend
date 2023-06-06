@@ -194,7 +194,9 @@ const ProjectList = ({
     <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
       <ContextMenu model={globalContextMenuModel} ref={globalContextMenuRef} id="global" />
       <ContextMenu model={tableContextMenuModel} ref={tableContextMenuRef} id="table" />
-      {isProjectManager && <Button label="Add New Project" icon="create_new_folder" />}
+      {isProjectManager && (
+        <Button label="Add New Project" icon="create_new_folder" onClick={onNewProject} />
+      )}
       <TablePanel loading={isLoading} onContextMenu={(e) => handleContext(e, 'global')}>
         <DataTable
           value={projectList}
