@@ -54,7 +54,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
   let projectLastUpdated, type
   if (project) {
     const projectLastest = events.filter((e) => e.project === project)[0]
-    projectLastUpdated = projectLastest.updatedAt
+    projectLastUpdated = projectLastest?.updatedAt
 
     // get type from topic
     type = topic.split('.')[1]
