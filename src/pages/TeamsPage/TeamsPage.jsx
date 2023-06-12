@@ -126,12 +126,12 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
         const isTeamSelected = selectedTeams.some((team) => teamsList.includes(team))
 
         const group = isTeamSelected
-          ? 'In A Selected Team'
+          ? 'On A Selected Team'
           : teamsList.filter((t) => !selectedTeams.includes(t)).length
           ? selectedTeams.length
-            ? 'In Other Teams'
-            : 'In Teams'
-          : 'In No Teams'
+            ? 'On Other Teams'
+            : 'On Teams'
+          : 'On No Teams'
 
         // Include any other user data in the merged object
         usersObject[user.name] = {
@@ -297,7 +297,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
       // Success
       setCreateTeamOpen(false)
       setSelectedTeams([name])
-      setShowTeamUsersOnly(true)
       !noToast && toast.success(`Created ${name}`)
     } catch (error) {
       toast.error(`Failed to create ${name}`)
@@ -449,6 +448,8 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             selectedTeams={selectedTeams}
             onShowAllUsers={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
             showAllUsers={showTeamUsersOnly}
+            teams={teams}
+            onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
           />
           {!isUser && (
             <SectionStyled>

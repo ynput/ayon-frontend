@@ -10,6 +10,7 @@ import {
   OverflowField,
   Panel,
 } from '@ynput/ayon-react-components'
+import addRemoveMembers from './addRemoveMembers'
 
 const getFieldValues = (users, field, selectedTeams) => {
   let values = []
@@ -119,38 +120,12 @@ const TeamUsersDetails = ({
     const removedTeams = teamsValue.filter((team) => !newTeams.includes(team))
 
     // add/remove all users to teams
-    const updatedTeamsWithNewMembers = []
-    teams.forEach((team) => {
-      // remove out the selected users from the team
-      const membersWithRemovedUsers = team.members.filter(
-        (member) => !users.some((user) => user.name === member.name),
-      )
-
-      if (addedTeams.includes(team.name)) {
-        // create new users array with updated roles and leader
-        // if user is already on team, keep their roles and leader
-        const newUsersToAdd = users.map((user) => ({
-          name: user.name,
-          leader: false,
-          roles: [],
-        }))
-
-        // now merge new users with existing team members
-        const newMembers = [...membersWithRemovedUsers, ...newUsersToAdd]
-
-        // add selected members to new team
-        updatedTeamsWithNewMembers.push({
-          name: team.name,
-          members: newMembers,
-        })
-      } else if (removedTeams.includes(team.name)) {
-        // remove members from team
-        updatedTeamsWithNewMembers.push({
-          name: team.name,
-          members: membersWithRemovedUsers,
-        })
-      }
-    })
+    const updatedTeamsWithNewMembers = addRemoveMembers(
+      teams,
+      users.map((u) => u.name),
+      addedTeams,
+      removedTeams,
+    )
 
     onUpdateTeams(updatedTeamsWithNewMembers)
   }
