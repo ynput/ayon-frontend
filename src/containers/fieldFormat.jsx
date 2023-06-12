@@ -77,6 +77,7 @@ const isoToTime = (isoTime) => {
 }
 
 const TimestampField = ({ value, ddOnly }) => {
+  if (!value) return ''
   const [dd, tt] = isoToTime(value)
   return (
     <DateTimeContainer>
