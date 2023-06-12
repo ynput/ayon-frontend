@@ -7,10 +7,10 @@ import {
   FormLayout,
   FormRow,
   InputSwitch,
-  OverflowField,
   Panel,
 } from '@ynput/ayon-react-components'
 import addRemoveMembers from './addRemoveMembers'
+import UserSubtitle from './UserSubtitle'
 
 const getFieldValues = (users, field, selectedTeams) => {
   let values = []
@@ -97,13 +97,6 @@ const TeamUsersDetails = ({
     : usersOnTeams.length
     ? 'Setting On Team' + (usersOnTeams.length > 1 ? 's' : '') + ': ' + usersOnTeams.join(', ')
     : `Not on ${selectedTeams.join(', ')}`
-
-  const subTitle =
-    users.length > 1
-      ? users.map((user) => user.name).join(', ')
-      : teamsValue.length
-      ? teamsValue.join(', ')
-      : 'No team'
 
   const leaderInit = leaderValue.some((v) => v) && !leaderMultiple
   // EFFECTS
@@ -210,7 +203,15 @@ const TeamUsersDetails = ({
         <UserDetailsHeader
           users={users}
           style={{ flex: 'unset', padding: 0 }}
-          subTitle={<OverflowField value={subTitle} align="left" />}
+          subTitle={
+            <UserSubtitle
+              teams={selectedTeams}
+              users={users}
+              teamsValue={teamsValue}
+              onAddTeam={handleTeamChange}
+            />
+          }
+          subItem={<div style={{ display: 'inline' }}>Test</div>}
         />
         <Divider style={{ margin: '10px 0' }} />
         <FormLayout>
