@@ -6,6 +6,8 @@ import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
+import ContextMenuItem from '/src/components/ContextMenuItem'
+import addRemoveMembers from './addRemoveMembers'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -51,9 +53,9 @@ const UserListTeams = ({
   selectedTeams,
   showAllUsers,
   onShowAllUsers,
+  teams = [],
+  onUpdateTeams,
 }) => {
-  const contextMenuRef = useRef(null)
-
   // Selection
   const selection = useMemo(
     () => userList.filter((user) => selectedUsers.includes(user.name)),
@@ -67,12 +69,89 @@ const UserListTeams = ({
     onSelectUsers(result)
   }
 
-  const contextMenuModel = [
-    {
-      label: showAllUsers ? 'Show All Users' : 'Show Members Only',
-      command: onShowAllUsers,
-    },
-  ]
+  const handleAddRemove = (add = [], remove = []) => {
+    const updatedTeams = addRemoveMembers(teams, selectedUsers, add, remove)
+
+    console.log(updatedTeams)
+
+    onUpdateTeams(updatedTeams)
+  }
+
+  const onContextSelectionChange = (e) => {
+    const name = e.value.name
+    const index = selectedUsers.indexOf(name)
+    if (index === -1) onSelectUsers([name])
+  }
+
+  // two arrays one for adding to teams and one for removing from teams
+  // only one user that is not in the team is required to add to the team
+  // only one user that is in the team is required to remove from the team
+  const addToList = useMemo(
+    () =>
+      teams.filter((team) =>
+        selectedUsers.some((user) => !team.members.some((mem) => mem.name === user)),
+      ),
+    [selectedTeams, selectedUsers, teams],
+  )
+
+  const removeFromList = useMemo(
+    () =>
+      teams.filter((team) =>
+        selectedUsers.some((user) => team.members.some((mem) => mem.name === user)),
+      ),
+    [selectedTeams, selectedUsers, teams],
+  )
+
+  // CONTEXT
+  // TODO: add/remove user from selectedTeams
+  const contextMenuRef = useRef(null)
+  const contextMenuModel = useMemo(() => {
+    const menuItems = [
+      {
+        label: showAllUsers ? 'Show All Users' : 'Show Members Only',
+        command: onShowAllUsers,
+        icon: showAllUsers ? 'visibility' : 'visibility_off',
+      },
+      {
+        label: 'Add To Team',
+        icon: 'add',
+        items: addToList.map((team) => ({
+          label: team.name,
+          icon: 'add',
+          command: () => handleAddRemove([team.name], []),
+        })),
+      },
+      {
+        label: 'Remove From Team',
+        icon: 'remove',
+        items: removeFromList.map((team) => ({
+          label: team.name,
+          icon: 'remove',
+          command: () => handleAddRemove([], [team.name]),
+        })),
+      },
+    ]
+
+    const addTemplateToItems = (items) => {
+      return items.map((item) => {
+        const newItem = {
+          ...item,
+          template: <ContextMenuItem key={item.label} contextMenuRef={contextMenuRef} {...item} />,
+        }
+        if (newItem.items) {
+          newItem.items = addTemplateToItems(newItem.items)
+        }
+        return newItem
+      })
+    }
+
+    const contextMenuItems = menuItems.map((item) => ({
+      template: <ContextMenuItem key={item.label} contextMenuRef={contextMenuRef} {...item} />,
+      items: item.items ? addTemplateToItems(item.items) : undefined,
+    }))
+
+    return contextMenuItems
+  }, [selectedTeams, selectedUsers, showAllUsers, teams])
 
   // Render
 
@@ -93,6 +172,7 @@ const UserListTeams = ({
           selectionMode="multiple"
           className="user-list-table"
           onSelectionChange={onSelectionChange}
+          onContextMenuSelectionChange={onContextSelectionChange}
           selection={selection}
           resizableColumns
           responsive="true"
@@ -100,11 +180,15 @@ const UserListTeams = ({
           tableStyle={{
             width: '100%',
           }}
+          groupRowsBy={'group'}
+          rowGroupMode="subheader"
+          rowGroupHeaderTemplate={(data) => {
+            return <div>{data.group}</div>
+          }}
         >
           <Column
             field="name"
             header="Username"
-            sortable
             body={(rowData) => ProfileRow({ rowData })}
             style={{
               width: '20%',
@@ -113,7 +197,6 @@ const UserListTeams = ({
           <Column
             field="attrib.fullName"
             header="Full Name"
-            sortable
             style={{
               width: '20%',
             }}
@@ -146,7 +229,6 @@ const UserListTeams = ({
                 </span>
               )
             }}
-            sortable
             sortField="teamsList"
           />
           <Column
@@ -177,7 +259,6 @@ const UserListTeams = ({
                 </span>
               )
             }}
-            sortable
             sortField="rolesList"
           />
         </DataTable>

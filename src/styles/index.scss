@@ -419,3 +419,14 @@ a {
     background-color: var(--button-background);
   }
 }
+
+// context menu
+.p-contextmenu {
+  min-width: 12.5rem;
+  width: unset;
+  padding: 0;
+
+  .p-submenu-list {
+    padding: 0;
+  }
+}
