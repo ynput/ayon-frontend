@@ -63,6 +63,7 @@ const ServicesPage = () => {
   }, [])
 
   const selection = useMemo(() => {
+    if (!services) return []
     return services.filter((i) => selectedServices.includes(i.name))
   }, [selectedServices, services])
 
