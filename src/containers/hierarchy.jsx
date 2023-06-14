@@ -369,7 +369,7 @@ const Hierarchy = (props) => {
           optionLabel="label"
           disabled={!projectName || isLoading || isFetching}
           selectedItemTemplate={selectedTypeTemplate}
-          onChange={(e) => setSelectedFolderTypes(e.value)}
+          onChange={(e) => setSelectedFolderTypes(e.value || [])}
           style={{ flexBasis: 150 }}
         />
       </Toolbar>
