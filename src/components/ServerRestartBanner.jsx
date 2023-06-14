@@ -3,6 +3,17 @@ import styled from 'styled-components'
 const StyledBanner = styled.div`
   position: fixed;
 
+  animation-name: delay-visibility;
+  animation-duration: 0.2s;
+  animation-fill-mode: forwards;
+  visibility: hidden;
+
+  @keyframes delay-visibility {
+    to {
+      visibility: visible;
+    }
+  }
+
   top: 40px;
   left: 50%;
   transform: translate(-50%, 0);
