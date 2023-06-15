@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ContextMenu } from 'primereact/contextmenu'
@@ -6,8 +5,8 @@ import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import ContextMenuItem from '/src/components/ContextMenuItem'
 import addRemoveMembers from './addRemoveMembers'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -103,10 +102,8 @@ const UserListTeams = ({
   )
 
   // CONTEXT
-  // TODO: add/remove user from selectedTeams
-  const contextMenuRef = useRef(null)
-  const contextMenuModel = useMemo(() => {
-    const menuItems = [
+  const contextMenuItems = useMemo(
+    () => [
       {
         label: showAllUsers ? 'Show All Users' : 'Show Members Only',
         command: onShowAllUsers,
@@ -130,28 +127,12 @@ const UserListTeams = ({
           command: () => handleAddRemove([], [team.name]),
         })),
       },
-    ]
+    ],
+    [selectedTeams, selectedUsers, showAllUsers, teams],
+  )
 
-    const addTemplateToItems = (items) => {
-      return items.map((item) => {
-        const newItem = {
-          ...item,
-          template: <ContextMenuItem key={item.label} contextMenuRef={contextMenuRef} {...item} />,
-        }
-        if (newItem.items) {
-          newItem.items = addTemplateToItems(newItem.items)
-        }
-        return newItem
-      })
-    }
-
-    const contextMenuItems = menuItems.map((item) => ({
-      template: <ContextMenuItem key={item.label} contextMenuRef={contextMenuRef} {...item} />,
-      items: item.items ? addTemplateToItems(item.items) : undefined,
-    }))
-
-    return contextMenuItems
-  }, [selectedTeams, selectedUsers, showAllUsers, teams])
+  // create ref and model
+  const [contextMenuRef, contextMenuModel, contextMenuShow] = useCreateContext(contextMenuItems)
 
   // Render
 
@@ -163,7 +144,7 @@ const UserListTeams = ({
       }}
     >
       <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-      <TablePanel loading={isLoading} onContextMenu={(e) => contextMenuRef.current.show(e)}>
+      <TablePanel loading={isLoading} onContextMenu={contextMenuShow}>
         <DataTable
           value={userList}
           scrollable="true"

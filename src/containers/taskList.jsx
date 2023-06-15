@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
@@ -11,6 +11,7 @@ import { CellWithIcon } from '/src/components/icons'
 import { setFocusedTasks, setPairing, setUri } from '/src/features/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '/src/services/getTasks'
+import useCreateContext from '../hooks/useCreateContext'
 
 const TaskList = ({ style = {} }) => {
   const tasks = useSelector((state) => state.project.tasks)
@@ -23,7 +24,6 @@ const TaskList = ({ style = {} }) => {
   const pairing = useSelector((state) => state.context.pairing)
   const userName = useSelector((state) => state.user.name)
 
-  const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false)
 
   //
@@ -90,12 +90,15 @@ const TaskList = ({ style = {} }) => {
     )
   }
 
-  const ctxMenuModel = [
+  const ctxMenuItems = [
     {
       label: 'Detail',
       command: () => setShowDetail(true),
+      icon: 'database',
     },
   ]
+
+  const [ctxMenuRef, ctxMenuModel, ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   if (isError) {
     toast.error(`Unable to load tasks. ${error}`)
@@ -129,7 +132,7 @@ const TaskList = ({ style = {} }) => {
           selectionMode="multiple"
           selectionKeys={selectedTasks}
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+          onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
           onRowClick={onRowClick}
         >

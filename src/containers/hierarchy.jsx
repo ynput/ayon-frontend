@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
@@ -18,6 +18,7 @@ import {
   setFocusedTasks,
 } from '/src/features/context'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
+import useCreateContext from '../hooks/useCreateContext'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -74,7 +75,6 @@ const Hierarchy = (props) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
-  const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false)
 
   //
@@ -311,12 +311,18 @@ const Hierarchy = (props) => {
     dispatch(setExpandedFolders(newExpandedFolders))
   }
 
-  const ctxMenuModel = [
+  // Context Menu
+  // const {openContext, useCreateContext} = useContextMenu()
+  // context items
+  const contextItems = [
     {
       label: 'Detail',
       command: () => setShowDetail(true),
+      icon: 'database',
     },
   ]
+  // create the ref and model
+  const [ctxMenuRef, ctxMenuModel, ctxMenuShow] = useCreateContext(contextItems)
 
   //
   // Render
@@ -336,14 +342,14 @@ const Hierarchy = (props) => {
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onRowClick={onRowClick}
-        onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+        onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
         onContextMenuSelectionChange={onContextMenuSelectionChange}
         onDoubleClick={handleDoubleClick}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
     )
-  }, [treeData, selectedFolders, expandedFolders, isFetching])
+  }, [treeData, selectedFolders, expandedFolders, isFetching, ctxMenuShow])
 
   if (isError) {
     toast.error(`Unable to load hierarchy. ${error}`)
