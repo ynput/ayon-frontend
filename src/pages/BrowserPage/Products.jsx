@@ -245,7 +245,10 @@ const Products = () => {
     },
   ]
 
-  const filterOptions = columns.map(({ field }) => ({ value: field, label: field }))
+  const filterOptions = columns.map(({ field, header }) => ({
+    value: field,
+    label: header || field,
+  }))
   const allColumnsNames = filterOptions.map(({ value }) => value)
   const isMultiSelected = focusedFolders.length > 1
 
