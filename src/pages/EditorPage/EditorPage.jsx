@@ -6,7 +6,6 @@ import { Spacer, Button, Section, Toolbar, TablePanel } from '@ynput/ayon-react-
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import sortByKey from '/src/helpers/sortByKey'
 
@@ -1025,8 +1024,7 @@ const EditorPage = () => {
     [canCommit, onCommit, handleRevert],
   )
 
-  const [ctxMenuGlobalRef, ctxMenuGlobalModel, ctxMenuGlobalShow] =
-    useCreateContext(ctxMenuGlobalItems)
+  const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
 
   // Context menu items on table items
   const ctxMenuTableItems = useMemo(
@@ -1064,7 +1062,7 @@ const EditorPage = () => {
     [currentSelection, canCommit],
   )
 
-  const [ctxMenuTableRef, ctxMenuTableModel, ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
   //
   // Table event handlers
@@ -1271,7 +1269,6 @@ const EditorPage = () => {
           />
           <Button icon="check" label="Save Changes" onClick={onCommit} disabled={!canCommit} />
         </Toolbar>
-        <ContextMenu model={ctxMenuGlobalModel} ref={ctxMenuGlobalRef} id="global" />
         <Splitter
           style={{ width: '100%', height: '100%' }}
           layout="horizontal"
@@ -1280,7 +1277,6 @@ const EditorPage = () => {
         >
           <SplitterPanel size={70} id="global" onContextMenu={ctxMenuGlobalShow}>
             <TablePanel loading={loading} style={{ height: '100%' }}>
-              <ContextMenu model={ctxMenuTableModel} ref={ctxMenuTableRef} id="table" />
               <TreeTable
                 responsive="true"
                 scrollable

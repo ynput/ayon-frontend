@@ -3,7 +3,6 @@ import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
@@ -418,7 +417,7 @@ const Products = () => {
     },
   ]
 
-  const [ctxMenuRef, ctxMenuModel, ctxMenuShow] = useCreateContext(ctxMenuItems)
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   //
   // Render
@@ -455,7 +454,6 @@ const Products = () => {
       </Toolbar>
 
       <TablePanel loading={isLoading || isFetching}>
-        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}

@@ -1,6 +1,5 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
 
 import { useMemo } from 'react'
@@ -132,7 +131,7 @@ const UserListTeams = ({
   )
 
   // create ref and model
-  const [contextMenuRef, contextMenuModel, contextMenuShow] = useCreateContext(contextMenuItems)
+  const [contextMenuShow] = useCreateContext(contextMenuItems)
 
   // Render
 
@@ -143,7 +142,6 @@ const UserListTeams = ({
         flex: 1.5,
       }}
     >
-      <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <TablePanel loading={isLoading} onContextMenu={contextMenuShow}>
         <DataTable
           value={userList}

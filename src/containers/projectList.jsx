@@ -5,7 +5,6 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useGetAllProjectsQuery } from '../services/project/getProject'
 import { useEffect } from 'react'
-import { ContextMenu } from 'primereact/contextmenu'
 import { useNavigate } from 'react-router'
 import useCreateContext from '../hooks/useCreateContext'
 
@@ -123,8 +122,7 @@ const ProjectList = ({
   }, [onNewProject, isProjectManager])
 
   // create the ref and model
-  const [globalContextMenuRef, globalContextMenuModel, globalContextMenuShow] =
-    useCreateContext(globalContextItems)
+  const [globalContextMenuShow] = useCreateContext(globalContextItems)
 
   // TABLE CONTEXT MENU
   const tableContextItems = useMemo(() => {
@@ -169,19 +167,16 @@ const ProjectList = ({
   }, [data, selection, contextProject])
 
   // create the ref and model
-  const [tableContextMenuRef, tableContextMenuModel, tableContextMenuShow] =
-    useCreateContext(tableContextItems)
+  const [tableContextMenuShow] = useCreateContext(tableContextItems)
 
   const onContextMenuSelectionChange = (event) => {
-    if (!selection.includes(event.value.name)) {
+    if (!selection?.includes(event.value.name)) {
       onSelect ? onSelect(event.value.name) : setContextProject(event.value.name)
     }
   }
 
   return (
     <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
-      <ContextMenu model={globalContextMenuModel} ref={globalContextMenuRef} id="global" />
-      <ContextMenu model={tableContextMenuModel} ref={tableContextMenuRef} id="table" />
       {isProjectManager && (
         <Button label="Add New Project" icon="create_new_folder" onClick={onNewProject} />
       )}

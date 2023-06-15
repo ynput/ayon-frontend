@@ -17,7 +17,6 @@ import useSearchFilter from '/src/hooks/useSearchFilter'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { useRestartServerMutation } from '/src/services/restartServer'
 import useCreateContext from '/src/hooks/useCreateContext'
-import { ContextMenu } from 'primereact/contextmenu'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -135,11 +134,10 @@ const Attributes = () => {
     },
   ])
 
-  const [ctxMenuTableRef, ctxMenuTableModel, ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
   return (
     <>
-      <ContextMenu model={ctxMenuTableModel} ref={ctxMenuTableRef} />
       <ConfirmDialog />
       <main>
         {showEditor && (

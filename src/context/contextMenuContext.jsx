@@ -1,30 +1,20 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useRef, useState } from 'react'
 
 const ContextMenuContext = createContext()
 
 function ContextMenuProvider(props) {
-  const [openRef, setOpenRef] = useState(null)
+  const ref = useRef(null)
+  const [model, setModel] = useState([])
 
-  function openContext(event, ref) {
-    if (!ref.current) return console.error('No ref passed to openContext')
-    if (!event) return console.error('No event passed to openContext')
-
-    if (openRef && openRef.current && openRef.current !== ref.current) {
-      openRef.current.hide()
-    }
-    setOpenRef(ref)
+  function openContext(event, model) {
+    if (!event || !ref.current || !model?.length) return
+    event.preventDefault()
+    setModel(model)
     ref.current.show(event)
   }
 
-  function handleClose() {
-    if (openRef && openRef.current) {
-      openRef.current.hide()
-    }
-    setOpenRef(null)
-  }
-
   return (
-    <ContextMenuContext.Provider value={{ openRef, openContext, handleClose }}>
+    <ContextMenuContext.Provider value={{ openContext, ref, model }}>
       {props.children}
     </ContextMenuContext.Provider>
   )

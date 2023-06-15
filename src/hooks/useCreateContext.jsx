@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import ContextMenuItem from '../components/ContextMenuItem'
 import { useContextMenu } from '../context/contextMenuContext'
 
@@ -17,8 +17,7 @@ const addTemplateToItems = (items, ref) => {
 }
 
 const useCreateContext = (menuList) => {
-  const { openContext } = useContextMenu()
-  const ref = useRef(null)
+  const { openContext, ref } = useContextMenu()
 
   const model = useMemo(
     () =>
@@ -33,10 +32,10 @@ const useCreateContext = (menuList) => {
     if (!e || !ref.current) return console.error('No ref or event passed to openContext')
 
     e.preventDefault()
-    openContext(e, ref)
+    openContext(e, model)
   }
 
-  return [ref, model, handleOpen]
+  return [handleOpen]
 }
 
 export default useCreateContext

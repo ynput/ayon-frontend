@@ -1,6 +1,5 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
 import './users.scss'
 
@@ -66,7 +65,7 @@ const UserList = ({
     [selection, isSelfSelected, setShowRenameUser, setShowSetPassword, onDelete],
   )
 
-  const [ctxMenuTableRef, ctxMenuTableModel, ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
   const ProfileRow = ({ rowData }) => (
     <StyledProfileRow>
@@ -86,7 +85,6 @@ const UserList = ({
   return (
     <Section className="wrap">
       <TablePanel loading={isLoading || isLoadingRoles}>
-        <ContextMenu model={ctxMenuTableModel} ref={ctxMenuTableRef} />
         <DataTable
           value={tableList}
           scrollable="true"

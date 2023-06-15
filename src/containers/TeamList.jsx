@@ -4,7 +4,6 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useEffect } from 'react'
-import { ContextMenu } from 'primereact/contextmenu'
 import useCreateContext from '../hooks/useCreateContext'
 
 const TeamList = ({
@@ -80,8 +79,7 @@ const TeamList = ({
     [onNewTeam],
   )
   // create the ref and model
-  const [globalContextMenuRef, globalContextMenuModel, globalContextMenuShow] =
-    useCreateContext(globalContextItems)
+  const [globalContextMenuShow] = useCreateContext(globalContextItems)
 
   // TABLE CONTEXT MENU
   const tableContextItems = useMemo(
@@ -106,16 +104,13 @@ const TeamList = ({
     [teams, selection],
   )
   // create the ref and model
-  const [tableContextMenuRef, tableContextMenuModel, tableContextMenuShow] =
-    useCreateContext(tableContextItems)
+  const [tableContextMenuShow] = useCreateContext(tableContextItems)
 
   return (
     <>
-      <ContextMenu model={globalContextMenuModel} ref={globalContextMenuRef} id="global" />
       <Section style={{ minWidth: 200, maxWidth: 200, ...styleSection }} className={className}>
         {footer}
         <TablePanel loading={isLoading} onContextMenu={globalContextMenuShow}>
-          <ContextMenu model={tableContextMenuModel} ref={tableContextMenuRef} id="table" />
           <DataTable
             value={teamList}
             scrollable="true"

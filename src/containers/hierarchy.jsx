@@ -6,7 +6,6 @@ import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-compo
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import { CellWithIcon } from '/src/components/icons'
 import EntityDetail from '/src/containers/entityDetail'
@@ -322,7 +321,7 @@ const Hierarchy = (props) => {
     },
   ]
   // create the ref and model
-  const [ctxMenuRef, ctxMenuModel, ctxMenuShow] = useCreateContext(contextItems)
+  const [ctxMenuShow] = useCreateContext(contextItems)
 
   //
   // Render
@@ -381,7 +380,6 @@ const Hierarchy = (props) => {
       </Toolbar>
 
       <TablePanel loading={isLoading || isFetching}>
-        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
           entityType="folder"

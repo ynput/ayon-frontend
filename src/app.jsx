@@ -30,6 +30,7 @@ import ErrorFallback from './components/ErrorFallback'
 import ServerRestartBanner from './components/ServerRestartBanner'
 import { useLazyGetInfoQuery } from './services/auth/getAuth'
 import { ContextMenuProvider } from './context/contextMenuContext'
+import { GlobalContextMenu } from './components/GlobalContextMenu'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -106,6 +107,7 @@ const App = () => {
       <Suspense fallback={<LoaderShade />}>
         <SocketProvider>
           <ContextMenuProvider>
+            <GlobalContextMenu />
             <RestartIndicator />
             <BrowserRouter>
               <QueryParamProvider

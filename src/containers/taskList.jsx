@@ -4,7 +4,6 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
@@ -98,7 +97,7 @@ const TaskList = ({ style = {} }) => {
     },
   ]
 
-  const [ctxMenuRef, ctxMenuModel, ctxMenuShow] = useCreateContext(ctxMenuItems)
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   if (isError) {
     toast.error(`Unable to load tasks. ${error}`)
@@ -116,7 +115,6 @@ const TaskList = ({ style = {} }) => {
   return (
     <Section style={style}>
       <TablePanel loading={isLoading}>
-        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
           entityType="task"
