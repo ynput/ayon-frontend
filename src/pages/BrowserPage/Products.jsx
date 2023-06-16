@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { InputText, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
-import { TreeTable } from 'primereact/treetable'
-import { Column } from 'primereact/column'
+import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
@@ -28,6 +26,9 @@ import useColumnResize from '/src/hooks/useColumnResize'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
 import { ayonApi } from '/src/services/ayon'
 import useCreateContext from '/src/hooks/useCreateContext'
+import ViewModeToggle from './ViewModeToggle'
+import ProductsList from './ProductsList'
+import ProductsGrid from './ProductsGrid'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -44,6 +45,9 @@ const Products = () => {
 
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
+  // grid/list/grouped
+  const [viewMode, setViewMode] = useState('list')
+
   // sets size of status based on status column width
   const [columnsWidths, setColumnWidths] = useColumnResize('products')
 
@@ -292,17 +296,6 @@ const Products = () => {
     columns = columns.filter(({ field }) => shownColumns.includes(field))
   }
 
-  const handleColumnReorder = (e) => {
-    const localStorageOrder = e.columns.reduce(
-      (acc, cur, i) => ({ ...acc, [cur.props.field]: i }),
-      {},
-    )
-
-    localStorage.setItem('products-columns-order', JSON.stringify(localStorageOrder))
-  }
-
-  // update status width
-
   //
   // Hooks
   //
@@ -454,8 +447,9 @@ const Products = () => {
           placeholder={placeholder}
           fixedPlaceholder
         />
+        <Spacer />
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </Toolbar>
-
       <TablePanel loading={isLoading || isFetching}>
         <EntityDetail
           projectName={projectName}
@@ -465,40 +459,20 @@ const Products = () => {
           onHide={() => setShowDetail(false)}
           versionOverrides={versionOverrides}
         />
-        <TreeTable
-          value={filteredData}
-          responsive="true"
-          scrollHeight="100%"
-          scrollable="true"
-          resizableColumns
-          columnResizeMode="expand"
-          emptyMessage="No product found"
-          selectionMode="multiple"
-          selectionKeys={selectedRows}
-          onSelectionChange={onSelectionChange}
-          onRowClick={onRowClick}
-          onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
-          onContextMenuSelectionChange={onContextMenuSelectionChange}
-          onColumnResizeEnd={setColumnWidths}
-          reorderableColumns
-          onColReorder={handleColumnReorder}
-        >
-          {columns.map((col, i) => {
-            return (
-              <Column
-                key={col.field}
-                style={{ ...col.style, width: columnsWidths[col.field] || col.width }}
-                expander={i === 0}
-                resizeable={true}
-                field={col.field}
-                header={col.header}
-                body={col.body}
-                className={col.field}
-                sortable
-              />
-            )
-          })}
-        </TreeTable>
+        {viewMode === 'grid' && <ProductsGrid />}
+        {viewMode === 'list' && (
+          <ProductsList
+            data={filteredData}
+            selectedRows={selectedRows}
+            onSelectionChange={onSelectionChange}
+            onRowClick={onRowClick}
+            ctxMenuShow={ctxMenuShow}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            setColumnWidths={setColumnWidths}
+            columns={columns}
+            columnsWidths={columnsWidths}
+          />
+        )}
       </TablePanel>
     </Section>
   )

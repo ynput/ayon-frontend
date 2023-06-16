@@ -119,13 +119,14 @@ const EntityGridTile = ({
   onClick,
   isLoading,
   isError,
+  style,
 }) => {
   const ref = useRef()
 
   // TODO: get full user
 
   return (
-    <PanelStyled ref={ref} onClick={onClick} isLoading={isError || isLoading}>
+    <PanelStyled ref={ref} onClick={onClick} isLoading={isError || isLoading} style={style}>
       <ThumbnailStyled>
         <Thumbnail
           entityType={thumbnailEntityType}
