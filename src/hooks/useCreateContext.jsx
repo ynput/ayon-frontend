@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import ContextMenuItem from '../components/ContextMenuItem'
 import { useContextMenu } from '../context/contextMenuContext'
 
@@ -19,20 +19,28 @@ const addTemplateToItems = (items, ref) => {
 const useCreateContext = (menuList) => {
   const { openContext, ref } = useContextMenu()
 
-  const model = useMemo(
-    () =>
-      menuList.map((item) => ({
+  const getModel = useCallback(
+    (menuList, ref) => {
+      return menuList.map((item) => ({
         template: <ContextMenuItem key={item.label} contextMenuRef={ref} {...item} />,
-        items: item.items ? addTemplateToItems(item.items, ref) : undefined,
-      })),
-    [menuList],
+        items: item.items?.length ? addTemplateToItems(item.items, ref) : undefined,
+      }))
+    },
+    [addTemplateToItems],
   )
 
-  const handleOpen = (e) => {
+  const model = useMemo(() => getModel(menuList, ref), [menuList, ref])
+
+  const handleOpen = (e, newItems) => {
     if (!e || !ref.current) return console.error('No ref or event passed to openContext')
 
+    let newModel
+    if (newItems) {
+      newModel = getModel(newItems, ref)
+    }
+
     e.preventDefault()
-    openContext(e, model)
+    openContext(e, newModel || model)
   }
 
   return [handleOpen]
