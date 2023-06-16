@@ -1,12 +1,11 @@
-import { useRef } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
 import './users.scss'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -28,8 +27,6 @@ const UserList = ({
   isSelfSelected,
   setLastSelectedUser,
 }) => {
-  const contextMenuRef = useRef(null)
-
   // Selection
   const selection = useMemo(
     () => userList.filter((user) => selectedUsers.includes(user.name)),
@@ -44,23 +41,31 @@ const UserList = ({
   }
 
   // IDEA: Can these go into the details panel aswell?
-  const contextMenuModel = [
-    {
-      label: 'Set username',
-      disabled: selection.length !== 1,
-      command: () => setShowRenameUser(true),
-    },
-    {
-      label: 'Set password',
-      disabled: selection.length !== 1,
-      command: () => setShowSetPassword(true),
-    },
-    {
-      label: 'Delete selected',
-      disabled: !selection.length || isSelfSelected,
-      command: () => onDelete(),
-    },
-  ]
+  const ctxMenuTableItems = useMemo(
+    () => [
+      {
+        label: 'Set username',
+        disabled: selection.length !== 1,
+        command: () => setShowRenameUser(true),
+        icon: 'edit',
+      },
+      {
+        label: 'Set password',
+        disabled: selection.length !== 1,
+        command: () => setShowSetPassword(true),
+        icon: 'key',
+      },
+      {
+        label: 'Delete selected',
+        disabled: !selection.length || isSelfSelected,
+        command: () => onDelete(),
+        icon: 'delete',
+      },
+    ],
+    [selection, isSelfSelected, setShowRenameUser, setShowSetPassword, onDelete],
+  )
+
+  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
   const ProfileRow = ({ rowData }) => (
     <StyledProfileRow>
@@ -80,7 +85,6 @@ const UserList = ({
   return (
     <Section className="wrap">
       <TablePanel loading={isLoading || isLoadingRoles}>
-        <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
         <DataTable
           value={tableList}
           scrollable="true"
@@ -89,12 +93,12 @@ const UserList = ({
           selectionMode="multiple"
           className="user-list-table"
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+          onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
           onContextMenuSelectionChange={(e) => {
             if (!selectedUsers.includes(e.value.name)) {
               onSelectUsers([...selection, e.value.name])
             }
-            setLastSelectedUser(e.data.name)
+            setLastSelectedUser(e.value.name)
           }}
           selection={selection}
           columnResizeMode="expand"

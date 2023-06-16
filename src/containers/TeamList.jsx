@@ -1,11 +1,10 @@
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useEffect } from 'react'
-import { ContextMenu } from 'primereact/contextmenu'
-import ContextMenuItem from '../components/ContextMenuItem'
+import useCreateContext from '../hooks/useCreateContext'
 
 const TeamList = ({
   teams,
@@ -62,28 +61,29 @@ const TeamList = ({
     onSelect(result)
   } // onSelectionChange
 
-  // Context menu outside of table items
-  const globalContextMenuRef = useRef(null)
+  const onContextMenuSelectionChange = (event) => {
+    if (!selection.includes(event.value.name)) {
+      onSelect(event.value.name)
+    }
+  }
 
-  const globalContextMenuModel = useMemo(() => {
-    const menuItems = [
+  // GLOBAL CONTEXT MENU
+  const globalContextItems = useMemo(
+    () => [
       {
         label: 'Create Team',
         icon: 'group_add',
         command: onNewTeam,
       },
-    ]
-    return menuItems.map((item) => ({
-      template: (
-        <ContextMenuItem key={item.label} contextMenuRef={globalContextMenuRef} {...item} />
-      ),
-    }))
-  }, [teams])
+    ],
+    [onNewTeam],
+  )
+  // create the ref and model
+  const [globalContextMenuShow] = useCreateContext(globalContextItems)
 
-  const tableContextMenuRef = useRef(null)
-  // Context menu outside of table items
-  const tableContextMenuModel = useMemo(() => {
-    const menuItems = [
+  // TABLE CONTEXT MENU
+  const tableContextItems = useMemo(
+    () => [
       {
         label: 'Create Team',
         icon: 'group_add',
@@ -100,36 +100,17 @@ const TeamList = ({
         icon: 'delete',
         command: onDelete,
       },
-    ]
-    return menuItems.map((item) => ({
-      template: <ContextMenuItem key={item.label} contextMenuRef={tableContextMenuRef} {...item} />,
-    }))
-  }, [teams, selection])
-
-  const contextMenuRefs = useMemo(
-    () => [tableContextMenuRef, globalContextMenuRef],
-    [tableContextMenuRef, globalContextMenuRef],
+    ],
+    [teams, selection],
   )
-
-  const handleContext = (e, id) => {
-    // show context menu and hide others
-    contextMenuRefs.forEach((ref) =>
-      ref?.current?.props?.id !== id ? ref.current?.hide() : ref.current?.show(e),
-    )
-  }
-  const onContextMenuSelectionChange = (event) => {
-    if (!selection.includes(event.value.name)) {
-      onSelect(event.value.name)
-    }
-  }
+  // create the ref and model
+  const [tableContextMenuShow] = useCreateContext(tableContextItems)
 
   return (
     <>
-      <ContextMenu model={globalContextMenuModel} ref={globalContextMenuRef} id="global" />
       <Section style={{ minWidth: 200, maxWidth: 200, ...styleSection }} className={className}>
         {footer}
-        <TablePanel loading={isLoading} onContextMenu={(e) => handleContext(e, 'global')}>
-          <ContextMenu model={tableContextMenuModel} ref={tableContextMenuRef} id="table" />
+        <TablePanel loading={isLoading} onContextMenu={globalContextMenuShow}>
           <DataTable
             value={teamList}
             scrollable="true"
@@ -140,7 +121,7 @@ const TeamList = ({
             selection={selectionObj}
             onSelectionChange={onSelect && onSelectionChange}
             onRowClick={onRowClick}
-            onContextMenu={(e) => handleContext(e.originalEvent, 'table')}
+            onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
           >
             <Column field="name" header="Team" style={{ minWidth: 150, ...style }} />

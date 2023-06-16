@@ -16,6 +16,7 @@ import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttr
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { useRestartServerMutation } from '/src/services/restartServer'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -120,6 +121,21 @@ const Attributes = () => {
     'attributes',
   )
 
+  const ctxMenuTableItems = useMemo(() => [
+    {
+      label: 'Edit',
+      icon: 'edit',
+      command: () => setShowEditor(true),
+    },
+    {
+      label: 'Delete',
+      icon: 'delete',
+      command: () => onDelete(),
+    },
+  ])
+
+  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+
   return (
     <>
       <ConfirmDialog />
@@ -161,6 +177,8 @@ const Attributes = () => {
               selectionMode="single"
               selection={selectedAttribute}
               onSelectionChange={(e) => setSelectedAttribute(e.value)}
+              onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
+              onContextMenuSelectionChange={(e) => setSelectedAttribute(e.value)}
               onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
               resizableColumns
             >

@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
@@ -28,6 +27,7 @@ import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
 import { ayonApi } from '/src/services/ayon'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -42,7 +42,6 @@ const Products = () => {
   const focusedProducts = useSelector((state) => state.context.focused.products)
   const pairing = useSelector((state) => state.context.pairing)
 
-  const ctxMenuRef = useRef(null)
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
   // sets size of status based on status column width
@@ -408,16 +407,20 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const ctxMenuModel = [
+  const ctxMenuItems = [
     {
       label: 'Product detail',
       command: () => setShowDetail('product'),
+      icon: 'database',
     },
     {
       label: 'Version detail',
       command: () => setShowDetail('version'),
+      icon: 'database',
     },
   ]
+
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   //
   // Render
@@ -454,7 +457,6 @@ const Products = () => {
       </Toolbar>
 
       <TablePanel loading={isLoading || isFetching}>
-        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}
@@ -475,7 +477,7 @@ const Products = () => {
           selectionKeys={selectedRows}
           onSelectionChange={onSelectionChange}
           onRowClick={onRowClick}
-          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+          onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
           onColumnResizeEnd={setColumnWidths}
           reorderableColumns

@@ -1,16 +1,16 @@
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import { useGetAddonListQuery } from '/src/services/addonList'
 import {
   useSetAddonVersionsMutation,
   useSetCopyAddonVariantMutation,
 } from '/src/services/addonList'
+import useCreateContext from '../hooks/useCreateContext'
 
 const sortSemver = (arr) => {
   arr.sort(function (a, b) {
@@ -41,21 +41,21 @@ const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {
   if (projectName) {
     result.push({
       label: 'From project',
-      icon: 'pi pi-copy',
+      icon: 'move_group',
       disabled: true,
       items: [],
     })
 
     result.push({
       label: 'From snapshot',
-      icon: 'pi pi-copy',
+      icon: 'move_group',
       disabled: true,
       items: [],
     })
 
     result.push({
       label: 'Save snapshot',
-      icon: 'pi pi-save',
+      icon: 'save',
       disabled: true,
     })
 
@@ -67,6 +67,7 @@ const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {
   const versionItems = [
     {
       label: 'Disable ' + environment,
+      icon: 'extension_off',
       command: () => {
         const versions = {}
         for (const addon of selectedAddons) {
@@ -107,6 +108,7 @@ const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {
 
   result.push({
     label: 'Set version',
+    icon: 'layers',
     items: versionItems,
   })
 
@@ -115,6 +117,7 @@ const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {
   if (environment === 'production') {
     result.push({
       label: 'Copy from staging',
+      icon: 'move_group',
       command: async () => {
         for (const addon of selectedAddons) {
           try {
@@ -133,6 +136,7 @@ const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {
   } else {
     result.push({
       label: 'Copy from production',
+      icon: 'move_group',
       command: async () => {
         for (const addon of selectedAddons) {
           try {
@@ -167,8 +171,6 @@ const AddonList = ({
   withSettings = 'settings',
   onAddonChanged = () => {},
 }) => {
-  const cm = useRef(null)
-
   const { data, loading } = useGetAddonListQuery()
   const uriChanged = useSelector((state) => state.context.uriChanged)
 
@@ -221,12 +223,18 @@ const AddonList = ({
   }
 
   // Context menu
-  const menu = createContextMenu(environment, selectedAddons, onAddonChanged, projectName)
+  const contextMenuItems = createContextMenu(
+    environment,
+    selectedAddons,
+    onAddonChanged,
+    projectName,
+  )
+
+  const [ctxMenuShow] = useCreateContext(contextMenuItems)
 
   return (
     <Section style={{ minWidth: 250 }}>
       <TablePanel loading={loading}>
-        <ContextMenu model={menu} ref={cm} />
         <DataTable
           value={addons}
           selectionMode="multiple"
@@ -234,7 +242,7 @@ const AddonList = ({
           scrollHeight="flex"
           selection={selectedAddons}
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => cm.current.show(e.originalEvent)}
+          onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
         >
           <Column field="title" header="Addon" />
           <Column field="version" header="Version" style={{ maxWidth: 80 }} />
