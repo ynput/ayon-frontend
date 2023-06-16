@@ -7,6 +7,7 @@ import { useGetSettingsAddonsQuery } from '/src/services/addonList'
 import SettingsAddon from './SettingsAddon'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
+const AddonInstall = lazy(() => import('./AddonInstall'))
 const AddonVersions = lazy(() => import('./AddonVersions'))
 const StudioSettings = lazy(() => import('./StudioSettings'))
 const SiteSettings = lazy(() => import('./SiteSettings'))
@@ -51,6 +52,8 @@ const SettingsPage = () => {
     }
 
     switch (module) {
+      case 'addonInstall':
+        return <AddonInstall />
       case 'addonVersions':
         return <AddonVersions />
       case 'anatomyPresets':
@@ -79,6 +82,11 @@ const SettingsPage = () => {
         name: 'Anatomy presets',
         path: '/settings/anatomyPresets',
         module: 'anatomyPresets',
+      },
+      {
+        name: 'Install addon',
+        path: '/settings/addonInstall',
+        module: 'addonInstall',
       },
       {
         name: 'Addon versions',
