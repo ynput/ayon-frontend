@@ -1,9 +1,25 @@
-import { useMemo } from 'react'
-import { ScrollPanel, Section } from '@ynput/ayon-react-components'
+import { useMemo, useState, useEffect } from 'react'
+import {
+  ScrollPanel,
+  Section,
+  InputText,
+  Dropdown,
+  FormLayout,
+  FormRow,
+} from '@ynput/ayon-react-components'
 import { useGetInstallerListQuery } from '/src/services/installers'
 
 const BundleDetail = ({ bundle }) => {
   const { data: installerList = [] } = useGetInstallerListQuery()
+  const [formData, setFormData] = useState({})
+
+  const isReadOnly = !!bundle
+
+  useEffect(() => {
+    if (bundle) {
+      setFormData(bundle)
+    }
+  }, [bundle])
 
   const installerVersions = useMemo(() => {
     if (!installerList) return []
@@ -25,14 +41,27 @@ const BundleDetail = ({ bundle }) => {
 
   return (
     <Section>
-      <pre>
-        {JSON.stringify(bundle, null, 2)}
-        {JSON.stringify(installerVersions, null, 2)}
-      </pre>
+      <FormLayout>
+        <FormRow label="Name">
+          <InputText
+            value={formData.name || ''}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            readOnly={isReadOnly}
+          />
+        </FormRow>
+        <FormRow label="Installer version">
+          <Dropdown
+            value={[formData.installerVersion || '']}
+            options={installerVersions}
+            onChange={(e) => setFormData({ ...formData, installerVersion: e.target.value[0] })}
+            disabled={isReadOnly}
+          />
+        </FormRow>
+      </FormLayout>
 
-      <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
-        addon list here
-      </ScrollPanel>
+      {JSON.stringify(installerVersions)}
+
+      <ScrollPanel style={{ flexGrow: 1 }} className="transparent"></ScrollPanel>
     </Section>
   )
 }
