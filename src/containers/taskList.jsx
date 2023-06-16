@@ -89,16 +89,6 @@ const TaskList = ({ style = {} }) => {
     )
   }
 
-  const ctxMenuItems = [
-    {
-      label: 'Detail',
-      command: () => setShowDetail(true),
-      icon: 'database',
-    },
-  ]
-
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
-
   if (isError) {
     toast.error(`Unable to load tasks. ${error}`)
 
@@ -111,6 +101,17 @@ const TaskList = ({ style = {} }) => {
     uri += `?task=${node.name}`
     dispatch(setUri(uri))
   }
+
+  // CONTEXT MENU
+  const ctxMenuItems = [
+    {
+      label: 'Detail',
+      command: () => setShowDetail(true),
+      icon: 'database',
+    },
+  ]
+
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   return (
     <Section style={style}>

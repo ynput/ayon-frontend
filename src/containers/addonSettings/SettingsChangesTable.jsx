@@ -1,16 +1,14 @@
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const SettingsChangesTable = ({ changes, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
   const [selectedKeys, setSelectedKeys] = useState({})
   const [knownAddonKeys, setKnownAddonKeys] = useState({})
-
-  const cm = useRef(null)
 
   useEffect(() => {
     const newExpandedKeys = {}
@@ -63,12 +61,13 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
     return result
   }, [changes])
 
-  const menu = useMemo(() => {
+  const ctxMenuItems = useMemo(() => {
     let result = []
 
     if (onRevert) {
       result.push({
-        label: 'Revert selected',
+        label: 'Clear Selected',
+        icon: 'delete',
         command: () => {
           const result = {}
           for (const addonKey in changes) {
@@ -91,6 +90,8 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
     return result
   }, [selectedKeys])
 
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+
   const actionRenderer = (rowData) => {
     if (!rowData.data.isKey) return null
     const delChange = () => {
@@ -104,7 +105,6 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
   return (
     <Section>
       <TablePanel>
-        <ContextMenu model={menu} ref={cm} />
         <TreeTable
           value={changesTree}
           expandedKeys={expandedKeys}
@@ -117,7 +117,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
               setSelectedKeys(event.value)
             }
           }}
-          onContextMenu={(event) => cm.current.show(event.originalEvent)}
+          onContextMenu={(event) => ctxMenuShow(event.originalEvent)}
           emptyMessage="No changes"
           scrollable="true"
           scrollHeight="100%"
