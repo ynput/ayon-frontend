@@ -4,6 +4,7 @@ import styled, { css } from 'styled-components'
 import { Panel, UserImage } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
 import { useRef } from 'react'
+import getShimmerStyles from '../styles/getShimmerStyles'
 
 const PanelStyled = styled(Panel)`
   padding: 4px;
@@ -13,8 +14,17 @@ const PanelStyled = styled(Panel)`
   width: 100%;
   min-height: 120px;
   gap: 0;
-  /* cursor: pointer; */
+  overflow: hidden;
+
   user-select: none;
+  transition: opacity 0.3s;
+
+  /* add point if onClick */
+  ${({ onClick }) =>
+    onClick &&
+    css`
+      cursor: pointer;
+    `}
 
   footer {
     display: flex;
@@ -39,13 +49,38 @@ const PanelStyled = styled(Panel)`
     min-height: 17.5px;
   }
 
-  ${({ isLoading }) =>
-    isLoading &&
+  ${({ $isLoading }) =>
+    $isLoading &&
     css`
-      opacity: 0.25;
+      opacity: 0.7;
 
       :hover {
         background-color: var(--color-grey-01);
+      }
+
+      .thumbnail {
+        background-color: var(--color-grey-00);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        ${getShimmerStyles('transparent')}
+        opacity: 0.5;
+        transition: opacity 0.3s;
+      }
+    `}
+
+  /* is error styles */
+    ${({ $isError }) =>
+    $isError &&
+    css`
+      /* fade tile */
+      opacity: 0.5;
+      /* hide shimmer */
+      &::after {
+        opacity: 0;
       }
     `}
 `
@@ -123,17 +158,37 @@ const EntityGridTile = ({
 }) => {
   const ref = useRef()
 
-  // TODO: get full user
+  // if is loading return shimmer skeleton
+  if (isLoading || isError)
+    return (
+      <PanelStyled
+        ref={ref}
+        $isLoading={isLoading || isError}
+        style={style}
+        $isError={isError}
+        className="skeleton"
+      >
+        <ThumbnailStyled>
+          <Thumbnail isLoading className={'thumbnail'} />
+          <div>
+            <IconStyled className="material-symbols-outlined"></IconStyled>
+            <IconStyled className="material-symbols-outlined"></IconStyled>
+          </div>
+        </ThumbnailStyled>
+        <span></span>
+        <footer></footer>
+      </PanelStyled>
+    )
 
   return (
-    <PanelStyled ref={ref} onClick={onClick} isLoading={isError || isLoading} style={style}>
+    <PanelStyled ref={ref} onClick={onClick} style={style}>
       <ThumbnailStyled>
         <Thumbnail
           entityType={thumbnailEntityType}
           entityId={thumbnailEntityId}
           projectName={projectName}
-          isLoading={isLoading}
           entityUpdatedAt={updatedAt}
+          className={'thumbnail'}
         />
         <div>
           <IconStyled className="material-symbols-outlined">{typeIcon}</IconStyled>

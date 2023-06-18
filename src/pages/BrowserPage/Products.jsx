@@ -46,7 +46,7 @@ const Products = () => {
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
   // grid/list/grouped
-  const [viewMode, setViewMode] = useState('list')
+  const [viewMode, setViewMode] = useLocalStorage('productsViewMode', 'list')
 
   // sets size of status based on status column width
   const [columnsWidths, setColumnWidths] = useColumnResize('products')
@@ -171,7 +171,7 @@ const Products = () => {
 
         const icon = node.data.isGroup
           ? 'folder'
-          : productTypes[node.data.productType]?.icon || 'help_center'
+          : productTypes[node.data.productType]?.icon || 'inventory_2'
 
         return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
       },
@@ -363,6 +363,10 @@ const Products = () => {
   // Handlers
   //
 
+  const handleGridContext = () => {
+    // set selection and open context menu
+  }
+
   // Set the breadcrumbs when a row is clicked
   const onRowClick = (event) => {
     if (event.node.data.isGroup) {
@@ -450,7 +454,7 @@ const Products = () => {
         <Spacer />
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </Toolbar>
-      <TablePanel loading={isLoading || isFetching}>
+      <TablePanel style={{ overflow: 'hidden' }}>
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}
@@ -459,7 +463,16 @@ const Products = () => {
           onHide={() => setShowDetail(false)}
           versionOverrides={versionOverrides}
         />
-        {viewMode === 'grid' && <ProductsGrid />}
+        {viewMode === 'grid' && !!focusedFolders.length && (
+          <ProductsGrid
+            isLoading={isLoading || isFetching}
+            data={filteredData}
+            onSelection={onSelectionChange}
+            onContext={handleGridContext}
+            selected={selectedRows}
+            productTypes={productTypes}
+          />
+        )}
         {viewMode === 'list' && (
           <ProductsList
             data={filteredData}
