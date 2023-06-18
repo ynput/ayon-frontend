@@ -37,7 +37,15 @@ const ImageStyled = styled.img`
 
 const ImagePlaceholder = () => <span className="material-symbols-outlined">image</span>
 
-const Thumbnail = ({ projectName, entityType, entityId, style, entityUpdatedAt }) => {
+const Thumbnail = ({
+  projectName,
+  entityType,
+  entityId,
+  style,
+  entityUpdatedAt,
+  isLoading,
+  className,
+}) => {
   // Display image only when loaded to avoid flickering and displaying,
   // ugly border around the image (when it's not loaded yet)
   const [thumbLoaded, setThumbLoaded] = useState(false)
@@ -47,8 +55,8 @@ const Thumbnail = ({ projectName, entityType, entityId, style, entityUpdatedAt }
   const isWrongEntity = ['task', 'product'].includes(entityType)
 
   return (
-    <ThumbnailStyled style={style}>
-      <ImagePlaceholder />
+    <ThumbnailStyled style={style} className={className}>
+      {!isLoading && <ImagePlaceholder />}
       {entityType && !(isWrongEntity || !entityId) && (
         <ImageStyled
           alt={`Entity thumbnail ${entityId}`}
