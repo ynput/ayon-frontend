@@ -468,7 +468,7 @@ const Products = () => {
           versionOverrides={versionOverrides}
           onContext={handleGridContext}
         />
-        {viewMode === 'grid' && !!focusedFolders.length && (
+        {viewMode !== 'list' && !!focusedFolders.length && (
           <ProductsGrid
             isLoading={isLoading || isFetching}
             data={filteredData}
@@ -480,6 +480,7 @@ const Products = () => {
             productTypes={productTypes}
             statuses={statusesObject}
             lastSelected={lastFocused}
+            groupBy={viewMode === 'grouped' ? 'productType' : null}
           />
         )}
         {viewMode === 'list' && (

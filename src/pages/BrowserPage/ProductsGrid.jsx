@@ -10,6 +10,10 @@ const StyledGridLayout = styled.div`
   height: 100%;
   scrollbar-gutter: stable;
 
+  & > * {
+    margin-bottom: 16px;
+  }
+
   &::-webkit-scrollbar {
     width: 20px;
   }
@@ -44,6 +48,13 @@ const StackedGridTiles = styled.div`
   }
 `
 
+const StyledGroupName = styled.h2`
+  font-size: 1.3em;
+  padding-left: 8px;
+  margin: 0;
+  margin-bottom: 8px;
+`
+
 const ProductsGrid = ({
   isLoading,
   data,
@@ -55,6 +66,7 @@ const ProductsGrid = ({
   productTypes,
   onContext,
   onContextMenuSelectionChange,
+  groupBy = null,
 }) => {
   const isNone = data.length === 0 && !isLoading
 
@@ -138,6 +150,27 @@ const ProductsGrid = ({
     )
   }
 
+  // by default it is not grouped
+  let groupedData = { '': data }
+
+  // if groupBy is set, group the data
+  if (groupBy && !isLoading) {
+    groupedData = data.reduce((acc, curr) => {
+      const { data: product } = curr
+      const group = product[groupBy] || 'Other'
+
+      // if group is not in acc, add it
+      if (!acc[group]) {
+        acc[group] = []
+      }
+
+      // add product to group
+      acc[group].push(curr)
+
+      return acc
+    }, {})
+  }
+
   return (
     <StyledGridLayout
       style={{
@@ -145,39 +178,44 @@ const ProductsGrid = ({
       }}
       onClick={() => onSelectionChange({ value: {} })}
     >
-      <GridLayout ratio={1.5} minWidth={170}>
-        {isLoading
-          ? Array.from({ length: 20 }).map((_, index) => (
-              <EntityGridTile
-                style={{
-                  minHeight: 'unset',
-                }}
-                key={index}
-                isLoading
-              />
-            ))
-          : data.map(
-              ({ data: product }, index) =>
-                product && (
+      {Object.entries(groupedData).map(([groupName, groupData], index) => (
+        <>
+          {groupName && <StyledGroupName>{groupName}</StyledGroupName>}
+          <GridLayout ratio={1.5} minWidth={170} key={index}>
+            {isLoading
+              ? Array.from({ length: 20 }).map((_, index) => (
                   <EntityGridTile
                     style={{
                       minHeight: 'unset',
                     }}
                     key={index}
-                    typeIcon={productTypes[product.productType]?.icon || 'inventory_2'}
-                    statusIcon={statuses[product.status]?.icon || ''}
-                    statusColor={statuses[product.status]?.color || ''}
-                    name={product.name}
-                    footer={product.versionName}
-                    thumbnailEntityId={product.id}
-                    thumbnailEntityType="product"
-                    onClick={(e) => handleSelection(e, product)}
-                    selected={product.id in selection}
-                    onContextMenu={(e) => handleContext(e, product.id)}
+                    isLoading
                   />
-                ),
-            )}
-      </GridLayout>
+                ))
+              : groupData.map(
+                  ({ data: product }, index) =>
+                    product && (
+                      <EntityGridTile
+                        style={{
+                          minHeight: 'unset',
+                        }}
+                        key={index}
+                        typeIcon={productTypes[product.productType]?.icon || 'inventory_2'}
+                        statusIcon={statuses[product.status]?.icon || ''}
+                        statusColor={statuses[product.status]?.color || ''}
+                        name={product.name}
+                        footer={product.versionName}
+                        thumbnailEntityId={product.id}
+                        thumbnailEntityType="product"
+                        onClick={(e) => handleSelection(e, product)}
+                        selected={product.id in selection}
+                        onContextMenu={(e) => handleContext(e, product.id)}
+                      />
+                    ),
+                )}
+          </GridLayout>
+        </>
+      ))}
     </StyledGridLayout>
   )
 }
@@ -192,6 +230,8 @@ ProductsGrid.propTypes = {
   productTypes: PropTypes.object,
   statuses: PropTypes.object,
   lastSelected: PropTypes.string,
+  onContextMenuSelectionChange: PropTypes.func,
+  groupBy: PropTypes.string,
 }
 
 export default ProductsGrid
