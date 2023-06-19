@@ -13,7 +13,7 @@ const NoneFound = styled.div`
 const StackedGridTiles = styled.div`
   height: 120px;
   margin-bottom: 32px;
-  & > * {
+  & > div {
     position: absolute;
     height: 120px;
     opacity: 1;
