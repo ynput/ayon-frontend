@@ -84,6 +84,8 @@ const ProjectLatest = ({ projectName }) => {
             entities={row.entities}
             args={row.args}
             filter={row.filter}
+            isProjectLoading={isLoading || isFetching}
+            rowIndex={i}
           />
         </Fragment>
       ))}

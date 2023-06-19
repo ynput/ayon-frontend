@@ -11,6 +11,7 @@ const initialState = {
     tasks: [],
     workfiles: [],
     editor: [],
+    lastFocused: null,
   },
   selectedVersions: {},
   pairing: [],
@@ -120,6 +121,10 @@ const contextSlice = createSlice({
       state.uriChanged = state.uriChanged + 1
     },
 
+    onFocusChanged: (state, action) => {
+      state.focused.lastFocused = action.payload
+    },
+
     setReload: (state, action) => {
       state.reload = {
         ...state.reload,
@@ -163,6 +168,7 @@ export const {
   onShare,
   closeShare,
   selectProject,
+  onFocusChanged,
 } = contextSlice.actions
 
 export default contextSlice.reducer

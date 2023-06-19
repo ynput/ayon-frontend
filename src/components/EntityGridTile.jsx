@@ -4,6 +4,7 @@ import styled, { css } from 'styled-components'
 import { Panel, UserImage } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
 import { useRef } from 'react'
+import getShimmerStyles from '../styles/getShimmerStyles'
 
 const PanelStyled = styled(Panel)`
   padding: 4px;
@@ -13,13 +14,34 @@ const PanelStyled = styled(Panel)`
   width: 100%;
   min-height: 120px;
   gap: 0;
-  /* cursor: pointer; */
+  overflow: hidden;
+
   user-select: none;
+  transition: opacity 0.3s;
+
+  & > * {
+    z-index: 10;
+  }
+
+  /* add point if onClick */
+  ${({ onClick }) =>
+    onClick &&
+    css`
+      cursor: pointer;
+    `}
 
   footer {
     display: flex;
     justify-content: space-between;
     min-height: 17.5px;
+    padding: 0 4px;
+    overflow: hidden;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   /* name */
@@ -39,13 +61,53 @@ const PanelStyled = styled(Panel)`
     min-height: 17.5px;
   }
 
-  ${({ isLoading }) =>
-    isLoading &&
+  /* border: 1px solid transparent; */
+  /* when selected */
+  ${({ $isSelected }) =>
+    $isSelected &&
     css`
-      opacity: 0.25;
+      /* border: 0.15rem solid var(--color-hl-00); */
+      background-color: var(--color-row-hl);
+      /* remove hover */
+      :hover {
+        background-color: var(--color-row-hl);
+      }
+    `}
+
+  /* when in loading state */
+  ${({ $isLoading }) =>
+    $isLoading &&
+    css`
+      opacity: 0.7;
 
       :hover {
         background-color: var(--color-grey-01);
+      }
+
+      .thumbnail {
+        background-color: var(--color-grey-00);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        ${getShimmerStyles('transparent')}
+        opacity: 0.5;
+        transition: opacity 0.3s;
+        z-index: 10;
+      }
+    `}
+
+  /* is error styles */
+    ${({ $isError }) =>
+    $isError &&
+    css`
+      /* fade tile */
+      opacity: 0.5;
+      /* hide shimmer */
+      &::after {
+        opacity: 0;
       }
     `}
 `
@@ -119,20 +181,49 @@ const EntityGridTile = ({
   onClick,
   isLoading,
   isError,
+  selected,
+  ...props
 }) => {
   const ref = useRef()
 
-  // TODO: get full user
+  // if is loading return shimmer skeleton
+  if (isLoading || isError)
+    return (
+      <PanelStyled
+        ref={ref}
+        $isLoading={isLoading || isError}
+        $isError={isError}
+        {...props}
+        className="skeleton"
+      >
+        <ThumbnailStyled>
+          <Thumbnail isLoading className={'thumbnail'} />
+          <div>
+            <IconStyled className="material-symbols-outlined"></IconStyled>
+            <IconStyled className="material-symbols-outlined"></IconStyled>
+          </div>
+        </ThumbnailStyled>
+        <span></span>
+        <footer></footer>
+      </PanelStyled>
+    )
 
   return (
-    <PanelStyled ref={ref} onClick={onClick} isLoading={isError || isLoading}>
+    <PanelStyled
+      ref={ref}
+      onClick={onClick}
+      $isSelected={selected}
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick(e)}
+      {...props}
+    >
       <ThumbnailStyled>
         <Thumbnail
           entityType={thumbnailEntityType}
           entityId={thumbnailEntityId}
           projectName={projectName}
-          isLoading={isLoading}
           entityUpdatedAt={updatedAt}
+          className={'thumbnail'}
         />
         <div>
           <IconStyled className="material-symbols-outlined">{typeIcon}</IconStyled>
@@ -141,7 +232,7 @@ const EntityGridTile = ({
           </IconStyled>
         </div>
       </ThumbnailStyled>
-      <span>{name}</span>
+      <span style={{ padding: '0 4px' }}>{name}</span>
       {subTitle && <span>{subTitle}</span>}
       <footer>
         <span>{footer}</span>

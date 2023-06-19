@@ -60,7 +60,7 @@ const PanelStyled = styled(Panel)`
     isLoading &&
     css`
       & > *:not(header) {
-        opacity: 0.25;
+        /* opacity: 0.25; */
       }
     `}
 `

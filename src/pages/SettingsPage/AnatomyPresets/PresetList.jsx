@@ -1,45 +1,51 @@
-import { useMemo, useRef } from 'react'
+import { useCallback, useMemo } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import { TablePanel } from '@ynput/ayon-react-components'
 
-import { useGetAnatomyPresetsQuery } from '../../../services/anatomy/getAnatomy'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const PresetList = ({
   selectedPreset,
   setSelectedPreset,
   onSetPrimary,
-  onUnsetPrimary,
   onDelete,
+  presetList,
+  isLoading,
 }) => {
-  const contextMenuRef = useRef(null)
+  const getCtxMenuItems = useCallback(
+    (data = {}) => {
+      // empty string is default preset
+      const isDefault = !('primary' in data)
+      const primarySelected = data.primary === 'PRIMARY'
 
-  // get presets lists data
-  const { data: presetList = [], isLoading } = useGetAnatomyPresetsQuery()
+      const items = [
+        {
+          label: 'Set as primary',
+          icon: 'flag',
+          command: () => onSetPrimary(isDefault ? '_' : data.name),
+          disabled: primarySelected || isDefault,
+        },
+        {
+          label: 'Delete',
+          icon: 'delete',
+          disabled: isDefault,
+          command: () => onDelete(data.name, primarySelected),
+        },
+      ]
 
-  const contextMenuModel = useMemo(() => {
-    return [
-      {
-        label: 'Set as primary',
-        command: onSetPrimary,
-      },
-      {
-        label: 'Unset primary preset',
-        command: onUnsetPrimary,
-      },
-      {
-        label: 'Delete',
-        disabled: selectedPreset === '_',
-        command: onDelete,
-      },
-    ]
-  }, [selectedPreset, presetList])
+      return items
+    },
+    [selectedPreset, presetList, onDelete, onSetPrimary],
+  )
+
+  const ctxMenuItems = useMemo(() => getCtxMenuItems(), [])
+
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   return (
     <TablePanel loading={isLoading}>
-      <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
       <DataTable
         value={presetList}
         scrollable
@@ -50,7 +56,7 @@ const PresetList = ({
         selection={{ name: selectedPreset }}
         onSelectionChange={(e) => setSelectedPreset(e.value.name)}
         onContextMenuSelectionChange={(e) => setSelectedPreset(e.value.name)}
-        onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+        onContextMenu={(e) => ctxMenuShow(e.originalEvent, getCtxMenuItems(e.data))}
       >
         <Column field="title" header="Name" />
         <Column field="primary" header="Primary" style={{ maxWidth: 70 }} />

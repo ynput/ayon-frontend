@@ -11,6 +11,7 @@ import { Spacer, Button, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react
 
 import {
   useGetAnatomyPresetQuery,
+  useGetAnatomyPresetsQuery,
   useGetAnatomySchemaQuery,
 } from '../../../services/anatomy/getAnatomy'
 import PresetList from './PresetList'
@@ -30,6 +31,15 @@ const AnatomyPresets = () => {
   //
   // Hooks
   //
+
+  // get presets lists data
+  const { data: presetList = [], isLoading } = useGetAnatomyPresetsQuery()
+
+  const isSelectedPrimary = useMemo(() => {
+    // find preset in list
+    const preset = presetList.find((p) => p.name === selectedPreset)
+    return preset && preset.primary === 'PRIMARY'
+  }, [selectedPreset, presetList])
 
   const { data: schema } = useGetAnatomySchemaQuery()
 
@@ -69,19 +79,21 @@ const AnatomyPresets = () => {
   }
 
   // DELETE PRESET
-  const handleDeletePreset = () => {
+  const handleDeletePreset = (name, isPrimary) => {
     console.log('handleDeletePreset')
     confirmDialog({
       header: 'Delete Preset',
-      message: `Are you sure you want to delete the preset ${selectedPreset}?`,
+      message: `Are you sure you want to delete the preset ${name}?`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Delete',
       accept: () => {
-        deletePreset({ name: selectedPreset })
+        deletePreset({ name })
           .unwrap()
           .then(() => {
-            setSelectedPreset('_')
-            toast.info(`Preset ${selectedPreset} deleted`)
+            if (isPrimary) {
+              setSelectedPreset('_')
+            }
+            toast.info(`Preset ${name} deleted`)
           })
           .catch((err) => {
             toast.error(err.message)
@@ -103,7 +115,7 @@ const AnatomyPresets = () => {
       .unwrap()
       .then(() => {
         if (name) {
-          toast.info(`Preset ${selectedPreset} set as primary`)
+          toast.info(`Preset ${name} set as primary`)
         } else {
           toast.info(`Unset primary preset`)
         }
@@ -152,24 +164,25 @@ const AnatomyPresets = () => {
         <PresetList
           selectedPreset={selectedPreset}
           setSelectedPreset={setSelectedPreset}
-          onSetPrimary={() => setPrimaryPreset(selectedPreset)}
-          onUnsetPrimary={setPrimaryPreset}
+          onSetPrimary={setPrimaryPreset}
           onDelete={handleDeletePreset}
+          isLoading={isLoading}
+          presetList={presetList}
         />
       </Section>
 
       <Section>
         <Toolbar>
           <Button
-            label="Set as primary preset"
-            icon="bolt"
+            label="Set as primary"
+            icon="flag"
             onClick={() => setPrimaryPreset(selectedPreset)}
           />
           <Button
             label="Delete the preset"
             icon="delete"
             disabled={selectedPreset === '_'}
-            onClick={handleDeletePreset}
+            onClick={() => handleDeletePreset(selectedPreset, isSelectedPrimary)}
           />
           <Spacer />
           <Button

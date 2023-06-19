@@ -1,9 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { InputText, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
-import { TreeTable } from 'primereact/treetable'
-import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
+import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
@@ -18,6 +15,7 @@ import {
   setUri,
   setPairing,
   productSelected,
+  onFocusChanged,
 } from '/src/features/context'
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
@@ -28,6 +26,10 @@ import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
 import { ayonApi } from '/src/services/ayon'
+import useCreateContext from '/src/hooks/useCreateContext'
+import ViewModeToggle from './ViewModeToggle'
+import ProductsList from './ProductsList'
+import ProductsGrid from './ProductsGrid'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -38,13 +40,18 @@ const Products = () => {
   const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
+  const statusesObject = useSelector((state) => state.project.statuses)
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
   const focusedProducts = useSelector((state) => state.context.focused.products)
   const pairing = useSelector((state) => state.context.pairing)
+  const lastFocused = useSelector((state) => state.context.focused.lastFocused)
 
-  const ctxMenuRef = useRef(null)
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
+  // grid/list/grouped
+  const [viewMode, setViewMode] = useLocalStorage('productsViewMode', 'list')
+  const [grouped, setGrouped] = useState(false)
+
   // sets size of status based on status column width
   const [columnsWidths, setColumnWidths] = useColumnResize('products')
 
@@ -168,7 +175,7 @@ const Products = () => {
 
         const icon = node.data.isGroup
           ? 'folder'
-          : productTypes[node.data.productType]?.icon || 'help_center'
+          : productTypes[node.data.productType]?.icon || 'inventory_2'
 
         return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
       },
@@ -293,17 +300,6 @@ const Products = () => {
     columns = columns.filter(({ field }) => shownColumns.includes(field))
   }
 
-  const handleColumnReorder = (e) => {
-    const localStorageOrder = e.columns.reduce(
-      (acc, cur, i) => ({ ...acc, [cur.props.field]: i }),
-      {},
-    )
-
-    localStorage.setItem('products-columns-order', JSON.stringify(localStorageOrder))
-  }
-
-  // update status width
-
   //
   // Hooks
   //
@@ -313,7 +309,7 @@ const Products = () => {
   // with the TreeTable component
 
   const selectedRows = useMemo(() => {
-    if (focusedVersions?.length === 0) return []
+    if (focusedVersions?.length === 0) return {}
     const productIds = {}
     for (const sdata of productData) {
       if (focusedVersions.includes(sdata.versionId)) {
@@ -371,6 +367,10 @@ const Products = () => {
   // Handlers
   //
 
+  const handleGridContext = () => {
+    // set selection and open context menu
+  }
+
   // Set the breadcrumbs when a row is clicked
   const onRowClick = (event) => {
     if (event.node.data.isGroup) {
@@ -382,6 +382,7 @@ const Products = () => {
     uri += `?product=${event.node.data.name}`
     uri += `&version=${event.node.data.versionName}`
     dispatch(setUri(uri))
+    dispatch(onFocusChanged(event.node.data.id))
   }
 
   const onSelectionChange = (event) => {
@@ -408,16 +409,20 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const ctxMenuModel = [
+  const ctxMenuItems = [
     {
       label: 'Product detail',
       command: () => setShowDetail('product'),
+      icon: 'database',
     },
     {
       label: 'Version detail',
       command: () => setShowDetail('version'),
+      icon: 'database',
     },
   ]
+
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   //
   // Render
@@ -451,10 +456,15 @@ const Products = () => {
           placeholder={placeholder}
           fixedPlaceholder
         />
+        <Spacer />
+        <ViewModeToggle
+          value={viewMode}
+          onChange={setViewMode}
+          grouped={grouped || focusedFolders.length > 1}
+          setGrouped={setGrouped}
+        />
       </Toolbar>
-
-      <TablePanel loading={isLoading || isFetching}>
-        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
+      <TablePanel style={{ overflow: 'hidden' }}>
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}
@@ -462,41 +472,38 @@ const Products = () => {
           visible={!!showDetail}
           onHide={() => setShowDetail(false)}
           versionOverrides={versionOverrides}
+          onContext={handleGridContext}
         />
-        <TreeTable
-          value={filteredData}
-          responsive="true"
-          scrollHeight="100%"
-          scrollable="true"
-          resizableColumns
-          columnResizeMode="expand"
-          emptyMessage="No product found"
-          selectionMode="multiple"
-          selectionKeys={selectedRows}
-          onSelectionChange={onSelectionChange}
-          onRowClick={onRowClick}
-          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
-          onContextMenuSelectionChange={onContextMenuSelectionChange}
-          onColumnResizeEnd={setColumnWidths}
-          reorderableColumns
-          onColReorder={handleColumnReorder}
-        >
-          {columns.map((col, i) => {
-            return (
-              <Column
-                key={col.field}
-                style={{ ...col.style, width: columnsWidths[col.field] || col.width }}
-                expander={i === 0}
-                resizeable={true}
-                field={col.field}
-                header={col.header}
-                body={col.body}
-                className={col.field}
-                sortable
-              />
-            )
-          })}
-        </TreeTable>
+        {viewMode !== 'list' && !!focusedFolders.length && (
+          <ProductsGrid
+            isLoading={isLoading || isFetching}
+            data={filteredData}
+            onItemClick={onRowClick}
+            onSelectionChange={onSelectionChange}
+            onContext={ctxMenuShow}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            selection={selectedRows}
+            productTypes={productTypes}
+            statuses={statusesObject}
+            lastSelected={lastFocused}
+            groupBy={grouped || focusedFolders.length > 1 ? 'productType' : null}
+            multipleFoldersSelected={focusedFolders.length > 1}
+          />
+        )}
+        {viewMode === 'list' && (
+          <ProductsList
+            data={filteredData}
+            selectedRows={selectedRows}
+            onSelectionChange={onSelectionChange}
+            onRowClick={onRowClick}
+            ctxMenuShow={ctxMenuShow}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            setColumnWidths={setColumnWidths}
+            columns={columns}
+            columnsWidths={columnsWidths}
+            isLoading={isLoading || isFetching}
+          />
+        )}
       </TablePanel>
     </Section>
   )
