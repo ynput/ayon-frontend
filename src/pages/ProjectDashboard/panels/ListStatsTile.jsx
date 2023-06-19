@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 export const TileStyled = styled.div`
   display: flex;
@@ -12,6 +13,8 @@ export const TileStyled = styled.div`
   user-select: none;
   cursor: pointer;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
     background-color: var(--color-grey-02);
@@ -30,12 +33,20 @@ export const TileStyled = styled.div`
   }
 `
 
+const StyledLoading = styled.div`
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-grey-01);
+  ${getShimmerStyles()}
+`
+
 const ListStatsTile = ({ title, stat, icon, isLoading, onClick }) => {
   return (
     <TileStyled onClick={onClick}>
       {icon && <span className="material-symbols-outlined">{icon}</span>}
       <h3>{title}</h3>
       <span>{isLoading ? '' : stat || 'unknown'}</span>
+      {isLoading && <StyledLoading />}
     </TileStyled>
   )
 }

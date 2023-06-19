@@ -22,7 +22,7 @@ const StyledLoading = styled.div`
   border-radius: var(--border-radius);
   overflow: hidden;
 
-  ${getShimmerStyles('var(--color-grey-01)', 'var(--color-grey-02)')}
+  ${getShimmerStyles()}
 `
 
 const AttributeTable = ({

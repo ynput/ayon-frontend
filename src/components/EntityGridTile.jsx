@@ -88,7 +88,7 @@ const PanelStyled = styled(Panel)`
         background-color: var(--color-grey-00);
       }
 
-      ${getShimmerStyles('transparent')}
+      ${getShimmerStyles('transparent', 'var(--color-grey-01)')}
       &::after {
         opacity: 0.5;
         transition: opacity 0.3s;

@@ -24,7 +24,7 @@ const ThumbnailStyled = styled.div`
     background-color: #161616;
   }
 
-  ${({ $shimmer }) => $shimmer && getShimmerStyles('var(--color-grey-01)', 'var(--color-grey-02)')}
+  ${({ $shimmer }) => $shimmer && getShimmerStyles()}
 `
 
 const ImageStyled = styled.img`
