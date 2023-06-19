@@ -474,7 +474,7 @@ const Products = () => {
           versionOverrides={versionOverrides}
           onContext={handleGridContext}
         />
-        {viewMode !== 'list' && !!focusedFolders.length && (
+        {viewMode !== 'list' && (
           <ProductsGrid
             isLoading={isLoading || isFetching}
             data={filteredData}

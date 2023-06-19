@@ -69,7 +69,7 @@ const ProductsGrid = ({
   groupBy = null,
   multipleFoldersSelected = false,
 }) => {
-  const isNone = data.length === 0 && !isLoading
+  const isNone = data.length === 0
 
   const handleContext = (e, id) => {
     onContextMenuSelectionChange({ value: id })
@@ -185,7 +185,7 @@ const ProductsGrid = ({
             <EntityGridTile isError />
             <EntityGridTile isError />
           </StackedGridTiles>
-          <span>No products found</span>
+          <span style={{ opacity: 0.5 }}>No products found</span>
         </NoneFound>
       </StyledGridLayout>
     )
