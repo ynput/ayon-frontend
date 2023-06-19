@@ -133,21 +133,18 @@ const Hierarchy = (props) => {
   }, [data, query, isFetching])
 
   function filterArray(arr = [], filter = []) {
-    let filteredArr = []
-
-    arr.forEach((item) => {
-      if (filter.includes(item.data.folderType)) {
-        filteredArr.push(item)
-      }
-      if (item.children.length > 0) {
-        filteredArr = filteredArr.concat(filterArray(item.children, filter))
-      }
-    })
-
-    // sort by folderType
-    return filteredArr.sort(
-      (a, b) => foldersOrder.indexOf(a.data.folderType) - foldersOrder.indexOf(b.data.folderType),
-    )
+    return arr
+      .map((item) => {
+        const children = filterArray(item.children, filter)
+        if (filter.includes(item.data.folderType) || children.length > 0) {
+          return {
+            ...item,
+            children,
+          }
+        }
+        return null
+      })
+      .filter((item) => item !== null)
   }
 
   const createDataObject = (data = []) => {
