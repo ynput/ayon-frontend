@@ -88,6 +88,7 @@ const PanelStyled = styled(Panel)`
         ${getShimmerStyles('transparent')}
         opacity: 0.5;
         transition: opacity 0.3s;
+        z-index: 10;
       }
     `}
 
