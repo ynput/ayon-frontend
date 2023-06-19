@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
@@ -6,7 +6,6 @@ import { Spacer, Button, Section, Toolbar, TablePanel } from '@ynput/ayon-react-
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import sortByKey from '/src/helpers/sortByKey'
 
@@ -36,7 +35,7 @@ import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
-import ContextMenuItem from '/src/components/ContextMenuItem'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -1001,10 +1000,9 @@ const EditorPage = () => {
 
   // CONTEXT MENUS
 
-  const globalContextMenuRef = useRef(null)
   // Context menu outside of table items
-  const globalContextModel = useMemo(() => {
-    const menuItems = [
+  const ctxMenuGlobalItems = useMemo(
+    () => [
       {
         label: 'Add Folder',
         icon: 'create_new_folder',
@@ -1022,18 +1020,15 @@ const EditorPage = () => {
         command: handleRevert,
         disabled: !canCommit,
       },
-    ]
-    return menuItems.map((item) => ({
-      template: (
-        <ContextMenuItem key={item.label} contextMenuRef={globalContextMenuRef} {...item} />
-      ),
-    }))
-  })
+    ],
+    [canCommit, onCommit, handleRevert],
+  )
 
-  const tableContextMenuRef = useRef(null)
+  const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
+
   // Context menu items on table items
-  const tableContextModel = useMemo(() => {
-    const menuItems = [
+  const ctxMenuTableItems = useMemo(
+    () => [
       {
         label: 'Add Folder',
         icon: 'create_new_folder',
@@ -1062,24 +1057,12 @@ const EditorPage = () => {
         icon: 'clear',
         command: revertChangesOnSelection,
       },
-    ]
+    ],
 
-    return menuItems.map((item) => ({
-      template: <ContextMenuItem key={item.label} contextMenuRef={tableContextMenuRef} {...item} />,
-    }))
-  }, [currentSelection])
-
-  const contextMenuRefs = useMemo(
-    () => [tableContextMenuRef, globalContextMenuRef],
-    [tableContextMenuRef, globalContextMenuRef],
+    [currentSelection, canCommit],
   )
 
-  const handleContext = (e, id) => {
-    // show context menu and hide others
-    contextMenuRefs.forEach((ref) =>
-      ref?.current.props.id !== id ? ref.current?.hide() : ref.current?.show(e),
-    )
-  }
+  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
   //
   // Table event handlers
@@ -1286,21 +1269,14 @@ const EditorPage = () => {
           />
           <Button icon="check" label="Save Changes" onClick={onCommit} disabled={!canCommit} />
         </Toolbar>
-        <ContextMenu model={globalContextModel} ref={globalContextMenuRef} id="global" />
         <Splitter
           style={{ width: '100%', height: '100%' }}
           layout="horizontal"
           stateKey="editor-panels"
           stateStorage="local"
         >
-          <SplitterPanel
-            size={70}
-            ref={globalContextMenuRef}
-            id="global"
-            onContextMenu={(e) => handleContext(e, 'global')}
-          >
+          <SplitterPanel size={70} id="global" onContextMenu={ctxMenuGlobalShow}>
             <TablePanel loading={loading} style={{ height: '100%' }}>
-              <ContextMenu model={tableContextModel} ref={tableContextMenuRef} id="table" />
               <TreeTable
                 responsive="true"
                 scrollable
@@ -1320,7 +1296,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}
-                onContextMenu={(e) => handleContext(e.originalEvent, 'table')}
+                onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
                 onContextMenuSelectionChange={onContextMenuSelectionChange}
                 onColumnResizeEnd={setColumnWidths}
                 reorderableColumns

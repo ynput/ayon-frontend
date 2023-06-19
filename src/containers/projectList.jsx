@@ -1,13 +1,12 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useGetAllProjectsQuery } from '../services/project/getProject'
 import { useEffect } from 'react'
-import { ContextMenu } from 'primereact/contextmenu'
-import ContextMenuItem from '../components/ContextMenuItem'
 import { useNavigate } from 'react-router'
+import useCreateContext from '../hooks/useCreateContext'
 
 const formatName = (rowData, defaultTitle) => {
   if (rowData.name === '_') return defaultTitle
@@ -97,9 +96,6 @@ const ProjectList = ({
     } // single select
   } // onSelectionChange
 
-  // Context menu outside of table items
-  const globalContextMenuRef = useRef(null)
-
   const manage = {
     label: 'Manage Project',
     icon: 'empty_dashboard',
@@ -109,7 +105,8 @@ const ProjectList = ({
     },
   }
 
-  const globalContextMenuModel = useMemo(() => {
+  // GLOBAL CONTEXT MENU
+  const globalContextItems = useMemo(() => {
     const menuItems = []
 
     if (!isProjectManager) menuItems.push({ ...manage, label: 'Manage Projects' })
@@ -121,15 +118,14 @@ const ProjectList = ({
         command: onNewProject,
       })
 
-    return menuItems.map((item) => ({
-      template: (
-        <ContextMenuItem key={item.label} contextMenuRef={globalContextMenuRef} {...item} />
-      ),
-    }))
-  }, [])
+    return menuItems
+  }, [onNewProject, isProjectManager])
 
-  const tableContextMenuRef = useRef(null)
-  const tableContextMenuModel = useMemo(() => {
+  // create the ref and model
+  const [globalContextMenuShow] = useCreateContext(globalContextItems)
+
+  // TABLE CONTEXT MENU
+  const tableContextItems = useMemo(() => {
     const managerMenuItems = [
       {
         label: 'Open Project',
@@ -167,37 +163,24 @@ const ProjectList = ({
     let menuItems = managerMenuItems
     if (!isProjectManager) menuItems = globalMenuItems
 
-    return menuItems.map((item) => ({
-      template: <ContextMenuItem key={item.label} contextMenuRef={tableContextMenuRef} {...item} />,
-    }))
+    return menuItems
   }, [data, selection, contextProject])
 
-  const contextMenuRefs = useMemo(
-    () => [tableContextMenuRef, globalContextMenuRef],
-    [tableContextMenuRef, globalContextMenuRef],
-  )
-
-  const handleContext = (e, id) => {
-    // show context menu and hide others
-    contextMenuRefs.forEach((ref) =>
-      ref?.current?.props?.id !== id ? ref.current?.hide() : ref.current?.show(e),
-    )
-  }
+  // create the ref and model
+  const [tableContextMenuShow] = useCreateContext(tableContextItems)
 
   const onContextMenuSelectionChange = (event) => {
-    if (!selection.includes(event.value.name)) {
+    if (!selection?.includes(event.value.name)) {
       onSelect ? onSelect(event.value.name) : setContextProject(event.value.name)
     }
   }
 
   return (
     <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
-      <ContextMenu model={globalContextMenuModel} ref={globalContextMenuRef} id="global" />
-      <ContextMenu model={tableContextMenuModel} ref={tableContextMenuRef} id="table" />
       {isProjectManager && (
         <Button label="Add New Project" icon="create_new_folder" onClick={onNewProject} />
       )}
-      <TablePanel loading={isLoading} onContextMenu={(e) => handleContext(e, 'global')}>
+      <TablePanel loading={isLoading} onContextMenu={globalContextMenuShow}>
         <DataTable
           value={projectList}
           scrollable="true"
@@ -209,7 +192,7 @@ const ProjectList = ({
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
           onRowDoubleClick={onRowDoubleClick}
-          onContextMenu={(e) => handleContext(e.originalEvent, 'table')}
+          onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
         >
           <Column
