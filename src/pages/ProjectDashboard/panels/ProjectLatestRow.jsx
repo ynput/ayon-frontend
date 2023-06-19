@@ -25,7 +25,14 @@ const GridStyled = styled.div`
   }
 `
 
-const ProjectLatestRow = ({ projectName, entities, args = {}, filter }) => {
+const ProjectLatestRow = ({
+  projectName,
+  entities,
+  args = {},
+  filter,
+  isProjectLoading,
+  rowIndex,
+}) => {
   const project = useSelector((state) => state.project)
   const { productTypes, folders, tasks, statuses } = project
   // transform args object to graphql arguments string
@@ -87,6 +94,20 @@ const ProjectLatestRow = ({ projectName, entities, args = {}, filter }) => {
     ]
   }
 
+  if (isProjectLoading || (data.length === 0 && !isNoData)) {
+    data = [
+      {
+        isLoading: true,
+      },
+      {
+        isLoading: true,
+      },
+      {
+        isLoading: true,
+      },
+    ]
+  }
+
   return (
     <GridStyled>
       {data.map((entity, index) => (
@@ -95,10 +116,11 @@ const ProjectLatestRow = ({ projectName, entities, args = {}, filter }) => {
         //   to={`/projects/${projectName}/browser?entity=${entity.id}&type=${entity.type}`}
         // >
         <EntityGridTile
-          key={`${entity.id}-${index}`}
+          key={`${rowIndex}-${index}`}
           {...entity}
           subTitle={null}
-          isLoading={isLoading || isFetching || !projectName}
+          isError={isNoData}
+          isLoading={isLoading || isFetching || !projectName || isProjectLoading}
         />
         // </Link>
       ))}
