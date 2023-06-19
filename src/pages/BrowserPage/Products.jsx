@@ -460,7 +460,7 @@ const Products = () => {
         <ViewModeToggle
           value={viewMode}
           onChange={setViewMode}
-          grouped={grouped}
+          grouped={grouped || focusedFolders.length > 1}
           setGrouped={setGrouped}
         />
       </Toolbar>
@@ -486,7 +486,8 @@ const Products = () => {
             productTypes={productTypes}
             statuses={statusesObject}
             lastSelected={lastFocused}
-            groupBy={grouped ? 'productType' : null}
+            groupBy={grouped || focusedFolders.length > 1 ? 'productType' : null}
+            multipleFoldersSelected={focusedFolders.length > 1}
           />
         )}
         {viewMode === 'list' && (

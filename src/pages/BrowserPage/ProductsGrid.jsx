@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import PropTypes from 'prop-types'
 import GridLayout from '/src/components/GridLayout'
 import EntityGridTile from '/src/components/EntityGridTile'
@@ -67,6 +67,7 @@ const ProductsGrid = ({
   onContext,
   onContextMenuSelectionChange,
   groupBy = null,
+  multipleFoldersSelected = false,
 }) => {
   const isNone = data.length === 0 && !isLoading
 
@@ -74,6 +75,23 @@ const ProductsGrid = ({
     onContextMenuSelectionChange({ value: id })
     onContext(e)
   }
+
+  data = useMemo(() => {
+    let flattenedData = data
+
+    // flatten data
+    if (multipleFoldersSelected) {
+      // for each data, check if it has children and if it does, flatten it
+      flattenedData = flattenedData.reduce((acc, curr) => {
+        if (curr.children) {
+          return [...acc, ...curr.children]
+        }
+        return [...acc, curr]
+      }, [])
+    }
+
+    return flattenedData
+  }, [data, multipleFoldersSelected])
 
   // we need to format it the same way as table
   // {value: {id: true}}
@@ -135,6 +153,29 @@ const ProductsGrid = ({
     })
   }
 
+  // if groupBy is set, group the data
+
+  const groupedData = useMemo(() => {
+    if (groupBy && !isLoading && !isNone) {
+      return data.reduce((acc, curr) => {
+        const { data: product, isGroup } = curr
+        const group = isGroup ? product.name : product[groupBy] || 'Other'
+
+        // if group is not in acc, add it
+        if (!acc[group]) {
+          acc[group] = []
+        }
+
+        // add product to group
+        acc[group].push(curr)
+
+        return acc
+      }, {})
+    } else {
+      return { '': data }
+    }
+  }, [data, groupBy])
+
   // if no data and not loading, show none found
   if (isNone) {
     return (
@@ -148,27 +189,6 @@ const ProductsGrid = ({
         </NoneFound>
       </StyledGridLayout>
     )
-  }
-
-  // by default it is not grouped
-  let groupedData = { '': data }
-
-  // if groupBy is set, group the data
-  if (groupBy && !isLoading) {
-    groupedData = data.reduce((acc, curr) => {
-      const { data: product, isGroup } = curr
-      const group = isGroup ? product.name : product[groupBy] || 'Other'
-
-      // if group is not in acc, add it
-      if (!acc[group]) {
-        acc[group] = []
-      }
-
-      // add product to group
-      acc[group].push(curr)
-
-      return acc
-    }, {})
   }
 
   return (
@@ -204,7 +224,12 @@ const ProductsGrid = ({
                         statusIcon={statuses[product.status]?.icon || ''}
                         statusColor={statuses[product.status]?.color || ''}
                         name={product.name}
-                        footer={product.versionName}
+                        footer={
+                          <>
+                            {product.versionName}
+                            {multipleFoldersSelected && product.folder && <> - {product.folder}</>}
+                          </>
+                        }
                         thumbnailEntityId={product.id}
                         thumbnailEntityType="product"
                         onClick={(e) => handleSelection(e, product)}

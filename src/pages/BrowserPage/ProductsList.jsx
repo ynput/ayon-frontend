@@ -12,6 +12,7 @@ const ProductsList = ({
   setColumnWidths,
   columnsWidths,
   columns,
+  isLoading,
 }) => {
   const handleColumnReorder = (e) => {
     const localStorageOrder = e.columns.reduce(
@@ -48,9 +49,9 @@ const ProductsList = ({
             style={{ ...col.style, width: columnsWidths[col.field] || col.width }}
             expander={i === 0}
             resizeable={true}
-            field={col.field}
+            field={isLoading ? '' : col.field}
             header={col.header}
-            body={col.body}
+            body={isLoading ? '' : col.body}
             className={col.field}
             sortable
           />

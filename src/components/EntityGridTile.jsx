@@ -35,6 +35,13 @@ const PanelStyled = styled(Panel)`
     justify-content: space-between;
     min-height: 17.5px;
     padding: 0 4px;
+    overflow: hidden;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   /* name */
