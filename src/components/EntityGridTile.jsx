@@ -19,6 +19,10 @@ const PanelStyled = styled(Panel)`
   user-select: none;
   transition: opacity 0.3s;
 
+  & > * {
+    z-index: 10;
+  }
+
   /* add point if onClick */
   ${({ onClick }) =>
     onClick &&
@@ -30,6 +34,7 @@ const PanelStyled = styled(Panel)`
     display: flex;
     justify-content: space-between;
     min-height: 17.5px;
+    padding: 0 4px;
   }
 
   /* name */
@@ -49,6 +54,20 @@ const PanelStyled = styled(Panel)`
     min-height: 17.5px;
   }
 
+  /* border: 1px solid transparent; */
+  /* when selected */
+  ${({ $isSelected }) =>
+    $isSelected &&
+    css`
+      /* border: 0.15rem solid var(--color-hl-00); */
+      background-color: var(--color-row-hl);
+      /* remove hover */
+      :hover {
+        background-color: var(--color-row-hl);
+      }
+    `}
+
+  /* when in loading state */
   ${({ $isLoading }) =>
     $isLoading &&
     css`
@@ -154,7 +173,8 @@ const EntityGridTile = ({
   onClick,
   isLoading,
   isError,
-  style,
+  selected,
+  ...props
 }) => {
   const ref = useRef()
 
@@ -164,8 +184,8 @@ const EntityGridTile = ({
       <PanelStyled
         ref={ref}
         $isLoading={isLoading || isError}
-        style={style}
         $isError={isError}
+        {...props}
         className="skeleton"
       >
         <ThumbnailStyled>
@@ -181,7 +201,14 @@ const EntityGridTile = ({
     )
 
   return (
-    <PanelStyled ref={ref} onClick={onClick} style={style}>
+    <PanelStyled
+      ref={ref}
+      onClick={onClick}
+      $isSelected={selected}
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick(e)}
+      {...props}
+    >
       <ThumbnailStyled>
         <Thumbnail
           entityType={thumbnailEntityType}
@@ -197,7 +224,7 @@ const EntityGridTile = ({
           </IconStyled>
         </div>
       </ThumbnailStyled>
-      <span>{name}</span>
+      <span style={{ padding: '0 4px' }}>{name}</span>
       {subTitle && <span>{subTitle}</span>}
       <footer>
         <span>{footer}</span>

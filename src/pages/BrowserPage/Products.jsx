@@ -15,6 +15,7 @@ import {
   setUri,
   setPairing,
   productSelected,
+  onFocusChanged,
 } from '/src/features/context'
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
@@ -39,9 +40,11 @@ const Products = () => {
   const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
+  const statusesObject = useSelector((state) => state.project.statuses)
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
   const focusedProducts = useSelector((state) => state.context.focused.products)
   const pairing = useSelector((state) => state.context.pairing)
+  const lastFocused = useSelector((state) => state.context.focused.lastFocused)
 
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
@@ -305,7 +308,7 @@ const Products = () => {
   // with the TreeTable component
 
   const selectedRows = useMemo(() => {
-    if (focusedVersions?.length === 0) return []
+    if (focusedVersions?.length === 0) return {}
     const productIds = {}
     for (const sdata of productData) {
       if (focusedVersions.includes(sdata.versionId)) {
@@ -378,6 +381,7 @@ const Products = () => {
     uri += `?product=${event.node.data.name}`
     uri += `&version=${event.node.data.versionName}`
     dispatch(setUri(uri))
+    dispatch(onFocusChanged(event.node.data.id))
   }
 
   const onSelectionChange = (event) => {
@@ -462,15 +466,20 @@ const Products = () => {
           visible={!!showDetail}
           onHide={() => setShowDetail(false)}
           versionOverrides={versionOverrides}
+          onContext={handleGridContext}
         />
         {viewMode === 'grid' && !!focusedFolders.length && (
           <ProductsGrid
             isLoading={isLoading || isFetching}
             data={filteredData}
-            onSelection={onSelectionChange}
-            onContext={handleGridContext}
-            selected={selectedRows}
+            onItemClick={onRowClick}
+            onSelectionChange={onSelectionChange}
+            onContext={ctxMenuShow}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            selection={selectedRows}
             productTypes={productTypes}
+            statuses={statusesObject}
+            lastSelected={lastFocused}
           />
         )}
         {viewMode === 'list' && (

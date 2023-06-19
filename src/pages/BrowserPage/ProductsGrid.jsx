@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import GridLayout from '/src/components/GridLayout'
 import EntityGridTile from '/src/components/EntityGridTile'
 import styled from 'styled-components'
-import { useSelector } from 'react-redux'
 
 const StyledGridLayout = styled.div`
   padding: 16px;
@@ -45,11 +44,85 @@ const StackedGridTiles = styled.div`
   }
 `
 
-//  eslint-disable-next-line no-unused-vars
-const ProductsGrid = ({ isLoading, data, onSelection, onContext, selected, productTypes }) => {
-  const statusesObject = useSelector((state) => state.project.statuses)
+const ProductsGrid = ({
+  isLoading,
+  data,
+  onItemClick,
+  onSelectionChange,
+  statuses,
+  selection = {},
+  lastSelected,
+  productTypes,
+  onContext,
+  onContextMenuSelectionChange,
+}) => {
   const isNone = data.length === 0 && !isLoading
 
+  const handleContext = (e, id) => {
+    onContextMenuSelectionChange({ value: id })
+    onContext(e)
+  }
+
+  // we need to format it the same way as table
+  // {value: {id: true}}
+  const handleSelection = (e, product) => {
+    e.preventDefault()
+    const { id } = product
+
+    const { metaKey, ctrlKey, shiftKey } = e
+    const ctrlOrMeta = metaKey || ctrlKey
+    const shift = shiftKey && !ctrlOrMeta
+
+    let newSelection = {
+      value: {},
+    }
+
+    // metaKey or ctrlKey or shiftKey is pressed, add to selection instead of replacing
+    if (ctrlOrMeta || shift) {
+      newSelection = { value: selection }
+    }
+
+    // add (selected) to selection
+    if (!newSelection.value[id]) {
+      // add to selection
+      newSelection.value[id] = true
+    } else if (ctrlOrMeta) {
+      // remove from selection
+      delete newSelection.value[id]
+    }
+
+    // if shift key is pressed, select all between last selected and current
+    if (shift) {
+      let lastSelectedIndex = data.findIndex(({ key }) => key === lastSelected)
+      let currentSelectedIndex = data.findIndex(({ key }) => key === id)
+
+      // if either lastSelectedIndex or currentSelectedIndex is not found, do nothing
+      if (lastSelectedIndex === -1 || currentSelectedIndex === -1) return
+
+      // if lastSelectedIndex is after currentSelectedIndex, swap them
+      if (lastSelectedIndex > currentSelectedIndex) {
+        const temp = lastSelectedIndex
+        lastSelectedIndex = currentSelectedIndex
+        currentSelectedIndex = temp
+      }
+
+      // select all between lastSelectedIndex and currentSelectedIndex
+      for (let i = lastSelectedIndex; i <= currentSelectedIndex; i++) {
+        const { id } = data[i].data
+        newSelection.value[id] = true
+      }
+    }
+
+    onSelectionChange(newSelection)
+    // updates the breadcrumbs
+    onItemClick({
+      node: {
+        data: product,
+      },
+    })
+  }
+
+  // if no data and not loading, show none found
   if (isNone) {
     return (
       <StyledGridLayout>
@@ -90,13 +163,15 @@ const ProductsGrid = ({ isLoading, data, onSelection, onContext, selected, produ
                     }}
                     key={index}
                     typeIcon={productTypes[product.productType]?.icon || 'inventory_2'}
-                    statusIcon={statusesObject[product.status]?.icon || ''}
-                    statusColor={statusesObject[product.status]?.color || ''}
+                    statusIcon={statuses[product.status]?.icon || ''}
+                    statusColor={statuses[product.status]?.color || ''}
                     name={product.name}
                     footer={product.versionName}
                     thumbnailEntityId={product.id}
                     thumbnailEntityType="product"
-                    onClick={onSelection}
+                    onClick={(e) => handleSelection(e, product)}
+                    selected={product.id in selection}
+                    onContextMenu={(e) => handleContext(e, product.id)}
                   />
                 ),
             )}
@@ -108,10 +183,13 @@ const ProductsGrid = ({ isLoading, data, onSelection, onContext, selected, produ
 ProductsGrid.propTypes = {
   isLoading: PropTypes.bool,
   data: PropTypes.array,
-  onSelection: PropTypes.func,
+  onSelectionChange: PropTypes.func,
+  onItemClick: PropTypes.func,
   onContext: PropTypes.func,
-  selected: PropTypes.string,
+  selection: PropTypes.object,
   productTypes: PropTypes.object,
+  statuses: PropTypes.object,
+  lastSelected: PropTypes.string,
 }
 
 export default ProductsGrid
