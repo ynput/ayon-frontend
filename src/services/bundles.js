@@ -28,8 +28,22 @@ const getBundles = ayonApi.injectEndpoints({
       // eslint-disable-next-line no-unused-vars
       invalidatesTags: (result, error, id) => [{ type: 'bundleList' }],
     }),
+
+    updateBundle: build.mutation({
+      query: ({ name, ...data }) => ({
+        url: `/api/desktop/bundles/${name}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      // eslint-disable-next-line no-unused-vars
+      invalidatesTags: (result, error, id) => [{ type: 'bundleList' }],
+    }),
   }), // endpoints
 })
 
-export const { useGetBundleListQuery, useDeleteBundleMutation, useCreateBundleMutation } =
-  getBundles
+export const {
+  useGetBundleListQuery,
+  useDeleteBundleMutation,
+  useCreateBundleMutation,
+  useUpdateBundleMutation,
+} = getBundles

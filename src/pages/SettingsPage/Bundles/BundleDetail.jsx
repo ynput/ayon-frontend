@@ -85,30 +85,30 @@ const BundleDetail = ({ bundle }) => {
           onClick={onSave}
         />
       </Toolbar>
-      <FormLayout>
-        <FormRow label="Name">
-          <InputText
-            value={formData.name || ''}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            disabled={!isNew}
-          />
-        </FormRow>
-        <FormRow label="Installer version">
-          <Dropdown
-            value={formData?.installerVersion ? [formData.installerVersion] : []}
-            options={installerVersions}
-            onChange={(e) => setFormData({ ...formData, installerVersion: e[0] })}
-            disabled={!isNew}
-            widthExpand
-          />
-        </FormRow>
-      </FormLayout>
+      <ScrollPanel style={{ flexGrow: 1 }} scrollStyle={{ padding: 10 }}>
+        <FormLayout>
+          <FormRow label="Name">
+            <InputText
+              value={formData.name || ''}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={!isNew}
+            />
+          </FormRow>
+          <FormRow label="Installer version">
+            <Dropdown
+              value={formData?.installerVersion ? [formData.installerVersion] : []}
+              options={installerVersions}
+              onChange={(e) => setFormData({ ...formData, installerVersion: e[0] })}
+              disabled={!isNew}
+              widthExpand
+            />
+          </FormRow>
+        </FormLayout>
 
-      <h2>Addons</h2>
+        <h2>Addons</h2>
 
-      <AddonVersions formData={formData} setFormData={setFormData} readOnly={!isNew} />
-
-      <ScrollPanel style={{ flexGrow: 1 }} className="transparent"></ScrollPanel>
+        <AddonVersions formData={formData} setFormData={setFormData} readOnly={!isNew} />
+      </ScrollPanel>
     </Section>
   )
 }
