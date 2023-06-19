@@ -42,7 +42,7 @@ const StackedStyled = styled.div`
   height: 100%;
 `
 
-const StackedThumbnails = ({ thumbnails = [] }) => {
+const StackedThumbnails = ({ thumbnails = [], isLoading }) => {
   const projectName = useSelector((state) => state.project.name)
   // limit to 5 users
   thumbnails = thumbnails.slice(0, 5)
@@ -59,6 +59,7 @@ const StackedThumbnails = ({ thumbnails = [] }) => {
               key={thumb.id}
               style={{ zIndex: -i }}
               entityUpdatedAt={thumb.updatedAt}
+              isLoading={isLoading}
             />
           ),
       )}

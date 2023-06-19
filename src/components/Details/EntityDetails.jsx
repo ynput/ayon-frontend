@@ -12,6 +12,7 @@ const EntityDetails = ({
   extraAttrib = [],
   hideNull,
   style,
+  isLoading,
 }) => {
   if (nodes.length === 0) return null
 
@@ -83,6 +84,7 @@ const EntityDetails = ({
           updatedAt: n.updatedAt,
         }))}
         type={type}
+        isLoading={isLoading}
       />
       <AttributeTable
         entityType={type}
@@ -92,6 +94,7 @@ const EntityDetails = ({
         style={{
           overflow: 'auto',
         }}
+        isLoading={isLoading}
       />
     </Panel>
   )

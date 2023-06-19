@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import styled from 'styled-components'
+import getShimmerStyles from '../styles/getShimmerStyles'
 
 const ThumbnailStyled = styled.div`
   position: relative;
@@ -22,6 +23,8 @@ const ThumbnailStyled = styled.div`
     inset: 0;
     background-color: #161616;
   }
+
+  ${({ $shimmer }) => $shimmer && getShimmerStyles('var(--color-grey-01)', 'var(--color-grey-02)')}
 `
 
 const ImageStyled = styled.img`
@@ -44,6 +47,7 @@ const Thumbnail = ({
   style,
   entityUpdatedAt,
   isLoading,
+  shimmer,
   className,
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
@@ -55,7 +59,7 @@ const Thumbnail = ({
   const isWrongEntity = ['task', 'product'].includes(entityType)
 
   return (
-    <ThumbnailStyled style={style} className={className}>
+    <ThumbnailStyled style={style} className={className} $shimmer={isLoading && shimmer}>
       {!isLoading && <ImagePlaceholder />}
       {entityType && !(isWrongEntity || !entityId) && (
         <ImageStyled
