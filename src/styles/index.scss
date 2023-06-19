@@ -430,3 +430,33 @@ a {
     padding: 0;
   }
 }
+
+@keyframes shimmerAnimation {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@mixin getShimmerStyles($color1: var(--color-grey-00), $color2: var(--color-grey-01), $speed: 1s) {
+  background: linear-gradient(to right, $color1 8%, $color2 18%, $color1 33%);
+  background-size: 1000px 42px;
+  animation: shimmerAnimation $speed linear infinite;
+}
+
+.table-loading {
+  .p-treetable-tbody {
+    position: relative;
+    &::after {
+      content: '';
+      display: block;
+      position: absolute;
+      inset: 0;
+      opacity: 0.2;
+
+      @include getShimmerStyles;
+    }
+  }
+}

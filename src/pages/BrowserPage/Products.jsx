@@ -361,7 +361,7 @@ const Products = () => {
     'data.versionName',
   ]
 
-  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'products')
+  let [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'products')
 
   //
   // Handlers
