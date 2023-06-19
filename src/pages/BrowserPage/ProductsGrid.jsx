@@ -67,6 +67,7 @@ const ProductsGrid = ({
   // {value: {id: true}}
   const handleSelection = (e, product) => {
     e.preventDefault()
+    e.stopPropagation()
     const { id } = product
 
     const { metaKey, ctrlKey, shiftKey } = e
@@ -142,6 +143,7 @@ const ProductsGrid = ({
       style={{
         overflowY: isLoading ? 'hidden' : 'auto',
       }}
+      onClick={() => onSelectionChange({ value: {} })}
     >
       <GridLayout ratio={1.5} minWidth={170}>
         {isLoading
