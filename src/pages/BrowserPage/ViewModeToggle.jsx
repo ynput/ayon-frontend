@@ -32,7 +32,14 @@ const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
           id: 'grouped',
           icon: 'layers',
           isActive: grouped && value === 'grid',
-          command: () => value === 'grid' && setGrouped(!grouped),
+          command: () => {
+            if (value !== 'grid') {
+              onChange('grid')
+              setGrouped(true)
+            } else {
+              setGrouped(!grouped)
+            }
+          },
         },
       ],
     },
