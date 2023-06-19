@@ -156,8 +156,8 @@ const ProductsGrid = ({
   // if groupBy is set, group the data
   if (groupBy && !isLoading) {
     groupedData = data.reduce((acc, curr) => {
-      const { data: product } = curr
-      const group = product[groupBy] || 'Other'
+      const { data: product, isGroup } = curr
+      const group = isGroup ? product.name : product[groupBy] || 'Other'
 
       // if group is not in acc, add it
       if (!acc[group]) {

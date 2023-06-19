@@ -18,7 +18,7 @@ const StyledButton = styled(Button)`
   }
 `
 
-const ViewModeToggle = ({ onChange, value }) => {
+const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
   const items = [
     {
       id: 'list',
@@ -27,21 +27,37 @@ const ViewModeToggle = ({ onChange, value }) => {
     {
       id: 'grid',
       icon: 'grid_view',
-    },
-    {
-      id: 'grouped',
-      icon: 'layers',
+      children: [
+        {
+          id: 'grouped',
+          icon: 'layers',
+          isActive: grouped && value === 'grid',
+          command: () => value === 'grid' && setGrouped(!grouped),
+        },
+      ],
     },
   ]
+
   return (
     <>
       {items.map((item) => (
-        <StyledButton
-          icon={item.icon}
-          key={item.id}
-          onClick={() => onChange(item.id)}
-          className={value === item.id ? 'active' : ''}
-        />
+        <>
+          <StyledButton
+            icon={item.icon}
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            className={value === item.id ? 'active' : ''}
+          />
+          {item.children &&
+            item.children.map((child) => (
+              <StyledButton
+                icon={child.icon}
+                key={child.id}
+                onClick={() => (child.command ? child.command(child.id) : onChange(child.id))}
+                className={value === child.id || child.isActive ? 'active' : ''}
+              />
+            ))}
+        </>
       ))}
     </>
   )

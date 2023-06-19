@@ -50,6 +50,7 @@ const Products = () => {
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
   // grid/list/grouped
   const [viewMode, setViewMode] = useLocalStorage('productsViewMode', 'list')
+  const [grouped, setGrouped] = useState(false)
 
   // sets size of status based on status column width
   const [columnsWidths, setColumnWidths] = useColumnResize('products')
@@ -456,7 +457,12 @@ const Products = () => {
           fixedPlaceholder
         />
         <Spacer />
-        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+        <ViewModeToggle
+          value={viewMode}
+          onChange={setViewMode}
+          grouped={grouped}
+          setGrouped={setGrouped}
+        />
       </Toolbar>
       <TablePanel style={{ overflow: 'hidden' }}>
         <EntityDetail
@@ -480,7 +486,7 @@ const Products = () => {
             productTypes={productTypes}
             statuses={statusesObject}
             lastSelected={lastFocused}
-            groupBy={viewMode === 'grouped' ? 'productType' : null}
+            groupBy={grouped ? 'productType' : null}
           />
         )}
         {viewMode === 'list' && (
@@ -494,6 +500,7 @@ const Products = () => {
             setColumnWidths={setColumnWidths}
             columns={columns}
             columnsWidths={columnsWidths}
+            isLoading={isLoading || isFetching}
           />
         )}
       </TablePanel>
