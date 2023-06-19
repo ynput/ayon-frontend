@@ -19,35 +19,6 @@ const StyledGridLayout = styled.div`
   }
 `
 
-const NoneFound = styled.div`
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-`
-
-// stack grid tiles on top of each other
-const StackedGridTiles = styled.div`
-  height: 120px;
-  margin-bottom: 32px;
-  & > * {
-    position: absolute;
-    height: 120px;
-    opacity: 1;
-  }
-
-  /* rotate out like a fan */
-  & > *:nth-child(1) {
-    transform: rotate(-10deg) translateX(-10px);
-    transform-origin: bottom;
-  }
-
-  & > *:nth-child(2) {
-    transform: rotate(10deg) translateX(10px);
-    transform-origin: bottom;
-  }
-`
-
 const StyledGroupName = styled.h2`
   font-size: 1.3em;
   padding-left: 8px;
@@ -175,21 +146,6 @@ const ProductsGrid = ({
       return { '': data }
     }
   }, [data, groupBy])
-
-  // if no data and not loading, show none found
-  if (isNone) {
-    return (
-      <StyledGridLayout>
-        <NoneFound>
-          <StackedGridTiles>
-            <EntityGridTile isError />
-            <EntityGridTile isError />
-          </StackedGridTiles>
-          <span style={{ opacity: 0.5 }}>No products found</span>
-        </NoneFound>
-      </StyledGridLayout>
-    )
-  }
 
   return (
     <StyledGridLayout

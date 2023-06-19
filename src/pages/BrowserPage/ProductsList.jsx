@@ -43,7 +43,7 @@ const ProductsList = ({
       scrollable="true"
       resizableColumns
       columnResizeMode="expand"
-      emptyMessage="No product found"
+      emptyMessage=" "
       selectionMode="multiple"
       selectionKeys={selectedRows}
       onSelectionChange={onSelectionChange}
