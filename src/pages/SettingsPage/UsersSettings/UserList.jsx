@@ -70,28 +70,39 @@ const UserList = ({
   const ProfileRow = ({ rowData }) => (
     <StyledProfileRow>
       <UserImage
-        fullName={rowData.attrib.fullName || rowData.name}
+        fullName={rowData.attrib?.fullName || rowData.name}
         size={25}
         style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
         highlight={rowData.self}
-        src={rowData.attrib.avatarUrl}
+        src={rowData.attrib?.avatarUrl}
       />
       <span>{rowData.self ? `${rowData.name} (me)` : rowData.name}</span>
     </StyledProfileRow>
   )
 
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 10 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isLoading) {
+    tableList = loadingData
+  }
   // Render
 
   return (
     <Section className="wrap">
-      <TablePanel loading={isLoading || isLoadingRoles}>
+      <TablePanel>
         <DataTable
           value={tableList}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className="user-list-table"
+          className={`user-list-table ${isLoading || isLoadingRoles ? 'table-loading' : ''}`}
           onSelectionChange={onSelectionChange}
           onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
           onContextMenuSelectionChange={(e) => {
@@ -126,6 +137,7 @@ const UserList = ({
             header="Roles"
             body={(rowData) =>
               rowData &&
+              rowData.roles &&
               Object.keys(rowData.roles).map((roleName) => (
                 <span key={roleName} className={rowData.roles[roleName].cls}>
                   {roleName}
