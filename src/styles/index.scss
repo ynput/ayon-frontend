@@ -447,7 +447,8 @@ a {
 }
 
 .table-loading {
-  .p-treetable-tbody {
+  .p-treetable-tbody,
+  .p-datatable-tbody {
     position: relative;
     &::after {
       content: '';
