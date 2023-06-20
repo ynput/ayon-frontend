@@ -43,6 +43,7 @@ const StyledLoader = styled.div`
   align-items: center;
 
   svg {
+    opacity: 0.8;
     width: 150px;
     /* animation */
     animation: ${pulse} 1.4s ease-in-out infinite;
@@ -82,7 +83,7 @@ const LoadingPage = () => {
                     y="10.196"
                     width="44"
                     height="12.001"
-                    style={{ fill: 'rgb(0,215,160)' }}
+                    style={{ fill: 'white' }}
                   />
                 </g>
                 <g transform="matrix(-1.26959,-2.19915,-2.19915,1.26959,1585.08,579.033)">
@@ -91,22 +92,16 @@ const LoadingPage = () => {
                     y="-5.803"
                     width="12.002"
                     height="43.999"
-                    style={{ fill: 'rgb(0,215,160)' }}
+                    style={{ fill: 'white' }}
                   />
                 </g>
                 <g transform="matrix(-2.53932,0,0,2.53932,2519.41,83.268)">
-                  <rect
-                    x="414.945"
-                    y="221.035"
-                    width="12"
-                    height="44"
-                    style={{ fill: 'rgb(0,215,160)' }}
-                  />
+                  <rect x="414.945" y="221.035" width="12" height="44" style={{ fill: 'white' }} />
                 </g>
                 <g transform="matrix(0,-2.53932,-2.53932,0,1450.5,462.224)" className="dot">
                   <path
                     d="M-12,-12C-18.627,-12 -24,-6.627 -24,0C-24,6.627 -18.627,12 -12,12C-5.373,12 0,6.627 0,0C0,-6.627 -5.373,-12 -12,-12"
-                    style={{ fill: 'rgb(0,215,160)', fillRule: 'nonzero' }}
+                    style={{ fill: 'white', fillRule: 'nonzero' }}
                   />
                 </g>
               </g>
