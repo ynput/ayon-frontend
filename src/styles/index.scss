@@ -471,3 +471,23 @@ a {
     }
   }
 }
+
+// for individual rows that are loading
+.p-treetable-tbody,
+.p-datatable-tbody {
+  tr.loading {
+    td {
+      position: relative;
+      &::after {
+        content: '';
+        display: block;
+        position: absolute;
+        inset: 6px;
+        border-radius: 3px;
+        opacity: 1;
+        background-color: var(--color-grey-02);
+        @include getShimmerStyles(var(--color-grey-02), var(--color-grey-03));
+      }
+    }
+  }
+}
