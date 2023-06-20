@@ -63,7 +63,6 @@ const ProductsList = ({
               ...col.style,
               width: columnsWidths[col.field] || col.width,
             }}
-            bodyStyle={{ opacity: isLoading ? 0 : 1 }}
             expander={i === 0}
             resizeable={true}
             field={col.field}

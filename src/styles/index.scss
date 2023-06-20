@@ -458,6 +458,12 @@ a {
 
       @include getShimmerStyles;
     }
+
+    tr {
+      td {
+        opacity: 0;
+      }
+    }
     & > tr:nth-child(even) {
       background: var(--color-grey-01);
       opacity: 0.25;
