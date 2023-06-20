@@ -76,9 +76,16 @@ const ProjectTeams = ({ projectName }) => {
           ),
       )}
       {!isFetching && !data.length && (
-        <Link to={`/manageProjects/teams?project=${projectName}`}>
-          <Button style={{ width: '100%' }}>Create new team</Button>
-        </Link>
+        <>
+          <h2 style={{ position: 'relative' }}>
+            <span>No teams found</span>
+          </h2>
+          <Link to={`/manageProjects/teams?project=${projectName}`}>
+            <Button style={{ width: '100%', maxHeight: 'unset', height: 36 }} icon="group_add">
+              Create new team
+            </Button>
+          </Link>
+        </>
       )}
     </DashboardPanelWrapper>
   )
