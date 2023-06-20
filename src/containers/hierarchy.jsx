@@ -97,7 +97,7 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, isLoading, data, isFetching } = useGetHierarchyQuery(
+  const { isError, error, data, isFetching } = useGetHierarchyQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -320,6 +320,18 @@ const Hierarchy = (props) => {
   // create the ref and model
   const [ctxMenuShow] = useCreateContext(contextItems)
 
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 15 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isFetching) {
+    treeData = loadingData
+  }
+
   //
   // Render
   //
@@ -341,6 +353,7 @@ const Hierarchy = (props) => {
         onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
         onContextMenuSelectionChange={onContextMenuSelectionChange}
         onDoubleClick={handleDoubleClick}
+        className={isFetching ? 'table-loading' : undefined}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
@@ -357,7 +370,7 @@ const Hierarchy = (props) => {
         <InputText
           style={{ flexGrow: 1, minWidth: 100 }}
           placeholder="Filter folders..."
-          disabled={!projectName || isLoading || isFetching}
+          disabled={!projectName || isFetching}
           value={query}
           onChange={(evt) => setQuery(evt.target.value)}
           autocomplete="off"
@@ -369,14 +382,14 @@ const Hierarchy = (props) => {
           placeholder="Select folder types"
           showClear={true}
           optionLabel="label"
-          disabled={!projectName || isLoading || isFetching}
+          disabled={!projectName || isFetching}
           selectedItemTemplate={selectedTypeTemplate}
           onChange={(e) => setSelectedFolderTypes(e.value || [])}
           style={{ flexBasis: 150 }}
         />
       </Toolbar>
 
-      <TablePanel loading={isLoading || isFetching}>
+      <TablePanel>
         <EntityDetail
           projectName={projectName}
           entityType="folder"
