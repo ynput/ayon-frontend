@@ -10,19 +10,23 @@ const shimmerAnimation = keyframes`
 `
 
 function getShimmerStyles(
-  color1 = 'var(--color-grey-00)',
-  color2 = 'var(--color-grey-01)',
-  config = {
-    speed: '1s',
-  },
+  color1 = 'var(--color-grey-01)',
+  color2 = 'var(--color-grey-02)',
+  config = {},
 ) {
-  const { speed } = config
+  const { speed = '1.2s', opacity = 0.25 } = config
 
   return css`
-    background: linear-gradient(to right, ${color1} 8%, ${color2} 18%, ${color1} 33%);
-    background-size: 1000px 42px;
-    animation: ${shimmerAnimation} ${speed} linear infinite;
-    animation-delay: 0.15s;
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, ${color1} 8%, ${color2} 18%, ${color1} 33%);
+      background-size: 1000px 42px;
+      animation: ${shimmerAnimation} ${speed} linear infinite;
+      animation-delay: 0.15s;
+      opacity: ${opacity};
+    }
   `
 }
 

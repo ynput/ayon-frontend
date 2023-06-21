@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
@@ -48,10 +48,9 @@ const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
   return (
     <>
       {items.map((item) => (
-        <>
+        <Fragment key={item.id}>
           <StyledButton
             icon={item.icon}
-            key={item.id}
             onClick={() => onChange(item.id)}
             className={value === item.id ? 'active' : ''}
           />
@@ -64,7 +63,7 @@ const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
                 className={value === child.id || child.isActive ? 'active' : ''}
               />
             ))}
-        </>
+        </Fragment>
       ))}
     </>
   )

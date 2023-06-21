@@ -53,7 +53,7 @@ const ProjectList = ({
     } else if (isSuccess && onSuccess) onSuccess()
   }, [selection, data, onNoProject, isLoading])
 
-  const projectList = [...data]
+  let projectList = [...data]
 
   if (showNull) projectList.unshift({ name: '_' })
 
@@ -175,12 +175,24 @@ const ProjectList = ({
     }
   }
 
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 10 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isLoading) {
+    projectList = loadingData
+  }
+
   return (
     <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
       {isProjectManager && (
         <Button label="Add New Project" icon="create_new_folder" onClick={onNewProject} />
       )}
-      <TablePanel loading={isLoading} onContextMenu={globalContextMenuShow}>
+      <TablePanel onContextMenu={globalContextMenuShow}>
         <DataTable
           value={projectList}
           scrollable="true"
@@ -188,12 +200,14 @@ const ProjectList = ({
           selectionMode={multiselect ? 'multiple' : 'single'}
           responsive="true"
           dataKey="name"
+          emptyMessage=" "
           selection={selectionObj}
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
           onRowDoubleClick={onRowDoubleClick}
           onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
+          className={isLoading ? 'table-loading' : undefined}
         >
           <Column
             field="name"

@@ -2,13 +2,14 @@ import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { InputText, InputPassword, Button, Panel, LoaderShade } from '@ynput/ayon-react-components'
+import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
 import { login } from '/src/features/user'
 import { ayonApi } from '../../services/ayon'
 import styled from 'styled-components'
 import AuthLink from './AuthLink'
 import { useGetInfoQuery } from '/src/services/auth/getAuth'
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
+import LoadingPage from '../LoadingPage'
 
 const LoginFormStyled = styled.div`
   display: flex;
@@ -192,7 +193,7 @@ const LoginPage = ({ loading }) => {
     doLogin()
   }
 
-  if (isLoading || isLoadingInfo || loading) return <LoaderShade />
+  if (isLoading || isLoadingInfo || loading) return <LoadingPage />
 
   return (
     <main className="center">

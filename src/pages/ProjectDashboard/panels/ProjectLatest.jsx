@@ -74,7 +74,6 @@ const ProjectLatest = ({ projectName }) => {
         link: '/events',
         icon: 'history',
       }}
-      isLoading={isLoading || isFetching}
     >
       {rows.map((row, i) => (
         <Fragment key={i}>

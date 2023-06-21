@@ -11,6 +11,7 @@ import { setFocusedTasks, setPairing, setUri } from '/src/features/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '/src/services/getTasks'
 import useCreateContext from '../hooks/useCreateContext'
+import NoTasks from '/src/components/NoTasks'
 
 const TaskList = ({ style = {} }) => {
   const tasks = useSelector((state) => state.project.tasks)
@@ -29,9 +30,9 @@ const TaskList = ({ style = {} }) => {
   // Hooks
   //
 
-  const {
+  let {
     data = [],
-    isLoading,
+    isFetching,
     isError,
     error,
   } = useGetTasksQuery({ projectName, folderIds, userName }, { skip: !folderIds.length })
@@ -113,9 +114,23 @@ const TaskList = ({ style = {} }) => {
 
   const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 6 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isFetching) {
+    data = loadingData
+  }
+
+  const noTasks = !isFetching && data.length === 0
+
   return (
     <Section style={style}>
-      <TablePanel loading={isLoading}>
+      <TablePanel>
         <EntityDetail
           projectName={projectName}
           entityType="task"
@@ -123,22 +138,27 @@ const TaskList = ({ style = {} }) => {
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
-        <TreeTable
-          value={data}
-          scrollable="true"
-          scrollHeight="100%"
-          emptyMessage="No Tasks Found"
-          selectionMode="multiple"
-          selectionKeys={selectedTasks}
-          onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
-          onContextMenuSelectionChange={onContextMenuSelectionChange}
-          onRowClick={onRowClick}
-        >
-          <Column field="name" header="Task" expander="true" body={nameRenderer} />
-          {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
-          <Column field="taskType" header="Task type" style={{ width: 90 }} />
-        </TreeTable>
+        {noTasks ? (
+          <NoTasks></NoTasks>
+        ) : (
+          <TreeTable
+            value={data}
+            scrollable="true"
+            scrollHeight="100%"
+            emptyMessage=" "
+            selectionMode="multiple"
+            selectionKeys={selectedTasks}
+            onSelectionChange={onSelectionChange}
+            onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            onRowClick={onRowClick}
+            className={isFetching ? 'table-loading' : undefined}
+          >
+            <Column field="name" header="Task" expander="true" body={nameRenderer} />
+            {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
+            <Column field="taskType" header="Task type" style={{ width: 90 }} />
+          </TreeTable>
+        )}
       </TablePanel>
     </Section>
   )

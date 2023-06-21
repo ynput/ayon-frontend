@@ -30,6 +30,7 @@ import useCreateContext from '/src/hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
+import NoProducts from './NoProducts'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -361,7 +362,7 @@ const Products = () => {
     'data.versionName',
   ]
 
-  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'products')
+  let [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'products')
 
   //
   // Handlers
@@ -439,6 +440,8 @@ const Products = () => {
       : `${getOutOfString(shownColumnsSingleFocused, filterOptions)} (Single)`
   }`
 
+  const isNone = filteredData.length === 0
+
   return (
     <Section className="wrap">
       <Toolbar>
@@ -474,7 +477,7 @@ const Products = () => {
           versionOverrides={versionOverrides}
           onContext={handleGridContext}
         />
-        {viewMode !== 'list' && !!focusedFolders.length && (
+        {viewMode !== 'list' && (
           <ProductsGrid
             isLoading={isLoading || isFetching}
             data={filteredData}
@@ -504,6 +507,7 @@ const Products = () => {
             isLoading={isLoading || isFetching}
           />
         )}
+        {isNone && !isLoading && !isFetching && <NoProducts />}
       </TablePanel>
     </Section>
   )

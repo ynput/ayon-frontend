@@ -133,6 +133,18 @@ const UserListTeams = ({
   // create ref and model
   const [contextMenuShow] = useCreateContext(contextMenuItems)
 
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 10 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isLoading) {
+    userList = loadingData
+  }
+
   // Render
 
   return (
@@ -142,14 +154,14 @@ const UserListTeams = ({
         flex: 1.5,
       }}
     >
-      <TablePanel loading={isLoading} onContextMenu={contextMenuShow}>
+      <TablePanel onContextMenu={contextMenuShow}>
         <DataTable
           value={userList}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className="user-list-table"
+          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
           onSelectionChange={onSelectionChange}
           onContextMenuSelectionChange={onContextSelectionChange}
           selection={selection}
@@ -183,6 +195,7 @@ const UserListTeams = ({
           <Column
             header="Teams"
             body={(rowData) => {
+              if (!rowData.teams) return null
               // sort teams by leader and sort teams by if they are selected
               const teamNames = Object.keys(rowData.teams)
               teamNames.sort((a, b) => {

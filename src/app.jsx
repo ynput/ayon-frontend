@@ -1,7 +1,6 @@
 import ayonClient from '/src/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
-import { LoaderShade } from '@ynput/ayon-react-components'
 import { useEffect, useState, Suspense, lazy, useContext } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
@@ -31,6 +30,7 @@ import ServerRestartBanner from './components/ServerRestartBanner'
 import { useLazyGetInfoQuery } from './services/auth/getAuth'
 import { ContextMenuProvider } from './context/contextMenuContext'
 import { GlobalContextMenu } from './components/GlobalContextMenu'
+import LoadingPage from './pages/LoadingPage'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -88,7 +88,7 @@ const App = () => {
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
     window.history.replaceState({}, document.title, '/')
-    return <LoaderShade />
+    return <LoadingPage />
   }
 
   if (serverError) return <ErrorPage code={serverError} message="Server connection failed" />
@@ -104,7 +104,7 @@ const App = () => {
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Suspense fallback={<LoaderShade />}>
+      <Suspense fallback={<LoadingPage />}>
         <SocketProvider>
           <ContextMenuProvider>
             <GlobalContextMenu />

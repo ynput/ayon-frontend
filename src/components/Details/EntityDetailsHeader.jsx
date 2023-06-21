@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { OverflowField } from '@ynput/ayon-react-components'
 import copyToClipboard from '/src/helpers/copyToClipboard'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 const ToolsStyled = styled.div`
   display: flex;
@@ -17,7 +18,16 @@ const ToolsStyled = styled.div`
   margin-right: 1px;
 `
 
-const EntityDetailsHeader = ({ values = [], tools }) => {
+const StyledLoading = styled.div`
+  width: 100%;
+  height: 37px;
+  border-radius: var(--border-radius);
+  position: relative;
+
+  ${getShimmerStyles()}
+`
+
+const EntityDetailsHeader = ({ values = [], tools, isLoading, hideThumbnail }) => {
   const { folders, tasks, productTypes } = useSelector((state) => state.project)
   const changes = useSelector((state) => state.editor.changes)
   const uri = useSelector((state) => state.context.uri)
@@ -63,30 +73,34 @@ const EntityDetailsHeader = ({ values = [], tools }) => {
 
   return (
     <DetailHeader>
-      <StackedThumbnails thumbnails={thumbnails} />
-      <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
-        {!isMultiple ? (
-          <NameField
-            node={values[0]}
-            changes={changes}
-            styled
-            tasks={tasks}
-            folders={folders}
-            productTypes={productTypes}
-            style={{ display: 'flex', gap: 4, fontWeight: 'bold' }}
-            iconStyle={{ fontSize: 19, marginRight: 0 }}
-            prefix={`${values[0]?.product?.name}`}
+      {!hideThumbnail && <StackedThumbnails thumbnails={thumbnails} isLoading={isLoading} />}
+      {isLoading ? (
+        <StyledLoading />
+      ) : (
+        <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
+          {!isMultiple ? (
+            <NameField
+              node={values[0]}
+              changes={changes}
+              styled
+              tasks={tasks}
+              folders={folders}
+              productTypes={productTypes}
+              style={{ display: 'flex', gap: 4, fontWeight: 'bold' }}
+              iconStyle={{ fontSize: 19, marginRight: 0 }}
+              prefix={`${values[0]?.product?.name}`}
+            />
+          ) : (
+            <h2>Multiple Selected ({values.length})</h2>
+          )}
+          <OverflowField
+            value={subTitle}
+            style={{ left: -3 }}
+            align="left"
+            onClick={copyToClipboard}
           />
-        ) : (
-          <h2>Multiple Selected ({values.length})</h2>
-        )}
-        <OverflowField
-          value={subTitle}
-          style={{ left: -3 }}
-          align="left"
-          onClick={copyToClipboard}
-        />
-      </div>
+        </div>
+      )}
       {tools && <ToolsStyled>{tools}</ToolsStyled>}
     </DetailHeader>
   )

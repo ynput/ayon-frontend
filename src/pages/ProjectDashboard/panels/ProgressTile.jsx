@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { TileStyled } from './ListStatsTile'
 import styled from 'styled-components'
 import ProgressBar from './ProgressBar'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 const HeaderStyled = styled.div`
   display: flex;
@@ -22,13 +23,18 @@ const ProgressStyled = styled(TileStyled)`
   flex-direction: column;
   gap: 8px;
   overflow: hidden;
+  position: relative;
 
   &:hover {
     background-color: var(--color-grey-01);
   }
+`
 
-  /* isLoading 50$ opacity */
-  ${({ isLoading }) => isLoading && 'opacity: 0.5;'}
+const StyledLoading = styled.div`
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-grey-01);
+  ${getShimmerStyles()}
 `
 
 const ProgressTile = ({
@@ -37,13 +43,12 @@ const ProgressTile = ({
   icon,
   onClick,
   isLoading,
-  isFetching,
   values = [],
   backgroundColor,
   onProgressClick,
 }) => {
   return (
-    <ProgressStyled onClick={onClick} isLoading={isLoading || isFetching}>
+    <ProgressStyled onClick={onClick}>
       <HeaderStyled>
         {icon && <span className="material-symbols-outlined">{icon}</span>}
         <h3>{title || ''}</h3>
@@ -57,6 +62,8 @@ const ProgressTile = ({
           onClick={onProgressClick}
         />
       )}
+
+      {isLoading && <StyledLoading />}
     </ProgressStyled>
   )
 }
