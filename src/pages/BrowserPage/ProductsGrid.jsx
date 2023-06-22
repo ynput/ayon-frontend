@@ -39,6 +39,7 @@ const ProductsGrid = ({
   onContextMenuSelectionChange,
   groupBy = null,
   multipleFoldersSelected = false,
+  projectName,
 }) => {
   const isNone = data.length === 0
 
@@ -177,8 +178,8 @@ const ProductsGrid = ({
                         }}
                         key={index}
                         typeIcon={productTypes[product.productType]?.icon || 'inventory_2'}
-                        statusIcon={statuses[product.status]?.icon || ''}
-                        statusColor={statuses[product.status]?.color || ''}
+                        statusIcon={statuses[product.versionStatus]?.icon || ''}
+                        statusColor={statuses[product.versionStatus]?.color || ''}
                         name={product.name}
                         footer={
                           <>
@@ -186,11 +187,12 @@ const ProductsGrid = ({
                             {multipleFoldersSelected && product.folder && <> - {product.folder}</>}
                           </>
                         }
-                        thumbnailEntityId={product.id}
-                        thumbnailEntityType="product"
+                        thumbnailEntityId={product.versionId}
+                        thumbnailEntityType="version"
                         onClick={(e) => handleSelection(e, product)}
                         selected={product.id in selection}
                         onContextMenu={(e) => handleContext(e, product.id)}
+                        projectName={projectName}
                       />
                     ),
                 )}
