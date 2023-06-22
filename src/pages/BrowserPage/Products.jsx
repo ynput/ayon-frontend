@@ -491,6 +491,7 @@ const Products = () => {
             lastSelected={lastFocused}
             groupBy={grouped || focusedFolders.length > 1 ? 'productType' : null}
             multipleFoldersSelected={focusedFolders.length > 1}
+            projectName={projectName}
           />
         )}
         {viewMode === 'list' && (
