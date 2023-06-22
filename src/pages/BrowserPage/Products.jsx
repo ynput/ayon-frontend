@@ -1,9 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { InputText, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
-import { TreeTable } from 'primereact/treetable'
-import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
+import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
@@ -13,40 +10,51 @@ import groupResult from '/src/helpers/groupResult'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import {
   setFocusedVersions,
-  setFocusedSubsets,
+  setFocusedProducts,
   setSelectedVersions,
   setUri,
   setPairing,
-  subsetSelected,
+  productSelected,
+  onFocusChanged,
 } from '/src/features/context'
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
 
-import { useGetSubsetsListQuery } from '/src/services/getSubsetsList'
+import { useGetProductListQuery } from '/src/services/getProductList'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
 import { ayonApi } from '/src/services/ayon'
+import useCreateContext from '/src/hooks/useCreateContext'
+import ViewModeToggle from './ViewModeToggle'
+import ProductsList from './ProductsList'
+import ProductsGrid from './ProductsGrid'
+import NoProducts from './NoProducts'
 
-const Subsets = () => {
+const Products = () => {
   const dispatch = useDispatch()
 
   // context
-  const families = useSelector((state) => state.project.families)
+  const productTypes = useSelector((state) => state.project.productTypes)
 
   const projectName = useSelector((state) => state.project.name)
   const focusedVersions = useSelector((state) => state.context.focused.versions)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
+  const statusesObject = useSelector((state) => state.project.statuses)
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
-  const focusedSubsets = useSelector((state) => state.context.focused.subsets)
+  const focusedProducts = useSelector((state) => state.context.focused.products)
   const pairing = useSelector((state) => state.context.pairing)
+  const lastFocused = useSelector((state) => state.context.focused.lastFocused)
 
-  const ctxMenuRef = useRef(null)
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
-  const [showDetail, setShowDetail] = useState(false) // false or 'subset' or 'version'
+  const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
+  // grid/list/grouped
+  const [viewMode, setViewMode] = useLocalStorage('productsViewMode', 'list')
+  const [grouped, setGrouped] = useState(false)
+
   // sets size of status based on status column width
-  const [columnsWidths, setColumnWidths] = useColumnResize('subsets')
+  const [columnsWidths, setColumnWidths] = useColumnResize('products')
 
   // version overrides
   // Get a list of version overrides for the current set of folders
@@ -54,8 +62,8 @@ const Subsets = () => {
   for (const folderId of focusedFolders) {
     const c = selectedVersions[folderId]
     if (!c) continue
-    for (const subsetId in c) {
-      const versionId = c[subsetId]
+    for (const productId in c) {
+      const versionId = c[productId]
       if (versionOverrides.includes(versionId)) continue
       versionOverrides.push(versionId)
     }
@@ -66,12 +74,12 @@ const Subsets = () => {
   }
 
   const {
-    data: subsetData = [],
+    data: productData = [],
     isLoading,
     isSuccess,
     refetch,
     isFetching,
-  } = useGetSubsetsListQuery(
+  } = useGetProductListQuery(
     {
       ids: focusedFolders,
       projectName,
@@ -80,7 +88,7 @@ const Subsets = () => {
     { skip: !projectName },
   )
 
-  // refocus version subset after reload
+  // refocus version product after reload
   useEffect(() => {
     if (focusOnReload && isSuccess) {
       dispatch(setFocusedVersions([focusOnReload]))
@@ -90,21 +98,21 @@ const Subsets = () => {
 
   // PUBSUB HOOK
   usePubSub(
-    'entity.subset',
+    'entity.product',
     refetch,
-    subsetData.map(({ id }) => id),
+    productData.map(({ id }) => id),
   )
 
   const [updateEntity] = useUpdateEntitiesDetailsMutation()
 
-  // update subset status
+  // update product status
   const handleStatusChange = async (value, selectedId) => {
     try {
-      // get selected subset ids based on focused selection
-      let subsetIds = focusedSubsets.includes(selectedId) ? focusedSubsets : [selectedId]
-      const subsets = subsetData.filter(({ id }) => subsetIds.includes(id))
-      // get version ids from selected subsets
-      const ids = subsets.map(({ versionId }) => versionId)
+      // get selected product ids based on focused selection
+      let productIds = focusedProducts.includes(selectedId) ? focusedProducts : [selectedId]
+      const products = productData.filter(({ id }) => productIds.includes(id))
+      // get version ids from selected products
+      const ids = products.map(({ versionId }) => versionId)
 
       // update version status
 
@@ -115,19 +123,19 @@ const Subsets = () => {
         data: { ['status']: value },
       }).unwrap()
 
-      // create new patch data of subsets
-      const patchData = subsetData.map(({ versionId, versionStatus, ...subset }) => ({
-        ...subset,
+      // create new patch data of products
+      const patchData = productData.map(({ versionId, versionStatus, ...product }) => ({
+        ...product,
         versionStatus: ids.includes(versionId) ? value : versionStatus,
         versionId,
       }))
 
       console.log(patchData)
 
-      // update subsets cache
+      // update products cache
       dispatch(
         ayonApi.util.updateQueryData(
-          'getSubsetsList',
+          'getProductList',
           { projectName, ids: focusedFolders, versionOverrides },
           (draft) => {
             Object.assign(draft, patchData)
@@ -142,18 +150,18 @@ const Subsets = () => {
   }
 
   const handleStatusOpen = (id) => {
-    // handles the edge case where the use foccusess multiple subsets but then changes a different status
-    if (!focusedSubsets.includes(id)) {
+    // handles the edge case where the use foccusess multiple products but then changes a different status
+    if (!focusedProducts.includes(id)) {
       // not in focused selection
       // reset selection to status id
-      dispatch(setFocusedSubsets([id]))
+      dispatch(setFocusedProducts([id]))
     }
   }
 
   let columns = [
     {
       field: 'name',
-      header: 'Subset',
+      header: 'Product',
       width: 200,
       body: (node) => {
         let className = ''
@@ -168,7 +176,7 @@ const Subsets = () => {
 
         const icon = node.data.isGroup
           ? 'folder'
-          : families[node.data.family]?.icon || 'help_center'
+          : productTypes[node.data.productType]?.icon || 'inventory_2'
 
         return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
       },
@@ -192,7 +200,7 @@ const Subsets = () => {
                 : 'full'
             }
             onChange={(v) => handleStatusChange(v, node.data.id)}
-            multipleSelected={focusedSubsets.length}
+            multipleSelected={focusedProducts.length}
             onOpen={() => handleStatusOpen(node.data.id)}
             style={{ maxWidth: '100%' }}
           />
@@ -205,8 +213,8 @@ const Subsets = () => {
       width: 200,
     },
     {
-      field: 'family',
-      header: 'Family',
+      field: 'productType',
+      header: 'Product type',
       width: 120,
     },
     {
@@ -214,10 +222,10 @@ const Subsets = () => {
       header: 'Version',
       width: 70,
       body: (node) =>
-        VersionList(node.data, (subsetId, versionId) => {
+        VersionList(node.data, (productId, versionId) => {
           // TODO changing version doesn't auto update version detail
           let newSelection = { ...selectedVersions[node.data.folderId] }
-          newSelection[subsetId] = versionId
+          newSelection[productId] = versionId
           dispatch(
             setSelectedVersions({
               ...selectedVersions,
@@ -245,16 +253,19 @@ const Subsets = () => {
     },
   ]
 
-  const filterOptions = columns.map(({ field }) => ({ value: field, label: field }))
+  const filterOptions = columns.map(({ field, header }) => ({
+    value: field,
+    label: header || field,
+  }))
   const allColumnsNames = filterOptions.map(({ value }) => value)
   const isMultiSelected = focusedFolders.length > 1
 
   const [shownColumnsSingleFocused, setShownColumnsSingleFocused] = useLocalStorage(
-    'subsets-columns-filter-single',
+    'products-columns-filter-single',
     allColumnsNames,
   )
   const [shownColumnsMultiFocused, setShownColumnsMultiFocused] = useLocalStorage(
-    'subsets-columns-filter-multi',
+    'products-columns-filter-multi',
     allColumnsNames,
   )
 
@@ -271,7 +282,7 @@ const Subsets = () => {
   }
 
   // sort columns if localstorage set
-  let columnsOrder = localStorage.getItem('subsets-columns-order')
+  let columnsOrder = localStorage.getItem('products-columns-order')
   if (columnsOrder) {
     try {
       columnsOrder = JSON.parse(columnsOrder)
@@ -279,7 +290,7 @@ const Subsets = () => {
     } catch (error) {
       console.log(error)
       // remove local stage
-      localStorage.removeItem('subsets-columns-order')
+      localStorage.removeItem('products-columns-order')
     }
   }
 
@@ -290,35 +301,24 @@ const Subsets = () => {
     columns = columns.filter(({ field }) => shownColumns.includes(field))
   }
 
-  const handleColumnReorder = (e) => {
-    const localStorageOrder = e.columns.reduce(
-      (acc, cur, i) => ({ ...acc, [cur.props.field]: i }),
-      {},
-    )
-
-    localStorage.setItem('subsets-columns-order', JSON.stringify(localStorageOrder))
-  }
-
-  // update status width
-
   //
   // Hooks
   //
 
   // Parse focusedVersions list from the project context
-  // and create a list of selected subset rows compatible
+  // and create a list of selected product rows compatible
   // with the TreeTable component
 
   const selectedRows = useMemo(() => {
-    if (focusedVersions?.length === 0) return []
-    const subsetIds = {}
-    for (const sdata of subsetData) {
+    if (focusedVersions?.length === 0) return {}
+    const productIds = {}
+    for (const sdata of productData) {
       if (focusedVersions.includes(sdata.versionId)) {
-        subsetIds[sdata.id] = true
+        productIds[sdata.id] = true
       }
     }
-    return subsetIds
-  }, [subsetData, focusedVersions])
+    return productIds
+  }, [productData, focusedVersions])
 
   // Since using dispatch in useMemo causes errors,
   // we need to use useEffect to update task-version pairing
@@ -327,7 +327,7 @@ const Subsets = () => {
   useEffect(() => {
     if (!focusedVersions.length) return
     const pairs = []
-    for (const sdata of subsetData) {
+    for (const sdata of productData) {
       if (focusedVersions.includes(sdata.versionId)) {
         if (sdata.taskId) {
           pairs.push({
@@ -341,18 +341,18 @@ const Subsets = () => {
     dispatch(setPairing(pairs))
     // shut up about missing dispatch dependency
     // eslint-disable-next-line
-  }, [subsetData, focusedVersions])
+  }, [productData, focusedVersions])
 
-  // Transform the subset data into a TreeTable compatible format
-  // by grouping the data by the subset name
+  // Transform the product data into a TreeTable compatible format
+  // by grouping the data by the product name
 
   let tableData = useMemo(() => {
-    return groupResult(subsetData, 'name')
-  }, [subsetData])
+    return groupResult(productData, 'name')
+  }, [productData])
 
   const searchableFields = [
     'data.author',
-    'data.family',
+    'data.productType',
     'data.folder',
     'data.fps',
     'data.frames',
@@ -362,11 +362,15 @@ const Subsets = () => {
     'data.versionName',
   ]
 
-  const [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'subsets')
+  let [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'products')
 
   //
   // Handlers
   //
+
+  const handleGridContext = () => {
+    // set selection and open context menu
+  }
 
   // Set the breadcrumbs when a row is clicked
   const onRowClick = (event) => {
@@ -376,45 +380,50 @@ const Subsets = () => {
 
     let uri = `ayon+entity://${projectName}/`
     uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
-    uri += `?subset=${event.node.data.name}`
+    uri += `?product=${event.node.data.name}`
     uri += `&version=${event.node.data.versionName}`
     dispatch(setUri(uri))
+    dispatch(onFocusChanged(event.node.data.id))
   }
 
   const onSelectionChange = (event) => {
     let versions = []
-    let subsets = []
+    let products = []
     const selection = Object.keys(event.value)
-    for (const sdata of subsetData) {
+    for (const sdata of productData) {
       if (selection.includes(sdata.id)) {
         versions.push(sdata.versionId)
-        subsets.push(sdata.id)
+        products.push(sdata.id)
       }
     }
     // we need to set the focused versions first
-    // otherwise setFocusedSubsets will clear the selection
+    // otherwise setFocusedProducts will clear the selection
     // of versions.
-    dispatch(subsetSelected({ subsets, versions }))
+    dispatch(productSelected({ products, versions }))
   }
 
   const onContextMenuSelectionChange = (event) => {
-    if (focusedSubsets.includes(event.value)) return
-    const subsetId = event.value
-    const versionId = subsetData.find((s) => s.id === subsetId).versionId
-    dispatch(setFocusedSubsets([subsetId]))
+    if (focusedProducts.includes(event.value)) return
+    const productId = event.value
+    const versionId = productData.find((s) => s.id === productId).versionId
+    dispatch(setFocusedProducts([productId]))
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const ctxMenuModel = [
+  const ctxMenuItems = [
     {
-      label: 'Subset detail',
-      command: () => setShowDetail('subset'),
+      label: 'Product detail',
+      command: () => setShowDetail('product'),
+      icon: 'database',
     },
     {
       label: 'Version detail',
       command: () => setShowDetail('version'),
+      icon: 'database',
     },
   ]
+
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   //
   // Render
@@ -431,12 +440,14 @@ const Subsets = () => {
       : `${getOutOfString(shownColumnsSingleFocused, filterOptions)} (Single)`
   }`
 
+  const isNone = filteredData.length === 0
+
   return (
     <Section className="wrap">
       <Toolbar>
         <InputText
           style={{ width: '200px' }}
-          placeholder="Filter subsets..."
+          placeholder="Filter products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           autocomplete="off"
@@ -448,55 +459,59 @@ const Subsets = () => {
           placeholder={placeholder}
           fixedPlaceholder
         />
+        <Spacer />
+        <ViewModeToggle
+          value={viewMode}
+          onChange={setViewMode}
+          grouped={grouped || focusedFolders.length > 1}
+          setGrouped={setGrouped}
+        />
       </Toolbar>
-
-      <TablePanel loading={isLoading || isFetching}>
-        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
+      <TablePanel style={{ overflow: 'hidden' }}>
         <EntityDetail
           projectName={projectName}
-          entityType={showDetail || 'subset'}
-          entityIds={showDetail === 'subset' ? focusedSubsets : focusedVersions}
+          entityType={showDetail || 'product'}
+          entityIds={showDetail === 'product' ? focusedProducts : focusedVersions}
           visible={!!showDetail}
           onHide={() => setShowDetail(false)}
           versionOverrides={versionOverrides}
+          onContext={handleGridContext}
         />
-        <TreeTable
-          value={filteredData}
-          responsive="true"
-          scrollHeight="100%"
-          scrollable="true"
-          resizableColumns
-          columnResizeMode="expand"
-          emptyMessage="No subset found"
-          selectionMode="multiple"
-          selectionKeys={selectedRows}
-          onSelectionChange={onSelectionChange}
-          onRowClick={onRowClick}
-          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
-          onContextMenuSelectionChange={onContextMenuSelectionChange}
-          onColumnResizeEnd={setColumnWidths}
-          reorderableColumns
-          onColReorder={handleColumnReorder}
-        >
-          {columns.map((col, i) => {
-            return (
-              <Column
-                key={col.field}
-                style={{ ...col.style, width: columnsWidths[col.field] || col.width }}
-                expander={i === 0}
-                resizeable={true}
-                field={col.field}
-                header={col.header}
-                body={col.body}
-                className={col.field}
-                sortable
-              />
-            )
-          })}
-        </TreeTable>
+        {viewMode !== 'list' && (
+          <ProductsGrid
+            isLoading={isLoading || isFetching}
+            data={filteredData}
+            onItemClick={onRowClick}
+            onSelectionChange={onSelectionChange}
+            onContext={ctxMenuShow}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            selection={selectedRows}
+            productTypes={productTypes}
+            statuses={statusesObject}
+            lastSelected={lastFocused}
+            groupBy={grouped || focusedFolders.length > 1 ? 'productType' : null}
+            multipleFoldersSelected={focusedFolders.length > 1}
+            projectName={projectName}
+          />
+        )}
+        {viewMode === 'list' && (
+          <ProductsList
+            data={filteredData}
+            selectedRows={selectedRows}
+            onSelectionChange={onSelectionChange}
+            onRowClick={onRowClick}
+            ctxMenuShow={ctxMenuShow}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            setColumnWidths={setColumnWidths}
+            columns={columns}
+            columnsWidths={columnsWidths}
+            isLoading={isLoading || isFetching}
+          />
+        )}
+        {isNone && !isLoading && !isFetching && <NoProducts />}
       </TablePanel>
     </Section>
   )
 }
 
-export default Subsets
+export default Products

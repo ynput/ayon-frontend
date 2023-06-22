@@ -4,7 +4,7 @@ import { Section } from '@ynput/ayon-react-components'
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'
 
-import Subsets from './Subsets'
+import Products from './Products'
 import Detail from './detail/Detail'
 
 const BrowserPage = () => {
@@ -24,7 +24,7 @@ const BrowserPage = () => {
         <SplitterPanel size={82}>
           <Splitter layout="horizontal" style={{ height: '100%' }} stateKey="browser-splitter-2">
             <SplitterPanel style={{ minWidth: 500 }}>
-              <Subsets />
+              <Products />
             </SplitterPanel>
             <SplitterPanel style={{ minWidth: 250, maxWidth: 480 }}>
               <Detail />

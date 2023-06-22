@@ -1,4 +1,7 @@
 import React from 'react'
+import axios from 'axios'
+import { useMemo } from 'react'
+import { toast } from 'react-toastify'
 import { useGetEventByIdQuery } from '/src/services/events/getEvents'
 import { Section, Panel, Button } from '@ynput/ayon-react-components'
 import DetailHeader from '/src/components/DetailHeader'
@@ -21,6 +24,29 @@ const RowStyled = styled.div`
 const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
   const { data: event, isLoading, isFetching } = useGetEventByIdQuery({ id }, { skip: !id })
 
+  const eventRestartButton = useMemo(() => {
+    if (!event) return null
+    if (!['finished', 'aborted', 'failed'].includes(event.status)) return null
+
+    const restartEvent = () => {
+      axios
+        .patch(`/api/events/${event.id}`, { status: 'restarted' })
+        .then(() => {
+          console.log('probably restarted')
+        })
+        .catch((err) => {
+          const msg = err?.response?.data?.detail || err.message
+          toast.error(msg)
+        })
+    }
+
+    return (
+      <RowStyled>
+        <Button onClick={restartEvent} label="Restart" />
+      </RowStyled>
+    )
+  }, [event])
+
   if (isLoading || !event || !id) return null
 
   const { description, user: userName, summary, project, payload, topic } = event
@@ -28,7 +54,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
   let projectLastUpdated, type
   if (project) {
     const projectLastest = events.filter((e) => e.project === project)[0]
-    projectLastUpdated = projectLastest.updatedAt
+    projectLastUpdated = projectLastest?.updatedAt
 
     // get type from topic
     type = topic.split('.')[1]
@@ -43,7 +69,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
       >
         <div style={{ overflow: 'hidden' }}>
           <h2>{event.topic}</h2>
-          <TimestampField value={event.updatedAt} />
+          <TimestampField value={event?.updatedAt} />
         </div>
       </DetailHeader>
       <Panel
@@ -61,6 +87,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
             <span>{payload.message}</span>
           </RowStyled>
         )}
+
         {userName && (
           <RowStyled>
             <h2>User</h2>
@@ -108,6 +135,8 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
           </RowStyled>
         )}
       </Panel>
+
+      <Panel>{eventRestartButton}</Panel>
     </Section>
   )
 }

@@ -1,7 +1,7 @@
 import { ayonApi } from './ayon'
 import {
   FOLDER_TILE_FRAGMENT,
-  SUBSET_TILE_FRAGMENT,
+  PRODUCT_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
 } from './entity/entityQueries'
@@ -31,7 +31,7 @@ const buildActivityQuery = (entities = [], args, name) => {
 
   const fragments = {
     folder: FOLDER_TILE_FRAGMENT,
-    subset: SUBSET_TILE_FRAGMENT,
+    product: PRODUCT_TILE_FRAGMENT,
     version: VERSION_TILE_FRAGMENT,
     task: TASK_TILE_FRAGMENT,
   }
@@ -62,7 +62,7 @@ const getProjectDashboard = ayonApi.injectEndpoints({
       }),
       transformResponse: (response, meta, { entities }) =>
         formatEntityTiles(response.data?.project, entities),
-      providesTags: ['folder', 'task', 'version', 'subset'],
+      providesTags: ['folder', 'task', 'version', 'product'],
     }),
   }),
 })

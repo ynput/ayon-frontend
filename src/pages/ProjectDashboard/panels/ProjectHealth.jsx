@@ -45,12 +45,7 @@ const getStorage = (storageUsage) => {
 
 const ProjectHealth = ({ projectName, share, position }) => {
   const statusesObject = useSelector((state) => state.project.statuses) || {}
-  const {
-    data = {},
-    isLoading,
-    isFetching,
-    isError,
-  } = useGetProjectDashboardQuery({ projectName, panel: 'health' })
+  const { data = {}, isFetching } = useGetProjectDashboardQuery({ projectName, panel: 'health' })
 
   // get project anatomy for project name for status
   const { data: anatomy } = useGetProjectAnatomyQuery({ projectName })
@@ -109,25 +104,21 @@ const ProjectHealth = ({ projectName, share, position }) => {
   return (
     <DashboardPanelWrapper
       title="Health"
-      isError={isError}
       icon={{ icon: 'share', onClick: () => share('Health', shareData, position) }}
-      isLoading={isLoading || isFetching}
     >
       <ProgressTile
         title={shareData.complete}
         subTitle={complete.subTitle}
         icon="schedule"
         values={[{ value: complete.percentage, label: 'Complete' }]}
-        isLoading={isLoading}
-        isFetching={isFetching}
+        isLoading={isFetching}
         onProgressClick={(v) => percentageCopy(v, 'Project Complete')}
       />
       <ProgressTile
         title={shareData.storage}
         icon="database"
         values={[{ value: storage.percentage, label: 'Storage Used', color: storage.color }]}
-        isLoading={isLoading}
-        isFetching={isFetching}
+        isLoading={isFetching}
         onProgressClick={(v) => percentageCopy(v, 'Storage Used')}
       />
       <ProgressTile
@@ -135,16 +126,14 @@ const ProjectHealth = ({ projectName, share, position }) => {
         subTitle={onTrack ? shareData.onTrack : ''}
         icon="notification_important"
         values={taskValues}
-        isLoading={isLoading}
-        isFetching={isFetching}
+        isLoading={isFetching}
         onProgressClick={(v) => tasksCopy(v, 'Tasks')}
       />
       <ProgressTile
         title={'Statuses'}
         icon="check_circle"
         values={statusValues || []}
-        isLoading={isLoading}
-        isFetching={isFetching}
+        isLoading={isFetching}
         onProgressClick={(v) => tasksCopy(v, 'Statuses')}
       />
     </DashboardPanelWrapper>

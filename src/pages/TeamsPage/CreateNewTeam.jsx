@@ -182,16 +182,16 @@ const CreateNewTeam = ({
           }}
         >
           <Button
-            onClick={handleClear}
-            label="Clear"
-            icon="clear"
+            onClick={handleSubmit}
+            label="Create New Team"
+            icon="group_add"
             style={{ flex: 1 }}
             disabled={!nameForm}
           />
           <Button
-            onClick={handleSubmit}
-            label="Create New Team"
-            icon="group_add"
+            onClick={handleClear}
+            label="Clear"
+            icon="clear"
             style={{ flex: 1 }}
             disabled={!nameForm}
           />

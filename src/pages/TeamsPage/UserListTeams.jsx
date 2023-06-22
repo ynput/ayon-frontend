@@ -1,11 +1,11 @@
-import { useRef } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
+import addRemoveMembers from './addRemoveMembers'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -47,12 +47,13 @@ const UserListTeams = ({
   selectedUsers = [],
   userList = [],
   onSelectUsers,
-  setLastSelectedUser,
   isLoading,
   selectedTeams,
+  showAllUsers,
+  onShowAllUsers,
+  teams = [],
+  onUpdateTeams,
 }) => {
-  const contextMenuRef = useRef(null)
-
   // Selection
   const selection = useMemo(
     () => userList.filter((user) => selectedUsers.includes(user.name)),
@@ -66,23 +67,83 @@ const UserListTeams = ({
     onSelectUsers(result)
   }
 
-  const contextMenuModel = [
-    // {
-    //   label: 'Set username',
-    //   disabled: selection.length !== 1,
-    //   command: () => setShowRenameUser(true),
-    // },
-    // {
-    //   label: 'Set password',
-    //   disabled: selection.length !== 1,
-    //   command: () => setShowSetPassword(true),
-    // },
-    // {
-    //   label: 'Delete selected',
-    //   disabled: !selection.length || isSelfSelected,
-    //   command: () => onDelete(),
-    // },
-  ]
+  const handleAddRemove = (add = [], remove = []) => {
+    const updatedTeams = addRemoveMembers(teams, selectedUsers, add, remove)
+
+    console.log(updatedTeams)
+
+    onUpdateTeams(updatedTeams)
+  }
+
+  const onContextSelectionChange = (e) => {
+    const name = e.value.name
+    const index = selectedUsers.indexOf(name)
+    if (index === -1) onSelectUsers([name])
+  }
+
+  // two arrays one for adding to teams and one for removing from teams
+  // only one user that is not in the team is required to add to the team
+  // only one user that is in the team is required to remove from the team
+  const addToList = useMemo(
+    () =>
+      teams.filter((team) =>
+        selectedUsers.some((user) => !team.members.some((mem) => mem.name === user)),
+      ),
+    [selectedTeams, selectedUsers, teams],
+  )
+
+  const removeFromList = useMemo(
+    () =>
+      teams.filter((team) =>
+        selectedUsers.some((user) => team.members.some((mem) => mem.name === user)),
+      ),
+    [selectedTeams, selectedUsers, teams],
+  )
+
+  // CONTEXT
+  const contextMenuItems = useMemo(
+    () => [
+      {
+        label: showAllUsers ? 'Show All Users' : 'Show Members Only',
+        command: onShowAllUsers,
+        icon: showAllUsers ? 'visibility' : 'visibility_off',
+      },
+      {
+        label: 'Add To Team',
+        icon: 'add',
+        items: addToList.map((team) => ({
+          label: team.name,
+          icon: 'add',
+          command: () => handleAddRemove([team.name], []),
+        })),
+      },
+      {
+        label: 'Remove From Team',
+        icon: 'remove',
+        items: removeFromList.map((team) => ({
+          label: team.name,
+          icon: 'remove',
+          command: () => handleAddRemove([], [team.name]),
+        })),
+      },
+    ],
+    [selectedTeams, selectedUsers, showAllUsers, teams],
+  )
+
+  // create ref and model
+  const [contextMenuShow] = useCreateContext(contextMenuItems)
+
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 10 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isLoading) {
+    userList = loadingData
+  }
 
   // Render
 
@@ -93,23 +154,16 @@ const UserListTeams = ({
         flex: 1.5,
       }}
     >
-      <TablePanel loading={isLoading}>
-        <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+      <TablePanel onContextMenu={contextMenuShow}>
         <DataTable
           value={userList}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className="user-list-table"
+          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-          onContextMenuSelectionChange={(e) => {
-            if (!selectedUsers.includes(e.value.name)) {
-              onSelectUsers([...selection, e.value.name])
-            }
-            setLastSelectedUser(e.data.name)
-          }}
+          onContextMenuSelectionChange={onContextSelectionChange}
           selection={selection}
           resizableColumns
           responsive="true"
@@ -117,11 +171,15 @@ const UserListTeams = ({
           tableStyle={{
             width: '100%',
           }}
+          groupRowsBy={'group'}
+          rowGroupMode="subheader"
+          rowGroupHeaderTemplate={(data) => {
+            return <div>{data.group}</div>
+          }}
         >
           <Column
             field="name"
             header="Username"
-            sortable
             body={(rowData) => ProfileRow({ rowData })}
             style={{
               width: '20%',
@@ -130,7 +188,6 @@ const UserListTeams = ({
           <Column
             field="attrib.fullName"
             header="Full Name"
-            sortable
             style={{
               width: '20%',
             }}
@@ -138,6 +195,7 @@ const UserListTeams = ({
           <Column
             header="Teams"
             body={(rowData) => {
+              if (!rowData.teams) return null
               // sort teams by leader and sort teams by if they are selected
               const teamNames = Object.keys(rowData.teams)
               teamNames.sort((a, b) => {
@@ -163,7 +221,6 @@ const UserListTeams = ({
                 </span>
               )
             }}
-            sortable
             sortField="teamsList"
           />
           <Column
@@ -194,7 +251,6 @@ const UserListTeams = ({
                 </span>
               )
             }}
-            sortable
             sortField="rolesList"
           />
         </DataTable>

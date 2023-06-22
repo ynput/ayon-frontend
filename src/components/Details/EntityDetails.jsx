@@ -12,6 +12,7 @@ const EntityDetails = ({
   extraAttrib = [],
   hideNull,
   style,
+  isLoading,
 }) => {
   if (nodes.length === 0) return null
 
@@ -83,6 +84,7 @@ const EntityDetails = ({
           updatedAt: n.updatedAt,
         }))}
         type={type}
+        isLoading={isLoading}
       />
       <AttributeTable
         entityType={type}
@@ -92,13 +94,14 @@ const EntityDetails = ({
         style={{
           overflow: 'auto',
         }}
+        isLoading={isLoading}
       />
     </Panel>
   )
 }
 
 EntityDetails.propTypes = {
-  type: PropTypes.oneOf(['version', 'subset', 'folder', 'task']),
+  type: PropTypes.oneOf(['version', 'product', 'folder', 'task']),
   nodes: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,

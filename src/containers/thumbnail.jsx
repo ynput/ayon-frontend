@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import styled from 'styled-components'
+import getShimmerStyles from '../styles/getShimmerStyles'
 
 const ThumbnailStyled = styled.div`
   position: relative;
@@ -22,6 +23,8 @@ const ThumbnailStyled = styled.div`
     inset: 0;
     background-color: #161616;
   }
+
+  ${({ $shimmer }) => $shimmer && getShimmerStyles()}
 `
 
 const ImageStyled = styled.img`
@@ -37,18 +40,27 @@ const ImageStyled = styled.img`
 
 const ImagePlaceholder = () => <span className="material-symbols-outlined">image</span>
 
-const Thumbnail = ({ projectName, entityType, entityId, style, entityUpdatedAt }) => {
+const Thumbnail = ({
+  projectName,
+  entityType,
+  entityId,
+  style,
+  entityUpdatedAt,
+  isLoading,
+  shimmer,
+  className,
+}) => {
   // Display image only when loaded to avoid flickering and displaying,
   // ugly border around the image (when it's not loaded yet)
   const [thumbLoaded, setThumbLoaded] = useState(false)
 
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
   const queryArgs = `?updatedAt=${entityUpdatedAt}&token=${localStorage.getItem('accessToken')}`
-  const isWrongEntity = ['task', 'subset'].includes(entityType)
+  const isWrongEntity = ['task', 'product'].includes(entityType)
 
   return (
-    <ThumbnailStyled style={style}>
-      <ImagePlaceholder />
+    <ThumbnailStyled style={style} className={className} $shimmer={isLoading && shimmer}>
+      {!isLoading && <ImagePlaceholder />}
       {entityType && !(isWrongEntity || !entityId) && (
         <ImageStyled
           alt={`Entity thumbnail ${entityId}`}

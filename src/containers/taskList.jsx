@@ -1,16 +1,17 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import EntityDetail from '/src/containers/entityDetail'
 import { CellWithIcon } from '/src/components/icons'
-import { setFocusedTasks, setPairing } from '/src/features/context'
+import { setFocusedTasks, setPairing, setUri } from '/src/features/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '/src/services/getTasks'
+import useCreateContext from '../hooks/useCreateContext'
+import NoTasks from '/src/components/NoTasks'
 
 const TaskList = ({ style = {} }) => {
   const tasks = useSelector((state) => state.project.tasks)
@@ -23,16 +24,15 @@ const TaskList = ({ style = {} }) => {
   const pairing = useSelector((state) => state.context.pairing)
   const userName = useSelector((state) => state.user.name)
 
-  const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false)
 
   //
   // Hooks
   //
 
-  const {
+  let {
     data = [],
-    isLoading,
+    isFetching,
     isError,
     error,
   } = useGetTasksQuery({ projectName, folderIds, userName }, { skip: !folderIds.length })
@@ -90,23 +90,47 @@ const TaskList = ({ style = {} }) => {
     )
   }
 
-  const ctxMenuModel = [
-    {
-      label: 'Detail',
-      command: () => setShowDetail(true),
-    },
-  ]
-
   if (isError) {
     toast.error(`Unable to load tasks. ${error}`)
 
     return <>Error</>
   }
 
+  const onRowClick = (event) => {
+    const node = event.node.data
+    let uri = `ayon+entity://${projectName}/${node.folderPath}`
+    uri += `?task=${node.name}`
+    dispatch(setUri(uri))
+  }
+
+  // CONTEXT MENU
+  const ctxMenuItems = [
+    {
+      label: 'Detail',
+      command: () => setShowDetail(true),
+      icon: 'database',
+    },
+  ]
+
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 6 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isFetching) {
+    data = loadingData
+  }
+
+  const noTasks = !isFetching && data.length === 0
+
   return (
     <Section style={style}>
-      <TablePanel loading={isLoading}>
-        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
+      <TablePanel>
         <EntityDetail
           projectName={projectName}
           entityType="task"
@@ -114,21 +138,27 @@ const TaskList = ({ style = {} }) => {
           visible={showDetail}
           onHide={() => setShowDetail(false)}
         />
-        <TreeTable
-          value={data}
-          scrollable="true"
-          scrollHeight="100%"
-          emptyMessage="No Tasks Found"
-          selectionMode="multiple"
-          selectionKeys={selectedTasks}
-          onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
-          onContextMenuSelectionChange={onContextMenuSelectionChange}
-        >
-          <Column field="name" header="Task" expander="true" body={nameRenderer} />
-          {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
-          <Column field="taskType" header="Task type" style={{ width: 90 }} />
-        </TreeTable>
+        {noTasks ? (
+          <NoTasks></NoTasks>
+        ) : (
+          <TreeTable
+            value={data}
+            scrollable="true"
+            scrollHeight="100%"
+            emptyMessage=" "
+            selectionMode="multiple"
+            selectionKeys={selectedTasks}
+            onSelectionChange={onSelectionChange}
+            onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            onRowClick={onRowClick}
+            className={isFetching ? 'table-loading' : undefined}
+          >
+            <Column field="name" header="Task" expander="true" body={nameRenderer} />
+            {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
+            <Column field="taskType" header="Task type" style={{ width: 90 }} />
+          </TreeTable>
+        )}
       </TablePanel>
     </Section>
   )

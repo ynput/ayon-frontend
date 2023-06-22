@@ -5,10 +5,13 @@ const initialState = {
   focused: {
     type: null,
     folders: [],
-    subsets: [],
+    products: [],
     versions: [],
+    representations: [],
     tasks: [],
+    workfiles: [],
     editor: [],
+    lastFocused: null,
   },
   selectedVersions: {},
   pairing: [],
@@ -38,14 +41,14 @@ const contextSlice = createSlice({
     setFocusedFolders: (state, action) => {
       state.focused.type = 'folder'
       state.focused.folders = action.payload
-      state.focused.subsets = []
+      state.focused.products = []
       state.focused.versions = []
       state.pairing = []
     },
 
-    setFocusedSubsets: (state, action) => {
-      state.focused.type = 'subset'
-      state.focused.subsets = action.payload
+    setFocusedProducts: (state, action) => {
+      state.focused.type = 'product'
+      state.focused.products = action.payload
       state.focused.versions = []
     },
 
@@ -54,6 +57,17 @@ const contextSlice = createSlice({
       state.focused.tasks = action.payload
       state.focused.versions = []
     },
+
+    setFocusedWorkfiles: (state, action) => {
+      state.focused.type = 'workfile'
+      state.focused.workfiles = action.payload
+    },
+
+    setFocusedRepresentations: (state, action) => {
+      state.focused.type = 'representation'
+      state.focused.representations = action.payload
+    },
+
     editorSelectionChanged: (state, action) => {
       // updates focused.editor, focused.folders, focused.tasks
       if (action.payload.tasks) state.focused.tasks = action.payload.tasks
@@ -83,18 +97,18 @@ const contextSlice = createSlice({
     clearFocus: (state, action) => {
       state.focused.type = null
       state.focused.folders = []
-      state.focused.subsets = []
+      state.focused.products = []
       state.focused.versions = []
     },
 
     setPairing: (state, action) => {
       state.pairing = action.payload
     },
-    subsetSelected: (state, action) => {
+    productSelected: (state, action) => {
       state.focused.type = 'version'
 
       state.focused.versions = action.payload.versions
-      state.focused.subsets = action.payload.subsets
+      state.focused.products = action.payload.products
     },
 
     setUri: (state, action) => {
@@ -105,6 +119,10 @@ const contextSlice = createSlice({
     // eslint-disable-next-line no-unused-vars
     setUriChanged: (state, action) => {
       state.uriChanged = state.uriChanged + 1
+    },
+
+    onFocusChanged: (state, action) => {
+      state.focused.lastFocused = action.payload
     },
 
     setReload: (state, action) => {
@@ -132,9 +150,11 @@ const contextSlice = createSlice({
 
 export const {
   setFocusedFolders,
-  setFocusedSubsets,
+  setFocusedProducts,
   setFocusedVersions,
   setFocusedTasks,
+  setFocusedWorkfiles,
+  setFocusedRepresentations,
   setSelectedVersions,
   setExpandedFolders,
   setPairing,
@@ -142,12 +162,13 @@ export const {
   setFocusedType,
   setUri,
   setUriChanged,
-  subsetSelected,
+  productSelected,
   editorSelectionChanged,
   projectSelected,
   onShare,
   closeShare,
   selectProject,
+  onFocusChanged,
 } = contextSlice.actions
 
 export default contextSlice.reducer

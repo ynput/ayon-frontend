@@ -1,14 +1,10 @@
 import axios from 'axios'
-
-import { useDispatch } from 'react-redux'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { Button, Spacer, UserImage } from '@ynput/ayon-react-components'
+import { Button, Divider, Spacer } from '@ynput/ayon-react-components'
 import { Sidebar } from 'primereact/sidebar'
-import { logout } from '/src/features/user'
 import { useSelector } from 'react-redux'
-import { ayonApi } from '/src/services/ayon'
 import styled, { css } from 'styled-components'
+import { Fragment } from 'react'
 
 const StyledButton = styled(Button)`
   width: 100%;
@@ -32,7 +28,6 @@ const StyledButton = styled(Button)`
 `
 
 const UserMenu = ({ visible, onHide }) => {
-  const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
   // get user from redux store
@@ -41,19 +36,8 @@ const UserMenu = ({ visible, onHide }) => {
   const isUser = user.data.isUser
   const isAdmin = user.data.isAdmin
 
-  const doLogout = () => {
-    axios
-      .post('/api/auth/logout')
-      .then((response) => {
-        toast.info(response.data.detail)
-        dispatch(logout())
-        // reset global state
-        dispatch(ayonApi.util.resetApiState())
-      })
-      .catch(() => {
-        toast.error('Unable to log out. Weird.')
-      })
-  }
+  const divider = <Divider style={{ margin: '10px 0' }} />
+  const spacer = <Spacer />
 
   const allLinks = [
     {
@@ -61,11 +45,7 @@ const UserMenu = ({ visible, onHide }) => {
       label: 'Settings',
       icon: 'settings',
     },
-    {
-      link: '/manageProjects',
-      label: 'Manage Projects',
-      icon: 'empty_dashboard',
-    },
+    { node: divider },
     {
       link: '/doc/api',
       label: 'REST API Docs',
@@ -79,6 +59,7 @@ const UserMenu = ({ visible, onHide }) => {
   ]
 
   const protectedLinks = [
+    { node: divider },
     {
       link: '/events',
       label: 'Event Viewer',
@@ -88,6 +69,9 @@ const UserMenu = ({ visible, onHide }) => {
       link: '/services',
       label: 'Services',
       icon: 'home_repair_service',
+    },
+    {
+      node: spacer,
     },
   ]
 
@@ -106,7 +90,7 @@ const UserMenu = ({ visible, onHide }) => {
     })
 
   return (
-    <Sidebar position="right" visible={visible} onHide={onHide} icons={() => <h3>User Menu</h3>}>
+    <Sidebar position="right" visible={visible} onHide={onHide}>
       <div
         style={{
           height: '100%',
@@ -116,32 +100,22 @@ const UserMenu = ({ visible, onHide }) => {
           gap: 8,
         }}
       >
-        <StyledButton
-          onClick={() => navigate('/profile')}
-          isActive={location.pathname.includes('/profile')}
-        >
-          <UserImage size={19.5} src={user?.attrib?.avatarUrl} fullName={user?.attrib?.fullName} />
-          Profile ({user.name})
-        </StyledButton>
-        {allLinks.map(({ icon, link, label, onClick }, i) => (
-          <StyledButton
-            key={`${label}-${i}`}
-            onClick={() => {
-              if (link) navigate(link)
-              else if (onClick) onClick()
-            }}
-            label={label}
-            icon={icon}
-            isActive={location.pathname.includes(link)}
-          />
-        ))}
-        <Spacer />
-        <StyledButton
-          style={{ justifyContent: 'center' }}
-          onClick={doLogout}
-          label="Sign Out"
-          icon="logout"
-        />
+        {allLinks.map(({ icon, link, label, onClick, node }, i) =>
+          label ? (
+            <StyledButton
+              key={`${label}-${i}`}
+              onClick={() => {
+                if (link) navigate(link)
+                else if (onClick) onClick()
+              }}
+              label={label}
+              icon={icon}
+              isActive={location.pathname.includes(link)}
+            />
+          ) : (
+            node && <Fragment key={`${node.displayName}-${i}`}>{node}</Fragment>
+          ),
+        )}
       </div>
     </Sidebar>
   )

@@ -210,7 +210,7 @@ input:-webkit-autofill:focus {
   color: rgba(234, 240, 246, 0.3);
   font-style: italic;
 }
-// Highlighting (used to match subset/tasks in the browser)
+// Highlighting (used to match product/tasks in the browser)
 
 .row-hl-1 {
   color: #01cc34 !important;
@@ -417,5 +417,77 @@ a {
 .react-datepicker__close-icon {
   &::after {
     background-color: var(--button-background);
+  }
+}
+
+// context menu
+.p-contextmenu {
+  min-width: 12.5rem;
+  width: unset;
+  padding: 0;
+
+  .p-submenu-list {
+    padding: 0;
+  }
+}
+
+@keyframes shimmerAnimation {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@mixin getShimmerStyles($color1: var(--color-grey-00), $color2: var(--color-grey-01), $speed: 1s) {
+  background: linear-gradient(to right, $color1 8%, $color2 18%, $color1 33%);
+  background-size: 1000px 42px;
+  animation: shimmerAnimation $speed linear infinite;
+}
+
+.table-loading {
+  .p-treetable-tbody,
+  .p-datatable-tbody {
+    position: relative;
+    &::after {
+      content: '';
+      display: block;
+      position: absolute;
+      inset: 0;
+      opacity: 0.2;
+
+      @include getShimmerStyles;
+    }
+
+    tr {
+      td {
+        opacity: 0;
+      }
+    }
+    & > tr:nth-child(even) {
+      background: var(--color-grey-01);
+      opacity: 0.25;
+    }
+  }
+}
+
+// for individual rows that are loading
+.p-treetable-tbody,
+.p-datatable-tbody {
+  tr.loading {
+    td {
+      position: relative;
+      &::after {
+        content: '';
+        display: block;
+        position: absolute;
+        inset: 6px;
+        border-radius: 3px;
+        opacity: 1;
+        background-color: var(--color-grey-02);
+        @include getShimmerStyles(var(--color-grey-02), var(--color-grey-03));
+      }
+    }
   }
 }

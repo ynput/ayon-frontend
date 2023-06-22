@@ -3,6 +3,7 @@ import { Chart } from 'primereact/chart'
 import styled from 'styled-components'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 const ChartStyled = styled(Chart)`
   width: 100%;
@@ -17,17 +18,24 @@ const ChartStyled = styled(Chart)`
   }
 `
 
+const StyledLoading = styled.div`
+  position: absolute;
+  inset: 8px;
+  background-color: var(--color-grey-01);
+  border-radius: var(--border-radius);
+  ${getShimmerStyles()}
+`
+
 const HeartBeat = ({ projectName }) => {
   const {
     data = {},
-    isLoading,
     isFetching,
     isError,
   } = useGetProjectDashboardQuery({ projectName, panel: 'activity' })
 
   let { activity } = data
 
-  if (isError || isLoading || isFetching) {
+  if (isError || isFetching) {
     activity = [0, 0]
   }
 
@@ -69,8 +77,9 @@ const HeartBeat = ({ projectName }) => {
   }
 
   return (
-    <DashboardPanelWrapper isError={isError} isLoading={isLoading || isFetching}>
+    <DashboardPanelWrapper>
       <ChartStyled data={chart} type={'line'} options={options} />
+      {isFetching && <StyledLoading />}
     </DashboardPanelWrapper>
   )
 }

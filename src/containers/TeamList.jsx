@@ -1,10 +1,10 @@
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useEffect } from 'react'
-import { ContextMenu } from 'primereact/contextmenu'
+import useCreateContext from '../hooks/useCreateContext'
 
 const TeamList = ({
   teams,
@@ -13,7 +13,6 @@ const TeamList = ({
   onSelect,
   onRowClick,
   showNull,
-  multiselect,
   footer,
   style,
   styleSection,
@@ -22,8 +21,9 @@ const TeamList = ({
   onSuccess,
   autoSelect,
   onDelete,
+  onNewTeam,
+  onDuplicate,
 }) => {
-  const contextMenuRef = useRef(null)
   // if selection does not exist in data, set selection to null
   useEffect(() => {
     if (isLoading) return
@@ -40,72 +40,95 @@ const TeamList = ({
   if (showNull) teamList.unshift({ name: '_' })
 
   const selectionObj = useMemo(() => {
-    if (multiselect) {
-      let result = []
-      for (const project of teamList) {
-        if (selection === null) {
-          if (project.name === '_') {
-            result.push(project)
-            break
-          }
+    let result = []
+    for (const project of teamList) {
+      if (selection === null) {
+        if (project.name === '_') {
+          result.push(project)
+          break
         }
-        if (selection?.includes(project.name)) result.push(project)
       }
-      return result
-    } else {
-      for (const project of teamList) {
-        if (project.name === selection) return project
-        if (!selection && project.name === '_') return project
-      }
-    } // single select
+      if (selection?.includes(project.name)) result.push(project)
+    }
+    return result
   }, [selection, teamList])
 
   const onSelectionChange = (e) => {
-    if (multiselect) {
-      let result = []
-      for (const node of e.value) {
-        if (node.name === '_') {
-          result = null
-          break
-        }
-        result.push(node.name)
-      }
-      onSelect(result)
-    } // multiselect
-    else {
-      if (e.value.name === '_') onSelect(null)
-      else onSelect(e.value.name)
-    } // single select
+    let result = []
+    for (const node of e.value) {
+      result.push(node.name)
+    }
+    onSelect(result)
   } // onSelectionChange
 
-  const contextMenuModel = [
-    {
-      label: 'Delete selected',
-      command: () => onDelete(),
-    },
-  ]
+  const onContextMenuSelectionChange = (event) => {
+    if (!selection.includes(event.value.name)) {
+      onSelect(event.value.name)
+    }
+  }
+
+  // GLOBAL CONTEXT MENU
+  const globalContextItems = useMemo(
+    () => [
+      {
+        label: 'Create Team',
+        icon: 'group_add',
+        command: onNewTeam,
+      },
+    ],
+    [onNewTeam],
+  )
+  // create the ref and model
+  const [globalContextMenuShow] = useCreateContext(globalContextItems)
+
+  // TABLE CONTEXT MENU
+  const tableContextItems = useMemo(
+    () => [
+      {
+        label: 'Create Team',
+        icon: 'group_add',
+        command: onNewTeam,
+      },
+      {
+        label: 'Duplicate Team',
+        icon: 'content_copy',
+        command: onDuplicate,
+        disabled: selection.length > 1,
+      },
+      {
+        label: `Delete Team${selection.length > 1 ? 's' : ''}`,
+        icon: 'delete',
+        command: onDelete,
+      },
+    ],
+    [teams, selection],
+  )
+  // create the ref and model
+  const [tableContextMenuShow] = useCreateContext(tableContextItems)
 
   return (
-    <Section style={{ maxWidth: 200, ...styleSection }} className={className}>
-      {footer}
-      <TablePanel loading={isLoading}>
-        <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
-        <DataTable
-          value={teamList}
-          scrollable="true"
-          scrollHeight="flex"
-          selectionMode={multiselect ? 'multiple' : 'single'}
-          responsive="true"
-          dataKey="name"
-          selection={selectionObj}
-          onSelectionChange={onSelect && onSelectionChange}
-          onRowClick={onRowClick}
-          onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
-        >
-          <Column field="name" header="Team" style={{ minWidth: 150, ...style }} />
-        </DataTable>
-      </TablePanel>
-    </Section>
+    <>
+      <Section style={{ minWidth: 200, maxWidth: 200, ...styleSection }} className={className}>
+        {footer}
+        <TablePanel loading={isLoading} onContextMenu={globalContextMenuShow}>
+          <DataTable
+            value={teamList}
+            scrollable="true"
+            scrollHeight="flex"
+            selectionMode={'multiple'}
+            responsive="true"
+            dataKey="name"
+            selection={selectionObj}
+            onSelectionChange={onSelect && onSelectionChange}
+            onRowClick={onRowClick}
+            onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
+            onContextMenuSelectionChange={onContextMenuSelectionChange}
+          >
+            <Column field="name" header="Team" style={{ minWidth: 150, ...style }} />
+          </DataTable>
+        </TablePanel>
+      </Section>
+    </>
   )
 }
 

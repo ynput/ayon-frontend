@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
@@ -6,7 +6,6 @@ import { Spacer, Button, Section, Toolbar, TablePanel } from '@ynput/ayon-react-
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import sortByKey from '/src/helpers/sortByKey'
 
@@ -36,7 +35,7 @@ import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
-import ContextMenuItem from '/src/components/ContextMenuItem'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -77,8 +76,6 @@ const EditorPage = () => {
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
 
-  const contextMenuRef = useRef(null)
-
   // Hierarchy data is used for fast searching
   const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery(
     { projectName },
@@ -91,13 +88,12 @@ const EditorPage = () => {
   // used to update nodes
   const [updateEditor, { isLoading: isUpdating }] = useUpdateEditorMutation()
 
+  // set which ids are expanded and loading
+  const [loadingBranches, setLoadingBranches] = useState([])
   // use later on for loading new branches
-  const [triggerGetExpandedBranch, { isFetching: isLoadingBranches }] =
-    useLazyGetExpandedBranchQuery()
+  const [triggerGetExpandedBranch] = useLazyGetExpandedBranchQuery()
 
   const [triggerGetEntity] = useLazyGetEntityQuery()
-
-  const loading = isLoadingBranches || isSearchLoading || isUpdating
 
   // call loadNewBranches with an array of folder ids to get the branches and patch them into the rootData cache
   const loadNewBranches = async (folderIds, force) => {
@@ -108,6 +104,7 @@ const EditorPage = () => {
     try {
       // get new branches using id
       // get new events data
+      setLoadingBranches(folderIds)
       for (const id of folderIds) {
         await triggerGetExpandedBranch(
           {
@@ -117,6 +114,8 @@ const EditorPage = () => {
           !force,
         )
       }
+      // reset after loading
+      setLoadingBranches([])
     } catch (error) {
       console.error(error)
     }
@@ -319,8 +318,6 @@ const EditorPage = () => {
   //
 
   // console.log(searchIds)
-
-  console.log(rootDataCache)
 
   // make new copy of root data
   const rootData = useMemo(() => {
@@ -1003,8 +1000,37 @@ const EditorPage = () => {
     }
   }
 
-  const contextMenuModel = useMemo(() => {
-    const menuItems = [
+  // CONTEXT MENUS
+
+  // Context menu outside of table items
+  const ctxMenuGlobalItems = useMemo(
+    () => [
+      {
+        label: 'Add Folder',
+        icon: 'create_new_folder',
+        command: () => addNewEntity('folder', true),
+      },
+      {
+        label: 'Save All Changes',
+        icon: 'check',
+        command: onCommit,
+        disabled: !canCommit,
+      },
+      {
+        label: 'Clear All Changes',
+        icon: 'clear',
+        command: handleRevert,
+        disabled: !canCommit,
+      },
+    ],
+    [canCommit, onCommit, handleRevert],
+  )
+
+  const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
+
+  // Context menu items on table items
+  const ctxMenuTableItems = useMemo(
+    () => [
       {
         label: 'Add Folder',
         icon: 'create_new_folder',
@@ -1018,21 +1044,27 @@ const EditorPage = () => {
         disabled: disableAddNew,
       },
       {
-        label: 'Clear Changes',
-        icon: 'clear',
-        command: revertChangesOnSelection,
-      },
-      {
         label: 'Delete',
         icon: 'delete',
         command: onDelete,
       },
-    ]
+      {
+        label: 'Save All Changes',
+        icon: 'check',
+        command: onCommit,
+        disabled: !canCommit,
+      },
+      {
+        label: 'Clear Changes',
+        icon: 'clear',
+        command: revertChangesOnSelection,
+      },
+    ],
 
-    return menuItems.map((item) => ({
-      template: <ContextMenuItem key={item.label} contextMenuRef={contextMenuRef} {...item} />,
-    }))
-  }, [currentSelection])
+    [currentSelection, canCommit],
+  )
+
+  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
   //
   // Table event handlers
@@ -1189,7 +1221,51 @@ const EditorPage = () => {
   // keeps editor form fast
   const throttledEditorChanges = debounce((c) => dispatch(onNewChanges(c)), 500)
 
-  // sort columns
+  const fullPageLoading = loadingBranches.includes('root')
+  // loading
+  if (fullPageLoading) {
+    // when replace all data with dummy data
+    // 10 folders
+    treeData = Array.from({ length: 10 }, (_, i) => ({
+      key: i,
+      data: {},
+      children: [],
+      leaf: true,
+    }))
+  }
+
+  function addDummyChildren(branch, localBranchesLoading) {
+    const newBranch = { ...branch }
+    if (localBranchesLoading.includes(branch.key)) {
+      newBranch.children = Array.from({ length: 1 }, (_, i) => ({
+        key: i,
+        data: {},
+        children: [],
+        leaf: true,
+        className: 'loading',
+      }))
+    } else if (branch.children) {
+      newBranch.children = branch.children.map((child) =>
+        addDummyChildren(child, localBranchesLoading),
+      )
+    }
+    return newBranch
+  }
+
+  // when loading a new branch
+  // when add dummy children to the branch
+  const localBranchesLoading = loadingBranches.filter((b) => b !== 'root')
+
+  if (localBranchesLoading.length) {
+    // in treeData, find the branch that is loading by id
+    // branches can have children so we need to check those too
+    // if the branch is found, add dummy children to it
+
+    const loadingTreeData = treeData.map((branch) => addDummyChildren(branch, localBranchesLoading))
+
+    // replace treeData with loadingTreeData
+    treeData = loadingTreeData
+  }
 
   //
   // Render the TreeTable
@@ -1207,14 +1283,8 @@ const EditorPage = () => {
         <Toolbar>
           <Button
             icon="create_new_folder"
-            label="Add root folder"
-            onClick={() => addNewEntity('folder', true)}
-          />
-          <Button
-            icon="create_new_folder"
             label="Add folder"
-            disabled={disableAddNew}
-            onClick={() => addNewEntity('folder')}
+            onClick={() => addNewEntity('folder', disableAddNew)}
           />
           <Button
             icon="add_task"
@@ -1253,9 +1323,8 @@ const EditorPage = () => {
           stateKey="editor-panels"
           stateStorage="local"
         >
-          <SplitterPanel size={70}>
-            <TablePanel loading={loading} style={{ height: '100%' }}>
-              <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
+          <SplitterPanel size={70} id="global" onContextMenu={ctxMenuGlobalShow}>
+            <TablePanel loading={isUpdating} style={{ height: '100%' }}>
               <TreeTable
                 responsive="true"
                 scrollable
@@ -1275,12 +1344,13 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}
-                onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+                onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
                 onContextMenuSelectionChange={onContextMenuSelectionChange}
                 onColumnResizeEnd={setColumnWidths}
                 reorderableColumns
                 onColReorder={handleColumnReorder}
                 rows={20}
+                className={fullPageLoading ? 'table-loading' : undefined}
               >
                 {allColumns}
                 <Column

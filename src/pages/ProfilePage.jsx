@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import SessionList from '/src/containers/SessionList'
-
 import { FormRow, Section, Panel, LockedInput, Button } from '@ynput/ayon-react-components'
 import { useGetMeQuery } from '../services/user/getUsers'
 import { useUpdateUserMutation } from '../services/user/updateUser'
@@ -10,6 +9,10 @@ import styled from 'styled-components'
 import UserAttribForm from './SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from './SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../ayon'
+import axios from 'axios'
+import { useDispatch } from 'react-redux'
+import { logout } from '../features/user'
+import { ayonApi } from '../services/ayon'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -33,6 +36,7 @@ export const PanelButtonsStyled = styled(Panel)`
 `
 
 const ProfilePage = () => {
+  const dispatch = useDispatch()
   const attributes = ayonClient.getAttribsByScope('user')
   // RTK QUERIES
   // GET USER DATA
@@ -120,6 +124,20 @@ const ProfilePage = () => {
     }
   }
 
+  const doLogout = () => {
+    axios
+      .post('/api/auth/logout')
+      .then((response) => {
+        toast.info(response.data.detail)
+        dispatch(logout())
+        // reset global state
+        dispatch(ayonApi.util.resetApiState())
+      })
+      .catch(() => {
+        toast.error('Unable to log out. Weird.')
+      })
+  }
+
   return (
     <main>
       <Section style={{ flex: 2 }}>
@@ -145,8 +163,16 @@ const ProfilePage = () => {
             <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
           </Panel>
           <PanelButtonsStyled>
-            <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
             <Button onClick={onSave} label="Save" icon="check" disabled={!changesMade} />
+            <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
+          </PanelButtonsStyled>
+          <PanelButtonsStyled>
+            <Button
+              style={{ justifyContent: 'center' }}
+              onClick={doLogout}
+              label="Sign Out"
+              icon="logout"
+            />
           </PanelButtonsStyled>
         </FormsStyled>
       </Section>

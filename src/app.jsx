@@ -1,7 +1,6 @@
 import ayonClient from '/src/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
-import { LoaderShade } from '@ynput/ayon-react-components'
 import { useEffect, useState, Suspense, lazy, useContext } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
@@ -29,6 +28,9 @@ import ShareDialog from './components/ShareDialog'
 import ErrorFallback from './components/ErrorFallback'
 import ServerRestartBanner from './components/ServerRestartBanner'
 import { useLazyGetInfoQuery } from './services/auth/getAuth'
+import { ContextMenuProvider } from './context/contextMenuContext'
+import { GlobalContextMenu } from './components/GlobalContextMenu'
+import LoadingPage from './pages/LoadingPage'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -86,7 +88,7 @@ const App = () => {
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
     window.history.replaceState({}, document.title, '/')
-    return <LoaderShade />
+    return <LoadingPage />
   }
 
   if (serverError) return <ErrorPage code={serverError} message="Server connection failed" />
@@ -102,56 +104,62 @@ const App = () => {
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Suspense fallback={<LoaderShade />}>
+      <Suspense fallback={<LoadingPage />}>
         <SocketProvider>
-          <RestartIndicator />
-          <BrowserRouter>
-            <QueryParamProvider
-              adapter={ReactRouter6Adapter}
-              options={{
-                updateType: 'replaceIn',
-              }}
-            >
-              <Header />
-              <ShareDialog />
-              <Routes>
-                <Route
-                  path="/"
-                  exact
-                  element={<Navigate replace to="/manageProjects/dashboard" />}
-                />
-                <Route
-                  path="/manageProjects"
-                  exact
-                  element={<Navigate replace to="/manageProjects/dashboard" />}
-                />
+          <ContextMenuProvider>
+            <GlobalContextMenu />
+            <RestartIndicator />
+            <BrowserRouter>
+              <QueryParamProvider
+                adapter={ReactRouter6Adapter}
+                options={{
+                  updateType: 'replaceIn',
+                }}
+              >
+                <Header />
+                <ShareDialog />
+                <Routes>
+                  <Route
+                    path="/"
+                    exact
+                    element={<Navigate replace to="/manageProjects/dashboard" />}
+                  />
+                  <Route
+                    path="/manageProjects"
+                    exact
+                    element={<Navigate replace to="/manageProjects/dashboard" />}
+                  />
 
-                <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-                <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-                <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
-                <Route
-                  path="/settings"
-                  exact
-                  element={<Navigate replace to="/settings/anatomyPresets" />}
-                />
-                <Route path="/settings/:module" exact element={<SettingsPage />} />
-                <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
-                <Route
-                  path="/services"
-                  element={
-                    <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                      <ServicesPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/explorer" element={<ExplorerPage />} />
-                <Route path="/doc/api" element={<APIDocsPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/events" element={<EventsPage />} />
-                <Route element={<ErrorPage code="404" />} />
-              </Routes>
-            </QueryParamProvider>
-          </BrowserRouter>
+                  <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
+                  <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+                  <Route
+                    path={'/projects/:projectName/addon/:addonName'}
+                    element={<ProjectPage />}
+                  />
+                  <Route
+                    path="/settings"
+                    exact
+                    element={<Navigate replace to="/settings/anatomyPresets" />}
+                  />
+                  <Route path="/settings/:module" exact element={<SettingsPage />} />
+                  <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
+                  <Route
+                    path="/services"
+                    element={
+                      <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                        <ServicesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/explorer" element={<ExplorerPage />} />
+                  <Route path="/doc/api" element={<APIDocsPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/events" element={<EventsPage />} />
+                  <Route element={<ErrorPage code="404" />} />
+                </Routes>
+              </QueryParamProvider>
+            </BrowserRouter>
+          </ContextMenuProvider>
         </SocketProvider>
       </Suspense>
     </ErrorBoundary>

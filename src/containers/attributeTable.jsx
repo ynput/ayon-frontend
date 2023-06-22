@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { TableRow } from '@ynput/ayon-react-components'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import copyToClipboard from '../helpers/copyToClipboard'
+import getShimmerStyles from '../styles/getShimmerStyles'
 
 const AttributeTableContainer = styled.div`
   display: flex;
@@ -12,6 +13,18 @@ const AttributeTableContainer = styled.div`
   flex: 1;
 `
 
+const StyledLoading = styled.div`
+  width: 100%;
+  height: 40px;
+  margin: 4px 0;
+  position: relative;
+
+  border-radius: var(--border-radius);
+  overflow: hidden;
+
+  ${getShimmerStyles()}
+`
+
 const AttributeTable = ({
   entityType,
   data,
@@ -19,15 +32,26 @@ const AttributeTable = ({
   style,
   projectAttrib,
   extraFields = [],
+  isLoading: isLoadingData,
 }) => {
   // get attrib fields
-  let { data: attribsData = [], isLoading } = useGetAttributesQuery()
+  let { data: attribsData = [], isLoadingAttribs } = useGetAttributesQuery()
   //   filter out scopes
   const attribFields = attribsData.filter(
     (a) => a.scope.some((s) => s === entityType) && a.name in data,
   )
 
-  if (isLoading) return null
+  const isLoading = isLoadingData || isLoadingAttribs
+
+  if (isLoading)
+    // add 18 dummy rows
+    return (
+      <AttributeTableContainer style={style}>
+        {[...Array(10)].map((_, index) => (
+          <StyledLoading key={index} />
+        ))}
+      </AttributeTableContainer>
+    )
 
   return (
     <AttributeTableContainer style={style}>

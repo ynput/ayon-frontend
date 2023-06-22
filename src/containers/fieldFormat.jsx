@@ -1,6 +1,8 @@
 // Various components for formatting fields in the UI
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
+import { OverflowField } from '@ynput/ayon-react-components'
+import copyToClipboard from '../helpers/copyToClipboard'
 
 // Attributes
 
@@ -77,6 +79,7 @@ const isoToTime = (isoTime) => {
 }
 
 const TimestampField = ({ value, ddOnly }) => {
+  if (!value) return ''
   const [dd, tt] = isoToTime(value)
   return (
     <DateTimeContainer>
@@ -86,17 +89,9 @@ const TimestampField = ({ value, ddOnly }) => {
   )
 }
 
-// PATH
-
-const PathContainer = styled.div`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
 const PathField = ({ value }) => {
   if (!value) return '\u00A0'
-  return <PathContainer>{value}</PathContainer>
+  return <OverflowField value={value} onClick={copyToClipboard} />
 }
 
 export { AttributeField, TagsField, TimestampField, PathField }

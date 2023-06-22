@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
@@ -6,7 +6,6 @@ import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-compo
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
-import { ContextMenu } from 'primereact/contextmenu'
 
 import { CellWithIcon } from '/src/components/icons'
 import EntityDetail from '/src/containers/entityDetail'
@@ -18,6 +17,7 @@ import {
   setFocusedTasks,
 } from '/src/features/context'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
+import useCreateContext from '../hooks/useCreateContext'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -33,7 +33,7 @@ const filterHierarchy = (text, folder, folders) => {
           label: item.label,
           status: item.status,
           folderType: item.folderType,
-          // hasSubsets: item.hasSubsets,
+          // hasProducts: item.hasProducts,
           hasTasks: item.hasTasks,
           parents: item.parents,
           body: <CellWithIcon icon={folders[item.folderType]?.icon} text={item.label} />,
@@ -50,7 +50,7 @@ const filterHierarchy = (text, folder, folders) => {
             label: item.label,
             status: item.status,
             folderType: item.folderType,
-            // hasSubsets: item.hasSubsets,
+            // hasProducts: item.hasProducts,
             hasTasks: item.hasTasks,
             parents: item.parents,
             body: <CellWithIcon icon={folders[item.folderType]?.icon} text={item.label} />,
@@ -74,7 +74,6 @@ const Hierarchy = (props) => {
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
-  const ctxMenuRef = useRef(null)
   const [showDetail, setShowDetail] = useState(false)
 
   //
@@ -98,7 +97,7 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, isLoading, data, isFetching } = useGetHierarchyQuery(
+  const { isError, error, data, isFetching } = useGetHierarchyQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -134,21 +133,18 @@ const Hierarchy = (props) => {
   }, [data, query, isFetching])
 
   function filterArray(arr = [], filter = []) {
-    let filteredArr = []
-
-    arr.forEach((item) => {
-      if (filter.includes(item.data.folderType)) {
-        filteredArr.push(item)
-      }
-      if (item.children.length > 0) {
-        filteredArr = filteredArr.concat(filterArray(item.children, filter))
-      }
-    })
-
-    // sort by folderType
-    return filteredArr.sort(
-      (a, b) => foldersOrder.indexOf(a.data.folderType) - foldersOrder.indexOf(b.data.folderType),
-    )
+    return arr
+      .map((item) => {
+        const children = filterArray(item.children, filter)
+        if (filter.includes(item.data.folderType) || children.length > 0) {
+          return {
+            ...item,
+            children,
+          }
+        }
+        return null
+      })
+      .filter((item) => item !== null)
   }
 
   const createDataObject = (data = []) => {
@@ -311,12 +307,30 @@ const Hierarchy = (props) => {
     dispatch(setExpandedFolders(newExpandedFolders))
   }
 
-  const ctxMenuModel = [
+  // Context Menu
+  // const {openContext, useCreateContext} = useContextMenu()
+  // context items
+  const contextItems = [
     {
       label: 'Detail',
       command: () => setShowDetail(true),
+      icon: 'database',
     },
   ]
+  // create the ref and model
+  const [ctxMenuShow] = useCreateContext(contextItems)
+
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 15 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isFetching) {
+    treeData = loadingData
+  }
 
   //
   // Render
@@ -336,14 +350,15 @@ const Hierarchy = (props) => {
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onRowClick={onRowClick}
-        onContextMenu={(e) => ctxMenuRef.current?.show(e.originalEvent)}
+        onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
         onContextMenuSelectionChange={onContextMenuSelectionChange}
         onDoubleClick={handleDoubleClick}
+        className={isFetching ? 'table-loading' : undefined}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
     )
-  }, [treeData, selectedFolders, expandedFolders, isFetching])
+  }, [treeData, selectedFolders, expandedFolders, isFetching, ctxMenuShow])
 
   if (isError) {
     toast.error(`Unable to load hierarchy. ${error}`)
@@ -355,7 +370,7 @@ const Hierarchy = (props) => {
         <InputText
           style={{ flexGrow: 1, minWidth: 100 }}
           placeholder="Filter folders..."
-          disabled={!projectName || isLoading || isFetching}
+          disabled={!projectName || isFetching}
           value={query}
           onChange={(evt) => setQuery(evt.target.value)}
           autocomplete="off"
@@ -367,15 +382,14 @@ const Hierarchy = (props) => {
           placeholder="Select folder types"
           showClear={true}
           optionLabel="label"
-          disabled={!projectName || isLoading || isFetching}
+          disabled={!projectName || isFetching}
           selectedItemTemplate={selectedTypeTemplate}
-          onChange={(e) => setSelectedFolderTypes(e.value)}
+          onChange={(e) => setSelectedFolderTypes(e.value || [])}
           style={{ flexBasis: 150 }}
         />
       </Toolbar>
 
-      <TablePanel loading={isLoading || isFetching}>
-        <ContextMenu model={ctxMenuModel} ref={ctxMenuRef} />
+      <TablePanel>
         <EntityDetail
           projectName={projectName}
           entityType="folder"

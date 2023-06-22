@@ -1,12 +1,12 @@
 import axios from 'axios'
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { ContextMenu } from 'primereact/contextmenu'
 import { TimestampField } from '/src/containers/fieldFormat'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './NewServiceDialog'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const formatStatus = (rowData) => {
   if (!rowData.shouldRun) return rowData.isRunning ? 'STOPPING' : 'DISABLED'
@@ -17,7 +17,6 @@ const ServicesPage = () => {
   const [services, setServices] = useState([])
   const [showNewService, setShowNewService] = useState(false)
   const [selectedServices, setSelectedServices] = useState([])
-  const contextMenuRef = useRef(null)
 
   const loadServices = () => {
     axios.get('/api/services').then((response) => {
@@ -63,10 +62,11 @@ const ServicesPage = () => {
   }, [])
 
   const selection = useMemo(() => {
+    if (!services) return []
     return services.filter((i) => selectedServices.includes(i.name))
   }, [selectedServices, services])
 
-  const contextMenuModel = useMemo(() => {
+  const ctxMenuItems = useMemo(() => {
     return [
       {
         label: 'Delete selected',
@@ -86,6 +86,8 @@ const ServicesPage = () => {
     ]
   }, [selectedServices])
 
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+
   return (
     <main>
       {showNewService && (
@@ -97,7 +99,6 @@ const ServicesPage = () => {
           <Spacer />
         </Toolbar>
         <TablePanel>
-          <ContextMenu model={contextMenuModel} ref={contextMenuRef} />
           <DataTable
             value={services}
             scrollable="true"
@@ -105,11 +106,10 @@ const ServicesPage = () => {
             dataKey="name"
             selectionMode="multiple"
             selection={selection}
-            onContextMenu={(e) => contextMenuRef.current.show(e.originalEvent)}
+            onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
             onSelectionChange={(e) => setSelectedServices(e.value.map((i) => i.name))}
             onContextMenuSelectionChange={(e) => {
-              if (!selectedServices.includes(e.value.name))
-                setSelectedServices([...selectedServices, e.value.name])
+              if (!selectedServices.includes(e.value.name)) setSelectedServices([e.value.name])
             }}
           >
             <Column field="name" header="Service name" />

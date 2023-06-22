@@ -31,6 +31,8 @@ const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {} }) =
 UserDetailsHeader.propTypes = {
   users: PropTypes.arrayOf(PropTypes.object),
   onClose: PropTypes.func,
+  subTitle: PropTypes.string,
+  style: PropTypes.object,
 }
 
 export default UserDetailsHeader

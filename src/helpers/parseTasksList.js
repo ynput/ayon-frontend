@@ -6,6 +6,7 @@ export const parseTasksList = (tasks, userName) => {
     name: name,
     label: label,
     folderName: folder.label || folder.name,
+    folderPath: folder.path,
     taskType: taskType,
     isMine: assignees.includes(userName) ? 'yes' : '',
   }))
