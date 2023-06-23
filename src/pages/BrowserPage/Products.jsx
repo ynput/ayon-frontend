@@ -193,8 +193,8 @@ const Products = () => {
           <StatusSelect
             value={node.data.versionStatus}
             size={
-              columnsWidths['versionStatus'] < statusMaxWidth
-                ? columnsWidths['versionStatus'] < 60
+              columnsWidths['status'] < statusMaxWidth
+                ? columnsWidths['status'] < 60
                   ? 'icon'
                   : 'short'
                 : 'full'
