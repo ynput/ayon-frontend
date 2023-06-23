@@ -6,13 +6,12 @@ import {
   Button,
   Spacer,
   Section,
+  InputText,
   Panel,
   Toolbar,
   ScrollPanel,
-  InputSwitch,
 } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { SelectButton } from 'primereact/selectbutton'
 
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
@@ -24,7 +23,7 @@ import {
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
-import ProjectManagerPageLayout from '/src/pages/ProjectManagerPage/ProjectManagerPageLayout'
+import { useGetBundleListQuery } from '/src/services/bundles'
 
 /*
  * key is {addonName}|{addonVersion}|{siteId}|{projectKey}
@@ -77,7 +76,7 @@ const sameKeysStructure = (obj1, obj2) => {
   return true
 }
 
-const AddonSettings = ({ projectName, showSites = false, projectList, projectManager }) => {
+const AddonSettings = ({ projectName, showSites = false }) => {
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [reloadTrigger, setReloadTrigger] = useState({})
@@ -87,13 +86,26 @@ const AddonSettings = ({ projectName, showSites = false, projectList, projectMan
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
   const [environment, setEnvironment] = useState('production')
-  const [showAllAddons, setShowAllAddons] = useState(false)
 
   const [setAddonSettings] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
 
   const uriChanged = useSelector((state) => state.context.uriChanged)
+
+  // bundles are used just to get the current bundle name
+  // actual list of addons comes from getAddonList
+  // TODO: unify in the future?
+  // The problem: bundle does not contain addon titles (just name and version)
+  const { data: bundleList } = useGetBundleListQuery()
+
+  const bundleName = useMemo(() => {
+    if (!bundleList) return null
+    const bundle = bundleList.find((bundle) =>
+      environment === 'staging' ? bundle.isStaging : bundle.isProduction,
+    )
+    return bundle ? bundle.name : null
+  }, [bundleList, environment])
 
   const projectKey = projectName || '_'
 
@@ -374,41 +386,42 @@ const AddonSettings = ({ projectName, showSites = false, projectList, projectMan
 
   const addonListHeader = useMemo(() => {
     // do not use staging or version overrides on project level settings
-    if (projectName) {
-      return <></>
+    // Hell yeah we want it!
+    // if (projectName) {
+    //   return <></>
+    // }
+
+    const onSetEnvironment = (env) => {
+      if (Object.keys(localOverrides).length) {
+        toast.error('Cannot change environment with unsaved changes')
+        return
+      }
+      setEnvironment(env)
     }
 
-    const environmentOptions = [
-      { label: 'Production', value: 'production' },
-      { label: 'Staging', value: 'staging' },
-    ]
+    const styleHl = {
+      backgroundColor: 'var(--color-hl-00)',
+      color: 'black',
+    }
 
     return (
       <Toolbar>
-        <SelectButton
-          unselectable={false}
-          value={environment}
-          options={environmentOptions}
-          onChange={(e) => {
-            if (Object.keys(localOverrides).length) {
-              toast.error('Cannot change environment with unsaved changes')
-              return
-            }
-            setEnvironment(e.value)
-          }}
+        <Button
+          label="Production"
+          onClick={() => onSetEnvironment('production')}
+          disabled={environment === 'production'}
+          style={environment === 'production' ? styleHl : {}}
         />
-        <Spacer />
-        <>
-          Show all
-          <InputSwitch
-            checked={showAllAddons}
-            onChange={() => setShowAllAddons(!showAllAddons)}
-            tooltip="Show all addons"
-          />
-        </>
+        <Button
+          label="Staging"
+          onClick={() => onSetEnvironment('staging')}
+          disabled={environment === 'staging'}
+          style={environment === 'staging' ? styleHl : {}}
+        />
+        <InputText tooltip="Bundle name" value={bundleName} style={{ flexGrow: 1 }} readOnly />
       </Toolbar>
     )
-  }, [showAllAddons, environment, localOverrides])
+  }, [environment, localOverrides])
 
   const settingsListHeader = useMemo(() => {
     return (
@@ -454,15 +467,20 @@ const AddonSettings = ({ projectName, showSites = false, projectList, projectMan
     )
   }, [showHelp, currentSelection, localOverrides])
 
-  const commitToolbar = useMemo(
-    () => (
+  const commitToolbar = useMemo(() => {
+    const changed = Object.keys(localOverrides).length > 0
+    return (
       <>
-        <Button label="Clear Changes" icon="clear" onClick={onRevertAllChanges} />
-        <Button label="Save Changes" icon="check" onClick={onSave} />
+        <Button
+          disabled={!changed}
+          label="Clear Changes"
+          icon="clear"
+          onClick={onRevertAllChanges}
+        />
+        <Button disabled={!changed} label="Save Changes" icon="check" onClick={onSave} />
       </>
-    ),
-    [onRevertAllChanges, onSave],
-  )
+    )
+  }, [onRevertAllChanges, onSave, localOverrides])
 
   const onSelectAddon = (newSelection) => {
     setSelectedAddons(newSelection)
@@ -470,93 +488,79 @@ const AddonSettings = ({ projectName, showSites = false, projectList, projectMan
   }
 
   return (
-    <ProjectManagerPageLayout
-      projectList={projectList}
-      toolbar={commitToolbar}
-      passthrough={!projectManager}
-    >
-      <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
-        <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
-          <Section style={{ maxWidth: 400 }}>
-            {addonListHeader}
-            <AddonList
-              projectKey={projectKey}
-              selectedAddons={selectedAddons}
-              setSelectedAddons={onSelectAddon}
-              changedAddons={
-                Object.keys(localData) /* Unused, AddonList doesn't have project&site */
-              }
-              environment={environment}
-              showAllAddons={showAllAddons}
-              onAddonChanged={onAddonChanged}
-              projectName={projectName}
+    <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
+      <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
+        <Section style={{ maxWidth: 400 }}>
+          {addonListHeader}
+          <AddonList
+            selectedAddons={selectedAddons}
+            setSelectedAddons={onSelectAddon}
+            environment={environment}
+            onAddonChanged={onAddonChanged}
+          />
+          {showSites && (
+            <SiteList
+              value={selectedSites}
+              onChange={setSelectedSites}
+              style={{ maxHeight: 300 }}
+              multiselect={true}
             />
-            {showSites && (
-              <SiteList
-                value={selectedSites}
-                onChange={setSelectedSites}
-                style={{ maxHeight: 300 }}
-                multiselect={true}
-              />
-            )}
-          </Section>
-          <Section className={showHelp && 'settings-help-visible'}>
-            {settingsListHeader}
-            <Section>
-              <ScrollPanel className="transparent nopad" style={{ flexGrow: 1, minWidth: 750 }}>
-                {selectedAddons
-                  .filter((addon) => addon.version)
-                  .reverse()
-                  .map((addon) => {
-                    const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
+          )}
+        </Section>
+        <Section className={showHelp && 'settings-help-visible'}>
+          {settingsListHeader}
+          <Section>
+            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1, minWidth: 750 }}>
+              {selectedAddons
+                .filter((addon) => addon.version)
+                .reverse()
+                .map((addon) => {
+                  const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
 
-                    return sites.map((siteId) => {
-                      const key = `${addon.name}|${addon.version}|${siteId}|${projectKey}`
-                      return (
-                        <Panel
-                          key={key}
-                          style={{ flexGrow: 0 }}
-                          className="transparent nopad"
-                          size={1}
-                        >
-                          <AddonSettingsPanel
-                            addon={addon}
-                            onChange={(data) =>
-                              onSettingsChange(addon.name, addon.version, siteId, data)
-                            }
-                            onLoad={(data) =>
-                              onSettingsLoad(addon.name, addon.version, siteId, data)
-                            }
-                            onSetChangedKeys={(data) =>
-                              onSetChangedKeys(addon.name, addon.version, siteId, data)
-                            }
-                            localData={localData[key]}
-                            changedKeys={localOverrides[key]}
-                            reloadTrigger={reloadTrigger[key]}
-                            currentSelection={currentSelection}
-                            onSelect={setCurrentSelection}
-                            projectName={projectName}
-                            siteId={siteId === '_' ? null : siteId}
-                            environment={environment}
-                          />
-                        </Panel>
-                      )
-                    })
-                  })}
+                  return sites.map((siteId) => {
+                    const key = `${addon.name}|${addon.version}|${siteId}|${projectKey}`
+                    return (
+                      <Panel
+                        key={key}
+                        style={{ flexGrow: 0 }}
+                        className="transparent nopad"
+                        size={1}
+                      >
+                        <AddonSettingsPanel
+                          addon={addon}
+                          onChange={(data) =>
+                            onSettingsChange(addon.name, addon.version, siteId, data)
+                          }
+                          onLoad={(data) => onSettingsLoad(addon.name, addon.version, siteId, data)}
+                          onSetChangedKeys={(data) =>
+                            onSetChangedKeys(addon.name, addon.version, siteId, data)
+                          }
+                          localData={localData[key]}
+                          changedKeys={localOverrides[key]}
+                          reloadTrigger={reloadTrigger[key]}
+                          currentSelection={currentSelection}
+                          onSelect={setCurrentSelection}
+                          projectName={projectName}
+                          siteId={siteId === '_' ? null : siteId}
+                          environment={environment}
+                        />
+                      </Panel>
+                    )
+                  })
+                })}
 
-                <Spacer />
-              </ScrollPanel>
-            </Section>
+              <Spacer />
+            </ScrollPanel>
           </Section>
-        </SplitterPanel>
-        <SplitterPanel>
-          <Section className="wrap" style={{ minWidth: 300 }}>
-            {!projectManager && <Toolbar>{commitToolbar}</Toolbar>}
-            <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
-          </Section>
-        </SplitterPanel>
-      </Splitter>
-    </ProjectManagerPageLayout>
+        </Section>
+      </SplitterPanel>
+      <SplitterPanel>
+        <Section className="wrap" style={{ minWidth: 300 }}>
+          <Toolbar>{commitToolbar}</Toolbar>
+          <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
+        </Section>
+      </SplitterPanel>
+    </Splitter>
   )
 }
 

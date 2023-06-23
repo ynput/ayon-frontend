@@ -17,6 +17,22 @@ import { selectProject } from '/src/features/context'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
+import ProjectManagerPageLayout from './ProjectManagerPageLayout'
+
+const ProjectSettings = ({ projectList, projectManager }) => {
+  return (
+    <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
+      <AddonSettings />
+    </ProjectManagerPageLayout>
+  )
+}
+const SiteSettings = ({ projectList, projectManager }) => {
+  return (
+    <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
+      <AddonSettings showSites />
+    </ProjectManagerPageLayout>
+  )
+}
 
 const ProjectManagerPage = () => {
   const navigate = useNavigate()
@@ -148,8 +164,8 @@ const ProjectManagerPage = () => {
       >
         {module === 'dashboard' && <ProjectDashboard />}
         {module === 'anatomy' && <ProjectAnatomy />}
-        {module === 'projectSettings' && <AddonSettings />}
-        {module === 'siteSettings' && <AddonSettings showSites />}
+        {module === 'projectSettings' && <ProjectSettings />}
+        {module === 'siteSettings' && <SiteSettings />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
       </ProjectManagerPageContainer>
