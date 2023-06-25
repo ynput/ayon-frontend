@@ -25,6 +25,7 @@ import {
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
 import ProjectManagerPageLayout from '/src/pages/ProjectManagerPage/ProjectManagerPageLayout'
+import SaveButton from '/src/components/SaveButton'
 
 /*
  * key is {addonName}|{addonVersion}|{siteId}|{projectKey}
@@ -89,7 +90,7 @@ const AddonSettings = ({ projectName, showSites = false, projectList, projectMan
   const [environment, setEnvironment] = useState('production')
   const [showAllAddons, setShowAllAddons] = useState(false)
 
-  const [setAddonSettings] = useSetAddonSettingsMutation()
+  const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
 
@@ -454,11 +455,23 @@ const AddonSettings = ({ projectName, showSites = false, projectList, projectMan
     )
   }, [showHelp, currentSelection, localOverrides])
 
+  const canCommit = useMemo(() => Object.keys(localOverrides).length > 0, [localOverrides])
+
   const commitToolbar = useMemo(
     () => (
       <>
-        <Button label="Clear Changes" icon="clear" onClick={onRevertAllChanges} />
-        <Button label="Save Changes" icon="check" onClick={onSave} />
+        <Button
+          label="Clear Changes"
+          icon="clear"
+          onClick={onRevertAllChanges}
+          disabled={!canCommit}
+        />
+        <SaveButton
+          label="Save Changes"
+          onClick={onSave}
+          active={canCommit}
+          saving={setAddonSettingsUpdating}
+        />
       </>
     ),
     [onRevertAllChanges, onSave],
