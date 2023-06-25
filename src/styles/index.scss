@@ -136,13 +136,27 @@ input:-webkit-autofill:focus {
 }
 .editor-field {
   &.changed {
-    border: 1px solid var(--color-hl-changed);
+    outline: 1px solid var(--color-hl-changed);
+    background-color: var(--color-hl-changed);
+    border-radius: var(--border-radius);
   }
   &.inherited {
     color: var(--color-grey-06);
     font-style: italic;
   }
 }
+
+.p-treetable .p-treetable-tbody > tr.changed {
+  outline: 2px solid var(--color-hl-changed);
+  outline-offset: -2px;
+}
+
+.p-treetable .p-treetable-tbody > tr.new {
+  outline: 2px solid var(--color-hl-studio);
+  outline-offset: -2px;
+  border-left: 4px solid var(--color-hl-studio);
+}
+
 .table-editor {
   margin: 0;
   .p-inputwrapper {
