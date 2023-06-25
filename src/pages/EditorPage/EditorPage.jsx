@@ -1340,7 +1340,8 @@ const EditorPage = () => {
                 onRowClick={onRowClick}
                 rowClassName={(rowData) => {
                   return {
-                    changed: rowData.key in changes || rowData.key in newNodes,
+                    changed: rowData.key in changes,
+                    new: rowData.key in newNodes,
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}
