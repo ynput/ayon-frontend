@@ -59,6 +59,7 @@ const Thumbnail = ({
   isLoading,
   shimmer,
   className,
+  disabled,
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
   // ugly border around the image (when it's not loaded yet)
@@ -70,7 +71,7 @@ const Thumbnail = ({
 
   return (
     <ThumbnailStyled style={style} className={className} $shimmer={isLoading && shimmer}>
-      {(!isLoading || !thumbLoaded) && <ImagePlaceholder />}
+      {(!isLoading || !thumbLoaded) && !disabled && <ImagePlaceholder />}
       {entityType && !(isWrongEntity || !entityId) && (
         <ImageStyled
           alt={`Entity thumbnail ${entityId}`}

@@ -3,6 +3,11 @@
   --color-hl-site: #efa0a8;
   --color-hl-02: #53d2f9;
 }
+
+input {
+  color: var(--color-text);
+}
+
 #root {
   position: absolute;
   overflow: hidden;
@@ -306,7 +311,7 @@ input:-webkit-autofill:focus {
 // remove text decoration from a tags
 a {
   text-decoration: none;
-  color: initial;
+  color: var(--color-text);
 }
 
 .p-tabview {
