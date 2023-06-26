@@ -20,6 +20,8 @@ import {
   useUpdatePresetMutation,
   useUpdatePrimaryPresetMutation,
 } from '/src/services/anatomy/updateAnatomy'
+import { isEqual } from 'lodash'
+import SaveButton from '/src/components/SaveButton'
 
 const AnatomyPresets = () => {
   const [originalData, setOriginalData] = useState(null)
@@ -55,12 +57,17 @@ const AnatomyPresets = () => {
     }
   }, [selectedPreset, isSuccess, anatomyData])
 
+  const isChanged = useMemo(() => {
+    if (!originalData || !newData) return false
+    return !isEqual(originalData, newData)
+  }, [newData, originalData])
+
   //
   // Actions
   //
 
   // RTK Query updateAnatomy.js mutations
-  const [updatePreset] = useUpdatePresetMutation()
+  const [updatePreset, { isLoading: isUpdating }] = useUpdatePresetMutation()
   const [deletePreset] = useDeletePresetMutation()
   const [updatePrimaryPreset] = useUpdatePrimaryPresetMutation()
 
@@ -150,13 +157,28 @@ const AnatomyPresets = () => {
     <main>
       <ConfirmDialog />
       {showNameDialog && (
-        <Dialog header="Preset name" visible="true" onHide={() => setShowNameDialog(false)}>
+        <Dialog
+          header="Preset name"
+          visible="true"
+          onHide={() => setShowNameDialog(false)}
+          style={{ minWidth: 300 }}
+          footer={
+            <SaveButton
+              label="Create New Preset"
+              onClick={() => savePreset(newPresetName)}
+              active={newPresetName}
+              style={{ marginLeft: 'auto' }}
+            />
+          }
+        >
           <InputText
             value={newPresetName}
             onChange={(e) => setNewPresetName(e.target.value)}
             placeholder="Preset name"
+            style={{
+              width: '100%',
+            }}
           />
-          <Button label="Save" onClick={() => savePreset(newPresetName)} />
         </Dialog>
       )}
 
@@ -193,10 +215,10 @@ const AnatomyPresets = () => {
               setShowNameDialog(true)
             }}
           />
-          <Button
+          <SaveButton
             label="Save Current Preset"
-            icon="check"
-            disabled={selectedPreset === '_'}
+            saving={isUpdating}
+            active={isChanged && selectedPreset !== '_'}
             onClick={() => savePreset(selectedPreset)}
           />
         </Toolbar>

@@ -36,6 +36,7 @@ import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
 import useCreateContext from '/src/hooks/useCreateContext'
+import SaveButton from '/src/components/SaveButton'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -1015,6 +1016,7 @@ const EditorPage = () => {
         icon: 'check',
         command: onCommit,
         disabled: !canCommit,
+        isSave: canCommit,
       },
       {
         label: 'Clear All Changes',
@@ -1053,11 +1055,13 @@ const EditorPage = () => {
         icon: 'check',
         command: onCommit,
         disabled: !canCommit,
+        isSave: canCommit,
       },
       {
         label: 'Clear Changes',
         icon: 'clear',
         command: revertChangesOnSelection,
+        disabled: !canCommit,
       },
     ],
 
@@ -1150,6 +1154,13 @@ const EditorPage = () => {
     )
 
     localStorage.setItem('editor-columns-order', JSON.stringify(localStorageOrder))
+  }
+
+  const handleDeselect = (e) => {
+    // target class is p-treetable-scrollable-body
+    if (e.target.classList.contains('p-treetable-scrollable-body')) {
+      handleSelectionChange({})
+    }
   }
 
   let allColumns = useMemo(
@@ -1309,13 +1320,14 @@ const EditorPage = () => {
             isLoading={isSearchLoading}
           />
           <Spacer />
+          {canCommit && <>Unsaved Changes</>}
           <Button
             icon="clear"
             label="Clear All Changes"
             onClick={handleRevert}
             disabled={!canCommit}
           />
-          <Button icon="check" label="Save Changes" onClick={onCommit} disabled={!canCommit} />
+          <SaveButton label="Save Changes" onClick={onCommit} active={canCommit} />
         </Toolbar>
         <Splitter
           style={{ width: '100%', height: '100%' }}
@@ -1337,10 +1349,12 @@ const EditorPage = () => {
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
+                onClick={handleDeselect}
                 onRowClick={onRowClick}
                 rowClassName={(rowData) => {
                   return {
-                    changed: rowData.key in changes || rowData.key in newNodes,
+                    changed: rowData.key in changes,
+                    new: rowData.key in newNodes,
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}

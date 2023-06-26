@@ -1,13 +1,15 @@
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import { Section, ScrollPanel, Button } from '@ynput/ayon-react-components'
+import { Section, ScrollPanel } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
 import { useGetAnatomySchemaQuery } from '../../services/anatomy/getAnatomy'
 import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { setUri } from '/src/features/context'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
+import SaveButton from '/src/components/SaveButton'
+import { isEqual } from 'lodash'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
   const [newData, setNewData] = useState(null)
@@ -26,10 +28,10 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
 
   // TODO: RTK QUERY
   useEffect(() => {
-    if (isSuccess) [setNewData(originalData)]
+    if (isSuccess) setNewData(originalData)
   }, [originalData, isSuccess, projectName, isFetching])
 
-  const [updateProjectAnatomy] = useUpdateProjectAnatomyMutation()
+  const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
 
   const saveAnatomy = () => {
     updateProjectAnatomy({ projectName, anatomy: newData })
@@ -41,6 +43,12 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
         toast.error(err.message)
       })
   }
+
+  // check if the user has made any changes
+  const hasChanges = useMemo(() => {
+    if (!originalData || !newData) return false
+    return !isEqual(originalData, newData)
+  }, [newData, originalData])
 
   const onSetBreadcrumbs = (path) => {
     let uri = 'ayon+anatomy://'
@@ -65,7 +73,14 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
   return (
     <ProjectManagerPageLayout
       projectList={projectList}
-      toolbar={<Button label="Save Changes" icon="check" onClick={saveAnatomy} />}
+      toolbar={
+        <SaveButton
+          label="Save changes"
+          onClick={saveAnatomy}
+          active={hasChanges}
+          saving={isUpdating}
+        />
+      }
     >
       <Section>
         <Section>

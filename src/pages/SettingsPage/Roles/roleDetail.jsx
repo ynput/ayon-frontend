@@ -3,15 +3,24 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { Button, Spacer, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
+import SaveButton from '/src/components/SaveButton'
+import { isEqual } from 'lodash'
 
 const RoleDetail = ({ projectName, role, onChange }) => {
   const [originalData, setOriginalData] = useState(null)
   const [schema, setSchema] = useState(null)
   const [newData, setNewData] = useState(null)
+  const [saving, setSaving] = useState(false)
 
   const roleName = role?.name
   const isProjectLevel = role?.isProjectLevel
 
+  const isChanged = useMemo(() => {
+    if (!originalData || !newData) return false
+    return !isEqual(originalData, newData)
+  }, [newData, originalData])
+
+  // TODO: use react-query
   const loadRoleData = () => {
     if (!roleName) {
       setOriginalData(null)
@@ -35,12 +44,18 @@ const RoleDetail = ({ projectName, role, onChange }) => {
     loadRoleData()
   }, [projectName, roleName])
 
-  const onSave = () => {
-    axios.put(`/api/roles/${roleName}/${projectName || '_'}`, newData).then(() => {
+  const onSave = async () => {
+    try {
+      setSaving(true)
+      await axios.put(`/api/roles/${roleName}/${projectName || '_'}`, newData)
       toast.success('Role saved')
       loadRoleData()
       onChange()
-    })
+    } catch (err) {
+      console.log(err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const onDelete = () => {
@@ -74,7 +89,12 @@ const RoleDetail = ({ projectName, role, onChange }) => {
           icon="group_remove"
         />
         <Spacer />
-        <Button onClick={onSave} label={`Save ${projectName ? 'project ' : ''}role`} icon="check" />
+        <SaveButton
+          onClick={onSave}
+          label={`Save ${projectName ? 'project ' : ''}role`}
+          active={isChanged}
+          saving={saving}
+        />
       </Toolbar>
       <ScrollPanel
         className="nopad transparent"
