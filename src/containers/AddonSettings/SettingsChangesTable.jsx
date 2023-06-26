@@ -30,7 +30,8 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
       const projectName = _projectName === '_' ? null : _projectName
 
       let name = `${addonName} ${addonVersion}`
-      if (siteName) name += ` (${siteName})`
+      if (projectName) name += ` (${projectName})`
+      if (siteName) name += ` @${siteName}`
 
       const addonChanges = changes[addonKey]
       const children = addonChanges.map((change) => ({

@@ -36,6 +36,18 @@ const PanelHeader = styled.div`
     border: 0;
     font-size: 1rem
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    span {
+      font-size: 0.8rem;
+      border-radius: 4px;
+      padding: 0 4px;
+      color: black;
+    }
+
     .new-object
       font-style: italic
       color: var(--color-hl-error)

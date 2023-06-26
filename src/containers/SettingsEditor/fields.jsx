@@ -3,6 +3,7 @@ import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './SettingsPanel'
 import styled from 'styled-components'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
 import arrayEquals from '/src/helpers/arrayEquals'
@@ -175,11 +176,41 @@ function ObjectFieldTemplate(props) {
   // use the "name" attributeas the title
 
   let title = props.title
+  if (props.idSchema.$id === 'root') {
+    const projectMark = props.formContext.headerProjectName && (
+      <span style={{ backgroundColor: 'var(--color-hl-project)' }}>
+        {props.formContext.headerProjectName}
+      </span>
+    )
+    const siteMark = props.formContext.headerSiteId && (
+      <span style={{ backgroundColor: 'var(--color-hl-site)' }}>
+        {props.formContext.headerSiteId}
+      </span>
+    )
+
+    const envMark = props.formContext.headerEnvironment && (
+      <span style={{ backgroundColor: 'var(--color-hl-variant)' }}>
+        {props.formContext.headerEnvironment}
+      </span>
+    )
+
+    title = (
+      <>
+        {title}
+        {projectMark}
+        {siteMark}
+        {envMark}
+      </>
+    )
+  }
+
   if ('name' in props.schema.properties) {
     let label = null
     if ('label' in props.schema.properties) label = props.formData.label
     title = label || props.formData.name || <span className="new-object">Unnamed item</span>
   }
+  if (props.idSchema.$id === 'root' && props.formContext.formTitle)
+    title = props.formContext.formTitle
 
   return (
     <SettingsPanel
@@ -198,6 +229,8 @@ function ObjectFieldTemplate(props) {
 }
 
 function FieldTemplate(props) {
+  const [contextMenu] = useCreateContext([])
+
   // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
   if (!(props.schema.scope || ['studio', 'project']).includes(props.formContext.level)) return null
 
@@ -232,6 +265,41 @@ function FieldTemplate(props) {
 
   if (override) {
     if (override?.inGroup) labelStyle.fontStyle = 'italic'
+  }
+
+  // Context menu
+
+  const contextMenuModel = useMemo(() => {
+    let model = [
+      {
+        label: `Remove ${props.formContext.level} override`,
+        disabled: overrideLevel !== props.formContext.level || !props.formContext.onRemoveOverride,
+        command: () => props.formContext.onRemoveOverride(path),
+      },
+      {
+        label: `Pin current value as ${props.formContext.level} override`,
+        disabled: overrideLevel === props.formContext.level || !props.formContext.onRemoveOverride,
+        command: () => props.formContext.onPinOverride(path),
+      },
+      {
+        label: 'Copy value',
+        disabled: !props.formContext.onCopyValue,
+        command: () => props.formContext.onCopyValue(path),
+      },
+      {
+        label: 'Paste value',
+        disabled: !props.formContext.onPasteValue,
+        command: () => props.formContext.onPasteValue(path),
+      },
+    ]
+
+    return model
+  }, [override, path])
+
+  const onContextMenu = (e) => {
+    e.preventDefault()
+    contextMenu(e, contextMenuModel)
+    if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
   }
 
   // Array fields
@@ -294,7 +362,7 @@ function FieldTemplate(props) {
   return (
     <>
       {divider}
-      <div className={className} data-fieldid={props.id}>
+      <div className={className} data-fieldid={props.id} onContextMenu={onContextMenu}>
         {props.label && (
           <div className={`form-inline-field-label ${overrideLevel}`}>
             <span

@@ -115,8 +115,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   // }, [projectKey, selectedAddons])
 
   useEffect(() => {
-    console.log('Current Selection: ', currentSelection)
-
     const url = new URL(window.location.href)
     const addonName = url.searchParams.get('addonName')
     const addonVersion = url.searchParams.get('addonVersion')
@@ -257,25 +255,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     }
   }
 
-  const onRemoveOverrides = async (addonName, addonVersion, siteId) => {
-    try {
-      await deleteAddonSettings({
-        addonName,
-        addonVersion,
-        projectName: projectKey,
-        environment,
-        siteId,
-      }).unwrap()
-    } catch (e) {
-      toast.error(`Unable to remove overrides of ${addonName} ${addonVersion} `)
-      console.error(e)
-      return
-    }
-    toast.success('Overrides removed')
-    reloadAddons([`${addonName}|${addonVersion}|${siteId || '_'}|${projectKey}`])
-  }
+  // Context menu actions
 
-  const deleteOverride = async (addon, siteId, path) => {
+  const onRemoveOverride = async (addon, siteId, path) => {
+    // Remove a single override for this addon (within current project and environment)
+    // path is an array of strings
     try {
       await modifyAddonOverride({
         addonName: addon.name,
@@ -296,7 +280,26 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
   }
 
-  const pinOverride = async (addon, siteId, path) => {
+  const onRemoveOverrides = async (addon, siteId) => {
+    // Remove all overrides for this addon (within current project and environment)
+    try {
+      await deleteAddonSettings({
+        addonName: addon.name,
+        addonVersion: addon.version,
+        projectName: projectKey,
+        environment,
+        siteId,
+      }).unwrap()
+    } catch (e) {
+      toast.error(`Unable to remove overrides of ${addon.name} ${addon.version} `)
+      console.error(e)
+      return
+    }
+    toast.success('Overrides removed')
+    reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
+  }
+
+  const onPinOverride = async (addon, siteId, path) => {
     try {
       await modifyAddonOverride({
         addonName: addon.name,
@@ -316,16 +319,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
   }
 
-  const copySelection = () => {
-    const key = `${currentSelection.addon.name}|${currentSelection.addon.version}|${
-      currentSelection.siteId || '_'
-    }|${projectKey || '_'}`
+  const onCopyValue = (addon, siteId, path) => {
+    const key = `${addon.name}|${addon.version}|${siteId || '_'}|${projectKey || '_'}`
     const allData = localData[key]
     if (!allData) {
       toast.error('No data to copy')
       return
     }
-    const value = getValueByPath(allData, currentSelection.path)
+    const value = getValueByPath(allData, path)
     if (value === undefined) {
       toast.error('No data to copy')
       return
@@ -336,16 +337,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     toast.success('Copied to clipboard')
   }
 
-  const pasteSelection = async () => {
-    const key = `${currentSelection.addon.name}|${currentSelection.addon.version}|${
-      currentSelection.siteId || '_'
-    }|${projectKey || '_'}`
+  const onPasteValue = async (addon, siteId, path) => {
+    const key = `${addon.name}|${addon.version}|${siteId || '_'}|${projectKey || '_'}`
     const allData = localData[key]
     if (!allData) {
       toast.error('No data to paste')
       return
     }
-    const oldValue = getValueByPath(allData, currentSelection.path)
+    const oldValue = getValueByPath(allData, path)
     if (oldValue === undefined) {
       toast.error('No data to paste')
       return
@@ -369,13 +368,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     setLocalOverrides((overrides) => {
       const newOverrides = { ...overrides }
       newOverrides[key] = newOverrides[key] || []
-      newOverrides[key].push(currentSelection.path)
+      newOverrides[key].push(path)
       return newOverrides
     })
 
     setLocalData((localData) => {
       const newData = { ...localData }
-      const nk = setValueByPath(localData[key], currentSelection.path, newValue)
+      const nk = setValueByPath(localData[key], path, newValue)
       newData[key] = nk
       return newData
     })
@@ -422,42 +421,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <InputText tooltip="Bundle name" value={bundleName} style={{ flexGrow: 1 }} readOnly />
       </Toolbar>
     )
-  }, [environment, localOverrides])
+  }, [environment, localOverrides, bundleName])
 
   const settingsListHeader = useMemo(() => {
     return (
       <Toolbar>
-        <Button icon="content_copy" onClick={copySelection} />
-        <Button icon="content_paste" onClick={pasteSelection} />
-        <Button
-          icon="cancel"
-          disabled={!currentSelection?.addon?.name}
-          tooltip="Remove all addon overrides"
-          onClick={() =>
-            onRemoveOverrides(
-              currentSelection.addon.name,
-              currentSelection.addon.version,
-              currentSelection.siteId,
-            )
-          }
-        />
-        <Button
-          icon="push_pin"
-          tooltip="Pin default value as an override"
-          disabled={false}
-          onClick={() =>
-            pinOverride(currentSelection.addon, currentSelection.siteId, currentSelection.path)
-          }
-        />
-        <Button
-          icon="lock_reset"
-          tooltip="Remove override from the selected field"
-          disabled={!currentSelection?.addon?.name || !currentSelection.hasOverride}
-          onClick={() =>
-            deleteOverride(currentSelection.addon, currentSelection.siteId, currentSelection.path)
-          }
-        />
-
         <Button
           onClick={() => {
             setShowHelp(!showHelp)
@@ -473,6 +441,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const commitToolbar = useMemo(
     () => (
       <>
+        <Spacer />
         <Button
           label="Clear Changes"
           icon="clear"
@@ -527,6 +496,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
                   return sites.map((siteId) => {
                     const key = `${addon.name}|${addon.version}|${siteId}|${projectKey}`
+
                     return (
                       <Panel
                         key={key}
@@ -551,6 +521,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           projectName={projectName}
                           siteId={siteId === '_' ? null : siteId}
                           environment={environment}
+                          context={{
+                            headerProjectName: projectName,
+                            headerSiteId: siteId === '_' ? null : siteId,
+                            headerEnvironment: environment,
+                            onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
+                            onPinOverride: (path) => onPinOverride(addon, siteId, path),
+                            onRemoveOverrides: () => onRemoveOverrides(addon, siteId),
+                            onCopyValue: (path, value) => onCopyValue(addon, siteId, path, value),
+                            onPasteValue: (path) => onPasteValue(addon, siteId, path),
+                          }}
                         />
                       </Panel>
                     )
@@ -566,6 +546,9 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className="wrap" style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
+          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
+            <pre>{JSON.stringify(localData, null, 2)}</pre>
+          </ScrollPanel>
         </Section>
       </SplitterPanel>
     </Splitter>

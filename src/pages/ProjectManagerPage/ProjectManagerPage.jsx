@@ -6,7 +6,7 @@ import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
-import AddonSettings from '/src/containers/addonSettings'
+import AddonSettings from '/src/containers/AddonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
@@ -19,17 +19,17 @@ import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 
-const ProjectSettings = ({ projectList, projectManager }) => {
+const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
     <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
-      <AddonSettings />
+      <AddonSettings projectName={projectName} />
     </ProjectManagerPageLayout>
   )
 }
-const SiteSettings = ({ projectList, projectManager }) => {
+const SiteSettings = ({ projectList, projectManager, projectName }) => {
   return (
     <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
-      <AddonSettings showSites />
+      <AddonSettings showSites projectName={projectName} />
     </ProjectManagerPageLayout>
   )
 }

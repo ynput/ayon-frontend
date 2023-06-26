@@ -23,6 +23,7 @@ const AddonSettingsPanel = ({
   onSetChangedKeys = () => {},
   onSelect = () => {},
   currentSelection = null,
+  context,
 }) => {
   const dispatch = useDispatch()
 
@@ -131,6 +132,7 @@ const AddonSettingsPanel = ({
         onSetBreadcrumbs={onSetBreadcrumbs}
         breadcrumbs={breadcrumbs}
         level={settingsLevel}
+        context={context}
       />
     )
   }, [schema, localData, overrides, breadcrumbs])

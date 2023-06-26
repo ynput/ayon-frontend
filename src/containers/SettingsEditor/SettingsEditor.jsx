@@ -82,6 +82,7 @@ const SettingsEditor = ({
   onSetChangedKeys,
   level,
   changedKeys,
+  context,
 }) => {
   if (!schema) {
     // TODO: maybe a spinner or something?
@@ -123,11 +124,16 @@ const SettingsEditor = ({
     }
   }, [schema, formData, overrides, level, changedKeys])
 
-  //console.log("formContext", formContext)
+  // we need to add the props.context to form context independently
+  // otherwise it breaks memoized overrides
 
-  formContext.onSetBreadcrumbs = onSetBreadcrumbs || noop
-  formContext.onSetChangedKeys = onSetChangedKeys || noop
-  formContext.breadcrumbs = breadcrumbs || []
+  const fullContext = {
+    ...context,
+    ...formContext,
+    onSetBreadcrumbs: onSetBreadcrumbs || noop,
+    onSetChangedKeys: onSetChangedKeys || noop,
+    breadcrumbs: breadcrumbs || [],
+  }
 
   const currentId = breadcrumbs && `root_${breadcrumbs.join('_')}`
 
@@ -137,7 +143,7 @@ const SettingsEditor = ({
         schema={schema}
         uiSchema={uiSchema}
         formData={formData}
-        formContext={formContext}
+        formContext={fullContext}
         widgets={widgets}
         liveValidate={true}
         FieldTemplate={FieldTemplate}
