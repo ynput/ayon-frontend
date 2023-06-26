@@ -2,7 +2,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam } from 'use-query-params'
-import { Button, InputSwitch, InputText, Section, Spacer } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Dialog,
+  FormRow,
+  InputSwitch,
+  InputText,
+  Section,
+  Spacer,
+} from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
@@ -15,6 +23,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import styled from 'styled-components'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
+import SaveButton from '/src/components/SaveButton'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -45,6 +54,9 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   const [showTeamUsersOnly, setShowTeamUsersOnly] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [createTeamOpen, setCreateTeamOpen] = useState(false)
+  // duplicate team
+  const [duplicateTeamNameVisible, setDuplicateTeamNameVisible] = useState(false)
+  const [duplicateTeamName, setDuplicateTeamName] = useState('')
 
   // Set selected users based on query params
   // set initial selected users
@@ -373,26 +385,69 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     })
   }
 
+  // check if duplicate team name is valid
+  const isDuplicateTeamNameValid = useMemo(() => {
+    return (
+      duplicateTeamName &&
+      !teams.some((team) => team.name.toLowerCase() === duplicateTeamName.toLowerCase())
+    )
+  }, [duplicateTeamName, teams])
+
   // DUPLICATE TEAM
-  const onDuplicate = async () => {
-    // preselect all users on selected team
-    const teamUsers = userList
-      .filter((user) => selectedTeams.some((team) => user.teams[team]))
-      .map((user) => user.name)
+  const onDuplicate = async (e, name) => {
+    e.preventDefault()
 
-    setSelectedUsers(teamUsers)
+    // get selected team
+    const selectedTeam = teams.find((team) => team.name === selectedTeams[0])
 
-    setCreateTeamOpen({
-      roles: selectedTeamsRoles,
-      subTitle: `Duplicating ${selectedTeams[0]}`,
-      duplicate: selectedTeams[0],
-    })
+    if (!selectedTeam) return
+
+    // copy selected team with new name
+    const newTeam = {
+      name,
+      members: selectedTeam.members,
+    }
+
+    // create new team
+    handleNewTeam(newTeam)
+
+    // create new team with same users
+    setDuplicateTeamNameVisible(false)
+    setDuplicateTeamName('')
+  }
+
+  const onCancelDuplicate = () => {
+    setDuplicateTeamNameVisible(false)
+    setDuplicateTeamName('')
   }
 
   const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
 
   return (
     <>
+      <Dialog visible={duplicateTeamNameVisible} onHide={onCancelDuplicate}>
+        <form onSubmit={(e) => onDuplicate(e, duplicateTeamName)}>
+          <FormRow label="name" key="name">
+            <InputText
+              id="name"
+              value={duplicateTeamName}
+              onChange={(e) => setDuplicateTeamName(e.target.value)}
+              autoFocus
+            />
+          </FormRow>
+          <span style={{ height: 18, display: 'block' }}>
+            {duplicateTeamName && !isDuplicateTeamNameValid && 'Team name already taken'}
+          </span>
+          <SaveButton
+            label="Create"
+            type="submit"
+            active={isDuplicateTeamNameValid}
+            style={{
+              marginLeft: 'auto',
+            }}
+          />
+        </form>
+      </Dialog>
       <ProjectManagerPageLayout
         projectList={projectList}
         toolbar={
@@ -436,7 +491,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             onSelect={(teams) => setSelectedTeams(teams)}
             styleSection={{ height: '100%', flex: 0.4 }}
             onDelete={onDelete}
-            onDuplicate={onDuplicate}
+            onDuplicate={() => setDuplicateTeamNameVisible(true)}
             onNewTeam={() => setCreateTeamOpen(true)}
           />
           <UserListTeams
