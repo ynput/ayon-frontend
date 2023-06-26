@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { toast } from 'react-toastify'
 import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './SettingsPanel'
@@ -179,6 +180,10 @@ function ObjectFieldTemplate(props) {
   const contextMenuItems = [
     {
       label: 'Copy',
+      command: () => {
+        navigator.clipboard.writeText(JSON.stringify(props.formData, null, 2))
+        toast.success('Copied to clipboard')
+      },
     },
   ]
 
