@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Panel, Button } from '@ynput/ayon-react-components'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 
 const PanelStyled = styled(Panel)`
@@ -11,6 +11,7 @@ const PanelStyled = styled(Panel)`
   min-height: 64px;
   height: fit-content;
   align-items: center;
+  position: relative;
 
   min-height: fit-content;
 
@@ -47,22 +48,6 @@ const PanelStyled = styled(Panel)`
 
   /* set span */
   grid-column: ${({ span }) => `span ${span}`};
-
-  /* if isError make title red */
-  ${({ isError }) =>
-    isError &&
-    css`
-      border: 1px solid var(--color-hl-error);
-    `}
-
-  /* isLoading children opacity 0.25  */
-  ${({ isLoading }) =>
-    isLoading &&
-    css`
-      & > *:not(header) {
-        /* opacity: 0.25; */
-      }
-    `}
 `
 const ContentStyled = styled.div`
   display: flex;
@@ -84,19 +69,9 @@ const IconStyled = styled(Button)`
   min-height: unset;
 `
 
-const DashboardPanelWrapper = ({
-  title,
-  children,
-  isError,
-  span = 1,
-  style,
-  stylePanel,
-  header,
-  icon,
-  isLoading,
-}) => {
+const DashboardPanelWrapper = ({ title, children, span = 1, style, stylePanel, header, icon }) => {
   return (
-    <PanelStyled isError={isError} span={span} style={stylePanel} isLoading={isLoading}>
+    <PanelStyled span={span} style={stylePanel}>
       {title && (
         <header>
           <h1>{title}</h1>
@@ -118,7 +93,6 @@ const DashboardPanelWrapper = ({
 DashboardPanelWrapper.propTypes = {
   title: PropTypes.string,
   children: PropTypes.node.isRequired,
-  isError: PropTypes.bool,
   span: PropTypes.number,
   style: PropTypes.object,
   stylePanel: PropTypes.object,

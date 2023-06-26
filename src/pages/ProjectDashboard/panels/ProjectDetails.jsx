@@ -2,9 +2,10 @@ import React from 'react'
 import { useGetProjectQuery } from '/src/services/project/getProject'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import Thumbnail from '/src/containers/thumbnail'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import AttributeTable from '/src/containers/attributeTable'
 import { format } from 'date-fns'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 const ThumbnailStyled = styled.div`
   width: 100%;
@@ -26,10 +27,27 @@ const ActiveStyled = styled.span`
   background-color: var(--color-grey-01);
   padding: 4px;
   border-radius: 3px;
+  position: relative;
+
+  ${({ $isActive }) =>
+    $isActive &&
+    css`
+      color: var(--color-hl-studio);
+    `}
+
+  ${({ $isLoading }) =>
+    $isLoading &&
+    css`
+      color: transparent;
+      background-color: unset;
+      width: 100%;
+
+      ${getShimmerStyles()}
+    `}
 `
 
 const ProjectDetails = ({ projectName }) => {
-  const { data = {}, isError, isLoading, isFetching } = useGetProjectQuery({ projectName })
+  const { data = {}, isFetching } = useGetProjectQuery({ projectName })
 
   const { attrib = {}, active } = data
 
@@ -49,7 +67,7 @@ const ProjectDetails = ({ projectName }) => {
   }
 
   const activeIcon = (
-    <ActiveStyled style={{ color: active && 'var(--color-hl-studio)' }}>
+    <ActiveStyled $isLoading={isFetching} $isActive={active}>
       {active ? 'active' : ' inactive'}
     </ActiveStyled>
   )
@@ -58,21 +76,20 @@ const ProjectDetails = ({ projectName }) => {
 
   return (
     <DashboardPanelWrapper
-      title={projectName}
+      title={!isFetching ? projectName : ' '}
       header={activeIcon}
       stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden' }}
-      isError={isError}
       style={{ height: '100%', overflow: 'hidden' }}
-      isLoading={isLoading || isFetching}
     >
       <ThumbnailStyled>
-        <Thumbnail projectName={projectName} />
+        <Thumbnail projectName={projectName} isLoading={isFetching} shimmer />
       </ThumbnailStyled>
       <AttributeTable
         projectAttrib={attribArray}
         style={{
           overflow: 'auto',
         }}
+        isLoading={isFetching}
       />
     </DashboardPanelWrapper>
   )

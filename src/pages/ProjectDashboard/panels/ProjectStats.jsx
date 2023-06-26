@@ -7,8 +7,7 @@ import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
 const ProjectStats = ({ projectName, share, position }) => {
   const {
     data = {},
-    isLoading,
-    isError,
+
     isFetching,
   } = useGetProjectDashboardQuery({ projectName, panel: 'entities' })
 
@@ -39,13 +38,11 @@ const ProjectStats = ({ projectName, share, position }) => {
   return (
     <DashboardPanelWrapper
       title="Project Stats"
-      isError={isError}
       icon={{ icon: 'share', onClick: () => share('stats', shareData, position) }}
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
       }}
-      isLoading={isLoading || isFetching}
     >
       {statsOrder.map((id) => {
         const { label, icon } = stats[id]
@@ -55,7 +52,7 @@ const ProjectStats = ({ projectName, share, position }) => {
             title={label}
             stat={stats[id].stat}
             icon={icon}
-            isLoading={isLoading || isFetching}
+            isLoading={isFetching}
             key={id}
             onClick={() => copyStatMessage(id)}
           />

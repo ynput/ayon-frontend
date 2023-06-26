@@ -6,6 +6,7 @@ import { useGetProjectAttribsQuery } from '/src/services/project/getProject'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
 import ProgressBar from './ProgressBar'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 const TailsStyled = styled.div`
   border-radius: var(--panel-border-radius);
@@ -116,16 +117,20 @@ const MarkerStyled = styled(TailsStyled)`
   animation: ${({ left }) => MarkerAnimation(left)} 1s forwards;
 `
 
+const StyledLoading = styled.div`
+  position: absolute;
+  inset: 8px;
+  z-index: 100;
+  background-color: var(--color-grey-01);
+  border-radius: var(--border-radius);
+  ${getShimmerStyles()}
+`
+
 const Timeline = ({ projectName }) => {
   // animation played
   const [animation, setAnimation] = useState(true)
 
-  let {
-    data = {},
-    isError,
-    isLoading,
-    isFetching,
-  } = useGetProjectAttribsQuery({
+  let { data = {}, isFetching } = useGetProjectAttribsQuery({
     projectName,
     attribs: ['startDate', 'endDate'],
   })
@@ -138,7 +143,7 @@ const Timeline = ({ projectName }) => {
     startString = '',
     endString = ''
 
-  if (!isLoading) {
+  if (!isFetching) {
     let start = new Date(startDate || '')
     let end = new Date(endDate || '')
 
@@ -161,7 +166,6 @@ const Timeline = ({ projectName }) => {
 
   return (
     <DashboardPanelWrapper
-      isError={isError}
       span={2}
       style={{
         flexDirection: 'row',
@@ -170,13 +174,12 @@ const Timeline = ({ projectName }) => {
         padding: '0 8px',
         flex: 1,
       }}
-      isLoading={isLoading || isFetching}
       stylePanel={{ height: '100%' }}
     >
       <TailsStyled>{startString}</TailsStyled>
       <ProgressStyled animation={animation} onAnimationEnd={() => setAnimation(false)}>
         <ProgressBar
-          isLoading={isLoading}
+          isLoading={isFetching}
           is
           values={[
             { value: done, label: `${done}/${length}` },
@@ -184,9 +187,10 @@ const Timeline = ({ projectName }) => {
           ]}
           backgroundColor="var(--color-grey-08)"
         />
-        <MarkerStyled left={percentage}>{!isLoading && `Day ${done}`}</MarkerStyled>
+        <MarkerStyled left={percentage}>{!isFetching && `Day ${done}`}</MarkerStyled>
       </ProgressStyled>
       <TailsStyled end="true">{endString}</TailsStyled>
+      {isFetching && <StyledLoading />}
     </DashboardPanelWrapper>
   )
 }

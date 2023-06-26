@@ -19,35 +19,6 @@ const StyledGridLayout = styled.div`
   }
 `
 
-const NoneFound = styled.div`
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-`
-
-// stack grid tiles on top of each other
-const StackedGridTiles = styled.div`
-  height: 120px;
-  margin-bottom: 32px;
-  & > * {
-    position: absolute;
-    height: 120px;
-    opacity: 1;
-  }
-
-  /* rotate out like a fan */
-  & > *:nth-child(1) {
-    transform: rotate(-10deg) translateX(-10px);
-    transform-origin: bottom;
-  }
-
-  & > *:nth-child(2) {
-    transform: rotate(10deg) translateX(10px);
-    transform-origin: bottom;
-  }
-`
-
 const StyledGroupName = styled.h2`
   font-size: 1.3em;
   padding-left: 8px;
@@ -68,8 +39,9 @@ const ProductsGrid = ({
   onContextMenuSelectionChange,
   groupBy = null,
   multipleFoldersSelected = false,
+  projectName,
 }) => {
-  const isNone = data.length === 0 && !isLoading
+  const isNone = data.length === 0
 
   const handleContext = (e, id) => {
     onContextMenuSelectionChange({ value: id })
@@ -176,21 +148,6 @@ const ProductsGrid = ({
     }
   }, [data, groupBy])
 
-  // if no data and not loading, show none found
-  if (isNone) {
-    return (
-      <StyledGridLayout>
-        <NoneFound>
-          <StackedGridTiles>
-            <EntityGridTile isError />
-            <EntityGridTile isError />
-          </StackedGridTiles>
-          <span>No products found</span>
-        </NoneFound>
-      </StyledGridLayout>
-    )
-  }
-
   return (
     <StyledGridLayout
       style={{
@@ -221,8 +178,8 @@ const ProductsGrid = ({
                         }}
                         key={index}
                         typeIcon={productTypes[product.productType]?.icon || 'inventory_2'}
-                        statusIcon={statuses[product.status]?.icon || ''}
-                        statusColor={statuses[product.status]?.color || ''}
+                        statusIcon={statuses[product.versionStatus]?.icon || ''}
+                        statusColor={statuses[product.versionStatus]?.color || ''}
                         name={product.name}
                         footer={
                           <>
@@ -230,11 +187,12 @@ const ProductsGrid = ({
                             {multipleFoldersSelected && product.folder && <> - {product.folder}</>}
                           </>
                         }
-                        thumbnailEntityId={product.id}
-                        thumbnailEntityType="product"
+                        thumbnailEntityId={product.versionId}
+                        thumbnailEntityType="version"
                         onClick={(e) => handleSelection(e, product)}
                         selected={product.id in selection}
                         onContextMenu={(e) => handleContext(e, product.id)}
+                        projectName={projectName}
                       />
                     ),
                 )}

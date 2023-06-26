@@ -6,6 +6,17 @@ import { useGetUserByNameQuery } from '/src/services/user/getUsers'
 import { useSelector } from 'react-redux'
 import { formatDistance } from 'date-fns'
 import { isObject } from 'lodash'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
+
+const StyledUserImage = styled(UserImage)`
+  /* isLoading */
+  ${({ $isLoading }) =>
+    $isLoading &&
+    css`
+      border: none;
+      z-index: 0;
+    `}
+`
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -25,11 +36,11 @@ const PanelStyled = styled(Panel)`
       }
     `}
 
-  /* isError */
-  ${({ isLoading }) =>
-    isLoading &&
+  /* isLoading */
+  ${({ $isLoading }) =>
+    $isLoading &&
     css`
-      opacity: 0.25;
+      ${getShimmerStyles()}
 
       :hover {
         background-color: var(--color-grey-01);
@@ -44,6 +55,13 @@ const TitleStyled = styled.strong`
   display: inline-block;
   overflow-x: clip;
   text-overflow: ellipsis;
+`
+
+const StyledLoading = styled.div`
+  position: absolute;
+  inset: 0;
+  border-radius: var(--border-radius);
+  ${getShimmerStyles('var(--color-grey-03)', 'var(--color-grey-04)')}
 `
 
 const UserTile = ({
@@ -101,10 +119,15 @@ const UserTile = ({
       onClick={onClick}
       disableHover={disableHover}
       style={style}
-      isLoading={isError || loadingState}
+      $isLoading={loadingState}
     >
-      <UserImage src={attrib?.avatarUrl} fullName={attrib?.fullName || name} highlight={isSelf} />
-      <div style={{ flex: 1, overflow: 'hidden' }}>
+      <StyledUserImage
+        src={attrib?.avatarUrl}
+        fullName={attrib?.fullName || name}
+        highlight={isSelf}
+        $isLoading={loadingState}
+      />
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <TitleStyled style={{ whiteSpace: 'nowrap' }}>
           {!loadingState && (attrib?.fullName ? `${attrib?.fullName} (${name})` : name)}
         </TitleStyled>
@@ -112,6 +135,7 @@ const UserTile = ({
         <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
           {!loadingState ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
         </span>
+        {loadingState && <StyledLoading />}
       </div>
       {updatedAt && (
         <span style={{ textAlign: 'end', opacity: 0.5 }}>

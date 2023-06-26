@@ -88,13 +88,12 @@ const EditorPage = () => {
   // used to update nodes
   const [updateEditor, { isLoading: isUpdating }] = useUpdateEditorMutation()
 
+  // set which ids are expanded and loading
+  const [loadingBranches, setLoadingBranches] = useState([])
   // use later on for loading new branches
-  const [triggerGetExpandedBranch, { isFetching: isLoadingBranches }] =
-    useLazyGetExpandedBranchQuery()
+  const [triggerGetExpandedBranch] = useLazyGetExpandedBranchQuery()
 
   const [triggerGetEntity] = useLazyGetEntityQuery()
-
-  const loading = isLoadingBranches || isSearchLoading || isUpdating
 
   // call loadNewBranches with an array of folder ids to get the branches and patch them into the rootData cache
   const loadNewBranches = async (folderIds, force) => {
@@ -105,6 +104,7 @@ const EditorPage = () => {
     try {
       // get new branches using id
       // get new events data
+      setLoadingBranches(folderIds)
       for (const id of folderIds) {
         await triggerGetExpandedBranch(
           {
@@ -114,6 +114,8 @@ const EditorPage = () => {
           !force,
         )
       }
+      // reset after loading
+      setLoadingBranches([])
     } catch (error) {
       console.error(error)
     }
@@ -1219,6 +1221,52 @@ const EditorPage = () => {
   // keeps editor form fast
   const throttledEditorChanges = debounce((c) => dispatch(onNewChanges(c)), 500)
 
+  const fullPageLoading = loadingBranches.includes('root')
+  // loading
+  if (fullPageLoading) {
+    // when replace all data with dummy data
+    // 10 folders
+    treeData = Array.from({ length: 10 }, (_, i) => ({
+      key: i,
+      data: {},
+      children: [],
+      leaf: true,
+    }))
+  }
+
+  function addDummyChildren(branch, localBranchesLoading) {
+    const newBranch = { ...branch }
+    if (localBranchesLoading.includes(branch.key)) {
+      newBranch.children = Array.from({ length: 1 }, (_, i) => ({
+        key: i,
+        data: {},
+        children: [],
+        leaf: true,
+        className: 'loading',
+      }))
+    } else if (branch.children) {
+      newBranch.children = branch.children.map((child) =>
+        addDummyChildren(child, localBranchesLoading),
+      )
+    }
+    return newBranch
+  }
+
+  // when loading a new branch
+  // when add dummy children to the branch
+  const localBranchesLoading = loadingBranches.filter((b) => b !== 'root')
+
+  if (localBranchesLoading.length) {
+    // in treeData, find the branch that is loading by id
+    // branches can have children so we need to check those too
+    // if the branch is found, add dummy children to it
+
+    const loadingTreeData = treeData.map((branch) => addDummyChildren(branch, localBranchesLoading))
+
+    // replace treeData with loadingTreeData
+    treeData = loadingTreeData
+  }
+
   //
   // Render the TreeTable
 
@@ -1276,7 +1324,7 @@ const EditorPage = () => {
           stateStorage="local"
         >
           <SplitterPanel size={70} id="global" onContextMenu={ctxMenuGlobalShow}>
-            <TablePanel loading={loading} style={{ height: '100%' }}>
+            <TablePanel loading={isUpdating} style={{ height: '100%' }}>
               <TreeTable
                 responsive="true"
                 scrollable
@@ -1302,6 +1350,7 @@ const EditorPage = () => {
                 reorderableColumns
                 onColReorder={handleColumnReorder}
                 rows={20}
+                className={fullPageLoading ? 'table-loading' : undefined}
               >
                 {allColumns}
                 <Column
