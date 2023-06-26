@@ -110,6 +110,7 @@ const RolesList = ({ projectName, selectedRole, onSelectRole, reloadTrigger }) =
     })
   }
 
+  // FIXME: this doesn't update when role details updates
   const getRowClass = (rowData) => {
     return { 'changed-project': rowData.isProjectLevel }
   }

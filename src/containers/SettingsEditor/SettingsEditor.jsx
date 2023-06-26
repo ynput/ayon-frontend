@@ -8,10 +8,10 @@ import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields
 import './SettingsEditor.sass'
 
 const FormWrapper = styled.div`
-  [data-fieldid="${(props) => props.currentSelection}"]{
+  [data-fieldid='${(props) => props.currentSelection}'] {
     border-left: 1px solid var(--color-hl-00) !important;
     border-radius: 4px;
-    background-color: rgba(0,0,0,.2);
+    background-color: rgba(0, 0, 0, 0.2);
   }
 
   .rjsf {
@@ -22,7 +22,6 @@ const FormWrapper = styled.div`
       display: none;
     }
   }
-}
 `
 
 const widgets = {

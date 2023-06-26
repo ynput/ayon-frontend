@@ -23,6 +23,7 @@ import {
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
+import SaveButton from '/src/components/SaveButton'
 import { useGetBundleListQuery } from '/src/services/bundles'
 
 /*
@@ -87,7 +88,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [selectedSites, setSelectedSites] = useState([])
   const [environment, setEnvironment] = useState('production')
 
-  const [setAddonSettings] = useSetAddonSettingsMutation()
+  const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
 
@@ -467,20 +468,27 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     )
   }, [showHelp, currentSelection, localOverrides])
 
-  const commitToolbar = useMemo(() => {
-    const changed = Object.keys(localOverrides).length > 0
-    return (
+  const canCommit = useMemo(() => Object.keys(localOverrides).length > 0, [localOverrides])
+
+  const commitToolbar = useMemo(
+    () => (
       <>
         <Button
-          disabled={!changed}
           label="Clear Changes"
           icon="clear"
           onClick={onRevertAllChanges}
+          disabled={!canCommit}
         />
-        <Button disabled={!changed} label="Save Changes" icon="check" onClick={onSave} />
+        <SaveButton
+          label="Save Changes"
+          onClick={onSave}
+          active={canCommit}
+          saving={setAddonSettingsUpdating}
+        />
       </>
-    )
-  }, [onRevertAllChanges, onSave, localOverrides])
+    ),
+    [onRevertAllChanges, onSave, canCommit],
+  )
 
   const onSelectAddon = (newSelection) => {
     setSelectedAddons(newSelection)

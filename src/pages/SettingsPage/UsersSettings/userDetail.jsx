@@ -10,6 +10,7 @@ import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
+import SaveButton from '/src/components/SaveButton'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -145,7 +146,7 @@ const UserDetail = ({
   // check if any users have the userLevel of service
   const hasServiceUser = formUsers.some((user) => user.isService)
 
-  const [updateUser] = useUpdateUserMutation()
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation()
 
   //
   // API
@@ -320,16 +321,16 @@ const UserDetail = ({
       )}
       <PanelButtonsStyled>
         <Button
-          onClick={() => (selectedUsers.length > 1 ? handleMultiSave() : onSave())}
-          label="Save selected users"
-          icon="check"
-          disabled={!changesMade}
-        />
-        <Button
           onClick={onCancel}
           label="Cancel"
-          icon="cancel"
+          icon="clear"
           disabled={!changesMade || selectedUsers.length > 1}
+        />
+        <SaveButton
+          onClick={() => (selectedUsers.length > 1 ? handleMultiSave() : onSave())}
+          label="Save selected users"
+          active={changesMade}
+          saving={isUpdating}
         />
       </PanelButtonsStyled>
     </Section>

@@ -1,6 +1,11 @@
 import { useState } from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import getShimmerStyles from '../styles/getShimmerStyles'
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to   { opacity: 1; }
+`
 
 const ThumbnailStyled = styled.div`
   position: relative;
@@ -11,7 +16,7 @@ const ThumbnailStyled = styled.div`
   border-radius: 3px;
   margin: auto;
   max-width: 250px;
-
+  background-color: #161616;
   /* icon */
   span {
     position: absolute;
@@ -22,6 +27,10 @@ const ThumbnailStyled = styled.div`
     align-items: center;
     inset: 0;
     background-color: #161616;
+
+    opacity: 0;
+    /* delay being seen by 1s */
+    animation: ${fadeIn} 0.1s 0.3s forwards;
   }
 
   ${({ $shimmer }) => $shimmer && getShimmerStyles()}
@@ -36,6 +45,7 @@ const ImageStyled = styled.img`
   display: block;
   position: absolute;
   inset: 0;
+  background-color: #161616;
 `
 
 const ImagePlaceholder = () => <span className="material-symbols-outlined">image</span>
@@ -49,6 +59,7 @@ const Thumbnail = ({
   isLoading,
   shimmer,
   className,
+  disabled,
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
   // ugly border around the image (when it's not loaded yet)
@@ -60,7 +71,7 @@ const Thumbnail = ({
 
   return (
     <ThumbnailStyled style={style} className={className} $shimmer={isLoading && shimmer}>
-      {!isLoading && <ImagePlaceholder />}
+      {(!isLoading || !thumbLoaded) && !disabled && <ImagePlaceholder />}
       {entityType && !(isWrongEntity || !entityId) && (
         <ImageStyled
           alt={`Entity thumbnail ${entityId}`}

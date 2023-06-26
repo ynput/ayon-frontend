@@ -17,6 +17,8 @@ import useSearchFilter from '/src/hooks/useSearchFilter'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { useRestartServerMutation } from '/src/services/restartServer'
 import useCreateContext from '/src/hooks/useCreateContext'
+import SaveButton from '/src/components/SaveButton'
+import { isEqual } from 'lodash'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -32,6 +34,12 @@ const Attributes = () => {
       setAttributes(data)
     }
   }, [data, isLoading, isFetching, updateLoading])
+
+  // check for changes
+  const isChanges = useMemo(() => {
+    if (!data || !attributes) return false
+    return !isEqual(data, attributes)
+  }, [data, attributes])
 
   if (isError) {
     console.error(error)
@@ -164,7 +172,20 @@ const Attributes = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
             <Spacer />
-            <Button label="Save Attributes" icon="check" onClick={onSave} />
+            {isChanges && 'Unsaved Changes'}
+            <Button
+              label="Clear changes"
+              icon="clear"
+              disabled={!isChanges}
+              onClick={() => setAttributes(data)}
+            />
+            <SaveButton
+              label="Save attributes changes"
+              icon="check"
+              onClick={onSave}
+              active={isChanges}
+              saving={updateLoading}
+            />
           </Toolbar>
           <TablePanel loading={isLoading || updateLoading || isFetching}>
             <DataTable

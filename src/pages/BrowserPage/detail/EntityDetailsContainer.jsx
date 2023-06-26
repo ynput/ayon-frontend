@@ -91,7 +91,7 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
       title: 'Author',
     },
     productType: {
-      title: 'productType',
+      title: 'Product Type',
     },
     latestVersion: {
       title: 'Latest Version',
