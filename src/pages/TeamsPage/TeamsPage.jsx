@@ -5,7 +5,6 @@ import { ArrayParam, useQueryParam } from 'use-query-params'
 import {
   Button,
   Dialog,
-  FormRow,
   InputSwitch,
   InputText,
   Section,
@@ -425,16 +424,21 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   return (
     <>
-      <Dialog visible={duplicateTeamNameVisible} onHide={onCancelDuplicate}>
+      <Dialog
+        visible={duplicateTeamNameVisible}
+        onHide={onCancelDuplicate}
+        header={<span>Duplicate Team - {selectedTeams[0]}</span>}
+        style={{ minWidth: 300 }}
+      >
         <form onSubmit={(e) => onDuplicate(e, duplicateTeamName)}>
-          <FormRow label="name" key="name">
-            <InputText
-              id="name"
-              value={duplicateTeamName}
-              onChange={(e) => setDuplicateTeamName(e.target.value)}
-              autoFocus
-            />
-          </FormRow>
+          <InputText
+            id="name"
+            value={duplicateTeamName}
+            onChange={(e) => setDuplicateTeamName(e.target.value)}
+            autoFocus
+            placeholder="New team name..."
+            style={{ width: '100%' }}
+          />
           <span style={{ height: 18, display: 'block' }}>
             {duplicateTeamName && !isDuplicateTeamNameValid && 'Team name already taken'}
           </span>
