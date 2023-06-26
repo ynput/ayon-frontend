@@ -418,7 +418,12 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           disabled={environment === 'staging'}
           style={environment === 'staging' ? styleHl : {}}
         />
-        <InputText tooltip="Bundle name" value={bundleName} style={{ flexGrow: 1 }} readOnly />
+        <InputText
+          tooltip="Bundle name"
+          value={bundleName || ''}
+          style={{ flexGrow: 1 }}
+          readOnly
+        />
       </Toolbar>
     )
   }, [environment, localOverrides, bundleName])

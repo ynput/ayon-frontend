@@ -76,7 +76,6 @@ const SettingsPage = () => {
   }, [module, addonName, addonsData])
 
   const links = useMemo(() => {
-    console.log('ADDONS DATA: ', addonsData)
     let result = [
       {
         name: 'Anatomy presets',

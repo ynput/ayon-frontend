@@ -52,9 +52,9 @@ const AddonVersions = ({ formData, setFormData, readOnly }) => {
         }
       } // end for
       setFormData((prev) => {
+        //console.log('creating new bundle', newAddons)
         const newFormData = { ...prev }
         newFormData.addons = newAddons
-        console.log('creating new bundle', newAddons)
         return newFormData
       })
     }
@@ -75,7 +75,7 @@ const AddonVersions = ({ formData, setFormData, readOnly }) => {
       {addons?.length &&
         addons.map((addon) => (
           <AddonListItem
-            key={addon.key}
+            key={addon.name}
             addonTitle={addon.title}
             version={formData?.addons?.[addon.name]}
             versions={Object.keys(addon.versions || {})}

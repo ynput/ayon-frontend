@@ -21,7 +21,6 @@ const AddonList = ({
   // Filter addons by environment
   // add 'version' property to each addon
   const addons = useMemo(() => {
-    console.log('AddonList: useMemo', { data, environment, withSettings })
     let result = []
     for (const addon of data || []) {
       const envVersion = addon[environment + 'Version']
