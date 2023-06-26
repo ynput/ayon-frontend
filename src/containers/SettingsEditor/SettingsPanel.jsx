@@ -76,13 +76,22 @@ const PanelContent = styled.div`
   }
 `
 
-const Panel = ({ header, onToggle, expanded, className, children, onHeaderClick }) => {
+const Panel = ({
+  header,
+  onToggle,
+  expanded,
+  className,
+  children,
+  onHeaderClick,
+  onContextMenu,
+}) => {
   const toggleIcon = expanded ? 'expand_more' : 'chevron_right'
 
   return (
     <PanelWrapper className={`panel ${className}`}>
       <PanelHeader
         className="panel-header"
+        onContextMenu={onContextMenu}
         onClick={(evt) => {
           // evt.preventDefault()
           // evt.stopPropagation()
@@ -108,6 +117,7 @@ const SettingsPanel = ({
   enabledToggler,
   className = '',
   onClick,
+  onContextMenu,
 }) => {
   const [expandedObjects, setExpandedObjects] = useLocalStorage('expanded-settings-keys', [])
 
@@ -137,6 +147,7 @@ const SettingsPanel = ({
       expanded={expanded}
       className={nclass}
       onHeaderClick={onClick}
+      onContextMenu={onContextMenu}
     >
       {children}
     </Panel>

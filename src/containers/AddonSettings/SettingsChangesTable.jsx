@@ -73,8 +73,6 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
           const result = {}
           for (const addonKey in changes) {
             console.log('Checking', addonKey)
-
-            console.log('changed', addonKey)
             for (const change of changes[addonKey]) {
               const key = `${addonKey}|${change.join('|')}`
               if (key in selectedKeys) {

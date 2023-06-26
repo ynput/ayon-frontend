@@ -546,13 +546,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className="wrap" style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
-          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
-            <pre>{JSON.stringify(localData, null, 2)}</pre>
-          </ScrollPanel>
         </Section>
       </SplitterPanel>
     </Splitter>
   )
+
+  /*
+          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
+            <pre>{JSON.stringify(localData, null, 2)}</pre>
+          </ScrollPanel>
+  */
 }
 
 export default AddonSettings

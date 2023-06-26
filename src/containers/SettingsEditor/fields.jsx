@@ -56,6 +56,7 @@ const arrayContainsArray = (arr1, arr2) => {
 }
 
 function ObjectFieldTemplate(props) {
+  const [contextMenu] = useCreateContext([])
   let className = 'form-object-field'
   if (props.schema.layout) className += ` layout-${props.schema.layout}`
 
@@ -175,6 +176,20 @@ function ObjectFieldTemplate(props) {
   // In case of "pseudo-dicts" (array of objects with a "name" attribute)
   // use the "name" attributeas the title
 
+  const contextMenuItems = [
+    {
+      label: 'Copy',
+    },
+  ]
+
+  const onContextMenu = (e) => {
+    console.log(path)
+    if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path || [])
+    if (!contextMenuItems?.length) return
+    e.preventDefault()
+    contextMenu(e, contextMenuItems)
+  }
+
   let title = props.title
   if (props.idSchema.$id === 'root') {
     const projectMark = props.formContext.headerProjectName && (
@@ -222,6 +237,7 @@ function ObjectFieldTemplate(props) {
       description={shortDescription}
       className={`obj-override-${overrideLevel}`}
       enabledToggler={enabledToggler}
+      onContextMenu={onContextMenu}
     >
       {fields}
     </SettingsPanel>

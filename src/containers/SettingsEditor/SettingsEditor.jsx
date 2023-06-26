@@ -2,7 +2,6 @@ import Form from '@rjsf/core'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 
-import { Tooltip } from 'primereact/tooltip'
 import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
 import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
 import './SettingsEditor.sass'
@@ -117,10 +116,6 @@ const SettingsEditor = ({
       overrides: formOverrides,
       changedKeys: changedKeys || [],
       level: level || 'studio',
-
-      onSetBreadcrumbs: null,
-      onSetChangedKeys: null,
-      breadcrumbs: [],
     }
   }, [schema, formData, overrides, level, changedKeys])
 
@@ -130,8 +125,8 @@ const SettingsEditor = ({
   const fullContext = {
     ...context,
     ...formContext,
-    onSetBreadcrumbs: onSetBreadcrumbs || noop,
     onSetChangedKeys: onSetChangedKeys || noop,
+    onSetBreadcrumbs: onSetBreadcrumbs || noop,
     breadcrumbs: breadcrumbs || [],
   }
 
@@ -153,7 +148,6 @@ const SettingsEditor = ({
       >
         <div />
       </Form>
-      <Tooltip target=".form-inline-field-label" />
     </FormWrapper>
   )
 }
