@@ -8,6 +8,7 @@ import useCreateContext from '/src/hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
 import arrayEquals from '/src/helpers/arrayEquals'
+import { Badge, BadgeWrapper } from '/src/components/Badge'
 
 const FormArrayField = styled.div`
   flex-grow: 1;
@@ -208,28 +209,24 @@ function ObjectFieldTemplate(props) {
 
   if (props.idSchema.$id === 'root') {
     const projectMark = props.formContext.headerProjectName && (
-      <span style={{ backgroundColor: 'var(--color-hl-project)' }}>
-        {props.formContext.headerProjectName}
-      </span>
+      <Badge hl="project">{props.formContext.headerProjectName}</Badge>
     )
     const siteMark = props.formContext.headerSiteId && (
-      <span style={{ backgroundColor: 'var(--color-hl-site)' }}>
-        {props.formContext.headerSiteId}
-      </span>
+      <Badge hl="site">{props.formContext.headerSiteId}</Badge>
     )
 
     const envMark = props.formContext.headerEnvironment && (
-      <span style={{ backgroundColor: 'var(--color-hl-variant)' }}>
-        {props.formContext.headerEnvironment}
-      </span>
+      <Badge hl="variant">{props.formContext.headerEnvironment}</Badge>
     )
 
     title = (
       <>
         {title}
-        {projectMark}
-        {siteMark}
-        {envMark}
+        <BadgeWrapper>
+          {projectMark}
+          {siteMark}
+          {envMark}
+        </BadgeWrapper>
       </>
     )
 

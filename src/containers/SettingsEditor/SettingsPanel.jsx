@@ -34,23 +34,18 @@ const PanelHeader = styled.div`
     padding:0;
     margin-left: 8px;
     border: 0;
-    font-size: 1rem
+    font-size: 1rem;
+    color: white;
 
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
 
-    span {
-      font-size: 0.8rem;
-      border-radius: 4px;
-      padding: 0 4px;
-      color: black;
+    .new-object {
+      font-style: italic;
+      color: var(--color-hl-error);
     }
-
-    .new-object
-      font-style: italic
-      color: var(--color-hl-error)
   }
 
   small {

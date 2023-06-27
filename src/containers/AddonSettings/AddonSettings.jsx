@@ -25,6 +25,7 @@ import {
 } from '/src/services/addonSettings'
 import SaveButton from '/src/components/SaveButton'
 import { useGetBundleListQuery } from '/src/services/bundles'
+import { isEqual } from 'lodash'
 
 /*
  * key is {addonName}|{addonVersion}|{siteId}|{projectKey}
@@ -86,6 +87,42 @@ const sameKeysStructure = (obj1, obj2) => {
   return true
 }
 
+const compareObjects = (obj1, obj2, path = []) => {
+  // Compare two objects and return a list of 'paths' where the objects differ
+  const changedPaths = []
+  for (const key in obj1) {
+    const newPath = [...path, key]
+
+    if (!(key in obj2)) {
+      changedPaths.push(newPath)
+      continue
+    }
+
+    const value1 = obj1[key]
+    const value2 = obj2[key]
+
+    if (typeof value1 === 'object' && typeof value2 === 'object') {
+      if (Array.isArray(value1) && Array.isArray(value2)) {
+        if (!isEqual(value1, value2)) {
+          changedPaths.push(newPath)
+        }
+      } else {
+        const nestedPaths = compareObjects(value1, value2, newPath)
+        changedPaths.push(...nestedPaths)
+      }
+    } else if (value1 !== value2) {
+      changedPaths.push(newPath)
+    }
+  }
+  for (const key in obj2) {
+    const newPath = [...path, key]
+    if (!(key in obj1)) {
+      changedPaths.push(newPath)
+    }
+  }
+  return changedPaths
+}
+
 const AddonSettings = ({ projectName, showSites = false }) => {
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
@@ -118,10 +155,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }, [bundleList, environment])
 
   const projectKey = projectName || '_'
-
-  // useEffect(() => {
-  //   setCurrentSelection(null)
-  // }, [projectKey, selectedAddons])
 
   useEffect(() => {
     const url = new URL(window.location.href)
@@ -165,7 +198,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onSetChangedKeys = (addonName, addonVersion, siteId, data) => {
     setLocalOverrides((localOverrides) => {
       const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
-      localOverrides[key] = data
+      if (!data?.length) {
+        delete localOverrides[key]
+      } else {
+        localOverrides[key] = data
+      }
       return { ...localOverrides }
     })
   }
@@ -328,27 +365,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
   }
 
-  // NOT NEEDED ANYMORE
-  // Fields use props.formData to copy data directly
-  //
-  // const onCopyValue = (addon, siteId, path) => {
-  //   const key = `${addon.name}|${addon.version}|${siteId || '_'}|${projectKey || '_'}`
-  //   const allData = localData[key]
-  //   if (!allData) {
-  //     toast.error('No data to copy')
-  //     return
-  //   }
-  //   const value = getValueByPath(allData, path)
-  //   if (value === undefined) {
-  //     toast.error('No data to copy')
-  //     return
-  //   }
-  //
-  //   const text = JSON.stringify(value, null, 2)
-  //   navigator.clipboard.writeText(text)
-  //   toast.success('Copied to clipboard')
-  // }
-
   const pushValueToPath = (addon, siteId, path, value) => {
     // Push a value to a given path of the settings
     // Validate that the value is compatible with the existing value
@@ -370,20 +386,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return
     }
 
-    setLocalOverrides((overrides) => {
-      if (!path?.length) overrides //FIXME
-      const newOverrides = { ...overrides }
-      newOverrides[key] = newOverrides[key] || []
-      newOverrides[key].push(path)
-      return newOverrides
-    })
+    const newData = { ...localData }
+    const nk = setValueByPath(localData[key], path, value)
+    newData[key] = nk
 
-    setLocalData((localData) => {
-      const newData = { ...localData }
-      const nk = setValueByPath(localData[key], path, value)
-      newData[key] = nk
-      return newData
-    })
+    const newOverrides = { ...localOverrides }
+    const no = compareObjects(localData[key], newData[key])
+    newOverrides[key] = no
+
+    setLocalOverrides(newOverrides)
+    setLocalData(newData)
   }
 
   const onPasteValue = async (addon, siteId, path) => {
@@ -403,12 +415,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   //
 
   const addonListHeader = useMemo(() => {
-    // do not use staging or version overrides on project level settings
-    // Hell yeah we want it!
-    // if (projectName) {
-    //   return <></>
-    // }
-
     const onSetEnvironment = (env) => {
       if (Object.keys(localOverrides).length) {
         toast.error('Cannot change environment with unsaved changes')
@@ -551,7 +557,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                             onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
                             onPinOverride: (path) => onPinOverride(addon, siteId, path),
                             onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
-                            // DEPRECATED: onCopyValue: (path, value) => onCopyValue(addon, siteId, path, value),
                             onPasteValue: (path) => onPasteValue(addon, siteId, path),
                           }}
                         />
