@@ -185,17 +185,27 @@ function ObjectFieldTemplate(props) {
         toast.success('Copied to clipboard')
       },
     },
+    {
+      label: 'Paste',
+      disabled: !props.formContext.onPasteValue,
+      command: () => {
+        props.formContext.onPasteValue(path || [])
+      },
+    },
   ]
 
-  const onContextMenu = (e) => {
-    console.log(path)
-    if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path || [])
-    if (!contextMenuItems?.length) return
-    e.preventDefault()
-    contextMenu(e, contextMenuItems)
-  }
+  // Title + handle root object
 
   let title = props.title
+  if ('name' in props.schema.properties) {
+    let label = null
+    if ('label' in props.schema.properties) label = props.formData.label
+    title = label || props.formData.name || <span className="new-object">Unnamed item</span>
+  }
+
+  if (props.idSchema.$id === 'root' && props.formContext.formTitle)
+    title = props.formContext.formTitle
+
   if (props.idSchema.$id === 'root') {
     const projectMark = props.formContext.headerProjectName && (
       <span style={{ backgroundColor: 'var(--color-hl-project)' }}>
@@ -222,15 +232,24 @@ function ObjectFieldTemplate(props) {
         {envMark}
       </>
     )
+
+    contextMenuItems.push({
+      label: `Remove all ${props.formContext.level} overrides`,
+      disabled: !props.formContext.onRemoveAllOverrides,
+      command: () => {
+        props.formContext.onRemoveAllOverrides()
+      },
+    })
   }
 
-  if ('name' in props.schema.properties) {
-    let label = null
-    if ('label' in props.schema.properties) label = props.formData.label
-    title = label || props.formData.name || <span className="new-object">Unnamed item</span>
+  // Execute context menu
+
+  const onContextMenu = (e) => {
+    if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path || [])
+    if (!contextMenuItems?.length) return
+    e.preventDefault()
+    contextMenu(e, contextMenuItems)
   }
-  if (props.idSchema.$id === 'root' && props.formContext.formTitle)
-    title = props.formContext.formTitle
 
   return (
     <SettingsPanel
@@ -305,7 +324,11 @@ function FieldTemplate(props) {
       {
         label: 'Copy value',
         disabled: !props.formContext.onCopyValue,
-        command: () => props.formContext.onCopyValue(path),
+        // command: () => props.formContext.onCopyValue(path),
+        command: () => {
+          navigator.clipboard.writeText(JSON.stringify(props.formData, null, 2))
+          toast.success('Copied to clipboard')
+        },
       },
       {
         label: 'Paste value',

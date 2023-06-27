@@ -35,9 +35,8 @@ const getValueByPath = (obj, path) => {
   // path is an array of keys
   // e.g. ['a', 'b', 'c'] => obj.a.b.c
   // if any key is not found, return undefined
-  // if path is empty, return null (to indicate that the value is not set)
 
-  if (path.length === 0) return null
+  if (path?.length === 0) return obj
   let value = obj
   for (const key of path) {
     if (value === undefined) return undefined
@@ -48,7 +47,7 @@ const getValueByPath = (obj, path) => {
 
 const setValueByPath = (obj, path, value) => {
   const result = { ...obj }
-  if (path.length === 0) return
+  if (path?.length === 0) return value
   let target = result
   for (const key of path.slice(0, -1)) {
     if (target[key] === undefined) target[key] = {}
@@ -67,11 +66,21 @@ const sameKeysStructure = (obj1, obj2) => {
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false
   const obj1Keys = Object.keys(obj1)
   const obj2Keys = Object.keys(obj2)
-  if (obj1Keys.length !== obj2Keys.length) return false
+  if (obj1Keys.length !== obj2Keys.length) {
+    console.warn('Len cond failed on ', obj1Keys, obj2Keys)
+    return false
+  }
   for (const key of obj1Keys) {
-    if (!obj2Keys.includes(key)) return false
+    // Let's allow this and see what happens
+    // if (!obj2Keys.includes(key)) return false
+
     if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
-      if (!sameKeysStructure(obj1[key], obj2[key])) return false
+      if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) continue // just assume someone won't paste invalid array items here
+
+      if (!sameKeysStructure(obj1[key], obj2[key])) {
+        console.warn('Struct cond failed on ', obj1[key], obj2[key])
+        return false
+      }
     }
   }
   return true
@@ -280,7 +289,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
   }
 
-  const onRemoveOverrides = async (addon, siteId) => {
+  const onRemoveAllOverrides = async (addon, siteId) => {
     // Remove all overrides for this addon (within current project and environment)
     try {
       await deleteAddonSettings({
@@ -319,25 +328,31 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
   }
 
-  const onCopyValue = (addon, siteId, path) => {
-    const key = `${addon.name}|${addon.version}|${siteId || '_'}|${projectKey || '_'}`
-    const allData = localData[key]
-    if (!allData) {
-      toast.error('No data to copy')
-      return
-    }
-    const value = getValueByPath(allData, path)
-    if (value === undefined) {
-      toast.error('No data to copy')
-      return
-    }
+  // NOT NEEDED ANYMORE
+  // Fields use props.formData to copy data directly
+  //
+  // const onCopyValue = (addon, siteId, path) => {
+  //   const key = `${addon.name}|${addon.version}|${siteId || '_'}|${projectKey || '_'}`
+  //   const allData = localData[key]
+  //   if (!allData) {
+  //     toast.error('No data to copy')
+  //     return
+  //   }
+  //   const value = getValueByPath(allData, path)
+  //   if (value === undefined) {
+  //     toast.error('No data to copy')
+  //     return
+  //   }
+  //
+  //   const text = JSON.stringify(value, null, 2)
+  //   navigator.clipboard.writeText(text)
+  //   toast.success('Copied to clipboard')
+  // }
 
-    const text = JSON.stringify(value, null, 2)
-    navigator.clipboard.writeText(text)
-    toast.success('Copied to clipboard')
-  }
+  const pushValueToPath = (addon, siteId, path, value) => {
+    // Push a value to a given path of the settings
+    // Validate that the value is compatible with the existing value
 
-  const onPasteValue = async (addon, siteId, path) => {
     const key = `${addon.name}|${addon.version}|${siteId || '_'}|${projectKey || '_'}`
     const allData = localData[key]
     if (!allData) {
@@ -350,22 +365,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return
     }
 
-    const text = await navigator.clipboard.readText()
-
-    let newValue
-    try {
-      newValue = JSON.parse(text)
-    } catch (e) {
-      toast.error('Cannot paste, invalid clipboard contents')
-      return
-    }
-
-    if (!sameKeysStructure(oldValue, newValue)) {
-      toast.error('Cannot paste, incompatible data structure')
+    if (!sameKeysStructure(oldValue, value)) {
+      toast.error('Icompatible data structure')
       return
     }
 
     setLocalOverrides((overrides) => {
+      if (!path?.length) overrides //FIXME
       const newOverrides = { ...overrides }
       newOverrides[key] = newOverrides[key] || []
       newOverrides[key].push(path)
@@ -374,10 +380,22 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
     setLocalData((localData) => {
       const newData = { ...localData }
-      const nk = setValueByPath(localData[key], path, newValue)
+      const nk = setValueByPath(localData[key], path, value)
       newData[key] = nk
       return newData
     })
+  }
+
+  const onPasteValue = async (addon, siteId, path) => {
+    const text = await navigator.clipboard.readText()
+    let value
+    try {
+      value = JSON.parse(text)
+    } catch (e) {
+      toast.error('Cannot paste, invalid clipboard contents')
+      return
+    }
+    pushValueToPath(addon, siteId, path, value)
   } // paste
 
   //
@@ -532,8 +550,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                             headerEnvironment: environment,
                             onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
                             onPinOverride: (path) => onPinOverride(addon, siteId, path),
-                            onRemoveOverrides: () => onRemoveOverrides(addon, siteId),
-                            onCopyValue: (path, value) => onCopyValue(addon, siteId, path, value),
+                            onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
+                            // DEPRECATED: onCopyValue: (path, value) => onCopyValue(addon, siteId, path, value),
                             onPasteValue: (path) => onPasteValue(addon, siteId, path),
                           }}
                         />
