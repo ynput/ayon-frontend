@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import EntityDetail from '/src/containers/entityDetail'
@@ -366,8 +366,52 @@ const Products = () => {
   // Handlers
   //
 
-  const handleGridContext = () => {
-    // set selection and open context menu
+  // create empty context menu model
+  // we will populate it later
+  const [showTableContextMenu] = useCreateContext([])
+
+  // context menu model for hiding columns
+  const createTableHeaderModel = useCallback(
+    (name) => {
+      const oldArray = isMultiSelected ? shownColumnsMultiFocused : shownColumnsSingleFocused
+      const newArray = oldArray.filter((item) => item !== name)
+      const disabled = newArray.length === 0
+      const command = () =>
+        isMultiSelected
+          ? setShownColumnsMultiFocused(newArray)
+          : setShownColumnsSingleFocused(newArray)
+
+      return [
+        {
+          label: 'Hide column',
+          icon: 'visibility_off',
+          disabled,
+          command,
+        },
+      ]
+    },
+    [
+      isMultiSelected,
+      shownColumnsMultiFocused,
+      shownColumnsSingleFocused,
+      setShownColumnsMultiFocused,
+      setShownColumnsSingleFocused,
+    ],
+  )
+
+  const handleTablePanelContext = (e) => {
+    // find the th that was clicked
+    const th = e.target.closest('th')
+
+    // return is no th was found
+    if (!th) return
+
+    // get the first class of the th (field name)
+    const field = th.classList[0]
+    if (field) {
+      // show context menu
+      showTableContextMenu(e, createTableHeaderModel(field))
+    }
   }
 
   // Set the breadcrumbs when a row is clicked
@@ -465,7 +509,7 @@ const Products = () => {
           setGrouped={setGrouped}
         />
       </Toolbar>
-      <TablePanel style={{ overflow: 'hidden' }}>
+      <TablePanel style={{ overflow: 'hidden' }} onContextMenu={handleTablePanelContext}>
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}
@@ -473,7 +517,6 @@ const Products = () => {
           visible={!!showDetail}
           onHide={() => setShowDetail(false)}
           versionOverrides={versionOverrides}
-          onContext={handleGridContext}
         />
         {viewMode !== 'list' && (
           <ProductsGrid
