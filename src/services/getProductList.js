@@ -63,6 +63,7 @@ const parseProductData = (data) => {
       versionName: vers && vers.name ? vers.name : '',
       versionStatus: vers.status || null,
       taskId: vers && vers.taskId ? vers.taskId : null,
+      taskName: vers && vers.task ? vers.task.name : null,
       frames: parseProductFrames(product),
       createdAt: vers ? vers.createdAt : product.createdAt,
     }
@@ -97,6 +98,9 @@ query ProductsList($projectName: String!, $ids: [String!]!, $versionOverrides: [
                           author
                           createdAt
                           taskId
+                          task {
+                            name
+                          }
                           status
                           attrib {
                               fps
@@ -116,6 +120,9 @@ query ProductsList($projectName: String!, $ids: [String!]!, $versionOverrides: [
                         author
                         createdAt
                         taskId
+                        task {
+                          name
+                        }
                         status
                         attrib {
                             fps
