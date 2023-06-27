@@ -170,7 +170,7 @@ const getEntity = ayonApi.injectEndpoints({
         result
           ? [
               ...result.map(({ node }) => {
-                console.log({ type: type, id: node.id })
+                // console.log({ type: type, id: node.id })
                 return { type: type, id: node.id }
               }),
             ]

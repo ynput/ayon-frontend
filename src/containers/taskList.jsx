@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
@@ -25,6 +25,8 @@ const TaskList = ({ style = {} }) => {
   const userName = useSelector((state) => state.user.name)
 
   const [showDetail, setShowDetail] = useState(false)
+
+  const tableRef = useRef(null)
 
   //
   // Hooks
@@ -103,6 +105,22 @@ const TaskList = ({ style = {} }) => {
     dispatch(setUri(uri))
   }
 
+  const handleDeselect = (e) => {
+    const tableRefElement = tableRef.current?.getElement()
+
+    const tableHeader = tableRefElement?.querySelector('table')
+    const table = tableRefElement?.querySelector('.p-treetable-scrollable-body-table')
+
+    // check if e.target is inside either table or tableHeader
+    // do nothing
+    if (tableHeader?.contains(e.target) || table?.contains(e.target)) return
+
+    // deselect all
+    dispatch(setFocusedTasks([]))
+    // remove paring
+    dispatch(setPairing([]))
+  }
+
   // CONTEXT MENU
   const ctxMenuItems = [
     {
@@ -153,6 +171,8 @@ const TaskList = ({ style = {} }) => {
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             onRowClick={onRowClick}
             className={isFetching ? 'table-loading' : undefined}
+            onClick={handleDeselect}
+            ref={tableRef}
           >
             <Column field="name" header="Task" expander="true" body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
