@@ -162,6 +162,12 @@ input:-webkit-autofill:focus {
   border-left: 4px solid var(--color-hl-studio);
 }
 
+.p-treetable .p-treetable-tbody {
+  tr.not-focused-task {
+    opacity: 0.5;
+  }
+}
+
 .table-editor {
   margin: 0;
   .p-inputwrapper {

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
+import { useSelector } from 'react-redux'
 
 const ProductsList = ({
   data,
@@ -14,6 +15,11 @@ const ProductsList = ({
   columns,
   isLoading,
 }) => {
+  // get focused task ids
+  const focusedTasks = useSelector((state) => state.context.focused.tasks)
+  // get focused type
+  const focusedType = useSelector((state) => state.context.focused.type)
+
   const handleColumnReorder = (e) => {
     const localStorageOrder = e.columns.reduce(
       (acc, cur, i) => ({ ...acc, [cur.props.field]: i }),
@@ -48,6 +54,14 @@ const ProductsList = ({
       selectionKeys={selectedRows}
       onSelectionChange={onSelectionChange}
       onRowClick={onRowClick}
+      rowClassName={(rowData) => {
+        if (!focusedTasks.length || focusedType !== 'task') return {}
+        const matchingTask = focusedTasks.some((id) => id === rowData.data.taskId)
+        return {
+          'focused-task': matchingTask,
+          'not-focused-task': !matchingTask,
+        }
+      }}
       onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
       onContextMenuSelectionChange={onContextMenuSelectionChange}
       onColumnResizeEnd={setColumnWidths}
