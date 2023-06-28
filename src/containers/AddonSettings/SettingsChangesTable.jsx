@@ -35,6 +35,8 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
       if (siteName) name += ` @${siteName}`
 
       const addonChanges = changes[addonKey]
+      if (!addonChanges?.length) continue
+
       const children = addonChanges.map((change) => ({
         key: `${addonKey}|${change.join('|')}`,
         expanded: true,

@@ -321,7 +321,6 @@ function FieldTemplate(props) {
       {
         label: 'Copy value',
         disabled: !props.formContext.onCopyValue,
-        // command: () => props.formContext.onCopyValue(path),
         command: () => {
           navigator.clipboard.writeText(JSON.stringify(props.formData, null, 2))
           toast.success('Copied to clipboard')

@@ -126,7 +126,6 @@ const compareObjects = (obj1, obj2, path = []) => {
 const AddonSettings = ({ projectName, showSites = false }) => {
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
-  const [reloadTrigger, setReloadTrigger] = useState({})
   const [originalData, setOriginalData] = useState({})
   const [localData, setLocalData] = useState({})
   const [localOverrides, setLocalOverrides] = useState({})
@@ -208,15 +207,24 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }
 
   const reloadAddons = (keys) => {
-    setReloadTrigger((reloadTrigger) => {
-      for (const key of keys) {
-        reloadTrigger[key] = new Date().getTime()
+    setLocalData((localData) => {
+      const newData = {}
+      for (const key in localData) {
+        if (keys.includes(key)) {
+          continue
+        }
+        newData[key] = localData[key]
       }
-      return { ...reloadTrigger }
+      return newData
     })
   }
 
   const onAddonChanged = (addonName) => {
+    // TODO: deprecated?
+    // not sure why this is here. I think it was used to reload addons when
+    // an addon was changed ouside the form (e.g. copying settings using addon list ctx menu)
+    // But we should probably get rid of outside changes
+    console.warn('Called onAddonChanged. This is deprecated.')
     for (const key in localData) {
       if (addonName === key.split('|')[0]) {
         reloadAddons([key])
@@ -229,9 +237,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     let allOk = true
 
     for (const key in localOverrides) {
-      if (!localOverrides[key].length) continue
+      if (!localOverrides[key]?.length) continue
       const [addonName, addonVersion, siteId, projectName] = key.split('|')
-      if (projectName !== projectKey) continue
 
       try {
         const payload = {
@@ -252,15 +259,12 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       }
     } // for key in localData
 
-    setLocalData((localData) => {
-      const newData = { ...localData }
-      updatedKeys.forEach((key) => delete newData[key])
-      return newData
-    })
-
     setLocalOverrides((overrides) => {
-      const newOverrides = { ...overrides }
-      updatedKeys.forEach((key) => delete newOverrides[key])
+      const newOverrides = {}
+      for (const key in overrides) {
+        if (updatedKeys.includes(key)) continue
+        newOverrides[key] = overrides[key]
+      }
       return newOverrides
     })
 
@@ -544,7 +548,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           }
                           localData={localData[key]}
                           changedKeys={localOverrides[key]}
-                          reloadTrigger={reloadTrigger[key]}
                           currentSelection={currentSelection}
                           onSelect={setCurrentSelection}
                           projectName={projectName}
