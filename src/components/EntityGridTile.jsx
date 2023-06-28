@@ -194,7 +194,7 @@ const EntityGridTile = ({
         className="skeleton"
       >
         <ThumbnailStyled>
-          <Thumbnail isLoading className={'thumbnail'} />
+          <Thumbnail isLoading className={'thumbnail'} disabled={isError} />
           <div>
             <IconStyled className="material-symbols-outlined"></IconStyled>
             <IconStyled className="material-symbols-outlined"></IconStyled>

@@ -3,6 +3,11 @@
   --color-hl-site: #efa0a8;
   --color-hl-02: #53d2f9;
 }
+
+input {
+  color: var(--color-text);
+}
+
 #root {
   position: absolute;
   overflow: hidden;
@@ -136,13 +141,33 @@ input:-webkit-autofill:focus {
 }
 .editor-field {
   &.changed {
-    border: 1px solid var(--color-hl-changed);
+    outline: 1px solid var(--color-hl-changed);
+    background-color: var(--color-hl-changed);
+    border-radius: var(--border-radius);
   }
   &.inherited {
     color: var(--color-grey-06);
     font-style: italic;
   }
 }
+
+.p-treetable .p-treetable-tbody > tr.changed {
+  outline: 2px solid var(--color-hl-changed);
+  outline-offset: -2px;
+}
+
+.p-treetable .p-treetable-tbody > tr.new {
+  outline: 2px solid var(--color-hl-studio);
+  outline-offset: -2px;
+  border-left: 4px solid var(--color-hl-studio);
+}
+
+.p-treetable .p-treetable-tbody {
+  tr.not-focused-task {
+    opacity: 0.5;
+  }
+}
+
 .table-editor {
   margin: 0;
   .p-inputwrapper {
@@ -292,7 +317,7 @@ input:-webkit-autofill:focus {
 // remove text decoration from a tags
 a {
   text-decoration: none;
-  color: initial;
+  color: var(--color-text);
 }
 
 .p-tabview {

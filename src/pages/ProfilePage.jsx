@@ -13,6 +13,7 @@ import axios from 'axios'
 import { useDispatch } from 'react-redux'
 import { logout } from '../features/user'
 import { ayonApi } from '../services/ayon'
+import SaveButton from '../components/SaveButton'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -44,7 +45,7 @@ const ProfilePage = () => {
   const [showSetPassword, setShowSetPassword] = useState(false)
 
   // UPDATE USER DATA
-  const [updateUser] = useUpdateUserMutation()
+  const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation()
 
   // build initial form data
   const initialFormData = {}
@@ -163,8 +164,13 @@ const ProfilePage = () => {
             <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
           </Panel>
           <PanelButtonsStyled>
-            <Button onClick={onSave} label="Save" icon="check" disabled={!changesMade} />
             <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
+            <SaveButton
+              onClick={onSave}
+              label="Save"
+              active={changesMade}
+              saving={isUpdatingUser}
+            />
           </PanelButtonsStyled>
           <PanelButtonsStyled>
             <Button

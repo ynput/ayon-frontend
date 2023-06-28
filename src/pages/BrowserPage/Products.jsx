@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import EntityDetail from '/src/containers/entityDetail'
@@ -13,7 +13,6 @@ import {
   setFocusedProducts,
   setSelectedVersions,
   setUri,
-  setPairing,
   productSelected,
   onFocusChanged,
 } from '/src/features/context'
@@ -36,16 +35,22 @@ const Products = () => {
   const dispatch = useDispatch()
 
   // context
-  const productTypes = useSelector((state) => state.project.productTypes)
-
-  const projectName = useSelector((state) => state.project.name)
-  const focusedVersions = useSelector((state) => state.context.focused.versions)
-  const focusedFolders = useSelector((state) => state.context.focused.folders)
-  const statusesObject = useSelector((state) => state.project.statuses)
+  // project redux
+  const {
+    productTypes,
+    name: projectName,
+    statuses: statusesObject,
+  } = useSelector((state) => state.project)
+  // focused redux
+  const {
+    versions: focusedVersions,
+    folders: focusedFolders,
+    products: focusedProducts,
+    lastFocused,
+  } = useSelector((state) => state.context.focused)
+  // context redux
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
-  const focusedProducts = useSelector((state) => state.context.focused.products)
   const pairing = useSelector((state) => state.context.pairing)
-  const lastFocused = useSelector((state) => state.context.focused.lastFocused)
 
   const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
@@ -158,100 +163,116 @@ const Products = () => {
     }
   }
 
-  let columns = [
-    {
-      field: 'name',
-      header: 'Product',
-      width: 200,
-      body: (node) => {
-        let className = ''
-        let i = 0
-        for (const pair of pairing) {
-          i++
-          if (pair.taskId === node.data.taskId) {
-            className = `row-hl-${i}`
-            break
-          }
-        }
-
-        const icon = node.data.isGroup
-          ? 'folder'
-          : productTypes[node.data.productType]?.icon || 'inventory_2'
-
-        return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
-      },
-    },
-    {
-      field: 'versionStatus',
-      header: 'Status',
-      width: 150,
-      style: { overflow: 'visible' },
-      body: (node) => {
-        if (node.data.isGroup) return ''
-        const statusMaxWidth = 120
-        return (
-          <StatusSelect
-            value={node.data.versionStatus}
-            size={
-              columnsWidths['status'] < statusMaxWidth
-                ? columnsWidths['status'] < 60
-                  ? 'icon'
-                  : 'short'
-                : 'full'
+  let columns = useMemo(
+    () => [
+      {
+        field: 'name',
+        header: 'Product',
+        width: 200,
+        body: (node) => {
+          let className = ''
+          let i = 0
+          for (const pair of pairing) {
+            i++
+            if (pair.taskId === node.data.taskId) {
+              className = `row-hl-${i}`
+              break
             }
-            onChange={(v) => handleStatusChange(v, node.data.id)}
-            multipleSelected={focusedProducts.length}
-            onOpen={() => handleStatusOpen(node.data.id)}
-            style={{ maxWidth: '100%' }}
-          />
-        )
+          }
+
+          const icon = node.data.isGroup
+            ? 'folder'
+            : productTypes[node.data.productType]?.icon || 'inventory_2'
+
+          return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
+        },
       },
-    },
-    {
-      field: 'folder',
-      header: 'Folder',
-      width: 200,
-    },
-    {
-      field: 'productType',
-      header: 'Product type',
-      width: 120,
-    },
-    {
-      field: 'versionList',
-      header: 'Version',
-      width: 70,
-      body: (node) =>
-        VersionList(node.data, (productId, versionId) => {
-          // TODO changing version doesn't auto update version detail
-          let newSelection = { ...selectedVersions[node.data.folderId] }
-          newSelection[productId] = versionId
-          dispatch(
-            setSelectedVersions({
-              ...selectedVersions,
-              [node.data.folderId]: newSelection,
-            }),
+      {
+        field: 'versionStatus',
+        header: 'Version Status',
+        width: 150,
+        style: { overflow: 'visible' },
+        body: (node) => {
+          if (node.data.isGroup) return ''
+          const statusMaxWidth = 120
+          return (
+            <StatusSelect
+              value={node.data.versionStatus}
+              size={
+                columnsWidths['versionStatus'] < statusMaxWidth
+                  ? columnsWidths['versionStatus'] < 60
+                    ? 'icon'
+                    : 'short'
+                  : 'full'
+              }
+              onChange={(v) => handleStatusChange(v, node.data.id)}
+              multipleSelected={focusedProducts.length}
+              onOpen={() => handleStatusOpen(node.data.id)}
+              style={{ maxWidth: '100%' }}
+            />
           )
-          setFocusOnReload(versionId)
-        }), // end VersionList
-    },
-    {
-      field: 'createdAt',
-      header: 'Created At',
-      width: 150,
-      body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
-    },
-    {
-      field: 'author',
-      header: 'Author',
-      width: 120,
-    },
-    {
-      field: 'frames',
-      header: 'Frames',
-      width: 120,
-    },
-  ]
+        },
+      },
+      {
+        field: 'productType',
+        header: 'Product type',
+        width: 120,
+      },
+      {
+        field: 'taskName',
+        header: 'Task',
+        width: 120,
+      },
+      {
+        field: 'folder',
+        header: 'Folder',
+        width: 120,
+      },
+      {
+        field: 'versionList',
+        header: 'Version',
+        width: 70,
+        body: (node) =>
+          VersionList(node.data, (productId, versionId) => {
+            let newSelection = { ...selectedVersions[node.data.folderId] }
+            newSelection[productId] = versionId
+            dispatch(
+              setSelectedVersions({
+                ...selectedVersions,
+                [node.data.folderId]: newSelection,
+              }),
+            )
+            setFocusOnReload(versionId)
+          }), // end VersionList
+      },
+      {
+        field: 'createdAt',
+        header: 'Created At',
+        width: 150,
+        body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
+      },
+      {
+        field: 'author',
+        header: 'Author',
+        width: 120,
+      },
+      {
+        field: 'frames',
+        header: 'Frames',
+        width: 120,
+      },
+    ],
+    [
+      columnsWidths,
+      focusedProducts,
+      pairing,
+      productTypes,
+      selectedVersions,
+      handleStatusChange,
+      handleStatusOpen,
+      setFocusOnReload,
+    ],
+  )
 
   const filterOptions = columns.map(({ field, header }) => ({
     value: field,
@@ -320,29 +341,6 @@ const Products = () => {
     return productIds
   }, [productData, focusedVersions])
 
-  // Since using dispatch in useMemo causes errors,
-  // we need to use useEffect to update task-version pairing
-  // in the context
-
-  useEffect(() => {
-    if (!focusedVersions.length) return
-    const pairs = []
-    for (const sdata of productData) {
-      if (focusedVersions.includes(sdata.versionId)) {
-        if (sdata.taskId) {
-          pairs.push({
-            taskId: sdata.taskId,
-            folderId: sdata.folderId,
-            versionId: sdata.versionId,
-          })
-        }
-      }
-    }
-    dispatch(setPairing(pairs))
-    // shut up about missing dispatch dependency
-    // eslint-disable-next-line
-  }, [productData, focusedVersions])
-
   // Transform the product data into a TreeTable compatible format
   // by grouping the data by the product name
 
@@ -368,8 +366,52 @@ const Products = () => {
   // Handlers
   //
 
-  const handleGridContext = () => {
-    // set selection and open context menu
+  // create empty context menu model
+  // we will populate it later
+  const [showTableContextMenu] = useCreateContext([])
+
+  // context menu model for hiding columns
+  const createTableHeaderModel = useCallback(
+    (name) => {
+      const oldArray = isMultiSelected ? shownColumnsMultiFocused : shownColumnsSingleFocused
+      const newArray = oldArray.filter((item) => item !== name)
+      const disabled = newArray.length === 0
+      const command = () =>
+        isMultiSelected
+          ? setShownColumnsMultiFocused(newArray)
+          : setShownColumnsSingleFocused(newArray)
+
+      return [
+        {
+          label: 'Hide column',
+          icon: 'visibility_off',
+          disabled,
+          command,
+        },
+      ]
+    },
+    [
+      isMultiSelected,
+      shownColumnsMultiFocused,
+      shownColumnsSingleFocused,
+      setShownColumnsMultiFocused,
+      setShownColumnsSingleFocused,
+    ],
+  )
+
+  const handleTablePanelContext = (e) => {
+    // find the th that was clicked
+    const th = e.target.closest('th')
+
+    // return is no th was found
+    if (!th) return
+
+    // get the first class of the th (field name)
+    const field = th.classList[0]
+    if (field) {
+      // show context menu
+      showTableContextMenu(e, createTableHeaderModel(field))
+    }
   }
 
   // Set the breadcrumbs when a row is clicked
@@ -467,7 +509,7 @@ const Products = () => {
           setGrouped={setGrouped}
         />
       </Toolbar>
-      <TablePanel style={{ overflow: 'hidden' }}>
+      <TablePanel style={{ overflow: 'hidden' }} onContextMenu={handleTablePanelContext}>
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}
@@ -475,7 +517,6 @@ const Products = () => {
           visible={!!showDetail}
           onHide={() => setShowDetail(false)}
           versionOverrides={versionOverrides}
-          onContext={handleGridContext}
         />
         {viewMode !== 'list' && (
           <ProductsGrid
