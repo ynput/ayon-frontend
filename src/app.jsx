@@ -68,6 +68,7 @@ const App = () => {
           ayonClient.settings = {
             attributes: response.attributes,
             sites: response.sites,
+            version: response.version,
           }
         }
       })

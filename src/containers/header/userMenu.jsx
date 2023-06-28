@@ -1,3 +1,4 @@
+import ayonClient from '/src/ayon'
 import axios from 'axios'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Divider, Spacer } from '@ynput/ayon-react-components'
@@ -37,6 +38,7 @@ const UserMenu = ({ visible, onHide }) => {
   const isAdmin = user.data.isAdmin
 
   const divider = <Divider style={{ margin: '10px 0' }} />
+  const versionInfo = <Divider>{`v${ayonClient.settings?.version}`}</Divider>
   const spacer = <Spacer />
 
   const allLinks = [
@@ -73,6 +75,10 @@ const UserMenu = ({ visible, onHide }) => {
     {
       node: spacer,
     },
+    {
+      node: versionInfo,
+    },
+    {},
   ]
 
   // add protected links if user is manager or admin
