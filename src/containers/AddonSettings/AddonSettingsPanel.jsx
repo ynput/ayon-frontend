@@ -14,7 +14,6 @@ const AddonSettingsPanel = ({
   addon,
   localData,
   changedKeys,
-  reloadTrigger,
   projectName = null,
   siteId = null,
   environment,
@@ -23,6 +22,7 @@ const AddonSettingsPanel = ({
   onSetChangedKeys = () => {},
   onSelect = () => {},
   currentSelection = null,
+  context,
 }) => {
   const dispatch = useDispatch()
 
@@ -70,19 +70,25 @@ const AddonSettingsPanel = ({
     siteId,
   })
 
-  const reload = async () => {
-    await refetchSchema()
-    await refetchOverrides()
-    //onChange({})
-    const res = await refetchSettings()
-    onChange(res.data)
-    onLoad(res.data)
+  const reload = async (force = false) => {
+    await refetchSchema().unwrap()
+    await refetchOverrides().unwrap()
+    const res = await refetchSettings().unwrap()
+    if (force || !localData) {
+      onChange(res)
+    }
+    onLoad(res)
   }
 
   useEffect(() => {
     reload()
     // eslint-disable-next-line no-unused-vars
-  }, [addon.name, addon.version, reloadTrigger, projectName, environment, siteId])
+  }, [addon.name, addon.version, projectName, environment, siteId]) //TODO: environment
+
+  useEffect(() => {
+    if (localData) return
+    reload(true)
+  }, [localData])
 
   const breadcrumbs = useMemo(() => {
     if (!currentSelection) return null
@@ -118,7 +124,8 @@ const AddonSettingsPanel = ({
   }
 
   const editor = useMemo(() => {
-    if (!(schema && localData && overrides)) return <></>
+    if (schemaLoading || settingsLoading || overridesLoading) return <>Loading...</>
+    if (!(schema && localData && overrides)) return <>Waiting for data...</>
     return (
       <SettingsEditor
         schema={schema}
@@ -131,9 +138,10 @@ const AddonSettingsPanel = ({
         onSetBreadcrumbs={onSetBreadcrumbs}
         breadcrumbs={breadcrumbs}
         level={settingsLevel}
+        context={context}
       />
     )
-  }, [schema, localData, overrides, breadcrumbs])
+  }, [schema, localData, overrides, breadcrumbs, schemaLoading, settingsLoading, overridesLoading])
 
   if (schemaLoading || settingsLoading || overridesLoading) {
     return `Loading... ${projectName}`

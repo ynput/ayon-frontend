@@ -2,7 +2,6 @@ import Form from '@rjsf/core'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 
-import { Tooltip } from 'primereact/tooltip'
 import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
 import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
 import './SettingsEditor.sass'
@@ -82,6 +81,7 @@ const SettingsEditor = ({
   onSetChangedKeys,
   level,
   changedKeys,
+  context,
 }) => {
   if (!schema) {
     // TODO: maybe a spinner or something?
@@ -116,18 +116,19 @@ const SettingsEditor = ({
       overrides: formOverrides,
       changedKeys: changedKeys || [],
       level: level || 'studio',
-
-      onSetBreadcrumbs: null,
-      onSetChangedKeys: null,
-      breadcrumbs: [],
     }
   }, [schema, formData, overrides, level, changedKeys])
 
-  //console.log("formContext", formContext)
+  // we need to add the props.context to form context independently
+  // otherwise it breaks memoized overrides
 
-  formContext.onSetBreadcrumbs = onSetBreadcrumbs || noop
-  formContext.onSetChangedKeys = onSetChangedKeys || noop
-  formContext.breadcrumbs = breadcrumbs || []
+  const fullContext = {
+    ...context,
+    ...formContext,
+    onSetChangedKeys: onSetChangedKeys || noop,
+    onSetBreadcrumbs: onSetBreadcrumbs || noop,
+    breadcrumbs: breadcrumbs || [],
+  }
 
   const currentId = breadcrumbs && `root_${breadcrumbs.join('_')}`
 
@@ -137,7 +138,7 @@ const SettingsEditor = ({
         schema={schema}
         uiSchema={uiSchema}
         formData={formData}
-        formContext={formContext}
+        formContext={fullContext}
         widgets={widgets}
         liveValidate={true}
         FieldTemplate={FieldTemplate}
@@ -147,7 +148,6 @@ const SettingsEditor = ({
       >
         <div />
       </Form>
-      <Tooltip target=".form-inline-field-label" />
     </FormWrapper>
   )
 }

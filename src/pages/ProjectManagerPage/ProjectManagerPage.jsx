@@ -6,7 +6,7 @@ import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
-import AddonSettings from '/src/containers/addonSettings'
+import AddonSettings from '/src/containers/AddonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
@@ -17,6 +17,22 @@ import { selectProject } from '/src/features/context'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
+import ProjectManagerPageLayout from './ProjectManagerPageLayout'
+
+const ProjectSettings = ({ projectList, projectManager, projectName }) => {
+  return (
+    <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
+      <AddonSettings projectName={projectName} />
+    </ProjectManagerPageLayout>
+  )
+}
+const SiteSettings = ({ projectList, projectManager, projectName }) => {
+  return (
+    <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
+      <AddonSettings showSites projectName={projectName} />
+    </ProjectManagerPageLayout>
+  )
+}
 
 const ProjectManagerPage = () => {
   const navigate = useNavigate()
@@ -148,8 +164,8 @@ const ProjectManagerPage = () => {
       >
         {module === 'dashboard' && <ProjectDashboard />}
         {module === 'anatomy' && <ProjectAnatomy />}
-        {module === 'projectSettings' && <AddonSettings />}
-        {module === 'siteSettings' && <AddonSettings showSites />}
+        {module === 'projectSettings' && <ProjectSettings />}
+        {module === 'siteSettings' && <SiteSettings />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
       </ProjectManagerPageContainer>

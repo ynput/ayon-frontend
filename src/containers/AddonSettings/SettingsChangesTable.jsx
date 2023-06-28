@@ -4,6 +4,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
+import { Badge, BadgeWrapper } from '/src/components/Badge'
 
 const SettingsChangesTable = ({ changes, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
@@ -30,9 +31,12 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
       const projectName = _projectName === '_' ? null : _projectName
 
       let name = `${addonName} ${addonVersion}`
-      if (siteName) name += ` (${siteName})`
+      if (projectName) name += ` (${projectName})`
+      if (siteName) name += ` @${siteName}`
 
       const addonChanges = changes[addonKey]
+      if (!addonChanges?.length) continue
+
       const children = addonChanges.map((change) => ({
         key: `${addonKey}|${change.join('|')}`,
         expanded: true,
@@ -61,6 +65,30 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
     return result
   }, [changes])
 
+  const changeNameRenderer = (rowData) => {
+    if (rowData.children) {
+      let projectBadge = null
+      if (rowData.data.projectName) {
+        projectBadge = <Badge hl="project">{rowData.data.projectName}</Badge>
+      }
+      let siteBadge = null
+      if (rowData.data.siteName) {
+        siteBadge = <Badge hl="site">{rowData.data.siteName}</Badge>
+      }
+      return (
+        <div style={{ display: 'inline-flex', flexDirecion: 'row' }}>
+          {rowData.data.addonName} {rowData.data.addonVersion}
+          <BadgeWrapper>
+            {projectBadge}
+            {siteBadge}
+          </BadgeWrapper>
+        </div>
+      )
+    }
+
+    return rowData.data.path.join(' / ')
+  }
+
   const ctxMenuItems = useMemo(() => {
     let result = []
 
@@ -72,8 +100,6 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
           const result = {}
           for (const addonKey in changes) {
             console.log('Checking', addonKey)
-
-            console.log('changed', addonKey)
             for (const change of changes[addonKey]) {
               const key = `${addonKey}|${change.join('|')}`
               if (key in selectedKeys) {
@@ -122,7 +148,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
           scrollable="true"
           scrollHeight="100%"
         >
-          <Column header="Name" field="name" expander />
+          <Column header="Name" body={changeNameRenderer} field="key" expander />
           <Column header="" body={actionRenderer} style={{ width: 28 }} />
         </TreeTable>
       </TablePanel>

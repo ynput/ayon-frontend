@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
+import { toast } from 'react-toastify'
 import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './SettingsPanel'
 import styled from 'styled-components'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
 import arrayEquals from '/src/helpers/arrayEquals'
+import { Badge, BadgeWrapper } from '/src/components/Badge'
 
 const FormArrayField = styled.div`
   flex-grow: 1;
@@ -55,6 +58,7 @@ const arrayContainsArray = (arr1, arr2) => {
 }
 
 function ObjectFieldTemplate(props) {
+  const [contextMenu] = useCreateContext([])
   let className = 'form-object-field'
   if (props.schema.layout) className += ` layout-${props.schema.layout}`
 
@@ -174,11 +178,74 @@ function ObjectFieldTemplate(props) {
   // In case of "pseudo-dicts" (array of objects with a "name" attribute)
   // use the "name" attributeas the title
 
+  const contextMenuItems = [
+    {
+      label: 'Copy',
+      command: () => {
+        navigator.clipboard.writeText(JSON.stringify(props.formData, null, 2))
+        toast.success('Copied to clipboard')
+      },
+    },
+    {
+      label: 'Paste',
+      disabled: !props.formContext.onPasteValue,
+      command: () => {
+        props.formContext.onPasteValue(path || [])
+      },
+    },
+  ]
+
+  // Title + handle root object
+
   let title = props.title
   if ('name' in props.schema.properties) {
     let label = null
     if ('label' in props.schema.properties) label = props.formData.label
     title = label || props.formData.name || <span className="new-object">Unnamed item</span>
+  }
+
+  if (props.idSchema.$id === 'root' && props.formContext.formTitle)
+    title = props.formContext.formTitle
+
+  if (props.idSchema.$id === 'root') {
+    const projectMark = props.formContext.headerProjectName && (
+      <Badge hl="project">{props.formContext.headerProjectName}</Badge>
+    )
+    const siteMark = props.formContext.headerSiteId && (
+      <Badge hl="site">{props.formContext.headerSiteId}</Badge>
+    )
+
+    const envMark = props.formContext.headerEnvironment && (
+      <Badge hl="variant">{props.formContext.headerEnvironment}</Badge>
+    )
+
+    title = (
+      <>
+        {title}
+        <BadgeWrapper>
+          {projectMark}
+          {siteMark}
+          {envMark}
+        </BadgeWrapper>
+      </>
+    )
+
+    contextMenuItems.push({
+      label: `Remove all ${props.formContext.level} overrides`,
+      disabled: !props.formContext.onRemoveAllOverrides,
+      command: () => {
+        props.formContext.onRemoveAllOverrides()
+      },
+    })
+  }
+
+  // Execute context menu
+
+  const onContextMenu = (e) => {
+    if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path || [])
+    if (!contextMenuItems?.length) return
+    e.preventDefault()
+    contextMenu(e, contextMenuItems)
   }
 
   return (
@@ -191,6 +258,7 @@ function ObjectFieldTemplate(props) {
       description={shortDescription}
       className={`obj-override-${overrideLevel}`}
       enabledToggler={enabledToggler}
+      onContextMenu={onContextMenu}
     >
       {fields}
     </SettingsPanel>
@@ -198,6 +266,8 @@ function ObjectFieldTemplate(props) {
 }
 
 function FieldTemplate(props) {
+  const [contextMenu] = useCreateContext([])
+
   // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
   if (!(props.schema.scope || ['studio', 'project']).includes(props.formContext.level)) return null
 
@@ -232,6 +302,44 @@ function FieldTemplate(props) {
 
   if (override) {
     if (override?.inGroup) labelStyle.fontStyle = 'italic'
+  }
+
+  // Context menu
+
+  const contextMenuModel = useMemo(() => {
+    let model = [
+      {
+        label: `Remove ${props.formContext.level} override`,
+        disabled: overrideLevel !== props.formContext.level || !props.formContext.onRemoveOverride,
+        command: () => props.formContext.onRemoveOverride(path),
+      },
+      {
+        label: `Pin current value as ${props.formContext.level} override`,
+        disabled: overrideLevel === props.formContext.level || !props.formContext.onRemoveOverride,
+        command: () => props.formContext.onPinOverride(path),
+      },
+      {
+        label: 'Copy value',
+        disabled: !props.formContext.onCopyValue,
+        command: () => {
+          navigator.clipboard.writeText(JSON.stringify(props.formData, null, 2))
+          toast.success('Copied to clipboard')
+        },
+      },
+      {
+        label: 'Paste value',
+        disabled: !props.formContext.onPasteValue,
+        command: () => props.formContext.onPasteValue(path),
+      },
+    ]
+
+    return model
+  }, [override, path])
+
+  const onContextMenu = (e) => {
+    e.preventDefault()
+    contextMenu(e, contextMenuModel)
+    if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
   }
 
   // Array fields
@@ -294,7 +402,7 @@ function FieldTemplate(props) {
   return (
     <>
       {divider}
-      <div className={className} data-fieldid={props.id}>
+      <div className={className} data-fieldid={props.id} onContextMenu={onContextMenu}>
         {props.label && (
           <div className={`form-inline-field-label ${overrideLevel}`}>
             <span

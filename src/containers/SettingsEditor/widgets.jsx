@@ -263,6 +263,7 @@ const TextWidget = (props) => {
   // Disable propagation of enter key
   // to prevent form submission. Just commit the change instead.
   opts.onKeyDown = (e) => {
+    if (Input === InputTextarea) return
     if (e.keyCode === 13) {
       e.preventDefault()
       e.stopPropagation()

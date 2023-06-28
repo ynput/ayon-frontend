@@ -8,7 +8,7 @@ import SettingsAddon from './SettingsAddon'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const AddonInstall = lazy(() => import('./AddonInstall'))
-const AddonVersions = lazy(() => import('./AddonVersions'))
+const Bundles = lazy(() => import('./Bundles'))
 const StudioSettings = lazy(() => import('./StudioSettings'))
 const SiteSettings = lazy(() => import('./SiteSettings'))
 const UsersSettings = lazy(() => import('./UsersSettings'))
@@ -54,10 +54,10 @@ const SettingsPage = () => {
     switch (module) {
       case 'addonInstall':
         return <AddonInstall />
-      case 'addonVersions':
-        return <AddonVersions />
       case 'anatomyPresets':
         return <AnatomyPresets />
+      case 'bundles':
+        return <Bundles />
       case 'studio':
         return <StudioSettings />
       case 'site':
@@ -76,7 +76,6 @@ const SettingsPage = () => {
   }, [module, addonName, addonsData])
 
   const links = useMemo(() => {
-    console.log('ADDONS DATA: ', addonsData)
     let result = [
       {
         name: 'Anatomy presets',
@@ -89,9 +88,9 @@ const SettingsPage = () => {
         module: 'addonInstall',
       },
       {
-        name: 'Addon versions',
-        path: '/settings/addonVersions',
-        module: 'addonVersions',
+        name: 'Bundles',
+        path: '/settings/bundles',
+        module: 'bundles',
       },
       {
         name: 'Studio settings',
