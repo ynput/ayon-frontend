@@ -35,7 +35,7 @@ const AddonList = ({
 
         result.push({
           ...addon,
-          environment,
+          variant: environment,
           version: envVersion,
           latestVersion: sortSemver(Object.keys(addon.versions || {})).pop(),
         })

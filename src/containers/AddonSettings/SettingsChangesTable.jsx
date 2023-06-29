@@ -26,7 +26,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
     let result = []
 
     for (const addonKey in changes) {
-      const [addonName, addonVersion, _siteName, _projectName] = addonKey.split('|')
+      const [addonName, addonVersion, variant, _siteName, _projectName] = addonKey.split('|')
       const siteName = _siteName === '_' ? null : _siteName
       const projectName = _projectName === '_' ? null : _projectName
 
@@ -56,6 +56,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
           name,
           addonName,
           addonVersion,
+          variant,
           siteName,
           projectName,
         },
@@ -79,6 +80,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
         <div style={{ display: 'inline-flex', flexDirecion: 'row' }}>
           {rowData.data.addonName} {rowData.data.addonVersion}
           <BadgeWrapper>
+            <Badge hl={rowData.data.variant}>{rowData.data.variant}</Badge>
             {projectBadge}
             {siteBadge}
           </BadgeWrapper>

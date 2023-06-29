@@ -16,7 +16,6 @@ const AddonSettingsPanel = ({
   changedKeys,
   projectName = null,
   siteId = null,
-  environment,
   onChange = () => {},
   onLoad = () => {},
   onSetChangedKeys = () => {},
@@ -53,8 +52,8 @@ const AddonSettingsPanel = ({
   } = useGetAddonSettingsQuery({
     addonName: addon.name,
     addonVersion: addon.version,
+    variant: addon.variant,
     projectName,
-    environment,
     siteId,
   })
 
@@ -65,8 +64,8 @@ const AddonSettingsPanel = ({
   } = useGetAddonSettingsOverridesQuery({
     addonName: addon.name,
     addonVersion: addon.version,
+    variant: addon.variant,
     projectName,
-    environment,
     siteId,
   })
 
@@ -83,7 +82,7 @@ const AddonSettingsPanel = ({
   useEffect(() => {
     reload()
     // eslint-disable-next-line no-unused-vars
-  }, [addon.name, addon.version, projectName, environment, siteId]) //TODO: environment
+  }, [addon.name, addon.version, addon.variant, siteId, projectName]) //TODO: environment
 
   useEffect(() => {
     if (localData) return

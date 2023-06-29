@@ -1,6 +1,7 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
+import { Badge, BadgeWrapper } from '/src/components/Badge'
 import { TablePanel } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { useUpdateBundleMutation } from '/src/services/bundles'
@@ -42,10 +43,10 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
 
   const formatStatus = (rowData) => {
     return (
-      <>
-        {rowData.isProduction && <span className="p-tag p-tag-success">Production</span>}
-        {rowData.isStaging && <span className="p-tag p-tag-info">Staging</span>}
-      </>
+      <BadgeWrapper>
+        {rowData.isProduction && <Badge hl="production">Production</Badge>}
+        {rowData.isStaging && <Badge hl="staging">Staging</Badge>}
+      </BadgeWrapper>
     )
   }
 

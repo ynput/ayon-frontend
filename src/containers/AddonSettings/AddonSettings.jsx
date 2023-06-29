@@ -28,7 +28,7 @@ import { useGetBundleListQuery } from '/src/services/bundles'
 import { isEqual } from 'lodash'
 
 /*
- * key is {addonName}|{addonVersion}|{siteId}|{projectKey}
+ * key is {addonName}|{addonVersion}|{environment}|{siteId}|{projectKey}
  * if project name or siteid is N/a, use _ instead
  */
 
@@ -178,25 +178,25 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     }
   }, [uriChanged])
 
-  const onSettingsLoad = (addonName, addonVersion, siteId, data) => {
-    const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
+  const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
+    const key = `${addonName}|${addonVersion}|${variant}${siteId}|${projectKey}`
     setOriginalData((localData) => {
       localData[key] = data
       return { ...localData }
     })
   }
 
-  const onSettingsChange = (addonName, addonVersion, siteId, data) => {
-    const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
+  const onSettingsChange = (addonName, addonVersion, variant, siteId, data) => {
+    const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
     setLocalData((localData) => {
       localData[key] = data
       return { ...localData }
     })
   }
 
-  const onSetChangedKeys = (addonName, addonVersion, siteId, data) => {
+  const onSetChangedKeys = (addonName, addonVersion, variant, siteId, data) => {
     setLocalOverrides((localOverrides) => {
-      const key = `${addonName}|${addonVersion}|${siteId}|${projectKey}`
+      const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
       if (!data?.length) {
         delete localOverrides[key]
       } else {
@@ -238,7 +238,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
     for (const key in localOverrides) {
       if (!localOverrides[key]?.length) continue
-      const [addonName, addonVersion, siteId, projectName] = key.split('|')
+      const [addonName, addonVersion, variant, siteId, projectName] = key.split('|')
 
       try {
         const payload = {
@@ -246,7 +246,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           addonVersion,
           projectName,
           siteId,
-          environment,
+          variant,
           data: localData[key],
         }
         await setAddonSettings(payload).unwrap()
@@ -254,7 +254,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         updatedKeys.push(key)
       } catch (e) {
         allOk = false
-        toast.error(`Unable to save settings of ${addonName} ${addonVersion} `)
+        toast.error(`Unable to save ${variant} settings of ${addonName} ${addonVersion} `)
         console.error(e)
       }
     } // for key in localData
@@ -317,17 +317,17 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         projectName: projectKey,
         siteId,
         path,
-        environment,
+        variant: addon.variant,
         action: 'delete',
       }).unwrap()
     } catch (e) {
-      toast.error(`Unable to remove override of ${addon.name} ${addon.version} `)
+      toast.error(`Unable to remove ${addon.variant} override of ${addon.name} ${addon.version} `)
       console.error(e)
       return
     }
 
     toast.success('Override removed')
-    reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
+    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
   }
 
   const onRemoveAllOverrides = async (addon, siteId) => {
@@ -337,7 +337,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         addonName: addon.name,
         addonVersion: addon.version,
         projectName: projectKey,
-        environment,
+        variant: addon.variant,
         siteId,
       }).unwrap()
     } catch (e) {
@@ -346,7 +346,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return
     }
     toast.success('Overrides removed')
-    reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
+    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
   }
 
   const onPinOverride = async (addon, siteId, path) => {
@@ -357,7 +357,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         projectName: projectKey,
         siteId,
         path,
-        environment,
+        variant: addon.variant,
         action: 'pin',
       }).unwrap()
     } catch (e) {
@@ -366,14 +366,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return
     }
     toast.success('Override pinned')
-    reloadAddons([`${addon.name}|${addon.version}|${siteId || '_'}|${projectKey}`])
+    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
   }
 
   const pushValueToPath = (addon, siteId, path, value) => {
     // Push a value to a given path of the settings
     // Validate that the value is compatible with the existing value
 
-    const key = `${addon.name}|${addon.version}|${siteId || '_'}|${projectKey || '_'}`
+    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${
+      projectKey || '_'
+    }`
     const allData = localData[key]
     if (!allData) {
       toast.error('No data to paste')
@@ -420,15 +422,19 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   const addonListHeader = useMemo(() => {
     const onSetEnvironment = (env) => {
-      if (Object.keys(localOverrides).length) {
-        toast.error('Cannot change environment with unsaved changes')
-        return
-      }
+      // if (Object.keys(localOverrides).length) {
+      //   toast.error('Cannot change environment with unsaved changes')
+      //   return
+      // }
       setEnvironment(env)
     }
 
-    const styleHl = {
-      backgroundColor: 'var(--color-hl-00)',
+    const styleHlProd = {
+      backgroundColor: 'var(--color-hl-production)',
+      color: 'black',
+    }
+    const styleHlStag = {
+      backgroundColor: 'var(--color-hl-staging)',
       color: 'black',
     }
 
@@ -438,13 +444,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           label="Production"
           onClick={() => onSetEnvironment('production')}
           disabled={environment === 'production'}
-          style={environment === 'production' ? styleHl : {}}
+          style={environment === 'production' ? styleHlProd : {}}
         />
         <Button
           label="Staging"
           onClick={() => onSetEnvironment('staging')}
           disabled={environment === 'staging'}
-          style={environment === 'staging' ? styleHl : {}}
+          style={environment === 'staging' ? styleHlStag : {}}
         />
         <InputText
           tooltip="Bundle name"
@@ -528,7 +534,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                   const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
 
                   return sites.map((siteId) => {
-                    const key = `${addon.name}|${addon.version}|${siteId}|${projectKey}`
+                    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
 
                     return (
                       <Panel
@@ -540,11 +546,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                         <AddonSettingsPanel
                           addon={addon}
                           onChange={(data) =>
-                            onSettingsChange(addon.name, addon.version, siteId, data)
+                            onSettingsChange(addon.name, addon.version, addon.variant, siteId, data)
                           }
-                          onLoad={(data) => onSettingsLoad(addon.name, addon.version, siteId, data)}
+                          onLoad={(data) =>
+                            onSettingsLoad(addon.name, addon.version, addon.variant, siteId, data)
+                          }
                           onSetChangedKeys={(data) =>
-                            onSetChangedKeys(addon.name, addon.version, siteId, data)
+                            onSetChangedKeys(addon.name, addon.version, addon.variant, siteId, data)
                           }
                           localData={localData[key]}
                           changedKeys={localOverrides[key]}
@@ -552,11 +560,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           onSelect={setCurrentSelection}
                           projectName={projectName}
                           siteId={siteId === '_' ? null : siteId}
-                          environment={environment}
                           context={{
                             headerProjectName: projectName,
                             headerSiteId: siteId === '_' ? null : siteId,
-                            headerEnvironment: environment,
+                            headerEnvironment: addon.variant,
                             onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
                             onPinOverride: (path) => onPinOverride(addon, siteId, path),
                             onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
