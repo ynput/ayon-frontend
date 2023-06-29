@@ -123,8 +123,8 @@ const AddonSettingsPanel = ({
   }
 
   const editor = useMemo(() => {
-    if (schemaLoading || settingsLoading || overridesLoading) return <>Loading...</>
-    if (!(schema && localData && overrides)) return <>Waiting for data...</>
+    // if (schemaLoading || settingsLoading || overridesLoading) return <>Loading...</>
+    // if (!(schema && localData && overrides)) return <>Waiting for data...</>
     return (
       <SettingsEditor
         schema={schema}
@@ -142,11 +142,13 @@ const AddonSettingsPanel = ({
     )
   }, [schema, localData, overrides, breadcrumbs, schemaLoading, settingsLoading, overridesLoading])
 
-  if (schemaLoading || settingsLoading || overridesLoading) {
-    return `Loading... ${projectName}`
-  }
+  // if (schemaLoading || settingsLoading || overridesLoading) {
+  //   return `Loading... ${projectName}`
+  // }
 
-  return <div style={{ flexGrow: 0 }}>{editor}</div>
+  const visibility = schemaLoading || settingsLoading || overridesLoading ? 'hidden' : 'visible'
+
+  return <div style={{ flexGrow: 0, visibility }}>{editor}</div>
 }
 
 export default AddonSettingsPanel

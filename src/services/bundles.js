@@ -4,7 +4,7 @@ const getBundles = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getBundleList: build.query({
       query: () => ({
-        url: `/api/desktop/bundles`,
+        url: `/api/bundles`,
       }),
       transformResponse: (res) => res.bundles,
       providesTags: () => [{ type: 'bundleList' }],
@@ -12,7 +12,7 @@ const getBundles = ayonApi.injectEndpoints({
 
     deleteBundle: build.mutation({
       query: (id) => ({
-        url: `/api/desktop/bundles/${id}`,
+        url: `/api/bundles/${id}`,
         method: 'DELETE',
       }),
       // eslint-disable-next-line no-unused-vars
@@ -21,7 +21,7 @@ const getBundles = ayonApi.injectEndpoints({
 
     createBundle: build.mutation({
       query: (data) => ({
-        url: `/api/desktop/bundles`,
+        url: `/api/bundles`,
         method: 'POST',
         body: data,
       }),
@@ -31,7 +31,7 @@ const getBundles = ayonApi.injectEndpoints({
 
     updateBundle: build.mutation({
       query: ({ name, ...data }) => ({
-        url: `/api/desktop/bundles/${name}`,
+        url: `/api/bundles/${name}`,
         method: 'PATCH',
         body: data,
       }),

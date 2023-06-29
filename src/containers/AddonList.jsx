@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
@@ -17,6 +17,8 @@ const AddonList = ({
 }) => {
   const { data, loading } = useGetAddonListQuery()
   const uriChanged = useSelector((state) => state.context.uriChanged)
+
+  const [preferredSelection, setPreferredSelection] = useState([])
 
   // Filter addons by environment
   // add 'version' property to each addon
@@ -45,6 +47,19 @@ const AddonList = ({
   }, [data, environment, withSettings])
 
   useEffect(() => {
+    // Maintain selection when addons are changed due to environment change
+    const newSelection = []
+    for (const addon of addons) {
+      if (selectedAddons.find((a) => a.name === addon.name)) {
+        newSelection.push(addon)
+      } else if (preferredSelection.find((a) => a.name === addon.name)) {
+        newSelection.push(addon)
+      }
+    }
+    setSelectedAddons(newSelection)
+  }, [addons])
+
+  useEffect(() => {
     const url = new URL(window.location.href)
     const addonName = url.searchParams.get('addonName')
     const addonVersion = url.searchParams.get('addonVersion')
@@ -59,6 +74,7 @@ const AddonList = ({
   }, [addons, uriChanged])
 
   const onSelectionChange = (e) => {
+    setPreferredSelection(e.value)
     setSelectedAddons(e.value)
   }
 
