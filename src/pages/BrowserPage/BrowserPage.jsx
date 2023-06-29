@@ -5,7 +5,7 @@ import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'
 
 import Products from './Products'
-import Detail from './detail/Detail'
+import Detail from './Detail'
 
 const BrowserPage = () => {
   return (

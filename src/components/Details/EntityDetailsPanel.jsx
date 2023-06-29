@@ -5,7 +5,7 @@ import ThumbnailGallery from './ThumbnailGallery'
 import AttributeTable from '/src/containers/attributeTable'
 import { format } from 'date-fns'
 
-const EntityDetails = ({
+const EntityDetailsPanel = ({
   nodes = [],
   typeFields = [],
   type,
@@ -14,6 +14,7 @@ const EntityDetails = ({
   style,
   isLoading,
 }) => {
+  // NOTE: You are probably looking for EntityDetailsPanelContainer.jsx
   if (nodes.length === 0) return null
 
   const isMultiple = nodes.length > 1
@@ -100,7 +101,7 @@ const EntityDetails = ({
   )
 }
 
-EntityDetails.propTypes = {
+EntityDetailsPanel.propTypes = {
   type: PropTypes.oneOf(['version', 'product', 'folder', 'task']),
   nodes: PropTypes.arrayOf(
     PropTypes.shape({
@@ -116,4 +117,4 @@ EntityDetails.propTypes = {
   style: PropTypes.object,
 }
 
-export default EntityDetails
+export default EntityDetailsPanel

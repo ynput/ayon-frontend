@@ -1,18 +1,28 @@
-import { useSelector } from 'react-redux'
-import { Section, Button, AssigneeSelect, TagsSelect } from '@ynput/ayon-react-components'
+import { useDispatch, useSelector } from 'react-redux'
+import { Section, Button, AssigneeSelect, TagsSelect, Toolbar } from '@ynput/ayon-react-components'
 import { useGetEntitiesDetailsQuery } from '/src/services/entity/getEntity'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
-import EntityDetails from '/src/components/Details/EntityDetails'
+import EntityDetailsPanel from '../../components/Details/EntityDetailsPanel'
 import StatusSelect from '/src/components/status/statusSelect'
 import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
-import { union } from 'lodash'
+import { isEqual, union, upperFirst } from 'lodash'
 import transformVersionsData from '/src/helpers/transformVersionsData'
-import RepresentationList from '../RepresentationList'
-import { useMemo } from 'react'
+import RepresentationList from './RepresentationList'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
+import { ayonApi } from '/src/services/ayon'
+import { current } from '@reduxjs/toolkit'
 
-const EntityDetailsContainer = ({ type, ids = [] }) => {
+const Detail = () => {
+  const focused = useSelector((state) => state.context.focused)
+  const selectedVersions = useSelector((state) => state.context.selectedVersions)
+  const { type, folders: focusedFolders } = focused
+
+  const ids = focused[type + 's'] || []
+
+  // use dispatch to update redux
+  const dispatch = useDispatch()
   const projectName = useSelector((state) => state.project.name)
 
   const projectTagsOrder = useSelector((state) => state.project.tagsOrder)
@@ -32,25 +42,85 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
     { skip: !ids.length || !type },
   )
 
+  const [showLoading, setShowLoading] = useState(true)
+
+  // showLoading when isFetching and entitiesData ids are different to ids
+  useEffect(() => {
+    if (isFetching) {
+      const oldIds = entitiesData.map(({ node }) => node.id)
+      if (!isEqual(oldIds, ids)) {
+        setShowLoading(true)
+      }
+    } else {
+      setShowLoading(false)
+    }
+  }, [isFetching, entitiesData, ids])
+
   const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined })
 
   const isVersion = type === 'version'
 
   // if representation, get the representations from the versions
   const representations = useMemo(
-    () => (!isFetching && !isError && isVersion && transformVersionsData(entitiesData)) || [],
-    [entitiesData, isError, isFetching, type],
+    () => (!showLoading && !isError && isVersion && transformVersionsData(entitiesData)) || [],
+    [entitiesData, isError, showLoading, type],
   )
 
   // PATCH ENTITY DATA
   const [updateEntity] = useUpdateEntitiesDetailsMutation()
 
+  // first patch the products list if the type is version, and status update
   const handleEntityChange = async (field, value) => {
     // patches = entitiesData but with field and value set for all entities
     const patches = [...entitiesData].map(({ node }) => ({
       ...node,
       [field]: value,
     }))
+    let productsPatch
+    // if the type is version and the is field is status or version, patch products list
+    // because the version status/version is also shown in the product list
+    if (isVersion && ['status', 'name'].includes(field)) {
+      // version overrides
+      // Get a list of version overrides for the current set of folders
+      let versionOverrides = []
+      for (const folderId of focusedFolders) {
+        const c = selectedVersions[folderId]
+        if (!c) continue
+        for (const productId in c) {
+          const versionId = c[productId]
+          if (versionOverrides.includes(versionId)) continue
+          versionOverrides.push(versionId)
+        }
+      }
+      if (versionOverrides.length === 0) {
+        // We need at least one item in the array to filter.
+        versionOverrides = ['00000000000000000000000000000000']
+      }
+
+      console.log(versionOverrides)
+
+      // patching new products cache in redux
+      productsPatch = dispatch(
+        ayonApi.util.updateQueryData(
+          'getProductList',
+          { versionOverrides, projectName, ids: focusedFolders },
+          (draft) => {
+            console.log('run')
+            // find the product in the cache that match the ids
+            // and update the versionStatus
+            for (const id of ids) {
+              draft.forEach((p) => {
+                console.log(current(p))
+                if (p.versionId === id) {
+                  console.log('here')
+                  p.versionStatus = value
+                }
+              })
+            }
+          },
+        ),
+      )
+    }
 
     try {
       const payload = await updateEntity({
@@ -64,6 +134,10 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
       console.log('fulfilled', payload)
     } catch (error) {
       console.error('rejected', error)
+      // we also need to undo the patch
+      if (productsPatch) {
+        productsPatch.undo()
+      }
     }
   }
 
@@ -109,11 +183,14 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
       title: 'Status',
       value: (values) => (
         <StatusSelect
-          value={values?.length > 1 ? 'Multiple Statuses' : values[0]}
+          value={values}
           align={'right'}
           onChange={(v) => handleEntityChange('status', v)}
-          widthExpand={false}
-          disabled={values?.length > 1}
+          multipleSelected={values.length}
+          style={{
+            backgroundColor: 'var(--button-background)',
+            paddingLeft: 8,
+          }}
         />
       ),
     },
@@ -195,33 +272,38 @@ const EntityDetailsContainer = ({ type, ids = [] }) => {
   const enableEdit = type === 'task' || type === 'folder'
 
   return (
-    <Section style={{ overflow: 'hidden', borderRadius: 3 }}>
-      <EntityDetailsHeader
-        values={nodes}
-        isLoading={isFetching}
-        hideThumbnail
-        tools={
-          enableEdit &&
-          !isFetching && (
-            <Link to={enableEdit ? `/projects/${projectName}/editor` : '#'}>
-              <Button icon="edit" disabled={!enableEdit} />
-            </Link>
-          )
-        }
-      />
-      <EntityDetails
-        nodes={nodes}
-        extraAttrib={extraAttribFields}
-        type={type}
-        typeFields={typeFields}
-        isError={isError}
-        hideNull={isVersion}
-        style={{ height: isVersion ? 'unset' : '100%' }}
-        isLoading={isFetching}
-      />
-      {isVersion && <RepresentationList representations={representations} />}
+    <Section className="wrap">
+      <Toolbar>
+        <span className="section-header">{upperFirst(type)}</span>
+      </Toolbar>
+      <Section style={{ overflow: 'hidden', borderRadius: 3 }}>
+        <EntityDetailsHeader
+          values={nodes}
+          isLoading={showLoading}
+          hideThumbnail
+          tools={
+            enableEdit &&
+            !showLoading && (
+              <Link to={enableEdit ? `/projects/${projectName}/editor` : '#'}>
+                <Button icon="edit" disabled={!enableEdit} />
+              </Link>
+            )
+          }
+        />
+        <EntityDetailsPanel
+          nodes={nodes}
+          extraAttrib={extraAttribFields}
+          type={type}
+          typeFields={typeFields}
+          isError={isError}
+          hideNull={isVersion}
+          style={{ height: isVersion ? 'unset' : '100%' }}
+          isLoading={showLoading}
+        />
+        {isVersion && <RepresentationList representations={representations} />}
+      </Section>
     </Section>
   )
 }
 
-export default EntityDetailsContainer
+export default Detail
