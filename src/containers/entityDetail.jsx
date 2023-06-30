@@ -1,4 +1,4 @@
-import { Dialog } from 'primereact/dialog'
+import { Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import { useGetEntitiesDetailsQuery } from '../services/entity/getEntity'
 import PropTypes from 'prop-types'

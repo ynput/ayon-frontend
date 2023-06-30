@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, NavLink, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Spacer, Button } from '@ynput/ayon-react-components'
-
-import { Dialog } from 'primereact/dialog'
+import { Spacer, Button, Dialog } from '@ynput/ayon-react-components'
 
 import BrowserPage from './BrowserPage'
 import EditorPage from './EditorPage'
@@ -149,6 +147,12 @@ const ProjectPage = () => {
         header="Project Context"
         visible={showContextDialog}
         onHide={() => setShowContextDialog(false)}
+        style={{
+          overflow: 'hidden',
+        }}
+        bodyStyle={{
+          overflow: 'auto',
+        }}
       >
         {showContextDialog && <ProjectContexInfo />}
       </Dialog>

@@ -144,8 +144,9 @@ input:-webkit-autofill:focus {
 }
 .editor-field {
   &.changed {
-    outline: 1px solid var(--color-hl-changed);
-    background-color: var(--color-hl-changed);
+    outline: 1px solid var(--color-hl-00);
+    background-color: var(--color-hl-00);
+    color: black;
     border-radius: var(--border-radius);
   }
   &.inherited {
@@ -155,14 +156,24 @@ input:-webkit-autofill:focus {
 }
 
 .p-treetable .p-treetable-tbody > tr.changed {
-  outline: 2px solid var(--color-hl-changed);
-  outline-offset: -2px;
+  border-left: 4px solid var(--color-hl-00) !important;
 }
 
 .p-treetable .p-treetable-tbody > tr.new {
-  outline: 2px solid var(--color-hl-studio);
-  outline-offset: -2px;
-  border-left: 4px solid var(--color-hl-studio);
+  border-left: 4px solid var(--color-hl-00);
+  span {
+    color: var(--color-hl-00) !important;
+  }
+
+  // icons
+  .material-symbols-outlined {
+    color: var(--color-hl-00);
+  }
+
+  // dates
+  td > div > span {
+    color: var(--color-hl-00) !important;
+  }
 }
 
 .p-treetable .p-treetable-tbody {
@@ -439,6 +450,10 @@ a {
       }
     }
   }
+}
+
+.react-datepicker-popper {
+  z-index: 1000;
 }
 
 // clearing a date input

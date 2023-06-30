@@ -32,7 +32,12 @@ const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
     onHide()
   }
   return (
-    <Dialog header={`Set username for: ${name}`} visible={true} onHide={onHide}>
+    <Dialog
+      header={`Set username for: ${name}`}
+      visible={true}
+      onHide={onHide}
+      onMaskClick={onHide}
+    >
       <FormLayout>
         <FormRow label="New name">
           <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />

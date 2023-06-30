@@ -40,7 +40,7 @@ const getInputProps = (attrib = {}) => {
   return props
 }
 
-const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => {
+const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onForceChange }) => {
   // SELECTORS
   const selected = useSelector((state) => state.context.focused.editor)
   const editorNodes = useSelector((state) => state.editor.nodes)
@@ -363,7 +363,6 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
   }
 
   const handleFormChanged = () => {
-    // console.log('handling form change')
     setLocalChange(false)
     // loop through form and get any changes
     for (const key in form) {
@@ -407,6 +406,15 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
           }
         }
       }
+    }
+  }
+
+  const handleForceSave = (e) => {
+    // we save input straight away with meta + enter key
+    if (e.metaKey && e.key === 'Enter') {
+      const value = e.target.value
+      const changeKey = e.target.id
+      onForceChange(changeKey, value, nodeIds, type)
     }
   }
 
@@ -465,7 +473,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                 }
 
                 const changedStyles = {
-                  backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
+                  backgroundColor: isChanged ? 'var(--color-hl-00)' : 'initial',
                 }
 
                 let disabledStyles = {}
@@ -562,7 +570,11 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                       onChange={(date) => handleLocalChange(date, changeKey, field)}
                       style={{
                         ...changedStyles,
-                        color: !isOwn ? 'var(--color-grey-06)' : 'var(--color-text)',
+                        color: isChanged
+                          ? 'black'
+                          : !isOwn
+                          ? 'var(--color-grey-06)'
+                          : 'var(--color-text)',
                         ...disabledStyles,
                         width: '100%',
                       }}
@@ -579,12 +591,18 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                       placeholder={placeholder}
                       style={{
                         ...changedStyles,
-                        color: !isOwn ? 'var(--color-grey-06)' : 'var(--color-text)',
+                        color: isChanged
+                          ? 'black'
+                          : !isOwn
+                          ? 'var(--color-grey-06)'
+                          : 'var(--color-text)',
                         ...disabledStyles,
                         width: '100%',
                       }}
                       {...extraProps}
                       onFocus={(e) => e.target?.select()}
+                      onKeyDown={handleForceSave}
+                      id={changeKey}
                     />
                   )
                 }

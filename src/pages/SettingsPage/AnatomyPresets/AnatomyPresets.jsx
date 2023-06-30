@@ -162,6 +162,7 @@ const AnatomyPresets = () => {
           visible="true"
           onHide={() => setShowNameDialog(false)}
           style={{ minWidth: 300 }}
+          onMaskClick={() => setShowNameDialog(false)}
           footer={
             <SaveButton
               label="Create New Preset"
