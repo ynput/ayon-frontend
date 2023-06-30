@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Dialog } from 'primereact/dialog'
+
 import {
   Button,
   Spacer,
@@ -9,6 +9,7 @@ import {
   InputSwitch,
   LockedInput,
   Dropdown,
+  Dialog,
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'

@@ -56,6 +56,7 @@ const NewRoleDialog = ({ onClose, rolesList }) => {
       onHide={onClose}
       visible={true}
       style={{ width: 500 }}
+      onMaskClick={onClose}
     >
       <FormLayout>
         <FormRow label="Role name">
