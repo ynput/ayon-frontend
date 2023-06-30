@@ -416,9 +416,15 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     pushValueToPath(addon, siteId, path, value)
   } // paste
 
+  const onPushToProduction = () => {
+    toast.error('Not implemented yet')
+  }
+
   //
   // RENDER
   //
+
+  const canCommit = useMemo(() => Object.keys(localOverrides).length > 0, [localOverrides])
 
   const addonListHeader = useMemo(() => {
     const onSetEnvironment = (env) => {
@@ -458,6 +464,12 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           style={{ flexGrow: 1 }}
           readOnly
         />
+        <Button
+          icon="local_shipping"
+          tooltip="Push to production"
+          onClick={onPushToProduction}
+          disabled={environment !== 'staging' || canCommit}
+        />
       </Toolbar>
     )
   }, [environment, localOverrides, bundleName])
@@ -474,8 +486,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       </Toolbar>
     )
   }, [showHelp, currentSelection, localOverrides])
-
-  const canCommit = useMemo(() => Object.keys(localOverrides).length > 0, [localOverrides])
 
   const commitToolbar = useMemo(
     () => (

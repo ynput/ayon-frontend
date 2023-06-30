@@ -9,37 +9,58 @@ import { useUpdateBundleMutation } from '/src/services/bundles'
 const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }) => {
   const [updateBundle] = useUpdateBundleMutation()
 
-  const onSetProduction = () => {
-    updateBundle({ name: selectedBundle, isProduction: true })
+  const onSetProduction = (name) => {
+    updateBundle({ name, isProduction: true })
   }
 
-  const onSetStaging = () => {
-    updateBundle({ name: selectedBundle, isStaging: true })
+  const onSetStaging = (name) => {
+    updateBundle({ name, isStaging: true })
   }
 
-  const onUnsetProduction = () => {
-    updateBundle({ name: selectedBundle, isProduction: false })
+  const onUnsetProduction = (name) => {
+    updateBundle({ name, isProduction: false })
   }
 
-  const onUnsetStaging = () => {
-    updateBundle({ name: selectedBundle, isStaging: false })
+  const onUnsetStaging = (name) => {
+    updateBundle({ name, isStaging: false })
   }
 
-  const ctxMenuItems = []
-  if (selectedBundle) {
-    if (bundleList.find((b) => b.name === selectedBundle)?.isProduction) {
-      ctxMenuItems.push({ label: 'Unset Production', icon: 'cancel', command: onUnsetProduction })
-    } else {
-      ctxMenuItems.push({ label: 'Set Production', icon: 'check', command: onSetProduction })
+  const [ctxMenuShow] = useCreateContext([])
+
+  const onContextMenu = (e) => {
+    const ctxMenuItems = []
+    const activeBundle = e?.data?.name
+    if (!activeBundle) {
+      return
     }
-    if (bundleList.find((b) => b.name === selectedBundle)?.isStaging) {
-      ctxMenuItems.push({ label: 'Unset Staging', icon: 'cancel', command: onUnsetStaging })
+    if (bundleList.find((b) => b.name === activeBundle)?.isProduction) {
+      ctxMenuItems.push({
+        label: 'Unset Production',
+        icon: 'cancel',
+        command: () => onUnsetProduction(activeBundle),
+      })
     } else {
-      ctxMenuItems.push({ label: 'Set Staging', icon: 'check', command: onSetStaging })
+      ctxMenuItems.push({
+        label: 'Set Production',
+        icon: 'check',
+        command: () => onSetProduction(activeBundle),
+      })
     }
+    if (bundleList.find((b) => b.name === activeBundle)?.isStaging) {
+      ctxMenuItems.push({
+        label: 'Unset Staging',
+        icon: 'cancel',
+        command: () => onUnsetStaging(activeBundle),
+      })
+    } else {
+      ctxMenuItems.push({
+        label: 'Set Staging',
+        icon: 'check',
+        command: () => onSetStaging(activeBundle),
+      })
+    }
+    ctxMenuShow(e.originalEvent, ctxMenuItems)
   }
-
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
 
   const formatStatus = (rowData) => {
     return (
@@ -59,7 +80,7 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
         selectionMode="single"
         responsive="true"
         dataKey="name"
-        onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
+        onContextMenu={(e) => onContextMenu(e)}
         selection={{ name: selectedBundle }}
         onSelectionChange={(e) => setSelectedBundle(e.value.name)}
         onContextMenuSelectionChange={(e) => setSelectedBundle(e.value.name)}

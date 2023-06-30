@@ -6,11 +6,11 @@ import {
   InputText,
   Toolbar,
   Spacer,
-  Button,
   Dropdown,
   FormLayout,
   FormRow,
 } from '@ynput/ayon-react-components'
+import SaveButton from '/src/components/SaveButton'
 
 import { useGetInstallerListQuery } from '/src/services/installers'
 import { useGetAddonListQuery } from '/src/services/addonList'
@@ -28,12 +28,11 @@ const BundleDetail = ({ bundle }) => {
   const [createBundle] = useCreateBundleMutation()
 
   useEffect(() => {
-    if (!installerList?.length) return
     if (bundle) {
       setFormData(bundle)
       setIsNew(false)
     } else {
-      setFormData({ installerVersion: installerList[0].version })
+      setFormData({ installerVersion: installerList?.[0]?.version })
       setIsNew(true)
     }
   }, [bundle, installerList])
@@ -79,10 +78,11 @@ const BundleDetail = ({ bundle }) => {
     <Section>
       <Toolbar>
         <Spacer />
-        <Button
+        <SaveButton
           label={isNew ? 'Create new bundle' : 'Update bundle'}
           icon="save"
           onClick={onSave}
+          active={formData?.name && isNew}
         />
       </Toolbar>
       <ScrollPanel style={{ flexGrow: 1 }} scrollStyle={{ padding: 10 }}>
@@ -91,6 +91,7 @@ const BundleDetail = ({ bundle }) => {
             <InputText
               value={formData.name || ''}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              style={formData?.name ? {} : { outline: '1px solid var(--color-hl-error)' }}
               disabled={!isNew}
             />
           </FormRow>

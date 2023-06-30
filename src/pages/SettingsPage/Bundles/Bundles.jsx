@@ -13,8 +13,11 @@ const Bundles = () => {
   const [deleteBundle] = useDeleteBundleMutation()
 
   const bundleData = useMemo(() => {
-    if (!(bundleList && selectedBundle)) return null
-    return bundleList.find((bundle) => bundle.name === selectedBundle)
+    if (!(bundleList && selectedBundle)) {
+      return null
+    }
+    const result = bundleList.find((bundle) => bundle.name === selectedBundle)
+    return result
   }, [bundleList, selectedBundle])
 
   const onDeleteBundle = async () => {
