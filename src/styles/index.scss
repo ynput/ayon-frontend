@@ -450,6 +450,10 @@ a {
   }
 }
 
+.react-datepicker-popper {
+  z-index: 1000;
+}
+
 // clearing a date input
 .react-datepicker__close-icon {
   &::after {
