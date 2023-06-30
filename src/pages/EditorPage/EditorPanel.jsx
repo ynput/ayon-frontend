@@ -465,7 +465,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                 }
 
                 const changedStyles = {
-                  backgroundColor: isChanged ? 'var(--color-row-hl)' : 'initial',
+                  backgroundColor: isChanged ? 'var(--color-hl-00)' : 'initial',
                 }
 
                 let disabledStyles = {}
@@ -562,7 +562,11 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                       onChange={(date) => handleLocalChange(date, changeKey, field)}
                       style={{
                         ...changedStyles,
-                        color: !isOwn ? 'var(--color-grey-06)' : 'var(--color-text)',
+                        color: isChanged
+                          ? 'black'
+                          : !isOwn
+                          ? 'var(--color-grey-06)'
+                          : 'var(--color-text)',
                         ...disabledStyles,
                         width: '100%',
                       }}
@@ -579,7 +583,11 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName }) => 
                       placeholder={placeholder}
                       style={{
                         ...changedStyles,
-                        color: !isOwn ? 'var(--color-grey-06)' : 'var(--color-text)',
+                        color: isChanged
+                          ? 'black'
+                          : !isOwn
+                          ? 'var(--color-grey-06)'
+                          : 'var(--color-text)',
                         ...disabledStyles,
                         width: '100%',
                       }}
