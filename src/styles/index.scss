@@ -161,7 +161,7 @@ input:-webkit-autofill:focus {
 
 .p-treetable .p-treetable-tbody > tr.new {
   border-left: 4px solid var(--color-hl-00);
-  color: var(--color-hl-00);
+  color: var(--color-hl-00) !important;
 
   // icons
   .material-symbols-outlined {

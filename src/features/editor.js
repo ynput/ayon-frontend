@@ -25,9 +25,11 @@ const editorSlice = createSlice({
       for (const id of deleted) {
         delete state.nodes[id]
       }
-      // reset any changes
-      state.new = {}
-      state.changes = {}
+      // reset any changes if not forcedSave
+      if (!action.payload.forcedSave) {
+        state.new = {}
+        state.changes = {}
+      }
     },
     updateNodes: (state, action) => {
       // only updates provided fields
@@ -60,6 +62,21 @@ const editorSlice = createSlice({
         state.changes[id] = node
       }
     },
+    onForceChange: (state, { payload = {} }) => {
+      // remove forced fields from changes
+      const { ids, keys } = payload
+      for (const id of ids) {
+        for (const key of keys) {
+          if (state.changes[id]) {
+            delete state.changes[id][key]
+          }
+        }
+        // if there are no changes left delete the node
+        if (Object.keys(state.changes[id]).filter((key) => !key.includes('__')).length === 0) {
+          delete state.changes[id]
+        }
+      }
+    },
     onRevert: (state, { payload }) => {
       // if ids are provided only delete those
       if (payload) {
@@ -90,5 +107,6 @@ export const {
   newProject,
   updateNodes,
   onProjectChange,
+  onForceChange,
 } = editorSlice.actions
 export default editorSlice.reducer
