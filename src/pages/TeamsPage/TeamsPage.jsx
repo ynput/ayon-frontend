@@ -95,17 +95,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   const [selectedTeams = [], setSelectedTeams] = useQueryParam(['teams'], ArrayParam)
 
-  // When a team is selected, select all users on that team
-  useEffect(() => {
-    if (selectedTeams.length) {
-      const newSelectedUsers = userList
-        .filter((user) => user.teamsList.some((team) => selectedTeams.includes(team)))
-        .map((user) => user.name)
-
-      setSelectedUsers(newSelectedUsers)
-    }
-  }, [selectedTeams])
-
   // Merge users and teams data
   // NOTE: there is a usersObject bellow [userList, usersObject]
   let [userList] = useMemo(() => {
