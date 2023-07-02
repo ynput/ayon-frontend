@@ -434,7 +434,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           <SaveButton
             label="Create"
             type="submit"
-            active={isDuplicateTeamNameValid}
+            active={!!isDuplicateTeamNameValid}
             style={{
               marginLeft: 'auto',
             }}
