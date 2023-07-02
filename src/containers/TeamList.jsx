@@ -108,7 +108,7 @@ const TeamList = ({
 
   return (
     <>
-      <Section style={{ minWidth: 200, maxWidth: 200, ...styleSection }} className={className}>
+      <Section style={{ minWidth: 150, maxWidth: 200, ...styleSection }} className={className}>
         {footer}
         <TablePanel loading={isLoading} onContextMenu={globalContextMenuShow}>
           <DataTable
