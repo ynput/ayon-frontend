@@ -44,13 +44,7 @@ const TaskPicker = ({ callback, multiple }) => {
   }, [errorMessage, focusedTasks])
 
   return (
-    <Dialog
-      header="Select task"
-      footer={footer}
-      visible={true}
-      onHide={() => callback(null)}
-      onMaskClick={() => callback(null)}
-    >
+    <Dialog header="Select task" footer={footer} visible={true} onHide={() => callback(null)}>
       <div style={{ display: 'flex', flexDirection: 'row', minHeight: 500, gap: 12 }}>
         <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
         <TaskList style={{ flex: 0.75, minWidth: 250, maxWidth: 500 }} />
