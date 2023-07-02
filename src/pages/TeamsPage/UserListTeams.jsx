@@ -102,6 +102,9 @@ const UserListTeams = ({
     handleAddRemoveCommand,
     users = [],
   ) {
+    const addToSelectedDisabled =
+      !selectedTeams.length || !selectedTeams.some((team) => addToList.some((t) => t.name === team))
+
     const items = [
       {
         label: showAllUsers ? 'Show All Users' : 'Show Members Only',
@@ -109,7 +112,16 @@ const UserListTeams = ({
         icon: showAllUsers ? 'visibility' : 'visibility_off',
       },
       {
-        label: 'Add To Team',
+        label:
+          selectedTeams.length > 1 || addToSelectedDisabled
+            ? 'Add to selected teams'
+            : `Add to ${selectedTeams[0]}`,
+        icon: 'add_circle',
+        disabled: addToSelectedDisabled,
+        command: () => handleAddRemoveCommand(selectedTeams, [], users),
+      },
+      {
+        label: 'Add to team',
         icon: 'add',
         items: addToList.map((team) => ({
           label: team.name,
@@ -118,7 +130,7 @@ const UserListTeams = ({
         })),
       },
       {
-        label: 'Remove From Team',
+        label: 'Remove from team',
         icon: 'remove',
         items: removeFromList.map((team) => ({
           label: team.name,
