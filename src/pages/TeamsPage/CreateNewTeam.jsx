@@ -11,6 +11,7 @@ import {
 } from '@ynput/ayon-react-components'
 import DetailHeader from '/src/components/DetailHeader'
 import checkName from '/src/helpers/checkName'
+import SaveButton from '/src/components/SaveButton'
 
 const CreateNewTeam = ({
   rolesList,
@@ -115,7 +116,7 @@ const CreateNewTeam = ({
     <>
       <DetailHeader
         onClose={() => onClose(false)}
-        style={{ borderTop: '2px solid var(--color-hl-studio)' }}
+        style={{ borderTop: '2px solid var(--color-hl-00)' }}
       >
         <div
           style={{
@@ -171,7 +172,7 @@ const CreateNewTeam = ({
       </Panel>
       <Panel
         style={{
-          borderBottom: '2px solid var(--color-hl-studio)',
+          borderBottom: '2px solid var(--color-hl-00)',
         }}
       >
         <div
@@ -182,18 +183,17 @@ const CreateNewTeam = ({
           }}
         >
           <Button
-            onClick={handleSubmit}
-            label="Create New Team"
-            icon="group_add"
-            style={{ flex: 1 }}
-            disabled={!nameForm}
-          />
-          <Button
             onClick={handleClear}
             label="Clear"
             icon="clear"
             style={{ flex: 1 }}
             disabled={!nameForm}
+          />
+          <SaveButton
+            onClick={handleSubmit}
+            label="Create New Team"
+            style={{ flex: 1 }}
+            active={!!nameForm}
           />
         </div>
       </Panel>
