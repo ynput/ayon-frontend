@@ -532,11 +532,8 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       emptyIcon={false}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       editor
-                      style={{
-                        ...changedStyles,
-                        border: '1px solid var(--color-grey-03)',
-                        ...disabledStyles,
-                      }}
+                      buttonStyle={{ border: '1px solid var(--color-grey-03)', overflow: 'hidden' }}
+                      isChanged={isChanged}
                       widthExpand
                     />
                   )
