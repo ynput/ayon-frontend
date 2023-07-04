@@ -67,10 +67,8 @@ const UserListTeams = ({
     onSelectUsers(result)
   }
 
-  const handleAddRemove = (add = [], remove = []) => {
-    const updatedTeams = addRemoveMembers(teams, selectedUsers, add, remove)
-
-    console.log(updatedTeams)
+  const handleAddRemove = (add = [], remove = [], users) => {
+    const updatedTeams = addRemoveMembers(teams, users, add, remove)
 
     onUpdateTeams(updatedTeams)
   }
@@ -83,55 +81,70 @@ const UserListTeams = ({
 
   // two arrays one for adding to teams and one for removing from teams
   // only one user that is not in the team is required to add to the team
+  function getAddToList(selectedUsers, teams) {
+    return teams.filter((team) =>
+      selectedUsers.some((user) => !team.members.some((mem) => mem.name === user)),
+    )
+  }
+
   // only one user that is in the team is required to remove from the team
-  const addToList = useMemo(
-    () =>
-      teams.filter((team) =>
-        selectedUsers.some((user) => !team.members.some((mem) => mem.name === user)),
-      ),
-    [selectedTeams, selectedUsers, teams],
-  )
+  function getRemoveFromList(selectedUsers, teams) {
+    return teams.filter((team) =>
+      selectedUsers.some((user) => team.members.some((mem) => mem.name === user)),
+    )
+  }
 
-  const removeFromList = useMemo(
-    () =>
-      teams.filter((team) =>
-        selectedUsers.some((user) => team.members.some((mem) => mem.name === user)),
-      ),
-    [selectedTeams, selectedUsers, teams],
-  )
+  function createListItems(
+    showAllUsers,
+    onShowAllUsers,
+    addToList,
+    removeFromList,
+    handleAddRemoveCommand,
+    users = [],
+  ) {
+    const addToSelectedDisabled =
+      !selectedTeams.length || !selectedTeams.some((team) => addToList.some((t) => t.name === team))
 
-  // CONTEXT
-  const contextMenuItems = useMemo(
-    () => [
+    const items = [
       {
         label: showAllUsers ? 'Show All Users' : 'Show Members Only',
         command: onShowAllUsers,
         icon: showAllUsers ? 'visibility' : 'visibility_off',
       },
       {
-        label: 'Add To Team',
+        label:
+          selectedTeams.length > 1 || addToSelectedDisabled
+            ? 'Add to selected teams'
+            : `Add to ${selectedTeams[0]}`,
+        icon: 'add_circle',
+        disabled: addToSelectedDisabled,
+        command: () => handleAddRemoveCommand(selectedTeams, [], users),
+      },
+      {
+        label: 'Add to team',
         icon: 'add',
         items: addToList.map((team) => ({
           label: team.name,
           icon: 'add',
-          command: () => handleAddRemove([team.name], []),
+          command: () => handleAddRemoveCommand([team.name], [], users),
         })),
       },
       {
-        label: 'Remove From Team',
+        label: 'Remove from team',
         icon: 'remove',
         items: removeFromList.map((team) => ({
           label: team.name,
           icon: 'remove',
-          command: () => handleAddRemove([], [team.name]),
+          command: () => handleAddRemoveCommand([], [team.name], users),
         })),
       },
-    ],
-    [selectedTeams, selectedUsers, showAllUsers, teams],
-  )
+    ]
+
+    return items
+  }
 
   // create ref and model
-  const [contextMenuShow] = useCreateContext(contextMenuItems)
+  const [contextMenuShow] = useCreateContext([])
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
@@ -145,6 +158,27 @@ const UserListTeams = ({
     userList = loadingData
   }
 
+  const handleContext = (e) => {
+    // we all of this to keep users in sync
+    // when right clicking on a new user we need to use the event NOT selectedUsers as it is not updated yet
+    let users = selectedUsers
+    if (selectedUsers.length < 2) users = [e.data.name]
+
+    const addToList = getAddToList(users, teams)
+    const removeFromList = getRemoveFromList(users, teams)
+    contextMenuShow(
+      e.originalEvent,
+      createListItems(
+        showAllUsers,
+        onShowAllUsers,
+        addToList,
+        removeFromList,
+        handleAddRemove,
+        users,
+      ),
+    )
+  }
+
   // Render
 
   return (
@@ -154,7 +188,7 @@ const UserListTeams = ({
         flex: 1.5,
       }}
     >
-      <TablePanel onContextMenu={contextMenuShow}>
+      <TablePanel onContextMenu={handleContext}>
         <DataTable
           value={userList}
           scrollable="true"
@@ -164,6 +198,7 @@ const UserListTeams = ({
           className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
           onSelectionChange={onSelectionChange}
           onContextMenuSelectionChange={onContextSelectionChange}
+          onContextMenu={handleContext}
           selection={selection}
           resizableColumns
           responsive="true"

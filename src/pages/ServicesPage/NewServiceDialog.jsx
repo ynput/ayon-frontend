@@ -74,13 +74,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   )
 
   return (
-    <Dialog
-      visible={true}
-      header="New service"
-      onHide={onHide}
-      footer={footer}
-      onMaskClick={onHide}
-    >
+    <Dialog visible={true} header="New service" onHide={onHide} footer={footer}>
       <FormLayout>
         <FormRow label="Service name">
           <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
