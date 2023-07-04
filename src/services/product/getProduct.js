@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 
 const parseProductFps = (product) => {
   const folderFps = product.folder.attrib.fps || ''
@@ -38,14 +38,13 @@ const parseProductFrames = (product) => {
 }
 
 const parseProductData = (data) => {
+  if (!data?.project) return []
   let s = []
   for (let productEdge of data.project.products.edges) {
     let product = productEdge.node
 
-    let vers
-    if (product.versions.edges.length === 1) vers = product.versions.edges[0].node
-    else if (product.latestVersion) vers = product.latestVersion
-    else vers = null
+    const vers = product.latestVersion
+
     let sub = {
       id: product.id,
       name: product.name,
@@ -72,8 +71,32 @@ const parseProductData = (data) => {
   return s
 }
 
+const PRODUCT_VERSION_FRAGMENT = `
+fragment ProductVersionFragment on VersionNode {
+  id
+  productId
+  version
+  name
+  author
+  createdAt
+  taskId
+  task {
+    name
+  }
+  status
+  attrib {
+      fps
+      resolutionWidth
+      resolutionHeight
+      frameStart
+      frameEnd
+  }
+}
+
+`
+
 const PRODUCTS_LIST_QUERY = `
-query ProductsList($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
+query ProductsList($projectName: String!, $ids: [String!]!) {
     project(name: $projectName){
         products(folderIds: $ids){
             edges {
@@ -88,31 +111,6 @@ query ProductsList($projectName: String!, $ids: [String!]!, $versionOverrides: [
                       version
                       name
                     }
-                    
-                    versions(ids: $versionOverrides){
-                      edges{
-                        node{
-                          id
-                          version
-                          name
-                          author
-                          createdAt
-                          taskId
-                          task {
-                            name
-                          }
-                          status
-                          attrib {
-                              fps
-                              resolutionWidth
-                              resolutionHeight
-                              frameStart
-                              frameEnd
-                          }
-                        }
-                      }
-                    }
-
                     latestVersion{
                         id
                         version
@@ -151,22 +149,44 @@ query ProductsList($projectName: String!, $ids: [String!]!, $versionOverrides: [
 }
 `
 
-const getProductList = ayonApi.injectEndpoints({
+const PRODUCT_VERSION_QUERY = `
+query GetProductVersion($projectName: String!, $versionId: String!) {
+  project(name: $projectName) {
+    version(id: $versionId) {
+      ...ProductVersionFragment
+    }
+  }
+}
+${PRODUCT_VERSION_FRAGMENT}
+`
+
+const getProduct = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getProductList: build.query({
-      query: ({ projectName, ids, versionOverrides }) => ({
+      query: ({ projectName, ids }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: PRODUCTS_LIST_QUERY,
-          variables: { projectName, ids, versionOverrides },
+          variables: { projectName, ids },
         },
       }),
       transformResponse: (response) => parseProductData(response.data),
       providesTags: (result) =>
         result ? [...result.map(({ id }) => ({ type: 'product', id }))] : ['product'],
     }),
+    getProductVersion: build.query({
+      query: ({ projectName, versionId }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: PRODUCT_VERSION_QUERY,
+          variables: { projectName, versionId },
+        },
+      }),
+      transformResponse: (response) => response?.data?.project?.version || {},
+    }),
   }),
 })
 
-export const { useGetProductListQuery } = getProductList
+export const { useGetProductListQuery, useLazyGetProductVersionQuery } = getProduct

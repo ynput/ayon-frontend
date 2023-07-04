@@ -3,21 +3,14 @@ import { toast } from 'react-toastify'
 import { useGetEntitiesDetailsQuery } from '../services/entity/getEntity'
 import PropTypes from 'prop-types'
 
-const EntityDetail = ({
-  projectName,
-  entityType,
-  entityIds,
-  visible,
-  onHide,
-  versionOverrides,
-}) => {
+const EntityDetail = ({ projectName, entityType, entityIds, visible, onHide }) => {
   const {
     data = [],
     isLoading,
     isError,
     error,
   } = useGetEntitiesDetailsQuery(
-    { projectName, type: entityType, ids: entityIds, versionOverrides },
+    { projectName, type: entityType, ids: entityIds },
     { skip: !visible },
   )
 
@@ -51,7 +44,6 @@ EntityDetail.propTypes = {
   entityIds: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   visible: PropTypes.bool.isRequired,
   onHide: PropTypes.func.isRequired,
-  versionOverrides: PropTypes.arrayOf(PropTypes.string),
 }
 
 export default EntityDetail

@@ -19,7 +19,10 @@ import {
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
 
-import { useGetProductListQuery } from '/src/services/getProductList'
+import {
+  useGetProductListQuery,
+  useLazyGetProductVersionQuery,
+} from '../../services/product/getProduct'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
@@ -30,6 +33,7 @@ import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
+import { toast } from 'react-toastify'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -52,7 +56,6 @@ const Products = () => {
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
   const pairing = useSelector((state) => state.context.pairing)
 
-  const [focusOnReload, setFocusOnReload] = useState(null) // version id to refocus to after reload
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
   // grid/list/grouped
   const [viewMode, setViewMode] = useLocalStorage('productsViewMode', 'list')
@@ -60,23 +63,6 @@ const Products = () => {
 
   // sets size of status based on status column width
   const [columnsWidths, setColumnWidths] = useColumnResize('products')
-
-  // version overrides
-  // Get a list of version overrides for the current set of folders
-  let versionOverrides = []
-  for (const folderId of focusedFolders) {
-    const c = selectedVersions[folderId]
-    if (!c) continue
-    for (const productId in c) {
-      const versionId = c[productId]
-      if (versionOverrides.includes(versionId)) continue
-      versionOverrides.push(versionId)
-    }
-  }
-  if (versionOverrides.length === 0) {
-    // We need at least one item in the array to filter.
-    versionOverrides = ['00000000000000000000000000000000']
-  }
 
   const {
     data: productData = [],
@@ -88,18 +74,71 @@ const Products = () => {
     {
       ids: focusedFolders,
       projectName,
-      versionOverrides,
     },
     { skip: !projectName },
   )
 
-  // refocus version product after reload
-  useEffect(() => {
-    if (focusOnReload && isSuccess) {
-      dispatch(setFocusedVersions([focusOnReload]))
-      setFocusOnReload(null)
+  // keep track of which products are loading (mainly used for versions loading)
+  const [loadingProducts, setLoadingProducts] = useState([])
+
+  const [getProductVersion] = useLazyGetProductVersionQuery()
+
+  // have the initial override versions been loaded?
+  const [isVersionsLoaded, setIsVersionsLoaded] = useState(false)
+
+  const handleVersionChange = async (productVersionPairs = [[]]) => {
+    // productVersionPairs is an array of arrays
+
+    setLoadingProducts(productVersionPairs.map(([pId]) => pId))
+
+    let isSuccessful = false
+    try {
+      const promises = productVersionPairs.map(([, versionId]) => {
+        return getProductVersion({ versionId, projectName }, true).unwrap()
+      })
+
+      const results = await Promise.all(promises)
+
+      // update products cache with new version
+      dispatch(
+        ayonApi.util.updateQueryData(
+          'getProductList',
+          { projectName, ids: focusedFolders },
+          (draft) => {
+            // loop through each result and update the corresponding product in the cache
+            results.forEach((result) => {
+              const { productId, id: versionId, name, status } = result
+              const product = draft.find((p) => p.id === productId)
+              if (product) {
+                product.version = result
+                product.versionName = name
+                product.versionId = versionId
+                product.versionStatus = status
+              }
+            })
+          },
+        ),
+      )
+
+      isSuccessful = true
+    } catch (error) {
+      console.error('Error while loading versions:', error)
+      toast.error('Error while loading versions')
     }
-  }, [focusOnReload, isSuccess])
+
+    setLoadingProducts([])
+
+    return isSuccessful
+  }
+
+  // if there are version overrides, fetch once productsList is loaded
+  useEffect(() => {
+    if (!isSuccess || isVersionsLoaded) return
+    // prevent further calls
+    setIsVersionsLoaded(true)
+
+    handleVersionChange(Object.entries(selectedVersions))
+  }, [isSuccess])
 
   // PUBSUB HOOK
   usePubSub(
@@ -141,7 +180,7 @@ const Products = () => {
       dispatch(
         ayonApi.util.updateQueryData(
           'getProductList',
-          { projectName, ids: focusedFolders, versionOverrides },
+          { projectName, ids: focusedFolders },
           (draft) => {
             Object.assign(draft, patchData)
           },
@@ -233,16 +272,24 @@ const Products = () => {
         header: 'Version',
         width: 70,
         body: (node) =>
-          VersionList(node.data, (productId, versionId) => {
-            let newSelection = { ...selectedVersions[node.data.folderId] }
-            newSelection[productId] = versionId
-            dispatch(
-              setSelectedVersions({
-                ...selectedVersions,
-                [node.data.folderId]: newSelection,
-              }),
-            )
-            setFocusOnReload(versionId)
+          VersionList({ ...node.data }, async (productId, versionId) => {
+            // load data here and patch into cache
+            const res = await handleVersionChange([[productId, versionId]])
+            if (res) {
+              // copy current selection
+              let newSelection = { ...selectedVersions[node.data.folderId] }
+              // update selection
+              newSelection[productId] = versionId
+              // update selected versions
+              dispatch(
+                setSelectedVersions({
+                  ...selectedVersions,
+                  [node.data.folderId]: newSelection,
+                }),
+              )
+              // set selected product
+              dispatch(productSelected({ products: [productId], versions: [versionId] }))
+            }
           }), // end VersionList
       },
       {
@@ -270,7 +317,6 @@ const Products = () => {
       selectedVersions,
       handleStatusChange,
       handleStatusOpen,
-      setFocusOnReload,
     ],
   )
 
@@ -516,7 +562,6 @@ const Products = () => {
           entityIds={showDetail === 'product' ? focusedProducts : focusedVersions}
           visible={!!showDetail}
           onHide={() => setShowDetail(false)}
-          versionOverrides={versionOverrides}
         />
         {viewMode !== 'list' && (
           <ProductsGrid
@@ -547,6 +592,7 @@ const Products = () => {
             columns={columns}
             columnsWidths={columnsWidths}
             isLoading={isLoading || isFetching}
+            loadingProducts={loadingProducts}
           />
         )}
         {isNone && !isLoading && !isFetching && <NoProducts />}

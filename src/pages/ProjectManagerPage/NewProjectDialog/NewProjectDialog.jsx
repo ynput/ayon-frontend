@@ -76,7 +76,6 @@ const NewProjectDialog = ({ onHide }) => {
       footer={footer}
       visible="true"
       onHide={onHide}
-      onMaskClick={onHide}
       style={{
         width: '50vw',
         height: '80%',

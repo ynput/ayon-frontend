@@ -14,6 +14,7 @@ const ProductsList = ({
   columnsWidths,
   columns,
   isLoading,
+  loadingProducts,
 }) => {
   // get focused task ids
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
@@ -55,9 +56,14 @@ const ProductsList = ({
       onSelectionChange={onSelectionChange}
       onRowClick={onRowClick}
       rowClassName={(rowData) => {
-        if (!focusedTasks.length || focusedType !== 'task') return {}
+        const className = {
+          loading: loadingProducts.includes(rowData.data.id),
+        }
+        if (!focusedTasks.length || focusedType !== 'task') return className
         const matchingTask = focusedTasks.some((id) => id === rowData.data.taskId)
+
         return {
+          ...className,
           'focused-task': matchingTask,
           'not-focused-task': !matchingTask,
         }
