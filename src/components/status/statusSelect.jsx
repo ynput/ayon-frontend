@@ -53,6 +53,10 @@ const StatusSelect = ({
       value={dropdownValue}
       onChange={handleChange}
       disabled={disabled}
+      buttonStyle={{
+        backgroundColor: 'transparent',
+      }}
+      listInline
       valueTemplate={() => (
         <StatusField
           value={isMixed ? `Mixed Statuses` : dropdownValue[0]}

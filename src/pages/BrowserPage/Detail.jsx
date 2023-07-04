@@ -12,11 +12,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import { ayonApi } from '/src/services/ayon'
-import { current } from '@reduxjs/toolkit'
 
 const Detail = () => {
   const focused = useSelector((state) => state.context.focused)
-  const selectedVersions = useSelector((state) => state.context.selectedVersions)
   const { type, folders: focusedFolders } = focused
 
   const ids = focused[type + 's'] || []
@@ -80,37 +78,16 @@ const Detail = () => {
     // if the type is version and the is field is status or version, patch products list
     // because the version status/version is also shown in the product list
     if (isVersion && ['status', 'name'].includes(field)) {
-      // version overrides
-      // Get a list of version overrides for the current set of folders
-      let versionOverrides = []
-      for (const folderId of focusedFolders) {
-        const c = selectedVersions[folderId]
-        if (!c) continue
-        for (const productId in c) {
-          const versionId = c[productId]
-          if (versionOverrides.includes(versionId)) continue
-          versionOverrides.push(versionId)
-        }
-      }
-      if (versionOverrides.length === 0) {
-        // We need at least one item in the array to filter.
-        versionOverrides = ['00000000000000000000000000000000']
-      }
-
-      console.log(versionOverrides)
-
       // patching new products cache in redux
       productsPatch = dispatch(
         ayonApi.util.updateQueryData(
           'getProductList',
-          { versionOverrides, projectName, ids: focusedFolders },
+          { projectName, ids: focusedFolders },
           (draft) => {
-            console.log('run')
             // find the product in the cache that match the ids
             // and update the versionStatus
             for (const id of ids) {
               draft.forEach((p) => {
-                console.log(current(p))
                 if (p.versionId === id) {
                   console.log('here')
                   p.versionStatus = value
