@@ -23,8 +23,7 @@ const ProjectManagerPageContainer = ({
         isUser: isUser,
         projectList: (
           <ProjectList
-            style={{ minWidth: 100 }}
-            styleSection={{ maxWidth: 170, minWidth: 170 }}
+            styleSection={{ maxWidth: 180, minWidth: 180 }}
             hideCode
             autoSelect
             onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
+import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -7,11 +7,49 @@ import { useGetAllProjectsQuery } from '../services/project/getProject'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import useCreateContext from '../hooks/useCreateContext'
+import useLocalStorage from '../hooks/useLocalStorage'
+import CollapseButton from '../components/CollapseButton'
+import styled, { css } from 'styled-components'
 
 const formatName = (rowData, defaultTitle) => {
   if (rowData.name === '_') return defaultTitle
   return rowData.name
 }
+
+const StyledAddButton = styled(Button)`
+  overflow: hidden;
+  position: relative;
+  div {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+
+    transition: left 0.15s ease-in-out, transform 0.15s ease-in-out;
+  }
+
+  .title {
+    transition: opacity 0.15s ease-in-out, width 0.15s ease-in-out;
+    width: 0;
+  }
+
+  ${({ $isOpen }) =>
+    !$isOpen &&
+    css`
+      div {
+        left: 8.75px;
+        transform: translateX(0);
+      }
+
+      .title {
+        opacity: 0;
+        width: 0;
+      }
+    `}
+`
 
 const ProjectList = ({
   selection,
@@ -31,6 +69,7 @@ const ProjectList = ({
   onDeleteProject,
   onNewProject,
   onHide,
+  isCollapsible = true,
 }) => {
   const [contextProject, setContextProject] = useState()
   const navigate = useNavigate()
@@ -41,6 +80,9 @@ const ProjectList = ({
   if (isError) {
     console.error(error)
   }
+
+  // localstorage collapsible state
+  const [collapsed, setCollapsed] = useLocalStorage('projectListCollapsed', false)
 
   // if selection does not exist in data, set selection to null
   useEffect(() => {
@@ -187,10 +229,22 @@ const ProjectList = ({
     projectList = loadingData
   }
 
+  const sectionStyle = {
+    ...styleSection,
+    maxWidth: collapsed ? 38 : styleSection?.maxWidth || 400,
+    minWidth: collapsed ? 38 : styleSection?.minWidth || 400,
+    transition: 'max-width 0.15s ease-in-out, min-width 0.15s ease-in-out',
+  }
+
   return (
-    <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
+    <Section style={sectionStyle} className={className}>
       {isProjectManager && (
-        <Button label="Add New Project" icon="create_new_folder" onClick={onNewProject} />
+        <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
+          <div>
+            <Icon icon="create_new_folder" />
+            <span className="title">Add New Project</span>
+          </div>
+        </StyledAddButton>
       )}
       <TablePanel onContextMenu={globalContextMenuShow}>
         <DataTable
@@ -207,11 +261,28 @@ const ProjectList = ({
           onRowDoubleClick={onRowDoubleClick}
           onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
-          className={isLoading ? 'table-loading' : undefined}
+          className={`${isLoading ? 'table-loading ' : ''}project-list${
+            collapsed ? ' collapsed' : ''
+          }`}
+          style={{
+            maxWidth: 'unset',
+          }}
         >
           <Column
             field="name"
-            header="Project name"
+            header={
+              <>
+                <span className="title">Project</span>
+                {isCollapsible && (
+                  <CollapseButton
+                    onClick={() => setCollapsed(!collapsed)}
+                    isOpen={!collapsed}
+                    side="left"
+                    // style={{ position: 'absolute', right: 4, top: 4 }}
+                  />
+                )}
+              </>
+            }
             body={(rowData) => formatName(rowData, showNull)}
             style={{ minWidth: 150, ...style }}
           />

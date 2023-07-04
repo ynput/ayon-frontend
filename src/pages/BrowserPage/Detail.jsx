@@ -188,7 +188,6 @@ const Detail = () => {
           onChange={(v) => handleEntityChange('status', v)}
           multipleSelected={values.length}
           style={{
-            backgroundColor: 'var(--button-background)',
             paddingLeft: 8,
           }}
         />

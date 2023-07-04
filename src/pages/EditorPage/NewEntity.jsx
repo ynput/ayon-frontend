@@ -82,6 +82,8 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       name: checkName(entityData.name),
     }
 
+    console.log(newData)
+
     // clear states
     setEntityType(null)
     setEntityData(initData)

@@ -534,3 +534,54 @@ a {
     }
   }
 }
+
+// project list styles
+.project-list {
+  .p-datatable-table {
+    width: fit-content;
+  }
+  // project list project header column
+  thead {
+    .p-column-header-content {
+      width: 100%;
+    }
+
+    // header container
+    .p-column-title {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      grid-template-columns: 1fr auto;
+
+      transition: grid-template-columns 0.15s;
+      padding: 4px;
+
+      // title
+      .title {
+        width: 0;
+        flex: 1;
+        transition: flex 0.15s, opacity 0.075s;
+      }
+    }
+  }
+  .p-datatable-thead > tr > th {
+    padding: 0;
+  }
+
+  &.collapsed {
+    th {
+      min-width: 0 !important;
+      transition: min-width 0.15s !important;
+    }
+
+    .p-column-title {
+      grid-template-columns: 0 auto;
+    }
+
+    // hide title
+    .title {
+      opacity: 0;
+      flex: 0;
+    }
+  }
+}
