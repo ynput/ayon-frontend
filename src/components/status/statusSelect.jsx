@@ -4,6 +4,13 @@ import { Dropdown } from '@ynput/ayon-react-components'
 import StatusField from './statusField'
 import { useSelector } from 'react-redux'
 import { uniq } from 'lodash'
+import styled from 'styled-components'
+
+const StyledDropdown = styled(Dropdown)`
+  button {
+    background-color: unset;
+  }
+`
 
 const StatusSelect = ({
   value,
@@ -45,7 +52,7 @@ const StatusSelect = ({
   const isMixed = dropdownValue.length > 1
 
   return (
-    <Dropdown
+    <StyledDropdown
       message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
       widthExpand={widthExpand}
       onOpen={onOpen}
@@ -53,9 +60,6 @@ const StatusSelect = ({
       value={dropdownValue}
       onChange={handleChange}
       disabled={disabled}
-      buttonStyle={{
-        backgroundColor: 'transparent',
-      }}
       listInline
       valueTemplate={() => (
         <StatusField
