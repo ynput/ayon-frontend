@@ -542,8 +542,8 @@ a {
   }
 }
 
-// project list styles
-.project-list {
+// project list styles for collapsed
+.project-list.collapsible {
   .p-datatable-table {
     width: fit-content;
   }

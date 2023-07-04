@@ -25,6 +25,7 @@ const ProjectManagerPageContainer = ({
           <ProjectList
             styleSection={{ maxWidth: 180, minWidth: 180 }}
             hideCode
+            isCollapsible
             autoSelect
             onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
             selection={selection}

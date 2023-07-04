@@ -11,10 +11,38 @@ import useLocalStorage from '../hooks/useLocalStorage'
 import CollapseButton from '../components/CollapseButton'
 import styled, { css } from 'styled-components'
 
-const formatName = (rowData, defaultTitle) => {
-  if (rowData.name === '_') return defaultTitle
-  return rowData.name
+const formatName = (rowData, defaultTitle, field = 'name') => {
+  if (rowData[field] === '_') return defaultTitle
+  return rowData[field]
 }
+
+const StyledProjectName = styled.div`
+  /* use grid to stack items on top of each other */
+  display: grid;
+  grid-template-columns: 1fr;
+
+  span {
+    grid-area: 1 / 1 / 2 / 2;
+    transition: opacity 0.15s;
+  }
+
+  /* when open hide the code */
+  span:last-child {
+    opacity: 0;
+  }
+
+  /* when closed show code and hide title */
+  ${({ $isOpen }) =>
+    !$isOpen &&
+    css`
+      span:first-child {
+        opacity: 0;
+      }
+      span:last-child {
+        opacity: 1;
+      }
+    `}
+`
 
 const StyledAddButton = styled(Button)`
   overflow: hidden;
@@ -70,7 +98,7 @@ const ProjectList = ({
   onDeleteProject,
   onNewProject,
   onHide,
-  isCollapsible = true,
+  isCollapsible = false,
 }) => {
   const [contextProject, setContextProject] = useState()
   const navigate = useNavigate()
@@ -83,7 +111,9 @@ const ProjectList = ({
   }
 
   // localstorage collapsible state
-  const [collapsed, setCollapsed] = useLocalStorage('projectListCollapsed', false)
+  let [collapsed, setCollapsed] = useLocalStorage('projectListCollapsed', false)
+  // always set to false if not collapsible
+  if (!isCollapsible) collapsed = false
 
   // if selection does not exist in data, set selection to null
   useEffect(() => {
@@ -232,8 +262,8 @@ const ProjectList = ({
 
   const sectionStyle = {
     ...styleSection,
-    maxWidth: collapsed ? 50 : styleSection?.maxWidth || 400,
-    minWidth: collapsed ? 50 : styleSection?.minWidth || 400,
+    maxWidth: collapsed ? 38 : styleSection?.maxWidth,
+    minWidth: collapsed ? 38 : styleSection?.minWidth,
     transition: 'max-width 0.15s, min-width 0.15s',
   }
 
@@ -266,7 +296,9 @@ const ProjectList = ({
           onContextMenuSelectionChange={onContextMenuSelectionChange}
           className={`${isLoading ? 'table-loading ' : ''}project-list${
             collapsed ? ' collapsed' : ''
-          }`}
+          }
+          ${isCollapsible ? ' collapsible' : ''}
+          `}
           style={{
             maxWidth: 'unset',
           }}
@@ -286,7 +318,12 @@ const ProjectList = ({
                 )}
               </>
             }
-            body={(rowData) => formatName(rowData, showNull)}
+            body={(rowData) => (
+              <StyledProjectName $isOpen={!collapsed}>
+                <span>{formatName(rowData, showNull)}</span>
+                <span>{formatName(rowData, showNull, 'code')}</span>
+              </StyledProjectName>
+            )}
             style={{ minWidth: 150, ...style }}
           />
           {!hideCode && <Column field="code" header="Code" style={{ maxWidth: 80 }} />}
