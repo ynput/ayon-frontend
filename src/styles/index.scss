@@ -558,19 +558,22 @@ a {
       width: 100%;
       display: flex;
       align-items: center;
-      grid-template-columns: 1fr auto;
+      justify-content: center;
 
-      transition: grid-template-columns 0.15s;
+      transition: grid-template-columns 0.15s, padding 0.15s;
       padding: 4px;
-
-      // title
-      .title {
-        width: 0;
-        flex: 1;
-        transition: flex 0.15s, opacity 0.075s;
-      }
+      padding-left: 8px;
     }
   }
+
+  // title
+  .title {
+    width: 0;
+    flex: 1;
+
+    transition: flex 0.15s, opacity 0.075s;
+  }
+
   .p-datatable-thead > tr > th {
     padding: 0;
   }
@@ -582,7 +585,11 @@ a {
     }
 
     .p-column-title {
-      grid-template-columns: 0 auto;
+      padding: 4px;
+    }
+
+    .p-datatable-wrapper {
+      overflow: hidden;
     }
 
     // hide title

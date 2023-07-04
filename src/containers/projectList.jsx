@@ -19,34 +19,35 @@ const formatName = (rowData, defaultTitle) => {
 const StyledAddButton = styled(Button)`
   overflow: hidden;
   position: relative;
-  div {
+  justify-content: flex-start;
+  gap: 0;
+
+  .content {
     display: flex;
     gap: 4px;
-    align-items: center;
+    position: relative;
 
-    position: absolute;
+    transition: transform 0.15s;
+    transition-delay: 0.015s;
+
     left: 50%;
     transform: translateX(-50%);
-
-    transition: left 0.15s ease-in-out, transform 0.15s ease-in-out;
   }
 
   .title {
-    transition: opacity 0.15s ease-in-out, width 0.15s ease-in-out;
-    width: 0;
+    transition: opacity 0.15s;
   }
 
+  /* closed */
   ${({ $isOpen }) =>
     !$isOpen &&
     css`
-      div {
-        left: 8.75px;
-        transform: translateX(0);
+      .content {
+        transform: translateX(-10px);
       }
 
       .title {
         opacity: 0;
-        width: 0;
       }
     `}
 `
@@ -231,19 +232,21 @@ const ProjectList = ({
 
   const sectionStyle = {
     ...styleSection,
-    maxWidth: collapsed ? 38 : styleSection?.maxWidth || 400,
-    minWidth: collapsed ? 38 : styleSection?.minWidth || 400,
-    transition: 'max-width 0.15s ease-in-out, min-width 0.15s ease-in-out',
+    maxWidth: collapsed ? 50 : styleSection?.maxWidth || 400,
+    minWidth: collapsed ? 50 : styleSection?.minWidth || 400,
+    transition: 'max-width 0.15s, min-width 0.15s',
   }
 
   return (
     <Section style={sectionStyle} className={className}>
       {isProjectManager && (
         <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
-          <div>
+          {/* <div className="spacer" /> */}
+          <div className="content">
             <Icon icon="create_new_folder" />
             <span className="title">Add New Project</span>
           </div>
+          {/* <div className="spacer" /> */}
         </StyledAddButton>
       )}
       <TablePanel onContextMenu={globalContextMenuShow}>
