@@ -70,6 +70,7 @@ const Hierarchy = (props) => {
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
+  const uri = useSelector((state) => state.context.uri)
 
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
@@ -183,10 +184,9 @@ const Hierarchy = (props) => {
   // Selection
   //
 
-  // when selection changes programatically, expand the parent folders
+  // when selection changes programmatically, expand the parent folders
+  // runs every time the uri changes
   useEffect(() => {
-    // TODO: This prevents closing the branch if there's a focused folder inside
-    // This might be a problem...
     if (!focusedFolders?.length) return
 
     let toExpand = [...Object.keys(expandedFolders)]
@@ -206,7 +206,7 @@ const Hierarchy = (props) => {
       newExpandedFolders[id] = true
     }
     dispatch(setExpandedFolders(newExpandedFolders))
-  }, [focusedFolders, expandedFolders])
+  }, [uri])
 
   // Transform the plain list of focused folder ids to a map
   // {id: true}, which is needed for the Treetable
@@ -263,6 +263,7 @@ const Hierarchy = (props) => {
   }
 
   const onToggle = (event) => {
+    console.log('toggle')
     dispatch(setExpandedFolders(event.value))
   }
 
