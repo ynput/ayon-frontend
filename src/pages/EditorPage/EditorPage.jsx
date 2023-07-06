@@ -1121,6 +1121,7 @@ const EditorPage = () => {
   //
 
   const onToggle = async (event) => {
+    const isMetaKey = event.originalEvent.metaKey || event.originalEvent.ctrlKey
     const newExpanded = { ...event.value }
     const removedIds = Object.keys(expandedFolders).filter((id) => !(id in newExpanded))
 
@@ -1128,7 +1129,7 @@ const EditorPage = () => {
     // filter out ids that are already in the expandedFolders object
     newIds = newIds.filter((id) => !(id in expandedFolders))
 
-    if (newIds.length) {
+    if (newIds.length && isMetaKey) {
       // find if any of the newIds are in selected folders
       const selected = Object.keys(currentSelection).filter((id) => newIds.includes(id))
       if (selected.length) {
@@ -1143,7 +1144,7 @@ const EditorPage = () => {
       }
     }
 
-    if (removedIds.length) {
+    if (removedIds.length && isMetaKey) {
       // find if any of the newIds are in selected folders
       const selected = Object.keys(currentSelection).filter((id) => removedIds.includes(id))
       if (selected.length) {

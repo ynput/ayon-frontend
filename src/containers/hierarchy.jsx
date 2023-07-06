@@ -263,6 +263,7 @@ const Hierarchy = (props) => {
   }
 
   const onToggle = (event) => {
+    const isMetaKey = event.originalEvent.metaKey || event.originalEvent.ctrlKey
     const newExpandedFolders = event.value
     // what folders have been removed from the expandedFolders
     const removedExpandedFolders = Object.keys(expandedFolders).filter(
@@ -276,7 +277,7 @@ const Hierarchy = (props) => {
 
     // are any removed folders in the focusedFolders?
     const focusedFoldersRemoved = focusedFolders.some((id) => removedExpandedFolders.includes(id))
-    if (focusedFoldersRemoved) {
+    if (focusedFoldersRemoved && isMetaKey) {
       // close (remove from expanded) all those folders
       for (const id of focusedFolders) {
         delete newExpandedFolders[id]
@@ -285,7 +286,7 @@ const Hierarchy = (props) => {
 
     // do you same but for added folders, add them to expandedFolders
     const focusedFoldersAdded = focusedFolders.some((id) => addedExpandedFolders.includes(id))
-    if (focusedFoldersAdded) {
+    if (focusedFoldersAdded && isMetaKey) {
       // add them to expandedFolders
       for (const id of focusedFolders) {
         newExpandedFolders[id] = true
