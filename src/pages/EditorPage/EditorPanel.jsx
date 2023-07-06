@@ -411,7 +411,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
 
   const handleForceSave = (e) => {
     // we save input straight away with meta + enter key
-    if (e.metaKey && e.key === 'Enter') {
+    if ((e.metaKey || e.ctrl) && e.key === 'Enter') {
       const value = e.target.value
       const changeKey = e.target.id
       onForceChange(changeKey, value, nodeIds, type)
