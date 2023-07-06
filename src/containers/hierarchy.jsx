@@ -263,49 +263,36 @@ const Hierarchy = (props) => {
   }
 
   const onToggle = (event) => {
-    console.log('toggle')
+    const newExpandedFolders = event.value
+    // what folders have been removed from the expandedFolders
+    const removedExpandedFolders = Object.keys(expandedFolders).filter(
+      (id) => !newExpandedFolders[id],
+    )
+
+    // find ones that are added
+    const addedExpandedFolders = Object.keys(newExpandedFolders).filter(
+      (id) => !expandedFolders[id],
+    )
+
+    // are any removed folders in the focusedFolders?
+    const focusedFoldersRemoved = focusedFolders.some((id) => removedExpandedFolders.includes(id))
+    if (focusedFoldersRemoved) {
+      // close (remove from expanded) all those folders
+      for (const id of focusedFolders) {
+        delete newExpandedFolders[id]
+      }
+    }
+
+    // do you same but for added folders, add them to expandedFolders
+    const focusedFoldersAdded = focusedFolders.some((id) => addedExpandedFolders.includes(id))
+    if (focusedFoldersAdded) {
+      // add them to expandedFolders
+      for (const id of focusedFolders) {
+        newExpandedFolders[id] = true
+      }
+    }
+
     dispatch(setExpandedFolders(event.value))
-  }
-
-  const handleDoubleClick = () => {
-    // folder is always selected when row is double clicked
-
-    // filter out selected folders that are isLeaf
-    let doubleClickedFolders = []
-    for (const id in selectedFolders) {
-      if (!hierarchyObjectData[id].isLeaf) {
-        doubleClickedFolders.push(id)
-      }
-    }
-
-    // return if no folders are selected
-    if (!doubleClickedFolders.length) return
-
-    // separate folders that are already expanded
-    // separate folders that are not expanded
-    const alreadyExpandedFolders = []
-    const notExpandedFolders = []
-    for (const id of doubleClickedFolders) {
-      if (expandedFolders[id]) {
-        alreadyExpandedFolders.push(id)
-      } else {
-        notExpandedFolders.push(id)
-      }
-    }
-
-    // remove already expanded folders
-    const newExpandedFolders = { ...expandedFolders }
-    for (const id of alreadyExpandedFolders) {
-      delete newExpandedFolders[id]
-    }
-
-    // add not expanded folders
-    for (const id of notExpandedFolders) {
-      newExpandedFolders[id] = true
-    }
-
-    // update redux
-    dispatch(setExpandedFolders(newExpandedFolders))
   }
 
   // Context Menu
@@ -353,7 +340,6 @@ const Hierarchy = (props) => {
         onRowClick={onRowClick}
         onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
         onContextMenuSelectionChange={onContextMenuSelectionChange}
-        onDoubleClick={handleDoubleClick}
         className={isFetching ? 'table-loading' : undefined}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
