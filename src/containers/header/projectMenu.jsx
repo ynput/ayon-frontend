@@ -62,6 +62,7 @@ const ProjectMenu = ({ visible, onHide }) => {
           onRowClick={(e) => onProjectSelect(e.data.name)}
           selection={projectName}
           onHide={onHide}
+          isCollapsible={false}
         />
       </div>
     </Sidebar>
