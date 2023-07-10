@@ -1121,12 +1121,44 @@ const EditorPage = () => {
   //
 
   const onToggle = async (event) => {
-    // updated expanded folders context object
-    dispatch(setExpandedFolders(event.value))
+    const isMetaKey = event.originalEvent.metaKey || event.originalEvent.ctrlKey
+    const newExpanded = { ...event.value }
+    const removedIds = Object.keys(expandedFolders).filter((id) => !(id in newExpanded))
 
-    let newIds = Object.keys(event.value)
+    let newIds = Object.keys(newExpanded)
     // filter out ids that are already in the expandedFolders object
     newIds = newIds.filter((id) => !(id in expandedFolders))
+
+    if (newIds.length && isMetaKey) {
+      // find if any of the newIds are in selected folders
+      const selected = Object.keys(currentSelection).filter((id) => newIds.includes(id))
+      if (selected.length) {
+        // we open all selected folders
+        newIds = Object.keys(currentSelection)
+        // expand all currentSelection folders
+        for (const id of newIds) {
+          if (rootData[id]?.data.__entityType === 'folder') {
+            newExpanded[id] = true
+          }
+        }
+      }
+    }
+
+    if (removedIds.length && isMetaKey) {
+      // find if any of the newIds are in selected folders
+      const selected = Object.keys(currentSelection).filter((id) => removedIds.includes(id))
+      if (selected.length) {
+        // close all selected folders
+        for (const id in currentSelection) {
+          if (rootData[id]?.data.__entityType === 'folder') {
+            delete newExpanded[id]
+          }
+        }
+      }
+    }
+
+    // updated expanded folders context object
+    dispatch(setExpandedFolders(newExpanded))
 
     // load new branches
     loadNewBranches(newIds)
