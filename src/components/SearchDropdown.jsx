@@ -255,7 +255,7 @@ const SearchDropdown = ({
     }
 
     // SUBMIT WITH ENTER
-    if (e.code === 'Enter') {
+    if (e.keyCode === 13) {
       // prevent reloads
       e.preventDefault()
 
