@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import styled from 'styled-components'
 import { toast } from 'react-toastify'
 import {
   ScrollPanel,
@@ -17,6 +18,14 @@ import { useGetAddonListQuery } from '/src/services/addonList'
 import { useCreateBundleMutation } from '/src/services/bundles'
 
 import AddonVersions from './AddonVersions'
+
+const Columns = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+`
 
 const BundleDetail = ({ bundle }) => {
   const { data: installerList = [] } = useGetInstallerListQuery()
@@ -106,9 +115,22 @@ const BundleDetail = ({ bundle }) => {
           </FormRow>
         </FormLayout>
 
-        <h2>Addons</h2>
-
-        <AddonVersions formData={formData} setFormData={setFormData} readOnly={!isNew} />
+        <Columns>
+          <section>
+            <h2>Addons</h2>
+            <AddonVersions formData={formData} setFormData={setFormData} readOnly={!isNew} />
+          </section>
+          <section style={{ flexGrow: 1 }}>
+            <h2>Dependency packages</h2>
+            {bundle && (
+              <FormLayout>
+                <FormRow label="Windows">{bundle.dependencyPackages?.windows || '(NONE)'}</FormRow>
+                <FormRow label="Linux">{bundle.dependencyPackages?.linux || '(NONE)'}</FormRow>
+                <FormRow label="MacOS">{bundle.dependencyPackages?.darwin || '(NONE)'}</FormRow>
+              </FormLayout>
+            )}
+          </section>
+        </Columns>
       </ScrollPanel>
     </Section>
   )
