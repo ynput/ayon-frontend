@@ -15,7 +15,15 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [selectedHost, setSelectedHost] = useState(null)
 
   useEffect(() => {
-    axios.get('/api/addons?details=1').then((response) => setAddonData(response.data.addons))
+    axios.get('/api/addons?details=1').then((response) => {
+      const addons = response.data.addons
+      const addonsWithServices = addons.filter((a) => {
+        return Object.keys(a.versions).some((v) => {
+          return Object.keys(a.versions[v].services || []).length
+        })
+      })
+      setAddonData(addonsWithServices)
+    })
     axios.get('/api/hosts').then((response) => setHostData(response.data.hosts))
   }, [])
 
@@ -33,9 +41,11 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
 
   const versionOptions = useMemo(() => {
     if (!selectedAddon) return []
-    return Object.keys(selectedAddon.versions).map((v) => {
-      return { value: v, label: `${selectedAddon.title} ${v}` }
-    })
+    return Object.keys(selectedAddon.versions)
+      .filter((v) => Object.keys(selectedAddon.versions[v].services || []).length)
+      .map((v) => {
+        return { value: v, label: `${selectedAddon.title} ${v}` }
+      })
   }, [selectedAddon?.name])
 
   const serviceOptions = useMemo(() => {
