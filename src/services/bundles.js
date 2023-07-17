@@ -16,7 +16,11 @@ const getBundles = ayonApi.injectEndpoints({
         method: 'DELETE',
       }),
       // eslint-disable-next-line no-unused-vars
-      invalidatesTags: (result, error, id) => [{ type: 'bundleList' }, { type: 'addonList' }],
+      invalidatesTags: (result, error, id) => [
+        { type: 'bundleList' },
+        { type: 'addonList' },
+        { type: 'addonSettingsList' },
+      ],
     }),
 
     createBundle: build.mutation({
@@ -26,7 +30,11 @@ const getBundles = ayonApi.injectEndpoints({
         body: data,
       }),
       // eslint-disable-next-line no-unused-vars
-      invalidatesTags: (result, error, id) => [{ type: 'bundleList' }, { type: 'addonList' }],
+      invalidatesTags: (result, error, id) => [
+        { type: 'bundleList' },
+        { type: 'addonList' },
+        { type: 'addonSettingsList' },
+      ],
     }),
 
     updateBundle: build.mutation({
@@ -36,7 +44,11 @@ const getBundles = ayonApi.injectEndpoints({
         body: data,
       }),
       // eslint-disable-next-line no-unused-vars
-      invalidatesTags: (result, error, id) => [{ type: 'bundleList' }, { type: 'addonList' }],
+      invalidatesTags: (result, error, id) => [
+        { type: 'bundleList' },
+        { type: 'addonList' },
+        { type: 'addonSettingsList' },
+      ],
     }),
   }), // endpoints
 })

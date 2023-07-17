@@ -20,6 +20,21 @@ const apiSuffix = (projectName, siteId, variant) => {
 
 const addonSettings = ayonApi.injectEndpoints({
   endpoints: (build) => ({
+    getAddonSettingsList: build.query({
+      query: ({ variant, projectName, siteId }) => ({
+        url: `/api/settings`,
+        method: 'GET',
+        params: { variant, project_name: projectName, site_id: siteId, summary: true },
+      }),
+      // eslint-disable-next-line no-unused-vars
+      providesTags: (result, error, arg) => [
+        { type: 'addonSettingsList', ...arg },
+        { type: 'addonSettingsList' },
+      ],
+      transformResponse: (response) => response,
+      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+    }),
+
     getAddonSettingsSchema: build.query({
       query: ({ addonName, addonVersion, projectName, siteId }) => ({
         url: `/api/addons/${addonName}/${addonVersion}/schema${apiSuffix(projectName, siteId)}`,
@@ -93,6 +108,12 @@ const addonSettings = ayonApi.injectEndpoints({
           siteId: arg.siteId,
           variant: arg.variant,
         },
+        {
+          type: 'addonSettingsList',
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+          variant: arg.variant,
+        },
       ],
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
@@ -121,6 +142,12 @@ const addonSettings = ayonApi.injectEndpoints({
           type: 'addonSettingsOverrides',
           addonName: arg.addonName,
           addonVersion: arg.addonVersion,
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+          variant: arg.variant,
+        },
+        {
+          type: 'addonSettingsList',
           projectName: arg.projectName,
           siteId: arg.siteId,
           variant: arg.variant,
@@ -158,6 +185,12 @@ const addonSettings = ayonApi.injectEndpoints({
           siteId: arg.siteId,
           variant: arg.variant,
         },
+        {
+          type: 'addonSettingsList',
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+          variant: arg.variant,
+        },
       ],
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
@@ -166,6 +199,7 @@ const addonSettings = ayonApi.injectEndpoints({
 }) // addonSettings
 
 export const {
+  useGetAddonSettingsListQuery,
   useGetAddonSettingsSchemaQuery,
   useGetAddonSettingsQuery,
   useGetAddonSettingsOverridesQuery,

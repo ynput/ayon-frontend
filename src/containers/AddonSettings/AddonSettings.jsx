@@ -24,7 +24,6 @@ import {
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
 import SaveButton from '/src/components/SaveButton'
-import { useGetBundleListQuery } from '/src/services/bundles'
 import { isEqual } from 'lodash'
 
 /*
@@ -132,26 +131,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
   const [environment, setEnvironment] = useState('production')
+  const [bundleName, setBundleName] = useState()
 
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
 
   const uriChanged = useSelector((state) => state.context.uriChanged)
-
-  // bundles are used just to get the current bundle name
-  // actual list of addons comes from getAddonList
-  // TODO: unify in the future?
-  // The problem: bundle does not contain addon titles (just name and version)
-  const { data: bundleList } = useGetBundleListQuery()
-
-  const bundleName = useMemo(() => {
-    if (!bundleList) return null
-    const bundle = bundleList.find((bundle) =>
-      environment === 'staging' ? bundle.isStaging : bundle.isProduction,
-    )
-    return bundle ? bundle.name : null
-  }, [bundleList, environment])
 
   const projectKey = projectName || '_'
 
@@ -197,10 +183,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onSetChangedKeys = (addonName, addonVersion, variant, siteId, data) => {
     setLocalOverrides((localOverrides) => {
       const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
-      if (!data?.length) {
+      const filteredData = (data || []).filter((item) => item?.length)
+      if (!filteredData.length) {
         delete localOverrides[key]
       } else {
-        localOverrides[key] = data
+        localOverrides[key] = filteredData
       }
       return { ...localOverrides }
     })
@@ -523,6 +510,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             setSelectedAddons={onSelectAddon}
             environment={environment}
             onAddonChanged={onAddonChanged}
+            setBundleName={setBundleName}
+            changedAddonKeys={Object.keys(localOverrides || {})}
+            projectName={projectName}
+            siteSettings={showSites}
           />
           {showSites && (
             <SiteList
