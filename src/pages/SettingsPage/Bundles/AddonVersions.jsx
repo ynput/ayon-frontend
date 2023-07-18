@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react'
-import { Dropdown, FormLayout, FormRow } from '@ynput/ayon-react-components'
+import { Button, Dropdown, FormLayout, FormRow } from '@ynput/ayon-react-components'
 import { useGetAddonListQuery } from '/src/services/addonList'
 
 const AddonListItem = ({ addonTitle, version, versions, setVersion, readOnly }) => {
@@ -29,6 +29,15 @@ const AddonListItem = ({ addonTitle, version, versions, setVersion, readOnly }) 
   )
 }
 
+const getLatestSemver = (versionList) => {
+  // get the latest semver version from versionList
+  // TODO: this is not correct. need to use semver to compare versions
+  const latestVersion = versionList.reduce((acc, cur) => {
+    return acc > cur ? acc : cur
+  })
+  return latestVersion
+}
+
 const AddonVersions = ({ formData, setFormData, readOnly }) => {
   const { data: addons, loading } = useGetAddonListQuery({ showVersions: true })
 
@@ -42,12 +51,8 @@ const AddonVersions = ({ formData, setFormData, readOnly }) => {
       for (const addon of addons) {
         const versionList = Object.keys(addon.versions || {})
 
-        // get the latest semver version from versionList
-        // TODO: this is not correct. need to use semver to compare versions
         if (versionList.length) {
-          const latestVersion = versionList.reduce((acc, cur) => {
-            return acc > cur ? acc : cur
-          })
+          const latestVersion = getLatestSemver(versionList)
           newAddons[addon.name] = latestVersion
         }
       } // end for
@@ -70,6 +75,31 @@ const AddonVersions = ({ formData, setFormData, readOnly }) => {
     })
   }
 
+  const enableAll = () => {
+    setFormData((prev) => {
+      const newFormData = { ...prev }
+      const newAddons = { ...(newFormData.addons || {}) }
+      for (const addon in newAddons) {
+        const vlist = addons.find((a) => a.name === addon)
+        newAddons[addon] = getLatestSemver(Object.keys(vlist.versions))
+      }
+      newFormData.addons = newAddons
+      return newFormData
+    })
+  }
+
+  const disableAll = () => {
+    setFormData((prev) => {
+      const newFormData = { ...prev }
+      const newAddons = { ...(newFormData.addons || {}) }
+      for (const addon in newAddons) {
+        newAddons[addon] = null
+      }
+      newFormData.addons = newAddons
+      return newFormData
+    })
+  }
+
   return (
     <FormLayout>
       {addons?.length &&
@@ -83,6 +113,12 @@ const AddonVersions = ({ formData, setFormData, readOnly }) => {
             readOnly={readOnly}
           />
         ))}
+      <FormRow style={{ flexGrow: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: 8, flexGrow: 1 }}>
+          <Button icon="toggle_on" label="Enable all" onClick={enableAll} />
+          <Button icon="toggle_off" label="Disable all" onClick={disableAll} />
+        </div>
+      </FormRow>
     </FormLayout>
   )
 }
