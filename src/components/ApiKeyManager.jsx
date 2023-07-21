@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
@@ -6,6 +6,7 @@ import { Panel, LockedInput } from '@ynput/ayon-react-components'
 import { useUpdateUserAPIKeyMutation } from '../services/user/updateUser'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 const PanelStyled = styled(Panel)`
   flex-direction: row;
@@ -20,13 +21,21 @@ const PanelStyled = styled(Panel)`
 
 const ApiKeyManager = ({ preview, name }) => {
   // temp hold new key
-  const [newKey, setNewKey] = useState()
+  const [newKey, setNewKey] = useState(null)
+  // loading state
+  const [loading, setLoading] = useState(false)
+
+  // if name changes clear new key
+  useEffect(() => {
+    setNewKey(null)
+  }, [name])
 
   //   update apikey mutation
   const [updateApi] = useUpdateUserAPIKeyMutation()
 
   // generate new api token using uuid4
   const createNewKey = async () => {
+    setLoading(true)
     const key = uuidv4().replace(/-/g, '')
 
     // try catch to update api key using unwrap and toaste results
@@ -43,24 +52,39 @@ const ApiKeyManager = ({ preview, name }) => {
       console.log(error)
       //   toast error
       toast.error('Error updating API Key')
+    } finally {
+      setLoading(false)
     }
   }
-  const handleDelete = async () => {
-    // try catch to update api key using unwrap and toaste results
-    try {
-      await updateApi({
-        name,
-        apiKey: null,
-      }).unwrap()
+  const handleDelete = async (e) => {
+    e.preventDefault()
 
-      setNewKey(null)
+    // check if target is an input and do nothing
+    if (e.target.tagName === 'INPUT') return
 
-      toast.success('API Key Deleted')
-    } catch (error) {
-      console.log(error)
-      //   toast error
-      toast.error('Error deleting API Key')
-    }
+    confirmDialog({
+      message: `Delete key: ${preview || newKey.preview}?`,
+      header: 'Delete service key',
+      icon: 'pi pi-exclamation-triangle',
+      accept: async () => {
+        // try catch to update api key using unwrap and toast results
+        try {
+          await updateApi({
+            name,
+            apiKey: null,
+          }).unwrap()
+
+          setNewKey(null)
+
+          toast.success('API Key Deleted')
+        } catch (error) {
+          console.log(error)
+          //   toast error
+          toast.error('Error deleting API Key')
+        }
+      },
+      reject: () => {},
+    })
   }
 
   const handleCopyKey = () => {
@@ -98,8 +122,8 @@ const ApiKeyManager = ({ preview, name }) => {
     <LockedInput
       onEdit={createNewKey}
       label="API Key"
-      editIcon="add"
-      placeholder="Create API Key..."
+      editIcon={loading ? 'sync' : 'add'}
+      value={loading ? 'Creating...' : 'Generate new key...'}
     />
   )
 }
