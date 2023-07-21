@@ -115,8 +115,8 @@ const AddonVersions = ({ formData, setFormData, readOnly }) => {
         ))}
       <FormRow style={{ flexGrow: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'row', gap: 8, flexGrow: 1 }}>
-          <Button icon="toggle_on" label="Enable all" onClick={enableAll} />
-          <Button icon="toggle_off" label="Disable all" onClick={disableAll} />
+          <Button disabled={readOnly} icon="toggle_on" label="Enable all" onClick={enableAll} />
+          <Button disabled={readOnly} icon="toggle_off" label="Disable all" onClick={disableAll} />
         </div>
       </FormRow>
     </FormLayout>

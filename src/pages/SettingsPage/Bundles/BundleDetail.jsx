@@ -88,7 +88,7 @@ const BundleDetail = ({ bundle }) => {
       <Toolbar>
         <Spacer />
         <SaveButton
-          label={isNew ? 'Create new bundle' : 'Update bundle'}
+          label="Create new bundle"
           icon="save"
           onClick={onSave}
           active={formData?.name && isNew}
