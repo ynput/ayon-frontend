@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
+import { Icon } from '@ynput/ayon-react-components'
 
 const hoverStyle = css`
   background-color: var(--color-grey-02);
@@ -145,7 +146,7 @@ const StatusField = ({
       size={size}
       placeholder={!value && placeholder ? placeholder : ''}
     >
-      {icon && <span className="material-symbols-outlined">{icon}</span>}
+      {icon && <Icon icon={icon} />}
       {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
     </StatusStyled>
   )

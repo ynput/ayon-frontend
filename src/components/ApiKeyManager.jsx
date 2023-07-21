@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { Panel, LockedInput } from '@ynput/ayon-react-components'
+import { Panel, LockedInput, Icon } from '@ynput/ayon-react-components'
 import { useUpdateUserAPIKeyMutation } from '../services/user/updateUser'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
@@ -110,9 +110,7 @@ const ApiKeyManager = ({ preview, name }) => {
                 Make a copy of this key as you will only see it once!
               </div>
             </div>
-            <span className="material-symbols-outlined" onClick={handleCopyKey}>
-              content_copy
-            </span>
+            <Icon onClick={handleCopyKey} icon="content_copy" />
           </PanelStyled>
         )}
       </>

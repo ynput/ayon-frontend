@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
-import { InputText } from '@ynput/ayon-react-components'
+import { Icon, InputText } from '@ynput/ayon-react-components'
 import styled, { css, keyframes } from 'styled-components'
 
 const SearchStyled = styled.form`
@@ -312,9 +312,7 @@ const SearchDropdown = ({
                   onMouseEnter={() => handleMouseEnter(i)}
                   onMouseLeave={() => handleMouseLeave(i)}
                 >
-                  {item?.icon && (
-                    <span className="material-symbols-outlined icon">{item?.icon}</span>
-                  )}
+                  {item?.icon && <Icon icon={item?.icon} />}
                   <span className="text">{item.label || item.value}</span>
                 </SuggestionItemStyled>
               ),
