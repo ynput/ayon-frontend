@@ -11,6 +11,14 @@ input {
   color: var(--color-text);
 }
 
+html {
+  scrollbar-width: thin;
+}
+
+body {
+  scrollbar-width: thin;
+}
+
 #root {
   position: absolute;
   overflow: hidden;
