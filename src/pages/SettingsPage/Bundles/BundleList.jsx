@@ -64,7 +64,14 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
 
   const formatStatus = (rowData) => {
     return (
-      <BadgeWrapper>
+      <BadgeWrapper
+        style={{
+          justifyContent: 'flex-end',
+          width: '100%',
+          padding: '0 8px',
+          marginLeft: 0,
+        }}
+      >
         {rowData.isProduction && <Badge hl="production">Production</Badge>}
         {rowData.isStaging && <Badge hl="staging">Staging</Badge>}
       </BadgeWrapper>
@@ -86,7 +93,7 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
         onContextMenuSelectionChange={(e) => setSelectedBundle(e.value.name)}
       >
         <Column field="name" header="Name" />
-        <Column header="" body={formatStatus} />
+        <Column header="Status" body={formatStatus} style={{ maxWidth: 73 }} />
       </DataTable>
     </TablePanel>
   )

@@ -27,7 +27,7 @@ const Bundles = () => {
 
   return (
     <main>
-      <Section style={{ maxWidth: 600 }}>
+      <Section style={{ maxWidth: 300 }}>
         <Toolbar>
           <Button label="New Bundle" icon="add" onClick={() => setSelectedBundle(null)} />
           <Button label="Delete Bundle" icon="delete" onClick={onDeleteBundle} />
