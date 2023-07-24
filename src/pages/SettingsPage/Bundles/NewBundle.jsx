@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import styled from 'styled-components'
-// import { toast } from 'react-toastify'
+import { toast } from 'react-toastify'
 import {
   ScrollPanel,
   Section,
@@ -10,11 +10,13 @@ import {
   Dropdown,
   FormLayout,
   FormRow,
+  SaveButton,
   Button,
 } from '@ynput/ayon-react-components'
 
 import { useGetInstallerListQuery } from '/src/services/installers'
-// import { useGetAddonListQuery } from '/src/services/addonList'
+import { useGetAddonListQuery } from '/src/services/addonList'
+import { useCreateBundleMutation } from '/src/services/bundles'
 
 import AddonVersions from './AddonVersions'
 
@@ -26,22 +28,27 @@ const Columns = styled.div`
   gap: 20px;
 `
 
-const BundleDetail = ({ bundle, onDuplicate }) => {
-  const { data: installerList = [] } = useGetInstallerListQuery()
-  // const { data: addons, loading } = useGetAddonListQuery({ showVersions: true })
+const NewBundle = ({ initBundle, onSave }) => {
+  const { data: installerList = [], isFetching } = useGetInstallerListQuery()
+  const { data: addons, isLoading } = useGetAddonListQuery({ showVersions: true })
 
-  const [formData, setFormData] = useState({})
-  const [isNew, setIsNew] = useState(true)
+  const [formData, setFormData] = useState(null)
 
+  const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
+
+  //   set initial form data
   useEffect(() => {
-    if (bundle) {
-      setFormData(bundle)
-      setIsNew(false)
-    } else {
-      setFormData({ installerVersion: installerList?.[0]?.version })
-      setIsNew(true)
+    if (initBundle && !isFetching) {
+      setFormData(initBundle)
     }
-  }, [bundle, installerList])
+  }, [initBundle, installerList, isFetching])
+
+  //   set initial installer version
+  useEffect(() => {
+    if (formData && !isFetching && formData?.installerVersion === undefined) {
+      setFormData((form) => ({ installerVersion: installerList?.[0]?.version, ...form }))
+    }
+  }, [formData, installerList, isFetching])
 
   const installerVersions = useMemo(() => {
     if (!installerList) return []
@@ -61,14 +68,40 @@ const BundleDetail = ({ bundle, onDuplicate }) => {
     }))
   }, [installerList])
 
+  if (!formData) return null
+  if (!isLoading && !addons?.length) return <div>No addons found</div>
+
+  const handleClear = () => {
+    setFormData({ installerVersion: installerList?.[0]?.version, name: initBundle?.name })
+  }
+
+  const handleSave = async () => {
+    if (!formData?.name) {
+      toast.error('Name is required')
+      return
+    }
+
+    try {
+      await createBundle(formData).unwrap()
+      toast.success('Bundle created')
+      onSave(formData.name)
+    } catch (error) {
+      console.log(error)
+      toast.error('Error: ' + error?.data?.detail)
+    }
+  }
+
   return (
     <Section>
       <Toolbar>
         <Spacer />
-        <Button
-          label="Duplicate and Edit"
-          icon="edit_document"
-          onClick={() => onDuplicate(formData.name)}
+        <Button icon={'clear'} label="Clear" onClick={handleClear} />
+        <SaveButton
+          label="Create new bundle"
+          icon={isCreating ? 'sync' : 'check'}
+          onClick={handleSave}
+          active={!!formData?.name}
+          saving={isCreating}
         />
       </Toolbar>
       <ScrollPanel style={{ flexGrow: 1 }} scrollStyle={{ padding: 10 }}>
@@ -78,7 +111,6 @@ const BundleDetail = ({ bundle, onDuplicate }) => {
               value={formData.name || ''}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               style={formData?.name ? {} : { outline: '1px solid var(--color-hl-error)' }}
-              disabled={!isNew}
             />
           </FormRow>
           <FormRow label="Installer version">
@@ -86,7 +118,6 @@ const BundleDetail = ({ bundle, onDuplicate }) => {
               value={formData?.installerVersion ? [formData.installerVersion] : []}
               options={installerVersions}
               onChange={(e) => setFormData({ ...formData, installerVersion: e[0] })}
-              disabled={!isNew}
               widthExpand
             />
           </FormRow>
@@ -95,17 +126,7 @@ const BundleDetail = ({ bundle, onDuplicate }) => {
         <Columns>
           <section>
             <h2>Addons</h2>
-            <AddonVersions formData={formData} setFormData={setFormData} readOnly={!isNew} />
-          </section>
-          <section style={{ flexGrow: 1 }}>
-            <h2>Dependency packages</h2>
-            {bundle && (
-              <FormLayout>
-                <FormRow label="Windows">{bundle.dependencyPackages?.windows || '(NONE)'}</FormRow>
-                <FormRow label="Linux">{bundle.dependencyPackages?.linux || '(NONE)'}</FormRow>
-                <FormRow label="MacOS">{bundle.dependencyPackages?.darwin || '(NONE)'}</FormRow>
-              </FormLayout>
-            )}
+            <AddonVersions formData={formData} setFormData={setFormData} />
           </section>
         </Columns>
       </ScrollPanel>
@@ -113,4 +134,4 @@ const BundleDetail = ({ bundle, onDuplicate }) => {
   )
 }
 
-export default BundleDetail
+export default NewBundle

@@ -6,7 +6,7 @@ import { TablePanel } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { useUpdateBundleMutation } from '/src/services/bundles'
 
-const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }) => {
+const BundleList = ({ selectedBundle, onBundleSelect, bundleList, isLoading, onDuplicate }) => {
   const [updateBundle] = useUpdateBundleMutation()
 
   const onSetProduction = (name) => {
@@ -33,6 +33,7 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
     if (!activeBundle) {
       return
     }
+    // production
     if (bundleList.find((b) => b.name === activeBundle)?.isProduction) {
       ctxMenuItems.push({
         label: 'Unset Production',
@@ -46,6 +47,7 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
         command: () => onSetProduction(activeBundle),
       })
     }
+    // staging
     if (bundleList.find((b) => b.name === activeBundle)?.isStaging) {
       ctxMenuItems.push({
         label: 'Unset Staging',
@@ -59,6 +61,14 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
         command: () => onSetStaging(activeBundle),
       })
     }
+
+    // duplicate and edit
+    ctxMenuItems.push({
+      label: 'Duplicate and Edit',
+      icon: 'edit_document',
+      command: () => onDuplicate(activeBundle),
+    })
+
     ctxMenuShow(e.originalEvent, ctxMenuItems)
   }
 
@@ -89,8 +99,8 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
         dataKey="name"
         onContextMenu={(e) => onContextMenu(e)}
         selection={{ name: selectedBundle }}
-        onSelectionChange={(e) => setSelectedBundle(e.value.name)}
-        onContextMenuSelectionChange={(e) => setSelectedBundle(e.value.name)}
+        onSelectionChange={(e) => onBundleSelect(e.value.name)}
+        onContextMenuSelectionChange={(e) => onBundleSelect(e.value.name)}
       >
         <Column field="name" header="Name" />
         <Column header="Status" body={formatStatus} style={{ maxWidth: 73 }} />
