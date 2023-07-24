@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
-import { Spacer, Button, Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
+import { Spacer, Button, Section, Toolbar, TablePanel, Icon } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -285,15 +285,7 @@ const EditorPage = () => {
     // as tooltip.
     const error = errors[rowData.id]
     if (error) {
-      return (
-        <span
-          className={`material-symbols-outlined`}
-          style={{ color: 'var(--color-hl-error)' }}
-          title={error}
-        >
-          warning
-        </span>
-      )
+      return <Icon icon="warning" style={{ color: 'var(--color-hl-error)' }} title={error} />
     }
   }
 

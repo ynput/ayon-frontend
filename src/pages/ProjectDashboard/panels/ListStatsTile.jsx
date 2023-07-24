@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import getShimmerStyles from '/src/styles/getShimmerStyles'
+import { Icon } from '@ynput/ayon-react-components'
 
 export const TileStyled = styled.div`
   display: flex;
@@ -43,7 +44,7 @@ const StyledLoading = styled.div`
 const ListStatsTile = ({ title, stat, icon, isLoading, onClick }) => {
   return (
     <TileStyled onClick={onClick}>
-      {icon && <span className="material-symbols-outlined">{icon}</span>}
+      {icon && <Icon icon={icon} />}
       <h3>{title}</h3>
       <span>{isLoading ? '' : stat || 'unknown'}</span>
       {isLoading && <StyledLoading />}
