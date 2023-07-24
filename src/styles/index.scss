@@ -607,3 +607,9 @@ a {
     }
   }
 }
+
+.p-menuitem-link {
+  &:hover {
+    background-color: var(--color-grey-00) !important;
+  }
+}
