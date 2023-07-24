@@ -25,11 +25,16 @@ const BundleList = ({ selectedBundle, onBundleSelect, bundleList, isLoading, onD
     updateBundle({ name, isStaging: false })
   }
 
+  const onArchive = (name, isArchived) => {
+    updateBundle({ name, isArchived: !isArchived })
+  }
+
   const [ctxMenuShow] = useCreateContext([])
 
   const onContextMenu = (e) => {
     const ctxMenuItems = []
     const activeBundle = e?.data?.name
+    const isArchived = e?.data?.isArchived
     if (!activeBundle) {
       return
     }
@@ -67,6 +72,13 @@ const BundleList = ({ selectedBundle, onBundleSelect, bundleList, isLoading, onD
       label: 'Duplicate and Edit',
       icon: 'edit_document',
       command: () => onDuplicate(activeBundle),
+    })
+
+    // duplicate and edit
+    ctxMenuItems.push({
+      label: isArchived ? 'Unarchive' : 'Archive',
+      icon: isArchived ? 'unarchive' : 'archive',
+      command: () => onArchive(activeBundle, isArchived),
     })
 
     ctxMenuShow(e.originalEvent, ctxMenuItems)
