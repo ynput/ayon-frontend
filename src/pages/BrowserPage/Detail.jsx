@@ -276,7 +276,9 @@ const Detail = () => {
           style={{ height: isVersion ? 'unset' : '100%' }}
           isLoading={showLoading}
         />
-        {isVersion && <RepresentationList representations={representations} />}
+        {isVersion && (
+          <RepresentationList representations={representations} projectName={projectName} />
+        )}
       </Section>
     </Section>
   )

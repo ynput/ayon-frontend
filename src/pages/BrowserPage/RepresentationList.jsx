@@ -32,11 +32,10 @@ const columns = [
   },
 ]
 
-const RepresentationList = ({ representations = [] }) => {
+const RepresentationList = ({ projectName, representations = [] }) => {
   const dispatch = useDispatch()
   const [selectedRepresentation, setSelectedRepresentation] = useState(null)
   //const [focusedRepresentation, setFocusedRepresentation] = useState(null)
-  const projectName = 'TODO'
 
   const data = useMemo(() => {
     return groupResult(representations, 'name')
