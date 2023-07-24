@@ -173,11 +173,6 @@ input:-webkit-autofill:focus {
     color: var(--color-hl-00) !important;
   }
 
-  // icons
-  .material-symbols-outlined {
-    color: var(--color-hl-00);
-  }
-
   // dates
   td > div > span {
     color: var(--color-hl-00) !important;
@@ -238,7 +233,7 @@ input:-webkit-autofill:focus {
   }
 }
 .copy-uri-button {
-  .material-symbols-outlined {
+  .icon {
     font-size: 1.2em !important;
   }
 }
