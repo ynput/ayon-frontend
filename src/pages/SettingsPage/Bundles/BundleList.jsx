@@ -14,6 +14,7 @@ const BundleList = ({
   isLoading,
   onDuplicate,
   onDelete,
+  toggleBundleStatus,
 }) => {
   const [updateBundle] = useUpdateBundleMutation()
 
@@ -23,22 +24,6 @@ const BundleList = ({
     const notArchived = bundleList.filter((b) => !b.isArchived)
     return [...notArchived, ...archived]
   }, [bundleList])
-
-  const onSetProduction = (name) => {
-    updateBundle({ name, isProduction: true })
-  }
-
-  const onSetStaging = (name) => {
-    updateBundle({ name, isStaging: true })
-  }
-
-  const onUnsetProduction = (name) => {
-    updateBundle({ name, isProduction: false })
-  }
-
-  const onUnsetStaging = (name) => {
-    updateBundle({ name, isStaging: false })
-  }
 
   const onArchive = (name, isArchived) => {
     updateBundle({ name, isArchived: !isArchived })
@@ -61,13 +46,13 @@ const BundleList = ({
         ctxMenuItems.push({
           label: 'Unset Production',
           icon: 'cancel',
-          command: () => onUnsetProduction(activeBundle),
+          command: () => toggleBundleStatus('production'),
         })
       } else {
         ctxMenuItems.push({
           label: 'Set Production',
           icon: 'check',
-          command: () => onSetProduction(activeBundle),
+          command: () => toggleBundleStatus('production'),
         })
       }
       // staging
@@ -75,13 +60,13 @@ const BundleList = ({
         ctxMenuItems.push({
           label: 'Unset Staging',
           icon: 'cancel',
-          command: () => onUnsetStaging(activeBundle),
+          command: () => toggleBundleStatus('staging'),
         })
       } else {
         ctxMenuItems.push({
           label: 'Set Staging',
           icon: 'check',
-          command: () => onSetStaging(activeBundle),
+          command: () => toggleBundleStatus('staging'),
         })
       }
     }
@@ -154,7 +139,7 @@ const BundleList = ({
           header="Name"
           body={(b) => `${b.name} ${b.isArchived ? '(archived)' : ''}`}
         />
-        <Column header="Status" body={formatStatus} style={{ maxWidth: 73 }} />
+        <Column header="Status" body={formatStatus} style={{ maxWidth: 120 }} />
       </DataTable>
     </TablePanel>
   )

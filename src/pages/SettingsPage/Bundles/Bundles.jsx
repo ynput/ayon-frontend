@@ -4,11 +4,17 @@ import BundleDetail from './BundleDetail'
 
 import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
 
-import { useDeleteBundleMutation, useGetBundleListQuery } from '/src/services/bundles'
+import {
+  useDeleteBundleMutation,
+  useGetBundleListQuery,
+  useUpdateBundleMutation,
+} from '/src/services/bundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 import { useGetInstallerListQuery } from '/src/services/installers'
 import { useGetAddonListQuery } from '/src/services/addonList'
+import { upperFirst } from 'lodash'
+import { toast } from 'react-toastify'
 
 const Bundles = () => {
   const [selectedBundle, setSelectedBundle] = useState(null)
@@ -18,27 +24,11 @@ const Bundles = () => {
   const studioName = 'Ynput'
 
   const { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
-  let { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
-  installerList = [
-    {
-      platform: 'windows',
-      version: '1.0.0',
-    },
-    {
-      platform: 'darwin',
-      version: '1.0.0',
-    },
-    {
-      platform: 'linux',
-      version: '1.0.0',
-    },
-    {
-      platform: 'linux',
-      version: '1.0.5',
-    },
-  ]
+  const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
+
   const { data: addons, isLoading: isLoadingAddons } = useGetAddonListQuery({ showVersions: true })
   const [deleteBundle] = useDeleteBundleMutation()
+  const [updateBundle] = useUpdateBundleMutation()
 
   // if no bundle selected and newBundleOpen is null, select the first bundle
   useEffect(() => {
@@ -109,6 +99,22 @@ const Bundles = () => {
     setSelectedBundle(null)
   }
 
+  const toggleBundleStatus = async (status) => {
+    const statusKey = `is${upperFirst(status)}`
+    const bundle = bundleList.find((b) => b.name === selectedBundle)
+    if (!bundle) return
+
+    const { name, [statusKey]: isActive } = bundle
+
+    const message = `bundle ${name} ${isActive ? 'set' : 'unset'} ${status}`
+    try {
+      await updateBundle({ name, [statusKey]: !isActive }).unwrap()
+      toast.success(upperFirst(message))
+    } catch (error) {
+      toast.error(`Error setting ${message}`)
+    }
+  }
+
   const handleDeleteBundle = async () => {
     await deleteBundle(selectedBundle).unwrap()
     setSelectedBundle(null)
@@ -116,7 +122,7 @@ const Bundles = () => {
 
   return (
     <main style={{ overflow: 'hidden' }}>
-      <Section style={{ minWidth: 300, maxWidth: 300 }}>
+      <Section style={{ minWidth: 400, maxWidth: 400 }}>
         <Toolbar>
           <Button label="Create new bundle" icon="add" onClick={handleNewBundleStart} />
         </Toolbar>
@@ -127,6 +133,7 @@ const Bundles = () => {
           isLoading={isLoading}
           onDuplicate={handleDuplicateBundle}
           onDelete={handleDeleteBundle}
+          toggleBundleStatus={toggleBundleStatus}
         />
       </Section>
 
@@ -144,6 +151,7 @@ const Bundles = () => {
           onDuplicate={handleDuplicateBundle}
           isLoading={isLoadingInstallers || isLoadingAddons}
           installers={installerVersions}
+          toggleBundleStatus={toggleBundleStatus}
         />
       )}
     </main>

@@ -1,3 +1,4 @@
+import { Button } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 const platformColors = {
@@ -7,11 +8,11 @@ const platformColors = {
 }
 
 export const PlatformTag = styled.span`
-  padding: 4px 8px;
+  padding: 2px 4px;
   border-radius: 4px;
   color: black;
   width: max-content;
-  font-size: 11px;
+  font-size: 10px;
 
   ${({ $platform }) => {
     // get platform color
@@ -21,4 +22,24 @@ export const PlatformTag = styled.span`
       background-color: ${color};
     `
   }}
+`
+
+// hl prop for background
+export const BadgeButton = styled(Button)`
+  ${({ $hl }) =>
+    $hl &&
+    css`
+      background-color: ${`var(--color-hl-${$hl})`};
+      color: black;
+
+      .icon {
+        color: black;
+      }
+
+      &:hover {
+        background-color: ${`var(--color-hl-${$hl})`};
+      }
+    `}
+
+  width: 140px;
 `
