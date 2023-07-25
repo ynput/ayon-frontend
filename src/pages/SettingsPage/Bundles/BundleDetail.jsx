@@ -4,9 +4,7 @@ import { Section, Toolbar, Spacer, FormLayout, FormRow, Button } from '@ynput/ay
 
 import BundleForm from './BundleForm'
 
-const BundleDetail = ({ bundle, onDuplicate }) => {
-  // const { data: addons, loading } = useGetAddonListQuery({ showVersions: true })
-
+const BundleDetail = ({ bundle, onDuplicate, installers }) => {
   const [formData, setFormData] = useState({})
   const [selectedAddons, setSelectedAddons] = useState([])
 
@@ -27,8 +25,11 @@ const BundleDetail = ({ bundle, onDuplicate }) => {
           onClick={() => onDuplicate(bundle.name)}
         />
       </Toolbar>
-      <BundleForm isNew={false} {...{ selectedAddons, setSelectedAddons, formData, setFormData }}>
-        <section style={{ flexGrow: 1 }}>
+      <BundleForm
+        isNew={false}
+        {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
+      >
+        <section style={{ flex: 1 }}>
           <h2>Dependency packages</h2>
           {bundle && (
             <FormLayout>

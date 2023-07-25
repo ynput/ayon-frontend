@@ -1,8 +1,6 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Section, Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
-import { useGetInstallerListQuery } from '/src/services/installers'
-import { useGetAddonListQuery } from '/src/services/addonList'
 import { useCreateBundleMutation } from '/src/services/bundles'
 
 import BundleForm from './BundleForm'
@@ -10,20 +8,21 @@ import styled from 'styled-components'
 import getLatestSemver from './getLatestSemver'
 
 const StyledTools = styled.div`
-  margin-top: 18px;
   flex: 1;
-  max-width: 400px;
   /* 2x2 grid */
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 8px;
+  padding-top: 1px;
+  padding-right: 1px;
+
+  button {
+    height: 30px;
+  }
 `
 
-const NewBundle = ({ initBundle, onSave }) => {
-  const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
-  const { data: addons, isLoading: isLoadingAddons } = useGetAddonListQuery({ showVersions: true })
-
+const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
 
@@ -31,7 +30,7 @@ const NewBundle = ({ initBundle, onSave }) => {
 
   //   build initial form data
   useEffect(() => {
-    if (initBundle && !isLoadingInstallers && !isLoadingAddons) {
+    if (initBundle && !isLoading) {
       // addons = [{name: 'addon1', versions:{'1.0.0': {}}}]
       // reduce down addons to latest version
       const initAddons = {}
@@ -45,34 +44,16 @@ const NewBundle = ({ initBundle, onSave }) => {
 
       const initForm = {
         addons: initAddons,
-        installerVersion: installerList?.[0]?.version,
+        installerVersion: installers?.[0]?.version,
         name: '',
         ...initBundle,
       }
       setFormData(initForm)
     }
-  }, [initBundle, installerList, isLoadingAddons, isLoadingAddons, addons])
-
-  const installerVersions = useMemo(() => {
-    if (!installerList) return []
-
-    const r = {}
-    for (const installer of installerList) {
-      if (r[installer.version]) {
-        r[installer.version].push(installer.platform)
-      } else {
-        r[installer.version] = [installer.platform]
-      }
-    }
-
-    return Object.entries(r).map(([version, platforms]) => ({
-      label: `${version} (${platforms.join(', ')})`,
-      value: version,
-    }))
-  }, [installerList])
+  }, [initBundle, installers, isLoading, addons])
 
   const handleClear = () => {
-    setFormData({ installerVersion: installerList?.[0]?.version, name: initBundle?.name })
+    setFormData({ installerVersion: installers?.[0]?.version, name: initBundle?.name })
   }
 
   const handleSave = async () => {
@@ -127,7 +108,7 @@ const NewBundle = ({ initBundle, onSave }) => {
       </Toolbar>
       <BundleForm
         isNew
-        {...{ selectedAddons, setSelectedAddons, setFormData, installerVersions }}
+        {...{ selectedAddons, setSelectedAddons, setFormData, installers }}
         formData={formData}
       >
         <StyledTools>

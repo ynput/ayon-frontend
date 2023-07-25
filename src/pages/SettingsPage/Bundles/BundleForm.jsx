@@ -1,7 +1,10 @@
-import { Dropdown, FormLayout, FormRow, InputText, Panel } from '@ynput/ayon-react-components'
+import { Divider, FormLayout, FormRow, InputText, Panel } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'
 import AddonList from './AddonList'
+import * as Styled from './Bundles.styled'
+import { upperFirst } from 'lodash'
+import InstallerSelector from './InstallerSelector'
 
 const StyledColumns = styled.div`
   display: flex;
@@ -15,16 +18,20 @@ const BundleForm = ({
   formData,
   setFormData,
   isNew,
-  installerVersions = [],
+  installers = [],
   children,
   selectedAddons,
   setSelectedAddons,
 }) => {
   const showNameError = formData && !formData?.name && isNew
 
+  const installerPlatforms = installers.find(
+    (i) => i.version === formData?.installerVersion,
+  )?.platforms
+
   return (
     <Panel style={{ flexGrow: 1, overflow: 'hidden' }}>
-      <FormLayout>
+      <FormLayout style={{ gap: 8, paddingTop: 1, maxWidth: 800 }}>
         <FormRow label="Name">
           {isNew ? (
             <InputText
@@ -39,22 +46,30 @@ const BundleForm = ({
         </FormRow>
         <FormRow label="Installer version">
           {isNew ? (
-            <Dropdown
+            <InstallerSelector
               value={formData?.installerVersion ? [formData?.installerVersion] : []}
-              options={installerVersions}
+              options={installers}
               onChange={(e) => setFormData({ ...formData, installerVersion: e[0] })}
               disabled={!formData}
-              widthExpand
-              placeholder={''}
             />
           ) : (
-            <h2 style={{ margin: 0 }}>{formData?.installerVersion || 'NONE'}</h2>
+            <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+              <h2 style={{ margin: 0 }}>{formData?.installerVersion || 'NONE'}</h2>
+              <>
+                {!!installerPlatforms?.length &&
+                  installerPlatforms.map((platform) => (
+                    <Styled.PlatformTag key={platform} $platform={platform}>
+                      {upperFirst(platform)}
+                    </Styled.PlatformTag>
+                  ))}
+              </>
+            </div>
           )}
         </FormRow>
       </FormLayout>
-
-      <StyledColumns>
-        <section style={{ height: '100%' }}>
+      <Divider />
+      <StyledColumns style={{ maxWidth: isNew ? 800 : 1000 }}>
+        <section style={{ height: '100%', minWidth: 400 }}>
           <h2>Addons</h2>
           <section style={{ height: '100%' }}>
             <AddonList

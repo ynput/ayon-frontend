@@ -31,7 +31,7 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
   )
 }
 
-const AddonList = ({ formData, setFormData, readOnly, selected = [], setSelected }) => {
+const AddonList = ({ formData, setFormData, readOnly, selected = [], setSelected, style }) => {
   const { data: addons = [] } = useGetAddonListQuery({ showVersions: true })
 
   const onSetVersion = (addonName, version) => {
@@ -70,7 +70,7 @@ const AddonList = ({ formData, setFormData, readOnly, selected = [], setSelected
       selection={selected}
       onSelectionChange={(e) => setSelected(e.value)}
       onContextMenuSelectionChange={(e) => setSelected(e.value)}
-      tableStyle={{ width: 350, marginBottom: 80 }}
+      tableStyle={{ marginBottom: 80, ...style }}
       className="addons-table"
     >
       <Column

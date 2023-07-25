@@ -7,6 +7,8 @@ import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
 import { useDeleteBundleMutation, useGetBundleListQuery } from '/src/services/bundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
+import { useGetInstallerListQuery } from '/src/services/installers'
+import { useGetAddonListQuery } from '/src/services/addonList'
 
 const Bundles = () => {
   const [selectedBundle, setSelectedBundle] = useState(null)
@@ -16,6 +18,9 @@ const Bundles = () => {
   const studioName = 'Ynput'
 
   const { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
+  const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
+
+  const { data: addons, isLoading: isLoadingAddons } = useGetAddonListQuery({ showVersions: true })
   const [deleteBundle] = useDeleteBundleMutation()
 
   // if no bundle selected and newBundleOpen is null, select the first bundle
@@ -34,6 +39,24 @@ const Bundles = () => {
     const result = bundleList.find((bundle) => bundle.name === selectedBundle)
     return result
   }, [bundleList, selectedBundle])
+
+  const installerVersions = useMemo(() => {
+    if (!installerList) return []
+
+    const r = {}
+    for (const installer of installerList) {
+      if (r[installer.version]) {
+        r[installer.version].push(installer.platform)
+      } else {
+        r[installer.version] = [installer.platform]
+      }
+    }
+
+    return Object.entries(r).map(([version, platforms]) => ({
+      platforms,
+      version,
+    }))
+  }, [installerList])
 
   const handleBundleSelect = (name) => {
     setSelectedBundle(name)
@@ -91,9 +114,20 @@ const Bundles = () => {
       </Section>
 
       {newBundleOpen ? (
-        <NewBundle initBundle={newBundleOpen} onSave={handleNewBundleEnd} />
+        <NewBundle
+          initBundle={newBundleOpen}
+          onSave={handleNewBundleEnd}
+          isLoading={isLoadingInstallers}
+          installers={installerVersions}
+          addons={addons}
+        />
       ) : (
-        <BundleDetail bundle={bundleData} onDuplicate={handleDuplicateBundle} />
+        <BundleDetail
+          bundle={bundleData}
+          onDuplicate={handleDuplicateBundle}
+          isLoading={isLoadingInstallers || isLoadingAddons}
+          installers={installerVersions}
+        />
       )}
     </main>
   )
