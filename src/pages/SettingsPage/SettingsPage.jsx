@@ -78,6 +78,11 @@ const SettingsPage = () => {
   const links = useMemo(() => {
     let result = [
       {
+        name: 'Bundles',
+        path: '/settings/bundles',
+        module: 'bundles',
+      },
+      {
         name: 'Anatomy presets',
         path: '/settings/anatomyPresets',
         module: 'anatomyPresets',
@@ -86,11 +91,6 @@ const SettingsPage = () => {
         name: 'Install addon',
         path: '/settings/addonInstall',
         module: 'addonInstall',
-      },
-      {
-        name: 'Bundles',
-        path: '/settings/bundles',
-        module: 'bundles',
       },
       {
         name: 'Studio settings',
