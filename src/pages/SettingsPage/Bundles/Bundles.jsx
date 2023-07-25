@@ -4,7 +4,7 @@ import BundleDetail from './BundleDetail'
 
 import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
 
-import { useGetBundleListQuery } from '/src/services/bundles'
+import { useDeleteBundleMutation, useGetBundleListQuery } from '/src/services/bundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 
@@ -16,6 +16,7 @@ const Bundles = () => {
   const studioName = 'Ynput'
 
   const { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
+  const [deleteBundle] = useDeleteBundleMutation()
 
   // if no bundle selected and newBundleOpen is null, select the first bundle
   useEffect(() => {
@@ -42,7 +43,6 @@ const Bundles = () => {
   const handleNewBundleStart = () => {
     const name = getNewBundleName(studioName, bundleList)
     setNewBundleOpen({ name })
-    setSelectedBundle(null)
   }
 
   const handleNewBundleEnd = (name) => {
@@ -69,6 +69,11 @@ const Bundles = () => {
     setSelectedBundle(null)
   }
 
+  const handleDeleteBundle = async () => {
+    await deleteBundle(selectedBundle).unwrap()
+    setSelectedBundle(null)
+  }
+
   return (
     <main style={{ overflow: 'hidden' }}>
       <Section style={{ minWidth: 300, maxWidth: 300 }}>
@@ -81,6 +86,7 @@ const Bundles = () => {
           bundleList={bundleList}
           isLoading={isLoading}
           onDuplicate={handleDuplicateBundle}
+          onDelete={handleDeleteBundle}
         />
       </Section>
 

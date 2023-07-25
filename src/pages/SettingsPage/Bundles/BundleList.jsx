@@ -7,7 +7,14 @@ import useCreateContext from '/src/hooks/useCreateContext'
 import { useUpdateBundleMutation } from '/src/services/bundles'
 import { useMemo } from 'react'
 
-const BundleList = ({ selectedBundle, onBundleSelect, bundleList, isLoading, onDuplicate }) => {
+const BundleList = ({
+  selectedBundle,
+  onBundleSelect,
+  bundleList,
+  isLoading,
+  onDuplicate,
+  onDelete,
+}) => {
   const [updateBundle] = useUpdateBundleMutation()
 
   // sort bundleList so that isArchived is at the bottom
@@ -93,6 +100,19 @@ const BundleList = ({ selectedBundle, onBundleSelect, bundleList, isLoading, onD
       command: () => onArchive(activeBundle, isArchived),
       disabled: isStaging || isProduction,
     })
+
+    const metaKey = e.originalEvent.metaKey || e.originalEvent.ctrlKey
+
+    if (metaKey || isArchived) {
+      // secret delete bundle
+      ctxMenuItems.push({
+        label: 'Delete',
+        icon: 'delete',
+        command: () => onDelete(),
+        disabled: isStaging || isProduction,
+        danger: true,
+      })
+    }
 
     ctxMenuShow(e.originalEvent, ctxMenuItems)
   }
