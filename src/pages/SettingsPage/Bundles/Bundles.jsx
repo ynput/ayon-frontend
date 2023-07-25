@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 
 import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
 
-import { useGetBundleListQuery, useDeleteBundleMutation } from '/src/services/bundles'
+import { useGetBundleListQuery } from '/src/services/bundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 
@@ -15,8 +15,16 @@ const Bundles = () => {
 
   const studioName = 'Ynput'
 
-  const { data: bundleList = [], isLoading } = useGetBundleListQuery()
-  const [deleteBundle] = useDeleteBundleMutation()
+  const { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
+
+  // if no bundle selected and newBundleOpen is null, select the first bundle
+  useEffect(() => {
+    if (!selectedBundle && !newBundleOpen) {
+      if (bundleList.length) {
+        setSelectedBundle(bundleList[0].name)
+      }
+    }
+  }, [bundleList, selectedBundle, newBundleOpen, setSelectedBundle, setNewBundleOpen])
 
   const bundleData = useMemo(() => {
     if (!(bundleList && selectedBundle)) {
@@ -29,11 +37,6 @@ const Bundles = () => {
   const handleBundleSelect = (name) => {
     setSelectedBundle(name)
     setNewBundleOpen(null)
-  }
-
-  const handleDeleteBundle = async () => {
-    await deleteBundle(selectedBundle).unwrap()
-    setSelectedBundle(null)
   }
 
   const handleNewBundleStart = () => {
@@ -67,11 +70,10 @@ const Bundles = () => {
   }
 
   return (
-    <main>
-      <Section style={{ maxWidth: 300 }}>
+    <main style={{ overflow: 'hidden' }}>
+      <Section style={{ minWidth: 300, maxWidth: 300 }}>
         <Toolbar>
-          <Button label="New Bundle" icon="add" onClick={handleNewBundleStart} />
-          <Button label="Delete Bundle" icon="delete" onClick={handleDeleteBundle} />
+          <Button label="Create new bundle" icon="add" onClick={handleNewBundleStart} />
         </Toolbar>
         <BundleList
           selectedBundle={selectedBundle}

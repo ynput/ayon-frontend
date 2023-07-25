@@ -1,54 +1,57 @@
 import { useMemo, useState, useEffect } from 'react'
-import styled from 'styled-components'
 import { toast } from 'react-toastify'
-import {
-  ScrollPanel,
-  Section,
-  InputText,
-  Toolbar,
-  Spacer,
-  Dropdown,
-  FormLayout,
-  FormRow,
-  SaveButton,
-  Button,
-} from '@ynput/ayon-react-components'
-
+import { Section, Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { useGetInstallerListQuery } from '/src/services/installers'
 import { useGetAddonListQuery } from '/src/services/addonList'
 import { useCreateBundleMutation } from '/src/services/bundles'
 
-import AddonVersions from './AddonVersions'
+import BundleForm from './BundleForm'
+import styled from 'styled-components'
+import getLatestSemver from './getLatestSemver'
 
-const Columns = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
+const StyledTools = styled.div`
+  margin-top: 18px;
+  flex: 1;
+  max-width: 400px;
+  /* 2x2 grid */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
 `
 
 const NewBundle = ({ initBundle, onSave }) => {
-  const { data: installerList = [], isFetching } = useGetInstallerListQuery()
-  const { data: addons, isLoading } = useGetAddonListQuery({ showVersions: true })
+  const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
+  const { data: addons, isLoading: isLoadingAddons } = useGetAddonListQuery({ showVersions: true })
 
   const [formData, setFormData] = useState(null)
+  const [selectedAddons, setSelectedAddons] = useState([])
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
 
-  //   set initial form data
+  //   build initial form data
   useEffect(() => {
-    if (initBundle && !isFetching) {
-      setFormData(initBundle)
-    }
-  }, [initBundle, installerList, isFetching])
+    if (initBundle && !isLoadingInstallers && !isLoadingAddons) {
+      // addons = [{name: 'addon1', versions:{'1.0.0': {}}}]
+      // reduce down addons to latest version
+      const initAddons = {}
+      for (const addon of addons) {
+        const versionList = Object.keys(addon.versions || {})
+        if (versionList.length) {
+          const latestVersion = getLatestSemver(versionList)
+          initAddons[addon.name] = latestVersion
+        }
+      }
 
-  //   set initial installer version
-  useEffect(() => {
-    if (formData && !isFetching && formData?.installerVersion === undefined) {
-      setFormData((form) => ({ installerVersion: installerList?.[0]?.version, ...form }))
+      const initForm = {
+        addons: initAddons,
+        installerVersion: installerList?.[0]?.version,
+        name: '',
+        ...initBundle,
+      }
+      setFormData(initForm)
     }
-  }, [formData, installerList, isFetching])
+  }, [initBundle, installerList, isLoadingAddons, isLoadingAddons, addons])
 
   const installerVersions = useMemo(() => {
     if (!installerList) return []
@@ -67,9 +70,6 @@ const NewBundle = ({ initBundle, onSave }) => {
       value: version,
     }))
   }, [installerList])
-
-  if (!formData) return null
-  if (!isLoading && !addons?.length) return <div>No addons found</div>
 
   const handleClear = () => {
     setFormData({ installerVersion: installerList?.[0]?.version, name: initBundle?.name })
@@ -91,8 +91,29 @@ const NewBundle = ({ initBundle, onSave }) => {
     }
   }
 
+  const setSelectedVersion = (latest = false) => {
+    setFormData((prev) => {
+      // set all selected addons to latest version if in formData
+      const newFormData = { ...prev }
+      const newAddons = { ...newFormData.addons }
+      for (const addon of selectedAddons) {
+        if (!latest) {
+          newAddons[addon.name] = undefined
+          continue
+        }
+        const versionList = Object.keys(addon.versions || {})
+        if (versionList.length) {
+          const latestVersion = getLatestSemver(versionList)
+          newAddons[addon.name] = latestVersion
+        }
+      } // end for
+      newFormData.addons = newAddons
+      return newFormData
+    })
+  }
+
   return (
-    <Section>
+    <Section style={{ overflow: 'hidden' }}>
       <Toolbar>
         <Spacer />
         <Button icon={'clear'} label="Clear" onClick={handleClear} />
@@ -104,32 +125,36 @@ const NewBundle = ({ initBundle, onSave }) => {
           saving={isCreating}
         />
       </Toolbar>
-      <ScrollPanel style={{ flexGrow: 1 }} scrollStyle={{ padding: 10 }}>
-        <FormLayout>
-          <FormRow label="Name">
-            <InputText
-              value={formData.name || ''}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              style={formData?.name ? {} : { outline: '1px solid var(--color-hl-error)' }}
-            />
-          </FormRow>
-          <FormRow label="Installer version">
-            <Dropdown
-              value={formData?.installerVersion ? [formData.installerVersion] : []}
-              options={installerVersions}
-              onChange={(e) => setFormData({ ...formData, installerVersion: e[0] })}
-              widthExpand
-            />
-          </FormRow>
-        </FormLayout>
-
-        <Columns>
-          <section>
-            <h2>Addons</h2>
-            <AddonVersions formData={formData} setFormData={setFormData} />
-          </section>
-        </Columns>
-      </ScrollPanel>
+      <BundleForm
+        isNew
+        {...{ selectedAddons, setSelectedAddons, setFormData, installerVersions }}
+        formData={formData}
+      >
+        <StyledTools>
+          <Button
+            label="Select all addons"
+            icon="select_all"
+            onClick={() => setSelectedAddons(addons)}
+          />
+          <Button
+            label="Deselect all addons"
+            icon="deselect"
+            onClick={() => setSelectedAddons([])}
+          />
+          <Button
+            label="Version latest"
+            icon="vertical_align_top"
+            disabled={!selectedAddons.length}
+            onClick={() => setSelectedVersion(true)}
+          />
+          <Button
+            label="Version NONE"
+            icon="vertical_align_bottom"
+            disabled={!selectedAddons.length}
+            onClick={() => setSelectedVersion(false)}
+          />
+        </StyledTools>
+      </BundleForm>
     </Section>
   )
 }
