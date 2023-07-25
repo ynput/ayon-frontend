@@ -18,8 +18,25 @@ const Bundles = () => {
   const studioName = 'Ynput'
 
   const { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
-  const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
-
+  let { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
+  installerList = [
+    {
+      platform: 'windows',
+      version: '1.0.0',
+    },
+    {
+      platform: 'darwin',
+      version: '1.0.0',
+    },
+    {
+      platform: 'linux',
+      version: '1.0.0',
+    },
+    {
+      platform: 'linux',
+      version: '1.0.5',
+    },
+  ]
   const { data: addons, isLoading: isLoadingAddons } = useGetAddonListQuery({ showVersions: true })
   const [deleteBundle] = useDeleteBundleMutation()
 

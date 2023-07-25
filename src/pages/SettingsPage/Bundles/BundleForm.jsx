@@ -53,13 +53,13 @@ const BundleForm = ({
               disabled={!formData}
             />
           ) : (
-            <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-              <h2 style={{ margin: 0 }}>{formData?.installerVersion || 'NONE'}</h2>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <h2 style={{ margin: 0, marginRight: 32 }}>{formData?.installerVersion || 'NONE'}</h2>
               <>
                 {!!installerPlatforms?.length &&
                   installerPlatforms.map((platform) => (
                     <Styled.PlatformTag key={platform} $platform={platform}>
-                      {upperFirst(platform)}
+                      {upperFirst(platform === 'darwin' ? 'macOS' : platform)}
                     </Styled.PlatformTag>
                   ))}
               </>
@@ -68,7 +68,7 @@ const BundleForm = ({
         </FormRow>
       </FormLayout>
       <Divider />
-      <StyledColumns style={{ maxWidth: isNew ? 800 : 1000 }}>
+      <StyledColumns style={{ maxWidth: isNew ? 800 : 'unset' }}>
         <section style={{ height: '100%', minWidth: 400 }}>
           <h2>Addons</h2>
           <section style={{ height: '100%' }}>

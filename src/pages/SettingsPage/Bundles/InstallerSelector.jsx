@@ -29,7 +29,7 @@ const VersionAndPlatformTemplate = ({ version = [], platforms = [] }) => {
       value={version}
       childrenCustom={platforms?.map((platform) => (
         <Styled.PlatformTag key={platform} $platform={platform}>
-          {platform}
+          {platform === 'darwin' ? 'macOS' : platform}
         </Styled.PlatformTag>
       ))}
     >
@@ -55,7 +55,7 @@ const InstallerSelector = ({ value = [], options, onChange, disabled }) => {
           <span>{option.version}</span>
           {option?.platforms?.map((platform) => (
             <Styled.PlatformTag key={platform} $platform={platform}>
-              {platform}
+              {platform === 'darwin' ? 'macOS' : platform}
             </Styled.PlatformTag>
           ))}
         </DefaultItemStyled>

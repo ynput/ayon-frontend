@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 // import { toast } from 'react-toastify'
-import { Section, Toolbar, Spacer, FormLayout, FormRow, Button } from '@ynput/ayon-react-components'
+import { Section, Toolbar, Spacer, Button } from '@ynput/ayon-react-components'
 
 import BundleForm from './BundleForm'
+import BundleDeps from './BundleDeps'
 
 const BundleDetail = ({ bundle, onDuplicate, installers }) => {
   const [formData, setFormData] = useState({})
@@ -29,16 +30,7 @@ const BundleDetail = ({ bundle, onDuplicate, installers }) => {
         isNew={false}
         {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
       >
-        <section style={{ flex: 1 }}>
-          <h2>Dependency packages</h2>
-          {bundle && (
-            <FormLayout>
-              <FormRow label="Windows">{bundle.dependencyPackages?.windows || '(NONE)'}</FormRow>
-              <FormRow label="Linux">{bundle.dependencyPackages?.linux || '(NONE)'}</FormRow>
-              <FormRow label="MacOS">{bundle.dependencyPackages?.darwin || '(NONE)'}</FormRow>
-            </FormLayout>
-          )}
-        </section>
+        <BundleDeps bundle={bundle} />
       </BundleForm>
     </Section>
   )
