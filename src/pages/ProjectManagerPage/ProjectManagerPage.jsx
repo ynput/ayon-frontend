@@ -3,7 +3,7 @@ import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-d
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
-import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
+import { confirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
 import AddonSettings from '/src/containers/AddonSettings'
@@ -69,7 +69,7 @@ const ProjectManagerPage = () => {
 
   const deletePreset = () => {
     confirmDialog({
-      header: 'Delete Preset',
+      header: 'Delete Project',
       message: `Are you sure you want to delete the project: ${selectedProject}?`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Delete',
@@ -138,7 +138,6 @@ const ProjectManagerPage = () => {
 
   return (
     <>
-      <ConfirmDialog />
       <nav className="secondary">
         {links.map((link, i) =>
           link.node ? (

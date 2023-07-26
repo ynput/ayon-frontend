@@ -21,6 +21,7 @@ import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
+import useServerRestart from '/src/hooks/useServerRestart'
 
 const Bundles = () => {
   const dispatch = useDispatch()
@@ -187,6 +188,17 @@ const Bundles = () => {
     deleteBundle({ name: activeBundle })
   }
 
+  const { confirmRestart } = useServerRestart()
+
+  const handleAddonInstallFinish = (newAddons) => {
+    setAddonInstallOpen(false)
+    if (newAddons) {
+      // ask if you want to restart the server
+      const message = 'Restart the server to apply addon changes?'
+      confirmRestart(message)
+    }
+  }
+
   return (
     <>
       <Dialog
@@ -195,7 +207,7 @@ const Bundles = () => {
         header="Install addons"
         onHide={() => setAddonInstallOpen(false)}
       >
-        <AddonUpload onClose={() => setAddonInstallOpen(false)} />
+        <AddonUpload onClose={handleAddonInstallFinish} />
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
         <Section style={{ minWidth: 400, maxWidth: 400 }}>
