@@ -602,3 +602,43 @@ a {
     }
   }
 }
+
+.p-contextmenu .p-menuitem > .p-menuitem-link {
+  padding-right: 10px;
+
+  &:hover {
+    background-color: var(--color-grey-00);
+  }
+
+  &.danger {
+    background-color: var(--color-hl-error);
+    span {
+      color: black;
+    }
+  }
+
+  &.save {
+    background-color: var(--color-hl-00);
+    span {
+      color: black;
+    }
+  }
+}
+
+// addons table
+.p-datatable.addons-table .p-datatable-tbody > tr {
+  border-left-width: 0;
+  td {
+    padding: 4px !important;
+    height: unset;
+  }
+}
+
+// bundles table
+.p-datatable.bundles-table .p-datatable-tbody > tr {
+  border-left-width: 0;
+  padding-left: 4px;
+  &.archived {
+    opacity: 0.5;
+  }
+}

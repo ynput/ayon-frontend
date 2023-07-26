@@ -5,24 +5,28 @@ import { Badge, BadgeWrapper } from '/src/components/Badge'
 import { TablePanel } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { useUpdateBundleMutation } from '/src/services/bundles'
+import { useMemo } from 'react'
 
-const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }) => {
+const BundleList = ({
+  selectedBundle,
+  onBundleSelect,
+  bundleList,
+  isLoading,
+  onDuplicate,
+  onDelete,
+  toggleBundleStatus,
+}) => {
   const [updateBundle] = useUpdateBundleMutation()
 
-  const onSetProduction = (name) => {
-    updateBundle({ name, isProduction: true })
-  }
+  // sort bundleList so that isArchived is at the bottom
+  const sortedBundleList = useMemo(() => {
+    const archived = bundleList.filter((b) => b.isArchived)
+    const notArchived = bundleList.filter((b) => !b.isArchived)
+    return [...notArchived, ...archived]
+  }, [bundleList])
 
-  const onSetStaging = (name) => {
-    updateBundle({ name, isStaging: true })
-  }
-
-  const onUnsetProduction = (name) => {
-    updateBundle({ name, isProduction: false })
-  }
-
-  const onUnsetStaging = (name) => {
-    updateBundle({ name, isStaging: false })
+  const onArchive = (name, isArchived) => {
+    updateBundle({ name, isArchived: !isArchived })
   }
 
   const [ctxMenuShow] = useCreateContext([])
@@ -30,41 +34,84 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
   const onContextMenu = (e) => {
     const ctxMenuItems = []
     const activeBundle = e?.data?.name
+    const isArchived = e?.data?.isArchived
+    const isProduction = e?.data?.isProduction
+    const isStaging = e?.data?.isStaging
     if (!activeBundle) {
       return
     }
-    if (bundleList.find((b) => b.name === activeBundle)?.isProduction) {
+    if (!isArchived) {
+      // production
+      if (isProduction) {
+        ctxMenuItems.push({
+          label: 'Unset Production',
+          icon: 'cancel',
+          command: () => toggleBundleStatus('production'),
+        })
+      } else {
+        ctxMenuItems.push({
+          label: 'Set Production',
+          icon: 'check',
+          command: () => toggleBundleStatus('production'),
+        })
+      }
+      // staging
+      if (isStaging) {
+        ctxMenuItems.push({
+          label: 'Unset Staging',
+          icon: 'cancel',
+          command: () => toggleBundleStatus('staging'),
+        })
+      } else {
+        ctxMenuItems.push({
+          label: 'Set Staging',
+          icon: 'check',
+          command: () => toggleBundleStatus('staging'),
+        })
+      }
+    }
+
+    // duplicate and edit
+    ctxMenuItems.push({
+      label: 'Duplicate and Edit',
+      icon: 'edit_document',
+      command: () => onDuplicate(activeBundle),
+    })
+
+    // duplicate and edit
+    ctxMenuItems.push({
+      label: isArchived ? 'Unarchive' : 'Archive',
+      icon: isArchived ? 'unarchive' : 'archive',
+      command: () => onArchive(activeBundle, isArchived),
+      disabled: isStaging || isProduction,
+    })
+
+    const metaKey = e.originalEvent.metaKey || e.originalEvent.ctrlKey
+
+    if (metaKey || isArchived) {
+      // secret delete bundle
       ctxMenuItems.push({
-        label: 'Unset Production',
-        icon: 'cancel',
-        command: () => onUnsetProduction(activeBundle),
-      })
-    } else {
-      ctxMenuItems.push({
-        label: 'Set Production',
-        icon: 'check',
-        command: () => onSetProduction(activeBundle),
+        label: 'Delete',
+        icon: 'delete',
+        command: () => onDelete(),
+        disabled: isStaging || isProduction,
+        danger: true,
       })
     }
-    if (bundleList.find((b) => b.name === activeBundle)?.isStaging) {
-      ctxMenuItems.push({
-        label: 'Unset Staging',
-        icon: 'cancel',
-        command: () => onUnsetStaging(activeBundle),
-      })
-    } else {
-      ctxMenuItems.push({
-        label: 'Set Staging',
-        icon: 'check',
-        command: () => onSetStaging(activeBundle),
-      })
-    }
+
     ctxMenuShow(e.originalEvent, ctxMenuItems)
   }
 
   const formatStatus = (rowData) => {
     return (
-      <BadgeWrapper>
+      <BadgeWrapper
+        style={{
+          justifyContent: 'flex-end',
+          width: '100%',
+          padding: '0 8px',
+          marginLeft: 0,
+        }}
+      >
         {rowData.isProduction && <Badge hl="production">Production</Badge>}
         {rowData.isStaging && <Badge hl="staging">Staging</Badge>}
       </BadgeWrapper>
@@ -74,7 +121,7 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
   return (
     <TablePanel loading={isLoading}>
       <DataTable
-        value={bundleList}
+        value={sortedBundleList}
         scrollable
         scrollHeight="flex"
         selectionMode="single"
@@ -82,11 +129,17 @@ const BundleList = ({ selectedBundle, setSelectedBundle, bundleList, isLoading }
         dataKey="name"
         onContextMenu={(e) => onContextMenu(e)}
         selection={{ name: selectedBundle }}
-        onSelectionChange={(e) => setSelectedBundle(e.value.name)}
-        onContextMenuSelectionChange={(e) => setSelectedBundle(e.value.name)}
+        onSelectionChange={(e) => onBundleSelect(e.value.name)}
+        onContextMenuSelectionChange={(e) => onBundleSelect(e.value.name)}
+        rowClassName={(rowData) => (rowData.isArchived ? 'archived' : '')}
+        className="bundles-table"
       >
-        <Column field="name" header="Name" />
-        <Column header="" body={formatStatus} />
+        <Column
+          field="name"
+          header="Name"
+          body={(b) => `${b.name} ${b.isArchived ? '(archived)' : ''}`}
+        />
+        <Column header="Status" body={formatStatus} style={{ maxWidth: 120 }} />
       </DataTable>
     </TablePanel>
   )

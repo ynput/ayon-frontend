@@ -3,8 +3,8 @@ import { ayonApi } from './ayon'
 const getBundles = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getBundleList: build.query({
-      query: () => ({
-        url: `/api/bundles`,
+      query: ({ archived = false }) => ({
+        url: `/api/bundles?archived=${archived}`,
       }),
       transformResponse: (res) => res.bundles,
       providesTags: () => [{ type: 'bundleList' }],
