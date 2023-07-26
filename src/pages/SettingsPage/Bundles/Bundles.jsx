@@ -123,7 +123,13 @@ const Bundles = () => {
       newName += '-01'
     }
 
-    setNewBundleOpen({ ...bundle, name: newName })
+    setNewBundleOpen({
+      ...bundle,
+      name: newName,
+      isArchived: false,
+      isStaging: false,
+      isProduction: false,
+    })
     setSelectedBundle(null)
   }
 
