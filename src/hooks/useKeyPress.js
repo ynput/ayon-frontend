@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 function useKeyPress(callback) {
   // State for keeping track of whether key is pressed
-  const [keyPressed, setKeyPressed] = useState('')
+  const [keyPressed, setKeyPressed] = useState(null)
 
   useEffect(() => {
     if (keyPressed && callback) {
@@ -11,12 +11,12 @@ function useKeyPress(callback) {
   }, [keyPressed])
 
   // If pressed key is our target key then set to true
-  function downHandler({ key }) {
-    setKeyPressed(key)
+  function downHandler(e) {
+    setKeyPressed(e)
   }
   // If released key is our target key then set to false
   const upHandler = () => {
-    setKeyPressed('')
+    setKeyPressed(null)
   }
   // Add event listeners
   useEffect(() => {
