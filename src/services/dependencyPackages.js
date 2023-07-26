@@ -6,7 +6,7 @@ const getDependencyPackages = ayonApi.injectEndpoints({
       query: () => ({
         url: `/api/desktop/dependency_packages`,
       }),
-      transformResponse: (res) => res.installers,
+      transformResponse: (res) => res.packages,
       providesTags: () => [{ type: 'dependencyPackageList' }],
     }),
   }), // endpoints
