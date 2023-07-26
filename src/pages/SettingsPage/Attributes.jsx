@@ -14,11 +14,10 @@ import AttributeEditor from '../../containers/attributes/attributeEditor'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttributes'
 import useSearchFilter from '/src/hooks/useSearchFilter'
-import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
-import { useRestartServerMutation } from '/src/services/restartServer'
 import useCreateContext from '/src/hooks/useCreateContext'
 import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
+import useServerRestart from '/src/hooks/useServerRestart'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -54,24 +53,14 @@ const Attributes = () => {
     [attributes],
   )
 
-  const [restartServer] = useRestartServerMutation()
-
-  // ask if the user wants to restart the server after saving
-  const confirmRestart = () =>
-    confirmDialog({
-      message: 'Restart the server to apply changes?',
-      header: 'Restart Server',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => restartServer(),
-      reject: () => {},
-    })
+  const { confirmRestart } = useServerRestart()
 
   const onSave = async () => {
     await updateAttributes({ attributes, deleteMissing: true, patches: attributes })
       .unwrap()
       .then(() => {
         toast.success('Attribute set saved')
-        confirmRestart()
+        confirmRestart('Restart the server to apply changes?')
       })
       .catch((err) => {
         console.error(err)
@@ -146,7 +135,6 @@ const Attributes = () => {
 
   return (
     <>
-      <ConfirmDialog />
       <main>
         {showEditor && (
           <AttributeEditor

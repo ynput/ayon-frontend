@@ -31,6 +31,7 @@ import { useLazyGetInfoQuery } from './services/auth/getAuth'
 import { ContextMenuProvider } from './context/contextMenuContext'
 import { GlobalContextMenu } from './components/GlobalContextMenu'
 import LoadingPage from './pages/LoadingPage'
+import { ConfirmDialog } from 'primereact/confirmdialog'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -119,6 +120,7 @@ const App = () => {
               >
                 <Header />
                 <ShareDialog />
+                <ConfirmDialog />
                 <Routes>
                   <Route
                     path="/"

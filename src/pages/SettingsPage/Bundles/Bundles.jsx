@@ -19,6 +19,7 @@ import { Dialog } from 'primereact/dialog'
 import AddonUpload from '../AddonInstall/AddonUpload'
 import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
+import useServerRestart from '/src/hooks/useServerRestart'
 
 const Bundles = () => {
   // addon install dialog
@@ -113,17 +114,28 @@ const Bundles = () => {
     const bundle = bundleList.find((b) => b.name === name)
     if (!bundle) return
 
-    // version up bundle name 01 -> 02
-    let newName = name.replace(/(\d+)$/, (match, p1) => {
-      return (parseInt(p1) + 1).toString().padStart(2, '0')
-    })
+    let newName
+    const versionNumber = parseInt(name.split('-')[4])
+    if (!isNaN(versionNumber)) {
+      newName = name.replace(/(\d+)$/, () => {
+        return (versionNumber + 1).toString().padStart(2, '0')
+      })
+    } else {
+      newName = `${name}-01`
+    }
 
     // if there is no xx at the end, add 01
     if (newName === name) {
       newName += '-01'
     }
 
-    setNewBundleOpen({ ...bundle, name: newName })
+    setNewBundleOpen({
+      ...bundle,
+      name: newName,
+      isArchived: false,
+      isStaging: false,
+      isProduction: false,
+    })
     setSelectedBundle(null)
   }
 
@@ -134,7 +146,7 @@ const Bundles = () => {
 
     const { name, [statusKey]: isActive } = bundle
 
-    const message = `bundle ${name} ${isActive ? 'set' : 'unset'} ${status}`
+    const message = `bundle ${name} ${!isActive ? 'set' : 'unset'} ${status}`
     try {
       await updateBundle({ name, [statusKey]: !isActive }).unwrap()
       toast.success(upperFirst(message))
@@ -148,6 +160,17 @@ const Bundles = () => {
     setSelectedBundle(null)
   }
 
+  const { confirmRestart } = useServerRestart()
+
+  const handleAddonInstallFinish = (newAddons) => {
+    setAddonInstallOpen(false)
+    if (newAddons) {
+      // ask if you want to restart the server
+      const message = 'Restart the server to apply addon changes?'
+      confirmRestart(message)
+    }
+  }
+
   return (
     <>
       <Dialog
@@ -156,7 +179,7 @@ const Bundles = () => {
         header="Install addons"
         onHide={() => setAddonInstallOpen(false)}
       >
-        <AddonUpload onClose={() => setAddonInstallOpen(false)} />
+        <AddonUpload onClose={handleAddonInstallFinish} />
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
         <Section style={{ minWidth: 400, maxWidth: 400 }}>
