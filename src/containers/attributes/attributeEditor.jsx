@@ -9,10 +9,10 @@ import {
   InputSwitch,
   LockedInput,
   Dropdown,
-  Dialog,
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'
+import { Dialog } from 'primereact/dialog'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
