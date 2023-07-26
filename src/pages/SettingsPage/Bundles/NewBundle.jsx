@@ -22,7 +22,7 @@ const StyledTools = styled.div`
   }
 `
 
-const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
+const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, noStudioName }) => {
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
 
@@ -108,7 +108,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
       </Toolbar>
       <BundleForm
         isNew
-        {...{ selectedAddons, setSelectedAddons, setFormData, installers }}
+        {...{ selectedAddons, setSelectedAddons, setFormData, installers, noStudioName }}
         formData={formData}
       >
         <StyledTools>

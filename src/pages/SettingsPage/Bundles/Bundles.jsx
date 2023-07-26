@@ -64,7 +64,7 @@ const Bundles = () => {
 
   // get studio name from core addon settings
   const studioName = useMemo(() => {
-    return coreAddonSettings?.studio_name || 'Studio-Name'
+    return coreAddonSettings?.studio_name
   }, [coreAddonSettings])
 
   const bundleData = useMemo(() => {
@@ -186,6 +186,8 @@ const Bundles = () => {
             isLoading={isLoadingInstallers}
             installers={installerVersions}
             addons={addons}
+            noStudioName={!studioName}
+            firstBundle={!bundleList.length}
           />
         ) : (
           <BundleDetail
