@@ -1,7 +1,7 @@
-import { Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import { useGetEntitiesDetailsQuery } from '../services/entity/getEntity'
 import PropTypes from 'prop-types'
+import { Dialog } from 'primereact/dialog'
 
 const EntityDetail = ({ projectName, entityType, entityIds, visible, onHide }) => {
   const {

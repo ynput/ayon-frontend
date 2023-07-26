@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { Panel, Button, Dialog } from '@ynput/ayon-react-components'
+import { Panel, Button } from '@ynput/ayon-react-components'
+import { Dialog } from 'primereact/dialog'
 
 const HeaderStyled = styled(Panel)`
   gap: 8px;
