@@ -26,11 +26,7 @@ const BundleDeps = ({ bundle }) => {
   const setBundleDepPackage = async (platform, packageName) => {
     const newDeps = {
       ...bundle.dependencyPackages,
-      [platform]: packageName,
-    }
-
-    if (!packageName) {
-      delete newDeps[platform]
+      [platform]: packageName || null,
     }
 
     // update bundle
