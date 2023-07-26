@@ -134,7 +134,7 @@ const Bundles = () => {
 
     const { name, [statusKey]: isActive } = bundle
 
-    const message = `bundle ${name} ${isActive ? 'set' : 'unset'} ${status}`
+    const message = `bundle ${name} ${!isActive ? 'set' : 'unset'} ${status}`
     try {
       await updateBundle({ name, [statusKey]: !isActive }).unwrap()
       toast.success(upperFirst(message))
