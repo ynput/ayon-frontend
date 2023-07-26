@@ -63,7 +63,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, noStudio
     }
 
     try {
-      await createBundle(formData).unwrap()
+      await createBundle({ data: formData, archived: true }).unwrap()
       toast.success('Bundle created')
       onSave(formData.name)
     } catch (error) {

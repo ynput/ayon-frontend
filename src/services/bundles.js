@@ -11,10 +11,26 @@ const getBundles = ayonApi.injectEndpoints({
     }),
 
     deleteBundle: build.mutation({
-      query: (id) => ({
-        url: `/api/bundles/${id}`,
+      query: ({ name }) => ({
+        url: `/api/bundles/${name}`,
         method: 'DELETE',
       }),
+      // optimisticUpdate bundleList to remove deleted bundle
+      // eslint-disable-next-line no-unused-vars
+      onQueryStarted: async ({ name, archived = true }, { dispatch, queryFulfilled }) => {
+        const patchResult = dispatch(
+          ayonApi.util.updateQueryData('getBundleList', { archived }, (draft) => {
+            const bundleIndex = draft.findIndex((bundle) => bundle.name === name)
+            draft.splice(bundleIndex, 1)
+          }),
+        )
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo()
+        }
+      },
+
       // eslint-disable-next-line no-unused-vars
       invalidatesTags: (result, error, id) => [
         { type: 'bundleList' },
@@ -24,11 +40,25 @@ const getBundles = ayonApi.injectEndpoints({
     }),
 
     createBundle: build.mutation({
-      query: (data) => ({
+      query: ({ data }) => ({
         url: `/api/bundles`,
         method: 'POST',
         body: data,
       }),
+      // optimisticUpdate bundleList to add new bundle
+      // TURNED OFF: having the lag is good user feedback
+      // onQueryStarted: async ({ archived = false, data }, { dispatch, queryFulfilled }) => {
+      //   const patchResult = dispatch(
+      //     ayonApi.util.updateQueryData('getBundleList', { archived }, (draft) => {
+      //       draft.push(data)
+      //     }),
+      //   )
+      //   try {
+      //     await queryFulfilled
+      //   } catch {
+      //     patchResult.undo()
+      //   }
+      // },
       // eslint-disable-next-line no-unused-vars
       invalidatesTags: (result, error, id) => [
         { type: 'bundleList' },
@@ -38,11 +68,26 @@ const getBundles = ayonApi.injectEndpoints({
     }),
 
     updateBundle: build.mutation({
-      query: ({ name, ...data }) => ({
+      query: ({ name, data }) => ({
         url: `/api/bundles/${name}`,
         method: 'PATCH',
         body: data,
       }),
+      // optimisticUpdate bundleList to update bundle
+      // eslint-disable-next-line no-unused-vars
+      onQueryStarted: async ({ name, archived = true, patch }, { dispatch, queryFulfilled }) => {
+        const patchResult = dispatch(
+          ayonApi.util.updateQueryData('getBundleList', { archived }, (draft) => {
+            const bundleIndex = draft.findIndex((bundle) => bundle.name === name)
+            draft[bundleIndex] = patch
+          }),
+        )
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo()
+        }
+      },
       // eslint-disable-next-line no-unused-vars
       invalidatesTags: (result, error, id) => [
         { type: 'bundleList' },
