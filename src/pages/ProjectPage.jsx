@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, NavLink, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Spacer, Button, Dialog } from '@ynput/ayon-react-components'
+import { Spacer, Button } from '@ynput/ayon-react-components'
 
 import BrowserPage from './BrowserPage'
 import EditorPage from './EditorPage'
@@ -15,6 +15,7 @@ import { selectProject } from '/src/features/project'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetProjectAddonsQuery } from '../services/addonList'
 import { TabPanel, TabView } from 'primereact/tabview'
+import { Dialog } from 'primereact/dialog'
 
 const ProjectContexInfo = () => {
   /**
