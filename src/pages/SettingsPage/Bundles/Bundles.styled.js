@@ -43,3 +43,18 @@ export const BadgeButton = styled(Button)`
 
   width: 140px;
 `
+
+export const AddonTools = styled.div`
+  flex: 1;
+  /* 2x2 grid */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  padding-top: 1px;
+  padding-right: 1px;
+
+  button {
+    height: 30px;
+  }
+`
