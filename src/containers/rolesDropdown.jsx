@@ -20,6 +20,7 @@ const RolesDropdown = ({ selectedRoles, setSelectedRoles, style, disabled, place
       widthExpand
       disable={rolesLoading}
       multiSelect
+      onClear={() => setSelectedRoles([])}
     />
   )
 }
