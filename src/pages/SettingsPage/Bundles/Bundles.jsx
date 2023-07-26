@@ -17,6 +17,8 @@ import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
 import AddonUpload from '../AddonInstall/AddonUpload'
+import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
+import getLatestSemver from './getLatestSemver'
 
 const Bundles = () => {
   // addon install dialog
@@ -26,12 +28,13 @@ const Bundles = () => {
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
-  const studioName = 'Ynput'
-
+  // REDUX QUERIES
   const { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
   const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
-
-  const { data: addons, isLoading: isLoadingAddons } = useGetAddonListQuery({ showVersions: true })
+  const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
+    showVersions: true,
+  })
+  // REDUX MUTATIONS
   const [deleteBundle] = useDeleteBundleMutation()
   const [updateBundle] = useUpdateBundleMutation()
 
@@ -43,6 +46,26 @@ const Bundles = () => {
       }
     }
   }, [bundleList, selectedBundle, newBundleOpen, setSelectedBundle, setNewBundleOpen])
+
+  // get latest core version
+  const coreAddonLatestVersion = useMemo(() => {
+    const coreAddonVersions = addons.find((addon) => addon.name === 'core')?.versions || {}
+    return getLatestSemver(Object.keys(coreAddonVersions))
+  }, [addons])
+
+  // get core addon settings for version
+  const { data: coreAddonSettings } = useGetAddonSettingsQuery(
+    {
+      addonName: 'core',
+      addonVersion: coreAddonLatestVersion,
+    },
+    { skip: !coreAddonLatestVersion },
+  )
+
+  // get studio name from core addon settings
+  const studioName = useMemo(() => {
+    return coreAddonSettings?.studio_name || 'Studio-Name'
+  }, [coreAddonSettings])
 
   const bundleData = useMemo(() => {
     if (!(bundleList && selectedBundle)) {

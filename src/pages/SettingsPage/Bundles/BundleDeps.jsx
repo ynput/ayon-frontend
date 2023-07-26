@@ -3,7 +3,6 @@ import React from 'react'
 import BundleDepPackage from './BundleDepPackage'
 
 const BundleDeps = ({ bundle }) => {
-  console.log(bundle)
   return (
     <section style={{ flex: 1, overflow: 'hidden' }}>
       <h2>
