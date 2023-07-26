@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
+import { confirmDialog } from 'primereact/confirmdialog'
 import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
@@ -206,7 +206,6 @@ const UsersSettings = () => {
 
   return (
     <main>
-      <ConfirmDialog />
       <Section>
         <Toolbar>
           <SelectButton

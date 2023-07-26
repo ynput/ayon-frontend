@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 
 import { Dialog } from 'primereact/dialog'
-import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
+import { confirmDialog } from 'primereact/confirmdialog'
 import { InputText } from 'primereact/inputtext'
 
 import { toast } from 'react-toastify'
@@ -155,7 +155,6 @@ const AnatomyPresets = () => {
 
   return (
     <main>
-      <ConfirmDialog />
       {showNameDialog && (
         <Dialog
           header="Preset name"
