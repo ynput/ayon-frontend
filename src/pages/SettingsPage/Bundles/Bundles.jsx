@@ -113,10 +113,15 @@ const Bundles = () => {
     const bundle = bundleList.find((b) => b.name === name)
     if (!bundle) return
 
-    // version up bundle name 01 -> 02
-    let newName = name.replace(/(\d+)$/, (match, p1) => {
-      return (parseInt(p1) + 1).toString().padStart(2, '0')
-    })
+    let newName
+    const versionNumber = parseInt(name.split('-')[4])
+    if (!isNaN(versionNumber)) {
+      newName = name.replace(/(\d+)$/, () => {
+        return (versionNumber + 1).toString().padStart(2, '0')
+      })
+    } else {
+      newName = `${name}-01`
+    }
 
     // if there is no xx at the end, add 01
     if (newName === name) {
