@@ -100,7 +100,9 @@ const AddonUpload = ({ onClose }) => {
           {isUploading && <StyledProgressBar $progress={progress} />}
           {!isComplete && !isUploading && 'Supports multiple .zip files.'}
           <div>
-            {onClose && <Button onClick={onClose} label="Close" />}
+            {onClose && (
+              <Button onClick={() => onClose(!errorMessage && isComplete)} label="Close" />
+            )}
             <SaveButton
               active={files.length}
               label="Install addons"
