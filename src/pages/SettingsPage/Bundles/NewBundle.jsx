@@ -94,7 +94,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
   }
 
   return (
-    <Section style={{ overflow: 'hidden' }}>
+    <Section>
       <Toolbar>
         <Spacer />
         <Button icon={'clear'} label="Clear" onClick={handleClear} />

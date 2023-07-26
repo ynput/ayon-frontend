@@ -15,8 +15,13 @@ import { useGetInstallerListQuery } from '/src/services/installers'
 import { useGetAddonListQuery } from '/src/services/addonList'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
+import { Dialog } from 'primereact/dialog'
+import AddonUpload from '../AddonInstall/AddonUpload'
 
 const Bundles = () => {
+  // addon install dialog
+  const [addonInstallOpen, setAddonInstallOpen] = useState(false)
+
   const [selectedBundle, setSelectedBundle] = useState(null)
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
@@ -121,40 +126,55 @@ const Bundles = () => {
   }
 
   return (
-    <main style={{ overflow: 'hidden' }}>
-      <Section style={{ minWidth: 400, maxWidth: 400 }}>
-        <Toolbar>
-          <Button label="Create new bundle" icon="add" onClick={handleNewBundleStart} />
-        </Toolbar>
-        <BundleList
-          selectedBundle={selectedBundle}
-          onBundleSelect={handleBundleSelect}
-          bundleList={bundleList}
-          isLoading={isLoading}
-          onDuplicate={handleDuplicateBundle}
-          onDelete={handleDeleteBundle}
-          toggleBundleStatus={toggleBundleStatus}
-        />
-      </Section>
+    <>
+      <Dialog
+        visible={addonInstallOpen}
+        style={{ width: 400, height: 400, overflow: 'hidden' }}
+        header="Install addons"
+        onHide={() => setAddonInstallOpen(false)}
+      >
+        <AddonUpload onClose={() => setAddonInstallOpen(false)} />
+      </Dialog>
+      <main style={{ overflow: 'hidden' }}>
+        <Section style={{ minWidth: 400, maxWidth: 400 }}>
+          <Toolbar>
+            <Button label="Create new bundle" icon="add" onClick={handleNewBundleStart} />
+            <Button
+              label="Install addons"
+              icon="upload"
+              onClick={() => setAddonInstallOpen(true)}
+            />
+          </Toolbar>
+          <BundleList
+            selectedBundle={selectedBundle}
+            onBundleSelect={handleBundleSelect}
+            bundleList={bundleList}
+            isLoading={isLoading}
+            onDuplicate={handleDuplicateBundle}
+            onDelete={handleDeleteBundle}
+            toggleBundleStatus={toggleBundleStatus}
+          />
+        </Section>
 
-      {newBundleOpen ? (
-        <NewBundle
-          initBundle={newBundleOpen}
-          onSave={handleNewBundleEnd}
-          isLoading={isLoadingInstallers}
-          installers={installerVersions}
-          addons={addons}
-        />
-      ) : (
-        <BundleDetail
-          bundle={bundleData}
-          onDuplicate={handleDuplicateBundle}
-          isLoading={isLoadingInstallers || isLoadingAddons}
-          installers={installerVersions}
-          toggleBundleStatus={toggleBundleStatus}
-        />
-      )}
-    </main>
+        {newBundleOpen ? (
+          <NewBundle
+            initBundle={newBundleOpen}
+            onSave={handleNewBundleEnd}
+            isLoading={isLoadingInstallers}
+            installers={installerVersions}
+            addons={addons}
+          />
+        ) : (
+          <BundleDetail
+            bundle={bundleData}
+            onDuplicate={handleDuplicateBundle}
+            isLoading={isLoadingInstallers || isLoadingAddons}
+            installers={installerVersions}
+            toggleBundleStatus={toggleBundleStatus}
+          />
+        )}
+      </main>
+    </>
   )
 }
 
