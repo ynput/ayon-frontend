@@ -1,11 +1,17 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
+import { useDispatch, useSelector } from 'react-redux'
+import { setProjectMenuOpen } from '../features/context'
 
 const ShortcutsContext = createContext()
 
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+
+  const projectMenuOpen = useSelector((state) => state.context.projectMenuOpen)
+
   // keep track of the last key pressed
   const [lastPressed, setLastPressed] = useState(null)
 
@@ -15,39 +21,45 @@ function ShortcutsProvider(props) {
     return () => clearTimeout(timer)
   }, [lastPressed])
 
-  const settings = [
-    { key: 's_s', action: () => navigate('/settings/studio') },
-    { key: 's_b', action: () => navigate('/settings/bundles') },
-    { key: 's_u', action: () => navigate('/settings/users') },
-    { key: 's_a', action: () => navigate('/settings/attributes') },
-    { key: 's_p', action: () => navigate('/settings/anatomyPresets') },
-  ]
+  const settings = useMemo(
+    () => [
+      { key: 's_s', action: () => navigate('/settings/studio') },
+      { key: 's_b', action: () => navigate('/settings/bundles') },
+      { key: 's_u', action: () => navigate('/settings/users') },
+      { key: 's_a', action: () => navigate('/settings/attributes') },
+      { key: 's_p', action: () => navigate('/settings/anatomyPresets') },
+    ],
+    [navigate],
+  )
 
   // dashboard, teams, anatomy, projectSettings
 
-  const manageProjects = [
-    { key: 'm_m', action: () => navigate('/manageProjects/dashboard') },
-    { key: 'm_t', action: () => navigate('/manageProjects/teams') },
-    { key: 'm_a', action: () => navigate('/manageProjects/anatomy') },
-    { key: 'm_s', action: () => navigate('/manageProjects/projectSettings') },
+  const manageProjects = useMemo(
+    () => [
+      { key: 'm_m', action: () => navigate('/manageProjects/dashboard') },
+      { key: 'm_t', action: () => navigate('/manageProjects/teams') },
+      { key: 'm_a', action: () => navigate('/manageProjects/anatomy') },
+      { key: 'm_s', action: () => navigate('/manageProjects/projectSettings') },
+    ],
+    [navigate],
+  )
+
+  const globalActions = [
+    {
+      key: 'ctrl_p',
+      action: () => dispatch(setProjectMenuOpen(!projectMenuOpen)),
+    },
   ]
 
-  const defaultShortcuts = [...settings, ...manageProjects]
+  const defaultShortcuts = [...settings, ...manageProjects, ...globalActions]
 
   // start off with global shortcuts but others can be set per page
   const [shortcuts, setShortcuts] = useState(defaultShortcuts)
 
-  // create function that can be used in components to add shortcuts, when the component mounts
-  // and removes them when it unmounts
-  const addShortcuts = (newShortcuts) => {
-    // console.log('adding shortcuts', newShortcuts)
-    setShortcuts((oldShortcuts) => [...oldShortcuts, ...newShortcuts])
-  }
-
-  const removeShortcuts = (shortcutsToRemove) => {
-    // console.log('removing shortcuts', shortcutsToRemove)
-    setShortcuts((oldShortcuts) => oldShortcuts.filter((s) => !shortcutsToRemove.includes(s.key)))
-  }
+  // update shortcuts when these variables change
+  useEffect(() => {
+    setShortcuts(defaultShortcuts)
+  }, [projectMenuOpen])
 
   const handleKeyPress = (e) => {
     // check target isn't an input
@@ -65,7 +77,7 @@ function ShortcutsProvider(props) {
     setLastPressed(singleKey)
 
     if (!shortcut?.action) return
-    // console.log(shortcut.key)
+    console.log(shortcut)
 
     // if it is, prevent default browser behavior
     e.preventDefault()
@@ -75,7 +87,23 @@ function ShortcutsProvider(props) {
   }
 
   // listen for key presses
-  useKeyPress(handleKeyPress)
+  useKeyPress(handleKeyPress, [projectMenuOpen])
+
+  // create function that can be used in components to add shortcuts, when the component mounts
+  // and removes them when it unmounts
+  const addShortcuts = (newShortcuts) => {
+    setShortcuts((oldShortcuts) => {
+      const oldShortcutsFiltered = oldShortcuts.filter(
+        (s) => !newShortcuts.some((n) => n.key === s.key),
+      )
+      return [...oldShortcutsFiltered, ...newShortcuts]
+    })
+  }
+
+  const removeShortcuts = (shortcutsToRemove) => {
+    // console.log('removing shortcuts', shortcutsToRemove)
+    setShortcuts((oldShortcuts) => oldShortcuts.filter((s) => !shortcutsToRemove.includes(s.key)))
+  }
 
   return (
     <ShortcutsContext.Provider
