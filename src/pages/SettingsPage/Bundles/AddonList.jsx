@@ -42,7 +42,7 @@ const AddonList = ({ formData, setFormData, readOnly, selected = [], setSelected
       const addons = { ...(newFormData.addons || {}) }
 
       for (const addon of versionsToSet) {
-        addons[addon] = version
+        addons[addon] = version === 'NONE' ? undefined : version
       }
       newFormData.addons = addons
       return newFormData
