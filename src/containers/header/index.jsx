@@ -18,9 +18,8 @@ const Header = () => {
   const userMenuVisible = useSelector((state) => state.context.userMenuOpen)
   const setUserMenuVisible = (open) => dispatch(setUserMenuOpen(open))
 
-  const setProjectMenuVisible = (open) => {
-    dispatch(setProjectMenuOpen(open))
-  }
+  const projectMenuVisible = useSelector((state) => state.context.projectMenuOpen)
+  const setProjectMenuVisible = (open) => dispatch(setProjectMenuOpen(open))
 
   // Hide sidebars when location changes
   useEffect(() => {
@@ -30,7 +29,7 @@ const Header = () => {
 
   return (
     <nav className="primary">
-      <ProjectMenu onHide={() => setProjectMenuVisible(false)} />
+      <ProjectMenu visible={projectMenuVisible} onHide={() => setProjectMenuVisible(false)} />
       <UserMenu visible={userMenuVisible} onHide={() => setUserMenuVisible(false)} />
 
       <HeaderButton

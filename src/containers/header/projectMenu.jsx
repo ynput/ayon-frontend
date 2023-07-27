@@ -4,25 +4,16 @@ import { Sidebar } from 'primereact/sidebar'
 import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectProject } from '/src/features/project'
-import {
-  selectProject as selectProjectContext,
-  setProjectMenuOpen,
-  setUri,
-} from '/src/features/context'
+import { selectProject as selectProjectContext, setUri } from '/src/features/context'
 import { onProjectChange } from '/src/features/editor'
 import { ayonApi } from '/src/services/ayon'
 import { Button } from '@ynput/ayon-react-components'
 
-const ProjectMenu = () => {
+const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
   const projectName = useSelector((state) => state.project.name)
-  const projectMenuOpen = useSelector((state) => state.context.projectMenuOpen)
-
-  const onHide = () => {
-    dispatch(setProjectMenuOpen(false))
-  }
 
   const onProjectSelect = (projectName) => {
     onHide()
@@ -50,7 +41,7 @@ const ProjectMenu = () => {
   }
 
   return (
-    <Sidebar position="left" visible={projectMenuOpen} onHide={onHide}>
+    <Sidebar position="left" visible={visible} onHide={onHide}>
       <div
         style={{
           display: 'flex',
