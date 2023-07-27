@@ -6,14 +6,19 @@ import Breadcrumbs from './breadcrumbs'
 import HeaderButton from './HeaderButton'
 import UserMenu from './userMenu'
 import ProjectMenu from './projectMenu'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setProjectMenuOpen } from '/src/features/context'
 
 const Header = () => {
-  const [projectMenuVisible, setProjectMenuVisible] = useState(false)
+  const dispatch = useDispatch()
   const [userMenuVisible, setUserMenuVisible] = useState(false)
   const location = useLocation()
   // get user from redux store
   const user = useSelector((state) => state.user)
+
+  const setProjectMenuVisible = (open) => {
+    dispatch(setProjectMenuOpen(open))
+  }
 
   // Hide sidebars when location changes
   useEffect(() => {
@@ -23,7 +28,7 @@ const Header = () => {
 
   return (
     <nav className="primary">
-      <ProjectMenu visible={projectMenuVisible} onHide={() => setProjectMenuVisible(false)} />
+      <ProjectMenu onHide={() => setProjectMenuVisible(false)} />
       <UserMenu visible={userMenuVisible} onHide={() => setUserMenuVisible(false)} />
 
       <HeaderButton

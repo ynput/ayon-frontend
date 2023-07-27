@@ -20,6 +20,7 @@ const initialState = {
   share: { name: null, data: null, link: null, img: null },
   uri: null,
   uriChanged: 0,
+  projectMenuOpen: false,
 }
 
 const contextSlice = createSlice({
@@ -145,6 +146,9 @@ const contextSlice = createSlice({
         link: null,
       }
     },
+    setProjectMenuOpen: (state, action) => {
+      state.projectMenuOpen = action.payload
+    },
   }, // reducers
 })
 
@@ -169,6 +173,7 @@ export const {
   closeShare,
   selectProject,
   onFocusChanged,
+  setProjectMenuOpen,
 } = contextSlice.actions
 
 export default contextSlice.reducer
