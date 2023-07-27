@@ -112,11 +112,7 @@ const Bundles = () => {
     setSelectedBundle(name)
   }
 
-  const handleDuplicateBundle = (name) => {
-    // get the bundle data
-    const bundle = bundleList.find((b) => b.name === name)
-    if (!bundle) return
-
+  const getVersionedName = (name) => {
     let newName
     const versionNumber = parseInt(name.split('-')[4])
     if (!isNaN(versionNumber)) {
@@ -130,6 +126,22 @@ const Bundles = () => {
     // if there is no xx at the end, add 01
     if (newName === name) {
       newName += '-01'
+    }
+
+    return newName
+  }
+
+  const handleDuplicateBundle = (name) => {
+    // get the bundle data
+    const bundle = bundleList.find((b) => b.name === name)
+    if (!bundle) return
+
+    let newName = getVersionedName(name)
+
+    const bundleNames = bundleList.map((b) => b.name)
+    // make sure the new name doesn't already exist
+    while (bundleNames.includes(newName)) {
+      newName = getVersionedName(newName)
     }
 
     setNewBundleOpen({
