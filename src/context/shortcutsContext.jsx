@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
 import { useDispatch, useSelector } from 'react-redux'
-import { setProjectMenuOpen } from '../features/context'
+import { setProjectMenuOpen, setUserMenuOpen } from '../features/context'
 
 const ShortcutsContext = createContext()
 
@@ -11,7 +11,7 @@ function ShortcutsProvider(props) {
   const dispatch = useDispatch()
 
   const projectMenuOpen = useSelector((state) => state.context.projectMenuOpen)
-
+  const userMenuOpen = useSelector((state) => state.context.userMenuOpen)
   // keep track of the last key pressed
   const [lastPressed, setLastPressed] = useState(null)
 
@@ -49,7 +49,13 @@ function ShortcutsProvider(props) {
       key: 'ctrl_p',
       action: () => dispatch(setProjectMenuOpen(!projectMenuOpen)),
     },
+    {
+      key: 'ctrl_m',
+      action: () => dispatch(setUserMenuOpen(!userMenuOpen)),
+    },
   ]
+  // when these variables change, update shortcuts
+  const deps = [projectMenuOpen, userMenuOpen]
 
   const defaultShortcuts = [...settings, ...manageProjects, ...globalActions]
 
@@ -59,7 +65,7 @@ function ShortcutsProvider(props) {
   // update shortcuts when these variables change
   useEffect(() => {
     setShortcuts(defaultShortcuts)
-  }, [projectMenuOpen])
+  }, deps)
 
   const handleKeyPress = (e) => {
     // check target isn't an input
@@ -77,7 +83,7 @@ function ShortcutsProvider(props) {
     setLastPressed(singleKey)
 
     if (!shortcut?.action) return
-    console.log(shortcut)
+    // console.log(shortcut)
 
     // if it is, prevent default browser behavior
     e.preventDefault()

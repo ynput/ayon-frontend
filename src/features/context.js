@@ -149,9 +149,13 @@ const contextSlice = createSlice({
     },
     setProjectMenuOpen: (state, action) => {
       state.projectMenuOpen = action.payload
+      // close user menu
+      state.userMenuOpen = action.payload ? false : state.userMenuOpen
     },
     setUserMenuOpen: (state, action) => {
       state.userMenuOpen = action.payload
+      // close project menu
+      state.projectMenuOpen = action.payload ? false : state.projectMenuOpen
     },
   }, // reducers
 })
