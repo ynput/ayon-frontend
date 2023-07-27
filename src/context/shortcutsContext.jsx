@@ -23,11 +23,11 @@ function ShortcutsProvider(props) {
 
   const settings = useMemo(
     () => [
-      { key: 's_s', action: () => navigate('/settings/studio') },
-      { key: 's_b', action: () => navigate('/settings/bundles') },
-      { key: 's_u', action: () => navigate('/settings/users') },
-      { key: 's_a', action: () => navigate('/settings/attributes') },
-      { key: 's_p', action: () => navigate('/settings/anatomyPresets') },
+      { key: 's+s', action: () => navigate('/settings/studio') },
+      { key: 's+b', action: () => navigate('/settings/bundles') },
+      { key: 's+u', action: () => navigate('/settings/users') },
+      { key: 's+a', action: () => navigate('/settings/attributes') },
+      { key: 's+p', action: () => navigate('/settings/anatomyPresets') },
     ],
     [navigate],
   )
@@ -36,21 +36,21 @@ function ShortcutsProvider(props) {
 
   const manageProjects = useMemo(
     () => [
-      { key: 'm_m', action: () => navigate('/manageProjects/dashboard') },
-      { key: 'm_t', action: () => navigate('/manageProjects/teams') },
-      { key: 'm_a', action: () => navigate('/manageProjects/anatomy') },
-      { key: 'm_s', action: () => navigate('/manageProjects/projectSettings') },
+      { key: 'm+m', action: () => navigate('/manageProjects/dashboard') },
+      { key: 'm+t', action: () => navigate('/manageProjects/teams') },
+      { key: 'm+a', action: () => navigate('/manageProjects/anatomy') },
+      { key: 'm+s', action: () => navigate('/manageProjects/projectSettings') },
     ],
     [navigate],
   )
 
   const globalActions = [
     {
-      key: 'ctrl_p',
+      key: 'ctrl+p',
       action: () => dispatch(setProjectMenuOpen(!projectMenuOpen)),
     },
     {
-      key: 'ctrl_m',
+      key: 'ctrl+m',
       action: () => dispatch(setUserMenuOpen(!userMenuOpen)),
     },
   ]
@@ -73,9 +73,9 @@ function ShortcutsProvider(props) {
 
     let singleKey = e.key
     // add ctrl_ prefix if ctrl or cmd is pressed
-    if (e.ctrlKey || e.metaKey) singleKey = 'ctrl_' + singleKey
+    if (e.ctrlKey || e.metaKey) singleKey = 'ctrl+' + singleKey
 
-    const combo = lastPressed + '_' + singleKey
+    const combo = lastPressed + '+' + singleKey
     // first check if the key pressed is a shortcut
     // const shortcut = shortcuts[e.key] || shortcuts[combo]
     const shortcut = shortcuts.find((s) => s.key === combo || s.key === singleKey)
