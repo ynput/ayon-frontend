@@ -21,6 +21,7 @@ const initialState = {
   uri: null,
   uriChanged: 0,
   projectMenuOpen: false,
+  userMenuOpen: false,
 }
 
 const contextSlice = createSlice({
@@ -149,6 +150,9 @@ const contextSlice = createSlice({
     setProjectMenuOpen: (state, action) => {
       state.projectMenuOpen = action.payload
     },
+    setUserMenuOpen: (state, action) => {
+      state.userMenuOpen = action.payload
+    },
   }, // reducers
 })
 
@@ -174,6 +178,7 @@ export const {
   selectProject,
   onFocusChanged,
   setProjectMenuOpen,
+  setUserMenuOpen,
 } = contextSlice.actions
 
 export default contextSlice.reducer
