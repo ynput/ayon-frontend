@@ -19,9 +19,12 @@ import { Dialog } from 'primereact/dialog'
 import AddonUpload from '../AddonInstall/AddonUpload'
 import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
+import { ayonApi } from '/src/services/ayon'
+import { useDispatch } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
 
 const Bundles = () => {
+  const dispatch = useDispatch()
   // addon install dialog
   const [addonInstallOpen, setAddonInstallOpen] = useState(false)
 
@@ -109,11 +112,7 @@ const Bundles = () => {
     setSelectedBundle(name)
   }
 
-  const handleDuplicateBundle = (name) => {
-    // get the bundle data
-    const bundle = bundleList.find((b) => b.name === name)
-    if (!bundle) return
-
+  const getVersionedName = (name) => {
     let newName
     const versionNumber = parseInt(name.split('-')[4])
     if (!isNaN(versionNumber)) {
@@ -129,6 +128,22 @@ const Bundles = () => {
       newName += '-01'
     }
 
+    return newName
+  }
+
+  const handleDuplicateBundle = (name) => {
+    // get the bundle data
+    const bundle = bundleList.find((b) => b.name === name)
+    if (!bundle) return
+
+    let newName = getVersionedName(name)
+
+    const bundleNames = bundleList.map((b) => b.name)
+    // make sure the new name doesn't already exist
+    while (bundleNames.includes(newName)) {
+      newName = getVersionedName(newName)
+    }
+
     setNewBundleOpen({
       ...bundle,
       name: newName,
@@ -139,25 +154,50 @@ const Bundles = () => {
     setSelectedBundle(null)
   }
 
-  const toggleBundleStatus = async (status) => {
+  const toggleBundleStatus = async (status, activeBundle) => {
     const statusKey = `is${upperFirst(status)}`
-    const bundle = bundleList.find((b) => b.name === selectedBundle)
+    const bundle = bundleList.find((b) => b.name === activeBundle)
     if (!bundle) return
 
     const { name, [statusKey]: isActive } = bundle
+    const newActive = !isActive
 
-    const message = `bundle ${name} ${!isActive ? 'set' : 'unset'} ${status}`
+    const message = `bundle ${name} ${newActive ? 'set' : 'unset'} ${status}`
+    let patchResult
+
+    if (newActive) {
+      // try and find an old bundle with the same status and unset it
+      const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
+      if (oldBundle) {
+        // optimistically update old bundle to remove status
+        try {
+          const patch = { ...oldBundle, [statusKey]: false }
+          patchResult = dispatch(
+            ayonApi.util.updateQueryData('getBundleList', { archived: true }, (draft) => {
+              const bundleIndex = draft.findIndex((bundle) => bundle.name === oldBundle.name)
+              draft[bundleIndex] = patch
+            }),
+          )
+        } catch (error) {
+          console.error(error)
+        }
+      }
+    }
+
     try {
-      await updateBundle({ name, [statusKey]: !isActive }).unwrap()
+      const patch = { ...bundle, [statusKey]: newActive }
+      await updateBundle({ name, data: { [statusKey]: newActive }, patch }).unwrap()
       toast.success(upperFirst(message))
     } catch (error) {
       toast.error(`Error setting ${message}`)
+      // revert optimistic update if failed to set new bundle
+      patchResult?.undo()
     }
   }
 
-  const handleDeleteBundle = async () => {
-    await deleteBundle(selectedBundle).unwrap()
+  const handleDeleteBundle = async (activeBundle) => {
     setSelectedBundle(null)
+    deleteBundle({ name: activeBundle })
   }
 
   const { confirmRestart } = useServerRestart()

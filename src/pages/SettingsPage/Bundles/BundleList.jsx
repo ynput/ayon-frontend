@@ -26,7 +26,10 @@ const BundleList = ({
   }, [bundleList])
 
   const onArchive = (name, isArchived) => {
-    updateBundle({ name, isArchived: !isArchived })
+    const bundle = bundleList.find((b) => b.name === selectedBundle)
+    if (!bundle) return
+    const patch = { ...bundle, isArchived: !isArchived }
+    updateBundle({ name, data: { isArchived: !isArchived, patch } })
   }
 
   const [ctxMenuShow] = useCreateContext([])
@@ -46,13 +49,13 @@ const BundleList = ({
         ctxMenuItems.push({
           label: 'Unset Production',
           icon: 'cancel',
-          command: () => toggleBundleStatus('production'),
+          command: () => toggleBundleStatus('production', activeBundle),
         })
       } else {
         ctxMenuItems.push({
           label: 'Set Production',
           icon: 'check',
-          command: () => toggleBundleStatus('production'),
+          command: () => toggleBundleStatus('production', activeBundle),
         })
       }
       // staging
@@ -60,13 +63,13 @@ const BundleList = ({
         ctxMenuItems.push({
           label: 'Unset Staging',
           icon: 'cancel',
-          command: () => toggleBundleStatus('staging'),
+          command: () => toggleBundleStatus('staging', activeBundle),
         })
       } else {
         ctxMenuItems.push({
           label: 'Set Staging',
           icon: 'check',
-          command: () => toggleBundleStatus('staging'),
+          command: () => toggleBundleStatus('staging', activeBundle),
         })
       }
     }
@@ -93,7 +96,7 @@ const BundleList = ({
       ctxMenuItems.push({
         label: 'Delete',
         icon: 'delete',
-        command: () => onDelete(),
+        command: () => onDelete(activeBundle),
         disabled: isStaging || isProduction,
         danger: true,
       })

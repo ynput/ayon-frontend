@@ -16,23 +16,17 @@ const StyledFormRow = styled(FormRow)`
       text-overflow: ellipsis;
       margin-right: 16px;
     }
-
-    & > button {
-      width: 100px;
-      justify-content: flex-start;
-    }
   }
 `
 
-const BundleDepPackage = ({ children, label }) => {
+const BundleDepPackage = ({ children, label, onEdit }) => {
   return (
     <StyledFormRow label={label}>
       <span>
         {children || '(NONE)'}
         {/* <span> (author)</span> */}
       </span>
-      <Button label={children ? 'Rebuild' : 'Build'} icon="sync" disabled />
-      <Button label="Upload zip" icon="folder_zip" disabled />
+      <Button icon={children ? 'edit' : 'add'} onClick={onEdit} />
     </StyledFormRow>
   )
 }

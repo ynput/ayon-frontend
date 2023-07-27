@@ -38,7 +38,7 @@ const BundleDetail = ({ bundle, onDuplicate, installers, toggleBundleStatus }) =
               key={name}
               $hl={active ? name : null}
               icon={active && 'cancel'}
-              onClick={() => toggleBundleStatus(name)}
+              onClick={() => toggleBundleStatus(name, bundle.name)}
             >
               {!active ? 'Set' : 'Unset'} {upperFirst(name)}
             </Styled.BadgeButton>

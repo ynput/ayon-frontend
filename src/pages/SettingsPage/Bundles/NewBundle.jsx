@@ -4,23 +4,8 @@ import { Section, Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-
 import { useCreateBundleMutation } from '/src/services/bundles'
 
 import BundleForm from './BundleForm'
-import styled from 'styled-components'
+import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
-
-const StyledTools = styled.div`
-  flex: 1;
-  /* 2x2 grid */
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 8px;
-  padding-top: 1px;
-  padding-right: 1px;
-
-  button {
-    height: 30px;
-  }
-`
 
 const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, noStudioName }) => {
   const [formData, setFormData] = useState(null)
@@ -63,7 +48,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, noStudio
     }
 
     try {
-      await createBundle(formData).unwrap()
+      await createBundle({ data: formData, archived: true }).unwrap()
       toast.success('Bundle created')
       onSave(formData.name)
     } catch (error) {
@@ -111,7 +96,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, noStudio
         {...{ selectedAddons, setSelectedAddons, setFormData, installers, noStudioName }}
         formData={formData}
       >
-        <StyledTools>
+        <Styled.AddonTools>
           <Button
             label="Select all addons"
             icon="select_all"
@@ -134,7 +119,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, noStudio
             disabled={!selectedAddons.length}
             onClick={() => setSelectedVersion(false)}
           />
-        </StyledTools>
+        </Styled.AddonTools>
       </BundleForm>
     </Section>
   )
