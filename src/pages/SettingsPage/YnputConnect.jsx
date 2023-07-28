@@ -17,35 +17,40 @@ const LoginButton = styled.a`
 `
 
 const YnputConnector = () => {
-  //const [ayonKey, setAyonKey] = useState(null)
-  //const [shouldDisplayLogin, setShouldDisplayLogin] = useState(false)
+  const [shouldDisplayLogin, setShouldDisplayLogin] = useState(false)
   const [queryKey, setQueryKey] = useQueryParam('key', withDefault(StringParam, ''))
   const [connectData, setConnectData] = useState(null)
 
   const signOut = () => {
     axios.delete('/api/connect').then(() => {
       setConnectData(null)
-      //setShouldDisplayLogin(true)
+      setShouldDisplayLogin(true)
     })
   }
 
-  useEffect(() => {
-    if (queryKey) {
-      //setAyonKey(queryKey)
-      setQueryKey(undefined)
-      axios.post('/api/connect', { key: queryKey })
-    }
-  }, [queryKey])
-
-  useEffect(() => {
+  const loadConnectData = () => {
     axios
       .get('/api/connect')
       .then((res) => {
         setConnectData(res.data)
       })
       .catch(() => {
-        //setShouldDisplayLogin(true)
+        setShouldDisplayLogin(true)
       })
+  }
+
+  useEffect(() => {
+    if (queryKey) {
+      //setAyonKey(queryKey)
+      setQueryKey(undefined)
+      axios.post('/api/connect', { key: queryKey }).then(() => {
+        loadConnectData()
+      })
+    }
+  }, [queryKey])
+
+  useEffect(() => {
+    loadConnectData()
   }, [])
 
   if (connectData) {
@@ -58,14 +63,16 @@ const YnputConnector = () => {
     )
   }
 
-  const redirectUrl = `${window.location.origin}/settings/connect`
-  const loginUrl = `https://auth.ayon.cloud/login?origin_url=${redirectUrl}`
-  return (
-    <Panel>
-      <h1>Connect to Ayon</h1>
-      <LoginButton href={loginUrl}>Connect to Ayon account</LoginButton>
-    </Panel>
-  )
+  if (shouldDisplayLogin) {
+    const redirectUrl = `${window.location.origin}/settings/connect`
+    const loginUrl = `https://auth.ayon.cloud/login?origin_url=${redirectUrl}`
+    return (
+      <Panel>
+        <h1>YnputConnect</h1>
+        <LoginButton href={loginUrl}>Connect to Ynput account</LoginButton>
+      </Panel>
+    )
+  }
 }
 
 const YnputConnect = () => {
