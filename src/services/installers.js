@@ -7,9 +7,18 @@ const getInstallers = ayonApi.injectEndpoints({
         url: `/api/desktop/installers`,
       }),
       transformResponse: (res) => res.installers,
-      providesTags: () => [{ type: 'bundleList' }],
+      providesTags: () => [{ type: 'installerList' }],
+    }),
+    // create installer
+    createInstaller: build.mutation({
+      query: ({ data, endPoint = 'installers' }) => ({
+        url: `/api/desktop/${endPoint}`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['installerList', 'dependencyPackageList'],
     }),
   }), // endpoints
 })
 
-export const { useGetInstallerListQuery } = getInstallers
+export const { useGetInstallerListQuery, useCreateInstallerMutation } = getInstallers
