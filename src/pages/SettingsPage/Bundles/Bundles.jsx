@@ -76,7 +76,7 @@ const Bundles = () => {
     if (!(bundleList && selectedBundle)) {
       return null
     }
-    const result = bundleList.find((bundle) => bundle.name === selectedBundle)
+    const result = bundleList.find((bundle) => bundle?.name === selectedBundle)
     return result
   }, [bundleList, selectedBundle])
 
@@ -280,13 +280,15 @@ const Bundles = () => {
             firstBundle={!bundleList.length}
           />
         ) : (
-          <BundleDetail
-            bundle={bundleData}
-            onDuplicate={handleDuplicateBundle}
-            isLoading={isLoadingInstallers || isLoadingAddons}
-            installers={installerVersions}
-            toggleBundleStatus={toggleBundleStatus}
-          />
+          bundleData && (
+            <BundleDetail
+              bundle={bundleData}
+              onDuplicate={handleDuplicateBundle}
+              isLoading={isLoadingInstallers || isLoadingAddons}
+              installers={installerVersions}
+              toggleBundleStatus={toggleBundleStatus}
+            />
+          )
         )}
       </main>
     </>
