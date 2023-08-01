@@ -22,11 +22,12 @@ import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
+import InstallerUpload from '/src/components/InstallerUpload/InstallerUpload'
 
 const Bundles = () => {
   const dispatch = useDispatch()
   // addon install dialog
-  const [addonInstallOpen, setAddonInstallOpen] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
 
   const [selectedBundle, setSelectedBundle] = useState(null)
   // set a bundle name to open the new bundle form, plus add any extra data
@@ -75,7 +76,7 @@ const Bundles = () => {
     if (!(bundleList && selectedBundle)) {
       return null
     }
-    const result = bundleList.find((bundle) => bundle.name === selectedBundle)
+    const result = bundleList.find((bundle) => bundle?.name === selectedBundle)
     return result
   }, [bundleList, selectedBundle])
 
@@ -203,32 +204,58 @@ const Bundles = () => {
   const { confirmRestart } = useServerRestart()
 
   const handleAddonInstallFinish = (newAddons) => {
-    setAddonInstallOpen(false)
+    setUploadOpen(false)
     if (newAddons) {
       // ask if you want to restart the server
-      const message = 'Restart the server to apply addon changes?'
+      const message = 'Restart the server to apply changes?'
       confirmRestart(message)
     }
+  }
+
+  let uploadHeader = ''
+  switch (uploadOpen) {
+    case 'addon':
+      uploadHeader = 'Install Addons'
+      break
+    case 'installer':
+      uploadHeader = 'Upload Installer'
+      break
+    case 'package':
+      uploadHeader = 'Upload Dependency Package'
+      break
+    default:
+      break
   }
 
   return (
     <>
       <Dialog
-        visible={addonInstallOpen}
+        visible={uploadOpen}
         style={{ width: 400, height: 400, overflow: 'hidden' }}
-        header="Install addons"
-        onHide={() => setAddonInstallOpen(false)}
+        header={uploadHeader}
+        onHide={() => setUploadOpen(false)}
       >
-        <AddonUpload onClose={handleAddonInstallFinish} />
+        {uploadOpen === 'addon' && <AddonUpload onClose={handleAddonInstallFinish} />}
+        {['package', 'installer'].includes(uploadOpen) && <InstallerUpload type={uploadOpen} />}
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
-        <Section style={{ minWidth: 400, maxWidth: 400 }}>
+        <Section style={{ minWidth: 400, maxWidth: 400, zIndex: 10 }}>
           <Toolbar>
             <Button label="Create new bundle" icon="add" onClick={handleNewBundleStart} />
             <Button
               label="Install addons"
+              icon="input_circle"
+              onClick={() => setUploadOpen('addon')}
+            />
+            <Button
+              label="Upload Installer"
               icon="upload"
-              onClick={() => setAddonInstallOpen(true)}
+              onClick={() => setUploadOpen('installer')}
+            />
+            <Button
+              label="Upload Dependency Package"
+              icon="upload"
+              onClick={() => setUploadOpen('package')}
             />
           </Toolbar>
           <BundleList
@@ -253,13 +280,15 @@ const Bundles = () => {
             firstBundle={!bundleList.length}
           />
         ) : (
-          <BundleDetail
-            bundle={bundleData}
-            onDuplicate={handleDuplicateBundle}
-            isLoading={isLoadingInstallers || isLoadingAddons}
-            installers={installerVersions}
-            toggleBundleStatus={toggleBundleStatus}
-          />
+          bundleData && (
+            <BundleDetail
+              bundle={bundleData}
+              onDuplicate={handleDuplicateBundle}
+              isLoading={isLoadingInstallers || isLoadingAddons}
+              installers={installerVersions}
+              toggleBundleStatus={toggleBundleStatus}
+            />
+          )
         )}
       </main>
     </>

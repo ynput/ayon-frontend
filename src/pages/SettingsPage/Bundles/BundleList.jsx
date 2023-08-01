@@ -20,16 +20,16 @@ const BundleList = ({
 
   // sort bundleList so that isArchived is at the bottom
   const sortedBundleList = useMemo(() => {
-    const archived = bundleList.filter((b) => b.isArchived)
-    const notArchived = bundleList.filter((b) => !b.isArchived)
-    return [...notArchived, ...archived]
+    const archived = bundleList.filter((b) => b?.isArchived)
+    const notArchived = bundleList.filter((b) => !b?.isArchived)
+    return [...notArchived, ...archived].filter((b) => b !== undefined)
   }, [bundleList])
 
   const onArchive = (name, isArchived) => {
     const bundle = bundleList.find((b) => b.name === selectedBundle)
     if (!bundle) return
     const patch = { ...bundle, isArchived: !isArchived }
-    updateBundle({ name, data: { isArchived: !isArchived, patch } })
+    updateBundle({ name, data: { isArchived: !isArchived }, patch })
   }
 
   const [ctxMenuShow] = useCreateContext([])
@@ -134,13 +134,13 @@ const BundleList = ({
         selection={{ name: selectedBundle }}
         onSelectionChange={(e) => onBundleSelect(e.value.name)}
         onContextMenuSelectionChange={(e) => onBundleSelect(e.value.name)}
-        rowClassName={(rowData) => (rowData.isArchived ? 'archived' : '')}
+        rowClassName={(rowData) => (rowData?.isArchived ? 'archived' : '')}
         className="bundles-table"
       >
         <Column
           field="name"
           header="Name"
-          body={(b) => `${b.name} ${b.isArchived ? '(archived)' : ''}`}
+          body={(b) => `${b.name} ${b?.isArchived ? '(archived)' : ''}`}
         />
         <Column header="Status" body={formatStatus} style={{ maxWidth: 120 }} />
       </DataTable>
