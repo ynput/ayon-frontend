@@ -29,6 +29,7 @@ import ErrorFallback from './components/ErrorFallback'
 import ServerRestartBanner from './components/ServerRestartBanner'
 import { useLazyGetInfoQuery } from './services/auth/getAuth'
 import { ContextMenuProvider } from './context/contextMenuContext'
+import { ShortcutsProvider } from './context/shortcutsContext'
 import { GlobalContextMenu } from './components/GlobalContextMenu'
 import LoadingPage from './pages/LoadingPage'
 import { ConfirmDialog } from 'primereact/confirmdialog'
@@ -112,55 +113,57 @@ const App = () => {
             <GlobalContextMenu />
             <RestartIndicator />
             <BrowserRouter>
-              <QueryParamProvider
-                adapter={ReactRouter6Adapter}
-                options={{
-                  updateType: 'replaceIn',
-                }}
-              >
-                <Header />
-                <ShareDialog />
-                <ConfirmDialog />
-                <Routes>
-                  <Route
-                    path="/"
-                    exact
-                    element={<Navigate replace to="/manageProjects/dashboard" />}
-                  />
-                  <Route
-                    path="/manageProjects"
-                    exact
-                    element={<Navigate replace to="/manageProjects/dashboard" />}
-                  />
+              <ShortcutsProvider>
+                <QueryParamProvider
+                  adapter={ReactRouter6Adapter}
+                  options={{
+                    updateType: 'replaceIn',
+                  }}
+                >
+                  <Header />
+                  <ShareDialog />
+                  <ConfirmDialog />
+                  <Routes>
+                    <Route
+                      path="/"
+                      exact
+                      element={<Navigate replace to="/manageProjects/dashboard" />}
+                    />
+                    <Route
+                      path="/manageProjects"
+                      exact
+                      element={<Navigate replace to="/manageProjects/dashboard" />}
+                    />
 
-                  <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-                  <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-                  <Route
-                    path={'/projects/:projectName/addon/:addonName'}
-                    element={<ProjectPage />}
-                  />
-                  <Route
-                    path="/settings"
-                    exact
-                    element={<Navigate replace to="/settings/anatomyPresets" />}
-                  />
-                  <Route path="/settings/:module" exact element={<SettingsPage />} />
-                  <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
-                  <Route
-                    path="/services"
-                    element={
-                      <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                        <ServicesPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="/explorer" element={<ExplorerPage />} />
-                  <Route path="/doc/api" element={<APIDocsPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/events" element={<EventsPage />} />
-                  <Route element={<ErrorPage code="404" />} />
-                </Routes>
-              </QueryParamProvider>
+                    <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
+                    <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+                    <Route
+                      path={'/projects/:projectName/addon/:addonName'}
+                      element={<ProjectPage />}
+                    />
+                    <Route
+                      path="/settings"
+                      exact
+                      element={<Navigate replace to="/settings/anatomyPresets" />}
+                    />
+                    <Route path="/settings/:module" exact element={<SettingsPage />} />
+                    <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
+                    <Route
+                      path="/services"
+                      element={
+                        <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                          <ServicesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/explorer" element={<ExplorerPage />} />
+                    <Route path="/doc/api" element={<APIDocsPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/events" element={<EventsPage />} />
+                    <Route element={<ErrorPage code="404" />} />
+                  </Routes>
+                </QueryParamProvider>
+              </ShortcutsProvider>
             </BrowserRouter>
           </ContextMenuProvider>
         </SocketProvider>

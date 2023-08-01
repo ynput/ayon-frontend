@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
@@ -102,6 +102,8 @@ const ProjectList = ({
 }) => {
   const [contextProject, setContextProject] = useState()
   const navigate = useNavigate()
+  const tableRef = useRef(null)
+
   // const user = useSelector((state) => state.user)
   // QUERY HOOK
   // ( default ) gets added in transformResponse
@@ -109,6 +111,16 @@ const ProjectList = ({
   if (isError) {
     console.error(error)
   }
+
+  useEffect(() => {
+    // set focus to table
+    if (tableRef.current && !isLoading) {
+      const tableEl = tableRef.current.getTable()
+      const focusableEl = tableEl?.querySelector('.p-selectable-row')
+
+      if (focusableEl) focusableEl.focus()
+    }
+  }, [tableRef, isLoading])
 
   // localstorage collapsible state
   let [collapsed, setCollapsed] = useLocalStorage('projectListCollapsed', false)
@@ -302,6 +314,7 @@ const ProjectList = ({
           style={{
             maxWidth: 'unset',
           }}
+          ref={tableRef}
         >
           <Column
             field="name"

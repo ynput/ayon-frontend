@@ -20,6 +20,8 @@ const initialState = {
   share: { name: null, data: null, link: null, img: null },
   uri: null,
   uriChanged: 0,
+  projectMenuOpen: false,
+  userMenuOpen: false,
 }
 
 const contextSlice = createSlice({
@@ -145,6 +147,16 @@ const contextSlice = createSlice({
         link: null,
       }
     },
+    setProjectMenuOpen: (state, action) => {
+      state.projectMenuOpen = action.payload
+      // close user menu
+      state.userMenuOpen = action.payload ? false : state.userMenuOpen
+    },
+    setUserMenuOpen: (state, action) => {
+      state.userMenuOpen = action.payload
+      // close project menu
+      state.projectMenuOpen = action.payload ? false : state.projectMenuOpen
+    },
   }, // reducers
 })
 
@@ -169,6 +181,8 @@ export const {
   closeShare,
   selectProject,
   onFocusChanged,
+  setProjectMenuOpen,
+  setUserMenuOpen,
 } = contextSlice.actions
 
 export default contextSlice.reducer

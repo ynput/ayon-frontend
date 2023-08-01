@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Spacer, UserImage } from '@ynput/ayon-react-components'
 
@@ -6,14 +6,20 @@ import Breadcrumbs from './breadcrumbs'
 import HeaderButton from './HeaderButton'
 import UserMenu from './userMenu'
 import ProjectMenu from './projectMenu'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setProjectMenuOpen, setUserMenuOpen } from '/src/features/context'
 
 const Header = () => {
-  const [projectMenuVisible, setProjectMenuVisible] = useState(false)
-  const [userMenuVisible, setUserMenuVisible] = useState(false)
+  const dispatch = useDispatch()
   const location = useLocation()
   // get user from redux store
   const user = useSelector((state) => state.user)
+  // user menu
+  const userMenuVisible = useSelector((state) => state.context.userMenuOpen)
+  const setUserMenuVisible = (open) => dispatch(setUserMenuOpen(open))
+
+  const projectMenuVisible = useSelector((state) => state.context.projectMenuOpen)
+  const setProjectMenuVisible = (open) => dispatch(setProjectMenuOpen(open))
 
   // Hide sidebars when location changes
   useEffect(() => {
