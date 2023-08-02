@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 
-import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
 
 import {
   useDeleteBundleMutation,
@@ -22,6 +22,7 @@ import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
+import useLocalStorage from '/src/hooks/useLocalStorage'
 
 const Bundles = () => {
   const dispatch = useDispatch()
@@ -35,12 +36,23 @@ const Bundles = () => {
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
+  const [showArchived, setShowArchived] = useLocalStorage(true)
+
   // REDUX QUERIES
-  const { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
+  let { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
   const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
   const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
     showVersions: true,
   })
+
+  // filter out archived bundles if showArchived is true
+  bundleList = useMemo(() => {
+    if (!showArchived) {
+      return bundleList.filter((bundle) => !bundle.isArchived)
+    }
+    return bundleList
+  }, [bundleList, showArchived])
+
   // REDUX MUTATIONS
   const [deleteBundle] = useDeleteBundleMutation()
   const [updateBundle] = useUpdateBundleMutation()
@@ -264,6 +276,11 @@ const Bundles = () => {
               label="Upload Dependency Package"
               icon="upload"
               onClick={() => setUploadOpen('package')}
+            />
+            <span style={{ whiteSpace: 'nowrap' }}>Show Archived</span>
+            <InputSwitch
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
             />
           </Toolbar>
           <BundleList
