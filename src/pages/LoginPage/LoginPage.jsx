@@ -11,7 +11,7 @@ import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
 
-const LoginPage = ({ loading }) => {
+const LoginPage = ({ loading, isFirstTime }) => {
   const dispatch = useDispatch()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -94,7 +94,7 @@ const LoginPage = ({ loading }) => {
     doLogin()
   }
 
-  if (isLoading || isLoadingInfo || loading) return <LoadingPage />
+  if (isLoading || isLoadingInfo || loading) return isFirstTime ? null : <LoadingPage />
 
   return (
     <main className="center">

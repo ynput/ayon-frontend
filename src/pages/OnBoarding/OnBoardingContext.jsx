@@ -2,20 +2,22 @@
 // gets addonsList
 // get server info
 import React, { createContext, useState } from 'react'
+import { useGetAddonListQuery } from '/src/services/addonList'
 
 export const OnBoardingContext = createContext()
 
 export const OnBoardingProvider = ({ children, serverInfo }) => {
   const [stepIndex, setStepIndex] = useState(0)
-  const [addonsList, setAddonsList] = useState([])
   const previousStep = () => setStepIndex(stepIndex - 1)
   const nextStep = () => setStepIndex(stepIndex + 1)
+
+  // get addons list
+  const { data: addons } = useGetAddonListQuery()
 
   const contextValue = {
     stepIndex,
     setStepIndex,
-    addonsList,
-    setAddonsList,
+    addons,
     serverInfo,
     nextStep,
     previousStep,

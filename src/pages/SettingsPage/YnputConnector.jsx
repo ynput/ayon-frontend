@@ -9,7 +9,14 @@ import {
 } from '/src/services/ynputConnect'
 import LoadingPage from '../LoadingPage'
 
-const YnputConnector = () => {
+const YnputConnector = ({
+  onConnection,
+  showLoading = true,
+  hideSignOut,
+  disabled,
+  redirect = '/settings/connect',
+  onRedirect,
+}) => {
   const [queryKey, setQueryKey] = useQueryParam('key', withDefault(StringParam, ''))
   const { data: connectData, isLoading, isError } = useGetYnputConnectionsQuery()
 
@@ -24,12 +31,22 @@ const YnputConnector = () => {
     if (queryKey) {
       //setAyonKey(queryKey)
       setQueryKey(undefined)
-
+      onRedirect && onRedirect(queryKey)
       connect({ key: queryKey })
     }
   }, [queryKey])
 
-  if (isLoading)
+  useEffect(() => {
+    if (!isLoading && onConnection) {
+      if (!isError && connectData && onConnection) {
+        onConnection(true)
+      } else {
+        onConnection(false)
+      }
+    }
+  }, [isLoading, isError, connectData, onConnection])
+
+  if (isLoading && showLoading)
     return (
       <Section style={{ position: 'relative', height: '100%' }}>
         <LoadingPage style={{ position: 'absolute' }} />
@@ -37,32 +54,29 @@ const YnputConnector = () => {
     )
 
   if (connectData && !isError) {
+    if (hideSignOut) return null
     return (
-      <Panel>
-        <h1>Connected to Ynput</h1>
-        <p>Ynput account: {connectData.email}</p>
-        <Button onClick={signOut}>Sign out</Button>
-      </Panel>
+      <main style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Panel>
+          <h1>Connected to Ynput</h1>
+          <p>Ynput account: {connectData.email}</p>
+          <Button onClick={signOut}>Sign out</Button>
+        </Panel>
+      </main>
     )
   }
 
-  const redirectUrl = `${window.location.origin}/settings/connect`
+  const redirectUrl = `${window.location.origin}${redirect}`
   const loginUrl = `https://auth.ayon.cloud/login?origin_url=${redirectUrl}`
   return (
-    <Panel>
-      <a href={loginUrl}>
-        <YnputConnectButton />
-      </a>
-    </Panel>
-  )
-}
-
-const YnputConnect = () => {
-  return (
     <main style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <YnputConnector />
+      <Panel>
+        <a href={disabled ? '#' : loginUrl}>
+          <YnputConnectButton disabled={disabled} />
+        </a>
+      </Panel>
     </main>
   )
 }
 
-export default YnputConnect
+export default YnputConnector

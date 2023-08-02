@@ -56,9 +56,9 @@ const StyledLoader = styled.div`
   }
 `
 
-const LoadingPage = () => {
+const LoadingPage = ({ style }) => {
   return (
-    <StyledLoader>
+    <StyledLoader style={style}>
       <svg
         width="100%"
         height="100%"

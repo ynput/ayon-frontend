@@ -1,10 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react'
-import * as Styled from './OnBoarding.styled'
-import { OnBoardingContext } from './OnBoardingContext'
-import YnputConnect from '/src/components/YnputConnect'
+import React, { useEffect, useState } from 'react'
+import * as Styled from './OnBoardingStep.styled'
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
+import YnputConnector from '../../SettingsPage/YnputConnector'
 
-const Landing01 = () => {
+export const Landing = ({ nextStep, setIsConnectionLoading }) => {
   const [markdown, setMarkdown] = useState('')
 
   useEffect(() => {
@@ -14,17 +13,19 @@ const Landing01 = () => {
   }, [])
   // import context
 
-  const { stepIndex } = useContext(OnBoardingContext)
   const [showMore, setShowMore] = useState(false)
-
-  if (stepIndex !== 0) return null
 
   const handleSkip = () => {}
 
-  const handleConnect = () => {}
+  const handleConnection = (c) => {
+    setIsConnectionLoading(false)
+    if (c) {
+      nextStep()
+    }
+  }
 
   return (
-    <Styled.LoginForm style={{ gap: 32 }}>
+    <>
       {showMore && (
         <>
           <Styled.More>
@@ -39,9 +40,21 @@ const Landing01 = () => {
       <Styled.Login>
         <Styled.Ayon src="/AYON.svg" />
         <h2>Welcome! Lets get things set up for you.</h2>
-        <div>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
           <span>Fast and Automated setup with</span>
-          <YnputConnect onClick={handleConnect} />
+          <YnputConnector
+            showLoading={false}
+            onConnection={handleConnection}
+            hideSignOut
+            redirect="/onboarding"
+            onRedirect={(q) => q && handleConnection(true)}
+          />
         </div>
         {!showMore && (
           <span className="more" onClick={() => setShowMore(true)}>
@@ -49,8 +62,6 @@ const Landing01 = () => {
           </span>
         )}
       </Styled.Login>
-    </Styled.LoginForm>
+    </>
   )
 }
-
-export default Landing01

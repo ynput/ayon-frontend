@@ -1,7 +1,26 @@
+import { Panel } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 // import some styles from LoginPage and export them as Styled
 export * from '/src/pages/LoginPage/LoginPage.styled'
+
+export const StepPanel = styled(Panel)`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 32px;
+  position: relative;
+  background-color: var(--color-grey-00);
+  padding: 64px;
+  border-radius: 6px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+
+  h2 {
+    font-size: 24px;
+    text-align: center;
+  }
+`
 
 export const Login = styled.section`
   display: flex;
@@ -9,11 +28,6 @@ export const Login = styled.section`
   flex-direction: column;
   align-items: center;
   gap: 16px;
-
-  h2 {
-    font-size: 24px;
-    text-align: center;
-  }
 
   button {
     margin-top: 8px;
@@ -36,11 +50,6 @@ export const More = styled.section`
   /* border right */
   border-right: 2px solid var(--color-grey-01);
   padding-right: 32px;
-
-  h2 {
-    font-size: 24px;
-    text-align: center;
-  }
 
   .skip {
     margin-top: 16px;

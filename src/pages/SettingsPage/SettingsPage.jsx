@@ -14,7 +14,7 @@ const UsersSettings = lazy(() => import('./UsersSettings'))
 const Roles = lazy(() => import('./Roles'))
 const Attributes = lazy(() => import('./Attributes'))
 const Secrets = lazy(() => import('./Secrets'))
-const YnputConnect = lazy(() => import('./YnputConnect'))
+const YnputConnector = lazy(() => import('./YnputConnector'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
@@ -69,7 +69,7 @@ const SettingsPage = () => {
       case 'secrets':
         return <Secrets />
       case 'connect':
-        return <YnputConnect />
+        return <YnputConnector />
       default:
         return <div>Not implemented</div>
     }
@@ -118,7 +118,7 @@ const SettingsPage = () => {
         module: 'secrets',
       },
       // {
-      //   name: 'YnputConnect',
+      //   name: 'YnputConnector',
       //   path: '/settings/connect',
       //   module: 'connect',
       // },

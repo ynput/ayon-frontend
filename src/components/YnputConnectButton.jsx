@@ -25,7 +25,13 @@ const StyledButton = styled(Button)`
 
 const YnputConnectButton = React.forwardRef(({ ...props }, ref) => {
   return (
-    <StyledButton {...props} ref={ref}>
+    <StyledButton
+      {...props}
+      ref={ref}
+      style={{
+        opacity: props.disabled ? 0.5 : 1,
+      }}
+    >
       <img src="/ynput-connect-logo.svg" />
     </StyledButton>
   )
