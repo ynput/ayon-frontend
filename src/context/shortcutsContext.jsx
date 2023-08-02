@@ -1,14 +1,12 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
-import { useDispatch, useSelector } from 'react-redux'
-import { setProjectMenuOpen, setUserMenuOpen } from '../features/context'
+import { useSelector } from 'react-redux'
 
 const ShortcutsContext = createContext()
 
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
-  const dispatch = useDispatch()
 
   const projectMenuOpen = useSelector((state) => state.context.projectMenuOpen)
   const userMenuOpen = useSelector((state) => state.context.userMenuOpen)
@@ -44,16 +42,7 @@ function ShortcutsProvider(props) {
     [navigate],
   )
 
-  const globalActions = [
-    {
-      key: 'ctrl+p',
-      action: () => dispatch(setProjectMenuOpen(!projectMenuOpen)),
-    },
-    {
-      key: 'ctrl+m',
-      action: () => dispatch(setUserMenuOpen(!userMenuOpen)),
-    },
-  ]
+  const globalActions = []
   // when these variables change, update shortcuts
   const deps = [projectMenuOpen, userMenuOpen]
 
