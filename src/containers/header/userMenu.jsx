@@ -111,10 +111,8 @@ const UserMenu = ({ visible, onHide }) => {
             <StyledButton
               key={`${label}-${i}`}
               onClick={() => {
-                if (link) {
-                  onHide()
-                  navigate(link)
-                } else if (onClick) onClick()
+                if (link) navigate(link)
+                else if (onClick) onClick()
               }}
               label={label}
               icon={icon}
