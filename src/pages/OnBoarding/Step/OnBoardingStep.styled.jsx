@@ -58,3 +58,28 @@ export const More = styled.section`
     cursor: pointer;
   }
 `
+
+export const PresetsContainer = styled.ul`
+  display: flex;
+  width: 470px;
+  max-width: 470px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+`
+
+export const Footer = styled.footer`
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-end;
+
+  button {
+    padding: 8px 16px;
+    min-height: unset;
+    min-width: unset;
+    max-width: unset;
+    max-height: unset;
+  }
+`
