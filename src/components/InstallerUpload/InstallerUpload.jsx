@@ -14,10 +14,6 @@ const InstallerUpload = ({ type = 'installer' }) => {
   let endPoint = 'installers'
   if (type === 'package') endPoint = 'dependency_packages'
 
-  const accepts = ['.json']
-  const fileType = type === 'installer' ? '.exe' : '.zip'
-  accepts.push(fileType)
-
   // first create the installer using the .json file
   const handleCreateInstaller = async (files) => {
     setMessage('Creating ' + type)
@@ -79,11 +75,11 @@ const InstallerUpload = ({ type = 'installer' }) => {
 
   const handleSubmit = async (files) => {
     const jsonFiles = files.filter((file) => file.file.name?.endsWith('.json'))
-    const exeFiles = files.filter((file) => file.file.name?.endsWith(fileType))
+    const installerFiles = files.filter((file) => !file.file.name?.endsWith('.json'))
     // first check that there are two files, one .exe and one .json
-    if (!jsonFiles.length && !exeFiles.length) {
+    if (!jsonFiles.length && !installerFiles.length) {
       console.log('wrong file types')
-      setError(`Please upload at least one ${fileType} or .json file`)
+      setError(`Please upload at least one installer or .json file`)
       return
     }
 
@@ -102,8 +98,8 @@ const InstallerUpload = ({ type = 'installer' }) => {
       }
     }
 
-    if (exeFiles.length) {
-      const uploadRes = await handleUploadInstaller(exeFiles)
+    if (installerFiles.length) {
+      const uploadRes = await handleUploadInstaller(installerFiles)
       // exit if there was an error
       if (!uploadRes) {
         setIsLoading(false)
@@ -111,14 +107,14 @@ const InstallerUpload = ({ type = 'installer' }) => {
       }
     }
 
-    const both = jsonFiles.length && exeFiles.length
+    const both = jsonFiles.length && installerFiles.length
 
     let message = ''
     if (both) {
       message = type + 's created and uploaded'
     } else if (jsonFiles.length) {
       message = type + 's created'
-    } else if (exeFiles.length) {
+    } else if (installerFiles.length) {
       message = type + 's uploaded'
     }
 
@@ -133,9 +129,8 @@ const InstallerUpload = ({ type = 'installer' }) => {
       files={files}
       setFiles={setFiles}
       allowMultiple
-      accept={accepts}
       onSubmit={handleSubmit}
-      placeholder="Drop .exe and .json files here"
+      placeholder="Drop .json manifest and installer file here"
       isError={!!error}
       errorMessage={error}
       confirmLabel={`Upload ${type}`}
