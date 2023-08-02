@@ -5,6 +5,10 @@ import styled from 'styled-components'
 const StyledButton = styled(Button)`
   background-color: var(--ayon-sys-dark-tertiary, #23e0a9);
   position: relative;
+  padding: 8px 16px;
+  min-height: unset;
+  max-height: unset;
+  max-width: unset;
 
   &:hover {
     background-color: var(--ayon-sys-dark-tertiary, #23e0a9);
@@ -19,7 +23,7 @@ const StyledButton = styled(Button)`
   }
 `
 
-const YnputConnect = React.forwardRef(({ ...props }, ref) => {
+const YnputConnectButton = React.forwardRef(({ ...props }, ref) => {
   return (
     <StyledButton {...props} ref={ref}>
       <img src="/ynput-connect-logo.svg" />
@@ -27,6 +31,6 @@ const YnputConnect = React.forwardRef(({ ...props }, ref) => {
   )
 })
 
-YnputConnect.displayName = 'YnputConnect'
+YnputConnectButton.displayName = 'YnputConnectButton'
 
-export default YnputConnect
+export default YnputConnectButton
