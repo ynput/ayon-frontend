@@ -22,7 +22,6 @@ import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
-import InstallerUpload from '/src/components/InstallerUpload/InstallerUpload'
 
 const Bundles = () => {
   const dispatch = useDispatch()
@@ -235,8 +234,7 @@ const Bundles = () => {
         header={uploadHeader}
         onHide={() => setUploadOpen(false)}
       >
-        {uploadOpen === 'addon' && <AddonUpload onClose={handleAddonInstallFinish} />}
-        {['package', 'installer'].includes(uploadOpen) && <InstallerUpload type={uploadOpen} />}
+        {uploadOpen && <AddonUpload onClose={handleAddonInstallFinish} type={uploadOpen} />}
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
         <Section style={{ minWidth: 400, maxWidth: 400, zIndex: 10 }}>
