@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 
@@ -32,7 +32,9 @@ const Bundles = () => {
   // keep track is an addon was installed
   const [restartRequired, setRestartRequired] = useState(false)
 
-  const [selectedBundle, setSelectedBundle] = useState(null)
+  // table selection
+  const [selectedBundles, setSelectedBundles] = useState([])
+  // open bundle details
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
@@ -57,15 +59,6 @@ const Bundles = () => {
   const [deleteBundle] = useDeleteBundleMutation()
   const [updateBundle] = useUpdateBundleMutation()
 
-  // if no bundle selected and newBundleOpen is null, select the first bundle
-  useEffect(() => {
-    if (!selectedBundle && !newBundleOpen) {
-      if (bundleList.length) {
-        setSelectedBundle(bundleList[0].name)
-      }
-    }
-  }, [bundleList, selectedBundle, newBundleOpen, setSelectedBundle, setNewBundleOpen])
-
   // get latest core version
   const coreAddonLatestVersion = useMemo(() => {
     const coreAddonVersions = addons.find((addon) => addon.name === 'core')?.versions || {}
@@ -86,13 +79,14 @@ const Bundles = () => {
     return coreAddonSettings?.studio_name
   }, [coreAddonSettings])
 
-  const bundleData = useMemo(() => {
-    if (!(bundleList && selectedBundle)) {
-      return null
+  const bundlesData = useMemo(() => {
+    if (!(bundleList && selectedBundles.length)) {
+      return []
     }
-    const result = bundleList.find((bundle) => bundle?.name === selectedBundle)
+    const result = bundleList.filter((bundle) => selectedBundles.includes(bundle.name))
+
     return result
-  }, [bundleList, selectedBundle])
+  }, [bundleList, selectedBundles])
 
   const installerVersions = useMemo(() => {
     if (!installerList) return []
@@ -112,8 +106,8 @@ const Bundles = () => {
     }))
   }, [installerList])
 
-  const handleBundleSelect = (name) => {
-    setSelectedBundle(name)
+  const handleBundleSelect = (names) => {
+    setSelectedBundles(names)
     setNewBundleOpen(null)
   }
 
@@ -124,7 +118,7 @@ const Bundles = () => {
 
   const handleNewBundleEnd = (name) => {
     setNewBundleOpen(null)
-    setSelectedBundle(name)
+    setSelectedBundles([name])
   }
 
   const getVersionedName = (name) => {
@@ -166,7 +160,7 @@ const Bundles = () => {
       isStaging: false,
       isProduction: false,
     })
-    setSelectedBundle(null)
+    setSelectedBundles([])
   }
 
   const toggleBundleStatus = async (status, activeBundle) => {
@@ -210,9 +204,11 @@ const Bundles = () => {
     }
   }
 
-  const handleDeleteBundle = async (activeBundle) => {
-    setSelectedBundle(null)
-    deleteBundle({ name: activeBundle })
+  const handleDeleteBundle = async () => {
+    setSelectedBundles([])
+    for (const name of selectedBundles) {
+      deleteBundle({ name })
+    }
   }
 
   const { confirmRestart } = useServerRestart()
@@ -284,7 +280,7 @@ const Bundles = () => {
             />
           </Toolbar>
           <BundleList
-            selectedBundle={selectedBundle}
+            selectedBundles={selectedBundles}
             onBundleSelect={handleBundleSelect}
             bundleList={bundleList}
             isLoading={isLoading}
@@ -305,9 +301,9 @@ const Bundles = () => {
             firstBundle={!bundleList.length}
           />
         ) : (
-          bundleData && (
+          !!bundlesData.length && (
             <BundleDetail
-              bundle={bundleData}
+              bundles={bundlesData}
               onDuplicate={handleDuplicateBundle}
               isLoading={isLoadingInstallers || isLoadingAddons}
               installers={installerVersions}

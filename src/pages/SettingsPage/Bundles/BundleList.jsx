@@ -8,7 +8,7 @@ import { useUpdateBundleMutation } from '/src/services/bundles'
 import { useMemo } from 'react'
 
 const BundleList = ({
-  selectedBundle,
+  selectedBundles = [],
   onBundleSelect,
   bundleList,
   isLoading,
@@ -25,11 +25,14 @@ const BundleList = ({
     return [...notArchived, ...archived].filter((b) => b !== undefined)
   }, [bundleList])
 
-  const onArchive = (name, isArchived) => {
-    const bundle = bundleList.find((b) => b.name === selectedBundle)
-    if (!bundle) return
-    const patch = { ...bundle, isArchived: !isArchived }
-    updateBundle({ name, data: { isArchived: !isArchived }, patch })
+  const onArchive = () => {
+    const bundles = bundleList.filter((b) => selectedBundles.includes(b.name))
+    if (!bundles.length) return
+
+    for (const bundle of bundles) {
+      const patch = { ...bundle, isArchived: !bundle.isArchived }
+      updateBundle({ name: bundle.name, data: { isArchived: !bundle.isArchived }, patch })
+    }
   }
 
   const [ctxMenuShow] = useCreateContext([])
@@ -50,12 +53,14 @@ const BundleList = ({
           label: 'Unset Production',
           icon: 'cancel',
           command: () => toggleBundleStatus('production', activeBundle),
+          disabled: selectedBundles.length > 1,
         })
       } else {
         ctxMenuItems.push({
           label: 'Set Production',
           icon: 'check',
           command: () => toggleBundleStatus('production', activeBundle),
+          disabled: selectedBundles.length > 1,
         })
       }
       // staging
@@ -64,12 +69,14 @@ const BundleList = ({
           label: 'Unset Staging',
           icon: 'cancel',
           command: () => toggleBundleStatus('staging', activeBundle),
+          disabled: selectedBundles.length > 1,
         })
       } else {
         ctxMenuItems.push({
           label: 'Set Staging',
           icon: 'check',
           command: () => toggleBundleStatus('staging', activeBundle),
+          disabled: selectedBundles.length > 1,
         })
       }
     }
@@ -79,13 +86,14 @@ const BundleList = ({
       label: 'Duplicate and Edit',
       icon: 'edit_document',
       command: () => onDuplicate(activeBundle),
+      disabled: selectedBundles.length > 1,
     })
 
     // duplicate and edit
     ctxMenuItems.push({
       label: isArchived ? 'Unarchive' : 'Archive',
       icon: isArchived ? 'unarchive' : 'archive',
-      command: () => onArchive(activeBundle, isArchived),
+      command: () => onArchive(),
       disabled: isStaging || isProduction,
     })
 
@@ -96,7 +104,7 @@ const BundleList = ({
       ctxMenuItems.push({
         label: 'Delete',
         icon: 'delete',
-        command: () => onDelete(activeBundle),
+        command: () => onDelete(),
         disabled: isStaging || isProduction,
         danger: true,
       })
@@ -121,19 +129,30 @@ const BundleList = ({
     )
   }
 
+  const handleSelect = (e) => {
+    const selected = e.value.map((b) => b.name)
+    onBundleSelect(selected)
+  }
+
+  const handleContextSelect = (e) => {
+    // only select if not already selected
+    if (selectedBundles.includes(e.value.name)) return
+    onBundleSelect([e.value.name])
+  }
+
   return (
     <TablePanel loading={isLoading}>
       <DataTable
         value={sortedBundleList}
         scrollable
         scrollHeight="flex"
-        selectionMode="single"
+        selectionMode="multiple"
         responsive="true"
         dataKey="name"
         onContextMenu={(e) => onContextMenu(e)}
-        selection={{ name: selectedBundle }}
-        onSelectionChange={(e) => onBundleSelect(e.value.name)}
-        onContextMenuSelectionChange={(e) => onBundleSelect(e.value.name)}
+        selection={selectedBundles.map((name) => ({ name }))}
+        onSelectionChange={handleSelect}
+        onContextMenuSelectionChange={handleContextSelect}
         rowClassName={(rowData) => (rowData?.isArchived ? 'archived' : '')}
         className="bundles-table"
       >
