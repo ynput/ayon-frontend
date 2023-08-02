@@ -308,6 +308,7 @@ const Bundles = () => {
               isLoading={isLoadingInstallers || isLoadingAddons}
               installers={installerVersions}
               toggleBundleStatus={toggleBundleStatus}
+              addons={addons}
             />
           )
         )}

@@ -5,21 +5,27 @@ import * as Styled from './Bundles.styled'
 import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
 import { upperFirst } from 'lodash'
+import BundleCompare from './BundleCompare'
 
-const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus }) => {
+const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus, addons }) => {
   const [selectedBundle, setSelectedBundle] = useState(null)
 
   const [formData, setFormData] = useState({})
   const [selectedAddons, setSelectedAddons] = useState([])
 
+  // data for first selected bundle
+  const bundle = useMemo(() => {
+    return bundles.find((b) => b.name === selectedBundle)
+  }, [bundles, selectedBundle])
+
   const bundleStates = [
     {
       name: 'staging',
-      active: bundles.some((b) => b?.isStaging),
+      active: bundles.length > 1 ? false : bundle?.isStaging,
     },
     {
       name: 'production',
-      active: bundles.some((b) => b?.isProduction),
+      active: bundles.length > 1 ? false : bundle?.isProduction,
     },
   ]
 
@@ -33,11 +39,6 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
         setFormData(bundles[0])
       }
     }
-  }, [bundles, selectedBundle])
-
-  // data for first selected bundle
-  const bundle = useMemo(() => {
-    return bundles.find((b) => b.name === selectedBundle)
   }, [bundles, selectedBundle])
 
   return (
@@ -64,13 +65,16 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
           disabled={bundles.length > 1}
         />
       </Toolbar>
-
-      <BundleForm
-        isNew={false}
-        {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
-      >
-        <BundleDeps bundle={bundle} />
-      </BundleForm>
+      {bundles.length > 1 ? (
+        <BundleCompare bundles={bundles} addons={addons} />
+      ) : (
+        <BundleForm
+          isNew={false}
+          {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
+        >
+          <BundleDeps bundle={bundle} />
+        </BundleForm>
+      )}
     </Section>
   )
 }
