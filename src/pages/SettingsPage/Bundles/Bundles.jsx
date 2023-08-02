@@ -28,6 +28,9 @@ const Bundles = () => {
   // addon install dialog
   const [uploadOpen, setUploadOpen] = useState(false)
 
+  // keep track is an addon was installed
+  const [restartRequired, setRestartRequired] = useState(false)
+
   const [selectedBundle, setSelectedBundle] = useState(null)
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
@@ -202,9 +205,10 @@ const Bundles = () => {
 
   const { confirmRestart } = useServerRestart()
 
-  const handleAddonInstallFinish = (newAddons) => {
+  const handleAddonInstallFinish = () => {
     setUploadOpen(false)
-    if (newAddons) {
+    if (restartRequired) {
+      setRestartRequired(false)
       // ask if you want to restart the server
       const message = 'Restart the server to apply changes?'
       confirmRestart(message)
@@ -232,9 +236,15 @@ const Bundles = () => {
         visible={uploadOpen}
         style={{ width: 400, height: 400, overflow: 'hidden' }}
         header={uploadHeader}
-        onHide={() => setUploadOpen(false)}
+        onHide={handleAddonInstallFinish}
       >
-        {uploadOpen && <AddonUpload onClose={handleAddonInstallFinish} type={uploadOpen} />}
+        {uploadOpen && (
+          <AddonUpload
+            onClose={handleAddonInstallFinish}
+            type={uploadOpen}
+            onInstall={(t) => t === 'addon' && setRestartRequired(true)}
+          />
+        )}
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
         <Section style={{ minWidth: 400, maxWidth: 400, zIndex: 10 }}>
