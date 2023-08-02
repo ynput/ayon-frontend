@@ -29,9 +29,6 @@ const Bundles = () => {
   // addon install dialog
   const [uploadOpen, setUploadOpen] = useState(false)
 
-  // keep track is an addon was installed
-  const [addonInstalled, setAddonInstalled] = useState(false)
-
   const [selectedBundle, setSelectedBundle] = useState(null)
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
@@ -206,10 +203,9 @@ const Bundles = () => {
 
   const { confirmRestart } = useServerRestart()
 
-  const handleAddonInstallFinish = () => {
+  const handleAddonInstallFinish = (newAddons) => {
     setUploadOpen(false)
-    if (addonInstalled) {
-      setAddonInstalled(false)
+    if (newAddons) {
       // ask if you want to restart the server
       const message = 'Restart the server to apply changes?'
       confirmRestart(message)
@@ -237,14 +233,9 @@ const Bundles = () => {
         visible={uploadOpen}
         style={{ width: 400, height: 400, overflow: 'hidden' }}
         header={uploadHeader}
-        onHide={() => (uploadOpen === 'addon' ? handleAddonInstallFinish() : setUploadOpen(false))}
+        onHide={() => setUploadOpen(false)}
       >
-        {uploadOpen === 'addon' && (
-          <AddonUpload
-            onClose={handleAddonInstallFinish}
-            onInstall={() => setAddonInstalled(true)}
-          />
-        )}
+        {uploadOpen === 'addon' && <AddonUpload onClose={handleAddonInstallFinish} />}
         {['package', 'installer'].includes(uploadOpen) && <InstallerUpload type={uploadOpen} />}
       </Dialog>
       <main style={{ overflow: 'hidden' }}>

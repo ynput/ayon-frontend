@@ -35,7 +35,7 @@ const StyledProgressBar = styled.hr`
   transition: width 0.3s;
 `
 
-const AddonUpload = ({ onClose, onInstall }) => {
+const AddonUpload = ({ onClose }) => {
   const dispatch = useDispatch()
   const [files, setFiles] = useState([])
   const [progress, setProgress] = useState(0)
@@ -54,7 +54,7 @@ const AddonUpload = ({ onClose, onInstall }) => {
     setProgress(percent)
   }
 
-  const handleInstall = async () => {
+  const onInstall = async () => {
     let index = 0
     setIsUploading(true)
     try {
@@ -76,8 +76,6 @@ const AddonUpload = ({ onClose, onInstall }) => {
 
       // update addon list
       dispatch(ayonApi.util.invalidateTags(['bundleList', 'addonList']))
-
-      onInstall()
     } catch (error) {
       console.log(error)
       setIsUploading(false)
@@ -87,7 +85,7 @@ const AddonUpload = ({ onClose, onInstall }) => {
     }
   }
 
-  //<Button onClick={handleInstall} label="Install" disabled={!files?.length} />
+  //<Button onClick={onInstall} label="Install" disabled={!files?.length} />
   return (
     <FileUpload
       files={files}
@@ -108,7 +106,7 @@ const AddonUpload = ({ onClose, onInstall }) => {
             <SaveButton
               active={files.length}
               label="Install addons"
-              onClick={handleInstall}
+              onClick={onInstall}
               saving={isUploading}
             />
           </div>
