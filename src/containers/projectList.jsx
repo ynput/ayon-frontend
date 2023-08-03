@@ -185,8 +185,8 @@ const ProjectList = ({
     label: 'Manage Project',
     icon: 'empty_dashboard',
     command: () => {
-      navigate(`/manageProjects/dashboard?project=${contextProject ? contextProject : selection}`)
       onHide()
+      navigate(`/manageProjects/dashboard?project=${contextProject ? contextProject : selection}`)
     },
   }
 

@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 
-import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
 
 import {
   useDeleteBundleMutation,
@@ -22,35 +22,42 @@ import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
-import InstallerUpload from '/src/components/InstallerUpload/InstallerUpload'
+import useLocalStorage from '/src/hooks/useLocalStorage'
 
 const Bundles = () => {
   const dispatch = useDispatch()
   // addon install dialog
   const [uploadOpen, setUploadOpen] = useState(false)
 
-  const [selectedBundle, setSelectedBundle] = useState(null)
+  // keep track is an addon was installed
+  const [restartRequired, setRestartRequired] = useState(false)
+
+  // table selection
+  const [selectedBundles, setSelectedBundles] = useState([])
+  // open bundle details
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
+  const [showArchived, setShowArchived] = useLocalStorage(true)
+
   // REDUX QUERIES
-  const { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
+  let { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
   const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
   const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
     showVersions: true,
   })
+
+  // filter out archived bundles if showArchived is true
+  bundleList = useMemo(() => {
+    if (!showArchived) {
+      return bundleList.filter((bundle) => !bundle.isArchived)
+    }
+    return bundleList
+  }, [bundleList, showArchived])
+
   // REDUX MUTATIONS
   const [deleteBundle] = useDeleteBundleMutation()
   const [updateBundle] = useUpdateBundleMutation()
-
-  // if no bundle selected and newBundleOpen is null, select the first bundle
-  useEffect(() => {
-    if (!selectedBundle && !newBundleOpen) {
-      if (bundleList.length) {
-        setSelectedBundle(bundleList[0].name)
-      }
-    }
-  }, [bundleList, selectedBundle, newBundleOpen, setSelectedBundle, setNewBundleOpen])
 
   // get latest core version
   const coreAddonLatestVersion = useMemo(() => {
@@ -72,13 +79,14 @@ const Bundles = () => {
     return coreAddonSettings?.studio_name
   }, [coreAddonSettings])
 
-  const bundleData = useMemo(() => {
-    if (!(bundleList && selectedBundle)) {
-      return null
+  const bundlesData = useMemo(() => {
+    if (!(bundleList && selectedBundles.length)) {
+      return []
     }
-    const result = bundleList.find((bundle) => bundle?.name === selectedBundle)
+    const result = bundleList.filter((bundle) => selectedBundles.includes(bundle.name))
+
     return result
-  }, [bundleList, selectedBundle])
+  }, [bundleList, selectedBundles])
 
   const installerVersions = useMemo(() => {
     if (!installerList) return []
@@ -98,8 +106,8 @@ const Bundles = () => {
     }))
   }, [installerList])
 
-  const handleBundleSelect = (name) => {
-    setSelectedBundle(name)
+  const handleBundleSelect = (names) => {
+    setSelectedBundles(names)
     setNewBundleOpen(null)
   }
 
@@ -110,7 +118,7 @@ const Bundles = () => {
 
   const handleNewBundleEnd = (name) => {
     setNewBundleOpen(null)
-    setSelectedBundle(name)
+    setSelectedBundles([name])
   }
 
   const getVersionedName = (name) => {
@@ -152,7 +160,7 @@ const Bundles = () => {
       isStaging: false,
       isProduction: false,
     })
-    setSelectedBundle(null)
+    setSelectedBundles([])
   }
 
   const toggleBundleStatus = async (status, activeBundle) => {
@@ -196,16 +204,19 @@ const Bundles = () => {
     }
   }
 
-  const handleDeleteBundle = async (activeBundle) => {
-    setSelectedBundle(null)
-    deleteBundle({ name: activeBundle })
+  const handleDeleteBundle = async () => {
+    setSelectedBundles([])
+    for (const name of selectedBundles) {
+      deleteBundle({ name })
+    }
   }
 
   const { confirmRestart } = useServerRestart()
 
-  const handleAddonInstallFinish = (newAddons) => {
+  const handleAddonInstallFinish = () => {
     setUploadOpen(false)
-    if (newAddons) {
+    if (restartRequired) {
+      setRestartRequired(false)
       // ask if you want to restart the server
       const message = 'Restart the server to apply changes?'
       confirmRestart(message)
@@ -233,10 +244,15 @@ const Bundles = () => {
         visible={uploadOpen}
         style={{ width: 400, height: 400, overflow: 'hidden' }}
         header={uploadHeader}
-        onHide={() => setUploadOpen(false)}
+        onHide={handleAddonInstallFinish}
       >
-        {uploadOpen === 'addon' && <AddonUpload onClose={handleAddonInstallFinish} />}
-        {['package', 'installer'].includes(uploadOpen) && <InstallerUpload type={uploadOpen} />}
+        {uploadOpen && (
+          <AddonUpload
+            onClose={handleAddonInstallFinish}
+            type={uploadOpen}
+            onInstall={(t) => t === 'addon' && setRestartRequired(true)}
+          />
+        )}
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
         <Section style={{ minWidth: 400, maxWidth: 400, zIndex: 10 }}>
@@ -257,9 +273,14 @@ const Bundles = () => {
               icon="upload"
               onClick={() => setUploadOpen('package')}
             />
+            <span style={{ whiteSpace: 'nowrap' }}>Show Archived</span>
+            <InputSwitch
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+            />
           </Toolbar>
           <BundleList
-            selectedBundle={selectedBundle}
+            selectedBundles={selectedBundles}
             onBundleSelect={handleBundleSelect}
             bundleList={bundleList}
             isLoading={isLoading}
@@ -280,13 +301,14 @@ const Bundles = () => {
             firstBundle={!bundleList.length}
           />
         ) : (
-          bundleData && (
+          !!bundlesData.length && (
             <BundleDetail
-              bundle={bundleData}
+              bundles={bundlesData}
               onDuplicate={handleDuplicateBundle}
               isLoading={isLoadingInstallers || isLoadingAddons}
               installers={installerVersions}
               toggleBundleStatus={toggleBundleStatus}
+              addons={addons}
             />
           )
         )}
