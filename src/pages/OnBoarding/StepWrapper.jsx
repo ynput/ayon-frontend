@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { OnBoardingContext } from '../OnBoardingContext'
+import { OnBoardingContext } from './OnBoardingContext'
 import * as Styled from './OnBoardingStep.styled'
 import FooterButtons from './FooterButtons'
 

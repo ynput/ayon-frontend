@@ -1,10 +1,10 @@
 import React from 'react'
 import { useGetInfoQuery } from '/src/services/auth/getAuth'
-import * as Styled from './Step/OnBoardingStep.styled'
+import * as Styled from './OnBoardingStep.styled'
 import OnBoardingProvider from './OnBoardingContext'
 import * as Step from './Step'
 import { useLocation, useNavigate } from 'react-router'
-import StepWrapper from './Step/StepWrapper'
+import StepWrapper from './StepWrapper'
 import YnputConnector from '../SettingsPage/YnputConnector'
 
 const OnBoardingPage = () => {
@@ -23,8 +23,8 @@ const OnBoardingPage = () => {
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
       <OnBoardingProvider serverInfo={info}>
         <StepWrapper>
-          <Step.Landing step={0} />
-          <Step.Package step={1} />
+          <Step.LandingStep step={0} />
+          <Step.PresetStep step={1} />
         </StepWrapper>
       </OnBoardingProvider>
 

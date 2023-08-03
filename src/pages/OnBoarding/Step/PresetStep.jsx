@@ -1,9 +1,9 @@
 import { Panel } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import ReleasePackage from '../../../components/Release/ReleasePreset'
-import * as Styled from './OnBoardingStep.styled'
+import * as Styled from '../OnBoardingStep.styled'
 
-export const Package = ({ release, Footer }) => {
+export const PresetStep = ({ release, Footer }) => {
   const { presets, addons } = release
   const [selectedPreset, setSelectedPreset] = useState(presets[0].name)
 
