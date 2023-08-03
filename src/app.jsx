@@ -34,6 +34,7 @@ import { GlobalContextMenu } from './components/GlobalContextMenu'
 import LoadingPage from './pages/LoadingPage'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import OnBoardingPage from './pages/OnBoarding'
+import CreateUserPage from './pages/CreateUserPage'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -86,9 +87,18 @@ const App = () => {
 
   let isFirstTime
   isFirstTime = true
+  let noAdminUser
+  noAdminUser = true
 
   // User is not logged in
-  if (!user.name) return <LoginPage loading={loading} isFirstTime={isFirstTime} />
+  if (!user.name || noAdminUser) {
+    if (noAdminUser) {
+      // create first admin user
+      return <CreateUserPage isAdmin />
+    } else {
+      return <LoginPage loading={loading} isFirstTime={isFirstTime} />
+    }
+  }
 
   const isUser = user.data.isUser
 
