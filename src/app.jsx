@@ -34,13 +34,14 @@ import { GlobalContextMenu } from './components/GlobalContextMenu'
 import LoadingPage from './pages/LoadingPage'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import OnBoardingPage from './pages/OnBoarding'
-import CreateUserPage from './pages/CreateUserPage'
 
 const App = () => {
   const user = useSelector((state) => state.user)
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState(false)
+
+  const [noAdminUser, setNoAdminUser] = useState(false)
 
   const storedAccessToken = localStorage.getItem('accessToken')
   if (storedAccessToken) {
@@ -57,6 +58,8 @@ const App = () => {
     getInfo()
       .unwrap()
       .then((response) => {
+        setNoAdminUser(!!response.noAdminUser)
+
         if (response.user) {
           dispatch(
             login({
@@ -87,20 +90,28 @@ const App = () => {
 
   let isFirstTime
   isFirstTime = true
-  let noAdminUser
-  noAdminUser = true
 
   // User is not logged in
-  if (!user.name || noAdminUser) {
-    if (noAdminUser) {
-      // create first admin user
-      return <CreateUserPage isAdmin />
-    } else {
-      return <LoginPage loading={loading} isFirstTime={isFirstTime} />
-    }
+  if (!user.name && !noAdminUser) {
+    return <LoginPage loading={loading} isFirstTime={isFirstTime} />
   }
 
-  const isUser = user.data.isUser
+  if ((isFirstTime || noAdminUser) && !loading) {
+    return (
+      <BrowserRouter>
+        <QueryParamProvider
+          adapter={ReactRouter6Adapter}
+          options={{
+            updateType: 'replaceIn',
+          }}
+        >
+          <OnBoardingPage noAdminUser={noAdminUser} />
+        </QueryParamProvider>
+      </BrowserRouter>
+    )
+  }
+
+  const isUser = user?.data?.isUser
 
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
@@ -108,7 +119,8 @@ const App = () => {
     return isFirstTime ? null : <LoadingPage />
   }
 
-  if (serverError) return <ErrorPage code={serverError} message="Server connection failed" />
+  if (serverError && !noAdminUser)
+    return <ErrorPage code={serverError} message="Server connection failed" />
 
   const RestartIndicator = () => {
     const serverIsRestarting = useContext(SocketContext)?.serverRestartingVisible || false
@@ -134,54 +146,48 @@ const App = () => {
                     updateType: 'replaceIn',
                   }}
                 >
-                  {isFirstTime ? (
-                    <OnBoardingPage />
-                  ) : (
-                    <>
-                      <Header />
-                      <ShareDialog />
-                      <ConfirmDialog />
-                      <Routes>
-                        <Route
-                          path="/"
-                          exact
-                          element={<Navigate replace to="/manageProjects/dashboard" />}
-                        />
-                        <Route
-                          path="/manageProjects"
-                          exact
-                          element={<Navigate replace to="/manageProjects/dashboard" />}
-                        />
+                  <Header />
+                  <ShareDialog />
+                  <ConfirmDialog />
+                  <Routes>
+                    <Route
+                      path="/"
+                      exact
+                      element={<Navigate replace to="/manageProjects/dashboard" />}
+                    />
+                    <Route
+                      path="/manageProjects"
+                      exact
+                      element={<Navigate replace to="/manageProjects/dashboard" />}
+                    />
 
-                        <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-                        <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-                        <Route
-                          path={'/projects/:projectName/addon/:addonName'}
-                          element={<ProjectPage />}
-                        />
-                        <Route
-                          path="/settings"
-                          exact
-                          element={<Navigate replace to="/settings/anatomyPresets" />}
-                        />
-                        <Route path="/settings/:module" exact element={<SettingsPage />} />
-                        <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
-                        <Route
-                          path="/services"
-                          element={
-                            <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                              <ServicesPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route path="/explorer" element={<ExplorerPage />} />
-                        <Route path="/doc/api" element={<APIDocsPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/events" element={<EventsPage />} />
-                        <Route element={<ErrorPage code="404" />} />
-                      </Routes>
-                    </>
-                  )}
+                    <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
+                    <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+                    <Route
+                      path={'/projects/:projectName/addon/:addonName'}
+                      element={<ProjectPage />}
+                    />
+                    <Route
+                      path="/settings"
+                      exact
+                      element={<Navigate replace to="/settings/anatomyPresets" />}
+                    />
+                    <Route path="/settings/:module" exact element={<SettingsPage />} />
+                    <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
+                    <Route
+                      path="/services"
+                      element={
+                        <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                          <ServicesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/explorer" element={<ExplorerPage />} />
+                    <Route path="/doc/api" element={<APIDocsPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/events" element={<EventsPage />} />
+                    <Route element={<ErrorPage code="404" />} />
+                  </Routes>
                 </QueryParamProvider>
               </ShortcutsProvider>
             </BrowserRouter>

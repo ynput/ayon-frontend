@@ -16,6 +16,7 @@ const YnputConnector = ({
   disabled,
   redirect = '/settings/connect',
   onRedirect,
+  ...props
 }) => {
   const [queryKey, setQueryKey] = useQueryParam('key', withDefault(StringParam, ''))
   const { data: connectData, isLoading, isError } = useGetYnputConnectionsQuery()
@@ -28,11 +29,16 @@ const YnputConnector = ({
   }
 
   useEffect(() => {
+    console.log(queryKey)
     if (queryKey) {
       //setAyonKey(queryKey)
       setQueryKey(undefined)
       onRedirect && onRedirect(queryKey)
       connect({ key: queryKey })
+        .unwrap()
+        .then((res) => {
+          onConnection && onConnection(res)
+        })
     }
   }, [queryKey])
 
@@ -69,13 +75,9 @@ const YnputConnector = ({
   const redirectUrl = `${window.location.origin}${redirect}`
   const loginUrl = `https://auth.ayon.cloud/login?origin_url=${redirectUrl}`
   return (
-    <main style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Panel>
-        <a href={disabled ? '#' : loginUrl}>
-          <YnputConnectButton disabled={disabled} />
-        </a>
-      </Panel>
-    </main>
+    <a href={disabled ? '#' : loginUrl} {...props} className=".ynput-connector">
+      <YnputConnectButton disabled={disabled} />
+    </a>
   )
 }
 

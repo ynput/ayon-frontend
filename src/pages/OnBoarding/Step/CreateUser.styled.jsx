@@ -1,24 +1,11 @@
-import { Panel as PanelComp } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
-export const BG = styled.img`
-  position: fixed;
-  z-index: -10;
-  object-fit: cover;
-  width: 100vw;
-  height: 100vh;
-`
-
-export const Ayon = styled.img`
-  height: 60px;
-`
-
-export const Panel = styled(PanelComp)`
-  position: relative;
-  background-color: var(--color-grey-00);
-  padding: 64px;
-  border-radius: 6px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+export const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
 `
 
 export const Form = styled.form`
@@ -63,5 +50,5 @@ export const Error = styled.span`
   color: var(--color-hl-error);
 
   position: absolute;
-  bottom: -32px;
+  bottom: 16px;
 `

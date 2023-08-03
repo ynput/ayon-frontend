@@ -3,17 +3,60 @@
 // get server info
 import React, { createContext, useEffect, useState } from 'react'
 import release from './releaseData'
+import { useGetYnputConnectionsQuery } from '/src/services/ynputConnect'
+
+const userFormFields = [
+  {
+    id: 'name',
+    label: 'Username',
+    type: 'text',
+    required: true,
+  },
+  {
+    id: 'password',
+    label: 'Password',
+    type: 'password',
+    required: true,
+  },
+  {
+    id: 'confirmPassword',
+    label: 'Confirm Password',
+    type: 'password',
+    required: true,
+  },
+  {
+    id: 'email',
+    label: 'Email (optional)',
+    type: 'email',
+  },
+  {
+    id: 'fullName',
+    label: 'Full Name (optional)',
+    type: 'text',
+  },
+]
 
 export const OnBoardingContext = createContext()
 
-export const OnBoardingProvider = ({ children, serverInfo }) => {
-  const [stepIndex, setStepIndex] = useState(0)
+export const OnBoardingProvider = ({ children, initStep }) => {
+  // get ynput connect data
+  const { data: ynputConnect } = useGetYnputConnectionsQuery()
+
+  const [stepIndex, setStepIndex] = useState(initStep)
   const previousStep = () => setStepIndex(stepIndex - 1)
   const nextStep = () => setStepIndex(stepIndex + 1)
 
-  // step 1
-  const [selectedPreset, setSelectedPreset] = useState(release.presets[0].name)
+  const initUserForm = userFormFields.reduce((acc, field) => {
+    acc[field.id] = ''
+    return acc
+  }, {})
+
+  // console.log({ ynputConnect })
   // step 2
+  const [userForm, setUserForm] = useState(initUserForm)
+  // step 3
+  const [selectedPreset, setSelectedPreset] = useState(release.presets[0].name)
+  // step 4
   const [selectedAddons, setSelectedAddons] = useState([])
 
   // when selectedPreset changes, update selectedAddons
@@ -39,7 +82,6 @@ export const OnBoardingProvider = ({ children, serverInfo }) => {
     stepIndex,
     setStepIndex,
     release,
-    serverInfo,
     nextStep,
     previousStep,
     selectedPreset,
@@ -47,6 +89,10 @@ export const OnBoardingProvider = ({ children, serverInfo }) => {
     selectedAddons,
     setSelectedAddons,
     onSubmit: handleSubmit,
+    setUserForm,
+    userForm,
+    userFormFields,
+    ynputConnect,
   }
 
   return <OnBoardingContext.Provider value={contextValue}>{children}</OnBoardingContext.Provider>

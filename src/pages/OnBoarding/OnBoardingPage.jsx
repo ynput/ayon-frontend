@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from 'react-router'
 import StepWrapper from './util/StepWrapper'
 import YnputConnector from '../SettingsPage/YnputConnector'
 
-const OnBoardingPage = () => {
+const OnBoardingPage = ({ noAdminUser }) => {
   const { data: info = {} } = useGetInfoQuery()
   const { loginPageBackground = '' } = info
   const navigate = useNavigate()
@@ -21,11 +21,13 @@ const OnBoardingPage = () => {
   return (
     <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
-      <OnBoardingProvider serverInfo={info}>
+      <OnBoardingProvider initStep={noAdminUser ? 0 : 2}>
         <StepWrapper>
-          <Step.LandingStep step={0} />
-          <Step.PresetStep step={1} />
-          <Step.AddonSelectStep step={2} />
+          <Step.Landing step={0} />
+          <Step.CreateUser step={1} />
+          <Step.BootstrapStart step={2} />
+          <Step.PresetStep step={3} />
+          <Step.AddonSelectStep step={4} />
         </StepWrapper>
       </OnBoardingProvider>
 

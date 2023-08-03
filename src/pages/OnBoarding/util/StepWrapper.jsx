@@ -1,11 +1,10 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import { OnBoardingContext } from './OnBoardingContext'
 import * as Styled from './OnBoardingStep.styled'
 import FooterButtons from './FooterButtons'
 
 // this wraps all steps, provides context and makes sure they are rendered in order
 const StepWrapper = ({ children }) => {
-  const [isConnectionLoading, setIsConnectionLoading] = useState(true)
   // for children get the step prop
   // get the stepIndex from context
   const { stepIndex, previousStep, nextStep, ...props } = useContext(OnBoardingContext) || {}
@@ -20,7 +19,6 @@ const StepWrapper = ({ children }) => {
       // spread the props object into the child component
       return React.cloneElement(child, {
         ...props,
-        setIsConnectionLoading,
         Footer,
         previousStep,
         nextStep,
@@ -28,15 +26,7 @@ const StepWrapper = ({ children }) => {
     }
   })
 
-  return (
-    <Styled.StepPanel
-      style={{
-        opacity: isConnectionLoading && stepIndex === 0 ? 0 : 1,
-      }}
-    >
-      {filteredChildren}
-    </Styled.StepPanel>
-  )
+  return <Styled.StepPanel>{filteredChildren}</Styled.StepPanel>
 }
 
 export default StepWrapper
