@@ -1,10 +1,10 @@
 import React from 'react'
 import { useGetInfoQuery } from '/src/services/auth/getAuth'
-import * as Styled from './OnBoardingStep.styled'
-import OnBoardingProvider from './OnBoardingContext'
+import * as Styled from './util/OnBoardingStep.styled'
+import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'
 import { useLocation, useNavigate } from 'react-router'
-import StepWrapper from './StepWrapper'
+import StepWrapper from './util/StepWrapper'
 import YnputConnector from '../SettingsPage/YnputConnector'
 
 const OnBoardingPage = () => {
@@ -25,6 +25,7 @@ const OnBoardingPage = () => {
         <StepWrapper>
           <Step.LandingStep step={0} />
           <Step.PresetStep step={1} />
+          <Step.AddonSelectStep step={2} />
         </StepWrapper>
       </OnBoardingProvider>
 

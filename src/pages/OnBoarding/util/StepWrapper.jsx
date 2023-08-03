@@ -15,8 +15,8 @@ const StepWrapper = ({ children }) => {
   // filter out children where the step prop doesn't match the stepIndex
   const filteredChildren = React.Children.map(children, (child) => {
     if (child.props.step === stepIndex) {
-      const Footer = ({ next, back }) =>
-        FooterButtons({ onBack: previousStep, onNext: nextStep, next, back })
+      const Footer = ({ ...props }) =>
+        FooterButtons({ onBack: previousStep, onNext: nextStep, ...props })
       // spread the props object into the child component
       return React.cloneElement(child, {
         ...props,

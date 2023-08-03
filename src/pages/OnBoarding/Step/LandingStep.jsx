@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import * as Styled from '../OnBoardingStep.styled'
+import * as Styled from '../util/OnBoardingStep.styled'
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
 import YnputConnector from '../../SettingsPage/YnputConnector'
 

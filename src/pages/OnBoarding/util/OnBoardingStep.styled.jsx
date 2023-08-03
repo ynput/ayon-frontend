@@ -1,4 +1,4 @@
-import { Panel } from '@ynput/ayon-react-components'
+import { Panel, Section as SectionComp } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 // import some styles from LoginPage and export them as Styled
@@ -8,13 +8,16 @@ export const StepPanel = styled(Panel)`
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: flex-start;
+  align-items: flex-end;
+  justify-content: flex-end;
   gap: 32px;
   position: relative;
   background-color: var(--color-grey-00);
   padding: 64px;
   border-radius: 6px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+  max-height: 550px;
+  min-height: 550px;
 
   h2 {
     font-size: 24px;
@@ -59,6 +62,12 @@ export const More = styled.section`
   }
 `
 
+export const Section = styled(SectionComp)`
+  overflow: hidden;
+  height: 100%;
+  padding: 1px;
+`
+
 export const PresetsContainer = styled.ul`
   display: flex;
   width: 470px;
@@ -67,6 +76,20 @@ export const PresetsContainer = styled.ul`
   align-items: center;
   gap: 8px;
   padding: 0;
+  margin: 0;
+  flex: 1;
+`
+
+export const AddonsContainer = styled.div`
+  /* 3 column grid */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 470px;
+  max-width: 470px;
+  max-height: 422px;
+
+  overflow: auto;
 `
 
 export const Footer = styled.footer`
@@ -81,5 +104,17 @@ export const Footer = styled.footer`
     min-width: unset;
     max-width: unset;
     max-height: unset;
+  }
+
+  .back {
+    background-color: unset !important;
+  }
+
+  .next {
+    width: 110px;
+  }
+
+  .icon {
+    display: none;
   }
 `
