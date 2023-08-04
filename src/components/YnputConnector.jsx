@@ -7,7 +7,7 @@ import {
   useDiscountYnputMutation,
   useGetYnputConnectionsQuery,
 } from '/src/services/ynputConnect'
-import LoadingPage from '../LoadingPage'
+import LoadingPage from '../pages/LoadingPage'
 
 const YnputConnector = ({
   onConnection,
@@ -21,7 +21,7 @@ const YnputConnector = ({
   const [queryKey, setQueryKey] = useQueryParam('key', withDefault(StringParam, ''))
   const { data: connectData, isLoading, isError } = useGetYnputConnectionsQuery()
 
-  const [connect] = useConnectYnputMutation()
+  const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation()
   const [disconnect] = useDiscountYnputMutation()
 
   const signOut = () => {
@@ -37,6 +37,7 @@ const YnputConnector = ({
       connect({ key: queryKey })
         .unwrap()
         .then((res) => {
+          console.log('ynput account connected')
           onConnection && onConnection(res)
         })
     }
@@ -62,13 +63,11 @@ const YnputConnector = ({
   if (connectData && !isError) {
     if (hideSignOut) return null
     return (
-      <main style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <Panel>
-          <h1>Connected to Ynput</h1>
-          <p>Ynput account: {connectData.email}</p>
-          <Button onClick={signOut}>Sign out</Button>
-        </Panel>
-      </main>
+      <Panel>
+        <h1>Connected to Ynput</h1>
+        <p>Ynput account: {connectData.email}</p>
+        <Button onClick={signOut}>Sign out</Button>
+      </Panel>
     )
   }
 
@@ -76,7 +75,7 @@ const YnputConnector = ({
   const loginUrl = `https://auth.ayon.cloud/login?origin_url=${redirectUrl}`
   return (
     <a href={disabled ? '#' : loginUrl} {...props} className=".ynput-connector">
-      <YnputConnectButton disabled={disabled} />
+      <YnputConnectButton disabled={disabled} isLoading={isLoadingConnect} />
     </a>
   )
 }

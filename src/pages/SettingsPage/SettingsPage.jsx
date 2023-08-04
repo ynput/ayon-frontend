@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux'
 import { useGetSettingsAddonsQuery } from '/src/services/addonList'
 
 import SettingsAddon from './SettingsAddon'
+import YnputConnectPage from './YnputConnectPage'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -14,7 +15,6 @@ const UsersSettings = lazy(() => import('./UsersSettings'))
 const Roles = lazy(() => import('./Roles'))
 const Attributes = lazy(() => import('./Attributes'))
 const Secrets = lazy(() => import('./Secrets'))
-const YnputConnector = lazy(() => import('./YnputConnector'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
@@ -69,7 +69,7 @@ const SettingsPage = () => {
       case 'secrets':
         return <Secrets />
       case 'connect':
-        return <YnputConnector />
+        return <YnputConnectPage />
       default:
         return <div>Not implemented</div>
     }

@@ -1,6 +1,7 @@
 import { Button } from '@ynput/ayon-react-components'
 import React from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import getShimmerStyles from '../styles/getShimmerStyles'
 
 const StyledButton = styled(Button)`
   background-color: var(--ayon-sys-dark-tertiary, #23e0a9);
@@ -21,6 +22,21 @@ const StyledButton = styled(Button)`
       background: var(--ayon-state-layers-dark-on-surface-opacity-016, rgba(197, 198, 201, 0.16));
     }
   }
+
+  /* when disabled */
+  ${({ $disabled }) =>
+    $disabled &&
+    css`
+      opacity: 0.5;
+    `}
+
+  /* when loading show shimmer */
+  ${({ $isLoading }) =>
+    $isLoading &&
+    css`
+      ${getShimmerStyles('black', 'white')}
+      opacity: 0.5;
+    `}
 `
 
 const YnputConnectButton = React.forwardRef(({ ...props }, ref) => {
@@ -28,9 +44,8 @@ const YnputConnectButton = React.forwardRef(({ ...props }, ref) => {
     <StyledButton
       {...props}
       ref={ref}
-      style={{
-        opacity: props.disabled ? 0.5 : 1,
-      }}
+      $disabled={props.disabled || props.isLoading}
+      $isLoading={props.isLoading}
     >
       <img src="/ynput-connect-logo.svg" />
     </StyledButton>

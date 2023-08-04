@@ -2,14 +2,14 @@ import { InputText } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import * as Styled from './CreateUser.styled'
 import { useInitializeUserMutation } from '/src/services/onBoarding/onBoarding'
-// import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { login } from '/src/features/user'
 import { ayonApi } from '/src/services/ayon'
 import { upperFirst } from 'lodash'
 
-export const CreateUser = ({ Footer, nextStep, userForm, setUserForm, userFormFields }) => {
-  // const navigate = useNavigate()
+export const CreateUser = ({ Footer, userForm, setUserForm, userFormFields }) => {
+  const navigate = useNavigate()
   const dispatch = useDispatch()
 
   const [errorMessage, setErrorMessage] = useState('')
@@ -47,7 +47,6 @@ export const CreateUser = ({ Footer, nextStep, userForm, setUserForm, userFormFi
       return false
     }
 
-    console.log('valid')
     setErrorMessage('')
     return true
   }
@@ -75,7 +74,12 @@ export const CreateUser = ({ Footer, nextStep, userForm, setUserForm, userFormFi
     try {
       const response = await initializeUser(formatedForm).unwrap()
 
+      console.log('admin user created')
+
       if (response.error) throw { data: { detail: response.error } }
+
+      // navigate to dashboard
+      navigate('/manageProjects')
 
       dispatch(
         login({
@@ -85,17 +89,16 @@ export const CreateUser = ({ Footer, nextStep, userForm, setUserForm, userFormFi
       )
       // invalidate all rtk queries cache
       dispatch(ayonApi.util.resetApiState())
-
-      nextStep()
     } catch (error) {
       console.log(error)
       setErrorMessage(error.data?.detail || 'Unable to create admin')
     }
   }
 
+  const autoFocus = userForm.name ? 1 : 0
+
   return (
     <Styled.Wrapper>
-      {/* <StepStyled.Ayon src="/AYON.svg" /> */}
       <Styled.Form onSubmit={handleSubmit}>
         <h1>Create Admin</h1>
         {userFormFields.map((field, i) => (
@@ -105,7 +108,7 @@ export const CreateUser = ({ Footer, nextStep, userForm, setUserForm, userFormFi
               {...field}
               value={userForm[field.id] || ''}
               onChange={handleInputChange}
-              autoFocus={i === 0}
+              autoFocus={!!(i === autoFocus)}
             />
           </Styled.FormRow>
         ))}

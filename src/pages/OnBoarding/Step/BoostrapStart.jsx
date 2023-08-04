@@ -1,19 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
-import YnputConnector from '../../SettingsPage/YnputConnector'
+
+import YnputConnector from '../../../components/YnputConnector'
 import { SaveButton } from '@ynput/ayon-react-components'
 
 export const BootstrapStart = ({ nextStep, ynputConnect }) => {
-  const [markdown, setMarkdown] = useState('')
-
-  useEffect(() => {
-    fetch('/moreBlurb.md')
-      .then((response) => response.text())
-      .then((text) => setMarkdown(text))
-  }, [])
-  // import context
-
   const [showMore, setShowMore] = useState(false)
 
   const handleSkip = () => {}
@@ -31,7 +22,16 @@ export const BootstrapStart = ({ nextStep, ynputConnect }) => {
         <>
           <Styled.More>
             <h2>{`What is ${ynputConnect ? 'Setup Wizard' : 'Ynput Connect'}?`}</h2>
-            <ReactMarkdown>{markdown}</ReactMarkdown>
+            <p>
+              AYON is a highly modular platform. Connecting your Ynput account to AYON lets us
+              automatically download and setup all you need to take full advantage of AYON in your
+              production.
+            </p>
+            <br />
+            <p>
+              If you are in offline environment or you would rather download and install all the
+              addons, desktop distribution and dependencies manually, you can skip this step.
+            </p>
             <span className="skip" onClick={handleSkip}>
               I know what I am doing, skip bootstrap.
             </span>

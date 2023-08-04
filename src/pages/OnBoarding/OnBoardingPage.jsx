@@ -3,19 +3,18 @@ import { useGetInfoQuery } from '/src/services/auth/getAuth'
 import * as Styled from './util/OnBoardingStep.styled'
 import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'
-import { useLocation, useNavigate } from 'react-router'
+import { Navigate, useLocation } from 'react-router'
 import StepWrapper from './util/StepWrapper'
-import YnputConnector from '../SettingsPage/YnputConnector'
+import YnputConnector from '../../components/YnputConnector'
 
 const OnBoardingPage = ({ noAdminUser }) => {
   const { data: info = {} } = useGetInfoQuery()
   const { loginPageBackground = '' } = info
-  const navigate = useNavigate()
   const location = useLocation()
 
   // if location is not /onboarding, redirect to /onboarding
   if (location.pathname !== '/onboarding') {
-    navigate('/onboarding')
+    return <Navigate to="/onboarding" replace={true} />
   }
 
   return (

@@ -89,7 +89,7 @@ const App = () => {
   }, [dispatch, storedAccessToken])
 
   let isFirstTime
-  isFirstTime = true
+  // isFirstTime = true
 
   // User is not logged in
   if (!user.name && !noAdminUser) {

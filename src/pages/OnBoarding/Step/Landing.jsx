@@ -1,18 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import YnputConnector from '../../SettingsPage/YnputConnector'
-import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
+import YnputConnector from '../../../components/YnputConnector'
 
 export const Landing = ({ nextStep, setUserForm }) => {
-  const [markdown, setMarkdown] = useState('')
-
-  useEffect(() => {
-    fetch('/moreBlurb.md')
-      .then((response) => response.text())
-      .then((text) => setMarkdown(text))
-  }, [])
-  // import context
-
   const [showMore, setShowMore] = useState(false)
 
   const handleConnection = (user) => {
@@ -29,7 +19,16 @@ export const Landing = ({ nextStep, setUserForm }) => {
         <>
           <Styled.More>
             <h2>{`What is Ynput Connect?`}</h2>
-            <ReactMarkdown>{markdown}</ReactMarkdown>
+            <p>
+              AYON is a highly modular platform. Connecting your Ynput account to AYON lets us
+              automatically download and setup all you need to take full advantage of AYON in your
+              production.
+            </p>
+            <br />
+            <p>
+              If you are in offline environment or you would rather download and install all the
+              addons, desktop distribution and dependencies manually, you can skip this step.
+            </p>
             <Styled.Skip className="skip" onClick={nextStep}>
               I know what I am doing, skip bootstrap.
             </Styled.Skip>
@@ -39,7 +38,6 @@ export const Landing = ({ nextStep, setUserForm }) => {
       <Styled.Section style={{ width: 300, textAlign: 'center', alignItems: 'center' }}>
         <Styled.Ayon src="/AYON.svg" />
         <h2>Lets get things set up for you.</h2>
-        <p>Lets configure your server.</p>
         <p>To make things as easy as possible we recommend using Ynput Connect.</p>
         <Styled.Connect style={{ marginTop: 16 }}>
           <span>Fast and Automated setup with</span>
