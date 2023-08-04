@@ -5,112 +5,13 @@ import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
 import { login } from '/src/features/user'
 import { ayonApi } from '../../services/ayon'
-import styled from 'styled-components'
 import AuthLink from './AuthLink'
 import { useGetInfoQuery } from '/src/services/auth/getAuth'
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
 import LoadingPage from '../LoadingPage'
+import * as Styled from './LoginPage.styled'
 
-const LoginFormStyled = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 64px;
-  position: relative;
-  background-color: var(--color-grey-00);
-  padding: 64px;
-  border-radius: 6px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
-
-  /* panel */
-  & > div {
-    align-items: center;
-    padding: 32px;
-    gap: 32px;
-    width: 350px;
-
-    p {
-      margin: 0;
-      text-align: center;
-
-      a {
-        text-decoration: underline;
-      }
-    }
-  }
-
-  /* company */
-  & > div:first-child {
-    p {
-      text-align: left;
-    }
-  }
-
-  /* login */
-  & > div:last-child {
-    background-color: var(--color-grey-01);
-  }
-
-  button {
-    padding: 8px 12px;
-    height: 40px;
-    max-height: unset;
-
-    svg {
-      width: 24px;
-    }
-
-    span {
-      font-size: 24px !important;
-    }
-  }
-
-  /* name password form */
-  form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    gap: 8px;
-
-    & > * {
-      width: 100%;
-    }
-  }
-`
-
-const MethodsStyled = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0px;
-  gap: 16px;
-  width: 100%;
-
-  a,
-  button {
-    width: 100%;
-  }
-`
-
-// AYON Logo
-const AyonStyled = styled.img`
-  height: 60px;
-`
-const LogoStyled = styled.img`
-  height: 60px;
-`
-
-const BGStyled = styled.img`
-  position: fixed;
-  z-index: -10;
-  object-fit: cover;
-  width: 100vw;
-  height: 100vh;
-`
-
-const LoginPage = ({ loading }) => {
+const LoginPage = ({ loading, isFirstTime }) => {
   const dispatch = useDispatch()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -193,23 +94,23 @@ const LoginPage = ({ loading }) => {
     doLogin()
   }
 
-  if (isLoading || isLoadingInfo || loading) return <LoadingPage />
+  if (isLoading || isLoadingInfo || loading) return isFirstTime ? null : <LoadingPage />
 
   return (
     <main className="center">
-      {loginPageBackground && <BGStyled src={loginPageBackground} />}
-      <LoginFormStyled>
+      {loginPageBackground && <Styled.BG src={loginPageBackground} />}
+      <Styled.LoginForm>
         {motd && (
           <Panel>
-            {loginPageBrand && <LogoStyled src={loginPageBrand} />}
+            {loginPageBrand && <Styled.Logo src={loginPageBrand} />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <ReactMarkdown>{motd}</ReactMarkdown>
             </div>
           </Panel>
         )}
         <Panel>
-          <AyonStyled src="/AYON.svg" />
-          <MethodsStyled>
+          <Styled.Ayon src="/AYON.svg" />
+          <Styled.Methods>
             <form onSubmit={handleSubmit}>
               <label id="username">Username</label>
               <InputText
@@ -256,9 +157,9 @@ const LoginPage = ({ loading }) => {
                   )
                 : null // ssoOptions.map
             }
-          </MethodsStyled>
+          </Styled.Methods>
         </Panel>
-      </LoginFormStyled>
+      </Styled.LoginForm>
     </main>
   )
 }

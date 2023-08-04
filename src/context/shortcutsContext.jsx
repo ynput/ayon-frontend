@@ -12,6 +12,8 @@ function ShortcutsProvider(props) {
   const userMenuOpen = useSelector((state) => state.context.userMenuOpen)
   // keep track of the last key pressed
   const [lastPressed, setLastPressed] = useState(null)
+  // disable shortcuts
+  const [disabled, setDisabled] = useState(false)
 
   // last key pressed should be reset after 200ms
   useEffect(() => {
@@ -26,6 +28,7 @@ function ShortcutsProvider(props) {
       { key: 's+u', action: () => navigate('/settings/users') },
       { key: 's+a', action: () => navigate('/settings/attributes') },
       { key: 's+p', action: () => navigate('/settings/anatomyPresets') },
+      { key: 's+c', action: () => navigate('/settings/connect') },
     ],
     [navigate],
   )
@@ -58,7 +61,7 @@ function ShortcutsProvider(props) {
 
   const handleKeyPress = (e) => {
     // check target isn't an input
-    if (e.target.tagName === 'INPUT') return
+    if (e.target.tagName === 'INPUT' || disabled) return
 
     let singleKey = e.key
     // add ctrl_ prefix if ctrl or cmd is pressed
@@ -105,6 +108,8 @@ function ShortcutsProvider(props) {
       value={{
         addShortcuts,
         removeShortcuts,
+        disableShortcuts: () => setDisabled(true),
+        enableShortcuts: () => setDisabled(false),
       }}
     >
       {props.children}
