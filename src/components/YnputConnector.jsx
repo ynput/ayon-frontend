@@ -29,9 +29,7 @@ const YnputConnector = ({
   }
 
   useEffect(() => {
-    console.log(queryKey)
     if (queryKey) {
-      //setAyonKey(queryKey)
       setQueryKey(undefined)
       onRedirect && onRedirect(queryKey)
       connect({ key: queryKey })
@@ -72,7 +70,7 @@ const YnputConnector = ({
   }
 
   const redirectUrl = `${window.location.origin}${redirect}`
-  const loginUrl = `https://auth.ayon.cloud/login?origin_url=${redirectUrl}`
+  const loginUrl = `/api/connect/authorize?origin_url=${redirectUrl}`
   return (
     <a href={disabled ? '#' : loginUrl} {...props} className=".ynput-connector">
       <YnputConnectButton disabled={disabled} isLoading={isLoadingConnect} />
