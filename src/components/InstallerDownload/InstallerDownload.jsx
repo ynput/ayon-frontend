@@ -2,6 +2,7 @@ import { Dropdown, Icon } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled, { css } from 'styled-components'
 import { useGetInstallerListQuery } from '/src/services/installers'
+import { toast } from 'react-toastify'
 
 const StyledInstallerDownload = styled(Dropdown)`
   .button {
@@ -97,6 +98,8 @@ const InstallerDownload = ({ isSpecial }) => {
       link.parentNode.removeChild(link)
       // set localStorage
       localStorage.setItem('installerDownloaded', 'true')
+    } else {
+      toast.error('URL for installer not found')
     }
   }
 
