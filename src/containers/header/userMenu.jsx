@@ -6,6 +6,7 @@ import { Sidebar } from 'primereact/sidebar'
 import { useSelector } from 'react-redux'
 import styled, { css } from 'styled-components'
 import { Fragment } from 'react'
+import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 
 const StyledButton = styled(Button)`
   width: 100%;
@@ -57,6 +58,9 @@ const UserMenu = ({ visible, onHide }) => {
       link: '/explorer',
       label: 'GraphQL Explorer',
       icon: 'account_tree',
+    },
+    {
+      node: <InstallerDownload />,
     },
   ]
 
