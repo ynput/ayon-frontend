@@ -57,10 +57,12 @@ export const Header = styled.header`
 `
 
 export const Addons = styled.span`
-  /* color: var(--ayon-sys-dark-on-primary-container, #cae6ff); */
-  font-size: 11px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
+  &,
+  & span {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
 `

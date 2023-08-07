@@ -2,7 +2,7 @@
 // gets addonsList
 // get server info
 import React, { createContext, useEffect, useState } from 'react'
-import release from './releaseData'
+import releases from './releases'
 import { useGetYnputConnectionsQuery } from '/src/services/ynputConnect'
 
 const userFormFields = [
@@ -55,22 +55,13 @@ export const OnBoardingProvider = ({ children, initStep }) => {
   // step 2
   const [userForm, setUserForm] = useState(initUserForm)
   // step 3
-  const [selectedPreset, setSelectedPreset] = useState(release.presets[0].name)
+  const [selectedPreset, setSelectedPreset] = useState(releases[0].name)
   // step 4
   const [selectedAddons, setSelectedAddons] = useState([])
 
   // when selectedPreset changes, update selectedAddons
   useEffect(
-    () =>
-      setSelectedAddons(
-        release.addons
-          .filter((addon) =>
-            addon.tags.includes(
-              release.presets.find((preset) => preset.name === selectedPreset).tag,
-            ),
-          )
-          .map((addon) => addon.name),
-      ),
+    () => setSelectedAddons(releases.find(({ name }) => name === selectedPreset)?.addons || []),
     [selectedPreset],
   )
 
@@ -81,7 +72,7 @@ export const OnBoardingProvider = ({ children, initStep }) => {
   const contextValue = {
     stepIndex,
     setStepIndex,
-    release,
+    releases,
     nextStep,
     previousStep,
     selectedPreset,
