@@ -29,9 +29,7 @@ const YnputConnector = ({
   }
 
   useEffect(() => {
-    console.log(queryKey)
     if (queryKey) {
-      //setAyonKey(queryKey)
       setQueryKey(undefined)
       onRedirect && onRedirect(queryKey)
       connect({ key: queryKey })
