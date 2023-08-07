@@ -6,6 +6,8 @@ import { Sidebar } from 'primereact/sidebar'
 import { useSelector } from 'react-redux'
 import styled, { css } from 'styled-components'
 import { Fragment } from 'react'
+import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
+import { useLogOutMutation } from '/src/services/auth/getAuth'
 
 const StyledButton = styled(Button)`
   width: 100%;
@@ -29,6 +31,8 @@ const StyledButton = styled(Button)`
 `
 
 const UserMenu = ({ visible, onHide }) => {
+  // LOGOUT USER
+  const [logout] = useLogOutMutation()
   const navigate = useNavigate()
   const location = useLocation()
   // get user from redux store
@@ -58,10 +62,13 @@ const UserMenu = ({ visible, onHide }) => {
       label: 'GraphQL Explorer',
       icon: 'account_tree',
     },
+    {
+      node: <InstallerDownload />,
+    },
+    { node: divider },
   ]
 
   const protectedLinks = [
-    { node: divider },
     {
       link: '/events',
       label: 'Event Viewer',
@@ -72,6 +79,21 @@ const UserMenu = ({ visible, onHide }) => {
       label: 'Services',
       icon: 'home_repair_service',
     },
+    { node: divider },
+  ]
+
+  // add protected links if user is manager or admin
+  if (!isUser) allLinks.push(...protectedLinks)
+
+  const logoutItem = {
+    label: 'Logout',
+    icon: 'logout',
+    onClick: logout,
+  }
+
+  allLinks.push(logoutItem)
+
+  const protectedBottomLinks = [
     {
       node: spacer,
     },
@@ -82,7 +104,7 @@ const UserMenu = ({ visible, onHide }) => {
   ]
 
   // add protected links if user is manager or admin
-  if (!isUser) allLinks.push(...protectedLinks)
+  if (!isUser) allLinks.push(...protectedBottomLinks)
 
   // server restart is only available to admins
   if (isAdmin)
