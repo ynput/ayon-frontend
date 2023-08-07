@@ -7,7 +7,7 @@ export const PresetStep = ({ release, Footer, selectedPreset, setSelectedPreset 
 
   return (
     <Styled.Section>
-      <h2>Select a Preset</h2>
+      <h2>Select a Release Package</h2>
       <Styled.PresetsContainer>
         {presets.map(({ name, ...props }) => (
           <ReleasePackage

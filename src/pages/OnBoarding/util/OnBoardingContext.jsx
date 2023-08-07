@@ -40,7 +40,7 @@ export const OnBoardingContext = createContext()
 
 export const OnBoardingProvider = ({ children, initStep }) => {
   // get ynput connect data
-  const { data: ynputConnect } = useGetYnputConnectionsQuery()
+  const { data: ynputConnect, isLoading: isLoadingConnect } = useGetYnputConnectionsQuery()
 
   const [stepIndex, setStepIndex] = useState(initStep)
   const previousStep = () => setStepIndex(stepIndex - 1)
@@ -93,6 +93,7 @@ export const OnBoardingProvider = ({ children, initStep }) => {
     userForm,
     userFormFields,
     ynputConnect,
+    isLoadingConnect,
   }
 
   return <OnBoardingContext.Provider value={contextValue}>{children}</OnBoardingContext.Provider>

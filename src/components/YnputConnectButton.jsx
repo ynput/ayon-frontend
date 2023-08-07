@@ -3,13 +3,14 @@ import React from 'react'
 import styled, { css } from 'styled-components'
 import getShimmerStyles from '../styles/getShimmerStyles'
 
-const StyledButton = styled(Button)`
+export const YnputConnectorButton = styled(Button)`
   background-color: var(--ayon-sys-dark-tertiary, #23e0a9);
   position: relative;
   padding: 8px 16px;
-  min-height: unset;
+  min-height: 50px;
   max-height: unset;
-  max-width: unset;
+  min-width: 210px;
+  color: black;
 
   &:hover {
     background-color: var(--ayon-sys-dark-tertiary, #23e0a9);
@@ -41,14 +42,14 @@ const StyledButton = styled(Button)`
 
 const YnputConnectButton = React.forwardRef(({ ...props }, ref) => {
   return (
-    <StyledButton
+    <YnputConnectorButton
       {...props}
       ref={ref}
       $disabled={props.disabled || props.isLoading}
       $isLoading={props.isLoading}
     >
       <img src="/ynput-connect-logo.svg" />
-    </StyledButton>
+    </YnputConnectorButton>
   )
 })
 

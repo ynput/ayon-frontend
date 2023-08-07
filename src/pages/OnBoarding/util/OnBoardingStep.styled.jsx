@@ -139,7 +139,7 @@ export const Connect = styled.div`
   align-items: center;
   gap: 4px;
 
-  .ynput-connector {
+  button {
     width: unset;
   }
 `
