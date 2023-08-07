@@ -9,10 +9,6 @@ import styled from 'styled-components'
 import UserAttribForm from './SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from './SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../ayon'
-import axios from 'axios'
-import { useDispatch } from 'react-redux'
-import { logout } from '../features/user'
-import { ayonApi } from '../services/ayon'
 import SaveButton from '../components/SaveButton'
 
 const FormsStyled = styled.section`
@@ -37,7 +33,6 @@ export const PanelButtonsStyled = styled(Panel)`
 `
 
 const ProfilePage = () => {
-  const dispatch = useDispatch()
   const attributes = ayonClient.getAttribsByScope('user')
   // RTK QUERIES
   // GET USER DATA
@@ -125,20 +120,6 @@ const ProfilePage = () => {
     }
   }
 
-  const doLogout = () => {
-    axios
-      .post('/api/auth/logout')
-      .then((response) => {
-        toast.info(response.data.detail)
-        dispatch(logout())
-        // reset global state
-        dispatch(ayonApi.util.resetApiState())
-      })
-      .catch(() => {
-        toast.error('Unable to log out. Weird.')
-      })
-  }
-
   return (
     <main>
       <Section style={{ flex: 2 }}>
@@ -170,14 +151,6 @@ const ProfilePage = () => {
               label="Save"
               active={changesMade}
               saving={isUpdatingUser}
-            />
-          </PanelButtonsStyled>
-          <PanelButtonsStyled>
-            <Button
-              style={{ justifyContent: 'center' }}
-              onClick={doLogout}
-              label="Sign Out"
-              icon="logout"
             />
           </PanelButtonsStyled>
         </FormsStyled>
