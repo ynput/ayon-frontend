@@ -72,7 +72,7 @@ const YnputConnector = ({
   }
 
   const redirectUrl = `${window.location.origin}${redirect}`
-  const loginUrl = `https://auth.ayon.cloud/login?origin_url=${redirectUrl}`
+  const loginUrl = `/api/connect/authorize?origin_url=${redirectUrl}`
   return (
     <a href={disabled ? '#' : loginUrl} {...props} className=".ynput-connector">
       <YnputConnectButton disabled={disabled} isLoading={isLoadingConnect} />
