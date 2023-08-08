@@ -63,7 +63,7 @@ const YnputConnector = ({
     return (
       <Panel>
         <h1>Connected to Ynput</h1>
-        <p>Ynput account: {connectData.email}</p>
+        <p>Ynput account: {connectData.userEmail}</p>
         <Button onClick={signOut}>Sign out</Button>
       </Panel>
     )
