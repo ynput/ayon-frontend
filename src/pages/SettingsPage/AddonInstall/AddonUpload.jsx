@@ -1,10 +1,11 @@
-import axios from 'axios'
 import { useState } from 'react'
 import { Button, FileUpload, SaveButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { ayonApi } from '/src/services/ayon'
-import { useDispatch } from 'react-redux'
-import { useCreateInstallerMutation } from '/src/services/installers'
+import { useDispatch, useSelector } from 'react-redux'
+import { useCreateInstallerMutation, useUploadInstallersMutation } from '/src/services/installers'
+import { useUploadAddonsMutation } from '/src/services/addons/updateAddons'
+import { useUploadDependencyPackagesMutation } from '/src/services/dependencyPackages'
 
 const StyledFooter = styled.div`
   display: flex;
@@ -39,25 +40,20 @@ const StyledProgressBar = styled.hr`
 const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
   const dispatch = useDispatch()
   const [files, setFiles] = useState([])
-  const [progress, setProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
+  const progress = useSelector((state) => state.context.uploadProgress)
 
+  // installers
   const [createInstaller] = useCreateInstallerMutation()
+  const [uploadInstallers] = useUploadInstallersMutation()
+  // upload packages
+  const [uploadPackages] = useUploadDependencyPackagesMutation()
+  // upload addons
+  const [uploadAddons] = useUploadAddonsMutation()
   let endPoint = 'installers'
   if (type === 'package') endPoint = 'dependency_packages'
-
-  const abortController = new AbortController()
-  const cancelToken = axios.CancelToken
-  const cancelTokenSource = cancelToken.source()
-
-  const onUploadProgress = (progress, index, total) => {
-    const percent = Math.round(
-      ((index - 1) * 100 + (progress.loaded * 100) / progress.total) / total,
-    )
-    setProgress(percent)
-  }
 
   // first create the installer using the .json file
   const handleCreateInstaller = async (files) => {
@@ -96,28 +92,24 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
 
   // then upload the the .exe file
   const handleUploadInstaller = async (files) => {
-    let index = 0
-    const opts = {
-      signal: new AbortController().signal,
-      cancelToken: axios.CancelToken.source().token,
-      onUploadProgress: (e) => onUploadProgress(e, index + 1, files.length),
-    }
-    console.log('progress: uploading ' + type, files)
+    const filesToUpload = files.map(({ file }) => file)
+    console.log('progress: uploading ' + type, filesToUpload)
     try {
-      for (const { file: exe } of files) {
-        const filename = exe.name
-        await axios.put(`/api/desktop/${endPoint}/` + filename, exe, opts)
-        index++
-      }
+      let success
+      if (type === 'installer') {
+        await uploadInstallers({ files: filesToUpload, isNameEndpoint: true }).unwrap()
+        success = true
+      } else if (type === 'package') {
+        await uploadPackages({ files: filesToUpload, isNameEndpoint: true }).unwrap()
+        success = true
+      } else success = false
+      console.log('finished: uploaded ' + type)
+      return success
     } catch (error) {
+      setErrorMessage(error)
       console.error(error)
-      const errorMessage = error?.response?.data?.detail || error.message
-      setErrorMessage(errorMessage)
       return false
     }
-
-    console.log('finished: uploaded ' + type)
-    return true
   }
 
   const handleInstallerPackage = async () => {
@@ -138,7 +130,6 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
     const onError = () => {
       setIsUploading(false)
       setIsComplete(true)
-      setProgress(0)
     }
 
     if (jsonFiles.length) {
@@ -173,7 +164,6 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
 
     setIsUploading(false)
     setIsComplete(true)
-    setProgress(0)
 
     setFiles([])
 
@@ -181,22 +171,13 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
   }
 
   const handleAddonInstall = async () => {
-    let index = 0
     setIsUploading(true)
     try {
-      for (const file of files) {
-        const opts = {
-          signal: abortController.signal,
-          cancelToken: cancelTokenSource.token,
-          onUploadProgress: (e) => onUploadProgress(e, index + 1, files.length),
-        }
+      const filesToUpload = files.map(({ file }) => file)
+      await uploadAddons({ files: filesToUpload }).unwrap()
 
-        await axios.post('/api/addons/install', file.file, opts)
-        index++
-      }
       setIsUploading(false)
       setIsComplete(true)
-      setProgress(0)
 
       setFiles([])
       onInstall(type)
@@ -207,7 +188,6 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
       console.log(error)
       setIsUploading(false)
       setIsComplete(true)
-      setProgress(0)
       setErrorMessage('ERROR: ' + error?.response?.data?.traceback)
     }
   }

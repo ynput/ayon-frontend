@@ -13,7 +13,7 @@ import usePubSub from '/src/hooks/usePubSub'
 import { setUri } from '/src/features/context'
 import { selectProject } from '/src/features/project'
 import { useGetProjectQuery } from '../services/project/getProject'
-import { useGetProjectAddonsQuery } from '../services/addonList'
+import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import { Dialog } from 'primereact/dialog'
 

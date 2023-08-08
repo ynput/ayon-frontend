@@ -1,4 +1,5 @@
 import { ayonApi } from './ayon'
+import queryUpload from './queryUpload'
 
 const getInstallers = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -18,7 +19,11 @@ const getInstallers = ayonApi.injectEndpoints({
       }),
       invalidatesTags: ['installerList', 'dependencyPackageList'],
     }),
+    uploadInstallers: build.mutation({
+      queryFn: (arg, api) => queryUpload(arg, api, { endpoint: '/api/desktop/installers' }),
+    }),
   }), // endpoints
 })
 
-export const { useGetInstallerListQuery, useCreateInstallerMutation } = getInstallers
+export const { useGetInstallerListQuery, useCreateInstallerMutation, useUploadInstallersMutation } =
+  getInstallers

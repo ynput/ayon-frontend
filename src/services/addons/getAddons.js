@@ -1,6 +1,6 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 
-const addonList = ayonApi.injectEndpoints({
+const getAddons = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     //  Return a list of all addons installed on the server
 
@@ -127,4 +127,4 @@ export const {
   useSetAddonVersionMutation,
   useSetAddonVersionsMutation,
   useSetCopyAddonVariantMutation,
-} = addonList
+} = getAddons
