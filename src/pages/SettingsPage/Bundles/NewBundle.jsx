@@ -7,15 +7,7 @@ import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
 
-const NewBundle = ({
-  initBundle,
-  onSave,
-  addons,
-  installers,
-  isLoading,
-  noStudioName,
-  firstBundle,
-}) => {
+const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
 
@@ -106,8 +98,6 @@ const NewBundle = ({
           setSelectedAddons,
           setFormData,
           installers,
-          noStudioName,
-          firstBundle,
         }}
         formData={formData}
       >

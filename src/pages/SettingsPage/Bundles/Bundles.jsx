@@ -12,7 +12,7 @@ import {
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 import { useGetInstallerListQuery } from '/src/services/installers'
-import { useGetAddonListQuery } from '/src/services/addonList'
+import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
@@ -297,8 +297,6 @@ const Bundles = () => {
             isLoading={isLoadingInstallers}
             installers={installerVersions}
             addons={addons}
-            noStudioName={!studioName}
-            firstBundle={!bundleList.length}
           />
         ) : (
           !!bundlesData.length && (
