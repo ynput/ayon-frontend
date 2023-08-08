@@ -5,15 +5,16 @@ const queryUpload = async (arg, api, { endpoint, method = 'put' }) => {
   // isNameEndpoint is used to determine if the endpoint has the name of the file in the url
   const { files, isNameEndpoint } = arg
   const { dispatch } = api
-  try {
-    const abortController = new AbortController()
-    const cancelToken = axios.CancelToken
-    const cancelTokenSource = cancelToken.source()
 
-    const results = []
+  const abortController = new AbortController()
+  const cancelToken = axios.CancelToken
+  const cancelTokenSource = cancelToken.source()
 
-    let index = 0
-    for (const file of files) {
+  const results = []
+
+  let index = 0
+  for (const file of files) {
+    try {
       const opts = {
         signal: abortController.signal,
         cancelToken: cancelTokenSource.token,
@@ -27,28 +28,36 @@ const queryUpload = async (arg, api, { endpoint, method = 'put' }) => {
           ),
       }
 
-      const fullEndpoint = isNameEndpoint ? `${endpoint}/${file.name}` : endpoint
+      let fullEndpoint = endpoint
+
+      if (isNameEndpoint && !file.url) {
+        // file is actually a name
+        fullEndpoint += `/${file.data.name}`
+      }
+
+      if (file.url) {
+        // file is actually a url
+        fullEndpoint += `?url=${file.url}`
+      }
 
       const axiosMethod = method === 'put' ? axios.put : axios.post
 
-      const res = await axiosMethod(fullEndpoint, file, opts)
+      const res = await axiosMethod(fullEndpoint, file.data, opts)
       index++
 
       if (res.data) {
-        results.push(res.data.eventId)
+        results.push({ eventId: res.data.eventId, file })
       }
+    } catch (error) {
+      console.error(error)
+      results.push({ eventId: null, file, error: error?.response?.data?.detail || 'Upload error' })
     }
-
-    // reset loading progress
-    dispatch(onUploadFinished())
-
-    return { data: results }
-  } catch (error) {
-    console.error(error)
-    // reset loading progress
-    dispatch(onUploadFinished())
-    return { error: error?.response?.data?.detail || 'Upload error' }
   }
+
+  // reset loading progress
+  dispatch(onUploadFinished())
+
+  return { data: results }
 }
 
 export default queryUpload

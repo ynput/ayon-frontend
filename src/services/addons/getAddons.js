@@ -117,6 +117,12 @@ const getAddons = ayonApi.injectEndpoints({
       }),
       invalidatesTags: ['addonList'],
     }), // setCopyAddonVariant
+    getAddonInstall: build.query({
+      query: () => ({
+        url: `/api/addons/install`,
+        method: 'GET',
+      }),
+    }),
   }), // endpoints
 })
 
@@ -127,4 +133,6 @@ export const {
   useSetAddonVersionMutation,
   useSetAddonVersionsMutation,
   useSetCopyAddonVariantMutation,
+  useGetAddonInstallQuery,
+  useLazyGetAddonInstallQuery,
 } = getAddons

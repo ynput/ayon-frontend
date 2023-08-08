@@ -27,6 +27,7 @@ const OnBoardingPage = ({ noAdminUser }) => {
           <Step.BootstrapStart step={2} />
           <Step.PresetStep step={3} />
           <Step.AddonSelectStep step={4} />
+          <Step.ProgressInstall step={5} />
         </StepWrapper>
       </OnBoardingProvider>
 

@@ -1,4 +1,10 @@
-import styled from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
+
+const spin = keyframes`
+  to {
+    transform: rotate(360deg);
+  }
+`
 
 export const AddonCard = styled.div`
   display: flex;
@@ -23,4 +29,30 @@ export const AddonCard = styled.div`
     background: ${({ $selected }) =>
       $selected ? 'var(--color-hl-00)' : 'var(--button-background-hover)'};
   }
+
+  ${({ $error }) =>
+    $error &&
+    css`
+      background: var(--color-hl-error);
+      color: black;
+      .icon {
+        color: black;
+      }
+
+      &:hover {
+        background: var(--color-hl-error);
+      }
+    `}
+
+  .error {
+    margin-left: auto;
+  }
+
+  ${({ $isSyncing }) =>
+    $isSyncing &&
+    css`
+      .icon {
+        animation: ${spin} 1s linear infinite;
+      }
+    `}
 `

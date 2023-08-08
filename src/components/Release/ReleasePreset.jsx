@@ -12,6 +12,8 @@ const ReleasePreset = ({
   createdAt,
   isSelected,
   onClick,
+  isLoading,
+  index,
   ...props
 }) => {
   const [showExactDate, setShowExactDate] = React.useState(false)
@@ -21,6 +23,7 @@ const ReleasePreset = ({
   }
 
   const fuzzyDate = React.useMemo(() => {
+    if (!createdAt) return ''
     const date = new Date(createdAt)
     if (showExactDate) {
       return format(date, 'dd-MM-yy HH:mm')
@@ -36,9 +39,12 @@ const ReleasePreset = ({
     }
   }
 
+  isSelected = isSelected || (isLoading && index === 0)
+
   return (
     <Styled.Preset
       $selected={isSelected}
+      $loading={isLoading}
       onClick={onClick}
       {...props}
       tabIndex={0}
@@ -51,7 +57,7 @@ const ReleasePreset = ({
           <span>{bio}</span>
         </div>
       </Styled.Header>
-      {isSelected && <Styled.Addons>Addons: {addons.join(', ')}</Styled.Addons>}
+      {isSelected && <Styled.Addons>Addons: {addons?.join(', ')}</Styled.Addons>}
       {isSelected && (
         <Styled.Addons>
           Release: Ynput - {name} - <span onClick={handleClick}>{fuzzyDate}</span>

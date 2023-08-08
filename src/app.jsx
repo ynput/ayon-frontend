@@ -96,18 +96,26 @@ const App = () => {
     return <LoginPage loading={loading} isFirstTime={isFirstTime} />
   }
 
-  if ((isFirstTime || noAdminUser) && !loading) {
+  const onBoardingSkips = ['events', 'explorer', 'doc/api']
+
+  if (
+    (isFirstTime || noAdminUser) &&
+    !loading &&
+    onBoardingSkips.every((path) => !location.pathname.includes(path))
+  ) {
     return (
-      <BrowserRouter>
-        <QueryParamProvider
-          adapter={ReactRouter6Adapter}
-          options={{
-            updateType: 'replaceIn',
-          }}
-        >
-          <OnBoardingPage noAdminUser={noAdminUser} />
-        </QueryParamProvider>
-      </BrowserRouter>
+      <SocketProvider>
+        <BrowserRouter>
+          <QueryParamProvider
+            adapter={ReactRouter6Adapter}
+            options={{
+              updateType: 'replaceIn',
+            }}
+          >
+            <OnBoardingPage noAdminUser={noAdminUser} />
+          </QueryParamProvider>
+        </BrowserRouter>
+      </SocketProvider>
     )
   }
 

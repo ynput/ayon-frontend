@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
-import release from '../util/release.230807.json'
 
-export const AddonSelectStep = ({ Footer, selectedAddons, setSelectedAddons, onSubmit }) => {
+export const AddonSelectStep = ({
+  Footer,
+  selectedAddons,
+  setSelectedAddons,
+  onSubmit,
+  release,
+}) => {
   // FIX: get release by name from /api/onboarding/release/:name
   // for now import release.230807.json
 
   const [sortedAddons, setSortedAddons] = useState([])
 
   useEffect(() => {
+    const sortedAddons = release.addons.map((addon) => addon)
     // order addons by selected and then by addon.required
-    const sorted = release.addons.sort((a, b) => {
+    sortedAddons.sort((a, b) => {
       const aSelected = selectedAddons.includes(a.name)
       const bSelected = selectedAddons.includes(b.name)
       if (aSelected && !bSelected) return -1
@@ -20,7 +26,7 @@ export const AddonSelectStep = ({ Footer, selectedAddons, setSelectedAddons, onS
       if (!a.required && b.required) return 1
       return 0
     })
-    setSortedAddons(sorted)
+    setSortedAddons(sortedAddons)
   }, [release])
 
   const handleAddonClick = (name) => {

@@ -1,4 +1,5 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 export const Preset = styled.li`
   display: flex;
@@ -12,6 +13,7 @@ export const Preset = styled.li`
   cursor: pointer;
   overflow: hidden;
   margin: 0;
+  position: relative;
 
   border-radius: 4px;
   /* background: var(--ayon-sys-dark-primary-container, #004b70); */
@@ -26,6 +28,20 @@ export const Preset = styled.li`
     background: ${({ $selected }) =>
       $selected ? 'var(--color-hl-00)' : 'var(--button-background-hover)'};
   }
+
+  ${({ $loading }) =>
+    $loading &&
+    css`
+      /* hide all text */
+      & > * {
+        visibility: hidden;
+        user-select: none;
+        pointer-events: none;
+      }
+
+      /* add shimmer */
+      ${getShimmerStyles(undefined, undefined, { opacity: 0.5 })}
+    `}
 `
 
 export const Header = styled.header`

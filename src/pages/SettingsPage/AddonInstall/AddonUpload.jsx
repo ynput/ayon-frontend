@@ -92,7 +92,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
 
   // then upload the the .exe file
   const handleUploadInstaller = async (files) => {
-    const filesToUpload = files.map(({ file }) => file)
+    const filesToUpload = files.map(({ file }) => ({ data: file }))
     console.log('progress: uploading ' + type, filesToUpload)
     try {
       let success
@@ -173,7 +173,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
   const handleAddonInstall = async () => {
     setIsUploading(true)
     try {
-      const filesToUpload = files.map(({ file }) => file)
+      const filesToUpload = files.map(({ file }) => ({ data: file }))
       await uploadAddons({ files: filesToUpload }).unwrap()
 
       setIsUploading(false)
