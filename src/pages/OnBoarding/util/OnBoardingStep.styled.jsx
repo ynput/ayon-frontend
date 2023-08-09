@@ -1,5 +1,5 @@
 import { Panel, SaveButton, Section as SectionComp } from '@ynput/ayon-react-components'
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 
 // import some styles from LoginPage and export them as Styled
 export * from '/src/pages/LoginPage/LoginPage.styled'
@@ -147,6 +147,11 @@ export const Connect = styled.div`
     width: unset;
   }
 `
+const spin = keyframes`
+to {
+  transform: rotate(360deg);
+}
+`
 
 export const NextButton = styled(SaveButton)`
   background-color: var(--md-sys-color-tertiary);
@@ -160,7 +165,17 @@ export const NextButton = styled(SaveButton)`
     &,
     &:hover {
       background-color: var(--md-sys-color-surface-container-high);
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--md-sys-color-on-surface);
+      opacity: 0.6;
     }
   }
+
+  ${({ saving }) =>
+    saving &&
+    css`
+      /* spin icon */
+      .icon {
+        animation: ${spin} 1s linear infinite;
+      }
+    `}
 `

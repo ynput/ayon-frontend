@@ -129,6 +129,7 @@ export const ProgressInstall = ({
         back={null}
         next="Finish Setup"
         nextProps={{
+          active: isAllFinished,
           saving: !isAllFinished,
           style: { width: 'unset', pointerEvents: !isAllFinished && 'none' },
         }}
