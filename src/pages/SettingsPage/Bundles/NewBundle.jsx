@@ -78,6 +78,8 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
     })
   }
 
+  console.log(formData)
+
   return (
     <Section>
       <Toolbar>
@@ -111,6 +113,16 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
             label="Deselect all addons"
             icon="deselect"
             onClick={() => setSelectedAddons([])}
+          />
+          <Button
+            label="Select activated"
+            icon="check_circle"
+            onClick={() => setSelectedAddons(addons.filter((a) => !!formData?.addons?.[a.name]))}
+          />
+          <Button
+            label="Select deactivated"
+            icon="block"
+            onClick={() => setSelectedAddons(addons.filter((a) => !formData?.addons?.[a.name]))}
           />
           <Button
             label="Version latest"
