@@ -1,6 +1,6 @@
 import React from 'react'
 import * as Styled from './OnBoardingStep.styled'
-import { Button, SaveButton } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 
 const FooterButtons = ({
   back = 'Back',
@@ -19,13 +19,7 @@ const FooterButtons = ({
         </Button>
       )}
       {next && (
-        <SaveButton
-          onClick={onNext}
-          label={next}
-          active
-          className="next"
-          {...nextProps}
-        ></SaveButton>
+        <Styled.NextButton onClick={onNext} label={next} active className="next" {...nextProps} />
       )}
     </Styled.Footer>
   )

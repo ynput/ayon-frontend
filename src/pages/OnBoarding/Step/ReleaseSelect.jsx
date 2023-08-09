@@ -2,7 +2,7 @@ import React from 'react'
 import ReleasePackage from '../../../components/Release/ReleasePreset'
 import * as Styled from '../util/OnBoardingStep.styled'
 
-export const PresetStep = ({
+export const ReleaseSelect = ({
   releases,
   Footer,
   selectedPreset,

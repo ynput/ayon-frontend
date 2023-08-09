@@ -165,7 +165,7 @@ export const OnBoardingProvider = ({ children, initStep }) => {
     try {
       await abortOnboarding().unwrap()
       // redirect to dashboard
-      navigate('/')
+      navigate('/manageProjects/dashboard')
     } catch (error) {
       console.error(error)
     }

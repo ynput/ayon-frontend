@@ -16,18 +16,21 @@ export const Preset = styled.li`
   position: relative;
 
   border-radius: 4px;
-  /* background: var(--ayon-sys-dark-primary-container, #004b70); */
-  background: ${({ $selected }) => ($selected ? 'var(--color-hl-00)' : 'var(--button-background)')};
-  color: ${({ $selected }) => ($selected ? 'black' : 'white')};
-
-  .icon {
-    color: ${({ $selected }) => ($selected ? 'black' : 'white')};
-  }
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-primary-container);
 
   &:hover {
-    background: ${({ $selected }) =>
-      $selected ? 'var(--color-hl-00)' : 'var(--button-background-hover)'};
+    background-color: var(--md-sys-color-surface-container-highest-hover);
   }
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      &,
+      &:hover {
+        background-color: var(--md-sys-color-primary-container);
+      }
+    `}
 
   ${({ $loading }) =>
     $loading &&

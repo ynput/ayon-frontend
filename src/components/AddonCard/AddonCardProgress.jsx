@@ -21,7 +21,7 @@ const AddonCardProgress = styled(AddonCard)`
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 800ms;
-    background-color: var(--color-hl-00);
+    background-color: var(--md-sys-color-primary-container);
   }
 
   ${({ $isSyncing }) =>

@@ -17,16 +17,25 @@ export const AddonCard = styled.div`
   }
 
   border-radius: 4px;
-  background: ${({ $selected }) => ($selected ? 'var(--color-hl-00)' : 'var(--button-background)')};
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-primary-container);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest-hover);
+  }
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      &,
+      &:hover {
+        background-color: var(--md-sys-color-primary-container);
+      }
+    `}
 
   .icon {
     /* fill icon */
     ${({ $selected }) => ($selected ? 'font-variation-settings: "FILL" 1;' : '')}
-  }
-
-  &:hover {
-    background: ${({ $selected }) =>
-      $selected ? 'var(--color-hl-00)' : 'var(--button-background-hover)'};
   }
 
   ${({ $error }) =>

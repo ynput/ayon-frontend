@@ -1,4 +1,4 @@
-import { Panel, Section as SectionComp } from '@ynput/ayon-react-components'
+import { Panel, SaveButton, Section as SectionComp } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 // import some styles from LoginPage and export them as Styled
@@ -145,5 +145,22 @@ export const Connect = styled.div`
 
   button {
     width: unset;
+  }
+`
+
+export const NextButton = styled(SaveButton)`
+  background-color: var(--md-sys-color-tertiary);
+  color: var(--md-sys-color-on-tertiary);
+
+  &:hover {
+    background-color: var(--md-sys-color-tertiary-hover);
+  }
+
+  :disabled {
+    &,
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface-variant);
+    }
   }
 `
