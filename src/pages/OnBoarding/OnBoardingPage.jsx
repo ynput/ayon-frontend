@@ -1,16 +1,31 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useGetInfoQuery } from '/src/services/auth/getAuth'
 import * as Styled from './util/OnBoardingStep.styled'
 import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'
 import { Navigate, useLocation } from 'react-router'
 import StepWrapper from './util/StepWrapper'
+import LoadingPage from '../LoadingPage'
 // import YnputConnector from '../../components/YnputConnector'
 
-const OnBoardingPage = ({ noAdminUser }) => {
+const OnBoardingPage = ({ noAdminUser, onFinish }) => {
+  const [isFinishing, setIsFinishing] = useState(false)
   const { data: info = {} } = useGetInfoQuery()
   const { loginPageBackground = '' } = info
   const location = useLocation()
+
+  const handleFinish = () => {
+    setIsFinishing(true)
+
+    // HACK: for some reason api/info is not updated after straight away after onboarding abort
+    setTimeout(() => {
+      onFinish()
+    }, 1000)
+  }
+
+  if (isFinishing) {
+    return <LoadingPage />
+  }
 
   // if location is not /onboarding, redirect to /onboarding
   if (location.pathname !== '/onboarding') {
@@ -20,7 +35,7 @@ const OnBoardingPage = ({ noAdminUser }) => {
   return (
     <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
-      <OnBoardingProvider initStep={noAdminUser ? 0 : 2}>
+      <OnBoardingProvider initStep={noAdminUser ? 0 : 2} onFinish={handleFinish}>
         <StepWrapper>
           <Step.Landing step={0} />
           <Step.CreateUser step={1} />

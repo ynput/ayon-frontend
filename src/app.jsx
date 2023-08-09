@@ -62,6 +62,8 @@ const App = () => {
 
         if (response.onboarding) {
           setIsOnboarding(true)
+        } else {
+          setIsOnboarding(false)
         }
 
         if (response.user) {
@@ -90,18 +92,19 @@ const App = () => {
       .finally(() => {
         setLoading(false)
       })
-  }, [dispatch, storedAccessToken])
+  }, [dispatch, storedAccessToken, isOnboarding])
+
+  if (loading) return <LoadingPage />
 
   // User is not logged in
   if (!user.name && !noAdminUser) {
-    return <LoginPage loading={loading} isFirstTime={isOnboarding} />
+    return <LoginPage isFirstTime={isOnboarding} />
   }
 
   const onBoardingSkips = ['events', 'explorer', 'doc/api']
 
   if (
     (isOnboarding || noAdminUser) &&
-    !loading &&
     onBoardingSkips.every((path) => !location.pathname.includes(path))
   ) {
     return (
@@ -113,7 +116,7 @@ const App = () => {
               updateType: 'replaceIn',
             }}
           >
-            <OnBoardingPage noAdminUser={noAdminUser} />
+            <OnBoardingPage noAdminUser={noAdminUser} onFinish={() => setIsOnboarding(false)} />
           </QueryParamProvider>
         </BrowserRouter>
       </SocketProvider>
@@ -148,7 +151,7 @@ const App = () => {
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Suspense fallback={isOnboarding ? null : <LoadingPage />}>
+      <Suspense fallback={<LoadingPage />}>
         <SocketProvider>
           <ContextMenuProvider>
             <GlobalContextMenu />

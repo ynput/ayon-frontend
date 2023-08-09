@@ -12,7 +12,6 @@ import {
 } from '/src/services/onBoarding/onBoarding'
 import { useGetReleasesQuery } from '/src/services/getRelease'
 import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useNavigate } from 'react-router'
 
 const userFormFields = [
   {
@@ -47,9 +46,7 @@ const userFormFields = [
 
 export const OnBoardingContext = createContext()
 
-export const OnBoardingProvider = ({ children, initStep }) => {
-  const navigate = useNavigate()
-
+export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const [isConnecting, setIsConnecting] = useLocalStorage(false)
 
   // get ynput connect data
@@ -161,11 +158,11 @@ export const OnBoardingProvider = ({ children, initStep }) => {
   }
 
   const [abortOnboarding] = useAbortOnBoardingMutation()
-  const onFinish = async () => {
+  const handleFinish = async () => {
     try {
       await abortOnboarding().unwrap()
-      // redirect to dashboard
-      navigate('/manageProjects/dashboard')
+
+      onFinish()
     } catch (error) {
       console.error(error)
     }
@@ -190,7 +187,7 @@ export const OnBoardingProvider = ({ children, initStep }) => {
     isLoadingConnect,
     installProgress,
     idsInstalling,
-    onFinish,
+    onFinish: handleFinish,
     isLoadingReleases,
     setIsConnecting,
     isConnecting,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCardProgress from '/src/components/AddonCard/AddonCardProgress'
 
@@ -57,30 +57,22 @@ export const ProgressInstall = ({
     return [...addons, ...installers, ...depPackages]
   }, [release])
 
-  //   once all events are finished or failed
-  const isAllFinished = useMemo(() => {
-    return (
-      installProgress.every((event) => event.status === 'finished' || event.status === 'failed') &&
-      !!installProgress.length
+  const [isFinished, setIsFinished] = useState(false)
+
+  useEffect(() => {
+    const allFinished = installProgress.every(
+      (event) => event.status === 'finished' || event.status === 'failed',
     )
+    if (!allFinished) return
+    // we use a timeout to fix flickering at the start
+    const id = setTimeout(() => {
+      setIsFinished(allFinished && !!installProgress.length)
+    }, 1000)
+
+    return () => clearTimeout(id)
   }, [installProgress])
 
-  //   when isAllFinished is true, scroll to last event
-  useEffect(() => {
-    if (!isAllFinished) return
-    const file = progressBars[progressBars.length - 1]
-    const url = file?.url
-    if (!url) return
-    const element = refs.current[url]
-    if (!element) return
-    // scroll to event
-    element.scrollIntoView({
-      behavior: 'smooth',
-      block: 'end',
-    })
-  }, [isAllFinished, installProgress, refs])
-
-  const title = isAllFinished ? 'Finished Installation!' : 'Getting Everything Installed...'
+  const title = isFinished ? 'Finished Installation!' : 'Getting Everything Installed...'
 
   return (
     <Styled.Section>
@@ -115,7 +107,7 @@ export const ProgressInstall = ({
                     ? event.description
                     : (!alreadyInstalled && res?.error?.detail) || null
                 }
-                style={{ cursor: 'default' }}
+                style={{ cursor: 'default', order: file.type === 'addon' ? 2 : 1 }}
                 ref={(el) => url && (refs.current[url] = el)}
                 // progress styled props
                 $isSyncing={status === 'in_progress'}
@@ -129,9 +121,9 @@ export const ProgressInstall = ({
         back={null}
         next="Finish Setup"
         nextProps={{
-          active: isAllFinished,
-          saving: !isAllFinished,
-          style: { width: 'unset', pointerEvents: !isAllFinished && 'none' },
+          active: isFinished,
+          saving: !isFinished,
+          style: { width: 'unset', pointerEvents: !isFinished && 'none' },
         }}
         onNext={onFinish}
         showIcon

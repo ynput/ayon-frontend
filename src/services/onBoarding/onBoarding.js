@@ -30,6 +30,7 @@ const onBoarding = ayonApi.injectEndpoints({
         url: '/api/onboarding/abort',
         method: 'POST',
       }),
+      invalidatesTags: ['info'],
     }),
     getReleases: build.query({
       query: () => ({
