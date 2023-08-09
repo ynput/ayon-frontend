@@ -128,6 +128,12 @@ const App = () => {
     return isOnboarding ? null : <LoadingPage />
   }
 
+  // stuck on onboarding page
+  if (window.location.pathname.startsWith('/onboarding')) {
+    window.history.replaceState({}, document.title, '/')
+    return <LoadingPage />
+  }
+
   if (serverError && !noAdminUser)
     return <ErrorPage code={serverError} message="Server connection failed" />
 
