@@ -3,8 +3,8 @@ import queryUpload from '../queryUpload'
 import PubSub from '/src/pubsub'
 
 const EVENTS_QUERY = `
-query InstallEvents($ids: [String!]!) {
-  events(last: 100, ids: $ids) {
+query InstallEvents($topics: [String!]!) {
+  events(last: 200, topics: $topics) {
     edges {
       node {
         id
@@ -96,25 +96,21 @@ const onBoarding = ayonApi.injectEndpoints({
       },
     }),
     getInstallEvents: build.query({
-      query: ({ ids = [] }) => ({
+      query: ({ topics = [] }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: EVENTS_QUERY,
-          variables: { ids },
+          variables: { topics },
         },
       }),
       transformResponse: (response) => response?.data?.events?.edges?.map(({ node }) => node),
-      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
-        let token
+      onQueryStarted: async (arg, { updateCachedData }) => {
         try {
           const handlePubSub = (topic, message) => {
             if (topic === 'client.connected') {
               return
             }
-
-            // check id is in the list of ids
-            if (!arg.ids.includes(message.id)) return
 
             // update cache
 
@@ -128,18 +124,15 @@ const onBoarding = ayonApi.injectEndpoints({
             })
           }
 
-          // sub to websocket topic
-          token = PubSub.subscribe('addon.install_from_url', handlePubSub)
-
-          await cacheDataLoaded
-        } catch {
+          // sub to websocket topics
+          arg.topics.forEach((topic) => {
+            PubSub.subscribe(topic, handlePubSub)
+          })
+        } catch (error) {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw
+          console.error(error)
         }
-        // cacheEntryRemoved will resolve when the cache subscription is no longer active
-        await cacheEntryRemoved
-        // perform cleanup steps once the `cacheEntryRemoved` promise resolves
-        PubSub.unsubscribe(token)
       },
     }),
   }),

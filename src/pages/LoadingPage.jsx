@@ -39,12 +39,14 @@ const StyledLoader = styled.div`
   inset: 0;
   background-color: var(--color-grey-01);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 
   svg {
     opacity: 0.8;
     width: 150px;
+    height: 300px;
     /* animation */
     animation: ${pulse} 1.4s ease-in-out infinite;
     animation-delay: -1s;
@@ -56,9 +58,9 @@ const StyledLoader = styled.div`
   }
 `
 
-const LoadingPage = ({ style }) => {
+const LoadingPage = ({ message, children, ...props }) => {
   return (
-    <StyledLoader style={style}>
+    <StyledLoader {...props}>
       <svg
         width="100%"
         height="100%"
@@ -109,6 +111,8 @@ const LoadingPage = ({ style }) => {
           </g>
         </g>
       </svg>
+      {message && <h2>{message}</h2>}
+      {children}
     </StyledLoader>
   )
 }

@@ -1,15 +1,18 @@
 // holds stageIndex state and provides functions to update it
 // gets addonsList
 // get server info
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useEffect, useState } from 'react'
 import { useGetYnputConnectionsQuery } from '/src/services/ynputConnect'
 import {
+  useAbortOnBoardingMutation,
   useGetInstallEventsQuery,
   useGetReleaseQuery,
   useInstallPresetMutation,
   useLazyGetReleaseQuery,
 } from '/src/services/onBoarding/onBoarding'
 import { useGetReleasesQuery } from '/src/services/getRelease'
+import useLocalStorage from '/src/hooks/useLocalStorage'
+import { useNavigate } from 'react-router'
 
 const userFormFields = [
   {
@@ -45,15 +48,29 @@ const userFormFields = [
 export const OnBoardingContext = createContext()
 
 export const OnBoardingProvider = ({ children, initStep }) => {
+  const navigate = useNavigate()
+
+  const [isConnecting, setIsConnecting] = useLocalStorage(false)
+
   // get ynput connect data
   const { data: ynputConnect, isLoading: isLoadingConnect } = useGetYnputConnectionsQuery({})
 
   // get releases data
-  const { data: releases = [], isLoading: isLoadingReleases } = useGetReleasesQuery()
+  const { data: releases = [], isLoading: isLoadingReleases } = useGetReleasesQuery({
+    ynputConnect,
+  })
 
   const [stepIndex, setStepIndex] = useState(initStep)
   const previousStep = () => setStepIndex(stepIndex - 1)
   const nextStep = () => setStepIndex(stepIndex + 1)
+
+  // when connected reset isConnecting, and go to next step
+  useEffect(() => {
+    if (ynputConnect && isConnecting) {
+      setIsConnecting(false)
+      nextStep()
+    }
+  }, [ynputConnect, isConnecting])
 
   const initUserForm = userFormFields.reduce((acc, field) => {
     acc[field.id] = ''
@@ -87,10 +104,9 @@ export const OnBoardingProvider = ({ children, initStep }) => {
 
   // set installing
   const [idsInstalling, setIdsInstalling] = useState([])
-  const eventIds = useMemo(
-    () => idsInstalling.filter((i) => i.eventId).map((i) => i.eventId),
-    [idsInstalling],
-  )
+
+  // topics of events to query
+  const [topics, setTopics] = useState([])
 
   // when selectedPreset changes, update selectedAddons
   useEffect(
@@ -99,10 +115,7 @@ export const OnBoardingProvider = ({ children, initStep }) => {
   )
 
   const [installPreset] = useInstallPresetMutation()
-  const { data: installProgress } = useGetInstallEventsQuery(
-    { ids: eventIds },
-    { skip: !eventIds.length },
-  )
+  const { data: installProgress } = useGetInstallEventsQuery({ topics }, { skip: !topics.length })
 
   const handleSubmit = async () => {
     // install addons, installers, dep packages
@@ -128,7 +141,16 @@ export const OnBoardingProvider = ({ children, initStep }) => {
       // got to next step
       nextStep()
 
-      console.log({ addons, installers, depPackages })
+      // starts monitoring the events
+      const eventTopics = [
+        'addon.install_from_url',
+        'installer.install_from_url',
+        'dependency_package.install_from_url',
+      ]
+
+      setTopics(eventTopics)
+
+      // console.log({ addons, installers, depPackages })
       const eventIds = await installPreset({ addons, installers, depPackages }).unwrap()
       // when we do this, getInstallEventsQuery will create an initial query and then sub to the topic "addon.install_from_url"
       // as the events come in, the query will update and we can use the data to show progress
@@ -138,9 +160,15 @@ export const OnBoardingProvider = ({ children, initStep }) => {
     }
   }
 
-  const onFinish = () => {
-    console.log('finishing setup')
-    //
+  const [abortOnboarding] = useAbortOnBoardingMutation()
+  const onFinish = async () => {
+    try {
+      await abortOnboarding().unwrap()
+      // redirect to dashboard
+      navigate('/')
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   const contextValue = {
@@ -164,6 +192,8 @@ export const OnBoardingProvider = ({ children, initStep }) => {
     idsInstalling,
     onFinish,
     isLoadingReleases,
+    setIsConnecting,
+    isConnecting,
   }
 
   return <OnBoardingContext.Provider value={contextValue}>{children}</OnBoardingContext.Provider>

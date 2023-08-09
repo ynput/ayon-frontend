@@ -50,7 +50,13 @@ const queryUpload = async (arg, api, { endpoint, method = 'put' }) => {
       }
     } catch (error) {
       console.error(error)
-      results.push({ eventId: null, file, error: error?.response?.data?.detail || 'Upload error' })
+      results.push({
+        eventId: null,
+        file,
+        error:
+          { detail: error?.response?.data?.detail, status: error?.response?.status } ||
+          'Upload error',
+      })
     }
   }
 

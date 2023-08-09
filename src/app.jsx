@@ -40,7 +40,7 @@ const App = () => {
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState(false)
-
+  const [isOnboarding, setIsOnboarding] = useState(false)
   const [noAdminUser, setNoAdminUser] = useState(false)
 
   const storedAccessToken = localStorage.getItem('accessToken')
@@ -59,6 +59,10 @@ const App = () => {
       .unwrap()
       .then((response) => {
         setNoAdminUser(!!response.noAdminUser)
+
+        if (response.onboarding) {
+          setIsOnboarding(true)
+        }
 
         if (response.user) {
           dispatch(
@@ -88,18 +92,15 @@ const App = () => {
       })
   }, [dispatch, storedAccessToken])
 
-  let isFirstTime
-  isFirstTime = true
-
   // User is not logged in
   if (!user.name && !noAdminUser) {
-    return <LoginPage loading={loading} isFirstTime={isFirstTime} />
+    return <LoginPage loading={loading} isFirstTime={isOnboarding} />
   }
 
   const onBoardingSkips = ['events', 'explorer', 'doc/api']
 
   if (
-    (isFirstTime || noAdminUser) &&
+    (isOnboarding || noAdminUser) &&
     !loading &&
     onBoardingSkips.every((path) => !location.pathname.includes(path))
   ) {
@@ -124,7 +125,7 @@ const App = () => {
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
     window.history.replaceState({}, document.title, '/')
-    return isFirstTime ? null : <LoadingPage />
+    return isOnboarding ? null : <LoadingPage />
   }
 
   if (serverError && !noAdminUser)
@@ -141,7 +142,7 @@ const App = () => {
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Suspense fallback={isFirstTime ? null : <LoadingPage />}>
+      <Suspense fallback={isOnboarding ? null : <LoadingPage />}>
         <SocketProvider>
           <ContextMenuProvider>
             <GlobalContextMenu />

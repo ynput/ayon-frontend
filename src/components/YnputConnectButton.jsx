@@ -12,6 +12,10 @@ export const YnputConnectorButton = styled(Button)`
   min-width: 210px;
   color: black;
 
+  .icon {
+    color: black;
+  }
+
   &:hover {
     background-color: var(--ayon-sys-dark-tertiary, #23e0a9);
     /* before hover state */

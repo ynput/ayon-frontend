@@ -35,7 +35,7 @@ const YnputConnector = ({
       connect({ key: queryKey })
         .unwrap()
         .then((res) => {
-          console.log('ynput account connected')
+          console.log('ynput account connected', res)
           onConnection && onConnection(res)
         })
     }

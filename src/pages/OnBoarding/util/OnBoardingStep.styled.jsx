@@ -1,5 +1,5 @@
 import { Panel, Section as SectionComp } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 // import some styles from LoginPage and export them as Styled
 export * from '/src/pages/LoginPage/LoginPage.styled'
@@ -128,9 +128,13 @@ export const Footer = styled.footer`
     width: 110px;
   }
 
-  .icon {
-    display: none;
-  }
+  ${({ $showIcon }) =>
+    !$showIcon &&
+    css`
+      .icon {
+        display: none;
+      }
+    `}
 `
 
 export const Connect = styled.div`

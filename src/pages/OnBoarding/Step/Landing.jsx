@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import YnputConnector from '../../../components/YnputConnector'
 
-export const Landing = ({ nextStep, setUserForm }) => {
+export const Landing = ({ nextStep, setUserForm, setIsConnecting }) => {
   const [showMore, setShowMore] = useState(false)
 
   const handleConnection = (user) => {
@@ -10,6 +10,7 @@ export const Landing = ({ nextStep, setUserForm }) => {
       // set user userName and userEmail
       setUserForm((userForm) => ({ ...userForm, name: user.userName, email: user.userEmail }))
       nextStep()
+      setIsConnecting(false)
     }
   }
 
@@ -46,6 +47,7 @@ export const Landing = ({ nextStep, setUserForm }) => {
             hideSignOut
             redirect="/onboarding"
             onConnection={handleConnection}
+            onClick={() => setIsConnecting(true)}
           />
         </Styled.Connect>
         {!showMore && (

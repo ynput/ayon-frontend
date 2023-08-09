@@ -61,8 +61,6 @@ export const ProgressInstall = ({
     return (
       installProgress.every((event) => event.status === 'finished' || event.status === 'failed') &&
       !!installProgress.length
-      //   &&
-      //   progressBars.length === installProgress.length
     )
   }, [installProgress])
 
@@ -81,15 +79,26 @@ export const ProgressInstall = ({
             const event = installProgress.find((event) => event.id === eventId) || {}
             const status = event?.status || (i === 0 ? 'in_progress' : 'pending')
             const icon = icons[status] || 'hourglass_empty'
+            const alreadyInstalled = res?.error?.status == 409
+
+            if (file.type === 'installer') {
+              //   console.log(installProgress)
+              //   console.log(file, idsInstalling)
+              //   console.log(eventId, event)
+            }
 
             return (
               <AddonCard
                 key={file.name}
                 name={file.name}
-                icon={icon}
+                icon={alreadyInstalled ? icons.finished : icon}
                 isSyncing={status === 'in_progress'}
-                error={status === 'failed' ? event.description : res?.error || null}
-                isSelected={status === 'finished'}
+                error={
+                  status === 'failed'
+                    ? event.description
+                    : (!alreadyInstalled && res?.error?.detail) || null
+                }
+                isSelected={status === 'finished' || alreadyInstalled}
                 style={{ cursor: 'default' }}
                 ref={(el) => eventId && (refs.current[eventId] = el)}
               />
@@ -99,8 +108,12 @@ export const ProgressInstall = ({
       <Footer
         back={null}
         next="Finish Setup"
-        nextProps={{ active: isAllFinished }}
+        nextProps={{
+          saving: !isAllFinished,
+          style: { width: 'unset', pointerEvents: !isAllFinished && 'none' },
+        }}
         onNext={onFinish}
+        showIcon
       />
     </Styled.Section>
   )

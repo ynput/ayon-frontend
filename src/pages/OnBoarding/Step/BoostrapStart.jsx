@@ -4,19 +4,8 @@ import * as Styled from '../util/OnBoardingStep.styled'
 import YnputConnector from '../../../components/YnputConnector'
 import { YnputConnectorButton } from '/src/components/YnputConnectButton'
 
-export const BootstrapStart = ({ nextStep, ynputConnect, isLoadingConnect }) => {
-  const handleSkip = () => {}
-
-  const handleConnection = (c) => {
-    // setIsConnectionLoading(false)
-    if (c) {
-      nextStep()
-    }
-  }
-
-  const message1 = `Using ${
-    ynputConnect ? 'the Setup Wizard' : 'Ynput Connect'
-  } lets us automatically download and setup all you need to take full advantage of AYON in your production.`
+export const BootstrapStart = ({ nextStep, ynputConnect, setIsConnecting, onFinish }) => {
+  const message1 = `Bootstrap Setup lets us automatically download and setup all you need to take full advantage of AYON in your production.`
 
   return (
     <>
@@ -46,22 +35,21 @@ export const BootstrapStart = ({ nextStep, ynputConnect, isLoadingConnect }) => 
         </p>
         <Styled.Connect>
           <span>Fast and Automated setup with</span>
-          {ynputConnect || isLoadingConnect ? (
-            <YnputConnectorButton active onClick={nextStep}>
-              {!isLoadingConnect && 'Setup Wizard'}
+          {ynputConnect ? (
+            <YnputConnectorButton active onClick={nextStep} icon="input_circle">
+              Bootstrap Setup
             </YnputConnectorButton>
           ) : (
             <YnputConnector
               showLoading={false}
-              onConnection={handleConnection}
               hideSignOut
               redirect="/onboarding"
-              onRedirect={(q) => q && handleConnection(true)}
+              onClick={() => setIsConnecting(true)}
             />
           )}
         </Styled.Connect>
 
-        <span className="more" onClick={handleSkip}>
+        <span className="more" onClick={onFinish}>
           I know what I am doing, skip bootstrap.
         </span>
       </Styled.Login>
