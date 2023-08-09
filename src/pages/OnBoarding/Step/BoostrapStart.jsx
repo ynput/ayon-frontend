@@ -36,7 +36,7 @@ export const BootstrapStart = ({ nextStep, ynputConnect, setIsConnecting, onFini
         <Styled.Connect>
           <span>Fast and Automated setup with</span>
           {ynputConnect ? (
-            <YnputConnectorButton active onClick={nextStep} icon="input_circle">
+            <YnputConnectorButton active onClick={nextStep} icon="verified_user">
               Bootstrap Setup
             </YnputConnectorButton>
           ) : (

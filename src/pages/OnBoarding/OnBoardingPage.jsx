@@ -5,7 +5,7 @@ import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'
 import { Navigate, useLocation } from 'react-router'
 import StepWrapper from './util/StepWrapper'
-import YnputConnector from '../../components/YnputConnector'
+// import YnputConnector from '../../components/YnputConnector'
 
 const OnBoardingPage = ({ noAdminUser }) => {
   const { data: info = {} } = useGetInfoQuery()
@@ -32,7 +32,7 @@ const OnBoardingPage = ({ noAdminUser }) => {
       </OnBoardingProvider>
 
       {/*  eslint-disable-next-line no-undef */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div
           style={{
             position: 'absolute',
@@ -42,7 +42,7 @@ const OnBoardingPage = ({ noAdminUser }) => {
         >
           <YnputConnector />
         </div>
-      )}
+      )} */}
     </main>
   )
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import AddonCard from '/src/components/AddonCard/AddonCard'
+import AddonCardProgress from '/src/components/AddonCard/AddonCardProgress'
 
 const icons = {
   pending: 'hourglass_empty',
@@ -23,9 +23,10 @@ export const ProgressInstall = ({
   useEffect(() => {
     // find first status === 'in_progress'
     const event = installProgress.find((event) => event.status === 'in_progress')
+    const url = idsInstalling.find((res) => res.eventId === event?.id)?.file?.url
 
-    if (!event) return
-    const element = refs.current[event.id]
+    if (!url) return
+    const element = refs.current[url]
     if (!element) return
     // scroll to event
     element.scrollIntoView({
@@ -64,14 +65,32 @@ export const ProgressInstall = ({
     )
   }, [installProgress])
 
+  //   when isAllFinished is true, scroll to last event
+  useEffect(() => {
+    if (!isAllFinished) return
+    const file = progressBars[progressBars.length - 1]
+    const url = file?.url
+    if (!url) return
+    const element = refs.current[url]
+    if (!element) return
+    // scroll to event
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+    })
+  }, [isAllFinished, installProgress, refs])
+
+  const title = isAllFinished ? 'Finished Installation!' : 'Getting Everything Installed...'
+
   return (
     <Styled.Section>
-      <h2>Getting Everything Installed...</h2>
+      <h2>{title}</h2>
       <Styled.PresetsContainer style={{ overflow: 'auto' }}>
         {progressBars
           .filter((file) => file.type !== 'addon' || selectedAddons.includes(file.name))
           .map((file, i) => {
-            const res = idsInstalling.find((res) => res.file.url === file.url)
+            const url = file.url
+            const res = idsInstalling.find((res) => res.file.url === url)
 
             // find event by id by url
             const eventId = res?.eventId
@@ -80,27 +99,28 @@ export const ProgressInstall = ({
             const status = event?.status || (i === 0 ? 'in_progress' : 'pending')
             const icon = icons[status] || 'hourglass_empty'
             const alreadyInstalled = res?.error?.status == 409
+            let progress = event?.progress || 0
+            const isFinished = status === 'finished' || alreadyInstalled
+            if (isFinished) progress = 100
 
-            if (file.type === 'installer') {
-              //   console.log(installProgress)
-              //   console.log(file, idsInstalling)
-              //   console.log(eventId, event)
-            }
+            const scale = Math.round((progress / 100) * 100) / 100
 
             return (
-              <AddonCard
+              <AddonCardProgress
                 key={file.name}
                 name={file.name}
                 icon={alreadyInstalled ? icons.finished : icon}
-                isSyncing={status === 'in_progress'}
                 error={
                   status === 'failed'
                     ? event.description
                     : (!alreadyInstalled && res?.error?.detail) || null
                 }
-                isSelected={status === 'finished' || alreadyInstalled}
                 style={{ cursor: 'default' }}
-                ref={(el) => eventId && (refs.current[eventId] = el)}
+                ref={(el) => url && (refs.current[url] = el)}
+                // progress styled props
+                $isSyncing={status === 'in_progress'}
+                $isFinished={isFinished}
+                $progress={scale}
               />
             )
           })}

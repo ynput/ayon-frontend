@@ -14,6 +14,8 @@ export const YnputConnectorButton = styled(Button)`
 
   .icon {
     color: black;
+    font-size: 2rem;
+    font-variation-settings: 'FILL' 1;
   }
 
   &:hover {
