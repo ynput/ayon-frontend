@@ -20,6 +20,7 @@ const initialState = {
   share: { name: null, data: null, link: null, img: null },
   uri: null,
   uriChanged: 0,
+  uploadProgress: 0, // percentage 0 - 100
 }
 
 const contextSlice = createSlice({
@@ -145,6 +146,22 @@ const contextSlice = createSlice({
         link: null,
       }
     },
+    onUploadProgress: (
+      state,
+      {
+        payload: {
+          progress: { loaded, total },
+          index,
+          filesTotal,
+        },
+      },
+    ) => {
+      const percent = Math.round(((index - 1) * 100 + (loaded * 100) / total) / filesTotal)
+      state.uploadProgress = percent
+    },
+    onUploadFinished: (state) => {
+      state.uploadProgress = 0
+    },
   }, // reducers
 })
 
@@ -169,6 +186,8 @@ export const {
   closeShare,
   selectProject,
   onFocusChanged,
+  onUploadProgress,
+  onUploadFinished,
 } = contextSlice.actions
 
 export default contextSlice.reducer

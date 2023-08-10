@@ -39,15 +39,25 @@ const StyledLoader = styled.div`
   inset: 0;
   background-color: var(--color-grey-01);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  z-index: 500;
 
   svg {
     opacity: 0.8;
     width: 150px;
+    height: 300px;
     /* animation */
     animation: ${pulse} 1.4s ease-in-out infinite;
     animation-delay: -1s;
+
+    #symbol {
+      rect,
+      path {
+        fill: var(--md-sys-color-secondary);
+      }
+    }
 
     .dot {
       animation: ${bounce} 0.7s cubic-bezier(0.58, 0.01, 0.44, 0.97) infinite;
@@ -56,9 +66,33 @@ const StyledLoader = styled.div`
   }
 `
 
-const LoadingPage = ({ style }) => {
+const StyledBanner = styled.div`
+  animation-name: delay-visibility;
+  animation-duration: 0.2s;
+  animation-fill-mode: forwards;
+  visibility: hidden;
+
+  @keyframes delay-visibility {
+    to {
+      visibility: visible;
+    }
+  }
+
+  background-color: var(--md-sys-color-secondary-container);
+  border-radius: 5px;
+  color: var(--md-sys-color-on-secondary-container);
+  padding: 8px 16px;
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0;
+    padding: 0;
+  }
+`
+
+const LoadingPage = ({ message, children, ...props }) => {
   return (
-    <StyledLoader style={style}>
+    <StyledLoader {...props}>
       <svg
         width="100%"
         height="100%"
@@ -78,30 +112,18 @@ const LoadingPage = ({ style }) => {
             <g id="Y_green1">
               <g id="symbol" transform="matrix(1.77413,0,0,0.922664,-1122.88,47.0979)">
                 <g transform="matrix(-2.19911,-1.26966,-1.26966,2.19911,1357.18,508.296)">
-                  <rect
-                    x="-38.053"
-                    y="10.196"
-                    width="44"
-                    height="12.001"
-                    style={{ fill: 'white' }}
-                  />
+                  <rect x="-38.053" y="10.196" width="44" height="12.001" />
                 </g>
                 <g transform="matrix(-1.26959,-2.19915,-2.19915,1.26959,1585.08,579.033)">
-                  <rect
-                    x="10.051"
-                    y="-5.803"
-                    width="12.002"
-                    height="43.999"
-                    style={{ fill: 'white' }}
-                  />
+                  <rect x="10.051" y="-5.803" width="12.002" height="43.999" />
                 </g>
                 <g transform="matrix(-2.53932,0,0,2.53932,2519.41,83.268)">
-                  <rect x="414.945" y="221.035" width="12" height="44" style={{ fill: 'white' }} />
+                  <rect x="414.945" y="221.035" width="12" height="44" />
                 </g>
                 <g transform="matrix(0,-2.53932,-2.53932,0,1450.5,462.224)" className="dot">
                   <path
                     d="M-12,-12C-18.627,-12 -24,-6.627 -24,0C-24,6.627 -18.627,12 -12,12C-5.373,12 0,6.627 0,0C0,-6.627 -5.373,-12 -12,-12"
-                    style={{ fill: 'white', fillRule: 'nonzero' }}
+                    style={{ fillRule: 'nonzero' }}
                   />
                 </g>
               </g>
@@ -109,6 +131,12 @@ const LoadingPage = ({ style }) => {
           </g>
         </g>
       </svg>
+      {message && (
+        <StyledBanner>
+          <h2>{message}</h2>
+        </StyledBanner>
+      )}
+      {children}
     </StyledLoader>
   )
 }

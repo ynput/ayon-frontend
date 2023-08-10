@@ -1,6 +1,6 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 
-const addonList = ayonApi.injectEndpoints({
+const getAddons = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     //  Return a list of all addons installed on the server
 
@@ -117,6 +117,12 @@ const addonList = ayonApi.injectEndpoints({
       }),
       invalidatesTags: ['addonList'],
     }), // setCopyAddonVariant
+    getAddonInstall: build.query({
+      query: () => ({
+        url: `/api/addons/install`,
+        method: 'GET',
+      }),
+    }),
   }), // endpoints
 })
 
@@ -127,4 +133,6 @@ export const {
   useSetAddonVersionMutation,
   useSetAddonVersionsMutation,
   useSetCopyAddonVariantMutation,
-} = addonList
+  useGetAddonInstallQuery,
+  useLazyGetAddonInstallQuery,
+} = getAddons

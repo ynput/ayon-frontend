@@ -1,13 +1,27 @@
-import { Dropdown, Icon } from '@ynput/ayon-react-components'
+import { Button, Dropdown, Icon } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled, { css } from 'styled-components'
 import { useGetInstallerListQuery } from '/src/services/installers'
 import { toast } from 'react-toastify'
+import useLocalStorage from '/src/hooks/useLocalStorage'
+
+const ButtonColors = css`
+  background-color: var(--md-sys-color-primary);
+
+  &:hover {
+    background-color: var(--md-sys-color-primary-hover, var(--md-sys-color-primary));
+  }
+  &,
+  .icon {
+    color: var(--md-sys-color-on-primary);
+  }
+`
 
 const StyledInstallerDownload = styled(Dropdown)`
   .button {
     background-color: var(--button-background);
-    padding: 8px 12px;
+    padding: 5.25px 8px;
+    padding-right: 4px;
     height: unset;
 
     &:hover {
@@ -19,16 +33,18 @@ const StyledInstallerDownload = styled(Dropdown)`
     $isSpecial &&
     css`
       .button {
-        background-color: var(--color-hl-00);
-        &:hover {
-          background-color: var(--color-hl-00);
-        }
-        &,
-        .icon {
-          color: black;
-        }
+        border-radius: 4px 0 0 4px;
+        ${ButtonColors}
       }
     `}
+`
+
+const StyledCloseButton = styled(Button)`
+  border-radius: 0 4px 4px 0;
+  left: -4px;
+  position: relative;
+
+  ${ButtonColors}
 `
 
 const StyledValue = styled.div`
@@ -62,6 +78,10 @@ const StyledItem = styled.div`
 `
 
 const InstallerDownload = ({ isSpecial }) => {
+  const [installerDownloaded, setInstallerDownloaded] = useLocalStorage(
+    'installer-downloaded',
+    false,
+  )
   const { data: installers } = useGetInstallerListQuery()
 
   // get operating system of user
@@ -97,37 +117,46 @@ const InstallerDownload = ({ isSpecial }) => {
       link.click()
       link.parentNode.removeChild(link)
       // set localStorage
-      localStorage.setItem('installerDownloaded', 'true')
+      setInstallerDownloaded(true)
     } else {
       toast.error('URL for installer not found')
     }
   }
 
-  if (isSpecial && localStorage.getItem('installerDownloaded') === 'true') return null
+  if (isSpecial && installerDownloaded) return null
 
   return (
-    <StyledInstallerDownload
-      $isSpecial={isSpecial}
-      options={installers}
-      value={[]}
-      valueTemplate={() => (
-        <StyledValue>
-          <Icon icon="install_desktop" />
-          <span>Download Installers</span>
-        </StyledValue>
+    <>
+      <StyledInstallerDownload
+        $isSpecial={isSpecial}
+        options={installers}
+        value={[]}
+        valueTemplate={() => (
+          <StyledValue>
+            <Icon icon="install_desktop" />
+            <span>Download Installers</span>
+          </StyledValue>
+        )}
+        itemTemplate={({ platform, filename, sources }) => (
+          <StyledItem
+            $highlight={userPlatform === platform}
+            onClick={() => handleDownloadClick(sources, filename)}
+          >
+            <Icon icon="download" />
+            <span>
+              {platform === 'darwin' ? 'macOS' : platform} - {filename}
+            </span>
+          </StyledItem>
+        )}
+      />
+      {isSpecial && (
+        <StyledCloseButton
+          $isSpecial={true}
+          icon="close"
+          onClick={() => setInstallerDownloaded(true)}
+        />
       )}
-      itemTemplate={({ platform, filename, sources }) => (
-        <StyledItem
-          $highlight={userPlatform === platform}
-          onClick={() => handleDownloadClick(sources, filename)}
-        >
-          <Icon icon="download" />
-          <span>
-            {platform === 'darwin' ? 'macOS' : platform} - {filename}
-          </span>
-        </StyledItem>
-      )}
-    />
+    </>
   )
 }
 

@@ -1,4 +1,5 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 export const Preset = styled.li`
   display: flex;
@@ -12,20 +13,38 @@ export const Preset = styled.li`
   cursor: pointer;
   overflow: hidden;
   margin: 0;
+  position: relative;
 
   border-radius: 4px;
-  /* background: var(--ayon-sys-dark-primary-container, #004b70); */
-  background: ${({ $selected }) => ($selected ? 'var(--color-hl-00)' : 'var(--button-background)')};
-  color: ${({ $selected }) => ($selected ? 'black' : 'white')};
-
-  .icon {
-    color: ${({ $selected }) => ($selected ? 'black' : 'white')};
-  }
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-primary-container);
 
   &:hover {
-    background: ${({ $selected }) =>
-      $selected ? 'var(--color-hl-00)' : 'var(--button-background-hover)'};
+    background-color: var(--md-sys-color-surface-container-highest-hover);
   }
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      &,
+      &:hover {
+        background-color: var(--md-sys-color-primary-container);
+      }
+    `}
+
+  ${({ $loading }) =>
+    $loading &&
+    css`
+      /* hide all text */
+      & > * {
+        visibility: hidden;
+        user-select: none;
+        pointer-events: none;
+      }
+
+      /* add shimmer */
+      ${getShimmerStyles(undefined, undefined, { opacity: 0.5 })}
+    `}
 `
 
 export const Header = styled.header`
@@ -57,10 +76,12 @@ export const Header = styled.header`
 `
 
 export const Addons = styled.span`
-  /* color: var(--ayon-sys-dark-on-primary-container, #cae6ff); */
-  font-size: 11px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
+  &,
+  & span {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
 `

@@ -12,12 +12,13 @@ const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
 
 export const SocketProvider = (props) => {
+  // get user logged in
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
 
   const wsOpts = {
     shouldReconnect: () => {
-      setServerRestartingVisible(true)
+      // setServerRestartingVisible(true)
       return true
     },
   }

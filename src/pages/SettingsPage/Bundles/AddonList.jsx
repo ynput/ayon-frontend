@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { VersionSelect } from '@ynput/ayon-react-components'
-import { useGetAddonListQuery } from '/src/services/addonList'
+import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 

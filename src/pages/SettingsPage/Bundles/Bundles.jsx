@@ -12,7 +12,7 @@ import {
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 import { useGetInstallerListQuery } from '/src/services/installers'
-import { useGetAddonListQuery } from '/src/services/addonList'
+import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
@@ -38,7 +38,7 @@ const Bundles = () => {
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
-  const [showArchived, setShowArchived] = useLocalStorage(true)
+  const [showArchived, setShowArchived] = useLocalStorage('bundles-archived', true)
 
   // REDUX QUERIES
   let { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
@@ -297,8 +297,6 @@ const Bundles = () => {
             isLoading={isLoadingInstallers}
             installers={installerVersions}
             addons={addons}
-            noStudioName={!studioName}
-            firstBundle={!bundleList.length}
           />
         ) : (
           !!bundlesData.length && (

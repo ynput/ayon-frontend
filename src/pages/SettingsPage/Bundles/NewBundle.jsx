@@ -7,15 +7,7 @@ import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
 
-const NewBundle = ({
-  initBundle,
-  onSave,
-  addons,
-  installers,
-  isLoading,
-  noStudioName,
-  firstBundle,
-}) => {
+const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
 
@@ -86,6 +78,8 @@ const NewBundle = ({
     })
   }
 
+  console.log(formData)
+
   return (
     <Section>
       <Toolbar>
@@ -106,8 +100,6 @@ const NewBundle = ({
           setSelectedAddons,
           setFormData,
           installers,
-          noStudioName,
-          firstBundle,
         }}
         formData={formData}
       >
@@ -121,6 +113,16 @@ const NewBundle = ({
             label="Deselect all addons"
             icon="deselect"
             onClick={() => setSelectedAddons([])}
+          />
+          <Button
+            label="Select activated"
+            icon="check_circle"
+            onClick={() => setSelectedAddons(addons.filter((a) => !!formData?.addons?.[a.name]))}
+          />
+          <Button
+            label="Select deactivated"
+            icon="block"
+            onClick={() => setSelectedAddons(addons.filter((a) => !formData?.addons?.[a.name]))}
           />
           <Button
             label="Version latest"

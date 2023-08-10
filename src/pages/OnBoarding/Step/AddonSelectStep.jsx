@@ -3,32 +3,38 @@ import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
 
 export const AddonSelectStep = ({
-  release,
   Footer,
   selectedAddons,
   setSelectedAddons,
   onSubmit,
+  release,
 }) => {
-  const { addons } = release
+  // FIX: get release by name from /api/onboarding/release/:name
+  // for now import release.230807.json
 
   const [sortedAddons, setSortedAddons] = useState([])
 
   useEffect(() => {
-    // order addons by selected
-    const sorted = addons.sort((a, b) => {
+    const sortedAddons = release.addons.map((addon) => addon)
+    // order addons by selected and then by addon.required
+    sortedAddons.sort((a, b) => {
       const aSelected = selectedAddons.includes(a.name)
       const bSelected = selectedAddons.includes(b.name)
       if (aSelected && !bSelected) return -1
       if (!aSelected && bSelected) return 1
+      if (a.required && !b.required) return -1
+      if (!a.required && b.required) return 1
       return 0
     })
-    setSortedAddons(sorted)
-  }, [])
+    setSortedAddons(sortedAddons)
+  }, [release])
 
   const handleAddonClick = (name) => {
+    const addon = release.addons.find((addon) => addon.name === name)
+    if (!addon) return
     // if it's already selected, remove it
     if (selectedAddons.includes(name)) {
-      if (name === 'Core') {
+      if (addon.required) {
         return // prevent removing the "Core" addon
       }
       setSelectedAddons(selectedAddons.filter((addon) => addon !== name))
@@ -48,7 +54,7 @@ export const AddonSelectStep = ({
             icon="check_circle"
             isSelected={selectedAddons.includes(addon.name)}
             onClick={() => handleAddonClick(addon.name)}
-            style={{ opacity: addon.name === 'Core' ? 0.5 : 1 }}
+            style={{ opacity: addon.required ? 0.5 : 1 }}
           />
         ))}
       </Styled.AddonsContainer>

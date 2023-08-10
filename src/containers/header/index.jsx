@@ -45,7 +45,11 @@ const Header = () => {
 
       <Link to="/profile">
         <HeaderButton>
-          <UserImage size={26} src={user?.attrib?.avatarUrl} fullName={user?.attrib?.fullName} />
+          <UserImage
+            size={26}
+            src={user?.attrib?.avatarUrl}
+            fullName={user?.attrib?.fullName || user?.name}
+          />
         </HeaderButton>
       </Link>
       <HeaderButton icon="apps" onClick={() => setUserMenuVisible(true)} />

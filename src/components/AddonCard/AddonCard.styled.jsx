@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const AddonCard = styled.div`
   display: flex;
@@ -8,19 +8,47 @@ export const AddonCard = styled.div`
   align-self: stretch;
   cursor: pointer;
   user-select: none;
+  position: relative;
+  overflow: hidden;
+  min-height: 40px;
+
+  & > * {
+    z-index: 1;
+  }
 
   border-radius: 4px;
-  background: ${({ $selected }) => ($selected ? 'var(--color-hl-00)' : 'var(--button-background)')};
-  color: ${({ $selected }) => ($selected ? 'black' : 'white')};
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-primary-container);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest-hover);
+  }
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      &,
+      &:hover {
+        background-color: var(--md-sys-color-primary-container);
+      }
+    `}
 
   .icon {
-    color: ${({ $selected }) => ($selected ? 'black' : 'white')};
     /* fill icon */
     ${({ $selected }) => ($selected ? 'font-variation-settings: "FILL" 1;' : '')}
   }
 
-  &:hover {
-    background: ${({ $selected }) =>
-      $selected ? 'var(--color-hl-00)' : 'var(--button-background-hover)'};
+  ${({ $error }) =>
+    $error &&
+    css`
+      background: var(--color-hl-error);
+
+      &:hover {
+        background: var(--color-hl-error);
+      }
+    `}
+
+  .error {
+    margin-left: auto;
   }
 `

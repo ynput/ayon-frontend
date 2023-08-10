@@ -5,7 +5,6 @@ import AddonList from './AddonList'
 import * as Styled from './Bundles.styled'
 import { upperFirst } from 'lodash'
 import InstallerSelector from './InstallerSelector'
-import { Link } from 'react-router-dom'
 
 const StyledColumns = styled.div`
   display: flex;
@@ -23,8 +22,6 @@ const BundleForm = ({
   children,
   selectedAddons,
   setSelectedAddons,
-  noStudioName,
-  firstBundle,
 }) => {
   const showNameError = formData && !formData?.name && isNew
 
@@ -47,17 +44,6 @@ const BundleForm = ({
             <h2 style={{ margin: 0 }}>{formData?.name}</h2>
           )}
         </FormRow>
-        {noStudioName && !firstBundle && (
-          <span style={{ color: 'var(--color-hl-01)' }}>
-            Warning: No Studio Name found. Set name in{' '}
-            <Link
-              to="/settings/studio"
-              style={{ textDecoration: 'underline', color: 'var(--color-hl-01)' }}
-            >
-              Core addon settings
-            </Link>
-          </span>
-        )}
         <FormRow label="Installer version">
           {isNew ? (
             <InstallerSelector

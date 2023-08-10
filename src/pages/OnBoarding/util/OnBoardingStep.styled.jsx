@@ -1,5 +1,5 @@
-import { Panel, Section as SectionComp } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
+import { Panel, SaveButton, Section as SectionComp } from '@ynput/ayon-react-components'
+import styled, { css, keyframes } from 'styled-components'
 
 // import some styles from LoginPage and export them as Styled
 export * from '/src/pages/LoginPage/LoginPage.styled'
@@ -128,9 +128,13 @@ export const Footer = styled.footer`
     width: 110px;
   }
 
-  .icon {
-    display: none;
-  }
+  ${({ $showIcon }) =>
+    !$showIcon &&
+    css`
+      .icon {
+        display: none;
+      }
+    `}
 `
 
 export const Connect = styled.div`
@@ -139,7 +143,39 @@ export const Connect = styled.div`
   align-items: center;
   gap: 4px;
 
-  .ynput-connector {
+  button {
     width: unset;
   }
+`
+const spin = keyframes`
+to {
+  transform: rotate(360deg);
+}
+`
+
+export const NextButton = styled(SaveButton)`
+  background-color: var(--md-sys-color-tertiary);
+  color: var(--md-sys-color-on-tertiary);
+
+  &:hover {
+    background-color: var(--md-sys-color-tertiary-hover);
+  }
+
+  :disabled {
+    &,
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface);
+      opacity: 0.6;
+    }
+  }
+
+  ${({ saving }) =>
+    saving &&
+    css`
+      /* spin icon */
+      .icon {
+        animation: ${spin} 1s linear infinite;
+      }
+    `}
 `

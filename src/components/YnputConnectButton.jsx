@@ -3,24 +3,23 @@ import React from 'react'
 import styled, { css } from 'styled-components'
 import getShimmerStyles from '../styles/getShimmerStyles'
 
-const StyledButton = styled(Button)`
-  background-color: var(--ayon-sys-dark-tertiary, #23e0a9);
+export const YnputConnectorButton = styled(Button)`
+  background-color: var(--md-sys-color-tertiary);
   position: relative;
   padding: 8px 16px;
-  min-height: unset;
+  min-height: 50px;
   max-height: unset;
-  max-width: unset;
+  min-width: 210px;
+  color: var(--md-sys-color-on-tertiary);
+
+  .icon {
+    color: var(--md-sys-color-on-tertiary);
+    font-size: 2rem;
+    font-variation-settings: 'FILL' 1;
+  }
 
   &:hover {
-    background-color: var(--ayon-sys-dark-tertiary, #23e0a9);
-    /* before hover state */
-    &::before {
-      z-index: 0;
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--ayon-state-layers-dark-on-surface-opacity-016, rgba(197, 198, 201, 0.16));
-    }
+    background-color: var(--md-sys-color-tertiary-hover);
   }
 
   /* when disabled */
@@ -41,14 +40,14 @@ const StyledButton = styled(Button)`
 
 const YnputConnectButton = React.forwardRef(({ ...props }, ref) => {
   return (
-    <StyledButton
+    <YnputConnectorButton
       {...props}
       ref={ref}
       $disabled={props.disabled || props.isLoading}
       $isLoading={props.isLoading}
     >
       <img src="/ynput-connect-logo.svg" />
-    </StyledButton>
+    </YnputConnectorButton>
   )
 })
 

@@ -1,5 +1,6 @@
 export { Landing } from './Landing'
 export { CreateUser } from './CreateUser'
 export { BootstrapStart } from './BoostrapStart'
-export { PresetStep } from './PresetStep'
+export { ReleaseSelect } from './ReleaseSelect'
 export { AddonSelectStep } from './AddonSelectStep'
+export { ProgressInstall } from './ProgressInstall'
