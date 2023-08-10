@@ -42,6 +42,7 @@ const StyledLoader = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  z-index: 10;
 
   svg {
     opacity: 0.8;
