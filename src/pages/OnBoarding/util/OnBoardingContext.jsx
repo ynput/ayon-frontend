@@ -123,11 +123,26 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     () => idsInstalling.filter((res) => res.eventId).map((res) => res.eventId),
     [idsInstalling],
   )
+  const [isFinished, setIsFinished] = useState(false)
+  const {
+    data: installProgress,
+    isSuccess,
+    isFetching,
+    refetch,
+  } = useGetInstallEventsQuery({ topics, ids: eventIds }, { skip: !eventIds.length })
 
-  const { data: installProgress } = useGetInstallEventsQuery(
-    { topics, ids: eventIds },
-    { skip: !eventIds.length },
-  )
+  // once installProgress is success (first time) and not fetching then refetch every 2 seconds
+  useEffect(() => {
+    if (isSuccess && !isFetching && !isFinished) {
+      const interval = setInterval(() => {
+        !isFetching && refetch()
+      }, 2000)
+
+      if (isFinished) clearInterval(interval)
+
+      return () => clearInterval(interval)
+    }
+  }, [isSuccess, isFetching, isFinished])
 
   const handleSubmit = async () => {
     // install addons, installers, dep packages
@@ -164,6 +179,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   }
 
   const [abortOnboarding] = useAbortOnBoardingMutation()
+
   const handleFinish = async () => {
     try {
       await abortOnboarding().unwrap()
@@ -193,6 +209,8 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     isLoadingConnect,
     installProgress,
     idsInstalling,
+    isFinished,
+    setIsFinished,
     onFinish: handleFinish,
     isLoadingReleases,
     setIsConnecting,

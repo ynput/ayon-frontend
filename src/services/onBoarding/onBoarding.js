@@ -124,6 +124,9 @@ const onBoarding = ayonApi.injectEndpoints({
               // replace event
               if (index !== -1) {
                 draft[index] = message
+              } else {
+                // add event
+                draft.push(message)
               }
             })
           }

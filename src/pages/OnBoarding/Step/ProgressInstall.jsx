@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCardProgress from '/src/components/AddonCard/AddonCardProgress'
 
@@ -35,6 +35,8 @@ export const ProgressInstall = ({
   selectedAddons = [],
   Footer,
   onFinish,
+  isFinished,
+  setIsFinished,
 }) => {
   const refs = React.useRef({})
 
@@ -75,8 +77,6 @@ export const ProgressInstall = ({
 
     return [...addons, ...installers, ...depPackages]
   }, [release])
-
-  const [isFinished, setIsFinished] = useState(false)
 
   useEffect(() => {
     const allFinished = installProgress.every(
