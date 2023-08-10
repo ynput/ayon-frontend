@@ -99,8 +99,13 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     }
   }, [releases])
 
-  // set installing
+  // these are the event ids that are installing
   const [idsInstalling, setIdsInstalling] = useState([])
+  // this is used to install addons, installers, dep packages
+  const [installPreset] = useInstallPresetMutation()
+  const [installData, setInstallData] = useState(null)
+
+  // set installing
 
   // topics of events to query
   const [topics, setTopics] = useState([])
@@ -111,8 +116,23 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     [selectedPreset],
   )
 
-  const [installPreset] = useInstallPresetMutation()
-  const { data: installProgress } = useGetInstallEventsQuery({ topics }, { skip: !topics.length })
+  const { data: installProgress, isSuccess: topicsSubscribed } = useGetInstallEventsQuery(
+    { topics },
+    { skip: !topics.length },
+  )
+
+  // once topics have been subscribed to, install addons, installers, dep packages
+  useEffect(() => {
+    if (topicsSubscribed) {
+      // console.log({ addons, installers, depPackages })
+      installPreset(installData)
+        .unwrap()
+        .then((eventIds) =>
+          // as the events come in, the query will update and we can use the data to show progress
+          setIdsInstalling(eventIds),
+        )
+    }
+  }, [topicsSubscribed, installData])
 
   const handleSubmit = async () => {
     // install addons, installers, dep packages
@@ -145,13 +165,10 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         'dependency_package.install_from_url',
       ]
 
+      // this sets the topics for the query to sub to the topics above
       setTopics(eventTopics)
 
-      // console.log({ addons, installers, depPackages })
-      const eventIds = await installPreset({ addons, installers, depPackages }).unwrap()
-      // when we do this, getInstallEventsQuery will create an initial query and then sub to the topic "addon.install_from_url"
-      // as the events come in, the query will update and we can use the data to show progress
-      setIdsInstalling(eventIds)
+      setInstallData({ addons, installers, depPackages })
     } catch (error) {
       console.error(error)
     }
