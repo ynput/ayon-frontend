@@ -101,6 +101,7 @@ export const ProgressInstall = ({
 
   // as progress data changes we update the progress state for each url
   useEffect(() => {
+    if (!installProgress.length) return
     const newProgress = { ...progress }
 
     for (const bar in progress) {
