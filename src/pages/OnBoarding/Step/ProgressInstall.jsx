@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCardProgress from '/src/components/AddonCard/AddonCardProgress'
 
@@ -91,6 +91,36 @@ export const ProgressInstall = ({
     return () => clearTimeout(id)
   }, [installProgress])
 
+  // reduce progressBars down to {url: progress || 0}
+  const progressInit = progressBars.reduce((acc, file) => {
+    acc[file.url] = 0
+    return acc
+  }, {})
+
+  const [progress, setProgress] = useState(progressInit)
+
+  // as progress data changes we update the progress state for each url
+  useEffect(() => {
+    const newProgress = { ...progress }
+
+    for (const bar in progress) {
+      const url = bar
+      const res = idsInstalling.find((res) => res.file.url === url)
+      // find event by id by url
+      const eventId = res?.eventId
+      // find all event messages for this event
+      const events = installProgress.filter((event) => event.id === eventId)
+      const event = findLastEvent(events)
+      if (!event) continue
+      const lastProgressValue = newProgress[bar]
+      const newProgressValue = event.progress
+      // prevents progress from going backwards
+      if (!newProgressValue || newProgressValue < lastProgressValue) continue
+      newProgress[bar] = newProgressValue
+    }
+    setProgress(newProgress)
+  }, [installProgress])
+
   const title = isFinished ? 'Finished Installation!' : 'Getting Everything Installed...'
 
   return (
@@ -102,7 +132,6 @@ export const ProgressInstall = ({
           .map((file) => {
             const url = file.url
             const res = idsInstalling.find((res) => res.file.url === url)
-
             // find event by id by url
             const eventId = res?.eventId
             // find all event messages for this event
@@ -115,11 +144,11 @@ export const ProgressInstall = ({
 
             const icon = icons[status] || 'hourglass_empty'
             const alreadyInstalled = res?.error?.status == 409
-            let progress = event?.progress || 0
+            let currentProgress = progress[url]
             const isFinished = status === 'finished' || alreadyInstalled
-            if (isFinished) progress = 100
+            if (isFinished) currentProgress = 100
 
-            const scale = Math.round((progress / 100) * 100) / 100
+            const scale = Math.round((currentProgress / 100) * 100) / 100
 
             return (
               <AddonCardProgress

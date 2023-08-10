@@ -58,7 +58,12 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
           <Step.AddonSelectStep step={4} />
           <Step.ProgressInstall step={5} />
         </StepWrapper>
-        {isFinishing && <ServerRestartBanner active={isFinishing} />}
+        {isFinishing && (
+          <ServerRestartBanner
+            active={isFinishing}
+            message={'Almost there! restarting server to apply setup...'}
+          />
+        )}
       </OnBoardingProvider>
     </main>
   )
