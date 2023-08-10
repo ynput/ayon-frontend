@@ -1,7 +1,9 @@
 :root {
  --md-sys-color-primary: var(--md-sys-color-primary-dark);
+ --md-sys-color-primary-hover: var(--md-sys-color-primary-dark-hover);
  --md-sys-color-on-primary: var(--md-sys-color-on-primary-dark);
  --md-sys-color-primary-container: var(--md-sys-color-primary-container-dark);
+ --md-sys-color-primary-container-hover: var(--md-sys-color-primary-container-dark-hover);
  --md-sys-color-on-primary-container: var(--md-sys-color-on-primary-container-dark);
  --md-sys-color-primary-fixed: var(--md-sys-color-primary-fixed-dark);
  --md-sys-color-on-primary-fixed: var(--md-sys-color-on-primary-fixed-dark);

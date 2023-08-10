@@ -160,8 +160,10 @@
   --md-sys-color-surface-dim-light: #D9DADD;
   /* dark */
   --md-sys-color-primary-dark: #8FCEFF;
+  --md-sys-color-primary-dark-hover: #83C2F1;
   --md-sys-color-on-primary-dark: #00344F;
   --md-sys-color-primary-container-dark: #004B70;
+  --md-sys-color-primary-container-dark-hover: #10577B;
   --md-sys-color-on-primary-container-dark: #CAE6FF;
   --md-sys-color-primary-fixed-dark: #CAE6FF;
   --md-sys-color-on-primary-fixed-dark: #001E30;
