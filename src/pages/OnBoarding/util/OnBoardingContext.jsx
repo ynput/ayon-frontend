@@ -131,12 +131,12 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     refetch,
   } = useGetInstallEventsQuery({ topics, ids: eventIds }, { skip: !eventIds.length })
 
-  // once installProgress is success (first time) and not fetching then refetch every 2 seconds
+  // once installProgress is success (first time) and not fetching then refetch every 1 second
   useEffect(() => {
     if (isSuccess && !isFetching && !isFinished) {
       const interval = setInterval(() => {
         !isFetching && refetch()
-      }, 2000)
+      }, 1000)
 
       if (isFinished) clearInterval(interval)
 
