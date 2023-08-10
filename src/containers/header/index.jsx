@@ -7,6 +7,7 @@ import HeaderButton from './HeaderButton'
 import UserMenu from './userMenu'
 import ProjectMenu from './projectMenu'
 import { useSelector } from 'react-redux'
+import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 
 const Header = () => {
   const [projectMenuVisible, setProjectMenuVisible] = useState(false)
@@ -39,6 +40,8 @@ const Header = () => {
       <Spacer>
         <Breadcrumbs />
       </Spacer>
+
+      <InstallerDownload isSpecial />
 
       <Link to="/profile">
         <HeaderButton>
