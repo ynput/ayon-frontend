@@ -47,7 +47,7 @@ const userFormFields = [
 export const OnBoardingContext = createContext()
 
 export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
-  const [isConnecting, setIsConnecting] = useLocalStorage(false)
+  const [isConnecting, setIsConnecting] = useLocalStorage('ynput-connecting', false)
 
   // get ynput connect data
   const { data: ynputConnect, isLoading: isLoadingConnect } = useGetYnputConnectionsQuery({})

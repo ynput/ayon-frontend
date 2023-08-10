@@ -38,7 +38,7 @@ const Bundles = () => {
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
-  const [showArchived, setShowArchived] = useLocalStorage(true)
+  const [showArchived, setShowArchived] = useLocalStorage('bundles-archived', true)
 
   // REDUX QUERIES
   let { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
