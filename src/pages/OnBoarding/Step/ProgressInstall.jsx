@@ -2,6 +2,25 @@ import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCardProgress from '/src/components/AddonCard/AddonCardProgress'
 
+const findLastEvent = (events = []) => {
+  // sort by status, null, pending, in_progress, finished, failed
+  // then sort by progress (if status is the same)
+  const sortedEvents = [...events].sort((a, b) => {
+    if (a.status === b.status) return b.progress - a.progress
+    if (a.status === 'failed') return -1
+    if (b.status === 'failed') return 1
+    if (a.status === 'finished') return -1
+    if (b.status === 'finished') return 1
+    if (a.status === 'in_progress') return -1
+    if (b.status === 'in_progress') return 1
+    if (a.status === 'pending') return -1
+    if (b.status === 'pending') return 1
+    return 0
+  })
+
+  return sortedEvents[0]
+}
+
 const icons = {
   pending: 'hourglass_empty',
   in_progress: 'sync',
@@ -80,15 +99,20 @@ export const ProgressInstall = ({
       <Styled.PresetsContainer style={{ overflow: 'auto' }}>
         {progressBars
           .filter((file) => file.type !== 'addon' || selectedAddons.includes(file.name))
-          .map((file, i) => {
+          .map((file) => {
             const url = file.url
             const res = idsInstalling.find((res) => res.file.url === url)
 
             // find event by id by url
             const eventId = res?.eventId
-            // find progress event by id
-            const event = installProgress.find((event) => event.id === eventId) || {}
-            const status = event?.status || (i === 0 ? 'in_progress' : 'pending')
+            // find all event messages for this event
+            const events = installProgress.filter((event) => event.id === eventId)
+
+            // find the most relevant event based on status
+            const event = findLastEvent(events)
+
+            const status = event?.status || 'pending'
+
             const icon = icons[status] || 'hourglass_empty'
             const alreadyInstalled = res?.error?.status == 409
             let progress = event?.progress || 0

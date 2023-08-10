@@ -3,8 +3,8 @@ import queryUpload from '../queryUpload'
 import PubSub from '/src/pubsub'
 
 const EVENTS_QUERY = `
-query InstallEvents($topics: [String!]!) {
-  events(last: 200, topics: $topics) {
+query InstallEvents($ids: [String!]!) {
+  events(last: 100, ids: $ids) {
     edges {
       node {
         id
@@ -97,24 +97,27 @@ const onBoarding = ayonApi.injectEndpoints({
       },
     }),
     getInstallEvents: build.query({
-      query: ({ topics = [] }) => ({
+      query: ({ ids = [] }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: EVENTS_QUERY,
-          variables: { topics },
+          variables: { ids },
         },
       }),
       transformResponse: (response) => response?.data?.events?.edges?.map(({ node }) => node),
-      onQueryStarted: async (arg, { updateCachedData }) => {
+      async onCacheEntryAdded({ topics = [], ids = [] }, { updateCachedData, cacheEntryRemoved }) {
+        let subscriptions = []
         try {
           const handlePubSub = (topic, message) => {
             if (topic === 'client.connected') {
               return
             }
 
-            // update cache
+            // if message is not in ids, ignore
+            if (!ids.includes(message.id)) return
 
+            // update cache
             updateCachedData((draft) => {
               // find index of event
               const index = draft.findIndex((e) => e.id === message.id)
@@ -126,14 +129,18 @@ const onBoarding = ayonApi.injectEndpoints({
           }
 
           // sub to websocket topics
-          arg.topics.forEach((topic) => {
-            PubSub.subscribe(topic, handlePubSub)
+          topics.forEach((topic) => {
+            const sub = PubSub.subscribe(topic, handlePubSub)
+            subscriptions.push(sub)
           })
         } catch (error) {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw
           console.error(error)
         }
+        await cacheEntryRemoved
+        // unsubscribe from all topics
+        subscriptions.forEach((sub) => PubSub.unsubscribe(sub))
       },
     }),
   }),

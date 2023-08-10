@@ -1,7 +1,7 @@
 // holds stageIndex state and provides functions to update it
 // gets addonsList
 // get server info
-import React, { createContext, useEffect, useState } from 'react'
+import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { useGetYnputConnectionsQuery } from '/src/services/ynputConnect'
 import {
   useAbortOnBoardingMutation,
@@ -103,12 +103,8 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const [idsInstalling, setIdsInstalling] = useState([])
   // this is used to install addons, installers, dep packages
   const [installPreset] = useInstallPresetMutation()
-  const [installData, setInstallData] = useState(null)
 
   // set installing
-
-  // topics of events to query
-  const [topics, setTopics] = useState([])
 
   // when selectedPreset changes, update selectedAddons
   useEffect(
@@ -116,23 +112,22 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     [selectedPreset],
   )
 
-  const { data: installProgress, isSuccess: topicsSubscribed } = useGetInstallEventsQuery(
-    { topics },
-    { skip: !topics.length },
+  // starts monitoring the events
+  const topics = [
+    'addon.install_from_url',
+    'installer.install_from_url',
+    'dependency_package.install_from_url',
+  ]
+
+  const eventIds = useMemo(
+    () => idsInstalling.filter((res) => res.eventId).map((res) => res.eventId),
+    [idsInstalling],
   )
 
-  // once topics have been subscribed to, install addons, installers, dep packages
-  useEffect(() => {
-    if (topicsSubscribed) {
-      // console.log({ addons, installers, depPackages })
-      installPreset(installData)
-        .unwrap()
-        .then((eventIds) =>
-          // as the events come in, the query will update and we can use the data to show progress
-          setIdsInstalling(eventIds),
-        )
-    }
-  }, [topicsSubscribed, installData])
+  const { data: installProgress } = useGetInstallEventsQuery(
+    { topics, ids: eventIds },
+    { skip: !eventIds.length },
+  )
 
   const handleSubmit = async () => {
     // install addons, installers, dep packages
@@ -158,17 +153,11 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
       // got to next step
       nextStep()
 
-      // starts monitoring the events
-      const eventTopics = [
-        'addon.install_from_url',
-        'installer.install_from_url',
-        'dependency_package.install_from_url',
-      ]
-
-      // this sets the topics for the query to sub to the topics above
-      setTopics(eventTopics)
-
-      setInstallData({ addons, installers, depPackages })
+      // console.log({ addons, installers, depPackages })
+      const eventIds = await installPreset({ addons, installers, depPackages }).unwrap()
+      // when we do this, getInstallEventsQuery will create an initial query and then sub to the topic "addon.install_from_url"
+      // as the events come in, the query will update and we can use the data to show progress
+      setIdsInstalling(eventIds)
     } catch (error) {
       console.error(error)
     }
