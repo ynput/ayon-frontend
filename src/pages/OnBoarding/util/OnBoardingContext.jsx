@@ -180,11 +180,11 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
   const [abortOnboarding] = useAbortOnBoardingMutation()
 
-  const handleFinish = async () => {
+  const handleFinish = async (restart) => {
     try {
       await abortOnboarding().unwrap()
 
-      onFinish()
+      onFinish(restart)
     } catch (error) {
       console.error(error)
     }

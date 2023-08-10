@@ -1,34 +1,48 @@
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { useGetInfoQuery } from '/src/services/auth/getAuth'
 import * as Styled from './util/OnBoardingStep.styled'
 import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'
 import { Navigate, useLocation } from 'react-router'
 import StepWrapper from './util/StepWrapper'
-import LoadingPage from '../LoadingPage'
-// import YnputConnector from '../../components/YnputConnector'
+import { useRestartServerMutation } from '/src/services/restartServer'
+import { SocketContext } from '/src/context/websocketContext'
+import ServerRestartBanner from '/src/components/ServerRestartBanner'
 
-const OnBoardingPage = ({ noAdminUser, onFinish }) => {
+const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
   const [isFinishing, setIsFinishing] = useState(false)
   const { data: info = {} } = useGetInfoQuery()
   const { loginPageBackground = '' } = info
   const location = useLocation()
 
-  const handleFinish = () => {
+  const [restartServer] = useRestartServerMutation()
+
+  const handleFinish = async (restart = true) => {
+    if (!restart) return setTimeout(() => onFinish(), 1000)
+    await restartServer().unwrap()
     setIsFinishing(true)
+  }
 
-    // HACK: for some reason api/info is not updated after straight away after onboarding abort
-    setTimeout(() => {
+  const serverIsRestarting = useContext(SocketContext)?.serverRestartingVisible
+
+  // start watching serverIsRestarting for change when ifFinishing is true
+  useEffect(() => {
+    if (!isFinishing) return
+
+    if (!serverIsRestarting) {
+      console.log('reconnect after onboarding restart')
       onFinish()
-    }, 1000)
-  }
+    }
+  }, [isFinishing, serverIsRestarting])
 
-  if (isFinishing) {
-    return <LoadingPage />
-  }
+  useEffect(() => {
+    if (!isOnboarding && isFinishing) {
+      setIsFinishing(false)
+    }
+  }, [isOnboarding, isFinishing])
 
   // if location is not /onboarding, redirect to /onboarding
-  if (location.pathname !== '/onboarding') {
+  if (location.pathname !== '/onboarding' && isOnboarding) {
     return <Navigate to="/onboarding" replace={true} />
   }
 
@@ -44,20 +58,8 @@ const OnBoardingPage = ({ noAdminUser, onFinish }) => {
           <Step.AddonSelectStep step={4} />
           <Step.ProgressInstall step={5} />
         </StepWrapper>
+        {isFinishing && <ServerRestartBanner active={isFinishing} />}
       </OnBoardingProvider>
-
-      {/*  eslint-disable-next-line no-undef */}
-      {/* {process.env.NODE_ENV === 'development' && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 20,
-            right: 20,
-          }}
-        >
-          <YnputConnector />
-        </div>
-      )} */}
     </main>
   )
 }

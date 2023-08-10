@@ -1,7 +1,7 @@
 import ayonClient from '/src/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
-import { useEffect, useState, Suspense, lazy, useContext } from 'react'
+import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
@@ -22,11 +22,9 @@ const EventsPage = lazy(() => import('./pages/EventsPage'))
 const ServicesPage = lazy(() => import('./pages/ServicesPage'))
 
 import { login } from './features/user'
-import { SocketContext, SocketProvider } from './context/websocketContext'
 import ProtectedRoute from './containers/ProtectedRoute'
 import ShareDialog from './components/ShareDialog'
 import ErrorFallback from './components/ErrorFallback'
-import ServerRestartBanner from './components/ServerRestartBanner'
 import { useLazyGetInfoQuery } from './services/auth/getAuth'
 import { ContextMenuProvider } from './context/contextMenuContext'
 import { ShortcutsProvider } from './context/shortcutsContext'
@@ -34,6 +32,7 @@ import { GlobalContextMenu } from './components/GlobalContextMenu'
 import LoadingPage from './pages/LoadingPage'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import OnBoardingPage from './pages/OnBoarding'
+import ServerRestartBanner from './components/ServerRestartBanner'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -108,18 +107,20 @@ const App = () => {
     onBoardingSkips.every((path) => !location.pathname.includes(path))
   ) {
     return (
-      <SocketProvider>
-        <BrowserRouter>
-          <QueryParamProvider
-            adapter={ReactRouter6Adapter}
-            options={{
-              updateType: 'replaceIn',
-            }}
-          >
-            <OnBoardingPage noAdminUser={noAdminUser} onFinish={() => setIsOnboarding(false)} />
-          </QueryParamProvider>
-        </BrowserRouter>
-      </SocketProvider>
+      <BrowserRouter>
+        <QueryParamProvider
+          adapter={ReactRouter6Adapter}
+          options={{
+            updateType: 'replaceIn',
+          }}
+        >
+          <OnBoardingPage
+            noAdminUser={noAdminUser}
+            onFinish={() => setIsOnboarding(false)}
+            isOnboarding={isOnboarding}
+          />
+        </QueryParamProvider>
+      </BrowserRouter>
     )
   }
 
@@ -140,11 +141,6 @@ const App = () => {
   if (serverError && !noAdminUser)
     return <ErrorPage code={serverError} message="Server connection failed" />
 
-  const RestartIndicator = () => {
-    const serverIsRestarting = useContext(SocketContext)?.serverRestartingVisible || false
-    return serverIsRestarting && <ServerRestartBanner />
-  }
-
   //
   // RENDER THE MAIN APP
   //
@@ -152,65 +148,63 @@ const App = () => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Suspense fallback={<LoadingPage />}>
-        <SocketProvider>
-          <ContextMenuProvider>
-            <GlobalContextMenu />
-            <RestartIndicator />
-            <BrowserRouter>
-              <ShortcutsProvider>
-                <QueryParamProvider
-                  adapter={ReactRouter6Adapter}
-                  options={{
-                    updateType: 'replaceIn',
-                  }}
-                >
-                  <Header />
-                  <ShareDialog />
-                  <ConfirmDialog />
-                  <Routes>
-                    <Route
-                      path="/"
-                      exact
-                      element={<Navigate replace to="/manageProjects/dashboard" />}
-                    />
-                    <Route
-                      path="/manageProjects"
-                      exact
-                      element={<Navigate replace to="/manageProjects/dashboard" />}
-                    />
+        <ContextMenuProvider>
+          <GlobalContextMenu />
+          <BrowserRouter>
+            <ServerRestartBanner />
+            <ShortcutsProvider>
+              <QueryParamProvider
+                adapter={ReactRouter6Adapter}
+                options={{
+                  updateType: 'replaceIn',
+                }}
+              >
+                <Header />
+                <ShareDialog />
+                <ConfirmDialog />
+                <Routes>
+                  <Route
+                    path="/"
+                    exact
+                    element={<Navigate replace to="/manageProjects/dashboard" />}
+                  />
+                  <Route
+                    path="/manageProjects"
+                    exact
+                    element={<Navigate replace to="/manageProjects/dashboard" />}
+                  />
 
-                    <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-                    <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-                    <Route
-                      path={'/projects/:projectName/addon/:addonName'}
-                      element={<ProjectPage />}
-                    />
-                    <Route
-                      path="/settings"
-                      exact
-                      element={<Navigate replace to="/settings/anatomyPresets" />}
-                    />
-                    <Route path="/settings/:module" exact element={<SettingsPage />} />
-                    <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
-                    <Route
-                      path="/services"
-                      element={
-                        <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                          <ServicesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route path="/explorer" element={<ExplorerPage />} />
-                    <Route path="/doc/api" element={<APIDocsPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/events" element={<EventsPage />} />
-                    <Route element={<ErrorPage code="404" />} />
-                  </Routes>
-                </QueryParamProvider>
-              </ShortcutsProvider>
-            </BrowserRouter>
-          </ContextMenuProvider>
-        </SocketProvider>
+                  <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
+                  <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+                  <Route
+                    path={'/projects/:projectName/addon/:addonName'}
+                    element={<ProjectPage />}
+                  />
+                  <Route
+                    path="/settings"
+                    exact
+                    element={<Navigate replace to="/settings/anatomyPresets" />}
+                  />
+                  <Route path="/settings/:module" exact element={<SettingsPage />} />
+                  <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
+                  <Route
+                    path="/services"
+                    element={
+                      <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                        <ServicesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/explorer" element={<ExplorerPage />} />
+                  <Route path="/doc/api" element={<APIDocsPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/events" element={<EventsPage />} />
+                  <Route element={<ErrorPage code="404" />} />
+                </Routes>
+              </QueryParamProvider>
+            </ShortcutsProvider>
+          </BrowserRouter>
+        </ContextMenuProvider>
       </Suspense>
     </ErrorBoundary>
   )
