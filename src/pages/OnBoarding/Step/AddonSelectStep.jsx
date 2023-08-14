@@ -54,6 +54,7 @@ export const AddonSelectStep = ({
             name={addon.name}
             icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
             isSelected={selectedAddons.includes(addon.name)}
+            disabled={addon.mandatory}
             onClick={() => handleAddonClick(addon.name)}
             style={{ opacity: addon.mandatory ? 0.5 : 1 }}
           />
