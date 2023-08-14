@@ -24,6 +24,11 @@ export const AddonCard = styled.div`
     background-color: var(--md-sys-color-surface-container-highest-hover);
   }
 
+  span {
+    word-break: break-all;
+    line-height: 100%;
+  }
+
   ${({ $selected }) =>
     $selected &&
     css`

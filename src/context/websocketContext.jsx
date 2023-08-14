@@ -18,7 +18,7 @@ export const SocketProvider = (props) => {
 
   const wsOpts = {
     shouldReconnect: () => {
-      // setServerRestartingVisible(true)
+      setServerRestartingVisible(true)
       return true
     },
   }

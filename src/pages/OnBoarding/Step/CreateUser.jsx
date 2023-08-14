@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux'
 import { login } from '/src/features/user'
 import { ayonApi } from '/src/services/ayon'
 import { upperFirst } from 'lodash'
+import Type from '/src/theme/typography.module.css'
 
 export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFields }) => {
   const navigate = useNavigate()
@@ -103,7 +104,9 @@ export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFiel
         <Header>Create Admin</Header>
         {userFormFields.map((field, i) => (
           <Styled.FormRow key={field.id}>
-            <label htmlFor={field.id}>{field.label}</label>
+            <label className={Type.labelLarge} htmlFor={field.id}>
+              {field.label}
+            </label>
             <InputText
               {...field}
               value={userForm[field.id] || ''}

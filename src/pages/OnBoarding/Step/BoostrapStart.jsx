@@ -4,20 +4,27 @@ import * as Styled from '../util/OnBoardingStep.styled'
 import YnputConnector from '../../../components/YnputConnector'
 import { YnputConnectorButton } from '/src/components/YnputConnectButton'
 
-export const BootstrapStart = ({ nextStep, ynputConnect, setIsConnecting, onFinish, Header }) => {
+export const BootstrapStart = ({
+  nextStep,
+  ynputConnect,
+  setIsConnecting,
+  onFinish,
+  Header,
+  Body,
+}) => {
   const message1 = `Bootstrap Setup lets us automatically download and setup all you need to take full advantage of AYON in your production.`
 
   return (
     <>
       <Styled.Login>
         <Header>Configure your server</Header>
-        <p>{message1}</p>
-        <p>
+        <Body>{message1}</Body>
+        <Body>
           If you are in offline environment or you would rather download and install all the addons,
           desktop distribution and dependencies manually, you can skip this step.
-        </p>
+        </Body>
         <Styled.Connect>
-          <span>Fast and Automated setup with</span>
+          <Body>Fast and Automated setup with</Body>
           {ynputConnect ? (
             <YnputConnectorButton active onClick={nextStep} icon="verified_user">
               Bootstrap Setup
