@@ -12,7 +12,7 @@ import {
 } from '/src/services/onBoarding/onBoarding'
 import { useGetReleasesQuery } from '/src/services/getRelease'
 import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useCreateBundleMutation } from '/src/services/bundles'
+import { useCreateBundleMutation, useLazyGetBundleListQuery } from '/src/services/bundles'
 import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
 
 const userFormFields = [
@@ -46,7 +46,7 @@ const userFormFields = [
   },
 ]
 
-const createBundleFromRelease = (release, selectedAddons) => {
+const createBundleFromRelease = (release, selectedAddons, bundleList) => {
   const addons = {}
   for (const name of selectedAddons) {
     // find addon in release
@@ -62,7 +62,7 @@ const createBundleFromRelease = (release, selectedAddons) => {
     dependencyPackages[depPackage.platform] = depPackage.filename
   }
 
-  const name = getNewBundleName(release.name, [])
+  const name = getNewBundleName(release.name, bundleList)
 
   return {
     name,
@@ -212,10 +212,15 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
   // create bundle
   const [createBundle] = useCreateBundleMutation()
+  // get bundle list so that we can make sure the bundle name is unique
+  const [getBundleList] = useLazyGetBundleListQuery()
   const handleFinish = async (restart) => {
     try {
+      // get bundle list
+      const bundleList = (await getBundleList({ archived: true }).unwrap()) || []
       // first create the bundle from the release
-      const bundle = createBundleFromRelease(release, selectedAddons)
+      const bundle = createBundleFromRelease(release, selectedAddons, bundleList)
+
       await createBundle({ data: bundle }).unwrap()
       await abortOnboarding().unwrap()
 
