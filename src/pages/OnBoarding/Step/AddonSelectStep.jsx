@@ -48,17 +48,18 @@ export const AddonSelectStep = ({
     <Styled.Section>
       <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
-        {sortedAddons.map((addon) => (
-          <AddonCard
-            key={addon.name}
-            name={addon.name}
-            icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
-            isSelected={selectedAddons.includes(addon.name)}
-            disabled={addon.mandatory}
-            onClick={() => handleAddonClick(addon.name)}
-            style={{ opacity: addon.mandatory ? 0.5 : 1 }}
-          />
-        ))}
+        {sortedAddons.map(
+          (addon) =>
+            !addon.mandatory && (
+              <AddonCard
+                key={addon.name}
+                name={addon.name}
+                icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
+                isSelected={selectedAddons.includes(addon.name)}
+                onClick={() => handleAddonClick(addon.name)}
+              />
+            ),
+        )}
       </Styled.AddonsContainer>
       <Footer next="Confirm" onNext={onSubmit} />
     </Styled.Section>
