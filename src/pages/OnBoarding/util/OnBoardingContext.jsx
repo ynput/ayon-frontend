@@ -12,6 +12,8 @@ import {
 } from '/src/services/onBoarding/onBoarding'
 import { useGetReleasesQuery } from '/src/services/getRelease'
 import useLocalStorage from '/src/hooks/useLocalStorage'
+import { useCreateBundleMutation } from '/src/services/bundles'
+import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
 
 const userFormFields = [
   {
@@ -43,6 +45,32 @@ const userFormFields = [
     type: 'text',
   },
 ]
+
+const createBundleFromRelease = (release, selectedAddons) => {
+  const addons = {}
+  for (const name of selectedAddons) {
+    // find addon in release
+    const addon = release.addons.find((addon) => addon.name === name)
+    if (addon) {
+      addons[name] = addon.version
+    }
+  }
+
+  const installerVersion = release.installers[0]?.version
+  const dependencyPackages = {}
+  for (const depPackage of release.dependencyPackages) {
+    dependencyPackages[depPackage.platform] = depPackage.filename
+  }
+
+  const name = getNewBundleName(release.name, [])
+
+  return {
+    name,
+    addons,
+    installerVersion,
+    dependencyPackages,
+  }
+}
 
 export const OnBoardingContext = createContext()
 
@@ -168,6 +196,8 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
       // got to next step
       nextStep()
 
+      // create bundle we release
+
       // console.log({ addons, installers, depPackages })
       const eventIds = await installPreset({ addons, installers, depPackages }).unwrap()
       // when we do this, getInstallEventsQuery will create an initial query and then sub to the topic "addon.install_from_url"
@@ -180,8 +210,13 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
   const [abortOnboarding] = useAbortOnBoardingMutation()
 
+  // create bundle
+  const [createBundle] = useCreateBundleMutation()
   const handleFinish = async (restart) => {
     try {
+      // first create the bundle from the release
+      const bundle = createBundleFromRelease(release, selectedAddons)
+      await createBundle({ data: bundle }).unwrap()
       await abortOnboarding().unwrap()
 
       onFinish(restart)
