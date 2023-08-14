@@ -134,7 +134,7 @@ const App = () => {
 
   // stuck on onboarding page
   if (window.location.pathname.startsWith('/onboarding')) {
-    window.history.replaceState({}, document.title, '/')
+    window.history.replaceState({}, document.title, '/settings/bundles?selected=latest')
     return <LoadingPage />
   }
 
