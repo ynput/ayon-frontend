@@ -4,6 +4,7 @@ import * as Styled from '../util/OnBoardingStep.styled'
 
 export const ReleaseSelect = ({
   releases,
+  Header,
   Footer,
   selectedPreset,
   setSelectedPreset,
@@ -24,7 +25,7 @@ export const ReleaseSelect = ({
 
   return (
     <Styled.Section>
-      <h2>Select a Release Package</h2>
+      <Header>Select a Release Package</Header>
       <Styled.PresetsContainer>
         {releases.map(({ name, ...props }, i) => (
           <ReleasePackage

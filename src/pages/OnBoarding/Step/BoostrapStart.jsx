@@ -4,30 +4,13 @@ import * as Styled from '../util/OnBoardingStep.styled'
 import YnputConnector from '../../../components/YnputConnector'
 import { YnputConnectorButton } from '/src/components/YnputConnectButton'
 
-export const BootstrapStart = ({ nextStep, ynputConnect, setIsConnecting, onFinish }) => {
+export const BootstrapStart = ({ nextStep, ynputConnect, setIsConnecting, onFinish, Header }) => {
   const message1 = `Bootstrap Setup lets us automatically download and setup all you need to take full advantage of AYON in your production.`
 
   return (
     <>
-      {/* {showMore && (
-        <>
-          <Styled.More>
-            <h2>{`What is ${ynputConnect ? 'Setup Wizard' : 'Ynput Connect'}?`}</h2>
-            <p>
-              AYON is a highly modular platform. Connecting your Ynput account to AYON lets us
-              automatically download and setup all you need to take full advantage of AYON in your
-              production.
-            </p>
-            <br />
-
-            <span className="skip" onClick={handleSkip}>
-              I know what I am doing, skip bootstrap.
-            </span>
-          </Styled.More>
-        </>
-      )} */}
       <Styled.Login>
-        <h2>Configure your server</h2>
+        <Header>Configure your server</Header>
         <p>{message1}</p>
         <p>
           If you are in offline environment or you would rather download and install all the addons,

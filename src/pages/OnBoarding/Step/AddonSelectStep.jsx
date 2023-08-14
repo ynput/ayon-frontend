@@ -3,6 +3,7 @@ import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
 
 export const AddonSelectStep = ({
+  Header,
   Footer,
   selectedAddons,
   setSelectedAddons,
@@ -45,7 +46,7 @@ export const AddonSelectStep = ({
 
   return (
     <Styled.Section>
-      <h2>Pick your Addons</h2>
+      <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
         {sortedAddons.map((addon) => (
           <AddonCard

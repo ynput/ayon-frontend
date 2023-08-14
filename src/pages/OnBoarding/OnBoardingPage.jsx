@@ -53,7 +53,7 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
         <StepWrapper>
           <Step.Landing step={0} />
           <Step.CreateUser step={1} />
-          <Step.BootstrapStart step={2} />
+          <Step.BootstrapStart step={2} title="Configure your Server" />
           <Step.ReleaseSelect step={3} />
           <Step.AddonSelectStep step={4} />
           <Step.ProgressInstall step={5} />

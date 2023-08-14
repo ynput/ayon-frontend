@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import YnputConnector from '../../../components/YnputConnector'
 
-export const Landing = ({ nextStep, setUserForm, setIsConnecting }) => {
+export const Landing = ({ Header, nextStep, setUserForm, setIsConnecting }) => {
   const [showMore, setShowMore] = useState(false)
 
   const handleConnection = (user) => {
@@ -19,7 +19,7 @@ export const Landing = ({ nextStep, setUserForm, setIsConnecting }) => {
       {showMore && (
         <>
           <Styled.More>
-            <h2>{`What is Ynput Connect?`}</h2>
+            <Header>{`What is Ynput Connect?`}</Header>
             <p>
               AYON is a highly modular platform. Connecting your Ynput account to AYON lets us
               automatically download and setup all you need to take full advantage of AYON in your
@@ -36,9 +36,9 @@ export const Landing = ({ nextStep, setUserForm, setIsConnecting }) => {
           </Styled.More>
         </>
       )}
+      <Styled.Logo src="/AYON.svg" />
       <Styled.Section style={{ width: 300, textAlign: 'center', alignItems: 'center' }}>
-        <Styled.Ayon src="/AYON.svg" />
-        <h2>Lets get things set up for you.</h2>
+        <Header>Lets get things set up for you.</Header>
         <p>To make things as easy as possible we recommend using Ynput Connect.</p>
         <Styled.Connect style={{ marginTop: 16 }}>
           <span>Fast and Automated setup with</span>

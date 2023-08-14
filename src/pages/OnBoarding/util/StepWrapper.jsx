@@ -4,6 +4,7 @@ import * as Styled from './OnBoardingStep.styled'
 import FooterButtons from './FooterButtons'
 import LoadingPage from '../../LoadingPage'
 import { Button } from '@ynput/ayon-react-components'
+import Type from '/src/theme/typography.module.css'
 
 // this wraps all steps, provides context and makes sure they are rendered in order
 const StepWrapper = ({ children }) => {
@@ -20,6 +21,9 @@ const StepWrapper = ({ children }) => {
   } = useContext(OnBoardingContext) || {}
   // if stepIndex === step, render children
 
+  // create header component to be user in all steps
+  const Header = ({ children }) => <h2 className={Type.headlineLarge}>{children}</h2>
+
   // const footer = <Footer onBack={previousStep} onNext={nextStep} />
   // filter out children where the step prop doesn't match the stepIndex
   const filteredChildren = React.Children.map(children, (child) => {
@@ -30,6 +34,7 @@ const StepWrapper = ({ children }) => {
       return React.cloneElement(child, {
         ...props,
         Footer,
+        Header,
         previousStep,
         nextStep,
         isLoadingConnect,

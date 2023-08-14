@@ -8,7 +8,7 @@ import { login } from '/src/features/user'
 import { ayonApi } from '/src/services/ayon'
 import { upperFirst } from 'lodash'
 
-export const CreateUser = ({ Footer, userForm, setUserForm, userFormFields }) => {
+export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFields }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
@@ -100,7 +100,7 @@ export const CreateUser = ({ Footer, userForm, setUserForm, userFormFields }) =>
   return (
     <Styled.Wrapper>
       <Styled.Form onSubmit={handleSubmit}>
-        <h1>Create Admin</h1>
+        <Header>Create Admin</Header>
         {userFormFields.map((field, i) => (
           <Styled.FormRow key={field.id}>
             <label htmlFor={field.id}>{field.label}</label>
