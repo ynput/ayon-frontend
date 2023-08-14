@@ -37,7 +37,7 @@ export const ReleaseSelect = ({
           />
         ))}
       </Styled.PresetsContainer>
-      <Footer next="Pick Addons" back={null} />
+      <Footer next="Continue" back={null} />
     </Styled.Section>
   )
 }
