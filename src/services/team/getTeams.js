@@ -10,7 +10,7 @@ const getTeams = ayonApi.injectEndpoints({
         result?.length
           ? [
               ...result.map(({ name }) => ({ type: 'team', id: name })),
-              { type: 'teams', id: 'LIST' },
+              { type: 'team', id: 'LIST' },
             ]
           : ['team'],
     }),

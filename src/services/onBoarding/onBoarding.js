@@ -95,6 +95,14 @@ const onBoarding = ayonApi.injectEndpoints({
           return { error: error?.response?.data?.detail || 'Upload error' }
         }
       },
+      invalidatesTags: [
+        'info',
+        'bundleList',
+        'addonList',
+        'addonSettingsList',
+        'installerList',
+        'dependencyPackageList',
+      ],
     }),
     getInstallEvents: build.query({
       query: ({ ids = [] }) => ({

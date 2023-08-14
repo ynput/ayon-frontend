@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 
@@ -23,8 +23,10 @@ import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
 import useLocalStorage from '/src/hooks/useLocalStorage'
+import { useLocation } from 'react-router'
 
 const Bundles = () => {
+  const location = useLocation()
   const dispatch = useDispatch()
   // addon install dialog
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -34,6 +36,7 @@ const Bundles = () => {
 
   // table selection
   const [selectedBundles, setSelectedBundles] = useState([])
+
   // open bundle details
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
@@ -50,10 +53,35 @@ const Bundles = () => {
   // filter out archived bundles if showArchived is true
   bundleList = useMemo(() => {
     if (!showArchived) {
-      return bundleList.filter((bundle) => !bundle.isArchived)
+      return [...bundleList]
+        .filter((bundle) => !bundle.isArchived)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     }
     return bundleList
   }, [bundleList, showArchived])
+
+  // if there is a url query ?selected={name} = latest then select the bundle and remove the query
+  useEffect(() => {
+    if (isLoading) return
+    const search = new URLSearchParams(location.search)
+    const selected = search.get('selected')
+    // if selected = latest then select the latest bundle createdAt
+    if (selected === 'latest') {
+      const latest = bundleList[0]
+
+      if (latest) {
+        setSelectedBundles([latest.name])
+      }
+    } else if (selected) {
+      // select bundle by name if in bundle list
+      const bundle = bundleList.find((b) => b.name === selected)
+      if (bundle) setSelectedBundles([selected])
+    }
+
+    // delete
+    search.delete('selected')
+    window.history.replaceState({}, '', `${location.pathname}${search.length ? '?' : ''}${search}`)
+  }, [location.search, isLoading, bundleList])
 
   // REDUX MUTATIONS
   const [deleteBundle] = useDeleteBundleMutation()
@@ -154,8 +182,10 @@ const Bundles = () => {
     }
 
     setNewBundleOpen({
-      ...bundle,
       name: newName,
+      addons: bundle.addons,
+      installerVersion: bundle.installerVersion,
+      dependencyPackages: bundle.dependencyPackages,
       isArchived: false,
       isStaging: false,
       isProduction: false,

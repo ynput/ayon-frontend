@@ -61,7 +61,7 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
         {isFinishing && (
           <ServerRestartBanner
             active={isFinishing}
-            message={'Almost there! restarting server to apply setup...'}
+            message={'Almost there! Restarting server to apply setup...'}
           />
         )}
       </OnBoardingProvider>
