@@ -69,6 +69,7 @@ const createBundleFromRelease = (release, selectedAddons, bundleList) => {
     addons,
     installerVersion,
     dependencyPackages,
+    isProduction: true,
   }
 }
 
