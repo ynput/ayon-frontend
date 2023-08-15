@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react'
+import React, { useContext, useEffect, useMemo } from 'react'
 import { VersionSelect } from '@ynput/ayon-react-components'
 import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { SocketContext } from '/src/context/websocketContext'
 import { rcompare } from 'semver'
 
 const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
@@ -39,7 +40,16 @@ const AddonList = React.forwardRef(
     { formData, setFormData, readOnly, selected = [], setSelected, style, diffAddonVersions },
     ref,
   ) => {
-    const { data: addons = [] } = useGetAddonListQuery({ showVersions: true })
+    const { data: addons = [], refetch } = useGetAddonListQuery({
+      showVersions: true,
+    })
+
+    const readyState = useContext(SocketContext).readyState
+    useEffect(() => {
+      refetch()
+    }, [readyState])
+
+    // every time readyState changes, refetch selected addons
 
     const onSetVersion = (addonName, version) => {
       const versionsToSet = selected.length > 1 ? selected.map((s) => s.name) : [addonName]
