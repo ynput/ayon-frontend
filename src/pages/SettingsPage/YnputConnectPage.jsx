@@ -1,5 +1,5 @@
 import React from 'react'
-import YnputConnector from '/src/components/YnputConnector'
+import YnputConnector from '/src/components/YnputConnect/YnputConnector'
 
 const YnputConnectPage = () => {
   return (

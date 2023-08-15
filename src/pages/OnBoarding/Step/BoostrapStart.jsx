@@ -1,8 +1,8 @@
 import React from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 
-import YnputConnector from '../../../components/YnputConnector'
-import { YnputConnectorButton } from '/src/components/YnputConnectButton'
+import YnputConnector from '../../../components/YnputConnect/YnputConnector'
+import * as YnputConnect from '../../../components/YnputConnect/YnputConnect.styled'
 
 export const BootstrapStart = ({
   nextStep,
@@ -26,15 +26,21 @@ export const BootstrapStart = ({
         <Styled.Connect>
           <Body>Fast and Automated setup with</Body>
           {ynputConnect ? (
-            <YnputConnectorButton active onClick={nextStep} icon="verified_user">
+            <YnputConnect.HeaderButton
+              active
+              onClick={() => nextStep(undefined, 1)}
+              icon="verified_user"
+              style={{ flexDirection: 'row', alignItems: 'center' }}
+            >
               Bootstrap Setup
-            </YnputConnectorButton>
+            </YnputConnect.HeaderButton>
           ) : (
             <YnputConnector
-              showLoading={false}
               hideSignOut
               redirect="/onboarding"
               onClick={() => setIsConnecting(true)}
+              showDropdown={false}
+              showStatus={false}
             />
           )}
         </Styled.Connect>

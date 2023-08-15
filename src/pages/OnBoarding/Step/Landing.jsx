@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import YnputConnector from '../../../components/YnputConnector'
+import YnputConnector from '../../../components/YnputConnect/YnputConnector'
 
 export const Landing = ({ Header, Body, nextStep, setUserForm, setIsConnecting }) => {
   const [showMore, setShowMore] = useState(false)
@@ -28,24 +28,25 @@ export const Landing = ({ Header, Body, nextStep, setUserForm, setIsConnecting }
               If you are in offline environment or you would rather download and install all the
               addons, desktop distribution and dependencies manually, you can skip this step.
             </Body>
-            <Styled.Skip className="skip" onClick={nextStep}>
+            <Styled.Skip className="skip" onClick={(e) => nextStep(e, 1)}>
               I know what I am doing, skip bootstrap.
             </Styled.Skip>
           </Styled.More>
         </>
       )}
-      <Styled.Logo src="/AYON.svg" />
+      {/* <Styled.Logo src="/AYON.svg" /> */}
       <Styled.Section style={{ width: 300, textAlign: 'center', alignItems: 'center' }}>
         <Header>Lets get things set up for you.</Header>
         <Body>To make things as easy as possible we recommend using Ynput Connect.</Body>
         <Styled.Connect style={{ marginTop: 16 }}>
           <Body>Fast and Automated setup with</Body>
           <YnputConnector
-            showLoading={false}
             hideSignOut
             redirect="/onboarding"
             onConnection={handleConnection}
             onClick={() => setIsConnecting(true)}
+            showDropdown={false}
+            showStatus={false}
           />
         </Styled.Connect>
         {!showMore && (

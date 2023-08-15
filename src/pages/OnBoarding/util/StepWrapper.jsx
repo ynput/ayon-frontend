@@ -22,8 +22,16 @@ const StepWrapper = ({ children }) => {
   // if stepIndex === step, render children
 
   // create header component to be user in all steps
-  const Header = ({ children }) => <h2 className={Type.headlineLarge}>{children}</h2>
-  const Body = ({ children }) => <p className={Type.bodyMedium}>{children}</p>
+  const Header = ({ children, ...props }) => (
+    <h2 className={Type.headlineLarge} {...props}>
+      {children}
+    </h2>
+  )
+  const Body = ({ children, ...props }) => (
+    <p className={Type.bodyMedium} {...props}>
+      {children}
+    </p>
+  )
 
   // const footer = <Footer onBack={previousStep} onNext={nextStep} />
   // filter out children where the step prop doesn't match the stepIndex

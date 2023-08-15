@@ -88,7 +88,14 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
   const [stepIndex, setStepIndex] = useState(initStep)
   const previousStep = () => setStepIndex(stepIndex - 1)
-  const nextStep = () => setStepIndex(stepIndex + 1)
+  const nextStep = (e, skip = 0) => setStepIndex(stepIndex + 1 + skip)
+
+  // const handleKeyPress = (e) => {
+  //   //"N" key for next step, "B" key for previous step
+  //   if (e.key === 'N') nextStep()
+  //   if (e.key === 'B') previousStep()
+  // }
+  // useKeyPress(handleKeyPress)
 
   // when connected reset isConnecting, and go to next step
   useEffect(() => {

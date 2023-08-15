@@ -49,14 +49,16 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
   return (
     <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
-      <OnBoardingProvider initStep={noAdminUser ? 0 : 2} onFinish={handleFinish}>
+      <OnBoardingProvider initStep={noAdminUser ? 0 : 3} onFinish={handleFinish}>
         <StepWrapper>
           <Step.Landing step={0} />
-          <Step.CreateUser step={1} />
-          <Step.BootstrapStart step={2} title="Configure your Server" />
-          <Step.ReleaseSelect step={3} />
-          <Step.AddonSelectStep step={4} />
-          <Step.ProgressInstall step={5} />
+          <Step.ConnectionDetails step={1} />
+          <Step.CreateUser step={2} />
+          <Step.BootstrapStart step={3} />
+          <Step.ConnectionDetails step={4} />
+          <Step.ReleaseSelect step={5} />
+          <Step.AddonSelectStep step={6} />
+          <Step.ProgressInstall step={7} />
         </StepWrapper>
         {isFinishing && (
           <ServerRestartBanner

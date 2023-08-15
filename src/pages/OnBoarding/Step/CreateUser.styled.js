@@ -13,8 +13,7 @@ export const Form = styled.form`
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 300px;
-  width: 100%;
+  width: 300px;
   gap: 8px;
 
   h1 {
