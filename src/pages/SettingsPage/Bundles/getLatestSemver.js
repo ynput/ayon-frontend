@@ -1,11 +1,11 @@
-const getLatestSemver = (versionList) => {
+import { rcompare } from 'semver'
+
+const getLatestSemver = (versionList = []) => {
   if (!versionList.length) return
-  // get the latest semver version from versionList
-  // TODO: this is not correct. need to use semver to compare versions
-  const latestVersion = versionList.reduce((acc, cur) => {
-    return acc > cur ? acc : cur
-  })
-  return latestVersion
+  // sort the version list by semver, with the latest version first
+  const sortedVersions = versionList.sort((a, b) => rcompare(a, b))
+  // return the latest version
+  return sortedVersions[0]
 }
 
 export default getLatestSemver

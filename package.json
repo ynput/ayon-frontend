@@ -36,6 +36,7 @@
     "react-transition-group": "^4.4.2",
     "react-use-websocket": "^4.2.0",
     "sass": "^1.62.0",
+    "semver": "^7.5.4",
     "short-uuid": "^4.2.0",
     "styled-components": "^5.3.6",
     "use-query-params": "^2.1.2",

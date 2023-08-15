@@ -3,6 +3,7 @@ import { VersionSelect } from '@ynput/ayon-react-components'
 import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { rcompare } from 'semver'
 
 const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
   const options = useMemo(
@@ -11,7 +12,9 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
         ? selection.map((s) => {
             const foundAddon = addons.find((a) => a.name === s.name)
             if (!foundAddon) return ['NONE']
-            const versionList = Object.keys(foundAddon.versions || {})
+            const versionList = Object.keys(foundAddon.versions || {}).sort((a, b) =>
+              rcompare(a, b),
+            )
             return [...versionList, 'NONE']
           })
         : [[...versions, 'NONE']],
