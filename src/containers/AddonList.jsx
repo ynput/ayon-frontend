@@ -18,7 +18,7 @@ const AddonList = ({
   siteId, // used for chaged addons
   setBundleName,
 }) => {
-  const { data, loading } = useGetAddonSettingsListQuery({
+  const { data, loading, isError } = useGetAddonSettingsListQuery({
     projectName,
     siteId,
     variant: environment,
@@ -57,10 +57,14 @@ const AddonList = ({
   }, [data, environment, siteSettings])
 
   useEffect(() => {
-    if (setBundleName && data?.bundleName) {
-      setBundleName(data.bundleName)
+    if (setBundleName) {
+      if (data?.bundleName && !isError) {
+        setBundleName(data?.bundleName)
+      } else {
+        setBundleName(null)
+      }
     }
-  }, [data?.bundleName])
+  }, [data?.bundleName, isError])
 
   useEffect(() => {
     // Maintain selection when addons are changed due to environment change
@@ -106,13 +110,14 @@ const AddonList = ({
     <Section style={{ minWidth: 250 }}>
       <TablePanel loading={loading}>
         <DataTable
-          value={addons}
+          value={isError ? [] : addons}
           selectionMode="multiple"
           scrollable="true"
           scrollHeight="flex"
           selection={selectedAddons}
           onSelectionChange={onSelectionChange}
           rowClassName={rowDataClassNameFormatter}
+          emptyMessage={isError ? `WARNING: No bundle set to ${environment}` : 'No addons found'}
         >
           <Column field="title" header="Addon" />
           <Column field="version" header="Version" style={{ maxWidth: 80 }} />
