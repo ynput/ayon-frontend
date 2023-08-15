@@ -77,12 +77,38 @@ export const Container = styled.div`
   gap: 0;
 `
 
+export const DropdownContainer = styled.div`
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows 0.23s ease;
+
+  ${({ $isOpen }) =>
+    $isOpen
+      ? css`
+          grid-template-rows: 1fr;
+        `
+      : css`
+          & > .dropdown {
+            padding: 0 8px;
+            transform: translateY(-50px);
+          }
+        `}
+`
+
 export const Dropdown = styled.div`
+  transition: padding 0.1s, transform 0.23s ease;
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: flex-start;
+  min-height: 0;
+  transform: translateY(0);
+
+  span {
+    word-break: break-all;
+  }
 `
 
 export const Footer = styled.footer`
