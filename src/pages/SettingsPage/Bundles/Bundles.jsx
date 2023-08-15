@@ -80,7 +80,7 @@ const Bundles = () => {
 
     // delete
     search.delete('selected')
-    window.history.replaceState({}, '', `${location.pathname}${search.length ? '?' : ''}${search}`)
+    window.history.replaceState({}, '', `${location.pathname}${search.size ? '?' : ''}${search}`)
   }, [location.search, isLoading, bundleList])
 
   // REDUX MUTATIONS
