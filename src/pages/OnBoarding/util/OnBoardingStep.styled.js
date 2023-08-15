@@ -1,8 +1,13 @@
 import { Panel, SaveButton, Section as SectionComp } from '@ynput/ayon-react-components'
 import styled, { css, keyframes } from 'styled-components'
 
-// import some styles from LoginPage and export them as Styled
-export * from '/src/pages/LoginPage/LoginPage.styled'
+export const Logo = styled.img`
+  width: 100px;
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+`
 
 export const StepPanel = styled(Panel)`
   display: flex;
@@ -20,7 +25,6 @@ export const StepPanel = styled(Panel)`
   min-height: 550px;
 
   h2 {
-    font-size: 24px;
     text-align: center;
   }
 
@@ -31,15 +35,11 @@ export const StepPanel = styled(Panel)`
 
 export const Login = styled.section`
   display: flex;
-  width: 300px;
+  width: 470px;
   flex-direction: column;
   align-items: center;
   gap: 16px;
   height: 100%;
-
-  button {
-    margin-top: 8px;
-  }
 
   .more {
     margin-top: auto;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Spacer, UserImage } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from './breadcrumbs'
@@ -13,6 +13,7 @@ const Header = () => {
   const [projectMenuVisible, setProjectMenuVisible] = useState(false)
   const [userMenuVisible, setUserMenuVisible] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
   // get user from redux store
   const user = useSelector((state) => state.user)
 
@@ -21,6 +22,27 @@ const Header = () => {
     setProjectMenuVisible(false)
     setUserMenuVisible(false)
   }, [location.pathname])
+
+  // if last path in pathname is 'userMenu' then open userMenu
+  useEffect(() => {
+    if (location.pathname.split('/').pop() === 'userMenu') {
+      // parse query params from current URL
+      const searchParams = new URLSearchParams(location.search)
+
+      // set localStorage to true
+      localStorage.setItem('userMenuVisible', true)
+      // then remove 'userMenu' from pathname
+      const newPathname = location.pathname.replace('/userMenu', '')
+
+      // append query params to new URL
+      const newUrl = `${newPathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+      navigate(newUrl, { replace: true })
+    } else if (localStorage.getItem('userMenuVisible') === 'true') {
+      setUserMenuVisible(true)
+      // delete
+      localStorage.removeItem('userMenuVisible')
+    }
+  }, [location.pathname, localStorage])
 
   return (
     <nav className="primary">

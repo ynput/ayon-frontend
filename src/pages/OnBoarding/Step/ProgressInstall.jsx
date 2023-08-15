@@ -33,6 +33,7 @@ export const ProgressInstall = ({
   release,
   idsInstalling = [],
   selectedAddons = [],
+  Header,
   Footer,
   onFinish,
   isFinished,
@@ -126,7 +127,7 @@ export const ProgressInstall = ({
 
   return (
     <Styled.Section>
-      <h2>{title}</h2>
+      <Header>{title}</Header>
       <Styled.PresetsContainer style={{ overflow: 'auto' }}>
         {progressBars
           .filter((file) => file.type !== 'addon' || selectedAddons.includes(file.name))

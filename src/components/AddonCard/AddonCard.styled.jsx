@@ -1,6 +1,10 @@
 import styled, { css } from 'styled-components'
 
-export const AddonCard = styled.div`
+export const AddonCard = styled.button`
+  /* reset button */
+  border: none;
+  text-align: left;
+
   display: flex;
   padding: 8px;
   align-items: center;
@@ -24,12 +28,22 @@ export const AddonCard = styled.div`
     background-color: var(--md-sys-color-surface-container-highest-hover);
   }
 
+  span {
+    word-break: break-all;
+    line-height: 100%;
+  }
+
   ${({ $selected }) =>
     $selected &&
     css`
-      &,
+      background-color: var(--md-sys-color-primary-container);
+
       &:hover {
-        background-color: var(--md-sys-color-primary-container);
+        background-color: var(--md-sys-color-primary-container-hover);
+
+        &:disabled {
+          background-color: var(--md-sys-color-primary-container);
+        }
       }
     `}
 

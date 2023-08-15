@@ -10,9 +10,10 @@ const FooterButtons = ({
   nextProps,
   backProps,
   showIcon,
+  ...props
 }) => {
   return (
-    <Styled.Footer $showIcon={showIcon}>
+    <Styled.Footer $showIcon={showIcon} {...props}>
       {back && (
         <Button onClick={onBack} className="back" {...backProps}>
           {back}

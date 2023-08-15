@@ -3,6 +3,7 @@ import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
 
 export const AddonSelectStep = ({
+  Header,
   Footer,
   selectedAddons,
   setSelectedAddons,
@@ -16,14 +17,14 @@ export const AddonSelectStep = ({
 
   useEffect(() => {
     const sortedAddons = release.addons.map((addon) => addon)
-    // order addons by selected and then by addon.required
+    // order addons by selected and then by addon.mandatory
     sortedAddons.sort((a, b) => {
       const aSelected = selectedAddons.includes(a.name)
       const bSelected = selectedAddons.includes(b.name)
       if (aSelected && !bSelected) return -1
       if (!aSelected && bSelected) return 1
-      if (a.required && !b.required) return -1
-      if (!a.required && b.required) return 1
+      if (a.mandatory && !b.mandatory) return -1
+      if (!a.mandatory && b.mandatory) return 1
       return 0
     })
     setSortedAddons(sortedAddons)
@@ -34,7 +35,7 @@ export const AddonSelectStep = ({
     if (!addon) return
     // if it's already selected, remove it
     if (selectedAddons.includes(name)) {
-      if (addon.required) {
+      if (addon.mandatory) {
         return // prevent removing the "Core" addon
       }
       setSelectedAddons(selectedAddons.filter((addon) => addon !== name))
@@ -45,18 +46,20 @@ export const AddonSelectStep = ({
 
   return (
     <Styled.Section>
-      <h2>Pick your Addons</h2>
+      <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
-        {sortedAddons.map((addon) => (
-          <AddonCard
-            key={addon.name}
-            name={addon.name}
-            icon="check_circle"
-            isSelected={selectedAddons.includes(addon.name)}
-            onClick={() => handleAddonClick(addon.name)}
-            style={{ opacity: addon.required ? 0.5 : 1 }}
-          />
-        ))}
+        {sortedAddons.map(
+          (addon) =>
+            !addon.mandatory && (
+              <AddonCard
+                key={addon.name}
+                name={addon.name}
+                icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
+                isSelected={selectedAddons.includes(addon.name)}
+                onClick={() => handleAddonClick(addon.name)}
+              />
+            ),
+        )}
       </Styled.AddonsContainer>
       <Footer next="Confirm" onNext={onSubmit} />
     </Styled.Section>

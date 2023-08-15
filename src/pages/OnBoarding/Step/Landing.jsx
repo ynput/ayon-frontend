@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import YnputConnector from '../../../components/YnputConnector'
+import YnputConnector from '../../../components/YnputConnect/YnputConnector'
 
-export const Landing = ({ nextStep, setUserForm, setIsConnecting }) => {
+export const Landing = ({ Header, Body, nextStep, setUserForm, setIsConnecting }) => {
   const [showMore, setShowMore] = useState(false)
 
   const handleConnection = (user) => {
@@ -19,35 +19,34 @@ export const Landing = ({ nextStep, setUserForm, setIsConnecting }) => {
       {showMore && (
         <>
           <Styled.More>
-            <h2>{`What is Ynput Connect?`}</h2>
-            <p>
+            <Header>{`What is Ynput Connect?`}</Header>
+            <Body>
               AYON is a highly modular platform. Connecting your Ynput account to AYON lets us
               automatically download and setup all you need to take full advantage of AYON in your
               production.
-            </p>
-            <br />
-            <p>
+              <br /> <br />
               If you are in offline environment or you would rather download and install all the
               addons, desktop distribution and dependencies manually, you can skip this step.
-            </p>
-            <Styled.Skip className="skip" onClick={nextStep}>
+            </Body>
+            <Styled.Skip className="skip" onClick={(e) => nextStep(e, 1)}>
               I know what I am doing, skip bootstrap.
             </Styled.Skip>
           </Styled.More>
         </>
       )}
+      {/* <Styled.Logo src="/AYON.svg" /> */}
       <Styled.Section style={{ width: 300, textAlign: 'center', alignItems: 'center' }}>
-        <Styled.Ayon src="/AYON.svg" />
-        <h2>Lets get things set up for you.</h2>
-        <p>To make things as easy as possible we recommend using Ynput Connect.</p>
+        <Header>Lets get things set up for you.</Header>
+        <Body>To make things as easy as possible we recommend using Ynput Connect.</Body>
         <Styled.Connect style={{ marginTop: 16 }}>
-          <span>Fast and Automated setup with</span>
+          <Body>Fast and Automated setup with</Body>
           <YnputConnector
-            showLoading={false}
             hideSignOut
             redirect="/onboarding"
             onConnection={handleConnection}
             onClick={() => setIsConnecting(true)}
+            showDropdown={false}
+            showStatus={false}
           />
         </Styled.Connect>
         {!showMore && (
