@@ -5,7 +5,6 @@ import { useSelector } from 'react-redux'
 import { useGetSettingsAddonsQuery } from '../../services/addons/getAddons'
 
 import SettingsAddon from './SettingsAddon'
-import YnputConnectPage from './YnputConnectPage'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -68,8 +67,6 @@ const SettingsPage = () => {
         return <Attributes />
       case 'secrets':
         return <Secrets />
-      case 'connect':
-        return <YnputConnectPage />
       default:
         return <div>Not implemented</div>
     }

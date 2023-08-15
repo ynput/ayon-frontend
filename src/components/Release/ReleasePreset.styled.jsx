@@ -55,7 +55,7 @@ export const Header = styled.header`
   align-self: stretch;
 
   .icon {
-    font-size: 30px;
+    font-size: 32px;
   }
 
   div {
@@ -66,7 +66,7 @@ export const Header = styled.header`
     flex: 1 0 0;
 
     h3 {
-      font-size: 16px;
+      /* font-size: 16px; */
       border: none;
       margin: 0;
       padding: 0;
@@ -78,10 +78,13 @@ export const Header = styled.header`
 export const Addons = styled.span`
   &,
   & span {
-    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
+  }
+
+  & span {
+    font-size: inherit;
   }
 `

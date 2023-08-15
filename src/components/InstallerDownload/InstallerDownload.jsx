@@ -20,7 +20,7 @@ const ButtonColors = css`
 const StyledInstallerDownload = styled(Dropdown)`
   .button {
     background-color: var(--button-background);
-    padding: 5.25px 8px;
+    padding: 8px;
     padding-right: 4px;
     height: unset;
 
@@ -33,6 +33,7 @@ const StyledInstallerDownload = styled(Dropdown)`
     $isSpecial &&
     css`
       .button {
+        padding: 5.25px 8px;
         border-radius: 4px 0 0 4px;
         ${ButtonColors}
       }

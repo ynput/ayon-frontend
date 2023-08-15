@@ -8,6 +8,7 @@ import styled, { css } from 'styled-components'
 import { Fragment } from 'react'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import { useLogOutMutation } from '/src/services/auth/getAuth'
+import YnputConnector from '/src/components/YnputConnect/YnputConnector'
 
 const StyledButton = styled(Button)`
   width: 100%;
@@ -42,7 +43,9 @@ const UserMenu = ({ visible, onHide }) => {
   const isAdmin = user.data.isAdmin
 
   const divider = <Divider style={{ margin: '10px 0' }} />
-  const versionInfo = <Divider>{`v${ayonClient.settings?.version}`}</Divider>
+  const versionInfo = (
+    <Divider style={{ margin: '10px 0' }}>{`v${ayonClient.settings?.version}`}</Divider>
+  )
   const spacer = <Spacer />
 
   const allLinks = [
@@ -66,9 +69,21 @@ const UserMenu = ({ visible, onHide }) => {
       node: <InstallerDownload />,
     },
     { node: divider },
+    {
+      link: 'https://community.ynput.io/',
+      label: 'Community Forum',
+      icon: 'forum',
+    },
+    {
+      link: 'https://github.com/ynput/ayon-frontend/issues/new',
+      label: 'Report a Bug',
+      icon: 'bug_report',
+    },
   ]
 
   const protectedLinks = [
+    { node: <YnputConnector redirect={location.pathname + '/userMenu'} smallLogo /> },
+    { node: divider },
     {
       link: '/events',
       label: 'Event Viewer',
@@ -133,8 +148,10 @@ const UserMenu = ({ visible, onHide }) => {
             <StyledButton
               key={`${label}-${i}`}
               onClick={() => {
-                if (link) navigate(link)
-                else if (onClick) onClick()
+                if (link) {
+                  if (link.includes('http')) window.open(link, '_blank')
+                  navigate(link)
+                } else if (onClick) onClick()
               }}
               label={label}
               icon={icon}
