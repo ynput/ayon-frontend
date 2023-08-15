@@ -41,10 +41,6 @@ export const Login = styled.section`
   gap: 16px;
   height: 100%;
 
-  button {
-    margin-top: 8px;
-  }
-
   .more {
     margin-top: auto;
     /* underline */
