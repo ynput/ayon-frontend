@@ -7,9 +7,9 @@ import * as Styled from './InstallerDownload.styled'
 import { useGetBundleListQuery } from '/src/services/bundles'
 
 const InstallerDownload = ({ isSpecial }) => {
-  const [installerDownloaded, setInstallerDownloaded] = useLocalStorage(
-    'installer-downloaded',
-    false,
+  const [installersDownloaded, setInstallersDownloaded] = useLocalStorage(
+    'installers-downloaded',
+    [],
   )
 
   const { data: installers = [] } = useGetInstallerListQuery()
@@ -75,7 +75,7 @@ const InstallerDownload = ({ isSpecial }) => {
     link.click()
     link.parentNode.removeChild(link)
     // set localStorage
-    setInstallerDownloaded(filename)
+    setInstallersDownloaded([...installersDownloaded, filename])
   }
 
   const handleDownloadClick = async (sources, filename) => {
@@ -97,7 +97,7 @@ const InstallerDownload = ({ isSpecial }) => {
     downloadFromUrl(directDownload.url, directDownload.filename)
   }
 
-  if (isSpecial && installerDownloaded === directDownload.filename) return null
+  if (isSpecial && installersDownloaded.includes(directDownload.filename)) return null
 
   return (
     <Styled.Container>
@@ -147,7 +147,9 @@ const InstallerDownload = ({ isSpecial }) => {
         <Styled.CloseButton
           $isSpecial={true}
           icon="close"
-          onClick={() => setInstallerDownloaded(true)}
+          onClick={() =>
+            setInstallersDownloaded([...installersDownloaded, directDownload.filename])
+          }
         />
       )}
     </Styled.Container>
