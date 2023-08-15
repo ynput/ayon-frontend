@@ -151,7 +151,7 @@ const Bundles = () => {
 
   const getVersionedName = (name) => {
     let newName
-    const versionNumber = parseInt(name.split('-')[4])
+    const versionNumber = parseInt(name.split('-').pop())
     if (!isNaN(versionNumber)) {
       newName = name.replace(/(\d+)$/, () => {
         return (versionNumber + 1).toString().padStart(2, '0')
