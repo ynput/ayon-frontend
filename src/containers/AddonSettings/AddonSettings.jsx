@@ -2,15 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import {
-  Button,
-  Spacer,
-  Section,
-  InputText,
-  Panel,
-  Toolbar,
-  ScrollPanel,
-} from '@ynput/ayon-react-components'
+import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import AddonList from '/src/containers/AddonList'
@@ -25,6 +17,7 @@ import {
 } from '/src/services/addonSettings'
 import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
+import { useNavigate } from 'react-router'
 
 /*
  * key is {addonName}|{addonVersion}|{environment}|{siteId}|{projectKey}
@@ -123,6 +116,7 @@ const compareObjects = (obj1, obj2, path = []) => {
 }
 
 const AddonSettings = ({ projectName, showSites = false }) => {
+  const navigate = useNavigate()
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [originalData, setOriginalData] = useState({})
@@ -445,14 +439,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           disabled={environment === 'staging'}
           style={environment === 'staging' ? styleHlStag : {}}
         />
-        <InputText
-          tooltip="Bundle name"
-          value={bundleName || ''}
-          style={{ flexGrow: 1 }}
-          readOnly
+        <Button
+          label={`Bundle: ${bundleName || 'NONE'}`}
+          onClick={() => navigate(`/settings/bundles?selected=${bundleName || 'latest'}`)}
         />
         <Button
           icon="local_shipping"
+          label="Push to production"
           tooltip="Push to production"
           onClick={onPushToProduction}
           disabled={environment !== 'staging' || canCommit}
@@ -464,6 +457,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const settingsListHeader = useMemo(() => {
     return (
       <Toolbar>
+        <Spacer />
         <Button
           onClick={() => {
             setShowHelp(!showHelp)

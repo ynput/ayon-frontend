@@ -80,11 +80,6 @@ const SettingsPage = () => {
         module: 'bundles',
       },
       {
-        name: 'Anatomy presets',
-        path: '/settings/anatomyPresets',
-        module: 'anatomyPresets',
-      },
-      {
         name: 'Studio settings',
         path: '/settings/studio',
         module: 'studio',
@@ -93,6 +88,11 @@ const SettingsPage = () => {
         name: 'Site settings',
         path: '/settings/site',
         module: 'site',
+      },
+      {
+        name: 'Anatomy presets',
+        path: '/settings/anatomyPresets',
+        module: 'anatomyPresets',
       },
       {
         name: 'Attributes',
