@@ -4,14 +4,14 @@ import { Spacer, UserImage } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from './breadcrumbs'
 import HeaderButton from './HeaderButton'
-import UserMenu from './userMenu'
+import AppMenu from './appMenu'
 import ProjectMenu from './projectMenu'
 import { useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 
 const Header = () => {
   const [projectMenuVisible, setProjectMenuVisible] = useState(false)
-  const [userMenuVisible, setUserMenuVisible] = useState(false)
+  const [appMenuOpen, setAppMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   // get user from redux store
@@ -20,34 +20,34 @@ const Header = () => {
   // Hide sidebars when location changes
   useEffect(() => {
     setProjectMenuVisible(false)
-    setUserMenuVisible(false)
+    setAppMenuOpen(false)
   }, [location.pathname])
 
-  // if last path in pathname is 'userMenu' then open userMenu
+  // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
-    if (location.pathname.split('/').pop() === 'userMenu') {
+    if (location.pathname.split('/').pop() === 'appMenu') {
       // parse query params from current URL
       const searchParams = new URLSearchParams(location.search)
 
       // set localStorage to true
-      localStorage.setItem('userMenuVisible', true)
-      // then remove 'userMenu' from pathname
-      const newPathname = location.pathname.replace('/userMenu', '')
+      localStorage.setItem('appMenuOpen', true)
+      // then remove 'appMenu' from pathname
+      const newPathname = location.pathname.replace('/appMenu', '')
 
       // append query params to new URL
       const newUrl = `${newPathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
       navigate(newUrl, { replace: true })
-    } else if (localStorage.getItem('userMenuVisible') === 'true') {
-      setUserMenuVisible(true)
+    } else if (localStorage.getItem('appMenuOpen') === 'true') {
+      setAppMenuOpen(true)
       // delete
-      localStorage.removeItem('userMenuVisible')
+      localStorage.removeItem('appMenuOpen')
     }
   }, [location.pathname, localStorage])
 
   return (
     <nav className="primary">
       <ProjectMenu visible={projectMenuVisible} onHide={() => setProjectMenuVisible(false)} />
-      <UserMenu visible={userMenuVisible} onHide={() => setUserMenuVisible(false)} />
+      <AppMenu visible={appMenuOpen} onHide={() => setAppMenuOpen(false)} />
 
       <HeaderButton
         icon="event_list"
@@ -74,7 +74,7 @@ const Header = () => {
           />
         </HeaderButton>
       </Link>
-      <HeaderButton icon="apps" onClick={() => setUserMenuVisible(true)} />
+      <HeaderButton icon="apps" onClick={() => setAppMenuOpen(true)} />
     </nav>
   )
 }

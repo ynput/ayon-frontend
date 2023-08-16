@@ -31,7 +31,7 @@ const StyledButton = styled(Button)`
     `}
 `
 
-const UserMenu = ({ visible, onHide }) => {
+const AppMenu = ({ visible, onHide }) => {
   // LOGOUT USER
   const [logout] = useLogOutMutation()
   const navigate = useNavigate()
@@ -82,7 +82,7 @@ const UserMenu = ({ visible, onHide }) => {
   ]
 
   const protectedLinks = [
-    { node: <YnputConnector redirect={location.pathname + '/userMenu'} smallLogo /> },
+    { node: <YnputConnector redirect={location.pathname + '/appMenu'} smallLogo /> },
     { node: divider },
     {
       link: '/events',
@@ -166,4 +166,4 @@ const UserMenu = ({ visible, onHide }) => {
   )
 }
 
-export default UserMenu
+export default AppMenu
