@@ -162,8 +162,7 @@
   --md-sys-color-primary-dark: #8FCEFF;
   --md-sys-color-on-primary-dark: #00344F;
   --md-sys-color-primary-container-dark: #004B70;
-  --md-sys-color-primary-container-dark-hover: #10577B;
-  --md-sys-color-on-primary-container-dark: #CAE6FF;
+  --md-sys-color-on-primary-container-dark: #EBF5FF;
   --md-sys-color-primary-fixed-dark: #CAE6FF;
   --md-sys-color-on-primary-fixed-dark: #001E30;
   --md-sys-color-primary-fixed-dim-dark: #8DCDFF;
@@ -189,9 +188,9 @@
   --md-sys-color-error-container-dark: #93000A;
   --md-sys-color-on-error-container-dark: #FFDAD6;
   --md-sys-color-outline-dark: #8B9198;
-  --md-sys-color-background-dark: #171B20;
+  --md-sys-color-background-dark: #252A31;
   --md-sys-color-on-background-dark: #F2F2F3;
-  --md-sys-color-surface-dark: #101114;
+  --md-sys-color-surface-dark: #252B32;
   --md-sys-color-on-surface-dark: #F4F5F5;
   --md-sys-color-surface-variant-dark: #41474D;
   --md-sys-color-on-surface-variant-dark: #C1C7CE;
@@ -202,11 +201,11 @@
   --md-sys-color-surface-tint-dark: #8DCDFF;
   --md-sys-color-outline-variant-dark: #41474D;
   --md-sys-color-scrim-dark: #000000;
-  --md-sys-color-surface-container-highest-dark: #2C333E;
-  --md-sys-color-surface-container-high-dark: #23282f;
-  --md-sys-color-surface-container-dark: #1B1F25;
-  --md-sys-color-surface-container-low-dark: #171B20;
-  --md-sys-color-surface-container-lowest-dark: #0C0F12;
+  --md-sys-color-surface-container-highest-dark: #424A57;
+  --md-sys-color-surface-container-high-dark: #353B46;
+  --md-sys-color-surface-container-dark: #272D35;
+  --md-sys-color-surface-container-low-dark: #1C2026;
+  --md-sys-color-surface-container-lowest-dark: #16191D;
   --md-sys-color-surface-bright-dark: #34383F;
   --md-sys-color-surface-dim-dark: #060709;
   /* Custom Colors */
