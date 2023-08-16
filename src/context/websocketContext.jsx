@@ -13,6 +13,7 @@ const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
 
 export const SocketProvider = (props) => {
+  const user = useSelector((state) => state.user)
   const dispatch = useDispatch()
   // get user logged in
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
@@ -20,7 +21,7 @@ export const SocketProvider = (props) => {
 
   const wsOpts = {
     shouldReconnect: () => {
-      setServerRestartingVisible(true)
+      if (user?.name) setServerRestartingVisible(true)
       return true
     },
   }
