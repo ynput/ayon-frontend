@@ -10,8 +10,10 @@
  --md-sys-color-primary-fixed-dim: var(--md-sys-color-primary-fixed-dim-dark);
  --md-sys-color-on-primary-fixed-variant: var(--md-sys-color-on-primary-fixed-variant-dark);
  --md-sys-color-secondary: var(--md-sys-color-secondary-dark);
+ --md-sys-color-secondary-hover: var(--md-sys-color-secondary-dark-hover);
  --md-sys-color-on-secondary: var(--md-sys-color-on-secondary-dark);
  --md-sys-color-secondary-container: var(--md-sys-color-secondary-container-dark);
+ --md-sys-color-secondary-container-hover: var(--md-sys-color-secondary-container-dark-hover);
  --md-sys-color-on-secondary-container: var(--md-sys-color-on-secondary-container-dark);
  --md-sys-color-secondary-fixed: var(--md-sys-color-secondary-fixed-dark);
  --md-sys-color-on-secondary-fixed: var(--md-sys-color-on-secondary-fixed-dark);
@@ -21,6 +23,7 @@
  --md-sys-color-tertiary-hover: var(--md-sys-color-tertiary-dark-hover);
  --md-sys-color-on-tertiary: var(--md-sys-color-on-tertiary-dark);
  --md-sys-color-tertiary-container: var(--md-sys-color-tertiary-container-dark);
+ --md-sys-color-tertiary-container-hover: var(--md-sys-color-tertiary-container-dark-hover);
  --md-sys-color-on-tertiary-container: var(--md-sys-color-on-tertiary-container-dark);
  --md-sys-color-tertiary-fixed: var(--md-sys-color-tertiary-fixed-dark);
  --md-sys-color-on-tertiary-fixed: var(--md-sys-color-on-tertiary-fixed-dark);
@@ -49,8 +52,11 @@
  --md-sys-color-surface-container-high: var(--md-sys-color-surface-container-high-dark);
  --md-sys-color-surface-container-high-hover: var(--md-sys-color-surface-container-high-dark-hover);
  --md-sys-color-surface-container: var(--md-sys-color-surface-container-dark);
+ --md-sys-color-surface-container-hover: var(--md-sys-color-surface-container-dark-hover);
  --md-sys-color-surface-container-low: var(--md-sys-color-surface-container-low-dark);
+ --md-sys-color-surface-container-low-hover: var(--md-sys-color-surface-container-low-dark-hover);
  --md-sys-color-surface-container-lowest: var(--md-sys-color-surface-container-lowest-dark);
+ --md-sys-color-surface-container-lowest-hover: var(--md-sys-color-surface-container-lowest-dark-hover);
  --md-sys-color-surface-bright: var(--md-sys-color-surface-bright-dark);
  --md-sys-color-surface-dim: var(--md-sys-color-surface-dim-dark);
 }

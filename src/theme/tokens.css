@@ -160,7 +160,6 @@
   --md-sys-color-surface-dim-light: #D9DADD;
   /* dark */
   --md-sys-color-primary-dark: #8FCEFF;
-  --md-sys-color-primary-dark-hover: #83C2F1;
   --md-sys-color-on-primary-dark: #00344F;
   --md-sys-color-primary-container-dark: #004B70;
   --md-sys-color-primary-container-dark-hover: #10577B;
@@ -178,7 +177,6 @@
   --md-sys-color-secondary-fixed-dim-dark: #B7C9D9;
   --md-sys-color-on-secondary-fixed-variant-dark: #384956;
   --md-sys-color-tertiary-dark: #23E0A9;
-  --md-sys-color-tertiary-dark-hover: #1FCC99;
   --md-sys-color-on-tertiary-dark: #003827;
   --md-sys-color-tertiary-container-dark: #00513A;
   --md-sys-color-on-tertiary-container-dark: #52FDC3;
@@ -193,7 +191,7 @@
   --md-sys-color-outline-dark: #8B9198;
   --md-sys-color-background-dark: #171B20;
   --md-sys-color-on-background-dark: #F2F2F3;
-  --md-sys-color-surface-dark: #111316;
+  --md-sys-color-surface-dark: #101114;
   --md-sys-color-on-surface-dark: #F4F5F5;
   --md-sys-color-surface-variant-dark: #41474D;
   --md-sys-color-on-surface-variant-dark: #C1C7CE;
@@ -204,15 +202,13 @@
   --md-sys-color-surface-tint-dark: #8DCDFF;
   --md-sys-color-outline-variant-dark: #41474D;
   --md-sys-color-scrim-dark: #000000;
-  --md-sys-color-surface-container-highest-dark: #2F343B;
-  --md-sys-color-surface-container-highest-dark-hover: #33383F;
-  --md-sys-color-surface-container-high-dark: #25292F;
-  --md-sys-color-surface-container-high-dark-hover: #292D33;
-  --md-sys-color-surface-container-dark: #1C1F24;
+  --md-sys-color-surface-container-highest-dark: #2C333E;
+  --md-sys-color-surface-container-high-dark: #23282f;
+  --md-sys-color-surface-container-dark: #1B1F25;
   --md-sys-color-surface-container-low-dark: #171B20;
-  --md-sys-color-surface-container-lowest-dark: #0C0E11;
+  --md-sys-color-surface-container-lowest-dark: #0C0F12;
   --md-sys-color-surface-bright-dark: #34383F;
-  --md-sys-color-surface-dim-dark: #101317;
+  --md-sys-color-surface-dim-dark: #060709;
   /* Custom Colors */
   --md-custom-color-warning: #FFB400;
   /* display - large */

@@ -1,0 +1,17 @@
+:root {
+    /* primary */
+    --md-sys-color-primary-dark-hover: #83C2F1;
+    --md-sys-color-primary-container-dark-hover: #10577B;
+    /* secondary */
+    --md-sys-color-secondary-dark-hover: #ABBDCD;
+    --md-sys-color-secondary-container-dark-hover: #445563;
+    /* tertiary */
+    --md-sys-color-tertiary-dark-hover: #1FCC99;
+    --md-sys-color-tertiary-container-dark-hover: #075F45;
+    /* container-surface */
+    --md-sys-color-surface-container-highest-dark-hover: #33383F;
+    --md-sys-color-surface-container-high-dark-hover: #292d33;
+    --md-sys-color-surface-container-dark-hover: #1B1F25;
+    --md-sys-color-surface-container-low-dark-hover: #171B20;
+    --md-sys-color-surface-container-lowest-dark-hover: #0C0F12;
+}
