@@ -21,6 +21,7 @@ const initialState = {
   uri: null,
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
+  menuOpen: false,
 }
 
 const contextSlice = createSlice({
@@ -162,6 +163,9 @@ const contextSlice = createSlice({
     onUploadFinished: (state) => {
       state.uploadProgress = 0
     },
+    setMenuOpen: (state, action) => {
+      state.menuOpen = action.payload
+    },
   }, // reducers
 })
 
@@ -188,6 +192,7 @@ export const {
   onFocusChanged,
   onUploadProgress,
   onUploadFinished,
+  setMenuOpen,
 } = contextSlice.actions
 
 export default contextSlice.reducer

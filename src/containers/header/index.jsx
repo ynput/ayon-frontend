@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Spacer, UserImage } from '@ynput/ayon-react-components'
 
@@ -6,22 +6,18 @@ import Breadcrumbs from './breadcrumbs'
 import HeaderButton from './HeaderButton'
 import AppMenu from './appMenu'
 import ProjectMenu from './projectMenu'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
+import { setMenuOpen as setMenuOpenAction } from '/src/features/context'
 
 const Header = () => {
-  const [projectMenuVisible, setProjectMenuVisible] = useState(false)
-  const [appMenuOpen, setAppMenuOpen] = useState(false)
+  const dispatch = useDispatch()
+  const menuOpen = useSelector((state) => state.context.menuOpen)
+  const setMenuOpen = (menu) => dispatch(setMenuOpenAction(menu))
   const location = useLocation()
   const navigate = useNavigate()
   // get user from redux store
   const user = useSelector((state) => state.user)
-
-  // Hide sidebars when location changes
-  useEffect(() => {
-    setProjectMenuVisible(false)
-    setAppMenuOpen(false)
-  }, [location.pathname])
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -38,21 +34,23 @@ const Header = () => {
       const newUrl = `${newPathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
       navigate(newUrl, { replace: true })
     } else if (localStorage.getItem('appMenuOpen') === 'true') {
-      setAppMenuOpen(true)
+      setMenuOpen('app')
       // delete
       localStorage.removeItem('appMenuOpen')
     }
   }, [location.pathname, localStorage])
 
+  const closeMenu = () => setMenuOpen(false)
+
   return (
     <nav className="primary">
-      <ProjectMenu visible={projectMenuVisible} onHide={() => setProjectMenuVisible(false)} />
-      <AppMenu visible={appMenuOpen} onHide={() => setAppMenuOpen(false)} />
+      <ProjectMenu visible={menuOpen === 'project'} onHide={closeMenu} />
+      <AppMenu visible={menuOpen === 'app'} onHide={closeMenu} />
 
       <HeaderButton
         icon="event_list"
         label="Projects"
-        onClick={() => setProjectMenuVisible(true)}
+        onClick={() => setMenuOpen('project')}
         style={{
           alignItems: 'center',
           display: 'flex',
@@ -64,7 +62,6 @@ const Header = () => {
       </Spacer>
 
       <InstallerDownload isSpecial />
-
       <Link to="/profile">
         <HeaderButton>
           <UserImage
@@ -74,7 +71,7 @@ const Header = () => {
           />
         </HeaderButton>
       </Link>
-      <HeaderButton icon="apps" onClick={() => setAppMenuOpen(true)} />
+      <HeaderButton icon="apps" onClick={() => setMenuOpen('app')} />
     </nav>
   )
 }

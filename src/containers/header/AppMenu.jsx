@@ -132,6 +132,8 @@ const AppMenu = ({ visible, onHide }) => {
       icon: 'restart_alt',
     })
 
+  if (!visible) return null
+
   return (
     <Sidebar position="right" visible={visible} onHide={onHide}>
       <div
@@ -150,6 +152,7 @@ const AppMenu = ({ visible, onHide }) => {
               onClick={() => {
                 if (link) {
                   if (link.includes('http')) window.open(link, '_blank')
+                  onHide()
                   navigate(link)
                 } else if (onClick) onClick()
               }}
