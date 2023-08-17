@@ -1,5 +1,4 @@
 import React from 'react'
-import { useNavigate } from 'react-router'
 import MenuItem from './MenuItem'
 import * as Styled from './Menu.styled'
 import Colors from '/src/theme/colors.module.scss'
@@ -11,10 +10,9 @@ const MenuList = ({
   disabledClose = false,
   footer = '',
   index,
+  navigate,
   ...props
 }) => {
-  const navigate = useNavigate()
-
   //   When a menu item is clicked, the following happens:
   const handleClick = (e, onClick, url) => {
     if (!disabledClose && onClose) onClose()

@@ -12,6 +12,7 @@ const HeaderButton = styled(Button)`
 
   background-color: transparent;
   padding: 4px;
+  z-index: 20;
 
   & > span {
     font-size: 26px !important;

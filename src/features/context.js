@@ -166,6 +166,14 @@ const contextSlice = createSlice({
     setMenuOpen: (state, action) => {
       state.menuOpen = action.payload
     },
+    toggleMenuOpen: (state, action) => {
+      // no payload means toggle off
+      if (!action.payload) action.payload = false
+      // if payload is same as current state, toggle off
+      else if (action.payload === state.menuOpen) state.menuOpen = false
+      // else set payload
+      else state.menuOpen = action.payload
+    },
   }, // reducers
 })
 
@@ -193,6 +201,7 @@ export const {
   onUploadProgress,
   onUploadFinished,
   setMenuOpen,
+  toggleMenuOpen,
 } = contextSlice.actions
 
 export default contextSlice.reducer

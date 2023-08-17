@@ -1,8 +1,7 @@
 import React from 'react'
-import MenuContainer from '/src/components/Menu/MenuContainer'
 import MenuList from '/src/components/Menu/MenuList'
 
-export const HelpMenu = ({ target }) => {
+export const HelpMenu = ({ ...props }) => {
   const items = [
     {
       id: 'documentation',
@@ -47,11 +46,7 @@ export const HelpMenu = ({ target }) => {
     },
   ]
 
-  return (
-    <MenuContainer id="help" target={target}>
-      <MenuList items={items} />
-    </MenuContainer>
-  )
+  return <MenuList items={items} {...props} />
 }
 
 export default HelpMenu

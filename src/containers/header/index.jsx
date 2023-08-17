@@ -8,13 +8,15 @@ import AppMenu from './appMenu'
 import ProjectMenu from './projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
-import { setMenuOpen as setMenuOpenAction } from '/src/features/context'
-import { HelpMenu } from '/src/components/Menu'
+import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
+import { HelpMenu, UserMenu } from '/src/components/Menu'
+import MenuContainer from '/src/components/Menu/MenuContainer'
 
 const Header = () => {
   const dispatch = useDispatch()
   const menuOpen = useSelector((state) => state.context.menuOpen)
-  const setMenuOpen = (menu) => dispatch(setMenuOpenAction(menu))
+  const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
+  const handleSetMenu = (menu) => dispatch(setMenuOpen(menu))
   const location = useLocation()
   const navigate = useNavigate()
   // get user from redux store
@@ -22,7 +24,7 @@ const Header = () => {
 
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef(null)
-  const profileButtonRef = useRef(null)
+  const userButtonRef = useRef(null)
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -39,13 +41,13 @@ const Header = () => {
       const newUrl = `${newPathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
       navigate(newUrl, { replace: true })
     } else if (localStorage.getItem('appMenuOpen') === 'true') {
-      setMenuOpen('app')
+      handleSetMenu('app')
       // delete
       localStorage.removeItem('appMenuOpen')
     }
   }, [location.pathname, localStorage])
 
-  const closeMenu = () => setMenuOpen(false)
+  const closeMenu = () => handleSetMenu(false)
 
   return (
     <nav className="primary">
@@ -55,7 +57,7 @@ const Header = () => {
       <HeaderButton
         icon="event_list"
         label="Projects"
-        onClick={() => setMenuOpen('project')}
+        onClick={() => handleToggleMenu('project')}
         style={{
           alignItems: 'center',
           display: 'flex',
@@ -70,14 +72,16 @@ const Header = () => {
       <HeaderButton
         icon="help"
         ref={helpButtonRef}
-        onClick={() => setMenuOpen('help')}
+        onClick={() => handleToggleMenu('help')}
         active={menuOpen === 'help'}
       />
-      <HelpMenu target={helpButtonRef.current} />
+      <MenuContainer id="help" target={helpButtonRef.current}>
+        <HelpMenu />
+      </MenuContainer>
       <HeaderButton
         active={menuOpen === 'user'}
-        onClick={() => setMenuOpen('help')}
-        ref={profileButtonRef}
+        onClick={() => handleToggleMenu('user')}
+        ref={userButtonRef}
       >
         <UserImage
           size={26}
@@ -85,7 +89,10 @@ const Header = () => {
           fullName={user?.attrib?.fullName || user?.name}
         />
       </HeaderButton>
-      <HeaderButton icon="apps" onClick={() => setMenuOpen('app')} />
+      <MenuContainer id="user" target={userButtonRef.current}>
+        <UserMenu target={userButtonRef.current} user={user} />
+      </MenuContainer>
+      <HeaderButton icon="apps" onClick={() => handleToggleMenu('app')} />
     </nav>
   )
 }

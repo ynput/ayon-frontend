@@ -7,7 +7,7 @@ export const Dialog = styled.dialog`
   inset: 0;
   width: auto;
   height: auto;
-  z-index: 500;
+  z-index: 10;
   border: none;
   background-color: unset;
   padding: 0;
@@ -41,7 +41,7 @@ export const DialogContent = styled.div`
   transform-origin: top right;
   /* add shadow to each item */
   & > * {
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
   }
 `
 

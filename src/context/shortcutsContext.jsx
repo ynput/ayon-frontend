@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
-import { setMenuOpen } from '../features/context'
+import { toggleMenuOpen } from '../features/context'
 
 const ShortcutsContext = createContext()
 
@@ -46,7 +46,12 @@ function ShortcutsProvider(props) {
   )
 
   const globalActions = useMemo(
-    () => [{ key: 'h+h', action: () => dispatch(setMenuOpen('help')) }],
+    () => [
+      { key: '1', action: () => dispatch(toggleMenuOpen('project')) },
+      { key: '8', action: () => dispatch(toggleMenuOpen('help')) },
+      { key: '9', action: () => dispatch(toggleMenuOpen('user')) },
+      { key: '0', action: () => dispatch(toggleMenuOpen('app')) },
+    ],
     [navigate],
   )
   // when these variables change, update shortcutshh
