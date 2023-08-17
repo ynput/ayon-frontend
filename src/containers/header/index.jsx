@@ -77,7 +77,7 @@ const Header = () => {
         active={menuOpen === 'help'}
       />
       <MenuContainer id="help" target={helpButtonRef.current}>
-        <HelpMenu />
+        <HelpMenu user={user} />
       </MenuContainer>
       <HeaderButton
         active={menuOpen === 'user'}

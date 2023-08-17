@@ -1,7 +1,9 @@
 import React from 'react'
 import Menu from '../MenuComponents/Menu'
 
-export const HelpMenu = ({ ...props }) => {
+export const HelpMenu = ({ user, ...props }) => {
+  const isUser = user.data.isUser
+
   const items = [
     {
       id: 'documentation',
@@ -35,6 +37,9 @@ export const HelpMenu = ({ ...props }) => {
       link: '/explorer',
       icon: 'hub',
     },
+  ]
+
+  const managers = [
     {
       id: 'divider',
     },
@@ -45,6 +50,8 @@ export const HelpMenu = ({ ...props }) => {
       icon: 'support_agent',
     },
   ]
+
+  if (!isUser) items.push(...managers)
 
   return <Menu menu={items} {...props} />
 }
