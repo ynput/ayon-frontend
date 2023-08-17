@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router'
 import MenuItem from './MenuItem'
 import * as Styled from './Menu.styled'
+import Colors from '/src/theme/colors.module.scss'
 
 const MenuList = ({
   items = [],
@@ -29,7 +30,7 @@ const MenuList = ({
   }
 
   return (
-    <Styled.Section>
+    <Styled.Section className={`${Colors['on-surface-text']}`}>
       <Styled.Menu>
         {items.map((item, i) => {
           // if item is a node, return it
@@ -56,7 +57,9 @@ const MenuList = ({
           )
         })}
       </Styled.Menu>
-      {footer && <footer>{footer}</footer>}
+      {footer && (
+        <Styled.Footer className={`${Colors['surface-container-low']}`}>{footer}</Styled.Footer>
+      )}
     </Styled.Section>
   )
 }

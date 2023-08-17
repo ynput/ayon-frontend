@@ -111,3 +111,12 @@ export const Menu = styled.menu`
     }
   }
 `
+
+export const Footer = styled.footer`
+  display: flex;
+  padding: 8px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-self: stretch;
+`
