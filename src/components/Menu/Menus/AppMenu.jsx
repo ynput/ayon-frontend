@@ -3,7 +3,7 @@ import InstallerDownload from '/src/components/InstallerDownload/InstallerDownlo
 import Menu from '../MenuComponents/Menu'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { useRestartServerMutation } from '/src/services/restartServer'
-// import YnputConnector from '/src/components/YnputConnect/YnputConnector'
+import YnputConnector from '/src/components/YnputConnect/YnputConnector'
 
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin
@@ -65,7 +65,7 @@ export const AppMenu = ({ user, ...props }) => {
     },
   ]
 
-  // { node: <YnputConnector redirect={location.pathname + '/appMenu'} smallLogo /> },
+  // { node:  },
 
   // add protected items if user is admin
   if (isAdmin) items.push(...adminItems)
@@ -73,6 +73,7 @@ export const AppMenu = ({ user, ...props }) => {
   return (
     <>
       <Menu menu={items} footer={ayonClient.settings?.version} {...props} />
+      {isAdmin && <YnputConnector redirect={location.pathname + '/appMenu'} smallLogo />}
     </>
   )
 }
