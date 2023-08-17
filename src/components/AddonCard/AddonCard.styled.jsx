@@ -55,14 +55,20 @@ export const AddonCard = styled.button`
   ${({ $error }) =>
     $error &&
     css`
-      background: var(--color-hl-error);
+      background-color: var(--md-sys-color-error-container);
+      &,
+      .icon {
+        color: var(--md-sys-color-on-error-container);
+      }
 
       &:hover {
-        background: var(--color-hl-error);
+        background-color: var(--md-sys-color-error-container);
       }
     `}
 
   .error {
     margin-left: auto;
+    background-color: unset;
+    color: var(--md-sys-color-on-error-container);
   }
 `
