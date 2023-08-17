@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Spacer, UserImage } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from './breadcrumbs'
@@ -9,7 +9,7 @@ import ProjectMenu from './projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import { setMenuOpen as setMenuOpenAction } from '/src/features/context'
-import HelpMenu from './Menu/HelpMenu'
+import { HelpMenu } from '/src/components/Menu'
 
 const Header = () => {
   const dispatch = useDispatch()
@@ -22,6 +22,7 @@ const Header = () => {
 
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef(null)
+  const profileButtonRef = useRef(null)
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -73,15 +74,17 @@ const Header = () => {
         active={menuOpen === 'help'}
       />
       <HelpMenu target={helpButtonRef.current} />
-      <Link to="/profile">
-        <HeaderButton>
-          <UserImage
-            size={26}
-            src={user?.attrib?.avatarUrl}
-            fullName={user?.attrib?.fullName || user?.name}
-          />
-        </HeaderButton>
-      </Link>
+      <HeaderButton
+        active={menuOpen === 'user'}
+        onClick={() => setMenuOpen('help')}
+        ref={profileButtonRef}
+      >
+        <UserImage
+          size={26}
+          src={user?.attrib?.avatarUrl}
+          fullName={user?.attrib?.fullName || user?.name}
+        />
+      </HeaderButton>
       <HeaderButton icon="apps" onClick={() => setMenuOpen('app')} />
     </nav>
   )

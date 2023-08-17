@@ -1,9 +1,8 @@
 import React from 'react'
 import MenuContainer from '/src/components/Menu/MenuContainer'
-
 import MenuList from '/src/components/Menu/MenuList'
 
-const HelpMenu = ({ target }) => {
+export const HelpMenu = ({ target }) => {
   const items = [
     {
       id: 'documentation',
