@@ -276,7 +276,7 @@ const Breadcrumbs = () => {
   }
 
   return (
-    <Crumbtainer>
+    <Crumbtainer style={{ margin: 'auto' }}>
       <ul onClick={() => setEditMode(true)}>
         {uri2crumbs(ctxUri).map((crumb, idx) => (
           <li key={idx}>{crumb}</li>

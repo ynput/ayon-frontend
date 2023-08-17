@@ -5,9 +5,10 @@ export const Dialog = styled.dialog`
   position: fixed;
   margin: 0;
   inset: 0;
+  top: 42px;
   width: auto;
   height: auto;
-  z-index: 10;
+  z-index: 100;
   border: none;
   background-color: unset;
   padding: 0;
@@ -32,15 +33,17 @@ export const DialogContent = styled.div`
   gap: 8px;
 
   /* position */
-  position: fixed;
+  position: absolute;
   right: 0;
   top: 0;
+  z-index: 30;
 
   /* animate */
   animation: ${DialogOpenAnimation} 0.03s ease-in forwards;
   transform-origin: top right;
   /* add shadow to each item */
-  & > * {
+  & > *:not(.sub-menu),
+  .sub-menu menu {
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
   }
 `
@@ -53,10 +56,28 @@ export const Section = styled.section`
 
   padding: 0px;
   border-radius: 8px;
-  overflow: hidden;
   /* colors */
   background-color: var(--md-sys-color-surface-container-high);
   z-index: 10;
+  overflow: hidden;
+`
+export const MenuWrapper = styled.div`
+  position: relative;
+
+  /* sub menu */
+  &.sub-menu {
+    position: absolute;
+    /* margin-right: 16px; */
+
+    border-radius: 8px;
+    width: max-content;
+    z-index: 30;
+
+    & > * {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  }
 `
 
 export const Menu = styled.menu`
@@ -85,29 +106,28 @@ export const Menu = styled.menu`
     opacity: 0.5;
     border-color: var(--md-sys-color-surface-container-highest);
   }
+`
 
-  /* item */
-  li {
-    & > * {
-      width: 100%;
-    }
+export const Item = styled.li`
+  display: flex;
+  padding: 6px 16px 6px 12px;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
 
-    button {
-      /* Temp button style fix until new buttons arrive */
-      /* remove background */
-      background-color: unset;
-      padding: 6px 16px 6px 12px;
-      max-height: unset;
-      /* highlighted button */
-      &.highlighted {
-        background-color: var(--md-sys-color-secondary-container);
-        &:hover {
-          background-color: var(--md-sys-color-secondary-container-hover);
-        }
-      }
+  :hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
 
-      /* actual styles */
-      justify-content: flex-start;
+  /* highlighted button */
+  &.highlighted {
+    background-color: var(--md-sys-color-secondary-container);
+    &:hover {
+      background-color: var(--md-sys-color-secondary-container-hover);
     }
   }
 `

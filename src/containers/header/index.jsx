@@ -1,16 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Spacer, UserImage } from '@ynput/ayon-react-components'
+import { UserImage } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from './breadcrumbs'
 import HeaderButton from './HeaderButton'
-import AppMenu from './appMenu'
+import AppMenu from '../../components/Menu/Menus/AppMenu'
 import ProjectMenu from './projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
 import { HelpMenu, UserMenu } from '/src/components/Menu'
-import MenuContainer from '/src/components/Menu/MenuContainer'
+import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
 
 const Header = () => {
   const dispatch = useDispatch()
@@ -25,6 +25,7 @@ const Header = () => {
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef(null)
   const userButtonRef = useRef(null)
+  const appButtonRef = useRef(null)
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -47,12 +48,14 @@ const Header = () => {
     }
   }, [location.pathname, localStorage])
 
-  const closeMenu = () => handleSetMenu(false)
+  const handleNavClick = (e) => {
+    // if target us nav, then close menu
+    if (e.target.tagName === 'NAV') handleSetMenu(false)
+  }
 
   return (
-    <nav className="primary">
-      <ProjectMenu visible={menuOpen === 'project'} onHide={closeMenu} />
-      <AppMenu visible={menuOpen === 'app'} onHide={closeMenu} />
+    <nav className="primary" onClick={handleNavClick}>
+      <ProjectMenu visible={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
 
       <HeaderButton
         icon="event_list"
@@ -64,9 +67,7 @@ const Header = () => {
         }}
       />
 
-      <Spacer>
-        <Breadcrumbs />
-      </Spacer>
+      <Breadcrumbs />
 
       <InstallerDownload isSpecial />
       <HeaderButton
@@ -90,9 +91,12 @@ const Header = () => {
         />
       </HeaderButton>
       <MenuContainer id="user" target={userButtonRef.current}>
-        <UserMenu target={userButtonRef.current} user={user} />
+        <UserMenu user={user} />
       </MenuContainer>
-      <HeaderButton icon="apps" onClick={() => handleToggleMenu('app')} />
+      <HeaderButton icon="apps" onClick={() => handleToggleMenu('app')} ref={appButtonRef} />
+      <MenuContainer id="app" target={appButtonRef.current}>
+        <AppMenu user={user} />
+      </MenuContainer>
     </nav>
   )
 }

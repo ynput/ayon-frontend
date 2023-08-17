@@ -8,14 +8,17 @@ const MenuContainer = ({ id, target, children, ...props }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const isOpen = useSelector((state) => state.context.menuOpen) === id
-  const handleClose = () => dispatch(setMenuOpen(false))
   const dialogRef = useRef(null)
 
+  const handleClose = () => {
+    // close menu
+    dispatch(setMenuOpen(false))
+  }
   // when the menu is open, focus the first element
   // this is used to allow keyboard navigation
   useEffect(() => {
     if (isOpen) {
-      const first = dialogRef.current.querySelectorAll('button')[0]
+      const first = dialogRef.current.querySelectorAll('li, button')[0]
       first && first.focus()
     }
   }, [isOpen, dialogRef])
@@ -24,16 +27,18 @@ const MenuContainer = ({ id, target, children, ...props }) => {
   // then set the style of the dialog to position it there
 
   const pos = useMemo(() => {
-    let pos = { top: 0, right: 0 }
+    let pos = { top: 4, right: 0 }
     if (target) {
       const rect = target.getBoundingClientRect()
       pos = {
-        top: rect.top + rect.height + 8,
+        ...pos,
         right: window.innerWidth - rect.right,
       }
     }
     return pos
   }, [target])
+
+  if (!isOpen) return null
 
   const handleNavigate = (path) => {
     handleClose()
@@ -56,7 +61,7 @@ const MenuContainer = ({ id, target, children, ...props }) => {
 
   return (
     <Styled.Dialog
-      open={isOpen}
+      open={true}
       onClick={handleOnClick}
       onKeyDown={handleKeyDown}
       {...props}
