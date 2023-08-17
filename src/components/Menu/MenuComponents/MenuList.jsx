@@ -58,53 +58,52 @@ const MenuList = ({
       <Styled.Menu>
         {items.map((item, i) => {
           // if item is a node, return it
-          if (item.node) return item.node
+          if (item.node) return
+          ;<div key={i}>{item.node}</div>
 
           if (item?.id === 'divider') return <hr key={i} />
 
           const { label, icon, highlighted, onClick, link, items = [], id } = item
 
           return (
-            <>
-              <MenuItem
-                tabIndex={0}
-                key={id}
-                {...{ label, icon, highlighted, items }}
-                onClick={(e) =>
-                  items.length ? handleSubMenu(e, id, items) : handleClick(e, onClick, link)
+            <MenuItem
+              tabIndex={0}
+              key={`${id}-${i}`}
+              {...{ label, icon, highlighted, items }}
+              onClick={(e) =>
+                items.length ? handleSubMenu(e, id, items) : handleClick(e, onClick, link)
+              }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (items.length) {
+                    handleSubMenu(e, id, items)
+                  } else {
+                    handleClick(e, onClick, link)
+                  }
                 }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    if (items.length) {
-                      handleSubMenu(e, id, items)
-                    } else {
-                      handleClick(e, onClick, link)
-                    }
-                  }
-                  const isLastChild = !e.target.nextSibling
-                  if (e.key === 'Tab' && isLastChild && !e.shiftKey) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    //   when at bottom of list, tab goes to top
-                    const first = menuRef.current.querySelectorAll('li, button')[0]
-                    first && first.focus()
-                  }
-                  //   when a submenu is open, esc closes it and sets focus on the parent
-                  if (e.key === 'Escape' && subMenu && parentRef) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    parentRef.focus()
-                    onClose(id)
-                  }
-                }}
-                style={{ paddingRight: items.length ? '0' : '16px' }}
-                ref={(e) => (itemRefs.current[id] = e)}
-                onMouseEnter={(e) => handleSubMenu(e, id, items)}
-                onMouseLeave={(e) => handleSubMenu(e, id, [])}
-              >
-                {!!items.length && <Icon icon="arrow_right" style={{ marginLeft: 'auto' }} />}
-              </MenuItem>
-            </>
+                const isLastChild = !e.target.nextSibling
+                if (e.key === 'Tab' && isLastChild && !e.shiftKey) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  //   when at bottom of list, tab goes to top
+                  const first = menuRef.current.querySelectorAll('li, button')[0]
+                  first && first.focus()
+                }
+                //   when a submenu is open, esc closes it and sets focus on the parent
+                if (e.key === 'Escape' && subMenu && parentRef) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  parentRef.focus()
+                  onClose(id)
+                }
+              }}
+              style={{ paddingRight: items.length ? '0' : '16px' }}
+              ref={(e) => (itemRefs.current[id] = e)}
+              onMouseEnter={(e) => handleSubMenu(e, id, items)}
+              onMouseLeave={(e) => handleSubMenu(e, id, [])}
+            >
+              {!!items.length && <Icon icon="arrow_right" style={{ marginLeft: 'auto' }} />}
+            </MenuItem>
           )
         })}
       </Styled.Menu>
