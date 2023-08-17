@@ -65,8 +65,6 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
     [installers],
   )
 
-  if (isSpecial && !directDownload) return null
-
   const downloadFromUrl = (url, filename) => {
     const link = document.createElement('a')
     link.href = url
@@ -94,10 +92,8 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
   }
 
   const handleDirectDownload = () => {
-    downloadFromUrl(directDownload.url, directDownload.filename)
+    downloadFromUrl(directDownload?.url, directDownload?.filename)
   }
-
-  if (isSpecial && installersDownloaded.includes(directDownload.filename)) return null
 
   // group by platform
   const groupedInstallers = useMemo(() => {
@@ -129,9 +125,13 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
       }),
     }
   }, [groupedInstallers, directDownload])
+
   if (isMenu) {
     return menuItems
   }
+
+  if (isSpecial && !directDownload) return null
+  if (isSpecial && installersDownloaded?.includes(directDownload?.filename)) return null
 
   return (
     <Styled.Container>
