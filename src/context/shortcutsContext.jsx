@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
+import { useDispatch } from 'react-redux'
+import { setMenuOpen } from '../features/context'
 
 const ShortcutsContext = createContext()
 
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   // keep track of the last key pressed
   const [lastPressed, setLastPressed] = useState(null)
@@ -42,8 +45,11 @@ function ShortcutsProvider(props) {
     [navigate],
   )
 
-  const globalActions = []
-  // when these variables change, update shortcuts
+  const globalActions = useMemo(
+    () => [{ key: 'h+h', action: () => dispatch(setMenuOpen('help')) }],
+    [navigate],
+  )
+  // when these variables change, update shortcutshh
   const deps = []
 
   const defaultShortcuts = [...settings, ...manageProjects, ...globalActions]

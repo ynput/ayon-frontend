@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Spacer, UserImage } from '@ynput/ayon-react-components'
 
@@ -9,6 +9,7 @@ import ProjectMenu from './projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import { setMenuOpen as setMenuOpenAction } from '/src/features/context'
+import HelpMenu from './Menu/HelpMenu'
 
 const Header = () => {
   const dispatch = useDispatch()
@@ -18,6 +19,9 @@ const Header = () => {
   const navigate = useNavigate()
   // get user from redux store
   const user = useSelector((state) => state.user)
+
+  // BUTTON REFS used to attach menu to buttons
+  const helpButtonRef = useRef(null)
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -62,6 +66,13 @@ const Header = () => {
       </Spacer>
 
       <InstallerDownload isSpecial />
+      <HeaderButton
+        icon="help"
+        ref={helpButtonRef}
+        onClick={() => setMenuOpen('help')}
+        active={menuOpen === 'help'}
+      />
+      <HelpMenu target={helpButtonRef.current} />
       <Link to="/profile">
         <HeaderButton>
           <UserImage
