@@ -3,12 +3,16 @@ import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { toggleMenuOpen } from '../features/context'
+import { useLogOutMutation } from '../services/auth/getAuth'
 
 const ShortcutsContext = createContext()
 
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+
+  // logout
+  const [logout] = useLogOutMutation()
 
   // keep track of the last key pressed
   const [lastPressed, setLastPressed] = useState(null)
@@ -49,6 +53,7 @@ function ShortcutsProvider(props) {
     () => [
       { key: '1', action: () => dispatch(toggleMenuOpen('project')) },
       { key: '8', action: () => dispatch(toggleMenuOpen('help')) },
+      { key: '9+9', action: () => logout() },
       { key: '9', action: () => dispatch(toggleMenuOpen('user')) },
       { key: '0', action: () => dispatch(toggleMenuOpen('app')) },
     ],
