@@ -58,8 +58,9 @@ const MenuList = ({
       <Styled.Menu>
         {items.map((item, i) => {
           // if item is a node, return it
-          if (item.node) return
-          ;<div key={i}>{item.node}</div>
+          if (item.node) {
+            return <div key={i}>{item.node}</div>
+          }
 
           if (item?.id === 'divider') return <hr key={i} />
 
