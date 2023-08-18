@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { UserImage } from '@ynput/ayon-react-components'
 
-import Breadcrumbs from './breadcrumbs'
+import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
 import AppMenu from '../../components/Menu/Menus/AppMenu'
 import ProjectMenu from './projectMenu'

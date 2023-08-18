@@ -4,7 +4,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { InputText } from '@ynput/ayon-react-components'
-import HeaderButton from './HeaderButton'
+import * as Styled from './Breadcrumbs.styled'
+import HeaderButton from '../header/HeaderButton'
 
 import {
   setFocusedFolders,
@@ -16,40 +17,6 @@ import {
   setUri,
   setUriChanged,
 } from '/src/features/context'
-
-import styled from 'styled-components'
-
-const Crumbtainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-
-  ul {
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    margin: 0;
-    padding: 0;
-
-    & > li {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4em;
-
-      &:not(:last-child) {
-        &::after {
-          margin: 0 5px;
-          content: '/';
-        }
-      }
-    }
-  }
-`
 
 const uri2crumbs = (uri) => {
   if (!uri) return []
@@ -92,7 +59,7 @@ const UriEditor = ({ uri, setUri, onAccept, onCopy }) => {
   }
 
   return (
-    <Crumbtainer onBlur={onBlur}>
+    <Styled.Crumbtainer onBlur={onBlur}>
       <InputText
         ref={inputRef}
         value={uri}
@@ -117,7 +84,7 @@ const UriEditor = ({ uri, setUri, onAccept, onCopy }) => {
           e.preventDefault()
         }}
       />
-    </Crumbtainer>
+    </Styled.Crumbtainer>
   )
 }
 
@@ -276,7 +243,7 @@ const Breadcrumbs = () => {
   }
 
   return (
-    <Crumbtainer style={{ margin: 'auto' }}>
+    <Styled.Crumbtainer style={{ margin: 'auto' }}>
       <ul onClick={() => setEditMode(true)}>
         {uri2crumbs(ctxUri).map((crumb, idx) => (
           <li key={idx}>{crumb}</li>
@@ -284,7 +251,7 @@ const Breadcrumbs = () => {
       </ul>
       <HeaderButton icon="edit" onClick={() => setEditMode(true)} />
       <HeaderButton icon="content_copy" onClick={onCopy} />
-    </Crumbtainer>
+    </Styled.Crumbtainer>
   )
 }
 
