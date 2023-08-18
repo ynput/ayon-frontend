@@ -1,7 +1,9 @@
-import { Spacer } from '@ynput/ayon-react-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { NavLink, useNavigate, useParams } from 'react-router-dom'
+import * as Styled from './AppNavLinks.styled'
+import Typography from '/src/theme/typography.module.css'
 
 const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
@@ -32,30 +34,36 @@ const AppNavLinks = ({ links = [] }) => {
   }, [module, links, access])
 
   return (
-    <nav className="secondary">
-      {links.map((item, idx) => {
-        // if item has restrictions, check if user has access
-        let hasAccess = true
-        if (item.accessLevels?.length) {
-          hasAccess = item.accessLevels?.every((restriction) => access[restriction])
-        }
-        if (!hasAccess) return null
+    <Styled.NavBar className="secondary">
+      <ul>
+        {links.map((item, idx) => {
+          // if item has restrictions, check if user has access
+          let hasAccess = true
+          if (item.accessLevels?.length) {
+            hasAccess = item.accessLevels?.every((restriction) => access[restriction])
+          }
+          if (!hasAccess) return null
 
-        // return spacer if item is a spacer, or just the node
-        if (item.node) {
-          // if item is a node a spacer, return spacer
-          if (item.node === 'spacer') {
-            return <Spacer key={idx} />
-          } else return <div key={idx}>{item.node}</div>
-        }
+          // return spacer if item is a spacer, or just the node
+          if (item.node) {
+            // if item is a node a spacer, return spacer
+            if (item.node === 'spacer') {
+              return <Spacer key={idx} />
+            } else return <li key={idx}>{item.node}</li>
+          }
 
-        return (
-          <NavLink key={idx} to={item.path}>
-            {item.name}
-          </NavLink>
-        )
-      })}
-    </nav>
+          return (
+            <Styled.NavItem key={idx}>
+              <NavLink to={item.path}>
+                <Button variant="text" className={Typography.titleMedium} tabIndex={-1}>
+                  {item.name}
+                </Button>
+              </NavLink>
+            </Styled.NavItem>
+          )
+        })}
+      </ul>
+    </Styled.NavBar>
   )
 }
 
