@@ -21,6 +21,17 @@ export const NavBar = styled.nav`
     /* this hides the border of the navbar by putting the active tab border over it */
     position: relative;
     top: 1px;
+    margin-bottom: -1px;
+
+    /* overflow */
+    width: 100%;
+    overflow-x: auto;
+    /* hide scroll bar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 `
 
