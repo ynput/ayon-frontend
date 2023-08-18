@@ -93,7 +93,12 @@ const Header = () => {
       <MenuContainer id="user" target={userButtonRef.current}>
         <UserMenu user={user} />
       </MenuContainer>
-      <HeaderButton icon="apps" onClick={() => handleToggleMenu('app')} ref={appButtonRef} />
+      <HeaderButton
+        icon="apps"
+        onClick={() => handleToggleMenu('app')}
+        ref={appButtonRef}
+        active={menuOpen === 'app'}
+      />
       <MenuContainer id="app" target={appButtonRef.current}>
         <AppMenu user={user} />
       </MenuContainer>
