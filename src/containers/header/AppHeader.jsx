@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { UserImage } from '@ynput/ayon-react-components'
+import { Spacer, UserImage } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
@@ -68,7 +68,7 @@ const Header = () => {
       />
 
       <Breadcrumbs />
-
+      <Spacer />
       <InstallerDownload isSpecial />
       <HeaderButton
         icon="help"

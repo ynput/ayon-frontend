@@ -54,15 +54,10 @@ nav.primary {
   padding-right: 8px;
   padding-top: 4px;
   padding-bottom: 4px;
-}
-
-nav.primary {
   display: flex;
   flex-direction: row;
   align-items: center;
-}
-
-nav.primary {
+  position: relative;
   gap: 4px;
 }
 

@@ -44,50 +44,6 @@ const uri2crumbs = (uri) => {
   return crumbs
 }
 
-const UriEditor = ({ uri, setUri, onAccept, onCopy }) => {
-  const inputRef = useRef(null)
-
-  useEffect(() => {
-    inputRef.current.focus()
-    inputRef.current.select()
-  }, [])
-
-  const onBlur = () => {
-    setTimeout(() => {
-      onAccept()
-    }, 200)
-  }
-
-  return (
-    <Styled.Crumbtainer onBlur={onBlur}>
-      <InputText
-        ref={inputRef}
-        value={uri}
-        onChange={(e) => setUri(e.target.value)}
-        style={{ width: 800 }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') onAccept()
-        }}
-        onBlur={(e) => e.preventDefault()}
-      />
-      <HeaderButton
-        onClick={onAccept}
-        icon="my_location"
-        onBlur={(e) => {
-          e.preventDefault()
-        }}
-      />
-      <HeaderButton
-        onClick={onCopy}
-        icon="content_copy"
-        onBlur={(e) => {
-          e.preventDefault()
-        }}
-      />
-    </Styled.Crumbtainer>
-  )
-}
-
 const Breadcrumbs = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -95,6 +51,14 @@ const Breadcrumbs = () => {
   const [localUri, setLocalUri] = useState('')
   const [editMode, setEditMode] = useState(false)
   const ctxUri = useSelector((state) => state.context.uri) || ''
+
+  const inputRef = useRef(null)
+
+  //   when editing, select all text
+  useEffect(() => {
+    if (!editMode) return
+    inputRef.current.select()
+  }, [editMode])
 
   const focusEntities = (entities) => {
     const focusedFolders = []
@@ -136,7 +100,12 @@ const Breadcrumbs = () => {
     dispatch(setFocusedWorkfiles(focusedWorkfiles))
   }
 
-  const goThere = () => {
+  const goThere = (e) => {
+    e?.preventDefault()
+    setEditMode(false)
+    // blur input
+    inputRef.current.blur()
+
     if (!localUri) return
 
     if (['ayon', 'ayon+entity'].includes(localUri.split('://')[0])) {
@@ -225,33 +194,45 @@ const Breadcrumbs = () => {
     toast.success('Copied to clipboard')
   }
 
+  const handleKeyDown = (e) => {
+    // if escape, cancel edit mode
+    if (e.key === 'Escape') {
+      setEditMode(false)
+      setLocalUri(ctxUri)
+      inputRef.current.blur()
+    }
+  }
+
   useEffect(() => {
     if (ctxUri === localUri) return
     setLocalUri(ctxUri)
   }, [ctxUri])
 
-  if (editMode) {
-    return (
-      <UriEditor
-        uri={localUri}
-        setUri={setLocalUri}
-        onAccept={goThere}
-        onCancel={() => setEditMode(false)}
-        onCopy={onCopy}
-      />
-    )
-  }
+  const uriDisplay = uri2crumbs(ctxUri).join(' / ')
+  const inputValue = editMode ? localUri : uriDisplay
 
   return (
-    <Styled.Crumbtainer style={{ margin: 'auto' }}>
-      <ul onClick={() => setEditMode(true)}>
-        {uri2crumbs(ctxUri).map((crumb, idx) => (
-          <li key={idx}>{crumb}</li>
-        ))}
-      </ul>
-      <HeaderButton icon="edit" onClick={() => setEditMode(true)} />
-      <HeaderButton icon="content_copy" onClick={onCopy} />
-    </Styled.Crumbtainer>
+    <Styled.Wrapper>
+      <Styled.Crumbtainer>
+        <Styled.CrumbsForm onSubmit={goThere}>
+          <label data-value={inputValue}>
+            <InputText
+              value={inputValue}
+              onChange={(e) => setLocalUri(e.target.value)}
+              onBlur={() => setEditMode(false)}
+              onFocus={() => setEditMode(true)}
+              onKeyDown={handleKeyDown}
+              ref={inputRef}
+            />
+          </label>
+        </Styled.CrumbsForm>
+        <HeaderButton
+          icon="content_copy"
+          style={{ opacity: editMode ? 0 : 1, width: editMode ? 0 : 'auto' }}
+          onClick={onCopy}
+        />
+      </Styled.Crumbtainer>
+    </Styled.Wrapper>
   )
 }
 
