@@ -14,6 +14,15 @@ export const Dialog = styled.dialog`
   padding: 0;
 
   user-select: none;
+
+  overflow: auto;
+  /* remove scroll bar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  padding-bottom: 60px;
 `
 
 const DialogOpenAnimation = keyframes`
@@ -63,10 +72,20 @@ export const Section = styled.section`
 `
 export const MenuWrapper = styled.div`
   position: relative;
+  border-radius: 8px;
 
   /* sub menu */
   &.sub-menu {
     position: absolute;
+    bottom: 0;
+    overflow: auto;
+    padding-bottom: 60px;
+    /* remove scroll bar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
     /* margin-right: 16px; */
 
     border-radius: 8px;
