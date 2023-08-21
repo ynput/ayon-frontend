@@ -95,19 +95,26 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
     const filesToUpload = files.map(({ file }) => ({ data: file }))
     console.log('progress: uploading ' + type, filesToUpload)
     try {
-      let success
+      let success, res
       if (type === 'installer') {
-        await uploadInstallers({ files: filesToUpload, isNameEndpoint: true }).unwrap()
+        res = await uploadInstallers({ files: filesToUpload, isNameEndpoint: true }).unwrap()
         success = true
       } else if (type === 'package') {
-        await uploadPackages({ files: filesToUpload, isNameEndpoint: true }).unwrap()
+        res = await uploadPackages({ files: filesToUpload, isNameEndpoint: true }).unwrap()
         success = true
       } else success = false
+
+      if (res.some((r) => r?.error)) {
+        // filter and reduce down to an object with the error message
+        const error = res.filter((r) => r?.error)[0].error
+        throw error
+      }
+
       console.log('finished: uploaded ' + type)
       return success
     } catch (error) {
-      setErrorMessage(error)
-      console.error(error)
+      console.error(error?.detail || error)
+      setErrorMessage(error?.detail || error)
       return false
     }
   }
@@ -174,7 +181,13 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
     setIsUploading(true)
     try {
       const filesToUpload = files.map(({ file }) => ({ data: file }))
-      await uploadAddons({ files: filesToUpload }).unwrap()
+      const res = await uploadAddons({ files: filesToUpload }).unwrap()
+
+      if (res.some((r) => r?.error)) {
+        // filter and reduce down to an object with the error message
+        const error = res.filter((r) => r?.error)[0].error
+        throw error
+      }
 
       setIsUploading(false)
       setIsComplete(true)
@@ -185,10 +198,10 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
       // update addon list
       dispatch(ayonApi.util.invalidateTags(['bundleList', 'addonList']))
     } catch (error) {
-      console.log(error)
+      console.error(error)
       setIsUploading(false)
       setIsComplete(true)
-      setErrorMessage('ERROR: ' + error?.response?.data?.traceback)
+      setErrorMessage('ERROR: ' + (error?.response?.data?.traceback || error?.detail))
     }
   }
 
