@@ -49,6 +49,7 @@ export const NavItem = styled.li`
       background-color: unset;
       padding: 4px 16px;
       max-height: unset;
+      user-select: none;
 
       &:hover {
         background-color: var(--color-grey-01);
