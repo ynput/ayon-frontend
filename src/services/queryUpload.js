@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { onUploadFinished, onUploadProgress } from '../features/context'
 
-const queryUpload = async (arg, api, { endpoint, method = 'put' }) => {
+const queryUpload = async (arg, api, { endpoint, method = 'put', overwrite = false }) => {
   // isNameEndpoint is used to determine if the endpoint has the name of the file in the url
   const { files, isNameEndpoint } = arg
   const { dispatch } = api
@@ -38,6 +38,14 @@ const queryUpload = async (arg, api, { endpoint, method = 'put' }) => {
       if (file.url) {
         // file is actually a url
         fullEndpoint += `?url=${file.url}`
+      }
+
+      if (overwrite) {
+        if (file.url) {
+          fullEndpoint += `&overwrite=true`
+        } else {
+          fullEndpoint += `?overwrite=true`
+        }
       }
 
       const axiosMethod = method === 'put' ? axios.put : axios.post
