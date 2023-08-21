@@ -30,7 +30,7 @@ const icons = {
 
 export const ProgressInstall = ({
   installProgress = [],
-  release,
+  release = {},
   idsInstalling = [],
   selectedAddons = [],
   Header,
@@ -143,7 +143,7 @@ export const ProgressInstall = ({
             // find the most relevant event based on status
             const event = findLastEvent(events) || {}
 
-            const status = res ? event?.status || 'pending' : 'failed'
+            const status = event?.status || 'pending'
 
             const icon = icons[status] || 'hourglass_empty'
             const alreadyInstalled = res?.error?.status == 409
@@ -160,7 +160,7 @@ export const ProgressInstall = ({
                 icon={alreadyInstalled ? icons?.finished : icon}
                 error={
                   status === 'failed'
-                    ? event?.description || 'Unknown Error'
+                    ? event?.description
                     : (!alreadyInstalled && res?.error?.detail) || null
                 }
                 style={{ cursor: 'default', order: file?.type === 'addon' ? 2 : 1 }}
