@@ -45,7 +45,7 @@ export const BootstrapStart = ({
           )}
         </Styled.Connect>
 
-        <span className="more" onClick={() => onFinish(false)}>
+        <span className="more" onClick={() => onFinish(false, true)}>
           I know what I am doing, skip bootstrap.
         </span>
       </Styled.Login>

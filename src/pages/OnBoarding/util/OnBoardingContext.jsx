@@ -50,7 +50,7 @@ const createBundleFromRelease = (release, selectedAddons, bundleList) => {
   const addons = {}
   for (const name of selectedAddons) {
     // find addon in release
-    const addon = release.addons.find((addon) => addon.name === name)
+    const addon = release?.addons?.find((addon) => addon?.name === name)
     if (addon) {
       addons[name] = addon.version
     }
@@ -222,14 +222,16 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const [createBundle] = useCreateBundleMutation()
   // get bundle list so that we can make sure the bundle name is unique
   const [getBundleList] = useLazyGetBundleListQuery()
-  const handleFinish = async (restart) => {
+  const handleFinish = async (restart, skip = false) => {
     try {
-      // get bundle list
-      const bundleList = (await getBundleList({ archived: true }).unwrap()) || []
-      // first create the bundle from the release
-      const bundle = createBundleFromRelease(release, selectedAddons, bundleList)
+      if (!skip) {
+        // get bundle list
+        const bundleList = (await getBundleList({ archived: true }).unwrap()) || []
+        // first create the bundle from the release
+        const bundle = createBundleFromRelease(release, selectedAddons, bundleList)
 
-      await createBundle({ data: bundle }).unwrap()
+        await createBundle({ data: bundle }).unwrap()
+      }
       await abortOnboarding().unwrap()
 
       onFinish(restart)
