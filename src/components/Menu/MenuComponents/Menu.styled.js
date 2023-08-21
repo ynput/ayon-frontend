@@ -78,15 +78,6 @@ export const MenuWrapper = styled.div`
   &.sub-menu {
     position: absolute;
     bottom: 0;
-    overflow: auto;
-    padding-bottom: 60px;
-    /* remove scroll bar */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
-    /* margin-right: 16px; */
 
     border-radius: 8px;
     width: max-content;
