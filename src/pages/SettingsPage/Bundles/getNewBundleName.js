@@ -11,7 +11,7 @@ const getNewBundleName = (studioName, bundleList) => {
   const baseName = `${studioName || defaultStudio}-${year}-${month}-${day}`
 
   // check how many bundles names start with baseName
-  const matchingBundles = bundleList.filter((bundle) => bundle.name.startsWith(baseName))
+  const matchingBundles = bundleList.filter((bundle) => bundle?.name?.startsWith(baseName))
   const name = `${baseName}-${(matchingBundles.length + 1).toString().padStart(2, '0')}`
 
   return name
