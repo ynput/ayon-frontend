@@ -113,14 +113,15 @@ const ProjectList = ({
   }
 
   useEffect(() => {
+    if (isProjectManager || isLoading) return
     // set focus to table
-    if (tableRef.current && !isLoading) {
+    if (tableRef.current) {
       const tableEl = tableRef.current.getTable()
       const focusableEl = tableEl?.querySelector('.p-selectable-row')
 
       if (focusableEl) focusableEl.focus()
     }
-  }, [tableRef, isLoading])
+  }, [tableRef, isLoading, isProjectManager])
 
   // localstorage collapsible state
   let [collapsed, setCollapsed] = useLocalStorage('projectListCollapsed', false)

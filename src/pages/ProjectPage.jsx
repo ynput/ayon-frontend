@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
-import { useParams, NavLink, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Spacer, Button } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 
 import BrowserPage from './BrowserPage'
 import EditorPage from './EditorPage'
@@ -16,8 +16,9 @@ import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import { Dialog } from 'primereact/dialog'
+import AppNavLinks from '../containers/header/AppNavLinks'
 
-const ProjectContexInfo = () => {
+const ProjectContextInfo = () => {
   /**
    * Show a project context in a dialog
    * this is for develompent only
@@ -54,7 +55,7 @@ const ProjectPage = () => {
   )
 
   const {
-    data: addonsData,
+    data: addonsData = [],
     isLoading: addonsLoading,
     isError: addonsIsError,
     refetch: refetchAddons,
@@ -108,6 +109,32 @@ const ProjectPage = () => {
   usePubSub('client.connected', handlePubSub)
   usePubSub('entity.project', handlePubSub)
 
+  const links = useMemo(
+    () => [
+      { name: 'Browser', path: `/projects/${projectName}/browser`, module: 'browser' },
+      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor' },
+      { name: 'Workfiles', path: `/projects/${projectName}/workfiles`, module: 'workfiles' },
+      ...addonsData.map((addon) => ({
+        name: addon.title,
+        path: `/projects/${projectName}/addon/${addon.name}`,
+        module: addon.name,
+      })),
+      { node: 'spacer' },
+      {
+        node: (
+          <Button
+            className="transparent"
+            icon="more_horiz"
+            onClick={() => {
+              setShowContextDialog(true)
+            }}
+          />
+        ),
+      },
+    ],
+    [addonsData, projectName],
+  )
+
   //
   // Render page
   //
@@ -155,26 +182,9 @@ const ProjectPage = () => {
           overflow: 'auto',
         }}
       >
-        {showContextDialog && <ProjectContexInfo />}
+        {showContextDialog && <ProjectContextInfo />}
       </Dialog>
-      <nav className="secondary">
-        <NavLink to={`/projects/${projectName}/browser`}>Browser</NavLink>
-        <NavLink to={`/projects/${projectName}/editor`}>Editor</NavLink>
-        <NavLink to={`/projects/${projectName}/workfiles`}>Workfiles</NavLink>
-        {addonsData.map((addon) => (
-          <NavLink to={`/projects/${projectName}/addon/${addon.name}`} key={addon.name}>
-            {addon.title}
-          </NavLink>
-        ))}
-        <Spacer />
-        <Button
-          className="transparent"
-          icon="more_horiz"
-          onClick={() => {
-            setShowContextDialog(true)
-          }}
-        />
-      </nav>
+      <AppNavLinks links={links} />
       {child}
     </>
   )

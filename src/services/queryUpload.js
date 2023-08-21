@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { onUploadFinished, onUploadProgress } from '../features/context'
 
-const queryUpload = async (arg, api, { endpoint, method = 'put' }) => {
+const queryUpload = async (arg, api, { endpoint, method = 'put', overwrite = false }) => {
   // isNameEndpoint is used to determine if the endpoint has the name of the file in the url
   const { files, isNameEndpoint } = arg
   const { dispatch } = api
@@ -40,18 +40,27 @@ const queryUpload = async (arg, api, { endpoint, method = 'put' }) => {
         fullEndpoint += `?url=${file.url}`
       }
 
+      if (overwrite) {
+        if (file.url) {
+          fullEndpoint += `&overwrite=true`
+        } else {
+          fullEndpoint += `?overwrite=true`
+        }
+      }
+
       const axiosMethod = method === 'put' ? axios.put : axios.post
 
       const res = await axiosMethod(fullEndpoint, file.data, opts)
       index++
 
       if (res.data) {
-        results.push({ eventId: res.data.eventId })
+        results.push({ eventId: res.data.eventId, file })
       }
     } catch (error) {
       console.error(error)
       results.push({
         eventId: null,
+        file,
         error:
           { detail: error?.response?.data?.detail, status: error?.response?.status } ||
           'Upload error',
