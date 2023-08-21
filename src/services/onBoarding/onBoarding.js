@@ -66,6 +66,7 @@ const onBoarding = ayonApi.injectEndpoints({
             endpoint: '/api/desktop/installers',
             method: 'post',
             fromUrl: true,
+            overwrite: true,
           })
 
           // then, upload all dep packages
@@ -73,6 +74,7 @@ const onBoarding = ayonApi.injectEndpoints({
             endpoint: '/api/desktop/dependency_packages',
             method: 'post',
             fromUrl: true,
+            overwrite: true,
           })
 
           // wait for all promises to resolve
