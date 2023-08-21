@@ -247,11 +247,16 @@ const TextWidget = (props) => {
     opts.onChange = (e) => {
       onChange(e.target.value)
     }
-
-    //
-    // Default text input
-    //
+  } else if (props.schema.widget === 'hierarchy') {
+    Input = InputText
+    opts.value = value
+    opts.onBlur = onChangeCommit
+    opts.placeholder = `Hierarchy for ${props.formContext?.headerProjectName}`
+    opts.onChange = (e) => {
+      onChange(e.target.value)
+    }
   } else {
+    // Default text input
     Input = InputText
     opts.value = value
     opts.onBlur = onChangeCommit

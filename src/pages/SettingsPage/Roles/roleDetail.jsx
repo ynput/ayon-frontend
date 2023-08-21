@@ -75,6 +75,9 @@ const RoleDetail = ({ projectName, role, onChange }) => {
         formData={originalData}
         onChange={setNewData}
         level={isProjectLevel ? 'project' : 'studio'}
+        context={{
+          headerProjectName: projectName,
+        }}
       />
     )
   }, [schema, originalData])
