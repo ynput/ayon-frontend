@@ -123,6 +123,10 @@ export const Item = styled.li`
     background-color: var(--md-sys-color-surface-container-highest);
   }
 
+  .more {
+    margin-left: auto;
+  }
+
   /* highlighted button */
   &.highlighted {
     background-color: var(--md-sys-color-secondary-container);

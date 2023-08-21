@@ -60,8 +60,20 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
   }, [foundInstallerVersions])
 
   // put any direct downloads first and then use semver to sort the rest
-  const sortedInstallers = useMemo(
-    () => [...installers].sort((a, b) => (b.filename === directDownload?.filename ? 1 : -1)),
+  // if showAll is true, show all installers
+  // if not showAll, only show installers that are in the production bundle
+  const sortedFoundInstallers = useMemo(
+    () =>
+      [...foundInstallerVersions].sort((a, b) =>
+        b.filename === directDownload?.filename ? 1 : -1,
+      ),
+    [installers],
+  )
+  const sortedOtherInstallers = useMemo(
+    () =>
+      [...installers]
+        .sort((a, b) => (b.filename === directDownload?.filename ? 1 : -1))
+        .filter((installer) => installer.version !== installerVersion),
     [installers],
   )
 
@@ -96,11 +108,20 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
   }
 
   // group by platform
-  const groupedInstallers = useMemo(() => {
+  const foundGroupedInstallers = useMemo(() => {
     const grouped = {}
-    sortedInstallers.forEach((installer) => {
-      if (!grouped[installer.platform]) grouped[installer.platform] = []
-      grouped[installer.platform].push(installer)
+    sortedFoundInstallers.forEach((installer) => {
+      if (!grouped[installer.version]) grouped[installer.version] = []
+      grouped[installer.version].push(installer)
+    })
+    return grouped
+  }, [installers])
+
+  const otherGroupedInstallers = useMemo(() => {
+    const grouped = {}
+    sortedOtherInstallers.forEach((installer) => {
+      if (!grouped[installer.version]) grouped[installer.version] = []
+      grouped[installer.version].push(installer)
     })
     return grouped
   }, [installers])
@@ -112,10 +133,12 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
       label: 'Download Installer',
       icon: 'install_desktop',
       disableClose: true,
-      items: Object.entries(groupedInstallers).flatMap(([platform, installers = []], i) => {
-        const items = installers.map((installer) => ({
+      items: Object.entries(foundGroupedInstallers).flatMap(([, installers = []], i) => {
+        const items = installers.map((installer = {}) => ({
           id: installer.filename,
-          label: `${platform === 'darwin' ? 'macOS' : platform} - ${installer.filename}`,
+          label: `${installer.filename} - ${
+            installer.platform === 'darwin' ? 'macOS' : installer.platform
+          }`,
           highlighted: directDownload?.filename === installer.filename,
           onClick: () => handleDownloadClick(installer.sources, installer.filename),
         }))
@@ -124,7 +147,32 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
         return items
       }),
     }
-  }, [groupedInstallers, directDownload])
+  }, [foundGroupedInstallers, directDownload])
+
+  menuItems.items.push(
+    ...[
+      {
+        id: 'divider',
+      },
+      {
+        id: 'all',
+        label: 'All Installers',
+        items: Object.entries(otherGroupedInstallers).flatMap(([, installers = []], i) => {
+          const items = installers.map((installer = {}) => ({
+            id: installer.filename,
+            label: `${installer.filename} - ${
+              installer.platform === 'darwin' ? 'macOS' : installer.platform
+            }`,
+            highlighted: directDownload?.filename === installer.filename,
+            onClick: () => handleDownloadClick(installer.sources, installer.filename),
+          }))
+          if (i !== 0) items.unshift({ id: 'divider' })
+
+          return items
+        }),
+      },
+    ],
+  )
 
   if (isMenu) {
     return menuItems
@@ -148,7 +196,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
         <Styled.InstallerDropdown
           $isSpecial={isSpecial}
           $noDirect={!directDownload}
-          options={sortedInstallers}
+          options={sortedFoundInstallers}
           value={[]}
           valueTemplate={() => (
             <Styled.Value>

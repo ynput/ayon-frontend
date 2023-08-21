@@ -64,7 +64,7 @@ const MenuList = ({
 
           if (item?.id === 'divider') return <hr key={i} />
 
-          const { label, icon, highlighted, onClick, link, items = [], id } = item
+          const { label, icon, highlighted, onClick, link, items = [], id, disableClose } = item
 
           return (
             <MenuItem
@@ -72,7 +72,9 @@ const MenuList = ({
               key={`${id}-${i}`}
               {...{ label, icon, highlighted, items }}
               onClick={(e) =>
-                items.length ? handleSubMenu(e, id, items) : handleClick(e, onClick, link)
+                items.length
+                  ? handleSubMenu(e, id, items)
+                  : handleClick(e, onClick, link, disableClose)
               }
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
