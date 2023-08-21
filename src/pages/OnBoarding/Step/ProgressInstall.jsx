@@ -59,22 +59,26 @@ export const ProgressInstall = ({
 
   const progressBars = useMemo(() => {
     const installers = []
-    for (const installer of release.installers) {
-      const sources = installer?.sources?.filter(({ type, url }) => type === 'url' && !!url)
-      installers.push(
-        ...sources.map(({ url }) => ({ url, name: installer?.filename, type: 'installer' })),
-      )
+    if (release?.installers?.length) {
+      for (const installer of release.installers) {
+        const sources = installer?.sources?.filter(({ type, url }) => type === 'url' && !!url)
+        installers.push(
+          ...sources.map(({ url }) => ({ url, name: installer?.filename, type: 'installer' })),
+        )
+      }
     }
 
     const depPackages = []
-    for (const depPackage of release.dependencyPackages) {
-      const sources = depPackage.sources.filter(({ type, url }) => type === 'url' && !!url)
-      depPackages.push(
-        ...sources.map(({ url }) => ({ url, name: depPackage?.filename, type: 'package' })),
-      )
+    if (release?.dependencyPackages?.length) {
+      for (const depPackage of release.dependencyPackages) {
+        const sources = depPackage.sources.filter(({ type, url }) => type === 'url' && !!url)
+        depPackages.push(
+          ...sources.map(({ url }) => ({ url, name: depPackage?.filename, type: 'package' })),
+        )
+      }
     }
 
-    const addons = release.addons.map(({ url, name }) => ({ url, name, type: 'addon' }))
+    const addons = release?.addons?.map(({ url, name }) => ({ url, name, type: 'addon' })) || []
 
     return [...addons, ...installers, ...depPackages]
   }, [release])

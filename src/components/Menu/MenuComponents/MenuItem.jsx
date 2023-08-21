@@ -13,7 +13,7 @@ const MenuItem = forwardRef(({ label, icon, highlighted, items = [], ...props },
     >
       {icon && <Icon icon={icon} />}
       <span>{label}</span>
-      {!!items.length && <Icon icon="arrow_right" />}
+      {!!items.length && <Icon icon="arrow_right" className="more" />}
     </Styled.Item>
   )
 })

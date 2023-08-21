@@ -6,7 +6,7 @@ import MenuList from './MenuList'
 const Menu = ({ menu = [], onClose, footer = '', navigate, ...props }) => {
   const [subMenus, setSubMenus] = useState([])
   //   When a menu item is clicked, the following happens:
-  const handleClick = (e, onClick, url) => {
+  const handleClick = (e, onClick, url, disableClose) => {
     if (url) {
       if (url.startsWith('http')) {
         window.open(url, '_blank')
@@ -17,7 +17,8 @@ const Menu = ({ menu = [], onClose, footer = '', navigate, ...props }) => {
     }
 
     onClick && onClick(e)
-    onClose && onClose()
+
+    !disableClose && onClose && onClose()
   }
 
   const onMenuEnter = (e, menu = {}) => {
@@ -73,6 +74,7 @@ const Menu = ({ menu = [], onClose, footer = '', navigate, ...props }) => {
           subMenu
           onSubMenu={handleSubMenu}
           onClose={() => setSubMenus(subMenus.filter((m) => m.id !== menu.id))}
+          onChange={onMenuEnter}
         />
       ))}
     </>

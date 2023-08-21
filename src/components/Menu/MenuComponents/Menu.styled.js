@@ -14,6 +14,15 @@ export const Dialog = styled.dialog`
   padding: 0;
 
   user-select: none;
+
+  overflow: auto;
+  /* remove scroll bar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  padding-bottom: 60px;
 `
 
 const DialogOpenAnimation = keyframes`
@@ -63,11 +72,12 @@ export const Section = styled.section`
 `
 export const MenuWrapper = styled.div`
   position: relative;
+  border-radius: 8px;
 
   /* sub menu */
   &.sub-menu {
     position: absolute;
-    /* margin-right: 16px; */
+    bottom: 0;
 
     border-radius: 8px;
     width: max-content;
@@ -121,6 +131,10 @@ export const Item = styled.li`
 
   :hover {
     background-color: var(--md-sys-color-surface-container-highest);
+  }
+
+  .more {
+    margin-left: auto;
   }
 
   /* highlighted button */
