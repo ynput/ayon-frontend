@@ -4,8 +4,9 @@ import styled from 'styled-components'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch, useSelector } from 'react-redux'
 import { useCreateInstallerMutation, useUploadInstallersMutation } from '/src/services/installers'
-import { useUploadAddonsMutation } from '/src/services/addons/updateAddons'
 import { useUploadDependencyPackagesMutation } from '/src/services/dependencyPackages'
+import { onUploadFinished, onUploadProgress } from '/src/features/context'
+import axios from 'axios'
 
 const StyledFooter = styled.div`
   display: flex;
@@ -50,8 +51,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
   const [uploadInstallers] = useUploadInstallersMutation()
   // upload packages
   const [uploadPackages] = useUploadDependencyPackagesMutation()
-  // upload addons
-  const [uploadAddons] = useUploadAddonsMutation()
+
   let endPoint = 'installers'
   if (type === 'package') endPoint = 'dependency_packages'
 
@@ -177,18 +177,31 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
     onInstall(type)
   }
 
+  const abortController = new AbortController()
+  const cancelToken = axios.CancelToken
+  const cancelTokenSource = cancelToken.source()
+
   const handleAddonInstall = async () => {
+    let index = 0
     setIsUploading(true)
     try {
-      const filesToUpload = files.map(({ file }) => ({ data: file }))
-      const res = await uploadAddons({ files: filesToUpload }).unwrap()
+      for (const file of files) {
+        const opts = {
+          signal: abortController.signal,
+          cancelToken: cancelTokenSource.token,
+          onUploadProgress: (e) =>
+            dispatch(
+              onUploadProgress({
+                progress: { loaded: e.loaded, total: e.total },
+                index: index + 1,
+                filesTotal: files.length,
+              }),
+            ),
+        }
 
-      if (res.some((r) => r?.error)) {
-        // filter and reduce down to an object with the error message
-        const error = res.filter((r) => r?.error)[0].error
-        throw error
+        await axios.post('/api/addons/install', file.file, opts)
+        index++
       }
-
       setIsUploading(false)
       setIsComplete(true)
 
@@ -198,10 +211,11 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
       // update addon list
       dispatch(ayonApi.util.invalidateTags(['bundleList', 'addonList']))
     } catch (error) {
-      console.error(error)
+      console.log(error)
       setIsUploading(false)
       setIsComplete(true)
-      setErrorMessage('ERROR: ' + (error?.response?.data?.traceback || error?.detail))
+      dispatch(onUploadFinished())
+      setErrorMessage('ERROR: ' + error?.response?.data?.traceback)
     }
   }
 
