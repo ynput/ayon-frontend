@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
-import { useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
+import { toggleMenuOpen } from '../features/context'
 
 const ShortcutsContext = createContext()
 
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
-  const projectMenuOpen = useSelector((state) => state.context.projectMenuOpen)
-  const userMenuOpen = useSelector((state) => state.context.userMenuOpen)
   // keep track of the last key pressed
   const [lastPressed, setLastPressed] = useState(null)
   // disable shortcuts
@@ -45,9 +45,17 @@ function ShortcutsProvider(props) {
     [navigate],
   )
 
-  const globalActions = []
-  // when these variables change, update shortcuts
-  const deps = [projectMenuOpen, userMenuOpen]
+  const globalActions = useMemo(
+    () => [
+      { key: '1', action: () => dispatch(toggleMenuOpen('project')) },
+      { key: '8', action: () => dispatch(toggleMenuOpen('help')) },
+      { key: '9', action: () => dispatch(toggleMenuOpen('user')) },
+      { key: '0', action: () => dispatch(toggleMenuOpen('app')) },
+    ],
+    [navigate],
+  )
+  // when these variables change, update shortcutshh
+  const deps = []
 
   const defaultShortcuts = [...settings, ...manageProjects, ...globalActions]
 
@@ -85,7 +93,7 @@ function ShortcutsProvider(props) {
   }
 
   // listen for key presses
-  useKeyPress(handleKeyPress, [projectMenuOpen])
+  useKeyPress(handleKeyPress, [])
 
   // create function that can be used in components to add shortcuts, when the component mounts
   // and removes them when it unmounts

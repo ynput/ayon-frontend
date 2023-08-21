@@ -12,6 +12,7 @@ const YnputConnectButton = React.forwardRef(
         $disabled={props.disabled || isLoading}
         $isLoading={isLoading}
         $isOpen={isOpen}
+        style={{ borderRadius: 8 }}
       >
         <img
           src="/ynput-connect-logo.svg"

@@ -149,7 +149,7 @@ export const ProgressInstall = ({
             let currentProgress = progress[url]
             const isFinished = status === 'finished' || alreadyInstalled
             if (isFinished) currentProgress = 100
-
+            if (status === 'failed') currentProgress = 0
             const scale = Math.round((currentProgress / 100) * 100) / 100
 
             return (

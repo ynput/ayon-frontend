@@ -73,7 +73,7 @@ export const Container = styled.div`
   flex-direction: column;
   align-items: center;
   background-color: var(--md-sys-color-tertiary-container);
-  border-radius: var(--base-input-border-radius);
+  border-radius: 8px;
   gap: 0;
 `
 

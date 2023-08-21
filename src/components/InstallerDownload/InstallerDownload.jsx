@@ -6,7 +6,7 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 import * as Styled from './InstallerDownload.styled'
 import { useGetBundleListQuery } from '/src/services/bundles'
 
-const InstallerDownload = ({ isSpecial }) => {
+const InstallerDownload = ({ isSpecial, isMenu }) => {
   const [installersDownloaded, setInstallersDownloaded] = useLocalStorage(
     'installers-downloaded',
     [],
@@ -65,8 +65,6 @@ const InstallerDownload = ({ isSpecial }) => {
     [installers],
   )
 
-  if (isSpecial && !directDownload) return null
-
   const downloadFromUrl = (url, filename) => {
     const link = document.createElement('a')
     link.href = url
@@ -94,10 +92,46 @@ const InstallerDownload = ({ isSpecial }) => {
   }
 
   const handleDirectDownload = () => {
-    downloadFromUrl(directDownload.url, directDownload.filename)
+    downloadFromUrl(directDownload?.url, directDownload?.filename)
   }
 
-  if (isSpecial && installersDownloaded.includes(directDownload.filename)) return null
+  // group by platform
+  const groupedInstallers = useMemo(() => {
+    const grouped = {}
+    sortedInstallers.forEach((installer) => {
+      if (!grouped[installer.platform]) grouped[installer.platform] = []
+      grouped[installer.platform].push(installer)
+    })
+    return grouped
+  }, [installers])
+
+  // instead of returning a node, return an object with a node property and sub menus
+  const menuItems = useMemo(() => {
+    return {
+      id: 'installer',
+      label: 'Download Installer',
+      icon: 'install_desktop',
+      disableClose: true,
+      items: Object.entries(groupedInstallers).flatMap(([platform, installers = []], i) => {
+        const items = installers.map((installer) => ({
+          id: installer.filename,
+          label: `${platform === 'darwin' ? 'macOS' : platform} - ${installer.filename}`,
+          highlighted: directDownload?.filename === installer.filename,
+          onClick: () => handleDownloadClick(installer.sources, installer.filename),
+        }))
+        if (i !== 0) items.unshift({ id: 'divider' })
+
+        return items
+      }),
+    }
+  }, [groupedInstallers, directDownload])
+
+  if (isMenu) {
+    return menuItems
+  }
+
+  if (isSpecial && !directDownload) return null
+  if (isSpecial && installersDownloaded?.includes(directDownload?.filename)) return null
 
   return (
     <Styled.Container>
@@ -140,7 +174,7 @@ const InstallerDownload = ({ isSpecial }) => {
               </span>
             </Styled.Item>
           )}
-          listStyle={{ left: isSpecial ? 28 : 0 }}
+          listStyle={{ left: isSpecial ? 28 : 0, backgroundColor: 'red' }}
         />
       )}
       {isSpecial && (
