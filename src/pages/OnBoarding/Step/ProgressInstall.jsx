@@ -44,8 +44,8 @@ export const ProgressInstall = ({
   //   every time status changes, scroll to eventId
   useEffect(() => {
     // find first status === 'in_progress'
-    const event = installProgress.find((event) => event.status === 'in_progress')
-    const url = idsInstalling.find((res) => res.eventId === event?.id)?.file?.url
+    const event = installProgress.find((event) => event?.status === 'in_progress')
+    const url = idsInstalling.find((res) => res?.eventId === event?.id)?.file?.url
 
     if (!url) return
     const element = refs.current[url]
@@ -60,9 +60,9 @@ export const ProgressInstall = ({
   const progressBars = useMemo(() => {
     const installers = []
     for (const installer of release.installers) {
-      const sources = installer.sources.filter(({ type, url }) => type === 'url' && !!url)
+      const sources = installer?.sources?.filter(({ type, url }) => type === 'url' && !!url)
       installers.push(
-        ...sources.map(({ url }) => ({ url, name: installer.filename, type: 'installer' })),
+        ...sources.map(({ url }) => ({ url, name: installer?.filename, type: 'installer' })),
       )
     }
 
@@ -70,7 +70,7 @@ export const ProgressInstall = ({
     for (const depPackage of release.dependencyPackages) {
       const sources = depPackage.sources.filter(({ type, url }) => type === 'url' && !!url)
       depPackages.push(
-        ...sources.map(({ url }) => ({ url, name: depPackage.filename, type: 'package' })),
+        ...sources.map(({ url }) => ({ url, name: depPackage?.filename, type: 'package' })),
       )
     }
 
@@ -81,12 +81,12 @@ export const ProgressInstall = ({
 
   useEffect(() => {
     const allFinished = installProgress.every(
-      (event) => event.status === 'finished' || event.status === 'failed',
+      (event) => event?.status === 'finished' || event.status === 'failed',
     )
     if (!allFinished) return
     // we use a timeout to fix flickering at the start
     const id = setTimeout(() => {
-      setIsFinished(allFinished && !!installProgress.length)
+      setIsFinished(allFinished && !!installProgress?.length)
     }, 1000)
 
     return () => clearTimeout(id)
@@ -94,7 +94,7 @@ export const ProgressInstall = ({
 
   // reduce progressBars down to {url: progress || 0}
   const progressInit = progressBars.reduce((acc, file) => {
-    acc[file.url] = 0
+    acc[file?.url] = 0
     return acc
   }, {})
 
@@ -102,20 +102,21 @@ export const ProgressInstall = ({
 
   // as progress data changes we update the progress state for each url
   useEffect(() => {
-    if (!installProgress.length) return
+    if (!installProgress?.length) return
     const newProgress = { ...progress }
 
     for (const bar in progress) {
       const url = bar
-      const res = idsInstalling.find((res) => res.file.url === url)
+      const res = idsInstalling.find((res) => res?.file?.url === url)
+      if (!res) continue
       // find event by id by url
       const eventId = res?.eventId
       // find all event messages for this event
-      const events = installProgress.filter((event) => event.id === eventId)
+      const events = installProgress.filter((event) => event?.id === eventId)
       const event = findLastEvent(events)
       if (!event) continue
       const lastProgressValue = newProgress[bar]
-      const newProgressValue = event.progress
+      const newProgressValue = event?.progress
       // prevents progress from going backwards
       if (!newProgressValue || newProgressValue < lastProgressValue) continue
       newProgress[bar] = newProgressValue
@@ -130,19 +131,19 @@ export const ProgressInstall = ({
       <Header>{title}</Header>
       <Styled.PresetsContainer style={{ overflow: 'auto' }}>
         {progressBars
-          .filter((file) => file.type !== 'addon' || selectedAddons.includes(file.name))
+          .filter((file) => file?.type !== 'addon' || selectedAddons.includes(file?.name))
           .map((file) => {
-            const url = file.url
-            const res = idsInstalling.find((res) => res.file.url === url)
+            const url = file?.url
+            const res = idsInstalling.find((res) => res?.file?.url === url)
             // find event by id by url
             const eventId = res?.eventId
             // find all event messages for this event
-            const events = installProgress.filter((event) => event.id === eventId)
+            const events = installProgress.filter((event) => event?.id === eventId)
 
             // find the most relevant event based on status
-            const event = findLastEvent(events)
+            const event = findLastEvent(events) || {}
 
-            const status = event?.status || 'pending'
+            const status = res ? event?.status || 'pending' : 'failed'
 
             const icon = icons[status] || 'hourglass_empty'
             const alreadyInstalled = res?.error?.status == 409
@@ -154,15 +155,15 @@ export const ProgressInstall = ({
 
             return (
               <AddonCardProgress
-                key={file.name}
-                name={file.name}
-                icon={alreadyInstalled ? icons.finished : icon}
+                key={file?.name}
+                name={file?.name}
+                icon={alreadyInstalled ? icons?.finished : icon}
                 error={
                   status === 'failed'
-                    ? event.description
+                    ? event?.description || 'Unknown Error'
                     : (!alreadyInstalled && res?.error?.detail) || null
                 }
-                style={{ cursor: 'default', order: file.type === 'addon' ? 2 : 1 }}
+                style={{ cursor: 'default', order: file?.type === 'addon' ? 2 : 1 }}
                 ref={(el) => url && (refs.current[url] = el)}
                 // progress styled props
                 $isSyncing={status === 'in_progress'}
