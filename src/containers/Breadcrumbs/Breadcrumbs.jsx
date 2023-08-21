@@ -209,7 +209,7 @@ const Breadcrumbs = () => {
   }, [ctxUri])
 
   const uriDisplay = uri2crumbs(ctxUri).join(' / ')
-  const inputValue = editMode ? localUri : uriDisplay
+  const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'
 
   return (
     <Styled.Wrapper>
@@ -226,11 +226,13 @@ const Breadcrumbs = () => {
             />
           </label>
         </Styled.CrumbsForm>
-        <HeaderButton
-          icon="content_copy"
-          style={{ opacity: editMode ? 0 : 1, width: editMode ? 0 : 'auto' }}
-          onClick={onCopy}
-        />
+        {uriDisplay && localUri && (
+          <HeaderButton
+            icon="content_copy"
+            style={{ opacity: editMode ? 0 : 1, width: editMode ? 0 : 'auto' }}
+            onClick={onCopy}
+          />
+        )}
       </Styled.Crumbtainer>
     </Styled.Wrapper>
   )
