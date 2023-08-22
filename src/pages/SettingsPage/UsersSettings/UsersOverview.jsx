@@ -1,5 +1,5 @@
 import React from 'react'
-import PropTypes from 'prop-types'
+
 import { Button, Section, Panel } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 import UserTile from './UserTile'
@@ -106,14 +106,6 @@ const UsersOverview = ({ userList = [], onUserSelect, onTotal, selectedProjects,
       </Panel>
     </Section>
   )
-}
-
-UsersOverview.propTypes = {
-  userList: PropTypes.array.isRequired,
-  onNewUser: PropTypes.func.isRequired,
-  onUserSelect: PropTypes.func,
-  onTotal: PropTypes.func,
-  selectedProjects: PropTypes.array,
 }
 
 export default UsersOverview

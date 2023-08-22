@@ -10,6 +10,7 @@ import {
 import LoadingPage from '/src/pages/LoadingPage'
 import * as Styled from './YnputConnect.styled'
 import { useLocation } from 'react-router'
+import { useSelector } from 'react-redux'
 
 const YnputConnector = ({
   onConnection,
@@ -32,8 +33,9 @@ const YnputConnector = ({
   const [isOpen, setIsOpen] = useState(initIsOpen)
   const [queryKey, setQueryKey] = useQueryParam('key', withDefault(StringParam, ''))
   const { data: connectData, isLoading, isError } = useGetYnputConnectionsQuery()
+  const currentUser = useSelector((state) => state.user)
 
-  const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation()
+  const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation({ skip: !currentUser })
   const [disconnect] = useDiscountYnputMutation()
 
   useEffect(() => {

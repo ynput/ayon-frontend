@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { OnBoardingContext } from './OnBoardingContext'
 import * as Styled from './OnBoardingStep.styled'
 import FooterButtons from './FooterButtons'
 import LoadingPage from '../../LoadingPage'
-import { Button } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
+import { toast } from 'react-toastify'
 
 // this wraps all steps, provides context and makes sure they are rendered in order
 const StepWrapper = ({ children }) => {
@@ -54,16 +54,14 @@ const StepWrapper = ({ children }) => {
     }
   })
 
-  const [showCancel, setShowCancel] = useState(false)
-
   const showLoading = isLoadingConnect || isConnecting
 
-  // after 30 seconds show cancel button
+  // after 10 seconds timeout
   useEffect(() => {
-    setShowCancel(false)
     const timeout = setTimeout(() => {
-      setShowCancel(true)
-    }, 30000)
+      toast.error('Connection timed out')
+      setIsConnecting(false)
+    }, 10000)
     return () => clearTimeout(timeout)
   }, [showLoading])
 
@@ -71,9 +69,7 @@ const StepWrapper = ({ children }) => {
     <>
       <Styled.StepPanel>{filteredChildren}</Styled.StepPanel>
       {showLoading && (
-        <LoadingPage message={isConnecting && 'Connecting Ynput Account...'}>
-          {showCancel && <Button onClick={() => setIsConnecting(false)}>Cancel</Button>}
-        </LoadingPage>
+        <LoadingPage message={isConnecting && 'Connecting Ynput Account...'}></LoadingPage>
       )}
     </>
   )
