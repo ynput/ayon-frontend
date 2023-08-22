@@ -54,7 +54,7 @@ const Detail = () => {
     }
   }, [isFetching, entitiesData, ids])
 
-  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined })
+  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
   const isVersion = type === 'version'
 

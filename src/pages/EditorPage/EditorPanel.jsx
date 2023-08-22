@@ -50,7 +50,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
   const folders = useSelector((state) => state.project.folders)
 
   // RTK QUERY
-  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined })
+  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
   // STATES
   // used to throttle changes to redux changes state and keep input fast
