@@ -147,10 +147,31 @@ export const Item = styled.li`
 `
 
 export const Footer = styled.footer`
+  position: relative;
   display: flex;
   padding: 8px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   align-self: stretch;
+
+  user-select: text;
+
+  button {
+    display: none;
+
+    position: absolute;
+    right: 2px;
+    border-radius: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
+  /* hover show button */
+  &:hover {
+    button {
+      display: flex;
+    }
+  }
 `
