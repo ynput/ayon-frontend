@@ -71,8 +71,6 @@ const UsersSettings = () => {
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
   const [showProjectUsers, setShowProjectUsers] = useState(false)
-  // last selected user state
-  const [lastSelectedUser, setLastSelectedUser] = useState(null)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -130,7 +128,6 @@ const UsersSettings = () => {
               type: toast.TYPE.SUCCESS,
             })
             setSelectedUsers([])
-            setLastSelectedUser(null)
             i += 1
           } catch {
             toast.error(`Unable to delete user: ${user}`)
@@ -258,7 +255,6 @@ const UsersSettings = () => {
               onSelectUsers={setSelectedUsers}
               isFetching={isFetching}
               {...{
-                setLastSelectedUser,
                 selectedProjects,
                 selectedUsers,
                 rolesList,
@@ -280,8 +276,6 @@ const UsersSettings = () => {
                 selectedProjects={selectedProjects}
                 setSelectedUsers={setSelectedUsers}
                 isSelfSelected={isSelfSelected}
-                rolesList={rolesList}
-                lastSelectedUser={lastSelectedUser}
                 selectedUserList={selectedUserList}
                 managerDisabled={managerDisabled}
               />

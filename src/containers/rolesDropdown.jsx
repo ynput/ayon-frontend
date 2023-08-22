@@ -1,7 +1,14 @@
 import { useGetRolesQuery } from '/src/services/getRoles'
 import { Dropdown } from '@ynput/ayon-react-components'
 
-const RolesDropdown = ({ selectedRoles, setSelectedRoles, style, disabled, placeholder }) => {
+const RolesDropdown = ({
+  selectedRoles,
+  setSelectedRoles,
+  style,
+  disabled,
+  placeholder,
+  ...props
+}) => {
   const { data: rolesList = [], isLoading: rolesLoading } = useGetRolesQuery()
 
   const onChange = (e) => {
@@ -21,6 +28,7 @@ const RolesDropdown = ({ selectedRoles, setSelectedRoles, style, disabled, place
       disable={rolesLoading}
       multiSelect
       onClear={() => setSelectedRoles([])}
+      {...props}
     />
   )
 }
