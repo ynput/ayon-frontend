@@ -99,7 +99,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
       // download the file
       downloadFromUrl(url, filename)
     } else {
-      toast.error('URL for installer not found')
+      toast.error('URL for launcher not found')
     }
   }
 
@@ -130,7 +130,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
   const menuItems = useMemo(() => {
     return {
       id: 'installer',
-      label: 'Download Installer',
+      label: 'Download Launcher',
       icon: 'install_desktop',
       disableClose: true,
       items: Object.entries(foundGroupedInstallers).flatMap(([, installers = []], i) => {
@@ -156,7 +156,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
       },
       {
         id: 'all',
-        label: 'All Installers',
+        label: 'All Launchers',
         items: Object.entries(otherGroupedInstallers).flatMap(([, installers = []], i) => {
           const items = installers.map((installer = {}) => ({
             id: installer.filename,
@@ -203,7 +203,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
               {!directDownload && (
                 <>
                   <Icon icon="install_desktop" />
-                  <span>Download installers</span>
+                  <span>Download Launcher</span>
                 </>
               )}
               <Icon icon="expand_more" />
