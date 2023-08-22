@@ -44,7 +44,7 @@ const BundleForm = ({
             <h2 style={{ margin: 0 }}>{formData?.name}</h2>
           )}
         </FormRow>
-        <FormRow label="Installer version">
+        <FormRow label="Launcher version">
           {isNew ? (
             <InstallerSelector
               value={formData?.installerVersion ? [formData?.installerVersion] : []}

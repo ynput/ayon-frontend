@@ -259,7 +259,7 @@ const Bundles = () => {
       uploadHeader = 'Install Addons'
       break
     case 'installer':
-      uploadHeader = 'Upload Installer'
+      uploadHeader = 'Upload Launcher'
       break
     case 'package':
       uploadHeader = 'Upload Dependency Package'
@@ -294,7 +294,7 @@ const Bundles = () => {
               onClick={() => setUploadOpen('addon')}
             />
             <Button
-              label="Upload Installer"
+              label="Upload Launcher"
               icon="upload"
               onClick={() => setUploadOpen('installer')}
             />
