@@ -9,7 +9,6 @@ import RenameUserDialog from './RenameUserDialog'
 import './users.scss'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useGetUsersQuery } from '../../../services/user/getUsers'
-import { useGetRolesQuery } from '/src/services/getRoles'
 import ProjectList from '/src/containers/projectList'
 import UserDetail from './userDetail'
 import UserList from './UserList'
@@ -83,13 +82,6 @@ const UsersSettings = () => {
     userList = []
     toast.error('Unable to load users')
   }
-
-  const {
-    data: rolesList = [],
-    isLoading: isLoadingRoles,
-    isError: isErrorRoles,
-  } = useGetRolesQuery()
-  if (isErrorRoles) toast.error('Unable to load roles')
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()
@@ -257,12 +249,10 @@ const UsersSettings = () => {
               {...{
                 selectedProjects,
                 selectedUsers,
-                rolesList,
                 setShowSetPassword,
                 setShowRenameUser,
                 onDelete,
                 isLoading,
-                isLoadingRoles,
                 isSelfSelected,
               }}
             />
@@ -291,7 +281,6 @@ const UsersSettings = () => {
               )
             )}
             <NewUser
-              rolesList={rolesList}
               onHide={(newUsers) => {
                 setShowNewUser(false)
                 if (newUsers.length) setSelectedUsers(newUsers)

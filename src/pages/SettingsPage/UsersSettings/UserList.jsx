@@ -22,7 +22,6 @@ const UserList = ({
   setShowSetPassword,
   onDelete,
   isLoading,
-  isLoadingRoles,
   onSelectUsers,
   isSelfSelected,
   setLastSelectedUser,
@@ -102,7 +101,7 @@ const UserList = ({
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={`user-list-table ${isLoading || isLoadingRoles ? 'table-loading' : ''}`}
+          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
           onSelectionChange={onSelectionChange}
           onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
           onContextMenuSelectionChange={(e) => {

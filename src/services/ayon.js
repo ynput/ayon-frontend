@@ -61,6 +61,8 @@ export const ayonApi = createApi({
     'projectAddons',
     'settingsAddons',
     'anatomyPresets',
+    'roles',
+    'role',
   ],
   endpoints: () => ({}),
 })
