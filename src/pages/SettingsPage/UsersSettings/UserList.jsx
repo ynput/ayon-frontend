@@ -24,7 +24,6 @@ const UserList = ({
   isLoading,
   onSelectUsers,
   isSelfSelected,
-  setLastSelectedUser,
 }) => {
   // Selection
   const selection = useMemo(
@@ -108,7 +107,6 @@ const UserList = ({
             if (!selectedUsers.includes(e.value.name)) {
               onSelectUsers([...selection, e.value.name])
             }
-            setLastSelectedUser(e.value.name)
           }}
           selection={selection}
           columnResizeMode="expand"
@@ -117,9 +115,6 @@ const UserList = ({
           stateKey="users-datatable"
           stateStorage={'local'}
           reorderableColumns
-          onRowClick={(e) => {
-            setLastSelectedUser(e.data.name)
-          }}
         >
           <Column
             field="name"
