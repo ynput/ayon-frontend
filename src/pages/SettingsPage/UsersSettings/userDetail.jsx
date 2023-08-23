@@ -10,6 +10,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
 import SaveButton from '/src/components/SaveButton'
+import { isEqual } from 'lodash'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -176,14 +177,31 @@ const UserDetail = ({
 
   // look for changes when formData changes
   useEffect(() => {
-    const isDiff = JSON.stringify(formData) !== JSON.stringify(initData) || selectedUsers.length > 1
+    if (!formData || !initData) return
+
+    const {
+      roles: formDataRoles,
+      defaultRoles: formDataDefaultRoles,
+      ...formDataWithoutRoles
+    } = formData || {}
+    const {
+      roles: initDataRoles,
+      defaultRoles: initDataDefaultRoles,
+      ...initDataWithoutRoles
+    } = initData || {}
+
+    const isDiffForm = !isEqual(formDataWithoutRoles, initDataWithoutRoles)
+    const isDiffRoles = !isEqual(formDataRoles, initDataRoles)
+    const isDiffDefaultRoles = !isEqual(formDataDefaultRoles, initDataDefaultRoles)
+
+    const isDiff = isDiffForm || isDiffRoles || isDiffDefaultRoles || selectedUsers.length > 1
 
     if (isDiff && (!isSelfSelected || selectedUsers.length === 1)) {
       if (!changesMade) setChangesMade(true)
     } else {
       setChangesMade(false)
     }
-  }, [formData, initData, selectedUsers])
+  }, [formData, initData, selectedUsers, formData?.roles])
 
   // editing a single user, so show attributes form too
   const singleUserEdit = selectedUsers.length === 1 ? formUsers[0] : null
@@ -294,8 +312,6 @@ const UserDetail = ({
 
     return [...new Set([...acc, ...roles])]
   }, [])
-
-  console.log(formData)
 
   return (
     <Section className="wrap" style={{ gap: '4px', bottom: 'unset', maxHeight: '100%' }}>

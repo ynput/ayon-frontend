@@ -43,7 +43,6 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
   const projectRoles = allRolesTheSame ? formData.roles[selectedProjects[0]] || [] : []
 
   const handleRolesChange = (value) => {
-    console.log(value)
     if (!isDefaultRoles) {
       // create new object with the new roles for selected projects
       const newRoles = selectedProjects.reduce((acc, projectName) => {

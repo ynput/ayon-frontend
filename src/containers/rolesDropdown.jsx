@@ -10,7 +10,6 @@ const RolesDropdown = ({
   ...props
 }) => {
   const { data: rolesList = [], isLoading: rolesLoading } = useGetRolesQuery()
-  console.log(rolesList)
 
   const onChange = (e) => {
     if (!setSelectedRoles) return
