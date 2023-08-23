@@ -66,7 +66,6 @@ const PanelStyled = styled(Panel)`
   ${({ $isSelected }) =>
     $isSelected &&
     css`
-      /* border: 0.15rem solid var(--color-hl-00); */
       background-color: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-on-primary-container);
       /* remove hover */

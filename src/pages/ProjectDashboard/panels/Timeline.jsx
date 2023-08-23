@@ -10,17 +10,13 @@ import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 const TailsStyled = styled.div`
   border-radius: var(--panel-border-radius);
-  background-color: var(--color-hl-00);
+  background-color: var(--primary-color);
   white-space: nowrap;
   min-width: 126px;
   min-height: 38px;
   z-index: 50;
 
-  &:hover {
-    background-color: var(--color-hl-02);
-  }
-
-  color: black;
+  color: var(--md-sys-color-on-primary);
   font-weight: bold;
   font-size: 16px;
 

@@ -473,7 +473,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                 }
 
                 const changedStyles = {
-                  backgroundColor: isChanged ? 'var(--color-hl-00)' : 'initial',
+                  backgroundColor: isChanged ? 'var(--color-changed)' : 'initial',
                 }
 
                 let disabledStyles = {}
@@ -568,7 +568,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       style={{
                         ...changedStyles,
                         color: isChanged
-                          ? 'black'
+                          ? 'var(--color-on-changed)'
                           : !isOwn
                           ? 'var(--color-grey-06)'
                           : 'var(--color-text)',

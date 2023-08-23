@@ -32,11 +32,11 @@ const formatType = (node, changes, styled = true) => {
 
   if (node.__entityType === 'folder') {
     value = '_folderType' in chobj ? chobj._folderType : node.folderType
-    if ('_folderType' in chobj) style.color = 'var(--color-hl-changed)'
+    if ('_folderType' in chobj) style.color = 'var(--color-changed)'
   } else {
     value = chobj?._taskType ? chobj._taskType : node.taskType
     if (!value) style.color = 'var(--color-hl-error)'
-    else if ('_taskType' in chobj) style.color = 'var(--color-hl-changed)'
+    else if ('_taskType' in chobj) style.color = 'var(--color-changed)'
   }
 
   if (!styled) return value

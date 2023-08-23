@@ -116,7 +116,7 @@ const CreateNewTeam = ({
     <>
       <DetailHeader
         onClose={() => onClose(false)}
-        style={{ borderTop: '2px solid var(--color-hl-00)' }}
+        style={{ borderTop: '2px solid var(--md-sys-color-primary)' }}
       >
         <div
           style={{
@@ -172,7 +172,7 @@ const CreateNewTeam = ({
       </Panel>
       <Panel
         style={{
-          borderBottom: '2px solid var(--color-hl-00)',
+          borderBottom: '2px solid var(--md-sys-color-primary)',
         }}
       >
         <div

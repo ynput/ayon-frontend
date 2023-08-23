@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { Button, Section, Panel } from '@ynput/ayon-react-components'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import UserTile from './UserTile'
 
 // panel with two buttons
@@ -29,20 +29,6 @@ export const TotalsStyledPanel = styled(Panel)`
 // total styled Button
 export const TotalStyledButton = styled(Button)`
   flex: 1;
-
-  &:focus {
-    outline: none;
-  }
-
-  ${({ highlighted }) =>
-    highlighted &&
-    css`
-      background-color: var(--color-grey-04);
-      outline: 1px solid var(--color-hl-00);
-      &:focus {
-        outline: 1px solid var(--color-hl-00);
-      }
-    `}
 `
 
 const UsersOverview = ({ userList = [], onUserSelect, onTotal, selectedProjects, search }) => {
@@ -63,7 +49,7 @@ const UsersOverview = ({ userList = [], onUserSelect, onTotal, selectedProjects,
         <TotalStyledButton
           label={`Total - ${userList.length}`}
           onClick={() => onTotal('total')}
-          highlighted={search === 'total'}
+          selected={search === 'total'}
         />
         <TotalsStyledPanel
           style={{
@@ -73,7 +59,7 @@ const UsersOverview = ({ userList = [], onUserSelect, onTotal, selectedProjects,
           <TotalStyledButton
             label={`Admins - ${userList.filter((u) => u.isAdmin).length}`}
             onClick={() => onTotal('admin')}
-            highlighted={search === 'admin'}
+            selected={search === 'admin'}
           />
           <TotalStyledButton
             label={`Managers - ${
@@ -81,19 +67,19 @@ const UsersOverview = ({ userList = [], onUserSelect, onTotal, selectedProjects,
             }
         `}
             onClick={() => onTotal('manager')}
-            highlighted={search === 'manager'}
+            selected={search === 'manager'}
           />
           <TotalStyledButton
             label={`Services - ${userList.filter((u) => !u.isAdmin && u.isService).length}`}
             onClick={() => onTotal('service')}
-            highlighted={search === 'service'}
+            selected={search === 'service'}
           />
           <TotalStyledButton
             label={`Users - ${
               userList.filter((u) => !u.isAdmin && !u.isService && !u.isManager).length
             }`}
             onClick={() => onTotal('!admin, !service, !manager')}
-            highlighted={search === '!admin, !service, !manager'}
+            selected={search === '!admin, !service, !manager'}
           />
         </TotalsStyledPanel>
       </TotalsStyledPanel>

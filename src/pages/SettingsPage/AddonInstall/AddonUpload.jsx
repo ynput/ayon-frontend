@@ -29,7 +29,7 @@ const StyledFooter = styled.div`
 const StyledProgressBar = styled.hr`
   height: 4px;
   border-radius: 2px;
-  background-color: var(--color-hl-00);
+  background-color: var(--md-sys-color-primary-container);
 
   width: ${({ $progress }) => $progress}%;
   border: none;

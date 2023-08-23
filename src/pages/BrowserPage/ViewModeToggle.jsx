@@ -1,22 +1,6 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { Button } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
-
-const StyledButton = styled(Button)`
-  /* active set background color and remove hover background */
-  &.active {
-    background-color: var(--color-hl-00);
-
-    span {
-      color: black;
-    }
-
-    &:hover {
-      background-color: var(--color-hl-00);
-    }
-  }
-`
 
 const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
   const items = [
@@ -49,18 +33,20 @@ const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
     <>
       {items.map((item) => (
         <Fragment key={item.id}>
-          <StyledButton
+          <Button
             icon={item.icon}
             onClick={() => onChange(item.id)}
             className={value === item.id ? 'active' : ''}
+            selected={value === item.id}
           />
           {item.children &&
             item.children.map((child) => (
-              <StyledButton
+              <Button
                 icon={child.icon}
                 key={child.id}
                 onClick={() => (child.command ? child.command(child.id) : onChange(child.id))}
                 className={value === child.id || child.isActive ? 'active' : ''}
+                selected={value === child.id || child.isActive}
               />
             ))}
         </Fragment>
