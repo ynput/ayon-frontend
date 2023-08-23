@@ -17,7 +17,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     try {
       await createAccessGroup({ name: accessGroupName }).unwrap()
 
-      onClose()
+      onClose(accessGroupName)
     } catch (error) {
       console.error(error)
 

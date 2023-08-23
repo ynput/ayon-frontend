@@ -28,6 +28,13 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
     })
   }
 
+  const onNewAccessGroup = (name) => {
+    // close form
+    setShowNewAccessGroup(false)
+    // select new access group
+    onSelectAccessGroup({ name, isProjectLevel: true })
+  }
+
   // FIXME: this doesn't update when access group details updates
   const getRowClass = (rowData) => {
     return { 'changed-project': rowData.isProjectLevel }
@@ -38,10 +45,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
   return (
     <Section style={{ maxWidth: 400 }}>
       {showNewAccessGroup && (
-        <NewAccessGroup
-          onClose={() => setShowNewAccessGroup(false)}
-          accessGroupList={accessGroupList}
-        />
+        <NewAccessGroup onClose={onNewAccessGroup} accessGroupList={accessGroupList} />
       )}
 
       <Toolbar>
