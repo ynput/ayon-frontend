@@ -281,7 +281,7 @@ const UsersSettings = () => {
               )
             )}
             <NewUser
-              onHide={(newUsers) => {
+              onHide={(newUsers = []) => {
                 setShowNewUser(false)
                 if (newUsers.length) setSelectedUsers(newUsers)
               }}
