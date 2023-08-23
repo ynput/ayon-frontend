@@ -537,8 +537,7 @@ const EditorPage = () => {
   }, [focusedEditor, rootData])
 
   // disable adding new nodes
-  const disableAddNew =
-    isEmpty(currentSelection) || Object.keys(currentSelection).some((id) => rootData[id]?.leaf)
+  const disableAddNew = isEmpty(currentSelection)
 
   //
   // Commit changes
@@ -895,6 +894,12 @@ const EditorPage = () => {
   const addNode = (entityType, root, data = {}) => {
     const parents = root ? [null] : futureParents
 
+    // for leaf nodes, add parents to parents
+    for (const id of focusedTasks) {
+      const parent = rootData[id]?.data?.folderId
+      if (!parents.includes(parent)) parents.push(parent)
+    }
+
     if (!parents.length) {
       console.log('Nothing to add')
       return
@@ -1027,18 +1032,6 @@ const EditorPage = () => {
     dispatch(onRevert(Object.keys(currentSelection)))
   }, [currentSelection, changes, newNodes])
 
-  // Context menu
-
-  const onContextMenuSelectionChange = (event) => {
-    if (!(event.value in currentSelection)) {
-      let newSelection = {
-        [event.value]: true,
-      }
-
-      handleSelectionChange(newSelection)
-    }
-  }
-
   // CONTEXT MENUS
 
   // Context menu outside of table items
@@ -1068,20 +1061,17 @@ const EditorPage = () => {
 
   const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
 
-  // Context menu items on table items
-  const ctxMenuTableItems = useMemo(
-    () => [
+  const getCtxMenuTableItems = () => {
+    return [
       {
         label: 'Add Folder',
         icon: 'create_new_folder',
         command: () => addNewEntity('folder'),
-        disabled: disableAddNew,
       },
       {
         label: 'Add Task',
         icon: 'add_task',
         command: () => addNewEntity('task'),
-        disabled: disableAddNew,
       },
       {
         label: 'Delete',
@@ -1101,12 +1091,26 @@ const EditorPage = () => {
         command: revertChangesOnSelection,
         disabled: !canCommit,
       },
-    ],
+    ]
+  }
 
-    [currentSelection, canCommit],
-  )
+  const [ctxMenuTableShow] = useCreateContext(getCtxMenuTableItems())
 
-  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+  // Context menu
+
+  const onContextMenuSelectionChange = (event) => {
+    if (!(event.value in currentSelection)) {
+      let newSelection = {
+        [event.value]: true,
+      }
+
+      handleSelectionChange(newSelection)
+    }
+  }
+
+  const handleOnContextMenu = (e) => {
+    ctxMenuTableShow(e.originalEvent)
+  }
 
   //
   // Table event handlers
@@ -1429,7 +1433,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}
-                onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
+                onContextMenu={handleOnContextMenu}
                 onContextMenuSelectionChange={onContextMenuSelectionChange}
                 onColumnResizeEnd={setColumnWidths}
                 reorderableColumns
