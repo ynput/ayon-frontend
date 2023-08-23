@@ -1,5 +1,5 @@
 import { useMemo, useEffect, lazy } from 'react'
-import { useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 import { useGetSettingsAddonsQuery } from '../../services/addons/getAddons'
 
 import SettingsAddon from './SettingsAddon'
@@ -63,7 +63,7 @@ const SettingsPage = () => {
       case 'secrets':
         return <Secrets />
       default:
-        return <div>Not implemented</div>
+        return <Navigate to="/settings" />
     }
   }, [module, addonName, addonsData])
 
