@@ -32,6 +32,12 @@ const onBoarding = ayonApi.injectEndpoints({
       }),
       invalidatesTags: ['info'],
     }),
+    restartOnBoarding: build.mutation({
+      query: () => ({
+        url: '/api/onboarding/restart',
+        method: 'POST',
+      }),
+    }),
     getReleases: build.query({
       query: () => ({
         url: '/api/onboarding/releases',
@@ -168,4 +174,5 @@ export const {
   useGetInstallEventsQuery,
   useGetReleaseQuery,
   useLazyGetReleaseQuery,
+  useRestartOnBoardingMutation,
 } = onBoarding
