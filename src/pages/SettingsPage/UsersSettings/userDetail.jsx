@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel, FormRow, LockedInput } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Section,
+  Panel,
+  FormRow,
+  LockedInput,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
 import ayonClient from '/src/ayon'
@@ -9,7 +16,6 @@ import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
-import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
 
 const FormsStyled = styled.section`

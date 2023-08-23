@@ -2,7 +2,15 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Spacer,
+  Section,
+  Panel,
+  Toolbar,
+  ScrollPanel,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import AddonList from '/src/containers/AddonList'
@@ -15,7 +23,6 @@ import {
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
-import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
 import { useNavigate } from 'react-router'
 

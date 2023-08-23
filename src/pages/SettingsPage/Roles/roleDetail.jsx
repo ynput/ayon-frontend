@@ -1,8 +1,14 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Spacer, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Spacer,
+  Section,
+  Toolbar,
+  ScrollPanel,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
-import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
 import { useGetRoleQuery, useGetRolesSchemaQuery } from '/src/services/roles/getRoles'
 import { useDeleteRoleMutation, useUpdateRoleMutation } from '/src/services/roles/updateRoles'

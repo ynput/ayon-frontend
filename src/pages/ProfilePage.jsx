@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import SessionList from '/src/containers/SessionList'
-import { FormRow, Section, Panel, LockedInput, Button } from '@ynput/ayon-react-components'
+import {
+  FormRow,
+  Section,
+  Panel,
+  LockedInput,
+  Button,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { useGetMeQuery } from '../services/user/getUsers'
 import { useUpdateUserMutation } from '../services/user/updateUser'
 import UserDetailsHeader from '../components/User/UserDetailsHeader'
@@ -9,7 +16,6 @@ import styled from 'styled-components'
 import UserAttribForm from './SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from './SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../ayon'
-import SaveButton from '../components/SaveButton'
 
 const FormsStyled = styled.section`
   flex: 1;

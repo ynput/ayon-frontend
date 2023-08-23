@@ -2,7 +2,15 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
-import { Spacer, Button, Section, Toolbar, TablePanel, Icon } from '@ynput/ayon-react-components'
+import {
+  Spacer,
+  Button,
+  Section,
+  Toolbar,
+  TablePanel,
+  Icon,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -37,7 +45,6 @@ import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
 import useCreateContext from '/src/hooks/useCreateContext'
-import SaveButton from '/src/components/SaveButton'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)

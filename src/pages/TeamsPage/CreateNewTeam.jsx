@@ -8,10 +8,10 @@ import {
   FormRow,
   InputText,
   Panel,
+  SaveButton,
 } from '@ynput/ayon-react-components'
 import DetailHeader from '/src/components/DetailHeader'
 import checkName from '/src/helpers/checkName'
-import SaveButton from '/src/components/SaveButton'
 
 const CreateNewTeam = ({
   rolesList,
