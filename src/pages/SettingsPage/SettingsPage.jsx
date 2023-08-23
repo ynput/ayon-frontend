@@ -10,7 +10,7 @@ const Bundles = lazy(() => import('./Bundles'))
 const StudioSettings = lazy(() => import('./StudioSettings'))
 const SiteSettings = lazy(() => import('./SiteSettings'))
 const UsersSettings = lazy(() => import('./UsersSettings'))
-const Roles = lazy(() => import('./Roles'))
+const AccessGroups = lazy(() => import('./AccessGroups'))
 const Attributes = lazy(() => import('./Attributes'))
 const Secrets = lazy(() => import('./Secrets'))
 
@@ -56,8 +56,8 @@ const SettingsPage = () => {
         return <SiteSettings />
       case 'users':
         return <UsersSettings />
-      case 'roles':
-        return <Roles />
+      case 'accessGroups':
+        return <AccessGroups />
       case 'attributes':
         return <Attributes />
       case 'secrets':
@@ -106,9 +106,9 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       },
       {
-        name: 'Roles',
-        path: '/settings/roles',
-        module: 'roles',
+        name: 'Permissions',
+        path: '/settings/accessGroups',
+        module: 'accessGroups',
         accessLevels: ['manager'],
       },
       {

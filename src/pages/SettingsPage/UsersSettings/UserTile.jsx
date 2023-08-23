@@ -92,23 +92,24 @@ const UserTile = ({
     if ((data?.length && !isLoading && !isFetching) || suspense) {
       // using useGetUserByNameQuery
       user = { ...data[0] }
-      if (user.roles) {
-        user.roles = JSON.parse(user.roles)
+      if (user.accessGroups) {
+        user.accessGroups = JSON.parse(user.accessGroups)
       }
     } else if (isError) return <PanelStyled>Not Found</PanelStyled>
   }
 
-  const { name, attrib, updatedAt, isManager, isAdmin, isService, roles } = user || {}
+  const { name, attrib, updatedAt, isManager, isAdmin, isService, accessGroups } = user || {}
   const isSelf = name === currentUser
 
+  // TODO: change names here
   let rolesHeader = leaderRoles || []
   if (!isLoading && !leaderRoles) {
     // add admin, manager, service
     if (isAdmin) rolesHeader.push('admin')
     else if (isService) rolesHeader.push('service')
     else if (isManager) rolesHeader.push('manager')
-    else if (isObject(roles) && !Array.isArray(roles)) {
-      Object.values(roles).forEach((roles2) => {
+    else if (isObject(accessGroups) && !Array.isArray(accessGroups)) {
+      Object.values(accessGroups).forEach((roles2) => {
         roles2.forEach((role) => !rolesHeader.includes(role) && rolesHeader.push(role))
       })
     }

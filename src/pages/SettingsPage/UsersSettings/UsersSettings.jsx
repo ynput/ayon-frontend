@@ -22,26 +22,26 @@ import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
 
 // TODO: Remove classname assignments and do in styled components
-const formatRoles = (rowData, selectedProjects) => {
+const formatAccessGroups = (rowData, selectedProjects) => {
   let res = {}
   if (rowData.isAdmin) res.admin = { cls: 'role admin' }
   else if (rowData.isService) res.service = { cls: 'role manager' }
   else if (rowData.isManager) res.manager = { cls: 'role manager' }
   else if (!selectedProjects) {
-    for (const name of rowData.defaultRoles || []) res[name] = { cls: 'role default' }
+    for (const name of rowData.defaultAccessGroups || []) res[name] = { cls: 'role default' }
   } else {
-    const roleSet = rowData.roles
+    const agSet = rowData.accessGroups || {}
     for (const projectName of selectedProjects) {
-      for (const roleName of roleSet[projectName] || []) {
-        if (roleName in res) res[roleName].count += 1
-        else res[roleName] = { count: 1 }
-        res[roleName].cls =
-          res[roleName].count === selectedProjects.length ? 'role all' : 'role partial'
+      for (const agName of agSet[projectName] || []) {
+        if (agName in res) res[agName].count += 1
+        else res[agName] = { count: 1 }
+        res[agName].cls =
+          res[agName].count === selectedProjects.length ? 'role all' : 'role partial'
       }
     }
   }
 
-  return { ...rowData, roles: res, rolesList: Object.keys(res) }
+  return { ...rowData, accessGroups: res, accessGroupList: Object.keys(res) }
 }
 
 const UsersSettings = () => {
@@ -93,11 +93,11 @@ const UsersSettings = () => {
         // user level not user
         if (user.isManager || user.isAdmin || user.isService) return true
 
-        // check user has role in selected projects
-        const roleSet = user.roles
-        let hasRole = selectedProjects.some((project) => roleSet[project]?.length)
+        // check user has access group in selected projects
+        const agSet = user.accessGroups
+        let hasAccessGroup = selectedProjects.some((project) => agSet[project]?.length)
 
-        return hasRole
+        return hasAccessGroup
       })
     } else {
       return userList
@@ -156,16 +156,22 @@ const UsersSettings = () => {
 
   if (showProjectUsers) userList = filteredUserList
 
-  let userListWithRoles = useMemo(
-    () => userList.map((user) => formatRoles(user, selectedProjects)),
+  let userListWithAccessGroups = useMemo(
+    () => userList.map((user) => formatAccessGroups(user, selectedProjects)),
     [userList, selectedProjects],
   )
 
-  const searchableFields = ['name', 'attrib.fullName', 'attrib.email', 'rolesList', 'hasPassword']
+  const searchableFields = [
+    'name',
+    'attrib.fullName',
+    'attrib.email',
+    'accessGroupList',
+    'hasPassword',
+  ]
 
   const [search, setSearch, filteredData] = useSearchFilter(
     searchableFields,
-    userListWithRoles,
+    userListWithAccessGroups,
     'users',
   )
 

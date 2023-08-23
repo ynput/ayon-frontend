@@ -74,11 +74,12 @@ const NewUser = ({ onHide, open, onSuccess }) => {
     else if (formData.userLevel === 'manager') payload.data.isManager = true
     else if (formData.userLevel === 'service') payload.data.isService = true
     else {
-      payload.data.defaultRoles = formData.defaultRoles || []
+      payload.data.defaultAccessGroups = formData.defaultAccessGroups || []
       if (selectedProjects) {
-        const roles = {}
-        for (const projectName of selectedProjects) roles[projectName] = payload.data.defaultRoles
-        payload.data.roles = roles
+        const accessGroups = {}
+        for (const projectName of selectedProjects)
+          accessGroups[projectName] = payload.data.defaultAccessGroups
+        payload.data.accessGroups = accessGroups
       }
     }
 
@@ -94,7 +95,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
       setPassword('')
       setPasswordConfirm('')
       setFormData((fd) => {
-        return { roles: fd.roles, userLevel: fd.userLevel }
+        return { accessGroups: fd.accessGroups, userLevel: fd.userLevel }
       })
 
       onSuccess && onSuccess(formData.Username)
@@ -156,12 +157,12 @@ const NewUser = ({ onHide, open, onSuccess }) => {
           />
         </Panel>
         <Panel>
-          <UserAccessForm formData={formData} setFormData={setFormData} hideProjectRoles isNew />
+          <UserAccessForm formData={formData} setFormData={setFormData} isNew />
         </Panel>
         {formData.userLevel === 'user' && (
           <Panel>
             <span style={{ margin: '8px 0' }}>
-              <b>Apply default roles to:</b>
+              <b>Apply default access groups to:</b>
             </span>
             <ProjectList
               selection={selectedProjects}
