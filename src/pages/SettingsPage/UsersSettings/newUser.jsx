@@ -92,11 +92,13 @@ const NewUser = ({ onHide, open, onSuccess }) => {
       setAddedUsers([...addedUsers, formData.Username])
       // keep re-usable data in the form
       setPassword('')
+      setPasswordConfirm('')
       setFormData((fd) => {
         return { roles: fd.roles, userLevel: fd.userLevel }
       })
 
       onSuccess && onSuccess(formData.Username)
+      onHide([formData.Username])
     } catch (error) {
       console.error(error)
       toast.error(`Unable to create user: ${error.detail}`)
@@ -154,7 +156,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
           />
         </Panel>
         <Panel>
-          <UserAccessForm formData={formData} setFormData={setFormData} hideProjectRoles />
+          <UserAccessForm formData={formData} setFormData={setFormData} hideProjectRoles isNew />
         </Panel>
         {formData.userLevel === 'user' && (
           <Panel>

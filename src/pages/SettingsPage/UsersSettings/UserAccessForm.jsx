@@ -4,7 +4,7 @@ import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
 import { isEqual } from 'lodash'
 
-const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled }) => {
+const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled, isNew }) => {
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
 
   const userLevels = [
@@ -29,18 +29,20 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
     })
   }
 
-  const userLevel = formData.userLevel === 'user'
-  const managerLevel = formData.userLevel === 'manager'
+  const userLevel = formData?.userLevel === 'user'
+  const managerLevel = formData?.userLevel === 'manager'
 
-  const isDefaultRoles = !selectedProjects?.length
-  const defaultRoles = formData.defaultRoles
+  const isDefaultRoles = !selectedProjects?.length || isNew
+  const defaultRoles = formData?.defaultRoles
 
   // check to see if the roles of each project are the same
   const allRolesTheSame = selectedProjects?.every((projectName) => {
-    return isEqual(formData.roles[projectName], formData.roles[selectedProjects[0]])
+    return isEqual(formData?.roles[projectName], formData?.roles[selectedProjects[0]])
   })
 
-  const projectRoles = allRolesTheSame ? formData.roles[selectedProjects[0]] || [] : []
+  const projectRoles = allRolesTheSame
+    ? (formData?.roles && formData?.roles[selectedProjects[0]]) || []
+    : []
 
   const handleRolesChange = (value) => {
     if (!isDefaultRoles) {
@@ -50,7 +52,7 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
         return acc
       }, {})
 
-      updateFormData('roles', { ...formData.roles, ...newRoles })
+      updateFormData('roles', { ...formData?.roles, ...newRoles })
     } else {
       updateFormData('defaultRoles', value)
     }
@@ -63,7 +65,7 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
         <FormRow label="User active">
           <SelectButton
             unselectable={false}
-            value={formData.userActive}
+            value={formData?.userActive}
             onChange={(e) => updateFormData('userActive', e.value)}
             options={activeOptions}
           />
@@ -72,7 +74,7 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
         <FormRow label="Access level">
           <SelectButton
             unselectable={false}
-            value={formData.userLevel}
+            value={formData?.userLevel}
             onChange={(e) => updateFormData('userLevel', e.value)}
             options={userLevels}
             disabled={disabled}
@@ -82,7 +84,7 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
         {(userLevel || managerLevel) && (
           <FormRow label="Guest">
             <InputSwitch
-              checked={formData.isGuest}
+              checked={formData?.isGuest}
               onChange={(e) => updateFormData('isGuest', e.target.checked)}
               disabled={disabled}
               style={{
