@@ -1250,6 +1250,7 @@ const EditorPage = () => {
           />
         )}
         style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
+        sortable
       />,
       <Column
         field="type"
