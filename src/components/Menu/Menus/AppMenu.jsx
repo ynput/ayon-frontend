@@ -4,13 +4,41 @@ import Menu from '../MenuComponents/Menu'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { useRestartServerMutation } from '/src/services/restartServer'
 import YnputConnector from '/src/components/YnputConnect/YnputConnector'
+import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
+import { toast } from 'react-toastify'
 
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin
   const isUser = user.data.isUser
   const isAdmin = user.data.isAdmin
 
+  // restart server
   const [restartServer] = useRestartServerMutation()
+
+  const handleServerRestart = async () => {
+    confirmDialog({
+      message: 'Are you sure you want to restart the server?',
+      header: 'Restart Server',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        restartServer()
+      },
+      reject: () => {},
+    })
+  }
+
+  // onboarding restart
+  const [restartOnBoarding] = useRestartOnBoardingMutation()
+
+  const handleBootstrapLaunch = async () => {
+    try {
+      await restartOnBoarding().unwrap()
+      window.location.reload()
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to launch bootstrap setup')
+    }
+  }
 
   const items = [
     {
@@ -48,20 +76,16 @@ export const AppMenu = ({ user, ...props }) => {
       id: 'divider',
     },
     {
+      id: 'onboarding',
+      label: 'Launch Bootstrap Setup',
+      onClick: handleBootstrapLaunch,
+      icon: 'verified_user',
+    },
+    {
       id: 'restart',
       label: 'Restart Server',
       icon: 'restart_alt',
-      onClick: () => {
-        confirmDialog({
-          message: 'Are you sure you want to restart the server?',
-          header: 'Restart Server',
-          icon: 'pi pi-exclamation-triangle',
-          accept: () => {
-            restartServer()
-          },
-          reject: () => {},
-        })
-      },
+      onClick: handleServerRestart,
     },
   ]
 
