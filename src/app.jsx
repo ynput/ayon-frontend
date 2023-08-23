@@ -1,7 +1,7 @@
 import ayonClient from '/src/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
-import { useEffect, useState, Suspense, lazy, useContext } from 'react'
+import { useEffect, useState, Suspense, lazy } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
@@ -22,21 +22,25 @@ const EventsPage = lazy(() => import('./pages/EventsPage'))
 const ServicesPage = lazy(() => import('./pages/ServicesPage'))
 
 import { login } from './features/user'
-import { SocketContext, SocketProvider } from './context/websocketContext'
 import ProtectedRoute from './containers/ProtectedRoute'
 import ShareDialog from './components/ShareDialog'
 import ErrorFallback from './components/ErrorFallback'
-import ServerRestartBanner from './components/ServerRestartBanner'
 import { useLazyGetInfoQuery } from './services/auth/getAuth'
 import { ContextMenuProvider } from './context/contextMenuContext'
+import { ShortcutsProvider } from './context/shortcutsContext'
 import { GlobalContextMenu } from './components/GlobalContextMenu'
 import LoadingPage from './pages/LoadingPage'
+import { ConfirmDialog } from 'primereact/confirmdialog'
+import OnBoardingPage from './pages/OnBoarding'
+import ServerRestartBanner from './components/ServerRestartBanner'
 
 const App = () => {
   const user = useSelector((state) => state.user)
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState(false)
+  const [isOnboarding, setIsOnboarding] = useState(false)
+  const [noAdminUser, setNoAdminUser] = useState(false)
 
   const storedAccessToken = localStorage.getItem('accessToken')
   if (storedAccessToken) {
@@ -53,6 +57,14 @@ const App = () => {
     getInfo()
       .unwrap()
       .then((response) => {
+        setNoAdminUser(!!response.noAdminUser)
+
+        if (response.onboarding) {
+          setIsOnboarding(true)
+        } else {
+          setIsOnboarding(false)
+        }
+
         if (response.user) {
           dispatch(
             login({
@@ -79,25 +91,55 @@ const App = () => {
       .finally(() => {
         setLoading(false)
       })
-  }, [dispatch, storedAccessToken])
+  }, [dispatch, storedAccessToken, isOnboarding])
+
+  if (loading) return <LoadingPage />
 
   // User is not logged in
-  if (!user.name) return <LoginPage loading={loading} />
+  if (!user.name && !noAdminUser) {
+    return <LoginPage isFirstTime={isOnboarding} />
+  }
 
-  const isUser = user.data.isUser
+  const onBoardingSkips = ['events', 'explorer', 'doc/api']
+
+  if (
+    (isOnboarding || noAdminUser) &&
+    onBoardingSkips.every((path) => !location.pathname.includes(path))
+  ) {
+    return (
+      <BrowserRouter>
+        <QueryParamProvider
+          adapter={ReactRouter6Adapter}
+          options={{
+            updateType: 'replaceIn',
+          }}
+        >
+          <OnBoardingPage
+            noAdminUser={noAdminUser}
+            onFinish={() => setIsOnboarding(false)}
+            isOnboarding={isOnboarding}
+          />
+        </QueryParamProvider>
+      </BrowserRouter>
+    )
+  }
+
+  const isUser = user?.data?.isUser
 
   if (window.location.pathname.startsWith('/login/')) {
     // already logged in, but stuck on the login page
     window.history.replaceState({}, document.title, '/')
+    return isOnboarding ? null : <LoadingPage />
+  }
+
+  // stuck on onboarding page
+  if (window.location.pathname.startsWith('/onboarding')) {
+    window.history.replaceState({}, document.title, '/settings/bundles?selected=latest')
     return <LoadingPage />
   }
 
-  if (serverError) return <ErrorPage code={serverError} message="Server connection failed" />
-
-  const RestartIndicator = () => {
-    const serverIsRestarting = useContext(SocketContext)?.serverRestartingVisible || false
-    return serverIsRestarting && <ServerRestartBanner />
-  }
+  if (serverError && !noAdminUser)
+    return <ErrorPage code={serverError} message="Server connection failed" />
 
   //
   // RENDER THE MAIN APP
@@ -106,11 +148,11 @@ const App = () => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Suspense fallback={<LoadingPage />}>
-        <SocketProvider>
-          <ContextMenuProvider>
-            <GlobalContextMenu />
-            <RestartIndicator />
-            <BrowserRouter>
+        <ContextMenuProvider>
+          <GlobalContextMenu />
+          <BrowserRouter>
+            <ServerRestartBanner />
+            <ShortcutsProvider>
               <QueryParamProvider
                 adapter={ReactRouter6Adapter}
                 options={{
@@ -119,6 +161,7 @@ const App = () => {
               >
                 <Header />
                 <ShareDialog />
+                <ConfirmDialog />
                 <Routes>
                   <Route
                     path="/"
@@ -159,9 +202,9 @@ const App = () => {
                   <Route element={<ErrorPage code="404" />} />
                 </Routes>
               </QueryParamProvider>
-            </BrowserRouter>
-          </ContextMenuProvider>
-        </SocketProvider>
+            </ShortcutsProvider>
+          </BrowserRouter>
+        </ContextMenuProvider>
       </Suspense>
     </ErrorBoundary>
   )

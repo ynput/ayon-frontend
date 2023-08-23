@@ -247,11 +247,16 @@ const TextWidget = (props) => {
     opts.onChange = (e) => {
       onChange(e.target.value)
     }
-
-    //
-    // Default text input
-    //
+  } else if (props.schema.widget === 'hierarchy') {
+    Input = InputText
+    opts.value = value
+    opts.onBlur = onChangeCommit
+    opts.placeholder = `Hierarchy for ${props.formContext?.headerProjectName}`
+    opts.onChange = (e) => {
+      onChange(e.target.value)
+    }
   } else {
+    // Default text input
     Input = InputText
     opts.value = value
     opts.onBlur = onChangeCommit
@@ -263,6 +268,7 @@ const TextWidget = (props) => {
   // Disable propagation of enter key
   // to prevent form submission. Just commit the change instead.
   opts.onKeyDown = (e) => {
+    if (Input === InputTextarea) return
     if (e.keyCode === 13) {
       e.preventDefault()
       e.stopPropagation()

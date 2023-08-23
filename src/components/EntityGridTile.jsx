@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { Panel, UserImage } from '@ynput/ayon-react-components'
+import { Icon, Panel, UserImage } from '@ynput/ayon-react-components'
 import Thumbnail from '/src/containers/thumbnail'
 import { useRef } from 'react'
 import getShimmerStyles from '../styles/getShimmerStyles'
@@ -147,7 +147,7 @@ const ThumbnailStyled = styled.div`
   }
 `
 
-const IconStyled = styled.span`
+const IconStyled = styled(Icon)`
   background-color: var(--color-grey-01);
   width: 25px;
   min-width: 25px;
@@ -196,8 +196,8 @@ const EntityGridTile = ({
         <ThumbnailStyled>
           <Thumbnail isLoading className={'thumbnail'} disabled={isError} />
           <div>
-            <IconStyled className="material-symbols-outlined"></IconStyled>
-            <IconStyled className="material-symbols-outlined"></IconStyled>
+            <IconStyled />
+            <IconStyled />
           </div>
         </ThumbnailStyled>
         <span></span>
@@ -223,10 +223,8 @@ const EntityGridTile = ({
           className={'thumbnail'}
         />
         <div>
-          <IconStyled className="material-symbols-outlined">{typeIcon}</IconStyled>
-          <IconStyled className="material-symbols-outlined" style={{ color: statusColor }}>
-            {statusIcon}
-          </IconStyled>
+          <IconStyled icon={typeIcon} />
+          <IconStyled icon={statusIcon} style={{ color: statusColor }} />
         </div>
       </ThumbnailStyled>
       <span style={{ padding: '0 4px' }}>{name}</span>

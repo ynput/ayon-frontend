@@ -4,6 +4,7 @@ import { TileStyled } from './ListStatsTile'
 import styled from 'styled-components'
 import ProgressBar from './ProgressBar'
 import getShimmerStyles from '/src/styles/getShimmerStyles'
+import { Icon } from '@ynput/ayon-react-components'
 
 const HeaderStyled = styled.div`
   display: flex;
@@ -50,7 +51,7 @@ const ProgressTile = ({
   return (
     <ProgressStyled onClick={onClick}>
       <HeaderStyled>
-        {icon && <span className="material-symbols-outlined">{icon}</span>}
+        {icon && <Icon icon={icon} />}
         <h3>{title || ''}</h3>
         <span>{subTitle || ''}</span>
       </HeaderStyled>

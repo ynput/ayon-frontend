@@ -1,10 +1,11 @@
 import { useEffect, useState, createContext } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import PubSub from '/src/pubsub'
 import arrayEquals from '../helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
+import { ayonApi } from '../services/ayon'
 
 export const SocketContext = createContext()
 
@@ -12,12 +13,15 @@ const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
 
 export const SocketProvider = (props) => {
+  const user = useSelector((state) => state.user)
+  const dispatch = useDispatch()
+  // get user logged in
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
 
   const wsOpts = {
     shouldReconnect: () => {
-      setServerRestartingVisible(true)
+      if (user?.name) setServerRestartingVisible(true)
       return true
     },
   }
@@ -67,7 +71,11 @@ export const SocketProvider = (props) => {
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
-      setServerRestartingVisible(false)
+      if (serverRestartingVisible) {
+        setServerRestartingVisible(false)
+        // clear ayonApi
+        dispatch(ayonApi.util.resetApiState())
+      }
       getWebSocket().onmessage = onMessage
       subscribe()
       // Dispatch a fake event to the frontend components

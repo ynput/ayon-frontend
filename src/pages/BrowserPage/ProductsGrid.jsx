@@ -156,7 +156,7 @@ const ProductsGrid = ({
       onClick={() => onSelectionChange({ value: {} })}
     >
       {Object.entries(groupedData).map(([groupName, groupData], index) => (
-        <>
+        <div key={`groupname-${groupName}`}>
           {groupName && <StyledGroupName>{groupName}</StyledGroupName>}
           <GridLayout ratio={1.5} minWidth={170} key={index}>
             {isLoading
@@ -181,12 +181,9 @@ const ProductsGrid = ({
                         statusIcon={statuses[product.versionStatus]?.icon || ''}
                         statusColor={statuses[product.versionStatus]?.color || ''}
                         name={product.name}
-                        footer={
-                          <>
-                            {product.versionName}
-                            {multipleFoldersSelected && product.folder && <> - {product.folder}</>}
-                          </>
-                        }
+                        footer={`${product.versionName}${
+                          multipleFoldersSelected && product.folder ? ' - ' + product.folder : ''
+                        }`}
                         thumbnailEntityId={product.versionId}
                         thumbnailEntityType="version"
                         onClick={(e) => handleSelection(e, product)}
@@ -197,7 +194,7 @@ const ProductsGrid = ({
                     ),
                 )}
           </GridLayout>
-        </>
+        </div>
       ))}
     </StyledGridLayout>
   )

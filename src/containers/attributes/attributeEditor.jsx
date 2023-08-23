@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Dialog } from 'primereact/dialog'
+
 import {
   Button,
   Spacer,
@@ -12,6 +12,7 @@ import {
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'
+import { Dialog } from 'primereact/dialog'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },

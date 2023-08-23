@@ -40,6 +40,8 @@ const ProjectMenu = ({ visible, onHide }) => {
     navigate(link)
   }
 
+  if (!visible) return null
+
   return (
     <Sidebar position="left" visible={visible} onHide={onHide}>
       <div
@@ -56,12 +58,16 @@ const ProjectMenu = ({ visible, onHide }) => {
           icon="empty_dashboard"
           label="Manage Projects"
           style={{ marginTop: 1, width: '100%' }}
-          onClick={() => navigate('/manageProjects')}
+          onClick={() => {
+            onHide()
+            navigate('/manageProjects')
+          }}
         />
         <ProjectList
           onRowClick={(e) => onProjectSelect(e.data.name)}
           selection={projectName}
           onHide={onHide}
+          isCollapsible={false}
         />
       </div>
     </Sidebar>

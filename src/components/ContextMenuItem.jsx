@@ -11,6 +11,7 @@ const ContextMenuItem = ({
   disabled,
   items,
   isSave,
+  danger,
   ...props
 }) => {
   const onCommand = (e) => {
@@ -30,30 +31,23 @@ const ContextMenuItem = ({
 
   return (
     <a
-      className={`p-menuitem-link ${disabled || noItems ? 'p-disabled' : ''}`}
+      className={`p-menuitem-link ${disabled || noItems ? 'p-disabled' : ''} ${
+        danger ? 'danger' : ''
+      } ${isSave ? 'save' : ''}`}
       role="menuitem"
       href="#"
       onClick={onCommand}
       style={{
-        paddingRight: 10,
-        backgroundColor: isSave ? 'var(--color-hl-00)' : 'transparent',
         ...props?.style,
       }}
       {...props}
     >
-      {icon && (
-        <Icon
-          className="p-menuitem-icon"
-          icon={icon}
-          style={{ fontSize: '1.5rem', color: isSave ? 'black' : 'white' }}
-        />
-      )}
+      {icon && <Icon className="p-menuitem-icon" icon={icon} />}
       {label && (
         <span
           className="p-menuitem-text"
           style={{
             whiteSpace: 'nowrap',
-            color: isSave ? 'black' : 'white',
           }}
         >
           {label}
@@ -67,7 +61,6 @@ const ContextMenuItem = ({
           marginLeft: 'auto',
           fontSize: '1.5rem',
           opacity: items ? 1 : 0,
-          color: isSave ? 'black' : 'white',
         }}
       />
     </a>

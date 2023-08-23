@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Panel, Section, UserImage } from '@ynput/ayon-react-components'
+import { Button, Panel, SaveButton, Section, UserImage } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { useAddUserMutation } from '/src/services/user/updateUser'
 import ayonClient from '/src/ayon'
@@ -44,7 +44,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
     setFormData(initialFormData())
   }, [])
 
-  const [addUser] = useAddUserMutation()
+  const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
 
   const attributes = ayonClient.getAttribsByScope('user')
 
@@ -171,8 +171,13 @@ const NewUser = ({ onHide, open, onSuccess }) => {
         )}
       </Section>
       <PanelButtonsStyled>
-        <Button onClick={handleSubmit} label="Create New User" icon="person_add" />
         <Button onClick={handleCancel} label="Clear" icon="clear" />
+        <SaveButton
+          onClick={handleSubmit}
+          label="Create New User"
+          active={formData.Username}
+          saving={isCreatingUser}
+        />
       </PanelButtonsStyled>
     </SectionStyled>
   )

@@ -1,3 +1,5 @@
+import { Icon } from '@ynput/ayon-react-components'
+
 const CellWithIcon = ({
   icon,
   iconClassName,
@@ -13,12 +15,11 @@ const CellWithIcon = ({
       className={className || ''}
       style={{ alignItems: 'center', position: 'relative', overflow: 'hidden', ...style }}
     >
-      <span
-        className={`material-symbols-outlined ${iconClassName || ''}`}
+      <Icon
+        icon={icon}
+        className={iconClassName || ''}
         style={{ marginRight: '0.6rem', ...iconStyle }}
-      >
-        {icon}
-      </span>
+      />
       <span
         style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...textStyle }}
         className={`cell-with-icon-text ${textClassName}`}

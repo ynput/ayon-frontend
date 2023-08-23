@@ -20,6 +20,8 @@ const initialState = {
   share: { name: null, data: null, link: null, img: null },
   uri: null,
   uriChanged: 0,
+  uploadProgress: 0, // percentage 0 - 100
+  menuOpen: false,
 }
 
 const contextSlice = createSlice({
@@ -145,6 +147,33 @@ const contextSlice = createSlice({
         link: null,
       }
     },
+    onUploadProgress: (
+      state,
+      {
+        payload: {
+          progress: { loaded, total },
+          index,
+          filesTotal,
+        },
+      },
+    ) => {
+      const percent = Math.round(((index - 1) * 100 + (loaded * 100) / total) / filesTotal)
+      state.uploadProgress = percent
+    },
+    onUploadFinished: (state) => {
+      state.uploadProgress = 0
+    },
+    setMenuOpen: (state, action) => {
+      state.menuOpen = action.payload
+    },
+    toggleMenuOpen: (state, action) => {
+      // no payload means toggle off
+      if (!action.payload) action.payload = false
+      // if payload is same as current state, toggle off
+      else if (action.payload === state.menuOpen) state.menuOpen = false
+      // else set payload
+      else state.menuOpen = action.payload
+    },
   }, // reducers
 })
 
@@ -169,6 +198,10 @@ export const {
   closeShare,
   selectProject,
   onFocusChanged,
+  onUploadProgress,
+  onUploadFinished,
+  setMenuOpen,
+  toggleMenuOpen,
 } = contextSlice.actions
 
 export default contextSlice.reducer

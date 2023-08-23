@@ -4,7 +4,7 @@ import ProjectStats from './panels/ProjectStats'
 import ProjectUsers from './panels/ProjectUsers'
 import Timeline from './panels/Timeline'
 import { Section } from '@ynput/ayon-react-components'
-import ProjectHealth from './panels/ProjectHealth'
+// import ProjectHealth from './panels/ProjectHealth'
 import DashboardPanelsContainer from './panels/DashboardPanelsContainer'
 import ProjectLatest from './panels/ProjectLatest'
 import ProjectDetails from './panels/ProjectDetails'
@@ -47,7 +47,7 @@ const ProjectDashboard = ({ projectName, projectList }) => {
             </HeaderGridStyled>
             <DashboardPanelsContainer projectName={projectName}>
               <ProjectStats column={1} />
-              <ProjectHealth column={1} />
+              {/* <ProjectHealth column={1} /> */}
               <ProjectUsers column={2} />
               <ProjectTeams column={2} />
               <ProjectLatest column={3} />

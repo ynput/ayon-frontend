@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
-import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
+import { confirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
-import AddonSettings from '/src/containers/addonSettings'
+import AddonSettings from '/src/containers/AddonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
@@ -17,9 +17,25 @@ import { selectProject } from '/src/features/context'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
+import ProjectManagerPageLayout from './ProjectManagerPageLayout'
+import AppNavLinks from '/src/containers/header/AppNavLinks'
+
+const ProjectSettings = ({ projectList, projectManager, projectName }) => {
+  return (
+    <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
+      <AddonSettings projectName={projectName} />
+    </ProjectManagerPageLayout>
+  )
+}
+const SiteSettings = ({ projectList, projectManager, projectName }) => {
+  return (
+    <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
+      <AddonSettings showSites projectName={projectName} />
+    </ProjectManagerPageLayout>
+  )
+}
 
 const ProjectManagerPage = () => {
-  const navigate = useNavigate()
   // get is user from context
   const isUser = useSelector((state) => state.user.data.isUser)
   const projectName = useSelector((state) => state.project.name)
@@ -53,7 +69,7 @@ const ProjectManagerPage = () => {
 
   const deletePreset = () => {
     confirmDialog({
-      header: 'Delete Preset',
+      header: 'Delete Project',
       message: `Are you sure you want to delete the project: ${selectedProject}?`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Delete',
@@ -75,68 +91,57 @@ const ProjectManagerPage = () => {
     })
   }
 
-  const userAccess = ['dashboard', 'siteSettings', 'teams']
-
-  // redirect to dashboard if user is not allowed to access this module
-  if (isUser && !userAccess.includes(module)) {
-    navigate('/manageProjects/dashboard')
-  }
-
   let links = [
     {
       name: 'Dashboard',
       path: '/manageProjects/dashboard',
       module: 'dashboard',
+      accessLevels: [],
     },
     {
       name: 'Anatomy',
       path: '/manageProjects/anatomy',
       module: 'anatomy',
+      accessLevels: ['manager'],
     },
     {
       name: 'Project settings',
       path: '/manageProjects/projectSettings',
       module: 'projectSettings',
+      accessLevels: ['manager'],
     },
     {
       name: 'Site settings',
       path: '/manageProjects/siteSettings',
       module: 'siteSettings',
+      accessLevels: [],
     },
     {
       name: 'Roots',
       path: '/manageProjects/roots',
       module: 'roots',
+      accessLevels: ['manager'],
     },
     {
       name: 'Teams',
       path: '/manageProjects/teams',
       module: 'teams',
+      accessLevels: ['manager'],
     },
   ]
 
-  // filter links if isUser
-  if (isUser) {
-    links = links.filter((link) => userAccess.includes(link.module))
-  }
+  const linksWithProject = useMemo(
+    () =>
+      links.map((link) => ({
+        ...link,
+        path: link.path + (selectedProject ? `?project=${selectedProject}` : ''),
+      })),
+    [links, selectedProject],
+  )
 
   return (
     <>
-      <ConfirmDialog />
-      <nav className="secondary">
-        {links.map((link, i) =>
-          link.node ? (
-            link.node
-          ) : (
-            <NavLink
-              to={link.path + (selectedProject ? `?project=${selectedProject}` : '')}
-              key={i}
-            >
-              {link.name}
-            </NavLink>
-          ),
-        )}
-      </nav>
+      <AppNavLinks links={linksWithProject} />
       {/* container wraps all modules and provides selectedProject, ProjectList comp and Toolbar comp as props */}
       <ProjectManagerPageContainer
         selection={selectedProject}
@@ -148,8 +153,8 @@ const ProjectManagerPage = () => {
       >
         {module === 'dashboard' && <ProjectDashboard />}
         {module === 'anatomy' && <ProjectAnatomy />}
-        {module === 'projectSettings' && <AddonSettings />}
-        {module === 'siteSettings' && <AddonSettings showSites />}
+        {module === 'projectSettings' && <ProjectSettings />}
+        {module === 'siteSettings' && <SiteSettings />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
       </ProjectManagerPageContainer>

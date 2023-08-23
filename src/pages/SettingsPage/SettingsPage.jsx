@@ -1,14 +1,12 @@
 import { useMemo, useEffect, lazy } from 'react'
-import { useParams, NavLink, Navigate } from 'react-router-dom'
-import { Spacer } from '@ynput/ayon-react-components'
-import { useSelector } from 'react-redux'
-import { useGetSettingsAddonsQuery } from '/src/services/addonList'
+import { useParams } from 'react-router-dom'
+import { useGetSettingsAddonsQuery } from '../../services/addons/getAddons'
 
 import SettingsAddon from './SettingsAddon'
+import AppNavLinks from '/src/containers/header/AppNavLinks'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
-const AddonInstall = lazy(() => import('./AddonInstall'))
-const AddonVersions = lazy(() => import('./AddonVersions'))
+const Bundles = lazy(() => import('./Bundles'))
 const StudioSettings = lazy(() => import('./StudioSettings'))
 const SiteSettings = lazy(() => import('./SiteSettings'))
 const UsersSettings = lazy(() => import('./UsersSettings'))
@@ -18,7 +16,6 @@ const Secrets = lazy(() => import('./Secrets'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
-  const isUser = useSelector((state) => state.user.data.isUser)
 
   const {
     data: addonsData,
@@ -32,9 +29,6 @@ const SettingsPage = () => {
       //console.log('unmounting settings page')
     }
   }, [])
-
-  // the settings regular users can access
-  const userAccess = ['site']
 
   const moduleComponent = useMemo(() => {
     if (addonName) {
@@ -52,12 +46,10 @@ const SettingsPage = () => {
     }
 
     switch (module) {
-      case 'addonInstall':
-        return <AddonInstall />
-      case 'addonVersions':
-        return <AddonVersions />
       case 'anatomyPresets':
         return <AnatomyPresets />
+      case 'bundles':
+        return <Bundles />
       case 'studio':
         return <StudioSettings />
       case 'site':
@@ -76,52 +68,54 @@ const SettingsPage = () => {
   }, [module, addonName, addonsData])
 
   const links = useMemo(() => {
-    console.log('ADDONS DATA: ', addonsData)
     let result = [
       {
-        name: 'Anatomy presets',
-        path: '/settings/anatomyPresets',
-        module: 'anatomyPresets',
-      },
-      {
-        name: 'Install addon',
-        path: '/settings/addonInstall',
-        module: 'addonInstall',
-      },
-      {
-        name: 'Addon versions',
-        path: '/settings/addonVersions',
-        module: 'addonVersions',
+        name: 'Bundles',
+        path: '/settings/bundles',
+        module: 'bundles',
+        accessLevels: ['manager'],
       },
       {
         name: 'Studio settings',
         path: '/settings/studio',
         module: 'studio',
+        accessLevels: ['manager'],
       },
       {
         name: 'Site settings',
         path: '/settings/site',
         module: 'site',
+        accessLevels: [],
+      },
+      {
+        name: 'Anatomy presets',
+        path: '/settings/anatomyPresets',
+        module: 'anatomyPresets',
+        accessLevels: ['manager'],
       },
       {
         name: 'Attributes',
         path: '/settings/attributes',
         module: 'attributes',
+        accessLevels: ['manager'],
       },
       {
         name: 'Users',
         path: '/settings/users',
         module: 'users',
+        accessLevels: ['manager'],
       },
       {
         name: 'Roles',
         path: '/settings/roles',
         module: 'roles',
+        accessLevels: ['manager'],
       },
       {
         name: 'Secrets',
         path: '/settings/secrets',
         module: 'secrets',
+        accessLevels: ['manager'],
       },
     ]
 
@@ -132,32 +126,16 @@ const SettingsPage = () => {
         name: addon.title,
         path: `/settings/addon/${addon.name}`,
         module: addon.name,
+        accessLevels: ['manager'],
       })
     }
 
     return result
   }, [addonsData])
 
-  const navLinks = links.map((link, idx) => {
-    if (isUser && !userAccess.includes(link.module)) return null
-    return (
-      <NavLink key={idx} to={link.path}>
-        {link.name}
-      </NavLink>
-    )
-  })
-
-  // if user and module not in userAccess, redirect to site settings
-  if (isUser && !userAccess.includes(module)) {
-    return <Navigate to={`/settings/${userAccess[0]}`} />
-  }
-
   return (
     <>
-      <nav className="secondary">
-        {navLinks}
-        <Spacer />
-      </nav>
+      <AppNavLinks links={links} />
       {moduleComponent}
     </>
   )

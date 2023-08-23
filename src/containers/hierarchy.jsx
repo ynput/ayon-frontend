@@ -70,6 +70,7 @@ const Hierarchy = (props) => {
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
+  const uri = useSelector((state) => state.context.uri)
 
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
@@ -183,10 +184,9 @@ const Hierarchy = (props) => {
   // Selection
   //
 
-  // when selection changes programatically, expand the parent folders
+  // when selection changes programmatically, expand the parent folders
+  // runs every time the uri changes
   useEffect(() => {
-    // TODO: This prevents closing the branch if there's a focused folder inside
-    // This might be a problem...
     if (!focusedFolders?.length) return
 
     let toExpand = [...Object.keys(expandedFolders)]
@@ -206,7 +206,7 @@ const Hierarchy = (props) => {
       newExpandedFolders[id] = true
     }
     dispatch(setExpandedFolders(newExpandedFolders))
-  }, [focusedFolders, expandedFolders])
+  }, [uri])
 
   // Transform the plain list of focused folder ids to a map
   // {id: true}, which is needed for the Treetable
@@ -263,48 +263,37 @@ const Hierarchy = (props) => {
   }
 
   const onToggle = (event) => {
+    const isMetaKey = event.originalEvent.metaKey || event.originalEvent.ctrlKey
+    const newExpandedFolders = event.value
+    // what folders have been removed from the expandedFolders
+    const removedExpandedFolders = Object.keys(expandedFolders).filter(
+      (id) => !newExpandedFolders[id],
+    )
+
+    // find ones that are added
+    const addedExpandedFolders = Object.keys(newExpandedFolders).filter(
+      (id) => !expandedFolders[id],
+    )
+
+    // are any removed folders in the focusedFolders?
+    const focusedFoldersRemoved = focusedFolders.some((id) => removedExpandedFolders.includes(id))
+    if (focusedFoldersRemoved && isMetaKey) {
+      // close (remove from expanded) all those folders
+      for (const id of focusedFolders) {
+        delete newExpandedFolders[id]
+      }
+    }
+
+    // do you same but for added folders, add them to expandedFolders
+    const focusedFoldersAdded = focusedFolders.some((id) => addedExpandedFolders.includes(id))
+    if (focusedFoldersAdded && isMetaKey) {
+      // add them to expandedFolders
+      for (const id of focusedFolders) {
+        newExpandedFolders[id] = true
+      }
+    }
+
     dispatch(setExpandedFolders(event.value))
-  }
-
-  const handleDoubleClick = () => {
-    // folder is always selected when row is double clicked
-
-    // filter out selected folders that are isLeaf
-    let doubleClickedFolders = []
-    for (const id in selectedFolders) {
-      if (!hierarchyObjectData[id].isLeaf) {
-        doubleClickedFolders.push(id)
-      }
-    }
-
-    // return if no folders are selected
-    if (!doubleClickedFolders.length) return
-
-    // separate folders that are already expanded
-    // separate folders that are not expanded
-    const alreadyExpandedFolders = []
-    const notExpandedFolders = []
-    for (const id of doubleClickedFolders) {
-      if (expandedFolders[id]) {
-        alreadyExpandedFolders.push(id)
-      } else {
-        notExpandedFolders.push(id)
-      }
-    }
-
-    // remove already expanded folders
-    const newExpandedFolders = { ...expandedFolders }
-    for (const id of alreadyExpandedFolders) {
-      delete newExpandedFolders[id]
-    }
-
-    // add not expanded folders
-    for (const id of notExpandedFolders) {
-      newExpandedFolders[id] = true
-    }
-
-    // update redux
-    dispatch(setExpandedFolders(newExpandedFolders))
   }
 
   // Context Menu
@@ -352,7 +341,6 @@ const Hierarchy = (props) => {
         onRowClick={onRowClick}
         onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
         onContextMenuSelectionChange={onContextMenuSelectionChange}
-        onDoubleClick={handleDoubleClick}
         className={isFetching ? 'table-loading' : undefined}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />

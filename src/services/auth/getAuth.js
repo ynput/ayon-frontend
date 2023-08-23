@@ -1,4 +1,5 @@
 import { ayonApi } from '../ayon'
+import { logout } from '/src/features/user'
 
 const getAuth = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -8,9 +9,21 @@ const getAuth = ayonApi.injectEndpoints({
       }),
       providesTags: ['info'],
     }),
+    logOut: build.mutation({
+      query: () => ({
+        url: '/api/auth/logout',
+        method: 'POST',
+      }),
+      invalidatesTags: ['info'],
+      onCacheEntryAdded: async (arg, { dispatch }) => {
+        dispatch(logout())
+        // reset global state
+        dispatch(ayonApi.util.resetApiState())
+      },
+    }),
   }),
 })
 
 //
 
-export const { useGetInfoQuery, useLazyGetInfoQuery } = getAuth
+export const { useGetInfoQuery, useLazyGetInfoQuery, useLogOutMutation } = getAuth

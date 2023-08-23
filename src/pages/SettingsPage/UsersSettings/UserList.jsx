@@ -22,10 +22,8 @@ const UserList = ({
   setShowSetPassword,
   onDelete,
   isLoading,
-  isLoadingRoles,
   onSelectUsers,
   isSelfSelected,
-  setLastSelectedUser,
 }) => {
   // Selection
   const selection = useMemo(
@@ -102,14 +100,13 @@ const UserList = ({
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={`user-list-table ${isLoading || isLoadingRoles ? 'table-loading' : ''}`}
+          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
           onSelectionChange={onSelectionChange}
           onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
           onContextMenuSelectionChange={(e) => {
             if (!selectedUsers.includes(e.value.name)) {
               onSelectUsers([...selection, e.value.name])
             }
-            setLastSelectedUser(e.value.name)
           }}
           selection={selection}
           columnResizeMode="expand"
@@ -118,9 +115,6 @@ const UserList = ({
           stateKey="users-datatable"
           stateStorage={'local'}
           reorderableColumns
-          onRowClick={(e) => {
-            setLastSelectedUser(e.data.name)
-          }}
         >
           <Column
             field="name"

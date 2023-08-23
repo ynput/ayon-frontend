@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
+import { useMemo, useRef, useState } from 'react'
+import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -7,11 +7,78 @@ import { useGetAllProjectsQuery } from '../services/project/getProject'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import useCreateContext from '../hooks/useCreateContext'
+import useLocalStorage from '../hooks/useLocalStorage'
+import CollapseButton from '../components/CollapseButton'
+import styled, { css } from 'styled-components'
 
-const formatName = (rowData, defaultTitle) => {
-  if (rowData.name === '_') return defaultTitle
-  return rowData.name
+const formatName = (rowData, defaultTitle, field = 'name') => {
+  if (rowData[field] === '_') return defaultTitle
+  return rowData[field]
 }
+
+const StyledProjectName = styled.div`
+  /* use grid to stack items on top of each other */
+  display: grid;
+  grid-template-columns: 1fr;
+
+  span {
+    grid-area: 1 / 1 / 2 / 2;
+    transition: opacity 0.15s;
+  }
+
+  /* when open hide the code */
+  span:last-child {
+    opacity: 0;
+  }
+
+  /* when closed show code and hide title */
+  ${({ $isOpen }) =>
+    !$isOpen &&
+    css`
+      span:first-child {
+        opacity: 0;
+      }
+      span:last-child {
+        opacity: 1;
+      }
+    `}
+`
+
+const StyledAddButton = styled(Button)`
+  overflow: hidden;
+  position: relative;
+  justify-content: flex-start;
+  gap: 0;
+
+  .content {
+    display: flex;
+    gap: 4px;
+    position: relative;
+
+    transition: transform 0.15s;
+    transition-delay: 0.015s;
+
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .title {
+    transition: opacity 0.15s;
+  }
+
+  /* closed */
+  ${({ $isOpen }) =>
+    !$isOpen &&
+    css`
+      .content {
+        transform: translateX(-10px);
+      }
+
+      .title {
+        opacity: 0;
+      }
+    `}
+`
 
 const ProjectList = ({
   selection,
@@ -31,9 +98,12 @@ const ProjectList = ({
   onDeleteProject,
   onNewProject,
   onHide,
+  isCollapsible = false,
 }) => {
   const [contextProject, setContextProject] = useState()
   const navigate = useNavigate()
+  const tableRef = useRef(null)
+
   // const user = useSelector((state) => state.user)
   // QUERY HOOK
   // ( default ) gets added in transformResponse
@@ -41,6 +111,22 @@ const ProjectList = ({
   if (isError) {
     console.error(error)
   }
+
+  useEffect(() => {
+    if (isProjectManager || isLoading) return
+    // set focus to table
+    if (tableRef.current) {
+      const tableEl = tableRef.current.getTable()
+      const focusableEl = tableEl?.querySelector('.p-selectable-row')
+
+      if (focusableEl) focusableEl.focus()
+    }
+  }, [tableRef, isLoading, isProjectManager])
+
+  // localstorage collapsible state
+  let [collapsed, setCollapsed] = useLocalStorage('projectListCollapsed', false)
+  // always set to false if not collapsible
+  if (!isCollapsible) collapsed = false
 
   // if selection does not exist in data, set selection to null
   useEffect(() => {
@@ -100,8 +186,8 @@ const ProjectList = ({
     label: 'Manage Project',
     icon: 'empty_dashboard',
     command: () => {
-      navigate(`/manageProjects/dashboard?project=${contextProject ? contextProject : selection}`)
       onHide()
+      navigate(`/manageProjects/dashboard?project=${contextProject ? contextProject : selection}`)
     },
   }
 
@@ -187,10 +273,24 @@ const ProjectList = ({
     projectList = loadingData
   }
 
+  const sectionStyle = {
+    ...styleSection,
+    maxWidth: collapsed ? 38 : styleSection?.maxWidth,
+    minWidth: collapsed ? 38 : styleSection?.minWidth,
+    transition: 'max-width 0.15s, min-width 0.15s',
+  }
+
   return (
-    <Section style={{ maxWidth: 400, ...styleSection }} className={className}>
+    <Section style={sectionStyle} className={className}>
       {isProjectManager && (
-        <Button label="Add New Project" icon="create_new_folder" onClick={onNewProject} />
+        <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
+          {/* <div className="spacer" /> */}
+          <div className="content">
+            <Icon icon="create_new_folder" />
+            <span className="title">Add New Project</span>
+          </div>
+          {/* <div className="spacer" /> */}
+        </StyledAddButton>
       )}
       <TablePanel onContextMenu={globalContextMenuShow}>
         <DataTable
@@ -207,12 +307,37 @@ const ProjectList = ({
           onRowDoubleClick={onRowDoubleClick}
           onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
           onContextMenuSelectionChange={onContextMenuSelectionChange}
-          className={isLoading ? 'table-loading' : undefined}
+          className={`${isLoading ? 'table-loading ' : ''}project-list${
+            collapsed ? ' collapsed' : ''
+          }
+          ${isCollapsible ? ' collapsible' : ''}
+          `}
+          style={{
+            maxWidth: 'unset',
+          }}
+          ref={tableRef}
         >
           <Column
             field="name"
-            header="Project name"
-            body={(rowData) => formatName(rowData, showNull)}
+            header={
+              <>
+                <span className="title">Project</span>
+                {isCollapsible && (
+                  <CollapseButton
+                    onClick={() => setCollapsed(!collapsed)}
+                    isOpen={!collapsed}
+                    side="left"
+                    // style={{ position: 'absolute', right: 4, top: 4 }}
+                  />
+                )}
+              </>
+            }
+            body={(rowData) => (
+              <StyledProjectName $isOpen={!collapsed}>
+                <span>{formatName(rowData, showNull)}</span>
+                <span>{formatName(rowData, showNull, 'code')}</span>
+              </StyledProjectName>
+            )}
             style={{ minWidth: 150, ...style }}
           />
           {!hideCode && <Column field="code" header="Code" style={{ maxWidth: 80 }} />}

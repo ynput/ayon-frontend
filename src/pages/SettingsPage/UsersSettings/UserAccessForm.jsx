@@ -2,14 +2,9 @@ import { useSelector } from 'react-redux'
 import { InputSwitch, FormLayout, FormRow } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import RolesDropdown from '/src/containers/rolesDropdown'
+import { isEqual } from 'lodash'
 
-const UserAccessForm = ({
-  formData,
-  setFormData,
-  selectedProjects,
-  hideProjectRoles,
-  disabled,
-}) => {
+const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled }) => {
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
 
   const userLevels = [
@@ -35,6 +30,31 @@ const UserAccessForm = ({
   }
 
   const userLevel = formData.userLevel === 'user'
+  const managerLevel = formData.userLevel === 'manager'
+
+  const isDefaultRoles = !selectedProjects?.length
+  const defaultRoles = formData.defaultRoles
+
+  // check to see if the roles of each project are the same
+  const allRolesTheSame = selectedProjects?.every((projectName) => {
+    return isEqual(formData.roles[projectName], formData.roles[selectedProjects[0]])
+  })
+
+  const projectRoles = allRolesTheSame ? formData.roles[selectedProjects[0]] || [] : []
+
+  const handleRolesChange = (value) => {
+    if (!isDefaultRoles) {
+      // create new object with the new roles for selected projects
+      const newRoles = selectedProjects.reduce((acc, projectName) => {
+        acc[projectName] = value
+        return acc
+      }, {})
+
+      updateFormData('roles', { ...formData.roles, ...newRoles })
+    } else {
+      updateFormData('defaultRoles', value)
+    }
+  }
 
   return (
     <>
@@ -46,11 +66,10 @@ const UserAccessForm = ({
             value={formData.userActive}
             onChange={(e) => updateFormData('userActive', e.value)}
             options={activeOptions}
-            disabled={disabled}
           />
         </FormRow>
 
-        <FormRow label="User level">
+        <FormRow label="Access level">
           <SelectButton
             unselectable={false}
             value={formData.userLevel}
@@ -60,45 +79,34 @@ const UserAccessForm = ({
           />
         </FormRow>
 
-        <FormRow label="Guest">
-          <InputSwitch
-            checked={formData.isGuest}
-            onChange={(e) => updateFormData('isGuest', e.target.checked)}
-            disabled={disabled}
-            style={{
-              opacity: disabled ? 0.5 : 1,
-            }}
-          />
-        </FormRow>
-
-        <>
-          <FormRow label={'Default Roles'}>
-            <RolesDropdown
-              style={{ flexGrow: 1 }}
-              selectedRoles={formData.defaultRoles}
-              setSelectedRoles={(value) => updateFormData('defaultRoles', value)}
-              disabled={selectedProjects || !userLevel || disabled}
-              placeholder={!userLevel && 'all roles'}
+        {(userLevel || managerLevel) && (
+          <FormRow label="Guest">
+            <InputSwitch
+              checked={formData.isGuest}
+              onChange={(e) => updateFormData('isGuest', e.target.checked)}
+              disabled={disabled}
+              style={{
+                opacity: disabled ? 0.5 : 1,
+              }}
             />
           </FormRow>
-          {!hideProjectRoles && (
-            <FormRow label={'Project Roles'}>
+        )}
+
+        {userLevel && (
+          <>
+            <FormRow label={'Access Groups'}>
               <RolesDropdown
                 style={{ flexGrow: 1 }}
-                selectedRoles={selectedProjects ? formData.roles : []}
-                setSelectedRoles={(value) => updateFormData('roles', value)}
-                disabled={!selectedProjects || !userLevel || disabled}
+                selectedRoles={!isDefaultRoles ? projectRoles : defaultRoles}
+                setSelectedRoles={handleRolesChange}
                 placeholder={
-                  !userLevel
-                    ? 'all roles'
-                    : !selectedProjects
-                    ? 'select a project'
-                    : 'select roles...'
+                  !allRolesTheSame && !isDefaultRoles ? 'Mixed Roles' : 'Select access groups...'
                 }
+                // onClearNoValue={!allRolesTheSame}
               />
             </FormRow>
-          )}
-        </>
+          </>
+        )}
       </FormLayout>
     </>
   )

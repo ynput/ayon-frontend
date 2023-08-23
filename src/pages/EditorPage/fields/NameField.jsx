@@ -25,7 +25,7 @@ const NameField = ({
   if (chobj?.errors?._name) {
     textStyle.color = 'var(--color-hl-error)'
   }
-  if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-changed)'
+  if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-00)'
 
   if (node.__entityType === 'task') {
     icon = tasks[chobj?._taskType || node.taskType]?.icon || 'check_circle'

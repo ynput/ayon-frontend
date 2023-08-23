@@ -3,6 +3,14 @@ import PropTypes from 'prop-types'
 import { Dropdown } from '@ynput/ayon-react-components'
 import StatusField from './statusField'
 import { useSelector } from 'react-redux'
+import { uniq } from 'lodash'
+import styled from 'styled-components'
+
+const StyledDropdown = styled(Dropdown)`
+  button {
+    background-color: unset;
+  }
+`
 
 const StatusSelect = ({
   value,
@@ -40,18 +48,22 @@ const StatusSelect = ({
 
   maxWidth = maxWidth || calcMaxWidth
 
+  const dropdownValue = Array.isArray(value) ? uniq(value) : [value]
+  const isMixed = dropdownValue.length > 1
+
   return (
-    <Dropdown
+    <StyledDropdown
       message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
       widthExpand={widthExpand}
       onOpen={onOpen}
       align={align}
-      value={[value]}
+      value={dropdownValue}
       onChange={handleChange}
       disabled={disabled}
+      listInline
       valueTemplate={() => (
         <StatusField
-          value={Array.isArray(value) ? `Multiple ( ${value.join(', ')} )` : value}
+          value={isMixed ? `Mixed Statuses` : dropdownValue[0]}
           align={align}
           size={size}
           style={{ maxWidth, ...style }}
@@ -66,7 +78,7 @@ const StatusSelect = ({
         <StatusField
           value={status.name}
           isSelecting
-          isActive={isActive}
+          isActive={!isMixed && isActive}
           align={align}
           height={height}
           statuses={statusesObject}
@@ -79,7 +91,7 @@ const StatusSelect = ({
 StatusSelect.propTypes = {
   size: PropTypes.oneOf(['full', 'short', 'icon']),
   align: PropTypes.oneOf(['left', 'right']),
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool, PropTypes.array]),
   statuses: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,

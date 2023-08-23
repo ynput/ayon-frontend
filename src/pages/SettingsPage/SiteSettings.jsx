@@ -122,7 +122,7 @@ const SiteSettings = () => {
           onRemoveOverrides={() => {}}
           environment={environment}
           showAllAddons={showAllAddons}
-          withSettings="site"
+          siteSettings={true}
         />
         <SiteList
           value={selectedSites}

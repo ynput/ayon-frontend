@@ -1,208 +1,83 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { useGetAddonListQuery } from '/src/services/addonList'
-import {
-  useSetAddonVersionsMutation,
-  useSetCopyAddonVariantMutation,
-} from '/src/services/addonList'
-import useCreateContext from '../hooks/useCreateContext'
-
-const sortSemver = (arr) => {
-  arr.sort(function (a, b) {
-    const aParts = a.split('.')
-    const bParts = b.split('.')
-    const len = Math.max(aParts.length, bParts.length)
-    for (let i = 0; i < len; i++) {
-      const aPart = aParts[i] || ''
-      const bPart = bParts[i] || ''
-      if (aPart === bPart) {
-        continue
-      }
-      if (!isNaN(aPart) && !isNaN(bPart)) {
-        return parseInt(aPart) - parseInt(bPart)
-      }
-      return aPart.localeCompare(bPart)
-    }
-    return 0
-  })
-  return arr
-}
-
-const createContextMenu = (environment, selectedAddons, onAddonChanged = () => {}, projectName) => {
-  const [setAddonVersions] = useSetAddonVersionsMutation()
-  const [setCopyAddonVariant] = useSetCopyAddonVariantMutation()
-  const result = []
-
-  if (projectName) {
-    result.push({
-      label: 'From project',
-      icon: 'move_group',
-      disabled: true,
-      items: [],
-    })
-
-    result.push({
-      label: 'From snapshot',
-      icon: 'move_group',
-      disabled: true,
-      items: [],
-    })
-
-    result.push({
-      label: 'Save snapshot',
-      icon: 'save',
-      disabled: true,
-    })
-
-    return result
-  }
-
-  // Set to version
-
-  const versionItems = [
-    {
-      label: 'Disable ' + environment,
-      icon: 'extension_off',
-      command: () => {
-        const versions = {}
-        for (const addon of selectedAddons) {
-          versions[addon.name] = { [environment + 'Version']: null }
-        }
-        setAddonVersions(versions)
-      },
-    },
-    {
-      label: 'Latest',
-      command: () => {
-        const versions = {}
-        for (const addon of selectedAddons) {
-          versions[addon.name] = { [environment + 'Version']: addon.latestVersion }
-        }
-        setAddonVersions(versions)
-      }, // set to latest
-    },
-  ]
-
-  if (selectedAddons.length === 1) {
-    versionItems.push({
-      separator: true,
-    })
-
-    const versions = sortSemver(Object.keys(selectedAddons[0].versions)).reverse()
-
-    for (const version of versions) {
-      versionItems.push({
-        label: version,
-        command: () => {
-          const versions = { [selectedAddons[0].name]: { [environment + 'Version']: version } }
-          setAddonVersions(versions)
-        },
-      })
-    }
-  }
-
-  result.push({
-    label: 'Set version',
-    icon: 'layers',
-    items: versionItems,
-  })
-
-  // Copy from other environment
-
-  if (environment === 'production') {
-    result.push({
-      label: 'Copy from staging',
-      icon: 'move_group',
-      command: async () => {
-        for (const addon of selectedAddons) {
-          try {
-            await setCopyAddonVariant({
-              addonName: addon.name,
-              copyFrom: 'staging',
-              copyTo: 'production',
-            }).unwrap()
-          } catch (e) {
-            console.error(e)
-          }
-          onAddonChanged(addon.name)
-        }
-      },
-    })
-  } else {
-    result.push({
-      label: 'Copy from production',
-      icon: 'move_group',
-      command: async () => {
-        for (const addon of selectedAddons) {
-          try {
-            await setCopyAddonVariant({
-              addonName: addon.name,
-              copyFrom: 'production',
-              copyTo: 'staging',
-            }).unwrap()
-          } catch (e) {
-            console.error(e)
-          }
-          onAddonChanged(addon.name)
-        }
-      },
-    })
-  }
-
-  return result
-}
-
-//
-//
-//
+import { useGetAddonSettingsListQuery } from '/src/services/addonSettings'
 
 const AddonList = ({
   selectedAddons,
   setSelectedAddons,
-  changedAddons,
-  projectName,
-  showAllAddons = true,
-  environment = 'production',
-  withSettings = 'settings',
-  onAddonChanged = () => {},
+  environment = 'production', // 'production' or 'staging'
+  siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
+  onAddonChanged = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
+  changedAddonKeys = null, // List of addon keys that have changed
+  projectName, // used for chaged addons
+  siteId, // used for chaged addons
+  setBundleName,
 }) => {
-  const { data, loading } = useGetAddonListQuery()
+  const { data, loading, isError } = useGetAddonSettingsListQuery({
+    projectName,
+    siteId,
+    variant: environment,
+  })
   const uriChanged = useSelector((state) => state.context.uriChanged)
+
+  const [preferredSelection, setPreferredSelection] = useState([])
 
   // Filter addons by environment
   // add 'version' property to each addon
   const addons = useMemo(() => {
+    if (loading) return []
     let result = []
-    console.log('With settings: ', withSettings)
-    for (const addon of data || []) {
-      const envVersion = addon[environment + 'Version']
+    for (const addon of data?.addons || []) {
+      if (siteSettings) {
+        if (!projectName && !addon.hasSiteSettings)
+          // global site overrides
+          continue
+        if (projectName && !addon.hasProjectSiteSettings)
+          // project site overrides
+          continue
+      } else if (projectName && !addon.hasProjectSettings) continue
+      else if (!addon.hasSettings) continue
 
-      if (envVersion || showAllAddons) {
-        if (withSettings === 'site') {
-          const hasSiteSettings = addon.versions[envVersion]?.hasSiteSettings || false
-          if (!hasSiteSettings) {
-            continue
-          }
-        }
+      const addonKey = `${addon.name}|${addon.version}|${environment}|${siteId || '_'}|${
+        projectName || '_'
+      }`
 
-        result.push({
-          ...addon,
-          version: envVersion,
-          latestVersion: sortSemver(Object.keys(addon.versions || {})).pop(),
-        })
-      }
+      result.push({
+        ...addon,
+        key: addonKey,
+        variant: environment,
+      })
     }
     return result
-  }, [data, environment, withSettings, showAllAddons])
+  }, [data, environment, siteSettings])
 
   useEffect(() => {
-    ///
-  }, [changedAddons])
+    if (setBundleName) {
+      if (data?.bundleName && !isError) {
+        setBundleName(data?.bundleName)
+      } else {
+        setBundleName(null)
+      }
+    }
+  }, [data?.bundleName, isError])
+
+  useEffect(() => {
+    // Maintain selection when addons are changed due to environment change
+    const newSelection = []
+    for (const addon of addons) {
+      if (selectedAddons.find((a) => a.name === addon.name)) {
+        newSelection.push(addon)
+      } else if (preferredSelection.find((a) => a.name === addon.name)) {
+        newSelection.push(addon)
+      }
+    }
+    setSelectedAddons(newSelection)
+  }, [addons])
 
   useEffect(() => {
     const url = new URL(window.location.href)
@@ -219,30 +94,30 @@ const AddonList = ({
   }, [addons, uriChanged])
 
   const onSelectionChange = (e) => {
+    setPreferredSelection(e.value)
     setSelectedAddons(e.value)
   }
 
-  // Context menu
-  const contextMenuItems = createContextMenu(
-    environment,
-    selectedAddons,
-    onAddonChanged,
-    projectName,
-  )
-
-  const [ctxMenuShow] = useCreateContext(contextMenuItems)
+  const rowDataClassNameFormatter = (rowData) => {
+    if (changedAddonKeys && changedAddonKeys.includes(rowData.key)) return 'changed'
+    if (rowData.hasProjectSiteOverrides) return 'changed-site'
+    if (rowData.hasProjectOverrides) return 'changed-project'
+    if (rowData.hasStudioOverrides) return 'changed-studio'
+    return ''
+  }
 
   return (
     <Section style={{ minWidth: 250 }}>
       <TablePanel loading={loading}>
         <DataTable
-          value={addons}
+          value={isError ? [] : addons}
           selectionMode="multiple"
           scrollable="true"
           scrollHeight="flex"
           selection={selectedAddons}
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
+          rowClassName={rowDataClassNameFormatter}
+          emptyMessage={isError ? `WARNING: No bundle set to ${environment}` : 'No addons found'}
         >
           <Column field="title" header="Addon" />
           <Column field="version" header="Version" style={{ maxWidth: 80 }} />

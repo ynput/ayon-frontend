@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'
+import { confirmDialog } from 'primereact/confirmdialog'
 import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
@@ -9,7 +9,6 @@ import RenameUserDialog from './RenameUserDialog'
 import './users.scss'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useGetUsersQuery } from '../../../services/user/getUsers'
-import { useGetRolesQuery } from '/src/services/getRoles'
 import ProjectList from '/src/containers/projectList'
 import UserDetail from './userDetail'
 import UserList from './UserList'
@@ -71,8 +70,6 @@ const UsersSettings = () => {
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
   const [showProjectUsers, setShowProjectUsers] = useState(false)
-  // last selected user state
-  const [lastSelectedUser, setLastSelectedUser] = useState(null)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -85,13 +82,6 @@ const UsersSettings = () => {
     userList = []
     toast.error('Unable to load users')
   }
-
-  const {
-    data: rolesList = [],
-    isLoading: isLoadingRoles,
-    isError: isErrorRoles,
-  } = useGetRolesQuery()
-  if (isErrorRoles) toast.error('Unable to load roles')
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()
@@ -130,7 +120,6 @@ const UsersSettings = () => {
               type: toast.TYPE.SUCCESS,
             })
             setSelectedUsers([])
-            setLastSelectedUser(null)
             i += 1
           } catch {
             toast.error(`Unable to delete user: ${user}`)
@@ -206,7 +195,6 @@ const UsersSettings = () => {
 
   return (
     <main>
-      <ConfirmDialog />
       <Section>
         <Toolbar>
           <SelectButton
@@ -259,15 +247,12 @@ const UsersSettings = () => {
               onSelectUsers={setSelectedUsers}
               isFetching={isFetching}
               {...{
-                setLastSelectedUser,
                 selectedProjects,
                 selectedUsers,
-                rolesList,
                 setShowSetPassword,
                 setShowRenameUser,
                 onDelete,
                 isLoading,
-                isLoadingRoles,
                 isSelfSelected,
               }}
             />
@@ -281,8 +266,6 @@ const UsersSettings = () => {
                 selectedProjects={selectedProjects}
                 setSelectedUsers={setSelectedUsers}
                 isSelfSelected={isSelfSelected}
-                rolesList={rolesList}
-                lastSelectedUser={lastSelectedUser}
                 selectedUserList={selectedUserList}
                 managerDisabled={managerDisabled}
               />
@@ -298,7 +281,6 @@ const UsersSettings = () => {
               )
             )}
             <NewUser
-              rolesList={rolesList}
               onHide={(newUsers) => {
                 setShowNewUser(false)
                 if (newUsers.length) setSelectedUsers(newUsers)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import getShimmerStyles from '../styles/getShimmerStyles'
+import { Icon } from '@ynput/ayon-react-components'
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -48,7 +49,7 @@ const ImageStyled = styled.img`
   background-color: #161616;
 `
 
-const ImagePlaceholder = () => <span className="material-symbols-outlined">image</span>
+const ImagePlaceholder = () => <Icon icon="image" />
 
 const Thumbnail = ({
   projectName,

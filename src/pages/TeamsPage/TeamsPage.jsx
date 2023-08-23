@@ -2,14 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam } from 'use-query-params'
-import {
-  Button,
-  Dialog,
-  InputSwitch,
-  InputText,
-  Section,
-  Spacer,
-} from '@ynput/ayon-react-components'
+import { Button, InputSwitch, InputText, Section, Spacer } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
@@ -23,6 +16,7 @@ import styled from 'styled-components'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
 import SaveButton from '/src/components/SaveButton'
+import { Dialog } from 'primereact/dialog'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -94,17 +88,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   const [updateTeams] = useUpdateTeamsMutation()
 
   const [selectedTeams = [], setSelectedTeams] = useQueryParam(['teams'], ArrayParam)
-
-  // When a team is selected, select all users on that team
-  useEffect(() => {
-    if (selectedTeams.length) {
-      const newSelectedUsers = userList
-        .filter((user) => user.teamsList.some((team) => selectedTeams.includes(team)))
-        .map((user) => user.name)
-
-      setSelectedUsers(newSelectedUsers)
-    }
-  }, [selectedTeams])
 
   // Merge users and teams data
   // NOTE: there is a usersObject bellow [userList, usersObject]
@@ -445,7 +428,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           <SaveButton
             label="Create"
             type="submit"
-            active={isDuplicateTeamNameValid}
+            active={!!isDuplicateTeamNameValid}
             style={{
               marginLeft: 'auto',
             }}

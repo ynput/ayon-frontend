@@ -1,4 +1,3 @@
-import { Dialog } from 'primereact/dialog'
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
@@ -7,6 +6,7 @@ import { Button } from '@ynput/ayon-react-components'
 import copyToClipboard from '../helpers/copyToClipboard'
 import { TabView, TabPanel } from 'primereact/tabview'
 import { toast } from 'react-toastify'
+import { Dialog } from 'primereact/dialog'
 
 const ShareStyled = styled.div`
   padding: 16px;

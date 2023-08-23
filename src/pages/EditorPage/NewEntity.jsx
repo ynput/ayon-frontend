@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Dialog } from 'primereact/dialog'
 import { capitalize } from 'lodash'
 import { useState } from 'react'
 import { useEffect } from 'react'
@@ -10,6 +9,7 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import checkName from '/src/helpers/checkName'
+import { Dialog } from 'primereact/dialog'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -81,6 +81,8 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       [`${type}Type`]: entityData.type,
       name: checkName(entityData.name),
     }
+
+    console.log(newData)
 
     // clear states
     setEntityType(null)

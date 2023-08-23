@@ -22,6 +22,7 @@ import './styles/index.scss'
 import { ayonApi } from './services/ayon'
 import { setupListeners } from '@reduxjs/toolkit/dist/query'
 import short from 'short-uuid'
+import { SocketProvider } from './context/websocketContext'
 
 // generate unique session id
 window.senderId = short.generate()
@@ -56,18 +57,20 @@ document.addEventListener('DOMContentLoaded', () => {
   root.render(
     <React.StrictMode>
       <ReduxProvider store={store}>
-        <App />
-        <ToastContainer
-          position="bottom-right"
-          transition={Flip}
-          theme="dark"
-          pauseOnFocusLoss={false}
-          newestOnTop={false}
-          draggable={false}
-          closeOnClick={true}
-          autoClose={5000}
-          limit={5}
-        />
+        <SocketProvider>
+          <App />
+          <ToastContainer
+            position="bottom-right"
+            transition={Flip}
+            theme="dark"
+            pauseOnFocusLoss={false}
+            newestOnTop={false}
+            draggable={false}
+            closeOnClick={true}
+            autoClose={5000}
+            limit={5}
+          />
+        </SocketProvider>
       </ReduxProvider>
     </React.StrictMode>,
   )
