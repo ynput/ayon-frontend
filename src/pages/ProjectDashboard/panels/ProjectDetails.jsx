@@ -32,7 +32,8 @@ const ActiveStyled = styled.span`
   ${({ $isActive }) =>
     $isActive &&
     css`
-      color: var(--color-hl-studio);
+      background-color: var(--md-sys-color-tertiary);
+      color: var(--md-sys-color-on-tertiary);
     `}
 
   ${({ $isLoading }) =>

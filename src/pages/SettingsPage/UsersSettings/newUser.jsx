@@ -13,10 +13,10 @@ import styled from 'styled-components'
 const SectionStyled = styled(Section)`
   & > div {
     :first-child {
-      border-top: 2px solid var(--color-hl-studio);
+      border-top: 2px solid var(--md-sys-color-tertiary-fixed-dim);
     }
     :last-child {
-      border-bottom: 2px solid var(--color-hl-studio);
+      border-bottom: 2px solid var(--md-sys-color-tertiary-fixed-dim);
     }
   }
 `
