@@ -16,7 +16,7 @@ export const PlatformTag = styled.span`
 
   ${({ $platform }) => {
     // get platform color
-    const color = platformColors[$platform?.toLowerCase()] || 'var(--color-grey-07)'
+    const color = platformColors[$platform?.toLowerCase()] || 'var(--md-sys-color-outline)'
 
     return css`
       background-color: ${color};
