@@ -147,7 +147,7 @@ const CreateNewTeam = ({
               emptyIcon={false}
               emptyMessage="Add Team Members..."
               style={{
-                border: '1px solid var(--color-grey-03)',
+                border: '1px solid var(--md-sys-color-outline-variant)',
               }}
             />
           </FormRow>

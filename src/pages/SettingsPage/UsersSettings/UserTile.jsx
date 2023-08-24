@@ -61,7 +61,10 @@ const StyledLoading = styled.div`
   position: absolute;
   inset: 0;
   border-radius: var(--border-radius);
-  ${getShimmerStyles('var(--color-grey-03)', 'var(--color-grey-04)')}
+  ${getShimmerStyles(
+    'var(--md-sys-color-surface-container-highest)',
+    'var(--md-sys-color-surface-container-highest-hover',
+  )}
 `
 
 const UserTile = ({

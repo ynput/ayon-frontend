@@ -511,7 +511,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       maxWidth={'100%'}
                       style={{
                         ...changedStyles,
-                        border: '1px solid var(--color-grey-03)',
+                        border: '1px solid var(--md-sys-color-outline-variant)',
                       }}
                       height={30}
                       placeholder={placeholder}
@@ -531,7 +531,10 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       emptyIcon={false}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       editor
-                      buttonStyle={{ border: '1px solid var(--color-grey-03)', overflow: 'hidden' }}
+                      buttonStyle={{
+                        border: '1px solid var(--md-sys-color-outline-variant)',
+                        overflow: 'hidden',
+                      }}
                       isChanged={isChanged}
                       widthExpand
                     />
