@@ -11,7 +11,6 @@ export const Preset = styled.li`
   align-self: stretch;
   user-select: none;
   cursor: pointer;
-  overflow: hidden;
   margin: 0;
   position: relative;
 
@@ -23,12 +22,23 @@ export const Preset = styled.li`
     background-color: var(--md-sys-color-surface-container-highest-hover);
   }
 
+  .bio {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
   ${({ $selected }) =>
     $selected &&
     css`
       &,
       &:hover {
         background-color: var(--md-sys-color-primary-container);
+      }
+
+      .bio {
+        white-space: normal;
       }
     `}
 
@@ -50,12 +60,13 @@ export const Preset = styled.li`
 export const Header = styled.header`
   display: flex;
   padding: 0px 8px;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   align-self: stretch;
 
   .icon {
     font-size: 32px;
+    margin-top: 8px;
   }
 
   div {
@@ -64,6 +75,7 @@ export const Header = styled.header`
     justify-content: center;
     align-items: flex-start;
     flex: 1 0 0;
+    overflow: hidden;
 
     h3 {
       /* font-size: 16px; */

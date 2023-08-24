@@ -91,6 +91,7 @@ export const PresetsContainer = styled.ul`
   padding: 0;
   margin: 0;
   flex: 1;
+  overflow: auto;
 `
 
 export const AddonsContainer = styled.div`
