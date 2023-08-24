@@ -10,28 +10,34 @@ import {
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
 import { isEqual } from 'lodash'
-import { useGetRoleQuery, useGetRolesSchemaQuery } from '/src/services/roles/getRoles'
-import { useDeleteRoleMutation, useUpdateRoleMutation } from '/src/services/roles/updateRoles'
+import {
+  useGetAccessGroupQuery,
+  useGetAccessGroupSchemaQuery,
+} from '/src/services/accessGroups/getAccessGroups'
+import {
+  useDeleteAccessGroupMutation,
+  useUpdateAccessGroupMutation,
+} from '/src/services/accessGroups/updateAccessGroups'
 
-const RoleDetail = ({ projectName, role }) => {
+const AccessGroupDetail = ({ projectName, accessGroup }) => {
   const [newData, setNewData] = useState(null)
-  const roleName = role?.name
+  const accessGroupName = accessGroup?.name
 
-  const { data: originalData } = useGetRoleQuery(
+  const { data: originalData } = useGetAccessGroupQuery(
     {
-      roleName,
+      name: accessGroupName,
       projectName: projectName || '_',
     },
-    { skip: !roleName },
+    { skip: !accessGroupName },
   )
 
-  const { data: schema } = useGetRolesSchemaQuery()
+  const { data: schema } = useGetAccessGroupSchemaQuery()
 
   // mutations
-  const [updateRole, { isLoading: saving }] = useUpdateRoleMutation()
-  const [deleteRole] = useDeleteRoleMutation()
+  const [updateAccessGroup, { isLoading: saving }] = useUpdateAccessGroupMutation()
+  const [deleteAccessGroup] = useDeleteAccessGroupMutation()
 
-  const isProjectLevel = role?.isProjectLevel
+  const isProjectLevel = accessGroup?.isProjectLevel
 
   const isChanged = useMemo(() => {
     if (!originalData || !newData) return false
@@ -40,25 +46,25 @@ const RoleDetail = ({ projectName, role }) => {
 
   const onSave = async () => {
     try {
-      await updateRole({
-        name: roleName,
+      await updateAccessGroup({
+        name: accessGroupName,
         projectName: projectName || '_',
         data: newData,
       }).unwrap()
-      toast.success('Role saved')
+      toast.success('Access group saved')
     } catch (err) {
       console.error(err)
-      toast.error('Unable to save role')
+      toast.error('Unable to save access group')
     }
   }
 
   const onDelete = async () => {
     try {
-      await deleteRole({ name: roleName, projectName }).unwrap()
-      toast.success('Role deleted')
+      await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap()
+      toast.success('Access group deleted')
     } catch (err) {
       console.error(err)
-      toast.error('Unable to delete role')
+      toast.error('Unable to delete access group')
     }
   }
 
@@ -83,14 +89,14 @@ const RoleDetail = ({ projectName, role }) => {
       <Toolbar>
         <Button
           onClick={onDelete}
-          label="Delete project role"
+          label="Delete project access group"
           disabled={!(projectName && isProjectLevel)}
           icon="group_remove"
         />
         <Spacer />
         <SaveButton
           onClick={onSave}
-          label={`Save ${projectName ? 'project ' : ''}role`}
+          label={`Save ${projectName ? 'project ' : ''}access group`}
           active={isChanged}
           saving={saving}
         />
@@ -106,4 +112,4 @@ const RoleDetail = ({ projectName, role }) => {
   )
 }
 
-export default RoleDetail
+export default AccessGroupDetail

@@ -33,6 +33,7 @@ function ShortcutsProvider(props) {
       { key: 's+a', action: () => navigate('/settings/attributes') },
       { key: 's+p', action: () => navigate('/settings/anatomyPresets') },
       { key: 's+c', action: () => navigate('/settings/connect') },
+      { key: 's+g', action: () => navigate('/settings/accessGroups') },
     ],
     [navigate],
   )

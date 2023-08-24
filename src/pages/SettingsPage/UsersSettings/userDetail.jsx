@@ -69,8 +69,8 @@ const fields = [
     },
   },
   {
-    name: 'defaultRoles',
-    label: 'Default Roles',
+    name: 'defaultAccessGroups',
+    label: 'Default access groups',
     data: {
       type: 'list_of_strings',
     },
@@ -85,8 +85,8 @@ const buildFormData = (users = [], attributes) => {
       acc[name] = attribTypeDefaults[data?.type]
       return acc
     }, {}),
-    // roles is custom field
-    roles: {},
+    // access groups is custom field
+    accessGroups: {},
   }
 
   const initForm = {
@@ -125,18 +125,20 @@ const buildFormData = (users = [], attributes) => {
     if (index !== 0 && initForm.userLevel !== userLevel) initForm.userLevel = defaultForm.userLevel
     else initForm.userLevel = userLevel
 
-    // defaultRoles
-    if (index !== 0 && initForm.defaultRoles !== user.defaultRoles) {
-      initForm.defaultRoles = defaultForm.defaultRoles
+    // defaultAccessGroups
+    if (index !== 0 && initForm.defaultAccessGroups !== user.defaultAccessGroups) {
+      initForm.defaultAccessGroups = defaultForm.defaultAccessGroups
     } else {
-      initForm.defaultRoles = user.defaultRoles
+      initForm.defaultAccessGroups = user.defaultAccessGroups
     }
 
-    // roles
-    if (user.roles) {
-      for (const project in user.roles) {
-        if (!initForm.roles[project]) initForm.roles[project] = []
-        initForm.roles[project] = [...new Set([...initForm.roles[project], ...user.roles[project]])]
+    // AccessGroups
+    if (user.accessGroups) {
+      for (const project in user.accessGroups) {
+        if (!initForm.accessGroups[project]) initForm.accessGroups[project] = []
+        initForm.accessGroups[project] = [
+          ...new Set([...initForm.accessGroups[project], ...user.accessGroups[project]]),
+        ]
       }
     }
   })
@@ -186,28 +188,32 @@ const UserDetail = ({
     if (!formData || !initData) return
 
     const {
-      roles: formDataRoles,
-      defaultRoles: formDataDefaultRoles,
-      ...formDataWithoutRoles
+      accessGroups: formDataAccessGroups,
+      defaultAccessGroups: formDataDefaultAccessGroups,
+      ...formDataWithoutAccessGroups
     } = formData || {}
     const {
-      roles: initDataRoles,
-      defaultRoles: initDataDefaultRoles,
-      ...initDataWithoutRoles
+      accessGroups: initDataAccessGroups,
+      defaultAccessGroups: initDataDefaultAccessGroups,
+      ...initDataWithoutAccessGroups
     } = initData || {}
 
-    const isDiffForm = !isEqual(formDataWithoutRoles, initDataWithoutRoles)
-    const isDiffRoles = !isEqual(formDataRoles, initDataRoles)
-    const isDiffDefaultRoles = !isEqual(formDataDefaultRoles, initDataDefaultRoles)
+    const isDiffForm = !isEqual(formDataWithoutAccessGroups, initDataWithoutAccessGroups)
+    const isDiffAccessGroups = !isEqual(formDataAccessGroups, initDataAccessGroups)
+    const isDiffDefaultAccessGroups = !isEqual(
+      formDataDefaultAccessGroups,
+      initDataDefaultAccessGroups,
+    )
 
-    const isDiff = isDiffForm || isDiffRoles || isDiffDefaultRoles || selectedUsers.length > 1
+    const isDiff =
+      isDiffForm || isDiffAccessGroups || isDiffDefaultAccessGroups || selectedUsers.length > 1
 
     if (isDiff && (!isSelfSelected || selectedUsers.length === 1)) {
       if (!changesMade) setChangesMade(true)
     } else {
       setChangesMade(false)
     }
-  }, [formData, initData, selectedUsers, formData?.roles])
+  }, [formData, initData, selectedUsers, formData?.accessGroups])
 
   // editing a single user, so show attributes form too
   const singleUserEdit = selectedUsers.length === 1 ? formUsers[0] : null
@@ -238,7 +244,9 @@ const UserDetail = ({
           <li>User Active: {formData.userActive ? 'Yes' : 'No'}</li>
           <li>Access Level: {formData.userLevel}</li>
           <li>Is Guest: {formData.isGuest ? 'Yes' : 'No'}</li>
-          <li>Roles: {formData.roles?.length ? formData.roles.join(', ') : ''}</li>
+          <li>
+            AccessGroups: {formData.accessGroups?.length ? formData.accessGroups.join(', ') : ''}
+          </li>
         </ul>
       ),
 
@@ -251,14 +259,17 @@ const UserDetail = ({
     toastId.current = toast.info('Updating user(s)...')
     let i = 0
     for (const user of formUsers) {
-      const data = { roles: formData.roles, defaultRoles: formData.defaultRoles }
+      const data = {
+        accessGroups: formData.accessGroups,
+        defaultAccessGroups: formData.defaultAccessGroups,
+      }
       const attrib = {}
 
       if (singleUserEdit) {
         attributes.forEach(({ name }) => (attrib[name] = formData[name]))
       }
 
-      // update user level && do role clean-up
+      // update user level && do access group clean-up
       data.isAdmin = formData.userLevel === 'admin'
       data.isManager = formData.userLevel === 'manager'
       data.isService = formData.userLevel === 'service'
@@ -304,19 +315,19 @@ const UserDetail = ({
   // Render
   //
 
-  const headerRoles = formUsers.reduce((acc, user) => {
-    let roles = Object.entries(user.roles)
-      .map(([project, role]) =>
-        selectedProjects ? (selectedProjects?.includes(project) ? role : []) : role,
+  const headerAccessGroups = formUsers.reduce((acc, user) => {
+    let accessGroups = Object.entries(user.accessGroups)
+      .map(([project, accessGroup]) =>
+        selectedProjects ? (selectedProjects?.includes(project) ? accessGroup : []) : accessGroup,
       )
       .flat()
 
     // add admin, manager, service
-    if (user.isAdmin) roles.push('admin')
-    else if (user.isService) roles.push('service')
-    else if (user.isManager) roles.push('manager')
+    if (user.isAdmin) accessGroups.push('admin')
+    else if (user.isService) accessGroups.push('service')
+    else if (user.isManager) accessGroups.push('manager')
 
-    return [...new Set([...acc, ...roles])]
+    return [...new Set([...acc, ...accessGroups])]
   }, [])
 
   return (
@@ -324,7 +335,7 @@ const UserDetail = ({
       <UserDetailsHeader
         users={formUsers}
         onClose={onClose}
-        subTitle={headerRoles.length ? headerRoles.join(', ') : 'No Roles'}
+        subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No AccessGroups'}
       />
       {hasServiceUser && singleUserEdit ? (
         <FormsStyled>

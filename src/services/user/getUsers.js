@@ -12,8 +12,8 @@ const USER_BY_NAME_QUERY = `
           isService
           isGuest
           active
-          roles
-          defaultRoles
+          accessGroups
+          defaultAccessGroups
           hasPassword
           attrib {
             #ATTRS#
@@ -34,8 +34,8 @@ const USERS_QUERY = `
           isService
           isGuest
           active
-          roles
-          defaultRoles
+          accessGroups
+          defaultAccessGroups
           hasPassword
           createdAt
           updatedAt
@@ -116,7 +116,7 @@ const getUsers = ayonApi.injectEndpoints({
         return res?.data?.users.edges.map((e) => ({
           ...e.node,
           self: e.node.name === selfName,
-          roles: e.node.roles ? JSON.parse(e.node.roles) : {},
+          accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
         }))
       },
       providesTags: (users) =>

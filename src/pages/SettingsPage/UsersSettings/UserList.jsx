@@ -127,14 +127,14 @@ const UserList = ({
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />
           <Column
-            field={'rolesList'}
-            header="Roles"
+            field={'accessGroupList'}
+            header="Access groups"
             body={(rowData) =>
               rowData &&
-              rowData.roles &&
-              Object.keys(rowData.roles).map((roleName) => (
-                <span key={roleName} className={rowData.roles[roleName].cls}>
-                  {roleName}
+              rowData.accessGroups &&
+              Object.keys(rowData.accessGroups).map((agName) => (
+                <span key={agName} className={rowData.accessGroups[agName].cls}>
+                  {agName}
                 </span>
               ))
             }
