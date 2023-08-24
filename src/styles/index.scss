@@ -425,7 +425,7 @@ a {
 // clearing a date input
 .react-datepicker__close-icon {
   &::after {
-    background-color: var(--button-background);
+    background-color: var(--md-sys-color-surface-container-highest);
   }
 }
 
