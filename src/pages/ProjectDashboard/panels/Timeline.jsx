@@ -32,12 +32,9 @@ const TailsStyled = styled.div`
   ${({ end }) =>
     end &&
     css`
-      background-color: var(--color-grey-08);
+      background-color: var(--md-sys-color-on-surface);
+      color: var(--md-sys-color-on-secondary);
       z-index: 10;
-
-      :hover {
-        background-color: var(--color-grey-09);
-      }
     `}
 `
 
@@ -179,9 +176,13 @@ const Timeline = ({ projectName }) => {
           is
           values={[
             { value: done, label: `${done}/${length}` },
-            { value: left, label: `${length - done} Left`, color: 'var(--color-grey-08)' },
+            {
+              value: left,
+              label: `${length - done} Left`,
+              color: 'var(--md-sys-color-on-surface)',
+            },
           ]}
-          backgroundColor="var(--color-grey-08)"
+          backgroundColor="var(--md-sys-color-on-surface)"
         />
         <MarkerStyled left={percentage}>{!isFetching && `Day ${done}`}</MarkerStyled>
       </ProgressStyled>
