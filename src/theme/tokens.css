@@ -1,5 +1,61 @@
 :root {
   --md-source: #009BE1;
+  /* dark */
+  --md-sys-color-primary-dark: #8FCEFF;
+  --md-sys-color-on-primary-dark: #00344F;
+  --md-sys-color-primary-container-dark: #004B70;
+  --md-sys-color-on-primary-container-dark: #EBF5FF;
+  --md-sys-color-primary-fixed-dark: #CAE6FF;
+  --md-sys-color-on-primary-fixed-dark: #001E30;
+  --md-sys-color-primary-fixed-dim-dark: #8DCDFF;
+  --md-sys-color-on-primary-fixed-variant-dark: #004B70;
+  --md-sys-color-secondary-dark: #B7C9D9;
+  --md-sys-color-on-secondary-dark: #22323F;
+  --md-sys-color-secondary-container-dark: #384956;
+  --md-sys-color-on-secondary-container-dark: #D3E5F6;
+  --md-sys-color-secondary-fixed-dark: #D3E5F6;
+  --md-sys-color-on-secondary-fixed-dark: #0C1D29;
+  --md-sys-color-secondary-fixed-dim-dark: #B7C9D9;
+  --md-sys-color-on-secondary-fixed-variant-dark: #384956;
+  --md-sys-color-tertiary-dark: #23E0A9;
+  --md-sys-color-on-tertiary-dark: #003827;
+  --md-sys-color-tertiary-container-dark: #00513A;
+  --md-sys-color-on-tertiary-container-dark: #52FDC3;
+  --md-sys-color-tertiary-fixed-dark: #52FDC3;
+  --md-sys-color-on-tertiary-fixed-dark: #002115;
+  --md-sys-color-tertiary-fixed-dim-dark: #23E0A9;
+  --md-sys-color-on-tertiary-fixed-variant-dark: #00513A;
+  --md-sys-color-error-dark: #FFB4AB;
+  --md-sys-color-on-error-dark: #690005;
+  --md-sys-color-error-container-dark: #93000A;
+  --md-sys-color-on-error-container-dark: #FFDAD6;
+  --md-sys-color-outline-dark: #8B9198;
+  --md-sys-color-background-dark: #252A31;
+  --md-sys-color-on-background-dark: #F2F2F3;
+  --md-sys-color-surface-dark: #252B32;
+  --md-sys-color-on-surface-dark: #F4F5F5;
+  --md-sys-color-surface-variant-dark: #41474D;
+  --md-sys-color-on-surface-variant-dark: #C1C7CE;
+  --md-sys-color-inverse-surface-dark: #E2E2E5;
+  --md-sys-color-inverse-on-surface-dark: #191B1E;
+  --md-sys-color-inverse-primary-dark: #006493;
+  --md-sys-color-shadow-dark: #000000;
+  --md-sys-color-surface-tint-dark: #8DCDFF;
+  --md-sys-color-outline-variant-dark: #41474D;
+  --md-sys-color-scrim-dark: #000000;
+  --md-sys-color-surface-container-highest-dark: #424A57;
+  --md-sys-color-surface-container-high-dark: #353B46;
+  --md-sys-color-surface-container-dark: #272D35;
+  --md-sys-color-surface-container-low-dark: #1C2026;
+  --md-sys-color-surface-container-lowest-dark: #16191D;
+  --md-sys-color-surface-bright-dark: #34383F;
+  --md-sys-color-surface-dim-dark: #060709;
+  /* Custom Colors */
+  --md-custom-color-warning: #fb9c15;
+  --md-sys-color-warning-dark: hsl(25, 100%, 84%);
+  --md-sys-color-on-warning-dark: hsl(25, 100%, 21%);
+  --md-sys-color-warning-container-dark: hsl(25, 100%, 29%);
+  --md-sys-color-on-warning-container-dark: hsl(25, 100%, 92%);
   /* primary */
   --md-ref-palette-primary0: #000000;
   --md-ref-palette-primary5: #001320;
@@ -183,10 +239,10 @@
   --md-sys-color-on-tertiary-fixed-dark: #002115;
   --md-sys-color-tertiary-fixed-dim-dark: #23E0A9;
   --md-sys-color-on-tertiary-fixed-variant-dark: #00513A;
-  --md-sys-color-error-dark: #FFB4AB;
-  --md-sys-color-on-error-dark: #690005;
-  --md-sys-color-error-container-dark: #93000A;
-  --md-sys-color-on-error-container-dark: #FFDAD6;
+  --md-sys-color-error-dark: hsl(6, 100%, 84%);
+  --md-sys-color-on-error-dark: hsl(6, 100%, 21%);
+  --md-sys-color-error-container-dark: hsl(6, 100%, 29%);
+  --md-sys-color-on-error-container-dark: hsl(6, 100%, 92%);
   --md-sys-color-outline-dark: #8B9198;
   --md-sys-color-background-dark: #252A31;
   --md-sys-color-on-background-dark: #F2F2F3;
@@ -209,109 +265,113 @@
   --md-sys-color-surface-bright-dark: #34383F;
   --md-sys-color-surface-dim-dark: #060709;
   /* Custom Colors */
-  --md-custom-color-warning: #FFB400;
+  --md-custom-color-warning: hsl(25, 97%, 53%);
+  --md-sys-color-warning-dark: hsl(25, 100%, 84%);
+  --md-sys-color-on-warning-dark: hsl(25, 100%, 21%);
+  --md-sys-color-warning-container-dark: hsl(25, 100%, 29%);
+  --md-sys-color-on-warning-container-dark: hsl(25, 100%, 92%);
   /* display - large */
   --md-sys-typescale-display-large-font-family-name: Nunito Sans;
   --md-sys-typescale-display-large-font-family-style: Regular;
-  --md-sys-typescale-display-large-font-weight: 400px;
+  --md-sys-typescale-display-large-font-weight: 400;
   --md-sys-typescale-display-large-font-size: 57px;
   --md-sys-typescale-display-large-line-height: 64px;
   --md-sys-typescale-display-large-letter-spacing: -0.25px;
   /* display - medium */
   --md-sys-typescale-display-medium-font-family-name: Nunito Sans;
   --md-sys-typescale-display-medium-font-family-style: Regular;
-  --md-sys-typescale-display-medium-font-weight: 400px;
+  --md-sys-typescale-display-medium-font-weight: 400;
   --md-sys-typescale-display-medium-font-size: 45px;
   --md-sys-typescale-display-medium-line-height: 52px;
   --md-sys-typescale-display-medium-letter-spacing: 0px;
   /* display - small */
   --md-sys-typescale-display-small-font-family-name: Nunito Sans;
   --md-sys-typescale-display-small-font-family-style: Regular;
-  --md-sys-typescale-display-small-font-weight: 400px;
+  --md-sys-typescale-display-small-font-weight: 400;
   --md-sys-typescale-display-small-font-size: 36px;
   --md-sys-typescale-display-small-line-height: 44px;
   --md-sys-typescale-display-small-letter-spacing: 0px;
   /* headline - large */
   --md-sys-typescale-headline-large-font-family-name: Nunito Sans;
   --md-sys-typescale-headline-large-font-family-style: Regular;
-  --md-sys-typescale-headline-large-font-weight: 400px;
+  --md-sys-typescale-headline-large-font-weight: 400;
   --md-sys-typescale-headline-large-font-size: 32px;
   --md-sys-typescale-headline-large-line-height: 40px;
   --md-sys-typescale-headline-large-letter-spacing: 0px;
   /* headline - medium */
   --md-sys-typescale-headline-medium-font-family-name: Nunito Sans;
   --md-sys-typescale-headline-medium-font-family-style: Regular;
-  --md-sys-typescale-headline-medium-font-weight: 400px;
+  --md-sys-typescale-headline-medium-font-weight: 400;
   --md-sys-typescale-headline-medium-font-size: 28px;
   --md-sys-typescale-headline-medium-line-height: 36px;
   --md-sys-typescale-headline-medium-letter-spacing: 0px;
   /* headline - small */
   --md-sys-typescale-headline-small-font-family-name: Nunito Sans;
   --md-sys-typescale-headline-small-font-family-style: Regular;
-  --md-sys-typescale-headline-small-font-weight: 400px;
+  --md-sys-typescale-headline-small-font-weight: 400;
   --md-sys-typescale-headline-small-font-size: 24px;
   --md-sys-typescale-headline-small-line-height: 32px;
   --md-sys-typescale-headline-small-letter-spacing: 0px;
   /* body - large */
   --md-sys-typescale-body-large-font-family-name: Nunito Sans;
   --md-sys-typescale-body-large-font-family-style: Regular;
-  --md-sys-typescale-body-large-font-weight: 400px;
+  --md-sys-typescale-body-large-font-weight: 400;
   --md-sys-typescale-body-large-font-size: 16px;
   --md-sys-typescale-body-large-line-height: 24px;
   --md-sys-typescale-body-large-letter-spacing: 0.50px;
   /* body - medium */
   --md-sys-typescale-body-medium-font-family-name: Nunito Sans;
   --md-sys-typescale-body-medium-font-family-style: Regular;
-  --md-sys-typescale-body-medium-font-weight: 400px;
+  --md-sys-typescale-body-medium-font-weight: 400;
   --md-sys-typescale-body-medium-font-size: 14px;
   --md-sys-typescale-body-medium-line-height: 20px;
   --md-sys-typescale-body-medium-letter-spacing: 0.25px;
   /* body - small */
   --md-sys-typescale-body-small-font-family-name: Nunito Sans;
   --md-sys-typescale-body-small-font-family-style: Regular;
-  --md-sys-typescale-body-small-font-weight: 400px;
+  --md-sys-typescale-body-small-font-weight: 400;
   --md-sys-typescale-body-small-font-size: 12px;
   --md-sys-typescale-body-small-line-height: 16px;
   --md-sys-typescale-body-small-letter-spacing: 0.40px;
   /* label - large */
   --md-sys-typescale-label-large-font-family-name: Nunito Sans;
   --md-sys-typescale-label-large-font-family-style: Bold;
-  --md-sys-typescale-label-large-font-weight: 500px;
+  --md-sys-typescale-label-large-font-weight: 500;
   --md-sys-typescale-label-large-font-size: 14px;
   --md-sys-typescale-label-large-line-height: 20px;
   --md-sys-typescale-label-large-letter-spacing: 0.10px;
   /* label - medium */
   --md-sys-typescale-label-medium-font-family-name: Nunito Sans;
   --md-sys-typescale-label-medium-font-family-style: Bold;
-  --md-sys-typescale-label-medium-font-weight: 500px;
+  --md-sys-typescale-label-medium-font-weight: 500;
   --md-sys-typescale-label-medium-font-size: 12px;
   --md-sys-typescale-label-medium-line-height: 16px;
   --md-sys-typescale-label-medium-letter-spacing: 0.50px;
   /* label - small */
   --md-sys-typescale-label-small-font-family-name: Nunito Sans;
   --md-sys-typescale-label-small-font-family-style: Bold;
-  --md-sys-typescale-label-small-font-weight: 500px;
+  --md-sys-typescale-label-small-font-weight: 500;
   --md-sys-typescale-label-small-font-size: 11px;
   --md-sys-typescale-label-small-line-height: 16px;
   --md-sys-typescale-label-small-letter-spacing: 0.50px;
   /* title - large */
   --md-sys-typescale-title-large-font-family-name: Nunito Sans;
   --md-sys-typescale-title-large-font-family-style: Regular;
-  --md-sys-typescale-title-large-font-weight: 400px;
+  --md-sys-typescale-title-large-font-weight: 400;
   --md-sys-typescale-title-large-font-size: 22px;
   --md-sys-typescale-title-large-line-height: 28px;
   --md-sys-typescale-title-large-letter-spacing: 0px;
   /* title - medium */
   --md-sys-typescale-title-medium-font-family-name: Nunito Sans;
   --md-sys-typescale-title-medium-font-family-style: Bold;
-  --md-sys-typescale-title-medium-font-weight: 500px;
+  --md-sys-typescale-title-medium-font-weight: 600;
   --md-sys-typescale-title-medium-font-size: 16px;
   --md-sys-typescale-title-medium-line-height: 24px;
   --md-sys-typescale-title-medium-letter-spacing: 0.15px;
   /* title - small */
   --md-sys-typescale-title-small-font-family-name: Nunito Sans;
   --md-sys-typescale-title-small-font-family-style: Bold;
-  --md-sys-typescale-title-small-font-weight: 500px;
+  --md-sys-typescale-title-small-font-weight: 600;
   --md-sys-typescale-title-small-font-size: 14px;
   --md-sys-typescale-title-small-line-height: 20px;
   --md-sys-typescale-title-small-letter-spacing: 0.10px;

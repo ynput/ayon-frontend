@@ -19,6 +19,7 @@ import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
 
 import './styles/index.scss'
+import './theme/theme.scss'
 import { ayonApi } from './services/ayon'
 import { setupListeners } from '@reduxjs/toolkit/dist/query'
 import short from 'short-uuid'
