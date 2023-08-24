@@ -503,8 +503,11 @@ a {
         border-radius: 3px;
         opacity: 1;
         z-index: 100;
-        background-color: var(--color-grey-02);
-        @include getShimmerStyles(var(--color-grey-02), var(--color-grey-03));
+        background-color: var(--md-sys-color-surface-container);
+        @include getShimmerStyles(
+          var(--md-sys-color-surface-container),
+          var(--md-sys-color-surface-container-hover)
+        );
       }
     }
   }

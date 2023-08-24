@@ -88,7 +88,7 @@ const SuggestionItemStyled = styled.li`
   ${({ activeIndex, index }) =>
     activeIndex === index &&
     css`
-      background-color: var(--color-grey-02);
+      background-color: var(--md-sys-color-surface-container-low-hover);
     `}
 
   &.results span {

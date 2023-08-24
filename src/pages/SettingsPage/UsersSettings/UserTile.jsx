@@ -31,7 +31,7 @@ const PanelStyled = styled(Panel)`
     !disableHover &&
     css`
       &:hover {
-        background-color: var(--color-grey-02);
+        background-color: var(--md-sys-color-surface-container-low-hover);
         cursor: pointer;
       }
     `}
