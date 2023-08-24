@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
+import { isEmpty } from 'lodash'
+import { toast } from 'react-toastify'
 
 export const AddonSelectStep = ({
   Header,
@@ -9,6 +11,7 @@ export const AddonSelectStep = ({
   setSelectedAddons,
   onSubmit,
   release,
+  previousStep,
 }) => {
   // FIX: get release by name from /api/onboarding/release/:name
   // for now import release.230807.json
@@ -16,7 +19,7 @@ export const AddonSelectStep = ({
   const [sortedAddons, setSortedAddons] = useState([])
 
   useEffect(() => {
-    const sortedAddons = release.addons.map((addon) => addon)
+    const sortedAddons = release?.addons?.map((addon) => addon)
     // order addons by selected and then by addon.mandatory
     sortedAddons.sort((a, b) => {
       const aSelected = selectedAddons.includes(a.name)
@@ -31,7 +34,7 @@ export const AddonSelectStep = ({
   }, [release])
 
   const handleAddonClick = (name) => {
-    const addon = release.addons.find((addon) => addon.name === name)
+    const addon = release?.addons?.find((addon) => addon.name === name)
     if (!addon) return
     // if it's already selected, remove it
     if (selectedAddons.includes(name)) {
@@ -42,6 +45,13 @@ export const AddonSelectStep = ({
     } else {
       setSelectedAddons([...selectedAddons, name])
     }
+  }
+
+  // no release
+  if (isEmpty(release)) {
+    toast.error('Release not found!')
+    previousStep()
+    return null
   }
 
   return (
