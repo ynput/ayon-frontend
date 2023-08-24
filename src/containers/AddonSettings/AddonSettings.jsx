@@ -583,7 +583,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         </Section>
       </SplitterPanel>
       <SplitterPanel>
-        <Section className="wrap" style={{ minWidth: 300 }}>
+        <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
         </Section>

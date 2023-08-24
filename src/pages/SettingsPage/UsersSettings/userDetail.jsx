@@ -320,7 +320,7 @@ const UserDetail = ({
   }, [])
 
   return (
-    <Section className="wrap" style={{ gap: '4px', bottom: 'unset', maxHeight: '100%' }}>
+    <Section wrap style={{ gap: '4px', bottom: 'unset', maxHeight: '100%' }}>
       <UserDetailsHeader
         users={formUsers}
         onClose={onClose}

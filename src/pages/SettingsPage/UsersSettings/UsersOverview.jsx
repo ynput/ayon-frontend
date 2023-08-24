@@ -43,7 +43,7 @@ const UsersOverview = ({ userList = [], onUserSelect, onTotal, selectedProjects,
   const selfUser = userList.filter((u) => u.self)[0]
 
   return (
-    <Section className="wrap" style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
+    <Section wrap style={{ gap: '5px', bottom: 'unset', maxHeight: '100%' }}>
       <TotalsStyledPanel style={{ flexWrap: 'wrap' }}>
         <h2 style={{ width: '100%' }}>{selectedProjects ? selectedProjects.join(', ') : 'All'}</h2>
         <TotalStyledButton

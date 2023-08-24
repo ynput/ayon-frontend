@@ -430,7 +430,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
   }, [form, nodes, changes])
 
   return (
-    <Section className="wrap">
+    <Section wrap>
       {!noSelection && (
         <>
           <EntityDetailsHeader

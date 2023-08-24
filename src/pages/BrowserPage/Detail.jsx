@@ -248,7 +248,7 @@ const Detail = () => {
   const enableEdit = type === 'task' || type === 'folder'
 
   return (
-    <Section className="wrap">
+    <Section wrap>
       <Toolbar>
         <span className="section-header">{upperFirst(type)}</span>
       </Toolbar>

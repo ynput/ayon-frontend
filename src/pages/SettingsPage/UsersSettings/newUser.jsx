@@ -128,7 +128,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
   if (!open) return null
 
   return (
-    <SectionStyled className="wrap" style={{ gap: 4, maxHeight: '100%', bottom: 'unset' }}>
+    <SectionStyled wrap style={{ gap: 4, maxHeight: '100%', bottom: 'unset' }}>
       <DetailHeader onClose={handleClose}>
         <UserImage
           src={formData?.avatarUrl}
