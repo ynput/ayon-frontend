@@ -68,7 +68,7 @@ const SessionList = ({ userName }) => {
           <Column
             header="Invalidate"
             body={(rowData) => (
-              <Button link label="Invalidate" onClick={() => invalidate(rowData.token)} />
+              <Button variant="text" label="Invalidate" onClick={() => invalidate(rowData.token)} />
             )}
             style={{ maxWidth: 160 }}
           />
