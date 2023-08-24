@@ -19,7 +19,7 @@ const StyledLoading = styled.div`
   margin: 4px 0;
   position: relative;
 
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-m);
   overflow: hidden;
 
   ${getShimmerStyles()}

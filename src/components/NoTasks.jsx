@@ -11,7 +11,7 @@ const StyledNoTasks = styled.div`
     background-color: var(--md-sys-color-surface-container-low);
     border: 2px solid var(--md-sys-color-surface-container);
     padding: 12px;
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-m);
     color: var(--md-sys-color-outline-variant);
 
     transform-origin: bottom center;

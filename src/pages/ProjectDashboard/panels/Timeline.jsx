@@ -115,7 +115,7 @@ const StyledLoading = styled.div`
   inset: 8px;
   z-index: 100;
   background-color: var(--md-sys-color-surface-container-high);
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-m);
   ${getShimmerStyles()}
 `
 

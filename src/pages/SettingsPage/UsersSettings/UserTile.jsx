@@ -60,7 +60,7 @@ const TitleStyled = styled.strong`
 const StyledLoading = styled.div`
   position: absolute;
   inset: 0;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-m);
   ${getShimmerStyles(
     'var(--md-sys-color-surface-container-highest)',
     'var(--md-sys-color-surface-container-highest-hover',

@@ -39,7 +39,7 @@ const StatusStyled = styled.div`
     color: inherit;
   }
 
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-m);
   /* same height as a row */
   height: 27px;
   min-height: 27px;
