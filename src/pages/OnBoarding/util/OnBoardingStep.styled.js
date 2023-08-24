@@ -17,7 +17,7 @@ export const StepPanel = styled(Panel)`
   justify-content: flex-start;
   gap: 32px;
   position: relative;
-  background-color: var(--color-grey-00);
+  background-color: var(--panel-background);
   padding: 64px;
   border-radius: 6px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);

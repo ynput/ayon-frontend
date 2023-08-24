@@ -1,11 +1,9 @@
 import styled from 'styled-components'
 
 export const NavBar = styled.nav`
-  background-color: var(--color-grey-00);
   padding-right: 8px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  /* FIX: these needs to be changed to new theme */
-  background-color: var(--color-grey-00);
+  background-color: var(--panel-background);
   padding: 0 8px;
 
   ul {

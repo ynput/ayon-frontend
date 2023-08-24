@@ -88,7 +88,7 @@ const PanelStyled = styled(Panel)`
       }
 
       .thumbnail {
-        background-color: var(--color-grey-00);
+        background-color: var(--md-sys-color-surface-container-low);
       }
 
       ${getShimmerStyles('transparent', 'var(--color-grey-01)')}

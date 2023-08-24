@@ -8,7 +8,7 @@ const StyledNoTasks = styled.div`
   left: 50%;
 
   .icon {
-    background-color: var(--color-grey-00);
+    background-color: var(--md-sys-color-surface-container-low);
     border: 2px solid var(--color-grey-01);
     padding: 12px;
     border-radius: var(--border-radius);

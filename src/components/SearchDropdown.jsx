@@ -41,7 +41,7 @@ const SuggestionsStyled = styled.ul`
   z-index: 9;
   border: 1px solid var(--color-grey-03);
   border-top: none;
-  background-color: var(--color-grey-00);
+  background-color: var(--md-sys-color-surface-container-low);
   border-radius: 0 0 3px 3px;
   padding: 0px;
   margin: 0px;
