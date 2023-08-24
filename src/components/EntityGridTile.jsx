@@ -8,7 +8,7 @@ import getShimmerStyles from '../styles/getShimmerStyles'
 
 const PanelStyled = styled(Panel)`
   padding: 4px;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   max-height: 400px;
   height: 100%;
   width: 100%;
@@ -50,7 +50,7 @@ const PanelStyled = styled(Panel)`
   }
 
   :hover {
-    background-color: var(--color-grey-02);
+    background-color: var(--md-sys-color-surface-container-high-hover);
   }
 
   /* overflows */
@@ -84,14 +84,14 @@ const PanelStyled = styled(Panel)`
       opacity: 0.7;
 
       :hover {
-        background-color: var(--color-grey-01);
+        background-color: var(--md-sys-color-surface-container-high);
       }
 
       .thumbnail {
         background-color: var(--md-sys-color-surface-container-low);
       }
 
-      ${getShimmerStyles('transparent', 'var(--color-grey-01)')}
+      ${getShimmerStyles('transparent', 'var(--md-sys-color-surface-container-high)')}
       &::after {
         opacity: 0.5;
         transition: opacity 0.3s;
@@ -151,7 +151,7 @@ const ThumbnailStyled = styled.div`
 `
 
 const IconStyled = styled(Icon)`
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   width: 25px;
   min-width: 25px;
   max-width: 40px;
