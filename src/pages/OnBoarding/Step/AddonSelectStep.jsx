@@ -1,43 +1,47 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
 
 export const AddonSelectStep = ({
   Header,
   Footer,
-  selectedAddons,
+  selectedAddons = [],
+  selectedPreset,
+  releases = [],
   setSelectedAddons,
   onSubmit,
-  release,
+  isLoadingRelease,
 }) => {
   // FIX: get release by name from /api/onboarding/release/:name
   // for now import release.230807.json
 
   const [sortedAddons, setSortedAddons] = useState([])
 
+  const release = useMemo(
+    () => releases.find((release) => release.name === selectedPreset),
+    [selectedPreset, releases],
+  )
+  const addons = useMemo(() => release?.addons || [], [release])
+  const mandatory = useMemo(() => release?.mandatoryAddons || [], [release])
+
   useEffect(() => {
-    const sortedAddons = release.addons.map((addon) => addon)
+    const sortedAddons = [...addons]
     // order addons by selected and then by addon.mandatory
     sortedAddons.sort((a, b) => {
-      const aSelected = selectedAddons.includes(a.name)
-      const bSelected = selectedAddons.includes(b.name)
+      const aSelected = selectedAddons.includes(a)
+      const bSelected = selectedAddons.includes(b)
       if (aSelected && !bSelected) return -1
       if (!aSelected && bSelected) return 1
-      if (a.mandatory && !b.mandatory) return -1
-      if (!a.mandatory && b.mandatory) return 1
+      if (mandatory.includes(a) && !mandatory.includes(b)) return -1
+      if (!mandatory.includes(a) && mandatory.includes(b)) return 1
       return 0
     })
     setSortedAddons(sortedAddons)
-  }, [release])
+  }, [releases])
 
   const handleAddonClick = (name) => {
-    const addon = release.addons.find((addon) => addon.name === name)
-    if (!addon) return
     // if it's already selected, remove it
     if (selectedAddons.includes(name)) {
-      if (addon.mandatory) {
-        return // prevent removing the "Core" addon
-      }
       setSelectedAddons(selectedAddons.filter((addon) => addon !== name))
     } else {
       setSelectedAddons([...selectedAddons, name])
@@ -50,18 +54,23 @@ export const AddonSelectStep = ({
       <Styled.AddonsContainer>
         {sortedAddons.map(
           (addon) =>
-            !addon.mandatory && (
+            !mandatory.includes(addon) && (
               <AddonCard
-                key={addon.name}
-                name={addon.name}
-                icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
-                isSelected={selectedAddons.includes(addon.name)}
-                onClick={() => handleAddonClick(addon.name)}
+                key={addon}
+                name={addon}
+                icon={selectedAddons.includes(addon) ? 'check_circle' : 'circle'}
+                isSelected={selectedAddons.includes(addon)}
+                onClick={() => handleAddonClick(addon)}
               />
             ),
         )}
       </Styled.AddonsContainer>
-      <Footer next="Confirm" onNext={onSubmit} />
+      <Footer
+        next="Confirm"
+        onNext={onSubmit}
+        nextProps={{ saving: isLoadingRelease }}
+        showIcon={isLoadingRelease}
+      />
     </Styled.Section>
   )
 }
