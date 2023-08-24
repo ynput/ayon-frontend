@@ -57,7 +57,7 @@ export const More = styled.section`
   height: 100%;
 
   /* border right */
-  border-right: 2px solid var(--color-grey-01);
+  border-right: 2px solid var(--md-sys-color-outline-variant);
   padding-right: 32px;
 
   .skip {

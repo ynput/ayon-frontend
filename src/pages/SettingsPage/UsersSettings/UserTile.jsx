@@ -22,7 +22,7 @@ const StyledUserImage = styled(UserImage)`
 const PanelStyled = styled(Panel)`
   flex-direction: row;
   align-items: center;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   padding: 8px;
   gap: 8px;
 
@@ -43,7 +43,7 @@ const PanelStyled = styled(Panel)`
       ${getShimmerStyles()}
 
       :hover {
-        background-color: var(--color-grey-01);
+        background-color: var(--md-sys-color-surface-container-high);
       }
     `}
 `
@@ -84,6 +84,8 @@ const UserTile = ({
       skip: user || !userName || isWaiting,
     },
   )
+
+  if (!data || !data.length) return null
 
   const loadingState = isLoading || isFetching || isWaiting
 

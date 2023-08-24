@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import * as Styled from './Menu.styled'
-import Colors from '/src/theme/colors.module.scss'
+import Colors from '/src/theme/colors.module.css'
 import MenuList from './MenuList'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'

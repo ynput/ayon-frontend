@@ -24,7 +24,7 @@ const ThumbnailStyled = styled.div`
 `
 
 const ActiveStyled = styled.span`
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   padding: 4px;
   border-radius: 3px;
   position: relative;

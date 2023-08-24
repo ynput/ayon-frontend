@@ -10,7 +10,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 
 const PanelStyled = styled(Panel)`
   flex-direction: row;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container);
   align-items: center;
 
   span {

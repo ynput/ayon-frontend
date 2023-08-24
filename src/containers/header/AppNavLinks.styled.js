@@ -44,31 +44,12 @@ export const NavItem = styled.li`
 
     /* this will be fixed with theme buttons */
     button {
-      background-color: unset;
       padding: 4px 16px;
       max-height: unset;
-      user-select: none;
-
-      &:hover {
-        background-color: var(--color-grey-01);
-      }
-
-      /* temp fix */
-      &:focus {
-        outline: none;
-      }
     }
 
     &.active {
-      background-color: var(--color-grey-01);
-      border: 1px solid var(--md-sys-color-outline-variant);
-      border-bottom: 1px solid var(--color-grey-01);
-
-      button {
-        &:hover {
-          background-color: unset;
-        }
-      }
+      border-bottom: 1px solid var(--md-sys-color-background);
     }
   }
 `

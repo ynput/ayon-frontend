@@ -42,7 +42,7 @@ const ShareStyled = styled.div`
 
   img {
     max-width: 30vw;
-    box-shadow: 0 0 10px 0px var(--color-grey-01);
+    box-shadow: 0 0 10px 0px var(--panel-background);
   }
 
   /* if panel is url link */

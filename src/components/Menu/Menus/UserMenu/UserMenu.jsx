@@ -2,7 +2,7 @@ import React from 'react'
 import * as Styled from './UserMenu.styled'
 import { Button, UserImage } from '@ynput/ayon-react-components'
 import Font from '/src/theme/typography.module.css'
-import Colors from '/src/theme/colors.module.scss'
+import Colors from '/src/theme/colors.module.css'
 import { useLogOutMutation } from '/src/services/auth/getAuth'
 
 export const UserMenu = ({ user, onClose, navigate }) => {

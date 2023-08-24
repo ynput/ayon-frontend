@@ -38,7 +38,7 @@ export const LoginForm = styled.div`
 
   /* login */
   & > div:last-child {
-    background-color: var(--color-grey-01);
+    background-color: var(--md-sys-color-surface-container);
   }
 
   button {
