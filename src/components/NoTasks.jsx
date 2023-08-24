@@ -9,10 +9,10 @@ const StyledNoTasks = styled.div`
 
   .icon {
     background-color: var(--md-sys-color-surface-container-low);
-    border: 2px solid var(--color-grey-01);
+    border: 2px solid var(--md-sys-color-surface-container);
     padding: 12px;
     border-radius: var(--border-radius);
-    color: var(--color-grey-03);
+    color: var(--md-sys-color-outline-variant);
 
     transform-origin: bottom center;
 
