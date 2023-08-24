@@ -5,7 +5,6 @@ import { format, formatDistanceToNow } from 'date-fns'
 import Type from '/src/theme/typography.module.css'
 
 const ReleasePreset = ({
-  addons,
   label,
   bio,
   icon,
@@ -27,9 +26,10 @@ const ReleasePreset = ({
     if (!createdAt) return ''
     const date = new Date(createdAt)
     if (showExactDate) {
-      return format(date, 'dd-MM-yy HH:mm')
+      return format(date, 'dd-MM-yy')
     } else {
-      return formatDistanceToNow(date, { addSuffix: true })
+      const fuzzyDate = formatDistanceToNow(date, { addSuffix: true })
+      return fuzzyDate.includes('hour') ? 'Today' : fuzzyDate
     }
   }, [createdAt, showExactDate])
 
@@ -55,16 +55,16 @@ const ReleasePreset = ({
         <Icon icon={icon} />
         <div>
           <h3 className={Type.titleLarge}>{label || name}</h3>
-          <span className={Type.titleSmall}>{bio}</span>
+          <span className="bio">{bio}</span>
         </div>
       </Styled.Header>
       {isSelected && (
-        <Styled.Addons className={Type.bodySmall}>Addons: {addons?.join(', ')}</Styled.Addons>
-      )}
-      {isSelected && (
-        <Styled.Addons className={Type.bodySmall}>
-          Release: Ynput - {name} - <span onClick={handleClick}>{fuzzyDate}</span>
-        </Styled.Addons>
+        <>
+          {/* <Styled.Addons className={Type.bodySmall}>Addons: {addons?.join(', ')}</Styled.Addons> */}
+          <Styled.Addons className={Type.bodySmall}>
+            Release: Ynput - {name} - <span onClick={handleClick}>{fuzzyDate}</span>
+          </Styled.Addons>
+        </>
       )}
     </Styled.Preset>
   )

@@ -1,18 +1,35 @@
 :root {
     /* primary */
-    --md-sys-color-primary-dark-hover: #83C2F1;
-    --md-sys-color-primary-container-dark-hover: #10577B;
+    --md-sys-color-primary-dark-hover: hsl(206, 80%, 73%);
+    --md-sys-color-on-primary-dark-hover: hsl(201, 79%, 20%);
+    --md-sys-color-primary-container-dark-hover: hsl(200, 77%, 27%);
     /* secondary */
-    --md-sys-color-secondary-dark-hover: #ABBDCD;
-    --md-sys-color-secondary-container-dark-hover: #445563;
+    --md-sys-color-secondary-dark-hover: hsl(208, 25%, 74%);
+    --md-sys-color-secondary-container-dark-hover: hsl(207, 19%, 33%);
     /* tertiary */
-    --md-sys-color-tertiary-dark-hover: #1FCC99;
-    --md-sys-color-tertiary-container-dark-hover: #075F45;
-    /* container-surface FIX: these are wrong */
-    --md-sys-color-surface-container-highest-dark-hover: #33383F;
-    --md-sys-color-surface-container-high-dark-hover: #292d33;
-    --md-sys-color-surface-container-low-dark-hover: #171B20;
-    --md-sys-color-surface-container-lowest-dark-hover: #0C0F12;
-    /* fixed */
-    --md-sys-color-surface-container-dark-hover: #343A41;
+    --md-sys-color-tertiary-dark-hover: hsl(162, 74%, 46%);
+    --md-sys-color-tertiary-container-dark-hover: hsl(162, 86%, 20%);
+    /* container-surface */
+    --md-sys-color-surface-container-highest-dark-hover: hsl(216, 11%, 34%);
+    --md-sys-color-surface-container-high-dark-hover: hsl(217, 11%, 29%);
+    --md-sys-color-surface-container-dark-hover: hsl(212, 11%, 23%);
+    --md-sys-color-surface-container-low-dark-hover: hsl(213, 10%, 18%);
+    --md-sys-color-surface-container-lowest-dark-hover: hsl(214, 9%, 15%);
+
+    /* primary */
+    --md-sys-color-primary-dark-active: hsl(206, 72%, 71%);
+    --md-sys-color-on-primary-dark-active: hsl(202, 71%, 23%);
+    --md-sys-color-primary-container-dark-active: hsl(200, 69%, 30%);
+    /* secondary */
+    --md-sys-color-secondary-dark-active: hsl(207, 22%, 71%);
+    --md-sys-color-secondary-container-dark-active: hsl(206, 17%, 35%);
+    /* tertiary */
+    --md-sys-color-tertiary-dark-active: hsl(163, 74%, 44%);
+    --md-sys-color-tertiary-container-dark-active: hsl(162, 82%, 22%);
+    /* container-surface */
+    --md-sys-color-surface-container-highest-dark-active: hsl(218, 10%, 36%);
+    --md-sys-color-surface-container-high-dark-active: hsl(220, 10%, 31%);
+    --md-sys-color-surface-container-dark-active: hsl(217, 10%, 25%);
+    --md-sys-color-surface-container-low-dark-active: hsl(213, 9%, 21%);
+    --md-sys-color-surface-container-lowest-dark-active: hsl(220, 7%, 18%);
 }
