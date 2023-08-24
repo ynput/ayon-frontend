@@ -572,7 +572,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                         color: isChanged
                           ? 'var(--color-on-changed)'
                           : !isOwn
-                          ? 'var(--color-grey-06)'
+                          ? 'var(--md-ref-palette-neutral-variant60)'
                           : 'var(--color-text)',
                         ...disabledStyles,
                         width: '100%',
@@ -593,7 +593,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                         color: isChanged
                           ? 'black'
                           : !isOwn
-                          ? 'var(--color-grey-06)'
+                          ? 'var(--md-ref-palette-neutral-variant60'
                           : 'var(--color-text)',
                         ...disabledStyles,
                         width: '100%',
