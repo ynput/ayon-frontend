@@ -479,8 +479,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                 let disabledStyles = {}
                 if (disabled) {
                   disabledStyles = {
-                    color: 'var(--color-text-dim)',
-                    backgroundColor: 'var(--input-disabled-background-color)',
+                    opacity: 0.7,
                     fontStyle: 'italic',
                   }
                 }
