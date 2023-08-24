@@ -8,7 +8,6 @@ import {
   useGetInstallEventsQuery,
   useGetReleaseQuery,
   useInstallPresetMutation,
-  useLazyGetReleaseQuery,
 } from '/src/services/onBoarding/onBoarding'
 import { useGetReleasesQuery } from '/src/services/getRelease'
 import useLocalStorage from '/src/hooks/useLocalStorage'
@@ -124,14 +123,11 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     { name: selectedPreset },
     { skip: !selectedPreset },
   )
-  // lazy
-  const [getRelease] = useLazyGetReleaseQuery()
 
-  // once releases are loaded, set selectedPreset to the first one and pre-cache each release
+  // // once releases are loaded, set selectedPreset to the first one and pre-cache each release
   useEffect(() => {
     if (releases.length) {
       setSelectedPreset(releases[0].name)
-      releases.forEach(({ name }) => getRelease({ name }))
     }
   }, [releases])
 
