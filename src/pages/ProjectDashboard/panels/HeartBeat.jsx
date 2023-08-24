@@ -45,7 +45,7 @@ const HeartBeat = ({ projectName }) => {
       {
         data: activity,
         fill: false,
-        borderColor: '#47b7da',
+        borderColor: '#8FCEFF',
         borderWidth: 3,
         borderCapStyle: 'round',
         borderJoinStyle: 'round',
