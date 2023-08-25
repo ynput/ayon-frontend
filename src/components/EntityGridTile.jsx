@@ -36,6 +36,7 @@ const PanelStyled = styled(Panel)`
     min-height: 17.5px;
     padding: 0 4px;
     overflow: hidden;
+    width: 100%;
 
     span {
       overflow: hidden;
