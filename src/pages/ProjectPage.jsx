@@ -128,6 +128,7 @@ const ProjectPage = () => {
             onClick={() => {
               setShowContextDialog(true)
             }}
+            variant="text"
           />
         ),
       },

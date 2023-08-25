@@ -60,6 +60,7 @@ const Header = () => {
       <HeaderButton
         icon="event_list"
         label="Projects"
+        variant="text"
         onClick={() => handleToggleMenu('project')}
         style={{
           alignItems: 'center',
@@ -75,6 +76,7 @@ const Header = () => {
         ref={helpButtonRef}
         onClick={() => handleToggleMenu('help')}
         active={menuOpen === 'help'}
+        variant="text"
       />
       <MenuContainer id="help" target={helpButtonRef.current}>
         <HelpMenu user={user} />
@@ -83,6 +85,7 @@ const Header = () => {
         active={menuOpen === 'user'}
         onClick={() => handleToggleMenu('user')}
         ref={userButtonRef}
+        variant="text"
       >
         <UserImage
           size={26}
@@ -98,6 +101,7 @@ const Header = () => {
         onClick={() => handleToggleMenu('app')}
         ref={appButtonRef}
         active={menuOpen === 'app'}
+        variant="text"
       />
       <MenuContainer id="app" target={appButtonRef.current}>
         <AppMenu user={user} />
