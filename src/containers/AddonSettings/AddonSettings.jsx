@@ -437,13 +437,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Button
           label="Production"
           onClick={() => onSetEnvironment('production')}
-          disabled={environment === 'production'}
           style={environment === 'production' ? styleHlProd : {}}
         />
         <Button
           label="Staging"
           onClick={() => onSetEnvironment('staging')}
-          disabled={environment === 'staging'}
           style={environment === 'staging' ? styleHlStag : {}}
         />
         <Button
@@ -456,6 +454,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           tooltip="Push to production"
           onClick={onPushToProduction}
           disabled={environment !== 'staging' || canCommit}
+          style={{ zIndex: 100 }}
         />
       </Toolbar>
     )
