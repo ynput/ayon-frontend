@@ -58,12 +58,13 @@ const StepWrapper = ({ children }) => {
 
   // after 10 seconds timeout
   useEffect(() => {
+    if (!isConnecting) return
     const timeout = setTimeout(() => {
       toast.error('Connection timed out')
       setIsConnecting(false)
     }, 10000)
     return () => clearTimeout(timeout)
-  }, [showLoading])
+  }, [showLoading, isConnecting])
 
   return (
     <>
