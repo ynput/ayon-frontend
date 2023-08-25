@@ -7,7 +7,7 @@ const ServerRestartBanner = ({ message, active }) => {
 
   if (!serverIsRestarting && !active) return null
 
-  let shownMessage = message || 'Server is restarting. Hand tight!'
+  let shownMessage = message || 'Server is restarting. Hang tight!'
 
   return (
     <>
