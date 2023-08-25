@@ -474,6 +474,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
 
                 const changedStyles = {
                   backgroundColor: isChanged ? 'var(--color-changed)' : 'initial',
+                  color: isChanged ? 'var(--color-on-changed)' : 'initial',
                 }
 
                 let disabledStyles = {}
@@ -510,9 +511,11 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       maxWidth={'100%'}
                       style={{
-                        ...changedStyles,
-                        border: '1px solid var(--md-sys-color-outline-variant)',
+                        border: isChanged
+                          ? '3px solid var(--md-sys-color-primary)'
+                          : '1px solid var(--md-sys-color-outline-variant)',
                       }}
+                      isChanged={isChanged}
                       height={30}
                       placeholder={placeholder}
                       disableMessage
