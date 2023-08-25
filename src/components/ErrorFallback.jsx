@@ -1,4 +1,4 @@
-import { Button, Panel } from '@ynput/ayon-react-components'
+import { Button, Panel, Section } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'
 
@@ -19,16 +19,25 @@ const ErrorFallback = ({ error }) => {
   return (
     <StyledPanel>
       <h1>Something went wrong :(</h1>
-      <pre style={{ color: 'var(--color-hl-error)' }}>{error.toString()}</pre>
-      <a href="https://github.com/ynput/ayon-frontend/issues" target="_blank" rel="noreferrer">
+      <pre style={{ color: 'var(--color-hl-error)' }}>{error?.toString()}</pre>
+      <Section direction="row">
+        <a href="https://github.com/ynput/ayon-frontend/issues" target="_blank" rel="noreferrer">
+          <Button
+            icon={'bug_report'}
+            label={'Report bug'}
+            style={{
+              width: '100%',
+            }}
+            variant="text"
+          />
+        </a>
         <Button
-          icon={'bug_report'}
-          label={'Please open an Issue'}
-          style={{
-            width: '100%',
-          }}
+          label={'Reload page'}
+          icon="sync"
+          variant="filled"
+          onClick={() => window.location.reload()}
         />
-      </a>
+      </Section>
     </StyledPanel>
   )
 }
