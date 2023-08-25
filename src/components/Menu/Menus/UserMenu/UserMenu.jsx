@@ -2,7 +2,6 @@ import React from 'react'
 import * as Styled from './UserMenu.styled'
 import { Button, UserImage } from '@ynput/ayon-react-components'
 import Font from '/src/theme/typography.module.css'
-import Colors from '/src/theme/colors.module.css'
 import { useLogOutMutation } from '/src/services/auth/getAuth'
 
 export const UserMenu = ({ user, onClose, navigate }) => {
@@ -26,7 +25,7 @@ export const UserMenu = ({ user, onClose, navigate }) => {
             {fullName ? (
               <span>{fullName}</span>
             ) : (
-              <span onClick={() => navigate('/profile')} className={Colors['error-text']}>
+              <span onClick={() => navigate('/profile')} className={'error'}>
                 Set Full Name
               </span>
             )}

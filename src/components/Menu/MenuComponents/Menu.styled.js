@@ -67,6 +67,7 @@ export const Section = styled.section`
   border-radius: 8px;
   /* colors */
   background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
   z-index: 10;
   overflow: hidden;
 `
@@ -154,6 +155,7 @@ export const Footer = styled.footer`
   justify-content: center;
   align-items: center;
   align-self: stretch;
+  background-color: var(--md-sys-color-surface-container-lowest);
 
   user-select: text;
 
