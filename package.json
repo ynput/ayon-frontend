@@ -15,7 +15,7 @@
     "@reduxjs/toolkit": "^1.8.2",
     "@rjsf/core": "^4.2.0",
     "@rtk-query/graphql-request-base-query": "^2.2.0",
-    "@ynput/ayon-react-components": "^0.3.29",
+    "@ynput/ayon-react-components": "^0.4.0",
     "axios": "^0.27.2",
     "chart.js": "^4.2.0",
     "date-fns": "^2.29.3",
