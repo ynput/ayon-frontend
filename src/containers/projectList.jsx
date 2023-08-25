@@ -99,6 +99,7 @@ const ProjectList = ({
   onNewProject,
   onHide,
   isCollapsible = false,
+  wrap,
 }) => {
   const [contextProject, setContextProject] = useState()
   const navigate = useNavigate()
@@ -281,7 +282,7 @@ const ProjectList = ({
   }
 
   return (
-    <Section style={sectionStyle} className={className}>
+    <Section style={sectionStyle} className={className} wrap={wrap}>
       {isProjectManager && (
         <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
           {/* <div className="spacer" /> */}
