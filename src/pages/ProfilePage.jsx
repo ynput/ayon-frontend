@@ -8,6 +8,7 @@ import {
   LockedInput,
   Button,
   SaveButton,
+  InputText,
 } from '@ynput/ayon-react-components'
 import { useGetMeQuery } from '../services/user/getUsers'
 import { useUpdateUserMutation } from '../services/user/updateUser'
@@ -16,6 +17,8 @@ import styled from 'styled-components'
 import UserAttribForm from './SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from './SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../ayon'
+import { onProfileUpdate } from '../features/user'
+import { useDispatch } from 'react-redux'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -39,6 +42,7 @@ export const PanelButtonsStyled = styled(Panel)`
 `
 
 const ProfilePage = () => {
+  const dispatch = useDispatch()
   const attributes = ayonClient.getAttribsByScope('user')
   // RTK QUERIES
   // GET USER DATA
@@ -116,6 +120,8 @@ const ProfilePage = () => {
 
       toast.success('Profile updated')
 
+      // update redux state with new data
+      dispatch(onProfileUpdate(formData))
       // reset form
       setInitData(formData)
       setChangesMade(false)
@@ -138,7 +144,7 @@ const ProfilePage = () => {
         <FormsStyled>
           <Panel>
             <FormRow label="Username" key="Username">
-              <LockedInput value={name} disabled />
+              <InputText value={name} disabled />
             </FormRow>
             <FormRow label="Password" key="Password">
               <LockedInput

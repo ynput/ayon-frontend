@@ -9,7 +9,7 @@ const updateUser = ayonApi.injectEndpoints({
         body: patch,
       }),
       transformErrorResponse: (res) => res.data,
-      invalidatesTags: (result, error, { name }) => [{ type: 'user', id: name }],
+      invalidatesTags: (result, error, { name }) => [{ type: 'user', id: name }, ['info']],
     }),
     updateUserName: build.mutation({
       query: ({ name, newName }) => ({
