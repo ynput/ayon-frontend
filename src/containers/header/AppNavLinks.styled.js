@@ -49,6 +49,16 @@ export const NavItem = styled.li`
     }
 
     &.active {
+      background-color: var(--md-sys-color-background);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-bottom: 1px solid var(--color-grey-01);
+
+      button {
+        &:hover {
+          background-color: unset;
+        }
+      }
+
       border-bottom: 1px solid var(--md-sys-color-background);
     }
   }
