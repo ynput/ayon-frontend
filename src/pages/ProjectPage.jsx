@@ -123,7 +123,6 @@ const ProjectPage = () => {
       {
         node: (
           <Button
-            className="transparent"
             icon="more_horiz"
             onClick={() => {
               setShowContextDialog(true)
