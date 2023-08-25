@@ -9,8 +9,6 @@ import {
   Button,
 } from '@ynput/ayon-react-components'
 
-import { SelectButton } from 'primereact/selectbutton'
-
 import SettingsEditor from '/src/containers/SettingsEditor'
 import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
@@ -81,20 +79,26 @@ const SiteSettings = () => {
   }
 
   const addonListHeader = useMemo(() => {
-    const environmentOptions = [
-      { label: 'Production', value: 'production' },
-      { label: 'Staging', value: 'staging' },
-    ]
+    const styleHlProd = {
+      backgroundColor: 'var(--color-hl-production)',
+      color: 'black',
+    }
+    const styleHlStag = {
+      backgroundColor: 'var(--color-hl-staging)',
+      color: 'black',
+    }
 
     return (
       <Toolbar>
-        <SelectButton
-          unselectable={false}
-          value={environment}
-          options={environmentOptions}
-          onChange={(e) => {
-            setEnvironment(e.value)
-          }}
+        <Button
+          label="Production"
+          onClick={() => setEnvironment('production')}
+          style={environment === 'production' ? styleHlProd : {}}
+        />
+        <Button
+          label="Staging"
+          onClick={() => setEnvironment('staging')}
+          style={environment === 'staging' ? styleHlStag : {}}
         />
         <Spacer />
         <>
