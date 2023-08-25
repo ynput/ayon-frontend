@@ -168,6 +168,8 @@ const UserDetail = ({
     // have the selected users changed?
     if (selectedUsers.length === 0) return
 
+    setFormUsers(selectedUserList)
+
     // return if the selectedUsers is the same as formUsers
     if (
       formUsers.every((user) => selectedUsers.includes(user.name)) &&
@@ -175,7 +177,6 @@ const UserDetail = ({
     )
       return
 
-    setFormUsers(selectedUserList)
     const builtFormData = buildFormData(selectedUserList, attributes)
 
     setFormData(builtFormData)

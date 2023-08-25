@@ -40,12 +40,12 @@ const ApiKeyManager = ({ preview, name }) => {
 
     // try catch to update api key using unwrap and toaste results
     try {
-      const res = await updateApi({
+      await updateApi({
         name,
         apiKey: key,
       }).unwrap()
 
-      setNewKey({ key, preview: res })
+      setNewKey({ key, preview: true })
 
       toast.success('API Key Created')
     } catch (error) {
@@ -87,16 +87,16 @@ const ApiKeyManager = ({ preview, name }) => {
     })
   }
 
-  const handleCopyKey = () => {
-    navigator.clipboard.writeText(newKey.key)
+  const handleCopyKey = (key) => {
+    navigator.clipboard.writeText(key || newKey.key)
     toast.success('API Key Copied')
   }
 
-  if (preview)
+  if (preview || newKey?.key)
     return (
       <>
         <LockedInput
-          value={preview || newKey.preview}
+          value={preview || newKey?.preview}
           onEdit={handleDelete}
           editIcon={'delete'}
           label={'Api Key'}
