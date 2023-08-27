@@ -1084,6 +1084,7 @@ const EditorPage = () => {
         label: 'Delete',
         icon: 'delete',
         command: onDelete,
+        danger: true,
       },
       {
         label: 'Save All Changes',
