@@ -248,7 +248,7 @@ const UserListTeams = ({
                       key={team}
                       style={{
                         color: rowData.teams[team].leader
-                          ? 'var(--md-sys-color-primary)'
+                          ? 'var(--md-sys-color-tertiary)'
                           : 'inherit',
                         opacity: selectedTeams.includes(team) ? 1 : 0.5,
                         marginLeft: i === 0 ? 0 : 4,
