@@ -61,7 +61,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
   }
 
   return (
-    <Section className={'wrap'} style={{ gap: 4 }}>
+    <Section wrap style={{ gap: 4 }}>
       <DetailHeader
         onClose={() => setSelectedEvent(null)}
         context={event}

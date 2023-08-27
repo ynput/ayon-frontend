@@ -142,7 +142,6 @@ const UserTile = ({
         <TitleStyled style={{ whiteSpace: 'nowrap' }}>
           {!loadingState && (attrib?.fullName ? `${attrib?.fullName} (${name})` : name)}
         </TitleStyled>
-        <br />
         <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
           {!loadingState ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
         </span>
