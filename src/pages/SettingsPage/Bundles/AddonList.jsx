@@ -13,12 +13,12 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
         ? selection.map((s) => {
             const foundAddon = addons.find((a) => a.name === s.name)
             if (!foundAddon) return ['NONE']
-            const versionList = Object.keys(foundAddon.versions || {}).sort((a, b) =>
-              rcompare(a, b),
-            )
+            const versionList = Object.keys(foundAddon.versions || {})
+            versionList.sort((a, b) => rcompare(a, b))
+            console.log(versionList)
             return [...versionList, 'NONE']
           })
-        : [[...versions, 'NONE']],
+        : [[...versions.sort((a, b) => rcompare(a, b)), 'NONE']],
 
     [selection, addons],
   )
@@ -103,7 +103,7 @@ const AddonList = React.forwardRef(
           sortable
           field="version"
           header="Version"
-          style={{ maxWidth: 120 }}
+          style={{ maxWidth: 200 }}
           bodyStyle={{ padding: 8 }}
           body={(addon) => {
             if (readOnly) return formData?.addons?.[addon.name] || 'NONE'

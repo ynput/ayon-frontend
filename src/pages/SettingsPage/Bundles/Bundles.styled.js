@@ -29,6 +29,7 @@ export const BadgeButton = styled(Button)`
   ${({ $hl }) =>
     $hl &&
     css`
+      gap: 2px;
       background-color: ${`var(--color-hl-${$hl})`};
       color: black;
 

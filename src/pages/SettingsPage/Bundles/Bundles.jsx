@@ -268,6 +268,9 @@ const Bundles = () => {
       break
   }
 
+  // at 1310px wide
+  const isCompacted = useMemo(() => window.innerWidth < 1310, [])
+
   return (
     <>
       <Dialog
@@ -294,12 +297,12 @@ const Bundles = () => {
               onClick={() => setUploadOpen('addon')}
             />
             <Button
-              label="Upload Launcher"
+              label={`${isCompacted ? '' : 'Upload'} Launcher`}
               icon="upload"
               onClick={() => setUploadOpen('installer')}
             />
             <Button
-              label="Upload Dependency Package"
+              label={`${isCompacted ? '' : 'Upload'} Dependency Package`}
               icon="upload"
               onClick={() => setUploadOpen('package')}
             />
