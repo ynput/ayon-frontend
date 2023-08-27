@@ -51,13 +51,15 @@ const PanelStyled = styled(Panel)`
     `}
 `
 
-const TitleStyled = styled.strong`
+const TitleStyled = styled.span`
   white-space: nowrap;
   width: 100%;
   position: relative;
   display: inline-block;
   overflow-x: clip;
   text-overflow: ellipsis;
+
+  font-weight: bold;
 `
 
 const StyledLoading = styled.div`
