@@ -72,6 +72,7 @@ const ServicesPage = () => {
         label: 'Delete selected',
         disabled: !selectedServices?.length,
         command: deleteSelected,
+        danger: true,
       },
       {
         label: 'Enable selected',
