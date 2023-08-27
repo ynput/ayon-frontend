@@ -79,8 +79,10 @@ const ProgressStyled = styled.div`
       left: 50% !important;
       transform: translateX(-50%) scale(0.5) !important;
       transform-origin: center !important;
-      color: black;
+      color: var(--md-sys-color-on-secondary);
       font-weight: bold;
+      font-size: 11px;
+      bottom: 5px;
     }
   }
 `
