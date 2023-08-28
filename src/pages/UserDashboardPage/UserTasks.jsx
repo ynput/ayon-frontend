@@ -14,7 +14,7 @@ import {
   onTasksGroupByChanged,
   onTasksSortByChanged,
 } from '/src/features/dashboard'
-import { useMemo } from 'react'
+import { Fragment, useMemo } from 'react'
 import { getFilteredTasks, getGroupedTasks, getSortedTasks, getTasksColumns } from './util'
 
 const UserTasks = () => {
@@ -130,7 +130,12 @@ const UserTasks = () => {
         />
       </Toolbar>
       <Section
-        style={{ height: '100%', width: 'max-content', alignItems: 'flex-start' }}
+        style={{
+          height: '100%',
+          width: '100%',
+          alignItems: 'flex-start',
+          justifyContent: 'flex-start',
+        }}
         direction="row"
       >
         {columnIds.flatMap((id) =>
@@ -138,7 +143,7 @@ const UserTasks = () => {
             <Panel key={id}>
               <h2 style={{ whiteSpace: 'nowrap' }}>{id}</h2>
               {getGroupedTasks(tasksColumns[id], groupByOptions[0]).map((group) => (
-                <>
+                <Fragment key={group.label}>
                   <span>{group.label}</span>
                   {group.tasks.map((task) => (
                     <EntityCard
@@ -151,7 +156,7 @@ const UserTasks = () => {
                       style={{ width: 210 }}
                     />
                   ))}
-                </>
+                </Fragment>
               ))}
             </Panel>
           ) : (

@@ -32,7 +32,7 @@ const UserDashboardPage = () => {
           <ProjectList
             wrap
             isCollapsible
-            styleSection={{ position: 'relative', height: '100%', maxWidth: 200 }}
+            styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
             hideCode
             multiselect
             selection={selectedProjects}
