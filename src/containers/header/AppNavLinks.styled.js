@@ -34,6 +34,7 @@ export const NavBar = styled.nav`
 `
 
 export const NavItem = styled.li`
+  user-select: none;
   /* NavLink */
   a {
     padding: 2px 4px;
