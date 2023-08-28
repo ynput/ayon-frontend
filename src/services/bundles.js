@@ -39,6 +39,20 @@ const getBundles = ayonApi.injectEndpoints({
       ],
     }),
 
+    promoteBundle: build.mutation({
+      query: ({ name }) => ({
+        url: `/api/bundles/${name}`,
+        method: 'POST',
+        body: { action: 'promote' },
+      }),
+      // eslint-disable-next-line no-unused-vars
+      invalidatesTags: (result, error, id) => [
+        { type: 'bundleList' },
+        { type: 'addonList' },
+        { type: 'addonSettingsList' },
+      ],
+    }),
+
     createBundle: build.mutation({
       query: ({ data }) => ({
         url: `/api/bundles`,
@@ -106,4 +120,5 @@ export const {
   useDeleteBundleMutation,
   useCreateBundleMutation,
   useUpdateBundleMutation,
+  usePromoteBundleMutation,
 } = getBundles

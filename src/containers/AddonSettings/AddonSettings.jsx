@@ -23,6 +23,8 @@ import {
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
+
+import { usePromoteBundleMutation } from '/src/services/bundles'
 import { isEqual } from 'lodash'
 import { useNavigate } from 'react-router'
 
@@ -137,6 +139,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
+  const [promoteBundle] = usePromoteBundleMutation()
 
   const uriChanged = useSelector((state) => state.context.uriChanged)
 
@@ -404,8 +407,12 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     pushValueToPath(addon, siteId, path, value)
   } // paste
 
-  const onPushToProduction = () => {
-    toast.error('Not implemented yet')
+  const onPushToProduction = async () => {
+    // Push the current bundle to production
+
+    await promoteBundle({ name: bundleName }).unwrap()
+    toast.success('Bundle pushed to production')
+    setEnvironment('production')
   }
 
   //
