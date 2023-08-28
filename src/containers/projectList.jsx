@@ -124,7 +124,7 @@ const ProjectList = ({
     const projectNames = data.map((project) => project.name)
     let foundProject = false
     if (multiselect && typeof selection === 'object') {
-      foundProject = projectNames.some((project) => selection.includes(project))
+      foundProject = projectNames.some((project) => selection?.includes(project))
     } else {
       foundProject = projectNames.includes(selection)
     }
