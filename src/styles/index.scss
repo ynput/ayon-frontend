@@ -27,6 +27,7 @@ body {
     flex-direction: row;
     gap: 8px;
     padding: 8px;
+    position: relative;
 
     &.center {
       flex-direction: column;

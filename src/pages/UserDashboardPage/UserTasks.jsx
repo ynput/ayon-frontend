@@ -1,7 +1,5 @@
-import React from 'react'
-
 const UserTasks = () => {
-  return <div>UserTasks</div>
+  return 'Tasks'
 }
 
 export default UserTasks
