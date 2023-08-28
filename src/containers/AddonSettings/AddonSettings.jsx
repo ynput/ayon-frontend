@@ -415,6 +415,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const canCommit = useMemo(() => Object.keys(localOverrides).length > 0, [localOverrides])
 
   const addonListHeader = useMemo(() => {
+    if (showSites) return
+
     const onSetEnvironment = (env) => {
       // if (Object.keys(localOverrides).length) {
       //   toast.error('Cannot change environment with unsaved changes')
