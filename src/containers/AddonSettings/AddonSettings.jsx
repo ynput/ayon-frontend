@@ -418,9 +418,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         await promoteBundle({ name: bundleName }).unwrap()
         setLocalData({})
         toast.success('Bundle pushed to production')
-
-        // TODO: settings won't reload in production so skip for now
-        // setEnvironment('production')
+        setEnvironment('production')
       },
       reject: () => {},
     })
