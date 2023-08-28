@@ -33,9 +33,35 @@ const getUserDashboard = ayonApi.injectEndpoints({
           ? [...result.map(({ id }) => ({ type: 'task', id })), { type: 'task', id: 'TASKS' }]
           : [{ type: 'task', id: 'TASKS' }],
     }),
+    getProjectsInfo: build.query({
+      async queryFn({ projects = [] }, { dispatch }) {
+        try {
+          // get project info for each project
+          const projectInfo = {}
+          for (const project of projects) {
+            // hopefully this will be cached
+            // it also allows for different combination of projects but still use the cache
+            const response = await dispatch(
+              ayonApi.endpoints.getProjectAnatomy.initiate(
+                { projectName: project },
+                { forceRefetch: false },
+              ),
+            )
+
+            if (response.status === 'rejected') throw new Error('No projects found', project)
+            projectInfo[project] = { statuses: response?.data?.statuses }
+          }
+
+          return { data: projectInfo }
+        } catch (error) {
+          console.error(error)
+          return error
+        }
+      },
+    }),
   }),
 })
 
 //
 
-export const { useGetKanBanQuery } = getUserDashboard
+export const { useGetKanBanQuery, useGetProjectsInfoQuery } = getUserDashboard
