@@ -1,7 +1,7 @@
 import React from 'react'
 import AppNavLinks from '/src/containers/header/AppNavLinks'
 import { useParams } from 'react-router'
-import UserTasks from './UserTasks'
+import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
@@ -40,7 +40,7 @@ const UserDashboardPage = () => {
             onNoProject={setSelectedProjects}
             autoSelect
           />
-          {module === 'tasks' && <UserTasks />}
+          {module === 'tasks' && <UserTasksContainer />}
         </Section>
       </main>
     </>

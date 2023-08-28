@@ -1,5 +1,3 @@
-import { useDispatch, useSelector } from 'react-redux'
-import { useGetKanBanQuery } from '/src/services/userDashboard/getUserDashboard'
 import {
   EntityCard,
   InputText,
@@ -8,19 +6,20 @@ import {
   SortingDropdown,
   Toolbar,
 } from '@ynput/ayon-react-components'
+import React, { Fragment, useMemo } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   onTaskSelected,
   onTasksFilterChanged,
   onTasksGroupByChanged,
   onTasksSortByChanged,
 } from '/src/features/dashboard'
-import { Fragment, useMemo } from 'react'
-import { getFilteredTasks, getGroupedTasks, getSortedTasks, getTasksColumns } from './util'
+import { getFilteredTasks, getGroupedTasks, getSortedTasks, getTasksColumns } from '../util'
 
-const UserTasks = () => {
+const UserDashboardKanBan = ({ tasks }) => {
   const dispatch = useDispatch()
+
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
-  const user = useSelector((state) => state.user)
 
   // SORT BY
   const sortByOptions = [
@@ -43,9 +42,6 @@ const UserTasks = () => {
   // SELECTED TASKS
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
-
-  //  get kanban tasks for all projects by assigned user (me)
-  const { data: tasks = [] } = useGetKanBanQuery({ assignees: [user.name] }, { skip: !user.name })
 
   // filter out projects by selected projects and filter value
   const filteredTasks = useMemo(
@@ -168,4 +164,4 @@ const UserTasks = () => {
   )
 }
 
-export default UserTasks
+export default UserDashboardKanBan
