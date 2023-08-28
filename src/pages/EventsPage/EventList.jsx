@@ -76,7 +76,7 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
   }, [dataTableRef.current, onScrollBottom, eventData])
 
   return (
-    <Section className={'wrap'}>
+    <Section wrap>
       <TablePanel loading={isLoading}>
         <DataTable
           value={eventData}

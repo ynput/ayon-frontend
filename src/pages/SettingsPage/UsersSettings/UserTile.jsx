@@ -22,7 +22,7 @@ const StyledUserImage = styled(UserImage)`
 const PanelStyled = styled(Panel)`
   flex-direction: row;
   align-items: center;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   padding: 8px;
   gap: 8px;
 
@@ -31,8 +31,11 @@ const PanelStyled = styled(Panel)`
     !disableHover &&
     css`
       &:hover {
-        background-color: var(--color-grey-02);
+        background-color: var(--md-sys-color-surface-container-high-hover);
         cursor: pointer;
+      }
+      &:active {
+        background-color: var(--md-sys-color-surface-container-high-active);
       }
     `}
 
@@ -43,25 +46,30 @@ const PanelStyled = styled(Panel)`
       ${getShimmerStyles()}
 
       :hover {
-        background-color: var(--color-grey-01);
+        background-color: var(--md-sys-color-surface-container-high);
       }
     `}
 `
 
-const TitleStyled = styled.strong`
+const TitleStyled = styled.span`
   white-space: nowrap;
   width: 100%;
   position: relative;
   display: inline-block;
   overflow-x: clip;
   text-overflow: ellipsis;
+
+  font-weight: bold;
 `
 
 const StyledLoading = styled.div`
   position: absolute;
   inset: 0;
-  border-radius: var(--border-radius);
-  ${getShimmerStyles('var(--color-grey-03)', 'var(--color-grey-04)')}
+  border-radius: var(--border-radius-m);
+  ${getShimmerStyles(
+    'var(--md-sys-color-surface-container-highest)',
+    'var(--md-sys-color-surface-container-highest-hover',
+  )}
 `
 
 const UserTile = ({
@@ -84,6 +92,8 @@ const UserTile = ({
       skip: user || !userName || isWaiting,
     },
   )
+
+  if (!data || !data.length) return null
 
   const loadingState = isLoading || isFetching || isWaiting
 
@@ -132,7 +142,6 @@ const UserTile = ({
         <TitleStyled style={{ whiteSpace: 'nowrap' }}>
           {!loadingState && (attrib?.fullName ? `${attrib?.fullName} (${name})` : name)}
         </TitleStyled>
-        <br />
         <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
           {!loadingState ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
         </span>

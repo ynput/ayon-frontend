@@ -19,7 +19,15 @@ const DefaultItemStyled = styled.span`
   ${({ $isSelected }) =>
     $isSelected &&
     css`
-      background-color: var(--color-row-hl);
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      /* remove hover */
+      :hover {
+        background-color: var(--md-sys-color-primary-container-hover);
+      }
+      :active {
+        background-color: var(--md-sys-color-primary-container-active);
+      }
     `}
 `
 

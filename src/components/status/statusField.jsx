@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
 
 const hoverStyle = css`
-  background-color: var(--color-grey-02);
+  background-color: var(--md-sys-color-surface-container-low-hover);
   color: ${({ color }) => color};
 `
 
@@ -39,7 +39,7 @@ const StatusStyled = styled.div`
     color: inherit;
   }
 
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-m);
   /* same height as a row */
   height: 27px;
   min-height: 27px;

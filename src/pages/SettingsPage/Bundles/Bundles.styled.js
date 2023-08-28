@@ -16,7 +16,7 @@ export const PlatformTag = styled.span`
 
   ${({ $platform }) => {
     // get platform color
-    const color = platformColors[$platform?.toLowerCase()] || 'var(--color-grey-07)'
+    const color = platformColors[$platform?.toLowerCase()] || 'var(--md-sys-color-outline)'
 
     return css`
       background-color: ${color};
@@ -29,6 +29,7 @@ export const BadgeButton = styled(Button)`
   ${({ $hl }) =>
     $hl &&
     css`
+      gap: 2px;
       background-color: ${`var(--color-hl-${$hl})`};
       color: black;
 

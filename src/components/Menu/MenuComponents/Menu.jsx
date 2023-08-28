@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import * as Styled from './Menu.styled'
-import Colors from '/src/theme/colors.module.scss'
 import MenuList from './MenuList'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'
@@ -61,10 +60,10 @@ const Menu = ({ menu = [], onClose, footer = '', navigate, ...props }) => {
 
   return (
     <>
-      <Styled.Section className={`${Colors['on-surface-text']}`} {...props}>
+      <Styled.Section {...props}>
         <MenuList items={menu} handleClick={handleClick} onSubMenu={handleSubMenu} level={0} />
         {footer && (
-          <Styled.Footer className={`${Colors['surface-container-low']}`}>
+          <Styled.Footer>
             {footer}
             <Button icon="content_copy" variant="text" onClick={() => copyToClipboard(footer)} />
           </Styled.Footer>

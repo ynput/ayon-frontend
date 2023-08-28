@@ -39,7 +39,7 @@ const ArrayItemControls = styled.div`
   button {
     border-radius: 50%;
     width: 30px;
-    height: 22px;
+    height: 30px;
   }
 `
 

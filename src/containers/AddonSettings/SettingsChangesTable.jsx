@@ -127,7 +127,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
         [rowData.data.addonKey]: [rowData.data.path],
       })
     }
-    return <Button className="transparent" icon="delete" onClick={delChange} />
+    return <Button variant="text" icon="delete" onClick={delChange} />
   }
 
   return (

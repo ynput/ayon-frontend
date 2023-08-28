@@ -26,7 +26,7 @@ const LinesAnimation = (left) => keyframes`
 
 const LineStyled = styled.hr`
   /* default border color */
-  border: 2.5px solid var(--color-hl-00);
+  border: 2.5px solid var(--md-sys-color-primary);
   /* custom line color */
   border-color: ${({ color }) => color};
   flex: 1;
@@ -69,7 +69,8 @@ const LineStyled = styled.hr`
     bottom: 8px;
     z-index: 20;
 
-    background-color: var(--color-hl-00);
+    color: var(--md-sys-color-on-primary);
+    background-color: var(--primary-color);
     background-color: ${({ color }) => color};
     padding: 0 4px;
     border-radius: 3px;

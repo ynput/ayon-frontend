@@ -55,7 +55,7 @@ const AppNavLinks = ({ links = [] }) => {
           return (
             <Styled.NavItem key={idx}>
               <NavLink to={item.path}>
-                <Button variant="text" className={Typography.titleMedium} tabIndex={-1}>
+                <Button variant="nav" className={Typography.titleMedium} tabIndex={-1}>
                   {item.name}
                 </Button>
               </NavLink>

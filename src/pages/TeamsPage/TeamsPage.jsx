@@ -2,7 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam } from 'use-query-params'
-import { Button, InputSwitch, InputText, Section, Spacer } from '@ynput/ayon-react-components'
+import {
+  Button,
+  InputSwitch,
+  InputText,
+  SaveButton,
+  Section,
+  Spacer,
+} from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
@@ -15,7 +22,6 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import styled from 'styled-components'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
-import SaveButton from '/src/components/SaveButton'
 import { Dialog } from 'primereact/dialog'
 
 const SectionStyled = styled(Section)`

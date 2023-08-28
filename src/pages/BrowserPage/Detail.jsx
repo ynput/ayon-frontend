@@ -248,7 +248,7 @@ const Detail = () => {
   const enableEdit = type === 'task' || type === 'folder'
 
   return (
-    <Section className="wrap">
+    <Section wrap>
       <Toolbar>
         <span className="section-header">{upperFirst(type)}</span>
       </Toolbar>
@@ -261,7 +261,7 @@ const Detail = () => {
             enableEdit &&
             !showLoading && (
               <Link to={enableEdit ? `/projects/${projectName}/editor` : '#'}>
-                <Button icon="edit" disabled={!enableEdit} />
+                <Button icon="edit" disabled={!enableEdit} variant="text" />
               </Link>
             )
           }

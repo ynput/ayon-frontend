@@ -16,7 +16,7 @@ const BrowserPage = () => {
         stateKey="browser-splitter-1"
       >
         <SplitterPanel size={18} style={{ minWidth: 250, maxWidth: 600 }}>
-          <Section className="wrap">
+          <Section wrap>
             <Hierarchy />
             <TaskList style={{ maxHeight: 300 }} />
           </Section>

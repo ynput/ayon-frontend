@@ -10,17 +10,13 @@ import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 const TailsStyled = styled.div`
   border-radius: var(--panel-border-radius);
-  background-color: var(--color-hl-00);
+  background-color: var(--primary-color);
   white-space: nowrap;
   min-width: 126px;
   min-height: 38px;
   z-index: 50;
 
-  &:hover {
-    background-color: var(--color-hl-02);
-  }
-
-  color: black;
+  color: var(--md-sys-color-on-primary);
   font-weight: bold;
   font-size: 16px;
 
@@ -36,12 +32,9 @@ const TailsStyled = styled.div`
   ${({ end }) =>
     end &&
     css`
-      background-color: var(--color-grey-08);
+      background-color: var(--md-sys-color-on-surface);
+      color: var(--md-sys-color-on-secondary);
       z-index: 10;
-
-      :hover {
-        background-color: var(--color-grey-09);
-      }
     `}
 `
 
@@ -86,8 +79,10 @@ const ProgressStyled = styled.div`
       left: 50% !important;
       transform: translateX(-50%) scale(0.5) !important;
       transform-origin: center !important;
-      color: black;
+      color: var(--md-sys-color-on-secondary);
       font-weight: bold;
+      font-size: 11px;
+      bottom: 5px;
     }
   }
 `
@@ -121,8 +116,8 @@ const StyledLoading = styled.div`
   position: absolute;
   inset: 8px;
   z-index: 100;
-  background-color: var(--color-grey-01);
-  border-radius: var(--border-radius);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--border-radius-m);
   ${getShimmerStyles()}
 `
 
@@ -183,9 +178,13 @@ const Timeline = ({ projectName }) => {
           is
           values={[
             { value: done, label: `${done}/${length}` },
-            { value: left, label: `${length - done} Left`, color: 'var(--color-grey-08)' },
+            {
+              value: left,
+              label: `${length - done} Left`,
+              color: 'var(--md-sys-color-on-surface)',
+            },
           ]}
-          backgroundColor="var(--color-grey-08)"
+          backgroundColor="var(--md-sys-color-on-surface)"
         />
         <MarkerStyled left={percentage}>{!isFetching && `Day ${done}`}</MarkerStyled>
       </ProgressStyled>

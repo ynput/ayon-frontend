@@ -31,7 +31,7 @@ const BundleForm = ({
 
   return (
     <Panel style={{ flexGrow: 1, overflow: 'hidden' }}>
-      <FormLayout style={{ gap: 8, paddingTop: 1, maxWidth: 800 }}>
+      <FormLayout style={{ gap: 8, paddingTop: 1, maxWidth: 900 }}>
         <FormRow label="Name">
           {isNew ? (
             <InputText
@@ -68,8 +68,8 @@ const BundleForm = ({
         </FormRow>
       </FormLayout>
       <Divider />
-      <StyledColumns style={{ maxWidth: isNew ? 800 : 'unset' }}>
-        <section style={{ height: '100%', minWidth: 400 }}>
+      <StyledColumns style={{ maxWidth: isNew ? 900 : 'unset' }}>
+        <section style={{ height: '100%', minWidth: 500 }}>
           <h2>Addons</h2>
           <section style={{ height: '100%' }}>
             <AddonList

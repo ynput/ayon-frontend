@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Panel, FormRow, LockedInput } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Section,
+  Panel,
+  FormRow,
+  LockedInput,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import styled from 'styled-components'
 import ayonClient from '/src/ayon'
@@ -9,7 +16,6 @@ import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
-import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
 
 const FormsStyled = styled.section`
@@ -162,6 +168,8 @@ const UserDetail = ({
     // have the selected users changed?
     if (selectedUsers.length === 0) return
 
+    setFormUsers(selectedUserList)
+
     // return if the selectedUsers is the same as formUsers
     if (
       formUsers.every((user) => selectedUsers.includes(user.name)) &&
@@ -169,7 +177,6 @@ const UserDetail = ({
     )
       return
 
-    setFormUsers(selectedUserList)
     const builtFormData = buildFormData(selectedUserList, attributes)
 
     setFormData(builtFormData)
@@ -325,7 +332,7 @@ const UserDetail = ({
   }, [])
 
   return (
-    <Section className="wrap" style={{ gap: '4px', bottom: 'unset', maxHeight: '100%' }}>
+    <Section wrap style={{ gap: '4px', bottom: 'unset', maxHeight: '100%' }}>
       <UserDetailsHeader
         users={formUsers}
         onClose={onClose}

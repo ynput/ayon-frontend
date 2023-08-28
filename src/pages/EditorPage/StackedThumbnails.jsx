@@ -15,7 +15,7 @@ const StackedStyled = styled.div`
     margin: unset;
     aspect-ratio: 1;
     width: 40px;
-    border: solid 1px var(--color-grey-06);
+    border: solid 1px var(--md-sys-color-outline);
     border-radius: 6px;
 
     span {

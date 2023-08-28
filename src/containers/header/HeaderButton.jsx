@@ -9,6 +9,7 @@ const HeaderButton = styled(Button)`
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  user-select: none;
 
   background-color: transparent;
   padding: 4px;

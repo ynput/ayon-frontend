@@ -2,7 +2,15 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import { Button, Spacer, Section, Panel, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Spacer,
+  Section,
+  Panel,
+  Toolbar,
+  ScrollPanel,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import AddonList from '/src/containers/AddonList'
@@ -15,7 +23,6 @@ import {
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
-import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
 import { useNavigate } from 'react-router'
 
@@ -430,13 +437,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Button
           label="Production"
           onClick={() => onSetEnvironment('production')}
-          disabled={environment === 'production'}
           style={environment === 'production' ? styleHlProd : {}}
         />
         <Button
           label="Staging"
           onClick={() => onSetEnvironment('staging')}
-          disabled={environment === 'staging'}
           style={environment === 'staging' ? styleHlStag : {}}
         />
         <Button
@@ -449,6 +454,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           tooltip="Push to production"
           onClick={onPushToProduction}
           disabled={environment !== 'staging' || canCommit}
+          style={{ zIndex: 100 }}
         />
       </Toolbar>
     )
@@ -576,7 +582,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         </Section>
       </SplitterPanel>
       <SplitterPanel>
-        <Section className="wrap" style={{ minWidth: 300 }}>
+        <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
         </Section>

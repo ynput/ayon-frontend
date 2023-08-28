@@ -23,10 +23,7 @@ const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setSho
   }
 
   return (
-    <Section
-      className="wrap"
-      style={{ gap: '5px', bottom: 'unset', maxHeight: '100%', overflow: 'hidden' }}
-    >
+    <Section wrap style={{ gap: '5px', bottom: 'unset', maxHeight: '100%', overflow: 'hidden' }}>
       <TotalsStyledPanel style={{ flexWrap: 'wrap' }}>
         <h2>Events Overview</h2>
         <TotalStyledButton

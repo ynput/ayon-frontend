@@ -243,7 +243,7 @@ const UsersSettings = () => {
               selection={selectedProjects}
               onSelect={setSelectedProjects}
               style={{ maxWidth: 'unset' }}
-              className="wrap"
+              wrap
             />
           </SplitterPanel>
           <SplitterPanel size={50}>

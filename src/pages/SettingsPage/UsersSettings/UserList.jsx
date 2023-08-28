@@ -92,7 +92,7 @@ const UserList = ({
   // Render
 
   return (
-    <Section className="wrap">
+    <Section wrap>
       <TablePanel>
         <DataTable
           value={tableList}

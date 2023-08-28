@@ -8,11 +8,11 @@ const StyledNoTasks = styled.div`
   left: 50%;
 
   .icon {
-    background-color: var(--color-grey-00);
-    border: 2px solid var(--color-grey-01);
+    background-color: var(--md-sys-color-surface-container-low);
+    border: 2px solid var(--md-sys-color-surface-container);
     padding: 12px;
-    border-radius: var(--border-radius);
-    color: var(--color-grey-03);
+    border-radius: var(--border-radius-m);
+    color: var(--md-sys-color-outline-variant);
 
     transform-origin: bottom center;
 

@@ -54,7 +54,7 @@ const ThumbnailGallery = ({ thumbnails = [], type, isLoading }) => {
 
   return (
     <GalleryStyled>
-      {isMultiple && <Button icon="chevron_left" onClick={() => handleClick(-1)} />}
+      {isMultiple && <Button icon="chevron_left" onClick={() => handleClick(-1)} variant="text" />}
       {thumbnails[index] && (
         <ImageStyled>
           <Thumbnail
@@ -71,7 +71,7 @@ const ThumbnailGallery = ({ thumbnails = [], type, isLoading }) => {
           <span style={{ opacity: isMultiple ? 1 : 0 }}>{thumbnails[index].name}</span>
         </ImageStyled>
       )}
-      {isMultiple && <Button icon="chevron_right" onClick={() => handleClick(1)} />}
+      {isMultiple && <Button icon="chevron_right" onClick={() => handleClick(1)} variant="text" />}
     </GalleryStyled>
   )
 }

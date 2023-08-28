@@ -430,7 +430,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
   }, [form, nodes, changes])
 
   return (
-    <Section className="wrap">
+    <Section wrap>
       {!noSelection && (
         <>
           <EntityDetailsHeader
@@ -473,14 +473,14 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                 }
 
                 const changedStyles = {
-                  backgroundColor: isChanged ? 'var(--color-hl-00)' : 'initial',
+                  backgroundColor: isChanged ? 'var(--color-changed)' : 'initial',
+                  color: isChanged ? 'var(--color-on-changed)' : 'initial',
                 }
 
                 let disabledStyles = {}
                 if (disabled) {
                   disabledStyles = {
-                    color: 'var(--color-text-dim)',
-                    backgroundColor: 'var(--input-disabled-background-color)',
+                    opacity: 0.7,
                     fontStyle: 'italic',
                   }
                 }
@@ -511,9 +511,11 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       maxWidth={'100%'}
                       style={{
-                        ...changedStyles,
-                        border: '1px solid var(--color-grey-03)',
+                        border: isChanged
+                          ? '3px solid var(--md-sys-color-primary)'
+                          : '1px solid var(--md-sys-color-outline-variant)',
                       }}
+                      isChanged={isChanged}
                       height={30}
                       placeholder={placeholder}
                       disableMessage
@@ -532,7 +534,10 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       emptyIcon={false}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       editor
-                      buttonStyle={{ border: '1px solid var(--color-grey-03)', overflow: 'hidden' }}
+                      buttonStyle={{
+                        border: '1px solid var(--md-sys-color-outline-variant)',
+                        overflow: 'hidden',
+                      }}
                       isChanged={isChanged}
                       widthExpand
                     />
@@ -568,10 +573,10 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       style={{
                         ...changedStyles,
                         color: isChanged
-                          ? 'black'
+                          ? 'var(--color-on-changed)'
                           : !isOwn
-                          ? 'var(--color-grey-06)'
-                          : 'var(--color-text)',
+                          ? 'var(--md-ref-palette-neutral-variant60)'
+                          : 'var(--md-sys-color-on-surface-variant)',
                         ...disabledStyles,
                         width: '100%',
                       }}
@@ -591,8 +596,8 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                         color: isChanged
                           ? 'black'
                           : !isOwn
-                          ? 'var(--color-grey-06)'
-                          : 'var(--color-text)',
+                          ? 'var(--md-ref-palette-neutral-variant60'
+                          : 'var(--md-sys-color-on-surface-variant)',
                         ...disabledStyles,
                         width: '100%',
                       }}

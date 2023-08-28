@@ -65,7 +65,7 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
           disabled={bundles.length > 1}
         />
       </Toolbar>
-      {bundles.length > 1 ? (
+      {bundles.length > 1 && bundles.length < 5 ? (
         <BundleCompare bundles={bundles} addons={addons} />
       ) : (
         <BundleForm

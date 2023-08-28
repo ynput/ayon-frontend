@@ -8,7 +8,7 @@ import getShimmerStyles from '../styles/getShimmerStyles'
 
 const PanelStyled = styled(Panel)`
   padding: 4px;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   max-height: 400px;
   height: 100%;
   width: 100%;
@@ -36,6 +36,7 @@ const PanelStyled = styled(Panel)`
     min-height: 17.5px;
     padding: 0 4px;
     overflow: hidden;
+    width: 100%;
 
     span {
       overflow: hidden;
@@ -50,7 +51,7 @@ const PanelStyled = styled(Panel)`
   }
 
   :hover {
-    background-color: var(--color-grey-02);
+    background-color: var(--md-sys-color-surface-container-high-hover);
   }
 
   /* overflows */
@@ -66,11 +67,14 @@ const PanelStyled = styled(Panel)`
   ${({ $isSelected }) =>
     $isSelected &&
     css`
-      /* border: 0.15rem solid var(--color-hl-00); */
-      background-color: var(--color-row-hl);
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
       /* remove hover */
       :hover {
-        background-color: var(--color-row-hl);
+        background-color: var(--md-sys-color-primary-container-hover);
+      }
+      :active {
+        background-color: var(--md-sys-color-primary-container-active);
       }
     `}
 
@@ -81,14 +85,14 @@ const PanelStyled = styled(Panel)`
       opacity: 0.7;
 
       :hover {
-        background-color: var(--color-grey-01);
+        background-color: var(--md-sys-color-surface-container-high);
       }
 
       .thumbnail {
-        background-color: var(--color-grey-00);
+        background-color: var(--md-sys-color-surface-container-low);
       }
 
-      ${getShimmerStyles('transparent', 'var(--color-grey-01)')}
+      ${getShimmerStyles('transparent', 'var(--md-sys-color-surface-container-high)')}
       &::after {
         opacity: 0.5;
         transition: opacity 0.3s;
@@ -148,7 +152,7 @@ const ThumbnailStyled = styled.div`
 `
 
 const IconStyled = styled(Icon)`
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   width: 25px;
   min-width: 25px;
   max-width: 40px;

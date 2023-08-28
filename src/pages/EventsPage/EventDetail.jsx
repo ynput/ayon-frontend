@@ -61,7 +61,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
   }
 
   return (
-    <Section className={'wrap'} style={{ gap: 4 }}>
+    <Section wrap style={{ gap: 4 }}>
       <DetailHeader
         onClose={() => setSelectedEvent(null)}
         context={event}
@@ -92,13 +92,9 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
           <RowStyled>
             <h2>User</h2>
             <UserTile userName={userName} suspense={isLoading || isFetching} disableHover>
-              <Button
-                icon="filter_alt"
-                className="transparent"
-                onClick={() => onFilter(userName)}
-              />
+              <Button icon="filter_alt" variant="text" onClick={() => onFilter(userName)} />
               <Link to={`/settings/users?name=${userName}`}>
-                <Button icon="manage_accounts" className="transparent" />
+                <Button icon="manage_accounts" variant="text" />
               </Link>
             </UserTile>
           </RowStyled>
@@ -116,9 +112,9 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
                 })
               }`}
             >
-              <Button icon="filter_alt" className="transparent" onClick={() => onFilter(project)} />
+              <Button icon="filter_alt" variant="text" onClick={() => onFilter(project)} />
               <Link to={`/manageProjects/dashboard?project=${project}`}>
-                <Button icon="empty_dashboard" className="transparent" />
+                <Button icon="empty_dashboard" variant="text" />
               </Link>
             </EventTile>
           </RowStyled>
@@ -127,9 +123,9 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
           <RowStyled>
             <h2>Entity</h2>
             <EntityTile id={summary.entityId} type={type} disableHover projectName={project}>
-              <Button icon="filter_alt" className="transparent" onClick={() => onFilter(type)} />
+              <Button icon="filter_alt" variant="text" onClick={() => onFilter(type)} />
               <Link to={`/projects/${project}/browser?entityId=${summary.entityId}&type=${type}`}>
-                <Button icon="open_in_new" className="transparent" />
+                <Button icon="open_in_new" variant="text" />
               </Link>
             </EntityTile>
           </RowStyled>

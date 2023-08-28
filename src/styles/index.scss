@@ -1,15 +1,5 @@
-@import '../theme/theme.css';
-:root {
-  // TODO: move this to the rest of the variables
-  --color-hl-site: #efa0a8;
-  --color-hl-variant: #f9d56e;
-  --color-hl-02: #53d2f9;
-  --color-hl-production: #00f0b4;
-  --color-hl-staging: #fa6e46;
-}
-
 input {
-  color: var(--color-text);
+  color: var(--md-sys-color-on-surface);
 }
 
 html {
@@ -49,7 +39,7 @@ body {
   }
 }
 nav.primary {
-  background-color: var(--color-grey-00);
+  background-color: var(--panel-background);
   padding-left: 8px;
   padding-right: 8px;
   padding-top: 4px;
@@ -79,7 +69,7 @@ h4 {
   align-items: center;
   margin: 0;
   padding-bottom: 5px;
-  border-bottom: 1px solid var(--color-grey-01);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 
   &h3 {
     margin-bottom: 20px;
@@ -102,7 +92,7 @@ input:-webkit-autofill:focus {
 //
 
 .oauth-icon {
-  color: var(--color-icon);
+  color: var(--md-sys-color-on-surface);
   width: 32px;
   height: auto;
   transition: color 0.4s ease;
@@ -115,30 +105,30 @@ input:-webkit-autofill:focus {
 }
 .editor-field {
   &.changed {
-    outline: 1px solid var(--color-hl-00);
-    background-color: var(--color-hl-00);
-    color: black;
-    border-radius: var(--border-radius);
+    outline: 1px solid var(--color-changed);
+    background-color: var(--color-changed);
+    color: var(--md-sys-color-on-primary);
+    border-radius: var(--border-radius-m);
   }
   &.inherited {
-    color: var(--color-grey-06);
+    color: var(--md-ref-palette-neutral-variant60);
     font-style: italic;
   }
 }
 
 .p-treetable .p-treetable-tbody > tr.changed {
-  border-left: 4px solid var(--color-hl-00) !important;
+  border-left: 4px solid var(--color-changed) !important;
 }
 
 .p-treetable .p-treetable-tbody > tr.new {
-  border-left: 4px solid var(--color-hl-00);
+  border-left: 4px solid var(--color-changed);
   span {
-    color: var(--color-hl-00) !important;
+    color: var(--color-changed) !important;
   }
 
   // dates
   td > div > span {
-    color: var(--color-hl-00) !important;
+    color: var(--color-changed) !important;
   }
 }
 
@@ -154,7 +144,7 @@ input:-webkit-autofill:focus {
     width: 100%;
     input {
       width: 100%;
-      border: 1px solid var(--color-hl-00);
+      border: 1px solid var(--md-sys-color-primary);
     }
   }
 }
@@ -297,12 +287,12 @@ input:-webkit-autofill:focus {
 // remove text decoration from a tags
 a {
   text-decoration: none;
-  color: var(--color-text);
+  color: var(--md-sys-color-on-surface);
 }
 
 .p-tabview {
   .p-tabview-panels {
-    background-color: var(--color-grey-02);
+    background-color: var(--md-sys-color-surface-container-high);
     display: flex;
     justify-content: center;
     border-radius: 3px;
@@ -312,7 +302,7 @@ a {
     border: 0;
     li {
       .p-tabview-nav-link {
-        background-color: var(--color-grey-01);
+        background-color: var(--md-sys-color-surface-container);
 
         &:focus {
           box-shadow: none !important;
@@ -321,17 +311,16 @@ a {
     }
 
     li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
-      background-color: var(--color-grey-01);
-      text-shadow: 0 0 5px var(--color-text);
+      background-color: var(--md-sys-color-surface-container-high);
       transition: text-shadow 0.2s;
     }
 
     li.p-highlight {
       .p-tabview-nav-link {
-        background-color: var(--color-grey-02);
+        background-color: var(--md-sys-color-surface-container-high);
 
         span {
-          color: var(--color-text);
+          color: var(--md-sys-color-on-surface-variant);
           text-decoration: underline;
         }
       }
@@ -425,7 +414,7 @@ a {
 // clearing a date input
 .react-datepicker__close-icon {
   &::after {
-    background-color: var(--button-background);
+    background-color: var(--md-sys-color-surface-container-highest);
   }
 }
 
@@ -449,7 +438,11 @@ a {
   }
 }
 
-@mixin getShimmerStyles($color1: var(--color-grey-00), $color2: var(--color-grey-01), $speed: 1s) {
+@mixin getShimmerStyles(
+  $color1: var(--md-sys-color-surface-container-low),
+  $color2: var(--md-sys-color-surface-container),
+  $speed: 1s
+) {
   background: linear-gradient(to right, $color1 8%, $color2 18%, $color1 33%);
   background-size: 1000px 42px;
   animation: shimmerAnimation $speed linear infinite;
@@ -475,7 +468,7 @@ a {
       }
     }
     & > tr:nth-child(even) {
-      background: var(--color-grey-01);
+      background: var(--md-sys-color-surface-container);
       opacity: 0.25;
     }
   }
@@ -501,8 +494,11 @@ a {
         border-radius: 3px;
         opacity: 1;
         z-index: 100;
-        background-color: var(--color-grey-02);
-        @include getShimmerStyles(var(--color-grey-02), var(--color-grey-03));
+        background-color: var(--md-sys-color-surface-container);
+        @include getShimmerStyles(
+          var(--md-sys-color-surface-container),
+          var(--md-sys-color-surface-container-hover)
+        );
       }
     }
   }
@@ -566,24 +562,73 @@ a {
   }
 }
 
-.p-contextmenu .p-menuitem > .p-menuitem-link {
-  padding-right: 10px;
-
-  &:hover {
-    background-color: var(--color-grey-00);
+// remove color hover state
+.p-contextmenu .p-menuitem.p-menuitem-active > .p-menuitem-link {
+  &.p-menuitem-icon,
+  &.p-menuitem-text {
+    color: inherit;
   }
+}
 
-  &.danger {
-    background-color: var(--color-hl-error);
-    span {
-      color: black;
+.p-contextmenu .p-menuitem-link:not(.p-disabled):hover {
+  .p-menuitem-icon,
+  .p-menuitem-text {
+    color: inherit;
+  }
+}
+
+// remove some hover
+.p-contextmenu .p-menuitem-link:not(.p-disabled):hover {
+  background: inherit;
+}
+
+.p-contextmenu {
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border-color: var(--md-sys-color-outline-variant);
+  .p-menuitem {
+    // when hovering
+    &.p-menuitem-active > .p-menuitem-link {
+      background-color: var(--md-sys-color-surface-container-lowest-hover);
+
+      &.p-disabled {
+        background-color: var(--md-sys-color-surface-container-lowest);
+      }
+
+      &.save {
+        background-color: var(--md-sys-color-primary-hover);
+        span {
+          color: var(--md-sys-color-on-primary);
+        }
+      }
     }
-  }
 
-  &.save {
-    background-color: var(--color-hl-00);
-    span {
-      color: black;
+    & > .p-menuitem-link {
+      padding-right: 10px;
+
+      &,
+      .icon {
+        color: var(--md-sys-color-on-surface);
+      }
+
+      &.p-disabled {
+        opacity: 0.4;
+        color: var(--md-sys-color-on-surface-variant);
+      }
+
+      &.danger {
+        background-color: var(--md-sys-color-error-container);
+        span {
+          color: var(--md-sys-color-on-error-container);
+        }
+      }
+
+      &.save {
+        background-color: var(--md-sys-color-primary);
+        &,
+        span {
+          color: var(--md-sys-color-on-primary);
+        }
+      }
     }
   }
 }
@@ -591,7 +636,7 @@ a {
 // addons table
 .p-datatable.addons-table .p-datatable-tbody {
   .diff-version {
-    color: var(--color-hl-01) !important;
+    color: var(--md-custom-color-warning) !important;
   }
 
   & > tr {

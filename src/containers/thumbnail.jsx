@@ -17,7 +17,7 @@ const ThumbnailStyled = styled.div`
   border-radius: 3px;
   margin: auto;
   max-width: 250px;
-  background-color: #161616;
+  background-color: hsl(220 20% 8%);
   /* icon */
   span {
     position: absolute;
@@ -27,7 +27,7 @@ const ThumbnailStyled = styled.div`
     justify-content: center;
     align-items: center;
     inset: 0;
-    background-color: #161616;
+    background-color: hsl(220 20% 8%);
 
     opacity: 0;
     /* delay being seen by 1s */

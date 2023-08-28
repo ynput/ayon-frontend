@@ -7,7 +7,14 @@ import { InputText } from 'primereact/inputtext'
 import { toast } from 'react-toastify'
 
 import SettingsEditor from '/src/containers/SettingsEditor'
-import { Spacer, Button, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+import {
+  Spacer,
+  Button,
+  Section,
+  Toolbar,
+  ScrollPanel,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 
 import {
   useGetAnatomyPresetQuery,
@@ -21,7 +28,6 @@ import {
   useUpdatePrimaryPresetMutation,
 } from '/src/services/anatomy/updateAnatomy'
 import { isEqual } from 'lodash'
-import SaveButton from '/src/components/SaveButton'
 
 const AnatomyPresets = () => {
   const [originalData, setOriginalData] = useState(null)

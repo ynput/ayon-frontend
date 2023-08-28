@@ -231,6 +231,7 @@ const Breadcrumbs = () => {
             icon="content_copy"
             style={{ opacity: editMode ? 0 : 1, width: editMode ? 0 : 'auto' }}
             onClick={onCopy}
+            variant="text"
           />
         )}
       </Styled.Crumbtainer>

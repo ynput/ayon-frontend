@@ -21,7 +21,7 @@ const ToolsStyled = styled.div`
 const StyledLoading = styled.div`
   width: 100%;
   height: 37px;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-m);
   position: relative;
 
   ${getShimmerStyles()}
