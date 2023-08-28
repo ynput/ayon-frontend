@@ -99,6 +99,7 @@ const ProjectList = ({
   onNewProject,
   onHide,
   isCollapsible = false,
+  collapsedId = 'global',
   wrap,
 }) => {
   const [contextProject, setContextProject] = useState()
@@ -114,7 +115,7 @@ const ProjectList = ({
   }
 
   // localstorage collapsible state
-  let [collapsed, setCollapsed] = useLocalStorage('projectListCollapsed', false)
+  let [collapsed, setCollapsed] = useLocalStorage(collapsedId + '-projectListCollapsed', false)
   // always set to false if not collapsible
   if (!isCollapsible) collapsed = false
 

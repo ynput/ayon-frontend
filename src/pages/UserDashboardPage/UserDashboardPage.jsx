@@ -32,6 +32,7 @@ const UserDashboardPage = () => {
           <ProjectList
             wrap
             isCollapsible
+            collapsedId="dashboard"
             styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
             hideCode
             multiselect

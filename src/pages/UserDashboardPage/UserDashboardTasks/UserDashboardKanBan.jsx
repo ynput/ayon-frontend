@@ -1,7 +1,6 @@
 import {
   EntityCard,
   InputText,
-  Panel,
   Section,
   SortingDropdown,
   Toolbar,
@@ -15,6 +14,15 @@ import {
   onTasksSortByChanged,
 } from '/src/features/dashboard'
 import { getFilteredTasks, getGroupedTasks, getSortedTasks, getTasksColumns } from '../util'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import KanBanColumn from './KanBanColumn/KanBanColumn'
 
 const UserDashboardKanBan = ({ tasks }) => {
   const dispatch = useDispatch()
@@ -70,6 +78,48 @@ const UserDashboardKanBan = ({ tasks }) => {
     [sortedTasks],
   )
 
+  const touchSensor = useSensor(TouchSensor)
+  const keyboardSensor = useSensor(KeyboardSensor)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    touchSensor,
+    keyboardSensor,
+  )
+
+  const handleDragEnd = () => {
+    // get over id
+    // const { active, over } = event
+    // // if different id, move card
+    // const activeCardId = active.id?.toString()
+    // const overColumnId = over?.id?.toString()
+    // if (!activeCardId || !overColumnId) return
+    // // find the column id of the card
+    // const activeColumnId = columns.find((column) => column.items.includes(activeCardId))?.id
+    // if (!activeColumnId) return
+    // // if same column, do nothing
+    // if (activeColumnId === overColumnId) return
+    // // remove card from active column
+    // const newColumns = columns.map((column) => {
+    //   if (column.id === activeColumnId) {
+    //     return {
+    //       ...column,
+    //       items: column.items.filter((item) => item !== activeCardId),
+    //     }
+    //   }
+    //   return column
+    // })
+    // // add card to new column
+    // const newColumn = newColumns.find((column) => column.id === overColumnId)
+    // if (newColumn) {
+    //   newColumn.items.push(activeCardId)
+    // }
+  }
+
   // HANDLE TASK CLICK
   const handleTaskClick = (e, id) => {
     e.preventDefault()
@@ -104,6 +154,8 @@ const UserDashboardKanBan = ({ tasks }) => {
     // dispatch(setUri(uri))
   }
 
+  console.log(tasks)
+
   return (
     <Section style={{ height: '100%', zIndex: 10 }}>
       <Toolbar style={{ zIndex: 20 }}>
@@ -125,6 +177,7 @@ const UserDashboardKanBan = ({ tasks }) => {
           onChange={(e) => setFilterValue(e.target.value)}
         />
       </Toolbar>
+
       <Section
         style={{
           height: '100%',
@@ -134,31 +187,35 @@ const UserDashboardKanBan = ({ tasks }) => {
         }}
         direction="row"
       >
-        {columnIds.flatMap((id) =>
-          tasksColumns[id] ? (
-            <Panel key={id}>
-              <h2 style={{ whiteSpace: 'nowrap' }}>{id}</h2>
-              {getGroupedTasks(tasksColumns[id], groupByOptions[0]).map((group) => (
-                <Fragment key={group.label}>
-                  <span>{group.label}</span>
-                  {group.tasks.map((task) => (
-                    <EntityCard
-                      key={task.id}
-                      title={task.name}
-                      subTitle={task.folderName}
-                      description={task.path}
-                      onClick={(e) => handleTaskClick(e, task.id)}
-                      isActive={selectedTasks.includes(task.id)}
-                      style={{ width: 210 }}
-                    />
-                  ))}
-                </Fragment>
-              ))}
-            </Panel>
-          ) : (
-            []
-          ),
-        )}
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          {columnIds.flatMap((id) =>
+            tasksColumns[id] ? (
+              <KanBanColumn key={id} columns={tasksColumns} tasks={tasksColumns[id]} id={id}>
+                {getGroupedTasks(tasksColumns[id], groupByOptions[0]).map((group) => (
+                  <Fragment key={group.label}>
+                    <span>{group.label}</span>
+                    {group.tasks.map((task) => (
+                      <EntityCard
+                        key={task.id}
+                        title={task.name}
+                        subTitle={task.folderName}
+                        description={task.path}
+                        onClick={(e) => handleTaskClick(e, task.id)}
+                        isActive={selectedTasks.includes(task.id)}
+                        icon={task.statusIcon}
+                        iconColor={task.statusColor}
+                        titleIcon={task.taskIcon}
+                        style={{ width: 210 }}
+                      />
+                    ))}
+                  </Fragment>
+                ))}
+              </KanBanColumn>
+            ) : (
+              []
+            ),
+          )}
+        </DndContext>
       </Section>
     </Section>
   )

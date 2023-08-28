@@ -49,7 +49,10 @@ const getUserDashboard = ayonApi.injectEndpoints({
             )
 
             if (response.status === 'rejected') throw new Error('No projects found', project)
-            projectInfo[project] = { statuses: response?.data?.statuses }
+            projectInfo[project] = {
+              statuses: response?.data?.statuses,
+              taskTypes: response?.data?.task_types,
+            }
           }
 
           return { data: projectInfo }

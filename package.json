@@ -12,6 +12,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.0.8",
     "@reduxjs/toolkit": "^1.8.2",
     "@rjsf/core": "^4.2.0",
     "@rtk-query/graphql-request-base-query": "^2.2.0",

@@ -23,11 +23,30 @@ const UserTasksContainer = () => {
     { skip: !user.name },
   )
 
+  const tasksWithIcons = tasks.map((task) => {
+    const projectInfo = projectsInfo[task.projectName]
+    if (!projectInfo?.statuses) return task
+    const findStatus = projectInfo.statuses?.find((status) => status.name === task.status)
+    if (!findStatus) return task
+    const findTaskIcon = projectInfo.taskTypes?.find((type) => type.name === task.taskType)
+    if (!findTaskIcon) return task
+    return {
+      ...task,
+      statusIcon: findStatus?.icon,
+      statusColor: findStatus?.color,
+      taskIcon: findTaskIcon?.icon,
+    }
+  })
+
   const isLoadingAll = isLoadingInfo || isLoadingTasks
 
   return (
     <Section style={{ height: '100%', zIndex: 10 }}>
-      <UserDashboardKanBan tasks={tasks} isLoading={isLoadingAll} projectsInfo={projectsInfo} />
+      <UserDashboardKanBan
+        tasks={tasksWithIcons}
+        isLoading={isLoadingAll}
+        projectsInfo={projectsInfo}
+      />
     </Section>
   )
 }
