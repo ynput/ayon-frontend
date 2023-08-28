@@ -3,6 +3,7 @@ query KanBan($assignees: [String!]) {
     projects {
       edges {
         node {
+          projectName
           tasks(assignees: $assignees) {
             edges {
               node {
@@ -10,10 +11,15 @@ query KanBan($assignees: [String!]) {
                 name
                 status
                 taskType
+                assignees
+                folderId
+                folder {
+                  name
+                  path
+                }
               }
             }
           }
-          projectName
         }
       }
     }

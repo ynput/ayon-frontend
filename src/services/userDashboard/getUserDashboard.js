@@ -4,19 +4,38 @@ import { KAN_BAN_QUERY } from './userDashboardQueries'
 const getUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getKanBan: build.query({
-      query: ({ projectNames = [], assignees = [] }) => ({
+      query: ({ assignees = [] }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: KAN_BAN_QUERY,
-          variables: { projectNames, assignees },
+          variables: { assignees },
         },
       }),
-      // providesTags: (result,error, arg) => result,
+      transformResponse: (response) =>
+        response?.data?.projects?.edges.flatMap(({ node }) => {
+          return node.tasks.edges.map(({ node: task }) => {
+            return {
+              id: task.id,
+              name: task.name,
+              status: task.status,
+              taskType: task.taskType,
+              assignees: task.assignees,
+              folderName: task.folder?.name,
+              folderId: task.folderId,
+              path: task.folder?.path,
+              projectName: node.projectName,
+            }
+          })
+        }),
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: 'task', id })), { type: 'task', id: 'TASKS' }]
+          : [{ type: 'task', id: 'TASKS' }],
     }),
   }),
 })
 
 //
 
-export const { useGetInfoQuery, useLazyGetInfoQuery, useLogOutMutation } = getUserDashboard
+export const { useGetKanBanQuery } = getUserDashboard

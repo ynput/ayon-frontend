@@ -31,6 +31,10 @@ window.senderId = short.generate()
 
 const localStorageItems = {
   'dashboard/onProjectSelected': 'dashboard-selectedProjects',
+  'dashboard/onTasksSortByChanged': 'dashboard-tasks-sortBy',
+  'dashboard/onTasksGroupByChanged': 'dashboard-tasks-groupBy',
+  'dashboard/onTasksFilterChanged': 'dashboard-tasks-filter',
+  'dashboard/onTaskSelected': 'dashboard-tasks-selected',
 }
 
 const store = configureStore({
