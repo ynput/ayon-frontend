@@ -2,9 +2,6 @@ import styled, { css } from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
 
 const HeaderButton = styled(Button)`
-  max-height: unset;
-  min-height: unset;
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,7 +9,6 @@ const HeaderButton = styled(Button)`
   user-select: none;
 
   background-color: transparent;
-  padding: 4px;
   z-index: 20;
 
   & > span {
@@ -25,6 +21,13 @@ const HeaderButton = styled(Button)`
     active &&
     css`
       background-color: var(--md-sys-color-surface-container-highest);
+    `}
+
+  ${({ $selected }) =>
+    $selected &&
+    css`
+      outline: solid 1px var(--md-sys-color-outline-variant);
+      background-color: var(--md-sys-color-background);
     `}
 `
 

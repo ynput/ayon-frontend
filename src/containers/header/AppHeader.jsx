@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { Spacer, UserImage } from '@ynput/ayon-react-components'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Spacer, Toolbar, UserImage } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
@@ -56,17 +56,27 @@ const Header = () => {
   return (
     <nav className="primary" onClick={handleNavClick}>
       <ProjectMenu visible={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
+      <Toolbar style={{ zIndex: 10, gap: 8 }}>
+        <HeaderButton
+          icon="event_list"
+          label="Projects"
+          variant="nav"
+          onClick={() => handleToggleMenu('project')}
+          style={{
+            alignItems: 'center',
+            display: 'flex',
+          }}
+        />
 
-      <HeaderButton
-        icon="event_list"
-        label="Projects"
-        variant="text"
-        onClick={() => handleToggleMenu('project')}
-        style={{
-          alignItems: 'center',
-          display: 'flex',
-        }}
-      />
+        <Link to={'/dashboard/tasks'}>
+          <HeaderButton
+            icon="space_dashboard"
+            label="Dashboard"
+            variant="nav"
+            $selected={location.pathname.startsWith('/dashboard')}
+          />
+        </Link>
+      </Toolbar>
 
       <Breadcrumbs />
       <Spacer />
@@ -86,6 +96,7 @@ const Header = () => {
         onClick={() => handleToggleMenu('user')}
         ref={userButtonRef}
         variant="text"
+        style={{ padding: 6 }}
       >
         <UserImage
           size={26}
