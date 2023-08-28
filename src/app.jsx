@@ -126,7 +126,7 @@ const App = () => {
 
   const isUser = user?.data?.isUser
 
-  if (window.location.pathname.startsWith('/login/')) {
+  if (window.location.pathname.startsWith('/login')) {
     // already logged in, but stuck on the login page
     window.history.replaceState({}, document.title, '/')
     return isOnboarding ? null : <LoadingPage />
