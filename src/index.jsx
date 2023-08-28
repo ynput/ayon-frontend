@@ -10,6 +10,7 @@ import userReducer from './features/user'
 import contextReducer from './features/context'
 import projectReducer from './features/project'
 import editorReducer from './features/editor'
+import dashboardReducer from './features/dashboard'
 
 import App from './app'
 
@@ -33,6 +34,7 @@ const store = configureStore({
     context: contextReducer,
     project: projectReducer,
     editor: editorReducer,
+    dashboard: dashboardReducer,
     [ayonApi.reducerPath]: ayonApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(ayonApi.middleware),
