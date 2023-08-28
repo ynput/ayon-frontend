@@ -27,6 +27,7 @@ import {
 import { usePromoteBundleMutation } from '/src/services/bundles'
 import { isEqual } from 'lodash'
 import { useNavigate } from 'react-router'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 /*
  * key is {addonName}|{addonVersion}|{environment}|{siteId}|{projectKey}
@@ -410,9 +411,19 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onPushToProduction = async () => {
     // Push the current bundle to production
 
-    await promoteBundle({ name: bundleName }).unwrap()
-    toast.success('Bundle pushed to production')
-    setEnvironment('production')
+    confirmDialog({
+      header: `Push ${bundleName} to production`,
+      message: `Are you sure you want to push ${bundleName} to production?`,
+      accept: async () => {
+        await promoteBundle({ name: bundleName }).unwrap()
+        setLocalData({})
+        toast.success('Bundle pushed to production')
+
+        // TODO: settings won't reload in production so skip for now
+        // setEnvironment('production')
+      },
+      reject: () => {},
+    })
   }
 
   //
