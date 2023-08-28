@@ -121,9 +121,15 @@ const ProjectList = ({
   // if selection does not exist in data, set selection to null
   useEffect(() => {
     if (isLoading || isFetching) return
+    const projectNames = data.map((project) => project.name)
+    let foundProject = false
+    if (multiselect && typeof selection === 'object') {
+      foundProject = projectNames.some((project) => selection.includes(project))
+    } else {
+      foundProject = projectNames.includes(selection)
+    }
 
-    if (onNoProject && !data.map((project) => project.name).includes(selection)) {
-      console.log('selected project does not exist: ', selection)
+    if (onNoProject && !foundProject) {
       const defaultProject = autoSelect ? data[0]?.name : null
       onNoProject(defaultProject)
     } else if (isSuccess && onSuccess) onSuccess()
