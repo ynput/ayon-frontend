@@ -10,59 +10,70 @@ export const buildOperations = (ids, type, data) =>
     data,
   }))
 
+const baseQuery = fetchBaseQuery({
+  prepareHeaders: (headers) => {
+    const storedAccessToken = localStorage.getItem('accessToken')
+    if (storedAccessToken) {
+      // headers.common['Authorization'] = `Bearer ${storedAccessToken}`
+      headers.set('Authorization', `Bearer ${storedAccessToken}`)
+    }
+    //   headers.common['X-Sender'] = short.generate()
+    headers.set('X-Sender', window.senderId)
+
+    return headers
+  },
+})
+
+// check for 401 and redirect to login
+const wrappedBaseQuery = async (args, api, extraOptions) => {
+  const result = await baseQuery(args, api, extraOptions)
+
+  if (result.error?.status === 401) {
+    window.location.href = '/login'
+  }
+  return result
+}
+
 // Define a service using a base URL and expected endpoints
 export const ayonApi = createApi({
   reducerPath: 'ayonApi',
-  baseQuery: fetchBaseQuery({
-    prepareHeaders: (headers) => {
-      const storedAccessToken = localStorage.getItem('accessToken')
-      if (storedAccessToken) {
-        // headers.common['Authorization'] = `Bearer ${storedAccessToken}`
-        headers.set('Authorization', `Bearer ${storedAccessToken}`)
-      }
-      //   headers.common['X-Sender'] = short.generate()
-      headers.set('X-Sender', window.senderId)
-
-      return headers
-    },
-  }),
+  baseQuery: wrappedBaseQuery,
   tagTypes: [
-    'folder',
-    'task',
-    'version',
-    'product',
-    'tag',
-    'project',
-    'projects',
-    'attribute',
-    'user',
-    'workfile',
-    'anatomyPresets',
-    'hierarchy',
-    'branch',
-    'entity',
-    'login',
-    'session',
-    'team',
-    'info',
-    'bundleList',
-    'addonSettingsList',
-    'addonSettingsSchema',
+    'accessGroup',
+    'accessGroups',
+    'addonList',
     'addonSettings',
+    'addonSettingsList',
     'addonSettingsOverrides',
+    'addonSettingsSchema',
+    'anatomyPresets',
+    'attribute',
+    'branch',
+    'bundleList',
+    'connections',
     'customRoots',
     'dependencyPackageList',
+    'entity',
+    'folder',
+    'hierarchy',
+    'info',
     'installerList',
-    'secrets',
-    'siteSettingsSchema',
-    'siteSettings',
-    'connections',
-    'addonList',
+    'login',
+    'product',
+    'project',
     'projectAddons',
+    'projects',
+    'secrets',
+    'session',
     'settingsAddons',
-    'anatomyPresets',
-    'accessGroups',
-    'accessGroup',
+    'siteSettings',
+    'siteSettingsSchema',
+    'tag',
+    'task',
+    'team',
+    'user',
+    'version',
+    'workfile',
   ],
   endpoints: () => ({}),
 })

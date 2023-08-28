@@ -1,13 +1,5 @@
 import { useState, useMemo } from 'react'
-import {
-  Section,
-  Spacer,
-  InputSwitch,
-  Panel,
-  Toolbar,
-  ScrollPanel,
-  Button,
-} from '@ynput/ayon-react-components'
+import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
 import SettingsEditor from '/src/containers/SettingsEditor'
 import AddonList from '/src/containers/AddonList'
@@ -51,8 +43,6 @@ const SiteSettings = () => {
   const [selectedSites, setSelectedSites] = useState([])
   const [newData, setNewData] = useState({})
   const [setSiteSettings] = useSetSiteSettingsMutation()
-  const [environment, setEnvironment] = useState('production')
-  const [showAllAddons, setShowAllAddons] = useState(false)
 
   const saveChanges = () => {
     for (const key in newData) {
@@ -78,54 +68,13 @@ const SiteSettings = () => {
     })
   }
 
-  const addonListHeader = useMemo(() => {
-    const styleHlProd = {
-      backgroundColor: 'var(--color-hl-production)',
-      color: 'black',
-    }
-    const styleHlStag = {
-      backgroundColor: 'var(--color-hl-staging)',
-      color: 'black',
-    }
-
-    return (
-      <Toolbar>
-        <Button
-          label="Production"
-          onClick={() => setEnvironment('production')}
-          style={environment === 'production' ? styleHlProd : {}}
-        />
-        <Button
-          label="Staging"
-          onClick={() => setEnvironment('staging')}
-          style={environment === 'staging' ? styleHlStag : {}}
-        />
-        <Spacer />
-        <>
-          Show all
-          <InputSwitch
-            checked={showAllAddons}
-            onChange={() => setShowAllAddons(!showAllAddons)}
-            tooltip="Show all addons"
-          />
-        </>
-      </Toolbar>
-    )
-  }, [showAllAddons, environment])
-
   return (
     <main style={{ flexDirection: 'row', flexGrow: 1 }}>
       <Section style={{ maxWidth: 400 }}>
-        {addonListHeader}
         <AddonList
-          projectKey="default"
           selectedAddons={selectedAddons}
           setSelectedAddons={setSelectedAddons}
-          changedAddons={[]}
-          onDismissChanges={() => {}}
-          onRemoveOverrides={() => {}}
-          environment={environment}
-          showAllAddons={showAllAddons}
+          environment="production"
           siteSettings={true}
         />
         <SiteList

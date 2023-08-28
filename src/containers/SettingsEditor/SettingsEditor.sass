@@ -18,8 +18,16 @@ $field-gap: 8px
     
 .rjsf
 
-  // If the 'enabled' switch is in a panel header
-  // hide its label
+  // TODO: do we have any instance in the app where we don't want
+  // the following behavior? Shouldn't we move this to ayon-react-components
+  textarea
+    font-family: monospace
+    font-size: .8rem
+    white-space: pre
+    overflow-wrap: normal
+    overflow-x: scroll
+
+  // If the 'enabled' switch is in a panel header hide its label
   .form-object-header-enabled-toggler
     .form-inline-field-label
        display: none
@@ -81,8 +89,8 @@ $field-gap: 8px
     align-items: flex-start
     justify-content: left
     gap: 8px
-    padding-right: 2px // fix for right outline
     border-left: 1px solid transparent
+    padding: 0 3px
 
     .form-inline-field-label
       flex-basis: 200px
