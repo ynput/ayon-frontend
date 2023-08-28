@@ -87,8 +87,8 @@ const ApiKeyManager = ({ preview, name }) => {
     })
   }
 
-  const handleCopyKey = (key) => {
-    navigator.clipboard.writeText(key || newKey.key)
+  const handleCopyKey = () => {
+    navigator.clipboard.writeText(newKey.key)
     toast.success('API Key Copied')
   }
 
