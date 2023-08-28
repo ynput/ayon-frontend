@@ -37,6 +37,8 @@ const UserDashboardPage = () => {
             multiselect
             selection={selectedProjects}
             onSelect={setSelectedProjects}
+            onNoProject={setSelectedProjects}
+            autoSelect
           />
           {module === 'tasks' && <UserTasks />}
         </Section>
