@@ -3,6 +3,7 @@ import * as Styled from './KanBanColumn.styled'
 import React, { useEffect, useRef, useState } from 'react'
 
 const KanBanColumn = ({ tasks = [], id, children, columns = {} }) => {
+  const column = columns[id]
   const { isOver, setNodeRef, active, over } = useDroppable({
     id: id,
   })
@@ -27,9 +28,9 @@ const KanBanColumn = ({ tasks = [], id, children, columns = {} }) => {
 
   return (
     <Styled.Column ref={setNodeRef} $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf}>
-      <Styled.Header>
+      <Styled.Header $color={column.color}>
         <h2>
-          {id} - {tasksCount}
+          {column.name} - {tasksCount}
         </h2>
       </Styled.Header>
       <Styled.Items

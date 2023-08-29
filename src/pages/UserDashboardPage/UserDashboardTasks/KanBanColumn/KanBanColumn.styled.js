@@ -54,16 +54,23 @@ export const Header = styled.header`
   justify-content: space-between;
   padding: 8px;
 
-  h3 {
+  h2 {
     margin: 0;
+    /* text-align: center; */
+    width: 100%;
   }
+
+  width: 100%;
+  border-bottom: solid 1px var(--md-sys-color-outline);
+  border-color: ${({ $color }) => $color};
+  margin-bottom: 8px;
 `
 
 export const Items = styled.div`
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 8px;
   padding-top: 0;
