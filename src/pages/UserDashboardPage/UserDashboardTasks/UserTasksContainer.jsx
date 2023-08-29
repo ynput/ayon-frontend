@@ -10,6 +10,7 @@ import UserDashboardKanBan from './UserDashboardKanBan'
 const UserTasksContainer = () => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const user = useSelector((state) => state.user)
+  const assignees = user?.name ? [user.name] : []
 
   // get all the info required for the projects selected, like status icons and colours
   const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(
@@ -19,8 +20,8 @@ const UserTasksContainer = () => {
 
   //  get kanban tasks for all projects by assigned user (me)
   const { data: tasks = [], isFetching: isLoadingTasks } = useGetKanBanQuery(
-    { assignees: [user.name], projects: selectedProjects },
-    { skip: !user.name || !selectedProjects?.length },
+    { assignees: assignees, projects: selectedProjects },
+    { skip: !assignees.length || !selectedProjects?.length },
   )
 
   const tasksWithIcons = tasks.map((task) => {
@@ -46,6 +47,7 @@ const UserTasksContainer = () => {
         tasks={tasksWithIcons}
         isLoading={isLoadingAll}
         projectsInfo={projectsInfo}
+        assignees={assignees}
       />
     </Section>
   )

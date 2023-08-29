@@ -1,10 +1,4 @@
-import {
-  EntityCard,
-  InputText,
-  Section,
-  SortingDropdown,
-  Toolbar,
-} from '@ynput/ayon-react-components'
+import { InputText, Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import React, { Fragment, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -29,8 +23,10 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
+import KanBanCard from './KanBanCard/KanBanCard'
+import { useUpdateTaskMutation } from '/src/services/userDashboard/updateUserDashboard'
 
-const UserDashboardKanBan = ({ tasks, projectsInfo = {} }) => {
+const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [] }) => {
   const dispatch = useDispatch()
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
@@ -72,8 +68,9 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {} }) => {
   // arrange the tasks into columns by status
   const mergedStatuses = getMergedStatuses(projectsInfo)
 
+  const splitBy = 'status'
   const tasksColumns = useMemo(
-    () => getTasksColumns(sortedTasks, 'status', mergedStatuses),
+    () => getTasksColumns(sortedTasks, splitBy, mergedStatuses),
     [sortedTasks],
   )
 
@@ -90,33 +87,36 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {} }) => {
     keyboardSensor,
   )
 
-  const handleDragEnd = () => {
+  // UPDATE TASK MUTATION
+  const [updateTask] = useUpdateTaskMutation()
+
+  const handleDragEnd = async (event) => {
     // get over id
-    // const { active, over } = event
-    // // if different id, move card
-    // const activeCardId = active.id?.toString()
-    // const overColumnId = over?.id?.toString()
-    // if (!activeCardId || !overColumnId) return
-    // // find the column id of the card
-    // const activeColumnId = columns.find((column) => column.items.includes(activeCardId))?.id
-    // if (!activeColumnId) return
-    // // if same column, do nothing
-    // if (activeColumnId === overColumnId) return
-    // // remove card from active column
-    // const newColumns = columns.map((column) => {
-    //   if (column.id === activeColumnId) {
-    //     return {
-    //       ...column,
-    //       items: column.items.filter((item) => item !== activeCardId),
-    //     }
-    //   }
-    //   return column
-    // })
-    // // add card to new column
-    // const newColumn = newColumns.find((column) => column.id === overColumnId)
-    // if (newColumn) {
-    //   newColumn.items.push(activeCardId)
-    // }
+    const { active, over } = event
+    // if different id, move card
+    const activeCardId = active.id?.toString()
+    const overColumnId = over?.id?.toString()
+    if (!activeCardId || !overColumnId) return
+    // find the column id of the card
+    const activeColumn = Object.values(tasksColumns).find((column) =>
+      column.tasks.find((t) => t.id === activeCardId),
+    )
+    const overColumn = tasksColumns[overColumnId]
+    const activeColumnId = activeColumn?.id
+    if (!activeColumnId || !overColumn) return
+    // if same column, do nothing
+    if (activeColumnId === overColumnId) return
+    // find the task
+    const task = tasks.find((t) => t.id === activeCardId)
+    if (!task) return
+    // card has moved columns, update the task
+    const newTaskData = { [splitBy]: overColumn.name }
+    await updateTask({
+      projectName: task.projectName,
+      taskId: task.id,
+      data: newTaskData,
+      assignees,
+    })
   }
 
   // HANDLE TASK CLICK
@@ -196,17 +196,11 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {} }) => {
                   <Fragment key={group.label}>
                     <span>{group.label}</span>
                     {group.tasks.map((task) => (
-                      <EntityCard
+                      <KanBanCard
+                        task={task}
                         key={task.id}
-                        title={task.name}
-                        subTitle={task.folderName}
-                        description={task.path}
                         onClick={(e) => handleTaskClick(e, task.id)}
                         isActive={selectedTasks.includes(task.id)}
-                        icon={task.statusIcon}
-                        iconColor={task.statusColor}
-                        titleIcon={task.taskIcon}
-                        style={{ width: 210 }}
                       />
                     ))}
                   </Fragment>
