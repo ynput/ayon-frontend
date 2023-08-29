@@ -1,6 +1,11 @@
+import { isEqual } from 'lodash'
 import { ayonApi } from '../ayon'
 import { taskProvideTags, transformTasksData } from './userDashboardHelpers'
-import { KAN_BAN_TASK_QUERY, PROJECT_TASKS_QUERY } from './userDashboardQueries'
+import {
+  KAN_BAN_ASSIGNEES_QUERY,
+  KAN_BAN_TASK_QUERY,
+  PROJECT_TASKS_QUERY,
+} from './userDashboardQueries'
 import PubSub from '/src/pubsub'
 
 const getUserDashboard = ayonApi.injectEndpoints({
@@ -22,7 +27,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
       providesTags: taskProvideTags,
       async onCacheEntryAdded(
         { assignees = [], projectName },
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch },
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getState },
       ) {
         let token
         try {
@@ -30,6 +35,9 @@ const getUserDashboard = ayonApi.injectEndpoints({
           await cacheDataLoaded
 
           const handlePubSub = async (topic, message) => {
+            const currentAssignees = getState().dashboard.tasks.assignees
+            const isSameAssignees = isEqual(currentAssignees, assignees)
+
             // first check the project name
             if (message.project !== projectName) return
             // then get entity id
@@ -81,6 +89,8 @@ const getUserDashboard = ayonApi.injectEndpoints({
                 }
               }
             })
+
+            if (!isSameAssignees) return
             // invalidate task to force refetch of getKanBan query
             // but because we just updated the tasks cache it should be instant
             dispatch(ayonApi.util.invalidateTags([{ type: 'kanBanTask', id: tagId }]))
@@ -172,9 +182,59 @@ const getUserDashboard = ayonApi.injectEndpoints({
           tasks: [response?.data?.project?.task],
         }),
     }),
+    getKanBanAssignee: build.query({
+      query: ({ projectName }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: KAN_BAN_ASSIGNEES_QUERY,
+          variables: { projectName },
+        },
+      }),
+      transformResponse: (res) =>
+        res?.data?.users.edges.flatMap((u) => {
+          if (!u.node) return []
+
+          const n = u.node
+
+          return {
+            name: n.name,
+            avatarUrl: n.attrib?.avatarUrl,
+            fullName: n.attrib?.fullName,
+          }
+        }),
+    }),
+    getKanBanUsers: build.query({
+      async queryFn({ projects = [] }, { dispatch }) {
+        try {
+          // get project tasks for each project
+          const assignees = []
+          for (const project of projects) {
+            // hopefully this will be cached
+            // it also allows for different combination of projects but still use the cache
+            // it also allows to update the project tasks from websocket in the background
+            const response = await dispatch(
+              ayonApi.endpoints.getKanBanAssignee.initiate(
+                { projectName: project },
+                { forceRefetch: false },
+              ),
+            )
+
+            if (response.status === 'rejected') throw new Error('No projects found', project)
+            response.data.forEach((assignee) => assignees.push(assignee))
+          }
+
+          return { data: assignees }
+        } catch (error) {
+          console.error(error)
+          return error
+        }
+      },
+    }),
   }),
 })
 
 //
 
-export const { useGetKanBanQuery, useGetProjectsInfoQuery } = getUserDashboard
+export const { useGetKanBanQuery, useGetProjectsInfoQuery, useGetKanBanUsersQuery } =
+  getUserDashboard

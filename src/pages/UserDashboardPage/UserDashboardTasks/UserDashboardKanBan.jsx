@@ -1,7 +1,15 @@
-import { InputText, Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
+import {
+  AssigneeSelect,
+  InputText,
+  Section,
+  SortingDropdown,
+  Spacer,
+  Toolbar,
+} from '@ynput/ayon-react-components'
 import React, { Fragment, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
+  onAssigneesChanged,
   onTaskSelected,
   onTasksFilterChanged,
   onTasksGroupByChanged,
@@ -26,11 +34,14 @@ import KanBanColumn from './KanBanColumn/KanBanColumn'
 import KanBanCard from './KanBanCard/KanBanCard'
 import { useUpdateTaskMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
+import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
 
 const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFields }) => {
   const dispatch = useDispatch()
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+  const user = useSelector((state) => state.user)
+  const isAdmin = user?.data?.isAdmin
 
   // SORT BY
   const sortByOptions = [
@@ -53,6 +64,12 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
   // SELECTED TASKS
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
+  // ASSIGNEES SELECT
+  const { data: allUsers = [], isLoading: isLoadingAllUsers } = useGetKanBanUsersQuery(
+    { projects: selectedProjects },
+    { skip: !selectedProjects?.length },
+  )
+  const setAssignees = (assignees) => dispatch(onAssigneesChanged(assignees))
 
   // filter out projects by selected projects and filter value
   const filteredTasks = useMemo(
@@ -171,7 +188,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
 
   return (
     <Section style={{ height: '100%', zIndex: 10, padding: 0 }} wrap>
-      <Toolbar style={{ zIndex: 20 }}>
+      <Toolbar style={{ zIndex: 100 }}>
         <SortingDropdown
           title="Sort by"
           options={sortByOptions}
@@ -189,6 +206,19 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
           value={filterValue}
           onChange={(e) => setFilterValue(e.target.value)}
         />
+        <Spacer />
+        {isAdmin && !isLoadingAllUsers && (
+          <AssigneeSelect
+            value={assignees}
+            onChange={setAssignees}
+            options={allUsers}
+            align={'right'}
+            minSelected={1}
+            editor
+            buttonStyle={{ outline: '1px solid var(--md-sys-color-outline-variant)' }}
+            style={{ zIndex: 20 }}
+          />
+        )}
       </Toolbar>
 
       <Section

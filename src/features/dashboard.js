@@ -10,6 +10,7 @@ const dashboardSlice = createSlice({
       sortBy: getInitialStateLocalStorage('dashboard-tasks-sortBy', []),
       groupBy: getInitialStateLocalStorage('dashboard-tasks-groupBy', []),
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
+      assignees: null,
     },
   },
   reducers: {
@@ -28,6 +29,9 @@ const dashboardSlice = createSlice({
     onTasksFilterChanged: (state, { payload = [] }) => {
       state.tasks.filter = payload
     },
+    onAssigneesChanged: (state, { payload = [] }) => {
+      state.tasks.assignees = payload
+    },
   },
 })
 
@@ -37,5 +41,6 @@ export const {
   onTasksSortByChanged,
   onTasksGroupByChanged,
   onTasksFilterChanged,
+  onAssigneesChanged,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer

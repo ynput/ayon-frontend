@@ -17,7 +17,7 @@ export const PROJECT_TASKS_QUERY = `
 query KanBan($assignees: [String!], $projectName: String!) {
   project(name: $projectName) {
         projectName
-        tasks(assignees: $assignees) {
+        tasks(assigneesAny: $assignees) {
           edges {
             node {
               ...TaskFragment
@@ -40,3 +40,17 @@ query KanBanTask($projectName: String!, $taskId: String!) {
 }
 ${TASK_FRAGMENT}
 `
+export const KAN_BAN_ASSIGNEES_QUERY = `
+query Assignees($projectName: String) {
+  users(last: 2000 projectName: $projectName) {
+  edges {
+    node {
+      name
+      attrib {
+        avatarUrl
+        fullName
+      }
+    }
+  }
+}
+}`

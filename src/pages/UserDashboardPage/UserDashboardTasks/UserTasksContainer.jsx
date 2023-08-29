@@ -1,4 +1,4 @@
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   useGetKanBanQuery,
   useGetProjectsInfoQuery,
@@ -6,11 +6,21 @@ import {
 import { Section } from '@ynput/ayon-react-components'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
+import { useEffect } from 'react'
+import { onAssigneesChanged } from '/src/features/dashboard'
 
 const UserTasksContainer = () => {
+  const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const user = useSelector((state) => state.user)
-  const assignees = user?.name ? [user.name] : []
+
+  const assignees =
+    useSelector((state) => state.dashboard.tasks.assignees) || (user?.name && [user?.name]) || []
+
+  // once user is loaded, set assignees to user
+  useEffect(() => {
+    dispatch(onAssigneesChanged([user.name]))
+  }, [user.name])
 
   const taskFields = {
     status: { plural: 'statuses', isEditable: true },
