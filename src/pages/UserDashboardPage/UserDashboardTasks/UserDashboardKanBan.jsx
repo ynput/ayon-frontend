@@ -10,7 +10,7 @@ import {
 import {
   getFilteredTasks,
   getGroupedTasks,
-  getMergedStatuses,
+  getMergedFields,
   getSortedTasks,
   getTasksColumns,
 } from '../util'
@@ -25,8 +25,9 @@ import {
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 import KanBanCard from './KanBanCard/KanBanCard'
 import { useUpdateTaskMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { toast } from 'react-toastify'
 
-const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [] }) => {
+const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFields }) => {
   const dispatch = useDispatch()
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
@@ -65,12 +66,17 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [] }) => {
     [filteredTasks, sortByValue],
   )
 
-  // arrange the tasks into columns by status
-  const mergedStatuses = getMergedStatuses(projectsInfo)
-
+  // This is the key that divides the tasks into columns
+  // default is hardcoded to "status" but maybe in the future we can make this dynamic
+  // the key also needs to be in the taskFields object
   const splitBy = 'status'
-  const tasksColumns = useMemo(
-    () => getTasksColumns(sortedTasks, splitBy, mergedStatuses),
+  const splitByField = taskFields[splitBy]
+  const splitByPlural = splitByField.plural
+  // arrange the tasks into columns by status
+  const mergedFields = getMergedFields(projectsInfo, splitByPlural)
+
+  const [tasksColumns, fieldsColumns] = useMemo(
+    () => getTasksColumns(sortedTasks, splitBy, mergedFields),
     [sortedTasks],
   )
 
@@ -91,6 +97,10 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [] }) => {
   const [updateTask] = useUpdateTaskMutation()
 
   const handleDragEnd = async (event) => {
+    // first check if field can be edited on task
+    if (splitByField.isEditable === false)
+      return toast.error(`Cannot edit ${splitByField.plural} on task`)
+
     // get over id
     const { active, over } = event
     // if different id, move card
@@ -111,6 +121,12 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [] }) => {
     if (!task) return
     // card has moved columns, update the task
     const newTaskData = { [splitBy]: overColumn.name }
+
+    // if the editing field is taskType and the task name is the same as the taskType, change name to new taskType
+    if (splitBy === 'taskType' && task.name.toLowerCase() === task.taskType.toLowerCase()) {
+      newTaskData.name = overColumn.name
+    }
+
     await updateTask({
       projectName: task.projectName,
       taskId: task.id,
@@ -186,7 +202,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [] }) => {
         direction="row"
       >
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          {mergedStatuses.flatMap(({ id }) => {
+          {fieldsColumns.flatMap(({ id }) => {
             const column = tasksColumns[id]
             if (!column) return []
 

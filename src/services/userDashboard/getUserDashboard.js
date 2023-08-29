@@ -129,7 +129,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
       providesTags: (res) => taskProvideTags(res, 'kanBanTask'),
     }),
     getProjectsInfo: build.query({
-      async queryFn({ projects = [] }, { dispatch }) {
+      async queryFn({ projects = [], fields = [] }, { dispatch }) {
         try {
           // get project info for each project
           const projectInfo = {}
@@ -144,9 +144,9 @@ const getUserDashboard = ayonApi.injectEndpoints({
             )
 
             if (response.status === 'rejected') throw new Error('No projects found', project)
-            projectInfo[project] = {
-              statuses: response?.data?.statuses,
-              taskTypes: response?.data?.task_types,
+            projectInfo[project] = {}
+            for (const field of fields) {
+              projectInfo[project][field] = response.data[field] || []
             }
           }
 

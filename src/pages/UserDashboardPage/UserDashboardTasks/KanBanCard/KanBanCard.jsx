@@ -23,11 +23,11 @@ const KanBanCard = ({ task, onClick, onKeyUp, isActive }) => {
       titleIcon={task.taskIcon}
       style={{ width: 210, ...style }}
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       onKeyUp={onKeyUp}
       isDragging={isDragging}
       isDraggable
+      {...attributes}
+      {...listeners}
     />
   )
 }
