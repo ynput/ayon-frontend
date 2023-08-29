@@ -154,8 +154,6 @@ const UserDashboardKanBan = ({ tasks }) => {
     // dispatch(setUri(uri))
   }
 
-  console.log(tasks)
-
   return (
     <Section style={{ height: '100%', zIndex: 10 }}>
       <Toolbar style={{ zIndex: 20 }}>
@@ -188,10 +186,14 @@ const UserDashboardKanBan = ({ tasks }) => {
         direction="row"
       >
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          {columnIds.flatMap((id) =>
-            tasksColumns[id] ? (
-              <KanBanColumn key={id} columns={tasksColumns} tasks={tasksColumns[id]} id={id}>
-                {getGroupedTasks(tasksColumns[id], groupByOptions[0]).map((group) => (
+          {columnIds.flatMap((id) => {
+            const columnId = id.toLowerCase()
+            const column = tasksColumns[columnId]
+            if (!column) return []
+
+            return (
+              <KanBanColumn key={id} columns={tasksColumns} tasks={column} id={id}>
+                {getGroupedTasks(column, groupByOptions[0]).map((group) => (
                   <Fragment key={group.label}>
                     <span>{group.label}</span>
                     {group.tasks.map((task) => (
@@ -211,10 +213,8 @@ const UserDashboardKanBan = ({ tasks }) => {
                   </Fragment>
                 ))}
               </KanBanColumn>
-            ) : (
-              []
-            ),
-          )}
+            )
+          })}
         </DndContext>
       </Section>
     </Section>
