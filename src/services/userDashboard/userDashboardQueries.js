@@ -5,10 +5,19 @@ const TASK_FRAGMENT = `
     status
     taskType
     assignees
+    updatedAt
     folderId
     folder {
       name
       path
+    }
+    versions(latestOnly: true) {
+      edges {
+        node {
+          id
+          thumbnailId
+        }
+      }
     }
   }
 `

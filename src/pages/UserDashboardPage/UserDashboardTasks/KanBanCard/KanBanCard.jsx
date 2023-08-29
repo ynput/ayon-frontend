@@ -13,6 +13,7 @@ const KanBanCard = ({ task, onClick, onKeyUp, isActive }) => {
 
   return (
     <EntityCard
+      imageUrl={task.thumbnailUrl}
       title={task.name}
       subTitle={task.folderName}
       description={task.path}
