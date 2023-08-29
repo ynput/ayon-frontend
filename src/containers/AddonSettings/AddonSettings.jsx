@@ -17,6 +17,8 @@ import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
+import CopySettingsButton from './CopySettings'
+import VariantSelector from './VariantSelector'
 
 import {
   useSetAddonSettingsMutation,
@@ -26,7 +28,7 @@ import {
 
 import { usePromoteBundleMutation } from '/src/services/bundles'
 import { isEqual } from 'lodash'
-import { useNavigate } from 'react-router'
+//import { useNavigate } from 'react-router'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 /*
@@ -126,7 +128,7 @@ const compareObjects = (obj1, obj2, path = []) => {
 }
 
 const AddonSettings = ({ projectName, showSites = false }) => {
-  const navigate = useNavigate()
+  //const navigate = useNavigate()
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [originalData, setOriginalData] = useState({})
@@ -431,50 +433,36 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const canCommit = useMemo(() => Object.keys(localOverrides).length > 0, [localOverrides])
 
   const addonListHeader = useMemo(() => {
+    // site settings do not have variants
     if (showSites) return
 
-    const onSetEnvironment = (env) => {
-      // if (Object.keys(localOverrides).length) {
-      //   toast.error('Cannot change environment with unsaved changes')
-      //   return
-      // }
-      setEnvironment(env)
-    }
-
-    const styleHlProd = {
-      backgroundColor: 'var(--color-hl-production)',
-      color: 'black',
-    }
-    const styleHlStag = {
-      backgroundColor: 'var(--color-hl-staging)',
-      color: 'black',
-    }
-
     return (
-      <Toolbar>
-        <Button
-          label="Production"
-          onClick={() => onSetEnvironment('production')}
-          style={environment === 'production' ? styleHlProd : {}}
-        />
-        <Button
-          label="Staging"
-          onClick={() => onSetEnvironment('staging')}
-          style={environment === 'staging' ? styleHlStag : {}}
-        />
+      <>
+        <Toolbar>
+          <VariantSelector variant={environment} setVariant={setEnvironment} />
+          {/*
         <Button
           label={`Bundle: ${bundleName || 'NONE'}`}
           onClick={() => navigate(`/settings/bundles?selected=${bundleName || 'latest'}`)}
         />
-        <Button
-          icon="local_shipping"
-          label="Push to production"
-          tooltip="Push to production"
-          onClick={onPushToProduction}
-          disabled={environment !== 'staging' || canCommit}
-          style={{ zIndex: 100 }}
-        />
-      </Toolbar>
+        */}
+          <Spacer />
+        </Toolbar>
+        <Toolbar>
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {bundleName}
+          </span>
+          <Spacer />
+          <CopySettingsButton bundleName={bundleName} variant={environment} />
+          <Button
+            icon="local_shipping"
+            tooltip="rocket_launch"
+            onClick={onPushToProduction}
+            disabled={environment !== 'staging' || canCommit}
+            style={{ zIndex: 100 }}
+          />
+        </Toolbar>
+      </>
     )
   }, [environment, localOverrides, bundleName])
 
@@ -521,7 +509,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   return (
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
       <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
-        <Section style={{ maxWidth: 400 }}>
+        <Section style={{ maxWidth: 400, minWidth: 400 }}>
           {addonListHeader}
           <AddonList
             selectedAddons={selectedAddons}
