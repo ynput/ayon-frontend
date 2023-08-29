@@ -22,9 +22,13 @@ const KanBanColumn = ({ tasks = [], id, children, columns = {} }) => {
   }, [itemsRef.current, tasksCount])
 
   // find out which column the active card has come from
-  const activeColumn = columns[active?.id]
+  const activeColumn = Object.values(columns).find((column) =>
+    column.tasks.find((t) => t.id === active?.id),
+  )
   const isColumnActive = activeColumn?.id === id
   const isOverSelf = over?.id === activeColumn?.id
+
+  console.log(activeColumn, isColumnActive, isOverSelf)
 
   return (
     <Styled.Column ref={setNodeRef} $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf}>
