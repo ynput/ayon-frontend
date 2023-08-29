@@ -19,8 +19,8 @@ const UserTasksContainer = () => {
 
   //  get kanban tasks for all projects by assigned user (me)
   const { data: tasks = [], isFetching: isLoadingTasks } = useGetKanBanQuery(
-    { assignees: [user.name] },
-    { skip: !user.name },
+    { assignees: [user.name], projects: selectedProjects },
+    { skip: !user.name || !selectedProjects?.length },
   )
 
   const tasksWithIcons = tasks.map((task) => {

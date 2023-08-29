@@ -74,6 +74,7 @@ export const ayonApi = createApi({
     'user',
     'version',
     'workfile',
+    'kanBanTask',
   ],
   endpoints: () => ({}),
 })
