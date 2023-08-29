@@ -1,24 +1,33 @@
-export const getTasksColumns = (tasks = [], splitBy = 'status', columns = []) => {
-  // split into into a object with keys of unique values of splitBy
-  const splitTasks = tasks.reduce((acc, task) => {
-    let key = task[splitBy]
-    if (!key) return acc
+import { snakeCase } from 'lodash'
+// statuses = [{id: 'backlog', name: 'Backlog'}, {id: 'in_progress', name: 'In Progress'}]
+//
+export const getTasksColumns = (tasks = [], splitBy, statuses = []) => {
+  const splitTasks = {}
+  const noColumnTasks = []
 
-    key = key.toLowerCase()
+  // group tasks by column
+  statuses.forEach((status) => {
+    splitTasks[status.id] = { ...status, tasks: [] }
+  })
 
-    if (!acc[key]) {
-      acc[key] = []
-    }
-    acc[key].push(task)
-    return acc
-  }, {})
-
-  // add columns with no tasks
-  columns.forEach((key) => {
-    if (!splitTasks[key.toLowerCase()]) {
-      splitTasks[key.toLowerCase()] = []
+  tasks.forEach((task) => {
+    const column = statuses.find((status) => status.id === snakeCase(task[splitBy]))
+    if (column) {
+      splitTasks[column.id].tasks?.push(task)
+    } else {
+      noColumnTasks.push(task)
     }
   })
+
+  // add "No Column Found" column
+  if (noColumnTasks.length > 0) {
+    splitTasks['no_column_found'] = {
+      name: 'No Column Found',
+      id: 'no_column_found',
+      color: 'var(--md-custom-color-warning)',
+      tasks: noColumnTasks,
+    }
+  }
 
   return splitTasks
 }

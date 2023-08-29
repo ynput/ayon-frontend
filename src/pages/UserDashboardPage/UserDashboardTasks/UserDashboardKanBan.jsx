@@ -13,7 +13,13 @@ import {
   onTasksGroupByChanged,
   onTasksSortByChanged,
 } from '/src/features/dashboard'
-import { getFilteredTasks, getGroupedTasks, getSortedTasks, getTasksColumns } from '../util'
+import {
+  getFilteredTasks,
+  getGroupedTasks,
+  getMergedStatuses,
+  getSortedTasks,
+  getTasksColumns,
+} from '../util'
 import {
   DndContext,
   KeyboardSensor,
@@ -24,7 +30,7 @@ import {
 } from '@dnd-kit/core'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 
-const UserDashboardKanBan = ({ tasks }) => {
+const UserDashboardKanBan = ({ tasks, projectsInfo = {} }) => {
   const dispatch = useDispatch()
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
@@ -64,17 +70,10 @@ const UserDashboardKanBan = ({ tasks }) => {
   )
 
   // arrange the tasks into columns by status
-  const columnIds = [
-    'Not ready',
-    'Ready to start',
-    'in Progress',
-    'Pending review',
-    'Approved',
-    'On hold',
-    'Omitted',
-  ]
+  const mergedStatuses = getMergedStatuses(projectsInfo)
+
   const tasksColumns = useMemo(
-    () => getTasksColumns(sortedTasks, 'status', columnIds),
+    () => getTasksColumns(sortedTasks, 'status', mergedStatuses),
     [sortedTasks],
   )
 
@@ -155,7 +154,7 @@ const UserDashboardKanBan = ({ tasks }) => {
   }
 
   return (
-    <Section style={{ height: '100%', zIndex: 10 }}>
+    <Section style={{ height: '100%', zIndex: 10, padding: 0 }} wrap>
       <Toolbar style={{ zIndex: 20 }}>
         <SortingDropdown
           title="Sort by"
@@ -182,18 +181,18 @@ const UserDashboardKanBan = ({ tasks }) => {
           width: '100%',
           alignItems: 'flex-start',
           justifyContent: 'flex-start',
+          overflowX: 'auto',
         }}
         direction="row"
       >
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          {columnIds.flatMap((id) => {
-            const columnId = id.toLowerCase()
-            const column = tasksColumns[columnId]
+          {mergedStatuses.flatMap(({ id }) => {
+            const column = tasksColumns[id]
             if (!column) return []
 
             return (
-              <KanBanColumn key={id} columns={tasksColumns} tasks={column} id={id}>
-                {getGroupedTasks(column, groupByOptions[0]).map((group) => (
+              <KanBanColumn key={id} columns={tasksColumns} tasks={column.tasks} id={id}>
+                {getGroupedTasks(column.tasks, groupByOptions[0]).map((group) => (
                   <Fragment key={group.label}>
                     <span>{group.label}</span>
                     {group.tasks.map((task) => (
