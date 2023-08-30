@@ -29,10 +29,6 @@ const ColumnsWrapper = ({ fieldsColumns, tasksColumns, groupByValue }) => {
 
   // if we are dragging, detect if we are near the edge of the section
   useEffect(() => {
-    let intervalId = null
-
-    const handleRemove = () => intervalId && clearInterval(intervalId)
-
     const handleMouseMove = (event) => {
       const el = sectionRef.current
       if (!active || !el) return
@@ -53,14 +49,12 @@ const ColumnsWrapper = ({ fieldsColumns, tasksColumns, groupByValue }) => {
     if (active) {
       window.addEventListener('mousemove', handleMouseMove)
     } else {
-      handleRemove()
+      window.removeEventListener('mousemove', handleMouseMove)
+      setScrollDirection(null)
     }
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
-      if (intervalId) {
-        clearInterval(intervalId)
-        intervalId = null
-      }
+      setScrollDirection(null)
     }
   }, [active, sectionRef.current])
 
