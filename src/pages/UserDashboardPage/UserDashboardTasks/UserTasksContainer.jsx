@@ -3,11 +3,12 @@ import {
   useGetKanBanQuery,
   useGetProjectsInfoQuery,
 } from '/src/services/userDashboard/getUserDashboard'
-import { Panel, Section } from '@ynput/ayon-react-components'
+import { Panel } from '@ynput/ayon-react-components'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect } from 'react'
 import { onAssigneesChanged } from '/src/features/dashboard'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 const UserTasksContainer = () => {
   const dispatch = useDispatch()
@@ -57,31 +58,47 @@ const UserTasksContainer = () => {
   })
 
   const isLoadingAll = isLoadingInfo || isLoadingTasks
+  const detailsMinWidth = 400
+  const detailsMaxWidth = '40vw'
+  const detailsMaxMaxWidth = 700
 
   return (
-    <Section
+    <Splitter
+      layout="horizontal"
       style={{
         height: '100%',
         zIndex: 10,
         overflow: 'hidden',
+        width: '100%',
         gap: 0,
         marginLeft: -8,
       }}
-      direction="row"
+      stateKey="user-dashboard-tasks"
     >
-      <UserDashboardKanBan
-        tasks={tasksWithIcons}
-        isLoading={isLoadingAll}
-        projectsInfo={projectsInfo}
-        assignees={assignees}
-        taskFields={taskFields}
-      />
-      <Section style={{ width: 200, height: '100%' }}>
+      <SplitterPanel
+        style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden', marginRight: -4 }}
+        size={4}
+      >
+        <UserDashboardKanBan
+          tasks={tasksWithIcons}
+          isLoading={isLoadingAll}
+          projectsInfo={projectsInfo}
+          assignees={assignees}
+          taskFields={taskFields}
+        />
+      </SplitterPanel>
+      <SplitterPanel
+        size={1}
+        style={{
+          maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+          minWidth: detailsMinWidth,
+        }}
+      >
         <Panel style={{ height: '100%' }}>
           <h2>Details Panel</h2>
         </Panel>
-      </Section>
-    </Section>
+      </SplitterPanel>
+    </Splitter>
   )
 }
 
