@@ -71,7 +71,7 @@ export const Items = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
+  gap: 8px;
   padding: 8px;
   padding-top: 0;
   padding-bottom: ${({ $isScrolling }) => ($isScrolling ? '30px' : '8px')};
