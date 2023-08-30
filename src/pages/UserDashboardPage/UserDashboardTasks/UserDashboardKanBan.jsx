@@ -238,7 +238,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
 
             return (
               <KanBanColumn key={id} columns={tasksColumns} tasks={column.tasks} id={id}>
-                {getGroupedTasks(column.tasks, groupByOptions[0]).map((group) => (
+                {getGroupedTasks(column.tasks, groupByValue[0]).map((group) => (
                   <Fragment key={group.label}>
                     <span>{group.label}</span>
                     {group.tasks.map((task) => (

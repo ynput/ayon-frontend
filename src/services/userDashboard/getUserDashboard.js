@@ -221,7 +221,11 @@ const getUserDashboard = ayonApi.injectEndpoints({
             )
 
             if (response.status === 'rejected') throw new Error('No projects found', project)
-            response.data.forEach((assignee) => assignees.push(assignee))
+            response.data.forEach((assignee) => {
+              if (!assignees.some((a) => a.name === assignee.name)) {
+                assignees.push(assignee)
+              }
+            })
           }
 
           return { data: assignees }

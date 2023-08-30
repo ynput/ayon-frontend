@@ -28,8 +28,6 @@ const KanBanColumn = ({ tasks = [], id, children, columns = {} }) => {
   const isColumnActive = activeColumn?.id === id
   const isOverSelf = over?.id === activeColumn?.id
 
-  console.log(activeColumn, isColumnActive, isOverSelf)
-
   return (
     <Styled.Column ref={setNodeRef} $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf}>
       <Styled.Header $color={column.color}>

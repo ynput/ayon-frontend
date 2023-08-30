@@ -4,7 +4,7 @@ export const getGroupedTasks = (tasks = [], groupBy = {}) => {
   const { id, sortOrder } = groupBy
 
   if (!id) {
-    return [{ label: '_', tasks: tasks }]
+    return [{ label: '', tasks: tasks }]
   }
 
   const groupedTasks = tasks.reduce((acc, task) => {
@@ -23,17 +23,16 @@ export const getGroupedTasks = (tasks = [], groupBy = {}) => {
     }
   })
 
-  if (sortOrder) {
-    groups.sort((a, b) => {
-      if (a.label < b.label) {
-        return -1
-      }
-      if (a.label > b.label) {
-        return 1
-      }
-      return 0
-    })
-  }
+  groups.sort((a, b) => {
+    const order = sortOrder ? -1 : 1
+    if (a.label < b.label) {
+      return -1 * order
+    }
+    if (a.label > b.label) {
+      return 1 * order
+    }
+    return 0
+  })
 
   return groups
 }
