@@ -3,7 +3,7 @@ import {
   useGetKanBanQuery,
   useGetProjectsInfoQuery,
 } from '/src/services/userDashboard/getUserDashboard'
-import { Section } from '@ynput/ayon-react-components'
+import { Panel, Section } from '@ynput/ayon-react-components'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect } from 'react'
@@ -58,7 +58,16 @@ const UserTasksContainer = () => {
   const isLoadingAll = isLoadingInfo || isLoadingTasks
 
   return (
-    <Section style={{ height: '100%', zIndex: 10 }}>
+    <Section
+      style={{
+        height: '100%',
+        zIndex: 10,
+        overflow: 'hidden',
+        gap: 0,
+        marginLeft: -8,
+      }}
+      direction="row"
+    >
       <UserDashboardKanBan
         tasks={tasksWithIcons}
         isLoading={isLoadingAll}
@@ -66,6 +75,11 @@ const UserTasksContainer = () => {
         assignees={assignees}
         taskFields={taskFields}
       />
+      <Section style={{ width: 200, height: '100%' }}>
+        <Panel style={{ height: '100%' }}>
+          <h2>Details Panel</h2>
+        </Panel>
+      </Section>
     </Section>
   )
 }

@@ -1,14 +1,23 @@
 import { useDroppable } from '@dnd-kit/core'
 import * as Styled from './KanBanColumn.styled'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { Fragment, useEffect, useRef, useState } from 'react'
+import { getGroupedTasks } from '../../util'
+import { useDispatch, useSelector } from 'react-redux'
+import { onTaskSelected } from '/src/features/dashboard'
+import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 
-const KanBanColumn = ({ tasks = [], id, children, columns = {} }) => {
-  const column = columns[id]
+const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
+  const dispatch = useDispatch()
+  const column = columns[id] || {}
   const { isOver, setNodeRef, active, over } = useDroppable({
     id: id,
   })
 
   const tasksCount = tasks.length
+
+  // SELECTED TASKS
+  const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
+  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
 
   const [isScrolling, setIsScrolling] = useState(false)
   const itemsRef = useRef(null)
@@ -28,11 +37,45 @@ const KanBanColumn = ({ tasks = [], id, children, columns = {} }) => {
   const isColumnActive = activeColumn?.id === id
   const isOverSelf = over?.id === activeColumn?.id
 
+  // HANDLE TASK CLICK
+  const handleTaskClick = (e, id) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const { metaKey, ctrlKey, shiftKey } = e
+    const ctrlOrMeta = metaKey || ctrlKey
+    const shift = shiftKey && !ctrlOrMeta
+
+    let newSelection = []
+
+    // metaKey or ctrlKey or shiftKey is pressed, add to selection instead of replacing
+    if (ctrlOrMeta || shift) {
+      newSelection = [...selectedTasks]
+    }
+
+    // add (selected) to selection
+    if (!newSelection.includes(id)) {
+      // add to selection
+      newSelection.push(id)
+    } else if (ctrlOrMeta) {
+      // remove from selection
+      newSelection = newSelection.filter((taskId) => taskId !== id)
+    }
+
+    setSelectedTasks(newSelection)
+    // updates the breadcrumbs
+    // let uri = `ayon+entity://${projectName}/`
+    // uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
+    // uri += `?product=${event.node.data.name}`
+    // uri += `&version=${event.node.data.versionName}`
+    // dispatch(setUri(uri))
+  }
+
   return (
     <Styled.Column ref={setNodeRef} $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf}>
-      <Styled.Header $color={column.color}>
+      <Styled.Header $color={column?.color}>
         <h2>
-          {column.name} - {tasksCount}
+          {column?.name} - {tasksCount}
         </h2>
       </Styled.Header>
       <Styled.Items
@@ -42,7 +85,20 @@ const KanBanColumn = ({ tasks = [], id, children, columns = {} }) => {
         $isColumnActive={isColumnActive}
         $active={!!active}
       >
-        {children}
+        {getGroupedTasks(column?.tasks, groupByValue[0]).map((group) => (
+          <Fragment key={group.label}>
+            <span>{group.label}</span>
+            {group.tasks.map((task) => (
+              <KanBanCardDraggable
+                task={task}
+                key={task.id}
+                onClick={(e) => handleTaskClick(e, task.id)}
+                isActive={selectedTasks.includes(task.id)}
+                className="card"
+              />
+            ))}
+          </Fragment>
+        ))}
       </Styled.Items>
     </Styled.Column>
   )

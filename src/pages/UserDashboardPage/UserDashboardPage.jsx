@@ -27,8 +27,8 @@ const UserDashboardPage = () => {
   return (
     <>
       <AppNavLinks links={links} />
-      <main>
-        <Section direction="row" wrap style={{ position: 'relative' }}>
+      <main style={{ overflow: 'hidden' }}>
+        <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
           <ProjectList
             wrap
             isCollapsible

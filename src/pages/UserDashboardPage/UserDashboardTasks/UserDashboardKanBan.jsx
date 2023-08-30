@@ -6,35 +6,29 @@ import {
   Spacer,
   Toolbar,
 } from '@ynput/ayon-react-components'
-import React, { Fragment, useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   onAssigneesChanged,
-  onTaskSelected,
   onTasksFilterChanged,
   onTasksGroupByChanged,
   onTasksSortByChanged,
 } from '/src/features/dashboard'
-import {
-  getFilteredTasks,
-  getGroupedTasks,
-  getMergedFields,
-  getSortedTasks,
-  getTasksColumns,
-} from '../util'
+import { getFilteredTasks, getMergedFields, getSortedTasks, getTasksColumns } from '../util'
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import KanBanColumn from './KanBanColumn/KanBanColumn'
-import KanBanCard from './KanBanCard/KanBanCard'
 import { useUpdateTaskMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
+import KanBanCard from './KanBanCard/KanBanCard'
+import ColumnsWrapper from './TasksWrapper'
 
 const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFields }) => {
   const dispatch = useDispatch()
@@ -61,9 +55,6 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
   // FILTER
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
   const setFilterValue = (value) => dispatch(onTasksFilterChanged(value))
-  // SELECTED TASKS
-  const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
   // ASSIGNEES SELECT
   const { data: allUsers = [], isLoading: isLoadingAllUsers } = useGetKanBanUsersQuery(
     { projects: selectedProjects },
@@ -113,7 +104,20 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
   // UPDATE TASK MUTATION
   const [updateTask] = useUpdateTaskMutation()
 
+  // keep track of which card is being dragged
+  const [activeDraggingId, setActiveDraggingId] = useState(null)
+
+  const activeTask = useMemo(
+    () => tasks.find((t) => t.id === activeDraggingId),
+    [activeDraggingId, tasks],
+  )
+
+  const handleDragStart = (event) => {
+    setActiveDraggingId(event.active.id)
+  }
+
   const handleDragEnd = async (event) => {
+    setActiveDraggingId(null)
     // first check if field can be edited on task
     if (splitByField.isEditable === false)
       return toast.error(`Cannot edit ${splitByField.plural} on task`)
@@ -152,43 +156,9 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
     })
   }
 
-  // HANDLE TASK CLICK
-  const handleTaskClick = (e, id) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    const { metaKey, ctrlKey, shiftKey } = e
-    const ctrlOrMeta = metaKey || ctrlKey
-    const shift = shiftKey && !ctrlOrMeta
-
-    let newSelection = []
-
-    // metaKey or ctrlKey or shiftKey is pressed, add to selection instead of replacing
-    if (ctrlOrMeta || shift) {
-      newSelection = [...selectedTasks]
-    }
-
-    // add (selected) to selection
-    if (!newSelection.includes(id)) {
-      // add to selection
-      newSelection.push(id)
-    } else if (ctrlOrMeta) {
-      // remove from selection
-      newSelection = newSelection.filter((taskId) => taskId !== id)
-    }
-
-    setSelectedTasks(newSelection)
-    // updates the breadcrumbs
-    // let uri = `ayon+entity://${projectName}/`
-    // uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
-    // uri += `?product=${event.node.data.name}`
-    // uri += `&version=${event.node.data.versionName}`
-    // dispatch(setUri(uri))
-  }
-
   return (
-    <Section style={{ height: '100%', zIndex: 10, padding: 0 }} wrap>
-      <Toolbar style={{ zIndex: 100 }}>
+    <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
+      <Toolbar style={{ zIndex: 100, padding: '1px 8px' }}>
         <SortingDropdown
           title="Sort by"
           options={sortByOptions}
@@ -221,41 +191,21 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
         )}
       </Toolbar>
 
-      <Section
-        style={{
-          height: '100%',
-          width: '100%',
-          alignItems: 'flex-start',
-          justifyContent: 'flex-start',
-          overflowX: 'auto',
-        }}
-        direction="row"
+      <DndContext
+        sensors={sensors}
+        onDragEnd={handleDragEnd}
+        onDragStart={handleDragStart}
+        autoScroll={false}
       >
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          {fieldsColumns.flatMap(({ id }) => {
-            const column = tasksColumns[id]
-            if (!column) return []
-
-            return (
-              <KanBanColumn key={id} columns={tasksColumns} tasks={column.tasks} id={id}>
-                {getGroupedTasks(column.tasks, groupByValue[0]).map((group) => (
-                  <Fragment key={group.label}>
-                    <span>{group.label}</span>
-                    {group.tasks.map((task) => (
-                      <KanBanCard
-                        task={task}
-                        key={task.id}
-                        onClick={(e) => handleTaskClick(e, task.id)}
-                        isActive={selectedTasks.includes(task.id)}
-                      />
-                    ))}
-                  </Fragment>
-                ))}
-              </KanBanColumn>
-            )
-          })}
-        </DndContext>
-      </Section>
+        <ColumnsWrapper
+          fieldsColumns={fieldsColumns}
+          tasksColumns={tasksColumns}
+          groupByValue={groupByValue}
+        />
+        <DragOverlay dropAnimation={null}>
+          {activeDraggingId && activeTask && <KanBanCard task={activeTask} isOverlay />}
+        </DragOverlay>
+      </DndContext>
     </Section>
   )
 }

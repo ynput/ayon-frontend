@@ -71,7 +71,7 @@ export const Items = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 16px;
   padding: 8px;
   padding-top: 0;
   padding-bottom: ${({ $isScrolling }) => ($isScrolling ? '30px' : '8px')};
@@ -82,17 +82,8 @@ export const Items = styled.div`
   overflow-y: auto;
   overflow-y: overlay;
 
-  ${({ $isColumnActive, $isScrolling }) =>
-    $isColumnActive &&
-    css`
-      /* so we can see the moving card */
-      overflow: visible;
-      /* add extra padding if it was previously scrolling to prevent width change */
-      padding-right: ${$isScrolling ? '16px' : '8px'};
-    `}
-
   /* for columns that aren't active */
-    ${({ $active, $isColumnActive, $isScrolling }) =>
+  ${({ $active, $isColumnActive, $isScrolling }) =>
     $active &&
     !$isColumnActive &&
     !$isScrolling &&

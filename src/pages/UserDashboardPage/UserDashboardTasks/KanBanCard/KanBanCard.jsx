@@ -1,36 +1,30 @@
-import { useDraggable } from '@dnd-kit/core'
-import { CSS } from '@dnd-kit/utilities'
-import { EntityCard } from '@ynput/ayon-react-components'
+import { forwardRef } from 'react'
+import * as Styled from './KanBanCard.styled'
 
-const KanBanCard = ({ task, onClick, onKeyUp, isActive }) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: task.id,
-  })
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    zIndex: isDragging ? 1000 : undefined,
-  }
+const KanBanCard = forwardRef(
+  ({ task, onClick, onKeyUp, isActive, style, isOverlay, isDragging, ...props }, ref) => {
+    return (
+      <Styled.KanBanEntityCard
+        ref={ref}
+        imageUrl={task.thumbnailUrl}
+        title={task.name}
+        subTitle={task.folderName}
+        description={task.path}
+        onClick={onClick}
+        isActive={isActive}
+        icon={task.statusIcon}
+        iconColor={task.statusColor}
+        titleIcon={task.taskIcon}
+        style={{ width: 210, ...style }}
+        onKeyUp={onKeyUp}
+        $isOverlay={isOverlay}
+        $isDragging={isDragging}
+        {...props}
+      />
+    )
+  },
+)
 
-  return (
-    <EntityCard
-      imageUrl={task.thumbnailUrl}
-      title={task.name}
-      subTitle={task.folderName}
-      description={task.path}
-      onClick={onClick}
-      isActive={isActive}
-      icon={task.statusIcon}
-      iconColor={task.statusColor}
-      titleIcon={task.taskIcon}
-      style={{ width: 210, ...style }}
-      ref={setNodeRef}
-      onKeyUp={onKeyUp}
-      isDragging={isDragging}
-      isDraggable
-      {...attributes}
-      {...listeners}
-    />
-  )
-}
+KanBanCard.displayName = 'KanBanCard'
 
 export default KanBanCard
