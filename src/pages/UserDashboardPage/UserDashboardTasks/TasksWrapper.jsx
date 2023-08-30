@@ -39,7 +39,7 @@ const ColumnsWrapper = ({ fieldsColumns, tasksColumns, groupByValue }) => {
       const { left, right } = el.getBoundingClientRect()
       // xPos of the mouse
       const xPos = event.clientX
-      const threshold = 200
+      const threshold = 100
 
       const newScrollDirection = xPos < left + threshold ? -1 : xPos > right - threshold ? 1 : null
       if (newScrollDirection !== scrollDirection) {
