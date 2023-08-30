@@ -35,6 +35,7 @@ const localStorageItems = {
   'dashboard/onTasksGroupByChanged': 'dashboard-tasks-groupBy',
   'dashboard/onTasksFilterChanged': 'dashboard-tasks-filter',
   'dashboard/onTaskSelected': 'dashboard-tasks-selected',
+  'dashboard/onAssigneesChanged': 'dashboard-tasks-assignees',
 }
 
 const store = configureStore({

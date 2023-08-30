@@ -13,13 +13,14 @@ const UserTasksContainer = () => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const user = useSelector((state) => state.user)
-
-  const assignees =
-    useSelector((state) => state.dashboard.tasks.assignees) || (user?.name && [user?.name]) || []
+  const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
+  const assignees = assigneesState || (user?.name && [user?.name]) || []
 
   // once user is loaded, set assignees to user
   useEffect(() => {
-    dispatch(onAssigneesChanged([user.name]))
+    if (!assigneesState) {
+      dispatch(onAssigneesChanged([user.name]))
+    }
   }, [user.name])
 
   const taskFields = {

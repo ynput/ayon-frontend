@@ -10,7 +10,7 @@ const dashboardSlice = createSlice({
       sortBy: getInitialStateLocalStorage('dashboard-tasks-sortBy', []),
       groupBy: getInitialStateLocalStorage('dashboard-tasks-groupBy', []),
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
-      assignees: null,
+      assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', null),
     },
   },
   reducers: {
