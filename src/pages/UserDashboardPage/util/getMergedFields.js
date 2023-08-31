@@ -23,10 +23,10 @@ const mergeArrays = (arrays) => {
 }
 
 export const getMergedFields = (projectInfo = {}, splitBy) => {
-  // first get all the statuses
-  const statuses = Object.values(projectInfo).map((project) => project[splitBy])
+  // first get all the fields
+  const fields = Object.values(projectInfo).map((project) => project[splitBy])
   //   then merge them into one array
-  const mergedStatuses = mergeArrays(statuses)
+  const mergedFields = mergeArrays(fields)
 
-  return mergedStatuses
+  return mergedFields
 }
