@@ -28,6 +28,7 @@ const ThumbnailStyled = styled.div`
     align-items: center;
     inset: 0;
     background-color: hsl(220 20% 8%);
+    color: var(--md-sys-color-outline);
 
     opacity: 0;
     /* delay being seen by 1s */
@@ -46,21 +47,21 @@ const ImageStyled = styled.img`
   display: block;
   position: absolute;
   inset: 0;
-  background-color: #161616;
+  background-color: var(--md-sys-color-surface-container-lowest);
 `
-
-const ImagePlaceholder = () => <Icon icon="image" />
 
 const Thumbnail = ({
   projectName,
   entityType,
   entityId,
+  icon,
   style,
   entityUpdatedAt,
   isLoading,
   shimmer,
   className,
   disabled,
+  src,
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
   // ugly border around the image (when it's not loaded yet)
@@ -71,17 +72,22 @@ const Thumbnail = ({
   const isWrongEntity = ['task', 'product'].includes(entityType)
 
   return (
-    <ThumbnailStyled style={style} className={className} $shimmer={isLoading && shimmer}>
-      {(!isLoading || !thumbLoaded) && !disabled && <ImagePlaceholder />}
-      {entityType && !(isWrongEntity || !entityId) && (
-        <ImageStyled
-          alt={`Entity thumbnail ${entityId}`}
-          src={`${url}${queryArgs}`}
-          style={{ display: thumbLoaded ? 'block' : 'none' }}
-          onError={() => setThumbLoaded(false)}
-          onLoad={() => setThumbLoaded(true)}
-        />
-      )}
+    <ThumbnailStyled
+      style={style}
+      className={className + ' thumbnail'}
+      $shimmer={isLoading && shimmer}
+    >
+      {(!isLoading || !thumbLoaded) && !disabled && <Icon icon={icon || 'image'} />}
+      {(entityType && !(isWrongEntity || !entityId)) ||
+        (src && (
+          <ImageStyled
+            alt={`Entity thumbnail ${entityId}`}
+            src={src || `${url}${queryArgs}`}
+            style={{ display: thumbLoaded ? 'block' : 'none' }}
+            onError={() => setThumbLoaded(false)}
+            onLoad={() => setThumbLoaded(true)}
+          />
+        ))}
     </ThumbnailStyled>
   )
 }

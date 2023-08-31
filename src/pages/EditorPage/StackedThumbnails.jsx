@@ -9,17 +9,17 @@ const StackedStyled = styled.div`
   z-index: 10;
   position: relative;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 8px;
   min-width: min-content;
   & > * {
     margin: unset;
     aspect-ratio: 1;
     width: 40px;
-    border: solid 1px var(--md-sys-color-outline);
-    border-radius: 6px;
+    border: solid 2px var(--md-sys-color-outline-variant);
+    border-radius: 8px;
 
     span {
-      font-size: 20px;
+      font-size: 24px;
     }
 
     ${({ length }) =>
@@ -42,17 +42,18 @@ const StackedStyled = styled.div`
   height: 100%;
 `
 
-const StackedThumbnails = ({ thumbnails = [], isLoading }) => {
+const StackedThumbnails = ({ thumbnails = [], isLoading, className }) => {
   const projectName = useSelector((state) => state.project.name)
   // limit to 5 users
   thumbnails = thumbnails.slice(0, 5)
 
   return (
-    <StackedStyled length={thumbnails.length}>
+    <StackedStyled length={thumbnails.length} className={className + ' stacked-thumbnails'}>
       {thumbnails.map(
         (thumb, i) =>
           thumb && (
             <Thumbnail
+              {...thumb}
               projectName={projectName}
               entityType={thumb.type}
               entityId={thumb.id}
@@ -60,6 +61,7 @@ const StackedThumbnails = ({ thumbnails = [], isLoading }) => {
               style={{ zIndex: -i }}
               entityUpdatedAt={thumb.updatedAt}
               isLoading={isLoading}
+              src={thumb.src}
             />
           ),
       )}
