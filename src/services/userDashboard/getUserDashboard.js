@@ -139,7 +139,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
       providesTags: (res) => taskProvideTags(res, 'kanBanTask'),
     }),
     getProjectsInfo: build.query({
-      async queryFn({ projects = [], fields = [] }, { dispatch }) {
+      async queryFn({ projects = [] }, { dispatch }) {
         try {
           // get project info for each project
           const projectInfo = {}
@@ -154,10 +154,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
             )
 
             if (response.status === 'rejected') throw new Error('No projects found', project)
-            projectInfo[project] = {}
-            for (const field of fields) {
-              projectInfo[project][field] = response.data[field] || []
-            }
+            projectInfo[project] = response.data
           }
 
           return { data: projectInfo }
@@ -207,8 +204,9 @@ const getUserDashboard = ayonApi.injectEndpoints({
     getKanBanUsers: build.query({
       async queryFn({ projects = [] }, { dispatch }) {
         try {
-          // get project tasks for each project
+          // get users for each project
           const assignees = []
+          const usersOnProjects = {}
           for (const project of projects) {
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
@@ -222,10 +220,15 @@ const getUserDashboard = ayonApi.injectEndpoints({
 
             if (response.status === 'rejected') throw new Error('No projects found', project)
             response.data.forEach((assignee) => {
-              if (!assignees.some((a) => a.name === assignee.name)) {
-                assignees.push(assignee)
+              const existingAssignee = assignees.find((a) => a.name === assignee.name)
+              if (existingAssignee) {
+                existingAssignee.projects.push(project)
+              } else {
+                assignees.push({ ...assignee, projects: [project] })
               }
             })
+
+            usersOnProjects[project] = response.data.map((a) => a.name)
           }
 
           return { data: assignees }

@@ -49,21 +49,20 @@ const StackedThumbnails = ({ thumbnails = [], isLoading, className }) => {
 
   return (
     <StackedStyled length={thumbnails.length} className={className + ' stacked-thumbnails'}>
-      {thumbnails.map(
-        (thumb, i) =>
-          thumb && (
-            <Thumbnail
-              {...thumb}
-              projectName={projectName}
-              entityType={thumb.type}
-              entityId={thumb.id}
-              key={thumb.id}
-              style={{ zIndex: -i }}
-              entityUpdatedAt={thumb.updatedAt}
-              isLoading={isLoading}
-              src={thumb.src}
-            />
-          ),
+      {thumbnails.map((thumb, i) =>
+        thumb ? (
+          <Thumbnail
+            projectName={projectName}
+            entityType={thumb.type}
+            entityId={thumb.id}
+            key={thumb.id}
+            style={{ zIndex: -i }}
+            entityUpdatedAt={thumb.updatedAt}
+            isLoading={isLoading}
+            src={thumb.src}
+            {...thumb}
+          />
+        ) : null,
       )}
     </StackedStyled>
   )

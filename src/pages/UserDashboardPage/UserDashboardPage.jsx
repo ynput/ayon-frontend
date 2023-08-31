@@ -6,6 +6,7 @@ import { Section } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { onProjectSelected } from '/src/features/dashboard'
+import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 
 const UserDashboardPage = () => {
   let { module } = useParams()
@@ -24,6 +25,12 @@ const UserDashboardPage = () => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const setSelectedProjects = (projects) => dispatch(onProjectSelected(projects))
 
+  // get all the info required for the projects selected, like status icons and colours
+  const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(
+    { projects: selectedProjects },
+    { skip: !selectedProjects?.length },
+  )
+
   return (
     <>
       <AppNavLinks links={links} />
@@ -41,7 +48,9 @@ const UserDashboardPage = () => {
             onNoProject={setSelectedProjects}
             autoSelect
           />
-          {module === 'tasks' && <UserTasksContainer />}
+          {module === 'tasks' && (
+            <UserTasksContainer projectsInfo={projectsInfo} isLoadingInfo={isLoadingInfo} />
+          )}
         </Section>
       </main>
     </>

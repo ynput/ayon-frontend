@@ -1,16 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  useGetKanBanQuery,
-  useGetProjectsInfoQuery,
-} from '/src/services/userDashboard/getUserDashboard'
-import { Panel } from '@ynput/ayon-react-components'
+import { useGetKanBanQuery } from '/src/services/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect } from 'react'
 import { onAssigneesChanged } from '/src/features/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import UserDashboardDetails from './UserDashboardDetails/UserDashboardDetails'
 
-const UserTasksContainer = () => {
+const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const user = useSelector((state) => state.user)
@@ -30,17 +27,14 @@ const UserTasksContainer = () => {
     folderName: { plural: 'folder_names', isEditable: false },
   }
 
-  // get all the info required for the projects selected, like status icons and colours
-  const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(
-    { projects: selectedProjects, fields: Object.values(taskFields).map((t) => t.plural) },
-    { skip: !selectedProjects?.length },
-  )
-
   //  get kanban tasks for all projects by assigned user (me)
-  const { data: tasks = [], isFetching: isLoadingTasks } = useGetKanBanQuery(
+  let { data: tasks = [], isFetching: isLoadingTasks } = useGetKanBanQuery(
     { assignees: assignees, projects: selectedProjects },
     { skip: !assignees.length || !selectedProjects?.length },
   )
+
+  // filter out tasks that don't have a assignees
+  tasks = tasks.filter((task) => task.assignees?.some((assignee) => assignees.includes(assignee)))
 
   const tasksWithIcons = tasks.map((task) => {
     const projectInfo = projectsInfo[task.projectName]
@@ -94,9 +88,7 @@ const UserTasksContainer = () => {
           minWidth: detailsMinWidth,
         }}
       >
-        <Panel style={{ height: '100%' }}>
-          <h2>Details Panel</h2>
-        </Panel>
+        <UserDashboardDetails tasks={tasksWithIcons} />
       </SplitterPanel>
     </Splitter>
   )

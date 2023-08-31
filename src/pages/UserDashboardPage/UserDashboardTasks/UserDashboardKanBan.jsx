@@ -60,6 +60,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
     { projects: selectedProjects },
     { skip: !selectedProjects?.length },
   )
+
   const setAssignees = (assignees) => dispatch(onAssigneesChanged(assignees))
 
   // filter out projects by selected projects and filter value

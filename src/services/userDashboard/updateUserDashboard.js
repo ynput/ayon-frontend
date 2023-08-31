@@ -28,7 +28,27 @@ const updateUserDashboard = ayonApi.injectEndpoints({
       },
       invalidatesTags: (result, error, { taskId }) => [{ type: 'task', id: taskId }],
     }),
+    updateTasks: build.mutation({
+      async queryFn({ operations = [] }, { dispatch, getState }) {
+        const assignees = getState().dashboard.tasks.assignees
+        try {
+          for (const { projectName, data, id } of operations) {
+            await dispatch(
+              ayonApi.endpoints.updateTask.initiate({
+                projectName: projectName,
+                taskId: id,
+                data,
+                assignees,
+              }),
+            )
+          }
+        } catch (error) {
+          console.error(error)
+          return error
+        }
+      },
+    }),
   }),
 })
 
-export const { useUpdateTaskMutation } = updateUserDashboard
+export const { useUpdateTaskMutation, useUpdateTasksMutation } = updateUserDashboard
