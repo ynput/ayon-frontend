@@ -13,11 +13,11 @@ import {
 } from '/src/services/addonSettings'
 
 import VariantSelector from './VariantSelector'
-import { setValueByPath } from './utils'
+import { getValueByPath, setValueByPath } from './utils'
 
-import { cloneDeep } from 'lodash'
+import { cloneDeep, isEqual } from 'lodash'
 
-const BundleDropdown = ({ bundleName, setBundleName }) => {
+const BundleDropdown = ({ bundleName, setBundleName, disabled }) => {
   const { data, isLoading, isError } = useGetBundleListQuery({})
 
   const bundleOptions = useMemo(() => {
@@ -32,16 +32,25 @@ const BundleDropdown = ({ bundleName, setBundleName }) => {
       onChange={(e) => setBundleName(e[0])}
       placeholder="Select a bundle"
       style={{ flexGrow: 1 }}
+      disabled={disabled}
     />
   )
 }
 
-const CopySettingsTable = ({ sourceBundle, sourceVariant, targetBundle, nodes, setNodes }) => {
+const CopySettingsTable = ({
+  sourceBundle,
+  sourceVariant,
+  targetBundle,
+  targetVariant,
+  nodes,
+  setNodes,
+}) => {
   //
   // targetBundle is used just to get the list of addons
   //
 
-  const [selectedNodes, setSelectedNodes] = useState([])
+  const [selectedNodes, setSelectedNodes] = useState({})
+  const [loading, setLoading] = useState(false)
 
   const {
     data: bundlesData,
@@ -50,9 +59,36 @@ const CopySettingsTable = ({ sourceBundle, sourceVariant, targetBundle, nodes, s
   } = useGetBundleListQuery({})
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
+  const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
+
+  useEffect(() => {
+    setLoading(bundlesLoading)
+  }, [bundlesLoading])
+
+  useEffect(() => {
+    for (const node of nodes) {
+      for (const child of node.children) {
+        if (Object.keys(selectedNodes).includes(child.key)) {
+          console.log('selected', child.key)
+          console.log(child)
+        }
+      }
+    }
+  }, [selectedNodes])
 
   const loadNodes = async () => {
-    if (bundlesLoading || bundlesError) return
+    if (bundlesLoading || bundlesError) {
+      setNodes([])
+      return
+    }
+
+    if (sourceBundle === targetBundle && sourceVariant === targetVariant) {
+      console.log('same bundle and variant')
+      setNodes([])
+      return
+    }
+
+    setLoading(true)
 
     let sourceBundleData = {}
     let targetBundleData = {}
@@ -77,19 +113,50 @@ const CopySettingsTable = ({ sourceBundle, sourceVariant, targetBundle, nodes, s
         const sourceAddonVersion = sourceBundleData.addons[addonName]
 
         const children = []
-        const res = await triggerGetOverrides({
+        const sourceOverrides = await triggerGetOverrides({
           addonName,
           addonVersion: sourceAddonVersion,
           variant: sourceVariant,
         })
-        for (const id in res.data) {
-          const override = res.data[id]
-          if (override.inGroup || override.type === 'branch') continue
+
+        // TODO: we may use this to display whether there
+        // is an override or we are replacing with a default value
+
+        // const targetOverrides = await triggerGetOverrides({
+        //   addonName,
+        //   addonVersion: targetBundleData.addons[addonName],
+        //   variant: targetVariant,
+        // })
+
+        const sourceSettings = await triggerGetSettings({
+          addonName,
+          addonVersion: sourceAddonVersion,
+          variant: sourceVariant,
+        })
+
+        const targetSettings = await triggerGetSettings({
+          addonName,
+          addonVersion: targetBundleData.addons[addonName],
+          variant: targetVariant,
+        })
+
+        for (const id in sourceOverrides.data) {
+          const sourceOverride = sourceOverrides.data[id]
+          //const targetOverride = targetOverrides.data[id]
+
+          if (sourceOverride.inGroup || sourceOverride.type === 'branch') continue
+
+          const sourceValue = getValueByPath(sourceSettings.data, sourceOverride.path)
+          const targetValue = getValueByPath(targetSettings.data, sourceOverride.path)
+
+          if (isEqual(sourceValue, targetValue)) continue
+
           const item = {
             key: id,
             data: {
-              path: override.path,
-              newValue: override.value,
+              path: sourceOverride.path,
+              sourceValue,
+              targetValue,
             },
           }
           children.push(item)
@@ -103,6 +170,7 @@ const CopySettingsTable = ({ sourceBundle, sourceVariant, targetBundle, nodes, s
             addonName: addonName,
             addonVersion: sourceAddonVersion,
             targetAddonVersion: targetBundleData.addons[addonName],
+            sourceSettings,
           },
           children: children,
         })
@@ -110,6 +178,7 @@ const CopySettingsTable = ({ sourceBundle, sourceVariant, targetBundle, nodes, s
     }
 
     setNodes(addonList)
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -127,20 +196,36 @@ const CopySettingsTable = ({ sourceBundle, sourceVariant, targetBundle, nodes, s
     return rowData.data?.path?.join(' / ')
   }
 
+  const formatValue = (value) => {
+    if (value === undefined) return ''
+    if (value === null) return 'null'
+    if (typeof value === 'object') return '[Complex object]'
+    return value
+  }
+
   return (
-    <TablePanel style={{ minHeight: 500, marginTop: 12, flexGrow: 1 }} loading={{ bundlesLoading }}>
+    <TablePanel style={{ minHeight: 500, marginTop: 12, flexGrow: 1 }}>
       <TreeTable
         selectionMode="multiple"
         selectionKeys={selectedNodes}
         onSelectionChange={(e) => setSelectedNodes(e.value)}
         value={nodes}
-        emptyMessage="No settings to copy"
+        emptyMessage="Nothing to copy"
+        loading={loading}
       >
         <Column field="addonName" header="Addon name" expander />
         <Column field="version" header="Addon version" body={formatVersionColumn} />
         <Column field="path" header="Path" body={formatPathColumn} />
-        <Column field="currentValue" header="Current value" />
-        <Column field="newValue" header="New value" />
+        <Column
+          field="targetValue"
+          header="Current value"
+          body={(r) => formatValue(r.data.targetValue)}
+        />
+        <Column
+          field="sourceValue"
+          header="New value"
+          body={(r) => formatValue(r.data.sourceValue)}
+        />
       </TreeTable>
     </TablePanel>
   )
@@ -164,9 +249,9 @@ const CopySettingsButton = ({
   const [sourceVariant, setSourceVariant] = useState('production')
   const [nodes, setNodes] = useState([])
 
-  const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
+  //const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
 
-  const onDoTheMagic = async () => {
+  const doTheMagic = async () => {
     const newLocalData = cloneDeep(localData)
     const newLocalOverrides = { ...localOverrides }
     const newOriginalData = { ...originalData }
@@ -188,29 +273,19 @@ const CopySettingsButton = ({
       }
 
       // Get current settings of the target addon
-
       let addonSettings = newLocalData[key]
       let addonOverrides = []
       if (!localData[key]) {
-        const res = await triggerGetSettings({
-          addonName: node.data.addonName,
-          addonVersion: node.data.targetAddonVersion,
-          projectName,
-          siteId,
-          variant,
-        })
-        newOriginalData[key] = res.data
-        addonSettings = cloneDeep(res.data)
+        newOriginalData[key] = node.data.sourceSettings.data
+        addonSettings = cloneDeep(newOriginalData[key])
       }
 
       // Iterate over the changes and apply them to the target addon
 
       for (const change of node.children) {
-        if (change.data.newValue) {
-          addonSettings = setValueByPath(addonSettings, change.data.path, change.data.newValue)
-          console.log('Copied', change.data.path.join('/'), change.data.newValue)
-          addonOverrides.push(change.data.path)
-        } else console.warn('Not implemented copy', change.data.path.join('/'))
+        addonSettings = setValueByPath(addonSettings, change.data.path, change.data.sourceValue)
+        addonOverrides.push(change.data.path)
+        console.log('Copied', change.data.path.join('/'), change.data.newValue)
       } // for change of node.children
 
       newLocalData[key] = addonSettings
@@ -218,12 +293,12 @@ const CopySettingsButton = ({
       newSelectedAddons.push(addon)
     } // for node of nodes
 
-    console.log('NEw local data', newLocalData)
     setOriginalData(newOriginalData)
     setLocalData(newLocalData)
     setLocalOverrides(newLocalOverrides)
     setSelectedAddons(newSelectedAddons)
     toast.success('Settings copied')
+    setDialogVisible(false)
   }
 
   //
@@ -233,7 +308,7 @@ const CopySettingsButton = ({
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row' }}>
       <Spacer />
-      <Button label="Copy settings" icon="input" onClick={() => onDoTheMagic()} />
+      <Button label="Copy settings" icon="input" onClick={() => doTheMagic()} />
     </div>
   )
 
@@ -247,24 +322,32 @@ const CopySettingsButton = ({
       />
       {dialogVisible && (
         <Dialog
-          header={`Copy ${bundleName} ${variant} settings from...`}
+          header={`Copy settings from...`}
           visible
           onHide={() => setDialogVisible(false)}
           style={{ width: '80%', height: '80%' }}
           footer={footer}
         >
-          <Toolbar>
-            Source bundle
-            <BundleDropdown bundleName={sourceBundle} setBundleName={setSourceBundle} />
-            <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
-          </Toolbar>
-          <CopySettingsTable
-            sourceBundle={sourceBundle}
-            sourceVariant={sourceVariant}
-            targetBundle={bundleName}
-            nodes={nodes}
-            setNodes={setNodes}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Toolbar>
+              Source bundle
+              <BundleDropdown bundleName={sourceBundle} setBundleName={setSourceBundle} />
+              <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
+            </Toolbar>
+            <Toolbar>
+              Target bundle
+              <BundleDropdown bundleName={bundleName} setBundleName={() => {}} disabled />
+              <VariantSelector variant={variant} setVariant={() => {}} disabled />
+            </Toolbar>
+            <CopySettingsTable
+              sourceBundle={sourceBundle}
+              sourceVariant={sourceVariant}
+              targetBundle={bundleName}
+              targetVariant={variant}
+              nodes={nodes}
+              setNodes={setNodes}
+            />
+          </div>
         </Dialog>
       )}
     </>

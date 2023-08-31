@@ -1,6 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
 
-const VariantSelector = ({ variant, setVariant }) => {
+const VariantSelector = ({ variant, setVariant, disabled }) => {
   const styleHlProd = {
     backgroundColor: 'var(--color-hl-production)',
     color: 'black',
@@ -16,11 +16,13 @@ const VariantSelector = ({ variant, setVariant }) => {
         label="Production"
         onClick={() => setVariant('production')}
         style={variant === 'production' ? styleHlProd : {}}
+        disabled={disabled}
       />
       <Button
         label="Staging"
         onClick={() => setVariant('staging')}
         style={variant === 'staging' ? styleHlStag : {}}
+        disabled={disabled}
       />
     </>
   )
