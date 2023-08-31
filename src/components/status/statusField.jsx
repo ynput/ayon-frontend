@@ -34,7 +34,7 @@ const StatusStyled = styled.div`
 
   /* ICON */
   .material-symbols-outlined {
-    font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 20;
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 400, 'opsz' 20;
     /* always taks parents color */
     color: inherit;
   }
