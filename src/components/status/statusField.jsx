@@ -59,12 +59,14 @@ const StatusStyled = styled.div`
 
 
     /* Only happens when a change has been made and dropdown closed */
-    ${({ $isChanging, $isSelecting }) =>
-    $isChanging &&
-    !$isSelecting &&
-    css`
-      ${invertHoverStyle}
-    `}
+    /* or invert prop */
+    ${({ $isChanging, $isSelecting, $invert }) =>
+    ($isChanging && !$isSelecting) ||
+    ($invert &&
+      css`
+        ${invertHoverStyle}
+      `)}
+
 
     /* A transition animation for onChange animation */
     ${({ $isSelecting }) =>
@@ -127,9 +129,15 @@ const StatusField = ({
   height,
   placeholder,
   statuses = {},
+  invert,
+  className,
   ...props
 }) => {
-  const { shortName, color, icon = 'help_center' } = statuses[value] || {}
+  const {
+    shortName,
+    color = 'var(--md-sys-color-surface-container-highest)',
+    icon = 'help_center',
+  } = statuses[value] || {}
 
   let shownValue = value || placeholder || 'None'
 
@@ -144,10 +152,12 @@ const StatusField = ({
       $align={align}
       $isChanging={isChanging}
       $size={size}
+      $invert={invert}
       placeholder={!value && placeholder ? placeholder : ''}
+      className={className + ' status-field'}
     >
       {icon && <Icon icon={icon} />}
-      {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
+      <span>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
     </StatusStyled>
   )
 }

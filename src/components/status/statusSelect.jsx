@@ -26,11 +26,22 @@ const StatusSelect = ({
   disableMessage,
   disabled,
   widthExpand,
+  options,
+  invert = false,
+  ...props
 }) => {
-  const statusesObject = useSelector((state) => state.project.statuses)
+  const statusesObject = options
+    ? options.reduce(
+        (acc, status) => ({
+          ...acc,
+          [status.name]: status,
+        }),
+        {},
+      )
+    : useSelector((state) => state.project.statuses)
   const statusesOrder = useSelector((state) => state.project.statusesOrder)
   // ordered array of statuses objects
-  const statuses = statusesOrder.map((status) => statusesObject[status])
+  const statuses = options || statusesOrder.map((status) => statusesObject[status])
 
   if (!value && !placeholder) return null
 
@@ -53,6 +64,7 @@ const StatusSelect = ({
 
   return (
     <StyledDropdown
+      {...props}
       message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
       widthExpand={widthExpand}
       onOpen={onOpen}
@@ -70,20 +82,24 @@ const StatusSelect = ({
           height={height}
           placeholder={placeholder}
           statuses={statusesObject}
+          invert={invert}
+          className={'value'}
         />
       )}
       dataKey={'name'}
       options={statuses}
-      itemTemplate={(status, isActive) => (
-        <StatusField
-          value={status.name}
-          isSelecting
-          isActive={!isMixed && isActive}
-          align={align}
-          height={height}
-          statuses={statusesObject}
-        />
-      )}
+      itemTemplate={(status, isActive) =>
+        statuses.find((s) => s.name === status.name) && (
+          <StatusField
+            value={status.name}
+            isSelecting
+            isActive={!isMixed && isActive}
+            align={align}
+            height={height}
+            statuses={statusesObject}
+          />
+        )
+      }
     />
   )
 }
