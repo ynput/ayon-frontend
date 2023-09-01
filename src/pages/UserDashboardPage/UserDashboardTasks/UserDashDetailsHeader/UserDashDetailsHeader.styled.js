@@ -50,3 +50,10 @@ export const TaskStatusSelect = styled(StatusSelect)`
     margin-bottom: 2px;
   }
 `
+
+export const Footer = styled.footer`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: stretch;
+`

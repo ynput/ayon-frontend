@@ -9,6 +9,7 @@ import { getIntersectionFields, getMergedFields } from '../../util'
 import { union } from 'lodash'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
+import Actions from '/src/components/Actions/Actions'
 
 const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }) => {
   const selectedTasksIds = useSelector((state) => state.dashboard.tasks.selected)
@@ -115,6 +116,38 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
     copyToClipboard(fullPath)
   }
 
+  // DUMMY ACTIONS DATA
+  const actions = [
+    { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
+    { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
+    { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
+    { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
+    { id: 'photoshop', icon: 'photoshop.png' },
+  ]
+
+  const actionTaskTypes = {
+    actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
+    actions3D: [
+      'modeling',
+      'texture',
+      'lookdev',
+      'rigging',
+      'layout',
+      'setdress',
+      'animation',
+      'fx',
+      'lighting',
+    ],
+  }
+
+  const pinned = actions
+    .filter((action) => {
+      const actions = actionTaskTypes[action.pinned]
+      if (!actions) return false
+      return actions.some((action) => action.toLowerCase() === singleTask.taskType.toLowerCase())
+    })
+    .map((action) => action.id)
+
   return (
     <Section style={{ padding: 8, alignItems: 'flex-start', gap: 8 }}>
       <OverflowField
@@ -151,6 +184,9 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
           onChange={(value) => handleUpdate('assignees', value)}
         />
       </Styled.StatusAssignees>
+      <Styled.Footer>
+        <Actions options={actions} pinned={pinned} />
+      </Styled.Footer>
     </Section>
   )
 }
