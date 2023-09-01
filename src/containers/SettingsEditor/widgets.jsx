@@ -40,6 +40,8 @@ const parseContext = (props) => {
   if (props.formContext?.overrides && props.formContext.overrides[props.id]) {
     result.originalValue = props.formContext.overrides[props.id].originalValue
     result.path = props.formContext.overrides[props.id].path
+  } else {
+    console.log('No overrides object!', props)
   }
   return result
 }
@@ -277,7 +279,7 @@ const TextWidget = (props) => {
   }
 
   const onFocus = (e) => {
-    props.formContext?.onSetBreadcrumbs(path)
+    props.formContext.onSetBreadcrumbs(path)
     props.onFocus(e)
   }
 

@@ -407,8 +407,13 @@ function FieldTemplate(props) {
           <div className={`form-inline-field-label ${overrideLevel}`}>
             <span
               onClick={() => {
-                if (props.formContext.onSetBreadcrumbs)
-                  props.formContext.onSetBreadcrumbs(override.path)
+                if (props.formContext.onSetBreadcrumbs) {
+                  if (override?.path) props.formContext.onSetBreadcrumbs(override.path)
+                  else {
+                    toast.error("Unable to find field path. This shoudn't happen")
+                    console.log(props.formContext)
+                  }
+                }
               }}
               style={labelStyle}
             >
@@ -447,6 +452,7 @@ const ArrayItemTemplate = (props) => {
       .filter((key) => !arrayEquals(key, path))
       .concat([path])
     formContext.onSetChangedKeys(newChangedKeys)
+    console.log('Array changed, new changed keys: ', newChangedKeys)
   }
 
   const onRemoveItem = () => {
@@ -486,6 +492,20 @@ const ArrayItemTemplate = (props) => {
 const ArrayFieldTemplate = (props) => {
   /* Complete array including the add button */
 
+  const onAddItem = () => {
+    const id = props.idSchema.$id
+    const formContext = props.formContext
+    const path = formContext.overrides[id].path
+    const newChangedKeys = formContext.changedKeys
+      .filter((key) => !arrayEquals(key, path))
+      .concat([path])
+    formContext.onSetChangedKeys(newChangedKeys)
+    console.log('Array changed, new changed keys: ', newChangedKeys)
+    setTimeout(() => {
+      props.onAddClick()
+    }, 100)
+  }
+
   const res = useMemo(
     () => (
       <FormArrayField>
@@ -495,7 +515,7 @@ const ArrayFieldTemplate = (props) => {
 
         {props.canAdd && (
           <ArrayItemControls>
-            <Button onClick={props.onAddClick} icon="add" />
+            <Button onClick={onAddItem} icon="add" />
           </ArrayItemControls>
         )}
       </FormArrayField>
