@@ -386,7 +386,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         </Toolbar>
       </>
     )
-  }, [environment, localOverrides, bundleName])
+  }, [environment, localOverrides, bundleName, environment, projectName])
 
   const settingsListHeader = useMemo(() => {
     return (
@@ -427,8 +427,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
   }
-
-  console.log('LocalData', localData)
 
   return (
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>

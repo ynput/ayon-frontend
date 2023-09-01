@@ -11,11 +11,50 @@ import {
   useLazyGetAddonSettingsQuery,
   useLazyGetAddonSettingsOverridesQuery,
 } from '/src/services/addonSettings'
+import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 
 import VariantSelector from './VariantSelector'
 import { getValueByPath, setValueByPath } from './utils'
 
 import { cloneDeep, isEqual } from 'lodash'
+
+import styled from 'styled-components'
+import { Icon } from '@ynput/ayon-react-components'
+
+const DialogBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+
+const ToolPanel = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-center;
+`
+
+const ToolSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 8px;
+`
+
+const ToolSectionSeparator = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .icon {
+    font-size: 4rem;
+    padding: 12px;
+    border-radius: var(--border-radius-m);
+    user-select: none;
+  }
+`
 
 const BundleDropdown = ({ bundleName, setBundleName, disabled }) => {
   const { data, isLoading, isError } = useGetBundleListQuery({})
@@ -37,9 +76,31 @@ const BundleDropdown = ({ bundleName, setBundleName, disabled }) => {
   )
 }
 
+const ProjectDropdown = ({ projectName, setProjectName, disabled }) => {
+  const { data, isLoading, isError } = useGetAllProjectsQuery()
+
+  const projectOptions = useMemo(() => {
+    if (isLoading || isError) return []
+    return data.map((i) => ({ value: i.name }))
+  }, [data])
+
+  return (
+    <Dropdown
+      value={projectName ? [projectName] : null}
+      options={projectOptions}
+      onChange={(e) => setProjectName(e[0])}
+      placeholder="Select a project"
+      style={{ flexGrow: 1 }}
+      disabled={disabled}
+    />
+  )
+}
+
 const CopySettingsTable = ({
   sourceBundle,
   sourceVariant,
+  sourceProjectName,
+  targetProjectName,
   targetBundle,
   targetVariant,
   nodes,
@@ -65,16 +126,16 @@ const CopySettingsTable = ({
     setLoading(bundlesLoading)
   }, [bundlesLoading])
 
-  useEffect(() => {
-    for (const node of nodes) {
-      for (const child of node.children) {
-        if (Object.keys(selectedNodes).includes(child.key)) {
-          console.log('selected', child.key)
-          console.log(child)
-        }
-      }
-    }
-  }, [selectedNodes])
+  // useEffect(() => {
+  //   for (const node of nodes) {
+  //     for (const child of node.children) {
+  //       if (Object.keys(selectedNodes).includes(child.key)) {
+  //         console.log('selected', child.key)
+  //         console.log(child)
+  //       }
+  //     }
+  //   }
+  // }, [selectedNodes])
 
   const loadNodes = async () => {
     if (bundlesLoading || bundlesError) {
@@ -82,8 +143,12 @@ const CopySettingsTable = ({
       return
     }
 
-    if (sourceBundle === targetBundle && sourceVariant === targetVariant) {
-      console.log('same bundle and variant')
+    if (
+      sourceBundle === targetBundle &&
+      sourceVariant === targetVariant &&
+      sourceProjectName === targetProjectName
+    ) {
+      console.warn('same bundle and variant')
       setNodes([])
       return
     }
@@ -104,6 +169,8 @@ const CopySettingsTable = ({
 
     if (!(sourceBundleData?.addons && targetBundleData?.addons)) {
       console.log('no addons')
+      setNodes([])
+      setLoading(false)
       return
     }
 
@@ -117,6 +184,7 @@ const CopySettingsTable = ({
           addonName,
           addonVersion: sourceAddonVersion,
           variant: sourceVariant,
+          projectName: sourceProjectName,
         })
 
         // TODO: we may use this to display whether there
@@ -132,23 +200,31 @@ const CopySettingsTable = ({
           addonName,
           addonVersion: sourceAddonVersion,
           variant: sourceVariant,
+          projectName: sourceProjectName,
         })
 
         const targetSettings = await triggerGetSettings({
           addonName,
           addonVersion: targetBundleData.addons[addonName],
           variant: targetVariant,
+          projectName: targetProjectName,
         })
 
         for (const id in sourceOverrides.data) {
           const sourceOverride = sourceOverrides.data[id]
           //const targetOverride = targetOverrides.data[id]
 
+          // Remove noise
           if (sourceOverride.inGroup || sourceOverride.type === 'branch') continue
+
+          // do not attempt to copy overrides from default or studio
+          // to project level
+          if (targetProjectName && ['default', 'studio'].includes(sourceOverride.level)) continue
 
           const sourceValue = getValueByPath(sourceSettings.data, sourceOverride.path)
           const targetValue = getValueByPath(targetSettings.data, sourceOverride.path)
 
+          // do not attempt to copy if the values are the same
           if (isEqual(sourceValue, targetValue)) continue
 
           const item = {
@@ -171,6 +247,7 @@ const CopySettingsTable = ({
             addonVersion: sourceAddonVersion,
             targetAddonVersion: targetBundleData.addons[addonName],
             sourceSettings,
+            targetSettings,
           },
           children: children,
         })
@@ -183,7 +260,15 @@ const CopySettingsTable = ({
 
   useEffect(() => {
     loadNodes()
-  }, [bundlesData, sourceBundle, sourceVariant, targetBundle])
+  }, [
+    bundlesData,
+    sourceBundle,
+    sourceVariant,
+    sourceProjectName,
+    targetBundle,
+    targetVariant,
+    targetProjectName,
+  ])
 
   const formatVersionColumn = (rowData) => {
     if (rowData.data.addonVersion === rowData.data.targetAddonVersion) {
@@ -246,12 +331,12 @@ const CopySettingsButton = ({
 }) => {
   const [dialogVisible, setDialogVisible] = useState(false)
   const [sourceBundle, setSourceBundle] = useState(bundleName)
-  const [sourceVariant, setSourceVariant] = useState('production')
+  const [sourceVariant, setSourceVariant] = useState(variant)
+  const [sourceProjectName, setSourceProjectName] = useState(projectName)
   const [nodes, setNodes] = useState([])
 
-  //const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
-
-  const doTheMagic = async () => {
+  //eslint-disable-next-line
+  const doTheMagic = async (copySelected = false) => {
     const newLocalData = cloneDeep(localData)
     const newLocalOverrides = { ...localOverrides }
     const newOriginalData = { ...originalData }
@@ -272,20 +357,15 @@ const CopySettingsButton = ({
         key,
       }
 
-      // Get current settings of the target addon
-      let addonSettings = newLocalData[key]
-      let addonOverrides = []
-      if (!localData[key]) {
-        newOriginalData[key] = node.data.sourceSettings.data
-        addonSettings = cloneDeep(newOriginalData[key])
-      }
+      const addonOverrides = []
+      let addonSettings = cloneDeep(node.data.targetSettings.data)
+      newOriginalData[key] = cloneDeep(node.data.targetSettings.data)
 
       // Iterate over the changes and apply them to the target addon
 
       for (const change of node.children) {
         addonSettings = setValueByPath(addonSettings, change.data.path, change.data.sourceValue)
         addonOverrides.push(change.data.path)
-        console.log('Copied', change.data.path.join('/'), change.data.newValue)
       } // for change of node.children
 
       newLocalData[key] = addonSettings
@@ -305,10 +385,19 @@ const CopySettingsButton = ({
   // Render
   //
 
+  // TODO: implement copy selected
+
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row' }}>
       <Spacer />
-      <Button label="Copy settings" icon="input" onClick={() => doTheMagic()} />
+      <Button label="Copy selected" icon="rule" disabled onClick={() => doTheMagic(true)} />
+      <Button
+        label="Copy all settings"
+        icon="checklist"
+        variant="filled"
+        onClick={() => doTheMagic()}
+        disabled={!nodes.length}
+      />
     </div>
   )
 
@@ -322,32 +411,61 @@ const CopySettingsButton = ({
       />
       {dialogVisible && (
         <Dialog
-          header={`Copy settings from...`}
+          header={`Copy settings`}
           visible
           onHide={() => setDialogVisible(false)}
           style={{ width: '80%', height: '80%' }}
           footer={footer}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Toolbar>
-              Source bundle
-              <BundleDropdown bundleName={sourceBundle} setBundleName={setSourceBundle} />
-              <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
-            </Toolbar>
-            <Toolbar>
-              Target bundle
-              <BundleDropdown bundleName={bundleName} setBundleName={() => {}} disabled />
-              <VariantSelector variant={variant} setVariant={() => {}} disabled />
-            </Toolbar>
+          <DialogBody>
+            <ToolPanel>
+              <ToolSection>
+                <Toolbar>
+                  Source bundle
+                  <BundleDropdown bundleName={sourceBundle} setBundleName={setSourceBundle} />
+                  <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
+                </Toolbar>
+
+                {projectName && (
+                  <Toolbar>
+                    Source project
+                    <ProjectDropdown
+                      projectName={sourceProjectName}
+                      setProjectName={setSourceProjectName}
+                    />
+                  </Toolbar>
+                )}
+              </ToolSection>
+
+              <ToolSectionSeparator>
+                <Icon icon="trending_flat" />
+              </ToolSectionSeparator>
+
+              <ToolSection>
+                <Toolbar>
+                  Target bundle
+                  <BundleDropdown bundleName={bundleName} setBundleName={() => {}} disabled />
+                  <VariantSelector variant={variant} setVariant={() => {}} disabled />
+                </Toolbar>
+                {projectName && (
+                  <Toolbar>
+                    Target project
+                    <ProjectDropdown projectName={projectName} setProjectName={() => {}} disabled />
+                  </Toolbar>
+                )}
+              </ToolSection>
+            </ToolPanel>
             <CopySettingsTable
               sourceBundle={sourceBundle}
               sourceVariant={sourceVariant}
+              sourceProjectName={sourceProjectName}
               targetBundle={bundleName}
               targetVariant={variant}
+              targetProjectName={projectName}
               nodes={nodes}
               setNodes={setNodes}
             />
-          </div>
+          </DialogBody>
         </Dialog>
       )}
     </>
