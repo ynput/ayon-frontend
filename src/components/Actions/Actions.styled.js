@@ -15,15 +15,15 @@ export const Actions = styled.div`
     align-items: center;
     border-radius: var(--border-radius);
     font-weight: bold;
-    z-index: 100;
+    z-index: 10;
   }
 `
 
 export const PinnedAction = styled(Button)`
   padding: 6px;
   img {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
   }
 
@@ -44,8 +44,8 @@ export const More = styled(Dropdown)`
         display: none;
       }
       & > span {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
       }
     }
   }

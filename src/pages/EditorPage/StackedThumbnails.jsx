@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
 import Thumbnail from '/src/containers/thumbnail'
 import { useSelector } from 'react-redux'
@@ -55,7 +54,7 @@ const StackedThumbnails = ({ thumbnails = [], isLoading, className }) => {
             projectName={projectName}
             entityType={thumb.type}
             entityId={thumb.id}
-            key={thumb.id}
+            key={thumb.id || thumb.src || i}
             style={{ zIndex: -i }}
             entityUpdatedAt={thumb.updatedAt}
             isLoading={isLoading}
@@ -66,16 +65,6 @@ const StackedThumbnails = ({ thumbnails = [], isLoading, className }) => {
       )}
     </StackedStyled>
   )
-}
-
-StackedThumbnails.propTypes = {
-  thumbnails: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      type: PropTypes.string.isRequired,
-      updatedAt: PropTypes.string.isRequired,
-    }).isRequired,
-  ).isRequired,
 }
 
 export default StackedThumbnails

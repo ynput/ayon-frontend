@@ -55,5 +55,5 @@ export const Footer = styled.footer`
   display: flex;
   align-items: center;
   gap: 4px;
-  align-self: stretch;
+  justify-content: space-between;
 `

@@ -1,18 +1,26 @@
-import { AssigneeSelect, OverflowField, Section } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Button, Icon, OverflowField, Section } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import * as Styled from './UserDashDetailsHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
-import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
+import {
+  useGetProjectsInfoQuery,
+  useGetTasksDetailsQuery,
+} from '/src/services/userDashboard/getUserDashboard'
 import { getIntersectionFields, getMergedFields } from '../../util'
 import { union } from 'lodash'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
+import { onAttributesOpenChanged } from '/src/features/dashboard'
+import TaskAttributes from '../TaskAttributes/TaskAttributes'
 
 const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }) => {
+  const dispatch = useDispatch()
   const selectedTasksIds = useSelector((state) => state.dashboard.tasks.selected)
+  const attributesOpen = useSelector((state) => state.dashboard.tasks.attributesOpen)
+  const setAttributesOpen = (value) => dispatch(onAttributesOpenChanged(value))
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     { projects: selectedProjects },
@@ -24,6 +32,12 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
     if (!selectedTasksIds?.length) return []
     return tasks.filter((task) => selectedTasksIds.includes(task.id))
   }, [selectedTasksIds, tasks])
+
+  // now we get the full details data for selected tasks
+  const { data: tasksDetailsData, isFetching: isLoadingTasksDetails } = useGetTasksDetailsQuery(
+    { tasks: selectedTasks, projects: selectedProjects },
+    { skip: !selectedTasksIds?.length || !selectedProjects?.length },
+  )
 
   const selectedTasksProjects = useMemo(
     () => selectedTasks.map((t) => t.projectName),
@@ -101,8 +115,6 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
         },
       }))
 
-      console.log(tasksOperations)
-
       await updateTasks({ operations: tasksOperations })
     } catch (error) {
       toast.error('Error updating task(s)')
@@ -149,7 +161,15 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
     .map((action) => action.id)
 
   return (
-    <Section style={{ padding: 8, alignItems: 'flex-start', gap: 8 }}>
+    <Section
+      style={{
+        padding: 8,
+        alignItems: 'flex-start',
+        gap: 8,
+        borderBottom: '1px solid var(--md-sys-color-outline-variant)',
+        flex: 'none',
+      }}
+    >
       <OverflowField
         value={pathArray.join(' / ')}
         align="left"
@@ -186,7 +206,24 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
       </Styled.StatusAssignees>
       <Styled.Footer>
         <Actions options={actions} pinned={pinned} />
+        <Button
+          label="Attributes"
+          variant={attributesOpen ? 'tonal' : 'text'}
+          style={{ padding: 6 }}
+          onClick={() => setAttributesOpen(!attributesOpen)}
+        >
+          <Icon
+            icon="expand_more"
+            style={{
+              transform: attributesOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease-in-out',
+            }}
+          />
+        </Button>
       </Styled.Footer>
+      {attributesOpen && (
+        <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
+      )}
     </Section>
   )
 }

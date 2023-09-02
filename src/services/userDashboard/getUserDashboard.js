@@ -7,6 +7,7 @@ import {
   PROJECT_TASKS_QUERY,
 } from './userDashboardQueries'
 import PubSub from '/src/pubsub'
+import { buildEntitiesQuery } from '../entity/getEntity'
 
 const getUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -238,10 +239,59 @@ const getUserDashboard = ayonApi.injectEndpoints({
         }
       },
     }),
+    getTaskDetails: build.query({
+      query: ({ projectName, ids }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: buildEntitiesQuery('task'),
+          variables: { projectName, ids },
+        },
+      }),
+      transformResponse: (res) => res?.data?.project?.tasks?.edges?.map((e) => e?.node || {}),
+    }),
+    getTasksDetails: build.query({
+      async queryFn({ tasks = [], projects }, { dispatch }) {
+        try {
+          const tasksDetails = []
+          for (const project of projects) {
+            // find tasks that are not in this project
+            const projectTasks = tasks.filter((t) => t.projectName === project)
+            const taskIds = projectTasks.map((t) => t.id)
+            if (taskIds.length === 0) continue
+
+            const response = await dispatch(
+              ayonApi.endpoints.getTaskDetails.initiate(
+                { projectName: project, ids: taskIds },
+                { forceRefetch: false },
+              ),
+            )
+
+            if (response.status === 'rejected')
+              return { error: new Error('No tasks found', taskIds) }
+
+            response.data.forEach((task) => {
+              // find task in project tasks
+              const projectTask = projectTasks.find((t) => t.id === task.id) || {}
+              tasksDetails.push({ ...projectTask, ...task, projectName: project })
+            })
+          }
+
+          return { data: tasksDetails }
+        } catch (error) {
+          console.error(error)
+          return error
+        }
+      },
+    }),
   }),
 })
 
 //
 
-export const { useGetKanBanQuery, useGetProjectsInfoQuery, useGetKanBanUsersQuery } =
-  getUserDashboard
+export const {
+  useGetKanBanQuery,
+  useGetProjectsInfoQuery,
+  useGetKanBanUsersQuery,
+  useGetTasksDetailsQuery,
+} = getUserDashboard
