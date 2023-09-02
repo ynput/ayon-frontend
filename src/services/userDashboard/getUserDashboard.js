@@ -251,18 +251,18 @@ const getUserDashboard = ayonApi.injectEndpoints({
       transformResponse: (res) => res?.data?.project?.tasks?.edges?.map((e) => e?.node || {}),
     }),
     getTasksDetails: build.query({
-      async queryFn({ tasks = [], projects }, { dispatch }) {
+      async queryFn({ tasks = [] }, { dispatch }) {
         try {
           const tasksDetails = []
-          for (const project of projects) {
+          for (const task of tasks) {
             // find tasks that are not in this project
-            const projectTasks = tasks.filter((t) => t.projectName === project)
-            const taskIds = projectTasks.map((t) => t.id)
+            const taskIds = [task.id]
+            const projectName = task.projectName
             if (taskIds.length === 0) continue
 
             const response = await dispatch(
               ayonApi.endpoints.getTaskDetails.initiate(
-                { projectName: project, ids: taskIds },
+                { projectName, ids: taskIds },
                 { forceRefetch: false },
               ),
             )
@@ -270,10 +270,8 @@ const getUserDashboard = ayonApi.injectEndpoints({
             if (response.status === 'rejected')
               return { error: new Error('No tasks found', taskIds) }
 
-            response.data.forEach((task) => {
-              // find task in project tasks
-              const projectTask = projectTasks.find((t) => t.id === task.id) || {}
-              tasksDetails.push({ ...projectTask, ...task, projectName: project })
+            response.data.forEach((taskData) => {
+              tasksDetails.push({ ...task, ...taskData })
             })
           }
 

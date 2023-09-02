@@ -43,7 +43,6 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
 
   // keep track of the ids that have been pre-fetched to avoid fetching them again
   const [preFetchedIds, setPreFetchedIds] = useState([])
-  const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const [getTasksDetails] = useLazyGetTasksDetailsQuery()
 
   const handleMouseOver = (task) => {
@@ -53,7 +52,7 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
     setPreFetchedIds((ids) => [...ids, task.id])
 
     // pre-fetch the task details
-    getTasksDetails({ tasks: [task], projects: selectedProjects })
+    getTasksDetails({ tasks: [task] })
   }
 
   // HANDLE TASK CLICK

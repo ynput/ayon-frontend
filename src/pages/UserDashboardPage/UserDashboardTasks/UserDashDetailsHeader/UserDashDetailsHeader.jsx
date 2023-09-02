@@ -35,8 +35,8 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
 
   // now we get the full details data for selected tasks
   const { data: tasksDetailsData, isFetching: isLoadingTasksDetails } = useGetTasksDetailsQuery(
-    { tasks: selectedTasks, projects: selectedProjects },
-    { skip: !selectedTasksIds?.length || !selectedProjects?.length },
+    { tasks: selectedTasks },
+    { skip: !selectedTasksIds?.length },
   )
 
   const selectedTasksProjects = useMemo(
