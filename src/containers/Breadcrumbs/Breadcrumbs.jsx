@@ -28,7 +28,7 @@ const uri2crumbs = (uri = '', pathname) => {
   if (scope?.includes('ayon+settings')) {
     let settingsScope = ''
     if (query?.includes('project')) {
-      settingsScope = 'Project Settings'
+      settingsScope = 'Projects Manager'
     } else {
       settingsScope = 'Studio Settings'
     }
@@ -41,7 +41,7 @@ const uri2crumbs = (uri = '', pathname) => {
     let pageTitle = pathname.split('/')[1]
 
     if (pageTitle.includes('settings')) pageTitle = 'Studio Settings'
-    else if (pageTitle.includes('manageProjects')) pageTitle = 'Project Settings'
+    else if (pageTitle.includes('manageProjects')) pageTitle = 'Projects Manager'
     // just a regular url
     crumbs.unshift(upperFirst(pageTitle))
   }
