@@ -80,6 +80,21 @@ const Breadcrumbs = () => {
   useEffect(() => {
     if (!editMode) return
     inputRef.current.select()
+
+    // reselect to counter mouse movement
+    const timeout = setTimeout(() => {
+      inputRef.current.select()
+    }, 50)
+
+    // reselect again to really make sure
+    const timeout2 = setTimeout(() => {
+      inputRef.current.select()
+    }, 400)
+
+    return () => {
+      clearTimeout(timeout)
+      clearTimeout(timeout2)
+    }
   }, [editMode])
 
   const focusEntities = (entities) => {
