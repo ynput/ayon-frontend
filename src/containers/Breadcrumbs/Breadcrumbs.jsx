@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useEffect, useState, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
@@ -17,14 +17,35 @@ import {
   setUri,
   setUriChanged,
 } from '/src/features/context'
+import { upperFirst } from 'lodash'
 
-const uri2crumbs = (uri) => {
-  if (!uri) return []
-
+const uri2crumbs = (uri = '', pathname) => {
   // parse uri to path and query params
-
-  const [path, query] = uri.split('://')[1].split('?')
+  const [scope, pathAndQuery = ''] = uri.split('://')
+  const [path, query] = pathAndQuery.split('?')
   const crumbs = path.split('/').filter((crumb) => crumb)
+
+  if (scope?.includes('ayon+settings')) {
+    let settingsScope = ''
+    if (query?.includes('project')) {
+      settingsScope = 'Project Settings'
+    } else {
+      settingsScope = 'Studio Settings'
+    }
+
+    crumbs.unshift(settingsScope)
+  } else if (scope?.includes('ayon+entity')) {
+    crumbs.unshift('Project')
+  } else {
+    // anything that doesn't have a uri
+    let pageTitle = pathname.split('/')[1]
+
+    if (pageTitle.includes('settings')) pageTitle = 'Studio Settings'
+    else if (pageTitle.includes('manageProjects')) pageTitle = 'Project Settings'
+    // just a regular url
+    crumbs.unshift(upperFirst(pageTitle))
+  }
+
   const qp = {}
 
   if (query) {
@@ -45,6 +66,7 @@ const uri2crumbs = (uri) => {
 }
 
 const Breadcrumbs = () => {
+  const location = useLocation()
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
@@ -208,7 +230,7 @@ const Breadcrumbs = () => {
     setLocalUri(ctxUri)
   }, [ctxUri])
 
-  const uriDisplay = uri2crumbs(ctxUri).join(' / ')
+  const uriDisplay = uri2crumbs(ctxUri, location.pathname).join(' / ')
   const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'
 
   return (
