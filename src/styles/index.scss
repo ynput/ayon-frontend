@@ -397,7 +397,7 @@ a {
   &.datetime.isMultiple:not(.isChanged) {
     .field {
       &::after {
-        content: 'Multiple';
+        content: 'Mixed';
         display: block;
         position: absolute;
         left: 8px;

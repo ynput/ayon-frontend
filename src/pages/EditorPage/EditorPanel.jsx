@@ -121,7 +121,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
         changeKey: '_status',
         label: 'Status',
         field: 'status',
-        placeholder: `Multiple (${statusValues.isMultiple && statusValues.isMultiple.join(', ')})`,
+        placeholder: `Mixed (${statusValues.isMultiple && statusValues.isMultiple.join(', ')})`,
         ...statusValues,
       },
       _assignees: {
@@ -147,7 +147,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
       if (hasMixedTypes) {
         placeholder = 'Mixed Entity Types...'
       } else if (isMultiple) {
-        placeholder = `Multiple (${isMultiple.join(', ')})`
+        placeholder = `Mixed (${isMultiple.join(', ')})`
       }
 
       initialForm[changeKey] = {
@@ -170,7 +170,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
       const field = 'attrib.' + name
       const { isMultiple, isChanged, isOwn, value } = getFieldValue(field, changeKey)
       const disabled = !types.every((t) => scope.includes(t))
-      const placeholder = isMultiple && !disabled ? `Multiple (${isMultiple.join(', ')})` : ''
+      const placeholder = isMultiple && !disabled ? `Mixed (${isMultiple.join(', ')})` : ''
 
       // create object
       const newRow = {

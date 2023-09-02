@@ -64,7 +64,7 @@ const AttributeTable = ({
         [...extraFields, ...attribFields].map(({ name, data: attribData = {} }) => {
           let value = data[name]
 
-          if (value && name.includes('Date') && !value.includes('Multiple')) {
+          if (value && name.includes('Date') && !value.includes('Mixed')) {
             value = format(new Date(value), 'dd/MM/yyyy')
           }
 
