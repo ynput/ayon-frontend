@@ -294,4 +294,5 @@ export const {
   useGetProjectsInfoQuery,
   useGetKanBanUsersQuery,
   useGetTasksDetailsQuery,
+  useLazyGetTasksDetailsQuery,
 } = getUserDashboard

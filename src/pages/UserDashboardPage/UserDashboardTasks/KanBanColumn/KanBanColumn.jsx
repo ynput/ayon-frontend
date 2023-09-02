@@ -5,6 +5,7 @@ import { getGroupedTasks } from '../../util'
 import { useDispatch, useSelector } from 'react-redux'
 import { onTaskSelected } from '/src/features/dashboard'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
+import { useLazyGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 
 const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
   const dispatch = useDispatch()
@@ -37,6 +38,24 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
   const isColumnActive = activeColumn?.id === id
   const isOverSelf = over?.id === activeColumn?.id
 
+  // we only pre-fetch on hover when the attributes panel is open
+  const attributesOpen = useSelector((state) => state.dashboard.tasks.attributesOpen)
+
+  // keep track of the ids that have been pre-fetched to avoid fetching them again
+  const [preFetchedIds, setPreFetchedIds] = useState([])
+  const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+  const [getTasksDetails] = useLazyGetTasksDetailsQuery()
+
+  const handleMouseOver = (task) => {
+    if (!attributesOpen) return
+    if (preFetchedIds.includes(task.id)) return
+
+    setPreFetchedIds((ids) => [...ids, task.id])
+
+    // pre-fetch the task details
+    getTasksDetails({ tasks: [task], projects: selectedProjects })
+  }
+
   // HANDLE TASK CLICK
   const handleTaskClick = (e, id) => {
     e.preventDefault()
@@ -63,6 +82,7 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
     }
 
     setSelectedTasks(newSelection)
+
     // updates the breadcrumbs
     // let uri = `ayon+entity://${projectName}/`
     // uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
@@ -93,6 +113,7 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
                 task={task}
                 key={task.id}
                 onClick={(e) => handleTaskClick(e, task.id)}
+                onMouseOver={() => handleMouseOver(task)}
                 isActive={selectedTasks.includes(task.id)}
                 className="card"
               />
