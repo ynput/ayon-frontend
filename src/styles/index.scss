@@ -40,10 +40,7 @@ body {
 }
 nav.primary {
   background-color: var(--panel-background);
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding: 8px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -655,4 +652,9 @@ a {
   &.archived {
     opacity: 0.5;
   }
+}
+
+// project side bar menu
+.p-sidebar-left {
+  align-items: flex-start;
 }
