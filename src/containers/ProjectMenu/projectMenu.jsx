@@ -9,6 +9,7 @@ import MenuList from '/src/components/Menu/MenuComponents/MenuList'
 import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import { useMemo, useRef, useState } from 'react'
 import { Button, InputText, Section } from '@ynput/ayon-react-components'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
@@ -23,6 +24,32 @@ const ProjectMenu = ({ visible, onHide }) => {
 
   const { data: projects = [] } = useGetAllProjectsQuery()
 
+  const [showContext] = useCreateContext([])
+
+  const buildContextMenu = (projectName) => {
+    const userItems = [
+      {
+        label: 'Dashboard',
+        icon: 'empty_dashboard',
+        command: () => navigate(`/manageProjects/dashboard?project=${projectName}`),
+      },
+    ]
+
+    if (!isUser) {
+      userItems.push(
+        ...[
+          {
+            label: 'Settings',
+            icon: 'settings',
+            command: () => navigate(`/manageProjects/projectSettings?project=${projectName}`),
+          },
+        ],
+      )
+    }
+
+    return userItems
+  }
+
   const menuItems = useMemo(() => {
     return projects
       .filter((p) => {
@@ -35,6 +62,7 @@ const ProjectMenu = ({ visible, onHide }) => {
         label: [project.name, project.code],
         selected: project.name === projectSelected,
         onClick: () => onProjectSelect(project.name),
+        onContextMenu: (e) => showContext(e, buildContextMenu(project.name)),
       }))
   }, [projects, projectSelected, projectsFilter])
 
