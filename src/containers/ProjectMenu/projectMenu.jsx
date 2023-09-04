@@ -63,6 +63,11 @@ const ProjectMenu = ({ visible, onHide }) => {
     navigate(link)
   }
 
+  const handleNewProject = () => {
+    navigate('/manageProjects/new')
+    onHide()
+  }
+
   if (!visible) return null
 
   return (
@@ -88,8 +93,8 @@ const ProjectMenu = ({ visible, onHide }) => {
       {!isUser && (
         <Button
           label="Create new project"
-          onClick={() => navigate('/projects/create')}
-          icon="add"
+          onClick={handleNewProject}
+          icon="create_new_folder"
           variant="filled"
           style={{ padding: '12px 0', borderRadius: 8 }}
         />
