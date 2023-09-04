@@ -1,2 +1,2 @@
-import NewProjectDialog from './NewProjectDialog'
+import NewProjectDialog from './NewProject'
 export default NewProjectDialog

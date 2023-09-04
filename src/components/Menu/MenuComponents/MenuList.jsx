@@ -13,6 +13,8 @@ const MenuList = ({
   parentRef,
   style,
   onClose,
+  itemClassName,
+  itemStyle,
   ...props
 }) => {
   const itemRefs = useRef([])
@@ -77,13 +79,24 @@ const MenuList = ({
 
           if (item?.id === 'divider') return <hr key={i} />
 
-          const { label, icon, highlighted, onClick, link, items = [], id, disableClose } = item
+          const {
+            label,
+            icon,
+            highlighted,
+            onClick,
+            link,
+            items = [],
+            id,
+            disableClose,
+            selected,
+            ...props
+          } = item
 
           return (
             <MenuItem
               tabIndex={0}
               key={`${id}-${i}`}
-              {...{ label, icon, highlighted, items }}
+              {...{ label, icon, highlighted, items, selected }}
               onClick={(e) =>
                 items.length
                   ? handleSubMenu(e, id, items)
@@ -113,10 +126,12 @@ const MenuList = ({
                   onClose(id)
                 }
               }}
-              style={{ paddingRight: items.length ? '0' : '16px' }}
+              style={{ paddingRight: items.length ? '0' : '16px', ...itemStyle }}
               ref={(e) => (itemRefs.current[id] = e)}
               onMouseEnter={(e) => handleSubMenu(e, id, items)}
               onMouseLeave={(e) => handleSubMenu(e, id, [])}
+              className={itemClassName}
+              {...props}
             >
               {!!items.length && <Icon icon="arrow_right" style={{ marginLeft: 'auto' }} />}
             </MenuItem>

@@ -3,7 +3,14 @@ import React from 'react'
 import { useContextMenu } from '../context/contextMenuContext'
 
 export const GlobalContextMenu = () => {
-  const { model, ref } = useContextMenu()
+  const { model, ref, setIsContextOpen } = useContextMenu()
 
-  return <ContextMenu model={model} ref={ref} />
+  return (
+    <ContextMenu
+      model={model}
+      ref={ref}
+      onShow={() => setIsContextOpen(true)}
+      onHide={() => setIsContextOpen(false)}
+    />
+  )
 }
