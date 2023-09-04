@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
+import { TablePanel, Section } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -44,42 +44,6 @@ const StyledProjectName = styled.div`
     `}
 `
 
-const StyledAddButton = styled(Button)`
-  overflow: hidden;
-  position: relative;
-  justify-content: flex-start;
-  gap: 0;
-
-  .content {
-    display: flex;
-    gap: 4px;
-    position: relative;
-
-    transition: transform 0.15s;
-    transition-delay: 0.015s;
-
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .title {
-    transition: opacity 0.15s;
-  }
-
-  /* closed */
-  ${({ $isOpen }) =>
-    !$isOpen &&
-    css`
-      .content {
-        transform: translateX(-10px);
-      }
-
-      .title {
-        opacity: 0;
-      }
-    `}
-`
-
 const ProjectList = ({
   selection,
   onSelect,
@@ -96,7 +60,6 @@ const ProjectList = ({
   autoSelect,
   isProjectManager,
   onDeleteProject,
-  onNewProject,
   onHide,
   isCollapsible = false,
   collapsedId = 'global',
@@ -194,15 +157,14 @@ const ProjectList = ({
 
     if (!isProjectManager) menuItems.push({ ...manage, label: 'Manage Projects' })
 
-    if (onNewProject)
-      menuItems.push({
-        label: 'Create Project',
-        icon: 'create_new_folder',
-        command: onNewProject,
-      })
+    menuItems.push({
+      label: 'Create new Project',
+      icon: 'create_new_folder',
+      command: () => navigate('/manageProjects/new'),
+    })
 
     return menuItems
-  }, [onNewProject, isProjectManager])
+  }, [isProjectManager])
 
   // create the ref and model
   const [globalContextMenuShow] = useCreateContext(globalContextItems)
@@ -216,9 +178,9 @@ const ProjectList = ({
         command: () => onRowDoubleClick({ data: { name: selection } }),
       },
       {
-        label: 'Create Project',
+        label: 'Create new Project',
         icon: 'create_new_folder',
-        command: onNewProject,
+        command: () => navigate('/manageProjects/new'),
       },
       {
         label: 'Delete Project',
@@ -236,12 +198,11 @@ const ProjectList = ({
       manage,
     ]
 
-    if (onNewProject)
-      globalMenuItems.push({
-        label: 'Create Project',
-        icon: 'create_new_folder',
-        command: onNewProject,
-      })
+    globalMenuItems.push({
+      label: 'Create Project',
+      icon: 'create_new_folder',
+      command: () => navigate('/manageProjects/new'),
+    })
 
     let menuItems = managerMenuItems
     if (!isProjectManager) menuItems = globalMenuItems
@@ -279,16 +240,6 @@ const ProjectList = ({
 
   return (
     <Section style={sectionStyle} className={className} wrap={wrap}>
-      {isProjectManager && (
-        <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
-          {/* <div className="spacer" /> */}
-          <div className="content">
-            <Icon icon="create_new_folder" />
-            <span className="title">Add New Project</span>
-          </div>
-          {/* <div className="spacer" /> */}
-        </StyledAddButton>
-      )}
       <TablePanel onContextMenu={globalContextMenuShow}>
         <DataTable
           value={projectList}

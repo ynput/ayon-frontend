@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
@@ -10,7 +10,7 @@ import AddonSettings from '/src/containers/AddonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
-import NewProjectDialog from './NewProjectDialog'
+import NewProject from './NewProjectDialog/NewProject'
 import ProjectDashboard from '/src/pages/ProjectDashboard'
 
 import { selectProject } from '/src/features/context'
@@ -42,8 +42,6 @@ const ProjectManagerPage = () => {
   const dispatch = useDispatch()
 
   let { module } = useParams()
-
-  const [showNewProject, setShowNewProject] = useState(false)
 
   // QUERY PARAMS STATE
   const [selectedProject, setSelectedProject] = useQueryParam(
@@ -148,7 +146,6 @@ const ProjectManagerPage = () => {
         onSelect={setSelectedProject}
         onNoProject={(s) => setSelectedProject(s)}
         isUser={isUser}
-        onNewProject={() => setShowNewProject(true)}
         onDeleteProject={deletePreset}
       >
         {module === 'dashboard' && <ProjectDashboard />}
@@ -157,16 +154,8 @@ const ProjectManagerPage = () => {
         {module === 'siteSettings' && <SiteSettings />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
+        {module === 'new' && <NewProject />}
       </ProjectManagerPageContainer>
-
-      {showNewProject && (
-        <NewProjectDialog
-          onHide={(name) => {
-            setShowNewProject(false)
-            setSelectedProject(name)
-          }}
-        />
-      )}
     </>
   )
 }

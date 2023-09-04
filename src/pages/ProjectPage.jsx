@@ -69,11 +69,12 @@ const ProjectPage = () => {
     // so i commented this out - this means project change won't trigger
     // breadcrumbs update, until something is clicked. but i think that's ok for now.
 
+    const newUri = `ayon+entity://${projectName}`
     // this might work
-    if (!uri) {
+    if (!uri?.includes(newUri)) {
       dispatch(setUri(`ayon+entity://${projectName}`))
     }
-  }, [projectName])
+  }, [projectName, uri])
 
   useEffect(() => {
     // Clear URI when project page is unmounted

@@ -19,6 +19,13 @@ const getAuth = ayonApi.injectEndpoints({
         dispatch(logout())
         // reset global state
         dispatch(ayonApi.util.resetApiState())
+        // remove some local storage items
+        localStorage.removeItem('projectMenu-pinned')
+        localStorage.removeItem('dashboard-tasks-filter')
+        localStorage.removeItem('currentProject')
+        localStorage.removeItem('dashboard-selectedProjects')
+        localStorage.removeItem('dashboard-tasks-assignees')
+        localStorage.removeItem('dashboard-tasks-selected')
       },
     }),
   }),

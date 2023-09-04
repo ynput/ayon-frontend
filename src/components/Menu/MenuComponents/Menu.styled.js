@@ -129,6 +129,7 @@ export const Item = styled.li`
   border-radius: 4px;
   cursor: pointer;
   position: relative;
+  user-select: none;
 
   :hover {
     background-color: var(--md-sys-color-surface-container-highest);
@@ -138,11 +139,20 @@ export const Item = styled.li`
     margin-left: auto;
   }
 
-  /* highlighted button */
+  /* highlighted item */
   &.highlighted {
     background-color: var(--md-sys-color-secondary-container);
     &:hover {
       background-color: var(--md-sys-color-secondary-container-hover);
+    }
+  }
+
+  /* selected item */
+  &.selected {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    &:hover {
+      background-color: var(--md-sys-color-primary-container-hover);
     }
   }
 `
