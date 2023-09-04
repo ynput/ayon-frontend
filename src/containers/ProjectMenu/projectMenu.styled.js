@@ -14,6 +14,10 @@ export const ProjectSidebar = styled(Sidebar)`
 
   overflow: hidden;
 
+  h3 {
+    border: none;
+  }
+
   .p-sidebar-content {
     padding: 0;
     overflow: hidden;
@@ -25,7 +29,7 @@ export const ProjectSidebar = styled(Sidebar)`
       background-color: var(--md-sys-color-surface-container-high);
       color: var(--md-sys-color-on-surface);
       border-radius: var(--border-radius-l);
-      gap: 8px;
+      gap: 16px;
       padding: 8px;
       overflow: hidden;
 
@@ -38,6 +42,8 @@ export const ProjectSidebar = styled(Sidebar)`
       overflow: auto;
       flex: 1;
       border-radius: 0;
+      top: 0 !important;
+      height: 100%;
     }
   }
 
@@ -48,6 +54,10 @@ export const ProjectSidebar = styled(Sidebar)`
   .menu-item {
     justify-content: space-between;
   }
+`
+
+export const All = styled.div`
+  overflow: hidden;
 `
 
 export const Header = styled.header`

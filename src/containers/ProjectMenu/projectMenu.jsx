@@ -10,11 +10,13 @@ import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import { useMemo, useRef, useState } from 'react'
 import { Button, InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
+import useLocalStorage from '/src/hooks/useLocalStorage'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const searchRef = useRef(null)
+  const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
 
   const projectSelected = useSelector((state) => state.project.name)
   const user = useSelector((state) => state.user)
@@ -26,12 +28,31 @@ const ProjectMenu = ({ visible, onHide }) => {
 
   const [showContext] = useCreateContext([])
 
+  const handlePinChange = (projectName, e) => {
+    e.originalEvent.stopPropagation()
+    // e.originalEvent.preventDefault()
+    if (pinned.includes(projectName)) {
+      setPinned(pinned.filter((p) => p !== projectName))
+    } else if (pinned.length < 5) {
+      setPinned([...pinned, projectName])
+    }
+  }
+
   const buildContextMenu = (projectName) => {
+    const isPinned = pinned.includes(projectName)
+    const pinnedDisabled = pinned.length >= 5 && !isPinned
+
     const userItems = [
       {
-        label: 'Dashboard',
+        label: 'Project Dashboard',
         icon: 'empty_dashboard',
         command: () => navigate(`/manageProjects/dashboard?project=${projectName}`),
+      },
+      {
+        label: pinnedDisabled ? 'Max 5 pinned' : `${isPinned ? 'Unpin' : 'Pin'} Project`,
+        icon: 'push_pin',
+        command: (e) => handlePinChange(projectName, e),
+        disabled: pinnedDisabled,
       },
     ]
 
@@ -39,7 +60,7 @@ const ProjectMenu = ({ visible, onHide }) => {
       userItems.push(
         ...[
           {
-            label: 'Settings',
+            label: 'Project Settings',
             icon: 'settings',
             command: () => navigate(`/manageProjects/projectSettings?project=${projectName}`),
           },
@@ -51,20 +72,30 @@ const ProjectMenu = ({ visible, onHide }) => {
   }
 
   const menuItems = useMemo(() => {
-    return projects
-      .filter((p) => {
-        const nameMatch = p.name?.toLowerCase().includes(projectsFilter.toLowerCase())
-        const codeMatch = p.code?.toLowerCase().includes(projectsFilter.toLowerCase())
-        return nameMatch || codeMatch
-      })
-      .map((project) => ({
-        id: project.name,
-        label: [project.name, project.code],
-        selected: project.name === projectSelected,
-        onClick: () => onProjectSelect(project.name),
-        onContextMenu: (e) => showContext(e, buildContextMenu(project.name)),
-      }))
-  }, [projects, projectSelected, projectsFilter])
+    return projects.map((project) => ({
+      id: project.name,
+      label: [project.name, project.code],
+      selected: project.name === projectSelected,
+      onClick: () => onProjectSelect(project.name),
+      onContextMenu: (e) => showContext(e, buildContextMenu(project.name)),
+    }))
+  }, [projects, projectSelected, projectsFilter, pinned])
+
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter((item) => {
+      const [name, code] = item.label
+      return (
+        name.toLowerCase().includes(projectsFilter.toLowerCase()) ||
+        code.toLowerCase().includes(projectsFilter.toLowerCase())
+      )
+    })
+  }, [menuItems, projectsFilter])
+
+  const pinnedMenuItems = useMemo(() => {
+    return filteredMenuItems
+      .filter((item) => pinned.includes(item.id))
+      .map((item) => ({ ...item, selected: false, highlighted: true }))
+  }, [filteredMenuItems, pinned])
 
   const onProjectSelect = (projectName) => {
     onHide()
@@ -98,14 +129,16 @@ const ProjectMenu = ({ visible, onHide }) => {
 
   if (!visible) return null
 
+  const showingPinned = !!pinnedMenuItems.length && !projectsFilter
+
   return (
     <Styled.ProjectSidebar
       position="left"
-      visible={visible}
-      onHide={onHide}
+      visible={true}
       modal={false}
       showCloseIcon={false}
       onShow={() => searchRef.current?.focus()}
+      onHide={onHide}
     >
       <Section>
         <Styled.Header>
@@ -116,7 +149,16 @@ const ProjectMenu = ({ visible, onHide }) => {
             ref={searchRef}
           />
         </Styled.Header>
-        <MenuList items={menuItems} handleClick={(e, onClick) => onClick()} level={0} />
+        {showingPinned && (
+          <div>
+            <h3>Pinned</h3>
+            <MenuList items={pinnedMenuItems} handleClick={(e, onClick) => onClick()} level={0} />
+          </div>
+        )}
+        <Styled.All>
+          {showingPinned && <h3>All</h3>}
+          <MenuList items={filteredMenuItems} handleClick={(e, onClick) => onClick()} level={0} />
+        </Styled.All>
       </Section>
       {!isUser && (
         <Button
