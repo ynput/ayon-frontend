@@ -5,7 +5,7 @@ import { Spacer, UserImage } from '@ynput/ayon-react-components'
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
 import AppMenu from '../../components/Menu/Menus/AppMenu'
-import ProjectMenu from './projectMenu'
+import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
@@ -55,8 +55,6 @@ const Header = () => {
 
   return (
     <nav className="primary" onClick={handleNavClick}>
-      <ProjectMenu visible={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
-
       <HeaderButton
         icon="event_list"
         label="Projects"
@@ -67,6 +65,8 @@ const Header = () => {
           display: 'flex',
         }}
       />
+
+      <ProjectMenu visible={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
 
       <Breadcrumbs />
       <Spacer />
