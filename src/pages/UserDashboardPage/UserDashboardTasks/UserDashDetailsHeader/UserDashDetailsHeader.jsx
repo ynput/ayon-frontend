@@ -1,6 +1,6 @@
 import { AssigneeSelect, Button, Icon, OverflowField, Section } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import * as Styled from './UserDashDetailsHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
@@ -16,10 +16,15 @@ import Actions from '/src/components/Actions/Actions'
 import { onAttributesOpenChanged } from '/src/features/dashboard'
 import TaskAttributes from '../TaskAttributes/TaskAttributes'
 
-const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }) => {
+const UserDashDetailsHeader = ({
+  tasks = [],
+  selectedProjects = [],
+  selectedTasksProjects = [],
+  disabledProjectUsers,
+  users = [],
+  attributesOpen,
+}) => {
   const dispatch = useDispatch()
-  const selectedTasksIds = useSelector((state) => state.dashboard.tasks.selected)
-  const attributesOpen = useSelector((state) => state.dashboard.tasks.attributesOpen)
   const setAttributesOpen = (value) => dispatch(onAttributesOpenChanged(value))
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
@@ -27,62 +32,32 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
     { skip: !selectedProjects?.length },
   )
 
-  //   find selected tasks
-  const selectedTasks = useMemo(() => {
-    if (!selectedTasksIds?.length) return []
-    return tasks.filter((task) => selectedTasksIds.includes(task.id))
-  }, [selectedTasksIds, tasks])
-
   // now we get the full details data for selected tasks
   const { data: tasksDetailsData, isFetching: isLoadingTasksDetails } = useGetTasksDetailsQuery(
-    { tasks: selectedTasks },
-    { skip: !selectedTasksIds?.length },
+    { tasks: tasks },
+    { skip: !tasks?.length },
   )
-
-  const selectedTasksProjects = useMemo(
-    () => selectedTasks.map((t) => t.projectName),
-    [selectedTasks],
-  )
-
-  // for selected projects, make sure user is on all
-  const [, disabledProjectUsers] = useMemo(() => {
-    if (!selectedTasksProjects?.length) return [users, []]
-    return users.reduce(
-      (acc, user) => {
-        if (selectedTasksProjects.every((p) => user.projects.includes(p))) {
-          acc[0].push(user)
-        } else {
-          acc[1].push(user)
-        }
-        return acc
-      },
-      [[], []],
-    )
-  }, [selectedTasksProjects, users])
 
   // for selected tasks, get flat list of assignees
-  const selectedTasksAssignees = useMemo(
-    () => union(...selectedTasks.map((t) => t.assignees)),
-    [selectedTasks],
-  )
+  const selectedTasksAssignees = useMemo(() => union(...tasks.map((t) => t.assignees)), [tasks])
 
-  const singleTask = selectedTasks[0]
+  const singleTask = tasks[0]
 
   const thumbnails = useMemo(
     () =>
-      selectedTasks
+      tasks
         .filter((t, i) => i <= 5)
         .map((t) => ({
           src: t.thumbnailUrl,
           icon: t.taskIcon,
         })),
-    [selectedTasks],
+    [tasks],
   )
 
   // we need to get the intersection of all the statuses of the projects for the selected tasks
   // this means that if we have 2 tasks from 2 different projects, we need to get the intersection of the statuses of those 2 projects
   //  and it prevents us from showing statuses that are not available for the selected tasks
-  const statusesValue = useMemo(() => selectedTasks.map((t) => t.status), [selectedTasks])
+  const statusesValue = useMemo(() => tasks.map((t) => t.status), [tasks])
   const statusesOptions = useMemo(() => getMergedFields(projectsInfo, 'statuses'), [projectsInfo])
   const StatusesOptionsIntersect = useMemo(
     () =>
@@ -101,13 +76,13 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
     [statusesOptions, StatusesOptionsIntersect],
   )
 
-  const isMultiple = selectedTasks.length > 1
+  const isMultiple = tasks.length > 1
 
   const [updateTasks] = useUpdateTasksMutation()
   const handleUpdate = async (field, value) => {
     try {
       // build tasks operations array
-      const tasksOperations = selectedTasks.map((task) => ({
+      const tasksOperations = tasks.map((task) => ({
         id: task.id,
         projectName: task.projectName,
         data: {
@@ -166,8 +141,10 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
         padding: 8,
         alignItems: 'flex-start',
         gap: 8,
-        borderBottom: '1px solid var(--md-sys-color-outline-variant)',
+        borderBottom: !attributesOpen ? '1px solid var(--md-sys-color-outline-variant)' : 'none',
         flex: 'none',
+        overflow: 'hidden',
+        height: attributesOpen ? '100%' : 'unset',
       }}
     >
       <OverflowField
@@ -181,8 +158,8 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
       <Styled.Header>
         <StackedThumbnails thumbnails={thumbnails} />
         <Styled.Content>
-          <h2>{!isMultiple ? singleTask.folderName : `${selectedTasks.length} tasks selected`}</h2>
-          <h3>{!isMultiple ? singleTask.name : selectedTasks.map((t) => t.name).join(', ')}</h3>
+          <h2>{!isMultiple ? singleTask.folderName : `${tasks.length} tasks selected`}</h2>
+          <h3>{!isMultiple ? singleTask.name : tasks.map((t) => t.name).join(', ')}</h3>
         </Styled.Content>
       </Styled.Header>
       <Styled.StatusAssignees>
@@ -222,7 +199,10 @@ const UserDashDetailsHeader = ({ tasks = [], selectedProjects = [], users = [] }
         </Button>
       </Styled.Footer>
       {attributesOpen && (
-        <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
+        <>
+          <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
+          <Button label="View activity" icon="forum" onClick={() => setAttributesOpen(false)} />
+        </>
       )}
     </Section>
   )

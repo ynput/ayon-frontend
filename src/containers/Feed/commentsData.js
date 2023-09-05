@@ -28,12 +28,12 @@ const users = [
   },
 ]
 
-const getRandomDateInLastMonth = () => {
+const getRandomDateInLastWeek = () => {
   const now = new Date()
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  const timeDiff = now.getTime() - lastMonth.getTime()
+  const lastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7)
+  const timeDiff = now.getTime() - lastWeek.getTime()
   const randomTime = Math.random() * timeDiff
-  const randomDate = new Date(lastMonth.getTime() + randomTime)
+  const randomDate = new Date(lastWeek.getTime() + randomTime)
   return randomDate
 }
 
@@ -101,10 +101,12 @@ const createRef = (type) => {
 const getRandomComment = (body = '') => {
   const comment = {
     id: uuid4(),
-    author: getRandomUser(),
-    created_at: getRandomDateInLastMonth(),
-    entityId: getRandomTaskId(),
-    refType: 'task',
+    author: getRandomUser().name,
+    createdAt: getRandomDateInLastWeek(),
+    entityId: getRandomTaskId().id,
+    entityName: getRandomTaskId().name,
+    entityType: 'task',
+    eventType: 'comment',
   }
 
   const references = []
@@ -117,7 +119,6 @@ const getRandomComment = (body = '') => {
   const bodyRefs = body.match(/@\w+/g)
   if (bodyRefs) {
     bodyRefs.forEach((ref) => {
-      console.log(ref)
       const reference = createRef(ref)
 
       references.push(reference)
@@ -127,12 +128,13 @@ const getRandomComment = (body = '') => {
   //   update the body with the references
   let updatedBody = body
   references.forEach((ref) => {
-    updatedBody = updatedBody.replace(ref.refType, `[${ref.label}](${ref.refId})`)
+    updatedBody = updatedBody.replace(ref.refType, `[${ref.label}](${ref.id})`)
   })
 
   return {
     ...comment,
     body: updatedBody,
+    references,
   }
 }
 
@@ -159,7 +161,7 @@ const commentBases = [
     body: 'Hey @user, I noticed a mistake in the animation for @@version of this shot. Could you lend your expertise and fix it?',
   },
   {
-    body: 'Kudos to the team! This version of the scene is impressive, but we should add more detail to the textures in @@version. @user, can you work on that?',
+    body: 'Kudos to the team! This version of the scene is impressive, but we should add more detail to the textures in @@version . @user, can you work on that?',
   },
   {
     body: 'I am going to approve @@version because it looks better than the previous one. Great work, @user!',

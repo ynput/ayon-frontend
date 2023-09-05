@@ -54,7 +54,8 @@ const StatusSelect = ({
   const charWidth = 7
   const gap = 5
   const iconWidth = 20
-  const longestStatus = [...statuses].sort((a, b) => b.name.length - a.name.length)[0].name.length
+  const statusesSortedByLength = [...statuses].sort((a, b) => b.name.length - a.name.length)[0]
+  const longestStatus = statusesSortedByLength?.name?.length
   const calcMaxWidth = longestStatus * charWidth + gap + iconWidth + 16
 
   maxWidth = maxWidth || calcMaxWidth
