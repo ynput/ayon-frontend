@@ -10,29 +10,15 @@ import {
   IconSelect,
 } from '@ynput/ayon-react-components'
 
-import arrayEquals from '/src/helpers/arrayEquals'
-
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)
   if (!valueString.match(/\./)) return valueString.concat('.0')
   else return valueString
 }
 
-const updateOverrides = (props, changed, path) => {
-  if (!props.formContext) {
-    return // WARN!
-  }
-
-  let newChangedKeys
-  if (changed) {
-    newChangedKeys = props.formContext?.changedKeys
-      .filter((key) => !arrayEquals(key, path))
-      .concat([path])
-  } else {
-    newChangedKeys = props.formContext?.changedKeys.filter((key) => !arrayEquals(key, path))
-  }
-
-  props.formContext.onSetChangedKeys(newChangedKeys)
+const updateChangedKeys = (props, changed, path) => {
+  if (!props.formContext) return // WARN! (but shouldn't happen)
+  props.formContext.onSetChangedKeys([{ path, isChanged: changed }])
 }
 
 const parseContext = (props) => {
@@ -60,7 +46,7 @@ const CheckboxWidget = function (props) {
       // the value will be set to the original value or smth
       setTimeout(() => {
         const isChanged = value !== originalValue
-        updateOverrides(props, isChanged, path)
+        updateChangedKeys(props, isChanged, path)
         props.formContext?.onSetBreadcrumbs(path)
       }, 100)
     }
@@ -104,9 +90,21 @@ const SelectWidget = (props) => {
     for (const err of props.rawErrors) tooltip.push(err)
   }
 
+  useEffect(() => {
+    // Handle new array items
+    if (props.formContext?.overrides && props.formContext.overrides[props.id] === undefined) {
+      props.onChange(value)
+      setTimeout(() => {
+        updateChangedKeys(props, true, path)
+      }, 100)
+    }
+  }, [originalValue, value])
+
   const onChange = (value) => {
-    updateOverrides(props, value !== originalValue, path)
     props.onChange(value)
+    setTimeout(() => {
+      updateChangedKeys(props, value !== originalValue, path)
+    }, 100)
   }
 
   const onFocus = (e) => {
@@ -114,30 +112,12 @@ const SelectWidget = (props) => {
     props.onFocus(e)
   }
 
-  if (props.multiple) {
-    return (
-      <>
-        <Dropdown
-          multiSelect
-          widthExpand
-          options={options}
-          value={value}
-          onChange={onChange}
-          onFocus={onFocus}
-          placeholder={props.schema?.placeholder}
-          disabled={props.schema?.disabled}
-          className={`form-field`}
-        />
-      </>
-    )
-  }
-
   return (
     <Dropdown
       widthExpand
       options={options}
-      value={[value]}
-      onChange={(e) => onChange(e[0])}
+      value={props.multiple ? value : [value]}
+      onChange={props.multiple ? onChange : (e) => onChange(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
       optionLabel="label"
@@ -147,6 +127,8 @@ const SelectWidget = (props) => {
       placeholder={props.schema?.placeholder}
       disabled={props.schema?.disabled}
       className={`form-field`}
+      multiSelect={props.multiple}
+      style={path?.length ? {} : { border: '1px solid yellow' }}
     />
   )
 }
@@ -166,12 +148,22 @@ const TextWidget = (props) => {
     setValue(newValue)
   }
 
+  useEffect(() => {
+    // Handle new array items
+    if (props.value === undefined) {
+      props.onChange(value)
+      setTimeout(() => {
+        updateChangedKeys(props, true, path)
+      }, 100)
+    }
+  }, [originalValue, value])
+
   const onChangeCommit = () => {
     if (value === props.value) return
     const isChanged = value !== originalValue
     props.onChange(value)
     props.formContext?.onSetBreadcrumbs(path)
-    updateOverrides(props, isChanged, path)
+    updateChangedKeys(props, isChanged, path)
   }
 
   const tooltip = []
@@ -225,7 +217,7 @@ const TextWidget = (props) => {
     opts.onChange = (e) => {
       // internal state is handled by the color picker,
       // so we shouldn't need to debounce this
-      updateOverrides(props, e.target.value !== originalValue, path)
+      updateChangedKeys(props, e.target.value !== originalValue, path)
       props.onChange(e.target.value)
     }
   } else if (props.schema.widget === 'icon') {
@@ -277,20 +269,19 @@ const TextWidget = (props) => {
   }
 
   const onFocus = (e) => {
-    props.formContext?.onSetBreadcrumbs(path)
+    props.formContext.onSetBreadcrumbs(path)
     props.onFocus(e)
   }
 
   return (
-    <>
-      <Input
-        className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
-        onFocus={onFocus}
-        tooltip={tooltip.join('\n')}
-        tooltipOptions={{ position: 'bottom' }}
-        {...opts}
-      />
-    </>
+    <Input
+      className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
+      onFocus={onFocus}
+      tooltip={tooltip.join('\n')}
+      tooltipOptions={{ position: 'bottom' }}
+      {...opts}
+      style={path?.length ? {} : { border: '1px solid yellow' }}
+    />
   )
 }
 
@@ -323,7 +314,7 @@ const DateTimeWidget = (props) => {
     const isChanged = newValue !== originalValue
     props.onChange(newValue)
     props.formContext?.onSetBreadcrumbs(path)
-    updateOverrides(props, isChanged, path)
+    updateChangedKeys(props, isChanged, path)
   }
 
   return <InputDate selected={value || undefined} onChange={onChange} onFocus={onFocus} />
