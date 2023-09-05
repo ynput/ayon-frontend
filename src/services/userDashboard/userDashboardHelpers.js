@@ -1,5 +1,5 @@
-export const transformTasksData = ({ projectName, tasks }) =>
-  tasks.map((task) => {
+export const transformTasksData = ({ projectName, tasks = [] }) =>
+  tasks?.map((task) => {
     const latestVersion = task.versions.edges[0]?.node
     const thumbnailUrl = latestVersion?.thumbnailId
       ? `/api/projects/${projectName}/thumbnails/${latestVersion?.thumbnailId}?updatedAt=${

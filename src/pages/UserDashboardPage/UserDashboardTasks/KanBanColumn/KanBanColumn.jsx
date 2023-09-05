@@ -1,13 +1,14 @@
 import { useDroppable } from '@dnd-kit/core'
 import * as Styled from './KanBanColumn.styled'
-import React, { Fragment, useEffect, useRef, useState } from 'react'
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { getGroupedTasks } from '../../util'
 import { useDispatch, useSelector } from 'react-redux'
 import { onTaskSelected } from '/src/features/dashboard'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import { useLazyGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
+import KanBanCard from '../KanBanCard/KanBanCard'
 
-const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
+const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {}, isLoading }) => {
   const dispatch = useDispatch()
   const column = columns[id] || {}
   const { isOver, setNodeRef, active, over } = useDroppable({
@@ -90,6 +91,15 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
     // dispatch(setUri(uri))
   }
 
+  // return 5 fake loading events if loading
+  const loadingTasks = useMemo(
+    () =>
+      Array.from({ length: 3 }, (_, index) => ({
+        id: index,
+        isLoading: true,
+      })),
+    [],
+  )
   return (
     <Styled.Column ref={setNodeRef} $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf}>
       <Styled.Header $color={column?.color}>
@@ -119,6 +129,8 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {} }) => {
             ))}
           </Fragment>
         ))}
+        {isLoading &&
+          loadingTasks.map((task) => <KanBanCard task={task} key={task.id} isLoading={true} />)}
       </Styled.Items>
     </Styled.Column>
   )

@@ -30,7 +30,13 @@ import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashb
 import KanBanCard from './KanBanCard/KanBanCard'
 import ColumnsWrapper from './TasksWrapper'
 
-const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFields }) => {
+const UserDashboardKanBan = ({
+  tasks,
+  projectsInfo = {},
+  assignees = [],
+  taskFields,
+  isLoading,
+}) => {
   const dispatch = useDispatch()
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
@@ -202,6 +208,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, assignees = [], taskFie
           fieldsColumns={fieldsColumns}
           tasksColumns={tasksColumns}
           groupByValue={groupByValue}
+          isLoading={isLoading}
         />
         <DragOverlay dropAnimation={null}>
           {activeDraggingId && activeTask && <KanBanCard task={activeTask} isOverlay />}
