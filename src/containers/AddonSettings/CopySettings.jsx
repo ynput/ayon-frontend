@@ -322,8 +322,8 @@ const CopySettingsButton = ({
   disabled,
   localData,
   setLocalData,
-  localOverrides,
-  setLocalOverrides,
+  changedKeys,
+  setChangedKeys,
   setSelectedAddons,
   originalData,
   setOriginalData,
@@ -338,7 +338,7 @@ const CopySettingsButton = ({
   //eslint-disable-next-line
   const doTheMagic = async (copySelected = false) => {
     const newLocalData = cloneDeep(localData)
-    const newLocalOverrides = { ...localOverrides }
+    const newChangedKeys = { ...changedKeys }
     const newOriginalData = { ...originalData }
     const newSelectedAddons = []
 
@@ -369,13 +369,13 @@ const CopySettingsButton = ({
       } // for change of node.children
 
       newLocalData[key] = addonSettings
-      newLocalOverrides[key] = addonOverrides
+      newChangedKeys[key] = addonOverrides
       newSelectedAddons.push(addon)
     } // for node of nodes
 
     setOriginalData(newOriginalData)
     setLocalData(newLocalData)
-    setLocalOverrides(newLocalOverrides)
+    setChangedKeys(newChangedKeys)
     setSelectedAddons(newSelectedAddons)
     toast.success('Settings copied')
     setDialogVisible(false)

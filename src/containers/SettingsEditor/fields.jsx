@@ -7,7 +7,6 @@ import styled from 'styled-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
-import arrayEquals from '/src/helpers/arrayEquals'
 import { Badge, BadgeWrapper } from '/src/components/Badge'
 
 const FormArrayField = styled.div`
@@ -448,11 +447,11 @@ const ArrayItemTemplate = (props) => {
     const parentId = props.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
     const formContext = props.children._owner.memoizedProps.formContext
     const path = formContext.overrides[parentId].path
-    const newChangedKeys = formContext.changedKeys
-      .filter((key) => !arrayEquals(key, path))
-      .concat([path])
-    formContext.onSetChangedKeys(newChangedKeys)
-    console.log('Array changed, new changed keys: ', newChangedKeys)
+    // const newChangedKeys = formContext.changedKeys
+    //   .filter((key) => !arrayEquals(key, path))
+    //   .concat([path])
+    formContext.onSetChangedKeys([{ path, isChanged: true }])
+    //console.log('Array changed, new changed keys: ', newChangedKeys)
   }
 
   const onRemoveItem = () => {
@@ -496,14 +495,11 @@ const ArrayFieldTemplate = (props) => {
     const id = props.idSchema.$id
     const formContext = props.formContext
     const path = formContext.overrides[id].path
-    const newChangedKeys = formContext.changedKeys
-      .filter((key) => !arrayEquals(key, path))
-      .concat([path])
-    formContext.onSetChangedKeys(newChangedKeys)
-    console.log('Array changed, new changed keys: ', newChangedKeys)
-    setTimeout(() => {
-      props.onAddClick()
-    }, 100)
+    // const newChangedKeys = formContext.changedKeys
+    //   .filter((key) => !arrayEquals(key, path))
+    //   .concat([path])
+    formContext.onSetChangedKeys([{ path, isChanged: true }])
+    props.onAddClick()
   }
 
   const res = useMemo(
