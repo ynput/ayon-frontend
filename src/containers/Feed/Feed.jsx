@@ -30,7 +30,7 @@ const Feed = ({ tasks = [], activeUsers }) => {
       <Section
         style={{
           padding: 8,
-          gap: 16,
+          gap: 20,
           overflowY: 'auto',
           paddingBottom: 100,
         }}

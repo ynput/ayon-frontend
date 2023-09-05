@@ -4,6 +4,8 @@ import FeedHeader from '../FeedHeader/FeedHeader'
 import ReactMarkdown from 'react-markdown'
 import FeedReference from '../FeedReference/FeedReference'
 import CommentWrapper from './CommentWrapper'
+import { Icon } from '@ynput/ayon-react-components'
+import Typography from '/src/theme/typography.module.css'
 
 const getTypeByCount = (count) => {
   switch (count) {
@@ -50,6 +52,8 @@ const FeedComment = ({ comment, users }) => {
     refType: comment.entityType,
   }
 
+  if (comment.attachments?.length) console.log(comment.attachments)
+
   return (
     <Styled.Comment>
       <FeedHeader
@@ -93,6 +97,20 @@ const FeedComment = ({ comment, users }) => {
             {body}
           </ReactMarkdown>
         </CommentWrapper>
+        {!!comment.attachments?.length && (
+          <Styled.Attachments>
+            {comment.attachments.map(({ id, type, url, name }) =>
+              type === 'image' ? (
+                <Styled.AttachmentImg key={id} src={url} />
+              ) : (
+                <Styled.AttachmentFile key={id}>
+                  <Icon icon="attach_file" />
+                  <Styled.Name className={Typography.labelSmall}>{name}</Styled.Name>
+                </Styled.AttachmentFile>
+              ),
+            )}
+          </Styled.Attachments>
+        )}
       </Styled.Body>
     </Styled.Comment>
   )

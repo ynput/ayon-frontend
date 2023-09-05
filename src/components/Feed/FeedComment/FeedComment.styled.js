@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const Comment = styled.li`
   /* reset default */
@@ -31,4 +31,59 @@ export const Body = styled.div`
   a {
     color: var(--md-sys-color-primary);
   }
+`
+
+export const Attachments = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`
+
+const attachmentBase = css`
+  height: 100px;
+  width: 100px;
+  object-fit: contain;
+  padding: 4px;
+  cursor: pointer;
+  position: relative;
+
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container-high);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+  }
+
+  &:active {
+    background-color: var(--md-sys-color-surface-container-high-active);
+  }
+`
+
+export const AttachmentImg = styled.img`
+  ${attachmentBase}
+`
+
+export const AttachmentFile = styled.a`
+  ${attachmentBase}
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  .icon {
+    margin-bottom: 20px;
+    font-size: 32px;
+    color: var(--md-sys-color-outline);
+  }
+`
+
+export const Name = styled.span`
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  /* break text */
+  overflow-wrap: break-word;
+  color: var(--md-sys-color-outline);
 `
