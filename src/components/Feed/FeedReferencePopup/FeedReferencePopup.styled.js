@@ -13,7 +13,7 @@ const popInAnimation = keyframes`
     }
 `
 
-export const Popup = styled.div`
+export const Popup = styled.span`
   display: flex;
   padding: 8px;
   gap: 8px;
@@ -40,7 +40,7 @@ export const Popup = styled.div`
   transform-origin: left bottom;
 `
 
-export const Content = styled.div`
+export const Content = styled.span`
   display: flex;
   flex-direction: column;
 
