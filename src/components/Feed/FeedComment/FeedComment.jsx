@@ -52,8 +52,6 @@ const FeedComment = ({ comment, users }) => {
     refType: comment.entityType,
   }
 
-  if (comment.attachments?.length) console.log(comment.attachments)
-
   return (
     <Styled.Comment>
       <FeedHeader
