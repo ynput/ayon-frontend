@@ -364,7 +364,8 @@ const CopySettingsButton = ({
       // Iterate over the changes and apply them to the target addon
 
       for (const change of node.children) {
-        addonSettings = setValueByPath(addonSettings, change.data.path, change.data.sourceValue)
+        const value = cloneDeep(change.data.sourceValue)
+        addonSettings = setValueByPath(addonSettings, change.data.path, value)
         addonOverrides.push(change.data.path)
       } // for change of node.children
 

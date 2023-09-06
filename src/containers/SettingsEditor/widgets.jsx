@@ -18,11 +18,12 @@ const addDecimalPoint = (value) => {
 
 const updateChangedKeys = (props, changed, path) => {
   if (!props.formContext) return // WARN! (but shouldn't happen)
+  if (!path?.length) return // WARN!
   props.formContext.onSetChangedKeys([{ path, isChanged: changed }])
 }
 
 const parseContext = (props) => {
-  const result = { originalValue: null, path: [] }
+  const result = { originalValue: undefined, path: [] }
   if (props.formContext?.overrides && props.formContext.overrides[props.id]) {
     result.originalValue = props.formContext.overrides[props.id].originalValue
     result.path = props.formContext.overrides[props.id].path
@@ -35,22 +36,32 @@ const CheckboxWidget = function (props) {
   const [value, setValue] = useState(null)
 
   useEffect(() => {
+    // Initial push to formData
+    // Used when the item is a part of an array
+    // and it is newly added
     if (!props.onChange) return
+    if (value === null) return
     if (value === props.value) return
 
     setTimeout(() => {
-      console.log('Setting value', props.id, value)
       props.onChange(value)
     }, 200)
   }, [props.onChange, value])
 
   useEffect(() => {
-    if (value === null && props.value !== undefined) {
-      setValue(props.value || false)
-    }
+    // Sync the local state with the formData
+    if (value === null && props.value !== undefined) setValue(props.value || false)
   }, [props.value])
 
   useEffect(() => {
+    // When a switch is switched, update the formData
+    // and the changed keys.
+    // Also set the breadcrumbs
+
+    // we don't want to push the data directly in onChange,
+    // because we want to first update the widget.
+    // Value propagation can wait
+
     if (!props.onChange) return
     if (value === null) return
     if (value !== props.value) {
@@ -60,10 +71,7 @@ const CheckboxWidget = function (props) {
         props.onChange(value)
         const isChanged = value !== originalValue
         updateChangedKeys(props, isChanged, path)
-        //  setTimeout(() => {
-        //    props.onChange(value)
         props.formContext?.onSetBreadcrumbs(path)
-        // }, 100)
       }, 100)
     }
   }, [value])
@@ -79,12 +87,21 @@ const CheckboxWidget = function (props) {
   // same render, we need the value here...
 
   return (
+    <span style={value !== props.value ? { outline: '1px solid yellow' } : {}}>
+      <InputSwitch checked={value || false} onChange={onChange} />
+    </span>
+  )
+
+  // For debugging
+  /* 
+  return (
     <>
       <InputSwitch checked={value || false} onChange={onChange} />
       {JSON.stringify(value)}
       {JSON.stringify(props.value) || 'und'}
     </>
   )
+  */
 }
 
 const SelectWidget = (props) => {
@@ -113,6 +130,9 @@ const SelectWidget = (props) => {
   }
 
   useEffect(() => {
+    // Handle adding new items to arrays
+    // This is needed because the value is not set yet in formData
+    // when this widget is a part of an array and it is newly added
     if (!props.onChange) return
     let newValue
     if (props.multiple) newValue = props.value || []
@@ -151,7 +171,7 @@ const SelectWidget = (props) => {
       disabled={props.schema?.disabled}
       className={`form-field`}
       multiSelect={props.multiple}
-      style={path?.length ? {} : { border: '1px solid yellow' }}
+      style={value !== props.value ? { outline: '1px solid yellow' } : {}}
     />
   )
 }
@@ -313,7 +333,7 @@ const TextWidget = (props) => {
       tooltip={tooltip.join('\n')}
       tooltipOptions={{ position: 'bottom' }}
       {...opts}
-      style={path?.length ? {} : { border: '1px solid yellow' }}
+      style={value !== props.value ? { outline: '1px solid yellow' } : {}}
     />
   )
 }

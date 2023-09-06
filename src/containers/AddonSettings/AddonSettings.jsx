@@ -27,7 +27,6 @@ import {
 } from '/src/services/addonSettings'
 
 import { usePromoteBundleMutation } from '/src/services/bundles'
-//import { useNavigate } from 'react-router'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
@@ -101,6 +100,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   const onSettingsChange = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
+
     setLocalData((localData) => {
       localData[key] = data
       return { ...localData }

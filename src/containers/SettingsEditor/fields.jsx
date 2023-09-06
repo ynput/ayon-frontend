@@ -489,7 +489,7 @@ const ArrayFieldTemplate = (props) => {
   const onAddItem = () => {
     const id = props.idSchema.$id
     const formContext = props.formContext
-    const path = formContext.overrides[id].path
+    const path = formContext.overrides[id]?.path
 
     formContext.onSetChangedKeys([{ path, isChanged: true }])
     props.onAddClick()

@@ -44,7 +44,7 @@ const PanelHeader = styled.div`
 
     .new-object {
       font-style: italic;
-      color: var(--color-hl-error);
+      color: red;
     }
   }
 
