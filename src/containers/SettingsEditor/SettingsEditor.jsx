@@ -164,7 +164,6 @@ const SettingsEditor = ({
         formData={formData}
         formContext={fullContext}
         widgets={widgets}
-        liveValidate={false}
         FieldTemplate={FieldTemplate}
         ObjectFieldTemplate={ObjectFieldTemplate}
         ArrayFieldTemplate={ArrayFieldTemplate}

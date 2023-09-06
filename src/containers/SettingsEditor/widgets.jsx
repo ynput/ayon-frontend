@@ -35,19 +35,35 @@ const CheckboxWidget = function (props) {
   const [value, setValue] = useState(null)
 
   useEffect(() => {
-    setValue(props.value || false)
+    if (!props.onChange) return
+    if (value === props.value) return
+
+    setTimeout(() => {
+      console.log('Setting value', props.id, value)
+      props.onChange(value)
+    }, 200)
+  }, [props.onChange, value])
+
+  useEffect(() => {
+    if (value === null && props.value !== undefined) {
+      setValue(props.value || false)
+    }
   }, [props.value])
 
   useEffect(() => {
+    if (!props.onChange) return
     if (value === null) return
     if (value !== props.value) {
-      props.onChange(value)
       // this timeout must be here. idk why. if not,
       // the value will be set to the original value or smth
       setTimeout(() => {
+        props.onChange(value)
         const isChanged = value !== originalValue
         updateChangedKeys(props, isChanged, path)
+        //  setTimeout(() => {
+        //    props.onChange(value)
         props.formContext?.onSetBreadcrumbs(path)
+        // }, 100)
       }, 100)
     }
   }, [value])
@@ -62,7 +78,13 @@ const CheckboxWidget = function (props) {
   // right after the component is mounted), but during the
   // same render, we need the value here...
 
-  return <InputSwitch checked={value || false} onChange={onChange} />
+  return (
+    <>
+      <InputSwitch checked={value || false} onChange={onChange} />
+      {JSON.stringify(value)}
+      {JSON.stringify(props.value) || 'und'}
+    </>
+  )
 }
 
 const SelectWidget = (props) => {
@@ -91,14 +113,15 @@ const SelectWidget = (props) => {
   }
 
   useEffect(() => {
-    // Handle new array items
-    if (props.formContext?.overrides && props.formContext.overrides[props.id] === undefined) {
-      props.onChange(value)
-      setTimeout(() => {
-        updateChangedKeys(props, true, path)
-      }, 100)
-    }
-  }, [originalValue, value])
+    if (!props.onChange) return
+    let newValue
+    if (props.multiple) newValue = props.value || []
+    else newValue = props.value || ''
+
+    setTimeout(() => {
+      props.onChange(newValue)
+    }, 100)
+  }, [props.onChange])
 
   const onChange = (value) => {
     props.onChange(value)
@@ -150,20 +173,30 @@ const TextWidget = (props) => {
 
   useEffect(() => {
     // Handle new array items
+    if (!props.onChange) return
     if (props.value === undefined) {
-      props.onChange(value)
+      let newValue
+      if (props.schema.type === 'string' && props.schema.widget !== 'color') newValue = ''
+      else if (props.schema.type === 'integer') newValue = 0
+      else newValue = null
+
       setTimeout(() => {
-        updateChangedKeys(props, true, path)
-      }, 100)
+        props.onChange(newValue)
+        //setTimeout(() => {
+        if (originalValue !== undefined) updateChangedKeys(props, true, path)
+        //}, 100)
+      }, 200)
     }
-  }, [originalValue, value])
+  }, [props.onChange])
 
   const onChangeCommit = () => {
     if (value === props.value) return
     const isChanged = value !== originalValue
     props.onChange(value)
-    props.formContext?.onSetBreadcrumbs(path)
-    updateChangedKeys(props, isChanged, path)
+    //props.formContext?.onSetBreadcrumbs(path)
+    setTimeout(() => {
+      updateChangedKeys(props, isChanged, path)
+    }, 100)
   }
 
   const tooltip = []

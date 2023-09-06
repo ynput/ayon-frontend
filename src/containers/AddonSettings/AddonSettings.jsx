@@ -557,6 +557,9 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable changes={changedKeys} onRevert={onRevertChange} />
+          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
+            <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>
+          </ScrollPanel>
         </Section>
       </SplitterPanel>
     </Splitter>
