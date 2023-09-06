@@ -203,6 +203,10 @@ input:-webkit-autofill:focus {
   color: rgba(234, 240, 246, 0.3);
   font-style: italic;
 }
+
+p strong {
+  font-weight: 800;
+}
 // Highlighting (used to match product/tasks in the browser)
 
 .row-hl-1 {

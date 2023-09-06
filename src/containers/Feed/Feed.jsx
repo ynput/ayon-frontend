@@ -1,21 +1,33 @@
-import React, { useMemo } from 'react'
-import { Section } from '@ynput/ayon-react-components'
+import React, { useMemo, useState } from 'react'
 import comments from './commentsData'
 import FeedItem from '/src/components/Feed/FeedItem'
 import { compareAsc } from 'date-fns'
+import CommentInput from '/src/components/CommentInput/CommentInput'
+import * as Styled from './Feed.styled'
+import { uuid } from 'short-uuid'
+import { useSelector } from 'react-redux'
 
 const Feed = ({ tasks = [], activeUsers }) => {
+  const name = useSelector((state) => state.user.name)
+
+  // STATES
+  const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
+  // for testing only!!!
+  const [textNewComments, setTextNewComments] = useState([])
+
   const entityIds = useMemo(() => tasks.map((task) => task.id), [tasks])
-  const events = [...comments].filter((comment) => entityIds.includes(comment.entityId))
+  const events = [...comments, ...textNewComments].filter((comment) =>
+    entityIds.includes(comment.entityId),
+  )
 
   const references = [...comments]
     .filter(
       (comment) =>
-        comment.references.some((ref) => entityIds.includes(ref.refId)) &&
+        comment?.references.some((ref) => entityIds.includes(ref.refId)) &&
         !entityIds.includes(comment.entityId),
     )
     .map((c) => {
-      const ref = c.references.find((ref) => entityIds.includes(ref.refId))
+      const ref = c?.references.find((ref) => entityIds.includes(ref.refId))
 
       return { reference: ref, ...c }
     })
@@ -25,21 +37,41 @@ const Feed = ({ tasks = [], activeUsers }) => {
   // sort events by date
   events.sort((a, b) => compareAsc(new Date(a.createdAt), new Date(b.createdAt)))
 
+  const handleCommentSubmit = (value) => {
+    const newComments = []
+
+    for (const task of tasks) {
+      const newComment = {
+        id: uuid(),
+        author: name,
+        body: value,
+        createdAt: new Date(),
+        entityId: task.id,
+        entityName: task.name,
+        entityType: 'task',
+        eventType: 'comment',
+      }
+
+      newComments.push(newComment)
+    }
+
+    setTextNewComments([...textNewComments, ...newComments])
+  }
+
   return (
-    <Section style={{ padding: 8, overflow: 'hidden' }}>
-      <Section
-        style={{
-          padding: 8,
-          gap: 20,
-          overflowY: 'auto',
-          paddingBottom: 100,
-        }}
-      >
+    <Styled.FeedContainer>
+      <Styled.FeedContent>
         {events.map((event) => (
           <FeedItem key={event.id} {...event} users={activeUsers} />
         ))}
-      </Section>
-    </Section>
+      </Styled.FeedContent>
+      <CommentInput
+        initValue={null}
+        onSubmit={handleCommentSubmit}
+        isOpen={isCommentInputOpen}
+        setIsOpen={setIsCommentInputOpen}
+      />
+    </Styled.FeedContainer>
   )
 }
 
