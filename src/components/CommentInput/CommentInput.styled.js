@@ -83,3 +83,13 @@ export const Markdown = styled.div`
   position: fixed;
   visibility: hidden;
 `
+
+export const Mention = styled.span`
+  background-color: var(--md-sys-color-surface-container-high);
+  padding: 4px;
+
+  position: absolute;
+
+  top: 0;
+  right: 0;
+`
