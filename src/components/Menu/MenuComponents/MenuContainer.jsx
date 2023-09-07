@@ -27,7 +27,7 @@ const MenuContainer = ({ id, target, children, ...props }) => {
   // then set the style of the dialog to position it there
 
   const pos = useMemo(() => {
-    let pos = { top: 4, right: 0 }
+    let pos = { top: 8, right: 0 }
     if (target) {
       const rect = target.getBoundingClientRect()
       pos = {
