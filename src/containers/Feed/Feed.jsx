@@ -20,6 +20,8 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
     entityIds.includes(comment.entityId),
   )
 
+  console.log(events)
+
   const references = [...comments]
     .filter(
       (comment) =>

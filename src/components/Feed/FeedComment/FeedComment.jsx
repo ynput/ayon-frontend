@@ -23,15 +23,14 @@ const getTypeByCount = (count) => {
   }
 }
 
-const countAtSymbolsBeforeLink = (body, link) => {
-  const prefix = body.substring(0, body.indexOf(link))
+const countAtSymbolsBeforeLink = (link, body) => {
+  const prefix = body.substring(0, body.indexOf(link.substring(1)))
   //   prefix last 3 characters
-  const last3 = prefix.substring(prefix.length - 3)
+  const last2 = prefix.substring(prefix.length - 2)
+  //   count @ in last 2 characters
+  const atCount = (last2.match(/@/g) || []).length
 
-  //   count @ in last 3 characters
-  const atCount = (last3.match(/@/g) || []).length
-
-  return atCount
+  return atCount + 1
 }
 
 const FeedComment = ({ comment, users }) => {
@@ -65,18 +64,18 @@ const FeedComment = ({ comment, users }) => {
           <ReactMarkdown
             components={{
               a: ({ href, children }) => {
+                if (!children[0] || !children[0].includes('@')) return <a href={href}>{children}</a>
                 const link = `[${children[0]}](${href})`
                 //   get number of @ symbols before link
-                const atCount = countAtSymbolsBeforeLink(body, link)
-                if (atCount < 1) return <a href={href}>{children}</a>
+                const atCount = countAtSymbolsBeforeLink(link, body)
 
                 const type = getTypeByCount(atCount)
 
                 // find the reference object by the href
                 const reference = comment?.references?.find((ref) => ref.id === href)
-                const label = reference?.label || children[0]
+                const label = reference?.label || (children[0] && children[0].replace('@', ''))
 
-                const isSelf = comment?.reference?.refId === reference?.refId
+                const isSelf = reference && comment?.reference?.refId === reference?.refId
 
                 return (
                   <FeedReference

@@ -84,8 +84,6 @@ const CommentInput = ({
     [activeUsers, mention?.type, mention?.search],
   )
 
-  console.log(mentionOptions)
-
   // triggered when a mention is selected
   const [newSelection, setNewSelection] = useState()
 
@@ -232,9 +230,6 @@ const CommentInput = ({
 
     // convert to markdown
     const markdown = turndownService.turndown(html)
-
-    // [@Luke Inderwick](@Innders) -> @[Luke Inderwick](Innders)
-    // [@@Luke Inderwick](@@Innders) -> @@[Luke Inderwick](Innders)
 
     return markdown
   }

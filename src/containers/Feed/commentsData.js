@@ -179,10 +179,19 @@ const getRandomComment = (body = '') => {
     })
   }
 
+  const refTypes = {
+    user: '@',
+    version: '@@',
+    task: '@@@',
+  }
+
   //   update the body with the references
   let updatedBody = body
   references.forEach((ref) => {
-    updatedBody = updatedBody.replace(ref.refType, `[${ref.label}](${ref.id})`)
+    updatedBody = updatedBody.replace(
+      refTypes[ref.refType] + ref.refType,
+      `[${refTypes[ref.refType]}${ref.label}](${ref.id})`,
+    )
   })
 
   return {
