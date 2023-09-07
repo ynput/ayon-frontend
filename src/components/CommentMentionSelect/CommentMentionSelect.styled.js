@@ -30,7 +30,7 @@ export const MentionItem = styled.li`
   /* reset defaults*/
   list-style: none;
   margin: 0;
-  padding: 8px;
+  padding: 6px 8px;
   border-radius: var(--border-radius-m);
 
   display: flex;
@@ -41,6 +41,11 @@ export const MentionItem = styled.li`
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
+  }
+
+  .image {
+    /* if not circle make square */
+    ${({ $isCircle }) => !$isCircle && `border-radius: var(--border-radius-m);`}
   }
 `
 

@@ -3,6 +3,7 @@ import { ayonApi } from '../ayon'
 import { taskProvideTags, transformTasksData } from './userDashboardHelpers'
 import {
   KAN_BAN_ASSIGNEES_QUERY,
+  KAN_BAN_TASK_MENTIONS_QUERY,
   KAN_BAN_TASK_QUERY,
   PROJECT_TASKS_QUERY,
 } from './userDashboardQueries'
@@ -282,6 +283,23 @@ const getUserDashboard = ayonApi.injectEndpoints({
         }
       },
     }),
+    getMentionTasks: build.query({
+      query: ({ projectName, assignee }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: KAN_BAN_TASK_MENTIONS_QUERY,
+          variables: { projectName, assignees: [assignee] },
+        },
+      }),
+      transformResponse: (response) =>
+        transformTasksData({
+          projectName: response?.data?.project?.projectName,
+          tasks: response?.data?.project?.tasks?.edges?.map((edge) => edge.node),
+        }),
+      providesTags: (res) =>
+        res.map(({ id }) => ({ type: 'kanBanTask', id }, { type: 'task', id })),
+    }),
   }),
 })
 
@@ -293,4 +311,5 @@ export const {
   useGetKanBanUsersQuery,
   useGetTasksDetailsQuery,
   useLazyGetTasksDetailsQuery,
+  useGetMentionTasksQuery,
 } = getUserDashboard

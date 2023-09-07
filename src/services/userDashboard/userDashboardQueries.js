@@ -63,3 +63,29 @@ query Assignees($projectName: String) {
   }
 }
 }`
+
+export const KAN_BAN_TASK_MENTIONS_QUERY = `
+query SearchMentionTasks($projectName: String!, $assignees: [String!]!) {
+  project(name: $projectName) {
+    projectName
+    tasks(assignees: $assignees) {
+      edges {
+        node {
+          id
+          name
+          taskType
+          status
+          versions(latestOnly: true) {
+            edges {
+              node {
+                id
+                thumbnailId
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`

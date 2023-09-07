@@ -22,7 +22,10 @@ const UserDashboardDetails = ({ tasks = [] }) => {
   }, [selectedTasksIds, tasks])
 
   // for selected tasks, get flat list of projects
-  const selectedTasksProjects = useMemo(() => tasks.map((t) => t.projectName), [tasks])
+  const selectedTasksProjects = useMemo(
+    () => [...new Set(tasks.map((t) => t.projectName))],
+    [tasks],
+  )
 
   // for selected projects, make sure user is on all
   const [activeProjectUsers, disabledProjectUsers] = useMemo(() => {
@@ -50,7 +53,13 @@ const UserDashboardDetails = ({ tasks = [] }) => {
         selectedTasksProjects={selectedTasksProjects}
         attributesOpen={attributesOpen}
       />
-      {!attributesOpen && <Feed tasks={selectedTasks} activeUsers={activeProjectUsers} />}
+      {!attributesOpen && (
+        <Feed
+          tasks={selectedTasks}
+          activeUsers={activeProjectUsers}
+          selectedTasksProjects={selectedTasksProjects}
+        />
+      )}
     </Panel>
   )
 }

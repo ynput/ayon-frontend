@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import * as Styled from './CommentMentionSelect.styled'
 import { UserImage } from '@ynput/ayon-react-components'
 
-const CommentMentionSelect = ({ mention, options = [], onChange }) => {
+const CommentMentionSelect = ({ mention, options = [], onChange, types = [], config = {} }) => {
   if (!mention) return null
 
   const [hasHovered, setHasHovered] = useState(false)
@@ -13,13 +13,21 @@ const CommentMentionSelect = ({ mention, options = [], onChange }) => {
       onMouseEnter={() => setHasHovered(true)}
       $hasHovered={hasHovered}
     >
-      {mention.type === '@' &&
-        options.map((option) => (
-          <Styled.MentionItem key={option.id} onClick={() => onChange(option)}>
-            <UserImage size={20} src={option.image} fullName={option.label} />
-            <Styled.MentionName>{option.label}</Styled.MentionName>
-          </Styled.MentionItem>
-        ))}
+      {types.includes(mention.type) &&
+        options.flatMap((option, i) =>
+          i > 5 ? (
+            []
+          ) : (
+            <Styled.MentionItem
+              key={option.id}
+              onClick={() => onChange(option)}
+              $isCircle={config?.isCircle}
+            >
+              <UserImage size={20} src={option.image} fullName={option.label} className="image" />
+              <Styled.MentionName>{option.label}</Styled.MentionName>
+            </Styled.MentionItem>
+          ),
+        )}
     </Styled.MentionSelect>
   )
 }

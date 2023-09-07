@@ -10,8 +10,18 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
 import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
+import { useGetMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
+import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 
-const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen, activeUsers }) => {
+const CommentInput = ({
+  initValue,
+  onSubmit,
+  isOpen,
+  setIsOpen,
+  activeUsers,
+  selectedTasksProjects,
+  userName,
+}) => {
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
 
@@ -34,12 +44,31 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen, activeUsers }) =
     }
   }, [initValue, markdownRef.current])
 
+  const { data: mentionTasks } = useGetMentionTasksQuery(
+    { projectName: selectedTasksProjects[0], assignee: userName },
+    {
+      skip: selectedTasksProjects?.length !== 1,
+    },
+  )
+
   // CONFIG
   const placeholder = `Comment or tag with @user, @@version, @@@task...`
 
   var turndownService = new TurndownService()
 
   const mentionTypes = ['@', '@@', '@@@']
+  const typeOptions = {
+    '@': {
+      id: 'user',
+      isCircle: true,
+    },
+    '@@': {
+      id: 'version',
+    },
+    '@@@': {
+      id: 'task',
+    },
+  }
   mentionTypes.sort((a, b) => b.length - a.length)
 
   const mentionOptions = useMemo(
@@ -48,11 +77,14 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen, activeUsers }) =
         mention?.type,
         {
           '@': () => getMentionUsers(activeUsers),
+          '@@@': () => getMentionTasks(mentionTasks),
         },
         mention?.search,
       ),
     [activeUsers, mention?.type, mention?.search],
   )
+
+  console.log(mentionOptions)
 
   // triggered when a mention is selected
   const [newSelection, setNewSelection] = useState()
@@ -165,6 +197,7 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen, activeUsers }) =
         setMention(null)
       }
     } else {
+      // This is where SEARCH is handled
       if (mention) {
         // if space is pressed, remove mention
         if (currentCharacter === ' ') {
@@ -177,7 +210,8 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen, activeUsers }) =
         let distanceMentionToRetain = retain - mention.retain
         if (!isDelete) distanceMentionToRetain++
         const mentionFull = editor.getText(mention.retain, distanceMentionToRetain)
-        const mentionSearch = mentionFull.replace(mention.type, '')
+        console.log(mention.type)
+        const mentionSearch = mentionFull.replace(mention.type.slice(-1), '')
         //  check for space in mentionFull
         if (mentionFull.includes(' ')) {
           setMention(null)
@@ -307,6 +341,8 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen, activeUsers }) =
           mention={mention}
           options={mentionOptions}
           onChange={handleSelectChange}
+          types={mentionTypes}
+          config={typeOptions[mention?.type]}
         />
       </Styled.AutoHeight>
     </>

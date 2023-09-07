@@ -7,7 +7,7 @@ import * as Styled from './Feed.styled'
 import { uuid } from 'short-uuid'
 import { useSelector } from 'react-redux'
 
-const Feed = ({ tasks = [], activeUsers }) => {
+const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
   const name = useSelector((state) => state.user.name)
 
   // STATES
@@ -72,6 +72,8 @@ const Feed = ({ tasks = [], activeUsers }) => {
         isOpen={isCommentInputOpen}
         setIsOpen={setIsCommentInputOpen}
         activeUsers={activeUsers}
+        selectedTasksProjects={selectedTasksProjects}
+        userName={name}
       />
     </Styled.FeedContainer>
   )
