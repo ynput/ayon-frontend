@@ -92,7 +92,6 @@ const CheckboxWidget = function (props) {
     if (value === props.value) return
     // this timeout must be here. idk why. if not,
     // the value will be set to the original value or smth
-    console.log('Publishing change', value, 'old', props.value)
     props.onChange(value)
     setTimeout(() => {
       const isChanged = value !== originalValue
@@ -215,47 +214,56 @@ const SelectWidget = (props) => {
   )
 }
 
+const getDefaultValue = (props) => {
+  if (props.value !== undefined) return props.value
+  if (props.schema.widget === 'color') {
+    if (props.schema.colorFormat === 'hex') return props.schema.colorAlpha ? '#00000000' : '#000000'
+    return props.schema.colorAlpha ? [0, 0, 0, 0] : [0, 0, 0]
+  }
+  if (props.schema.type === 'string') return ''
+  if (props.schema.type === 'integer') return 0
+}
+
 const TextWidget = (props) => {
   const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState('')
+  const [value, setValue] = useState(null)
+  const [initialized, setInitialized] = useState(false)
 
-  useEffect(() => {
-    if (props.schema.type === 'string' && props.schema.widget !== 'color')
-      setValue(props.value || '')
-    else if (props.schema.type === 'integer') setValue(props.value || 0)
-    else setValue(props.value || false)
-  }, [props.value])
+  const doInitialPush = () => {
+    // Initial push to formData
+    // Used when the item is a part of an array
+    // and it is newly added
+    if (!props.onChange) return
+    if (value === null) return
+    if (value === props.value) return
+    if (initialized) return
 
-  const onChange = (newValue) => {
-    setValue(newValue)
+    setInitialized(true)
+    props.onChange(value)
   }
 
   useEffect(() => {
-    // Handle new array items
-    if (!props.onChange) return
-    if (props.value === undefined) {
-      let newValue
-      if (props.schema.type === 'string' && props.schema.widget !== 'color') newValue = ''
-      else if (props.schema.type === 'integer') newValue = 0
-      else newValue = null
+    doInitialPush()
+  }, [props.onChange, value])
 
-      setTimeout(() => {
-        props.onChange(newValue)
-        //setTimeout(() => {
-        if (originalValue !== undefined) updateChangedKeys(props, true, path)
-        //}, 100)
-      }, 200)
-    }
-  }, [props.onChange])
+  useEffect(() => {
+    // Sync the local state with the formData
+    if (props.value === undefined) return
+    if (equiv(value, props.value)) return
+    setValue(props.value || getDefaultValue(props))
+  }, [props.value])
 
   const onChangeCommit = () => {
     if (value === props.value) return
     const isChanged = value !== originalValue
     props.onChange(value)
-    //props.formContext?.onSetBreadcrumbs(path)
     setTimeout(() => {
       updateChangedKeys(props, isChanged, path)
     }, 100)
+  }
+
+  const onChange = (newValue) => {
+    setValue(newValue)
   }
 
   const tooltip = []
@@ -280,9 +288,9 @@ const TextWidget = (props) => {
     Input = InputNumber
     if (props.schema.type === 'number') {
       opts.step = 0.1
-      opts.value = addDecimalPoint(value)
+      opts.value = addDecimalPoint(value || 0)
     } else {
-      opts.value = value
+      opts.value = value || 0
       opts.step = 1
     }
     if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
@@ -303,7 +311,7 @@ const TextWidget = (props) => {
     // Color picker
     //
     Input = InputColor
-    opts.value = value
+    opts.value = value || getDefaultValue(props)
     opts.format = props.schema.colorFormat || 'hex'
     opts.alpha = props.schema.colorAlpha || false
     opts.onChange = (e) => {
@@ -326,14 +334,14 @@ const TextWidget = (props) => {
     Input = InputTextarea
     opts.autoResize = true
     opts.rows = 8
-    opts.value = value
+    opts.value = value || ''
     opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
       onChange(e.target.value)
     }
   } else if (props.schema.widget === 'hierarchy') {
     Input = InputText
-    opts.value = value
+    opts.value = value || ''
     opts.onBlur = onChangeCommit
     opts.placeholder = `Hierarchy for ${props.formContext?.headerProjectName}`
     opts.onChange = (e) => {
@@ -342,7 +350,7 @@ const TextWidget = (props) => {
   } else {
     // Default text input
     Input = InputText
-    opts.value = value
+    opts.value = value || ''
     opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
       onChange(e.target.value)
@@ -361,6 +369,7 @@ const TextWidget = (props) => {
   }
 
   const onFocus = (e) => {
+    doInitialPush()
     props.formContext.onSetBreadcrumbs(path)
     props.onFocus(e)
   }
