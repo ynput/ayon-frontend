@@ -10,6 +10,8 @@ import {
   IconSelect,
 } from '@ynput/ayon-react-components'
 
+import { isEqual } from 'lodash'
+
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)
   if (!valueString.match(/\./)) return valueString.concat('.0')
@@ -20,6 +22,22 @@ const updateChangedKeys = (props, changed, path) => {
   if (!props.formContext) return // WARN! (but shouldn't happen)
   if (!path?.length) return // WARN!
   props.formContext.onSetChangedKeys([{ path, isChanged: changed }])
+}
+
+const equiv = (a, b) => {
+  if (typeof a !== typeof b) return false
+
+  if (typeof a === 'object' && a.length) {
+    // compare two arrays. return true if they contain the same elements
+    // order doesn't matter
+    if (a.length !== b.length) return false
+    for (const i of a) {
+      if (!b.includes(i)) return false
+    }
+    return true
+  }
+
+  return isEqual(a, b)
 }
 
 const parseContext = (props) => {
@@ -155,6 +173,14 @@ const SelectWidget = (props) => {
     props.onFocus(e)
   }
 
+  const hlstyle = {}
+  console.log(props.id, props.value, originalValue)
+  if (!equiv(value, props.value)) {
+    hlstyle.outline = '1px solid yellow'
+  } else if (originalValue !== undefined && !equiv(props.value, originalValue)) {
+    hlstyle.outline = '1px solid var(--color-changed)'
+  }
+
   return (
     <Dropdown
       widthExpand
@@ -165,13 +191,13 @@ const SelectWidget = (props) => {
       onFocus={onFocus}
       optionLabel="label"
       optionValue="value"
-      tooltip={tooltip.join('\n')}
+      toolTip={'baaaa'}
       tooltipOptions={{ position: 'bottom' }}
       placeholder={props.schema?.placeholder}
       disabled={props.schema?.disabled}
       className={`form-field`}
       multiSelect={props.multiple}
-      style={value !== props.value ? { outline: '1px solid yellow' } : {}}
+      style={hlstyle}
     />
   )
 }
@@ -326,6 +352,11 @@ const TextWidget = (props) => {
     props.onFocus(e)
   }
 
+  const hlstyle = {}
+  if (value !== props.value) hlstyle.outline = '1px solid yellow'
+  else if (originalValue !== undefined && props.value !== originalValue)
+    hlstyle.outline = '1px solid var(--color-changed)'
+
   return (
     <Input
       className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
@@ -333,7 +364,7 @@ const TextWidget = (props) => {
       tooltip={tooltip.join('\n')}
       tooltipOptions={{ position: 'bottom' }}
       {...opts}
-      style={value !== props.value ? { outline: '1px solid yellow' } : {}}
+      style={hlstyle}
     />
   )
 }
