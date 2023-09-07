@@ -189,7 +189,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             <br />
             {addonName} {addonVersion}
             <br />
-            {e}
+            {e.detail}
+            {e.errors?.length && (
+              <ul>
+                {e.errors.map((error, i) => (
+                  <li key={i}>
+                    {error.loc.join('/')}: {error.msg}
+                  </li>
+                ))}
+              </ul>
+            )}
           </>,
         )
       }
