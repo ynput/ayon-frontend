@@ -65,7 +65,6 @@ const CheckboxWidget = function (props) {
 
     setInitialized(true)
     setTimeout(() => {
-      console.log('GenPush')
       props.onChange(value)
     }, 200)
   }, [props.onChange, value])
@@ -74,7 +73,6 @@ const CheckboxWidget = function (props) {
     // Sync the local state with the formData
     if (props.value === undefined) return
     if (value === props.value) return
-    console.log('syncing', props.value, 'to', value)
     setValue(props.value || false)
   }, [props.value])
 
@@ -215,6 +213,7 @@ const SelectWidget = (props) => {
 }
 
 const getDefaultValue = (props) => {
+  //console.log("Creating default value for", props.id)
   if (props.value !== undefined) return props.value
   if (props.schema.widget === 'color') {
     if (props.schema.colorFormat === 'hex') return props.schema.colorAlpha ? '#00000000' : '#000000'
@@ -238,19 +237,19 @@ const TextWidget = (props) => {
     if (value === props.value) return
     if (initialized) return
 
+    //console.log("Initial push for", props.id, "with value", value)
     setInitialized(true)
-    props.onChange(value)
+    setTimeout(() => {
+      props.onChange(value)
+    }, 200)
   }
-
-  useEffect(() => {
-    doInitialPush()
-  }, [props.onChange, value])
 
   useEffect(() => {
     // Sync the local state with the formData
     if (props.value === undefined) return
     if (equiv(value, props.value)) return
-    setValue(props.value || getDefaultValue(props))
+    //console.log("Syncing local state for", props.id, JSON.stringify(props.value))
+    setValue(props.value)
   }, [props.value])
 
   const onChangeCommit = () => {
