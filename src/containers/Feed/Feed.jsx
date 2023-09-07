@@ -20,8 +20,6 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
     entityIds.includes(comment.entityId),
   )
 
-  console.log(events)
-
   const references = [...comments]
     .filter(
       (comment) =>
@@ -47,12 +45,13 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
       const newComment = {
         id: uuid(),
         author: name,
-        body: value,
+        body: value?.body,
         createdAt: new Date(),
         entityId: task.id,
         entityName: task.name,
         entityType: 'task',
         eventType: 'comment',
+        references: value?.references,
       }
 
       newComments.push(newComment)

@@ -12,6 +12,7 @@ import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOpt
 import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
 import { useGetMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
+import { v4 as uuid4 } from 'uuid'
 
 const CommentInput = ({
   initValue,
@@ -58,15 +59,15 @@ const CommentInput = ({
 
   const mentionTypes = ['@', '@@', '@@@']
   const typeOptions = {
-    '@': {
-      id: 'user',
-      isCircle: true,
+    '@@@': {
+      id: 'task',
     },
     '@@': {
       id: 'version',
     },
-    '@@@': {
-      id: 'task',
+    '@': {
+      id: 'user',
+      isCircle: true,
     },
   }
   mentionTypes.sort((a, b) => b.length - a.length)
@@ -90,7 +91,6 @@ const CommentInput = ({
   useEffect(() => {
     if (newSelection) {
       setNewSelection(null)
-      console.log(editorValue)
       // now we set selection to the end of the mention
       const quill = editorRef.current.getEditor()
       quill.setSelection(newSelection)
@@ -208,7 +208,6 @@ const CommentInput = ({
         let distanceMentionToRetain = retain - mention.retain
         if (!isDelete) distanceMentionToRetain++
         const mentionFull = editor.getText(mention.retain, distanceMentionToRetain)
-        console.log(mention.type)
         const mentionSearch = mentionFull.replace(mention.type.slice(-1), '')
         //  check for space in mentionFull
         if (mentionFull.includes(' ')) {
@@ -229,9 +228,33 @@ const CommentInput = ({
     const html = unprivilegedEditor.getHTML()
 
     // convert to markdown
-    const markdown = turndownService.turndown(html)
+    let markdown = turndownService.turndown(html)
 
-    return markdown
+    // find any
+    const regex = /\[(.*?)\]\((.*?)\)/g
+    const mentions = []
+    let match
+    while ((match = regex.exec(markdown)) !== null) {
+      let link = match[2]
+      const label = match[1]
+      const type = mentionTypes.find((key) => label.startsWith(key))
+      const typeConfig = typeOptions[type]
+      if (link && link.startsWith('@') && typeConfig && label) {
+        const newId = uuid4()
+
+        // replace the link with the new id
+        markdown = markdown.replace(new RegExp(link, 'g'), newId)
+
+        mentions.push({
+          label: label.replace(/@/g, ''),
+          refId: link.substring(1),
+          refType: typeConfig.id,
+          id: newId,
+        })
+      }
+    }
+
+    return { body: markdown, references: mentions }
   }
 
   const handleSubmit = () => {
