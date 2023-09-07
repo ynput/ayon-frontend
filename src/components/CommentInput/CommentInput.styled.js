@@ -44,6 +44,13 @@ export const Comment = styled.div`
     opacity: 0.25;
   }
 
+  .ql-editor a {
+    ::before,
+    ::after {
+      display: none;
+    }
+  }
+
   .ql-bubble .ql-tooltip.ql-flip {
     left: 0 !important;
     top: 9px !important;
@@ -82,14 +89,4 @@ export const Commands = styled.div`
 export const Markdown = styled.div`
   position: fixed;
   visibility: hidden;
-`
-
-export const Mention = styled.span`
-  background-color: var(--md-sys-color-surface-container-high);
-  padding: 4px;
-
-  position: absolute;
-
-  top: 0;
-  right: 0;
 `

@@ -38,6 +38,7 @@ const Feed = ({ tasks = [], activeUsers }) => {
   events.sort((a, b) => compareAsc(new Date(a.createdAt), new Date(b.createdAt)))
 
   const handleCommentSubmit = (value) => {
+    console.log(value)
     const newComments = []
 
     for (const task of tasks) {
@@ -70,6 +71,7 @@ const Feed = ({ tasks = [], activeUsers }) => {
         onSubmit={handleCommentSubmit}
         isOpen={isCommentInputOpen}
         setIsOpen={setIsCommentInputOpen}
+        activeUsers={activeUsers}
       />
     </Styled.FeedContainer>
   )

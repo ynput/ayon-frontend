@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as Styled from './CommentInput.styled'
 import { Button, SaveButton } from '@ynput/ayon-react-components'
 import 'react-quill/dist/quill.bubble.css'
@@ -7,8 +7,11 @@ import ReactMarkdown from 'react-markdown'
 import ReactQuill from 'react-quill'
 import { toast } from 'react-toastify'
 import { confirmDialog } from 'primereact/confirmdialog'
+import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
+import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOptions'
+import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
 
-const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen }) => {
+const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen, activeUsers }) => {
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
 
@@ -36,21 +39,84 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen }) => {
 
   var turndownService = new TurndownService()
 
-  const mentionDenotationChars = ['@', '@@', '@@@']
-  mentionDenotationChars.sort((a, b) => b.length - a.length)
+  const mentionTypes = ['@', '@@', '@@@']
+  mentionTypes.sort((a, b) => b.length - a.length)
+
+  const mentionOptions = useMemo(
+    () =>
+      getMentionOptions(
+        mention?.type,
+        {
+          '@': () => getMentionUsers(activeUsers),
+        },
+        mention?.search,
+      ),
+    [activeUsers, mention?.type, mention?.search],
+  )
+
+  // triggered when a mention is selected
+  const [newSelection, setNewSelection] = useState()
+
+  useEffect(() => {
+    if (newSelection) {
+      setNewSelection(null)
+      console.log(editorValue)
+      // now we set selection to the end of the mention
+      const quill = editorRef.current.getEditor()
+      quill.setSelection(newSelection)
+    }
+  }, [newSelection])
+
+  const handleSelectMention = (selectedOption, retain) => {
+    // get option text
+    const quill = editorRef.current.getEditor()
+    // insert space instead of tab or enter
+    const replace = mention.type + (mention.search || '')
+    const mentionText = mention.type + selectedOption.label
+    const newString = `<a href="@${selectedOption.id}">${mentionText}</a>&nbsp;`
+    const newContent = editorValue.replace(replace, newString)
+
+    const deltaContent = quill.clipboard.convert(newContent)
+
+    quill.setContents(deltaContent, 'silent')
+
+    const newSelection = retain + (selectedOption.label.length - (mention.search?.length || 0)) + 1
+    setNewSelection(newSelection)
+    setMention(null)
+  }
+
+  const handleSelectChange = (option) => {
+    // get current selection position
+    const quill = editorRef.current.getEditor()
+    const selection = quill.getSelection()
+
+    handleSelectMention(option, selection.index)
+  }
 
   const handleChange = (content, delta, _, editor) => {
+    let currentCharacter =
+      (delta.ops[0] && delta.ops[0].insert) || (delta.ops[1] && delta.ops[1].insert)
+
+    const tabOrEnter = currentCharacter === '\n' || currentCharacter === '\t'
+    // find the first option
+    const selectedOption = mentionOptions[0]
+
+    if (mention && tabOrEnter && selectedOption) {
+      // get option text
+      const retain = (delta.ops[0] && delta.ops[0].retain) || 0
+
+      return handleSelectMention(selectedOption, retain)
+    }
+
     setEditorValue(content)
 
     const isDelete = delta.ops.length === 2 && delta.ops[1].delete
 
-    let currentCharacter =
-      (delta.ops[0] && delta.ops[0].insert) || (delta.ops[1] && delta.ops[1].insert)
     if (!currentCharacter && isDelete) {
       currentCharacter = editor.getText(delta.ops[0].retain - 1, 1)
     }
 
-    const isMention = mentionDenotationChars.includes(currentCharacter)
+    const isMention = mentionTypes.includes(currentCharacter)
 
     if (isMention) {
       const mentionIndex = delta.ops.findIndex((op) => 'insert' in op || 'delete' in op)
@@ -63,7 +129,7 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen }) => {
       let mentionMatch = null
 
       // loop through each mention denotation char, with longest first. First one to match is the one we want
-      for (const chars of mentionDenotationChars) {
+      for (const chars of mentionTypes) {
         let isMatch = true
         // start with the last character
         if (chars.endsWith(mention)) {
@@ -91,15 +157,10 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen }) => {
       }
 
       if (mentionMatch) {
-        const bounds = editor.getBounds(retain - (mentionMatch.length - 1))
-        console.log('mention match!', mentionMatch, bounds)
-        if (bounds) {
-          setMention({
-            bounds: bounds,
-            type: mentionMatch,
-            retain: retain,
-          })
-        }
+        setMention({
+          type: mentionMatch,
+          retain: retain,
+        })
       } else {
         setMention(null)
       }
@@ -123,7 +184,7 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen }) => {
         } else {
           setMention({
             ...mention,
-            search: mentionSearch,
+            search: mentionSearch?.toLowerCase(),
           })
         }
       }
@@ -137,6 +198,9 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen }) => {
 
     // convert to markdown
     const markdown = turndownService.turndown(html)
+
+    // [@Luke Inderwick](@Innders) -> @[Luke Inderwick](Innders)
+    // [@@Luke Inderwick](@@Innders) -> @@[Luke Inderwick](Innders)
 
     return markdown
   }
@@ -168,6 +232,11 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen }) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSubmit()
     }
+
+    if (mention && e.key === 'Tab') {
+      e.preventDefault()
+    }
+
     if (e.key === 'Escape') {
       const markdown = editorValue && convertToMarkdown()
 
@@ -234,17 +303,11 @@ const CommentInput = ({ initValue, onSubmit, isOpen, setIsOpen }) => {
             />
           </Styled.Footer>
         </Styled.Comment>
-        {mention && (
-          <Styled.Mention
-            style={{
-              left: mention.bounds.left,
-              top: mention.bounds.top + mention.bounds.height,
-              width: 100,
-            }}
-          >
-            {mention.type} {mention.search}
-          </Styled.Mention>
-        )}
+        <CommentMentionSelect
+          mention={mention}
+          options={mentionOptions}
+          onChange={handleSelectChange}
+        />
       </Styled.AutoHeight>
     </>
   )
