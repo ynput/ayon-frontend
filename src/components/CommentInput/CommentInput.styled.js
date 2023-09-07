@@ -43,6 +43,21 @@ export const Comment = styled.div`
     color: var(--md-sys-color-on-surface);
     opacity: 0.25;
   }
+
+  .ql-bubble .ql-tooltip.ql-flip {
+    left: 0 !important;
+    top: 9px !important;
+    position: fixed;
+    translate: 0 calc(-100% - 4px);
+
+    background-color: var(--md-sys-color-surface-container-lowest);
+    outline: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 8px;
+
+    .ql-tooltip-arrow {
+      display: none;
+    }
+  }
 `
 
 export const Footer = styled.footer`
