@@ -20,6 +20,8 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
     entityIds.includes(comment.entityId),
   )
 
+  const tasksVersions = tasks.flatMap((task) => task.allVersions) || []
+
   const references = [...comments]
     .filter(
       (comment) =>
@@ -74,6 +76,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
         setIsOpen={setIsCommentInputOpen}
         activeUsers={activeUsers}
         selectedTasksProjects={selectedTasksProjects}
+        versions={tasksVersions}
         userName={name}
       />
     </Styled.FeedContainer>

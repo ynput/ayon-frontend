@@ -16,6 +16,17 @@ const TASK_FRAGMENT = `
         node {
           id
           thumbnailId
+          updatedAt
+        }
+      }
+    }
+    allVersions: versions {
+      edges {
+        node {
+          name
+          version
+          thumbnailId
+          updatedAt
         }
       }
     }

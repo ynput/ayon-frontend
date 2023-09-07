@@ -1,11 +1,22 @@
+const getVersionThumbnailUrl = (version, projectName, accessToken) => {
+  return version?.thumbnailId
+    ? `/api/projects/${projectName}/thumbnails/${version?.thumbnailId}?updatedAt=${version.updatedAt}&token=${accessToken}`
+    : null
+}
+
 export const transformTasksData = ({ projectName, tasks = [] }) =>
   tasks?.map((task) => {
     const latestVersion = task.versions?.edges[0]?.node
-    const thumbnailUrl = latestVersion?.thumbnailId
-      ? `/api/projects/${projectName}/thumbnails/${latestVersion?.thumbnailId}?updatedAt=${
-          task.updatedAt
-        }&token=${localStorage.getItem('accessToken')}`
-      : null
+
+    const accessToken = localStorage.getItem('accessToken')
+
+    const thumbnailUrl = getVersionThumbnailUrl(latestVersion, projectName, accessToken)
+
+    const allVersions =
+      task?.allVersions?.edges.map(({ node }) => ({
+        ...node,
+        thumbnailUrl: getVersionThumbnailUrl(node, projectName, accessToken),
+      })) || []
 
     return {
       id: task.id,
@@ -21,6 +32,7 @@ export const transformTasksData = ({ projectName, tasks = [] }) =>
       latestVersionId: latestVersion?.id,
       latestVersionThumbnailId: latestVersion?.thumbnailId,
       thumbnailUrl,
+      allVersions,
     }
   })
 

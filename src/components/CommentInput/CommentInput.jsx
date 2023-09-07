@@ -13,6 +13,7 @@ import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers
 import { useGetMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import { v4 as uuid4 } from 'uuid'
+import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
 
 const CommentInput = ({
   initValue,
@@ -22,6 +23,7 @@ const CommentInput = ({
   activeUsers,
   selectedTasksProjects,
   userName,
+  versions = [],
 }) => {
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
@@ -78,6 +80,7 @@ const CommentInput = ({
         mention?.type,
         {
           '@': () => getMentionUsers(activeUsers),
+          '@@': () => getMentionVersions(versions),
           '@@@': () => getMentionTasks(mentionTasks),
         },
         mention?.search,
