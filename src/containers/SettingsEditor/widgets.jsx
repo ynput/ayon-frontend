@@ -27,7 +27,7 @@ const updateChangedKeys = (props, changed, path) => {
 const equiv = (a, b) => {
   if (typeof a !== typeof b) return false
 
-  if (typeof a === 'object' && a.length) {
+  if (typeof a === 'object' && a?.length) {
     // compare two arrays. return true if they contain the same elements
     // order doesn't matter
     if (a.length !== b.length) return false
@@ -52,6 +52,7 @@ const parseContext = (props) => {
 const CheckboxWidget = function (props) {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState(null)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     // Initial push to formData
@@ -60,15 +61,21 @@ const CheckboxWidget = function (props) {
     if (!props.onChange) return
     if (value === null) return
     if (value === props.value) return
+    if (initialized) return
 
+    setInitialized(true)
     setTimeout(() => {
+      console.log('GenPush')
       props.onChange(value)
     }, 200)
   }, [props.onChange, value])
 
   useEffect(() => {
     // Sync the local state with the formData
-    if (value === null && props.value !== undefined) setValue(props.value || false)
+    if (props.value === undefined) return
+    if (value === props.value) return
+    console.log('syncing', props.value, 'to', value)
+    setValue(props.value || false)
   }, [props.value])
 
   useEffect(() => {
@@ -82,16 +89,16 @@ const CheckboxWidget = function (props) {
 
     if (!props.onChange) return
     if (value === null) return
-    if (value !== props.value) {
-      // this timeout must be here. idk why. if not,
-      // the value will be set to the original value or smth
-      setTimeout(() => {
-        props.onChange(value)
-        const isChanged = value !== originalValue
-        updateChangedKeys(props, isChanged, path)
-        props.formContext?.onSetBreadcrumbs(path)
-      }, 100)
-    }
+    if (value === props.value) return
+    // this timeout must be here. idk why. if not,
+    // the value will be set to the original value or smth
+    console.log('Publishing change', value, 'old', props.value)
+    props.onChange(value)
+    setTimeout(() => {
+      const isChanged = value !== originalValue
+      updateChangedKeys(props, isChanged, path)
+      props.formContext?.onSetBreadcrumbs(path)
+    }, 100)
   }, [value])
 
   const onChange = (e) => {
@@ -99,14 +106,10 @@ const CheckboxWidget = function (props) {
     setValue(newValue)
   }
 
-  // we need value || false here. in the useeffect above
-  // it is necessarty to check against null (which happens
-  // right after the component is mounted), but during the
-  // same render, we need the value here...
-
   return (
     <span style={value !== props.value ? { outline: '1px solid yellow' } : {}}>
       <InputSwitch checked={value || false} onChange={onChange} />
+      {/* {JSON.stringify(props.value)} / {JSON.stringify(value)} */}
     </span>
   )
 
@@ -124,48 +127,50 @@ const CheckboxWidget = function (props) {
 
 const SelectWidget = (props) => {
   const { originalValue, path } = parseContext(props)
+  const [value, setValue] = useState(null)
+  const [initialized, setInitialized] = useState(false)
+
+  useEffect(() => {
+    // Initial push to formData
+    // Used when the item is a part of an array
+    // and it is newly added
+    if (!props.onChange) return
+    if (value === null) return
+    if (value === props.value) return
+    if (initialized) return
+
+    setInitialized(true)
+
+    setTimeout(() => {
+      props.onChange(value)
+    }, 200)
+  }, [props.onChange, value])
+
+  useEffect(() => {
+    // Sync the local state with the formData
+    if (props.value === undefined) return
+    if (equiv(value, props.value)) return
+    setValue(props.value || (props.multiple ? [] : ''))
+  }, [props.value])
+
+  useEffect(() => {
+    if (value === null) return
+    const isChanged = !equiv(value, props.value)
+    if (!isChanged) {
+      return
+    }
+    props.onChange(value)
+    setTimeout(() => {
+      updateChangedKeys(props, !equiv(value, props.originalValue), path)
+    }, 100)
+  }, [value])
+
   const enumLabels = props.schema?.enumLabels || {}
   const options = []
   for (const opt of props.options.enumOptions) {
-    const value = opt.value
-    const label = enumLabels[value] || value
-    options.push({ label, value })
-  }
-
-  // Ensure the value is in the options
-  let value
-  if (props.multiple) {
-    value = props.value || []
-    value = value.filter((v) => options.find((o) => o.value === v))
-  } else {
-    value = props.value || ''
-    if (!options.find((o) => o.value === value)) value = ''
-  }
-
-  const tooltip = []
-  if (props.rawErrors) {
-    for (const err of props.rawErrors) tooltip.push(err)
-  }
-
-  useEffect(() => {
-    // Handle adding new items to arrays
-    // This is needed because the value is not set yet in formData
-    // when this widget is a part of an array and it is newly added
-    if (!props.onChange) return
-    let newValue
-    if (props.multiple) newValue = props.value || []
-    else newValue = props.value || ''
-
-    setTimeout(() => {
-      props.onChange(newValue)
-    }, 100)
-  }, [props.onChange])
-
-  const onChange = (value) => {
-    props.onChange(value)
-    setTimeout(() => {
-      updateChangedKeys(props, value !== originalValue, path)
-    }, 100)
+    const _value = opt.value
+    const label = enumLabels[_value] || _value
+    options.push({ label, value: _value })
   }
 
   const onFocus = (e) => {
@@ -173,25 +178,33 @@ const SelectWidget = (props) => {
     props.onFocus(e)
   }
 
+  const tooltip = []
+  if (props.rawErrors) {
+    for (const err of props.rawErrors) tooltip.push(err)
+  }
+
   const hlstyle = {}
-  console.log(props.id, props.value, originalValue)
   if (!equiv(value, props.value)) {
     hlstyle.outline = '1px solid yellow'
-  } else if (originalValue !== undefined && !equiv(props.value, originalValue)) {
+  } else if (originalValue && !equiv(props.value, originalValue)) {
     hlstyle.outline = '1px solid var(--color-changed)'
   }
+
+  let renderableValue
+  if (value === null) renderableValue = []
+  else if (props.multiple) renderableValue = value
+  else renderableValue = [value]
 
   return (
     <Dropdown
       widthExpand
       options={options}
-      value={props.multiple ? value : [value]}
-      onChange={props.multiple ? onChange : (e) => onChange(e[0])}
+      value={renderableValue}
+      onChange={props.multiple ? setValue : (e) => setValue(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
       optionLabel="label"
       optionValue="value"
-      toolTip={'baaaa'}
       tooltipOptions={{ position: 'bottom' }}
       placeholder={props.schema?.placeholder}
       disabled={props.schema?.disabled}

@@ -183,6 +183,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         updatedKeys.push(key)
       } catch (e) {
         allOk = false
+        console.error(e)
         toast.error(
           <>
             <strong>Unable to save {variant} settings</strong>

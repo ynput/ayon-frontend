@@ -117,7 +117,7 @@ const addonSettings = ayonApi.injectEndpoints({
       ],
       transformResponse: (response) => response,
       transformErrorResponse: (error) =>
-        error.data.detail ? error : { detail: `Error ${error.status}` },
+        error.data.detail ? error.data : { detail: `Error ${error.status}` },
     }), // setAddonSettings
 
     deleteAddonSettings: build.mutation({
