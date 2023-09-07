@@ -75,7 +75,7 @@ function ShortcutsProvider(props) {
 
   const handleKeyPress = (e) => {
     // check target isn't an input
-    if (e.target.tagName === 'INPUT' || disabled) return
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName) || disabled) return
 
     let singleKey = e.key
     // add ctrl_ prefix if ctrl or cmd is pressed
