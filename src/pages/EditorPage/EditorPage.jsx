@@ -889,6 +889,7 @@ const EditorPage = () => {
 
     // set name to type
     initData.name = initData.type.toLowerCase()
+    initData.label = initData.type
 
     setNewEntityData(initData)
   }
