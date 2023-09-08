@@ -17,7 +17,7 @@ import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
-import CopySettingsButton from './CopySettings'
+import CopyBundleSettingsButton from './CopyBundleSettings'
 import VariantSelector from './VariantSelector'
 
 import {
@@ -411,7 +411,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             {bundleName}
           </span>
           <Spacer />
-          <CopySettingsButton
+          <CopyBundleSettingsButton
             bundleName={bundleName}
             variant={environment}
             disabled={canCommit}

@@ -316,7 +316,7 @@ const CopySettingsTable = ({
   )
 }
 
-const CopySettingsButton = ({
+const CopyBundleSettingsButton = ({
   bundleName,
   variant,
   disabled,
@@ -473,4 +473,4 @@ const CopySettingsButton = ({
   )
 }
 
-export default CopySettingsButton
+export default CopyBundleSettingsButton
