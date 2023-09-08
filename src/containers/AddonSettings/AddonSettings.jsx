@@ -27,7 +27,6 @@ import {
 } from '/src/services/addonSettings'
 
 import { usePromoteBundleMutation } from '/src/services/bundles'
-//import { useNavigate } from 'react-router'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
@@ -101,6 +100,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   const onSettingsChange = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
+
     setLocalData((localData) => {
       localData[key] = data
       return { ...localData }
@@ -183,13 +183,23 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         updatedKeys.push(key)
       } catch (e) {
         allOk = false
+        console.error(e)
         toast.error(
           <>
             <strong>Unable to save {variant} settings</strong>
             <br />
             {addonName} {addonVersion}
             <br />
-            {e}
+            {e.detail}
+            {e.errors?.length && (
+              <ul>
+                {e.errors.map((error, i) => (
+                  <li key={i}>
+                    {error.loc.join('/')}: {error.msg}
+                  </li>
+                ))}
+              </ul>
+            )}
           </>,
         )
       }
@@ -557,6 +567,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable changes={changedKeys} onRevert={onRevertChange} />
+          {/*}
+          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
+            <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>
+          </ScrollPanel>
+          */}
         </Section>
       </SplitterPanel>
     </Splitter>

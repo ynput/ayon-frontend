@@ -164,11 +164,11 @@ const SettingsEditor = ({
         formData={formData}
         formContext={fullContext}
         widgets={widgets}
-        liveValidate={false}
         FieldTemplate={FieldTemplate}
         ObjectFieldTemplate={ObjectFieldTemplate}
         ArrayFieldTemplate={ArrayFieldTemplate}
         onChange={(evt) => onChange(evt.formData)}
+        onError={(evt) => console.log('Form contains errors:', evt)}
       >
         <div />
       </Form>
