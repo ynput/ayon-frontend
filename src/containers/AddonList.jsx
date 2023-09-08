@@ -10,6 +10,7 @@ import { useGetAddonSettingsListQuery } from '/src/services/addonSettings'
 const AddonList = ({
   selectedAddons,
   setSelectedAddons,
+  onContextMenu,
   environment = 'production', // 'production' or 'staging'
   siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
   onAddonChanged = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
@@ -94,8 +95,19 @@ const AddonList = ({
   }, [addons, uriChanged])
 
   const onSelectionChange = (e) => {
-    setPreferredSelection(e.value)
-    setSelectedAddons(e.value)
+    // if e.value is an array [], just set the selection
+
+    if (Array.isArray(e.value) && e.value?.length) {
+      setPreferredSelection(e.value)
+      setSelectedAddons(e.value)
+      return
+    }
+
+    if (e.value?.name) {
+      const index = selectedAddons.findIndex((a) => a.name === e.value.name)
+      if (index > -1) return
+      setSelectedAddons([e.value])
+    }
   }
 
   const rowDataClassNameFormatter = (rowData) => {
@@ -116,6 +128,8 @@ const AddonList = ({
           scrollHeight="flex"
           selection={selectedAddons}
           onSelectionChange={onSelectionChange}
+          onContextMenuSelectionChange={onSelectionChange}
+          onContextMenu={onContextMenu}
           rowClassName={rowDataClassNameFormatter}
           emptyMessage={isError ? `WARNING: No bundle set to ${environment}` : 'No addons found'}
         >

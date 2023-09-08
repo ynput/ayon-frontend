@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
+import useCreateContext from '/src/hooks/useCreateContext'
+
 import {
   Button,
   Spacer,
@@ -19,6 +21,7 @@ import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettings'
 import VariantSelector from './VariantSelector'
+import CopySettingsDialog from '/src/containers/CopySettings/CopySettingsDialog'
 
 import {
   useSetAddonSettingsMutation,
@@ -56,6 +59,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [selectedSites, setSelectedSites] = useState([])
   const [environment, setEnvironment] = useState('production')
   const [bundleName, setBundleName] = useState()
+
+  const [showCopySettings, setShowCopySettings] = useState(false)
 
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
@@ -390,6 +395,21 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     })
   }
 
+  // Addon list context menu
+
+  const [addonListContextMenu] = useCreateContext([])
+  const showAddonListContextMenu = (e) => {
+    setTimeout(() => {
+      const menuItems = [
+        {
+          label: 'Copy settings from...',
+          command: () => setShowCopySettings(true),
+        },
+      ]
+      addonListContextMenu(e.originalEvent, menuItems)
+    }, 50)
+  }
+
   //
   // RENDER
   //
@@ -481,6 +501,20 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
         <Section style={{ maxWidth: 400, minWidth: 400 }}>
           {addonListHeader}
+          {showCopySettings && (
+            <CopySettingsDialog
+              selectedAddons={selectedAddons}
+              variant={environment}
+              originalData={originalData}
+              setOriginalData={setOriginalData}
+              localData={localData}
+              setLocalData={setLocalData}
+              changedKeys={changedKeys}
+              setChangedKeys={setChangedKeys}
+              projectName={projectName}
+              onClose={() => setShowCopySettings(false)}
+            />
+          )}
           <AddonList
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
@@ -490,6 +524,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
             siteSettings={showSites}
+            onContextMenu={showAddonListContextMenu}
           />
           {showSites && (
             <SiteList
