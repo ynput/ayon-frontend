@@ -383,9 +383,12 @@ function FieldTemplate(props) {
 
   // do not show error for color widgets (they are declared as strings, but
   // contains arrays. The error is not relevant for the user)
-  let className = `form-inline-field ${
-    props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
-  }`
+  //
+  // TODO: ignoring errors for now. Too many false positives
+  let className = `form-inline-field`
+  // let className = `form-inline-field ${
+  //   props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
+  // }`
 
   const inlineHelp = useMemo(() => {
     return (

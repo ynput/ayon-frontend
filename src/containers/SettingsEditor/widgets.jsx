@@ -28,6 +28,7 @@ const equiv = (a, b) => {
   if (typeof a !== typeof b) return false
 
   if (typeof a === 'object' && a?.length) {
+    if (a?.length !== b?.length) return false
     // compare two arrays. return true if they contain the same elements
     // order doesn't matter
     if (a.length !== b.length) return false
@@ -380,7 +381,7 @@ const TextWidget = (props) => {
 
   return (
     <Input
-      className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
+      className={`form-field`}
       onFocus={onFocus}
       tooltip={tooltip.join('\n')}
       tooltipOptions={{ position: 'bottom' }}
