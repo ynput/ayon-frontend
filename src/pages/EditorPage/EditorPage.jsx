@@ -1365,7 +1365,7 @@ const EditorPage = () => {
   // Render the TreeTable
 
   return (
-    <main>
+    <main className="editor-page">
       <NewEntity
         type={newEntity}
         data={newEntityData}
