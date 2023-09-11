@@ -52,12 +52,12 @@ export const CrumbsForm = styled.form`
       cursor: pointer;
       user-select: none;
 
-      font-family: var(--md-sys-typescale-title-medium-font-family-name);
-      font-style: var(--md-sys-typescale-title-medium-font-family-style);
-      font-weight: var(--md-sys-typescale-title-medium-font-weight);
-      font-size: var(--md-sys-typescale-title-medium-font-size);
-      letter-spacing: var(--md-sys-typescale-title-medium-letter-spacing);
-      line-height: var(--md-sys-typescale-title-medium-line-height);
+      font-family: var(--md-sys-typescale-title-small-font-family-name);
+      font-style: var(--md-sys-typescale-title-small-font-family-style);
+      font-weight: var(--md-sys-typescale-title-small-font-weight);
+      font-size: var(--md-sys-typescale-title-small-font-size);
+      letter-spacing: var(--md-sys-typescale-title-small-letter-spacing);
+      line-height: var(--md-sys-typescale-title-small-line-height);
     }
 
     input {
