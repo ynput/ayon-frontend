@@ -65,12 +65,14 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
         overflow: 'hidden',
         width: '100%',
         gap: 0,
-        marginLeft: -8,
+        marginLeft: -12,
       }}
       stateKey="user-dashboard-tasks"
+      className="dashboard-tasks"
+      gutterSize={6}
     >
       <SplitterPanel
-        style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden', marginRight: -4 }}
+        style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden', marginRight: -6 }}
         size={4}
       >
         <UserDashboardKanBan

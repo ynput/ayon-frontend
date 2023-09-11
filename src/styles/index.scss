@@ -674,6 +674,21 @@ a {
   align-items: flex-start;
 }
 
-.p-splitter-gutter {
-  z-index: 100;
+.dashboard-tasks {
+  .p-splitter-gutter {
+    z-index: 100;
+    align-items: flex-start;
+    translate: 6px 0;
+    transform-origin: left;
+
+    .p-splitter-gutter-handle {
+      height: 34px;
+      background: var(--md-sys-color-outline-variant);
+      border-radius: var(--border-radius);
+
+      &:hover {
+        background: var(--md-sys-color-outline);
+      }
+    }
+  }
 }
