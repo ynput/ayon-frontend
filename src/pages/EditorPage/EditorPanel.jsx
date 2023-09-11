@@ -100,10 +100,25 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
   const createInitialForm = () => {
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
+    const labelValues = getFieldValue('label', '_label')
+
     const assigneesValues = getFieldValue('assignees', '_assignees', [])
 
     const disableMessage = 'Names Can Not Be The Same...'
     const initialForm = {
+      _label: {
+        changeKey: '_label',
+        label: 'Label',
+        field: 'label',
+        type: 'string',
+        disabled: !singleSelect,
+        placeholder: !singleSelect ? disableMessage : '',
+        attrib: {
+          type: 'string',
+        },
+        ...labelValues,
+        value: singleSelect ? labelValues.value : disableMessage,
+      },
       _name: {
         changeKey: '_name',
         label: 'Name',
@@ -128,7 +143,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
         changeKey: '_assignees',
         label: 'Assignees',
         field: 'assignees',
-        disabled: types.includes('folder'),
+        disabled: !types.includes('task'),
         placeholder: `Folders Can Not Have Assignees...`,
         ...assigneesValues,
       },
@@ -488,7 +503,9 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                 // pick a react input
                 let input
 
-                if (field.includes('Type')) {
+                if (field === 'name') {
+                  input = <InputText value={value} disabled readOnly />
+                } else if (field.includes('Type')) {
                   input = (
                     <TypeEditor
                       value={isMultiple ? isMultiple : [value]}

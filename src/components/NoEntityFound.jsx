@@ -4,7 +4,7 @@ import { Icon } from '@ynput/ayon-react-components'
 
 const StyledNoTasks = styled.div`
   position: absolute;
-  top: 40%;
+  top: min(40%, 100px);
   left: 50%;
 
   .icon {
@@ -38,14 +38,41 @@ const StyledNoTasks = styled.div`
   }
 `
 
-const NoTasks = () => {
+const NoEntityFound = ({ type = 'task', icon }) => {
+  let typeIcon
+
+  switch (type) {
+    case 'task':
+      typeIcon = 'check_circle'
+      break
+    case 'workfile':
+      typeIcon = 'home_repair_service'
+      break
+    case 'folder':
+      typeIcon = 'folder'
+      break
+    case 'product':
+      typeIcon = 'inventory_2'
+      break
+    case 'version':
+      typeIcon = 'layers'
+      break
+    case 'representation':
+      typeIcon = 'view_in_ar'
+      break
+    default:
+      typeIcon = 'web_asset'
+  }
+
+  if (icon) typeIcon = icon
+
   return (
     <StyledNoTasks>
-      <Icon icon="check_circle" />
-      <Icon icon="check_circle" />
-      <span>No tasks found</span>
+      <Icon icon={typeIcon} />
+      <Icon icon={typeIcon} />
+      <span>{`No ${type}s found`}</span>
     </StyledNoTasks>
   )
 }
 
-export default NoTasks
+export default NoEntityFound
