@@ -75,7 +75,7 @@ function ShortcutsProvider(props) {
 
   const handleKeyPress = (e) => {
     // check target isn't an input
-    if (e.target.tagName === 'INPUT' || disabled) return
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName) || disabled) return
     // or has blocked shortcuts className
     if (e.target.classList.contains('block-shortcuts')) return
     // or any of its parents

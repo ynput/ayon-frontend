@@ -17,6 +17,11 @@ const NameField = ({
   const chobj = changes[node.id]
   let value = chobj?._name || chobj?._name === '' ? chobj._name : node.name
 
+  // is label
+  const label = chobj?._label || chobj?._label === '' ? chobj._label : node.label
+
+  if (label) value = label
+
   if (!styled) return value
 
   let icon
@@ -40,6 +45,7 @@ const NameField = ({
 
   return (
     <CellWithIcon
+      isLabel={!!label}
       icon={icon}
       text={`${
         prefix && !['undefined', 'null', ''].includes(prefix) ? prefix + ' | ' : ''

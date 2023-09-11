@@ -11,7 +11,7 @@ import { setFocusedTasks, setPairing, setUri } from '/src/features/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '/src/services/getTasks'
 import useCreateContext from '../hooks/useCreateContext'
-import NoTasks from '/src/components/NoTasks'
+import NoEntityFound from '../components/NoEntityFound'
 
 const TaskList = ({ style = {} }) => {
   const tasks = useSelector((state) => state.project.tasks)
@@ -157,7 +157,7 @@ const TaskList = ({ style = {} }) => {
           onHide={() => setShowDetail(false)}
         />
         {noTasks ? (
-          <NoTasks></NoTasks>
+          <NoEntityFound type="task" />
         ) : (
           <TreeTable
             value={data}

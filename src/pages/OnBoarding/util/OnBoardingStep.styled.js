@@ -9,6 +9,14 @@ export const Logo = styled.img`
   transform: translateX(-50%);
 `
 
+export const BG = styled.img`
+  position: fixed;
+  z-index: -10;
+  object-fit: cover;
+  width: 100vw;
+  height: 100vh;
+`
+
 export const StepPanel = styled(Panel)`
   display: flex;
   flex-direction: row;

@@ -1,7 +1,16 @@
 import { Dropdown } from '@ynput/ayon-react-components'
 
 //eslint-disable-next-line no-unused-vars
-const TypeEditor = ({ value, options, onChange, style, disabled, placeholder, isChanged }) => {
+const TypeEditor = ({
+  value,
+  options,
+  onChange,
+  style,
+  mainStyle,
+  disabled,
+  placeholder,
+  isChanged,
+}) => {
   const optionsTypes = Object.values(options).map((t) => ({
     name: t?.name,
     label: t?.name,
@@ -23,6 +32,7 @@ const TypeEditor = ({ value, options, onChange, style, disabled, placeholder, is
       search
       searchFields={['name']}
       emptyMessage="None Set"
+      style={mainStyle}
     />
   )
 }

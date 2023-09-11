@@ -17,6 +17,8 @@ import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
+import CopySettingsButton from './CopySettings'
+import VariantSelector from './VariantSelector'
 
 import {
   useSetAddonSettingsMutation,
@@ -25,113 +27,31 @@ import {
 } from '/src/services/addonSettings'
 
 import { usePromoteBundleMutation } from '/src/services/bundles'
-import { isEqual } from 'lodash'
-import { useNavigate } from 'react-router'
 import { confirmDialog } from 'primereact/confirmdialog'
+
+import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
+import arrayEquals from '/src/helpers/arrayEquals'
 
 /*
  * key is {addonName}|{addonVersion}|{environment}|{siteId}|{projectKey}
  * if project name or siteid is N/a, use _ instead
  */
 
-const getValueByPath = (obj, path) => {
-  // path is an array of keys
-  // e.g. ['a', 'b', 'c'] => obj.a.b.c
-  // if any key is not found, return undefined
-
-  if (path?.length === 0) return obj
-  let value = obj
-  for (const key of path) {
-    if (value === undefined) return undefined
-    value = value[key]
-  }
-  return value
-}
-
-const setValueByPath = (obj, path, value) => {
-  const result = { ...obj }
-  if (path?.length === 0) return value
-  let target = result
-  for (const key of path.slice(0, -1)) {
-    if (target[key] === undefined) target[key] = {}
-    target = target[key]
-  }
-  target[path[path.length - 1]] = value
-  return result
-}
-
-const sameKeysStructure = (obj1, obj2) => {
-  for (const type of ['string', 'number', 'boolean']) {
-    if (typeof obj1 === type && typeof obj2 === type) {
-      return true
-    }
-  }
-  if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false
-  const obj1Keys = Object.keys(obj1)
-  const obj2Keys = Object.keys(obj2)
-  if (obj1Keys.length !== obj2Keys.length) {
-    console.warn('Len cond failed on ', obj1Keys, obj2Keys)
-    return false
-  }
-  for (const key of obj1Keys) {
-    // Let's allow this and see what happens
-    // if (!obj2Keys.includes(key)) return false
-
-    if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
-      if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) continue // just assume someone won't paste invalid array items here
-
-      if (!sameKeysStructure(obj1[key], obj2[key])) {
-        console.warn('Struct cond failed on ', obj1[key], obj2[key])
-        return false
-      }
-    }
+const isChildPath = (childPath, parentPath) => {
+  if (childPath.length < parentPath.length) return false
+  for (let i = 0; i < parentPath.length; i++) {
+    if (childPath[i] !== parentPath[i]) return false
   }
   return true
 }
 
-const compareObjects = (obj1, obj2, path = []) => {
-  // Compare two objects and return a list of 'paths' where the objects differ
-  const changedPaths = []
-  for (const key in obj1) {
-    const newPath = [...path, key]
-
-    if (!(key in obj2)) {
-      changedPaths.push(newPath)
-      continue
-    }
-
-    const value1 = obj1[key]
-    const value2 = obj2[key]
-
-    if (typeof value1 === 'object' && typeof value2 === 'object') {
-      if (Array.isArray(value1) && Array.isArray(value2)) {
-        if (!isEqual(value1, value2)) {
-          changedPaths.push(newPath)
-        }
-      } else {
-        const nestedPaths = compareObjects(value1, value2, newPath)
-        changedPaths.push(...nestedPaths)
-      }
-    } else if (value1 !== value2) {
-      changedPaths.push(newPath)
-    }
-  }
-  for (const key in obj2) {
-    const newPath = [...path, key]
-    if (!(key in obj1)) {
-      changedPaths.push(newPath)
-    }
-  }
-  return changedPaths
-}
-
 const AddonSettings = ({ projectName, showSites = false }) => {
-  const navigate = useNavigate()
+  //const navigate = useNavigate()
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [originalData, setOriginalData] = useState({})
   const [localData, setLocalData] = useState({})
-  const [localOverrides, setLocalOverrides] = useState({})
+  const [changedKeys, setChangedKeys] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
   const [environment, setEnvironment] = useState('production')
@@ -170,7 +90,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }, [uriChanged])
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
-    const key = `${addonName}|${addonVersion}|${variant}${siteId}|${projectKey}`
+    const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
+    if (key in originalData) return
     setOriginalData((localData) => {
       localData[key] = data
       return { ...localData }
@@ -179,22 +100,38 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   const onSettingsChange = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
+
     setLocalData((localData) => {
       localData[key] = data
       return { ...localData }
     })
   }
 
-  const onSetChangedKeys = (addonName, addonVersion, variant, siteId, data) => {
-    setLocalOverrides((localOverrides) => {
+  const updateChangedKeys = (addonName, addonVersion, variant, siteId, data) => {
+    // data is a list of [{path:list, isChanged: bool}]
+
+    if (data.length === 0) return
+    if (data.length === 1 && !data[0].path?.length) return
+
+    setChangedKeys((changedKeys) => {
       const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
-      const filteredData = (data || []).filter((item) => item?.length)
-      if (!filteredData.length) {
-        delete localOverrides[key]
-      } else {
-        localOverrides[key] = filteredData
+      const keyData = changedKeys[key] || []
+
+      for (const item of data) {
+        const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, item.path))
+        if (index === -1 && item.isChanged) {
+          keyData.push(item.path)
+        } else if (index > -1 && !item.isChanged) {
+          keyData.splice(index, 1)
+        }
       }
-      return { ...localOverrides }
+
+      if (!keyData.length) {
+        delete changedKeys[key]
+        return { ...changedKeys }
+      }
+
+      return { ...changedKeys, [key]: keyData }
     })
   }
 
@@ -228,8 +165,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     let updatedKeys = []
     let allOk = true
 
-    for (const key in localOverrides) {
-      if (!localOverrides[key]?.length) continue
+    for (const key in changedKeys) {
+      if (!changedKeys[key]?.length) continue
       const [addonName, addonVersion, variant, siteId, projectName] = key.split('|')
 
       try {
@@ -246,12 +183,29 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         updatedKeys.push(key)
       } catch (e) {
         allOk = false
-        toast.error(`Unable to save ${variant} settings of ${addonName} ${addonVersion} `)
         console.error(e)
+        toast.error(
+          <>
+            <strong>Unable to save {variant} settings</strong>
+            <br />
+            {addonName} {addonVersion}
+            <br />
+            {e.detail}
+            {e.errors?.length && (
+              <ul>
+                {e.errors.map((error, i) => (
+                  <li key={i}>
+                    {error.loc.join('/')}: {error.msg}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>,
+        )
       }
     } // for key in localData
 
-    setLocalOverrides((overrides) => {
+    setChangedKeys((overrides) => {
       const newOverrides = {}
       for (const key in overrides) {
         if (updatedKeys.includes(key)) continue
@@ -268,8 +222,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   } // onSave
 
   const onRevertAllChanges = () => {
-    const keys = Object.keys(localOverrides)
-    setLocalOverrides({})
+    const keys = Object.keys(changedKeys)
+    setChangedKeys({})
     reloadAddons(keys)
   } // end of onDismissChanges
 
@@ -279,20 +233,32 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       for (const path of keysToRevert[addonKey]) {
         setLocalData((localData) => {
           const returnValue = getValueByPath(originalData[addonKey], path)
-          localData[addonKey] = setValueByPath(localData[addonKey], path, returnValue)
           console.log('REVERT ', path, 'TO', returnValue)
+          try {
+            localData[addonKey] = setValueByPath(localData[addonKey], path, returnValue)
+          } catch (e) {
+            console.error(e)
+          }
           return { ...localData }
         }) // setLocalData
-        setLocalOverrides((localOverrides) => {
-          const index = (localOverrides[addonKey] || []).indexOf(path)
-          if (index > -1) {
-            localOverrides[addonKey].splice(index, 1)
+        setChangedKeys((changedKeys) => {
+          const addonChanges = changedKeys[addonKey] || []
+          // delete the path from the list of changed keys
+          // also delete all children of this path
+
+          for (const index in addonChanges) {
+            if (isChildPath(addonChanges[index], path)) {
+              addonChanges.splice(index, 1)
+            }
           }
-          if (!localOverrides[addonKey]?.length) {
-            delete localOverrides[addonKey]
+
+          if (!addonChanges.length) {
+            delete changedKeys[addonKey]
+            return { ...changedKeys }
           }
-          return { ...localOverrides }
-        }) // setLocalOverrides
+
+          return { ...changedKeys, [addonKey]: addonChanges }
+        }) // setChangedKeys
       }
     }
   }
@@ -388,11 +354,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     const nk = setValueByPath(localData[key], path, value)
     newData[key] = nk
 
-    const newOverrides = { ...localOverrides }
+    const newChangedKeys = { ...changedKeys }
     const no = compareObjects(localData[key], newData[key])
-    newOverrides[key] = no
+    newChangedKeys[key] = no
 
-    setLocalOverrides(newOverrides)
+    setChangedKeys(newChangedKeys)
     setLocalData(newData)
   }
 
@@ -428,55 +394,47 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   // RENDER
   //
 
-  const canCommit = useMemo(() => Object.keys(localOverrides).length > 0, [localOverrides])
+  const canCommit = useMemo(() => Object.keys(changedKeys).length > 0, [changedKeys])
 
   const addonListHeader = useMemo(() => {
+    // site settings do not have variants
     if (showSites) return
 
-    const onSetEnvironment = (env) => {
-      // if (Object.keys(localOverrides).length) {
-      //   toast.error('Cannot change environment with unsaved changes')
-      //   return
-      // }
-      setEnvironment(env)
-    }
-
-    const styleHlProd = {
-      backgroundColor: 'var(--color-hl-production)',
-      color: 'black',
-    }
-    const styleHlStag = {
-      backgroundColor: 'var(--color-hl-staging)',
-      color: 'black',
-    }
-
     return (
-      <Toolbar>
-        <Button
-          label="Production"
-          onClick={() => onSetEnvironment('production')}
-          style={environment === 'production' ? styleHlProd : {}}
-        />
-        <Button
-          label="Staging"
-          onClick={() => onSetEnvironment('staging')}
-          style={environment === 'staging' ? styleHlStag : {}}
-        />
-        <Button
-          label={`Bundle: ${bundleName || 'NONE'}`}
-          onClick={() => navigate(`/settings/bundles?selected=${bundleName || 'latest'}`)}
-        />
-        <Button
-          icon="local_shipping"
-          label="Push to production"
-          tooltip="Push to production"
-          onClick={onPushToProduction}
-          disabled={environment !== 'staging' || canCommit}
-          style={{ zIndex: 100 }}
-        />
-      </Toolbar>
+      <>
+        <Toolbar>
+          <VariantSelector variant={environment} setVariant={setEnvironment} />
+          <Spacer />
+        </Toolbar>
+        <Toolbar>
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {bundleName}
+          </span>
+          <Spacer />
+          <CopySettingsButton
+            bundleName={bundleName}
+            variant={environment}
+            disabled={canCommit}
+            localData={localData}
+            changedKeys={changedKeys}
+            setLocalData={setLocalData}
+            setChangedKeys={setChangedKeys}
+            setSelectedAddons={setSelectedAddons}
+            originalData={originalData}
+            setOriginalData={setOriginalData}
+            projectName={projectName}
+          />
+          <Button
+            icon="local_shipping"
+            tooltip="rocket_launch"
+            onClick={onPushToProduction}
+            disabled={environment !== 'staging' || canCommit}
+            style={{ zIndex: 100 }}
+          />
+        </Toolbar>
+      </>
     )
-  }, [environment, localOverrides, bundleName])
+  }, [environment, changedKeys, bundleName, environment, projectName])
 
   const settingsListHeader = useMemo(() => {
     return (
@@ -490,7 +448,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         />
       </Toolbar>
     )
-  }, [showHelp, currentSelection, localOverrides])
+  }, [showHelp, currentSelection, changedKeys])
 
   const commitToolbar = useMemo(
     () => (
@@ -521,7 +479,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   return (
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
       <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
-        <Section style={{ maxWidth: 400 }}>
+        <Section style={{ maxWidth: 400, minWidth: 400 }}>
           {addonListHeader}
           <AddonList
             selectedAddons={selectedAddons}
@@ -529,7 +487,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             environment={environment}
             onAddonChanged={onAddonChanged}
             setBundleName={setBundleName}
-            changedAddonKeys={Object.keys(localOverrides || {})}
+            changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
             siteSettings={showSites}
           />
@@ -571,10 +529,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                             onSettingsLoad(addon.name, addon.version, addon.variant, siteId, data)
                           }
                           onSetChangedKeys={(data) =>
-                            onSetChangedKeys(addon.name, addon.version, addon.variant, siteId, data)
+                            updateChangedKeys(
+                              addon.name,
+                              addon.version,
+                              addon.variant,
+                              siteId,
+                              data,
+                            )
                           }
                           localData={localData[key]}
-                          changedKeys={localOverrides[key]}
+                          changedKeys={changedKeys[key]}
                           currentSelection={currentSelection}
                           onSelect={setCurrentSelection}
                           projectName={projectName}
@@ -602,17 +566,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable changes={localOverrides} onRevert={onRevertChange} />
+          <SettingsChangesTable changes={changedKeys} onRevert={onRevertChange} />
+          {/*}
+          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
+            <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>
+          </ScrollPanel>
+          */}
         </Section>
       </SplitterPanel>
     </Splitter>
   )
-
-  /*
-          <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
-            <pre>{JSON.stringify(localData, null, 2)}</pre>
-          </ScrollPanel>
-  */
 }
 
 export default AddonSettings

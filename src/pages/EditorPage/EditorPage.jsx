@@ -889,6 +889,7 @@ const EditorPage = () => {
 
     // set name to type
     initData.name = initData.type.toLowerCase()
+    initData.label = initData.type
 
     setNewEntityData(initData)
   }
@@ -1261,7 +1262,7 @@ const EditorPage = () => {
             folders={foldersObject}
           />
         )}
-        style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
+        style={{ width: columnsWidths['name'] || 230, height: 33 }}
         sortable
       />,
       <Column
@@ -1269,14 +1270,14 @@ const EditorPage = () => {
         key="type"
         header="Type"
         body={(rowData) => formatType(rowData.data, changes)}
-        style={{ width: columnsWidths['type'], maxWidth: 200 }}
+        style={{ width: columnsWidths['type'] || 140 }}
       />,
       ...columns.map((col) => (
         <Column
           key={col.name}
           header={col.title}
           field={col.name}
-          style={{ width: columnsWidths[col.name] }}
+          style={{ width: columnsWidths[col.name] || 140 }}
           body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
         />
       )),
@@ -1365,7 +1366,7 @@ const EditorPage = () => {
   // Render the TreeTable
 
   return (
-    <main>
+    <main className="editor-page">
       <NewEntity
         type={newEntity}
         data={newEntityData}

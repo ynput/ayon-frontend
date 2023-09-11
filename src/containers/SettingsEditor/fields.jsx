@@ -7,7 +7,6 @@ import styled from 'styled-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
-import arrayEquals from '/src/helpers/arrayEquals'
 import { Badge, BadgeWrapper } from '/src/components/Badge'
 
 const FormArrayField = styled.div`
@@ -175,9 +174,6 @@ function ObjectFieldTemplate(props) {
 
   if (['compact', 'root', 'expanded'].includes(props.schema.layout)) return fields
 
-  // In case of "pseudo-dicts" (array of objects with a "name" attribute)
-  // use the "name" attributeas the title
-
   const contextMenuItems = [
     {
       label: 'Copy',
@@ -198,6 +194,8 @@ function ObjectFieldTemplate(props) {
   // Title + handle root object
 
   let title = props.title
+  // In case of "pseudo-dicts" (array of objects with a "name" attribute)
+  // use the "name" attributeas the title
   if ('name' in props.schema.properties) {
     let label = null
     if ('label' in props.schema.properties) label = props.formData.label
@@ -385,9 +383,12 @@ function FieldTemplate(props) {
 
   // do not show error for color widgets (they are declared as strings, but
   // contains arrays. The error is not relevant for the user)
-  let className = `form-inline-field ${
-    props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
-  }`
+  //
+  // TODO: ignoring errors for now. Too many false positives
+  let className = `form-inline-field`
+  // let className = `form-inline-field ${
+  //   props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
+  // }`
 
   const inlineHelp = useMemo(() => {
     return (
@@ -407,8 +408,13 @@ function FieldTemplate(props) {
           <div className={`form-inline-field-label ${overrideLevel}`}>
             <span
               onClick={() => {
-                if (props.formContext.onSetBreadcrumbs)
-                  props.formContext.onSetBreadcrumbs(override.path)
+                if (props.formContext.onSetBreadcrumbs) {
+                  if (override?.path) props.formContext.onSetBreadcrumbs(override.path)
+                  else {
+                    toast.error("Unable to find field path. This shoudn't happen")
+                    console.log(props.formContext)
+                  }
+                }
               }}
               style={labelStyle}
             >
@@ -443,10 +449,7 @@ const ArrayItemTemplate = (props) => {
     const parentId = props.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
     const formContext = props.children._owner.memoizedProps.formContext
     const path = formContext.overrides[parentId].path
-    const newChangedKeys = formContext.changedKeys
-      .filter((key) => !arrayEquals(key, path))
-      .concat([path])
-    formContext.onSetChangedKeys(newChangedKeys)
+    formContext.onSetChangedKeys([{ path, isChanged: true }])
   }
 
   const onRemoveItem = () => {
@@ -486,6 +489,31 @@ const ArrayItemTemplate = (props) => {
 const ArrayFieldTemplate = (props) => {
   /* Complete array including the add button */
 
+  const onAddItem = () => {
+    const id = props.idSchema.$id
+    const formContext = props.formContext
+    const path = formContext.overrides[id]?.path
+
+    formContext.onSetChangedKeys([{ path, isChanged: true }])
+    props.onAddClick()
+  }
+  return (
+    <FormArrayField>
+      {props.items.map((element) => (
+        <ArrayItemTemplate key={element.name} {...element} />
+      ))}
+
+      {props.canAdd && (
+        <ArrayItemControls>
+          <Button onClick={onAddItem} icon="add" />
+        </ArrayItemControls>
+      )}
+    </FormArrayField>
+  )
+
+  /*
+   * THIS IS THE ORIGINAL CODE,
+   * apparently we cannot memoize this
   const res = useMemo(
     () => (
       <FormArrayField>
@@ -495,7 +523,7 @@ const ArrayFieldTemplate = (props) => {
 
         {props.canAdd && (
           <ArrayItemControls>
-            <Button onClick={props.onAddClick} icon="add" />
+            <Button onClick={onAddItem} icon="add" />
           </ArrayItemControls>
         )}
       </FormArrayField>
@@ -504,6 +532,7 @@ const ArrayFieldTemplate = (props) => {
   )
 
   return res
+  */
 }
 
 export { ObjectFieldTemplate, FieldTemplate, ArrayFieldTemplate }
