@@ -143,7 +143,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
         changeKey: '_assignees',
         label: 'Assignees',
         field: 'assignees',
-        disabled: types.includes('folder'),
+        disabled: !types.includes('task'),
         placeholder: `Folders Can Not Have Assignees...`,
         ...assigneesValues,
       },
