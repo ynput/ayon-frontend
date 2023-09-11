@@ -15,12 +15,17 @@ const ContentStyled = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  form {
+    input:first-child {
+      margin-right: 8px;
+    }
+  }
 `
 
 const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
   const [entityType, setEntityType] = useState(null)
   //   build out form state
-  const initData = { name: '', type: '' }
+  const initData = { label: '', name: '', type: '' }
   const [entityData, setEntityData] = useState(initData)
 
   //   format title
@@ -38,7 +43,7 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
   const typeOptions = type === 'folder' ? folders : tasks
 
   //   refs
-  const nameRef = useRef(null)
+  const labelRef = useRef(null)
 
   // set entity type
   useEffect(() => {
@@ -58,16 +63,21 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       if (value && id === 'type' && entityData.name === entityData.type.toLowerCase()) {
         // if name is same as type, update name
         newState.name = value.toLowerCase()
+        newState.label = value
       }
+    }
+
+    if (id === 'label') {
+      newState.name = checkName(value)
     }
     setEntityData(newState)
   }
 
   const handleShow = () => {
     // focus name input
-    nameRef.current?.focus()
+    labelRef.current?.focus()
     // select name
-    nameRef.current?.select()
+    labelRef.current?.select()
   }
 
   const handleSubmit = (e) => {
@@ -79,7 +89,8 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
     const newData = {
       ...entityData,
       [`${type}Type`]: entityData.type,
-      name: checkName(entityData.name),
+      name: entityData.name,
+      label: entityData.label,
     }
 
     console.log(newData)
@@ -114,9 +125,9 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       <ContentStyled>
         <form onSubmit={handleSubmit}>
           <InputText
-            value={entityData.name}
-            onChange={(e) => handleChange(e.target.value, 'name')}
-            ref={nameRef}
+            value={entityData.label}
+            onChange={(e) => handleChange(e.target.value, 'label')}
+            ref={labelRef}
           />
         </form>
         <TypeEditor

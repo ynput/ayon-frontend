@@ -145,6 +145,16 @@ input:-webkit-autofill:focus {
     }
   }
 }
+
+// Label on name field in editor
+.editor-page {
+  .p-treetable td *.material-symbols-outlined,
+  .p-datatable td *.material-symbols-outlined {
+    &.label {
+      font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 0, 'opsz' 18;
+    }
+  }
+}
 .form-error-text {
   color: var(--color-hl-error);
   font-style: italic;

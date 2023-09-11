@@ -889,6 +889,7 @@ const EditorPage = () => {
 
     // set name to type
     initData.name = initData.type.toLowerCase()
+    initData.label = initData.type
 
     setNewEntityData(initData)
   }
@@ -1365,7 +1366,7 @@ const EditorPage = () => {
   // Render the TreeTable
 
   return (
-    <main>
+    <main className="editor-page">
       <NewEntity
         type={newEntity}
         data={newEntityData}
