@@ -69,16 +69,18 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
           <FeedItem key={event.id} {...event} users={activeUsers} />
         ))}
       </Styled.FeedContent>
-      <CommentInput
-        initValue={null}
-        onSubmit={handleCommentSubmit}
-        isOpen={isCommentInputOpen}
-        setIsOpen={setIsCommentInputOpen}
-        activeUsers={activeUsers}
-        selectedTasksProjects={selectedTasksProjects}
-        versions={tasksVersions}
-        userName={name}
-      />
+      {!!tasks.length && (
+        <CommentInput
+          initValue={null}
+          onSubmit={handleCommentSubmit}
+          isOpen={isCommentInputOpen}
+          setIsOpen={setIsCommentInputOpen}
+          activeUsers={activeUsers}
+          selectedTasksProjects={selectedTasksProjects}
+          versions={tasksVersions}
+          userName={name}
+        />
+      )}
     </Styled.FeedContainer>
   )
 }
