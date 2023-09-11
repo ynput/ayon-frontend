@@ -51,8 +51,8 @@ const StepWrapper = ({ children }) => {
         setIsConnecting,
         isConnecting,
       })
-    }
-  })
+    } else return null
+  }).filter((child) => child !== null)
 
   const showLoading = isLoadingConnect || isConnecting
 
