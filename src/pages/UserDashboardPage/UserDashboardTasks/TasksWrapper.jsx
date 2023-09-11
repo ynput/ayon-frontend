@@ -11,16 +11,18 @@ const ColumnsWrapper = ({ fieldsColumns, tasksColumns, groupByValue, isLoading }
 
   // this scrolls the section based on the direction
   useEffect(() => {
-    if (!scrollDirection) return
-
     const el = sectionRef.current
     if (!el) return
 
     const speed = 10
 
-    const intervalId = setInterval(() => {
-      el.scrollLeft += speed * scrollDirection
-    }, 5)
+    let intervalId = null
+
+    if (scrollDirection) {
+      intervalId = setInterval(() => {
+        el.scrollLeft += speed * scrollDirection
+      }, 5)
+    }
 
     return () => {
       clearInterval(intervalId)
@@ -31,9 +33,15 @@ const ColumnsWrapper = ({ fieldsColumns, tasksColumns, groupByValue, isLoading }
   useEffect(() => {
     const handleMouseMove = (event) => {
       const el = sectionRef.current
-      if (!active || !el) return
+      if (!active || !el) {
+        setScrollDirection(null)
+        return
+      }
       const isOverflowing = el.scrollWidth > el.clientWidth
-      if (!isOverflowing) return
+      if (!isOverflowing) {
+        setScrollDirection(null)
+        return
+      }
 
       // get bounding box of the section
       const { left, right } = el.getBoundingClientRect()
@@ -42,10 +50,16 @@ const ColumnsWrapper = ({ fieldsColumns, tasksColumns, groupByValue, isLoading }
       const threshold = 100
 
       const newScrollDirection = xPos < left + threshold ? -1 : xPos > right - threshold ? 1 : null
-      if (newScrollDirection !== scrollDirection) {
+
+      if (newScrollDirection === null) {
+        // console.log('setting null')
+        setScrollDirection(null)
+      } else if (newScrollDirection !== scrollDirection) {
+        // console.log('setting new', newScrollDirection)
         setScrollDirection(newScrollDirection)
       }
     }
+
     if (active) {
       window.addEventListener('mousemove', handleMouseMove)
     } else {
