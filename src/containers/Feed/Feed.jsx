@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import comments from './commentsData'
+import commentsData from './commentsData'
 import FeedItem from '/src/components/Feed/FeedItem'
 import { compareAsc } from 'date-fns'
 import CommentInput from '/src/components/CommentInput/CommentInput'
@@ -15,14 +15,31 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
   // for testing only!!!
   const [textNewComments, setTextNewComments] = useState([])
 
+  const isAllComments = !tasks.length
+
   const entityIds = useMemo(() => tasks.map((task) => task.id), [tasks])
-  const events = [...comments, ...textNewComments].filter((comment) =>
-    entityIds.includes(comment.entityId),
-  )
+
+  // GET COMMENTS (FOR NOW DEMO DATA)
+  const events = []
+
+  // add comments to events list
+  if (!isAllComments) {
+    const comments = [...commentsData, ...textNewComments].filter((comment) =>
+      entityIds.includes(comment.entityId),
+    )
+    events.push(...comments)
+  } else {
+    // add all comments but with reference to the task, this gives every comment "on task" tag
+    const allCommentsAsReferences = commentsData.map((comment) => ({
+      ...comment,
+      reference: comment,
+    }))
+    events.push(...allCommentsAsReferences)
+  }
 
   const tasksVersions = tasks.flatMap((task) => task.allVersions) || []
 
-  const references = [...comments]
+  const references = [...commentsData]
     .filter(
       (comment) =>
         comment?.references.some((ref) => entityIds.includes(ref.refId)) &&

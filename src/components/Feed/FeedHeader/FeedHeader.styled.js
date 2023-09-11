@@ -5,6 +5,7 @@ export const Header = styled.header`
   align-items: center;
   gap: 0;
   position: relative;
+  flex-wrap: wrap;
 
   h5 {
     margin: 0 4px;
