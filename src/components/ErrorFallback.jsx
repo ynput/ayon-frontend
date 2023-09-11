@@ -16,8 +16,19 @@ const StyledPanel = styled(Panel)`
 `
 
 const ErrorFallback = ({ error }) => {
-  if (error?.toString()?.includes('TypeError: Failed to fetch dynamically imported module:'))
-    window.location.reload()
+  if (error?.toString()?.includes('TypeError: Failed to fetch dynamically imported module:')) {
+    return (
+      <StyledPanel>
+        <h1>AYON has been updated. Please reload for changes.</h1>
+        <Button
+          label={'Reload page'}
+          icon="sync"
+          variant="filled"
+          onClick={() => window.location.reload()}
+        />
+      </StyledPanel>
+    )
+  }
 
   return (
     <StyledPanel>
