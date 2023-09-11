@@ -46,7 +46,7 @@ const FeedComment = ({ comment, users }) => {
   }
 
   const referenceSource = comment?.reference && {
-    label: comment.entityName,
+    label: comment.entityFolder,
     refId: comment.entityId,
     refType: comment.entityType,
   }

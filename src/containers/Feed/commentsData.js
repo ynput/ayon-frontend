@@ -1,13 +1,21 @@
 import { v4 as uuid4 } from 'uuid'
 
 const tasks = [
-  { id: '73a047243da311eeac5d0242ac120004', name: 'compositing' },
-  { id: '739ed29a3da311eeac5d0242ac120004', name: 'animation' },
-  { id: '739ff6ca3da311eeac5d0242ac120004', name: 'matchmove' },
-  { id: '73a2a7763da311eeac5d0242ac120004', name: 'lighting' },
-  { id: '74b0c72e3da311eeac5d0242ac120004', name: 'texturing' },
-  { id: '739af4b83da311eeac5d0242ac120004', name: 'modeling' },
-  { id: '75993a9a3da311eeac5d0242ac120004', name: 'rigging' },
+  {
+    id: '739af4b83da311eeac5d0242ac120004',
+    name: 'modeling',
+    folder: '00_kloecksiouys_mccrietsoiwn',
+  },
+  { id: '74b042ae3da311eeac5d0242ac120004', name: 'matchmove', folder: 'sh040' },
+  { id: '7463af163da311eeac5d0242ac120004', name: 'lighting', folder: 'sh030' },
+  { id: '7463016a3da311eeac5d0242ac120004', name: 'animation', folder: 'sh030' },
+  {
+    id: '73a047243da311eeac5d0242ac120004',
+    name: 'texture',
+    folder: '00_kloecksiouys_mccrietsoiwn',
+  },
+  { id: '746356883da311eeac5d0242ac120004', name: 'fx', folder: 'sh030' },
+  { id: '74ff1a1e3da311eeac5d0242ac120004', name: 'fx', folder: 'sh050' },
 ]
 
 const versions = [
@@ -112,6 +120,7 @@ const getTaskRef = () => {
     id: uuid4(),
     refId: task.id,
     label: task.name,
+    folder: task.folder,
     refType: 'task',
   }
 }
@@ -152,12 +161,15 @@ const createRef = (type) => {
 }
 
 const getRandomComment = (body = '') => {
+  const task = getRandomTaskId()
+
   const comment = {
     id: uuid4(),
     author: getRandomUser().name,
     createdAt: getRandomDateInLastWeek(),
-    entityId: getRandomTaskId().id,
-    entityName: getRandomTaskId().name,
+    entityId: task.id,
+    entityName: task.name,
+    entityFolder: task.folder,
     entityType: 'task',
     eventType: 'comment',
     attachments: getRandomAttachments(),
