@@ -10,10 +10,12 @@ const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
   const pairing = useSelector((state) => state.context.pairing)
   const projectName = useSelector((state) => state.project.name)
 
-  const { data, isLoading, isError, error } = useGetWorkfileListQuery(
-    { projectName, taskIds },
-    { skip: !taskIds.length },
-  )
+  const {
+    data = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetWorkfileListQuery({ projectName, taskIds }, { skip: !taskIds.length })
 
   if (isError) {
     console.error(error)
@@ -51,7 +53,7 @@ const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
           selectionMode="single"
           responsive="true"
           dataKey="id"
-          value={data}
+          value={taskIds.length ? data : []}
           selection={selectedWorkfile}
           onSelectionChange={(e) => setSelectedWorkfile(e.value)}
         >
