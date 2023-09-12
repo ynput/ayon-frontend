@@ -118,7 +118,7 @@ const App = () => {
           <OnBoardingPage
             noAdminUser={noAdminUser}
             onFinish={() => setIsOnboarding(false)}
-            isOnboarding={isOnboarding}
+            isOnboarding={isOnboarding || noAdminUser}
           />
         </QueryParamProvider>
       </BrowserRouter>

@@ -9,7 +9,7 @@ const ynputConnect = ayonApi.injectEndpoints({
       }),
       providesTags: ['connections'],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
     }),
     connectYnput: build.mutation({
       query: ({ key }) => ({
@@ -18,7 +18,7 @@ const ynputConnect = ayonApi.injectEndpoints({
         body: { key },
       }),
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       invalidatesTags: ['connections'],
     }),
     discountYnput: build.mutation({
@@ -27,7 +27,7 @@ const ynputConnect = ayonApi.injectEndpoints({
         method: 'DELETE',
       }),
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       invalidatesTags: ['connections'],
     }),
   }),
