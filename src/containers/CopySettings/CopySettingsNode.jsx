@@ -124,6 +124,7 @@ const CopySettingsNode = ({
         path: sourceOverride.path,
         sourceValue,
         targetValue,
+        enabled: true,
       }
       changes.push(item)
     }
@@ -140,6 +141,7 @@ const CopySettingsNode = ({
       targetSettings,
       changes,
       available: changes.length > 0,
+      enabled: true,
     })
 
     setLoading(false)
@@ -149,11 +151,28 @@ const CopySettingsNode = ({
     loadNodeData()
   }, [sourceVersion, sourceVariant, sourceProjectName])
 
-  const header = (
-    <NodePanelHeader className={expanded ? 'expanded' : undefined}>
+  /*
       <NodePanelToggle>
         <Icon icon={toggleIcon} onClick={onToggle} className="panel-toggler" />
       </NodePanelToggle>
+  */
+
+  useEffect(() => {
+    console.log('nodeData', nodeData)
+  }, [nodeData])
+
+  const header = (
+    <NodePanelHeader className={expanded ? 'expanded' : undefined}>
+      {nodeData?.available ? (
+        <InputSwitch
+          checked={nodeData.enabled}
+          onChange={(e) => {
+            setNodeData({ ...nodeData, enabled: e.target.checked })
+          }}
+        />
+      ) : (
+        'N/A'
+      )}
 
       <AddonDropdown
         addonName={addonName}
@@ -199,11 +218,24 @@ const CopySettingsNode = ({
 
   const body = (
     <NodePanelBody>
-      {nodeData?.changes?.length ? (
+      {nodeData?.changes?.length && nodeData?.enabled ? (
         <div className="changes">
           {nodeData.changes.map((change) => (
             <ChangeRow key={change.key} className="change">
-              <InputSwitch />
+              <InputSwitch
+                checked={change.enabled}
+                onChange={(e) => {
+                  setNodeData({
+                    ...nodeData,
+                    changes: nodeData.changes.map((c) => {
+                      if (c.key === change.key) {
+                        c.enabled = e.target.checked
+                      }
+                      return c
+                    }),
+                  })
+                }}
+              />
               <FormattedPath value={change.path} />
               <Spacer />
               <FormattedValue value={change.sourceValue} />
