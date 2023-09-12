@@ -1,73 +1,39 @@
 /* eslint-disable */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-import styled from 'styled-components'
+import { Icon, Spacer, InputSwitch } from '@ynput/ayon-react-components'
 
-import { Icon } from '@ynput/ayon-react-components'
+import {
+  useLazyGetAddonSettingsQuery,
+  useLazyGetAddonSettingsOverridesQuery,
+} from '/src/services/addonSettings'
+// TODO: move this to a common location
+import { getValueByPath, setValueByPath } from '../AddonSettings/utils'
+import { cloneDeep, isEqual } from 'lodash'
 
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 import ProjectDropdown from '/src/containers/CopySettings/ProjectDropdown'
 import AddonDropdown from '/src/containers/CopySettings/AddonDropdown'
 
-const NodePanelWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  flexgrow: 1;
-  border-radius: 4px;
-`
+import {
+  NodePanelWrapper,
+  NodePanelHeader,
+  NodePanelToggle,
+  NodePanelBody,
+  NodePanelDirectionSelector,
+  ChangeRow,
+} from '/src/containers/CopySettings/CopySettingsNode.styled'
 
-const NodePanelHeader = styled.div`
-  padding: 4px 8px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  background-color: var(--color-grey-02);
-  min-height: 40px;
-  max-height: 40px;
+const FormattedPath = ({ value }) => {
+  return <div className="path">{value.join(' / ')}</div>
+}
 
-  .dropdown {
-    min-width: 200px;
-    max-width: 200px;
-  }
-
-  border-radius: 4px;
-
-  &.expanded {
-    border-radius: 4px 4px 0 0;
-`
-
-const NodePanelToggle = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-  border: 1px solid #ccc;
-`
-
-const NodePanelBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  border-radius: 0 0 4px 4px;
-  border: 1px solid var(--color-grey-02);
-  min-height: 100px;
-`
-
-const NodePanelDirectionSelector = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-grow: 1;
-
-  .icon {
-    font-size: 4rem;
-    border-radius: var(--border-radius-m);
-    user-select: none;
-  }
-`
+const FormattedValue = ({ value }) => {
+  let strval
+  if (typeof value === 'object') strval = '[[COMPLEX]]'
+  else strval = `"${value}"`
+  return <div className="value">{strval}</div>
+}
 
 const CopySettingsNode = ({
   addonName,
@@ -81,11 +47,107 @@ const CopySettingsNode = ({
   const [sourceVersion, setSourceVersion] = useState(targetVersion)
   const [sourceVariant, setSourceVariant] = useState(targetVariant)
   const [sourceProjectName, setSourceProjectName] = useState(targetProjectName)
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [enabled, setEnabled] = useState(true)
 
   const toggleIcon = expanded ? 'expand_more' : 'chevron_right'
 
   const onToggle = () => setExpanded(!expanded)
+
+  const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
+  const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
+
+  const loadNodeData = async () => {
+    setLoading(true)
+
+    if (
+      sourceVersion === targetVersion &&
+      sourceVariant === targetVariant &&
+      sourceProjectName === targetProjectName
+    ) {
+      setNodeData({ message: 'cannot copy from itself' })
+      setLoading(false)
+      return
+    }
+
+    const changes = []
+    const sourceOverrides = await triggerGetOverrides({
+      addonName,
+      addonVersion: sourceVersion,
+      variant: sourceVariant,
+      projectName: sourceProjectName,
+    })
+
+    const sourceSettings = await triggerGetSettings({
+      addonName,
+      addonVersion: sourceVersion,
+      variant: sourceVariant,
+      projectName: sourceProjectName,
+    })
+
+    // TODO: we may use this to display whether there
+    // is an override or we are replacing with a default value
+
+    // const targetOverrides = await triggerGetOverrides({
+    //   addonName,
+    //   addonVersion: targetBundleData.addons[addonName],
+    //   variant: targetVariant,
+    // })
+
+    const targetSettings = await triggerGetSettings({
+      addonName,
+      addonVersion: targetVersion,
+      variant: targetVariant,
+      projectName: targetProjectName,
+    })
+
+    for (const id in sourceOverrides.data) {
+      const sourceOverride = sourceOverrides.data[id]
+      //const targetOverride = targetOverrides.data[id]
+
+      // Remove noise
+      if (sourceOverride.inGroup || sourceOverride.type === 'branch') continue
+
+      // do not attempt to copy overrides from default or studio
+      // to project level
+      if (targetProjectName && ['default', 'studio'].includes(sourceOverride.level)) continue
+
+      const sourceValue = getValueByPath(sourceSettings.data, sourceOverride.path)
+      const targetValue = getValueByPath(targetSettings.data, sourceOverride.path)
+
+      // do not attempt to copy if the values are the same
+      if (isEqual(sourceValue, targetValue)) continue
+
+      const item = {
+        key: id,
+        path: sourceOverride.path,
+        sourceValue,
+        targetValue,
+      }
+      changes.push(item)
+    }
+
+    if (!changes.length) {
+      setNodeData({ message: 'no changes to copy' })
+    }
+
+    setNodeData({
+      addonName: addonName,
+      addonVersion: sourceVersion,
+      targetAddonVersion: targetVersion,
+      sourceSettings,
+      targetSettings,
+      changes,
+      available: changes.length > 0,
+    })
+
+    setLoading(false)
+  } //loadNodeData
+
+  useEffect(() => {
+    loadNodeData()
+  }, [sourceVersion, sourceVariant, sourceProjectName])
 
   const header = (
     <NodePanelHeader className={expanded ? 'expanded' : undefined}>
@@ -104,7 +166,11 @@ const CopySettingsNode = ({
       <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
 
       <NodePanelDirectionSelector>
-        <Icon icon="trending_flat" />
+        {nodeData?.available ? (
+          <Icon icon="trending_flat" />
+        ) : (
+          <>{nodeData?.message || 'Nothing to copy'}</>
+        )}
       </NodePanelDirectionSelector>
 
       <AddonDropdown
@@ -120,7 +186,37 @@ const CopySettingsNode = ({
     </NodePanelHeader>
   )
 
-  const body = <NodePanelBody>something here</NodePanelBody>
+  /*
+  if ((!nodeData) || loading) {
+    return (
+      <NodePanelWrapper className={expanded ? 'expanded' : undefined}>
+        {header}
+        {expanded && <NodePanelBody>loading...</NodePanelBody>}
+      </NodePanelWrapper>
+    )
+  }
+  */
+
+  const body = (
+    <NodePanelBody>
+      {nodeData?.changes?.length ? (
+        <div className="changes">
+          {nodeData.changes.map((change) => (
+            <ChangeRow key={change.key} className="change">
+              <InputSwitch />
+              <FormattedPath value={change.path} />
+              <Spacer />
+              <FormattedValue value={change.sourceValue} />
+              <Icon icon="trending_flat" />
+              <FormattedValue value={change.targetValue} />
+            </ChangeRow>
+          ))}
+        </div>
+      ) : (
+        ''
+      )}
+    </NodePanelBody>
+  )
 
   return (
     <NodePanelWrapper className={expanded ? 'expanded' : undefined}>
