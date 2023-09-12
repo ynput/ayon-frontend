@@ -7,6 +7,8 @@ import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { onProjectSelected } from '/src/features/dashboard'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
+import { useGetAllProjectsQuery } from '/src/services/project/getProject'
+import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 
 const UserDashboardPage = () => {
   let { module } = useParams()
@@ -30,6 +32,13 @@ const UserDashboardPage = () => {
     { projects: selectedProjects },
     { skip: !selectedProjects?.length },
   )
+
+  // get projects list
+  const { data: projects = [], isLoading: isLoadingProjects } = useGetAllProjectsQuery()
+
+  if (isLoadingProjects) return null
+
+  if (!projects.length) return <UserDashboardNoProjects />
 
   return (
     <>
