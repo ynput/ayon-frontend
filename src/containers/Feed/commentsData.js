@@ -1,47 +1,10 @@
 import { v4 as uuid4 } from 'uuid'
 
-const tasks = [
-  {
-    id: '739af4b83da311eeac5d0242ac120004',
-    name: 'modeling',
-    folder: '00_kloecksiouys_mccrietsoiwn',
-  },
-  { id: '74b042ae3da311eeac5d0242ac120004', name: 'matchmove', folder: 'sh040' },
-  { id: '7463af163da311eeac5d0242ac120004', name: 'lighting', folder: 'sh030' },
-  { id: '7463016a3da311eeac5d0242ac120004', name: 'animation', folder: 'sh030' },
-  {
-    id: '73a047243da311eeac5d0242ac120004',
-    name: 'texture',
-    folder: '00_kloecksiouys_mccrietsoiwn',
-  },
-  { id: '746356883da311eeac5d0242ac120004', name: 'fx', folder: 'sh030' },
-  { id: '74ff1a1e3da311eeac5d0242ac120004', name: 'fx', folder: 'sh050' },
-]
-
 const versions = [
   { id: '73c9635c3da311eeac5d0242ac120004', name: 'renderCompositingMain' },
   { id: '74c1ae043da311eeac5d0242ac120004', name: 'renderAnimationLookDev' },
   { id: '73c080f23da311eeac5d0242ac120004', name: 'renderMatchmove' },
   { id: '743f25f63da311eeac5d0242ac120004', name: 'renderLighting' },
-]
-
-const users = [
-  {
-    name: 'admin',
-    fullName: 'Admin',
-  },
-  {
-    name: 'demouser10',
-    fullName: 'Demo 10',
-  },
-  {
-    name: 'demouser20',
-    fullName: 'Demo 20',
-  },
-  {
-    name: 'demouser30',
-    fullName: 'Demo 30',
-  },
 ]
 
 const getRandomImage = () => {
@@ -104,121 +67,6 @@ const getRandomDateInLastWeek = () => {
   const randomTime = Math.random() * timeDiff
   const randomDate = new Date(lastWeek.getTime() + randomTime)
   return randomDate
-}
-
-const getRandomTaskId = () => {
-  const randomIndex = Math.floor(Math.random() * tasks.length)
-  return tasks[randomIndex]
-}
-
-const getRandomVersionId = () => {
-  const randomIndex = Math.floor(Math.random() * versions.length)
-  return versions[randomIndex]
-}
-
-const getRandomUser = () => {
-  const randomIndex = Math.floor(Math.random() * users.length)
-  return users[randomIndex]
-}
-
-const getTaskRef = () => {
-  const task = getRandomTaskId()
-
-  return {
-    id: uuid4(),
-    refId: task.id,
-    label: task.name,
-    folder: task.folder,
-    refType: 'task',
-  }
-}
-
-const getVersionRef = () => {
-  const version = getRandomVersionId()
-
-  return {
-    id: uuid4(),
-    refId: version.id,
-    label: version.name,
-    refType: 'version',
-  }
-}
-
-const getUserRef = () => {
-  const user = getRandomUser()
-  return {
-    id: uuid4(),
-    refId: user.name,
-    refType: 'user',
-    label: user.fullName,
-  }
-}
-
-const createRef = (type) => {
-  switch (type) {
-    case '@user':
-      return getUserRef()
-    case '@version':
-      return getVersionRef()
-    case '@task':
-      return getTaskRef()
-
-    default:
-      return getTaskRef()
-  }
-}
-
-const getRandomComment = (body = '') => {
-  const task = getRandomTaskId()
-
-  const comment = {
-    id: uuid4(),
-    author: getRandomUser().name,
-    createdAt: getRandomDateInLastWeek(),
-    entityId: task.id,
-    entityName: task.name,
-    entityFolder: task.folder,
-    entityType: 'task',
-    eventType: 'comment',
-    attachments: getRandomAttachments(),
-  }
-
-  const references = []
-
-  // based on the comments references, we can add a body
-  // @user @@version @@@task
-  // inside of the body string @[ref_label] replaced with @[ref_label](refId) from the references array
-
-  //   create references based on the body
-  const bodyRefs = body.match(/@\w+/g)
-  if (bodyRefs) {
-    bodyRefs.forEach((ref) => {
-      const reference = createRef(ref)
-
-      references.push(reference)
-    })
-  }
-
-  const refTypes = {
-    user: '@',
-    version: '@@',
-    task: '@@@',
-  }
-
-  //   update the body with the references
-  let updatedBody = body
-  references.forEach((ref) => {
-    updatedBody = updatedBody.replace(
-      refTypes[ref.refType] + ref.refType,
-      `[${refTypes[ref.refType]}${ref.label}](${ref.id})`,
-    )
-  })
-
-  return {
-    ...comment,
-    body: updatedBody,
-    references,
-  }
 }
 
 const commentBases = [
@@ -300,6 +148,125 @@ const commentBases = [
   },
 ]
 
-const comments = commentBases.map(({ body }) => getRandomComment(body))
+const getCommentsForTasks = (tasks = [], users = []) => {
+  const getRandomTask = () => {
+    const randomIndex = Math.floor(Math.random() * tasks.length)
+    return tasks[randomIndex] || {}
+  }
 
-export default comments
+  const getRandomVersion = () => {
+    const randomIndex = Math.floor(Math.random() * versions.length)
+    return versions[randomIndex] || {}
+  }
+
+  const getRandomUser = () => {
+    const randomIndex = Math.floor(Math.random() * users.length)
+    return users[randomIndex] || {}
+  }
+
+  const getTaskRef = () => {
+    const task = getRandomTask()
+
+    return {
+      id: uuid4(),
+      refId: task.id,
+      label: task.name,
+      folder: task.folderName,
+      refType: 'task',
+    }
+  }
+
+  const getVersionRef = () => {
+    const version = getRandomVersion()
+
+    return {
+      id: uuid4(),
+      refId: version.id,
+      label: version.name,
+      refType: 'version',
+    }
+  }
+
+  const getUserRef = () => {
+    const user = getRandomUser()
+    return {
+      id: uuid4(),
+      refId: user.name,
+      refType: 'user',
+      label: user.fullName,
+    }
+  }
+
+  const createRef = (type) => {
+    switch (type) {
+      case '@user':
+        return getUserRef()
+      case '@version':
+        return getVersionRef()
+      case '@task':
+        return getTaskRef()
+
+      default:
+        return getTaskRef()
+    }
+  }
+
+  const getRandomComment = (body = '') => {
+    const task = getRandomTask()
+
+    const comment = {
+      id: uuid4(),
+      author: getRandomUser().name,
+      createdAt: getRandomDateInLastWeek(),
+      entityId: task.id,
+      entityName: task.name,
+      entityFolder: task.folderName,
+      entityType: 'task',
+      eventType: 'comment',
+      attachments: getRandomAttachments(),
+    }
+
+    const references = []
+
+    // based on the comments references, we can add a body
+    // @user @@version @@@task
+    // inside of the body string @[ref_label] replaced with @[ref_label](refId) from the references array
+
+    //   create references based on the body
+    const bodyRefs = body.match(/@\w+/g)
+    if (bodyRefs) {
+      bodyRefs.forEach((ref) => {
+        const reference = createRef(ref)
+
+        references.push(reference)
+      })
+    }
+
+    const refTypes = {
+      user: '@',
+      version: '@@',
+      task: '@@@',
+    }
+
+    //   update the body with the references
+    let updatedBody = body
+    references.forEach((ref) => {
+      updatedBody = updatedBody.replace(
+        refTypes[ref.refType] + ref.refType,
+        `[${refTypes[ref.refType]}${ref.label}](${ref.id})`,
+      )
+    })
+
+    return {
+      ...comment,
+      body: updatedBody,
+      references,
+    }
+  }
+
+  const comments = commentBases.map(({ body }) => getRandomComment(body))
+
+  return comments
+}
+
+export default getCommentsForTasks

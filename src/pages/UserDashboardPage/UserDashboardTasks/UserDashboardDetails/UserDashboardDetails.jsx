@@ -58,6 +58,8 @@ const UserDashboardDetails = ({ tasks = [] }) => {
           tasks={selectedTasks}
           activeUsers={activeProjectUsers}
           selectedTasksProjects={selectedTasksProjects}
+          allTasks={tasks}
+          allUsers={projectUsers}
         />
       )}
     </Panel>
