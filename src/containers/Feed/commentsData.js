@@ -27,12 +27,20 @@ const versions = [
 
 const users = [
   {
-    name: 'Innders',
-    fullName: 'Luke Inderwick',
+    name: 'admin',
+    fullName: 'Admin',
   },
   {
-    name: 'demouser11',
-    fullName: 'Demo 11',
+    name: 'demouser10',
+    fullName: 'Demo 10',
+  },
+  {
+    name: 'demouser20',
+    fullName: 'Demo 20',
+  },
+  {
+    name: 'demouser30',
+    fullName: 'Demo 30',
   },
 ]
 
