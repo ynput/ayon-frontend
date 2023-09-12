@@ -31,11 +31,15 @@ const YnputConnector = ({
 }) => {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(initIsOpen)
-  const [queryKey, setQueryKey] = useQueryParam('key', withDefault(StringParam, ''))
-  const { data: connectData, isLoading, isError } = useGetYnputConnectionsQuery()
   const currentUser = useSelector((state) => state.user)
+  const [queryKey, setQueryKey] = useQueryParam('key', withDefault(StringParam, ''))
+  const {
+    data: connectData,
+    isLoading,
+    isError,
+  } = useGetYnputConnectionsQuery({}, { skip: !currentUser.name })
 
-  const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation({ skip: !currentUser })
+  const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation()
   const [disconnect] = useDiscountYnputMutation()
 
   useEffect(() => {
