@@ -82,9 +82,12 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const { data: ynputConnect, isLoading: isLoadingConnect } = useGetYnputConnectionsQuery({})
 
   // get releases data
-  const { data: releases = [], isLoading: isLoadingReleases } = useGetReleasesQuery({
-    ynputConnect,
-  })
+  const { data: releases = [], isLoading: isLoadingReleases } = useGetReleasesQuery(
+    {
+      ynputConnect,
+    },
+    { skip: !ynputConnect },
+  )
 
   const [stepIndex, setStepIndex] = useState(initStep)
   const previousStep = () => setStepIndex(stepIndex - 1)
