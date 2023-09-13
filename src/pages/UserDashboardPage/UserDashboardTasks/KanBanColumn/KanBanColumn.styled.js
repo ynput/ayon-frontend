@@ -1,5 +1,18 @@
 import styled, { css } from 'styled-components'
 
+export const DropColumn = styled.div`
+  position: absolute;
+  width: 100%;
+
+  border-radius: 16px;
+
+  ${({ $isActive }) =>
+    $isActive &&
+    css`
+      z-index: 1000;
+    `}
+`
+
 export const Column = styled.div`
   --min-height: 125px;
   position: relative;

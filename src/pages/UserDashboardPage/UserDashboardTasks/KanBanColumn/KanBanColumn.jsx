@@ -16,6 +16,17 @@ const KanBanColumn = ({
   isLoading,
   allUsers = [],
 }) => {
+  const columnRef = useRef(null)
+
+  // we get column top position to figure out how high to make droppable area
+  const [columnTop, setColumnTop] = useState(null)
+
+  useEffect(() => {
+    if (!columnRef.current) return
+    const { top } = columnRef.current.getBoundingClientRect()
+    setColumnTop(top)
+  }, [columnRef.current])
+
   const dispatch = useDispatch()
   const column = columns[id] || {}
   const { isOver, setNodeRef, active, over } = useDroppable({
@@ -130,7 +141,17 @@ const KanBanColumn = ({
   )
 
   return (
-    <Styled.Column ref={setNodeRef} $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf}>
+    <Styled.Column $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf} ref={columnRef}>
+      <Styled.DropColumn
+        ref={setNodeRef}
+        className="dropzone"
+        style={{
+          height: `calc(100vh - 32px - ${columnTop}px)`,
+        }}
+        $isOver={isOver}
+        $isOverSelf={isOverSelf}
+        $active={!!active}
+      ></Styled.DropColumn>
       <Styled.Header $color={column?.color}>
         <h2>
           {column?.name} - {tasksCount}
