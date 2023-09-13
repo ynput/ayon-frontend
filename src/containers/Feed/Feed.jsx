@@ -61,8 +61,6 @@ const Feed = ({
 
   events.push(...references)
 
-  console.log(references)
-
   // sort events by date
   events.sort((a, b) => compareAsc(new Date(a.createdAt), new Date(b.createdAt)))
 

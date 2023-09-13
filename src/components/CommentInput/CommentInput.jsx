@@ -365,6 +365,8 @@ const CommentInput = ({
           onChange={handleSelectChange}
           types={mentionTypes}
           config={typeOptions[mention?.type]}
+          noneFound={!mentionOptions.length && mention?.search}
+          noneFoundAtAll={!mentionOptions.length && !mention?.search}
         />
       </Styled.AutoHeight>
     </>
