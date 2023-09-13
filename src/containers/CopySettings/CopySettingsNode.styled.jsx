@@ -26,25 +26,23 @@ const NodePanelHeader = styled.div`
 
   &.expanded {
     border-radius: 4px 4px 0 0;
-`
 
-const NodePanelToggle = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-  border: 1px solid #ccc;
+  .message {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 3px;
+    padding: 2px 4px;
+    background-color: var(--color-grey-04);
+  }
 `
 
 const NodePanelBody = styled.div`
   display: flex;
   flex-direction: column;
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 6px 6px;
   border: 1px solid var(--color-grey-02);
-  // min-height: 100px;
 `
 
 const NodePanelDirectionSelector = styled.div`
@@ -68,11 +66,22 @@ const ChangeRow = styled.div`
   padding: 4px 8px;
   border-bottom: 1px solid var(--color-grey-02);
 `
+
+const ChangeValue = styled.span`
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 3px;
+  padding: 2px 4px;
+  background-color: var(--color-grey-04);
+`
+
 export {
   NodePanelWrapper,
   NodePanelHeader,
-  NodePanelToggle,
   NodePanelBody,
   NodePanelDirectionSelector,
   ChangeRow,
+  ChangeValue,
 }

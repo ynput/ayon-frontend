@@ -7,9 +7,10 @@ import {
   useLazyGetAddonSettingsQuery,
   useLazyGetAddonSettingsOverridesQuery,
 } from '/src/services/addonSettings'
+
 // TODO: move this to a common location
-import { getValueByPath, setValueByPath } from '../AddonSettings/utils'
-import { cloneDeep, isEqual } from 'lodash'
+import { getValueByPath } from '../AddonSettings/utils'
+import { isEqual } from 'lodash'
 
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 import ProjectDropdown from '/src/containers/CopySettings/ProjectDropdown'
@@ -18,10 +19,10 @@ import AddonDropdown from '/src/containers/CopySettings/AddonDropdown'
 import {
   NodePanelWrapper,
   NodePanelHeader,
-  NodePanelToggle,
   NodePanelBody,
   NodePanelDirectionSelector,
   ChangeRow,
+  ChangeValue,
 } from '/src/containers/CopySettings/CopySettingsNode.styled'
 
 const FormattedPath = ({ value }) => {
@@ -30,9 +31,9 @@ const FormattedPath = ({ value }) => {
 
 const FormattedValue = ({ value }) => {
   let strval
-  if (typeof value === 'object') strval = '[[COMPLEX]]'
-  else strval = `"${value}"`
-  return <div className="value">{strval}</div>
+  if (typeof value === 'object') strval = 'Complex object'
+  else strval = value
+  return <ChangeValue>{strval}</ChangeValue>
 }
 
 const CopySettingsNode = ({
@@ -47,13 +48,7 @@ const CopySettingsNode = ({
   const [sourceVersion, setSourceVersion] = useState(targetVersion)
   const [sourceVariant, setSourceVariant] = useState(targetVariant)
   const [sourceProjectName, setSourceProjectName] = useState(targetProjectName)
-  const [expanded, setExpanded] = useState(true)
   const [loading, setLoading] = useState(false)
-  const [enabled, setEnabled] = useState(true)
-
-  const toggleIcon = expanded ? 'expand_more' : 'chevron_right'
-
-  const onToggle = () => setExpanded(!expanded)
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
   const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
@@ -151,34 +146,24 @@ const CopySettingsNode = ({
     loadNodeData()
   }, [sourceVersion, sourceVariant, sourceProjectName])
 
-  /*
-      <NodePanelToggle>
-        <Icon icon={toggleIcon} onClick={onToggle} className="panel-toggler" />
-      </NodePanelToggle>
-  */
-
-  useEffect(() => {
-    console.log('nodeData', nodeData)
-  }, [nodeData])
+  const expanded = !!(nodeData?.available && nodeData?.enabled)
 
   const header = (
     <NodePanelHeader className={expanded ? 'expanded' : undefined}>
-      {nodeData?.available ? (
-        <InputSwitch
-          checked={nodeData.enabled}
-          onChange={(e) => {
-            setNodeData({ ...nodeData, enabled: e.target.checked })
-          }}
-        />
-      ) : (
-        'N/A'
-      )}
+      <InputSwitch
+        checked={nodeData?.available && nodeData?.enabled}
+        disabled={!nodeData?.available}
+        onChange={(e) => {
+          setNodeData({ ...nodeData, enabled: e.target.checked })
+        }}
+      />
 
       <AddonDropdown
         addonName={addonName}
         addonVersion={sourceVersion}
         setAddonVersion={setSourceVersion}
       />
+
       {sourceProjectName && (
         <ProjectDropdown projectName={sourceProjectName} setProjectName={setSourceProjectName} />
       )}
@@ -188,7 +173,7 @@ const CopySettingsNode = ({
         {nodeData?.available ? (
           <Icon icon="trending_flat" />
         ) : (
-          <>{nodeData?.message || 'Nothing to copy'}</>
+          <span className="message">{nodeData?.message || 'Nothing to copy'}</span>
         )}
       </NodePanelDirectionSelector>
 
@@ -205,53 +190,39 @@ const CopySettingsNode = ({
     </NodePanelHeader>
   )
 
-  /*
-  if ((!nodeData) || loading) {
-    return (
-      <NodePanelWrapper className={expanded ? 'expanded' : undefined}>
-        {header}
-        {expanded && <NodePanelBody>loading...</NodePanelBody>}
-      </NodePanelWrapper>
-    )
-  }
-  */
-
-  const body = (
+  const body = expanded ? (
     <NodePanelBody>
-      {nodeData?.changes?.length && nodeData?.enabled ? (
-        <div className="changes">
-          {nodeData.changes.map((change) => (
-            <ChangeRow key={change.key} className="change">
-              <InputSwitch
-                checked={change.enabled}
-                onChange={(e) => {
-                  setNodeData({
-                    ...nodeData,
-                    changes: nodeData.changes.map((c) => {
-                      if (c.key === change.key) {
-                        c.enabled = e.target.checked
-                      }
-                      return c
-                    }),
-                  })
-                }}
-              />
-              <FormattedPath value={change.path} />
-              <Spacer />
-              <FormattedValue value={change.sourceValue} />
-              <Icon icon="trending_flat" />
-              <FormattedValue value={change.targetValue} />
-            </ChangeRow>
-          ))}
-        </div>
-      ) : (
-        ''
-      )}
+      <div className="changes">
+        {nodeData.changes.map((change) => (
+          <ChangeRow key={change.key} className="change">
+            <InputSwitch
+              checked={change.enabled}
+              onChange={(e) => {
+                setNodeData({
+                  ...nodeData,
+                  changes: nodeData.changes.map((c) => {
+                    if (c.key === change.key) {
+                      c.enabled = e.target.checked
+                    }
+                    return c
+                  }),
+                })
+              }}
+            />
+            <FormattedPath value={change.path} />
+            <Spacer />
+            <FormattedValue value={change.sourceValue} />
+            <Icon icon="trending_flat" />
+            <FormattedValue value={change.targetValue} />
+          </ChangeRow>
+        ))}
+      </div>
     </NodePanelBody>
-  )
+  ) : null
 
   return (
     <NodePanelWrapper className={expanded ? 'expanded' : undefined}>
+      {loading && <NodePanelBody>loading...</NodePanelBody>}
       {header}
       {expanded && body}
     </NodePanelWrapper>
