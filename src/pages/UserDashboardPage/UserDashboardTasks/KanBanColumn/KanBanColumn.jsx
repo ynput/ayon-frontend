@@ -8,7 +8,14 @@ import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import { useLazyGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import KanBanCard from '../KanBanCard/KanBanCard'
 
-const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {}, isLoading }) => {
+const KanBanColumn = ({
+  tasks = [],
+  id,
+  groupByValue = {},
+  columns = {},
+  isLoading,
+  allUsers = [],
+}) => {
   const dispatch = useDispatch()
   const column = columns[id] || {}
   const { isOver, setNodeRef, active, over } = useDroppable({
@@ -16,6 +23,19 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {}, isLoadi
   })
 
   const tasksCount = tasks.length
+
+  // create groupBy labels for assignees
+  const groupByLabels = useMemo(() => {
+    const assigneesLabels = allUsers.map(({ name, fullName, avatarUrl }) => ({
+      id: name,
+      label: fullName,
+      img: avatarUrl,
+    }))
+
+    return {
+      assignees: assigneesLabels,
+    }
+  }, [allUsers])
 
   // SELECTED TASKS
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
@@ -100,6 +120,12 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {}, isLoadi
       })),
     [],
   )
+
+  const groupedTasks = useMemo(
+    () => getGroupedTasks(tasks, groupByValue[0], groupByLabels),
+    [tasks, groupByValue, groupByLabels],
+  )
+
   return (
     <Styled.Column ref={setNodeRef} $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf}>
       <Styled.Header $color={column?.color}>
@@ -114,7 +140,7 @@ const KanBanColumn = ({ tasks = [], id, groupByValue = {}, columns = {}, isLoadi
         $isColumnActive={isColumnActive}
         $active={!!active}
       >
-        {getGroupedTasks(column?.tasks, groupByValue[0]).map((group) => (
+        {groupedTasks.map((group) => (
           <Fragment key={group.label}>
             <span>{group.label}</span>
             {group.tasks.map((task) => (

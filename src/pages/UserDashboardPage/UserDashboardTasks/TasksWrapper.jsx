@@ -3,7 +3,13 @@ import React, { useEffect, useRef, useState } from 'react'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 
-const ColumnsWrapper = ({ fieldsColumns, tasksColumns, groupByValue, isLoading }) => {
+const ColumnsWrapper = ({
+  fieldsColumns,
+  tasksColumns,
+  groupByValue,
+  isLoading,
+  allUsers = [],
+}) => {
   const { active } = useDndContext()
   const sectionRef = useRef(null)
 
@@ -97,6 +103,7 @@ const ColumnsWrapper = ({ fieldsColumns, tasksColumns, groupByValue, isLoading }
             isLoading={isLoading}
             id={id}
             groupByValue={groupByValue}
+            allUsers={allUsers}
           />
         )
       })}

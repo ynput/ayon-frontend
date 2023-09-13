@@ -17,6 +17,7 @@ import { toast } from 'react-toastify'
 import KanBanCard from './KanBanCard/KanBanCard'
 import ColumnsWrapper from './TasksWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar'
+import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
 
 const UserDashboardKanBan = ({
   tasks,
@@ -61,6 +62,12 @@ const UserDashboardKanBan = ({
     [sortedTasks],
   )
 
+  const { data: allUsers = [], isLoading: isLoadingAllUsers } = useGetKanBanUsersQuery(
+    { projects: selectedProjects },
+    { skip: !selectedProjects?.length },
+  )
+
+  // DND Stuff
   const touchSensor = useSensor(TouchSensor)
   const keyboardSensor = useSensor(KeyboardSensor)
 
@@ -125,13 +132,13 @@ const UserDashboardKanBan = ({
       projectName: task.projectName,
       taskId: task.id,
       data: newTaskData,
-      assignees,
+      assignees, // this purely for the cache
     })
   }
 
   return (
     <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-      <DashboardTasksToolbar assignees={assignees} />
+      <DashboardTasksToolbar allUsers={allUsers} isLoadingAllUsers={isLoadingAllUsers} />
       <DndContext
         sensors={sensors}
         onDragEnd={handleDragEnd}
@@ -143,6 +150,7 @@ const UserDashboardKanBan = ({
           tasksColumns={tasksColumns}
           groupByValue={groupByValue}
           isLoading={isLoading}
+          allUsers={allUsers}
         />
         <DragOverlay dropAnimation={null}>
           {activeDraggingId && activeTask && <KanBanCard task={activeTask} isOverlay />}
