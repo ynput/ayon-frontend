@@ -27,7 +27,7 @@ export const transformTasksData = ({ projectName, tasks = [] }) =>
       updatedAt: task.updatedAt,
       folderName: task.folder?.name,
       folderId: task.folderId,
-      path: task.folder?.path,
+      path: `${projectName}/${task.folder?.path}`,
       projectName: projectName,
       latestVersionId: latestVersion?.id,
       latestVersionThumbnailId: latestVersion?.thumbnailId,
