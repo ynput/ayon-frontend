@@ -32,7 +32,8 @@ const FormattedPath = ({ value }) => {
 const FormattedValue = ({ value }) => {
   let strval
   if (typeof value === 'object') strval = 'Complex object'
-  else strval = value
+  else if (typeof value === 'string') strval = value
+  else strval = JSON.stringify(value)
   return <ChangeValue>{strval}</ChangeValue>
 }
 
