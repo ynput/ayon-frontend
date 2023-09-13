@@ -1,10 +1,15 @@
 /* eslint-disable */
 
-import { useState } from 'react'
-import { ScrollPanel } from '@ynput/ayon-react-components'
+import { useState, useMemo } from 'react'
+import { toast } from 'react-toastify'
+
+import { ScrollPanel, Button, Spacer } from '@ynput/ayon-react-components'
 import { Dialog } from 'primereact/dialog'
 
 import CopySettingsNode from './CopySettingsNode'
+
+import { setValueByPath } from '../AddonSettings/utils'
+import { cloneDeep } from 'lodash'
 
 const CopySettingsDialog = ({
   selectedAddons,
@@ -20,12 +25,91 @@ const CopySettingsDialog = ({
 }) => {
   const [nodes, setNodes] = useState([])
 
+  const doTheMagic = () => {
+    const newLocalData = cloneDeep(localData)
+    const newChangedKeys = { ...changedKeys }
+    const newOriginalData = { ...originalData }
+    const newSelectedAddons = []
+
+    for (const nodeKey in nodes) {
+      const node = nodes[nodeKey]
+      if (!(node.available && node.enabled)) continue
+      console.log('Migrating node', node.addonName, node.addonVersion)
+
+      // Define the target addon
+      const siteId = '_'
+      const projectKey = projectName || '_'
+      const key = `${node.addonName}|${node.targetAddonVersion}|${variant}|${siteId}|${projectKey}`
+      const addon = {
+        name: node.addonName,
+        version: node.targetAddonVersion,
+        variant: variant,
+        siteId,
+        key,
+      }
+
+      const addonOverrides = []
+      let addonSettings = cloneDeep(node.targetSettings.data)
+      newOriginalData[key] = cloneDeep(node.targetSettings.data)
+
+      // Iterate over the changes and apply them to the target addon
+
+      for (const change of node.changes) {
+        if (!change.enabled) continue
+        const value = cloneDeep(change.sourceValue)
+        addonSettings = setValueByPath(addonSettings, change.path, value)
+        addonOverrides.push(change.path)
+      } // for change of node.children
+
+      newLocalData[key] = addonSettings
+      newChangedKeys[key] = addonOverrides
+      newSelectedAddons.push(addon)
+    } // for node of nodes
+
+    setOriginalData(newOriginalData)
+    setLocalData(newLocalData)
+    setChangedKeys(newChangedKeys)
+    //setSelectedAddons(newSelectedAddons)
+    toast.success('Settings copied')
+    onClose(false)
+  }
+
+  const somethingToCopy = useMemo(() => {
+    // Do we have something to copy?
+    // Is there at least one change enabled?
+    for (const nodeKey in nodes || {}) {
+      const node = nodes[nodeKey]
+      for (const change of node.changes || []) {
+        if (change?.enabled) return true
+      }
+    }
+    return false
+  }, [nodes])
+
+  //
+  // RENDER
+  //
+
+  const footer = (
+    <div style={{ display: 'flex', flexDirection: 'row' }}>
+      <Spacer />
+      <Button
+        label="Copy selected settings"
+        icon="checklist"
+        variant="filled"
+        onClick={() => doTheMagic()}
+        disabled={!somethingToCopy}
+      />
+    </div>
+  )
+
   return (
     <Dialog
       visible
       onHide={onClose}
       style={{ width: '80vw', height: '80vh' }}
       header="Copy Settings"
+      footer={footer}
     >
       <ScrollPanel style={{ width: '100%', height: '100%', background: 'transparent' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>

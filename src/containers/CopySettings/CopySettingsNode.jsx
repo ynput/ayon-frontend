@@ -211,9 +211,9 @@ const CopySettingsNode = ({
             />
             <FormattedPath value={change.path} />
             <Spacer />
-            <FormattedValue value={change.sourceValue} />
-            <Icon icon="trending_flat" />
             <FormattedValue value={change.targetValue} />
+            <Icon icon="trending_flat" />
+            <FormattedValue value={change.sourceValue} />
           </ChangeRow>
         ))}
       </div>
