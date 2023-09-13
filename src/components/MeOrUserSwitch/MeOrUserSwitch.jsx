@@ -29,7 +29,7 @@ const MeOrUserSwitch = ({ value = [], onAssignee, onMe, options = [], isMe, ...p
         onClick={handleDropdownClick}
         disableOpen={isMe && !!value.length}
         emptyIcon="groups"
-        placeholder="Assignees"
+        emptyMessage="Assignees"
       />
     </Styled.MeOrUserSwitchContainer>
   )

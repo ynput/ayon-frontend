@@ -244,13 +244,14 @@ const CommentInput = ({
       const typeConfig = typeOptions[type]
       if (link && link.startsWith('@') && typeConfig && label) {
         const newId = uuid4()
+        const refId = link.substring(1)
 
         // replace the link with the new id
-        markdown = markdown.replace(new RegExp(link, 'g'), newId)
+        markdown = markdown.replace(new RegExp(link, 'g'), refId)
 
         mentions.push({
           label: label.replace(/@/g, ''),
-          refId: link.substring(1),
+          refId: refId,
           refType: typeConfig.id,
           id: newId,
         })

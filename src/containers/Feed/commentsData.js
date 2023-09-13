@@ -253,7 +253,7 @@ const getCommentsForTasks = (tasks = [], users = []) => {
     references.forEach((ref) => {
       updatedBody = updatedBody.replace(
         refTypes[ref.refType] + ref.refType,
-        `[${refTypes[ref.refType]}${ref.label}](${ref.id})`,
+        `[${refTypes[ref.refType]}${ref.label}](${ref.refId})`,
       )
     })
 

@@ -72,17 +72,15 @@ const FeedComment = ({ comment, users }) => {
                 const type = getTypeByCount(atCount)
 
                 // find the reference object by the href
-                const reference = comment?.references?.find((ref) => ref.id === href)
-                const label = reference?.label || (children[0] && children[0].replace('@', ''))
 
-                const isSelf = reference && comment?.reference?.refId === reference?.refId
+                const label = children[0] && children[0].replace('@', '')
+                const entityId = href
 
                 return (
                   <FeedReference
-                    id={href}
+                    id={entityId}
                     type={type}
                     style={{ top: 5, userSelect: 'text' }}
-                    variant={isSelf ? 'filled' : 'surface'}
                     label={label}
                   >
                     {label}
