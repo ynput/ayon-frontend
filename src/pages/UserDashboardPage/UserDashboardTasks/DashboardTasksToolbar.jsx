@@ -34,6 +34,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
   const groupByOptions = [
     { id: 'projectName', label: 'Project', sortOrder: true },
     // { id: 'status', label: 'Status', sortOrder: true },
+    { id: 'taskType', label: 'Type', sortOrder: true },
   ]
 
   const assigneesGroupBy = { id: 'assignees', label: 'Assignee', sortOrder: true }

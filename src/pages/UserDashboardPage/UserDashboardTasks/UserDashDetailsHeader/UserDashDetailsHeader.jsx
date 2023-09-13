@@ -1,4 +1,10 @@
-import { AssigneeSelect, Button, Icon, OverflowField, Section } from '@ynput/ayon-react-components'
+import {
+  AssigneeSelect,
+  Button,
+  OverflowField,
+  Section,
+  Spacer,
+} from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import * as Styled from './UserDashDetailsHeader.styled'
@@ -183,26 +189,23 @@ const UserDashDetailsHeader = ({
       </Styled.StatusAssignees>
       <Styled.Footer>
         <Actions options={actions} pinned={pinned} />
+        <Spacer />
         <Button
-          label="Attributes"
-          variant={attributesOpen ? 'tonal' : 'text'}
-          style={{ padding: 6 }}
+          // label="Activity"
+          icon="forum"
+          onClick={() => setAttributesOpen(false)}
+          selected={!attributesOpen}
+        />
+        <Button
+          // label="Details"
+          selected={attributesOpen}
+          icon="segment"
           onClick={() => setAttributesOpen(!attributesOpen)}
-        >
-          <Icon
-            icon="expand_more"
-            style={{
-              transform: attributesOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s ease-in-out',
-            }}
-          />
-        </Button>
+          iconStyle={{ transform: 'scaleX(-1)' }}
+        />
       </Styled.Footer>
       {attributesOpen && (
-        <>
-          <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
-          <Button label="View activity" icon="forum" onClick={() => setAttributesOpen(false)} />
-        </>
+        <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
       )}
     </Section>
   )
