@@ -28,7 +28,10 @@ const UserDashboardKanBan = ({
   isLoading,
 }) => {
   const dispatch = useDispatch()
+
+  const selectedCards = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
+
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
 
   // SORT BY
@@ -98,7 +101,9 @@ const UserDashboardKanBan = ({
   const handleDragStart = (event) => {
     setActiveDraggingId(event.active.id)
     // select card
-    setSelectedTasks([event.active.id])
+    if (!selectedCards.includes(event.active.id)) {
+      setSelectedTasks([event.active.id])
+    }
   }
 
   const handleDragEnd = async (event) => {
