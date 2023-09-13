@@ -76,16 +76,9 @@ const UserDashboardKanBan = ({
   // DND Stuff
   const touchSensor = useSensor(TouchSensor)
   const keyboardSensor = useSensor(KeyboardSensor)
+  const pointerSensor = useSensor(PointerSensor)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    touchSensor,
-    keyboardSensor,
-  )
+  const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor)
 
   // UPDATE TASK MUTATION
   const [updateTask] = useUpdateTaskMutation()
