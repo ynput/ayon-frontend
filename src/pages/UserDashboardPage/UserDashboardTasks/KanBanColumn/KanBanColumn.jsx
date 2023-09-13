@@ -85,20 +85,23 @@ const KanBanColumn = ({
     const ctrlOrMeta = metaKey || ctrlKey
     const shift = shiftKey && !ctrlOrMeta
 
-    let newSelection = []
+    let newSelection = [...selectedTasks]
 
     // metaKey or ctrlKey or shiftKey is pressed, add to selection instead of replacing
-    if (ctrlOrMeta || shift) {
-      newSelection = [...selectedTasks]
-    }
+    const isMulti = ctrlOrMeta || shift
 
     // add (selected) to selection
-    if (!newSelection.includes(id)) {
+    if (!newSelection.includes(id) && isMulti) {
       // add to selection
       newSelection.push(id)
-    } else if (ctrlOrMeta) {
+    } else if (isMulti) {
       // remove from selection
       newSelection = newSelection.filter((taskId) => taskId !== id)
+    } else if (!newSelection.includes(id) || newSelection.length > 1) {
+      // replace selection
+      newSelection = [id]
+    } else {
+      newSelection = []
     }
 
     setSelectedTasks(newSelection)
