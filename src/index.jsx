@@ -10,7 +10,7 @@ import userReducer from './features/user'
 import contextReducer from './features/context'
 import projectReducer from './features/project'
 import editorReducer from './features/editor'
-import dashboardReducer from './features/dashboard'
+import dashboardReducer, { dashboardLocalItems } from './features/dashboard'
 
 import App from './app'
 
@@ -29,16 +29,6 @@ import localStorageMiddleware from './features/middleware/localStorageMiddleware
 // generate unique session id
 window.senderId = short.generate()
 
-const localStorageItems = {
-  'dashboard/onProjectSelected': 'dashboard-selectedProjects',
-  'dashboard/onTasksSortByChanged': 'dashboard-tasks-sortBy',
-  'dashboard/onTasksGroupByChanged': 'dashboard-tasks-groupBy',
-  'dashboard/onTasksFilterChanged': 'dashboard-tasks-filter',
-  'dashboard/onTaskSelected': 'dashboard-tasks-selected',
-  'dashboard/onAssigneesChanged': 'dashboard-tasks-assignees',
-  'dashboard/onAttributesOpenChanged': 'dashboard-tasks-attributesOpen',
-}
-
 const store = configureStore({
   reducer: {
     user: userReducer,
@@ -51,7 +41,7 @@ const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(ayonApi.middleware)
-      .concat(localStorageMiddleware(localStorageItems)),
+      .concat(localStorageMiddleware({ ...dashboardLocalItems })),
 })
 
 setupListeners(store.dispatch)

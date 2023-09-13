@@ -11,6 +11,7 @@ const dashboardSlice = createSlice({
       groupBy: getInitialStateLocalStorage('dashboard-tasks-groupBy', []),
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', null),
+      assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
       attributesOpen: getInitialStateLocalStorage('dashboard-tasks-attributesOpen', false),
     },
   },
@@ -27,13 +28,14 @@ const dashboardSlice = createSlice({
     onTasksGroupByChanged: (state, { payload = [] }) => {
       state.tasks.groupBy = payload
     },
-    onTasksFilterChanged: (state, { payload = [] }) => {
+    onTasksFilterChanged: (state, { payload = '' }) => {
       state.tasks.filter = payload
     },
     onAssigneesChanged: (state, { payload = [] }) => {
       state.tasks.assignees = payload
+      state.tasks.assigneesIsMe = false
     },
-    onAttributesOpenChanged: (state, { payload = [] }) => {
+    onAttributesOpenChanged: (state, { payload }) => {
       state.tasks.attributesOpen = payload
     },
   },
@@ -49,3 +51,17 @@ export const {
   onAttributesOpenChanged,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer
+
+// topics that need to set localStorage. If there is no explicit value, it will be the payload value
+export const dashboardLocalItems = {
+  'dashboard/onProjectSelected': [{ key: 'dashboard-selectedProjects' }],
+  'dashboard/onTasksSortByChanged': [{ key: 'dashboard-tasks-sortBy' }],
+  'dashboard/onTasksGroupByChanged': [{ key: 'dashboard-tasks-groupBy' }],
+  'dashboard/onTasksFilterChanged': [{ key: 'dashboard-tasks-filter' }],
+  'dashboard/onTaskSelected': [{ key: 'dashboard-tasks-selected' }],
+  'dashboard/onAssigneesChanged': [{ key: 'dashboard-tasks-assignees' }],
+  'dashboard/onAttributesOpenChanged': [
+    { key: 'dashboard-tasks-attributesOpen' },
+    { key: 'dashboard-tasks-assigneesIsMe', value: false },
+  ],
+}

@@ -1,7 +1,9 @@
 const localStorageMiddleware = (types) => () => (next) => (action) => {
   const matchedType = types[action.type]
-  if (matchedType) {
-    localStorage.setItem(matchedType, JSON.stringify(action.payload))
+  if (matchedType && Array.isArray(matchedType)) {
+    matchedType.forEach(({ key, value = action.payload }) => {
+      localStorage.setItem(key, JSON.stringify(value))
+    })
   }
 
   return next(action)
