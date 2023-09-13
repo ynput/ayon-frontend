@@ -1,19 +1,7 @@
-import {
-  AssigneeSelect,
-  InputText,
-  Section,
-  SortingDropdown,
-  Spacer,
-  Toolbar,
-} from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 import React, { useMemo, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import {
-  onAssigneesChanged,
-  onTasksFilterChanged,
-  onTasksGroupByChanged,
-  onTasksSortByChanged,
-} from '/src/features/dashboard'
+import { useSelector } from 'react-redux'
+
 import { getFilteredTasks, getMergedFields, getSortedTasks, getTasksColumns } from '../util'
 import {
   DndContext,
@@ -26,9 +14,9 @@ import {
 } from '@dnd-kit/core'
 import { useUpdateTaskMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
-import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
 import KanBanCard from './KanBanCard/KanBanCard'
 import ColumnsWrapper from './TasksWrapper'
+import DashboardTasksToolbar from './DashboardTasksToolbar'
 
 const UserDashboardKanBan = ({
   tasks,
@@ -37,37 +25,15 @@ const UserDashboardKanBan = ({
   taskFields,
   isLoading,
 }) => {
-  const dispatch = useDispatch()
-
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
-  const user = useSelector((state) => state.user)
-  const isAdmin = user?.data?.isAdmin
 
   // SORT BY
-  const sortByOptions = [
-    { id: 'folderName', label: 'Shot', sortOrder: true },
-    { id: 'name', label: 'Task', sortOrder: true },
-    { id: 'status', label: 'Status', sortORder: true },
-  ]
   const sortByValue = useSelector((state) => state.dashboard.tasks.sortBy)
-  const setSortByValue = (value) => dispatch(onTasksSortByChanged(value))
   // GROUP BY
-  const groupByOptions = [
-    { id: 'projectName', label: 'Project', sortOrder: true },
-    // { id: 'status', label: 'Status', sortOrder: true },
-  ]
   const groupByValue = useSelector((state) => state.dashboard.tasks.groupBy)
-  const setGroupByValue = (value) => dispatch(onTasksGroupByChanged(value))
+
   // FILTER
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
-  const setFilterValue = (value) => dispatch(onTasksFilterChanged(value))
-  // ASSIGNEES SELECT
-  const { data: allUsers = [], isLoading: isLoadingAllUsers } = useGetKanBanUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
-
-  const setAssignees = (assignees) => dispatch(onAssigneesChanged(assignees))
 
   // filter out projects by selected projects and filter value
   const filteredTasks = useMemo(
@@ -165,39 +131,7 @@ const UserDashboardKanBan = ({
 
   return (
     <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-      <Toolbar style={{ zIndex: 100, padding: '1px 8px' }}>
-        <SortingDropdown
-          title="Sort by"
-          options={sortByOptions}
-          value={sortByValue}
-          onChange={setSortByValue}
-        />
-        <SortingDropdown
-          title="Group by"
-          options={groupByOptions}
-          value={groupByValue}
-          onChange={setGroupByValue}
-        />
-        <InputText
-          placeholder="Filter tasks..."
-          value={filterValue}
-          onChange={(e) => setFilterValue(e.target.value)}
-        />
-        <Spacer />
-        {isAdmin && !isLoadingAllUsers && (
-          <AssigneeSelect
-            value={assignees}
-            onChange={setAssignees}
-            options={allUsers}
-            align={'right'}
-            minSelected={1}
-            editor
-            buttonStyle={{ outline: '1px solid var(--md-sys-color-outline-variant)' }}
-            style={{ zIndex: 20 }}
-          />
-        )}
-      </Toolbar>
-
+      <DashboardTasksToolbar assignees={assignees} />
       <DndContext
         sensors={sensors}
         onDragEnd={handleDragEnd}
