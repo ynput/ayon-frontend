@@ -25,6 +25,7 @@ export const Column = styled.div`
   min-height: var(--min-height);
   max-height: -webkit-fill-available;
   padding: 0;
+  flex: 0;
 
   border-radius: 16px;
   background-color: var(--md-sys-color-surface-container-lowest);
