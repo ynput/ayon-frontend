@@ -43,6 +43,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
   }
 
   const groupByValue = useSelector((state) => state.dashboard.tasks.groupBy)
+
   const setGroupByValue = (value) => dispatch(onTasksGroupByChanged(value))
 
   // FILTER
@@ -50,13 +51,17 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
   const setFilterValue = (value) => dispatch(onTasksFilterChanged(value))
 
   const addRemoveGroupByAssignees = (add) => {
-    const groupBy = [...groupByValue]
-    const assigneesIndex = groupBy.findIndex((item) => item.id === 'assignees')
-
-    if (add && assigneesIndex === -1) {
-      groupBy.push(assigneesGroupBy)
-    } else if (!add && assigneesIndex !== -1) {
-      groupBy.splice(assigneesIndex, 1)
+    let groupBy
+    if (add) {
+      // store last group by
+      localStorage.setItem('lastGroupBy', JSON.stringify(groupByValue))
+      groupBy = [assigneesGroupBy]
+    } else {
+      // get last group by
+      const lastGroupBy = JSON.parse(localStorage.getItem('lastGroupBy'))
+      if (lastGroupBy.length) {
+        groupBy = lastGroupBy
+      }
     }
 
     setGroupByValue(groupBy)
@@ -120,6 +125,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
         options={groupByOptions}
         value={groupByValue}
         onChange={setGroupByValue}
+        multiSelect={false}
       />
       <InputText
         placeholder="Filter tasks..."
