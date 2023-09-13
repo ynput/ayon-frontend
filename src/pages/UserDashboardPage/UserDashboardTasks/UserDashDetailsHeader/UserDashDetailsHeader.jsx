@@ -190,18 +190,12 @@ const UserDashDetailsHeader = ({
       <Styled.Footer>
         <Actions options={actions} pinned={pinned} />
         <Spacer />
+        <Button icon="forum" onClick={() => setAttributesOpen(false)} selected={!attributesOpen} />
         <Button
-          // label="Activity"
-          icon="forum"
-          onClick={() => setAttributesOpen(false)}
-          selected={!attributesOpen}
-        />
-        <Button
-          // label="Details"
           selected={attributesOpen}
           icon="segment"
           onClick={() => setAttributesOpen(!attributesOpen)}
-          iconStyle={{ transform: 'scaleX(-1)' }}
+          iconProps={{ style: { transform: 'scaleX(-1)' } }}
         />
       </Styled.Footer>
       {attributesOpen && (
