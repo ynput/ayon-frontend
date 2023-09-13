@@ -4,13 +4,13 @@ import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorag
 const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState: {
-    selectedProjects: getInitialStateLocalStorage('dashboard-selectedProjects'),
+    selectedProjects: getInitialStateLocalStorage('dashboard-selectedProjects', []),
     tasks: {
       selected: getInitialStateLocalStorage('dashboard-tasks-selected', []),
       sortBy: getInitialStateLocalStorage('dashboard-tasks-sortBy', []),
       groupBy: getInitialStateLocalStorage('dashboard-tasks-groupBy', []),
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
-      assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', null),
+      assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
       assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
       attributesOpen: getInitialStateLocalStorage('dashboard-tasks-attributesOpen', false),
     },
