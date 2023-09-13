@@ -31,9 +31,9 @@ const dashboardSlice = createSlice({
     onTasksFilterChanged: (state, { payload = '' }) => {
       state.tasks.filter = payload
     },
-    onAssigneesChanged: (state, { payload = [] }) => {
-      state.tasks.assignees = payload
-      state.tasks.assigneesIsMe = false
+    onAssigneesChanged: (state, { payload: { assignees = [], assigneesIsMe = false } }) => {
+      state.tasks.assignees = assignees
+      state.tasks.assigneesIsMe = assigneesIsMe
     },
     onAttributesOpenChanged: (state, { payload }) => {
       state.tasks.attributesOpen = payload
@@ -59,9 +59,10 @@ export const dashboardLocalItems = {
   'dashboard/onTasksGroupByChanged': [{ key: 'dashboard-tasks-groupBy' }],
   'dashboard/onTasksFilterChanged': [{ key: 'dashboard-tasks-filter' }],
   'dashboard/onTaskSelected': [{ key: 'dashboard-tasks-selected' }],
-  'dashboard/onAssigneesChanged': [{ key: 'dashboard-tasks-assignees' }],
-  'dashboard/onAttributesOpenChanged': [
-    { key: 'dashboard-tasks-attributesOpen' },
-    { key: 'dashboard-tasks-assigneesIsMe', value: false },
+  'dashboard/onAssigneesChanged': [
+    { key: 'dashboard-tasks-assignees', payload: 'assignees' },
+    { key: 'dashboard-tasks-assigneesIsMe', payload: 'assigneesIsMe' },
   ],
+  'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
+  'dashboard/onAttributesOpenChanged': [{ key: 'dashboard-tasks-attributesOpen' }],
 }

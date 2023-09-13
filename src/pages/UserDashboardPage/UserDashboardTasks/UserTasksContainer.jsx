@@ -12,7 +12,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
-  const assignees = assigneesState || (user?.name && [user?.name]) || []
+  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+  const assignees = assigneesIsMe ? [user?.name] : assigneesState || []
 
   // once user is loaded, set assignees to user
   useEffect(() => {
