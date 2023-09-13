@@ -3,10 +3,13 @@ import * as Styled from './KanBanCard.styled'
 import useCreateContext from '/src/hooks/useCreateContext'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { Dialog } from 'primereact/dialog'
+import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
+import { useSelector } from 'react-redux'
 
 const KanBanCard = forwardRef(
   ({ task, onClick, onKeyUp, isActive, style, isOverlay, isDragging, ...props }, ref) => {
     const [dialogOpen, setDialogOpen] = useState(false)
+    const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
 
     const contextMenuItems = [
       {
@@ -27,6 +30,11 @@ const KanBanCard = forwardRef(
       },
     ]
     const [showContextMenu] = useCreateContext(contextMenuItems)
+
+    const { data: assignees = [] } = useGetUsersAssigneeQuery(
+      { names: task.assignees },
+      { skip: assigneesIsMe },
+    )
 
     return (
       <>
@@ -49,6 +57,7 @@ const KanBanCard = forwardRef(
           $isOverlay={isOverlay}
           $isDragging={isDragging}
           onContextMenu={showContextMenu}
+          assignees={!assigneesIsMe && !!assignees.length && assignees}
           {...props}
         />
       </>
