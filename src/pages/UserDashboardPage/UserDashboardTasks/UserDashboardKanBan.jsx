@@ -1,6 +1,6 @@
 import { Section } from '@ynput/ayon-react-components'
 import React, { useMemo, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { getFilteredTasks, getMergedFields, getSortedTasks, getTasksColumns } from '../util'
 import {
@@ -18,6 +18,7 @@ import KanBanCard from './KanBanCard/KanBanCard'
 import ColumnsWrapper from './TasksWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar'
 import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
+import { onTaskSelected } from '/src/features/dashboard'
 
 const UserDashboardKanBan = ({
   tasks,
@@ -26,6 +27,8 @@ const UserDashboardKanBan = ({
   taskFields,
   isLoading,
 }) => {
+  const dispatch = useDispatch()
+  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
 
   // SORT BY
@@ -94,6 +97,8 @@ const UserDashboardKanBan = ({
 
   const handleDragStart = (event) => {
     setActiveDraggingId(event.active.id)
+    // select card
+    setSelectedTasks([event.active.id])
   }
 
   const handleDragEnd = async (event) => {
@@ -153,7 +158,9 @@ const UserDashboardKanBan = ({
           allUsers={allUsers}
         />
         <DragOverlay dropAnimation={null}>
-          {activeDraggingId && activeTask && <KanBanCard task={activeTask} isOverlay />}
+          {activeDraggingId && activeTask && (
+            <KanBanCard task={activeTask} isOverlay isActive={true} />
+          )}
         </DragOverlay>
       </DndContext>
     </Section>
