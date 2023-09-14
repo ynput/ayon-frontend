@@ -130,7 +130,7 @@ const MenuList = ({
               ref={(e) => (itemRefs.current[id] = e)}
               onMouseEnter={(e) => handleSubMenu(e, id, items)}
               onMouseLeave={(e) => handleSubMenu(e, id, [])}
-              className={itemClassName}
+              className={`${itemClassName} ${props.className || ''}`}
               {...props}
             >
               {!!items.length && <Icon icon="arrow_right" style={{ marginLeft: 'auto' }} />}
