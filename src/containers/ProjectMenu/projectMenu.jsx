@@ -107,7 +107,7 @@ const ProjectMenu = ({ visible, onHide }) => {
   // now we have a divider index, we can insert a divider
   const menuItemsWithDivider = useMemo(() => {
     const items = [...sortedMenuItems]
-    items.splice(dividerIndex, 0, { id: 'divider' })
+    if (pinned.length) items.splice(dividerIndex, 0, { id: 'divider' })
     return items
   }, [sortedMenuItems, dividerIndex])
 
