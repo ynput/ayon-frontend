@@ -59,7 +59,12 @@ export const ProjectSidebar = styled(Sidebar)`
 
 export const All = styled.div`
   overflow: hidden;
-  max-height: 50%;
+  display: flex;
+  flex-direction: column;
+
+  menu {
+    flex: 1;
+  }
 `
 
 export const Divider = styled.hr`
