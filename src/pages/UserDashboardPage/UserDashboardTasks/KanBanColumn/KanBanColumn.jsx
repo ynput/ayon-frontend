@@ -174,6 +174,7 @@ const KanBanColumn = ({
                 onClick={(e) => handleTaskClick(e, task.id)}
                 onMouseOver={() => handleMouseOver(task)}
                 isActive={selectedTasks.includes(task.id)}
+                isDraggingActive={active}
                 className="card"
               />
             ))}
