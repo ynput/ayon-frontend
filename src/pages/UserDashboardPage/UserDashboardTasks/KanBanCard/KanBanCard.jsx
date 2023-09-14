@@ -3,9 +3,23 @@ import * as Styled from './KanBanCard.styled'
 
 const KanBanCard = forwardRef(
   (
-    { task, onClick, onKeyUp, isActive, style, isOverlay, isDragging, assigneesIsMe, ...props },
+    {
+      task,
+      onClick,
+      onKeyUp,
+      isActive,
+      style,
+      isOverlay,
+      isDragging,
+      assigneesIsMe,
+      inView,
+      ...props
+    },
     ref,
   ) => {
+    if (!inView && inView !== undefined && !props.isLoading)
+      return <div style={{ minHeight: 'var(--min-height)' }}></div>
+
     return (
       <>
         <Styled.KanBanEntityCard

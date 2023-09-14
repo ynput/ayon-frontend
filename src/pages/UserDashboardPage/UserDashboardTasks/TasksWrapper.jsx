@@ -15,6 +15,15 @@ const ColumnsWrapper = ({
 
   const [scrollDirection, setScrollDirection] = useState(null)
 
+  // we get section rect to figure out how high to make droppable area
+  const [sectionRect, setSectionRect] = useState(null)
+
+  useEffect(() => {
+    if (!sectionRef.current) return
+    const rect = sectionRef.current.getBoundingClientRect()
+    setSectionRect(rect)
+  }, [sectionRef.current])
+
   // this scrolls the section based on the direction
   useEffect(() => {
     const el = sectionRef.current
@@ -104,6 +113,7 @@ const ColumnsWrapper = ({
             id={id}
             groupByValue={groupByValue}
             allUsers={allUsers}
+            sectionRect={sectionRect}
           />
         )
       })}

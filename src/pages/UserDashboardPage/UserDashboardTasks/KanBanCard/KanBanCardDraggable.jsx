@@ -9,13 +9,14 @@ const KanBanCardDraggable = ({
   isActive,
   style,
   isDraggingActive,
+  isColumnActive,
   ...props
 }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: task.id,
   })
 
-  let card = useMemo(
+  const card = useMemo(
     () => (
       <KanBanCard
         {...{ task, onClick, onKeyUp, isActive, style, ...props }}
@@ -30,10 +31,22 @@ const KanBanCardDraggable = ({
 
   // prevent the card re-rendering when dragging another card
   // this massively improves performance
-  const lightCard = useMemo(() => card, [])
+  const lightCard = useMemo(
+    () => (
+      <KanBanCard
+        {...{ task, onClick, onKeyUp, isActive, style, ...props }}
+        ref={setNodeRef}
+        isDragging={isDragging}
+        {...attributes}
+        {...listeners}
+        inView={isColumnActive}
+      />
+    ),
+    [isColumnActive],
+  )
 
-  if (!isDragging && isDraggingActive) {
-    card = lightCard
+  if (!isDragging && isDraggingActive && !isColumnActive) {
+    return lightCard
   }
 
   return card

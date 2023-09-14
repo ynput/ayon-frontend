@@ -9,6 +9,8 @@ import { useLazyGetTasksDetailsQuery } from '/src/services/userDashboard/getUser
 import KanBanCard from '../KanBanCard/KanBanCard'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import useCreateContext from '/src/hooks/useCreateContext'
+import { Button } from '@ynput/ayon-react-components'
+import { InView, useInView } from 'react-intersection-observer'
 
 const KanBanColumn = ({
   tasks = [],
@@ -17,18 +19,9 @@ const KanBanColumn = ({
   columns = {},
   isLoading,
   allUsers = [],
+  sectionRect,
 }) => {
-  const columnRef = useRef(null)
   const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
-
-  // we get column top position to figure out how high to make droppable area
-  const [columnTop, setColumnTop] = useState(null)
-
-  useEffect(() => {
-    if (!columnRef.current) return
-    const { top } = columnRef.current.getBoundingClientRect()
-    setColumnTop(top)
-  }, [columnRef.current])
 
   const dispatch = useDispatch()
   const column = columns[id] || {}
@@ -55,6 +48,7 @@ const KanBanColumn = ({
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
 
+  const [numberCardsFit, setNumberCardsFit] = useState(15)
   const [isScrolling, setIsScrolling] = useState(false)
   const itemsRef = useRef(null)
   // figure if the column items are overflowing and scrolling
@@ -64,6 +58,11 @@ const KanBanColumn = ({
     // now work out if the items are overflowing
     const isOverflowing = el.scrollHeight > el.clientHeight
     setIsScrolling(isOverflowing)
+    const cardHeight = 118
+
+    const itemsHeight = el.clientHeight
+    const cardsFit = Math.floor(itemsHeight / cardHeight)
+    setNumberCardsFit(cardsFit)
   }, [itemsRef.current, tasksCount])
 
   // find out which column the active card has come from
@@ -165,7 +164,7 @@ const KanBanColumn = ({
   // return 5 fake loading events if loading
   const loadingTasks = useMemo(
     () =>
-      Array.from({ length: 3 }, (_, index) => ({
+      Array.from({ length: 5 }, (_, index) => ({
         id: index,
         isLoading: true,
       })),
@@ -177,13 +176,82 @@ const KanBanColumn = ({
     [tasks, groupByValue, groupByLabels],
   )
 
+  let [taskLimit, setTaskLimit] = useState(10)
+
+  // only when hovering over the column show full taskLimit
+  // otherwise show the number of cards that fit in the column
+  if (active && !isColumnActive) taskLimit = numberCardsFit - 1
+
+  let tasksAdded = 0
+
+  const allGroupedTasks = useMemo(
+    () =>
+      groupedTasks.flatMap((group) =>
+        tasksAdded >= taskLimit ? (
+          []
+        ) : (
+          <Fragment key={group.label}>
+            <span>{group.label}</span>
+            {group.tasks.flatMap((task, i) => {
+              if (tasksAdded >= taskLimit) return []
+              tasksAdded++
+              return (
+                <InView>
+                  {({ inView, ref }) => (
+                    <div ref={ref}>
+                      <KanBanCardDraggable
+                        task={task}
+                        key={task.id}
+                        onClick={(e) => handleTaskClick(e, task.id)}
+                        onMouseOver={() => handleMouseOver(task)}
+                        isActive={selectedTasks.includes(task.id)}
+                        isDraggingActive={active}
+                        className="card"
+                        assigneesIsMe={assigneesIsMe}
+                        onContextMenu={handleContextMenu}
+                        inView={inView || i <= numberCardsFit}
+                      />
+                    </div>
+                  )}
+                </InView>
+              )
+            })}
+          </Fragment>
+        ),
+      ),
+    [
+      groupedTasks,
+      handleTaskClick,
+      handleMouseOver,
+      selectedTasks,
+      active,
+      assigneesIsMe,
+      handleContextMenu,
+    ],
+  )
+
+  // used to load more tasks when scrolling
+  const { ref: moreButtonRef, inView } = useInView({
+    root: itemsRef.current,
+  })
+
+  useEffect(() => {
+    if (!inView) return
+    setTaskLimit((limit) => limit + 15)
+  }, [inView])
+
   return (
-    <Styled.Column $isOver={isOver} $active={!!active} $isOverSelf={isOverSelf} ref={columnRef}>
+    <Styled.Column
+      $isOver={isOver}
+      $active={!!active}
+      $isOverSelf={isOverSelf}
+      isColumnActive={isColumnActive}
+    >
       <Styled.DropColumn
         ref={setNodeRef}
         className="dropzone"
         style={{
-          height: `calc(100vh - 32px - ${columnTop}px)`,
+          height: `calc(100vh - 32px - ${sectionRect?.top}px)`,
         }}
         $isOver={isOver}
         $isOverSelf={isOverSelf}
@@ -201,24 +269,18 @@ const KanBanColumn = ({
         $isColumnActive={isColumnActive}
         $active={!!active}
       >
-        {groupedTasks.map((group) => (
-          <Fragment key={group.label}>
-            <span>{group.label}</span>
-            {group.tasks.map((task) => (
-              <KanBanCardDraggable
-                task={task}
-                key={task.id}
-                onClick={(e) => handleTaskClick(e, task.id)}
-                onMouseOver={() => handleMouseOver(task)}
-                isActive={selectedTasks.includes(task.id)}
-                isDraggingActive={active}
-                className="card"
-                assigneesIsMe={assigneesIsMe}
-                onContextMenu={handleContextMenu}
-              />
-            ))}
-          </Fragment>
-        ))}
+        {allGroupedTasks}
+        {!isLoading && tasksCount !== tasksAdded && !active && (
+          <Button
+            label="Load More"
+            onClick={() => setTaskLimit(taskLimit + 15)}
+            ref={moreButtonRef}
+            style={{ width: '100%' }}
+          />
+        )}
+        {active && tasksAdded !== tasksCount && (
+          <span>{tasksCount - tasksAdded > 0 ? `+ ${tasksCount - tasksAdded} more` : ''}</span>
+        )}
         {isLoading &&
           loadingTasks.map((task) => <KanBanCard task={task} key={task.id} isLoading={true} />)}
       </Styled.Items>
