@@ -42,10 +42,24 @@ const UserDashboardKanBan = ({
   // FILTER
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
 
+  // GET ALL USERS FOR THE PROJECTS
+  const { data: allUsers = [], isLoading: isLoadingAllUsers } = useGetKanBanUsersQuery(
+    { projects: selectedProjects },
+    { skip: !selectedProjects?.length },
+  )
+
+  // attach assignees data to tasks
+  const tasksWithAssignees = useMemo(() => {
+    return tasks.map((task) => {
+      const taskAssignees = allUsers.filter((user) => task.assignees.includes(user.name))
+      return { ...task, assigneesData: taskAssignees }
+    })
+  }, [tasks, allUsers])
+
   // filter out projects by selected projects and filter value
   const filteredTasks = useMemo(
-    () => getFilteredTasks(tasks, filterValue, selectedProjects),
-    [tasks, filterValue, selectedProjects],
+    () => getFilteredTasks(tasksWithAssignees, filterValue, selectedProjects),
+    [tasksWithAssignees, filterValue, selectedProjects],
   )
 
   // sort tasks by sort by values
@@ -66,11 +80,6 @@ const UserDashboardKanBan = ({
   const [tasksColumns, fieldsColumns] = useMemo(
     () => getTasksColumns(sortedTasks, splitBy, mergedFields),
     [sortedTasks],
-  )
-
-  const { data: allUsers = [], isLoading: isLoadingAllUsers } = useGetKanBanUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
   )
 
   // DND Stuff

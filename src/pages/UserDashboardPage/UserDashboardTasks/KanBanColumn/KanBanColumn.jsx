@@ -17,6 +17,7 @@ const KanBanColumn = ({
   allUsers = [],
 }) => {
   const columnRef = useRef(null)
+  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
 
   // we get column top position to figure out how high to make droppable area
   const [columnTop, setColumnTop] = useState(null)
@@ -176,6 +177,7 @@ const KanBanColumn = ({
                 isActive={selectedTasks.includes(task.id)}
                 isDraggingActive={active}
                 className="card"
+                assigneesIsMe={assigneesIsMe}
               />
             ))}
           </Fragment>
