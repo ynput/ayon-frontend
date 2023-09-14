@@ -46,8 +46,10 @@ const CopySettingsNode = ({
   nodeData,
   setNodeData,
 }) => {
+  const defaultSourceVariant = targetVariant === 'staging' ? 'production' : 'staging'
+
   const [sourceVersion, setSourceVersion] = useState(targetVersion)
-  const [sourceVariant, setSourceVariant] = useState(targetVariant)
+  const [sourceVariant, setSourceVariant] = useState(defaultSourceVariant)
   const [sourceProjectName, setSourceProjectName] = useState(targetProjectName)
   const [loading, setLoading] = useState(false)
 
