@@ -51,8 +51,8 @@ export const AppMenu = ({ user, ...props }) => {
     {
       id: 'projectsManager',
       link: 'manageProjects',
-      label: 'Projects Manager',
-      icon: 'empty_dashboard',
+      label: 'Projects Settings',
+      icon: 'settings_applications',
     },
     // this is weird I know, instead of returning a node, we return a menu object with sub menus
     InstallerDownload({ isMenu: true }),
