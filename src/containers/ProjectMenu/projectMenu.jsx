@@ -11,6 +11,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Button, InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import useLocalStorage from '/src/hooks/useLocalStorage'
+import ProjectButton from '/src/components/ProjectButton/ProjectButton'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
@@ -30,7 +31,7 @@ const ProjectMenu = ({ visible, onHide }) => {
   const [showContext] = useCreateContext([])
 
   const handlePinChange = (projectName, e) => {
-    e.originalEvent.stopPropagation()
+    e.stopPropagation()
     // e.originalEvent.preventDefault()
     if (pinned.includes(projectName)) {
       setPinned(pinned.filter((p) => p !== projectName))
@@ -45,11 +46,6 @@ const ProjectMenu = ({ visible, onHide }) => {
 
     const userItems = [
       {
-        label: 'Project Dashboard',
-        icon: 'empty_dashboard',
-        command: () => navigate(`/manageProjects/dashboard?project=${projectName}`),
-      },
-      {
         label: pinnedDisabled ? 'Max 5 pinned' : `${isPinned ? 'Unpin' : 'Pin'} Project`,
         icon: 'push_pin',
         command: (e) => handlePinChange(projectName, e),
@@ -62,7 +58,7 @@ const ProjectMenu = ({ visible, onHide }) => {
         ...[
           {
             label: 'Project Settings',
-            icon: 'settings',
+            icon: 'settings_applications',
             command: () => navigate(`/manageProjects/projectSettings?project=${projectName}`),
           },
         ],
@@ -76,11 +72,19 @@ const ProjectMenu = ({ visible, onHide }) => {
     return projects.map((project) => ({
       id: project.name,
       label: project.name,
-      selected: project.name === projectSelected,
-      onClick: () => onProjectSelect(project.name),
-      onContextMenu: (e) => showContext(e, buildContextMenu(project.name)),
       pinned: pinned.includes(project.name),
-      className: pinned.includes(project.name) ? 'pinned' : '',
+      node: (
+        <ProjectButton
+          label={project.name}
+          className={pinned.includes(project.name) ? 'pinned' : ''}
+          onPin={(e) => handlePinChange(project.name, e)}
+          onEdit={
+            !isUser && (() => navigate(`/manageProjects/projectSettings?project=${project.name}`))
+          }
+          onClick={() => onProjectSelect(project.name)}
+          onContextMenu={(e) => showContext(e, buildContextMenu(project.name))}
+        />
+      ),
     }))
   }, [projects, projectSelected, projectsFilter, pinned])
 
