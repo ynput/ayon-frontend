@@ -76,7 +76,11 @@ const UserDashboardKanBan = ({
   // DND Stuff
   const touchSensor = useSensor(TouchSensor)
   const keyboardSensor = useSensor(KeyboardSensor)
-  const pointerSensor = useSensor(PointerSensor)
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 8,
+    },
+  })
 
   const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor)
 
