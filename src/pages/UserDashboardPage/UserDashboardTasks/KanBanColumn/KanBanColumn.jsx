@@ -7,6 +7,8 @@ import { onTaskSelected } from '/src/features/dashboard'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import { useLazyGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import KanBanCard from '../KanBanCard/KanBanCard'
+import copyToClipboard from '/src/helpers/copyToClipboard'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const KanBanColumn = ({
   tasks = [],
@@ -86,6 +88,40 @@ const KanBanColumn = ({
 
     // pre-fetch the task details
     getTasksDetails({ tasks: [task] })
+  }
+
+  const getContextMenuItems = (taskId, latestVersionId) => {
+    return [
+      {
+        label: 'Copy task ID',
+        command: () => copyToClipboard(taskId),
+        icon: 'content_copy',
+      },
+      {
+        label: 'Copy latest version ID',
+        command: () => copyToClipboard(latestVersionId),
+        icon: 'content_copy',
+        disabled: !latestVersionId,
+      },
+    ]
+  }
+
+  const [showContextMenu] = useCreateContext([])
+
+  const handleContextMenu = (e) => {
+    // find the parent with className card
+    let el = e.target
+    const taskId = el.closest('.card')
+    if (!taskId) return
+    // find card
+    const card = tasks.find((t) => t.id === taskId.id)
+
+    if (!card) return
+
+    // get context model
+    const contextMenuItems = getContextMenuItems(card.id, card.latestVersionId)
+    // show context menu
+    showContextMenu(e, contextMenuItems)
   }
 
   // HANDLE TASK CLICK
@@ -178,6 +214,7 @@ const KanBanColumn = ({
                 isDraggingActive={active}
                 className="card"
                 assigneesIsMe={assigneesIsMe}
+                onContextMenu={handleContextMenu}
               />
             ))}
           </Fragment>
