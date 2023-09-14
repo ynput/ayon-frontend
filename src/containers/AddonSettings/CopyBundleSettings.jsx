@@ -73,22 +73,27 @@ const DropdownBadge = styled.span`
 `
 
 const formatBundleDropdownItem = (bundle) => {
-  let badge = null
+  let prodBadge = null
+  let stagBadge = null
   if (bundle.isProduction) {
-    badge = (
+    prodBadge = (
       <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
         Production
       </DropdownBadge>
     )
-  } else if (bundle.isStaging) {
-    badge = (
+  }
+  if (bundle.isStaging) {
+    stagBadge = (
       <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>Staging</DropdownBadge>
     )
   }
 
   return (
     <BundleDropdownItem>
-      {bundle.value} {badge}
+      {bundle.value}{' '}
+      <span>
+        {prodBadge} {stagBadge}
+      </span>
     </BundleDropdownItem>
   )
 }
