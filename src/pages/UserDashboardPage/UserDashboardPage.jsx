@@ -56,6 +56,7 @@ const UserDashboardPage = () => {
             onSelect={setSelectedProjects}
             onNoProject={(p) => p && setSelectedProjects(p)}
             autoSelect
+            onSelectAll={(projects) => setSelectedProjects(projects)}
           />
           {module === 'tasks' && (
             <UserTasksContainer projectsInfo={projectsInfo} isLoadingInfo={isLoadingInfo} />

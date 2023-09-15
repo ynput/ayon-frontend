@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -64,6 +64,7 @@ const ProjectList = ({
   isCollapsible = false,
   collapsedId = 'global',
   wrap,
+  onSelectAll,
 }) => {
   const [contextProject, setContextProject] = useState()
   const navigate = useNavigate()
@@ -81,11 +82,12 @@ const ProjectList = ({
   let [collapsed, setCollapsed] = useLocalStorage(collapsedId + '-projectListCollapsed', false)
   // always set to false if not collapsible
   if (!isCollapsible) collapsed = false
+  const projectNames = data.map((project) => project.name)
 
   // if selection does not exist in data, set selection to null
   useEffect(() => {
     if (isLoading || isFetching) return
-    const projectNames = data.map((project) => project.name)
+
     let foundProject = false
     if (multiselect && typeof selection === 'object') {
       foundProject = projectNames.some((project) => selection?.includes(project))
@@ -240,6 +242,13 @@ const ProjectList = ({
 
   return (
     <Section style={sectionStyle} className={className} wrap={wrap}>
+      {onSelectAll && (
+        <Button
+          label={!collapsed && 'Select all projects'}
+          onClick={() => onSelectAll(projectNames)}
+          icon={collapsed && 'checklist'}
+        />
+      )}
       <TablePanel onContextMenu={globalContextMenuShow}>
         <DataTable
           value={projectList}

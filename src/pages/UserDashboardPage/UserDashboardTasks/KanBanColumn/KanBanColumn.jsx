@@ -181,8 +181,6 @@ const KanBanColumn = ({
   // otherwise show the number of cards that fit in the column
   if (active && !isColumnActive) taskLimit = numberCardsFit - 1
 
-  console.log(taskLimit)
-
   let tasksAdded = 0
 
   const allGroupedTasks = useMemo(

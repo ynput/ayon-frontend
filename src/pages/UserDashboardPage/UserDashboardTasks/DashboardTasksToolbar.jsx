@@ -113,7 +113,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
   }
 
   return (
-    <Toolbar style={{ zIndex: 100, padding: '1px 8px' }}>
+    <Toolbar style={{ zIndex: 100, padding: '1px 8px', height: 32 }}>
       <SortingDropdown
         title="Sort by"
         options={sortByOptions}
