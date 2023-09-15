@@ -86,8 +86,9 @@ const TaskList = ({ style = {} }) => {
     return (
       <CellWithIcon
         icon={icon}
-        text={node.data.label || node.data.name}
+        text={node.data.label}
         iconClassName={className}
+        name={node.data.name}
       />
     )
   }

@@ -223,7 +223,14 @@ const Products = () => {
             ? 'folder'
             : productTypes[node.data.productType]?.icon || 'inventory_2'
 
-          return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
+          return (
+            <CellWithIcon
+              icon={icon}
+              iconClassName={className}
+              text={node.data.label}
+              name={node.data.name}
+            />
+          )
         },
       },
       {

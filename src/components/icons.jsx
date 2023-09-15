@@ -2,7 +2,6 @@ import { Icon } from '@ynput/ayon-react-components'
 
 const CellWithIcon = ({
   icon,
-  isLabel,
   iconClassName,
   text,
   textStyle,
@@ -10,6 +9,7 @@ const CellWithIcon = ({
   className,
   style,
   iconStyle,
+  name,
 }) => {
   return (
     <span
@@ -26,12 +26,12 @@ const CellWithIcon = ({
         className={iconClassName || ''}
         style={{ marginRight: '0.6rem', ...iconStyle }}
       />
-      {isLabel && <Icon icon="label" className="label" />}
       <span
+        title={name}
         style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...textStyle }}
         className={`cell-with-icon-text ${textClassName}`}
       >
-        {text}
+        {text || name}
       </span>
     </span>
   )

@@ -36,7 +36,13 @@ const filterHierarchy = (text, folder, folders) => {
           // hasProducts: item.hasProducts,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: <CellWithIcon icon={folders[item.folderType]?.icon} text={item.label} />,
+          body: (
+            <CellWithIcon
+              icon={folders[item.folderType]?.icon}
+              text={item.label}
+              name={item.name}
+            />
+          ),
         },
       })
     } else if (item.children) {
@@ -53,7 +59,13 @@ const filterHierarchy = (text, folder, folders) => {
             // hasProducts: item.hasProducts,
             hasTasks: item.hasTasks,
             parents: item.parents,
-            body: <CellWithIcon icon={folders[item.folderType]?.icon} text={item.label} />,
+            body: (
+              <CellWithIcon
+                icon={folders[item.folderType]?.icon}
+                text={item.label}
+                name={item.name}
+              />
+            ),
           },
         })
       }
