@@ -7,59 +7,6 @@ const versions = [
   { id: '743f25f63da311eeac5d0242ac120004', name: 'renderLighting' },
 ]
 
-const getRandomImage = () => {
-  const width = Math.floor(Math.random() * 800) + 200
-  const height = Math.floor(Math.random() * 700) + 300
-  return `https://picsum.photos/${width}/${height}`
-}
-
-const getRandomAttachmentType = () => {
-  const types = ['image', 'file']
-  const randomIndex = Math.floor(Math.random() * types.length)
-  return types[randomIndex]
-}
-
-const getRandomFileName = () => {
-  const names = [
-    'model.fbx',
-    'model.obj',
-    'model.mb',
-    'model.ma',
-    'model.fbx',
-    'shot_001.mov',
-    'shot_002.mov',
-    'shot_003.mov',
-    'shot_004.mov',
-    'shot_005.mov',
-    'shot_006.mov',
-    'shot_007.mov',
-  ]
-
-  const randomIndex = Math.floor(Math.random() * names.length)
-  return names[randomIndex]
-}
-
-const getRandomAttachments = () => {
-  const shouldReturnAttachments = Math.random() < 0.5
-
-  if (!shouldReturnAttachments) return []
-
-  const numberOfAttachments = Math.floor(Math.random() * 2) + 1
-
-  const attachments = []
-
-  for (let i = 0; i < numberOfAttachments; i++) {
-    attachments.push({
-      id: uuid4(),
-      url: getRandomImage(),
-      type: getRandomAttachmentType(),
-      name: getRandomFileName(),
-    })
-  }
-
-  return attachments
-}
-
 const getRandomDateInLastWeek = () => {
   const now = new Date()
   const lastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7)
@@ -223,7 +170,7 @@ const getCommentsForTasks = (tasks = [], users = []) => {
       entityFolder: task.folderName,
       entityType: 'task',
       eventType: 'comment',
-      attachments: getRandomAttachments(),
+      // attachments: getRandomAttachments(),
     }
 
     const references = []
