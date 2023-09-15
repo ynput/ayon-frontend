@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react'
-import getCommentsForTasks from './commentsData'
 import FeedItem from '/src/components/Feed/FeedItem'
 import { compareAsc } from 'date-fns'
 import CommentInput from '/src/components/CommentInput/CommentInput'
@@ -7,13 +6,7 @@ import * as Styled from './Feed.styled'
 import { uuid } from 'short-uuid'
 import { useSelector } from 'react-redux'
 
-const Feed = ({
-  tasks = [],
-  allTasks = [],
-  allUsers = [],
-  activeUsers,
-  selectedTasksProjects = [],
-}) => {
+const Feed = ({ tasks = [], commentsData = [], activeUsers, selectedTasksProjects = [] }) => {
   const name = useSelector((state) => state.user.name)
 
   // STATES
@@ -27,8 +20,6 @@ const Feed = ({
 
   // GET COMMENTS (FOR NOW DEMO DATA)
   const events = []
-
-  const commentsData = getCommentsForTasks(allTasks, allUsers)
 
   // add comments to events list
   if (!isAllComments) {

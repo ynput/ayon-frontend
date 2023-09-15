@@ -4,6 +4,7 @@ import UserDashDetailsHeader from '../UserDashDetailsHeader/UserDashDetailsHeade
 import { useSelector } from 'react-redux'
 import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
 import Feed from '/src/containers/Feed/Feed'
+import getCommentsForTasks from '/src/containers/Feed/commentsData'
 
 const UserDashboardDetails = ({ tasks = [] }) => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
@@ -43,6 +44,8 @@ const UserDashboardDetails = ({ tasks = [] }) => {
     )
   }, [selectedTasksProjects, projectUsers])
 
+  const commentsData = useMemo(() => getCommentsForTasks(tasks, projectUsers), [tasks])
+
   return (
     <Panel style={{ height: '100%', padding: 0 }}>
       <UserDashDetailsHeader
@@ -58,8 +61,7 @@ const UserDashboardDetails = ({ tasks = [] }) => {
           tasks={selectedTasks}
           activeUsers={activeProjectUsers}
           selectedTasksProjects={selectedTasksProjects}
-          allTasks={tasks}
-          allUsers={projectUsers}
+          commentsData={commentsData}
         />
       )}
     </Panel>
