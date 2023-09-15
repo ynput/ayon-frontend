@@ -10,6 +10,7 @@ const ProjectManagerPageContainer = ({
   isUser,
   selection,
   onDeleteProject,
+  onNewProject,
   ...props
 }) => {
   const navigate = useNavigate()
@@ -29,11 +30,13 @@ const ProjectManagerPageContainer = ({
             onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
             selection={selection}
             onDeleteProject={onDeleteProject}
+            onNewProject={onNewProject}
             isProjectManager
             {...props}
           />
         ),
         onDeleteProject,
+        onNewProject,
       })
     }
     return child
