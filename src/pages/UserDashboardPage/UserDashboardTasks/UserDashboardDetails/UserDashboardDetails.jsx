@@ -56,7 +56,7 @@ const UserDashboardDetails = ({ tasks = [] }) => {
         selectedTasksProjects={selectedTasksProjects}
         attributesOpen={attributesOpen}
       />
-      {!attributesOpen && (
+      {(!attributesOpen || !selectedTasks.length) && (
         <Feed
           tasks={selectedTasks}
           activeUsers={activeProjectUsers}
