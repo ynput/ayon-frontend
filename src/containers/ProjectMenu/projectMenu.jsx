@@ -68,6 +68,12 @@ const ProjectMenu = ({ visible, onHide }) => {
     return userItems
   }
 
+  const handleEditClick = (e, name) => {
+    e.stopPropagation()
+    navigate(`/manageProjects/projectSettings?project=${name}`)
+    onHide()
+  }
+
   const menuItems = useMemo(() => {
     return projects.map((project) => ({
       id: project.name,
@@ -78,9 +84,7 @@ const ProjectMenu = ({ visible, onHide }) => {
           label={project.name}
           className={pinned.includes(project.name) ? 'pinned' : ''}
           onPin={(e) => handlePinChange(project.name, e)}
-          onEdit={
-            !isUser && (() => navigate(`/manageProjects/projectSettings?project=${project.name}`))
-          }
+          onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
           onClick={() => onProjectSelect(project.name)}
           onContextMenu={(e) => showContext(e, buildContextMenu(project.name))}
         />
