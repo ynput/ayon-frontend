@@ -60,8 +60,7 @@ const KanBanColumn = ({
     setIsScrolling(isOverflowing)
     const cardHeight = 118
 
-    const itemsHeight = el.clientHeight
-    const cardsFit = Math.floor(itemsHeight / cardHeight)
+    const cardsFit = Math.floor(sectionRect.height / cardHeight)
     setNumberCardsFit(cardsFit)
   }, [itemsRef.current, tasksCount])
 
@@ -181,6 +180,8 @@ const KanBanColumn = ({
   // only when hovering over the column show full taskLimit
   // otherwise show the number of cards that fit in the column
   if (active && !isColumnActive) taskLimit = numberCardsFit - 1
+
+  console.log(taskLimit)
 
   let tasksAdded = 0
 
