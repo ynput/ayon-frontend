@@ -53,7 +53,10 @@ const getUserDashboard = ayonApi.injectEndpoints({
               ),
             )
 
-            if (response.status === 'rejected') throw new Error('No tasks found', entityId)
+            if (response.status === 'rejected') {
+              console.error('No tasks found', entityId)
+              throw new Error('No tasks found', entityId)
+            }
 
             // get task from response
             const task = response.data[0]
@@ -127,7 +130,10 @@ const getUserDashboard = ayonApi.injectEndpoints({
               ),
             )
 
-            if (response.status === 'rejected') throw new Error('No projects found', project)
+            if (response.status === 'rejected') {
+              console.error('No projects found', project)
+              throw new Error('No projects found', project)
+            }
 
             response.data.forEach((project) => projectTasks.push(project))
           }

@@ -5,31 +5,25 @@ import { useDispatch, useSelector } from 'react-redux'
 import { getFilteredTasks, getMergedFields, getSortedTasks, getTasksColumns } from '../util'
 import {
   DndContext,
-  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { useUpdateTaskMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
-import KanBanCard from './KanBanCard/KanBanCard'
+
 import ColumnsWrapper from './TasksWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar'
 import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
 import { onTaskSelected } from '/src/features/dashboard'
+import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 
-const UserDashboardKanBan = ({
-  tasks,
-  projectsInfo = {},
-  assignees = [],
-  taskFields,
-  isLoading,
-}) => {
+const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }) => {
   const dispatch = useDispatch()
 
-  const selectedCards = useSelector((state) => state.dashboard.tasks.selected)
+  const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
@@ -94,20 +88,15 @@ const UserDashboardKanBan = ({
   const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor)
 
   // UPDATE TASK MUTATION
-  const [updateTask] = useUpdateTaskMutation()
+  const [updateTasks] = useUpdateTasksMutation()
 
   // keep track of which card is being dragged
   const [activeDraggingId, setActiveDraggingId] = useState(null)
 
-  const activeTask = useMemo(
-    () => tasks.find((t) => t.id === activeDraggingId),
-    [activeDraggingId, tasks],
-  )
-
   const handleDragStart = (event) => {
     setActiveDraggingId(event.active.id)
     // select card
-    if (!selectedCards.includes(event.active.id)) {
+    if (!selectedTasks.includes(event.active.id)) {
       setSelectedTasks([event.active.id])
     }
   }
@@ -134,22 +123,28 @@ const UserDashboardKanBan = ({
     // if same column, do nothing
     if (activeColumnId === overColumnId) return
     // find the task
-    const task = tasks.find((t) => t.id === activeCardId)
-    if (!task) return
-    // card has moved columns, update the task
-    const newTaskData = { [splitBy]: overColumn.name }
+    let updatingTasks = [tasks.find((t) => t.id === activeCardId)]
+    if (selectedTasks.length > 1) updatingTasks = tasks.filter((t) => selectedTasks.includes(t.id))
+    if (!updatingTasks.length) return
 
-    // if the editing field is taskType and the task name is the same as the taskType, change name to new taskType
-    if (splitBy === 'taskType' && task.name.toLowerCase() === task.taskType.toLowerCase()) {
-      newTaskData.name = overColumn.name
-    }
+    // build operations package for query
+    const operations = updatingTasks.map((task) => {
+      // card has moved columns, update the task
+      const newTaskData = { [splitBy]: overColumn.name }
 
-    await updateTask({
-      projectName: task.projectName,
-      taskId: task.id,
-      data: newTaskData,
-      assignees, // this purely for the cache
+      // if the editing field is taskType and the task name is the same as the taskType, change name to new taskType
+      if (splitBy === 'taskType' && task.name.toLowerCase() === task.taskType.toLowerCase()) {
+        newTaskData.name = overColumn.name
+      }
+
+      return {
+        projectName: task.projectName,
+        id: task.id,
+        data: newTaskData,
+      }
     })
+
+    updateTasks({ operations })
   }
 
   return (
@@ -168,11 +163,11 @@ const UserDashboardKanBan = ({
           isLoading={isLoading}
           allUsers={allUsers}
         />
-        <DragOverlay dropAnimation={null}>
-          {activeDraggingId && activeTask && (
-            <KanBanCard task={activeTask} isOverlay isActive={true} />
-          )}
-        </DragOverlay>
+        <KanBanCardOverlay
+          activeDraggingId={activeDraggingId}
+          selectedTasks={selectedTasks}
+          tasks={tasks}
+        />
       </DndContext>
     </Section>
   )

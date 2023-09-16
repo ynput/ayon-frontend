@@ -22,7 +22,8 @@ const updateUserDashboard = ayonApi.injectEndpoints({
         dispatch(ayonApi.util.invalidateTags([{ type: 'kanBanTask', id: taskId }]))
         try {
           await queryFulfilled
-        } catch {
+        } catch (error) {
+          console.error('error updating task', error)
           patchResult.undo()
         }
       },

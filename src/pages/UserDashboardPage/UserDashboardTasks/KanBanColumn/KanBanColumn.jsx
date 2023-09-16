@@ -60,7 +60,7 @@ const KanBanColumn = ({
     setIsScrolling(isOverflowing)
     const cardHeight = 118
 
-    const cardsFit = Math.floor(sectionRect.height / cardHeight)
+    const cardsFit = Math.floor(sectionRect?.height / cardHeight)
     setNumberCardsFit(cardsFit)
   }, [itemsRef.current, tasksCount])
 

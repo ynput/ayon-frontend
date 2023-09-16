@@ -80,7 +80,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           tasks={tasksWithIcons}
           isLoading={isLoadingAll}
           projectsInfo={projectsInfo}
-          assignees={assignees}
           taskFields={taskFields}
         />
       </SplitterPanel>

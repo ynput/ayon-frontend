@@ -12,16 +12,18 @@ const KanBanCardDraggable = ({
   isColumnActive,
   ...props
 }) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging, active } = useDraggable({
     id: task.id,
   })
+
+  const draggingCard = isDragging || (active && isActive)
 
   const card = useMemo(
     () => (
       <KanBanCard
         {...{ task, onClick, onKeyUp, isActive, style, ...props }}
         ref={setNodeRef}
-        isDragging={isDragging}
+        isDragging={draggingCard}
         {...attributes}
         {...listeners}
       />
@@ -42,10 +44,10 @@ const KanBanCardDraggable = ({
         inView={isColumnActive}
       />
     ),
-    [isColumnActive],
+    [isColumnActive, isActive],
   )
 
-  if (!isDragging && isDraggingActive && !isColumnActive) {
+  if (!draggingCard && isDraggingActive && !isColumnActive) {
     return lightCard
   }
 
