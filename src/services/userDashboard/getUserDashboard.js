@@ -103,7 +103,8 @@ const getUserDashboard = ayonApi.injectEndpoints({
 
           // sub to websocket topic
           token = PubSub.subscribe('entity.task', handlePubSub)
-        } catch {
+        } catch (error) {
+          console.error(error)
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw
         }
@@ -161,7 +162,10 @@ const getUserDashboard = ayonApi.injectEndpoints({
               ),
             )
 
-            if (response.status === 'rejected') throw new Error('No projects found', project)
+            if (response.status === 'rejected') {
+              console.error('No projects found', project)
+              throw new Error('No projects found', project)
+            }
             projectInfo[project] = response.data
           }
 
@@ -226,7 +230,10 @@ const getUserDashboard = ayonApi.injectEndpoints({
               ),
             )
 
-            if (response.status === 'rejected') throw new Error('No projects found', project)
+            if (response.status === 'rejected') {
+              console.error('no projects found', project)
+              throw new Error('No projects found', project)
+            }
             response.data.forEach((assignee) => {
               const existingAssignee = assignees.find((a) => a.name === assignee.name)
               if (existingAssignee) {
@@ -274,8 +281,10 @@ const getUserDashboard = ayonApi.injectEndpoints({
               ),
             )
 
-            if (response.status === 'rejected')
+            if (response.status === 'rejected') {
+              console.error('No tasks found', taskIds)
               return { error: new Error('No tasks found', taskIds) }
+            }
 
             response.data.forEach((taskData) => {
               tasksDetails.push({ ...task, ...taskData })
