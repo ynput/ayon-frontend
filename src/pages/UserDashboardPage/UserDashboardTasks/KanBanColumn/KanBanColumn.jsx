@@ -195,12 +195,11 @@ const KanBanColumn = ({
               if (tasksAdded >= taskLimit) return []
               tasksAdded++
               return (
-                <InView>
+                <InView key={task.id}>
                   {({ inView, ref }) => (
                     <div ref={ref}>
                       <KanBanCardDraggable
                         task={task}
-                        key={task.id}
                         onClick={(e) => handleTaskClick(e, task.id)}
                         onMouseOver={() => handleMouseOver(task)}
                         isActive={selectedTasks.includes(task.id)}

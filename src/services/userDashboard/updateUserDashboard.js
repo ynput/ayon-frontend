@@ -30,7 +30,14 @@ const updateUserDashboard = ayonApi.injectEndpoints({
     }),
     updateTasks: build.mutation({
       async queryFn({ operations = [] }, { dispatch, getState }) {
-        const assignees = getState().dashboard.tasks.assignees
+        const assignees = [...getState().dashboard.tasks.assignees]
+        const assigneesIsMe = getState().dashboard.tasks.assigneesIsMe
+
+        if (assigneesIsMe) {
+          // get current user
+          assignees.push(getState().user.name)
+        }
+
         try {
           for (const { projectName, data, id } of operations) {
             await dispatch(

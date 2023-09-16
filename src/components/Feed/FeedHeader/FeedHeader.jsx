@@ -11,7 +11,7 @@ const FeedHeader = ({ name, users, date, reference }) => {
   // first check if the users are already in users
   const userInUsers = users?.find((user) => user.name === name)
   // get user based on user name
-  const { data: userData = {} } = useGetUserQuery({ name }, { skip: userInUsers })
+  const { data: userData = {} } = useGetUserQuery({ name }, { skip: userInUsers || !name })
 
   let user = userData
   if (userInUsers) user = userInUsers
