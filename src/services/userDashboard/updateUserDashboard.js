@@ -50,6 +50,8 @@ const updateUserDashboard = ayonApi.injectEndpoints({
               }),
             )
           }
+
+          return { data: operations }
         } catch (error) {
           console.error(error)
           return error
