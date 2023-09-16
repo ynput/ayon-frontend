@@ -7,7 +7,6 @@ export const Actions = styled.div`
   position: relative;
 
   &::after {
-    content: 'Coming Soon';
     position: absolute;
     inset: 0;
     display: flex;
@@ -16,6 +15,11 @@ export const Actions = styled.div`
     border-radius: var(--border-radius);
     font-weight: bold;
     z-index: 10;
+  }
+  &:has(img) {
+    &::after {
+      content: 'Coming Soon';
+    }
   }
 `
 
@@ -47,6 +51,10 @@ export const More = styled(Dropdown)`
         width: 20px;
         height: 20px;
       }
+    }
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest);
     }
   }
 `

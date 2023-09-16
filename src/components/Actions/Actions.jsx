@@ -16,7 +16,7 @@ const Actions = ({ options = [], pinned = [] }) => {
           </Styled.PinnedAction>
         )
       })}
-      <Styled.More options={options} placeholder="" value={[]} />
+      <Styled.More options={options} placeholder="" value={[]} disabled />
     </Styled.Actions>
   )
 }
