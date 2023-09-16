@@ -168,25 +168,31 @@ const UserDashDetailsHeader = ({
           <h3>{!isMultiple ? singleTask.name : tasks.map((t) => t.name).join(', ')}</h3>
         </Styled.Content>
       </Styled.Header>
-      <Styled.StatusAssignees>
-        <Styled.TaskStatusSelect
-          value={statusesValue}
-          options={statusesOptions}
-          disabledValues={disabledStatuses}
-          invert
-          style={{ maxWidth: 'unset' }}
-          onChange={(value) => handleUpdate('status', value)}
-        />
-        <AssigneeSelect
-          value={isMultiple ? selectedTasksAssignees : singleTask.assignees}
-          options={users}
-          disabledValues={disabledProjectUsers.map((u) => u.name)}
-          isMultiple={isMultiple && selectedTasksAssignees.length > 1}
-          editor
-          align="right"
-          onChange={(value) => handleUpdate('assignees', value)}
-        />
-      </Styled.StatusAssignees>
+      <Styled.StatusAssigned>
+        <Styled.ContentRow>
+          <label>Status</label>
+          <label>Assigned</label>
+        </Styled.ContentRow>
+        <Styled.ContentRow>
+          <Styled.TaskStatusSelect
+            value={statusesValue}
+            options={statusesOptions}
+            disabledValues={disabledStatuses}
+            invert
+            style={{ maxWidth: 'unset' }}
+            onChange={(value) => handleUpdate('status', value)}
+          />
+          <AssigneeSelect
+            value={isMultiple ? selectedTasksAssignees : singleTask.assignees}
+            options={users}
+            disabledValues={disabledProjectUsers.map((u) => u.name)}
+            isMultiple={isMultiple && selectedTasksAssignees.length > 1}
+            editor
+            align="right"
+            onChange={(value) => handleUpdate('assignees', value)}
+          />
+        </Styled.ContentRow>
+      </Styled.StatusAssigned>
       <Styled.Footer>
         <Actions options={actions} pinned={pinned} />
         <Spacer />

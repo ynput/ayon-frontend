@@ -33,11 +33,25 @@ export const Content = styled.div`
   }
 `
 
-export const StatusAssignees = styled.div`
+export const StatusAssigned = styled.div`
+  display: flex;
+  flex-direction: column;
+`
+
+export const ContentRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   align-self: stretch;
+
+  label {
+    color: var(--md-sys-color-outline);
+  }
+`
+
+export const LabelWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
 `
 
 export const TaskStatusSelect = styled(StatusSelect)`
