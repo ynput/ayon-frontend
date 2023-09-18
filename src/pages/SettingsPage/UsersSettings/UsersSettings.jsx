@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { confirmDialog } from 'primereact/confirmdialog'
 import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
@@ -20,6 +19,7 @@ import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 // TODO: Remove classname assignments and do in styled components
 const formatAccessGroups = (rowData, selectedProjects) => {
@@ -105,10 +105,9 @@ const UsersSettings = () => {
   }, [userList, selectedProjects])
 
   const onDelete = async () => {
-    confirmDialog({
-      message: `Are you sure you want to delete ${selectedUsers.length} user(s)?`,
-      header: 'Delete users',
-      icon: 'pi pi-exclamation-triangle',
+    confirmDelete({
+      label: `${selectedUsers.length} Users`,
+      showToasts: false,
       accept: async () => {
         toastId.current = toast.info('Deleting users...')
         let i = 0
@@ -127,7 +126,6 @@ const UsersSettings = () => {
         }
         toast.update(toastId.current, { render: `Deleted ${i} user(s)`, type: toast.TYPE.SUCCESS })
       },
-      reject: () => {},
     })
   }
 

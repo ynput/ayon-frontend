@@ -6,7 +6,7 @@ import { Panel, LockedInput, Icon } from '@ynput/ayon-react-components'
 import { useUpdateUserAPIKeyMutation } from '../services/user/updateUser'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { confirmDialog } from 'primereact/confirmdialog'
+import confirmDelete from '../helpers/confirmDelete'
 
 const PanelStyled = styled(Panel)`
   flex-direction: row;
@@ -62,28 +62,16 @@ const ApiKeyManager = ({ preview, name }) => {
     // check if target is an input and do nothing
     if (e.target.tagName === 'INPUT') return
 
-    confirmDialog({
-      message: `Delete key: ${preview || newKey.preview}?`,
-      header: 'Delete service key',
-      icon: 'pi pi-exclamation-triangle',
+    confirmDelete({
+      label: 'Service Key',
       accept: async () => {
-        // try catch to update api key using unwrap and toast results
-        try {
-          await updateApi({
-            name,
-            apiKey: null,
-          }).unwrap()
+        await updateApi({
+          name,
+          apiKey: null,
+        }).unwrap()
 
-          setNewKey(null)
-
-          toast.success('API Key Deleted')
-        } catch (error) {
-          console.log(error)
-          //   toast error
-          toast.error('Error deleting API Key')
-        }
+        setNewKey(null)
       },
-      reject: () => {},
     })
   }
 
