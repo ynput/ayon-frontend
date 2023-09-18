@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { toggleMenuOpen } from '../features/context'
 import { useLogOutMutation } from '../services/auth/getAuth'
 
@@ -10,6 +10,7 @@ const ShortcutsContext = createContext()
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const isUser = useSelector((state) => state.user.isUser)
 
   // logout
   const [logout] = useLogOutMutation()
@@ -25,45 +26,49 @@ function ShortcutsProvider(props) {
     return () => clearTimeout(timer)
   }, [lastPressed])
 
-  const settings = useMemo(
+  const navigation = useMemo(
     () => [
+      // project settings
+      { key: 'a+a', action: () => navigate('/manageProjects/projectSettings') },
+      // studio settings
       { key: 's+s', action: () => navigate('/settings/studio') },
-      { key: 's+b', action: () => navigate('/settings/bundles') },
-      { key: 's+u', action: () => navigate('/settings/users') },
-      { key: 's+a', action: () => navigate('/settings/attributes') },
-      { key: 's+p', action: () => navigate('/settings/anatomyPresets') },
-      { key: 's+c', action: () => navigate('/settings/connect') },
-      { key: 's+g', action: () => navigate('/settings/accessGroups') },
+      // dashboard
+      { key: 'd+d', action: () => navigate('/manageProjects/projectSettings') },
+      // user settings
+      { key: 'f+f', action: () => navigate('/settings/users') },
     ],
     [navigate],
   )
 
-  // dashboard, teams, anatomy, projectSettings
-
-  const manageProjects = useMemo(
-    () => [
-      { key: 'm+m', action: () => navigate('/manageProjects/dashboard') },
-      { key: 'm+t', action: () => navigate('/manageProjects/teams') },
-      { key: 'm+a', action: () => navigate('/manageProjects/anatomy') },
-      { key: 'm+s', action: () => navigate('/manageProjects/projectSettings') },
-    ],
-    [navigate],
+  const admin = useMemo(
+    () =>
+      isUser
+        ? []
+        : [
+            // events
+            { key: 'e+e', action: () => navigate('/events') },
+            // graphql
+            { key: 'q+q', action: () => navigate('/explorer') },
+            // api
+            { key: 'w+w', action: () => navigate('/doc/api') },
+          ],
+    [navigate, isUser],
   )
 
-  const globalActions = useMemo(
+  const navBar = useMemo(
     () => [
       { key: '1', action: () => dispatch(toggleMenuOpen('project')) },
-      { key: '8', action: () => dispatch(toggleMenuOpen('help')) },
-      { key: '9+9', action: () => logout() },
-      { key: '9', action: () => dispatch(toggleMenuOpen('user')) },
-      { key: '0', action: () => dispatch(toggleMenuOpen('app')) },
+      { key: '3', action: () => dispatch(toggleMenuOpen('help')) },
+      { key: '4+4', action: () => logout() },
+      { key: '4', action: () => dispatch(toggleMenuOpen('user')) },
+      { key: '5', action: () => dispatch(toggleMenuOpen('app')) },
     ],
     [navigate],
   )
   // when these variables change, update shortcutshh
   const deps = []
 
-  const defaultShortcuts = [...settings, ...manageProjects, ...globalActions]
+  const defaultShortcuts = [...navigation, ...navBar, ...admin]
 
   // start off with global shortcuts but others can be set per page
   const [shortcuts, setShortcuts] = useState(defaultShortcuts)
