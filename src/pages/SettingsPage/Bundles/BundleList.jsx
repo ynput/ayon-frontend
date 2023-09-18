@@ -161,7 +161,7 @@ const BundleList = ({
           header="Name"
           body={(b) => `${b.name} ${b?.isArchived ? '(archived)' : ''}`}
         />
-        <Column header="Status" body={formatStatus} style={{ maxWidth: 120 }} />
+        <Column header="Status" body={formatStatus} style={{ maxWidth: 130 }} />
       </DataTable>
     </TablePanel>
   )
