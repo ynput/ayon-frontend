@@ -155,6 +155,7 @@ const BundleList = ({
         onContextMenuSelectionChange={handleContextSelect}
         rowClassName={(rowData) => (rowData?.isArchived ? 'archived' : '')}
         className="bundles-table"
+        resizableColumns
       >
         <Column
           field="name"
