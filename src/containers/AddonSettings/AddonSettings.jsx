@@ -382,9 +382,21 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onPushToProduction = async () => {
     // Push the current bundle to production
 
+    const message = (
+      <>
+        <p>
+          Are you sure you want to push <strong>{bundleName}</strong> to production?
+        </p>
+        <p>
+          This will mark the current staging bundle as production and copy all staging studio
+          settings to production as well.
+        </p>
+      </>
+    )
+
     confirmDialog({
       header: `Push ${bundleName} to production`,
-      message: `Are you sure you want to push ${bundleName} to production?`,
+      message,
       accept: async () => {
         await promoteBundle({ name: bundleName }).unwrap()
         setLocalData({})

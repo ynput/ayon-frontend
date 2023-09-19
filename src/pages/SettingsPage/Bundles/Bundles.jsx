@@ -28,7 +28,6 @@ import { useLocation } from 'react-router'
 import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-
 const Bundles = () => {
   const location = useLocation()
   const dispatch = useDispatch()
