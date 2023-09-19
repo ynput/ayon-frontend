@@ -10,6 +10,7 @@ const TypeEditor = ({
   disabled,
   placeholder,
   isChanged,
+  align,
 }) => {
   const optionsTypes = Object.values(options).map((t) => ({
     name: t?.name,
@@ -33,6 +34,7 @@ const TypeEditor = ({
       searchFields={['name']}
       emptyMessage="None Set"
       style={mainStyle}
+      align={align}
     />
   )
 }

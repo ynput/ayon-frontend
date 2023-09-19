@@ -45,6 +45,7 @@ import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
 import useCreateContext from '/src/hooks/useCreateContext'
+import HierarchyBuilder from '/src/containers/HierarchyBuilder/HierarchyBuilder'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -81,6 +82,7 @@ const EditorPage = () => {
   // NEW STATES
   const [newEntity, setNewEntity] = useState('')
   const [newEntityData, setNewEntityData] = useState({})
+  const [hierarchyBuilderOpen, setHierarchyBuilderOpen] = useState(false)
 
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
@@ -459,6 +461,8 @@ const EditorPage = () => {
         childrenLength: folder.childrenLength,
         name: folder.value,
         parents: folder.parents,
+        id: folder.id,
+        label: folder.label,
       })
     }
 
@@ -899,8 +903,8 @@ const EditorPage = () => {
     setNewEntityData({})
   }
 
-  const addNode = (entityType, root, data = {}) => {
-    const parents = root ? [null] : futureParents
+  const addNode = (entityType, root, data = {}, entityParents) => {
+    const parents = root ? [null] : entityParents || futureParents
 
     // for leaf nodes, add parents to parents
     for (const id of focusedTasks) {
@@ -942,6 +946,8 @@ const EditorPage = () => {
         __parentId: parentId || 'root',
         __isNew: true,
       }
+
+      console.log(newNode)
       if (entityType === 'folder') {
         newNode['parentId'] = parentId
         newNode['folderType'] = parentData?.folderType
@@ -976,6 +982,31 @@ const EditorPage = () => {
       loadNewBranches(loadBranches)
     }
   } // Add node
+
+  const handleHierarchySubmit = (items) => {
+    let newNodes = []
+    for (const item of items) {
+      const newNode = {
+        leaf: item.leaf,
+        name: item.name,
+        id: item.id,
+        status: 'Not ready',
+        attrib: attrib,
+        ownAttrib: [],
+        __entityType: item.entityType,
+        __parentId: item.parentId || 'root',
+        __isNew: true,
+        [item.entityType === 'folder' ? 'parentId' : 'folderId']: item.parentId,
+        [item.entityType === 'folder' ? 'folderType' : 'taskType']: item.type,
+      }
+
+      newNodes.push(newNode)
+    }
+
+    dispatch(newNodesAdded(newNodes))
+
+    setHierarchyBuilderOpen(null)
+  }
 
   //
   // Other user events handlers (Toolbar)
@@ -1374,6 +1405,12 @@ const EditorPage = () => {
         onHide={handleCloseNew}
         onConfirm={addNode}
       />
+      <HierarchyBuilder
+        parents={focusedFolders.map((id) => searchableFoldersSet.get(id))}
+        visible={hierarchyBuilderOpen}
+        onHide={() => setHierarchyBuilderOpen(false)}
+        onSubmit={handleHierarchySubmit}
+      />
       <Section>
         <Toolbar>
           <Button
@@ -1386,6 +1423,12 @@ const EditorPage = () => {
             label="Add task"
             disabled={disableAddNew}
             onClick={() => addNewEntity('task')}
+          />
+          <Button
+            icon="account_tree"
+            label="Build hierarchy"
+            onClick={() => setHierarchyBuilderOpen(true)}
+            disabled={!focusedFolders.length && focusedTasks.length}
           />
           <MultiSelect
             options={filterOptions}
