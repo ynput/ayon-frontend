@@ -155,13 +155,14 @@ const BundleList = ({
         onContextMenuSelectionChange={handleContextSelect}
         rowClassName={(rowData) => (rowData?.isArchived ? 'archived' : '')}
         className="bundles-table"
+        resizableColumns
       >
         <Column
           field="name"
           header="Name"
           body={(b) => `${b.name} ${b?.isArchived ? '(archived)' : ''}`}
         />
-        <Column header="Status" body={formatStatus} style={{ maxWidth: 120 }} />
+        <Column header="Status" body={formatStatus} style={{ maxWidth: 130 }} />
       </DataTable>
     </TablePanel>
   )
