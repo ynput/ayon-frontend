@@ -95,8 +95,12 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   return (
     <Dialog visible={true} header="New service" onHide={onHide} footer={footer}>
       <FormLayout>
-        <FormRow label="Service name">
-          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
+        <FormRow label="Host">
+          <Dropdown
+            options={hostOptions}
+            value={selectedHost}
+            onChange={(e) => setSelectedHost(e.value)}
+          />
         </FormRow>
 
         <FormRow label="Addon name">
@@ -119,16 +123,15 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
           <Dropdown
             options={serviceOptions}
             value={selectedService}
-            onChange={(e) => setSelectedService(e.value)}
+            onChange={(e) => {
+              setSelectedService(e.value)
+              setServiceName(e.value)
+            }}
           />
         </FormRow>
 
-        <FormRow label="Host">
-          <Dropdown
-            options={hostOptions}
-            value={selectedHost}
-            onChange={(e) => setSelectedHost(e.value)}
-          />
+        <FormRow label="Service name">
+          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
         </FormRow>
       </FormLayout>
     </Dialog>

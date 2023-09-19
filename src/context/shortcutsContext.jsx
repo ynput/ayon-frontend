@@ -33,7 +33,7 @@ function ShortcutsProvider(props) {
       // studio settings
       { key: 's+s', action: () => navigate('/settings/studio') },
       // dashboard
-      { key: 'd+d', action: () => navigate('/manageProjects/projectSettings') },
+      { key: 'd+d', action: () => navigate('/manageProjects/dashboard') },
       // user settings
       { key: 'f+f', action: () => navigate('/settings/users') },
     ],

@@ -58,6 +58,7 @@ const UserList = ({
         disabled: !selection.length || isSelfSelected,
         command: () => onDelete(),
         icon: 'delete',
+        danger: true,
       },
     ],
     [selection, isSelfSelected, setShowRenameUser, setShowSetPassword, onDelete],

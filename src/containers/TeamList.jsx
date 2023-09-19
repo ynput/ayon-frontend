@@ -99,6 +99,7 @@ const TeamList = ({
         label: `Delete Team${selection.length > 1 ? 's' : ''}`,
         icon: 'delete',
         command: onDelete,
+        danger: true,
       },
     ],
     [teams, selection],

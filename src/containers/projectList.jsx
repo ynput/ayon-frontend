@@ -228,6 +228,7 @@ const ProjectList = ({
         label: 'Delete Project',
         icon: 'delete',
         command: onDeleteProject,
+        danger: true,
       },
     ]
 

@@ -24,7 +24,10 @@ import { useDispatch } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useLocation } from 'react-router'
+
+import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+
 
 const Bundles = () => {
   const location = useLocation()
@@ -235,12 +238,16 @@ const Bundles = () => {
     }
   }
 
-  const handleDeleteBundle = async () => {
-    setSelectedBundles([])
-    for (const name of selectedBundles) {
-      deleteBundle({ name })
-    }
-  }
+  const handleDeleteBundle = async () =>
+    confirmDelete({
+      label: `${selectedBundles.length} bundles`,
+      accept: async () => {
+        setSelectedBundles([])
+        for (const name of selectedBundles) {
+          await deleteBundle({ name }).unwrap()
+        }
+      },
+    })
 
   const { confirmRestart } = useServerRestart()
 
