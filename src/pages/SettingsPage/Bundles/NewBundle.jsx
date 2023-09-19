@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Section, Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
+import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { useCreateBundleMutation } from '/src/services/bundles'
 
 import BundleForm from './BundleForm'
@@ -81,7 +81,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
   console.log(formData)
 
   return (
-    <Section>
+    <>
       <Toolbar>
         <Spacer />
         <Button icon={'clear'} label="Clear" onClick={handleClear} />
@@ -138,7 +138,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
           />
         </Styled.AddonTools>
       </BundleForm>
-    </Section>
+    </>
   )
 }
 
