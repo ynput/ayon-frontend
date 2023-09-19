@@ -140,6 +140,7 @@ const SelectWidget = (props) => {
     if (initialized) return
 
     setInitialized(true)
+    if (path?.length) return
 
     setTimeout(() => {
       props.onChange(value)
