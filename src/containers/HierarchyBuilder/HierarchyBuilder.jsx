@@ -70,67 +70,17 @@ const generateId = () => uuid1().replace(/-/g, '')
 const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
   //   fake data
   const parent1 = generateId()
-  // const parent2 = generateId()
-  // const parent3 = generateId()
 
   const initForm = [
     {
       id: parent1,
-      base: 'ep010',
-      increment: 'ep020',
+      base: '',
+      increment: '',
       length: 2,
-      type: 'Episode',
+      type: '',
       entityType: 'folder',
       parent: null,
     },
-    // {
-    //   id: parent2,
-    //   parent: parent1,
-    //   base: 'sc0100',
-    //   increment: 'sc0200',
-    //   length: 2,
-    //   type: 'Sequence',
-    //   entityType: 'folder',
-    //   prefix: 1,
-    // },
-    // {
-    //   id: parent3,
-    //   parent: parent2,
-    //   base: 'sh0010',
-    //   increment: 'sh0020',
-    //   entityType: 'folder',
-    //   length: 2,
-    //   type: 'Shot',
-    //   prefix: 2,
-    // },
-    // {
-    //   id: generateId(),
-    //   entityType: 'task',
-    //   type: 'Compositing',
-    //   base: 'Compositing',
-    //   parent: parent3,
-    // },
-    // {
-    //   id: generateId(),
-    //   entityType: 'task',
-    //   type: 'Compositing',
-    //   base: 'Compositing',
-    //   parent: parent3,
-    // },
-    // {
-    //   id: generateId(),
-    //   entityType: 'task',
-    //   type: 'Compositing',
-    //   base: 'Compositing',
-    //   parent: parent3,
-    // },
-    // {
-    //   id: generateId(),
-    //   entityType: 'task',
-    //   type: 'Compositing',
-    //   base: 'Compositing',
-    //   parent: parent3,
-    // },
   ]
 
   const [hierarchyForm, setHierarchyForm] = useState(initForm)
