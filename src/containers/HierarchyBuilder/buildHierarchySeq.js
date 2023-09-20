@@ -59,7 +59,7 @@ const buildHierarchySeq = (items, rootParents) => {
   const template = items.map((f) => ({
     label: f.base,
     id: f.id,
-    parent: f.parent,
+    parentId: f.parentId,
     entityType: f.entityType,
     type: f.type,
     name: replaceSpaces(f.base),

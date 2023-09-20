@@ -17,7 +17,7 @@ function formatSeq(arr, maxLength) {
 
 const FolderSequence = ({
   onChange,
-  parent = null,
+  parentId = null,
   children,
   depth,
   onNew,
@@ -140,7 +140,7 @@ const FolderSequence = ({
           <Button
             icon={'close'}
             variant="text"
-            onClick={() => onChange({ id, delete: true }, parent)}
+            onClick={() => onChange({ id, delete: true }, parentId)}
             className="delete"
           />
         </Styled.SequenceForm>

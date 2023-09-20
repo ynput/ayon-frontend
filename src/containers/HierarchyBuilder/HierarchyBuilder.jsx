@@ -9,7 +9,7 @@ import HierarchyPreviewWrapper from '/src/components/HierarchyPreview/HierarchyP
 function findMaxChildDepth(hierarchyForm, itemId) {
   let maxChildDepth = 0
   for (const item of hierarchyForm) {
-    if (item.parent === itemId) {
+    if (item.parentId === itemId) {
       const childDepth = findMaxChildDepth(hierarchyForm, item.id)
       maxChildDepth = Math.max(maxChildDepth, childDepth + 1)
     }
@@ -20,7 +20,7 @@ function findMaxChildDepth(hierarchyForm, itemId) {
 export function buildHierarchy(hierarchyForm, parentId = null, depth = 0, parentBases = []) {
   const hierarchy = []
   for (const item of hierarchyForm) {
-    if (item.parent === parentId) {
+    if (item.parentId === parentId) {
       const newDepth = depth + 1
       const children = buildHierarchy(hierarchyForm, item.id, newDepth, [...parentBases, item.base])
       const maxChildDepth = findMaxChildDepth(hierarchyForm, item.id)
@@ -47,11 +47,11 @@ const buildPreviewHierarchy = (flatHierarchy = [], parentId = undefined) => {
   return hierarchy
 }
 
-// deletes parent and all children
+// deletes parentId and all children
 const deleteItem = (id, hierarchyForm) => {
   let newForm = hierarchyForm.filter((item) => item.id !== id)
 
-  const childItems = hierarchyForm.filter((item) => item.parent === id)
+  const childItems = hierarchyForm.filter((item) => item.parentId === id)
 
   childItems.forEach((child) => {
     newForm = deleteItem(child.id, newForm)
@@ -79,7 +79,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
       length: 2,
       type: '',
       entityType: 'folder',
-      parent: null,
+      parentId: null,
     },
   ]
 
@@ -113,12 +113,22 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
     }
   }
 
+  // eslint-disable-next-line no-unused-vars
+  const [tooBig, setTooBig] = useState(false)
+
   useEffect(() => {
+    console.time('buildPreviewHierarchy')
+    // if (tooBig) return
     const flatHierarchy = buildHierarchySeq(hierarchyForm)
     // build a hierarchy from the flat hierarchy
-    const hierarchy = buildPreviewHierarchy(flatHierarchy)
+    const hierarchy = buildPreviewHierarchy(flatHierarchy, undefined, preview)
+    console.timeEnd('buildPreviewHierarchy')
+    if (hierarchy.length > 8000) {
+      // setTooBig(true)
+      return
+    }
     setPreview(hierarchy)
-  }, [hierarchyForm])
+  }, [hierarchyForm, tooBig])
 
   const handleNew = (parentId, type) => {
     // get parent
@@ -132,14 +142,14 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
         : {
             base: '',
             increment: parent.increment || '',
-            length: parent.length || '',
+            length: 2,
             type: parent.type || '',
             prefix: parent.prefix + 1 || 1,
           }
     // create a new item with parentId
     const newItem = {
       id: generateId(),
-      parent: parentId,
+      parentId: parentId,
       base: '',
       increment: '',
       length: '',
@@ -194,8 +204,10 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
           maxDepth={maxDepth}
         />
       </div>
-      <h2 style={{ marginBottom: 0 }}>Preview</h2>
-      <HierarchyPreviewWrapper hierarchy={preview} />
+      <h2 style={{ marginBottom: 0 }}>
+        {tooBig ? 'Preview disabled due to hierarchy size.' : 'Preview'}
+      </h2>
+      {!tooBig && <HierarchyPreviewWrapper hierarchy={preview} />}
     </Dialog>
   )
 }
