@@ -23,12 +23,15 @@ const FolderSequence = ({
   onNew,
   index,
   nesting = true,
+  childTypes,
   ...props
 }) => {
   const folders = useSelector((state) => state.project.folders) || []
   const tasks = useSelector((state) => state.project.tasks) || []
 
   const { base, increment, length, type, id, entityType, prefix, parentBases } = props
+
+  const childrenOnlyTasks = childTypes?.includes('task') && !childTypes?.includes('folder')
 
   let initSeq = []
   if (base && increment && length) {
@@ -105,6 +108,8 @@ const FolderSequence = ({
     }
   }, [prefixRef.current, prefix, parentBases])
 
+  console.log(base, depth)
+
   if (entityType === 'task') {
     return (
       <Styled.TaskContainer
@@ -116,25 +121,23 @@ const FolderSequence = ({
       >
         <Styled.SequenceForm className="form">
           <Icon icon="task_alt" />
-          <Styled.InputColumn>
-            <label>Task label</label>
-            <InputText
-              value={base}
-              id={'base'}
-              onChange={handleChange}
-              placeholder="compositing..."
-            />
-          </Styled.InputColumn>
-          <Styled.InputColumn>
-            <label>Task Type</label>
-            <TypeEditor
-              value={[type]}
-              onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
-              options={tasks}
-              style={{ width: 160 }}
-              align="right"
-            />
-          </Styled.InputColumn>
+
+          <label>Task label</label>
+          <InputText
+            value={base}
+            id={'base'}
+            onChange={handleChange}
+            placeholder="compositing..."
+          />
+
+          <label>Type</label>
+          <TypeEditor
+            value={[type]}
+            onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
+            options={tasks}
+            style={{ width: 160 }}
+            align="right"
+          />
 
           <Button
             icon={'close'}
@@ -205,13 +208,13 @@ const FolderSequence = ({
               </Styled.InputColumn>
             )}
 
-            <Styled.InputColumn>
-              <label>First Sequence Name</label>
+            <Styled.InputColumn className="seq">
+              <label>First Seq. Name</label>
               <InputText value={base} id={'base'} onChange={handleChange} placeholder="ep101..." />
             </Styled.InputColumn>
             <Icon icon="trending_flat" />
-            <Styled.InputColumn>
-              <label>Second Sequence Name</label>
+            <Styled.InputColumn className="seq">
+              <label>Second Seq. Name</label>
               <InputText
                 value={increment}
                 id={'increment'}
@@ -221,7 +224,7 @@ const FolderSequence = ({
             </Styled.InputColumn>
 
             <Styled.InputColumn>
-              <label>Sequence Length</label>
+              <label>Seq. Length</label>
               <InputNumber
                 value={length}
                 id={'length'}
@@ -252,7 +255,7 @@ const FolderSequence = ({
         </Styled.SequenceContainer>
       </Styled.RowWrapper>
       {nesting && (
-        <Styled.Children $depth={depth} className="children">
+        <Styled.Children $tasksOnly={childrenOnlyTasks} className="children">
           {children}
         </Styled.Children>
       )}

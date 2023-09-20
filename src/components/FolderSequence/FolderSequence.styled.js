@@ -10,8 +10,9 @@ export const FolderSequenceWrapper = styled.div`
   .form.folder {
     /* get smaller as depth gets higher */
     /* input type text */
-    input[type='text'] {
-      width: ${({ $depth, $prefix }) => `${300 - $depth * 20 - $prefix}px`};
+    .seq {
+      width: ${({ $depth, $prefix }) =>
+        `${300 - $prefix - ($depth === 0 ? 0 : 20) - $depth * 20}px`};
     }
   }
 
@@ -75,11 +76,9 @@ export const TaskContainer = styled(SequenceContainer)`
 
   border-radius: var(--border-radius-l);
   padding-bottom: 4px;
+  margin-left: 36px;
 
-  .form > .icon {
-    padding: 0;
-    padding-top: 20px;
-  }
+  background-color: var(--md-sys-color-secondary-container);
 `
 
 export const SequenceForm = styled.div`
@@ -96,10 +95,18 @@ export const SequenceForm = styled.div`
 export const InputColumn = styled.div`
   display: flex;
   flex-direction: column;
+  width: min-content;
 
   /* input type number */
   input[type='number'] {
-    width: 150px;
+    width: 90px;
+  }
+
+  label {
+    overflow: hidden;
+    width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 `
 
@@ -108,10 +115,11 @@ export const Children = styled.div`
   flex-direction: column;
   gap: var(--base-gap-small);
 
-  /* if children has no folders then make 100% width for task */
-  &:not(:has(.folder)) {
-    width: calc(100% - ${({ $depth }) => ($depth === 0 ? 84 : 0)}px);
-  }
+  ${({ $tasksOnly }) =>
+    $tasksOnly &&
+    css`
+      width: calc(100% - 40px);
+    `}
 
   /* has no children then display none */
   &:empty {
