@@ -4,6 +4,8 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
+  justify-content: flex-end;
 `
 
 export const FolderSequenceWrapper = styled.div`
@@ -11,20 +13,15 @@ export const FolderSequenceWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-small);
-  width: max-content;
+  width: 100%;
   align-items: flex-end;
-  .form.folder {
-    /* get smaller as depth gets higher */
-    /* input type text */
-    .seq {
-      width: ${({ $depth, $prefix }) =>
-        `${300 - $prefix - ($depth === 0 ? 0 : 26) - $depth * 20}px`};
-    }
-  }
 
   .seq {
     /* lower depth have a higher z-index */
     z-index: ${({ $depth, $index }) => 100 - $depth - $index};
+    /* flex: 1; */
+    flex-grow: 1;
+    width: 100%;
   }
   .children {
     /* lower depth have a higher z-index */
@@ -45,6 +42,7 @@ export const SequenceContainer = styled.div`
   border-radius: var(--border-radius);
   border: 1px solid transparent;
   z-index: 10;
+  width: 100%;
 
   transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 
@@ -82,7 +80,6 @@ export const TaskContainer = styled(SequenceContainer)`
 
   border-radius: var(--border-radius-l);
   padding-bottom: 4px;
-  margin-left: 36px;
   padding: 2px 4px;
 `
 
@@ -91,7 +88,7 @@ export const SequenceForm = styled.div`
   flex-direction: row;
   align-items: flex-end;
   gap: var(--base-gap-small);
-
+  width: 100%;
   .delete {
     margin-left: auto;
   }
@@ -127,17 +124,13 @@ export const Children = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-small);
-
-  ${({ $tasksOnly }) =>
-    $tasksOnly &&
-    css`
-      width: calc(100% - 40px);
-    `}
+  justify-content: flex-end;
 
   /* has no children then display none */
   &:empty {
     display: none;
   }
+  width: 100%;
 `
 
 export const RowWrapper = styled.div`
@@ -145,6 +138,7 @@ export const RowWrapper = styled.div`
   flex-direction: row;
   align-items: center;
   gap: var(--base-gap-small);
+  width: 100%;
 `
 
 export const AddButtons = styled.div`

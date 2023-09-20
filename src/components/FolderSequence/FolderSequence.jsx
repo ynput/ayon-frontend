@@ -1,8 +1,8 @@
-import { Button, Icon, InputNumber, InputText } from '@ynput/ayon-react-components'
+import { Button, Icon, InputNumber, InputText, Spacer } from '@ynput/ayon-react-components'
 import * as Styled from './FolderSequence.styled'
 import TypeEditor from '/src/pages/EditorPage/TypeEditor'
 import { useSelector } from 'react-redux'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import getSequence from '/src/containers/HierarchyBuilder/getSequence'
 
 function formatSeq(arr, maxLength) {
@@ -23,15 +23,12 @@ const FolderSequence = ({
   onNew,
   index,
   nesting = true,
-  childTypes,
   ...props
 }) => {
   const folders = useSelector((state) => state.project.folders) || []
   const tasks = useSelector((state) => state.project.tasks) || []
 
   const { base, increment, length, type, id, entityType, prefix, parentBases } = props
-
-  const childrenOnlyTasks = childTypes?.includes('task') && !childTypes?.includes('folder')
 
   let initSeq = []
   if (base && increment && length) {
@@ -102,16 +99,14 @@ const FolderSequence = ({
 
   const sequenceString = formatSeq(sequence, 5)
 
-  const prefixRef = useRef(null)
-  const [prefixWidth, setPrefixWidth] = useState(0)
+  const seqRef = useRef(null)
+  const [seqWidth, setSeqWidth] = useState(0)
   useLayoutEffect(() => {
     // find width of prefix
-    if (prefixRef.current) {
-      if (!prefix) return setPrefixWidth(0)
-      // add 4px for gap
-      setPrefixWidth(prefixRef.current.offsetWidth + 4)
+    if (seqRef.current) {
+      setSeqWidth(seqRef.current.offsetWidth)
     }
-  }, [prefixRef.current, prefix, parentBases])
+  }, [seqRef.current, prefix])
 
   if (entityType === 'task') {
     return (
@@ -154,12 +149,7 @@ const FolderSequence = ({
   }
 
   return (
-    <Styled.FolderSequenceWrapper
-      $depth={depth}
-      $index={index}
-      $prefix={prefixWidth / 2}
-      className="folder"
-    >
+    <Styled.FolderSequenceWrapper $depth={depth} $index={index} className="folder">
       <Styled.RowWrapper $depth={depth} className="seq">
         {nesting && (
           <Styled.AddButtons className="buttons">
@@ -191,7 +181,7 @@ const FolderSequence = ({
             />
           </Styled.AddButtons>
         )}
-        <Styled.SequenceContainer $isNew={isNew} $nesting={nesting}>
+        <Styled.SequenceContainer $isNew={isNew} $nesting={nesting} ref={seqRef}>
           <Styled.SequenceForm className="form folder">
             {depth !== 0 && nesting && (
               <Styled.InputColumn>
@@ -207,7 +197,7 @@ const FolderSequence = ({
             )}
 
             {parentBases && nesting && (
-              <Styled.InputColumn ref={prefixRef} style={{ display: prefix ? 'flex' : 'none' }}>
+              <Styled.InputColumn style={{ display: prefix ? 'flex' : 'none' }}>
                 <Styled.Prefix>{parentBases.join('')}</Styled.Prefix>
               </Styled.InputColumn>
             )}
@@ -248,11 +238,13 @@ const FolderSequence = ({
                 align="right"
               />
             </Styled.InputColumn>
-            {nesting && (depth !== 0 || index > 0) && (
+            <Spacer />
+            {nesting && (
               <Button
                 icon={'close'}
                 variant="text"
                 onClick={() => onChange({ id, delete: true })}
+                disabled={depth === 0 && index === 0}
               />
             )}
           </Styled.SequenceForm>
@@ -260,7 +252,7 @@ const FolderSequence = ({
         </Styled.SequenceContainer>
       </Styled.RowWrapper>
       {nesting && (
-        <Styled.Children $tasksOnly={childrenOnlyTasks} className="children">
+        <Styled.Children className="children" style={{ width: seqWidth }}>
           {children}
         </Styled.Children>
       )}
