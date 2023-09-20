@@ -114,7 +114,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
   }
 
   useEffect(() => {
-    const flatHierarchy = buildHierarchySeq(hierarchyForm, parents)
+    const flatHierarchy = buildHierarchySeq(hierarchyForm)
     // build a hierarchy from the flat hierarchy
     const hierarchy = buildPreviewHierarchy(flatHierarchy)
     setPreview(hierarchy)
@@ -155,18 +155,24 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
   }
 
   const handleSubmit = () => {
-    const newEntities = buildHierarchySeq(hierarchyForm, parents)
+    const newEntities = buildHierarchySeq(
+      hierarchyForm,
+      parents.map((p) => p.id),
+    )
     onSubmit(newEntities)
   }
 
-  const parentsLabels = parents?.map((p) => p?.label).join(', ')
+  let parentsLabels = parents?.map((p) => p?.label).join(', ')
+  if (parentsLabels.length > 50) {
+    parentsLabels = parentsLabels.slice(0, 50) + '...'
+  }
 
   return (
     <Dialog
       header={`Hierarchy Builder Inside: ${parents.length ? parentsLabels : 'root'}`}
       visible={visible}
       onHide={onHide}
-      style={{ minWidth: '95vw', minHeight: '90vh' }}
+      style={{ minWidth: '95vw', maxWidth: '95vw', minHeight: '90vh' }}
       contentStyle={{ gap: 16, display: 'flex', flexDirection: 'column' }}
       footer={
         <Toolbar>

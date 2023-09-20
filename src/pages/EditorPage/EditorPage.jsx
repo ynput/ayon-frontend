@@ -989,6 +989,7 @@ const EditorPage = () => {
       const newNode = {
         leaf: item.leaf,
         name: item.name,
+        label: item.label,
         id: item.id,
         status: 'Not ready',
         attrib: attrib,
@@ -1405,12 +1406,14 @@ const EditorPage = () => {
         onHide={handleCloseNew}
         onConfirm={addNode}
       />
-      <HierarchyBuilder
-        parents={focusedFolders.map((id) => searchableFoldersSet.get(id))}
-        visible={hierarchyBuilderOpen}
-        onHide={() => setHierarchyBuilderOpen(false)}
-        onSubmit={handleHierarchySubmit}
-      />
+      {hierarchyBuilderOpen && (
+        <HierarchyBuilder
+          parents={focusedFolders.map((id) => searchableFoldersSet.get(id))}
+          visible={hierarchyBuilderOpen}
+          onHide={() => setHierarchyBuilderOpen(false)}
+          onSubmit={handleHierarchySubmit}
+        />
+      )}
       <Section>
         <Toolbar>
           <Button

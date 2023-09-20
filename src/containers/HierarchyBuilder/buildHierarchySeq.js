@@ -54,7 +54,7 @@ const buildSeqs = (hierarchy = [], parentId, depth = 0, parentNames = []) => {
   return seqs
 }
 
-const buildHierarchySeq = (items) => {
+const buildHierarchySeq = (items, rootParents) => {
   // split out folders and tasks
   const template = items.map((f) => ({
     label: f.base,
@@ -69,9 +69,20 @@ const buildHierarchySeq = (items) => {
 
   const hierarchy = buildHierarchy(template, null)
 
-  const seqs = buildSeqs(hierarchy)
+  let allSeqs = []
+  if (rootParents?.length) {
+    rootParents.forEach((id) => {
+      const seqs = buildSeqs(hierarchy, id)
+      console.log(seqs)
+      allSeqs = [...allSeqs, ...seqs]
+    })
+  } else {
+    allSeqs = buildSeqs(hierarchy)
+  }
 
-  return seqs
+  console.log(allSeqs)
+
+  return allSeqs
 }
 
 export default buildHierarchySeq

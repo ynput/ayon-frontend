@@ -169,11 +169,12 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       footer={
         <Toolbar>
           <Spacer />
-          {entityType === 'folder' && !createSeq ? (
-            <Button label="Create multiple" variant="text" onClick={openCreateSeq} />
-          ) : (
-            <Button label="Create single" variant="text" onClick={() => setCreateSeq(null)} />
-          )}
+          {entityType === 'folder' &&
+            (!createSeq ? (
+              <Button label="Create multiple" variant="text" onClick={openCreateSeq} />
+            ) : (
+              <Button label="Create single" variant="text" onClick={() => setCreateSeq(null)} />
+            ))}
           <Button
             label={'Create'}
             onClick={createSeq ? handleSeqSubmit : handleSubmit}
