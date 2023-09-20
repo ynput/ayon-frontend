@@ -1,9 +1,10 @@
 import { Dialog } from 'primereact/dialog'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { v1 as uuid1 } from 'uuid'
 import FolderHierarchy from '/src/components/FolderSequence/FolderHierarchy'
 import { Button, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import buildHierarchySeq from './buildHierarchySeq'
+import HierarchyPreviewWrapper from '/src/components/HierarchyPreview/HierarchyPreviewWrapper'
 
 function findMaxChildDepth(hierarchyForm, itemId) {
   let maxChildDepth = 0
@@ -16,19 +17,31 @@ function findMaxChildDepth(hierarchyForm, itemId) {
   return maxChildDepth
 }
 
-export function buildHierarchy(hierarchyForm, parentId = null, depth = 0) {
+export function buildHierarchy(hierarchyForm, parentId = null, depth = 0, parentBases = []) {
   const hierarchy = []
   for (const item of hierarchyForm) {
     if (item.parent === parentId) {
       const newDepth = depth + 1
-      const children = buildHierarchy(hierarchyForm, item.id, newDepth)
+      const children = buildHierarchy(hierarchyForm, item.id, newDepth, [...parentBases, item.base])
       const maxChildDepth = findMaxChildDepth(hierarchyForm, item.id)
       hierarchy.push({
         ...item,
         children,
         maxChildDepth,
         depth: depth,
+        parentBases,
       })
+    }
+  }
+  return hierarchy
+}
+
+const buildPreviewHierarchy = (flatHierarchy = [], parentId = undefined) => {
+  const hierarchy = []
+  for (const item of flatHierarchy) {
+    if (item.parentId === parentId) {
+      const children = buildPreviewHierarchy(flatHierarchy, item.id)
+      hierarchy.push({ ...item, children })
     }
   }
   return hierarchy
@@ -44,37 +57,71 @@ const generateId = () => uuid1().replace(/-/g, '')
 const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
   //   fake data
   const parent1 = generateId()
-  // const parent2 = generateId()
+  const parent2 = generateId()
+  const parent3 = generateId()
 
   const initForm = [
     {
       id: parent1,
       base: 'ep010',
       increment: 'ep020',
-      length: 10,
+      length: 2,
       type: 'Episode',
       entityType: 'folder',
       parent: null,
     },
-    // {
-    //   id: parent2,
-    //   parent: parent1,
-    //   base: 'sc0100',
-    //   increment: 'sc0200',
-    //   length: 4,
-    //   type: 'Scene',
-    //   entityType: 'folder',
-    // },
-    // {
-    //   id: generateId(),
-    //   parent: parent2,
-    //   base: 'Compositing',
-    //   type: 'Compositing',
-    //   entityType: 'task',
-    // },
+    {
+      id: parent2,
+      parent: parent1,
+      base: 'sc0100',
+      increment: 'sc0200',
+      length: 2,
+      type: 'Sequence',
+      entityType: 'folder',
+      prefix: true,
+    },
+    {
+      id: parent3,
+      parent: parent2,
+      base: 'sh0010',
+      increment: 'sh0020',
+      entityType: 'folder',
+      length: 2,
+      type: 'Shot',
+      prefix: true,
+    },
+    {
+      id: generateId(),
+      entityType: 'task',
+      type: 'Compositing',
+      base: 'Compositing',
+      parent: parent3,
+    },
+    {
+      id: generateId(),
+      entityType: 'task',
+      type: 'Compositing',
+      base: 'Compositing',
+      parent: parent3,
+    },
+    {
+      id: generateId(),
+      entityType: 'task',
+      type: 'Compositing',
+      base: 'Compositing',
+      parent: parent3,
+    },
+    {
+      id: generateId(),
+      entityType: 'task',
+      type: 'Compositing',
+      base: 'Compositing',
+      parent: parent3,
+    },
   ]
 
   const [hierarchyForm, setHierarchyForm] = useState(initForm)
+  const [preview, setPreview] = useState([])
 
   const allFieldsValid = hierarchyForm.every(
     (item) =>
@@ -106,6 +153,13 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
     }
   }
 
+  useEffect(() => {
+    const flatHierarchy = buildHierarchySeq(hierarchyForm, parents)
+    // build a hierarchy from the flat hierarchy
+    const hierarchy = buildPreviewHierarchy(flatHierarchy)
+    setPreview(hierarchy)
+  }, [hierarchyForm])
+
   const handleNew = (parentId, type) => {
     // get parent
     const parent = hierarchyForm.find((i) => i.id === parentId) || {}
@@ -116,10 +170,11 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
             base: 'Generic',
           }
         : {
-            base: parent.base || '',
+            base: '',
             increment: parent.increment || '',
             length: parent.length || '',
             type: parent.type || '',
+            prefix: true,
           }
     // create a new item with parentId
     const newItem = {
@@ -165,12 +220,16 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
         </Toolbar>
       }
     >
-      <FolderHierarchy
-        hierarchy={hierarchy}
-        onChange={handleChange}
-        onNew={handleNew}
-        maxDepth={maxDepth}
-      />
+      <div style={{ height: 'min-content' }}>
+        <FolderHierarchy
+          hierarchy={hierarchy}
+          onChange={handleChange}
+          onNew={handleNew}
+          maxDepth={maxDepth}
+        />
+      </div>
+      <h2 style={{ marginBottom: 0 }}>Preview</h2>
+      <HierarchyPreviewWrapper hierarchy={preview} />
     </Dialog>
   )
 }

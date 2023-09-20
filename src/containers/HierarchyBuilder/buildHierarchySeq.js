@@ -8,7 +8,7 @@ const replaceSpaces = (string) => {
 
 const generateUniqueId = () => uuid1().replace(/-/g, '')
 
-const buildSeqs = (hierarchy = [], parentId) => {
+const buildSeqs = (hierarchy = [], parentId, depth = 0, parentLabel) => {
   let seqs = []
 
   hierarchy.forEach((item) => {
@@ -21,24 +21,30 @@ const buildSeqs = (hierarchy = [], parentId) => {
         entityType: 'task',
         type: item.type,
         leaf: true,
+        depth: depth,
+        siblingsLength: 1,
       })
       return
     }
 
     item.seq.forEach((seqItem) => {
+      console.log(parentLabel, seqItem, item.prefix)
+      const name = item.prefix ? `${parentLabel}${seqItem}` : seqItem
       const newId = generateUniqueId()
       seqs.push({
         id: newId,
-        label: seqItem,
-        name: replaceSpaces(seqItem),
+        label: name,
+        name: replaceSpaces(name),
         parentId: parentId,
         entityType: 'folder',
         type: item.type,
         leaf: !item.children?.length,
+        depth: depth,
+        siblingsLength: item.seq.length,
       })
 
       if (item.children?.length) {
-        const nestedSeqs = buildSeqs(item.children, newId)
+        const nestedSeqs = buildSeqs(item.children, newId, depth + 1, name)
         seqs = [...seqs, ...nestedSeqs]
       }
     })
@@ -57,6 +63,7 @@ const buildHierarchySeq = (items) => {
     type: f.type,
     name: replaceSpaces(f.base),
     seq: f.entityType === 'task' ? [] : getSequence(f.base, f.increment, f.length),
+    prefix: f.prefix,
   }))
 
   const hierarchy = buildHierarchy(template, null)

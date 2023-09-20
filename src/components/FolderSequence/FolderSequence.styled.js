@@ -7,11 +7,11 @@ export const FolderSequenceWrapper = styled.div`
   gap: var(--base-gap-small);
   width: max-content;
   align-items: flex-end;
-  .form {
+  .form.folder {
     /* get smaller as depth gets higher */
     /* input type text */
     input[type='text'] {
-      min-width: ${({ $depth }) => `${300 - $depth * 20}px`};
+      width: ${({ $depth, $prefix }) => `${300 - $depth * 20 - $prefix}px`};
     }
   }
 
@@ -97,19 +97,9 @@ export const InputColumn = styled.div`
   display: flex;
   flex-direction: column;
 
-  input {
-    max-height: 30px;
-    min-height: 30px;
-  }
-
   /* input type number */
   input[type='number'] {
     width: 150px;
-  }
-
-  /* input type text */
-  input[type='text'] {
-    min-width: 200px;
   }
 `
 
@@ -144,3 +134,15 @@ export const AddButtons = styled.div`
 `
 
 export const Example = styled.span``
+
+export const Prefix = styled.span`
+  background-color: var(--md-sys-color-surface-container-low);
+  padding: 5px 8px;
+  border-radius: var(--border-radius);
+  position: relative;
+  top: -1px;
+  right: -3px;
+
+  color: var(--md-sys-color-outline);
+  min-height: 30px;
+`
