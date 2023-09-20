@@ -8,7 +8,7 @@ const replaceSpaces = (string) => {
 
 const generateUniqueId = () => uuid1().replace(/-/g, '')
 
-const buildSeqs = (hierarchy = [], parentId, depth = 0, parentLabel) => {
+const buildSeqs = (hierarchy = [], parentId, depth = 0, parentNames = []) => {
   let seqs = []
 
   hierarchy.forEach((item) => {
@@ -28,8 +28,9 @@ const buildSeqs = (hierarchy = [], parentId, depth = 0, parentLabel) => {
     }
 
     item.seq.forEach((seqItem) => {
-      console.log(parentLabel, seqItem, item.prefix)
-      const name = item.prefix ? `${parentLabel}${seqItem}` : seqItem
+      // keep onl the prefix number of parents
+      const prefixParents = parentNames.slice(0, item.prefix)
+      const name = item.prefix ? `${prefixParents.join('')}${seqItem}` : seqItem
       const newId = generateUniqueId()
       seqs.push({
         id: newId,
@@ -44,7 +45,7 @@ const buildSeqs = (hierarchy = [], parentId, depth = 0, parentLabel) => {
       })
 
       if (item.children?.length) {
-        const nestedSeqs = buildSeqs(item.children, newId, depth + 1, name)
+        const nestedSeqs = buildSeqs(item.children, newId, depth + 1, [...parentNames, seqItem])
         seqs = [...seqs, ...nestedSeqs]
       }
     })

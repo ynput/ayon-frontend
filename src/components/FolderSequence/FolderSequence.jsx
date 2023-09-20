@@ -1,4 +1,4 @@
-import { Button, Icon, InputNumber, InputSwitch, InputText } from '@ynput/ayon-react-components'
+import { Button, Icon, InputNumber, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './FolderSequence.styled'
 import TypeEditor from '/src/pages/EditorPage/TypeEditor'
 import { useSelector } from 'react-redux'
@@ -44,6 +44,11 @@ const FolderSequence = ({
     e?.preventDefault && e?.preventDefault()
 
     let { value, id: fieldId } = e.target
+
+    if (fieldId === 'prefix') {
+      // convert to number
+      value = parseInt(value, 10)
+    }
 
     const newValue = { [fieldId]: value }
 
@@ -108,8 +113,6 @@ const FolderSequence = ({
     }
   }, [prefixRef.current, prefix, parentBases])
 
-  console.log(base, depth)
-
   if (entityType === 'task') {
     return (
       <Styled.TaskContainer
@@ -121,8 +124,8 @@ const FolderSequence = ({
       >
         <Styled.SequenceForm className="form">
           <Icon icon="task_alt" />
-
-          <label>Task label</label>
+          <strong>Task</strong>
+          <label>label</label>
           <InputText
             value={base}
             id={'base'}
@@ -190,14 +193,15 @@ const FolderSequence = ({
         )}
         <Styled.SequenceContainer $isNew={isNew} $nesting={nesting}>
           <Styled.SequenceForm className="form folder">
-            {nesting && <Icon icon="folder" />}
             {depth !== 0 && nesting && (
               <Styled.InputColumn>
-                <label>Prefix</label>
-                <InputSwitch
-                  checked={prefix}
+                <label>Prefixes</label>
+                <InputNumber
+                  value={prefix}
                   id={'prefix'}
-                  onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
+                  onChange={handleChange}
+                  max={parentBases.length}
+                  min={0}
                 />
               </Styled.InputColumn>
             )}
@@ -230,6 +234,7 @@ const FolderSequence = ({
                 id={'length'}
                 onChange={handleChange}
                 placeholder="15..."
+                min={1}
               />
             </Styled.InputColumn>
 
@@ -243,7 +248,7 @@ const FolderSequence = ({
                 align="right"
               />
             </Styled.InputColumn>
-            {nesting && (
+            {nesting && (depth !== 0 || index > 0) && (
               <Button
                 icon={'close'}
                 variant="text"
@@ -251,7 +256,7 @@ const FolderSequence = ({
               />
             )}
           </Styled.SequenceForm>
-          <Styled.Example>Sequence Output: {sequenceString}</Styled.Example>
+          {!nesting && <Styled.Example>Sequence Output: {sequenceString}</Styled.Example>}
         </Styled.SequenceContainer>
       </Styled.RowWrapper>
       {nesting && (

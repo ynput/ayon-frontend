@@ -47,6 +47,19 @@ const buildPreviewHierarchy = (flatHierarchy = [], parentId = undefined) => {
   return hierarchy
 }
 
+// deletes parent and all children
+const deleteItem = (id, hierarchyForm) => {
+  let newForm = hierarchyForm.filter((item) => item.id !== id)
+
+  const childItems = hierarchyForm.filter((item) => item.parent === id)
+
+  childItems.forEach((child) => {
+    newForm = deleteItem(child.id, newForm)
+  })
+
+  return newForm
+}
+
 const generateId = () => uuid1().replace(/-/g, '')
 //
 //
@@ -78,7 +91,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
       length: 2,
       type: 'Sequence',
       entityType: 'folder',
-      prefix: true,
+      prefix: 1,
     },
     {
       id: parent3,
@@ -88,7 +101,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
       entityType: 'folder',
       length: 2,
       type: 'Shot',
-      prefix: true,
+      prefix: 2,
     },
     {
       id: generateId(),
@@ -133,14 +146,11 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
   const maxDepth = hierarchy.reduce((max, item) => Math.max(max, item.maxChildDepth), 0)
 
   const handleChange = (value, id) => {
+    // value is the value of the new field
     // find the item in the form
     const item = hierarchyForm.find((i) => i.id === id)
     if (value.delete) {
-      // remove the item from the form
-      const newForm = hierarchyForm.filter((i) => i.id !== value.id)
-      // don't allow deleting the last item
-      if (newForm.length === 0) return
-      // update state
+      const newForm = deleteItem(value.id, hierarchyForm)
       setHierarchyForm(newForm)
     } else {
       // update the item
@@ -174,7 +184,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
             increment: parent.increment || '',
             length: parent.length || '',
             type: parent.type || '',
-            prefix: true,
+            prefix: parent.prefix + 1 || 1,
           }
     // create a new item with parentId
     const newItem = {
@@ -206,7 +216,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
       header={`Hierarchy Builder Inside: ${parents.length ? parentsLabels : 'root'}`}
       visible={visible}
       onHide={onHide}
-      style={{ maxWidth: '95vw' }}
+      style={{ maxWidth: '95vw', minHeight: '90vh' }}
       contentStyle={{ gap: 16, display: 'flex', flexDirection: 'column' }}
       footer={
         <Toolbar>
@@ -220,7 +230,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
         </Toolbar>
       }
     >
-      <div style={{ height: 'min-content' }}>
+      <div style={{ height: 'min-content', flex: 1 }}>
         <FolderHierarchy
           hierarchy={hierarchy}
           onChange={handleChange}

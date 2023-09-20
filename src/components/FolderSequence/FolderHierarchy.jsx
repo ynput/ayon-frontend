@@ -1,9 +1,10 @@
 import React from 'react'
 import FolderSequence from './FolderSequence'
+import * as Styled from './FolderSequence.styled'
 
 function FolderHierarchy({ hierarchy = [], onChange, onNew }) {
   return (
-    <>
+    <Styled.Container>
       {hierarchy.map((item, index) => (
         <FolderSequence
           key={item.id}
@@ -18,7 +19,7 @@ function FolderHierarchy({ hierarchy = [], onChange, onNew }) {
           )}
         </FolderSequence>
       ))}
-    </>
+    </Styled.Container>
   )
 }
 

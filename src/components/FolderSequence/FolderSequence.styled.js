@@ -1,5 +1,11 @@
 import styled, { css } from 'styled-components'
 
+export const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`
+
 export const FolderSequenceWrapper = styled.div`
   position: relative;
   display: flex;
@@ -12,7 +18,7 @@ export const FolderSequenceWrapper = styled.div`
     /* input type text */
     .seq {
       width: ${({ $depth, $prefix }) =>
-        `${300 - $prefix - ($depth === 0 ? 0 : 20) - $depth * 20}px`};
+        `${300 - $prefix - ($depth === 0 ? 0 : 26) - $depth * 20}px`};
     }
   }
 
@@ -35,7 +41,7 @@ export const SequenceContainer = styled.div`
   flex-direction: column;
   /* panel */
   background-color: var(--md-sys-color-surface-container-high);
-  padding: 2px 4px;
+  padding: 7px 4px;
   border-radius: var(--border-radius);
   border: 1px solid transparent;
   z-index: 10;
@@ -77,8 +83,7 @@ export const TaskContainer = styled(SequenceContainer)`
   border-radius: var(--border-radius-l);
   padding-bottom: 4px;
   margin-left: 36px;
-
-  background-color: var(--md-sys-color-secondary-container);
+  padding: 2px 4px;
 `
 
 export const SequenceForm = styled.div`
@@ -90,6 +95,10 @@ export const SequenceForm = styled.div`
   .delete {
     margin-left: auto;
   }
+
+  strong {
+    font-weight: 700;
+  }
 `
 
 export const InputColumn = styled.div`
@@ -98,8 +107,12 @@ export const InputColumn = styled.div`
   width: min-content;
 
   /* input type number */
-  input[type='number'] {
+  #length {
     width: 90px;
+  }
+
+  #prefix {
+    width: 53px;
   }
 
   label {
