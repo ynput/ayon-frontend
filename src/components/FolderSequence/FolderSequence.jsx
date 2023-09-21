@@ -3,7 +3,7 @@ import * as Styled from './FolderSequence.styled'
 import TypeEditor from '/src/pages/EditorPage/TypeEditor'
 import { useSelector } from 'react-redux'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import getSequence from '/src/containers/HierarchyBuilder/getSequence'
+import getSequence from '/src/helpers/getSequence'
 
 function formatSeq(arr, maxLength) {
   if (arr.length <= maxLength) {

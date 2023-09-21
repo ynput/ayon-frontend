@@ -11,7 +11,7 @@ import TypeEditor from './TypeEditor'
 import checkName from '/src/helpers/checkName'
 import { Dialog } from 'primereact/dialog'
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
-import getSequence from '/src/containers/HierarchyBuilder/getSequence'
+import getSequence from '/src/helpers/getSequence'
 
 const ContentStyled = styled.div`
   display: flex;
