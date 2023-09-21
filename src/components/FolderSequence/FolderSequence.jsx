@@ -203,12 +203,12 @@ const FolderSequence = ({
             )}
 
             <Styled.InputColumn className="seq">
-              <label>First Seq. Name</label>
+              <label>First Name</label>
               <InputText value={base} id={'base'} onChange={handleChange} placeholder="ep101..." />
             </Styled.InputColumn>
             <Icon icon="trending_flat" />
             <Styled.InputColumn className="seq">
-              <label>Second Seq. Name</label>
+              <label>Second Name</label>
               <InputText
                 value={increment}
                 id={'increment'}
@@ -218,7 +218,7 @@ const FolderSequence = ({
             </Styled.InputColumn>
 
             <Styled.InputColumn>
-              <label>Seq. Length</label>
+              <label>Count</label>
               <InputNumber
                 value={length}
                 id={'length'}

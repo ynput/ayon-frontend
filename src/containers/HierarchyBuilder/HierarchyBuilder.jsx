@@ -5,6 +5,8 @@ import FolderHierarchy from '/src/components/FolderSequence/FolderHierarchy'
 import { Button, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import buildHierarchySeq from './buildHierarchySeq'
 import HierarchyPreviewWrapper from '/src/components/HierarchyPreview/HierarchyPreviewWrapper'
+import { useDispatch } from 'react-redux'
+import { newNodesAdded } from '/src/features/editor'
 
 function findMaxChildDepth(hierarchyForm, itemId) {
   let maxChildDepth = 0
@@ -78,13 +80,12 @@ const generateId = () => uuid1().replace(/-/g, '')
 //
 //
 // COMPONENT
-const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
-  //   fake data
-  const parent1 = generateId()
+const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit, attrib }) => {
+  const dispatch = useDispatch()
 
   const initForm = [
     {
-      id: parent1,
+      id: generateId(),
       base: '',
       increment: '',
       length: 2,
@@ -190,7 +191,32 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
       hierarchyForm,
       parents.map((p) => p.id),
     )
-    onSubmit(newEntities)
+
+    let newNodes = []
+    for (const item of newEntities) {
+      const newNode = {
+        leaf: item.leaf,
+        name: item.name,
+        label: item.label,
+        id: item.id,
+        status: 'Not ready',
+        attrib: attrib,
+        ownAttrib: [],
+        __entityType: item.entityType,
+        __parentId: item.parentId || 'root',
+        __isNew: true,
+        __depth: item.depth,
+        [item.entityType === 'folder' ? 'parentId' : 'folderId']: item.parentId,
+        [item.entityType === 'folder' ? 'folderType' : 'taskType']: item.type,
+      }
+
+      newNodes.push(newNode)
+    }
+
+    dispatch(newNodesAdded(newNodes))
+
+    onHide()
+    onSubmit(newNodes)
   }
 
   let parentsLabels = parents?.map((p) => p?.label).join(', ')

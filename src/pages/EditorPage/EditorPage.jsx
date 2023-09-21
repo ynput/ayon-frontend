@@ -1030,33 +1030,6 @@ const EditorPage = () => {
     }
   } // Add node
 
-  const handleHierarchySubmit = (items) => {
-    let newNodes = []
-    for (const item of items) {
-      const newNode = {
-        leaf: item.leaf,
-        name: item.name,
-        label: item.label,
-        id: item.id,
-        status: 'Not ready',
-        attrib: attrib,
-        ownAttrib: [],
-        __entityType: item.entityType,
-        __parentId: item.parentId || 'root',
-        __isNew: true,
-        __depth: item.depth,
-        [item.entityType === 'folder' ? 'parentId' : 'folderId']: item.parentId,
-        [item.entityType === 'folder' ? 'folderType' : 'taskType']: item.type,
-      }
-
-      newNodes.push(newNode)
-    }
-
-    dispatch(newNodesAdded(newNodes))
-
-    setHierarchyBuilderOpen(null)
-  }
-
   //
   // Other user events handlers (Toolbar)
   //
@@ -1459,7 +1432,7 @@ const EditorPage = () => {
           parents={focusedFolders.map((id) => searchableFoldersSet.get(id))}
           visible={hierarchyBuilderOpen}
           onHide={() => setHierarchyBuilderOpen(false)}
-          onSubmit={handleHierarchySubmit}
+          attrib={attrib}
         />
       )}
       <Section>
