@@ -47,6 +47,7 @@ import useCreateContext from '/src/hooks/useCreateContext'
 import { ayonApi } from '/src/services/ayon'
 import { confirmDialog } from 'primereact/confirmdialog'
 import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
+import NewSequence from './NewSequence'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -82,6 +83,7 @@ const EditorPage = () => {
   // NEW STATES
   const [newEntity, setNewEntity] = useState('')
   const [newEntityData, setNewEntityData] = useState({})
+  const [multipleFoldersOpen, setMultipleFoldersOpen] = useState(false)
 
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
@@ -1107,7 +1109,7 @@ const EditorPage = () => {
   const ctxMenuGlobalItems = useMemo(
     () => [
       {
-        label: 'Add Folder',
+        label: 'Create Folder',
         icon: 'create_new_folder',
         command: () => addNewEntity('folder', true),
       },
@@ -1133,12 +1135,12 @@ const EditorPage = () => {
   const getCtxMenuTableItems = () => {
     return [
       {
-        label: 'Add Folder',
+        label: 'Create Folder',
         icon: 'create_new_folder',
         command: () => addNewEntity('folder'),
       },
       {
-        label: 'Add Task',
+        label: 'Create Task',
         icon: 'add_task',
         command: () => addNewEntity('task'),
       },
@@ -1435,18 +1437,28 @@ const EditorPage = () => {
         onHide={handleCloseNew}
         onConfirm={addNodes}
       />
+      <NewSequence
+        visible={multipleFoldersOpen}
+        onHide={() => setMultipleFoldersOpen(false)}
+        onConfirm={addNodes}
+      />
       <Section>
         <Toolbar>
           <Button
             icon="create_new_folder"
-            label="Add folder"
+            label="Create folder"
             onClick={() => addNewEntity('folder', disableAddNew)}
           />
           <Button
             icon="add_task"
-            label="Add task"
+            label="Create task"
             disabled={disableAddNew}
             onClick={() => addNewEntity('task')}
+          />
+          <Button
+            icon="create_new_folder"
+            label="Create multiple"
+            onClick={() => setMultipleFoldersOpen(true)}
           />
           <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect
