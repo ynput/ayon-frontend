@@ -1457,7 +1457,12 @@ const EditorPage = () => {
             onClick={handleRevert}
             disabled={!canCommit}
           />
-          <SaveButton label="Save Changes" onClick={onCommit} active={canCommit} />
+          <SaveButton
+            label="Save Changes"
+            onClick={onCommit}
+            active={canCommit}
+            saving={isUpdating}
+          />
         </Toolbar>
         <Splitter
           style={{ width: '100%', height: '100%' }}
