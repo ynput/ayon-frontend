@@ -1,6 +1,6 @@
 import React from 'react'
-import FolderSequence from './FolderSequence'
-import * as Styled from './FolderSequence.styled'
+import FolderSequence from '/src/components/FolderSequence/FolderSequence'
+import * as Styled from './FolderHierarchy.styled'
 
 function FolderHierarchy({ hierarchy = [], onChange, onNew }) {
   return (

@@ -1,13 +1,5 @@
 import styled, { css } from 'styled-components'
 
-export const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  justify-content: flex-end;
-`
-
 export const FolderSequenceWrapper = styled.div`
   position: relative;
   display: flex;

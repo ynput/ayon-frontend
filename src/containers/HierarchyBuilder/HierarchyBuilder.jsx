@@ -1,12 +1,12 @@
 import { Dialog } from 'primereact/dialog'
 import React, { useEffect, useMemo, useState } from 'react'
 import { v1 as uuid1 } from 'uuid'
-import FolderHierarchy from '/src/components/FolderSequence/FolderHierarchy'
 import { Button, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import buildHierarchySeq from './buildHierarchySeq'
-import HierarchyPreviewWrapper from '/src/components/HierarchyPreview/HierarchyPreviewWrapper'
+import HierarchyPreviewWrapper from './HierarchyPreview/HierarchyPreviewWrapper'
 import { useDispatch } from 'react-redux'
 import { newNodesAdded } from '/src/features/editor'
+import FolderHierarchy from './FolderHierarchy/FolderHierarchy'
 
 function findMaxChildDepth(hierarchyForm, itemId) {
   let maxChildDepth = 0
@@ -52,7 +52,7 @@ const buildPreviewHierarchy = (flatHierarchy = [], parentId = null) => {
 const checkAllNamesUnique = (items) => {
   const names = {}
   for (let i = 0; i < items.length; i++) {
-    if (names[items[i].name]) {
+    if (names[items[i].name] && items[i].entityType !== 'task') {
       return false
     }
     names[items[i].name] = true
@@ -80,7 +80,7 @@ const generateId = () => uuid1().replace(/-/g, '')
 //
 //
 // COMPONENT
-const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit, attrib }) => {
+const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit, attrib, ...props }) => {
   const dispatch = useDispatch()
 
   const initForm = [
@@ -187,10 +187,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit, attrib }) =
   }
 
   const handleSubmit = () => {
-    const newEntities = buildHierarchySeq(
-      hierarchyForm,
-      parents.map((p) => p.id),
-    )
+    const newEntities = buildHierarchySeq(hierarchyForm, parents)
 
     let newNodes = []
     for (const item of newEntities) {
@@ -219,14 +216,9 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit, attrib }) =
     onSubmit(newNodes)
   }
 
-  let parentsLabels = parents?.map((p) => p?.label).join(', ')
-  if (parentsLabels.length > 50) {
-    parentsLabels = parentsLabels.slice(0, 50) + '...'
-  }
-
   return (
     <Dialog
-      header={`Hierarchy Builder Inside: ${parents.length ? parentsLabels : 'root'}`}
+      header={`Hierarchy Builder`}
       visible={visible}
       onHide={onHide}
       style={{ minWidth: '95vw', maxWidth: '95vw', minHeight: '90vh' }}
@@ -242,6 +234,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit, attrib }) =
           </SaveButton>
         </Toolbar>
       }
+      {...props}
     >
       <div style={{ height: 'min-content', flex: 1 }}>
         <FolderHierarchy

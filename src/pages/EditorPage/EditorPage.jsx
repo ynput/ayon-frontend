@@ -44,9 +44,9 @@ import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
 import useCreateContext from '/src/hooks/useCreateContext'
-import HierarchyBuilder from '/src/containers/HierarchyBuilder/HierarchyBuilder'
 import { ayonApi } from '/src/services/ayon'
 import { confirmDialog } from 'primereact/confirmdialog'
+import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -82,7 +82,6 @@ const EditorPage = () => {
   // NEW STATES
   const [newEntity, setNewEntity] = useState('')
   const [newEntityData, setNewEntityData] = useState({})
-  const [hierarchyBuilderOpen, setHierarchyBuilderOpen] = useState(false)
 
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
@@ -1427,14 +1426,6 @@ const EditorPage = () => {
         onHide={handleCloseNew}
         onConfirm={addNode}
       />
-      {hierarchyBuilderOpen && (
-        <HierarchyBuilder
-          parents={focusedFolders.map((id) => searchableFoldersSet.get(id))}
-          visible={hierarchyBuilderOpen}
-          onHide={() => setHierarchyBuilderOpen(false)}
-          attrib={attrib}
-        />
-      )}
       <Section>
         <Toolbar>
           <Button
@@ -1448,12 +1439,7 @@ const EditorPage = () => {
             disabled={disableAddNew}
             onClick={() => addNewEntity('task')}
           />
-          <Button
-            icon="account_tree"
-            label="Build hierarchy"
-            onClick={() => setHierarchyBuilderOpen(true)}
-            disabled={!focusedFolders.length && focusedTasks.length}
-          />
+          <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect
             options={filterOptions}
             value={shownColumns}
