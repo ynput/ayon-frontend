@@ -121,6 +121,11 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
           style={{ marginLeft: 'auto' }}
         />
       }
+      onKeyDown={(e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          handleSubmit()
+        }
+      }}
     >
       <ContentStyled>
         <form onSubmit={handleSubmit}>

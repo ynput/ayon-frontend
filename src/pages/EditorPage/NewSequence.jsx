@@ -70,6 +70,11 @@ const NewSequence = ({ visible, onConfirm, onHide }) => {
           <Button label={'Create'} onClick={handleSeqSubmit} variant="filled" />
         </Toolbar>
       }
+      onKeyDown={(e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          handleSeqSubmit()
+        }
+      }}
     >
       <FolderSequence
         {...createSeq}

@@ -1450,15 +1450,15 @@ const EditorPage = () => {
             onClick={() => addNewEntity('folder', disableAddNew)}
           />
           <Button
+            icon="create_new_folder"
+            label="Create multiple"
+            onClick={() => setMultipleFoldersOpen(true)}
+          />
+          <Button
             icon="add_task"
             label="Create task"
             disabled={disableAddNew}
             onClick={() => addNewEntity('task')}
-          />
-          <Button
-            icon="create_new_folder"
-            label="Create multiple"
-            onClick={() => setMultipleFoldersOpen(true)}
           />
           <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect
