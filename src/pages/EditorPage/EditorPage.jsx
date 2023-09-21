@@ -949,8 +949,8 @@ const EditorPage = () => {
     setNewEntityData({})
   }
 
-  const addNode = (entityType, root, data = {}, entityParents) => {
-    const parents = root ? [null] : entityParents || futureParents
+  const addNodes = (entityType, root, nodesData = [], expandBranches = true) => {
+    const parents = root ? [null] : futureParents
 
     // for leaf nodes, add parents to parents
     for (const id of focusedTasks) {
@@ -978,42 +978,51 @@ const EditorPage = () => {
         parentData = rootData[parentId]?.data || {}
       }
 
-      const newNode = {
-        leaf: true,
-        name: `new${capitalize(entityType)}${
-          Object.values(newNodes).filter((n) => n?.name?.includes(`new${capitalize(entityType)}`))
-            .length + parents.indexOf(parentId)
-        }`,
-        id: uuid1().replace(/-/g, ''),
-        status: parentData?.status || 'Not ready',
-        attrib: parentData?.attrib || {},
-        ownAttrib: [],
-        __entityType: entityType,
-        __parentId: parentId || 'root',
-        __isNew: true,
-      }
-
-      console.log(newNode)
-      if (entityType === 'folder') {
-        newNode['parentId'] = parentId
-        newNode['folderType'] = parentData?.folderType
-        if (newNode.__parentId === 'root') {
-          // all attrib are it's own
-          newNode['ownAttrib'] = Object.keys(newNode.attrib)
+      for (const data of nodesData) {
+        const newNode = {
+          leaf: true,
+          name: `new${capitalize(entityType)}${
+            Object.values(newNodes).filter((n) => n?.name?.includes(`new${capitalize(entityType)}`))
+              .length + parents.indexOf(parentId)
+          }`,
+          id: uuid1().replace(/-/g, ''),
+          status: parentData?.status || 'Not ready',
+          attrib: parentData?.attrib || {},
+          ownAttrib: [],
+          __entityType: entityType,
+          __parentId: parentId || 'root',
+          __isNew: true,
         }
-        folderIds.push(newNode.id)
-      } else if (entityType === 'task') {
-        newNode['folderId'] = parentId
-        newNode['taskType'] = 'Generic'
-        taskIds.push(newNode.id)
+
+        const newData = { ...data }
+
+        if (newData.__prefix) {
+          // prefix the parent to the name and label
+          newData.name = `${parentData.name}${newData.name}`
+          newData.label = `${parentData.label}${newData.label}`
+        }
+
+        if (entityType === 'folder') {
+          newNode['parentId'] = parentId
+          newNode['folderType'] = parentData?.folderType
+          if (newNode.__parentId === 'root') {
+            // all attrib are it's own
+            newNode['ownAttrib'] = Object.keys(newNode.attrib)
+          }
+          folderIds.push(newNode.id)
+        } else if (entityType === 'task') {
+          newNode['folderId'] = parentId
+          newNode['taskType'] = 'Generic'
+          taskIds.push(newNode.id)
+        }
+        addingNewNodes.push({ ...newNode, ...newData })
       }
-      addingNewNodes.push({ ...newNode, ...data })
     }
 
     // update new nodes state
     dispatch(newNodesAdded(addingNewNodes))
 
-    if (!root) {
+    if (!root && expandBranches) {
       // Update expanded folders context object
       const exps = { ...expandedFolders }
       const loadBranches = []
@@ -1424,7 +1433,7 @@ const EditorPage = () => {
         data={newEntityData}
         visible={!!newEntity}
         onHide={handleCloseNew}
-        onConfirm={addNode}
+        onConfirm={addNodes}
       />
       <Section>
         <Toolbar>

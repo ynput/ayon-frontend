@@ -1,4 +1,11 @@
-import { Button, Icon, InputNumber, InputText, Spacer } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Icon,
+  InputNumber,
+  InputSwitch,
+  InputText,
+  Spacer,
+} from '@ynput/ayon-react-components'
 import * as Styled from './FolderSequence.styled'
 import TypeEditor from '/src/pages/EditorPage/TypeEditor'
 import { useSelector } from 'react-redux'
@@ -23,12 +30,13 @@ const FolderSequence = ({
   onNew,
   index,
   nesting = true,
+  selectedParents = [],
   ...props
 }) => {
   const folders = useSelector((state) => state.project.folders) || []
   const tasks = useSelector((state) => state.project.tasks) || []
 
-  const { base, increment, length, type, id, entityType, prefix, parentBases } = props
+  const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
 
   let initSeq = []
   if (base && increment && length) {
@@ -42,7 +50,7 @@ const FolderSequence = ({
 
     let { value, id: fieldId } = e.target
 
-    if (fieldId === 'prefix') {
+    if (fieldId === 'prefixDepth') {
       // convert to number
       value = parseInt(value, 10)
     }
@@ -102,7 +110,6 @@ const FolderSequence = ({
   const seqRef = useRef(null)
   const [seqWidth, setSeqWidth] = useState(0)
   useLayoutEffect(() => {
-    // find width of prefix
     if (seqRef.current) {
       setSeqWidth(seqRef.current.offsetWidth)
     }
@@ -183,17 +190,30 @@ const FolderSequence = ({
         )}
         <Styled.SequenceContainer $isNew={isNew} $nesting={nesting} ref={seqRef}>
           <Styled.SequenceForm className="form folder">
-            {depth !== 0 && nesting && (
-              <Styled.InputColumn>
-                <label>Prefixes</label>
-                <InputNumber
-                  value={prefix}
-                  id={'prefix'}
-                  onChange={handleChange}
-                  max={parentBases.length}
-                  min={0}
-                />
-              </Styled.InputColumn>
+            {(depth !== 0 || !nesting) && (
+              <>
+                <Styled.InputColumn>
+                  <label>Prefix</label>
+                  <InputSwitch
+                    checked={prefix}
+                    id={'prefix'}
+                    onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
+                    disabled={!nesting && !selectedParents.length}
+                  />
+                </Styled.InputColumn>
+                {nesting && prefix && (
+                  <Styled.InputColumn>
+                    <label>Depth</label>
+                    <InputNumber
+                      value={prefixDepth}
+                      id={'prefixDepth'}
+                      onChange={handleChange}
+                      max={parentBases.length}
+                      min={0}
+                    />
+                  </Styled.InputColumn>
+                )}
+              </>
             )}
 
             {parentBases && nesting && (
@@ -248,7 +268,7 @@ const FolderSequence = ({
               />
             )}
           </Styled.SequenceForm>
-          {!nesting && <Styled.Example>Sequence Output: {sequenceString}</Styled.Example>}
+          {!nesting && <Styled.Example>Example Output: {sequenceString}</Styled.Example>}
         </Styled.SequenceContainer>
       </Styled.RowWrapper>
       {nesting && (

@@ -25,6 +25,7 @@ const ContentStyled = styled.div`
 `
 
 const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
+  const focusedFolders = useSelector((state) => state.context.focused.folders)
   const [entityType, setEntityType] = useState(null)
   //   build out form state
   const initData = { label: '', name: '', type: '' }
@@ -42,9 +43,10 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       // add ten to the number for the increment
       increment = baseWithoutNumber + (startNumber + 10)
     } else {
-      base = entityData.label + '010'
+      const prefix = entityData.label || 'sh'
+      base = prefix + '010'
       // no number in the base, just add 10
-      increment = entityData.label + '020'
+      increment = prefix + '020'
     }
 
     const newSeq = {
@@ -52,10 +54,16 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       increment,
       length: 10,
       type: entityData.label,
+      prefix: !!focusedFolders.length,
+      prefixDepth: focusedFolders.length ? 1 : 0,
     }
 
     setCreateSeq(newSeq)
   }
+
+  useEffect(() => {
+    openCreateSeq()
+  }, [focusedFolders])
 
   //   format title
   let isRoot
@@ -114,13 +122,13 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
     labelRef.current?.select()
   }
 
-  const finalSubmit = (data) => {
+  const finalSubmit = (nodes, isSeq) => {
     // clear states
     setEntityType(null)
     setEntityData(initData)
 
     // callbacks
-    onConfirm(entityType, isRoot, data)
+    onConfirm(entityType, isRoot, nodes, !isSeq)
     onHide()
   }
 
@@ -128,16 +136,18 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
     // get the sequence
     const seq = getSequence(createSeq.base, createSeq.increment, createSeq.length)
     // for each sequence item, create a new entity
-    seq.forEach((item) => {
-      const newEntity = {
+    let nodes = []
+    for (const item of seq) {
+      nodes.push({
         ...entityData,
         folderType: createSeq.type,
         name: item,
         label: item.replace(/\s/g, '_'),
-      }
+        __prefix: createSeq.prefix,
+      })
+    }
 
-      finalSubmit(newEntity)
-    })
+    finalSubmit(nodes, true)
   }
 
   const handleSubmit = (e) => {
@@ -153,7 +163,7 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       label: entityData.label,
     }
 
-    finalSubmit(newData)
+    finalSubmit([newData])
   }
 
   if (!entityType) return null
@@ -184,7 +194,12 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       }
     >
       {createSeq ? (
-        <FolderSequence {...createSeq} nesting={false} onChange={handleSeqChange} />
+        <FolderSequence
+          {...createSeq}
+          nesting={false}
+          onChange={handleSeqChange}
+          selectedParents={focusedFolders}
+        />
       ) : (
         <ContentStyled>
           <form onSubmit={handleSubmit}>
