@@ -3,6 +3,7 @@ import styled from 'styled-components'
 export const Preview = styled.div`
   display: flex;
   flex-direction: column;
+  position: relative;
 
   max-height: 250px;
   min-height: 150px;
@@ -35,5 +36,23 @@ export const Row = styled.div`
 
   .toggle {
     padding: 2px;
+  }
+`
+
+export const Error = styled.div`
+  position: absolute;
+  border-radius: var(--border-radius);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  bottom: 8px;
+  left: 8px;
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  .icon {
+    font-size: 24px;
   }
 `

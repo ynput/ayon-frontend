@@ -89,8 +89,6 @@ const buildHierarchySeq = (items, rootParents) => {
     allSeqs = buildSeqs(hierarchy)
   }
 
-  console.log(allSeqs.length)
-
   return allSeqs
 }
 

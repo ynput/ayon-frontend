@@ -1,8 +1,8 @@
 import React, { useLayoutEffect, useState } from 'react'
 import * as Styled from './HierarchyPreview.styled'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 
-const HierarchyPreview = ({ hierarchy = [] }) => {
+const HierarchyPreview = ({ hierarchy = [], error }) => {
   const [hideChildren, setHideChildren] = useState([])
 
   useLayoutEffect(() => {
@@ -41,6 +41,12 @@ const HierarchyPreview = ({ hierarchy = [] }) => {
           )}
         </React.Fragment>
       ))}
+      {error && (
+        <Styled.Error>
+          <Icon icon="error" />
+          Error: {error}
+        </Styled.Error>
+      )}
     </Styled.Parent>
   )
 }

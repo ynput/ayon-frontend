@@ -47,6 +47,17 @@ const buildPreviewHierarchy = (flatHierarchy = [], parentId = null) => {
   return hierarchy
 }
 
+const checkAllNamesUnique = (items) => {
+  const names = {}
+  for (let i = 0; i < items.length; i++) {
+    if (names[items[i].name]) {
+      return false
+    }
+    names[items[i].name] = true
+  }
+  return true
+}
+
 // deletes parentId and all children
 const deleteItem = (id, hierarchyForm) => {
   let newForm = hierarchyForm.filter((item) => item.id !== id)
@@ -115,10 +126,19 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
 
   // eslint-disable-next-line no-unused-vars
   const [tooBig, setTooBig] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     // if (tooBig) return
     const flatHierarchy = buildHierarchySeq(hierarchyForm)
+
+    const allNamesUnique = checkAllNamesUnique(flatHierarchy)
+
+    if (!allNamesUnique) {
+      setError('Names must be unique')
+    } else {
+      setError(null)
+    }
 
     if (flatHierarchy.length > 8000) {
       setTooBig(flatHierarchy.length)
@@ -191,7 +211,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
           <Button onClick={onHide} variant={'text'}>
             Close
           </Button>
-          <SaveButton onClick={handleSubmit} active={allFieldsValid}>
+          <SaveButton onClick={handleSubmit} active={allFieldsValid && !error}>
             Create hierarchy
           </SaveButton>
         </Toolbar>
@@ -208,7 +228,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
       <h2 style={{ marginBottom: 0 }}>
         {tooBig ? 'Preview disabled due to hierarchy size: ' + tooBig : 'Preview'}
       </h2>
-      {!tooBig && <HierarchyPreviewWrapper hierarchy={preview} />}
+      {!tooBig && <HierarchyPreviewWrapper hierarchy={preview} error={error} />}
     </Dialog>
   )
 }
