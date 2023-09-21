@@ -121,7 +121,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
     const flatHierarchy = buildHierarchySeq(hierarchyForm)
 
     if (flatHierarchy.length > 8000) {
-      setTooBig(true)
+      setTooBig(flatHierarchy.length)
       setPreview([])
       return
     }
@@ -206,7 +206,7 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
         />
       </div>
       <h2 style={{ marginBottom: 0 }}>
-        {tooBig ? 'Preview disabled due to hierarchy size.' : 'Preview'}
+        {tooBig ? 'Preview disabled due to hierarchy size: ' + tooBig : 'Preview'}
       </h2>
       {!tooBig && <HierarchyPreviewWrapper hierarchy={preview} />}
     </Dialog>
