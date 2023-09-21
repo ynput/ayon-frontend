@@ -8,8 +8,8 @@ const replaceSpaces = (string) => {
 
 const generateUniqueId = () => uuid1().replace(/-/g, '')
 
-const buildSeqs = (hierarchy = []) => {
-  const stack = [{ hierarchy, parentId: null, depth: 0, parentNames: [] }]
+const buildSeqs = (hierarchy = [], parentId = null) => {
+  const stack = [{ hierarchy, parentId: parentId, depth: 0, parentNames: [] }]
   const seqs = []
 
   while (stack.length) {
