@@ -36,7 +36,7 @@ export function buildHierarchy(hierarchyForm, parentId = null, depth = 0, parent
   return hierarchy
 }
 
-const buildPreviewHierarchy = (flatHierarchy = [], parentId = undefined) => {
+const buildPreviewHierarchy = (flatHierarchy = [], parentId = null) => {
   const hierarchy = []
   for (const item of flatHierarchy) {
     if (item.parentId === parentId) {
@@ -117,14 +117,15 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
   const [tooBig, setTooBig] = useState(false)
 
   useEffect(() => {
-    console.time('buildPreviewHierarchy')
     // if (tooBig) return
     const flatHierarchy = buildHierarchySeq(hierarchyForm)
+
     // build a hierarchy from the flat hierarchy
-    const hierarchy = buildPreviewHierarchy(flatHierarchy, undefined, preview)
-    console.timeEnd('buildPreviewHierarchy')
-    if (hierarchy.length > 8000) {
-      // setTooBig(true)
+    const hierarchy = buildPreviewHierarchy(flatHierarchy)
+
+    if (flatHierarchy.length > 8000) {
+      setTooBig(true)
+      setPreview([])
       return
     }
     setPreview(hierarchy)
