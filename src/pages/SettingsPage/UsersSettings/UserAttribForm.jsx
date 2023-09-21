@@ -39,7 +39,7 @@ const UserAttribForm = ({
   )
 
   const buildForms = (attribs) =>
-    attribs.map(({ name, data }) => (
+    attribs.map(({ name, data, input }) => (
       <FormRow label={data.title} key={name}>
         {name.includes('password') && setPassword ? (
           <InputPassword
@@ -77,6 +77,7 @@ const UserAttribForm = ({
               })
             }}
             autoComplete="cc-csc"
+            {...input}
           />
         )}
       </FormRow>

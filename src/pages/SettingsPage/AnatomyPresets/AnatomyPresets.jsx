@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 
 import { Dialog } from 'primereact/dialog'
-import { confirmDialog } from 'primereact/confirmdialog'
 import { InputText } from 'primereact/inputtext'
 
 import { toast } from 'react-toastify'
@@ -28,6 +27,7 @@ import {
   useUpdatePrimaryPresetMutation,
 } from '/src/services/anatomy/updateAnatomy'
 import { isEqual } from 'lodash'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const AnatomyPresets = () => {
   const [originalData, setOriginalData] = useState(null)
@@ -94,27 +94,13 @@ const AnatomyPresets = () => {
   // DELETE PRESET
   const handleDeletePreset = (name, isPrimary) => {
     console.log('handleDeletePreset')
-    confirmDialog({
-      header: 'Delete Preset',
-      message: `Are you sure you want to delete the preset ${name}?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Delete',
-      accept: () => {
-        deletePreset({ name })
-          .unwrap()
-          .then(() => {
-            if (isPrimary) {
-              setSelectedPreset('_')
-            }
-            toast.info(`Preset ${name} deleted`)
-          })
-          .catch((err) => {
-            toast.error(err.message)
-          })
-      },
-      rejectLabel: 'Cancel',
-      reject: () => {
-        // do nothing
+    confirmDelete({
+      label: `Preset: ${name}`,
+      accept: async () => {
+        await deletePreset({ name }).unwrap()
+        if (isPrimary) {
+          setSelectedPreset('_')
+        }
       },
     })
   }

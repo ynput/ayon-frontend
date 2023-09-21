@@ -368,6 +368,7 @@ function FieldTemplate(props) {
         onMouseUp={() => {
           if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
         }}
+        onContextMenu={onContextMenu}
       >
         {props.children}
       </SettingsPanel>

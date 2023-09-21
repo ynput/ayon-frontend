@@ -627,6 +627,13 @@ a {
         span {
           color: var(--md-sys-color-on-error-container);
         }
+
+        &:hover {
+          background-color: var(--md-sys-color-error-container-hover);
+        }
+        &:active {
+          background-color: var(--md-sys-color-error-container-active);
+        }
       }
 
       &.save {
@@ -667,4 +674,47 @@ a {
 // project side bar menu
 .p-sidebar-left {
   align-items: flex-start;
+}
+
+// confirm dialog buttons
+.p-dialog.p-confirm-dialog {
+  .p-dialog-footer {
+    gap: 8px;
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .p-button {
+    border: none;
+    margin-right: 0;
+    &:focus {
+      outline: none;
+    }
+
+    background-color: var(--md-sys-color-surface-container-highest);
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+    &:active {
+      background-color: var(--md-sys-color-surface-container-highest-active);
+    }
+
+    // for reject button
+    &.p-confirm-dialog-reject {
+      background-color: unset;
+    }
+
+    // for delete buttons
+    &.button-danger {
+      background-color: var(--md-sys-color-error-container);
+
+      color: var(--md-sys-color-on-error-container);
+
+      &:hover {
+        background-color: var(--md-sys-color-error-container-hover);
+      }
+    }
+  }
 }

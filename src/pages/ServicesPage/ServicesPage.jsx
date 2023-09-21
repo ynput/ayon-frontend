@@ -7,6 +7,7 @@ import { TimestampField } from '/src/containers/fieldFormat'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './NewServiceDialog'
 import useCreateContext from '/src/hooks/useCreateContext'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const formatStatus = (rowData) => {
   if (!rowData.shouldRun) return rowData.isRunning ? 'STOPPING' : 'DISABLED'
@@ -25,13 +26,23 @@ const ServicesPage = () => {
   }
 
   const deleteSelected = () => {
-    for (const serviceName of selectedServices) {
-      axios
-        .delete(`/api/services/${serviceName}`)
-        .then(() => toast.success(`${serviceName} deleted`))
-        .catch(() => toast.error(`Unable to delete ${serviceName}`))
-        .finally(() => loadServices())
-    }
+    confirmDelete({
+      label: 'Services',
+      accept: async () => {
+        for (const serviceName of selectedServices) {
+          try {
+            await axios.delete(`/api/services/${serviceName}`)
+
+            toast.success(`${serviceName} deleted`)
+          } catch (error) {
+            toast.error(`Unable to delete ${serviceName}`)
+          }
+        }
+
+        loadServices()
+      },
+      showToasts: false,
+    })
   }
 
   const enableSelected = () => {
@@ -69,20 +80,23 @@ const ServicesPage = () => {
   const ctxMenuItems = useMemo(() => {
     return [
       {
-        label: 'Delete selected',
-        disabled: !selectedServices?.length,
-        command: deleteSelected,
-        danger: true,
-      },
-      {
         label: 'Enable selected',
         disabled: !selectedServices?.length,
         command: enableSelected,
+        icon: 'check',
       },
       {
         label: 'Disable selected',
         disabled: !selectedServices?.length,
         command: disableSelected,
+        icon: 'cancel',
+      },
+      {
+        label: 'Delete selected',
+        disabled: !selectedServices?.length,
+        command: deleteSelected,
+        danger: true,
+        icon: 'delete',
       },
     ]
   }, [selectedServices])

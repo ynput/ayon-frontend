@@ -148,7 +148,11 @@ const NewUser = ({ onHide, open, onSuccess }) => {
             formData={formData}
             setFormData={setFormData}
             attributes={[
-              { name: 'Username', data: { title: 'Username' } },
+              {
+                name: 'Username',
+                data: { title: 'Username' },
+                input: { placeholder: 'No spaces allowed' },
+              },
               { name: 'password', data: { title: 'Password' } },
               { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
               ...attributes,

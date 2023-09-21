@@ -128,6 +128,7 @@ const Attributes = () => {
       label: 'Delete',
       icon: 'delete',
       command: () => onDelete(),
+      danger: true,
     },
   ])
 
