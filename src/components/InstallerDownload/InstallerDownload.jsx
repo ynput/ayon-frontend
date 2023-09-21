@@ -46,7 +46,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
       (installer) => installer.platform === userPlatform,
     )
     if (!foundInstaller?.sources?.length) return null
-    const foundInstallerUrl = foundInstaller.sources.find((source) => source.type === 'url')?.url
+    const foundInstallerUrl = foundInstaller.sources.find((source) => source.type === 'http')?.url
     if (foundInstallerUrl) return { url: foundInstallerUrl, filename: foundInstaller.filename }
     const foundInstallerFile = foundInstaller.sources.find((source) => source.type === 'server')
     if (foundInstallerFile) {
@@ -91,7 +91,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
   const handleDownloadClick = async (sources, filename) => {
     // find a source of type === 'server
     const serverSource = sources.find((source) => source.type === 'server')
-    const urlSource = sources.find((source) => source.type === 'url')
+    const urlSource = sources.find((source) => source.type === 'http')
     if (serverSource || urlSource) {
       const url = serverSource
         ? `/api/desktop/installers/${filename}?token=${localStorage.getItem('accessToken')}`
