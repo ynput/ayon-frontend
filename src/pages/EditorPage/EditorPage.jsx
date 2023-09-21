@@ -617,6 +617,7 @@ const EditorPage = () => {
         entityType,
         data: newEntity,
         patch,
+        depth: entity.depth,
       })
 
       if (!parent?.data?.hasChildren && entity.__parentId !== 'root' && parent) {
@@ -742,6 +743,13 @@ const EditorPage = () => {
       rootDataHashTable.set(id, rootData[id])
     }
 
+    // sort updates by depth so lowest comes first
+    updates.sort((a, b) => {
+      a.depth = a.depth || 0
+      b.depth = b.depth || 0
+      return a.depth - b.depth
+    })
+
     // Iterate over the updates array.
     for (const op of updates) {
       // Compare the update to the rootData item.
@@ -824,6 +832,8 @@ const EditorPage = () => {
       dispatch(nodesUpdated({ updated: childUpdates, forcedSave }))
       // update selection (remove from deleted)
       handleSelectionChange(newSelection)
+
+      return updates
     } catch (error) {
       setCommitUpdating(false)
       toast.error('Unable to save changes')
@@ -832,7 +842,7 @@ const EditorPage = () => {
     }
   }
 
-  const onCommit = (e, overridesChanges) => {
+  const onCommit = async (e, overridesChanges) => {
     e.preventDefault()
 
     if (Object.keys(changes).length + Object.keys(newNodes).length > 1000) {
@@ -843,8 +853,9 @@ const EditorPage = () => {
           Object.keys(changes).length + Object.keys(newNodes).length
         } changes. This may take a while and freeze the server for everyone else. Are you sure you want to continue?`,
         header: 'Confirm Large Save',
-        accept: () => {
-          handleCommit(overridesChanges)
+        accept: async () => {
+          const res = await handleCommit(overridesChanges)
+          return res
           // save
         },
         reject: () => {
@@ -1033,6 +1044,7 @@ const EditorPage = () => {
         __entityType: item.entityType,
         __parentId: item.parentId || 'root',
         __isNew: true,
+        __depth: item.depth,
         [item.entityType === 'folder' ? 'parentId' : 'folderId']: item.parentId,
         [item.entityType === 'folder' ? 'folderType' : 'taskType']: item.type,
       }
