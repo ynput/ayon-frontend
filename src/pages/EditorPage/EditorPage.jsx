@@ -8,7 +8,6 @@ import {
   Section,
   Toolbar,
   TablePanel,
-  Icon,
   SaveButton,
 } from '@ynput/ayon-react-components'
 
@@ -46,6 +45,8 @@ import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
 import useCreateContext from '/src/hooks/useCreateContext'
 import HierarchyBuilder from '/src/containers/HierarchyBuilder/HierarchyBuilder'
+import { ayonApi } from '/src/services/ayon'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -74,7 +75,6 @@ const EditorPage = () => {
     a.scope.some((s) => ['folder', 'task'].includes(s)),
   )
 
-  const [errors, setErrors] = useState({})
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
@@ -286,17 +286,6 @@ const EditorPage = () => {
   //
 
   let columns = useMemo(() => getColumns(), [])
-
-  const formatError = (rowData) => {
-    // Format the error icon for the given row
-    // If the row has no error, return null,
-    // otherwise return the error icon with the error message
-    // as tooltip.
-    const error = errors[rowData.id]
-    if (error) {
-      return <Icon icon="warning" style={{ color: 'var(--color-hl-error)' }} title={error} />
-    }
-  }
 
   // on first render, get selection from focused folders and tasks
   // for further selections, focusedEditor is used
@@ -554,8 +543,99 @@ const EditorPage = () => {
   // Commit changes
   //
 
-  const onCommit = async (e, overrideChanges) => {
-    e?.preventDefault()
+  const commitNewNodes = (commitChanges, updates, parentPatches) => {
+    // Create a map to store the newNodes parentIds.
+    const newNodesParentIdsMap = new Map()
+    for (const id in newNodes) {
+      const parentId = newNodes[id].parentId || newNodes[id].folderId
+      newNodesParentIdsMap.set(id, parentId)
+    }
+    for (const id in newNodes) {
+      const entity = newNodes[id]
+      const entityType = entity.__entityType
+      const newEntity = { ...entity }
+      const entityChanges = commitChanges[entity.id]
+
+      // it is a new entity, so only valid attributes are those
+      // stored in `changes`. The rest are inherited ones
+      let ownAttrib = [...entity.ownAttrib] || []
+      const parent = rootData[entity.parentId || entity.folderId]
+      // copy over own attrib
+      let patchAttrib = { ...entity.attrib } || {}
+      // copy over parents if they have any
+      if (parent) {
+        patchAttrib = { ...parent?.data?.attrib } || {}
+      }
+      for (const key in entityChanges || {}) {
+        if (key.startsWith('__')) continue
+        if (key.startsWith('_')) {
+          newEntity[key.substring(1)] = entityChanges[key]
+        } else {
+          if (entityChanges[key]) {
+            ownAttrib.push(key)
+            patchAttrib[key] = entityChanges[key]
+          }
+        }
+      }
+
+      // check name
+      newEntity.name = checkName(newEntity.name)
+
+      // we use a different set of attributes for the newEntity than the patch
+      const newEntityAttribs = { ...patchAttrib }
+      // remove any attribs that are not ownAttrib
+      for (const key in newEntityAttribs) {
+        if (!ownAttrib.includes(key)) delete newEntityAttribs[key]
+      }
+      // add to newEntity
+      newEntity.attrib = newEntityAttribs
+
+      const patch = {
+        data: {
+          ...newEntity,
+          name: newEntity.name,
+          attrib: patchAttrib,
+          ownAttrib,
+        },
+        leaf: !!entity.leaf,
+      }
+
+      // check if this newNode has any child newNodes (is it a parent)
+      if (newNodesParentIdsMap.has(id)) {
+        patch.data.hasChildren = true
+        patch.leaf = false
+      }
+      // if it's a folder, leaf is false
+      if (entityType === 'folder') {
+        patch.leaf = false
+      }
+
+      updates.push({
+        id: entity.id,
+        entityId: entity.id,
+        type: 'create',
+        entityType,
+        data: newEntity,
+        patch,
+      })
+
+      if (!parent?.data?.hasChildren && entity.__parentId !== 'root' && parent) {
+        const parentPatch = {
+          data: { ...parent.data, hasTasks: entityType === 'task', hasChildren: true },
+          leaf: false,
+        }
+
+        // push to array to be added all together later
+        parentPatches.push(parentPatch)
+      }
+    } // CREATE NEW ENTITIES
+  }
+
+  const [commitUpdating, setCommitUpdating] = useState(false)
+
+  const handleCommit = async (overrideChanges) => {
+    console.time('commit')
+
     const updates = []
     const parentPatches = []
     const commitChanges = overrideChanges || changes
@@ -645,89 +725,10 @@ const EditorPage = () => {
     // CREATE NEW ENTITIES
     //
 
-    const newNodesParentIds = Object.values(newNodes).map((n) => n.parentId || n.folderId)
-
     // skip new nodes if force saving
     if (!forcedSave) {
-      for (const id in newNodes) {
-        const entity = newNodes[id]
-        const entityType = entity.__entityType
-        const newEntity = { ...entity }
-        const entityChanges = commitChanges[entity.id]
-
-        // it is a new entity, so only valid attributes are those
-        // stored in `changes`. The rest are inherited ones
-        let ownAttrib = [...entity.ownAttrib] || []
-        const parent = rootData[entity.parentId || entity.folderId]
-        // copy over own attrib
-        let patchAttrib = { ...entity.attrib } || {}
-        // copy over parents if they have any
-        if (parent) {
-          patchAttrib = { ...parent?.data?.attrib } || {}
-        }
-        for (const key in entityChanges || {}) {
-          if (key.startsWith('__')) continue
-          if (key.startsWith('_')) {
-            newEntity[key.substring(1)] = entityChanges[key]
-          } else {
-            if (entityChanges[key]) {
-              ownAttrib.push(key)
-              patchAttrib[key] = entityChanges[key]
-            }
-          }
-        }
-
-        // check name
-        newEntity.name = checkName(newEntity.name)
-
-        // we use a different set of attributes for the newEntity than the patch
-        const newEntityAttribs = { ...patchAttrib }
-        // remove any attribs that are not ownAttrib
-        for (const key in newEntityAttribs) {
-          if (!ownAttrib.includes(key)) delete newEntityAttribs[key]
-        }
-        // add to newEntity
-        newEntity.attrib = newEntityAttribs
-
-        const patch = {
-          data: {
-            ...newEntity,
-            name: newEntity.name,
-            attrib: patchAttrib,
-            ownAttrib,
-          },
-          leaf: !!entity.leaf,
-        }
-
-        // check if this newNode has any child newNodes (is it a parent)
-        if (newNodesParentIds.includes(id)) {
-          patch.data.hasChildren = true
-          patch.leaf = false
-        }
-        // if it's a folder, leaf is false
-        if (entityType === 'folder') {
-          patch.leaf = false
-        }
-
-        updates.push({
-          id: entity.id,
-          entityId: entity.id,
-          type: 'create',
-          entityType,
-          data: newEntity,
-          patch,
-        })
-
-        if (!parent?.data?.hasChildren && entity.__parentId !== 'root' && parent) {
-          const parentPatch = {
-            data: { ...parent.data, hasTasks: entityType === 'task', hasChildren: true },
-            leaf: false,
-          }
-
-          // push to array to be added all together later
-          parentPatches.push(parentPatch)
-        }
-      } // CREATE NEW ENTITIES
+      // CREATE NEW ENTITIES
+      commitNewNodes(commitChanges, updates, parentPatches)
     }
 
     // validation
@@ -735,28 +736,33 @@ const EditorPage = () => {
     const changesErrors = []
     const errorMessages = []
 
-    for (const op of updates) {
-      if (op.type === 'delete') continue
-      const name = op.data.name
-      const parentId = op.data.__parentId
+    // Create a hash table to store the rootData items.
+    const rootDataHashTable = new Map()
+    for (const id in rootData) {
+      rootDataHashTable.set(id, rootData[id])
+    }
 
-      for (const id in rootData) {
-        const data = rootData[id]?.data
-        if (data.__parentId === parentId) {
-          // found sibling (same parent) check name is different
-          if (name === data.name && id !== op.entityId) {
-            const msg = 'Sibling entities can not have the same name.'
-            // ERROR SAME NAME
-            changesErrors.push({
-              id: op.data.id,
-              ...commitChanges[id],
-              errors: {
-                _name: msg,
-              },
-            })
-            if (!errorMessages.includes(msg)) errorMessages.push(msg)
-          }
-        }
+    // Iterate over the updates array.
+    for (const op of updates) {
+      // Compare the update to the rootData item.
+      if (op.type === 'delete') continue
+
+      // Look up the corresponding rootData item by its ID.
+      const rootDataItem = rootDataHashTable.get(op.data.__parentId)
+      if (!rootDataItem) continue
+      const name = op.data.name
+      if (name === rootDataItem.name && op.entityId !== rootDataItem.id) {
+        // The update and the rootData item have the same name.
+        const msg = 'Sibling entities can not have the same name.'
+        // ERROR SAME NAME
+        changesErrors.push({
+          id: op.data.id,
+          ...commitChanges[op.entityId],
+          errors: {
+            _name: msg,
+          },
+        })
+        if (!errorMessages.includes(msg)) errorMessages.push(msg)
       }
     }
 
@@ -765,60 +771,90 @@ const EditorPage = () => {
       toast.warning('Error Committing: ' + errorMessages.toString())
       // update changes to show errors
       dispatch(onNewChanges(changesErrors))
-
       return
     }
 
-    // Send the changes to the server
+    // split the updates into chunks of 1000
+    // to avoid payload too large error
+    const chunkedUpdates = []
+    const chunkSize = 1000
+    for (let i = 0; i < updates.length; i += chunkSize) {
+      chunkedUpdates.push(updates.slice(i, i + chunkSize))
+    }
 
-    return await updateEditor({ updates, projectName, rootData })
-      .unwrap()
-      .then((res) => {
+    setCommitUpdating(true)
+    try {
+      for (const updates of chunkedUpdates) {
+        const res = await updateEditor({ updates, projectName, rootData }).unwrap()
+
         if (!res.success) {
           toast.warn('Errors occurred during save')
+          setCommitUpdating(false)
           return null
-        } else {
-          toast.success('Changes saved')
-          const updated = []
-          const deleted = []
-
-          // create object of updated/new branches
-          for (const op of updates) {
-            if (op.type === 'delete') {
-              deleted.push(op.id)
-            } else {
-              updated.push(op.patch)
-            }
-          }
-
-          // add new branches to redux editor slice
-          dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))
-          if (parentPatches.length) {
-            dispatch(nodesUpdated({ updated: parentPatches, forcedSave }))
-          }
-          // update children
-          const childUpdates = getChildAttribUpdates(updates)
-          dispatch(nodesUpdated({ updated: childUpdates, forcedSave }))
-          // update selection (remove from deleted)
-          handleSelectionChange(newSelection)
         }
+      }
+      setCommitUpdating(false)
 
-        setErrors(() => {
-          const result = {}
-          for (const op of res.operations) {
-            if (!op.success) result[op.id] = op.error
-          }
-          return result
-        })
+      // once everything has finished
+      toast.success('Changes saved')
+      const updated = []
+      const deleted = []
 
-        return true
+      // create object of updated/new branches
+      for (const op of updates) {
+        if (op.type === 'delete') {
+          deleted.push(op.id)
+        } else {
+          updated.push(op.patch)
+        }
+      }
+
+      // invalidate these tags ['hierarchy', 'folder', 'task']
+      // so that the query will be executed again
+      // and the new data will be fetched
+      dispatch(ayonApi.util.invalidateTags(['hierarchy', 'folder', 'task']))
+
+      // add new branches to redux editor slice
+      dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))
+      if (parentPatches.length) {
+        dispatch(nodesUpdated({ updated: parentPatches, forcedSave }))
+      }
+      // update children
+      const childUpdates = getChildAttribUpdates(updates)
+      dispatch(nodesUpdated({ updated: childUpdates, forcedSave }))
+      // update selection (remove from deleted)
+      handleSelectionChange(newSelection)
+    } catch (error) {
+      setCommitUpdating(false)
+      toast.error('Unable to save changes')
+      console.log(updates)
+      console.error(error)
+    }
+  }
+
+  const onCommit = (e, overridesChanges) => {
+    e.preventDefault()
+
+    if (Object.keys(changes).length + Object.keys(newNodes).length > 1000) {
+      // show warning
+      confirmDialog({
+        style: { maxWidth: 400 },
+        message: `You are about to save ${
+          Object.keys(changes).length + Object.keys(newNodes).length
+        } changes. This may take a while and freeze the server for everyone else. Are you sure you want to continue?`,
+        header: 'Confirm Large Save',
+        accept: () => {
+          handleCommit(overridesChanges)
+          // save
+        },
+        reject: () => {
+          // don't save
+          return
+        },
       })
-      .catch((err) => {
-        toast.error("Unable to save changes. This shouldn't happen.")
-        console.log(updates)
-        console.error(err)
-        return null
-      })
+    } else {
+      handleCommit(overridesChanges)
+    }
   }
 
   const handleForceChange = async (key, value, ids, entityType) => {
@@ -1461,7 +1497,7 @@ const EditorPage = () => {
             label="Save Changes"
             onClick={onCommit}
             active={canCommit}
-            saving={isUpdating}
+            saving={commitUpdating}
           />
         </Toolbar>
         <Splitter
@@ -1502,12 +1538,6 @@ const EditorPage = () => {
                 className={fullPageLoading ? 'table-loading' : undefined}
               >
                 {allColumns}
-                <Column
-                  field="error"
-                  header=""
-                  body={(rowData) => formatError(rowData.data)}
-                  style={{ width: 24 }}
-                />
               </TreeTable>
             </TablePanel>
           </SplitterPanel>

@@ -120,14 +120,14 @@ const HierarchyBuilder = ({ visible, onHide, parents = [], onSubmit }) => {
     // if (tooBig) return
     const flatHierarchy = buildHierarchySeq(hierarchyForm)
 
-    // build a hierarchy from the flat hierarchy
-    const hierarchy = buildPreviewHierarchy(flatHierarchy)
-
     if (flatHierarchy.length > 8000) {
       setTooBig(true)
       setPreview([])
       return
     }
+
+    // build a hierarchy from the flat hierarchy
+    const hierarchy = buildPreviewHierarchy(flatHierarchy)
     setPreview(hierarchy)
   }, [hierarchyForm, tooBig])
 

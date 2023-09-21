@@ -8,48 +8,57 @@ const replaceSpaces = (string) => {
 
 const generateUniqueId = () => uuid1().replace(/-/g, '')
 
-const buildSeqs = (hierarchy = [], parentId, depth = 0, parentNames = []) => {
-  let seqs = []
+const buildSeqs = (hierarchy = []) => {
+  const stack = [{ hierarchy, parentId: null, depth: 0, parentNames: [] }]
+  const seqs = []
 
-  hierarchy.forEach((item) => {
-    if (item.entityType === 'task') {
-      seqs.push({
-        id: generateUniqueId(),
-        label: item.label,
-        name: replaceSpaces(item.label),
-        parentId: parentId,
-        entityType: 'task',
-        type: item.type,
-        leaf: true,
-        depth: depth,
-        siblingsLength: 1,
-      })
-      return
-    }
+  while (stack.length) {
+    const { hierarchy, parentId, depth, parentNames } = stack.pop()
 
-    item.seq.forEach((seqItem) => {
-      // keep onl the prefix number of parents
-      const prefixParents = parentNames.slice(0, item.prefix)
-      const name = item.prefix ? `${prefixParents.join('')}${seqItem}` : seqItem
-      const newId = generateUniqueId()
-      seqs.push({
-        id: newId,
-        label: name,
-        name: replaceSpaces(name),
-        parentId: parentId,
-        entityType: 'folder',
-        type: item.type,
-        leaf: !item.children?.length,
-        depth: depth,
-        siblingsLength: item.seq.length,
-      })
-
-      if (item.children?.length) {
-        const nestedSeqs = buildSeqs(item.children, newId, depth + 1, [...parentNames, seqItem])
-        seqs = [...seqs, ...nestedSeqs]
+    hierarchy.forEach((item) => {
+      if (item.entityType === 'task') {
+        seqs.push({
+          id: generateUniqueId(),
+          label: item.label,
+          name: replaceSpaces(item.label),
+          parentId,
+          entityType: 'task',
+          type: item.type,
+          leaf: true,
+          depth,
+          siblingsLength: 1,
+        })
+        return
       }
+
+      item.seq.forEach((seqItem) => {
+        // keep onl the prefix number of parents
+        const prefixParents = parentNames.slice(0, item.prefix)
+        const name = item.prefix ? `${prefixParents.join('')}${seqItem}` : seqItem
+        const newId = generateUniqueId()
+        seqs.push({
+          id: newId,
+          label: name,
+          name: replaceSpaces(name),
+          parentId,
+          entityType: 'folder',
+          type: item.type,
+          leaf: !item.children?.length,
+          depth,
+          siblingsLength: item.seq.length,
+        })
+
+        if (item.children?.length) {
+          stack.push({
+            hierarchy: item.children,
+            parentId: newId,
+            depth: depth + 1,
+            parentNames: [...parentNames, seqItem],
+          })
+        }
+      })
     })
-  })
+  }
 
   return seqs
 }
@@ -73,14 +82,14 @@ const buildHierarchySeq = (items, rootParents) => {
   if (rootParents?.length) {
     rootParents.forEach((id) => {
       const seqs = buildSeqs(hierarchy, id)
-      console.log(seqs)
+
       allSeqs = [...allSeqs, ...seqs]
     })
   } else {
     allSeqs = buildSeqs(hierarchy)
   }
 
-  console.log(allSeqs)
+  console.log(allSeqs.length)
 
   return allSeqs
 }

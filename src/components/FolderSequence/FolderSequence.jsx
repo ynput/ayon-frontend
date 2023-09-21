@@ -224,7 +224,7 @@ const FolderSequence = ({
                 id={'length'}
                 onChange={handleChange}
                 placeholder="15..."
-                min={1}
+                min={2}
               />
             </Styled.InputColumn>
 
