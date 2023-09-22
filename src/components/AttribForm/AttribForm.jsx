@@ -1,20 +1,14 @@
 import React, { useEffect } from 'react'
-import { useGetAnatomySchemaQuery } from '/src/services/anatomy/getAnatomy'
 import { isEmpty } from 'lodash'
 import * as Styled from './AttribForm.styled'
 import AttribFormType from './AttribFormType'
-import Typography from '/src/theme/typography.module.css'
 
-const AttribForm = ({ initData = {}, onChange, form }) => {
-  const { data: schema } = useGetAnatomySchemaQuery()
-  const fields = schema?.definitions?.ProjectAttribModel?.properties
-
+const AttribForm = ({ initData = {}, onChange, form, fields }) => {
   //   we build the form data based on the schema, trying to match the data types
   // we do this incase initData is missing any fields
   // and so that formData is always in the same format (we don't get uncontrolled inputs)
   useEffect(() => {
     if (!initData || !fields) return
-    console.log(fields)
 
     // build form data
     const formData = {}
@@ -60,15 +54,18 @@ const AttribForm = ({ initData = {}, onChange, form }) => {
       {Object.entries(fields).map(
         ([key, { title, type, format, enumLabels }]) =>
           form[key] !== undefined && (
-            <Styled.Row key={key} className={Typography.bodyMedium}>
+            <Styled.Row key={key}>
               <label>{title}</label>
-              <AttribFormType
-                id={key}
-                type={format === 'date-time' ? 'date' : type}
-                value={form[key]}
-                onChange={handleChange}
-                enumLabels={enumLabels}
-              />
+              <Styled.Field>
+                <AttribFormType
+                  id={key}
+                  type={type}
+                  format={format}
+                  value={form[key]}
+                  onChange={handleChange}
+                  enumLabels={enumLabels}
+                />
+              </Styled.Field>
             </Styled.Row>
           ),
       )}

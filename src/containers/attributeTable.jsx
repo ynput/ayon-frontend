@@ -93,7 +93,12 @@ const AttributeTable = ({
 
       {projectAttrib &&
         projectAttrib.map(({ name, value }) => (
-          <TableRow key={name} name={name} value={value} onCopy={copyToClipboard} />
+          <TableRow
+            key={name}
+            name={name}
+            value={value === 0 ? '0' : value}
+            onCopy={copyToClipboard}
+          />
         ))}
     </AttributeTableContainer>
   )

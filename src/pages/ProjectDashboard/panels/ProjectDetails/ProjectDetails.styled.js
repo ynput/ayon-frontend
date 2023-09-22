@@ -7,11 +7,12 @@ export const Thumbnail = styled.div`
   height: auto;
   position: relative;
   aspect-ratio: 16 / 9;
+  min-height: auto;
   & > div {
     width: 100%;
     height: 100%;
     max-width: unset;
-    aspect-ratio: unset;
+    aspect-ratio: 16 / 9;
 
     img {
       object-fit: cover;
@@ -19,13 +20,17 @@ export const Thumbnail = styled.div`
   }
 `
 
+export const Code = styled.span`
+  background-color: var(--md-sys-color-surface-container-lowest);
+  padding: 2px 8px;
+  border-radius: var(--border-radius-l);
+`
+
 export const Active = styled.span`
   background-color: var(--md-sys-color-surface-container-high);
   padding: 2px 4px;
   border-radius: 3px;
-  position: absolute;
-  top: 4px;
-  right: 4px;
+
   display: flex;
   align-items: center;
 

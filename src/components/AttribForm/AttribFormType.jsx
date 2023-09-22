@@ -1,8 +1,8 @@
 import { Dropdown, InputDate, InputNumber, InputText } from '@ynput/ayon-react-components'
-import { isEqual } from 'lodash'
+import { isEmpty, isEqual } from 'lodash'
 import React from 'react'
 
-const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, ...props }) => {
+const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ...props }) => {
   let options = []
   for (const key in enumLabels) {
     options.push({ label: enumLabels[key], value: key })
@@ -11,14 +11,13 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, ...props }
   const handleChange = (e, v) => {
     e?.preventDefault()
 
-    let newValue = v ?? e.target.value
+    let newValue = v ?? e?.target?.value ?? null
 
     if (type === 'date' && newValue) {
       newValue = new Date(newValue)
-      newValue = newValue.toLocaleDateString()
+      newValue = newValue.toISOString()
     }
 
-    console.log(value, newValue)
     // only change if value is different
     if (isEqual(value, newValue)) return
 
@@ -26,6 +25,9 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, ...props }
   }
 
   const sharedProps = { value, onChange: handleChange, id, ...props, autoComplete: 'off' }
+
+  if (format === 'date-time') type = 'date'
+  if (!isEmpty(enumLabels) && type !== 'array') type = 'array-single'
 
   switch (type) {
     case 'string':
@@ -38,8 +40,9 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, ...props }
       return (
         <InputDate
           {...sharedProps}
+          onChange={() => console.log('date changed')}
           selected={!!value && new Date(value)}
-          onChange={(date) => handleChange(null, date)}
+          onSelect={(v) => handleChange(null, v)}
           dateFormat={'dd/MM/yyyy'}
         />
       )
@@ -50,6 +53,21 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, ...props }
           onChange={(v) => handleChange(null, v)}
           options={options}
           search={options.length > 5}
+          onClear={value?.length ? () => handleChange(null, []) : false}
+          multiSelect
+          style={{ width: '100%' }}
+        />
+      )
+    case 'array-single':
+      return (
+        <Dropdown
+          value={[value]}
+          onChange={(v) => handleChange(null, v[0])}
+          options={options}
+          search={options.length > 5}
+          multiple={false}
+          onClear={() => handleChange(null, null)}
+          style={{ width: '100%' }}
         />
       )
     default:
