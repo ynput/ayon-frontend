@@ -178,12 +178,14 @@ const NewProjectDialog = ({ onHide }) => {
             style={projectNameStyle}
             value={name}
             onChange={handleNameChange}
+            title={nameValidationError}
             autoFocus
           />
           <InputText
             placeholder="Project code"
             value={code}
             onChange={handleCodeChange}
+            title={codeValidationError}
             style={projectCodeStyle}
           />
           <AnatomyPresetDropdown
