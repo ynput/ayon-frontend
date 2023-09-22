@@ -11,6 +11,11 @@ import {
 } from '../../../services/anatomy/getAnatomy'
 import { useCreateProjectMutation } from '/src/services/project/updateProject'
 
+// allow only alphanumeric and underscorer,
+// while underscore cannot be the first or last character
+const PROJECT_NAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9_]*[a-zA-Z0-9]$/
+const PROJECT_CODE_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9_]*[a-zA-Z0-9]$/
+
 const NewProjectDialog = ({ onHide }) => {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
@@ -94,6 +99,24 @@ const NewProjectDialog = ({ onHide }) => {
     setCodeSet(true)
   }
 
+  const nameValidationError = useMemo(() => {
+    if (!name) return 'Project name is required'
+    if (name.length < 3) return 'Project name must be at least 3 characters'
+    if (!PROJECT_NAME_REGEX.test(name)) {
+      return 'Project name can only contain alphanumeric characters and underscores'
+    }
+    return null
+  }, [name])
+
+  const codeValidationError = useMemo(() => {
+    if (!code) return 'Project code is required'
+    if (code.length > 10) return 'Project code is too long'
+    if (!PROJECT_CODE_REGEX.test(code)) {
+      return 'Project code can only contain alphanumeric characters and underscores'
+    }
+    return null
+  }, [code])
+
   //
   // Render
   //
@@ -115,9 +138,19 @@ const NewProjectDialog = ({ onHide }) => {
         onClick={handleSubmit}
         active={name && code}
         saving={isLoading}
+        disabled={!!(nameValidationError || codeValidationError)}
       />
     </Toolbar>
   )
+
+  const projectNameStyle = {
+    flexGrow: 1,
+  }
+  const projectCodeStyle = codeValidationError ? { outline: '1px solid var(--color-hl-error)' } : {}
+
+  if (nameValidationError) {
+    projectNameStyle.outline = '1px solid var(--color-hl-error)'
+  }
 
   return (
     <Dialog
@@ -142,12 +175,17 @@ const NewProjectDialog = ({ onHide }) => {
         <Toolbar>
           <InputText
             placeholder="Project Name"
-            style={{ flexGrow: 1 }}
+            style={projectNameStyle}
             value={name}
             onChange={handleNameChange}
             autoFocus
           />
-          <InputText placeholder="Project code" value={code} onChange={handleCodeChange} />
+          <InputText
+            placeholder="Project code"
+            value={code}
+            onChange={handleCodeChange}
+            style={projectCodeStyle}
+          />
           <AnatomyPresetDropdown
             selectedPreset={selectedPreset}
             setSelectedPreset={setSelectedPreset}
