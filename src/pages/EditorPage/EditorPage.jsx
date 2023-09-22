@@ -48,10 +48,11 @@ import { ayonApi } from '/src/services/ayon'
 import { confirmDialog } from 'primereact/confirmdialog'
 import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
+import useShortcuts from '/src/hooks/useShortcuts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
-  const { folders: foldersObject, tasks = [], folders = [], attrib } = project
+  const { folders: foldersObject, tasks = [], attrib } = project
 
   // eslint-disable-next-line no-unused-vars
   // const context = useSelector((state) => ({ ...state.context }))
@@ -82,7 +83,6 @@ const EditorPage = () => {
 
   // NEW STATES
   const [newEntity, setNewEntity] = useState('')
-  const [newEntityData, setNewEntityData] = useState({})
   const [multipleFoldersOpen, setMultipleFoldersOpen] = useState(false)
 
   // columns widths
@@ -925,30 +925,8 @@ const EditorPage = () => {
 
   const canCommit = !isEmpty(changes) || !isEmpty(newNodes)
 
-  const addNewEntity = (eType, root) => {
-    setNewEntity(eType)
-
-    // set any default data
-    const initData = {}
-
-    let type = eType === 'task' ? tasks : folders
-    if (type) {
-      initData.type = Object.keys(type)[0]
-    }
-    if (root) {
-      initData.parentIds = ['root']
-    }
-
-    // set name to type
-    initData.name = initData.type.toLowerCase()
-    initData.label = initData.type
-
-    setNewEntityData(initData)
-  }
-
   const handleCloseNew = () => {
     setNewEntity('')
-    setNewEntityData({})
   }
 
   const addNodes = (entityType, root, nodesData = [], expandBranches = true) => {
@@ -1111,7 +1089,7 @@ const EditorPage = () => {
       {
         label: 'Create Folder',
         icon: 'create_new_folder',
-        command: () => addNewEntity('folder', true),
+        command: () => setNewEntity('folder'),
       },
       {
         label: 'Save All Changes',
@@ -1137,12 +1115,12 @@ const EditorPage = () => {
       {
         label: 'Create Folder',
         icon: 'create_new_folder',
-        command: () => addNewEntity('folder'),
+        command: () => setNewEntity('folder'),
       },
       {
         label: 'Create Task',
         icon: 'add_task',
-        command: () => addNewEntity('task'),
+        command: () => setNewEntity('task'),
       },
       {
         label: 'Delete',
@@ -1425,6 +1403,24 @@ const EditorPage = () => {
     treeData = loadingTreeData
   }
 
+  const shortcuts = [
+    {
+      key: 'n',
+      action: () => setNewEntity('folder'),
+    },
+    {
+      key: 'm',
+      action: () => setMultipleFoldersOpen(true),
+    },
+    {
+      key: 't',
+      action: () => setNewEntity('task'),
+      disabled: disableAddNew,
+    },
+  ]
+
+  useShortcuts(shortcuts, [disableAddNew])
+
   //
   // Render the TreeTable
 
@@ -1432,34 +1428,39 @@ const EditorPage = () => {
     <main className="editor-page">
       <NewEntity
         type={newEntity}
-        data={newEntityData}
         visible={!!newEntity}
         onHide={handleCloseNew}
         onConfirm={addNodes}
-      />
-      <NewSequence
-        visible={multipleFoldersOpen}
-        onHide={() => setMultipleFoldersOpen(false)}
-        onConfirm={addNodes}
         currentSelection={currentSelection}
       />
+      {multipleFoldersOpen && (
+        <NewSequence
+          visible={multipleFoldersOpen}
+          onHide={() => setMultipleFoldersOpen(false)}
+          onConfirm={addNodes}
+          currentSelection={currentSelection}
+        />
+      )}
       <Section>
         <Toolbar>
           <Button
             icon="create_new_folder"
             label="Create folder"
-            onClick={() => addNewEntity('folder', disableAddNew)}
+            onClick={() => setNewEntity('folder')}
+            title='Press "n" to create a folder'
           />
           <Button
             icon="create_new_folder"
             label="Create multiple"
             onClick={() => setMultipleFoldersOpen(true)}
+            title='Press "m" to create multiple folders'
           />
           <Button
             icon="add_task"
             label="Create task"
             disabled={disableAddNew}
-            onClick={() => addNewEntity('task')}
+            onClick={() => setNewEntity('task')}
+            title='Press "t" to create a task'
           />
           <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect

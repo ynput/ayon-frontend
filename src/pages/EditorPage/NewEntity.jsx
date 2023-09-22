@@ -1,9 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { capitalize } from 'lodash'
+import { capitalize, isEmpty } from 'lodash'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { InputText, Button } from '@ynput/ayon-react-components'
+import { InputText, SaveButton } from '@ynput/ayon-react-components'
 import { useRef } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
@@ -22,17 +22,14 @@ const ContentStyled = styled.div`
   }
 `
 
-const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
+const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) => {
   const [entityType, setEntityType] = useState(null)
   //   build out form state
   const initData = { label: '', name: '', type: '' }
   const [entityData, setEntityData] = useState(initData)
 
   //   format title
-  let isRoot
-  if (Array.isArray(data.parentIds)) {
-    isRoot = data.parentIds.includes('root')
-  }
+  const isRoot = isEmpty(currentSelection)
   let title = 'Creating New '
   if (isRoot) title += 'Root '
   title += capitalize(type)
@@ -50,7 +47,7 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
     if (type) {
       setEntityType(type)
       //   prefill any extra data
-      setEntityData({ ...entityData, ...data })
+      setEntityData({ ...entityData })
     }
   }, [type, visible])
 
@@ -93,12 +90,6 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       label: entityData.label,
     }
 
-    console.log(newData)
-
-    // clear states
-    setEntityType(null)
-    setEntityData(initData)
-
     // callbacks
     onConfirm(entityType, isRoot, [newData])
     onHide()
@@ -115,10 +106,11 @@ const NewEntity = ({ type, data = {}, visible, onConfirm, onHide }) => {
       resizable={false}
       draggable={false}
       footer={
-        <Button
-          label={`Create ${capitalize(type)}`}
+        <SaveButton
+          label={`Create ${type}`}
           onClick={handleSubmit}
           style={{ marginLeft: 'auto' }}
+          active={entityData.label && entityData.type}
         />
       }
       onKeyDown={(e) => {

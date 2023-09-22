@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useShortcutsContext } from '../context/shortcutsContext'
 
-const userShortcuts = (shortcuts, deps = []) => {
+const useShortcuts = (shortcuts, deps = []) => {
   const { addShortcuts, removeShortcuts } = useShortcutsContext()
 
   useEffect(() => {
@@ -12,4 +12,4 @@ const userShortcuts = (shortcuts, deps = []) => {
   }, deps)
 }
 
-export default userShortcuts
+export default useShortcuts

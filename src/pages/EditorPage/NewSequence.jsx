@@ -14,7 +14,6 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     : currentSelection[Object.keys(currentSelection)[0]]
     ? currentSelection[Object.keys(currentSelection)[0]].data.name
     : ''
-  console.log(currentSelection)
 
   const [createSeq, setCreateSeq] = useState({})
 
@@ -70,7 +69,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       footer={
         <Toolbar>
           <Spacer />
-          <Button label={'Create'} onClick={handleSeqSubmit} variant="filled" />
+          <Button label={'Create folders'} onClick={handleSeqSubmit} variant="filled" />
         </Toolbar>
       }
       onKeyDown={(e) => {
