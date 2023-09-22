@@ -143,15 +143,6 @@ const NewProjectDialog = ({ onHide }) => {
     </Toolbar>
   )
 
-  const projectNameStyle = {
-    flexGrow: 1,
-  }
-  const projectCodeStyle = codeValidationError ? { outline: '1px solid var(--color-hl-error)' } : {}
-
-  if (nameValidationError) {
-    projectNameStyle.outline = '1px solid var(--color-hl-error)'
-  }
-
   return (
     <Dialog
       header="Create a new project"
@@ -175,10 +166,11 @@ const NewProjectDialog = ({ onHide }) => {
         <Toolbar>
           <InputText
             placeholder="Project Name"
-            style={projectNameStyle}
+            style={{ flexGrow: 1 }}
             value={name}
             onChange={handleNameChange}
             title={nameValidationError}
+            className={nameValidationError ? 'error' : ''}
             autoFocus
           />
           <InputText
@@ -186,7 +178,7 @@ const NewProjectDialog = ({ onHide }) => {
             value={code}
             onChange={handleCodeChange}
             title={codeValidationError}
-            style={projectCodeStyle}
+            className={codeValidationError ? 'error' : ''}
           />
           <AnatomyPresetDropdown
             selectedPreset={selectedPreset}
