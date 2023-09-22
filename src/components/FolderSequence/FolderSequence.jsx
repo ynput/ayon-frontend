@@ -254,6 +254,7 @@ const FolderSequence = ({
                 onChange={handleChange}
                 placeholder="15..."
                 min={2}
+                onFocus={(e) => e.target.select()}
               />
             </Styled.InputColumn>
 

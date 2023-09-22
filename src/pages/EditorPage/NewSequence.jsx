@@ -23,7 +23,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       increment: '',
       length: 10,
       type: 'Folder',
-      prefix: !isRoot,
+      prefix: false,
       prefixDepth: !isRoot ? 1 : 0,
     }
 
