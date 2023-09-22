@@ -46,8 +46,21 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   useEffect(() => {
     if (type) {
       setEntityType(type)
-      //   prefill any extra data
-      setEntityData({ ...entityData })
+      const task = {
+        label: 'Generic',
+        name: 'generic',
+        type: 'Generic',
+      }
+
+      const folder = {
+        label: 'Folder',
+        name: 'folder',
+        type: 'Folder',
+      }
+
+      // set defaults
+      if (type === 'task') setEntityData(task)
+      if (type === 'folder') setEntityData(folder)
     }
   }, [type, visible])
 
@@ -57,7 +70,12 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     let newState = { ...entityData }
     if (id) {
       newState[id] = value
-      if (value && id === 'type' && entityData.name === entityData.type.toLowerCase()) {
+      if (
+        value &&
+        id === 'type' &&
+        (entityData.label.toLowerCase() === entityData.type.toLowerCase() ||
+          entityData.label === '')
+      ) {
         // if name is same as type, update name
         newState.name = value.toLowerCase()
         newState.label = value
@@ -78,8 +96,10 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   }
 
   const handleSubmit = (e) => {
-    console.log('subbing')
     e?.preventDefault()
+
+    // first check name and type valid
+    if (!entityData.label || !entityData.type) return
 
     // convert type to correct key
     // convert name to camelCase
@@ -113,11 +133,6 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
           active={entityData.label && entityData.type}
         />
       }
-      onKeyDown={(e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          handleSubmit()
-        }
-      }}
     >
       <ContentStyled>
         <form onSubmit={handleSubmit}>
