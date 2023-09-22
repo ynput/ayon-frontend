@@ -85,6 +85,8 @@ function ShortcutsProvider(props) {
     let singleKey = e.key
     // add ctrl_ prefix if ctrl or cmd is pressed
     if (e.ctrlKey || e.metaKey) singleKey = 'ctrl+' + singleKey
+    // support alt
+    if (e.altKey) singleKey = 'alt+' + singleKey
 
     const combo = lastPressed + '+' + singleKey
     // first check if the key pressed is a shortcut
@@ -93,7 +95,9 @@ function ShortcutsProvider(props) {
 
     setLastPressed(singleKey)
 
-    if (!shortcut?.action) return
+    if (!shortcut) return
+
+    if (!shortcut.action || shortcut.disabled) return
     // console.log(shortcut)
 
     // if it is, prevent default browser behavior
