@@ -83,7 +83,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         nesting={false}
         onChange={handleSeqChange}
         isRoot={isRoot}
-        prefixExample={examplePrefix}
+        prefixExample={createSeq.prefix ? examplePrefix : ''}
       />
     </Dialog>
   )
