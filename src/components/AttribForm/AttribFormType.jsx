@@ -1,8 +1,13 @@
-import { InputDate, InputNumber, InputText } from '@ynput/ayon-react-components'
+import { Dropdown, InputDate, InputNumber, InputText } from '@ynput/ayon-react-components'
 import { isEqual } from 'lodash'
 import React from 'react'
 
-const AttribFormType = ({ type, value, onChange, id, ...props }) => {
+const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, ...props }) => {
+  let options = []
+  for (const key in enumLabels) {
+    options.push({ label: enumLabels[key], value: key })
+  }
+
   const handleChange = (e, v) => {
     e?.preventDefault()
 
@@ -18,10 +23,6 @@ const AttribFormType = ({ type, value, onChange, id, ...props }) => {
     if (isEqual(value, newValue)) return
 
     onChange({ [id]: newValue })
-  }
-
-  if (type === 'date') {
-    console.log(!!value)
   }
 
   const sharedProps = { value, onChange: handleChange, id, ...props, autoComplete: 'off' }
@@ -40,6 +41,15 @@ const AttribFormType = ({ type, value, onChange, id, ...props }) => {
           selected={!!value && new Date(value)}
           onChange={(date) => handleChange(null, date)}
           dateFormat={'dd/MM/yyyy'}
+        />
+      )
+    case 'array':
+      return (
+        <Dropdown
+          value={value}
+          onChange={(v) => handleChange(null, v)}
+          options={options}
+          search={options.length > 5}
         />
       )
     default:

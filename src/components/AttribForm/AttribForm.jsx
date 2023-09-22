@@ -52,15 +52,13 @@ const AttribForm = ({ initData = {}, onChange, form }) => {
   if (!initData || !fields || isEmpty(form)) return null
 
   const handleChange = (value) => {
-    console.log(value)
-    console.log(value)
     onChange({ ...form, ...value })
   }
 
   return (
     <Styled.FormContainer>
       {Object.entries(fields).map(
-        ([key, { title, type, format }]) =>
+        ([key, { title, type, format, enumLabels }]) =>
           form[key] !== undefined && (
             <Styled.Row key={key} className={Typography.bodyMedium}>
               <label>{title}</label>
@@ -69,6 +67,7 @@ const AttribForm = ({ initData = {}, onChange, form }) => {
                 type={format === 'date-time' ? 'date' : type}
                 value={form[key]}
                 onChange={handleChange}
+                enumLabels={enumLabels}
               />
             </Styled.Row>
           ),

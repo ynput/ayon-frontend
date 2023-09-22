@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-export const FormContainer = styled.form`
+export const FormContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -17,7 +17,8 @@ export const Row = styled.div`
   align-items: center;
   justify-content: space-between;
 
-  input {
+  input,
+  button {
     min-width: 200px;
   }
 `
