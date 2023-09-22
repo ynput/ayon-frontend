@@ -44,7 +44,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   // set entity type
   useEffect(() => {
-    if (type) {
+    if (type !== entityType && type) {
       setEntityType(type)
       const task = {
         label: 'Generic',
