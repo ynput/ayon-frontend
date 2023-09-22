@@ -218,6 +218,8 @@ const FolderSequence = ({
               </>
             )}
 
+            <Icon icon="trending_flat" />
+
             {parentBases && nesting && (
               <Styled.InputColumn style={{ display: prefix ? 'flex' : 'none' }}>
                 <Styled.Prefix>{parentBases.join('')}</Styled.Prefix>
