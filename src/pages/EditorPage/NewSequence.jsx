@@ -2,14 +2,19 @@ import React from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import { Button, Toolbar, Spacer } from '@ynput/ayon-react-components'
-
-import { useSelector } from 'react-redux'
 import { Dialog } from 'primereact/dialog'
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
+import { isEmpty } from 'lodash'
 
-const NewSequence = ({ visible, onConfirm, onHide }) => {
-  const focusedFolders = useSelector((state) => state.context.focused.folders)
+const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
+  const isRoot = isEmpty(currentSelection)
+  const examplePrefix = isRoot
+    ? ''
+    : currentSelection[Object.keys(currentSelection)[0]]
+    ? currentSelection[Object.keys(currentSelection)[0]].data.name
+    : ''
+  console.log(currentSelection)
 
   const [createSeq, setCreateSeq] = useState({})
 
@@ -19,8 +24,8 @@ const NewSequence = ({ visible, onConfirm, onHide }) => {
       increment: '',
       length: 10,
       type: 'Folder',
-      prefix: !!focusedFolders.length,
-      prefixDepth: focusedFolders.length ? 1 : 0,
+      prefix: !isRoot,
+      prefixDepth: !isRoot ? 1 : 0,
     }
 
     setCreateSeq(newSeq)
@@ -28,7 +33,7 @@ const NewSequence = ({ visible, onConfirm, onHide }) => {
 
   useEffect(() => {
     openCreateSeq()
-  }, [focusedFolders])
+  }, [isRoot])
 
   const title = 'Create Folder Sequence'
 
@@ -50,8 +55,6 @@ const NewSequence = ({ visible, onConfirm, onHide }) => {
         __prefix: createSeq.prefix,
       })
     }
-
-    const isRoot = !focusedFolders.length
 
     onConfirm('folder', isRoot, nodes, false)
     onHide()
@@ -80,7 +83,8 @@ const NewSequence = ({ visible, onConfirm, onHide }) => {
         {...createSeq}
         nesting={false}
         onChange={handleSeqChange}
-        selectedParents={focusedFolders}
+        isRoot={isRoot}
+        prefixExample={examplePrefix}
       />
     </Dialog>
   )

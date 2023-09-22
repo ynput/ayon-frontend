@@ -1441,6 +1441,7 @@ const EditorPage = () => {
         visible={multipleFoldersOpen}
         onHide={() => setMultipleFoldersOpen(false)}
         onConfirm={addNodes}
+        currentSelection={currentSelection}
       />
       <Section>
         <Toolbar>

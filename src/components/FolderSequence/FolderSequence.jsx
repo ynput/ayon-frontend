@@ -12,12 +12,12 @@ import { useSelector } from 'react-redux'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import getSequence from '/src/helpers/getSequence'
 
-function formatSeq(arr, maxLength) {
+function formatSeq(arr, maxLength, prefix = '') {
   if (arr.length <= maxLength) {
-    return arr.join(', ')
+    return arr.map((item) => prefix + item).join(', ')
   } else {
-    const firstItems = arr.slice(0, Math.ceil(maxLength / 2))
-    const lastItems = arr.slice(-1)
+    const firstItems = arr.slice(0, Math.ceil(maxLength / 2)).map((item) => prefix + item)
+    const lastItems = arr.slice(-1).map((item) => prefix + item)
     return `${firstItems.join(', ')} ... ${lastItems.join(', ')}`
   }
 }
@@ -30,7 +30,8 @@ const FolderSequence = ({
   onNew,
   index,
   nesting = true,
-  selectedParents = [],
+  isRoot,
+  prefixExample = '',
   ...props
 }) => {
   const folders = useSelector((state) => state.project.folders) || []
@@ -105,7 +106,7 @@ const FolderSequence = ({
     [],
   )
 
-  const sequenceString = formatSeq(sequence, 5)
+  const sequenceString = formatSeq(sequence, 5, prefixExample)
 
   const seqRef = useRef(null)
   const [seqWidth, setSeqWidth] = useState(0)
@@ -133,6 +134,7 @@ const FolderSequence = ({
             id={'base'}
             onChange={handleChange}
             placeholder="compositing..."
+            autoComplete="off"
           />
 
           <label>Type</label>
@@ -198,7 +200,7 @@ const FolderSequence = ({
                     checked={prefix}
                     id={'prefix'}
                     onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
-                    disabled={!nesting && !selectedParents.length}
+                    disabled={!nesting && isRoot}
                   />
                 </Styled.InputColumn>
                 {nesting && prefix && (
@@ -224,7 +226,13 @@ const FolderSequence = ({
 
             <Styled.InputColumn className="seq">
               <label>First Name</label>
-              <InputText value={base} id={'base'} onChange={handleChange} placeholder="ep101..." />
+              <InputText
+                value={base}
+                id={'base'}
+                onChange={handleChange}
+                placeholder="ep101..."
+                autoComplete="off"
+              />
             </Styled.InputColumn>
             <Icon icon="trending_flat" />
             <Styled.InputColumn className="seq">
@@ -234,6 +242,7 @@ const FolderSequence = ({
                 id={'increment'}
                 onChange={handleChange}
                 placeholder="ep102..."
+                autoComplete="off"
               />
             </Styled.InputColumn>
 
@@ -268,7 +277,7 @@ const FolderSequence = ({
               />
             )}
           </Styled.SequenceForm>
-          {!nesting && <Styled.Example>Example Output: {sequenceString}</Styled.Example>}
+          {!nesting && <Styled.Example>Example: {sequenceString}</Styled.Example>}
         </Styled.SequenceContainer>
       </Styled.RowWrapper>
       {nesting && (
