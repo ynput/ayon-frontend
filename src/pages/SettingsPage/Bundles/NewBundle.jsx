@@ -47,6 +47,11 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
       return
     }
 
+    if (formData?.name.includes(' ')) {
+      toast.error('Name cannot contain spaces')
+      return
+    }
+
     try {
       await createBundle({ data: formData, archived: true }).unwrap()
       toast.success('Bundle created')
@@ -77,8 +82,6 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
       return newFormData
     })
   }
-
-  console.log(formData)
 
   return (
     <>
