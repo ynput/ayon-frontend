@@ -32,6 +32,7 @@ const FolderSequence = ({
   nesting = true,
   isRoot,
   prefixExample = '',
+  prefixDisabled,
   ...props
 }) => {
   const folders = useSelector((state) => state.project.folders) || []
@@ -200,7 +201,7 @@ const FolderSequence = ({
                     checked={prefix}
                     id={'prefix'}
                     onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
-                    disabled={!nesting && isRoot}
+                    disabled={(!nesting && isRoot) || prefixDisabled}
                   />
                 </Styled.InputColumn>
                 {nesting && prefix && (
@@ -217,6 +218,8 @@ const FolderSequence = ({
                 )}
               </>
             )}
+
+            <Icon icon="trending_flat" />
 
             {parentBases && nesting && (
               <Styled.InputColumn style={{ display: prefix ? 'flex' : 'none' }}>
@@ -254,6 +257,7 @@ const FolderSequence = ({
                 onChange={handleChange}
                 placeholder="15..."
                 min={2}
+                onFocus={(e) => e.target.select()}
               />
             </Styled.InputColumn>
 

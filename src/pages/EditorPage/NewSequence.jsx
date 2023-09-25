@@ -9,6 +9,7 @@ import { isEmpty } from 'lodash'
 
 const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   const isRoot = isEmpty(currentSelection)
+  const multipleSelection = Object.keys(currentSelection).length > 1
   const examplePrefix = isRoot
     ? ''
     : currentSelection[Object.keys(currentSelection)[0]]
@@ -23,7 +24,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       increment: '',
       length: 10,
       type: 'Folder',
-      prefix: !isRoot,
+      prefix: multipleSelection,
       prefixDepth: !isRoot ? 1 : 0,
     }
 
@@ -84,6 +85,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         onChange={handleSeqChange}
         isRoot={isRoot}
         prefixExample={createSeq.prefix ? examplePrefix : ''}
+        prefixDisabled={multipleSelection}
       />
     </Dialog>
   )

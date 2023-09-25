@@ -976,7 +976,7 @@ const EditorPage = () => {
 
         const newData = { ...data }
 
-        if (newData.__prefix) {
+        if (newData.__prefix && parentData.name && parentData.label) {
           // prefix the parent to the name and label
           newData.name = `${parentData.name}${newData.name}`
           newData.label = `${parentData.label}${newData.label}`
