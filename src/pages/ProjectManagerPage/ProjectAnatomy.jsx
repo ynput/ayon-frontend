@@ -33,7 +33,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
   const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
 
   const saveAnatomy = () => {
-    updateProjectAnatomy({ projectName, anatomy: { attributes: newData.attributes } })
+    updateProjectAnatomy({ projectName, anatomy: newData })
       .unwrap()
       .then(() => {
         toast.info(`Anatomy saved`)
