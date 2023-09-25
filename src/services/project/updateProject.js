@@ -41,7 +41,8 @@ const updateProject = ayonApi.injectEndpoints({
         method: 'POST',
         body: anatomy,
       }),
-      invalidatesTags: (result, error, { projectName }) => [{ type: 'project', id: projectName }],
+      invalidatesTags: (result, error, { projectName }) =>
+        error ? [] : [{ type: 'project', id: projectName }],
     }),
   }),
 })

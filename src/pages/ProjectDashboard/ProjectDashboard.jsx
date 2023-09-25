@@ -7,7 +7,7 @@ import { Section } from '@ynput/ayon-react-components'
 // import ProjectHealth from './panels/ProjectHealth'
 import DashboardPanelsContainer from './panels/DashboardPanelsContainer'
 import ProjectLatest from './panels/ProjectLatest'
-import ProjectDetails from './panels/ProjectDetails'
+import ProjectDetails from './panels/ProjectDetails/ProjectDetails'
 import ProjectTeams from './panels/ProjectTeams'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 
@@ -35,7 +35,7 @@ const ProjectDashboard = ({ projectName, projectList }) => {
         <Section
           style={{
             display: 'grid',
-            gridTemplateColumns: 'auto minmax(300px, 20vw)',
+            gridTemplateColumns: 'auto minmax(400px, 20vw)',
             height: `calc(100% + 8px)`,
             alignItems: 'start',
           }}
