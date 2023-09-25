@@ -81,7 +81,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }
   const keyboardSensor = useSensor(KeyboardSensor)
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: {
-      distance: 8,
+      distance: 1,
     },
   })
 
