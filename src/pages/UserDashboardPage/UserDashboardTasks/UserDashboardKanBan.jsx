@@ -15,7 +15,7 @@ import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDa
 import { toast } from 'react-toastify'
 
 import ColumnsWrapper from './TasksWrapper'
-import DashboardTasksToolbar from './DashboardTasksToolbar'
+import DashboardTasksToolbar from './DashboardTasksToolbar/DashboardTasksToolbar'
 import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
 import { onTaskSelected } from '/src/features/dashboard'
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'

@@ -66,7 +66,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
         overflow: 'hidden',
         width: '100%',
         gap: 0,
-        marginLeft: -12,
+        marginLeft: -8,
       }}
       stateKey="user-dashboard-tasks"
       className="dashboard-tasks"

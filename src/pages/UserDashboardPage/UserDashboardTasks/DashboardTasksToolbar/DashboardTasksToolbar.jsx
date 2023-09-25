@@ -1,4 +1,4 @@
-import { InputText, SortingDropdown, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { Button, InputText, SortingDropdown, Spacer } from '@ynput/ayon-react-components'
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -8,6 +8,8 @@ import {
   onTasksSortByChanged,
 } from '/src/features/dashboard'
 import MeOrUserSwitch from '/src/components/MeOrUserSwitch/MeOrUserSwitch'
+import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+import * as Styled from './DashboardTasksToolbar.styled'
 
 const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
   const dispatch = useDispatch()
@@ -15,6 +17,8 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
   const user = useSelector((state) => state.user)
   const isAdmin = user?.data?.isAdmin
 
+  // KANBAN or TASKS
+  const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
@@ -113,7 +117,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
   }
 
   return (
-    <Toolbar style={{ zIndex: 100, padding: '1px 8px', height: 32 }}>
+    <Styled.TasksToolbar>
       <SortingDropdown
         title="Sort by"
         options={sortByOptions}
@@ -132,7 +136,6 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
         value={filterValue}
         onChange={(e) => setFilterValue(e.target.value)}
       />
-      <Spacer />
       {isAdmin && !isLoadingAllUsers && (
         <MeOrUserSwitch
           value={assignees}
@@ -147,7 +150,20 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
           style={{ zIndex: 20 }}
         />
       )}
-    </Toolbar>
+      <Spacer />
+      <Button
+        label="List"
+        onClick={() => setView('list')}
+        selected={view === 'list'}
+        icon="format_list_bulleted"
+      />
+      <Button
+        label="Kanban"
+        onClick={() => setView('kanban')}
+        selected={view === 'kanban'}
+        icon="view_kanban"
+      />
+    </Styled.TasksToolbar>
   )
 }
 
