@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
+import { Dialog } from 'primereact/dialog'
 import { toast } from 'react-toastify'
 
-import { Spacer, InputText, Toolbar, SaveButton, Section } from '@ynput/ayon-react-components'
+import { Spacer, InputText, Toolbar, SaveButton } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import {
@@ -9,11 +10,8 @@ import {
   useGetAnatomySchemaQuery,
 } from '../../../services/anatomy/getAnatomy'
 import { useCreateProjectMutation } from '/src/services/project/updateProject'
-import { useNavigate } from 'react-router'
 
-const NewProject = () => {
-  const navigate = useNavigate()
-
+const NewProjectDialog = ({ onHide }) => {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [codeSet, setCodeSet] = useState(false)
@@ -45,9 +43,7 @@ const NewProject = () => {
       .unwrap()
       .then(() => {
         toast.success('Project created')
-        // redirect to project manager page
-        const redirect = `/manageProjects/dashboard?project=${name}`
-        navigate(redirect)
+        onHide(name)
       })
       .catch((error) => {
         // log
@@ -124,43 +120,44 @@ const NewProject = () => {
   )
 
   return (
-    <Section
+    <Dialog
+      header="Create a new project"
+      footer={footer}
+      visible="true"
+      onHide={onHide}
       style={{
-        padding: 16,
-        overflow: 'hidden',
+        width: '50vw',
+        height: '80%',
       }}
     >
-      <h2>
-        New Project{name ? ': ' : ''}
-        {name}
-        {code ? ' - ' : ''}
-        {code}
-      </h2>
-      <Toolbar>
-        <InputText
-          placeholder="Project Name"
-          style={{ flexGrow: 1 }}
-          value={name}
-          onChange={handleNameChange}
-          autoFocus
-        />
-        <InputText placeholder="Project code" value={code} onChange={handleCodeChange} />
-        <AnatomyPresetDropdown
-          selectedPreset={selectedPreset}
-          setSelectedPreset={setSelectedPreset}
-          tooltip="Project anatomy preset"
-        />
-      </Toolbar>
       <div
         style={{
-          overflow: 'auto',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
         }}
       >
+        <Toolbar>
+          <InputText
+            placeholder="Project Name"
+            style={{ flexGrow: 1 }}
+            value={name}
+            onChange={handleNameChange}
+            autoFocus
+          />
+          <InputText placeholder="Project code" value={code} onChange={handleCodeChange} />
+          <AnatomyPresetDropdown
+            selectedPreset={selectedPreset}
+            setSelectedPreset={setSelectedPreset}
+            tooltip="Project anatomy preset"
+          />
+        </Toolbar>
         {editor}
       </div>
-      {footer}
-    </Section>
+    </Dialog>
   )
 }
 
-export default NewProject
+export default NewProjectDialog

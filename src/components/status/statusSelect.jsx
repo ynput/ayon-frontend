@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import { Dropdown } from '@ynput/ayon-react-components'
 import StatusField from './statusField'
 import { useSelector } from 'react-redux'
@@ -103,27 +102,6 @@ const StatusSelect = ({
       }
     />
   )
-}
-
-StatusSelect.propTypes = {
-  size: PropTypes.oneOf(['full', 'short', 'icon']),
-  align: PropTypes.oneOf(['left', 'right']),
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool, PropTypes.array]),
-  statuses: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      color: PropTypes.string.isRequired,
-      state: PropTypes.string.isRequired,
-    }).isRequired,
-  ),
-  onChange: PropTypes.func.isRequired,
-  maxWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  multipleSelected: PropTypes.number,
-  onClick: PropTypes.func,
-  isChanged: PropTypes.object,
-  disableMessage: PropTypes.bool,
-  disabled: PropTypes.bool,
-  widthExpand: PropTypes.bool,
 }
 
 export default StatusSelect

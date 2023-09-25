@@ -11,12 +11,14 @@ import { useMemo, useRef, useState } from 'react'
 import { Button, InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import useLocalStorage from '/src/hooks/useLocalStorage'
+import ProjectButton from '/src/components/ProjectButton/ProjectButton'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const searchRef = useRef(null)
   const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
+  const [searchOpen, setSearchOpen] = useState(false)
 
   const projectSelected = useSelector((state) => state.project.name)
   const user = useSelector((state) => state.user)
@@ -29,7 +31,7 @@ const ProjectMenu = ({ visible, onHide }) => {
   const [showContext] = useCreateContext([])
 
   const handlePinChange = (projectName, e) => {
-    e.originalEvent.stopPropagation()
+    e.stopPropagation()
     // e.originalEvent.preventDefault()
     if (pinned.includes(projectName)) {
       setPinned(pinned.filter((p) => p !== projectName))
@@ -44,11 +46,6 @@ const ProjectMenu = ({ visible, onHide }) => {
 
     const userItems = [
       {
-        label: 'Project Dashboard',
-        icon: 'empty_dashboard',
-        command: () => navigate(`/manageProjects/dashboard?project=${projectName}`),
-      },
-      {
         label: pinnedDisabled ? 'Max 5 pinned' : `${isPinned ? 'Unpin' : 'Pin'} Project`,
         icon: 'push_pin',
         command: (e) => handlePinChange(projectName, e),
@@ -61,7 +58,7 @@ const ProjectMenu = ({ visible, onHide }) => {
         ...[
           {
             label: 'Project Settings',
-            icon: 'settings',
+            icon: 'settings_applications',
             command: () => navigate(`/manageProjects/projectSettings?project=${projectName}`),
           },
         ],
@@ -71,31 +68,58 @@ const ProjectMenu = ({ visible, onHide }) => {
     return userItems
   }
 
+  const handleEditClick = (e, name) => {
+    e.stopPropagation()
+    navigate(`/manageProjects/projectSettings?project=${name}`)
+    onHide()
+  }
+
   const menuItems = useMemo(() => {
     return projects.map((project) => ({
       id: project.name,
-      label: [project.name, project.code],
-      selected: project.name === projectSelected,
-      onClick: () => onProjectSelect(project.name),
-      onContextMenu: (e) => showContext(e, buildContextMenu(project.name)),
+      label: project.name,
+      pinned: pinned.includes(project.name),
+      node: (
+        <ProjectButton
+          label={project.name}
+          className={pinned.includes(project.name) ? 'pinned' : ''}
+          onPin={(e) => handlePinChange(project.name, e)}
+          onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
+          onClick={() => onProjectSelect(project.name)}
+          onContextMenu={(e) => showContext(e, buildContextMenu(project.name))}
+        />
+      ),
     }))
   }, [projects, projectSelected, projectsFilter, pinned])
 
+  // sort  by pinned, then alphabetically
+  const sortedMenuItems = useMemo(() => {
+    return menuItems.sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1
+      if (!a.pinned && b.pinned) return 1
+      if (a.label[0] < b.label[0]) return -1
+      if (a.label[0] > b.label[0]) return 1
+      return 0
+    })
+  }, [menuItems])
+
+  // after the last pinned item, insert a divider
+  const dividerIndex = useMemo(() => {
+    return sortedMenuItems.findIndex((item) => !item.pinned)
+  }, [sortedMenuItems])
+
+  // now we have a divider index, we can insert a divider
+  const menuItemsWithDivider = useMemo(() => {
+    const items = [...sortedMenuItems]
+    if (pinned.length) items.splice(dividerIndex, 0, { id: 'divider' })
+    return items
+  }, [sortedMenuItems, dividerIndex])
+
   const filteredMenuItems = useMemo(() => {
-    return menuItems.filter((item) => {
-      const [name, code] = item.label
-      return (
-        name.toLowerCase().includes(projectsFilter.toLowerCase()) ||
-        code.toLowerCase().includes(projectsFilter.toLowerCase())
-      )
+    return menuItemsWithDivider.filter((item) => {
+      return !projectsFilter || item?.label?.toLowerCase().includes(projectsFilter.toLowerCase())
     })
   }, [menuItems, projectsFilter])
-
-  const pinnedMenuItems = useMemo(() => {
-    return filteredMenuItems
-      .filter((item) => pinned.includes(item.id))
-      .map((item) => ({ ...item, selected: false, highlighted: true }))
-  }, [filteredMenuItems, pinned])
 
   const onProjectSelect = (projectName) => {
     onHide()
@@ -114,6 +138,9 @@ const ProjectMenu = ({ visible, onHide }) => {
     // reset uri
     dispatch(setUri(`ayon+entity://${projectName}`))
 
+    // close search if it was open
+    setSearchOpen(false)
+
     // if projects/[project] is null, projects/[projectName]/browser, else projects/[projectName]/[module]
     const link = window.location.pathname.includes('projects')
       ? `/projects/${projectName}/${window.location.pathname.split('/')[3] || 'browser'}`
@@ -122,14 +149,24 @@ const ProjectMenu = ({ visible, onHide }) => {
     navigate(link)
   }
 
-  const handleNewProject = () => {
-    navigate('/manageProjects/new')
+  const handleHide = () => {
     onHide()
+    // close search if it was open
+    setSearchOpen(false)
+  }
+
+  const handleAllClick = () => {
+    onHide()
+
+    navigate('/manageProjects/dashboard')
+  }
+
+  const handleSearchClick = (e) => {
+    e.stopPropagation()
+    setSearchOpen(true)
   }
 
   if (!visible) return null
-
-  const showingPinned = !!pinnedMenuItems.length && !projectsFilter
 
   return (
     <Styled.ProjectSidebar
@@ -138,37 +175,34 @@ const ProjectMenu = ({ visible, onHide }) => {
       modal={false}
       showCloseIcon={false}
       onShow={() => searchRef.current?.focus()}
-      onHide={onHide}
+      onHide={handleHide}
     >
       <Section>
         <Styled.Header>
-          <InputText
-            placeholder="Search projects..."
-            value={projectsFilter}
-            onChange={(e) => setProjectsFilter(e.target.value)}
-            ref={searchRef}
+          <Button
+            label="All Projects"
+            variant="tonal"
+            icon="empty_dashboard"
+            onClick={handleAllClick}
           />
+          {!searchOpen ? (
+            <Button label="Search" icon="search" variant="text" onClick={handleSearchClick} />
+          ) : (
+            <InputText
+              placeholder="Search projects..."
+              value={projectsFilter}
+              onChange={(e) => setProjectsFilter(e.target.value)}
+              ref={searchRef}
+              autoFocus
+            />
+          )}
         </Styled.Header>
-        {showingPinned && (
-          <div>
-            <h3>Pinned</h3>
-            <MenuList items={pinnedMenuItems} handleClick={(e, onClick) => onClick()} level={0} />
-          </div>
-        )}
+        <Styled.Divider />
         <Styled.All>
-          {showingPinned && <h3>All</h3>}
+          <h3>Projects</h3>
           <MenuList items={filteredMenuItems} handleClick={(e, onClick) => onClick()} level={0} />
         </Styled.All>
       </Section>
-      {!isUser && (
-        <Button
-          label="Create new project"
-          onClick={handleNewProject}
-          icon="create_new_folder"
-          variant="filled"
-          style={{ padding: '12px 0', borderRadius: 8 }}
-        />
-      )}
     </Styled.ProjectSidebar>
   )
 }

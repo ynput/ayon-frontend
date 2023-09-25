@@ -65,12 +65,14 @@ const CheckboxWidget = function (props) {
     if (initialized) return
 
     setInitialized(true)
+    if (path?.length) return
     setTimeout(() => {
       props.onChange(value)
-    }, 200)
+    }, 300)
   }, [props.onChange, value])
 
   useEffect(() => {
+    console.log(props.id, props.value, value)
     // Sync the local state with the formData
     if (props.value === undefined) return
     if (value === props.value) return
@@ -107,7 +109,7 @@ const CheckboxWidget = function (props) {
   return (
     <span style={value !== props.value ? { outline: '1px solid yellow' } : {}}>
       <InputSwitch checked={value || false} onChange={onChange} />
-      {/* {JSON.stringify(props.value)} / {JSON.stringify(value)} */}
+      {/* {JSON.stringify(props.value)} / {JSON.stringify(value)}  */}
     </span>
   )
 
@@ -138,6 +140,7 @@ const SelectWidget = (props) => {
     if (initialized) return
 
     setInitialized(true)
+    if (path?.length) return
 
     setTimeout(() => {
       props.onChange(value)

@@ -61,7 +61,7 @@ export const ProgressInstall = ({
     const installers = []
     if (release?.installers?.length) {
       for (const installer of release.installers) {
-        const sources = installer?.sources?.filter(({ type, url }) => type === 'url' && !!url)
+        const sources = installer?.sources?.filter(({ type, url }) => type === 'http' && !!url)
         installers.push(
           ...sources.map(({ url }) => ({ url, name: installer?.filename, type: 'installer' })),
         )
@@ -71,7 +71,7 @@ export const ProgressInstall = ({
     const depPackages = []
     if (release?.dependencyPackages?.length) {
       for (const depPackage of release.dependencyPackages) {
-        const sources = depPackage.sources.filter(({ type, url }) => type === 'url' && !!url)
+        const sources = depPackage.sources.filter(({ type, url }) => type === 'http' && !!url)
         depPackages.push(
           ...sources.map(({ url }) => ({ url, name: depPackage?.filename, type: 'package' })),
         )

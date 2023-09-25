@@ -32,6 +32,7 @@ const PresetList = ({
           icon: 'delete',
           disabled: isDefault,
           command: () => onDelete(data.name, primarySelected),
+          danger: true,
         },
       ]
 

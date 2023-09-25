@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
+import useCreateContext from '/src/hooks/useCreateContext'
+
 import {
   Button,
   Spacer,
@@ -17,8 +19,9 @@ import AddonList from '/src/containers/AddonList'
 import SiteList from '/src/containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
-import CopySettingsButton from './CopySettings'
+import CopyBundleSettingsButton from './CopyBundleSettings'
 import VariantSelector from './VariantSelector'
+import CopySettingsDialog from '/src/containers/CopySettings/CopySettingsDialog'
 
 import {
   useSetAddonSettingsMutation,
@@ -56,6 +59,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [selectedSites, setSelectedSites] = useState([])
   const [environment, setEnvironment] = useState('production')
   const [bundleName, setBundleName] = useState()
+
+  const [showCopySettings, setShowCopySettings] = useState(false)
 
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
@@ -377,9 +382,21 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onPushToProduction = async () => {
     // Push the current bundle to production
 
+    const message = (
+      <>
+        <p>
+          Are you sure you want to push <strong>{bundleName}</strong> to production?
+        </p>
+        <p>
+          This will mark the current staging bundle as production and copy all staging studio
+          settings to production as well.
+        </p>
+      </>
+    )
+
     confirmDialog({
       header: `Push ${bundleName} to production`,
-      message: `Are you sure you want to push ${bundleName} to production?`,
+      message,
       accept: async () => {
         await promoteBundle({ name: bundleName }).unwrap()
         setLocalData({})
@@ -388,6 +405,21 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       },
       reject: () => {},
     })
+  }
+
+  // Addon list context menu
+
+  const [addonListContextMenu] = useCreateContext([])
+  const showAddonListContextMenu = (e) => {
+    setTimeout(() => {
+      const menuItems = [
+        {
+          label: 'Copy settings from...',
+          command: () => setShowCopySettings(true),
+        },
+      ]
+      addonListContextMenu(e.originalEvent, menuItems)
+    }, 50)
   }
 
   //
@@ -411,7 +443,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             {bundleName}
           </span>
           <Spacer />
-          <CopySettingsButton
+          <CopyBundleSettingsButton
             bundleName={bundleName}
             variant={environment}
             disabled={canCommit}
@@ -481,6 +513,20 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
         <Section style={{ maxWidth: 400, minWidth: 400 }}>
           {addonListHeader}
+          {showCopySettings && (
+            <CopySettingsDialog
+              selectedAddons={selectedAddons}
+              variant={environment}
+              originalData={originalData}
+              setOriginalData={setOriginalData}
+              localData={localData}
+              setLocalData={setLocalData}
+              changedKeys={changedKeys}
+              setChangedKeys={setChangedKeys}
+              projectName={projectName}
+              onClose={() => setShowCopySettings(false)}
+            />
+          )}
           <AddonList
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
@@ -490,6 +536,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
             siteSettings={showSites}
+            onContextMenu={showAddonListContextMenu}
           />
           {showSites && (
             <SiteList

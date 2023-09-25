@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 // import { toast } from 'react-toastify'
-import { Section, Toolbar, Spacer, Button } from '@ynput/ayon-react-components'
+import { Toolbar, Spacer, Button } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
@@ -42,7 +42,7 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
   }, [bundles, selectedBundle])
 
   return (
-    <Section>
+    <>
       <Toolbar>
         <Spacer />
         <>
@@ -75,7 +75,7 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
           <BundleDeps bundle={bundle} />
         </BundleForm>
       )}
-    </Section>
+    </>
   )
 }
 

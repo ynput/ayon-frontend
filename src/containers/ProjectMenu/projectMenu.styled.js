@@ -16,6 +16,7 @@ export const ProjectSidebar = styled(Sidebar)`
 
   h3 {
     border: none;
+    color: var(--md-sys-color-outline);
   }
 
   .p-sidebar-content {
@@ -29,7 +30,7 @@ export const ProjectSidebar = styled(Sidebar)`
       background-color: var(--md-sys-color-surface-container-high);
       color: var(--md-sys-color-on-surface);
       border-radius: var(--border-radius-l);
-      gap: 16px;
+      gap: 8px;
       padding: 8px;
       overflow: hidden;
 
@@ -58,12 +59,36 @@ export const ProjectSidebar = styled(Sidebar)`
 
 export const All = styled.div`
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  menu {
+    flex: 1;
+  }
+`
+
+export const Divider = styled.hr`
+  margin: 0;
+  width: 100%;
+  border-style: solid;
+  opacity: 0.5;
+  border-color: var(--md-sys-color-surface-container-highest);
 `
 
 export const Header = styled.header`
   padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
 
-  input {
+  button {
+    justify-content: flex-start;
+    padding: 6px 12px;
+  }
+
+  input,
+  button {
     width: 100%;
   }
 `

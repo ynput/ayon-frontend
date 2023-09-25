@@ -21,6 +21,12 @@ const RowStyled = styled.div`
   }
 `
 
+const MessageField = styled.pre`
+  white-space: pre-wrap;
+  overflow: auto;
+  max-height: 300px;
+`
+
 const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
   const { data: event, isLoading, isFetching } = useGetEventByIdQuery({ id }, { skip: !id })
 
@@ -84,7 +90,13 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
         {payload.message && (
           <RowStyled>
             <h2>Message</h2>
-            <span>{payload.message}</span>
+            <MessageField>{payload.message}</MessageField>
+          </RowStyled>
+        )}
+        {payload.traceback && (
+          <RowStyled>
+            <h2>Traceback</h2>
+            <MessageField>{payload.traceback}</MessageField>
           </RowStyled>
         )}
 

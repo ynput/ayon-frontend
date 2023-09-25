@@ -40,7 +40,7 @@ const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
         icon="engineering"
         iconClassName={className}
         text={rowData.name}
-        tooltip={rowData.path}
+        name={rowData.path}
       />
     )
   }

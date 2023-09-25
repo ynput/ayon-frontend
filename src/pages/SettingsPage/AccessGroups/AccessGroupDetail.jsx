@@ -18,6 +18,7 @@ import {
   useDeleteAccessGroupMutation,
   useUpdateAccessGroupMutation,
 } from '/src/services/accessGroups/updateAccessGroups'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const AccessGroupDetail = ({ projectName, accessGroup }) => {
   const [newData, setNewData] = useState(null)
@@ -58,15 +59,11 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
     }
   }
 
-  const onDelete = async () => {
-    try {
-      await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap()
-      toast.success('Access group deleted')
-    } catch (err) {
-      console.error(err)
-      toast.error('Unable to delete access group')
-    }
-  }
+  const onDelete = async () =>
+    confirmDelete({
+      label: 'Access group',
+      accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
+    })
 
   const editor = useMemo(() => {
     if (!(schema && originalData)) return <></>
