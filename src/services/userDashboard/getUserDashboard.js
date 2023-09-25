@@ -24,6 +24,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
       transformResponse: (response) =>
         transformTasksData({
           projectName: response?.data?.project.projectName,
+          code: response?.data?.project.code,
           tasks: response?.data?.project?.tasks?.edges?.map((edge) => edge.node),
         }),
       providesTags: taskProvideTags,
@@ -188,6 +189,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
       transformResponse: (response) =>
         transformTasksData({
           projectName: response?.data?.project?.projectName,
+          code: response?.data?.project?.code,
           tasks: [response?.data?.project?.task],
         }),
     }),

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import AppNavLinks from '/src/containers/header/AppNavLinks'
 import { useParams } from 'react-router'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
@@ -36,6 +36,16 @@ const UserDashboardPage = () => {
   // get projects list
   const { data: projects = [], isLoading: isLoadingProjects } = useGetAllProjectsQuery()
 
+  // attach projects: ['project_name'] to each projectInfo
+  const projectsInfoWithProjects = useMemo(() => {
+    const projectsInfoWithProjects = {}
+    for (const key in projectsInfo) {
+      const projectInfo = projectsInfo[key]
+      projectsInfoWithProjects[key] = { ...projectInfo, projectNames: [{ id: key, name: key }] }
+    }
+    return projectsInfoWithProjects
+  }, [projectsInfo, isLoadingInfo])
+
   if (isLoadingProjects) return null
 
   if (!projects.length) return <UserDashboardNoProjects />
@@ -59,7 +69,10 @@ const UserDashboardPage = () => {
             onSelectAll={(projects) => setSelectedProjects(projects)}
           />
           {module === 'tasks' && (
-            <UserTasksContainer projectsInfo={projectsInfo} isLoadingInfo={isLoadingInfo} />
+            <UserTasksContainer
+              projectsInfo={projectsInfoWithProjects}
+              isLoadingInfo={isLoadingInfo}
+            />
           )}
         </Section>
       </main>

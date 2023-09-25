@@ -1,16 +1,13 @@
 import { useDroppable } from '@dnd-kit/core'
 import * as Styled from './KanBanColumn.styled'
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { getGroupedTasks } from '../../util'
+import { getFakeTasks, getGroupedTasks, usePrefetchTask, useTaskClick } from '../../util'
 import { useDispatch, useSelector } from 'react-redux'
-import { onTaskSelected } from '/src/features/dashboard'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
-import { useLazyGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import KanBanCard from '../KanBanCard/KanBanCard'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import useCreateContext from '/src/hooks/useCreateContext'
 import { Button } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
+import { useGetTaskContextMenu } from '../../util'
 
 const KanBanColumn = ({
   tasks = [],
@@ -46,7 +43,6 @@ const KanBanColumn = ({
 
   // SELECTED TASKS
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
 
   const [numberCardsFit, setNumberCardsFit] = useState(15)
   const [isScrolling, setIsScrolling] = useState(false)
@@ -71,104 +67,18 @@ const KanBanColumn = ({
   const isColumnActive = activeColumn?.id === id
   const isOverSelf = over?.id === activeColumn?.id
 
-  // we only pre-fetch on hover when the attributes panel is open
-  const attributesOpen = useSelector((state) => state.dashboard.tasks.attributesOpen)
+  // PREFETCH TASK WHEN HOVERING
+  // we keep track of the ids that have been pre-fetched to avoid fetching them again
+  const handlePrefetch = usePrefetchTask(dispatch)
 
-  // keep track of the ids that have been pre-fetched to avoid fetching them again
-  const [preFetchedIds, setPreFetchedIds] = useState([])
-  const [getTasksDetails] = useLazyGetTasksDetailsQuery()
-
-  const handleMouseOver = (task) => {
-    if (!attributesOpen) return
-    if (preFetchedIds.includes(task.id)) return
-
-    setPreFetchedIds((ids) => [...ids, task.id])
-
-    // pre-fetch the task details
-    getTasksDetails({ tasks: [task] })
-  }
-
-  const getContextMenuItems = (taskId, latestVersionId) => {
-    return [
-      {
-        label: 'Copy task ID',
-        command: () => copyToClipboard(taskId),
-        icon: 'content_copy',
-      },
-      {
-        label: 'Copy latest version ID',
-        command: () => copyToClipboard(latestVersionId),
-        icon: 'content_copy',
-        disabled: !latestVersionId,
-      },
-    ]
-  }
-
-  const [showContextMenu] = useCreateContext([])
-
-  const handleContextMenu = (e) => {
-    // find the parent with className card
-    let el = e.target
-    const taskId = el.closest('.card')
-    if (!taskId) return
-    // find card
-    const card = tasks.find((t) => t.id === taskId.id)
-
-    if (!card) return
-
-    // get context model
-    const contextMenuItems = getContextMenuItems(card.id, card.latestVersionId)
-    // show context menu
-    showContextMenu(e, contextMenuItems)
-  }
+  // CONTEXT MENU
+  const handleContextMenu = useGetTaskContextMenu(tasks)
 
   // HANDLE TASK CLICK
-  const handleTaskClick = (e, id) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    const { metaKey, ctrlKey, shiftKey } = e
-    const ctrlOrMeta = metaKey || ctrlKey
-    const shift = shiftKey && !ctrlOrMeta
-
-    let newSelection = [...selectedTasks]
-
-    // metaKey or ctrlKey or shiftKey is pressed, add to selection instead of replacing
-    const isMulti = ctrlOrMeta || shift
-
-    // add (selected) to selection
-    if (!newSelection.includes(id) && isMulti) {
-      // add to selection
-      newSelection.push(id)
-    } else if (isMulti) {
-      // remove from selection
-      newSelection = newSelection.filter((taskId) => taskId !== id)
-    } else if (!newSelection.includes(id) || newSelection.length > 1) {
-      // replace selection
-      newSelection = [id]
-    } else {
-      newSelection = []
-    }
-
-    setSelectedTasks(newSelection)
-
-    // updates the breadcrumbs
-    // let uri = `ayon+entity://${projectName}/`
-    // uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
-    // uri += `?product=${event.node.data.name}`
-    // uri += `&version=${event.node.data.versionName}`
-    // dispatch(setUri(uri))
-  }
+  const handleTaskClick = useTaskClick(dispatch)
 
   // return 5 fake loading events if loading
-  const loadingTasks = useMemo(
-    () =>
-      Array.from({ length: 5 }, (_, index) => ({
-        id: index,
-        isLoading: true,
-      })),
-    [],
-  )
+  const loadingTasks = useMemo(() => getFakeTasks(), [])
 
   const groupedTasks = useMemo(
     () => getGroupedTasks(tasks, groupByValue[0], groupByLabels),
@@ -201,7 +111,7 @@ const KanBanColumn = ({
                       <KanBanCardDraggable
                         task={task}
                         onClick={(e) => handleTaskClick(e, task.id)}
-                        onMouseOver={() => handleMouseOver(task)}
+                        onMouseOver={() => handlePrefetch(task)}
                         isActive={selectedTasks.includes(task.id)}
                         isDraggingActive={active}
                         className="card"
@@ -220,7 +130,7 @@ const KanBanColumn = ({
     [
       groupedTasks,
       handleTaskClick,
-      handleMouseOver,
+      handlePrefetch,
       selectedTasks,
       active,
       assigneesIsMe,

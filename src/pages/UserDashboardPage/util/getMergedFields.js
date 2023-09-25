@@ -23,6 +23,7 @@ const mergeArrays = (arrays) => {
 }
 
 export const getMergedFields = (projectInfo = {}, splitBy) => {
+  if (!splitBy) return []
   // first get all the fields
   const fields = Object.values(projectInfo).map((project) => project[splitBy])
   //   then merge them into one array

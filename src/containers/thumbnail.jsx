@@ -62,6 +62,7 @@ const Thumbnail = ({
   className,
   disabled,
   src,
+  ...props
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
   // ugly border around the image (when it's not loaded yet)
@@ -76,6 +77,7 @@ const Thumbnail = ({
       style={style}
       className={className + ' thumbnail'}
       $shimmer={isLoading && shimmer}
+      {...props}
     >
       {(!isLoading || !thumbLoaded) && !disabled && <Icon icon={icon || 'image'} />}
       {(entityType && !(isWrongEntity || !entityId)) ||

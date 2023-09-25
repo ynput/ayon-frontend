@@ -8,17 +8,14 @@ import {
   onTasksSortByChanged,
 } from '/src/features/dashboard'
 import MeOrUserSwitch from '/src/components/MeOrUserSwitch/MeOrUserSwitch'
-import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import * as Styled from './DashboardTasksToolbar.styled'
 
-const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
+const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView }) => {
   const dispatch = useDispatch()
 
   const user = useSelector((state) => state.user)
   const isAdmin = user?.data?.isAdmin
 
-  // KANBAN or TASKS
-  const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
@@ -37,7 +34,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers }) => {
   // GROUP BY
   const groupByOptions = [
     { id: 'projectName', label: 'Project', sortOrder: true },
-    // { id: 'status', label: 'Status', sortOrder: true },
+    { id: 'status', label: 'Status', sortOrder: true },
     { id: 'taskType', label: 'Type', sortOrder: true },
   ]
 

@@ -4,7 +4,7 @@ const getVersionThumbnailUrl = (version, projectName, accessToken) => {
     : null
 }
 
-export const transformTasksData = ({ projectName, tasks = [] }) =>
+export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
     const latestVersion = task.versions?.edges[0]?.node
 
@@ -28,11 +28,12 @@ export const transformTasksData = ({ projectName, tasks = [] }) =>
       folderName: task.folder?.name,
       folderId: task.folderId,
       path: `${projectName}/${task.folder?.path}`,
-      projectName: projectName,
       latestVersionId: latestVersion?.id,
       latestVersionThumbnailId: latestVersion?.thumbnailId,
       thumbnailUrl,
       allVersions,
+      projectName: projectName,
+      projectCode: code,
     }
   })
 

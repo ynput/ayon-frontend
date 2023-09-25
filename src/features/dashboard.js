@@ -5,6 +5,7 @@ const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState: {
     selectedProjects: getInitialStateLocalStorage('dashboard-selectedProjects', []),
+    prefetchedIds: [],
     tasks: {
       selected: getInitialStateLocalStorage('dashboard-tasks-selected', []),
       sortBy: getInitialStateLocalStorage('dashboard-tasks-sortBy', []),
@@ -13,6 +14,7 @@ const dashboardSlice = createSlice({
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
       assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
       attributesOpen: getInitialStateLocalStorage('dashboard-tasks-attributesOpen', true),
+      collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
     },
   },
   reducers: {
@@ -38,6 +40,12 @@ const dashboardSlice = createSlice({
     onAttributesOpenChanged: (state, { payload }) => {
       state.tasks.attributesOpen = payload
     },
+    onCollapsedColumnsChanged: (state, { payload }) => {
+      state.tasks.collapsedColumns = payload
+    },
+    onPrefetchIds: (state, { payload }) => {
+      state.prefetchedIds = payload
+    },
   },
 })
 
@@ -49,6 +57,8 @@ export const {
   onTasksFilterChanged,
   onAssigneesChanged,
   onAttributesOpenChanged,
+  onCollapsedColumnsChanged,
+  onPrefetchIds,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer
 
@@ -65,4 +75,5 @@ export const dashboardLocalItems = {
   ],
   'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
   'dashboard/onAttributesOpenChanged': [{ key: 'dashboard-tasks-attributesOpen' }],
+  'dashboard/onCollapsedColumnsChanged': [{ key: 'dashboard-tasks-collapsedColumns' }],
 }

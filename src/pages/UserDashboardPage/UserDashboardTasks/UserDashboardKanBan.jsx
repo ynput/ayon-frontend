@@ -19,9 +19,14 @@ import DashboardTasksToolbar from './DashboardTasksToolbar/DashboardTasksToolbar
 import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
 import { onTaskSelected } from '/src/features/dashboard'
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
+import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+import UserDashboardList from './UserDashboardList/UserDashboardList'
 
 const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }) => {
   const dispatch = useDispatch()
+
+  // KANBAN or TASKS
+  const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
@@ -65,15 +70,16 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }
   // This is the key that divides the tasks into columns
   // default is hardcoded to "status" but maybe in the future we can make this dynamic
   // the key also needs to be in the taskFields object
-  const splitBy = 'status'
+  const splitBy = view === 'list' ? groupByValue[0] && groupByValue[0].id : 'status'
   const splitByField = taskFields[splitBy]
-  const splitByPlural = splitByField.plural
+  const splitByPlural = splitByField?.plural
+
   // arrange the tasks into columns by status
   const mergedFields = getMergedFields(projectsInfo, splitByPlural)
 
   const [tasksColumns, fieldsColumns] = useMemo(
     () => getTasksColumns(sortedTasks, splitBy, mergedFields),
-    [sortedTasks],
+    [sortedTasks, splitBy],
   )
 
   // DND Stuff
@@ -149,26 +155,37 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }
 
   return (
     <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-      <DashboardTasksToolbar allUsers={allUsers} isLoadingAllUsers={isLoadingAllUsers} />
-      <DndContext
-        sensors={sensors}
-        onDragEnd={handleDragEnd}
-        onDragStart={handleDragStart}
-        autoScroll={false}
-      >
-        <ColumnsWrapper
-          fieldsColumns={fieldsColumns}
-          tasksColumns={tasksColumns}
-          groupByValue={groupByValue}
+      <DashboardTasksToolbar {...{ view, setView, allUsers, isLoadingAllUsers }} />
+      {view === 'kanban' && (
+        <DndContext
+          sensors={sensors}
+          onDragEnd={handleDragEnd}
+          onDragStart={handleDragStart}
+          autoScroll={false}
+        >
+          <ColumnsWrapper
+            tasksColumns={tasksColumns}
+            fieldsColumns={fieldsColumns}
+            groupByValue={groupByValue}
+            isLoading={isLoading}
+            allUsers={allUsers}
+          />
+          <KanBanCardOverlay
+            activeDraggingId={activeDraggingId}
+            selectedTasks={selectedTasks}
+            tasks={tasks}
+          />
+        </DndContext>
+      )}
+      {view === 'list' && (
+        <UserDashboardList
+          groupedFields={fieldsColumns.length ? fieldsColumns : [{ id: 'none' }]}
+          groupedTasks={tasksColumns}
           isLoading={isLoading}
           allUsers={allUsers}
+          mergedFields={mergedFields}
         />
-        <KanBanCardOverlay
-          activeDraggingId={activeDraggingId}
-          selectedTasks={selectedTasks}
-          tasks={tasks}
-        />
-      </DndContext>
+      )}
     </Section>
   )
 }
