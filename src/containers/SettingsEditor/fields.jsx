@@ -411,10 +411,6 @@ function FieldTemplate(props) {
               onClick={() => {
                 if (props.formContext.onSetBreadcrumbs) {
                   if (override?.path) props.formContext.onSetBreadcrumbs(override.path)
-                  else {
-                    toast.error("Unable to find field path. This shoudn't happen")
-                    console.log(props.formContext)
-                  }
                 }
               }}
               style={labelStyle}
