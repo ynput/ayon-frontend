@@ -281,9 +281,7 @@ const FolderSequence = ({
               />
             )}
           </Styled.SequenceForm>
-          {!nesting && base && increment && (
-            <Styled.Example>Example: {sequenceString}</Styled.Example>
-          )}
+          {!nesting && <Styled.Example>Example: {sequenceString}</Styled.Example>}
         </Styled.SequenceContainer>
       </Styled.RowWrapper>
       {nesting && (
