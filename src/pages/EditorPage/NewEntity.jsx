@@ -30,7 +30,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   //   format title
   const isRoot = isEmpty(currentSelection)
-  let title = 'Creating New '
+  let title = 'Add New '
   if (isRoot) title += 'Root '
   title += capitalize(type)
 
@@ -127,7 +127,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       draggable={false}
       footer={
         <SaveButton
-          label={`Create ${type}`}
+          label={`Add ${type}`}
           onClick={handleSubmit}
           style={{ marginLeft: 'auto' }}
           active={entityData.label && entityData.type}

@@ -1445,22 +1445,22 @@ const EditorPage = () => {
         <Toolbar>
           <Button
             icon="create_new_folder"
-            label="Create folder"
+            label="Add folders"
             onClick={() => setNewEntity('folder')}
-            title='Press "n" to create a folder'
+            title='Press "n" to create folders'
           />
           <Button
-            icon="create_new_folder"
-            label="Create multiple"
+            icon="topic"
+            label="Add folder sequence"
             onClick={() => setMultipleFoldersOpen(true)}
-            title='Press "m" to create multiple folders'
+            title='Press "m" to create a folder sequence'
           />
           <Button
             icon="add_task"
-            label="Create task"
+            label="Add tasks"
             disabled={disableAddNew}
             onClick={() => setNewEntity('task')}
-            title='Press "t" to create a task'
+            title='Press "t" to create tasks'
           />
           <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect

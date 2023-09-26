@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Button, Toolbar, Spacer } from '@ynput/ayon-react-components'
+import { Toolbar, Spacer, SaveButton } from '@ynput/ayon-react-components'
 import { Dialog } from 'primereact/dialog'
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
@@ -35,7 +35,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     openCreateSeq()
   }, [isRoot])
 
-  const title = 'Create Folder Sequence'
+  const title = 'Add Folder Sequence'
 
   const handleSeqChange = (value) => {
     const newValue = { ...createSeq, ...value }
@@ -60,6 +60,9 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     onHide()
   }
 
+  const addDisabled =
+    !createSeq.base || !createSeq.increment || !createSeq.length || !createSeq.type
+
   return (
     <Dialog
       header={title}
@@ -70,7 +73,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       footer={
         <Toolbar>
           <Spacer />
-          <Button label={'Create folders'} onClick={handleSeqSubmit} variant="filled" />
+          <SaveButton label={'Add folders'} onClick={handleSeqSubmit} active={!addDisabled} />
         </Toolbar>
       }
       onKeyDown={(e) => {
