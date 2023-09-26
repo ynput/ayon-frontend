@@ -935,7 +935,7 @@ const EditorPage = () => {
     setNewEntity('')
   }
 
-  const addNodes = (entityType, root, nodesData = [], expandBranches = true) => {
+  const addNodes = (entityType, root, nodesData = []) => {
     const parents = root ? [null] : futureParents
 
     // for leaf nodes, add parents to parents
@@ -1008,7 +1008,7 @@ const EditorPage = () => {
     // update new nodes state
     dispatch(newNodesAdded(addingNewNodes))
 
-    if (!root && expandBranches) {
+    if (!root) {
       // Update expanded folders context object
       const exps = { ...expandedFolders }
       const loadBranches = []
@@ -1021,6 +1021,14 @@ const EditorPage = () => {
       dispatch(setExpandedFolders(exps))
       // get new branch
       loadNewBranches(loadBranches)
+
+      // update selection to new nodes
+      const newSelection = {}
+      for (const id of [...folderIds, ...taskIds]) {
+        newSelection[id] = true
+      }
+
+      handleSelectionChange(newSelection)
     }
   } // Add node
 
