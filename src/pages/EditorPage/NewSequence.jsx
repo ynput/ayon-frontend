@@ -34,7 +34,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
 
   useEffect(() => {
     openCreateSeq()
-  }, [isRoot])
+  }, [isRoot, currentSelection])
 
   //   refs
   const typeSelectRef = useRef(null)

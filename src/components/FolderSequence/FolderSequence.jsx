@@ -271,20 +271,19 @@ const FolderSequence = ({
 
             {(depth !== 0 || !nesting) && (
               <>
-                {!((!nesting && isRoot) || prefixDisabled) && (
-                  <>
-                    <Styled.InputColumn>
-                      <label>Prefix</label>
-                      <InputSwitch
-                        checked={prefix}
-                        id={'prefix'}
-                        onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
-                        disabled={(!nesting && isRoot) || prefixDisabled}
-                      />
-                    </Styled.InputColumn>
-                    <Icon icon="trending_flat" />
-                  </>
-                )}
+                <>
+                  <Styled.InputColumn>
+                    <label>Prefix</label>
+                    <InputSwitch
+                      checked={prefix}
+                      id={'prefix'}
+                      onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
+                      disabled={(!nesting && isRoot) || prefixDisabled}
+                    />
+                  </Styled.InputColumn>
+                  <Icon icon="trending_flat" />
+                </>
+
                 {nesting && prefix && (
                   <Styled.InputColumn>
                     <label>Depth</label>
