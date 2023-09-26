@@ -87,6 +87,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   //   refs
   const typeSelectRef = useRef(null)
+  const labelRef = useRef(null)
 
   const handleShow = () => {
     const buttonEl = typeSelectRef.current.querySelector('button')
@@ -110,6 +111,11 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     // callbacks
     onConfirm(entityType, isRoot, [newData])
     hide && onHide()
+
+    if (!hide) {
+      // set focus back to typeSelector
+      handleShow()
+    }
   }
 
   const handleKeyDown = (e) => {
@@ -120,6 +126,14 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     // shift + enter submit and don't close
     if (e.shiftKey && e.key === 'Enter') {
       handleSubmit(false)
+    }
+    // if tabbing from dropdown, focus name input
+    if (e.key === 'Tab') {
+      const target = e.target
+      // check if target is inside typeSelectRef.current
+      if (target && typeSelectRef.current.contains(target)) {
+        e.stopPropagation()
+      }
     }
   }
 
@@ -163,11 +177,11 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
           style={{ width: 160 }}
           ref={typeSelectRef}
           openOnFocus
-          onClose={(e) => console.log(e, 'soose')}
         />
         <InputText
           value={entityData.label}
           onChange={(e) => handleChange(e.target.value, 'label')}
+          ref={labelRef}
         />
       </ContentStyled>
     </Dialog>

@@ -78,6 +78,14 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     if (e.shiftKey && e.key === 'Enter') {
       handleSeqSubmit(false)
     }
+    // if tabbing from dropdown, focus name input
+    if (e.key === 'Tab') {
+      const target = e.target
+      // check if target is inside typeSelectRef.current
+      if (target && typeSelectRef.current.contains(target)) {
+        e.stopPropagation()
+      }
+    }
   }
 
   const addDisabled =
