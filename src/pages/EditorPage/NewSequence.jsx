@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Toolbar, Spacer, SaveButton } from '@ynput/ayon-react-components'
+import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { Dialog } from 'primereact/dialog'
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
@@ -42,7 +42,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     setCreateSeq(newValue)
   }
 
-  const handleSeqSubmit = () => {
+  const handleSeqSubmit = (hide = false) => {
     // get the sequence
     const seq = getSequence(createSeq.base, createSeq.increment, createSeq.length)
     // for each sequence item, create a new entity
@@ -57,7 +57,18 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     }
 
     onConfirm('folder', isRoot, nodes, false)
-    onHide()
+    hide && onHide()
+  }
+
+  const handleKeyDown = (e) => {
+    // ctrl + enter submit and close
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      handleSeqSubmit(true)
+    }
+    // shift + enter submit and don't close
+    if (e.shiftKey && e.key === 'Enter') {
+      handleSeqSubmit(false)
+    }
   }
 
   const addDisabled =
@@ -73,14 +84,21 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       footer={
         <Toolbar>
           <Spacer />
-          <SaveButton label={'Add folders'} onClick={handleSeqSubmit} active={!addDisabled} />
+          <Button
+            label="Add"
+            disabled={addDisabled}
+            onClick={() => handleSeqSubmit(false)}
+            title={'Shift + Enter'}
+          />
+          <SaveButton
+            label={'Add and Close'}
+            onClick={() => handleSeqSubmit(true)}
+            active={!addDisabled}
+            title="Ctrl/Cmd + Enter"
+          />
         </Toolbar>
       }
-      onKeyDown={(e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          handleSeqSubmit()
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       <FolderSequence
         {...createSeq}

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { capitalize, isEmpty } from 'lodash'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { InputText, SaveButton } from '@ynput/ayon-react-components'
+import { Button, InputText, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { useRef } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
@@ -95,9 +95,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     labelRef.current?.select()
   }
 
-  const handleSubmit = (e) => {
-    e?.preventDefault()
-
+  const handleSubmit = (hide = false) => {
     // first check name and type valid
     if (!entityData.label || !entityData.type) return
 
@@ -112,10 +110,23 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
     // callbacks
     onConfirm(entityType, isRoot, [newData])
-    onHide()
+    hide && onHide()
+  }
+
+  const handleKeyDown = (e) => {
+    // ctrl + enter submit and close
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      handleSubmit(true)
+    }
+    // shift + enter submit and don't close
+    if (e.shiftKey && e.key === 'Enter') {
+      handleSubmit(false)
+    }
   }
 
   if (!entityType) return null
+
+  const addDisabled = !entityData.label || !entityData.type
 
   return (
     <Dialog
@@ -126,22 +137,31 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       resizable={false}
       draggable={false}
       footer={
-        <SaveButton
-          label={`Add ${type}`}
-          onClick={handleSubmit}
-          style={{ marginLeft: 'auto' }}
-          active={entityData.label && entityData.type}
-        />
+        <Toolbar>
+          <Spacer />
+          <Button
+            label={`Add`}
+            variant="text"
+            onClick={() => handleSubmit(false)}
+            disabled={addDisabled}
+            title={'Shift + Enter'}
+          />
+          <SaveButton
+            label={`Add and Close`}
+            onClick={() => handleSubmit(true)}
+            active={!addDisabled}
+            title="Ctrl/Cmd + Enter"
+          />
+        </Toolbar>
       }
+      onKeyDown={handleKeyDown}
     >
       <ContentStyled>
-        <form onSubmit={handleSubmit}>
-          <InputText
-            value={entityData.label}
-            onChange={(e) => handleChange(e.target.value, 'label')}
-            ref={labelRef}
-          />
-        </form>
+        <InputText
+          value={entityData.label}
+          onChange={(e) => handleChange(e.target.value, 'label')}
+          ref={labelRef}
+        />
         <TypeEditor
           value={[entityData.type]}
           onChange={(v) => handleChange(v, 'type')}
