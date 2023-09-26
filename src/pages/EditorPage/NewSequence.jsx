@@ -20,12 +20,13 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
 
   const openCreateSeq = () => {
     const newSeq = {
-      base: '',
-      increment: '',
+      base: 'Folder010',
+      increment: 'Folder020',
       length: 10,
       type: 'Folder',
       prefix: multipleSelection,
       prefixDepth: !isRoot ? 1 : 0,
+      entityType: 'folder',
     }
 
     setCreateSeq(newSeq)

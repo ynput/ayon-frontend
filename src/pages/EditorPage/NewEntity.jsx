@@ -67,15 +67,33 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     let newState = { ...entityData }
     if (id) {
       newState[id] = value
-      if (
-        value &&
-        id === 'type' &&
-        (entityData.label.toLowerCase() === entityData.type.toLowerCase() ||
-          entityData.label === '')
-      ) {
+      if (value && id === 'type') {
+        // changing type
+        // update name if newState.name matches any values in typeOptions
+        let matches = false
+        // loop through typeOptions and check if any match, when match is found we can stop looping
+        for (const o in typeOptions) {
+          if (newState.name === '') {
+            matches = true
+            break
+          }
+          const option = typeOptions[o]
+          for (const key in option) {
+            if (newState.name.toLowerCase().includes(option[key].toLowerCase())) {
+              matches = true
+              break
+            }
+          }
+        }
+
+        const typeOption = typeOptions[value]
+
+        if (!matches || !typeOption) return
         // if name is same as type, update name
-        newState.name = value.toLowerCase()
-        newState.label = value
+        const newName =
+          type === 'folder' ? typeOption.shortName || typeOption.name : typeOption.name
+        newState.name = newName
+        newState.label = newName
       }
     }
 
@@ -83,6 +101,12 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       newState.name = checkName(value)
     }
     setEntityData(newState)
+
+    if (id === 'type') {
+      setTimeout(() => {
+        labelRef.current.focus()
+      }, 50)
+    }
   }
 
   //   refs
