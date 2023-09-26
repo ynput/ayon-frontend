@@ -83,7 +83,6 @@ const EditorPage = () => {
 
   // NEW STATES
   const [newEntity, setNewEntity] = useState('')
-  const [multipleFoldersOpen, setMultipleFoldersOpen] = useState(false)
 
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
@@ -1410,7 +1409,7 @@ const EditorPage = () => {
     },
     {
       key: 'm',
-      action: () => setMultipleFoldersOpen(true),
+      action: () => setNewEntity('sequence'),
     },
     {
       key: 't',
@@ -1426,21 +1425,23 @@ const EditorPage = () => {
 
   return (
     <main className="editor-page">
-      <NewEntity
-        type={newEntity}
-        visible={!!newEntity}
-        onHide={handleCloseNew}
-        onConfirm={addNodes}
-        currentSelection={currentSelection}
-      />
-      {multipleFoldersOpen && (
-        <NewSequence
-          visible={multipleFoldersOpen}
-          onHide={() => setMultipleFoldersOpen(false)}
-          onConfirm={addNodes}
-          currentSelection={currentSelection}
-        />
-      )}
+      {newEntity &&
+        (newEntity === 'sequence' ? (
+          <NewSequence
+            visible={newEntity === 'sequence'}
+            onHide={() => setNewEntity('')}
+            onConfirm={addNodes}
+            currentSelection={currentSelection}
+          />
+        ) : (
+          <NewEntity
+            type={newEntity}
+            visible={!!newEntity}
+            onHide={handleCloseNew}
+            onConfirm={addNodes}
+            currentSelection={currentSelection}
+          />
+        ))}
       <Section>
         <Toolbar>
           <Button
@@ -1452,7 +1453,7 @@ const EditorPage = () => {
           <Button
             icon="topic"
             label="Add folder sequence"
-            onClick={() => setMultipleFoldersOpen(true)}
+            onClick={() => setNewEntity('sequence')}
             title='Press "m" to create a folder sequence'
           />
           <Button
