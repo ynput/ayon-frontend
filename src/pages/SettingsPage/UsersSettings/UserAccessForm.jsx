@@ -94,6 +94,17 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
           </FormRow>
         )}
 
+        <FormRow label="Developer">
+          <InputSwitch
+            checked={formData?.isDeveloper}
+            onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
+            disabled={disabled}
+            style={{
+              opacity: disabled ? 0.5 : 1,
+            }}
+          />
+        </FormRow>
+
         {userLevel && (
           <>
             <FormRow label={'Access Groups'}>
