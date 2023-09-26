@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
@@ -796,7 +796,14 @@ const EditorPage = () => {
         const res = await updateEditor({ updates, projectName, rootData }).unwrap()
 
         if (!res.success) {
-          toast.warn('Errors occurred during save')
+          const messages = []
+          res.operations.forEach((op) => {
+            if (op.success) return
+            messages.push(op.detail)
+          })
+          for (const msg of messages) {
+            toast.error('Error: ' + msg)
+          }
           setCommitUpdating(false)
           return null
         }
@@ -843,7 +850,7 @@ const EditorPage = () => {
   }
 
   const onCommit = async (e, overridesChanges) => {
-    e.preventDefault()
+    e?.preventDefault()
 
     if (Object.keys(changes).length + Object.keys(newNodes).length > 1000) {
       // show warning
@@ -1021,11 +1028,9 @@ const EditorPage = () => {
   // Other user events handlers (Toolbar)
   //
 
-  const onDelete = () => {
-    const newIds = Object.keys(newNodes).filter((i) => i in currentSelection)
-    const modifiedIds = Object.keys(currentSelection).filter(
-      (i) => !newIds.includes(i) && i in currentSelection,
-    )
+  const onDelete = (sel) => {
+    const newIds = Object.keys(newNodes).filter((i) => i in sel)
+    const modifiedIds = Object.keys(sel).filter((i) => !newIds.includes(i) && i in sel)
 
     // remove from newNodes state and the tree table
     dispatch(onRevert(newIds))
@@ -1040,8 +1045,8 @@ const EditorPage = () => {
         newSelection = {}
       } else {
         // preserve selection of non newItems
-        newSelection = { ...currentSelection }
-        for (const id in currentSelection) {
+        newSelection = { ...sel }
+        for (const id in sel) {
           if (newIds.includes(id)) delete newSelection[id]
         }
       }
@@ -1075,10 +1080,8 @@ const EditorPage = () => {
     handleSelectionChange({})
   }
 
-  const revertChangesOnSelection = useCallback(() => {
-    // remove from newNodes and changes from state
+  const revertChangesOnSelection = (currentSelection) =>
     dispatch(onRevert(Object.keys(currentSelection)))
-  }, [currentSelection, changes, newNodes])
 
   // CONTEXT MENUS
 
@@ -1109,7 +1112,7 @@ const EditorPage = () => {
 
   const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
 
-  const getCtxMenuTableItems = () => {
+  const getCtxMenuTableItems = (sel) => {
     return [
       {
         label: 'Create Folder',
@@ -1124,41 +1127,42 @@ const EditorPage = () => {
       {
         label: 'Delete',
         icon: 'delete',
-        command: onDelete,
+        command: () => onDelete(sel),
         danger: true,
       },
       {
         label: 'Save All Changes',
         icon: 'check',
-        command: onCommit,
+        command: () => onCommit(),
         disabled: !canCommit,
         isSave: canCommit,
       },
       {
         label: 'Clear Changes',
         icon: 'clear',
-        command: revertChangesOnSelection,
+        command: () => revertChangesOnSelection(sel),
         disabled: !canCommit,
       },
     ]
   }
 
-  const [ctxMenuTableShow] = useCreateContext(getCtxMenuTableItems())
+  const [ctxMenuTableShow] = useCreateContext([])
 
   // Context menu
 
-  const onContextMenuSelectionChange = (event) => {
-    if (!(event.value in currentSelection)) {
+  // When right clicking on the already selected node, we don't want to change the selection
+  const onContextMenu = (event) => {
+    let selection = currentSelection
+    if (event?.node?.key && !(event.node.key in currentSelection)) {
       let newSelection = {
-        [event.value]: true,
+        [event.node.key]: true,
       }
+
+      selection = newSelection
 
       handleSelectionChange(newSelection)
     }
-  }
-
-  const handleOnContextMenu = (e) => {
-    ctxMenuTableShow(e.originalEvent)
+    ctxMenuTableShow(event.originalEvent, getCtxMenuTableItems(selection))
   }
 
   //
@@ -1524,8 +1528,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}
-                onContextMenu={handleOnContextMenu}
-                onContextMenuSelectionChange={onContextMenuSelectionChange}
+                onContextMenu={onContextMenu}
                 onColumnResizeEnd={setColumnWidths}
                 reorderableColumns
                 onColReorder={handleColumnReorder}
@@ -1541,8 +1544,8 @@ const EditorPage = () => {
               editorMode
               nodes={editorNodes}
               onChange={(c) => throttledEditorChanges(c)}
-              onDelete={onDelete}
-              onRevert={revertChangesOnSelection}
+              onDelete={() => onDelete(currentSelection)}
+              onRevert={() => revertChangesOnSelection(currentSelection)}
               attribs={attribFields}
               projectName={projectName}
               onForceChange={handleForceChange}
