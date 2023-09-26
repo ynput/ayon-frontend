@@ -192,10 +192,11 @@ const AnatomyPresets = () => {
             onClick={() => setPrimaryPreset(selectedPreset)}
           />
           <Button
-            label="Delete the preset"
+            label="Delete preset"
             icon="delete"
             disabled={selectedPreset === '_'}
             onClick={() => handleDeletePreset(selectedPreset, isSelectedPrimary)}
+            style={{ visibility: selectedPreset === '_' ? 'hidden' : 'visible' }}
           />
           <Spacer />
           <Button
@@ -205,12 +206,15 @@ const AnatomyPresets = () => {
               setNewPresetName('')
               setShowNameDialog(true)
             }}
+            variant={selectedPreset === '_' ? 'filled' : 'surface'}
           />
+
           <SaveButton
             label="Save Current Preset"
             saving={isUpdating}
             active={isChanged && selectedPreset !== '_'}
             onClick={() => savePreset(selectedPreset)}
+            variant={selectedPreset === '_' ? 'surface' : 'filled'}
           />
         </Toolbar>
 
