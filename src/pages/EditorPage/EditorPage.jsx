@@ -597,14 +597,9 @@ const EditorPage = () => {
           attrib: patchAttrib,
           ownAttrib,
         },
-        leaf: !!entity.leaf,
+        leaf: !!entity.leaf || entityType === 'task',
       }
 
-      // check if this newNode has any child newNodes (is it a parent)
-      if (newNodesParentIdsMap.has(id)) {
-        patch.data.hasChildren = true
-        patch.leaf = false
-      }
       // if it's a folder, leaf is false
       if (entityType === 'folder') {
         patch.leaf = false
