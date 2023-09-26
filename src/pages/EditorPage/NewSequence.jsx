@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
@@ -34,6 +34,15 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   useEffect(() => {
     openCreateSeq()
   }, [isRoot])
+
+  //   refs
+  const typeSelectRef = useRef(null)
+
+  const handleShow = () => {
+    const buttonEl = typeSelectRef.current.querySelector('button')
+    // focus name dropdown
+    buttonEl?.focus()
+  }
 
   const title = 'Add Folder Sequence'
 
@@ -79,6 +88,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       header={title}
       visible={visible}
       onHide={onHide}
+      onShow={handleShow}
       resizable={false}
       draggable={false}
       footer={
@@ -107,6 +117,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         isRoot={isRoot}
         prefixExample={createSeq.prefix ? examplePrefix : ''}
         prefixDisabled={multipleSelection}
+        typeSelectRef={typeSelectRef}
       />
     </Dialog>
   )

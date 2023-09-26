@@ -39,9 +39,6 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   const folders = useSelector((state) => state.project.folders)
   const typeOptions = type === 'folder' ? folders : tasks
 
-  //   refs
-  const labelRef = useRef(null)
-
   // set entity type
   useEffect(() => {
     if (type !== entityType && type) {
@@ -88,11 +85,13 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     setEntityData(newState)
   }
 
+  //   refs
+  const typeSelectRef = useRef(null)
+
   const handleShow = () => {
-    // focus name input
-    labelRef.current?.focus()
-    // select name
-    labelRef.current?.select()
+    const buttonEl = typeSelectRef.current.querySelector('button')
+    // focus name dropdown
+    buttonEl?.focus()
   }
 
   const handleSubmit = (hide = false) => {
@@ -157,16 +156,18 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       onKeyDown={handleKeyDown}
     >
       <ContentStyled>
-        <InputText
-          value={entityData.label}
-          onChange={(e) => handleChange(e.target.value, 'label')}
-          ref={labelRef}
-        />
         <TypeEditor
           value={[entityData.type]}
           onChange={(v) => handleChange(v, 'type')}
           options={typeOptions}
           style={{ width: 160 }}
+          ref={typeSelectRef}
+          openOnFocus
+          onClose={(e) => console.log(e, 'soose')}
+        />
+        <InputText
+          value={entityData.label}
+          onChange={(e) => handleChange(e.target.value, 'label')}
         />
       </ContentStyled>
     </Dialog>

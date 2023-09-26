@@ -33,6 +33,7 @@ const FolderSequence = ({
   isRoot,
   prefixExample = '',
   prefixDisabled,
+  typeSelectRef,
   ...props
 }) => {
   const folders = useSelector((state) => state.project.folders) || []
@@ -129,14 +130,6 @@ const FolderSequence = ({
         <Styled.SequenceForm className="form">
           <Icon icon="task_alt" />
           <strong>Task</strong>
-          <label>label</label>
-          <InputText
-            value={base}
-            id={'base'}
-            onChange={handleChange}
-            placeholder="compositing..."
-            autoComplete="off"
-          />
 
           <label>Type</label>
           <TypeEditor
@@ -145,6 +138,15 @@ const FolderSequence = ({
             options={tasks}
             style={{ width: 160 }}
             align="right"
+          />
+
+          <label>label</label>
+          <InputText
+            value={base}
+            id={'base'}
+            onChange={handleChange}
+            placeholder="compositing..."
+            autoComplete="off"
           />
 
           <Button
@@ -193,17 +195,37 @@ const FolderSequence = ({
         )}
         <Styled.SequenceContainer $isNew={isNew} $nesting={nesting} ref={seqRef}>
           <Styled.SequenceForm className="form folder">
+            <Styled.InputColumn>
+              <label>Type</label>
+              <TypeEditor
+                value={[type]}
+                onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
+                options={folders}
+                style={{ width: 160 }}
+                align="right"
+                openOnFocus
+                ref={typeSelectRef}
+              />
+            </Styled.InputColumn>
+
+            <Icon icon="trending_flat" />
+
             {(depth !== 0 || !nesting) && (
               <>
-                <Styled.InputColumn>
-                  <label>Prefix</label>
-                  <InputSwitch
-                    checked={prefix}
-                    id={'prefix'}
-                    onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
-                    disabled={(!nesting && isRoot) || prefixDisabled}
-                  />
-                </Styled.InputColumn>
+                {!((!nesting && isRoot) || prefixDisabled) && (
+                  <>
+                    <Styled.InputColumn>
+                      <label>Prefix</label>
+                      <InputSwitch
+                        checked={prefix}
+                        id={'prefix'}
+                        onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
+                        disabled={(!nesting && isRoot) || prefixDisabled}
+                      />
+                    </Styled.InputColumn>
+                    <Icon icon="trending_flat" />
+                  </>
+                )}
                 {nesting && prefix && (
                   <Styled.InputColumn>
                     <label>Depth</label>
@@ -218,8 +240,6 @@ const FolderSequence = ({
                 )}
               </>
             )}
-
-            <Icon icon="trending_flat" />
 
             {parentBases && nesting && (
               <Styled.InputColumn style={{ display: prefix ? 'flex' : 'none' }}>
@@ -248,7 +268,7 @@ const FolderSequence = ({
                 autoComplete="off"
               />
             </Styled.InputColumn>
-
+            <Icon icon="trending_flat" />
             <Styled.InputColumn>
               <label>Count</label>
               <InputNumber
@@ -261,16 +281,6 @@ const FolderSequence = ({
               />
             </Styled.InputColumn>
 
-            <Styled.InputColumn>
-              <label>Type</label>
-              <TypeEditor
-                value={[type]}
-                onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
-                options={folders}
-                style={{ width: 160 }}
-                align="right"
-              />
-            </Styled.InputColumn>
             <Spacer />
             {nesting && (
               <Button
