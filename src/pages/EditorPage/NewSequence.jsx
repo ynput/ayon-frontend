@@ -68,6 +68,11 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
 
     onConfirm('folder', isRoot, nodes, false)
     hide && onHide()
+
+    // focus typeSelector again
+    if (!hide) {
+      handleShow()
+    }
   }
 
   const handleKeyDown = (e) => {

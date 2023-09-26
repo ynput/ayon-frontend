@@ -1024,11 +1024,11 @@ const EditorPage = () => {
 
       // update selection to new nodes
       const newSelection = {}
-      for (const id of [...folderIds, ...taskIds]) {
+      for (const id of folderIds) {
         newSelection[id] = true
       }
 
-      handleSelectionChange(newSelection)
+      if (!isEmpty(newSelection)) handleSelectionChange(newSelection)
     }
   } // Add node
 
