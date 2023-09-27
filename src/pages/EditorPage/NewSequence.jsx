@@ -66,7 +66,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       })
     }
 
-    onConfirm('folder', isRoot, nodes, false)
+    onConfirm('folder', isRoot, nodes, true)
     hide && onHide()
 
     // focus typeSelector again

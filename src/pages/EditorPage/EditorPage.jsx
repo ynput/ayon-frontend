@@ -930,7 +930,7 @@ const EditorPage = () => {
     setNewEntity('')
   }
 
-  const addNodes = (entityType, root, nodesData = []) => {
+  const addNodes = (entityType, root, nodesData = [], sequence) => {
     const parents = root ? [null] : futureParents
 
     // for leaf nodes, add parents to parents
@@ -1017,13 +1017,16 @@ const EditorPage = () => {
       // get new branch
       loadNewBranches(loadBranches)
 
-      // update selection to new nodes
-      const newSelection = {}
-      for (const id of folderIds) {
-        newSelection[id] = true
-      }
+      // only auto select for sequences
+      if (sequence) {
+        // update selection to new nodes
+        const newSelection = {}
+        for (const id of folderIds) {
+          newSelection[id] = true
+        }
 
-      if (!isEmpty(newSelection)) handleSelectionChange(newSelection)
+        if (!isEmpty(newSelection)) handleSelectionChange(newSelection)
+      }
     }
   } // Add node
 
