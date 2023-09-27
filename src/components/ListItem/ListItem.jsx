@@ -71,14 +71,16 @@ const ListItem = ({
             </Styled.Name>
           </Styled.Path>
           <Spacer />
-          <Styled.ItemAssignees
-            options={allUsers}
-            value={task.assignees}
-            editor
-            align="right"
-            size={20}
-            onChange={(v) => onUpdate('assignees', v)}
-          />
+          {!!allUsers.length && (
+            <Styled.ItemAssignees
+              options={allUsers}
+              value={task.assignees}
+              editor
+              align="right"
+              size={20}
+              onChange={(v) => onUpdate('assignees', v)}
+            />
+          )}
         </>
       )}
     </Styled.Item>
