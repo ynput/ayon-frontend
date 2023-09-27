@@ -120,7 +120,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           disabledStatuses={disabledStatuses}
         />
       </SplitterPanel>
-      {selectedTasks.length ? (
+      {selectedTasksData.length ? (
         <SplitterPanel
           size={1}
           style={{

@@ -38,7 +38,11 @@ const getUserDashboard = ayonApi.injectEndpoints({
           await cacheDataLoaded
 
           const handlePubSub = async (topic, message) => {
-            const currentAssignees = getState().dashboard.tasks.assignees
+            let currentAssignees = getState().dashboard.tasks.assignees
+            const assigneesIsMe = getState().dashboard.tasks.assigneesIsMe
+            // currentAssignees state will be empty if assigneesIsMe is true
+            // so we need to get me user
+            if (assigneesIsMe) currentAssignees = [getState().user.name]
             const isSameAssignees = isEqual(currentAssignees, assignees)
 
             // first check the project name
@@ -96,6 +100,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
               }
             })
 
+            // check to see if this query is the query we are currently using (has same assignees)
             if (!isSameAssignees) return
             // invalidate task to force refetch of getKanBan query
             // but because we just updated the tasks cache it should be instant
