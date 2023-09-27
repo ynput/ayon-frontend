@@ -1,6 +1,5 @@
 import React from 'react'
 import * as Styled from './ListItem.styled'
-// import StatusSelect from '../status/statusSelect'
 import { Icon } from '@ynput/ayon-react-components'
 
 const ListItem = ({ task = {}, none, isLast, isFirst, selected, ...props }) => {
@@ -24,7 +23,7 @@ const ListItem = ({ task = {}, none, isLast, isFirst, selected, ...props }) => {
         'No Tasks Found'
       ) : (
         <>
-          {/* <StatusSelect options={[]} value={task.status} size="icon" /> */}
+          <Styled.ItemStatus icon={task.statusIcon} style={{ backgroundColor: task.statusColor }} />
           <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
           <Styled.Path>
             <Styled.PathItem>{task.projectCode}</Styled.PathItem>
