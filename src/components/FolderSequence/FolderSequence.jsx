@@ -22,6 +22,25 @@ function formatSeq(arr, maxLength, prefix = '') {
   }
 }
 
+function getDefaultIncrements(type) {
+  switch (type) {
+    case 'Shot':
+      return {
+        base: '0010',
+        increment: '0020',
+        length: 10,
+        difference: 10,
+      }
+    default:
+      return {
+        base: '001',
+        increment: '002',
+        length: 10,
+        difference: 1,
+      }
+  }
+}
+
 const FolderSequence = ({
   onChange,
   parentId = null,
@@ -32,12 +51,16 @@ const FolderSequence = ({
   nesting = true,
   isRoot,
   prefixExample = '',
+  prefixDisabled,
+  typeSelectRef,
   ...props
 }) => {
+  const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
+
   const folders = useSelector((state) => state.project.folders) || []
   const tasks = useSelector((state) => state.project.tasks) || []
 
-  const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
+  const typeOptions = entityType === 'folder' ? folders : tasks
 
   let initSeq = []
   if (base && increment && length) {
@@ -46,6 +69,7 @@ const FolderSequence = ({
 
   const [sequence, setSequence] = useState(initSeq)
 
+  const baseRef = useRef(null)
   const handleChange = (e) => {
     e?.preventDefault && e?.preventDefault()
 
@@ -58,37 +82,74 @@ const FolderSequence = ({
 
     const newValue = { [fieldId]: value }
 
-    if (entityType === 'task' && fieldId === 'type') {
-      if (type === base || !base) {
-        // update base to match new type
-        newValue.base = value
+    const newState = { ...props, ...newValue }
+
+    // if changing type, look to change base and increment
+    if (fieldId === 'type') {
+      // changing type
+      // update name if newState.name matches any values in typeOptions
+      let matches = false
+      // loop through typeOptions and check if any match, when match is found we can stop looping
+      for (const o in typeOptions) {
+        if (newState.base === '') {
+          matches = true
+          break
+        }
+        const option = typeOptions[o]
+        for (const key in option) {
+          if (newState.base.toLowerCase().includes(option[key].toLowerCase())) {
+            matches = true
+            break
+          }
+        }
       }
+
+      const typeOption = typeOptions[value]
+
+      if (!matches || !typeOption) return
+      // if name is same as type, update name
+      const newName =
+        entityType === 'folder' ? typeOption.shortName || typeOption.name : typeOption.name
+      // add new state to new value
+
+      // get default increments
+      const suffixes = getDefaultIncrements(value)
+
+      newState.base = newName + suffixes.base
+      newState.increment = newName + suffixes.increment
+      newState.length = suffixes.length
     }
 
     if (fieldId === 'base') {
-      let increment = value
+      // get default increments
+      const suffixes = getDefaultIncrements(newState.type)
+      // split value into prefix (letter) and suffix (number)
+      const prefix = value.replace(/[^a-zA-Z]/g, '')
+      const suffix = value.replace(/[^0-9]/g, '')
+      // get interger value of suffix and padding
+      const suffixInt = parseInt(suffix, 10)
+      const suffixPad = suffix.length
 
-      const startNumber = parseInt((value.match(/\d+$/) || [])[0], 10)
-      if (startNumber) {
-        const baseWithoutNumber = value.replace(/\d+$/, '')
-        // count digits in start number and then add ten to the number for the increment
-        const numDigits = startNumber.toString().length
-        const number = startNumber + parseInt('1' + '0'.repeat(Math.max(numDigits - 2, 0)))
-        const paddedNumber = String(number).padStart(value.match(/\d+$/)[0].length, '0')
+      const newIncrement =
+        prefix + (suffixInt + suffixes.difference).toString().padStart(suffixPad, '0')
 
-        increment = baseWithoutNumber + paddedNumber
-      }
-      // also update increment
-      newValue.increment = increment
+      newState.increment = newIncrement.replace('NaN', '')
     }
 
-    onChange(newValue, id, entityType)
+    onChange(newState, id, entityType)
 
-    const newForm = { ...props, ...newValue }
-    if (newForm.base && newForm.increment && newForm.length) {
+    if (newState.base && newState.increment && newState.length) {
       // calculate the sequence
-      const seq = getSequence(newForm.base, newForm.increment, newForm.length)
+      const seq = getSequence(newState.base, newState.increment, newState.length)
       setSequence(seq)
+    }
+
+    // focus base input if changing type
+    if (fieldId === 'type') {
+      setTimeout(() => {
+        baseRef.current.focus()
+        baseRef.current.select()
+      }, 50)
     }
   }
 
@@ -128,14 +189,6 @@ const FolderSequence = ({
         <Styled.SequenceForm className="form">
           <Icon icon="task_alt" />
           <strong>Task</strong>
-          <label>label</label>
-          <InputText
-            value={base}
-            id={'base'}
-            onChange={handleChange}
-            placeholder="compositing..."
-            autoComplete="off"
-          />
 
           <label>Type</label>
           <TypeEditor
@@ -144,6 +197,15 @@ const FolderSequence = ({
             options={tasks}
             style={{ width: 160 }}
             align="right"
+          />
+
+          <label>label</label>
+          <InputText
+            value={base}
+            id={'base'}
+            onChange={handleChange}
+            placeholder="compositing..."
+            autoComplete="off"
           />
 
           <Button
@@ -192,17 +254,36 @@ const FolderSequence = ({
         )}
         <Styled.SequenceContainer $isNew={isNew} $nesting={nesting} ref={seqRef}>
           <Styled.SequenceForm className="form folder">
+            <Styled.InputColumn>
+              <label>Type</label>
+              <TypeEditor
+                value={[type]}
+                onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
+                options={folders}
+                style={{ width: 160 }}
+                align="right"
+                openOnFocus
+                ref={typeSelectRef}
+              />
+            </Styled.InputColumn>
+
+            <Icon icon="trending_flat" />
+
             {(depth !== 0 || !nesting) && (
               <>
-                <Styled.InputColumn>
-                  <label>Prefix</label>
-                  <InputSwitch
-                    checked={prefix}
-                    id={'prefix'}
-                    onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
-                    disabled={!nesting && isRoot}
-                  />
-                </Styled.InputColumn>
+                <>
+                  <Styled.InputColumn>
+                    <label>Prefix</label>
+                    <InputSwitch
+                      checked={prefix}
+                      id={'prefix'}
+                      onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
+                      disabled={(!nesting && isRoot) || prefixDisabled}
+                    />
+                  </Styled.InputColumn>
+                  <Icon icon="trending_flat" />
+                </>
+
                 {nesting && prefix && (
                   <Styled.InputColumn>
                     <label>Depth</label>
@@ -229,6 +310,7 @@ const FolderSequence = ({
               <InputText
                 value={base}
                 id={'base'}
+                ref={baseRef}
                 onChange={handleChange}
                 placeholder="ep101..."
                 autoComplete="off"
@@ -245,7 +327,7 @@ const FolderSequence = ({
                 autoComplete="off"
               />
             </Styled.InputColumn>
-
+            <Icon icon="trending_flat" />
             <Styled.InputColumn>
               <label>Count</label>
               <InputNumber
@@ -254,19 +336,10 @@ const FolderSequence = ({
                 onChange={handleChange}
                 placeholder="15..."
                 min={2}
+                onFocus={(e) => e.target.select()}
               />
             </Styled.InputColumn>
 
-            <Styled.InputColumn>
-              <label>Type</label>
-              <TypeEditor
-                value={[type]}
-                onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
-                options={folders}
-                style={{ width: 160 }}
-                align="right"
-              />
-            </Styled.InputColumn>
             <Spacer />
             {nesting && (
               <Button
@@ -277,9 +350,7 @@ const FolderSequence = ({
               />
             )}
           </Styled.SequenceForm>
-          {!nesting && base && increment && (
-            <Styled.Example>Example: {sequenceString}</Styled.Example>
-          )}
+          {!nesting && <Styled.Example>Example: {sequenceString}</Styled.Example>}
         </Styled.SequenceContainer>
       </Styled.RowWrapper>
       {nesting && (

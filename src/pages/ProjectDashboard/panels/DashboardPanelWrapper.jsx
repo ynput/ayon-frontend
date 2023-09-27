@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import { Panel, Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
@@ -88,20 +87,6 @@ const DashboardPanelWrapper = ({ title, children, span = 1, style, stylePanel, h
       <ContentStyled style={style}>{children}</ContentStyled>
     </PanelStyled>
   )
-}
-
-DashboardPanelWrapper.propTypes = {
-  title: PropTypes.string,
-  children: PropTypes.node.isRequired,
-  span: PropTypes.number,
-  style: PropTypes.object,
-  stylePanel: PropTypes.object,
-  header: PropTypes.node,
-  icon: PropTypes.shape({
-    link: PropTypes.string,
-    onClick: PropTypes.func,
-    icon: PropTypes.string.isRequired,
-  }),
 }
 
 export default DashboardPanelWrapper
