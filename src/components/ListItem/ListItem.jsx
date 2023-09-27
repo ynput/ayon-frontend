@@ -1,6 +1,6 @@
 import React from 'react'
 import * as Styled from './ListItem.styled'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, Spacer } from '@ynput/ayon-react-components'
 
 const ListItem = ({
   task = {},
@@ -13,10 +13,11 @@ const ListItem = ({
   disabledStatuses,
   onClick,
   onUpdate,
+  allUsers,
   ...props
 }) => {
   const pathDepth = 3
-  const paths = task.path.split('/')
+  const paths = task.path.split('/').splice(1)
   // get the end of the path based on the depth
   const pathEnds = paths.slice(-pathDepth)
   // are there more paths than the depth?
@@ -64,6 +65,15 @@ const ListItem = ({
               <span>{task.name}</span>
             </Styled.Name>
           </Styled.Path>
+          <Spacer />
+          <Styled.ItemAssignees
+            options={allUsers}
+            value={task.assignees}
+            editor
+            align="right"
+            size={20}
+            onChange={(v) => onUpdate('assignees', v)}
+          />
         </>
       )}
     </Styled.Item>

@@ -1,6 +1,7 @@
 import styled, { css } from 'styled-components'
 import Thumbnail from '/src/containers/thumbnail'
 import StatusSelect from '../status/statusSelect'
+import { AssigneeSelect } from '@ynput/ayon-react-components'
 
 export const Item = styled.li`
   /* reset defaults */
@@ -72,7 +73,7 @@ export const Item = styled.li`
 `
 
 export const ItemStatus = styled(StatusSelect)`
-  height: unset;
+  height: 24px;
 
   button {
     .icon {
@@ -136,4 +137,28 @@ export const Name = styled.div`
     color: var(--md-sys-color-outline);
   }
   gap: var(--base-gap-small);
+`
+
+export const ItemAssignees = styled(AssigneeSelect)`
+  height: 24px;
+  .button {
+    & > div {
+      padding: 2px;
+      height: unset;
+    }
+
+    background-color: unset;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-hover);
+    }
+
+    span:not(.user-image) {
+      /* remove name label */
+      display: none;
+    }
+
+    .user-image {
+      top: 0;
+    }
+  }
 `

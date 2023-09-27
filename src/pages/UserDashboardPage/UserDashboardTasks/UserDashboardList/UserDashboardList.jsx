@@ -58,6 +58,9 @@ const UserDashboardList = ({
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
 
+  // Assignees
+  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+
   const selectedTasksData = useMemo(
     () => tasks.filter((task) => selectedTasks.includes(task.id)),
     [tasks, selectedTasks],
@@ -200,7 +203,7 @@ const UserDashboardList = ({
       onKeyDown={handleKeyDown}
       ref={containerRef}
     >
-      {sortedFields.flatMap(({ id }, i) => {
+      {sortedFields.flatMap(({ id }) => {
         const column = groupedTasks[id]
         if (!column) return []
 
@@ -213,13 +216,13 @@ const UserDashboardList = ({
             id={id}
             groupByValue={groupByValue}
             allUsers={allUsers}
-            index={i}
             selectedTasks={selectedTasks}
             onTaskSelected={handleTaskClick}
             onTaskHover={(t) => handlePrefetch(t)}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             onUpdate={handleUpdate}
+            assigneesIsMe={assigneesIsMe}
           />
         )
       })}

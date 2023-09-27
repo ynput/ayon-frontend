@@ -17,9 +17,9 @@ const ListGroup = ({
   statusesOptions,
   disabledStatuses,
   onUpdate,
+  assigneesIsMe,
+  allUsers = [],
   // isLoading,
-  // allUsers = [],
-  // index,
 }) => {
   const dispatch = useDispatch()
   const column = groups[id] || {}
@@ -73,6 +73,7 @@ const ListGroup = ({
               statusesOptions={statusesOptions}
               disabledStatuses={disabledStatuses}
               onUpdate={onUpdate}
+              allUsers={assigneesIsMe ? [] : allUsers}
             />
           ))}
           {!loadingTasks && column?.tasks?.length === 0 && <ListItem none />}
