@@ -79,7 +79,7 @@ const UserDashboardList = ({
         // holding shift key, add to the selected tasks
         newIds.unshift(...selectedTasks)
       }
-      setSelectedTasks([nextTaskId])
+      setSelectedTasks(newIds)
 
       // get the next li element based on the nextIndex from the ref
       const nextLi = listItemsRef.current[nextIndex]
@@ -103,7 +103,7 @@ const UserDashboardList = ({
         nextLi.focus()
         // prefect the task after the next task
         const nextNextTask = tasks[nextIndex + 1]
-        console.log(nextNextTask)
+
         if (nextNextTask) {
           handlePrefetch(nextNextTask)
         }
@@ -156,7 +156,7 @@ const UserDashboardList = ({
 
   const handleTaskClick = (e, id) => {
     // update selected tasks
-    taskClick(e, id)
+    taskClick(e, id, taskIds)
   }
 
   return (

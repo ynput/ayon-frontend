@@ -49,7 +49,7 @@ export const getTasksColumns = (tasks = [], splitBy, fields = [], users = []) =>
     } else {
       tasks.forEach((task) => {
         const column = fields.find((field) => snakeCase(field.id) === snakeCase(task[splitBy]))
-        console.log(fields, task)
+
         if (column) {
           splitTasks[column.id].tasks?.push(task)
         } else {

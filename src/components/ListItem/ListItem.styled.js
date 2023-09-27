@@ -37,6 +37,12 @@ export const Item = styled.li`
       background-color: var(--md-sys-color-primary-container-active);
     }
 
+    /* remove focus visible border if selected */
+
+    &:focus-visible {
+      outline: none;
+    }
+
     /* highlight borders */
     border-color: var(--md-sys-color-primary);
 
