@@ -78,7 +78,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }
   const mergedFields = getMergedFields(projectsInfo, splitByPlural)
 
   const [tasksColumns, fieldsColumns] = useMemo(
-    () => getTasksColumns(sortedTasks, splitBy, mergedFields),
+    () => getTasksColumns(sortedTasks, splitBy, mergedFields, allUsers),
     [sortedTasks, splitBy, mergedFields],
   )
 

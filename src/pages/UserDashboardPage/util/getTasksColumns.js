@@ -1,14 +1,14 @@
 import { isEmpty, snakeCase } from 'lodash'
 // fields = [{id: 'backlog', name: 'Backlog'}, {id: 'in_progress', name: 'In Progress'}]
 //
-export const getTasksColumns = (tasks = [], splitBy, fields = []) => {
+export const getTasksColumns = (tasks = [], splitBy, fields = [], users = []) => {
   let columns = fields
   let splitTasks = {}
   let noColumnTasks = []
 
   // group tasks by column
-  fields.forEach((status) => {
-    splitTasks[status.id] = { ...status, tasks: [] }
+  fields.forEach((field) => {
+    splitTasks[field.id] = { ...field, tasks: [] }
   })
 
   if (!splitBy) {
@@ -18,26 +18,38 @@ export const getTasksColumns = (tasks = [], splitBy, fields = []) => {
       // there must not be a anatomy schema for this splitBy field
       // so just return the tasks into their own columns using the splitBy as the column name
       // For example groupBy = assignee
+
       splitTasks = tasks.reduce((acc, task) => {
         let column = task[splitBy]
+        let columnId = column
+        let columnName = column
+
         // if column is object or array, convert column to string
         if (Array.isArray(column)) {
-          column = column.join(', ')
+          columnId = column.join(', ')
         } else if (typeof column === 'object') {
-          column = Object.keys(column).join(', ')
+          columnId = Object.keys(column).join(', ')
         }
 
-        if (!acc[column]) {
-          acc[column] = { name: column, id: column, tasks: [] }
+        if (!acc[columnId]) {
+          // add fullName data to column name
+          if (splitBy === 'assignees') {
+            // find all the users data for the column = ['name', 'name2']
+            const usersData = users.filter((user) => column.includes(user.name))
+            columnName = usersData.map((user) => user.fullName || user.name).join(', ')
+          }
+
+          acc[columnId] = { name: columnName, id: columnId, tasks: [] }
         }
-        acc[column].tasks.push(task)
+        acc[columnId].tasks.push(task)
         return acc
       }, {})
 
       columns = Object.keys(splitTasks).map((key) => splitTasks[key])
     } else {
       tasks.forEach((task) => {
-        const column = fields.find((status) => status.id === snakeCase(task[splitBy]))
+        const column = fields.find((field) => snakeCase(field.id) === snakeCase(task[splitBy]))
+        console.log(fields, task)
         if (column) {
           splitTasks[column.id].tasks?.push(task)
         } else {
