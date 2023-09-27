@@ -22,11 +22,13 @@ const getUserDashboard = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (response) =>
-        transformTasksData({
-          projectName: response?.data?.project.projectName,
-          code: response?.data?.project.code,
-          tasks: response?.data?.project?.tasks?.edges?.map((edge) => edge.node),
-        }),
+        response?.errors?.length
+          ? { errors: response?.errors }
+          : transformTasksData({
+              projectName: response?.data?.project.projectName,
+              code: response?.data?.project.code,
+              tasks: response?.data?.project?.tasks?.edges?.map((edge) => edge.node),
+            }),
       providesTags: taskProvideTags,
       async onCacheEntryAdded(
         { assignees = [], projectName },
@@ -123,6 +125,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
     getKanBan: build.query({
       async queryFn({ projects = [], assignees = [] }, { dispatch }) {
         console.log('fetching kanban')
+
         try {
           // get project tasks for each project
           const projectTasks = []
@@ -137,9 +140,10 @@ const getUserDashboard = ayonApi.injectEndpoints({
               ),
             )
 
-            if (response.status === 'rejected') {
-              console.error('No projects found', project)
-              throw new Error('No projects found', project)
+            if (response?.data?.errors?.length) {
+              console.error('ERROR: getKanBan Query:' + response?.data?.errors)
+              const message = response?.data?.errors[0]?.message
+              throw message || 'No projects found'
             }
 
             response.data.forEach((project) => projectTasks.push(project))
@@ -147,8 +151,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
 
           return { data: projectTasks }
         } catch (error) {
-          console.error(error)
-          return error
+          return { error: error }
         }
       },
       providesTags: (res) => taskProvideTags(res, 'kanBanTask'),
@@ -169,8 +172,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
             )
 
             if (response.status === 'rejected') {
-              console.error('No projects found', project)
-              throw new Error('No projects found', project)
+              throw 'No projects found'
             }
             projectInfo[project] = response.data
           }
@@ -178,7 +180,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
           return { data: projectInfo }
         } catch (error) {
           console.error(error)
-          return error
+          return { error }
         }
       },
     }),

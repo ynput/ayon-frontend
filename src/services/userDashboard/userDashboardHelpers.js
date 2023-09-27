@@ -38,6 +38,6 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
   })
 
 export const taskProvideTags = (result, type = 'task') =>
-  result
+  result?.length
     ? [...result.map(({ id }) => ({ type, id })), { type, id: 'TASKS' }]
     : [{ type, id: 'TASKS' }]

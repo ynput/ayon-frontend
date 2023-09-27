@@ -7,6 +7,7 @@ import { onAssigneesChanged } from '/src/features/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import UserDashboardDetails from './UserDashboardDetails/UserDashboardDetails'
 import { getIntersectionFields, getMergedFields } from '../util'
+import { Section } from '@ynput/ayon-react-components'
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
@@ -32,7 +33,12 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   }
 
   //  get kanban tasks for all projects by assigned user (me)
-  let { data: tasks = [], isFetching: isLoadingTasks } = useGetKanBanQuery(
+  let {
+    data: tasks = [],
+    isFetching: isLoadingTasks,
+    isError,
+    error,
+  } = useGetKanBanQuery(
     { assignees: assignees, projects: selectedProjects },
     { skip: !assignees.length || !selectedProjects?.length },
   )
@@ -91,6 +97,19 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const detailsMinWidth = 400
   const detailsMaxWidth = '40vw'
   const detailsMaxMaxWidth = 700
+
+  if (isError)
+    return (
+      <Section style={{ textAlign: 'center' }}>
+        <h2>Error: Something went wrong loading your tasks. Try refreshing the page.</h2>
+        <span>assignees: {JSON.stringify(assigneesState)}</span>
+        <span>assigneesIsMe: {JSON.stringify(assigneesIsMe)}</span>
+        <span>selectedProjects: {JSON.stringify(selectedProjects)}</span>
+        <span>selectedTasks: {JSON.stringify(selectedTasks)}</span>
+        <span>userName: {JSON.stringify(user?.name)}</span>
+        <span>error: {JSON.stringify(error)}</span>
+      </Section>
+    )
 
   return (
     <Splitter
