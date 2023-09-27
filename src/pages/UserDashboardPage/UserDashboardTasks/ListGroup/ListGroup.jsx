@@ -1,7 +1,6 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onCollapsedColumnsChanged } from '/src/features/dashboard'
-import { getFakeTasks } from '/src/pages/UserDashboardPage/util'
 import { useGetTaskContextMenu } from '/src/pages/UserDashboardPage/util'
 import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
@@ -11,15 +10,15 @@ const ListGroup = ({
   tasks = [],
   id,
   groups = {},
-  selectedTasks,
+  selectedTasks = [],
   onTaskSelected,
   onTaskHover,
-  statusesOptions,
-  disabledStatuses,
+  statusesOptions = [],
+  disabledStatuses = [],
   onUpdate,
   assigneesIsMe,
   allUsers = [],
-  // isLoading,
+  isLoading,
 }) => {
   const dispatch = useDispatch()
   const column = groups[id] || {}
@@ -39,10 +38,6 @@ const ListGroup = ({
   // CONTEXT MENU
   const handleContextMenu = useGetTaskContextMenu(tasks)
 
-  // return 5 fake loading events if loading
-  // return 5 fake loading events if loading
-  const loadingTasks = useMemo(() => getFakeTasks(), [])
-
   return (
     <>
       <Styled.Header
@@ -51,11 +46,16 @@ const ListGroup = ({
         }}
         $isCollapsed={isCollapsed}
         onDoubleClick={() => handleCollapseToggle(id)}
+        $isLoading={column?.isLoading}
       >
-        <Button icon="expand_more" variant="text" onClick={() => handleCollapseToggle(id)} />
-        <span>
-          {column?.name} - {column?.tasks?.length}
-        </span>
+        {!column.isLoading && (
+          <>
+            <Button icon="expand_more" variant="text" onClick={() => handleCollapseToggle(id)} />
+            <span>
+              {column?.name} - {column?.tasks?.length}
+            </span>
+          </>
+        )}
       </Styled.Header>
       {!isCollapsed && (
         <>
@@ -76,7 +76,7 @@ const ListGroup = ({
               allUsers={assigneesIsMe ? [] : allUsers}
             />
           ))}
-          {!loadingTasks && column?.tasks?.length === 0 && <ListItem none />}
+          {!isLoading && column?.tasks?.length === 0 && <ListItem none />}
         </>
       )}
     </>

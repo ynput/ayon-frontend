@@ -3,7 +3,7 @@ import ListGroup from '../ListGroup/ListGroup'
 import { useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onTaskSelected } from '/src/features/dashboard'
-import { usePrefetchTask, useTaskClick } from '../../util'
+import { getFakeTasks, usePrefetchTask, useTaskClick } from '../../util'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 
@@ -189,6 +189,21 @@ const UserDashboardList = ({
     }
   }
 
+  // return 5 fake loading events if loading
+  // return 5 fake loading events if loading
+
+  const [fakeColumns, fakeColumnsObject] = useMemo(() => {
+    const fakeTasks = getFakeTasks(5)
+    const columnsObject = fakeTasks.reduce((acc, column) => {
+      return {
+        ...acc,
+        [column.id]: { tasks: getFakeTasks(), ...column },
+      }
+    }, {})
+
+    return [fakeTasks, columnsObject]
+  }, [])
+
   return (
     <Section
       style={{
@@ -203,29 +218,32 @@ const UserDashboardList = ({
       onKeyDown={handleKeyDown}
       ref={containerRef}
     >
-      {sortedFields.flatMap(({ id }) => {
-        const column = groupedTasks[id]
-        if (!column) return []
+      {isLoading
+        ? fakeColumns.map((c) => (
+            <ListGroup key={c.id} isLoading groups={fakeColumnsObject} id={c.id} />
+          ))
+        : sortedFields.flatMap(({ id }) => {
+            const column = groupedTasks[id]
+            if (!column) return []
 
-        return (
-          <ListGroup
-            key={id}
-            groups={groupedTasks}
-            tasks={column.tasks}
-            isLoading={isLoading}
-            id={id}
-            groupByValue={groupByValue}
-            allUsers={allUsers}
-            selectedTasks={selectedTasks}
-            onTaskSelected={handleTaskClick}
-            onTaskHover={(t) => handlePrefetch(t)}
-            statusesOptions={statusesOptions}
-            disabledStatuses={disabledStatuses}
-            onUpdate={handleUpdate}
-            assigneesIsMe={assigneesIsMe}
-          />
-        )
-      })}
+            return (
+              <ListGroup
+                key={id}
+                groups={groupedTasks}
+                tasks={column.tasks}
+                id={id}
+                groupByValue={groupByValue}
+                allUsers={allUsers}
+                selectedTasks={selectedTasks}
+                onTaskSelected={handleTaskClick}
+                onTaskHover={(t) => handlePrefetch(t)}
+                statusesOptions={statusesOptions}
+                disabledStatuses={disabledStatuses}
+                onUpdate={handleUpdate}
+                assigneesIsMe={assigneesIsMe}
+              />
+            )
+          })}
     </Section>
   )
 }

@@ -9,6 +9,7 @@ export const Header = styled.header`
   width: 100%;
   z-index: 20;
   user-select: none;
+  min-height: 40px;
 
   border-bottom: 1px solid var(--md-sys-color-surface-container-lowest);
   background-color: var(--md-sys-color-background);
@@ -46,5 +47,11 @@ export const Header = styled.header`
       .icon {
         rotate: -90deg;
       }
+    `}
+
+  ${({ $isLoading }) =>
+    $isLoading &&
+    css`
+      opacity: 0.5;
     `}
 `

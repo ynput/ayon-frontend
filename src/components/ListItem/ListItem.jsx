@@ -16,12 +16,16 @@ const ListItem = ({
   allUsers,
   ...props
 }) => {
+  if (task.isLoading) {
+    return <Styled.Item $isLoading={true}></Styled.Item>
+  }
+
   const pathDepth = 3
-  const paths = task.path.split('/').splice(1)
+  const paths = task?.path?.split('/')?.splice(1)
   // get the end of the path based on the depth
-  const pathEnds = paths.slice(-pathDepth)
+  const pathEnds = paths?.slice(-pathDepth)
   // are there more paths than the depth?
-  const hasMorePaths = paths.length > pathDepth
+  const hasMorePaths = paths?.length > pathDepth
 
   return (
     <Styled.Item

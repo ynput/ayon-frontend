@@ -38,6 +38,7 @@ const KanBanCard = forwardRef(
           onKeyUp={onKeyUp}
           $isOverlay={isOverlay}
           $isDragging={isDragging}
+          isLoading={props.isLoading}
           assignees={(!assigneesIsMe && !!task.assigneesData?.length && task.assigneesData) || null}
           {...props}
         />

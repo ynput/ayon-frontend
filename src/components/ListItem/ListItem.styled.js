@@ -2,12 +2,15 @@ import styled, { css } from 'styled-components'
 import Thumbnail from '/src/containers/thumbnail'
 import StatusSelect from '../status/statusSelect'
 import { AssigneeSelect } from '@ynput/ayon-react-components'
+import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 export const Item = styled.li`
   /* reset defaults */
   list-style: none;
   margin: 0;
   padding: 0;
+  position: relative;
+  min-height: 42px;
 
   display: flex;
   padding: 8px 16px 8px 8px;
@@ -68,6 +71,17 @@ export const Item = styled.li`
 
       &.selected {
         border-bottom-color: var(--md-sys-color-primary);
+      }
+    `}
+
+    ${({ $isLoading }) =>
+    $isLoading &&
+    css`
+      ${getShimmerStyles()}
+      border-color: var(--md-sys-color-surface-container-low);
+
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-lowest);
       }
     `}
 `
