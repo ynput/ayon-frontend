@@ -2,10 +2,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useGetKanBanQuery } from '/src/services/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { onAssigneesChanged } from '/src/features/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import UserDashboardDetails from './UserDashboardDetails/UserDashboardDetails'
+import { getIntersectionFields, getMergedFields } from '../util'
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
@@ -54,6 +55,38 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     }
   })
 
+  const selectedTasksData = useMemo(
+    () => tasksWithIcons.filter((task) => selectedTasks.includes(task.id)),
+    [selectedTasks, tasks],
+  )
+
+  // for selected tasks, get flat list of projects
+  const selectedTasksProjects = useMemo(
+    () => [...new Set(selectedTasksData.map((t) => t.projectName))],
+    [selectedTasks],
+  )
+
+  // we need to get the intersection of all the statuses of the projects for the selected tasks
+  // this means that if we have 2 tasks from 2 different projects, we need to get the intersection of the statuses of those 2 projects
+  //  and it prevents us from showing statuses that are not available for the selected tasks
+  const statusesOptions = useMemo(() => getMergedFields(projectsInfo, 'statuses'), [projectsInfo])
+  const StatusesOptionsIntersect = useMemo(
+    () =>
+      selectedProjects.length > 1
+        ? getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects)
+        : statusesOptions,
+    [projectsInfo, selectedTasksProjects],
+  )
+
+  // all statuses that are not in the intersection of the statuses of the selected tasks
+  const disabledStatuses = useMemo(
+    () =>
+      statusesOptions
+        .filter((s) => !StatusesOptionsIntersect.some((s2) => s2.name === s.name))
+        .map((s) => s.name),
+    [statusesOptions, StatusesOptionsIntersect],
+  )
+
   const isLoadingAll = isLoadingInfo || isLoadingTasks
   const detailsMinWidth = 400
   const detailsMaxWidth = '40vw'
@@ -83,6 +116,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           isLoading={isLoadingAll}
           projectsInfo={projectsInfo}
           taskFields={taskFields}
+          statusesOptions={statusesOptions}
+          disabledStatuses={disabledStatuses}
         />
       </SplitterPanel>
       {selectedTasks.length ? (
@@ -93,7 +128,11 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             minWidth: detailsMinWidth,
           }}
         >
-          <UserDashboardDetails tasks={tasksWithIcons} />
+          <UserDashboardDetails
+            tasks={tasksWithIcons}
+            statusesOptions={statusesOptions}
+            disabledStatuses={disabledStatuses}
+          />
         </SplitterPanel>
       ) : (
         <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

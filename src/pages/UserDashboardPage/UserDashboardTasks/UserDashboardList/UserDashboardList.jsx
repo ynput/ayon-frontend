@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onTaskSelected } from '/src/features/dashboard'
 import { usePrefetchTask, useTaskClick } from '../../util'
+import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { toast } from 'react-toastify'
 
 const UserDashboardList = ({
   groupedTasks = {},
@@ -11,6 +13,8 @@ const UserDashboardList = ({
   groupByValue,
   isLoading,
   allUsers = [],
+  statusesOptions,
+  disabledStatuses,
 }) => {
   const containerRef = useRef(null)
 
@@ -53,6 +57,11 @@ const UserDashboardList = ({
   // SELECTED TASKS
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
+
+  const selectedTasksData = useMemo(
+    () => tasks.filter((task) => selectedTasks.includes(task.id)),
+    [tasks, selectedTasks],
+  )
 
   // PREFETCH TASK WHEN HOVERING
   // we keep track of the ids that have been pre-fetched to avoid fetching them again
@@ -159,6 +168,24 @@ const UserDashboardList = ({
     taskClick(e, id, taskIds)
   }
 
+  const [updateTasks] = useUpdateTasksMutation()
+  const handleUpdate = async (field, value) => {
+    try {
+      // build tasks operations array
+      const tasksOperations = selectedTasksData.map((task) => ({
+        id: task.id,
+        projectName: task.projectName,
+        data: {
+          [field]: value,
+        },
+      }))
+
+      await updateTasks({ operations: tasksOperations })
+    } catch (error) {
+      toast.error('Error updating task(s)')
+    }
+  }
+
   return (
     <Section
       style={{
@@ -190,6 +217,9 @@ const UserDashboardList = ({
             selectedTasks={selectedTasks}
             onTaskSelected={handleTaskClick}
             onTaskHover={(t) => handlePrefetch(t)}
+            statusesOptions={statusesOptions}
+            disabledStatuses={disabledStatuses}
+            onUpdate={handleUpdate}
           />
         )
       })}

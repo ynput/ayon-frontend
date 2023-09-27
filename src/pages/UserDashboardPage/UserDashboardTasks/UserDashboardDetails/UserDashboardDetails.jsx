@@ -6,7 +6,7 @@ import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashb
 import Feed from '/src/containers/Feed/Feed'
 import getCommentsForTasks from '/src/containers/Feed/commentsData'
 
-const UserDashboardDetails = ({ tasks = [] }) => {
+const UserDashboardDetails = ({ tasks = [], statusesOptions, disabledStatuses }) => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const selectedTasksIds = useSelector((state) => state.dashboard.tasks.selected)
   const attributesOpen = useSelector((state) => state.dashboard.tasks.attributesOpen)
@@ -50,11 +50,11 @@ const UserDashboardDetails = ({ tasks = [] }) => {
     <Panel style={{ height: '100%', padding: 0 }}>
       <UserDashDetailsHeader
         tasks={selectedTasks}
-        selectedProjects={selectedProjects}
         users={projectUsers}
         disabledProjectUsers={disabledProjectUsers}
-        selectedTasksProjects={selectedTasksProjects}
         attributesOpen={attributesOpen}
+        statusesOptions={statusesOptions}
+        disabledStatuses={disabledStatuses}
       />
       {(!attributesOpen || !selectedTasks.length) && (
         <Feed

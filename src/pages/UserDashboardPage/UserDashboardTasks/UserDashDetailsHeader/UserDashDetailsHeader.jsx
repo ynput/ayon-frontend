@@ -10,11 +10,8 @@ import { useDispatch } from 'react-redux'
 import * as Styled from './UserDashDetailsHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
-import {
-  useGetProjectsInfoQuery,
-  useGetTasksDetailsQuery,
-} from '/src/services/userDashboard/getUserDashboard'
-import { getIntersectionFields, getMergedFields } from '../../util'
+import { useGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
+
 import { union } from 'lodash'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
@@ -24,19 +21,14 @@ import TaskAttributes from '../TaskAttributes/TaskAttributes'
 
 const UserDashDetailsHeader = ({
   tasks = [],
-  selectedProjects = [],
-  selectedTasksProjects = [],
   disabledProjectUsers,
   users = [],
   attributesOpen,
+  statusesOptions,
+  disabledStatuses,
 }) => {
   const dispatch = useDispatch()
   const setAttributesOpen = (value) => dispatch(onAttributesOpenChanged(value))
-
-  const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
 
   // now we get the full details data for selected tasks
   const { data: tasksDetailsData, isFetching: isLoadingTasksDetails } = useGetTasksDetailsQuery(
@@ -64,23 +56,6 @@ const UserDashDetailsHeader = ({
   // this means that if we have 2 tasks from 2 different projects, we need to get the intersection of the statuses of those 2 projects
   //  and it prevents us from showing statuses that are not available for the selected tasks
   const statusesValue = useMemo(() => tasks.map((t) => t.status), [tasks])
-  const statusesOptions = useMemo(() => getMergedFields(projectsInfo, 'statuses'), [projectsInfo])
-  const StatusesOptionsIntersect = useMemo(
-    () =>
-      selectedProjects.length > 1
-        ? getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects)
-        : statusesOptions,
-    [projectsInfo, selectedTasksProjects],
-  )
-
-  // all statuses that are not in the intersection of the statuses of the selected tasks
-  const disabledStatuses = useMemo(
-    () =>
-      statusesOptions
-        .filter((s) => !StatusesOptionsIntersect.some((s2) => s2.name === s.name))
-        .map((s) => s.name),
-    [statusesOptions, StatusesOptionsIntersect],
-  )
 
   const isMultiple = tasks.length > 1
 

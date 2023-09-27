@@ -22,7 +22,14 @@ import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import UserDashboardList from './UserDashboardList/UserDashboardList'
 
-const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }) => {
+const UserDashboardKanBan = ({
+  tasks,
+  projectsInfo = {},
+  taskFields,
+  isLoading,
+  statusesOptions,
+  disabledStatuses,
+}) => {
   const dispatch = useDispatch()
 
   // KANBAN or TASKS
@@ -185,6 +192,8 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }
           allUsers={allUsers}
           mergedFields={mergedFields}
           groupByValue={groupByValue}
+          statusesOptions={statusesOptions}
+          disabledStatuses={disabledStatuses}
         />
       )}
     </Section>

@@ -14,6 +14,9 @@ const ListGroup = ({
   selectedTasks,
   onTaskSelected,
   onTaskHover,
+  statusesOptions,
+  disabledStatuses,
+  onUpdate,
   // isLoading,
   // allUsers = [],
   // index,
@@ -44,7 +47,7 @@ const ListGroup = ({
     <>
       <Styled.Header
         style={{
-          borderBottomColor: !isCollapsed && column?.color,
+          borderBottomColor: !isCollapsed && (column?.color ?? 'var(--md-sys-color-outline)'),
         }}
         $isCollapsed={isCollapsed}
         onDoubleClick={() => handleCollapseToggle(id)}
@@ -63,9 +66,13 @@ const ListGroup = ({
               isLast={i === a.length - 1}
               isFirst={i === 0}
               selected={selectedTasks.includes(task.id)}
+              selectedLength={selectedTasks.length}
               onClick={(e) => onTaskSelected(e, task.id)}
               onContextMenu={(e) => handleContextMenu(e)}
               onMouseOver={() => onTaskHover(task)}
+              statusesOptions={statusesOptions}
+              disabledStatuses={disabledStatuses}
+              onUpdate={onUpdate}
             />
           ))}
           {!loadingTasks && column?.tasks?.length === 0 && <ListItem none />}

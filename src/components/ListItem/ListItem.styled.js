@@ -1,5 +1,6 @@
 import styled, { css } from 'styled-components'
 import Thumbnail from '/src/containers/thumbnail'
+import StatusSelect from '../status/statusSelect'
 
 export const Item = styled.li`
   /* reset defaults */
@@ -68,6 +69,30 @@ export const Item = styled.li`
         border-bottom-color: var(--md-sys-color-primary);
       }
     `}
+`
+
+export const ItemStatus = styled(StatusSelect)`
+  height: unset;
+
+  button {
+    .icon {
+      border-radius: var(--border-radius-l);
+      font-size: 16px;
+    }
+    .status-field {
+      width: 24px;
+      height: 24px;
+      padding: 4px;
+      min-height: unset;
+    }
+    .icon {
+      color: var(--md-sys-color-inverse-on-surface);
+      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+    }
+  }
+  & > div {
+    transform: translateX(-4px);
+  }
 `
 
 export const ItemThumbnail = styled(Thumbnail)`

@@ -6,10 +6,10 @@ export const useTaskClick = (dispatch) => {
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
   // HANDLE TASK CLICK
   const handleTaskClick = (e, id, taskIds) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e?.preventDefault()
+    e?.stopPropagation()
 
-    const { metaKey, ctrlKey, shiftKey } = e
+    const { metaKey, ctrlKey, shiftKey } = e || {}
     const ctrlOrMeta = metaKey || ctrlKey
     const shift = shiftKey && !ctrlOrMeta
 
@@ -27,11 +27,12 @@ export const useTaskClick = (dispatch) => {
           // add all tasks between the last selected task and the current task (including last selected and current)
           const startIndex = Math.min(lastSelectedIndex, taskIds.indexOf(id))
           const endIndex = Math.max(lastSelectedIndex, taskIds.indexOf(id))
-          newSelection = [...newSelection, ...taskIds.slice(startIndex, endIndex + 1)]
+          newSelection = [...new Set([...newSelection, ...taskIds.slice(startIndex, endIndex + 1)])]
         }
+      } else {
+        // add to selection
+        newSelection.push(id)
       }
-      // add to selection
-      newSelection.push(id)
     } else if (isMulti) {
       // remove from selection
       newSelection = newSelection.filter((taskId) => taskId !== id)
