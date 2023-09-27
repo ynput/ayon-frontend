@@ -1491,7 +1491,6 @@ const EditorPage = () => {
             isLoading={isSearchLoading}
           />
           <Spacer />
-          {canCommit && <>Unsaved Changes</>}
           <Button
             icon="clear"
             label="Clear All Changes"
