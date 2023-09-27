@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { capitalize, isEmpty } from 'lodash'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { InputText, SaveButton } from '@ynput/ayon-react-components'
+import { Button, InputText, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { useRef } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
@@ -30,7 +30,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   //   format title
   const isRoot = isEmpty(currentSelection)
-  let title = 'Creating New '
+  let title = 'Add New '
   if (isRoot) title += 'Root '
   title += capitalize(type)
 
@@ -38,9 +38,6 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
   const typeOptions = type === 'folder' ? folders : tasks
-
-  //   refs
-  const labelRef = useRef(null)
 
   // set entity type
   useEffect(() => {
@@ -70,15 +67,33 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     let newState = { ...entityData }
     if (id) {
       newState[id] = value
-      if (
-        value &&
-        id === 'type' &&
-        (entityData.label.toLowerCase() === entityData.type.toLowerCase() ||
-          entityData.label === '')
-      ) {
+      if (value && id === 'type') {
+        // changing type
+        // update name if newState.name matches any values in typeOptions
+        let matches = false
+        // loop through typeOptions and check if any match, when match is found we can stop looping
+        for (const o in typeOptions) {
+          if (newState.name === '') {
+            matches = true
+            break
+          }
+          const option = typeOptions[o]
+          for (const key in option) {
+            if (newState.name.toLowerCase().includes(option[key].toLowerCase())) {
+              matches = true
+              break
+            }
+          }
+        }
+
+        const typeOption = typeOptions[value]
+
+        if (!matches || !typeOption) return
         // if name is same as type, update name
-        newState.name = value.toLowerCase()
-        newState.label = value
+        const newName =
+          type === 'folder' ? typeOption.shortName || typeOption.name : typeOption.name
+        newState.name = newName
+        newState.label = newName
       }
     }
 
@@ -86,18 +101,25 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       newState.name = checkName(value)
     }
     setEntityData(newState)
+
+    if (id === 'type') {
+      setTimeout(() => {
+        labelRef.current.focus()
+      }, 50)
+    }
   }
+
+  //   refs
+  const typeSelectRef = useRef(null)
+  const labelRef = useRef(null)
 
   const handleShow = () => {
-    // focus name input
-    labelRef.current?.focus()
-    // select name
-    labelRef.current?.select()
+    const buttonEl = typeSelectRef.current.querySelector('button')
+    // focus name dropdown
+    buttonEl?.focus()
   }
 
-  const handleSubmit = (e) => {
-    e?.preventDefault()
-
+  const handleSubmit = (hide = false) => {
     // first check name and type valid
     if (!entityData.label || !entityData.type) return
 
@@ -112,10 +134,36 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
     // callbacks
     onConfirm(entityType, isRoot, [newData])
-    onHide()
+    hide && onHide()
+
+    if (!hide) {
+      // set focus back to typeSelector
+      handleShow()
+    }
+  }
+
+  const handleKeyDown = (e) => {
+    // ctrl + enter submit and close
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      handleSubmit(true)
+    }
+    // shift + enter submit and don't close
+    if (e.shiftKey && e.key === 'Enter') {
+      handleSubmit(false)
+    }
+    // if tabbing from dropdown, focus name input
+    if (e.key === 'Tab') {
+      const target = e.target
+      // check if target is inside typeSelectRef.current
+      if (target && typeSelectRef.current.contains(target)) {
+        e.stopPropagation()
+      }
+    }
   }
 
   if (!entityType) return null
+
+  const addDisabled = !entityData.label || !entityData.type
 
   return (
     <Dialog
@@ -126,27 +174,38 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       resizable={false}
       draggable={false}
       footer={
-        <SaveButton
-          label={`Create ${type}`}
-          onClick={handleSubmit}
-          style={{ marginLeft: 'auto' }}
-          active={entityData.label && entityData.type}
-        />
+        <Toolbar>
+          <Spacer />
+          <Button
+            label={`Add`}
+            variant="text"
+            onClick={() => handleSubmit(false)}
+            disabled={addDisabled}
+            title={'Shift + Enter'}
+          />
+          <SaveButton
+            label={`Add and Close`}
+            onClick={() => handleSubmit(true)}
+            active={!addDisabled}
+            title="Ctrl/Cmd + Enter"
+          />
+        </Toolbar>
       }
+      onKeyDown={handleKeyDown}
     >
       <ContentStyled>
-        <form onSubmit={handleSubmit}>
-          <InputText
-            value={entityData.label}
-            onChange={(e) => handleChange(e.target.value, 'label')}
-            ref={labelRef}
-          />
-        </form>
         <TypeEditor
           value={[entityData.type]}
           onChange={(v) => handleChange(v, 'type')}
           options={typeOptions}
           style={{ width: 160 }}
+          ref={typeSelectRef}
+          openOnFocus
+        />
+        <InputText
+          value={entityData.label}
+          onChange={(e) => handleChange(e.target.value, 'label')}
+          ref={labelRef}
         />
       </ContentStyled>
     </Dialog>

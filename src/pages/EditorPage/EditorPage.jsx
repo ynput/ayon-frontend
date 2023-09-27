@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
@@ -83,7 +83,6 @@ const EditorPage = () => {
 
   // NEW STATES
   const [newEntity, setNewEntity] = useState('')
-  const [multipleFoldersOpen, setMultipleFoldersOpen] = useState(false)
 
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
@@ -598,14 +597,9 @@ const EditorPage = () => {
           attrib: patchAttrib,
           ownAttrib,
         },
-        leaf: !!entity.leaf,
+        leaf: !!entity.leaf || entityType === 'task',
       }
 
-      // check if this newNode has any child newNodes (is it a parent)
-      if (newNodesParentIdsMap.has(id)) {
-        patch.data.hasChildren = true
-        patch.leaf = false
-      }
       // if it's a folder, leaf is false
       if (entityType === 'folder') {
         patch.leaf = false
@@ -797,7 +791,14 @@ const EditorPage = () => {
         const res = await updateEditor({ updates, projectName, rootData }).unwrap()
 
         if (!res.success) {
-          toast.warn('Errors occurred during save')
+          const messages = []
+          res.operations.forEach((op) => {
+            if (op.success) return
+            messages.push(op.detail)
+          })
+          for (const msg of messages) {
+            toast.error('Error: ' + msg)
+          }
           setCommitUpdating(false)
           return null
         }
@@ -844,7 +845,7 @@ const EditorPage = () => {
   }
 
   const onCommit = async (e, overridesChanges) => {
-    e.preventDefault()
+    e?.preventDefault()
 
     if (Object.keys(changes).length + Object.keys(newNodes).length > 1000) {
       // show warning
@@ -929,7 +930,7 @@ const EditorPage = () => {
     setNewEntity('')
   }
 
-  const addNodes = (entityType, root, nodesData = [], expandBranches = true) => {
+  const addNodes = (entityType, root, nodesData = [], sequence) => {
     const parents = root ? [null] : futureParents
 
     // for leaf nodes, add parents to parents
@@ -1002,7 +1003,7 @@ const EditorPage = () => {
     // update new nodes state
     dispatch(newNodesAdded(addingNewNodes))
 
-    if (!root && expandBranches) {
+    if (!root) {
       // Update expanded folders context object
       const exps = { ...expandedFolders }
       const loadBranches = []
@@ -1015,6 +1016,17 @@ const EditorPage = () => {
       dispatch(setExpandedFolders(exps))
       // get new branch
       loadNewBranches(loadBranches)
+
+      // only auto select for sequences
+      if (sequence) {
+        // update selection to new nodes
+        const newSelection = {}
+        for (const id of folderIds) {
+          newSelection[id] = true
+        }
+
+        if (!isEmpty(newSelection)) handleSelectionChange(newSelection)
+      }
     }
   } // Add node
 
@@ -1022,11 +1034,9 @@ const EditorPage = () => {
   // Other user events handlers (Toolbar)
   //
 
-  const onDelete = () => {
-    const newIds = Object.keys(newNodes).filter((i) => i in currentSelection)
-    const modifiedIds = Object.keys(currentSelection).filter(
-      (i) => !newIds.includes(i) && i in currentSelection,
-    )
+  const onDelete = (sel) => {
+    const newIds = Object.keys(newNodes).filter((i) => i in sel)
+    const modifiedIds = Object.keys(sel).filter((i) => !newIds.includes(i) && i in sel)
 
     // remove from newNodes state and the tree table
     dispatch(onRevert(newIds))
@@ -1041,8 +1051,8 @@ const EditorPage = () => {
         newSelection = {}
       } else {
         // preserve selection of non newItems
-        newSelection = { ...currentSelection }
-        for (const id in currentSelection) {
+        newSelection = { ...sel }
+        for (const id in sel) {
           if (newIds.includes(id)) delete newSelection[id]
         }
       }
@@ -1076,10 +1086,8 @@ const EditorPage = () => {
     handleSelectionChange({})
   }
 
-  const revertChangesOnSelection = useCallback(() => {
-    // remove from newNodes and changes from state
+  const revertChangesOnSelection = (currentSelection) =>
     dispatch(onRevert(Object.keys(currentSelection)))
-  }, [currentSelection, changes, newNodes])
 
   // CONTEXT MENUS
 
@@ -1087,7 +1095,7 @@ const EditorPage = () => {
   const ctxMenuGlobalItems = useMemo(
     () => [
       {
-        label: 'Create Folder',
+        label: 'Add Folders',
         icon: 'create_new_folder',
         command: () => setNewEntity('folder'),
       },
@@ -1110,56 +1118,57 @@ const EditorPage = () => {
 
   const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
 
-  const getCtxMenuTableItems = () => {
+  const getCtxMenuTableItems = (sel) => {
     return [
       {
-        label: 'Create Folder',
+        label: 'Add Folders',
         icon: 'create_new_folder',
         command: () => setNewEntity('folder'),
       },
       {
-        label: 'Create Task',
+        label: 'Add Tasks',
         icon: 'add_task',
         command: () => setNewEntity('task'),
       },
       {
         label: 'Delete',
         icon: 'delete',
-        command: onDelete,
+        command: () => onDelete(sel),
         danger: true,
       },
       {
         label: 'Save All Changes',
         icon: 'check',
-        command: onCommit,
+        command: () => onCommit(),
         disabled: !canCommit,
         isSave: canCommit,
       },
       {
         label: 'Clear Changes',
         icon: 'clear',
-        command: revertChangesOnSelection,
+        command: () => revertChangesOnSelection(sel),
         disabled: !canCommit,
       },
     ]
   }
 
-  const [ctxMenuTableShow] = useCreateContext(getCtxMenuTableItems())
+  const [ctxMenuTableShow] = useCreateContext([])
 
   // Context menu
 
-  const onContextMenuSelectionChange = (event) => {
-    if (!(event.value in currentSelection)) {
+  // When right clicking on the already selected node, we don't want to change the selection
+  const onContextMenu = (event) => {
+    let selection = currentSelection
+    if (event?.node?.key && !(event.node.key in currentSelection)) {
       let newSelection = {
-        [event.value]: true,
+        [event.node.key]: true,
       }
+
+      selection = newSelection
 
       handleSelectionChange(newSelection)
     }
-  }
-
-  const handleOnContextMenu = (e) => {
-    ctxMenuTableShow(e.originalEvent)
+    ctxMenuTableShow(event.originalEvent, getCtxMenuTableItems(selection))
   }
 
   //
@@ -1410,7 +1419,7 @@ const EditorPage = () => {
     },
     {
       key: 'm',
-      action: () => setMultipleFoldersOpen(true),
+      action: () => setNewEntity('sequence'),
     },
     {
       key: 't',
@@ -1426,41 +1435,43 @@ const EditorPage = () => {
 
   return (
     <main className="editor-page">
-      <NewEntity
-        type={newEntity}
-        visible={!!newEntity}
-        onHide={handleCloseNew}
-        onConfirm={addNodes}
-        currentSelection={currentSelection}
-      />
-      {multipleFoldersOpen && (
-        <NewSequence
-          visible={multipleFoldersOpen}
-          onHide={() => setMultipleFoldersOpen(false)}
-          onConfirm={addNodes}
-          currentSelection={currentSelection}
-        />
-      )}
+      {newEntity &&
+        (newEntity === 'sequence' ? (
+          <NewSequence
+            visible={newEntity === 'sequence'}
+            onHide={() => setNewEntity('')}
+            onConfirm={addNodes}
+            currentSelection={currentSelection}
+          />
+        ) : (
+          <NewEntity
+            type={newEntity}
+            visible={!!newEntity}
+            onHide={handleCloseNew}
+            onConfirm={addNodes}
+            currentSelection={currentSelection}
+          />
+        ))}
       <Section>
         <Toolbar>
           <Button
             icon="create_new_folder"
-            label="Create folder"
+            label="Add folders"
             onClick={() => setNewEntity('folder')}
-            title='Press "n" to create a folder'
+            title='Press "n" to create folders'
           />
           <Button
-            icon="create_new_folder"
-            label="Create multiple"
-            onClick={() => setMultipleFoldersOpen(true)}
-            title='Press "m" to create multiple folders'
+            icon="topic"
+            label="Add folder sequence"
+            onClick={() => setNewEntity('sequence')}
+            title='Press "m" to create a folder sequence'
           />
           <Button
             icon="add_task"
-            label="Create task"
+            label="Add tasks"
             disabled={disableAddNew}
             onClick={() => setNewEntity('task')}
-            title='Press "t" to create a task'
+            title='Press "t" to create tasks'
           />
           <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect
@@ -1480,7 +1491,6 @@ const EditorPage = () => {
             isLoading={isSearchLoading}
           />
           <Spacer />
-          {canCommit && <>Unsaved Changes</>}
           <Button
             icon="clear"
             label="Clear All Changes"
@@ -1523,8 +1533,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}
-                onContextMenu={handleOnContextMenu}
-                onContextMenuSelectionChange={onContextMenuSelectionChange}
+                onContextMenu={onContextMenu}
                 onColumnResizeEnd={setColumnWidths}
                 reorderableColumns
                 onColReorder={handleColumnReorder}
@@ -1540,8 +1549,8 @@ const EditorPage = () => {
               editorMode
               nodes={editorNodes}
               onChange={(c) => throttledEditorChanges(c)}
-              onDelete={onDelete}
-              onRevert={revertChangesOnSelection}
+              onDelete={() => onDelete(currentSelection)}
+              onRevert={() => revertChangesOnSelection(currentSelection)}
               attribs={attribFields}
               projectName={projectName}
               onForceChange={handleForceChange}

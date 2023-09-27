@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Button, Toolbar, Spacer } from '@ynput/ayon-react-components'
+import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { Dialog } from 'primereact/dialog'
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
@@ -20,12 +20,13 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
 
   const openCreateSeq = () => {
     const newSeq = {
-      base: '',
-      increment: '',
+      base: 'Folder010',
+      increment: 'Folder020',
       length: 10,
       type: 'Folder',
       prefix: multipleSelection,
       prefixDepth: !isRoot ? 1 : 0,
+      entityType: 'folder',
     }
 
     setCreateSeq(newSeq)
@@ -33,16 +34,25 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
 
   useEffect(() => {
     openCreateSeq()
-  }, [isRoot])
+  }, [isRoot, currentSelection])
 
-  const title = 'Create Folder Sequence'
+  //   refs
+  const typeSelectRef = useRef(null)
+
+  const handleShow = () => {
+    const buttonEl = typeSelectRef.current.querySelector('button')
+    // focus name dropdown
+    buttonEl?.focus()
+  }
+
+  const title = 'Add Folder Sequence'
 
   const handleSeqChange = (value) => {
     const newValue = { ...createSeq, ...value }
     setCreateSeq(newValue)
   }
 
-  const handleSeqSubmit = () => {
+  const handleSeqSubmit = (hide = false) => {
     // get the sequence
     const seq = getSequence(createSeq.base, createSeq.increment, createSeq.length)
     // for each sequence item, create a new entity
@@ -56,28 +66,63 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       })
     }
 
-    onConfirm('folder', isRoot, nodes, false)
-    onHide()
+    onConfirm('folder', isRoot, nodes, true)
+    hide && onHide()
+
+    // focus typeSelector again
+    if (!hide) {
+      handleShow()
+    }
   }
+
+  const handleKeyDown = (e) => {
+    // ctrl + enter submit and close
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      handleSeqSubmit(true)
+    }
+    // shift + enter submit and don't close
+    if (e.shiftKey && e.key === 'Enter') {
+      handleSeqSubmit(false)
+    }
+    // if tabbing from dropdown, focus name input
+    if (e.key === 'Tab') {
+      const target = e.target
+      // check if target is inside typeSelectRef.current
+      if (target && typeSelectRef.current.contains(target)) {
+        e.stopPropagation()
+      }
+    }
+  }
+
+  const addDisabled =
+    !createSeq.base || !createSeq.increment || !createSeq.length || !createSeq.type
 
   return (
     <Dialog
       header={title}
       visible={visible}
       onHide={onHide}
+      onShow={handleShow}
       resizable={false}
       draggable={false}
       footer={
         <Toolbar>
           <Spacer />
-          <Button label={'Create folders'} onClick={handleSeqSubmit} variant="filled" />
+          <Button
+            label="Add"
+            disabled={addDisabled}
+            onClick={() => handleSeqSubmit(false)}
+            title={'Shift + Enter'}
+          />
+          <SaveButton
+            label={'Add and Close'}
+            onClick={() => handleSeqSubmit(true)}
+            active={!addDisabled}
+            title="Ctrl/Cmd + Enter"
+          />
         </Toolbar>
       }
-      onKeyDown={(e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          handleSeqSubmit()
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       <FolderSequence
         {...createSeq}
@@ -86,6 +131,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         isRoot={isRoot}
         prefixExample={createSeq.prefix ? examplePrefix : ''}
         prefixDisabled={multipleSelection}
+        typeSelectRef={typeSelectRef}
       />
     </Dialog>
   )
