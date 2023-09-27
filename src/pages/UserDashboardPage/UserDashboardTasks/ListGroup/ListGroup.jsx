@@ -74,6 +74,7 @@ const ListGroup = ({
               disabledStatuses={disabledStatuses}
               onUpdate={onUpdate}
               allUsers={assigneesIsMe ? [] : allUsers}
+              className={'card'}
             />
           ))}
           {!isLoading && column?.tasks?.length === 0 && <ListItem none />}

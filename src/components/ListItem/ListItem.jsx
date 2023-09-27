@@ -14,6 +14,7 @@ const ListItem = ({
   onClick,
   onUpdate,
   allUsers,
+  className,
   ...props
 }) => {
   if (task.isLoading) {
@@ -31,7 +32,7 @@ const ListItem = ({
     <Styled.Item
       $isLast={isLast}
       $isFirst={isFirst}
-      className={selected ? 'selected' : undefined}
+      className={selected ? 'selected ' + className : className}
       tabIndex={0}
       id={task.id}
       onClick={onClick}
