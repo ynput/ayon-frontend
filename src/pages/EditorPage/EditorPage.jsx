@@ -1095,7 +1095,7 @@ const EditorPage = () => {
   const ctxMenuGlobalItems = useMemo(
     () => [
       {
-        label: 'Create Folder',
+        label: 'Add Folders',
         icon: 'create_new_folder',
         command: () => setNewEntity('folder'),
       },
@@ -1121,12 +1121,12 @@ const EditorPage = () => {
   const getCtxMenuTableItems = (sel) => {
     return [
       {
-        label: 'Create Folder',
+        label: 'Add Folders',
         icon: 'create_new_folder',
         command: () => setNewEntity('folder'),
       },
       {
-        label: 'Create Task',
+        label: 'Add Tasks',
         icon: 'add_task',
         command: () => setNewEntity('task'),
       },
