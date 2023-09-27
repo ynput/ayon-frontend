@@ -17,6 +17,22 @@ const UserDashboardList = ({
   // create a ref for the list items
   const listItemsRef = useRef([])
 
+  // sort the groupedTasks by id alphabetically based on groupByValue sortBy
+  const sortedFields = useMemo(() => {
+    if (groupByValue[0] && groupByValue[0].id !== 'status') {
+      const asc = groupByValue[0].sortOrder
+      // sort by id
+      return [...groupedFields].sort((a, b) => {
+        if (asc) {
+          return a.id.localeCompare(b.id)
+        } else {
+          return b.id.localeCompare(a.id)
+        }
+      })
+    }
+    return groupedFields
+  }, [groupedFields, groupByValue])
+
   // store a reference to the list items in the ref
   useEffect(() => {
     listItemsRef.current = containerRef.current.querySelectorAll('li')
@@ -157,7 +173,7 @@ const UserDashboardList = ({
       onKeyDown={handleKeyDown}
       ref={containerRef}
     >
-      {groupedFields.flatMap(({ id }, i) => {
+      {sortedFields.flatMap(({ id }, i) => {
         const column = groupedTasks[id]
         if (!column) return []
 

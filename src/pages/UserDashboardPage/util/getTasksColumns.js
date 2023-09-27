@@ -17,8 +17,16 @@ export const getTasksColumns = (tasks = [], splitBy, fields = []) => {
     if (isEmpty(splitTasks)) {
       // there must not be a anatomy schema for this splitBy field
       // so just return the tasks into their own columns using the splitBy as the column name
+      // For example groupBy = assignee
       splitTasks = tasks.reduce((acc, task) => {
-        const column = task[splitBy]
+        let column = task[splitBy]
+        // if column is object or array, convert column to string
+        if (Array.isArray(column)) {
+          column = column.join(', ')
+        } else if (typeof column === 'object') {
+          column = Object.keys(column).join(', ')
+        }
+
         if (!acc[column]) {
           acc[column] = { name: column, id: column, tasks: [] }
         }

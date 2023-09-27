@@ -79,7 +79,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }
 
   const [tasksColumns, fieldsColumns] = useMemo(
     () => getTasksColumns(sortedTasks, splitBy, mergedFields),
-    [sortedTasks, splitBy],
+    [sortedTasks, splitBy, mergedFields],
   )
 
   // DND Stuff
@@ -184,6 +184,7 @@ const UserDashboardKanBan = ({ tasks, projectsInfo = {}, taskFields, isLoading }
           isLoading={isLoading}
           allUsers={allUsers}
           mergedFields={mergedFields}
+          groupByValue={groupByValue}
         />
       )}
     </Section>

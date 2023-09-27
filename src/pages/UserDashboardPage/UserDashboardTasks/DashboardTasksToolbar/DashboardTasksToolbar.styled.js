@@ -20,4 +20,6 @@ export const TasksToolbar = styled(Toolbar)`
   &::-webkit-scrollbar {
     display: none;
   }
+
+  z-index: 100;
 `
