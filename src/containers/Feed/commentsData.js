@@ -204,6 +204,9 @@ const getCommentsForTasks = (tasks = [], users = []) => {
       )
     })
 
+    // add "(DEMO)" to the start of each body
+    updatedBody = `(DEMO) ${updatedBody}`
+
     return {
       ...comment,
       body: updatedBody,

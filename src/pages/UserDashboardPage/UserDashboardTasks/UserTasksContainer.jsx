@@ -14,6 +14,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
   const assignees = assigneesIsMe ? [user?.name] : assigneesState || []
+  const selectedTasks = useSelector((state) => state.dashboard.tasks.selected) || []
 
   // once user is loaded, set assignees to user
   useEffect(() => {
@@ -71,7 +72,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       }}
       stateKey="user-dashboard-tasks"
       className="dashboard-tasks"
-      gutterSize={6}
+      gutterSize={selectedTasks.length ? 6 : 0}
     >
       <SplitterPanel
         style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden', marginRight: -6 }}
@@ -84,15 +85,19 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           taskFields={taskFields}
         />
       </SplitterPanel>
-      <SplitterPanel
-        size={1}
-        style={{
-          maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-          minWidth: detailsMinWidth,
-        }}
-      >
-        <UserDashboardDetails tasks={tasksWithIcons} />
-      </SplitterPanel>
+      {selectedTasks.length ? (
+        <SplitterPanel
+          size={1}
+          style={{
+            maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+            minWidth: detailsMinWidth,
+          }}
+        >
+          <UserDashboardDetails tasks={tasksWithIcons} />
+        </SplitterPanel>
+      ) : (
+        <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+      )}
     </Splitter>
   )
 }
