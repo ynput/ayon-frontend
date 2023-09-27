@@ -74,19 +74,35 @@ export const Item = styled.li`
 
 export const ItemStatus = styled(StatusSelect)`
   height: 24px;
+  width: 24px;
 
   button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-hover);
+    }
+
     .icon {
       border-radius: var(--border-radius-l);
       font-size: 16px;
     }
     .status-field {
-      width: 24px;
-      height: 24px;
-      padding: 4px;
+      width: 20px;
+      height: 20px;
+      padding: 0;
       min-height: unset;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      span:last-child {
+        display: none;
+      }
     }
     .icon {
+      margin: 0;
       color: var(--md-sys-color-inverse-on-surface);
       font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
     }
