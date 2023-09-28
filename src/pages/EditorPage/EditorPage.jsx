@@ -477,7 +477,7 @@ const EditorPage = () => {
   const searchFilter = (search, suggestions) => {
     // filter through suggestions
     const filtered = suggestions.filter((folder) =>
-      folder.keywords.some((key) => key.includes(search)),
+      folder.keywords.some((key) => key.toLowerCase().includes(search.toLowerCase())),
     )
     return filtered
   }
