@@ -2,8 +2,7 @@ import React from 'react'
 import * as Styled from './FeedHeader.styled'
 import { UserImage } from '@ynput/ayon-react-components'
 import { useGetUserQuery } from '/src/services/user/getUsers'
-import { formatDistanceToNow } from 'date-fns'
-import { isDate } from 'lodash'
+import { formatDistanceToNow, isValid } from 'date-fns'
 import Typography from '/src/theme/typography.module.css'
 import FeedReference from '../FeedReference/FeedReference'
 
@@ -17,7 +16,7 @@ const FeedHeader = ({ name, users, date, reference }) => {
   if (userInUsers) user = userInUsers
 
   const fuzzyDate =
-    date && isDate(new Date(date)) ? formatDistanceToNow(new Date(date), { addSuffix: true }) : ''
+    date && isValid(new Date(date)) ? formatDistanceToNow(new Date(date), { addSuffix: true }) : ''
 
   return (
     <Styled.Header>

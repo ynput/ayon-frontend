@@ -1,4 +1,4 @@
-import { Section } from '@ynput/ayon-react-components'
+import * as Styled from './UserDashboardList.styled'
 import ListGroup from '../ListGroup/ListGroup'
 import { useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -21,6 +21,8 @@ const UserDashboardList = ({
   // create a ref for the list items
   const listItemsRef = useRef([])
 
+  console.log(listItemsRef)
+
   // sort the groupedTasks by id alphabetically based on groupByValue sortBy
   const sortedFields = useMemo(() => {
     if (groupByValue[0] && groupByValue[0].id !== 'status') {
@@ -39,7 +41,7 @@ const UserDashboardList = ({
 
   // store a reference to the list items in the ref
   useEffect(() => {
-    listItemsRef.current = containerRef.current.querySelectorAll('li')
+    listItemsRef.current = containerRef.current.querySelectorAll('li:not(.none)')
   }, [containerRef.current, isLoading, groupedTasks, groupedFields])
 
   const dispatch = useDispatch()
@@ -145,8 +147,8 @@ const UserDashboardList = ({
         const prevLiHeight = prevLiRect.height
         const containerScrollTop = containerRef.current.scrollTop
         const containerHeight = containerRect.height
-        const headerHeight = 42
-        if (prevLiTop < 0) {
+        const headerHeight = groupByValue.length ? 42 : 0
+        if (prevLiTop - prevLiHeight < 0) {
           containerRef.current.scrollTo({ top: containerScrollTop + prevLiTop - headerHeight })
         } else if (prevLiTop + prevLiHeight > containerHeight) {
           containerRef.current.scrollTo({
@@ -205,46 +207,36 @@ const UserDashboardList = ({
   }, [])
 
   return (
-    <Section
-      style={{
-        height: '100%',
-        width: '100%',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        overflowX: 'auto',
-        padding: '0 8px',
-        gap: 0,
-      }}
-      onKeyDown={handleKeyDown}
-      ref={containerRef}
-    >
-      {isLoading
-        ? fakeColumns.map((c) => (
-            <ListGroup key={c.id} isLoading groups={fakeColumnsObject} id={c.id} />
-          ))
-        : sortedFields.flatMap(({ id }) => {
-            const column = groupedTasks[id]
-            if (!column) return []
+    <Styled.ListContainer onKeyDown={handleKeyDown}>
+      <Styled.Inner ref={containerRef}>
+        {isLoading
+          ? fakeColumns.map((c) => (
+              <ListGroup key={c.id} isLoading groups={fakeColumnsObject} id={c.id} />
+            ))
+          : sortedFields.flatMap(({ id }) => {
+              const column = groupedTasks[id]
+              if (!column) return []
 
-            return (
-              <ListGroup
-                key={id}
-                groups={groupedTasks}
-                tasks={column.tasks}
-                id={id}
-                groupByValue={groupByValue}
-                allUsers={allUsers}
-                selectedTasks={selectedTasks}
-                onTaskSelected={handleTaskClick}
-                onTaskHover={(t) => handlePrefetch(t)}
-                statusesOptions={statusesOptions}
-                disabledStatuses={disabledStatuses}
-                onUpdate={handleUpdate}
-                assigneesIsMe={assigneesIsMe}
-              />
-            )
-          })}
-    </Section>
+              return (
+                <ListGroup
+                  key={id}
+                  groups={groupedTasks}
+                  tasks={column.tasks}
+                  id={id}
+                  groupByValue={groupByValue}
+                  allUsers={allUsers}
+                  selectedTasks={selectedTasks}
+                  onTaskSelected={handleTaskClick}
+                  onTaskHover={(t) => handlePrefetch(t)}
+                  statusesOptions={statusesOptions}
+                  disabledStatuses={disabledStatuses}
+                  onUpdate={handleUpdate}
+                  assigneesIsMe={assigneesIsMe}
+                />
+              )
+            })}
+      </Styled.Inner>
+    </Styled.ListContainer>
   )
 }
 

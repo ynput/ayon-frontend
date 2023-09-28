@@ -40,23 +40,25 @@ const ListGroup = ({
 
   return (
     <>
-      <Styled.Header
-        style={{
-          borderBottomColor: !isCollapsed && (column?.color ?? 'var(--md-sys-color-outline)'),
-        }}
-        $isCollapsed={isCollapsed}
-        onDoubleClick={() => handleCollapseToggle(id)}
-        $isLoading={column?.isLoading}
-      >
-        {!column.isLoading && (
-          <>
-            <Button icon="expand_more" variant="text" onClick={() => handleCollapseToggle(id)} />
-            <span>
-              {column?.name} - {column?.tasks?.length}
-            </span>
-          </>
-        )}
-      </Styled.Header>
+      {id !== 'none' && (
+        <Styled.Header
+          style={{
+            borderBottomColor: !isCollapsed && (column?.color ?? 'var(--md-sys-color-outline)'),
+          }}
+          $isCollapsed={isCollapsed}
+          onDoubleClick={() => handleCollapseToggle(id)}
+          $isLoading={column?.isLoading}
+        >
+          {!column.isLoading && (
+            <>
+              <Button icon="expand_more" variant="text" onClick={() => handleCollapseToggle(id)} />
+              <span>
+                {column?.name} - {column?.tasks?.length}
+              </span>
+            </>
+          )}
+        </Styled.Header>
+      )}
       {!isCollapsed && (
         <>
           {column?.tasks?.map((task, i, a) => (

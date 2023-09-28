@@ -61,8 +61,8 @@ export const getTasksColumns = (tasks = [], splitBy, fields = [], users = []) =>
   // add "No Column Found" column
   if (noColumnTasks.length > 0) {
     splitTasks['none'] = {
-      name: 'No Column Found',
-      id: 'no_column_found',
+      name: 'None',
+      id: 'none',
       color: 'var(--md-custom-color-warning)',
       tasks: noColumnTasks,
     }

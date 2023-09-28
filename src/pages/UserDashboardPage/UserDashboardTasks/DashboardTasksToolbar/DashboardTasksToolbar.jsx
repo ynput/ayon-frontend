@@ -27,6 +27,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
     { id: 'folderName', label: 'Folder', sortOrder: true },
     { id: 'name', label: 'Task', sortOrder: true },
     { id: 'status', label: 'Status', sortOrder: true },
+    { id: 'endDate', label: 'Due Date', sortOrder: true },
   ]
   const sortByValue = useSelector((state) => state.dashboard.tasks.sortBy)
   const setSortByValue = (value) => dispatch(onTasksSortByChanged(value))

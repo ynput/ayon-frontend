@@ -1,6 +1,7 @@
 import React from 'react'
 import * as Styled from './ListItem.styled'
 import { Icon, Spacer } from '@ynput/ayon-react-components'
+import { addDays, formatDistanceToNow, isSameDay, isValid } from 'date-fns'
 
 const ListItem = ({
   task = {},
@@ -18,8 +19,10 @@ const ListItem = ({
   ...props
 }) => {
   if (task.isLoading) {
-    return <Styled.Item $isLoading={true}></Styled.Item>
+    return <Styled.Item $isLoading={true} className="loading"></Styled.Item>
   }
+
+  if (none) return <Styled.Item className="none">No tasks found</Styled.Item>
 
   const pathDepth = 2
   const paths = task?.path?.split('/')?.splice(1)
@@ -27,6 +30,24 @@ const ListItem = ({
   const pathEnds = paths?.slice(-pathDepth)
   // are there more paths than the depth?
   const hasMorePaths = paths?.length > pathDepth
+
+  const endDateDate = task.endDate && new Date(task.endDate)
+
+  let isToday = '',
+    pastEndDate,
+    endDateString,
+    isTomorrow
+
+  if (endDateDate && isValid(endDateDate)) {
+    isToday = isSameDay(endDateDate, new Date())
+    isTomorrow = isSameDay(endDateDate, addDays(new Date(), 1))
+
+    pastEndDate = endDateDate < new Date()
+
+    if (isToday) endDateString = 'Today'
+    else if (isTomorrow) endDateString = 'Tomorrow'
+    else endDateString = formatDistanceToNow(endDateDate, { addSuffix: true })
+  }
 
   return (
     <Styled.Item
@@ -38,51 +59,56 @@ const ListItem = ({
       onClick={onClick}
       {...props}
     >
-      {none ? (
-        'No Tasks Found'
-      ) : (
-        <>
-          <Styled.ItemStatus
-            value={task.status}
-            options={statusesOptions}
-            disabledValues={disabledStatuses}
-            invert
-            size="icon"
-            onOpen={!selected && onClick}
-            multipleSelected={selectedLength}
-            onChange={(v) => onUpdate('status', v)}
-          />
-          <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
-          <Styled.Path>
-            <Styled.PathItem>{task.projectCode}</Styled.PathItem>
-            {
-              <Styled.PathItem style={{ marginLeft: hasMorePaths ? 0 : -4 }}>
-                {hasMorePaths ? '...' : ''}
-              </Styled.PathItem>
-            }
-            {pathEnds.map((pathEnd, i, a) => (
-              <Styled.PathItem key={i} className={i === a.length - 1 ? 'last' : undefined}>
-                {pathEnd}
-              </Styled.PathItem>
-            ))}
-            <Styled.Name>
-              <Icon icon={task.taskIcon} />
-              <span>{task.name}</span>
-            </Styled.Name>
-          </Styled.Path>
-          <Spacer />
-          {!!allUsers.length && (
-            <Styled.ItemAssignees
-              options={allUsers}
-              value={task.assignees}
-              editor
-              align="right"
-              size={20}
-              onChange={(v) => onUpdate('assignees', v)}
-            />
-          )}
-        </>
+      <Styled.ItemStatus
+        value={task.status}
+        options={statusesOptions}
+        disabledValues={disabledStatuses}
+        invert
+        size="icon"
+        onOpen={!selected && onClick}
+        multipleSelected={selectedLength}
+        onChange={(v) => onUpdate('status', v)}
+      />
+      <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
+      <Styled.Path>
+        <Styled.PathItem>{task.projectCode}</Styled.PathItem>
+        {
+          <Styled.PathItem style={{ marginLeft: hasMorePaths ? 0 : -4 }}>
+            {hasMorePaths ? '...' : ''}
+          </Styled.PathItem>
+        }
+        {pathEnds.map((pathEnd, i, a) => (
+          <Styled.PathItem key={i} className={i === a.length - 1 ? 'last' : undefined}>
+            {pathEnd}
+          </Styled.PathItem>
+        ))}
+        <Styled.Name>
+          <Icon icon={task.taskIcon} />
+          <span>{task.name}</span>
+        </Styled.Name>
+      </Styled.Path>
+      <Spacer />
+      {!!allUsers.length && (
+        <Styled.ItemAssignees
+          options={allUsers}
+          value={task.assignees}
+          editor
+          align="right"
+          size={20}
+          onChange={(v) => onUpdate('assignees', v)}
+        />
       )}
+      <Styled.Date
+        style={{
+          color: pastEndDate
+            ? isToday || isTomorrow
+              ? 'var(--md-sys-color-warning)'
+              : 'var(--md-sys-color-error)'
+            : 'inherit',
+        }}
+      >
+        {endDateString}
+      </Styled.Date>
     </Styled.Item>
   )
 }

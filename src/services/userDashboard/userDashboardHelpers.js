@@ -32,6 +32,7 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       taskType: task.taskType,
       assignees: task.assignees,
       updatedAt: task.updatedAt,
+      endDate: task.attrib?.endDate,
       folderName: task.folder?.name,
       folderId: task.folderId,
       path: `${projectName}/${task.folder?.path}`,

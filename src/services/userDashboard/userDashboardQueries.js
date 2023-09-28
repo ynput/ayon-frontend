@@ -7,6 +7,9 @@ const TASK_FRAGMENT = `
     assignees
     updatedAt
     folderId
+    attrib {
+      endDate
+    }
     folder {
       name
       path
