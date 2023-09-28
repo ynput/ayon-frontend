@@ -21,8 +21,6 @@ const UserDashboardList = ({
   // create a ref for the list items
   const listItemsRef = useRef([])
 
-  console.log(listItemsRef)
-
   // sort the groupedTasks by id alphabetically based on groupByValue sortBy
   const sortedFields = useMemo(() => {
     if (groupByValue[0] && groupByValue[0].id !== 'status') {
