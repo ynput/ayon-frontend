@@ -188,6 +188,12 @@ export const ItemAssignees = styled(AssigneeSelect)`
     }
 
     .user-image {
+      span {
+        display: block;
+      }
+    }
+
+    .user-image {
       top: 0;
     }
   }
