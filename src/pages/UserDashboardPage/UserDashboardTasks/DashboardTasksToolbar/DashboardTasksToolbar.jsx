@@ -155,7 +155,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
         icon="format_list_bulleted"
       />
       <Button
-        label="Kanban"
+        label="Board"
         onClick={() => setView('kanban')}
         selected={view === 'kanban'}
         icon="view_kanban"
