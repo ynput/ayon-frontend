@@ -21,7 +21,7 @@ const ListItem = ({
     return <Styled.Item $isLoading={true}></Styled.Item>
   }
 
-  const pathDepth = 3
+  const pathDepth = 2
   const paths = task?.path?.split('/')?.splice(1)
   // get the end of the path based on the depth
   const pathEnds = paths?.slice(-pathDepth)

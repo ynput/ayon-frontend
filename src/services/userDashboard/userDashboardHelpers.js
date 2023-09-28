@@ -18,6 +18,13 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
         thumbnailUrl: getVersionThumbnailUrl(node, projectName, accessToken),
       })) || []
 
+    // create a short path [code][.../][end of path by depth joined by /][taskName]
+    const depth = 2
+    const path = task.folder?.path?.split('/')
+    const pathLastItems = path?.slice(-depth)
+    const pathPrefix = path?.length > depth ? '../' : '/'
+    const shortPath = `${code}${pathPrefix}${pathLastItems?.join('/')}/${task.name}`
+
     return {
       id: task.id,
       name: task.name,
@@ -28,6 +35,7 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       folderName: task.folder?.name,
       folderId: task.folderId,
       path: `${projectName}/${task.folder?.path}`,
+      shortPath,
       latestVersionId: latestVersion?.id,
       latestVersionThumbnailId: latestVersion?.thumbnailId,
       thumbnailUrl,
