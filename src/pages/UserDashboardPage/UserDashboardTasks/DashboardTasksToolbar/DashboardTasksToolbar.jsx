@@ -52,23 +52,6 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
   const setFilterValue = (value) => dispatch(onTasksFilterChanged(value))
 
-  const addRemoveGroupByAssignees = (add) => {
-    let groupBy
-    if (add) {
-      // store last group by
-      localStorage.setItem('lastGroupBy', JSON.stringify(groupByValue))
-      groupBy = [assigneesGroupBy]
-    } else {
-      // get last group by
-      const lastGroupBy = JSON.parse(localStorage.getItem('lastGroupBy'))
-      if (lastGroupBy.length) {
-        groupBy = lastGroupBy
-      }
-    }
-
-    setGroupByValue(groupBy)
-  }
-
   const handleAssigneesChange = (isMe, newAssignees = []) => {
     if (isMe) {
       // setting back to me
@@ -80,9 +63,6 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
       // update assignees to me
       setAssignees(payload)
 
-      // remove assignees from group by
-      addRemoveGroupByAssignees(false)
-
       return
     } else if (!newAssignees.length) {
       // assignees cleared so set back to me
@@ -93,8 +73,6 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
 
       // update assignees to me
       setAssignees(payload)
-      // remove assignees from group by
-      addRemoveGroupByAssignees(false)
 
       return
     } else {
@@ -106,9 +84,6 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
 
       // update assignees to new assignees and remove isMe
       setAssignees(payload)
-
-      // add assignees to group by
-      addRemoveGroupByAssignees(true)
 
       return
     }
