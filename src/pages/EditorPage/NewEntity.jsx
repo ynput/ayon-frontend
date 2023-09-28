@@ -137,8 +137,9 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     hide && onHide()
 
     if (!hide) {
-      // set focus back to typeSelector
-      handleShow()
+      // focus and select the label input
+      labelRef.current.focus()
+      labelRef.current.select()
     }
   }
 
