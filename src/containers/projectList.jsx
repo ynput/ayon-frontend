@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
@@ -84,7 +84,6 @@ const ProjectList = ({
   selection,
   onSelect,
   onRowClick,
-  onRowDoubleClick,
   showNull,
   multiselect,
   style,
@@ -97,13 +96,11 @@ const ProjectList = ({
   isProjectManager,
   onDeleteProject,
   onNewProject,
-  onHide,
   isCollapsible = false,
   collapsedId = 'global',
   wrap,
   onSelectAll,
 }) => {
-  const [contextProject, setContextProject] = useState()
   const navigate = useNavigate()
   const tableRef = useRef(null)
 
@@ -181,84 +178,55 @@ const ProjectList = ({
     } // single select
   } // onSelectionChange
 
-  const manage = {
-    label: 'Manage Project',
-    icon: 'empty_dashboard',
-    command: () => {
-      onHide()
-      navigate(`/manageProjects/dashboard?project=${contextProject ? contextProject : selection}`)
-    },
-  }
-
-  // GLOBAL CONTEXT MENU
-  const globalContextItems = useMemo(() => {
-    const menuItems = []
-
-    if (!isProjectManager) menuItems.push({ ...manage, label: 'Manage Projects' })
-
-    if (onNewProject)
-      menuItems.push({
-        label: 'Create Project',
-        icon: 'create_new_folder',
-        command: onNewProject,
-      })
-
-    return menuItems
-  }, [onNewProject, isProjectManager])
-
-  // create the ref and model
-  const [globalContextMenuShow] = useCreateContext(globalContextItems)
-
   // TABLE CONTEXT MENU
-  const tableContextItems = useMemo(() => {
-    const managerMenuItems = [
-      {
-        label: 'Open Project',
-        icon: 'event_list',
-        command: () => onRowDoubleClick({ data: { name: selection } }),
-      },
-      {
-        label: 'Create Project',
-        icon: 'create_new_folder',
-        command: onNewProject,
-      },
-      {
-        label: 'Delete Project',
-        icon: 'delete',
-        command: onDeleteProject,
-        danger: true,
-      },
-    ]
+  const getContextItems = useCallback(
+    (sel) => {
+      const menuItems = [
+        {
+          label: 'Open Project',
+          icon: 'event_list',
+          command: () => navigate(`/projects/${sel[0]}/browser`),
+        },
+      ]
 
-    const globalMenuItems = [
-      {
-        label: 'Open Project',
-        icon: 'event_list',
-        command: () => onRowClick({ data: { name: contextProject || selection } }),
-      },
-      manage,
-    ]
+      const managerMenuItems = [
+        {
+          label: 'Create Project',
+          icon: 'create_new_folder',
+          command: onNewProject,
+        },
+        {
+          label: 'Delete Project',
+          icon: 'delete',
+          command: () => onDeleteProject(sel[0]),
+          danger: true,
+        },
+      ]
 
-    if (onNewProject)
-      globalMenuItems.push({
-        label: 'Create Project',
-        icon: 'create_new_folder',
-        command: onNewProject,
-      })
+      if (isProjectManager) menuItems.push(...managerMenuItems)
 
-    let menuItems = managerMenuItems
-    if (!isProjectManager) menuItems = globalMenuItems
-
-    return menuItems
-  }, [data, selection, contextProject])
+      return menuItems
+    },
+    [data, onNewProject, onDeleteProject, onRowClick, isProjectManager],
+  )
 
   // create the ref and model
-  const [tableContextMenuShow] = useCreateContext(tableContextItems)
+  const [tableContextMenuShow] = useCreateContext([])
 
-  const onContextMenuSelectionChange = (event) => {
-    if (!selection?.includes(event.value.name)) {
-      onSelect ? onSelect(event.value.name) : setContextProject(event.value.name)
+  // When right clicking on the already selected node, we don't want to change the selection
+  const onContextMenu = (event) => {
+    let newSelection = selection
+    if (
+      event?.data?.name &&
+      (typeof selection === 'string'
+        ? selection !== event.data.name
+        : !(event.data.name in selection))
+    ) {
+      onSelect([event.data.name])
+      newSelection = [event.data.name]
     }
+
+    tableContextMenuShow(event.originalEvent, getContextItems(newSelection))
   }
 
   // create 10 dummy rows
@@ -299,7 +267,7 @@ const ProjectList = ({
           {/* <div className="spacer" /> */}
         </StyledAddButton>
       )}
-      <TablePanel onContextMenu={globalContextMenuShow}>
+      <TablePanel>
         <DataTable
           value={projectList}
           scrollable="true"
@@ -311,9 +279,8 @@ const ProjectList = ({
           selection={selectionObj}
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
-          onRowDoubleClick={onRowDoubleClick}
-          onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
-          onContextMenuSelectionChange={onContextMenuSelectionChange}
+          onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
+          onContextMenu={onContextMenu}
           className={`${isLoading ? 'table-loading ' : ''}project-list${
             collapsed ? ' collapsed' : ''
           }

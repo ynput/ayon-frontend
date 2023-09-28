@@ -65,11 +65,11 @@ const ProjectManagerPage = () => {
 
   const [deleteProject] = useDeleteProjectMutation()
 
-  const handleDeleteProject = () => {
+  const handleDeleteProject = (sel) => {
     confirmDelete({
-      label: `Project: ${selectedProject}`,
+      label: `Project: ${sel}`,
       accept: async () => {
-        await deleteProject({ projectName: selectedProject }).unwrap()
+        await deleteProject({ projectName: sel }).unwrap()
         setSelectedProject(null)
       },
     })
