@@ -1007,11 +1007,14 @@ const EditorPage = () => {
       // Update expanded folders context object
       const exps = { ...expandedFolders }
       const loadBranches = []
+      let count = 0
       for (const id of parents) {
+        if (count >= 1) break // exit loop after first two items
         exps[id] = true
         if (rootData[id]?.data?.hasChildren) {
           loadBranches.push(id)
         }
+        count++
       }
       dispatch(setExpandedFolders(exps))
       // get new branch
