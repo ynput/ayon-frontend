@@ -44,13 +44,6 @@ export const useTaskClick = (dispatch) => {
     }
 
     setSelectedTasks(newSelection)
-
-    // updates the breadcrumbs
-    // let uri = `ayon+entity://${projectName}/`
-    // uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
-    // uri += `?product=${event.node.data.name}`
-    // uri += `&version=${event.node.data.versionName}`
-    // dispatch(setUri(uri))
   }
 
   return handleTaskClick

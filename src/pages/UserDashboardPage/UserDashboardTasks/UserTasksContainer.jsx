@@ -8,6 +8,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import UserDashboardDetails from './UserDashboardDetails/UserDashboardDetails'
 import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
+import { setUri } from '/src/features/context'
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
@@ -42,6 +43,21 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     { assignees: assignees, projects: selectedProjects },
     { skip: !assignees.length || !selectedProjects?.length },
   )
+
+  // update the uri breadcrumbs when the selected tasks change
+  useEffect(() => {
+    if (selectedTasks.length && !isLoadingTasks) {
+      // first find task
+      const task = tasks.find((t) => t.id === selectedTasks[0])
+      if (!task) return
+      // updates the breadcrumbs
+      let uri = `ayon+entity://${task.path}?task=${task.name}`
+
+      dispatch(setUri(uri))
+    } else {
+      dispatch(setUri(null))
+    }
+  }, [selectedTasks, isLoadingTasks, tasks])
 
   // filter out tasks that don't have a assignees
   tasks = tasks.filter((task) => task.assignees?.some((assignee) => assignees.includes(assignee)))
