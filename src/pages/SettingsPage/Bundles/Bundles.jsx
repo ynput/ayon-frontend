@@ -20,7 +20,7 @@ import AddonUpload from '../AddonInstall/AddonUpload'
 import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useLocation } from 'react-router'
@@ -29,6 +29,7 @@ import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 const Bundles = () => {
+  const developerMode = useSelector((state) => state.user.attrib.developerMode)
   const location = useLocation()
   const dispatch = useDispatch()
   // addon install dialog
@@ -62,6 +63,30 @@ const Bundles = () => {
     }
     return bundleList
   }, [bundleList, showArchived])
+
+  // DEMO AND REMOVE: set the third bundle to isDev: true. Mutate the bundleList data
+  bundleList = useMemo(
+    () =>
+      bundleList.map((bundle, index) => {
+        if (index === 2) {
+          return {
+            ...bundle,
+            isDev: true,
+          }
+        }
+        return bundle
+      }),
+    [bundleList],
+  )
+  // REMOVE ABOVE
+
+  // filter out isDev bundles if developerMode off
+  bundleList = useMemo(() => {
+    if (!developerMode) {
+      return [...bundleList].filter((bundle) => !bundle.isDev)
+    }
+    return bundleList
+  }, [bundleList, developerMode])
 
   // if there is a url query ?selected={name} = latest then select the bundle and remove the query
   useEffect(() => {
@@ -296,10 +321,10 @@ const Bundles = () => {
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
-          <SplitterPanel style={{ minWidth: 400, maxWidth: 800, zIndex: 10 }} size={30}>
+          <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>
               <Toolbar>
-                <Button label="Create new bundle" icon="add" onClick={handleNewBundleStart} />
+                <Button label="Add bundle" icon="add" onClick={handleNewBundleStart} />
                 <Button
                   label="Install addons"
                   icon="input_circle"
@@ -343,7 +368,17 @@ const Bundles = () => {
                   addons={addons}
                 />
               ) : (
-                !!bundlesData.length && (
+                !!bundlesData.length &&
+                (bundlesData.length === 1 && bundlesData[0].isDev ? (
+                  <NewBundle
+                    initBundle={bundlesData[0]}
+                    isLoading={isLoadingInstallers}
+                    installers={installerVersions}
+                    addons={addons}
+                    toggleBundleStatus={toggleBundleStatus}
+                    isDev
+                  />
+                ) : (
                   <BundleDetail
                     bundles={bundlesData}
                     onDuplicate={handleDuplicateBundle}
@@ -351,8 +386,9 @@ const Bundles = () => {
                     installers={installerVersions}
                     toggleBundleStatus={toggleBundleStatus}
                     addons={addons}
+                    developerMode={developerMode}
                   />
-                )
+                ))
               )}
             </Section>
           </SplitterPanel>

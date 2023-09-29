@@ -113,8 +113,6 @@ const Header = () => {
         },
       }).unwrap()
 
-      if (!developerMode) toast.success('Developer Mode Activated 🧑‍💻')
-
       // update redux state with new data
       dispatch(onProfileUpdate({ developerMode: !developerMode }))
     } catch (error) {

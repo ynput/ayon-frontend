@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
-import { useCreateBundleMutation } from '/src/services/bundles'
+import { useCreateBundleMutation, useUpdateBundleMutation } from '/src/services/bundles'
 
 import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
+import { isEqual, union } from 'lodash'
+import BundleDeps from './BundleDeps'
 
-const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
+const NewBundle = ({
+  initBundle,
+  onSave,
+  addons,
+  installers,
+  isLoading,
+  isDev,
+  toggleBundleStatus,
+}) => {
+  // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
+  const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
 
   //   build initial form data
   useEffect(() => {
@@ -37,10 +49,6 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
     }
   }, [initBundle, installers, isLoading, addons])
 
-  const handleClear = () => {
-    setFormData({ installerVersion: installers?.[0]?.version, name: initBundle?.name })
-  }
-
   const handleSave = async () => {
     if (!formData?.name) {
       toast.error('Name is required')
@@ -62,14 +70,37 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
     }
   }
 
-  const setSelectedVersion = (latest = false) => {
+  const [devChanges, setDevChanges] = useState(false)
+
+  useEffect(() => {
+    if (!initBundle) return
+    // check for changes
+    isEqual(initBundle, formData) ? setDevChanges(false) : setDevChanges(true)
+  }, [initBundle, formData])
+
+  const handleUpdate = async () => {
+    // find the changes between initBundle and formData
+    const changes = {}
+    // create a unique list of keys
+    var allKeys = union(Object.keys(initBundle), Object.keys(formData))
+    // for each key, check if the values are the same, if not, add to changes
+    for (const key of allKeys) {
+      if (!isEqual(initBundle[key], formData[key])) {
+        changes[key] = formData[key]
+      }
+    }
+
+    updateBundle({ name: initBundle.name, data: { ...changes } })
+  }
+
+  const setSelectedVersion = (latest = false, dev) => {
     setFormData((prev) => {
       // set all selected addons to latest version if in formData
       const newFormData = { ...prev }
       const newAddons = { ...newFormData.addons }
       for (const addon of selectedAddons) {
         if (!latest) {
-          newAddons[addon.name] = undefined
+          newAddons[addon.name] = dev ? 'DEV' : undefined
           continue
         }
         const versionList = Object.keys(addon.versions || {})
@@ -87,17 +118,29 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
     <>
       <Toolbar>
         <Spacer />
-        <Button icon={'clear'} label="Clear" onClick={handleClear} />
+        {isDev && (
+          <>
+            <Styled.BadgeButton
+              $hl={'developer'}
+              icon={'cancel'}
+              disabled={devChanges}
+              onClick={() => toggleBundleStatus('isDev', initBundle.name)}
+            >
+              Unset Dev
+            </Styled.BadgeButton>
+            <Button disabled={!devChanges}>Cancel</Button>
+          </>
+        )}
         <SaveButton
-          label="Create new bundle"
-          icon={isCreating ? 'sync' : 'check'}
-          onClick={handleSave}
-          active={!!formData?.name}
-          saving={isCreating}
+          label={isDev ? 'Save dev bundle' : 'Create new bundle'}
+          onClick={isDev ? handleUpdate : handleSave}
+          active={isDev ? !!formData?.name && devChanges : !!formData?.name}
+          saving={isCreating || isUpdating}
         />
       </Toolbar>
       <BundleForm
         isNew
+        isDev={isDev}
         {...{
           selectedAddons,
           setSelectedAddons,
@@ -139,7 +182,22 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading }) => {
             disabled={!selectedAddons.length}
             onClick={() => setSelectedVersion(false)}
           />
+          {isDev && (
+            <Styled.BadgeButton
+              label="Version to DEV"
+              icon="code"
+              $hl={'developer'}
+              disabled={!selectedAddons.length}
+              onClick={() => setSelectedVersion(false, true)}
+              style={{
+                gridColumn: 'span 2',
+                justifyContent: 'center',
+                width: 'auto',
+              }}
+            />
+          )}
         </Styled.AddonTools>
+        {isDev && <BundleDeps bundle={formData} />}
       </BundleForm>
     </>
   )

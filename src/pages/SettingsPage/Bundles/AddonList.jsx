@@ -1,12 +1,13 @@
 import React, { useContext, useEffect, useMemo } from 'react'
-import { VersionSelect } from '@ynput/ayon-react-components'
+import { StyledVersionSelect } from './Bundles.styled'
 import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { SocketContext } from '/src/context/websocketContext'
 import { rcompare } from 'semver'
+import { InputText } from '@ynput/ayon-react-components'
 
-const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
+const AddonListItem = ({ version, setVersion, selection, addons = [], versions, isDev }) => {
   const options = useMemo(
     () =>
       selection.length > 1
@@ -15,29 +16,38 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
             if (!foundAddon) return ['NONE']
             const versionList = Object.keys(foundAddon.versions || {})
             versionList.sort((a, b) => rcompare(a, b))
-            console.log(versionList)
+            if (isDev) versionList.push('DEV')
             return [...versionList, 'NONE']
           })
-        : [[...versions.sort((a, b) => rcompare(a, b)), 'NONE']],
-
-    [selection, addons],
+        : [[...versions.sort((a, b) => rcompare(a, b)), ...(isDev ? ['DEV'] : []), 'NONE']],
+    [(selection, addons)],
   )
 
   return (
-    <VersionSelect
-      style={{ width: 200 }}
+    <StyledVersionSelect
+      style={{ width: 200, height: 32 }}
       buttonStyle={{ zIndex: 0 }}
       versions={options}
       value={version ? [version] : []}
       placeholder="NONE"
       onChange={(e) => setVersion(e[0])}
+      className={version === 'DEV' ? 'dev' : ''}
     />
   )
 }
 
 const AddonList = React.forwardRef(
   (
-    { formData, setFormData, readOnly, selected = [], setSelected, style, diffAddonVersions },
+    {
+      formData,
+      setFormData,
+      readOnly,
+      selected = [],
+      setSelected,
+      style,
+      diffAddonVersions,
+      isDev,
+    },
     ref,
   ) => {
     const { data: addons = [], refetch } = useGetAddonListQuery({
@@ -64,6 +74,10 @@ const AddonList = React.forwardRef(
         newFormData.addons = addons
         return newFormData
       })
+    }
+
+    const onSetPath = (addonName, path) => {
+      console.log(addonName, path)
     }
 
     const addonsTable = useMemo(() => {
@@ -95,7 +109,7 @@ const AddonList = React.forwardRef(
         <Column
           header="Name"
           field="name"
-          style={{ padding: '8px !important' }}
+          style={{ padding: '8px !important', maxWidth: isDev ? 300 : 'unset' }}
           bodyStyle={{ height: 38 }}
           sortable
         />
@@ -117,10 +131,27 @@ const AddonList = React.forwardRef(
                 addons={addons}
                 setVersion={(version) => onSetVersion(addon.name, version)}
                 versions={Object.keys(addon.versions || {})}
+                isDev={isDev}
               />
             )
           }}
         />
+        {isDev && (
+          <Column
+            field="path"
+            header="File Path"
+            body={(addon) =>
+              addon.version === 'DEV' ? (
+                <InputText
+                  value={addon.path}
+                  style={{ width: '100%' }}
+                  placeholder="/path/to/dev/addon..."
+                  onChange={(e) => onSetPath(addon.name, e.target.value)}
+                />
+              ) : null
+            }
+          />
+        )}
       </DataTable>
     )
   },
