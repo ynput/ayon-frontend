@@ -1,6 +1,5 @@
 const getInitialStateLocalStorage = (key, initial, types) => {
   const value = localStorage.getItem(key)
-  console.log(value)
   if (!value || value === 'null' || value === 'undefined') {
     return initial || (types && types[0]) || ''
   } else {

@@ -9,6 +9,7 @@ import { onProjectSelected } from '/src/features/dashboard'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
+import ProjectDashboard from '../ProjectDashboard'
 
 const UserDashboardPage = () => {
   let { module } = useParams()
@@ -17,6 +18,12 @@ const UserDashboardPage = () => {
       name: 'Tasks',
       path: '/dashboard/tasks',
       module: 'tasks',
+      accessLevels: [],
+    },
+    {
+      name: 'Overview',
+      path: '/dashboard/overview',
+      module: 'overview',
       accessLevels: [],
     },
   ]
@@ -35,7 +42,6 @@ const UserDashboardPage = () => {
 
   // get projects list
   const { data: projects = [], isLoading: isLoadingProjects } = useGetAllProjectsQuery()
-
   // attach projects: ['project_name'] to each projectInfo
   const projectsInfoWithProjects = useMemo(() => {
     const projectsInfoWithProjects = {}
@@ -50,6 +56,8 @@ const UserDashboardPage = () => {
 
   if (!projects.length) return <UserDashboardNoProjects />
 
+  const isProjectsMultiSelect = module === 'tasks'
+
   return (
     <>
       <AppNavLinks links={links} />
@@ -61,12 +69,13 @@ const UserDashboardPage = () => {
             collapsedId="dashboard"
             styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
             hideCode
-            multiselect
-            selection={selectedProjects}
-            onSelect={setSelectedProjects}
+            multiselect={isProjectsMultiSelect}
+            selection={isProjectsMultiSelect ? selectedProjects : selectedProjects[0]}
+            onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}
             onNoProject={(p) => p && setSelectedProjects([p])}
             autoSelect
             onSelectAll={(projects) => setSelectedProjects(projects)}
+            onSelectAllDisabled={!isProjectsMultiSelect}
           />
           {module === 'tasks' && (
             <UserTasksContainer
@@ -74,6 +83,7 @@ const UserDashboardPage = () => {
               isLoadingInfo={isLoadingInfo}
             />
           )}
+          {module === 'overview' && <ProjectDashboard projectName={selectedProjects[0]} />}
         </Section>
       </main>
     </>

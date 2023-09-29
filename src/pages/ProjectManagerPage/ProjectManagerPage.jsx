@@ -8,7 +8,6 @@ import AddonSettings from '/src/containers/AddonSettings'
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
-import ProjectDashboard from '/src/pages/ProjectDashboard'
 
 import { selectProject } from '/src/features/context'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
@@ -77,12 +76,6 @@ const ProjectManagerPage = () => {
 
   let links = [
     {
-      name: 'Dashboard',
-      path: '/manageProjects/dashboard',
-      module: 'dashboard',
-      accessLevels: [],
-    },
-    {
       name: 'Anatomy',
       path: '/manageProjects/anatomy',
       module: 'anatomy',
@@ -135,7 +128,6 @@ const ProjectManagerPage = () => {
         onNewProject={() => setShowNewProject(true)}
         onDeleteProject={handleDeleteProject}
       >
-        {module === 'dashboard' && <ProjectDashboard />}
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}

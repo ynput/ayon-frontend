@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import useKeyPress from '../hooks/useKeyPress'
 import { useNavigate } from 'react-router'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { toggleMenuOpen } from '../features/context'
 import { useLogOutMutation } from '../services/auth/getAuth'
 
@@ -10,7 +10,6 @@ const ShortcutsContext = createContext()
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const isUser = useSelector((state) => state.user.isUser)
 
   // logout
   const [logout] = useLogOutMutation()
@@ -29,46 +28,33 @@ function ShortcutsProvider(props) {
   const navigation = useMemo(
     () => [
       // project settings
-      { key: 'a+a', action: () => navigate('/manageProjects/projectSettings') },
+      { key: 'p+p', action: () => navigate('/manageProjects/anatomy') },
       // studio settings
       { key: 's+s', action: () => navigate('/settings/studio') },
       // dashboard
-      { key: 'd+d', action: () => navigate('/manageProjects/dashboard') },
+      { key: 'd+d', action: () => navigate('/dashboard') },
       // user settings
-      { key: 'f+f', action: () => navigate('/settings/users') },
+      { key: 'u+u', action: () => navigate('/settings/users') },
+      // events page
+      { key: 'e+e', action: () => navigate('/events') },
     ],
     [navigate],
-  )
-
-  const admin = useMemo(
-    () =>
-      isUser
-        ? []
-        : [
-            // events
-            { key: 'e+e', action: () => navigate('/events') },
-            // graphql
-            { key: 'q+q', action: () => navigate('/explorer') },
-            // api
-            { key: 'w+w', action: () => navigate('/doc/api') },
-          ],
-    [navigate, isUser],
   )
 
   const navBar = useMemo(
     () => [
       { key: '1', action: () => dispatch(toggleMenuOpen('project')) },
-      { key: '3', action: () => dispatch(toggleMenuOpen('help')) },
-      { key: '4+4', action: () => logout() },
-      { key: '4', action: () => dispatch(toggleMenuOpen('user')) },
-      { key: '5', action: () => dispatch(toggleMenuOpen('app')) },
+      { key: '8', action: () => dispatch(toggleMenuOpen('help')) },
+      { key: '9+9', action: () => logout() },
+      { key: '9', action: () => dispatch(toggleMenuOpen('user')) },
+      { key: '0', action: () => dispatch(toggleMenuOpen('app')) },
     ],
     [navigate],
   )
   // when these variables change, update shortcutshh
   const deps = []
 
-  const defaultShortcuts = [...navigation, ...navBar, ...admin]
+  const defaultShortcuts = [...navigation, ...navBar]
 
   // start off with global shortcuts but others can be set per page
   const [shortcuts, setShortcuts] = useState(defaultShortcuts)

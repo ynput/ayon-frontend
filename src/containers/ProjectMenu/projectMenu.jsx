@@ -59,7 +59,7 @@ const ProjectMenu = ({ visible, onHide }) => {
           {
             label: 'Project Settings',
             icon: 'settings_applications',
-            command: () => navigate(`/manageProjects/projectSettings?project=${projectName}`),
+            command: () => navigate(`/manageProjects/anatomy?project=${projectName}`),
           },
         ],
       )
@@ -70,7 +70,7 @@ const ProjectMenu = ({ visible, onHide }) => {
 
   const handleEditClick = (e, name) => {
     e.stopPropagation()
-    navigate(`/manageProjects/projectSettings?project=${name}`)
+    navigate(`/manageProjects/anatomy?project=${name}`)
     onHide()
   }
 
@@ -158,7 +158,7 @@ const ProjectMenu = ({ visible, onHide }) => {
   const handleAllClick = () => {
     onHide()
 
-    navigate('/manageProjects/dashboard')
+    navigate('/dashboard/overview')
   }
 
   const handleSearchClick = (e) => {
@@ -180,7 +180,7 @@ const ProjectMenu = ({ visible, onHide }) => {
       <Section>
         <Styled.Header>
           <Button
-            label="All Projects"
+            label="Projects Overview"
             variant="tonal"
             icon="empty_dashboard"
             onClick={handleAllClick}

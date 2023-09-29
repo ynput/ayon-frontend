@@ -164,15 +164,11 @@ const App = () => {
                 <ShareDialog />
                 <ConfirmDialog />
                 <Routes>
-                  <Route
-                    path="/"
-                    exact
-                    element={<Navigate replace to="/manageProjects/dashboard" />}
-                  />
+                  <Route path="/" exact element={<Navigate replace to="/dashboard/tasks" />} />
                   <Route
                     path="/manageProjects"
                     exact
-                    element={<Navigate replace to="/manageProjects/dashboard" />}
+                    element={<Navigate replace to="/manageProjects/anatomy" />}
                   />
 
                   <Route path="/dashboard" element={<Navigate replace to="/dashboard/tasks" />} />

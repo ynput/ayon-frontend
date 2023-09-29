@@ -100,6 +100,7 @@ const ProjectList = ({
   collapsedId = 'global',
   wrap,
   onSelectAll,
+  onSelectAllDisabled,
 }) => {
   const navigate = useNavigate()
   const tableRef = useRef(null)
@@ -255,6 +256,7 @@ const ProjectList = ({
           label={!collapsed && 'Select all projects'}
           onClick={() => onSelectAll(projectNames)}
           icon={collapsed && 'checklist'}
+          disabled={onSelectAllDisabled}
         />
       )}
       {isProjectManager && (
