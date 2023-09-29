@@ -36,7 +36,7 @@ const ListGroup = ({
   }
 
   // CONTEXT MENU
-  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks)
+  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
 
   return (
     <>

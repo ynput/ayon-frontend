@@ -1,10 +1,13 @@
 import useCreateContext from '/src/hooks/useCreateContext'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import useUriNavigate from '/src/hooks/useUriNavigate'
+import { onTaskSelected } from '/src/features/dashboard'
+import { useSelector } from 'react-redux'
 
-export const useGetTaskContextMenu = (tasks) => {
+export const useGetTaskContextMenu = (tasks, dispatch) => {
   // URI NAVIGATE ON RIGHT CLICK
   const navigateToUri = useUriNavigate()
+  const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
 
   const getContextMenuItems = (card) => {
     return [
@@ -12,17 +15,19 @@ export const useGetTaskContextMenu = (tasks) => {
         label: 'Open in Browser',
         command: () => navigateToUri(`ayon+entity://${card.path}?task=${card.name}`),
         icon: 'open_in_new',
+        disabled: selectedTasks.includes(card.id) && selectedTasks.length > 1,
       },
       {
         label: 'Copy task ID',
         command: () => copyToClipboard(card.id),
         icon: 'content_copy',
+        disabled: selectedTasks.includes(card.id) && selectedTasks.length > 1,
       },
       {
         label: 'Copy latest version ID',
         command: () => copyToClipboard(card.latestVersionId),
         icon: 'content_copy',
-        disabled: !card.latestVersionId,
+        disabled: !card.latestVersionId || selectedTasks.length > 1,
       },
     ]
   }
@@ -38,6 +43,11 @@ export const useGetTaskContextMenu = (tasks) => {
     const card = tasks.find((t) => t.id === taskId.id)
 
     if (!card) return
+
+    // if task not already selected, select it and remove all other selections
+    if (!selectedTasks.includes(card.id)) {
+      dispatch(onTaskSelected([card.id]))
+    }
 
     // get context model
     const contextMenuItems = getContextMenuItems(card)

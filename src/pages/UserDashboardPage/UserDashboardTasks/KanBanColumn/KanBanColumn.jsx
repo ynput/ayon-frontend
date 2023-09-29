@@ -72,7 +72,7 @@ const KanBanColumn = ({
   const handlePrefetch = usePrefetchTask(dispatch)
 
   // CONTEXT MENU
-  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks)
+  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
 
   // HANDLE TASK CLICK
   const handleTaskClick = useTaskClick(dispatch)
