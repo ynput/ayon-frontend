@@ -7,8 +7,6 @@ import {
   Divider,
   Dropdown,
 } from '@ynput/ayon-react-components'
-
-import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 
 export const DividerSmallStyled = styled(Divider)`
@@ -39,10 +37,6 @@ const UserAttribForm = ({
       return acc
     },
     [[], []],
-  )
-
-  const currentUserIsDeveloper = useSelector(
-    (state) => state.user.data.isDeveloper || state.user.data.isAdmin,
   )
 
   const buildForms = (attribs) =>
@@ -79,7 +73,7 @@ const UserAttribForm = ({
           />
         )
       } else if (data.type === 'boolean') {
-        if (name === 'developerMode' && !currentUserIsDeveloper) return null
+        if (name === 'developerMode') return null
 
         widget = (
           <InputSwitch

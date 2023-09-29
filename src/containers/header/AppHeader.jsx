@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Spacer, UserImage } from '@ynput/ayon-react-components'
+import { InputSwitch, Spacer, UserImage } from '@ynput/ayon-react-components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
@@ -11,6 +11,51 @@ import InstallerDownload from '/src/components/InstallerDownload/InstallerDownlo
 import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
 import { HelpMenu, UserMenu } from '/src/components/Menu'
 import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
+import { useUpdateUserMutation } from '/src/services/user/updateUser'
+import { toast } from 'react-toastify'
+import { onProfileUpdate } from '/src/features/user'
+import styled from 'styled-components'
+
+const DeveloperSwitch = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--border-radius-l);
+  padding: 0 4px 0 8px;
+  cursor: pointer;
+  z-index: 10;
+
+  transition: background-color 0.2s;
+
+  background-color: ${({ $isChecked }) =>
+    $isChecked ? 'var(--color-hl-developer-container)' : 'unset'};
+
+  & > span {
+    color: ${({ $isChecked }) => ($isChecked ? 'var(--color-hl-developer)' : 'inherit')};
+    user-select: none;
+  }
+
+  &:hover {
+    background-color: ${({ $isChecked }) =>
+      $isChecked
+        ? 'var(--color-hl-developer-container-hover)'
+        : 'var(--md-sys-color-surface-container-highest-hover)'};
+  }
+`
+
+const StyledSwitch = styled(InputSwitch)`
+  .switch-body input:checked + .slider {
+    background-color: var(--color-hl-developer);
+    border-color: var(--color-hl-developer);
+
+    &,
+    &:hover {
+      &::before {
+        background-color: var(--color-hl-developer-container);
+      }
+    }
+  }
+`
 
 const Header = () => {
   const dispatch = useDispatch()
@@ -21,6 +66,10 @@ const Header = () => {
   const navigate = useNavigate()
   // get user from redux store
   const user = useSelector((state) => state.user)
+
+  // Get developer states
+  const isDeveloper = user?.data?.isDeveloper
+  const developerMode = user?.attrib.developerMode
 
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef(null)
@@ -53,6 +102,27 @@ const Header = () => {
     if (e.target.tagName === 'NAV') handleSetMenu(false)
   }
 
+  // UPDATE USER DATA
+  const [updateUser] = useUpdateUserMutation()
+  const handleDeveloperMode = async () => {
+    try {
+      await updateUser({
+        name: user.name,
+        patch: {
+          attrib: { developerMode: !developerMode },
+        },
+      }).unwrap()
+
+      if (!developerMode) toast.success('Developer Mode Activated 🧑‍💻')
+
+      // update redux state with new data
+      dispatch(onProfileUpdate({ developerMode: !developerMode }))
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to update developer mode: ' + error.details)
+    }
+  }
+
   return (
     <nav className="primary" onClick={handleNavClick}>
       <HeaderButton
@@ -71,6 +141,12 @@ const Header = () => {
       <Breadcrumbs />
       <Spacer />
       <InstallerDownload isSpecial />
+      {isDeveloper && (
+        <DeveloperSwitch $isChecked={developerMode} onClick={handleDeveloperMode}>
+          <span>Developer Mode</span>
+          <StyledSwitch checked={developerMode} />
+        </DeveloperSwitch>
+      )}
       <HeaderButton
         icon="help"
         ref={helpButtonRef}

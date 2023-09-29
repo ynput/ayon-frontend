@@ -98,10 +98,6 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
           <InputSwitch
             checked={formData?.isDeveloper}
             onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
-            disabled={disabled}
-            style={{
-              opacity: disabled ? 0.5 : 1,
-            }}
           />
         </FormRow>
 
