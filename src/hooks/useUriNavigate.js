@@ -1,16 +1,7 @@
 import { useCallback } from 'react'
 import axios from 'axios'
 import { useDispatch } from 'react-redux'
-import {
-  setFocusedFolders,
-  setFocusedProducts,
-  setFocusedRepresentations,
-  setFocusedTasks,
-  setFocusedVersions,
-  setFocusedWorkfiles,
-  setUri,
-  setUriChanged,
-} from '/src/features/context'
+import { onUriNavigate, setUri, setUriChanged } from '/src/features/context'
 import { useNavigate } from 'react-router'
 import { toast } from 'react-toastify'
 
@@ -19,12 +10,14 @@ const useUriNavigate = () => {
   const dispatch = useDispatch()
 
   const focusEntities = (entities) => {
-    const focusedFolders = []
-    const focusedProducts = []
-    const focusedVersions = []
-    const focusedRepresentations = []
-    const focusedTasks = []
-    const focusedWorkfiles = []
+    const focused = {
+      folders: [],
+      products: [],
+      versions: [],
+      representations: [],
+      tasks: [],
+      workfiles: [],
+    }
 
     const project = entities[0].projectName
 
@@ -32,12 +25,12 @@ const useUriNavigate = () => {
     // if not, redirect
 
     for (const entity of entities) {
-      if (entity.folderId) focusedFolders.push(entity.folderId)
-      if (entity.productId) focusedProducts.push(entity.productId)
-      if (entity.versionId) focusedVersions.push(entity.versionId)
-      if (entity.representationId) focusedRepresentations.push(entity.representationId)
-      if (entity.taskId) focusedTasks.push(entity.taskId)
-      if (entity.workfileId) focusedWorkfiles.push(entity.workfileId)
+      if (entity.folderId) focused.folders.push(entity.folderId)
+      if (entity.productId) focused.products.push(entity.productId)
+      if (entity.versionId) focused.versions.push(entity.versionId)
+      if (entity.representationId) focused.representations.push(entity.representationId)
+      if (entity.taskId) focused.tasks.push(entity.taskId)
+      if (entity.workfileId) focused.workfiles.push(entity.workfileId)
 
       if (entity.projectName !== project) {
         toast.error('Entities must be from the same project')
@@ -45,12 +38,22 @@ const useUriNavigate = () => {
       }
     }
 
-    dispatch(setFocusedFolders(focusedFolders))
-    dispatch(setFocusedProducts(focusedProducts))
-    dispatch(setFocusedVersions(focusedVersions))
-    dispatch(setFocusedRepresentations(focusedRepresentations))
-    dispatch(setFocusedTasks(focusedTasks))
-    dispatch(setFocusedWorkfiles(focusedWorkfiles))
+    const focusedTypePriorityOrder = [
+      'folder',
+      'task',
+      'product',
+      'version',
+      'representation',
+      'workfile',
+    ]
+
+    const focusedType = focusedTypePriorityOrder.findLast((type) => {
+      return focused[type + 's'].length > 0
+    })
+
+    focused.type = focusedType
+
+    dispatch(onUriNavigate(focused))
 
     const path = window.location.pathname
     if (!path.startsWith(`/projects/${project}`)) {
