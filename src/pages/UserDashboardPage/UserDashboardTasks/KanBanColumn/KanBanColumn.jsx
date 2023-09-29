@@ -72,7 +72,7 @@ const KanBanColumn = ({
   const handlePrefetch = usePrefetchTask(dispatch)
 
   // CONTEXT MENU
-  const handleContextMenu = useGetTaskContextMenu(tasks)
+  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks)
 
   // HANDLE TASK CLICK
   const handleTaskClick = useTaskClick(dispatch)
@@ -110,7 +110,10 @@ const KanBanColumn = ({
                     <div ref={ref}>
                       <KanBanCardDraggable
                         task={task}
-                        onClick={(e) => handleTaskClick(e, task.id)}
+                        onClick={(e) => {
+                          closeContext()
+                          handleTaskClick(e, task.id)
+                        }}
                         onMouseOver={() => handlePrefetch(task)}
                         isActive={selectedTasks.includes(task.id)}
                         isDraggingActive={active}

@@ -27,7 +27,7 @@ export const useGetTaskContextMenu = (tasks) => {
     ]
   }
 
-  const [showContextMenu] = useCreateContext([])
+  const [showContextMenu, closeContext] = useCreateContext([])
 
   const handleContextMenu = (e) => {
     // find the parent with className card
@@ -45,7 +45,7 @@ export const useGetTaskContextMenu = (tasks) => {
     showContextMenu(e, contextMenuItems)
   }
 
-  return handleContextMenu
+  return { handleContextMenu, closeContext }
 }
 
 export default useGetTaskContextMenu

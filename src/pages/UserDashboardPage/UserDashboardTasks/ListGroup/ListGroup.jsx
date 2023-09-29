@@ -36,7 +36,7 @@ const ListGroup = ({
   }
 
   // CONTEXT MENU
-  const handleContextMenu = useGetTaskContextMenu(tasks)
+  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks)
 
   return (
     <>
@@ -69,7 +69,10 @@ const ListGroup = ({
               isFirst={i === 0}
               selected={selectedTasks.includes(task.id)}
               selectedLength={selectedTasks.length}
-              onClick={(e) => onTaskSelected(e, task.id)}
+              onClick={(e) => {
+                closeContext()
+                onTaskSelected(e, task.id)
+              }}
               onContextMenu={(e) => handleContextMenu(e)}
               onMouseOver={() => onTaskHover(task)}
               statusesOptions={statusesOptions}
