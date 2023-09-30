@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 export const DropColumn = styled.div`
   position: absolute;
@@ -6,8 +7,8 @@ export const DropColumn = styled.div`
 
   border-radius: 16px;
 
-  ${({ $isActive }) =>
-    $isActive &&
+  ${({ $active }) =>
+    $active &&
     css`
       z-index: 1000;
     `}
@@ -21,9 +22,10 @@ export const Column = styled.div`
   align-items: center;
 
   height: min-content;
-  min-width: 226px;
+  min-width: 234px;
   min-height: var(--min-height);
   max-height: -webkit-fill-available;
+  max-height: 100%;
   padding: 0;
   flex: 0;
 
@@ -35,9 +37,10 @@ export const Column = styled.div`
     margin-bottom: 0;
     transition: margin-bottom 0.1s ease-in-out;
   }
-  ${({ $isOverSelf, $isOver }) =>
+  ${({ $isOverSelf, $isOver, $isScrolling }) =>
     $isOver &&
     !$isOverSelf &&
+    !$isScrolling &&
     css`
       /* last child margin bottom */
       .items {
@@ -80,33 +83,38 @@ export const Header = styled.header`
   margin-bottom: 8px;
 `
 
-export const Items = styled.div`
+export const Items = styled(PerfectScrollbar)`
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
-  padding: 8px;
-  padding-top: 0;
-  padding-bottom: ${({ $isScrolling }) => ($isScrolling ? '30px' : '8px')};
-  /* remove padding when scroll bar visible */
-  padding-right: ${({ $isScrolling }) => ($isScrolling ? '0' : '8px')};
+  width: 100%;
 
-  overflow-x: hidden;
-  overflow-y: auto;
-  overflow-y: overlay;
+  padding-bottom: ${({ $isScrolling }) => ($isScrolling ? '30px' : '16px')};
 
-  /* for columns that aren't active */
-  ${({ $active, $isColumnActive, $isScrolling }) =>
+  ${({ $active }) =>
     $active &&
-    !$isColumnActive &&
-    !$isScrolling &&
     css`
-      overflow: hidden;
-      padding-right: 8px;
+      .ps__rail-y {
+        visibility: hidden;
+      }
     `}
 
-  &::-webkit-scrollbar {
-    width: unset;
+  .ps__rail-y {
+    z-index: 1000;
+
+    .ps__thumb-y {
+      background-color: var(--md-sys-color-surface-container-high) !important;
+    }
+
+    &:hover,
+    &.ps--clicking {
+      background-color: unset !important;
+      .ps__thumb-y {
+        background-color: var(--md-sys-color-surface-container-highest) !important;
+        width: 8px !important;
+      }
+    }
   }
 `

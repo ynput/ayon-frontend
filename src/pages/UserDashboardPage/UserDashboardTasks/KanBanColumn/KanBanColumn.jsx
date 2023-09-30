@@ -8,6 +8,7 @@ import KanBanCard from '../KanBanCard/KanBanCard'
 import { Button } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
 import { useGetTaskContextMenu } from '../../util'
+import 'react-perfect-scrollbar/dist/css/styles.css'
 
 const KanBanColumn = ({
   tasks = [],
@@ -46,6 +47,7 @@ const KanBanColumn = ({
 
   const [numberCardsFit, setNumberCardsFit] = useState(15)
   const [isScrolling, setIsScrolling] = useState(false)
+
   const itemsRef = useRef(null)
   // figure if the column items are overflowing and scrolling
   useEffect(() => {
@@ -58,7 +60,7 @@ const KanBanColumn = ({
 
     const cardsFit = Math.floor(sectionRect?.height / cardHeight)
     setNumberCardsFit(cardsFit)
-  }, [itemsRef.current, tasksCount])
+  }, [itemsRef.current, tasksCount, sectionRect?.height, active])
 
   // find out which column the active card has come from
   const activeColumn = Object.values(columns).find((column) =>
@@ -156,6 +158,7 @@ const KanBanColumn = ({
       $isOver={isOver}
       $active={!!active}
       $isOverSelf={isOverSelf}
+      $isScrolling={isScrolling}
       isColumnActive={isColumnActive}
     >
       <Styled.DropColumn
@@ -163,6 +166,7 @@ const KanBanColumn = ({
         className="dropzone"
         style={{
           height: `calc(100vh - 32px - ${sectionRect?.top}px)`,
+          // display: 'none',
         }}
         $isOver={isOver}
         $isOverSelf={isOverSelf}
@@ -173,11 +177,11 @@ const KanBanColumn = ({
           {column?.name} - {tasksCount}
         </h2>
       </Styled.Header>
+
       <Styled.Items
         className="items"
         ref={itemsRef}
-        $isScrolling={isScrolling}
-        $isColumnActive={isColumnActive}
+        style={{ overflow: active && !isColumnActive && !isScrolling && 'hidden' }}
         $active={!!active}
       >
         {allGroupedTasks}

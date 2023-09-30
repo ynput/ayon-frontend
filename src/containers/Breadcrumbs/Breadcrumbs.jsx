@@ -2,9 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { InputText } from '@ynput/ayon-react-components'
+import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
-import HeaderButton from '../header/HeaderButton'
 
 import { upperFirst } from 'lodash'
 import useUriNavigate from '/src/hooks/useUriNavigate'
@@ -138,15 +137,16 @@ const Breadcrumbs = () => {
               onFocus={() => setEditMode(true)}
               onKeyDown={handleKeyDown}
               ref={inputRef}
+              style={{ borderRadius: !localUri ? 4 : '4px 0 0 4px' }}
             />
           </label>
         </Styled.CrumbsForm>
         {uriDisplay && localUri && (
-          <HeaderButton
+          <Button
             icon="content_copy"
             style={{ opacity: editMode ? 0 : 1, width: editMode ? 0 : 'auto' }}
             onClick={onCopy}
-            variant="text"
+            variant="tonal"
           />
         )}
       </Styled.Crumbtainer>

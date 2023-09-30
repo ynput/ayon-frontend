@@ -1,13 +1,21 @@
 import styled from 'styled-components'
 import StatusSelect from '/src/components/status/statusSelect'
+import { OverflowField } from '@ynput/ayon-react-components'
 
 export const Header = styled.header`
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  z-index: 50;
 
   .thumbnail {
     width: 48px;
+  }
+`
+
+export const Path = styled(OverflowField)`
+  & > span {
+    -webkit-transform: translate3d(0, 0, 0);
   }
 `
 

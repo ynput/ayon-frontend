@@ -11,6 +11,11 @@ export const Item = styled.li`
   padding: 0;
   position: relative;
   min-height: 42px;
+  overflow: hidden;
+
+  & > * {
+    width: min-content;
+  }
 
   display: flex;
   padding: 8px 16px 8px 8px;
@@ -128,6 +133,7 @@ export const ItemStatus = styled(StatusSelect)`
 
 export const ItemThumbnail = styled(Thumbnail)`
   width: 40px;
+  min-width: 40px;
   height: 24px;
   margin: 0;
 

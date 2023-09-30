@@ -149,30 +149,29 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
     }
   }, [foundGroupedInstallers, directDownload])
 
-  menuItems.items.push(
-    ...[
-      {
-        id: 'divider',
-      },
-      {
-        id: 'all',
-        label: 'All Launchers',
-        items: Object.entries(otherGroupedInstallers).flatMap(([, installers = []], i) => {
-          const items = installers.map((installer = {}) => ({
-            id: installer.filename,
-            label: `${installer.filename} - ${
-              installer.platform === 'darwin' ? 'macOS' : installer.platform
-            }`,
-            highlighted: directDownload?.filename === installer.filename,
-            onClick: () => handleDownloadClick(installer.sources, installer.filename),
-          }))
-          if (i !== 0) items.unshift({ id: 'divider' })
+  if (Object.entries(otherGroupedInstallers).length) {
+    if (Object.entries(foundGroupedInstallers).length) {
+      menuItems.items.push({ id: 'divider' })
+    }
 
-          return items
-        }),
-      },
-    ],
-  )
+    menuItems.items.push({
+      id: 'all',
+      label: 'All Launchers',
+      items: Object.entries(otherGroupedInstallers).flatMap(([, installers = []], i) => {
+        const items = installers.map((installer = {}) => ({
+          id: installer.filename,
+          label: `${installer.filename} - ${
+            installer.platform === 'darwin' ? 'macOS' : installer.platform
+          }`,
+          highlighted: directDownload?.filename === installer.filename,
+          onClick: () => handleDownloadClick(installer.sources, installer.filename),
+        }))
+        if (i !== 0) items.unshift({ id: 'divider' })
+
+        return items
+      }),
+    })
+  }
 
   if (isMenu) {
     return menuItems

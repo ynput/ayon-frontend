@@ -30,6 +30,7 @@ const MeOrUserSwitch = ({ value = [], onAssignee, onMe, options = [], isMe, ...p
         disableOpen={isMe && !!value.length}
         emptyIcon="groups"
         emptyMessage="Assignees"
+        style={{ zIndex: 'none' }}
       />
     </Styled.MeOrUserSwitchContainer>
   )

@@ -1,10 +1,4 @@
-import {
-  AssigneeSelect,
-  Button,
-  OverflowField,
-  Section,
-  Spacer,
-} from '@ynput/ayon-react-components'
+import { AssigneeSelect, Button, Section, Spacer } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import * as Styled from './UserDashDetailsHeader.styled'
@@ -128,7 +122,7 @@ const UserDashDetailsHeader = ({
         height: attributesOpen ? '100%' : 'unset',
       }}
     >
-      <OverflowField
+      <Styled.Path
         value={pathArray.join(' / ')}
         align="left"
         onClick={handleCopyPath}
