@@ -322,6 +322,22 @@ const EditorPage = () => {
     return data
   }, [rootDataCache, newNodes, changes, projectName])
 
+  // create an array of folder names and a map of task names with parentId as the value
+  const [folderNamesMap, taskNamesMap] = useMemo(() => {
+    const folders = new Map()
+    const tasks = new Map()
+    for (const key in rootData) {
+      const entity = rootData[key].data
+      if (!entity) continue
+      if (entity.__entityType === 'folder') {
+        folders.set(entity.name, entity.id)
+      } else if (entity.__entityType === 'task') {
+        tasks.set(entity.name, entity.__parentId)
+      }
+    }
+    return [folders, tasks]
+  }, [rootData])
+
   // SEARCH FILTER
   // if search results filter out nodes
   const filteredNodeData = useMemo(() => {
@@ -461,7 +477,7 @@ const EditorPage = () => {
   const searchFilter = (search, suggestions) => {
     // filter through suggestions
     const filtered = suggestions.filter((folder) =>
-      folder.keywords.some((key) => key.includes(search)),
+      folder.keywords.some((key) => key.toLowerCase().includes(search.toLowerCase())),
     )
     return filtered
   }
@@ -1007,11 +1023,14 @@ const EditorPage = () => {
       // Update expanded folders context object
       const exps = { ...expandedFolders }
       const loadBranches = []
+      let count = 0
       for (const id of parents) {
+        if (count >= 1) break // exit loop after first two items
         exps[id] = true
         if (rootData[id]?.data?.hasChildren) {
           loadBranches.push(id)
         }
+        count++
       }
       dispatch(setExpandedFolders(exps))
       // get new branch
@@ -1442,6 +1461,7 @@ const EditorPage = () => {
             onHide={() => setNewEntity('')}
             onConfirm={addNodes}
             currentSelection={currentSelection}
+            folderNames={folderNamesMap}
           />
         ) : (
           <NewEntity
@@ -1450,6 +1470,8 @@ const EditorPage = () => {
             onHide={handleCloseNew}
             onConfirm={addNodes}
             currentSelection={currentSelection}
+            folderNames={folderNamesMap}
+            taskNames={taskNamesMap}
           />
         ))}
       <Section>
