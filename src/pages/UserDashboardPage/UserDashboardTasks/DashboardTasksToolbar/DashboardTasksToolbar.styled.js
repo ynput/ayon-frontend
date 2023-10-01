@@ -4,7 +4,7 @@ import styled from 'styled-components'
 export const TasksToolbar = styled(Toolbar)`
   z-index: 100;
   padding: 0 8px;
-  height: 34px;
+  height: 36px;
   z-index: 10;
 
   overflow: auto;
