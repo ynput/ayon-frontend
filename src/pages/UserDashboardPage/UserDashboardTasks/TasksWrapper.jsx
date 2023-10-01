@@ -96,6 +96,7 @@ const ColumnsWrapper = ({
         justifyContent: 'flex-start',
         overflowX: 'auto',
         padding: '0 8px',
+        cursor: active && 'grabbing',
       }}
       direction="row"
       ref={sectionRef}
