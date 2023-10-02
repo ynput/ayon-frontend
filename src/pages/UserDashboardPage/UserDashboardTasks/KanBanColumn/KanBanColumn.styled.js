@@ -168,7 +168,18 @@ export const Items = styled(PerfectScrollbar)`
   }
 `
 
-export const CollapsedWrapper = styled.div``
+export const CollapsedWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: unset;
+  height: 100%;
+
+  /* every child not the last */
+  & > *:not(:last-child) {
+    padding-bottom: 32px;
+    border-radius: 16px 16px 0 0;
+  }
+`
 
 export const Collapsed = styled.div`
   user-select: none;
@@ -181,12 +192,28 @@ export const Collapsed = styled.div`
   flex-direction: column;
   align-items: center;
   gap: var(--base-gap-medium);
+  position: relative;
 
   border-top: solid 1px ${({ $color }) => $color};
+
+  cursor: pointer;
 
   h2 {
     /* text side ways */
     writing-mode: vertical-rl;
     margin: 0;
+  }
+
+  .icon,
+  h2 {
+    color: var(--md-sys-color-outline);
+  }
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-lowest-hover);
+    h2,
+    .icon {
+      color: var(--md-sys-color-on-surface);
+    }
   }
 `

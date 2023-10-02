@@ -105,25 +105,34 @@ const UserDashboardKanBan = ({
   const openFieldColumns = useMemo(() => {
     return fieldsColumns.map((field) => {
       const isCollapsed = collapsedColumns.includes(field.id)
-      const collapsed = []
+      // count number of tasks in column
+      const count = Object.values(tasksColumns).reduce((acc, column) => {
+        const tasks = column.tasks.filter((task) => task[splitBy] === field.name)
+        return acc + tasks.length
+      }, 0)
 
-      if (isCollapsed) {
-        // count number of tasks in column
-        const count = Object.values(tasksColumns).reduce((acc, column) => {
-          const tasks = column.tasks.filter((task) => task[splitBy] === field.name)
-          return acc + tasks.length
-        }, 0)
-        collapsed.push({
-          id: field.id,
-          name: field.name,
-          color: field.color,
-          count,
-        })
-      }
-
-      return { ...field, isCollapsed, collapsed }
+      return { ...field, isCollapsed, count }
     })
   }, [fieldsColumns, collapsedColumns])
+
+  // group openFieldColumns isCollapsed adjacent columns into one collapsed column
+  const groupedOpenFieldColumns = useMemo(() => {
+    const grouped = []
+    let currentGroup = []
+    openFieldColumns.forEach((column) => {
+      if (column.isCollapsed) {
+        currentGroup.push(column)
+      } else {
+        if (currentGroup.length) grouped.push(currentGroup)
+        currentGroup = []
+        grouped.push([column])
+      }
+    })
+    if (currentGroup.length) grouped.push(currentGroup)
+    return grouped
+  }, [openFieldColumns])
+
+  console.log(groupedOpenFieldColumns)
 
   // DND Stuff
   const touchSensor = useSensor(TouchSensor)
@@ -208,7 +217,7 @@ const UserDashboardKanBan = ({
         >
           <ColumnsWrapper
             tasksColumns={tasksColumns}
-            fieldsColumns={openFieldColumns}
+            fieldsColumns={groupedOpenFieldColumns}
             groupByValue={groupByValue}
             isLoading={isLoading}
             allUsers={allUsers}

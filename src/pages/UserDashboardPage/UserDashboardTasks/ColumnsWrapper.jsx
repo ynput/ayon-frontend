@@ -108,31 +108,36 @@ const ColumnsWrapper = ({
       direction="row"
       ref={sectionRef}
     >
-      {fieldsColumns.flatMap(({ id, isCollapsed, collapsed = [] }) => {
-        const column = tasksColumns[id]
-        if (!column) return []
+      {fieldsColumns.flatMap((columnsArray = [], i) => {
+        const isCollapsed = columnsArray.some((c) => c.isCollapsed)
 
         // return collapsed column if collapsed
         if (isCollapsed)
           return (
-            <CollapsedColumn columns={collapsed} onChange={() => onCollapsedColumnsChange(id)} />
+            <CollapsedColumn columns={columnsArray} onChange={onCollapsedColumnsChange} key={i} />
           )
 
-        return (
-          <KanBanColumn
-            key={id}
-            columns={tasksColumns}
-            tasks={column.tasks}
-            isLoading={isLoading}
-            id={id}
-            groupByValue={groupByValue}
-            allUsers={allUsers}
-            sectionRect={sectionRect}
-            sectionRef={sectionRef}
-            disabled={disabledStatuses.includes(column.name)}
-            onToggleCollapse={() => onCollapsedColumnsChange(id)}
-          />
-        )
+        // for now this should only ever been one item
+        // in the future we may want to allow multiple columns to be grouped into one column
+        return columnsArray.flatMap(({ id }) => {
+          const column = tasksColumns[id]
+          if (!column) return []
+          return (
+            <KanBanColumn
+              key={id}
+              columns={tasksColumns}
+              tasks={column.tasks}
+              isLoading={isLoading}
+              id={id}
+              groupByValue={groupByValue}
+              allUsers={allUsers}
+              sectionRect={sectionRect}
+              sectionRef={sectionRef}
+              disabled={disabledStatuses.includes(column.name)}
+              onToggleCollapse={() => onCollapsedColumnsChange(id)}
+            />
+          )
+        })
       })}
     </StyledWrapper>
   )

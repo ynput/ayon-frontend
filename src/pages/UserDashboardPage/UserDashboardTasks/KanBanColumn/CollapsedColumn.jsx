@@ -1,19 +1,23 @@
+import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './KanBanColumn.styled'
 
 const CollapsedColumn = ({ columns = [], onChange }) => {
   // columns  = [{id: 'ready', name: 'Ready', count: 4}]
+
+  //   if there are no columns return null
+  if (!columns.length) return null
+
   return (
     <Styled.CollapsedWrapper>
-      {columns.map((column) => (
-        <Styled.Collapsed key={column.id} $color={column?.color}>
+      {columns.map((column, i) => (
+        <Styled.Collapsed
+          key={column.id}
+          $color={column?.color}
+          onClick={() => onChange(column.id)}
+          style={{ top: i === 0 ? 0 : -i * 16 }}
+        >
           {/* reveals the column */}
-          <Styled.CollapseButton
-            icon="expand_more"
-            variant="text"
-            className="collapse"
-            onClick={() => onChange(column.id)}
-            style={{ rotate: '-180deg' }}
-          />
+          <Icon icon="expand_more" className="collapse" style={{ rotate: '-90deg' }} />
           <h2>
             {column?.count} - {column?.name}
           </h2>
