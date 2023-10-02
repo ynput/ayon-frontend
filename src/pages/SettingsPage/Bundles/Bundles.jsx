@@ -72,22 +72,6 @@ const Bundles = () => {
     return bundleList
   }, [bundleList, showArchived])
 
-  // DEMO AND REMOVE: set the third bundle to isDev: true. Mutate the bundleList data
-  bundleList = useMemo(
-    () =>
-      bundleList.map((bundle, index) => {
-        if (index === 2) {
-          return {
-            ...bundle,
-            isDev: true,
-          }
-        }
-        return bundle
-      }),
-    [bundleList],
-  )
-  // REMOVE ABOVE
-
   // filter out isDev bundles if developerMode off
   bundleList = useMemo(() => {
     if (!developerMode) {
