@@ -1,4 +1,5 @@
 import { ayonApi } from '../ayon'
+import { onClearDashboard } from '/src/features/dashboard'
 import { logout } from '/src/features/user'
 
 const getAuth = ayonApi.injectEndpoints({
@@ -24,8 +25,11 @@ const getAuth = ayonApi.injectEndpoints({
         localStorage.removeItem('dashboard-tasks-filter')
         localStorage.removeItem('currentProject')
         localStorage.removeItem('dashboard-selectedProjects')
+        localStorage.removeItem('dashboard-tasks-collapsedColumns')
         localStorage.removeItem('dashboard-tasks-assignees')
         localStorage.removeItem('dashboard-tasks-selected')
+        // clear dashboard state
+        dispatch(onClearDashboard())
       },
     }),
   }),

@@ -46,6 +46,18 @@ const dashboardSlice = createSlice({
     onPrefetchIds: (state, { payload }) => {
       state.prefetchedIds = payload
     },
+    onClearDashboard: (state) => {
+      state.selectedProjects = []
+      state.prefetchedIds = []
+      state.tasks.selected = []
+      state.tasks.sortBy = []
+      state.tasks.groupBy = []
+      state.tasks.filter = ''
+      state.tasks.assignees = []
+      state.tasks.assigneesIsMe = false
+      state.tasks.attributesOpen = true
+      state.tasks.collapsedColumns = []
+    },
   },
 })
 
@@ -59,6 +71,7 @@ export const {
   onAttributesOpenChanged,
   onCollapsedColumnsChanged,
   onPrefetchIds,
+  onClearDashboard,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer
 
