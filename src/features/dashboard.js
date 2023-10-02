@@ -54,7 +54,7 @@ const dashboardSlice = createSlice({
       state.tasks.groupBy = []
       state.tasks.filter = ''
       state.tasks.assignees = []
-      state.tasks.assigneesIsMe = false
+      state.tasks.assigneesIsMe = true
       state.tasks.attributesOpen = true
       state.tasks.collapsedColumns = []
     },

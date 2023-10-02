@@ -12,6 +12,7 @@ const ListItem = ({
   selectedLength,
   statusesOptions,
   disabledStatuses,
+  disabledProjectUsers,
   onClick,
   onUpdate,
   allUsers,
@@ -96,6 +97,7 @@ const ListItem = ({
           align="right"
           size={20}
           onChange={(v) => onUpdate('assignees', v)}
+          disabledValues={disabledProjectUsers}
         />
       )}
       <Styled.Date

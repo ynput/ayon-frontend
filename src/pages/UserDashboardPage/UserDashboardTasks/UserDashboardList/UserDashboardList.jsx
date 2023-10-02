@@ -15,6 +15,7 @@ const UserDashboardList = ({
   allUsers = [],
   statusesOptions,
   disabledStatuses,
+  disabledProjectUsers,
 }) => {
   const containerRef = useRef(null)
 
@@ -228,6 +229,7 @@ const UserDashboardList = ({
                   onTaskHover={(t) => handlePrefetch(t)}
                   statusesOptions={statusesOptions}
                   disabledStatuses={disabledStatuses}
+                  disabledProjectUsers={disabledProjectUsers}
                   onUpdate={handleUpdate}
                   assigneesIsMe={assigneesIsMe}
                 />

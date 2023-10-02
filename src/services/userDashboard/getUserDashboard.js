@@ -231,7 +231,6 @@ const getUserDashboard = ayonApi.injectEndpoints({
           for (const project of projects) {
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
-            // it also allows to update the project tasks from websocket in the background
             const response = await dispatch(
               ayonApi.endpoints.getKanBanAssignee.initiate(
                 { projectName: project },

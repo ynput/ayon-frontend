@@ -29,6 +29,7 @@ const UserDashboardKanBan = ({
   isLoading,
   statusesOptions,
   disabledStatuses,
+  disabledProjectUsers = [],
 }) => {
   const dispatch = useDispatch()
 
@@ -194,6 +195,7 @@ const UserDashboardKanBan = ({
           groupByValue={groupByValue}
           statusesOptions={statusesOptions}
           disabledStatuses={disabledStatuses}
+          disabledProjectUsers={disabledProjectUsers}
         />
       )}
     </Section>

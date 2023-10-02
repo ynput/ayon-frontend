@@ -15,6 +15,7 @@ const ListGroup = ({
   onTaskHover,
   statusesOptions = [],
   disabledStatuses = [],
+  disabledProjectUsers = [],
   onUpdate,
   assigneesIsMe,
   allUsers = [],
@@ -77,6 +78,7 @@ const ListGroup = ({
               onMouseOver={() => onTaskHover(task)}
               statusesOptions={statusesOptions}
               disabledStatuses={disabledStatuses}
+              disabledProjectUsers={disabledProjectUsers}
               onUpdate={onUpdate}
               allUsers={assigneesIsMe ? [] : allUsers}
               className={'card'}

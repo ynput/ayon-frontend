@@ -1,5 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { useGetKanBanQuery } from '/src/services/userDashboard/getUserDashboard'
+import {
+  useGetKanBanQuery,
+  useGetKanBanUsersQuery,
+} from '/src/services/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
@@ -16,7 +19,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
-  const assignees = assigneesIsMe ? [user?.name] : assigneesState || []
+  // Only admins and managers can see task of other users
+  const assignees = assigneesIsMe || user?.data?.isUser ? [user?.name] : assigneesState || []
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected) || []
 
   // once user is loaded, set assignees to user
@@ -109,6 +113,27 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [statusesOptions, StatusesOptionsIntersect],
   )
 
+  const { data: projectUsers } = useGetKanBanUsersQuery(
+    { projects: selectedProjects },
+    { skip: !selectedProjects?.length },
+  )
+
+  // for selected projects, make sure user is on all
+  const [activeProjectUsers, disabledProjectUsers] = useMemo(() => {
+    if (!selectedTasksProjects?.length) return [projectUsers, []]
+    return projectUsers.reduce(
+      (acc, user) => {
+        if (selectedTasksProjects.every((p) => user.projects.includes(p))) {
+          acc[0].push(user)
+        } else {
+          acc[1].push(user)
+        }
+        return acc
+      },
+      [[], []],
+    )
+  }, [selectedTasksProjects, projectUsers])
+
   const isLoadingAll = isLoadingInfo || isLoadingTasks
   const detailsMinWidth = 400
   const detailsMaxWidth = '40vw'
@@ -153,6 +178,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           taskFields={taskFields}
           statusesOptions={statusesOptions}
           disabledStatuses={disabledStatuses}
+          disabledProjectUsers={disabledProjectUsers}
         />
       </SplitterPanel>
       {selectedTasksData.length ? (
@@ -167,6 +193,9 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             tasks={tasksWithIcons}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
+            projectUsers={projectUsers}
+            activeProjectUsers={activeProjectUsers}
+            disabledProjectUsers={disabledProjectUsers}
           />
         </SplitterPanel>
       ) : (

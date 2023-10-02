@@ -66,11 +66,12 @@ query KanBanTask($projectName: String!, $taskId: String!) {
 ${TASK_FRAGMENT}
 `
 export const KAN_BAN_ASSIGNEES_QUERY = `
-query Assignees($projectName: String) {
+query KanbanProjectAssignees($projectName: String) {
   users(last: 2000 projectName: $projectName) {
   edges {
     node {
       name
+      accessGroups
       attrib {
         avatarUrl
         fullName
