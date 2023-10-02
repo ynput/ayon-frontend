@@ -102,12 +102,26 @@ const UserDashboardKanBan = ({
     [sortedTasks, splitBy, mergedFields],
   )
 
-  // now for kan ban group collapsed columns in one column and add isCollapsed field
-  // all add new field collapsed=[{id: 'ready', name: 'Ready', count: 4}]
   const openFieldColumns = useMemo(() => {
     return fieldsColumns.map((field) => {
       const isCollapsed = collapsedColumns.includes(field.id)
-      return { ...field, isCollapsed }
+      const collapsed = []
+
+      if (isCollapsed) {
+        // count number of tasks in column
+        const count = Object.values(tasksColumns).reduce((acc, column) => {
+          const tasks = column.tasks.filter((task) => task[splitBy] === field.name)
+          return acc + tasks.length
+        }, 0)
+        collapsed.push({
+          id: field.id,
+          name: field.name,
+          color: field.color,
+          count,
+        })
+      }
+
+      return { ...field, isCollapsed, collapsed }
     })
   }, [fieldsColumns, collapsedColumns])
 

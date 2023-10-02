@@ -108,24 +108,14 @@ const ColumnsWrapper = ({
       direction="row"
       ref={sectionRef}
     >
-      {fieldsColumns.flatMap(({ id, isCollapsed }) => {
+      {fieldsColumns.flatMap(({ id, isCollapsed, collapsed = [] }) => {
         const column = tasksColumns[id]
         if (!column) return []
 
         // return collapsed column if collapsed
         if (isCollapsed)
           return (
-            <CollapsedColumn
-              columns={[
-                {
-                  id: column.id,
-                  name: column.name,
-                  count: column.tasks.length,
-                  color: column.color,
-                },
-              ]}
-              onChange={() => onCollapsedColumnsChange(id)}
-            />
+            <CollapsedColumn columns={collapsed} onChange={() => onCollapsedColumnsChange(id)} />
           )
 
         return (
