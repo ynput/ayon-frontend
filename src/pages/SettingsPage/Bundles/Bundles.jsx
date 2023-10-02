@@ -48,11 +48,23 @@ const Bundles = () => {
   const [showArchived, setShowArchived] = useLocalStorage('bundles-archived', true)
 
   // REDUX QUERIES
-  let { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
+  let {
+    data: bundleList = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetBundleListQuery({ archived: true })
   const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
   const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
     showVersions: true,
   })
+
+  useEffect(() => {
+    if (isError) {
+      console.error(error)
+      toast.error('Error loading bundles: ' + error?.data?.traceback || error?.message)
+    }
+  }, [isError, error])
 
   // filter out archived bundles if showArchived is true
   bundleList = useMemo(() => {
