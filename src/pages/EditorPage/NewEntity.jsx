@@ -10,6 +10,7 @@ import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import checkName from '/src/helpers/checkName'
 import { Dialog } from 'primereact/dialog'
+import { toast } from 'react-toastify'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -22,7 +23,15 @@ const ContentStyled = styled.div`
   }
 `
 
-const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) => {
+const NewEntity = ({
+  type,
+  currentSelection = {},
+  visible,
+  onConfirm,
+  onHide,
+  folderNames = new Map(),
+  taskNames = new Map(),
+}) => {
   const [entityType, setEntityType] = useState(null)
   //   build out form state
   const initData = { label: '', name: '', type: '' }
@@ -123,6 +132,13 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     // first check name and type valid
     if (!entityData.label || !entityData.type) return
 
+    // check name is unique
+    if (folderNames.has(entityData.name) && type === 'folder')
+      return toast.warning('Folder names must be unique')
+    else if (taskNames.get(entityData.name) in currentSelection) {
+      return toast.warning('Sibling Task names must be unique')
+    }
+
     // convert type to correct key
     // convert name to camelCase
     const newData = {
@@ -137,8 +153,9 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     hide && onHide()
 
     if (!hide) {
-      // set focus back to typeSelector
-      handleShow()
+      // focus and select the label input
+      labelRef.current.focus()
+      labelRef.current.select()
     }
   }
 
