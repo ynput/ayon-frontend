@@ -18,6 +18,7 @@ const KanBanColumn = ({
   isLoading,
   allUsers = [],
   sectionRect,
+  sectionRef,
 }) => {
   const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
 
@@ -145,7 +146,7 @@ const KanBanColumn = ({
 
   // used to load more tasks when scrolling
   const { ref: moreButtonRef, inView } = useInView({
-    root: itemsRef.current,
+    root: sectionRef.current,
   })
 
   useEffect(() => {

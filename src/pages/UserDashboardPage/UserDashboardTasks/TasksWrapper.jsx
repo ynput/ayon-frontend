@@ -115,6 +115,7 @@ const ColumnsWrapper = ({
             groupByValue={groupByValue}
             allUsers={allUsers}
             sectionRect={sectionRect}
+            sectionRef={sectionRef}
           />
         )
       })}
