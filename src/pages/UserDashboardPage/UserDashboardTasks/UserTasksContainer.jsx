@@ -89,28 +89,28 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   // for selected tasks, get flat list of projects
   const selectedTasksProjects = useMemo(
     () => [...new Set(selectedTasksData.map((t) => t.projectName))],
-    [selectedTasks],
+    [selectedTasks, selectedTasksData],
   )
 
   // we need to get the intersection of all the statuses of the projects for the selected tasks
   // this means that if we have 2 tasks from 2 different projects, we need to get the intersection of the statuses of those 2 projects
   //  and it prevents us from showing statuses that are not available for the selected tasks
-  const statusesOptions = useMemo(() => getMergedFields(projectsInfo, 'statuses'), [projectsInfo])
-  const StatusesOptionsIntersect = useMemo(
-    () =>
-      selectedProjects.length > 1
-        ? getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects)
-        : statusesOptions,
-    [projectsInfo, selectedTasksProjects],
+  const statusesOptions = useMemo(
+    () => getMergedFields(projectsInfo, 'statuses'),
+    [projectsInfo, isLoadingInfo],
   )
 
-  // all statuses that are not in the intersection of the statuses of the selected tasks
   const disabledStatuses = useMemo(
     () =>
       statusesOptions
-        .filter((s) => !StatusesOptionsIntersect.some((s2) => s2.name === s.name))
+        .filter(
+          (s) =>
+            !getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects).some(
+              (s2) => s2.name === s.name,
+            ),
+        )
         .map((s) => s.name),
-    [statusesOptions, StatusesOptionsIntersect],
+    [projectsInfo, selectedTasksProjects, statusesOptions],
   )
 
   const { data: projectUsers } = useGetKanBanUsersQuery(
@@ -196,6 +196,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             projectUsers={projectUsers}
             activeProjectUsers={activeProjectUsers}
             disabledProjectUsers={disabledProjectUsers}
+            selectedTasksProjects={selectedTasksProjects}
           />
         </SplitterPanel>
       ) : (

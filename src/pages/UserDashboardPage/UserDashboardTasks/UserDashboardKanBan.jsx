@@ -177,6 +177,7 @@ const UserDashboardKanBan = ({
             groupByValue={groupByValue}
             isLoading={isLoading}
             allUsers={allUsers}
+            disabledStatuses={disabledStatuses}
           />
           <KanBanCardOverlay
             activeDraggingId={activeDraggingId}

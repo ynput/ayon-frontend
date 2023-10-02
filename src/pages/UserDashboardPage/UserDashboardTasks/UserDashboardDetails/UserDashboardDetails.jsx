@@ -12,6 +12,7 @@ const UserDashboardDetails = ({
   projectUsers,
   disabledProjectUsers,
   activeProjectUsers,
+  selectedTasksProjects,
 }) => {
   const selectedTasksIds = useSelector((state) => state.dashboard.tasks.selected)
   const attributesOpen = useSelector((state) => state.dashboard.tasks.attributesOpen)
@@ -21,12 +22,6 @@ const UserDashboardDetails = ({
     if (!selectedTasksIds?.length) return []
     return tasks.filter((task) => selectedTasksIds.includes(task.id))
   }, [selectedTasksIds, tasks])
-
-  // for selected tasks, get flat list of projects
-  const selectedTasksProjects = useMemo(
-    () => [...new Set(tasks.map((t) => t.projectName))],
-    [tasks],
-  )
 
   const commentsData = useMemo(() => getCommentsForTasks(tasks, projectUsers), [tasks])
 

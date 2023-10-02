@@ -63,6 +63,15 @@ export const Column = styled.div`
         border-radius: 16px;
       }
     `}
+
+    transition: opacity 0.1s ease-in-out;
+  /* fade out if active and disabled */
+  ${({ $active, $disabled }) =>
+    $active &&
+    $disabled &&
+    css`
+      opacity: 0.2;
+    `}
 `
 
 export const Header = styled.header`

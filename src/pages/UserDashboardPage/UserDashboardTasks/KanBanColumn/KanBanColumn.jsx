@@ -17,6 +17,7 @@ const KanBanColumn = ({
   columns = {},
   isLoading,
   allUsers = [],
+  disabled,
   sectionRect,
   sectionRef,
 }) => {
@@ -26,6 +27,7 @@ const KanBanColumn = ({
   const column = columns[id] || {}
   const { isOver, setNodeRef, active, over } = useDroppable({
     id: id,
+    disabled,
   })
 
   const tasksCount = tasks.length
@@ -161,6 +163,7 @@ const KanBanColumn = ({
       $isOverSelf={isOverSelf}
       $isScrolling={isScrolling}
       isColumnActive={isColumnActive}
+      $disabled={disabled}
     >
       <Styled.DropColumn
         ref={setNodeRef}

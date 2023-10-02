@@ -9,6 +9,7 @@ const ColumnsWrapper = ({
   groupByValue,
   isLoading,
   allUsers = [],
+  disabledStatuses = [],
 }) => {
   const { active } = useDndContext()
   const sectionRef = useRef(null)
@@ -116,6 +117,7 @@ const ColumnsWrapper = ({
             allUsers={allUsers}
             sectionRect={sectionRect}
             sectionRef={sectionRef}
+            disabled={disabledStatuses.includes(column.name)}
           />
         )
       })}
