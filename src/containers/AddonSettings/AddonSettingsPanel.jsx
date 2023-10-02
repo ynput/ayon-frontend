@@ -82,7 +82,7 @@ const AddonSettingsPanel = ({
   useEffect(() => {
     reload()
     // eslint-disable-next-line no-unused-vars
-  }, [addon.name, addon.version, addon.variant, siteId, projectName]) //TODO: environment
+  }, [addon.name, addon.version, addon.variant, siteId, projectName])
 
   useEffect(() => {
     if (localData) return
