@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
+import CollapsedColumn from './KanBanColumn/CollapsedColumn'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -20,6 +21,7 @@ const ColumnsWrapper = ({
   isLoading,
   allUsers = [],
   disabledStatuses = [],
+  onCollapsedColumnsChange,
 }) => {
   const { active } = useDndContext()
   const sectionRef = useRef(null)
@@ -106,9 +108,25 @@ const ColumnsWrapper = ({
       direction="row"
       ref={sectionRef}
     >
-      {fieldsColumns.flatMap(({ id }) => {
+      {fieldsColumns.flatMap(({ id, isCollapsed }) => {
         const column = tasksColumns[id]
         if (!column) return []
+
+        // return collapsed column if collapsed
+        if (isCollapsed)
+          return (
+            <CollapsedColumn
+              columns={[
+                {
+                  id: column.id,
+                  name: column.name,
+                  count: column.tasks.length,
+                  color: column.color,
+                },
+              ]}
+              onChange={() => onCollapsedColumnsChange(id)}
+            />
+          )
 
         return (
           <KanBanColumn
@@ -122,6 +140,7 @@ const ColumnsWrapper = ({
             sectionRect={sectionRect}
             sectionRef={sectionRef}
             disabled={disabledStatuses.includes(column.name)}
+            onToggleCollapse={() => onCollapsedColumnsChange(id)}
           />
         )
       })}

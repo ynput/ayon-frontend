@@ -167,8 +167,13 @@ export const Items = styled(PerfectScrollbar)`
     }
   }
 `
-export const CollapsedColumn = styled.div`
+
+export const CollapsedWrapper = styled.div``
+
+export const Collapsed = styled.div`
+  user-select: none;
   padding: 8px;
+  padding-top: 7px;
   padding-bottom: 16px;
   border-radius: 16px;
   background-color: var(--md-sys-color-surface-container-lowest);

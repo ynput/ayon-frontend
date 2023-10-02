@@ -14,10 +14,10 @@ import {
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 
-import ColumnsWrapper from './TasksWrapper'
+import ColumnsWrapper from './ColumnsWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar/DashboardTasksToolbar'
 import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
-import { onTaskSelected } from '/src/features/dashboard'
+import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import UserDashboardList from './UserDashboardList/UserDashboardList'
@@ -40,6 +40,18 @@ const UserDashboardKanBan = ({
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+
+  // COLLAPSED COLUMNS
+  const collapsedColumns = useSelector((state) => state.dashboard.tasks.collapsedColumns)
+  const setCollapsedColumns = (ids) => dispatch(onCollapsedColumnsChanged(ids))
+
+  // handle collapse toggle
+  const handleCollapseToggle = (id) => {
+    const newCollapsedColumns = collapsedColumns.includes(id)
+      ? collapsedColumns.filter((groupId) => groupId !== id)
+      : [...collapsedColumns, id]
+    setCollapsedColumns(newCollapsedColumns)
+  }
 
   // SORT BY
   const sortByValue = useSelector((state) => state.dashboard.tasks.sortBy)
@@ -89,6 +101,15 @@ const UserDashboardKanBan = ({
     () => getTasksColumns(sortedTasks, splitBy, mergedFields, allUsers),
     [sortedTasks, splitBy, mergedFields],
   )
+
+  // now for kan ban group collapsed columns in one column and add isCollapsed field
+  // all add new field collapsed=[{id: 'ready', name: 'Ready', count: 4}]
+  const openFieldColumns = useMemo(() => {
+    return fieldsColumns.map((field) => {
+      const isCollapsed = collapsedColumns.includes(field.id)
+      return { ...field, isCollapsed }
+    })
+  }, [fieldsColumns, collapsedColumns])
 
   // DND Stuff
   const touchSensor = useSensor(TouchSensor)
@@ -173,11 +194,12 @@ const UserDashboardKanBan = ({
         >
           <ColumnsWrapper
             tasksColumns={tasksColumns}
-            fieldsColumns={fieldsColumns}
+            fieldsColumns={openFieldColumns}
             groupByValue={groupByValue}
             isLoading={isLoading}
             allUsers={allUsers}
             disabledStatuses={disabledStatuses}
+            onCollapsedColumnsChange={handleCollapseToggle}
           />
           <KanBanCardOverlay
             activeDraggingId={activeDraggingId}
