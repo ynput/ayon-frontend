@@ -243,7 +243,7 @@ const Hierarchy = (props) => {
   const onSelectionChange = (event) => {
     const selection = Object.keys(event.value)
     // remove task selection
-    dispatch(setFocusedTasks([]))
+    dispatch(setFocusedTasks({ ids: [] }))
     dispatch(setFocusedFolders(selection))
 
     // for each selected folder, if isLeaf then set expandedFolders

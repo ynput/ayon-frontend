@@ -17,7 +17,7 @@ const WorkfilesPage = () => {
   return (
     <main>
       <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
-      <TaskList style={{ flex: 0.75, minWidth: 250, maxWidth: 500 }} />
+      <TaskList style={{ flex: 0.75, minWidth: 250, maxWidth: 500 }} autoSelect />
       <WorkfileList
         selectedWorkfile={selectedWorkfile}
         setSelectedWorkfile={setSelectedWorkfile}
