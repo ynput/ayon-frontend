@@ -89,8 +89,15 @@ const NewBundle = ({
         changes[key] = formData[key]
       }
     }
+    try {
+      await updateBundle({ name: initBundle.name, data: { ...changes } }).unwrap()
 
-    updateBundle({ name: initBundle.name, data: { ...changes } })
+      toast.success('Dev bundle updated')
+      setDevChanges(false)
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to update bundle')
+    }
   }
 
   const setSelectedVersion = (latest = false, dev) => {
