@@ -142,7 +142,7 @@ const Header = () => {
       {isDeveloper && (
         <DeveloperSwitch $isChecked={developerMode} onClick={handleDeveloperMode}>
           <span>Developer Mode</span>
-          <StyledSwitch checked={developerMode} />
+          <StyledSwitch checked={developerMode} readOnly />
         </DeveloperSwitch>
       )}
       <HeaderButton
