@@ -15,6 +15,7 @@ const BundleList = ({
   onDuplicate,
   onDelete,
   toggleBundleStatus,
+  errorMessage,
 }) => {
   const [updateBundle] = useUpdateBundleMutation()
 
@@ -142,6 +143,7 @@ const BundleList = ({
         rowClassName={(rowData) => (rowData?.isArchived ? 'archived' : '')}
         className="bundles-table"
         resizableColumns
+        emptyMessage={errorMessage ? 'Error: ' + errorMessage : 'No bundles found'}
       >
         <Column
           field="name"

@@ -51,20 +51,16 @@ const Bundles = () => {
   let {
     data: bundleList = [],
     isLoading,
+    isFetching,
     isError,
     error,
   } = useGetBundleListQuery({ archived: true })
+  // GET INSTALLERS
   const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
+  // GET ADDONS
   const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
     showVersions: true,
   })
-
-  useEffect(() => {
-    if (isError) {
-      console.error(error)
-      toast.error('Error loading bundles: ' + error?.data?.traceback || error?.message)
-    }
-  }, [isError, error])
 
   // filter out archived bundles if showArchived is true
   bundleList = useMemo(() => {
@@ -366,6 +362,7 @@ const Bundles = () => {
                 onDuplicate={handleDuplicateBundle}
                 onDelete={handleDeleteBundle}
                 toggleBundleStatus={toggleBundleStatus}
+                errorMessage={!isFetching && isError && error?.data?.traceback}
               />
             </Section>
           </SplitterPanel>
