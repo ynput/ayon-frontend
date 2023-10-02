@@ -2,6 +2,16 @@ import { Section } from '@ynput/ayon-react-components'
 import React, { useEffect, useRef, useState } from 'react'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
+import styled from 'styled-components'
+
+const StyledWrapper = styled(Section)`
+  height: 100%;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow-x: auto;
+  padding: 0 8px;
+`
 
 const ColumnsWrapper = ({
   fieldsColumns,
@@ -89,14 +99,8 @@ const ColumnsWrapper = ({
   }, [active, sectionRef.current])
 
   return (
-    <Section
+    <StyledWrapper
       style={{
-        height: '100%',
-        width: '100%',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        overflowX: 'auto',
-        padding: '0 8px',
         cursor: active && 'grabbing',
       }}
       direction="row"
@@ -121,7 +125,7 @@ const ColumnsWrapper = ({
           />
         )
       })}
-    </Section>
+    </StyledWrapper>
   )
 }
 
