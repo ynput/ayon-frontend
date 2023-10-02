@@ -1,5 +1,6 @@
 import styled, { css } from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import { Button } from '@ynput/ayon-react-components'
 
 export const DropColumn = styled.div`
   position: absolute;
@@ -79,6 +80,8 @@ export const Header = styled.header`
   align-items: center;
   justify-content: space-between;
   padding: 8px;
+  z-index: 10;
+  position: relative;
 
   h2 {
     margin: 0;
@@ -90,6 +93,43 @@ export const Header = styled.header`
   border-bottom: solid 1px var(--md-sys-color-outline);
   border-color: ${({ $color }) => $color};
   margin-bottom: 8px;
+
+  /* toolbar */
+  nav {
+    position: absolute;
+    inset: 0;
+    justify-content: flex-end;
+    padding: 0 6px;
+
+    /* toolbar is only revealed on hover */
+    display: none;
+
+    /* buttons inside of toolbar */
+    button {
+      padding: 4px;
+      border-radius: var(--border-radius-xl);
+    }
+  }
+
+  /* collapse button */
+  .collapse {
+  }
+
+  /* reveal toolbar on hover */
+  &:hover {
+    nav {
+      display: flex;
+    }
+  }
+`
+
+export const CollapseButton = styled(Button)`
+  padding: 4px;
+  border-radius: var(--border-radius-xl);
+  .icon {
+    rotate: 90deg;
+    transition: rotate 0.1s;
+  }
 `
 
 export const Items = styled(PerfectScrollbar)`
@@ -125,5 +165,23 @@ export const Items = styled(PerfectScrollbar)`
         width: 8px !important;
       }
     }
+  }
+`
+export const CollapsedColumn = styled.div`
+  padding: 8px;
+  padding-bottom: 16px;
+  border-radius: 16px;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--base-gap-medium);
+
+  border-top: solid 1px ${({ $color }) => $color};
+
+  h2 {
+    /* text side ways */
+    writing-mode: vertical-rl;
+    margin: 0;
   }
 `

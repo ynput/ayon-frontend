@@ -5,10 +5,11 @@ import { getFakeTasks, getGroupedTasks, usePrefetchTask, useTaskClick } from '..
 import { useDispatch, useSelector } from 'react-redux'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import KanBanCard from '../KanBanCard/KanBanCard'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
 import { useGetTaskContextMenu } from '../../util'
 import 'react-perfect-scrollbar/dist/css/styles.css'
+import { onCollapsedColumnsChanged } from '/src/features/dashboard'
 
 const KanBanColumn = ({
   tasks = [],
@@ -22,6 +23,8 @@ const KanBanColumn = ({
   sectionRef,
 }) => {
   const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+  const collapsedColumns = useSelector((state) => state.dashboard.tasks.collapsedColumns)
+  const setCollapsedColumns = (ids) => dispatch(onCollapsedColumnsChanged(ids))
 
   const dispatch = useDispatch()
   const column = columns[id] || {}
@@ -81,6 +84,14 @@ const KanBanColumn = ({
 
   // HANDLE TASK CLICK
   const handleTaskClick = useTaskClick(dispatch)
+
+  // handle collapse toggle
+  const handleCollapseToggle = (id) => {
+    const newCollapsedColumns = collapsedColumns.includes(id)
+      ? collapsedColumns.filter((groupId) => groupId !== id)
+      : [...collapsedColumns, id]
+    setCollapsedColumns(newCollapsedColumns)
+  }
 
   // return 5 fake loading events if loading
   const loadingTasks = useMemo(() => getFakeTasks(), [])
@@ -156,6 +167,23 @@ const KanBanColumn = ({
     setTaskLimit((limit) => limit + 15)
   }, [inView])
 
+  if (collapsedColumns.includes(id))
+    return (
+      <Styled.CollapsedColumn $color={column?.color}>
+        {/* reveals the column */}
+        <Styled.CollapseButton
+          icon="expand_more"
+          variant="text"
+          className="collapse"
+          onClick={() => handleCollapseToggle(column.id)}
+          style={{ rotate: '-180deg' }}
+        />
+        <h2>
+          {tasksCount} - {column?.name}
+        </h2>
+      </Styled.CollapsedColumn>
+    )
+
   return (
     <Styled.Column
       $isOver={isOver}
@@ -180,6 +208,15 @@ const KanBanColumn = ({
         <h2>
           {column?.name} - {tasksCount}
         </h2>
+        <Toolbar>
+          {/* collapses the columns */}
+          <Styled.CollapseButton
+            icon="expand_more"
+            variant="text"
+            className="collapse"
+            onClick={() => handleCollapseToggle(column.id)}
+          />
+        </Toolbar>
       </Styled.Header>
 
       <Styled.Items
