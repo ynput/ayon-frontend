@@ -28,7 +28,9 @@ const DeveloperSwitch = styled.div`
   transition: background-color 0.2s;
 
   background-color: ${({ $isChecked }) =>
-    $isChecked ? 'var(--color-hl-developer-container)' : 'unset'};
+    $isChecked
+      ? 'var(--color-hl-developer-container)'
+      : 'var(--md-sys-color-surface-container-highest)'};
 
   & > span {
     color: ${({ $isChecked }) => ($isChecked ? 'var(--color-hl-developer)' : 'inherit')};
