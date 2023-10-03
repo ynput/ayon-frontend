@@ -1,9 +1,11 @@
 import { Section } from '@ynput/ayon-react-components'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
 import CollapsedColumn from './KanBanColumn/CollapsedColumn'
+import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
+import ColumnMenu from './KanBanColumn/ColumnMenu'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -25,6 +27,12 @@ const ColumnsWrapper = ({
 }) => {
   const { active } = useDndContext()
   const sectionRef = useRef(null)
+  const columnsRefs = useRef({})
+
+  const openColumnIds = useMemo(
+    () => fieldsColumns.flatMap((c) => (!c?.isCollapsed ? c[0].id : [])),
+    [fieldsColumns],
+  )
 
   const [scrollDirection, setScrollDirection] = useState(null)
 
@@ -101,45 +109,65 @@ const ColumnsWrapper = ({
   }, [active, sectionRef.current])
 
   return (
-    <StyledWrapper
-      style={{
-        cursor: active && 'grabbing',
-      }}
-      direction="row"
-      ref={sectionRef}
-    >
-      {fieldsColumns.flatMap((columnsArray = [], i) => {
-        const isCollapsed = columnsArray.some((c) => c.isCollapsed)
+    <>
+      <StyledWrapper
+        style={{
+          cursor: active && 'grabbing',
+        }}
+        direction="row"
+        ref={sectionRef}
+      >
+        {fieldsColumns.flatMap((columnsArray = [], i) => {
+          const isCollapsed = columnsArray.some((c) => c.isCollapsed)
 
-        // return collapsed column if collapsed
-        if (isCollapsed)
-          return (
-            <CollapsedColumn columns={columnsArray} onChange={onCollapsedColumnsChange} key={i} />
-          )
+          // return collapsed column if collapsed
+          if (isCollapsed)
+            return (
+              <CollapsedColumn columns={columnsArray} onChange={onCollapsedColumnsChange} key={i} />
+            )
 
-        // for now this should only ever been one item
-        // in the future we may want to allow multiple columns to be grouped into one column
-        return columnsArray.flatMap(({ id }) => {
-          const column = tasksColumns[id]
-          if (!column) return []
-          return (
-            <KanBanColumn
-              key={id}
-              columns={tasksColumns}
-              tasks={column.tasks}
-              isLoading={isLoading}
-              id={id}
-              groupByValue={groupByValue}
-              allUsers={allUsers}
-              sectionRect={sectionRect}
-              sectionRef={sectionRef}
-              disabled={disabledStatuses.includes(column.name)}
-              onToggleCollapse={() => onCollapsedColumnsChange(id)}
-            />
-          )
-        })
+          // for now this should only ever been one item
+          // in the future we may want to allow multiple columns to be grouped into one column
+          return columnsArray.flatMap(({ id }) => {
+            const column = tasksColumns[id]
+            if (!column) return []
+            return (
+              <KanBanColumn
+                key={id}
+                columns={tasksColumns}
+                tasks={column.tasks}
+                isLoading={isLoading}
+                id={id}
+                groupByValue={groupByValue}
+                allUsers={allUsers}
+                sectionRect={sectionRect}
+                sectionRef={sectionRef}
+                disabled={disabledStatuses.includes(column.name)}
+                onToggleCollapse={() => onCollapsedColumnsChange(id)}
+                ref={(el) => {
+                  columnsRefs.current[id] = el
+                }}
+              />
+            )
+          })
+        })}
+      </StyledWrapper>
+      {/* Dropdown menu */}
+      {openColumnIds.map((id) => {
+        // get button ref
+        const columnEl = columnsRefs.current[id]
+        if (!columnEl) return null
+        // get more button el
+        const buttonRef = columnEl.querySelector('.column-menu')
+        if (!buttonRef) return null
+
+        return (
+          <MenuContainer id={id} key={id} target={buttonRef}>
+            <ColumnMenu onCollapse={() => onCollapsedColumnsChange(id)} />
+          </MenuContainer>
+        )
       })}
-    </StyledWrapper>
+    </>
   )
 }
 

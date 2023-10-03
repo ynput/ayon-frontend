@@ -17,7 +17,7 @@ const CollapsedColumn = ({ columns = [], onChange }) => {
           style={{ top: i === 0 ? 0 : -i * 16 }}
         >
           {/* reveals the column */}
-          <Icon icon="expand_more" className="collapse" style={{ rotate: '-90deg' }} />
+          <Icon icon="chevron_right" className="collapse" />
           <h2>
             {column?.count} - {column?.name}
           </h2>

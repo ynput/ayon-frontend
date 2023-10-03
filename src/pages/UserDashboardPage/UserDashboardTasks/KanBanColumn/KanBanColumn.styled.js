@@ -87,6 +87,9 @@ export const Header = styled.header`
     margin: 0;
     /* text-align: center; */
     width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   width: 100%;
@@ -100,35 +103,46 @@ export const Header = styled.header`
     inset: 0;
     justify-content: flex-end;
     padding: 0 6px;
+    gap: 4px;
 
-    /* toolbar is only revealed on hover */
-    display: none;
+    button {
+      /* toolbar is only revealed on hover */
+      opacity: 0;
+    }
 
     /* buttons inside of toolbar */
     button {
       padding: 4px;
       border-radius: var(--border-radius-xl);
-    }
-  }
+      background-color: var(--md-sys-color-surface-container-low);
 
-  /* collapse button */
-  .collapse {
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-low-hover);
+      }
+      &:active {
+        background-color: var(--md-sys-color-surface-container-low-active);
+      }
+    }
   }
 
   /* reveal toolbar on hover */
   &:hover {
     nav {
-      display: flex;
+      button {
+        opacity: 1;
+      }
     }
   }
 `
 
-export const CollapseButton = styled(Button)`
+export const MenuButton = styled(Button)`
   padding: 4px;
   border-radius: var(--border-radius-xl);
-  .icon {
-    rotate: 90deg;
-    transition: rotate 0.1s;
+
+  /* when the menu is open */
+  &.open {
+    opacity: 1;
+    background-color: var(--md-sys-color-surface-container-high);
   }
 `
 

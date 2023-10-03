@@ -15,6 +15,7 @@ const MenuList = ({
   onClose,
   itemClassName,
   itemStyle,
+  compact,
   ...props
 }) => {
   const itemRefs = useRef([])
@@ -24,12 +25,23 @@ const MenuList = ({
 
   const handleSubMenu = (e, id, items) => {
     if (!itemRefs.current[id] || !menuRef.current) return
+    const prevMenuRect = menuRef.current.getBoundingClientRect()
+
+    // calculate the position of the submenu
+    const top = itemRefs.current[id].offsetTop + (style?.top || 0) - 4
+    let right = -prevMenuRect.width - (style?.right || 0)
+    // check if the submenu is off the screen on the right, if so flip to left hand side
+
+    if (prevMenuRect.left + prevMenuRect.width - right > window.innerWidth) {
+      right = prevMenuRect.width + (style?.right || 0) - 12
+    }
+
     onSubMenu &&
       onSubMenu(e, {
         id,
         style: {
-          top: itemRefs.current[id].offsetTop + (style?.top || 0) - 4,
-          right: menuRef.current.getBoundingClientRect().width + (style?.right || 0) - 12,
+          top: top,
+          right,
         },
         items,
         level: level,
@@ -70,7 +82,7 @@ const MenuList = ({
       {...props}
       ref={menuRef}
     >
-      <Styled.Menu>
+      <Styled.Menu className={compact ? 'compact' : ''}>
         {items.map((item, i) => {
           // if item is a node, return it
           if (item.node) {

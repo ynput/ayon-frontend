@@ -33,10 +33,11 @@ const MenuContainer = ({ id, target, children, ...props }) => {
       pos = {
         ...pos,
         right: window.innerWidth - rect.right,
+        top: rect.bottom + 8 - 42,
       }
     }
     return pos
-  }, [target])
+  }, [target, isOpen])
 
   if (!isOpen) return null
 

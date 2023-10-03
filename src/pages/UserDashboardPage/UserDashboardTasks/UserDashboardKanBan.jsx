@@ -132,8 +132,6 @@ const UserDashboardKanBan = ({
     return grouped
   }, [openFieldColumns])
 
-  console.log(groupedOpenFieldColumns)
-
   // DND Stuff
   const touchSensor = useSensor(TouchSensor)
   const keyboardSensor = useSensor(KeyboardSensor)
@@ -206,45 +204,47 @@ const UserDashboardKanBan = ({
   }
 
   return (
-    <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-      <DashboardTasksToolbar {...{ view, setView, allUsers, isLoadingAllUsers }} />
-      {view === 'kanban' && (
-        <DndContext
-          sensors={sensors}
-          onDragEnd={handleDragEnd}
-          onDragStart={handleDragStart}
-          autoScroll={false}
-        >
-          <ColumnsWrapper
-            tasksColumns={tasksColumns}
-            fieldsColumns={groupedOpenFieldColumns}
-            groupByValue={groupByValue}
+    <>
+      <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
+        <DashboardTasksToolbar {...{ view, setView, allUsers, isLoadingAllUsers }} />
+        {view === 'kanban' && (
+          <DndContext
+            sensors={sensors}
+            onDragEnd={handleDragEnd}
+            onDragStart={handleDragStart}
+            autoScroll={false}
+          >
+            <ColumnsWrapper
+              tasksColumns={tasksColumns}
+              fieldsColumns={groupedOpenFieldColumns}
+              groupByValue={groupByValue}
+              isLoading={isLoading}
+              allUsers={allUsers}
+              disabledStatuses={disabledStatuses}
+              onCollapsedColumnsChange={handleCollapseToggle}
+            />
+            <KanBanCardOverlay
+              activeDraggingId={activeDraggingId}
+              selectedTasks={selectedTasks}
+              tasks={tasks}
+            />
+          </DndContext>
+        )}
+        {view === 'list' && (
+          <UserDashboardList
+            groupedFields={fieldsColumns.length ? fieldsColumns : [{ id: 'none' }]}
+            groupedTasks={tasksColumns}
             isLoading={isLoading}
             allUsers={allUsers}
+            mergedFields={mergedFields}
+            groupByValue={groupByValue}
+            statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
-            onCollapsedColumnsChange={handleCollapseToggle}
+            disabledProjectUsers={disabledProjectUsers}
           />
-          <KanBanCardOverlay
-            activeDraggingId={activeDraggingId}
-            selectedTasks={selectedTasks}
-            tasks={tasks}
-          />
-        </DndContext>
-      )}
-      {view === 'list' && (
-        <UserDashboardList
-          groupedFields={fieldsColumns.length ? fieldsColumns : [{ id: 'none' }]}
-          groupedTasks={tasksColumns}
-          isLoading={isLoading}
-          allUsers={allUsers}
-          mergedFields={mergedFields}
-          groupByValue={groupByValue}
-          statusesOptions={statusesOptions}
-          disabledStatuses={disabledStatuses}
-          disabledProjectUsers={disabledProjectUsers}
-        />
-      )}
-    </Section>
+        )}
+      </Section>
+    </>
   )
 }
 
