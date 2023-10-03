@@ -25,24 +25,28 @@ const MenuList = ({
 
   const handleSubMenu = (e, id, items) => {
     if (!itemRefs.current[id] || !menuRef.current) return
-    const prevMenuRect = menuRef.current.getBoundingClientRect()
+    const menuRect = menuRef.current.getBoundingClientRect()
+    const liItemRect = itemRefs.current[id].getBoundingClientRect()
 
     // calculate the position of the submenu
-    const top = itemRefs.current[id].offsetTop + (style?.top || 0) - 4
-    let right = -prevMenuRect.width - (style?.right || 0)
+    const top = itemRefs.current[id].offsetTop + (style?.top || 0)
+    const gap = 4
+    const left = (style?.left || 0) + menuRect.width + gap
+    let right = 0
     // check if the submenu is off the screen on the right, if so flip to left hand side
 
-    if (prevMenuRect.left + prevMenuRect.width - right > window.innerWidth) {
-      right = prevMenuRect.width + (style?.right || 0) - 12
+    if (liItemRect.left + liItemRect.width + left > window.innerWidth) {
+      right = liItemRect.width + gap
     }
+
+    const pos = { top }
+    if (right) pos.right = right
+    else pos.left = left
 
     onSubMenu &&
       onSubMenu(e, {
         id,
-        style: {
-          top: top,
-          right,
-        },
+        style: pos,
         items,
         level: level,
       })
@@ -65,13 +69,16 @@ const MenuList = ({
   // check that the menu is not off the screen
   useEffect(() => {
     if (!menuRef.current) return
-    const { top, height } = menuRef.current.getBoundingClientRect()
+    const { height } = menuRef.current.getBoundingClientRect()
+    const top = style?.top || 0
     const windowHeight = window.innerHeight
     if (top + height > windowHeight) {
       const newTop = windowHeight - height - 60
       setTop(newTop)
+    } else {
+      setTop(top)
     }
-  }, [menuRef.current])
+  }, [menuRef.current, style?.top, subMenu])
 
   return (
     <Styled.MenuWrapper
