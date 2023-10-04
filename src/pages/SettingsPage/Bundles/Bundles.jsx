@@ -359,6 +359,7 @@ const Bundles = () => {
                   isLoading={isLoadingInstallers || isFetching}
                   installers={installerVersions}
                   addons={addons}
+                  developerMode={developerMode}
                 />
               ) : (
                 !!bundlesData.length &&

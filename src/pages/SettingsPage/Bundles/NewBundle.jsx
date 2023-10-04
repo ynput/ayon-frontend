@@ -28,6 +28,7 @@ const NewBundle = ({
   isLoading,
   isDev,
   toggleBundleStatus,
+  developerMode,
 }) => {
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
@@ -80,6 +81,8 @@ const NewBundle = ({
       toast.error('Name cannot contain spaces')
       return
     }
+
+    if (!developerMode) formData.isDev = false
 
     try {
       await createBundle({ data: formData, archived: true }).unwrap()
@@ -195,6 +198,7 @@ const NewBundle = ({
         }}
         formData={formData}
         onAddonDevChange={handleAddonDevChange}
+        developerMode={developerMode}
       >
         <Styled.AddonTools>
           <Button
@@ -229,7 +233,7 @@ const NewBundle = ({
             disabled={!selectedAddons.length}
             onClick={() => setSelectedVersion(false)}
           />
-          {isDev && (
+          {(isDev || formData?.isDev) && (
             <>
               <Styled.BadgeButton
                 label="Enable development addon"

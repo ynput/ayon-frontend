@@ -2,6 +2,7 @@ import {
   Divider,
   FormLayout,
   FormRow,
+  InputSwitch,
   InputText,
   Panel,
   Section,
@@ -33,6 +34,7 @@ const BundleForm = ({
   selectedAddons,
   setSelectedAddons,
   onAddonDevChange,
+  developerMode,
 }) => {
   const showNameError = formData && !formData?.name && isNew
   const currentUser = useSelector((state) => state.user.name)
@@ -91,14 +93,22 @@ const BundleForm = ({
             </div>
           )}
         </FormRow>
-        {isDev && (
+        {developerMode && !isDev && (
+          <FormRow label="Dev bundle">
+            <InputSwitch
+              checked={formData.isDev}
+              onChange={() => setFormData({ ...formData, isDev: !formData.isDev })}
+            />
+          </FormRow>
+        )}
+        {(isDev || developerMode) && (
           <FormRow label="Assigned dev" fieldStyle={{ flexDirection: 'row', gap: 8 }}>
             <Styled.DevSelect
               editor
               emptyMessage={'Assign developer...'}
               value={[formData.activeUser]}
               options={devSelectOptions}
-              disabled={isLoading}
+              disabled={isLoading || !formData.isDev}
               multiSelect={false}
               onChange={(v) =>
                 setFormData((prev) => ({
@@ -115,7 +125,7 @@ const BundleForm = ({
                 justifyContent: 'center',
                 width: 'auto',
               }}
-              disabled={formData.activeUser === currentUser || isLoading}
+              disabled={formData.activeUser === currentUser || isLoading || !formData.isDev}
               onClick={() => {
                 setFormData((prev) => ({
                   ...prev,
@@ -136,7 +146,7 @@ const BundleForm = ({
               {...{ formData, setFormData }}
               setSelected={setSelectedAddons}
               selected={selectedAddons}
-              isDev={isDev}
+              isDev={isDev || formData.isDev}
               onDevChange={onAddonDevChange}
             />
           </section>
