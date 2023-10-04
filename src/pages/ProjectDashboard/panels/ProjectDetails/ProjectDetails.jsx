@@ -28,6 +28,8 @@ const ProjectDetails = ({ projectName }) => {
 
   // for updating the project
   const [attribForm, setAttribForm] = useState({})
+  // for updating the active tag
+  const [activeForm, setActiveForm] = useState(false)
 
   const { attrib = {}, active, code } = data
 
@@ -78,7 +80,7 @@ const ProjectDetails = ({ projectName }) => {
         data[key] = value
       }
 
-      await updateProject({ projectName, update: { attrib: data } }).unwrap()
+      await updateProject({ projectName, update: { attrib: data, active: activeForm } }).unwrap()
 
       setEditing(false)
       toast.success('Project updated')
@@ -89,7 +91,9 @@ const ProjectDetails = ({ projectName }) => {
     }
   }
 
-  const hasChanges = !isEmpty(attrib) && !isEmpty(attribForm) && !isEqual(attrib, attribForm)
+  const hasChanges =
+    (!isEmpty(attrib) && !isEmpty(attribForm) && !isEqual(attrib, attribForm)) ||
+    active !== activeForm
 
   return (
     <DashboardPanelWrapper
@@ -137,6 +141,9 @@ const ProjectDetails = ({ projectName }) => {
           form={attribForm}
           onChange={handleAttribChange}
           fields={fields}
+          initActive={active}
+          activeForm={activeForm}
+          onActiveChange={setActiveForm}
         />
       ) : (
         <AttributeTable
