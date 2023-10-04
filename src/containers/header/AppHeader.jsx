@@ -21,7 +21,7 @@ const DeveloperSwitch = styled.div`
   align-items: center;
   gap: 4px;
   border-radius: var(--border-radius-l);
-  padding: 0 4px 0 8px;
+  padding: 4px 4px 4px 8px;
   cursor: pointer;
   z-index: 10;
 
