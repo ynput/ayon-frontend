@@ -10,6 +10,7 @@ import {
   Dropdown,
   AssigneeSelect,
   InputDate,
+  InputSwitch,
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -617,6 +618,24 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                         width: '100%',
                       }}
                       isClearable={isOwn}
+                    />
+                  )
+                } else if (attrib?.type === 'boolean') {
+                  input = (
+                    <InputSwitch
+                      checked={value || false}
+                      disabled={disabled}
+                      onChange={(e) => handleLocalChange(e.target.checked, changeKey, field)}
+                      style={{
+                        ...changedStyles,
+                        color: isChanged
+                          ? 'var(--color-on-changed)'
+                          : !isOwn
+                          ? 'var(--md-ref-palette-neutral-variant60)'
+                          : 'var(--md-sys-color-on-surface-variant)',
+                        ...disabledStyles,
+                        width: '100%',
+                      }}
                     />
                   )
                 } else {
