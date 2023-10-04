@@ -6,12 +6,14 @@ import {
   Panel,
   Section,
 } from '@ynput/ayon-react-components'
-import React from 'react'
+import React, { useMemo } from 'react'
 import styled from 'styled-components'
 import AddonList from './AddonList'
 import * as Styled from './Bundles.styled'
 import { upperFirst } from 'lodash'
 import InstallerSelector from './InstallerSelector'
+import { useSelector } from 'react-redux'
+import { useGetUsersQuery } from '/src/services/user/getUsers'
 
 const StyledColumns = styled.div`
   display: flex;
@@ -33,10 +35,22 @@ const BundleForm = ({
   onAddonDevChange,
 }) => {
   const showNameError = formData && !formData?.name && isNew
-
+  const currentUser = useSelector((state) => state.user.name)
+  const { data: users = [], isLoading } = useGetUsersQuery({ selfName: currentUser })
+  const devs = users?.filter((u) => u.isDeveloper)
   const installerPlatforms = installers.find(
     (i) => i.version === formData?.installerVersion,
   )?.platforms
+
+  const devSelectOptions = useMemo(
+    () =>
+      devs.map((d) => ({
+        name: d.name,
+        fullName: d.attrib?.fullName || d.name,
+        avatarUrl: d.attrib?.avatarUrl,
+      })),
+    [devs],
+  )
 
   if (!formData) return null
 
@@ -77,6 +91,40 @@ const BundleForm = ({
             </div>
           )}
         </FormRow>
+        {isDev && (
+          <FormRow label="Assigned dev" fieldStyle={{ flexDirection: 'row', gap: 8 }}>
+            <Styled.DevSelect
+              editor
+              emptyMessage={'Assign developer...'}
+              value={[formData.activeUser]}
+              options={devSelectOptions}
+              disabled={isLoading}
+              multiSelect={false}
+              onChange={(v) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  activeUser: v[0],
+                }))
+              }
+            />
+            <Styled.BadgeButton
+              label="Assign to me"
+              $hl={'developer-surface'}
+              icon={'person_pin_circle'}
+              style={{
+                justifyContent: 'center',
+                width: 'auto',
+              }}
+              disabled={formData.activeUser === currentUser || isLoading}
+              onClick={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  activeUser: currentUser,
+                }))
+              }}
+            />
+          </FormRow>
+        )}
       </FormLayout>
       <Divider />
       <StyledColumns style={{ maxWidth: 1500 }}>

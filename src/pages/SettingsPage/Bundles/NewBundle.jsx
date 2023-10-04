@@ -2,13 +2,23 @@ import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { useCreateBundleMutation, useUpdateBundleMutation } from '/src/services/bundles'
-import { useSelector } from 'react-redux'
 
 import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
 import { isEqual, union } from 'lodash'
 import BundleDeps from './BundleDeps'
+
+const removeEmptyDevAddons = (addons = {}) => {
+  if (!addons) return addons
+  const newAddonDevelopment = {}
+  for (const [key, value] of Object.entries(addons)) {
+    if (value.enabled || value.path) {
+      newAddonDevelopment[key] = value
+    }
+  }
+  return newAddonDevelopment
+}
 
 const NewBundle = ({
   initBundle,
@@ -22,9 +32,6 @@ const NewBundle = ({
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
-
-  const currentUser = useSelector((state) => state.user.name)
-  const [originalUser, setOriginalUser] = useState(null)
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
@@ -60,7 +67,6 @@ const NewBundle = ({
         addonDevelopment: { ...initBundle.addonDevelopment, ...initAddonsDev },
       }
       setFormData(initForm)
-      setOriginalUser(initBundle.activeUser)
     }
   }, [initBundle, installers, isLoading, addons])
 
@@ -89,8 +95,10 @@ const NewBundle = ({
 
   useEffect(() => {
     if (!initBundle) return
+    const latestFormData = { ...formData }
+    latestFormData['addonDevelopment'] = removeEmptyDevAddons(latestFormData['addonDevelopment'])
     // check for changes
-    isEqual(initBundle, formData) ? setDevChanges(false) : setDevChanges(true)
+    isEqual(initBundle, latestFormData) ? setDevChanges(false) : setDevChanges(true)
   }, [initBundle, formData])
 
   const handleUpdate = async () => {
@@ -107,13 +115,7 @@ const NewBundle = ({
 
     // if changes includes addonDevelopment, we remove keys that have enabled and path false
     if (changes.addonDevelopment) {
-      const newAddonDevelopment = {}
-      for (const [key, value] of Object.entries(changes.addonDevelopment)) {
-        if (value.enabled || value.path) {
-          newAddonDevelopment[key] = value
-        }
-      }
-      changes.addonDevelopment = newAddonDevelopment
+      changes.addonDevelopment = removeEmptyDevAddons(changes.addonDevelopment)
     }
 
     try {
@@ -232,7 +234,7 @@ const NewBundle = ({
               <Styled.BadgeButton
                 label="Enable development addon"
                 icon="code"
-                $hl={'developer'}
+                $hl={'developer-surface'}
                 disabled={!selectedAddons.length}
                 onClick={() =>
                   handleAddonDevChange(
@@ -244,25 +246,6 @@ const NewBundle = ({
                   gridColumn: 'span 2',
                   justifyContent: 'center',
                   width: 'auto',
-                }}
-              />
-
-              <Styled.BadgeButton
-                label="Mark as active dev package"
-                icon={
-                  formData?.activeUser === currentUser ? 'check_box' : 'check_box_outline_blank'
-                }
-                style={{
-                  gridColumn: 'span 2',
-                  justifyContent: 'center',
-                  width: 'auto',
-                }}
-                disabled={originalUser === currentUser}
-                onClick={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    activeUser: prev.activeUser === currentUser ? undefined : currentUser,
-                  }))
                 }}
               />
             </>

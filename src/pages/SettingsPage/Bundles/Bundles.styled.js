@@ -1,4 +1,4 @@
-import { Button } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Button } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 const platformColors = {
@@ -72,4 +72,13 @@ export const FilePath = styled.div`
   gap: var(--base-gap-large);
   width: 100%;
   padding-left: 4px;
+  align-items: center;
+`
+export const DevSelect = styled(AssigneeSelect)`
+  min-width: 200px;
+
+  .button {
+    border: 1px solid var(--md-sys-color-outline-variant);
+    height: 32px;
+  }
 `
