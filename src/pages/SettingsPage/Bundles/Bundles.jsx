@@ -369,7 +369,6 @@ const Bundles = () => {
                     isLoading={isLoadingInstallers || isFetching}
                     installers={installerVersions}
                     addons={addons}
-                    toggleBundleStatus={toggleBundleStatus}
                     isDev
                   />
                 ) : (

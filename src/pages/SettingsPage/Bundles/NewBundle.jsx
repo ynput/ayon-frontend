@@ -20,16 +20,7 @@ const removeEmptyDevAddons = (addons = {}) => {
   return newAddonDevelopment
 }
 
-const NewBundle = ({
-  initBundle,
-  onSave,
-  addons,
-  installers,
-  isLoading,
-  isDev,
-  toggleBundleStatus,
-  developerMode,
-}) => {
+const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, developerMode }) => {
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
@@ -169,15 +160,16 @@ const NewBundle = ({
         <Spacer />
         {isDev && (
           <>
-            <Styled.BadgeButton
-              $hl={'developer'}
-              icon={'cancel'}
-              disabled={devChanges}
-              onClick={() => toggleBundleStatus('isDev', initBundle.name)}
+            <Button
+              disabled={!devChanges}
+              title="Cancel changes"
+              onClick={() => {
+                setFormData(initBundle)
+                setDevChanges(false)
+              }}
             >
-              Unset Dev
-            </Styled.BadgeButton>
-            <Button disabled={!devChanges}>Cancel</Button>
+              Cancel
+            </Button>
           </>
         )}
         <SaveButton
