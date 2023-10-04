@@ -77,9 +77,9 @@ const AttributeTable = ({
         })}
 
       {projectAttrib &&
-        projectAttrib.map(({ name, value }) => {
-          return <TableRow key={name} name={name} value={value} onCopy={copyToClipboard} />
-        })}
+        projectAttrib.map(({ name, value }) => (
+          <TableRow key={name} name={name} value={value} onCopy={copyToClipboard} />
+        ))}
     </AttributeTableContainer>
   )
 }

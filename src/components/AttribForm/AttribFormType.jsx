@@ -27,7 +27,7 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ..
     // only change if value is different
     if (isEqual(value, newValue)) return
 
-    onChange({ [id]: newValue })
+    onChange(id, newValue)
   }
 
   const sharedProps = { value, onChange: handleChange, id, ...props, autoComplete: 'off' }
@@ -57,7 +57,7 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ..
     case 'array':
       return (
         <Dropdown
-          value={value}
+          value={value || []}
           onChange={(v) => handleChange(null, v)}
           options={options}
           search={options.length > 5}
