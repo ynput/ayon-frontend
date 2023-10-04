@@ -214,7 +214,15 @@ function ObjectFieldTemplate(props) {
     )
 
     const envMark = props.formContext.headerVariant && (
-      <Badge hl={props.formContext.headerVariant}>{props.formContext.headerVariant}</Badge>
+      <Badge
+        hl={
+          ['production', 'staging'].includes(props.formContext.headerVariant)
+            ? props.formContext.headerVariant
+            : 'developer'
+        }
+      >
+        {props.formContext.headerVariant}
+      </Badge>
     )
 
     title = (
