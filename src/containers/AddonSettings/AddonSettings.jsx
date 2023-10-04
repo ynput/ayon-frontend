@@ -94,6 +94,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     }
   }, [uriChanged])
 
+  const user = useSelector((state) => state.user)
+
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
     if (key in originalData) return
@@ -438,32 +440,34 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           <VariantSelector variant={variant} setVariant={setVariant} />
           <Spacer />
         </Toolbar>
-        <Toolbar>
-          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {bundleName}
-          </span>
-          <Spacer />
-          <CopyBundleSettingsButton
-            bundleName={bundleName}
-            variant={variant}
-            disabled={canCommit}
-            localData={localData}
-            changedKeys={changedKeys}
-            setLocalData={setLocalData}
-            setChangedKeys={setChangedKeys}
-            setSelectedAddons={setSelectedAddons}
-            originalData={originalData}
-            setOriginalData={setOriginalData}
-            projectName={projectName}
-          />
-          <Button
-            icon="local_shipping"
-            tooltip="rocket_launch"
-            onClick={onPushToProduction}
-            disabled={variant !== 'staging' || canCommit}
-            style={{ zIndex: 100 }}
-          />
-        </Toolbar>
+        {!user?.attrib?.developerMode && (
+          <Toolbar>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {bundleName}
+            </span>
+            <Spacer />
+            <CopyBundleSettingsButton
+              bundleName={bundleName}
+              variant={variant}
+              disabled={canCommit}
+              localData={localData}
+              changedKeys={changedKeys}
+              setLocalData={setLocalData}
+              setChangedKeys={setChangedKeys}
+              setSelectedAddons={setSelectedAddons}
+              originalData={originalData}
+              setOriginalData={setOriginalData}
+              projectName={projectName}
+            />
+            <Button
+              icon="local_shipping"
+              tooltip="rocket_launch"
+              onClick={onPushToProduction}
+              disabled={variant !== 'staging' || canCommit}
+              style={{ zIndex: 100 }}
+            />
+          </Toolbar>
+        )}
       </>
     )
   }, [variant, changedKeys, bundleName, projectName])
