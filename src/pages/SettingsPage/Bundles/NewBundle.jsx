@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { useCreateBundleMutation, useUpdateBundleMutation } from '/src/services/bundles'
+import { useSelector } from 'react-redux'
 
 import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
@@ -21,6 +22,9 @@ const NewBundle = ({
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
+
+  const currentUser = useSelector((state) => state.user.name)
+  const [originalUser, setOriginalUser] = useState(null)
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
@@ -56,6 +60,7 @@ const NewBundle = ({
         addonDevelopment: { ...initBundle.addonDevelopment, ...initAddonsDev },
       }
       setFormData(initForm)
+      setOriginalUser(initBundle.activeUser)
     }
   }, [initBundle, installers, isLoading, addons])
 
@@ -223,23 +228,44 @@ const NewBundle = ({
             onClick={() => setSelectedVersion(false)}
           />
           {isDev && (
-            <Styled.BadgeButton
-              label="Enable development addon"
-              icon="code"
-              $hl={'developer'}
-              disabled={!selectedAddons.length}
-              onClick={() =>
-                handleAddonDevChange(
-                  selectedAddons.map((a) => a.name),
-                  { key: 'enabled', value: true },
-                )
-              }
-              style={{
-                gridColumn: 'span 2',
-                justifyContent: 'center',
-                width: 'auto',
-              }}
-            />
+            <>
+              <Styled.BadgeButton
+                label="Enable development addon"
+                icon="code"
+                $hl={'developer'}
+                disabled={!selectedAddons.length}
+                onClick={() =>
+                  handleAddonDevChange(
+                    selectedAddons.map((a) => a.name),
+                    { key: 'enabled', value: true },
+                  )
+                }
+                style={{
+                  gridColumn: 'span 2',
+                  justifyContent: 'center',
+                  width: 'auto',
+                }}
+              />
+
+              <Styled.BadgeButton
+                label="Mark as active dev package"
+                icon={
+                  formData?.activeUser === currentUser ? 'check_box' : 'check_box_outline_blank'
+                }
+                style={{
+                  gridColumn: 'span 2',
+                  justifyContent: 'center',
+                  width: 'auto',
+                }}
+                disabled={originalUser === currentUser}
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    activeUser: prev.activeUser === currentUser ? undefined : currentUser,
+                  }))
+                }}
+              />
+            </>
           )}
         </Styled.AddonTools>
         {isDev && <BundleDeps bundle={formData} />}
