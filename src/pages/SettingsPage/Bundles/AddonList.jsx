@@ -140,7 +140,7 @@ const AddonList = React.forwardRef(
             body={(addon) => (
               <FilePath>
                 <InputSwitch
-                  checked={addon.dev.enabled}
+                  checked={addon.dev?.enabled}
                   onChange={() =>
                     onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
                   }
