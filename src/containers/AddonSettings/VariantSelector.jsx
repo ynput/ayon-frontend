@@ -1,18 +1,31 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 
 import { useGetBundleListQuery } from '/src/services/bundles'
 
 const DevModeSelector = ({ variant, setVariant, disabled }) => {
   const { data: bundleList } = useGetBundleListQuery({})
+  const userName = useSelector((state) => state.user.name)
 
   const bundleOptions = useMemo(() => {
-    console.log('BUNDLE LIST', bundleList)
     if (!bundleList?.length) return []
     const bundles = bundleList.filter((b) => !b?.isArchived && b?.isDev)
     return bundles.map((b) => ({ label: b.name, value: b.name }))
   }, [bundleList])
+
+  useEffect(() => {
+    // Bundle preselection
+    if (!bundleList?.length) return
+    const bundles = bundleList.filter((b) => !b?.isArchived && b?.isDev)
+    if (!bundles.length) return
+    const selectedBundle = bundles.find((b) => b.name === variant)
+    if (!selectedBundle) {
+      const userBundle = bundles.find((b) => b.activeUser === userName)
+      if (userBundle) return setVariant(userBundle.name)
+      else return setVariant(bundles[0].name)
+    }
+  }, [bundleList, variant])
 
   return (
     <Dropdown
