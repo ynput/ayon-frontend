@@ -31,11 +31,20 @@ const NewBundle = ({
       // addons = [{name: 'addon1', versions:{'1.0.0': {}}}]
       // reduce down addons to latest version
       const initAddons = {}
+      const initAddonsDev = {}
       for (const addon of addons) {
         const versionList = Object.keys(addon.versions || {})
         if (versionList.length) {
           const latestVersion = getLatestSemver(versionList)
           initAddons[addon.name] = latestVersion
+        }
+
+        if (isDev) {
+          // check if there's an addon development
+          if (!initBundle.addonDevelopment?.[addon.name]) {
+            // create new addon development when there isn't one
+            initAddonsDev[addon.name] = { path: '', enabled: false }
+          }
         }
       }
 
@@ -44,6 +53,7 @@ const NewBundle = ({
         installerVersion: installers?.[0]?.version,
         name: '',
         ...initBundle,
+        addonDevelopment: { ...initBundle.addonDevelopment, ...initAddonsDev },
       }
       setFormData(initForm)
     }
@@ -89,6 +99,18 @@ const NewBundle = ({
         changes[key] = formData[key]
       }
     }
+
+    // if changes includes addonDevelopment, we remove keys that have enabled and path false
+    if (changes.addonDevelopment) {
+      const newAddonDevelopment = {}
+      for (const [key, value] of Object.entries(changes.addonDevelopment)) {
+        if (value.enabled || value.path) {
+          newAddonDevelopment[key] = value
+        }
+      }
+      changes.addonDevelopment = newAddonDevelopment
+    }
+
     try {
       await updateBundle({ name: initBundle.name, data: { ...changes } }).unwrap()
 
@@ -100,14 +122,14 @@ const NewBundle = ({
     }
   }
 
-  const setSelectedVersion = (latest = false, dev) => {
+  const setSelectedVersion = (latest = false) => {
     setFormData((prev) => {
       // set all selected addons to latest version if in formData
       const newFormData = { ...prev }
       const newAddons = { ...newFormData.addons }
       for (const addon of selectedAddons) {
         if (!latest) {
-          newAddons[addon.name] = dev ? 'DEV' : undefined
+          newAddons[addon.name] = undefined
           continue
         }
         const versionList = Object.keys(addon.versions || {})
@@ -119,6 +141,16 @@ const NewBundle = ({
       newFormData.addons = newAddons
       return newFormData
     })
+  }
+
+  const handleAddonDevChange = (names = [], { key, value }) => {
+    const newFormData = { ...formData }
+    const addonDevelopment = { ...(newFormData.addonDevelopment || {}) }
+    for (const name of names) {
+      addonDevelopment[name] = { ...(addonDevelopment[name] || {}), [key]: value }
+    }
+    newFormData.addonDevelopment = addonDevelopment
+    setFormData(newFormData)
   }
 
   return (
@@ -155,6 +187,7 @@ const NewBundle = ({
           installers,
         }}
         formData={formData}
+        onAddonDevChange={handleAddonDevChange}
       >
         <Styled.AddonTools>
           <Button
@@ -191,11 +224,16 @@ const NewBundle = ({
           />
           {isDev && (
             <Styled.BadgeButton
-              label="Version to DEV"
+              label="Enable development addon"
               icon="code"
               $hl={'developer'}
               disabled={!selectedAddons.length}
-              onClick={() => setSelectedVersion(false, true)}
+              onClick={() =>
+                handleAddonDevChange(
+                  selectedAddons.map((a) => a.name),
+                  { key: 'enabled', value: true },
+                )
+              }
               style={{
                 gridColumn: 'span 2',
                 justifyContent: 'center',

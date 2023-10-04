@@ -1,4 +1,4 @@
-import { Button, VersionSelect } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 const platformColors = {
@@ -67,18 +67,9 @@ export const AddonTools = styled.div`
   }
 `
 
-export const StyledVersionSelect = styled(VersionSelect)`
-  &.dev {
-    button {
-      background-color: var(--color-hl-developer);
-
-      &:hover {
-        background-color: var(--color-hl-developer-hover);
-      }
-
-      span {
-        color: black;
-      }
-    }
-  }
+export const FilePath = styled.div`
+  display: flex;
+  gap: var(--base-gap-large);
+  width: 100%;
+  padding-left: 4px;
 `

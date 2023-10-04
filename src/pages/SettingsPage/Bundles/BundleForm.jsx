@@ -30,12 +30,15 @@ const BundleForm = ({
   children,
   selectedAddons,
   setSelectedAddons,
+  onAddonDevChange,
 }) => {
   const showNameError = formData && !formData?.name && isNew
 
   const installerPlatforms = installers.find(
     (i) => i.version === formData?.installerVersion,
   )?.platforms
+
+  if (!formData) return null
 
   return (
     <Panel style={{ flexGrow: 1, overflow: 'hidden' }}>
@@ -86,6 +89,7 @@ const BundleForm = ({
               setSelected={setSelectedAddons}
               selected={selectedAddons}
               isDev={isDev}
+              onDevChange={onAddonDevChange}
             />
           </section>
         </section>

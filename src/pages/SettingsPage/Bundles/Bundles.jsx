@@ -356,7 +356,7 @@ const Bundles = () => {
                 <NewBundle
                   initBundle={newBundleOpen}
                   onSave={handleNewBundleEnd}
-                  isLoading={isLoadingInstallers}
+                  isLoading={isLoadingInstallers || isFetching}
                   installers={installerVersions}
                   addons={addons}
                 />
@@ -365,7 +365,7 @@ const Bundles = () => {
                 (bundlesData.length === 1 && bundlesData[0].isDev ? (
                   <NewBundle
                     initBundle={bundlesData[0]}
-                    isLoading={isLoadingInstallers}
+                    isLoading={isLoadingInstallers || isFetching}
                     installers={installerVersions}
                     addons={addons}
                     toggleBundleStatus={toggleBundleStatus}
@@ -375,7 +375,7 @@ const Bundles = () => {
                   <BundleDetail
                     bundles={bundlesData}
                     onDuplicate={handleDuplicateBundle}
-                    isLoading={isLoadingInstallers || isLoadingAddons}
+                    isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
                     installers={installerVersions}
                     toggleBundleStatus={toggleBundleStatus}
                     addons={addons}
