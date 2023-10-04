@@ -48,6 +48,12 @@ const TYPE_OPTIONS = {
     label: 'List Of Strings',
     fields: ['minItems', 'maxItems', 'enum'],
   },
+  boolean: {
+    value: 'boolean',
+    label: 'Boolean',
+    fields: [],
+    exclude: ['example'],
+  },
 }
 
 const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
@@ -95,7 +101,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
       <Spacer />
       <Button
         label={isNew ? 'Create Attribute' : 'Save Attribute'}
-        icon="check"
+        icon={'check'}
         disabled={!!error}
         onClick={() => onEdit(formData)}
       />
@@ -104,7 +110,9 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   let dataFields = [...GLOBAL_FIELDS]
   if (TYPE_OPTIONS[formData?.data.type]) {
-    dataFields = [...dataFields, ...TYPE_OPTIONS[formData?.data.type].fields]
+    dataFields = [...dataFields, ...TYPE_OPTIONS[formData?.data.type].fields].filter(
+      (f) => !TYPE_OPTIONS[formData?.data.type].exclude?.includes(f),
+    )
   }
 
   const customFields = {
@@ -112,6 +120,9 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
       <EnumEditor values={value} onChange={(value) => onChange(value)} />
     ),
     inherit: (value, onChange) => (
+      <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />
+    ),
+    booleanDefault: (value, onChange) => (
       <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />
     ),
   }
@@ -166,24 +177,37 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               widthExpand
             />
           </FormRow>
-          {dataFields.map((field) => (
-            <FormRow
-              label={field}
-              key={field}
-              style={{
-                alignItems: 'flex-start',
-              }}
-            >
-              {field in customFields ? (
-                customFields[field](formData?.data[field], (value) => setData(field, value))
-              ) : (
+          {dataFields.map((field) => {
+            let fieldComp = null
+            if (field in customFields) {
+              fieldComp = customFields[field](formData?.data[field], (value) =>
+                setData(field, value),
+              )
+            } else if (field === 'default' && formData?.data?.type === 'boolean') {
+              fieldComp = customFields['booleanDefault'](formData?.data[field], (value) =>
+                setData(field, value),
+              )
+            } else {
+              fieldComp = (
                 <InputText
                   value={formData?.data[field] || ''}
                   onChange={(e) => setData(field, e.target.value)}
                 />
-              )}
-            </FormRow>
-          ))}
+              )
+            }
+
+            return (
+              <FormRow
+                label={field}
+                key={field}
+                style={{
+                  alignItems: 'flex-start',
+                }}
+              >
+                {fieldComp}
+              </FormRow>
+            )
+          })}
           <FormRow>{error && <span className="form-error-text">{error}</span>}</FormRow>
         </FormLayout>
       )}

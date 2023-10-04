@@ -146,11 +146,11 @@ const SearchDropdown = ({
     onClose && onClose()
   }
 
-  const handleSubmit = (e, useAll) => {
+  const handleSubmit = (e, useAll, preventClose) => {
     e && e.preventDefault()
     const input = inputRef.current.value
 
-    closeSearch()
+    !preventClose && closeSearch()
     // if active index true find item
     const item = suggestionsSpliced[activeIndex]
 
@@ -183,6 +183,16 @@ const SearchDropdown = ({
     // update search results
     handleFilterResults(finalSearch)
   }
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (search) {
+        handleSubmit(null, true, true)
+      }
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [search])
 
   const handleOnChange = (e) => {
     const inputText = e.target.value
@@ -283,7 +293,7 @@ const SearchDropdown = ({
     >
       {suggestionsOpen && <BackdropStyled onClick={handleBlur} />}
       <InputTextStyled
-        placeholder="Filter folders..."
+        placeholder="Filter folders & tasks..."
         value={search}
         onChange={handleOnChange}
         onFocus={handleFocus}

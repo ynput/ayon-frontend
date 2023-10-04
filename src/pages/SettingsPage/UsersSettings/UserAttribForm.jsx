@@ -1,11 +1,11 @@
 import {
   InputText,
-  InputSwitch,
   FormLayout,
   FormRow,
   InputPassword,
   Divider,
   Dropdown,
+  InputSwitch,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 

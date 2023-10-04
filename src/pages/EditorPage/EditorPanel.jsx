@@ -10,6 +10,7 @@ import {
   Dropdown,
   AssigneeSelect,
   InputDate,
+  InputSwitch,
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -347,6 +348,25 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
         isMultiple: oldValue?.isMultiple && !isChanged,
       }
 
+      // if the label is changed and the entity is new, change the name as well
+      // first check if all nodes are newNodes
+      const allNewNodes = nodeIds.every((id) => nodes[id]?.data?.__isNew)
+      if (allNewNodes && changeKey === '_label') {
+        // replace space with underscore, set to lowercase and remove special characters and any non alphanumeric characters from the start
+        const name = newValue
+          .replace(/\s/g, '_')
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, '')
+          .replace(/^[^a-z]+/g, '')
+        newForm._name = {
+          ...newForm._name,
+          value: name,
+          isChanged: true,
+          isOwn: true,
+          isMultiple: false,
+        }
+      }
+
       setLocalChange(true)
 
       if (setFormNew) return setFormNew(newForm)
@@ -598,6 +618,24 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                         width: '100%',
                       }}
                       isClearable={isOwn}
+                    />
+                  )
+                } else if (attrib?.type === 'boolean') {
+                  input = (
+                    <InputSwitch
+                      checked={value || false}
+                      disabled={disabled}
+                      onChange={(e) => handleLocalChange(e.target.checked, changeKey, field)}
+                      style={{
+                        ...changedStyles,
+                        color: isChanged
+                          ? 'var(--color-on-changed)'
+                          : !isOwn
+                          ? 'var(--md-ref-palette-neutral-variant60)'
+                          : 'var(--md-sys-color-on-surface-variant)',
+                        ...disabledStyles,
+                        width: '100%',
+                      }}
                     />
                   )
                 } else {

@@ -60,12 +60,9 @@ const ProductsList = ({
           loading: loadingProducts.includes(rowData.data.id),
         }
         if (!focusedTasks.length || focusedType !== 'task') return className
-        const matchingTask = focusedTasks.some((id) => id === rowData.data.taskId)
 
         return {
           ...className,
-          'focused-task': matchingTask,
-          'not-focused-task': !matchingTask,
         }
       }}
       onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
