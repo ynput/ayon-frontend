@@ -10,7 +10,7 @@ import AttribForm from '/src/components/AttribForm/AttribForm'
 import { useGetAnatomySchemaQuery } from '/src/services/anatomy/getAnatomy'
 import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
+import { useUpdateProjectMutation } from '/src/services/project/updateProject'
 import { toast } from 'react-toastify'
 
 const ProjectDetails = ({ projectName }) => {
@@ -22,7 +22,7 @@ const ProjectDetails = ({ projectName }) => {
   const fields = schema?.definitions?.ProjectAttribModel?.properties
 
   // UPDATE DATA
-  const [updateAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
+  const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation()
 
   const [editing, setEditing] = useState(false)
 
@@ -78,7 +78,7 @@ const ProjectDetails = ({ projectName }) => {
         data[key] = value
       }
 
-      await updateAnatomy({ projectName, anatomy: { attributes: data } }).unwrap()
+      await updateProject({ projectName, update: { attrib: data } }).unwrap()
 
       setEditing(false)
       toast.success('Project updated')

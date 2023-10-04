@@ -1,4 +1,10 @@
-import { Dropdown, InputDate, InputNumber, InputText } from '@ynput/ayon-react-components'
+import {
+  Dropdown,
+  InputDate,
+  InputNumber,
+  InputSwitch,
+  InputText,
+} from '@ynput/ayon-react-components'
 import { isEmpty, isEqual } from 'lodash'
 import React from 'react'
 
@@ -36,6 +42,8 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ..
       return <InputNumber {...sharedProps} step={0.01} min={0} />
     case 'integer':
       return <InputNumber {...sharedProps} step={1} min={0} />
+    case 'boolean':
+      return <InputSwitch checked={value} onChange={() => handleChange(null, !value)} />
     case 'date':
       return (
         <InputDate
