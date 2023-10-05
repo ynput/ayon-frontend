@@ -1,8 +1,26 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
 import { useMemo, useEffect } from 'react'
-
 import { useGetBundleListQuery } from '/src/services/bundles'
+import styled from 'styled-components'
+
+const BundleDropdownItem = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+`
+
+const DropdownBadge = styled.span`
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: black;
+  background-color: var(--color-hl-developer);
+  margin-left: 8px;
+`
 
 const DevModeSelector = ({ variant, setVariant, disabled }) => {
   const { data: bundleList } = useGetBundleListQuery({})
@@ -11,7 +29,7 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
   const bundleOptions = useMemo(() => {
     if (!bundleList?.length) return []
     const bundles = bundleList.filter((b) => !b?.isArchived && b?.isDev)
-    return bundles.map((b) => ({ label: b.name, value: b.name }))
+    return bundles.map((b) => ({ label: b.name, value: b.name, active: b.activeUser === userName }))
   }, [bundleList])
 
   useEffect(() => {
@@ -33,7 +51,15 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
       value={[variant]}
       onChange={(e) => setVariant(e[0])}
       disabled={disabled}
-      style={{ flex: 1 }}
+      style={{ flexGrow: 1 }}
+      itemTemplate={(option) => (
+        <BundleDropdownItem>
+          <span>
+            {option.label}
+            {option.active && <DropdownBadge>A</DropdownBadge>}
+          </span>
+        </BundleDropdownItem>
+      )}
     />
   )
 }
@@ -41,8 +67,15 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
 const VariantSelector = ({ variant, setVariant, disabled }) => {
   const user = useSelector((state) => state.user)
 
-  if (user.attrib.developerMode)
+  useEffect(() => {
+    if (!user.attrib.developerMode && !['staging', 'production'].includes(variant)) {
+      setVariant('production')
+    }
+  }, [user.attrib.developerMode])
+
+  if (user.attrib.developerMode) {
     return <DevModeSelector variant={variant} setVariant={setVariant} disabled={disabled} />
+  }
 
   const styleHlProd = {
     backgroundColor: 'var(--color-hl-production)',

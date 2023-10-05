@@ -438,7 +438,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <>
         <Toolbar>
           <VariantSelector variant={variant} setVariant={setVariant} />
-          <Spacer />
         </Toolbar>
         {!user?.attrib?.developerMode && (
           <Toolbar>
