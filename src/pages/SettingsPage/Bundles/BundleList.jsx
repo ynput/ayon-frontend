@@ -54,15 +54,15 @@ const BundleList = ({
     const ctxMenuItems = []
     const activeBundle = e?.data
     if (!activeBundle) return
-    const { name: activeBundleName, isArchived, isProduction, isStaging } = e?.data || {}
+    const { name: activeBundleName, isArchived, isProduction, isStaging, isDev } = e?.data || {}
     if (!activeBundleName) {
       return
     }
     if (!isArchived) {
       // production
-      ctxMenuItems.push(getBundleStatusItem('production', activeBundle))
+      ctxMenuItems.push(getBundleStatusItem('production', activeBundle, isDev))
       // staging
-      ctxMenuItems.push(getBundleStatusItem('staging', activeBundle))
+      ctxMenuItems.push(getBundleStatusItem('staging', activeBundle, isDev))
       // dev
       ctxMenuItems.push(getBundleStatusItem('dev', activeBundle, isProduction || isStaging))
     }
