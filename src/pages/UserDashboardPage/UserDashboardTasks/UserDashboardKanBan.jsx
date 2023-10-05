@@ -21,6 +21,8 @@ import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboa
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import UserDashboardList from './UserDashboardList/UserDashboardList'
+import useLocalStorage from '/src/hooks/useLocalStorage'
+import { snakeCase } from 'lodash'
 
 const UserDashboardKanBan = ({
   tasks,
@@ -32,6 +34,18 @@ const UserDashboardKanBan = ({
   disabledProjectUsers = [],
 }) => {
   const dispatch = useDispatch()
+
+  const [customColumns, setCustomColumns] = useLocalStorage('dashboard-tasks-columns', {
+    // not_started: {
+    //   id: 'not_started',
+    //   name: 'Not Started',
+    //   state: 'not_started',
+    //   shortName: 'NST',
+    //   color: '#FFD166',
+    //   items: ['ready_to_start', 'not_ready', 'waiting'],
+    //   index: 1,
+    // },
+  })
 
   // KANBAN or TASKS
   const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
@@ -102,35 +116,74 @@ const UserDashboardKanBan = ({
     [sortedTasks, splitBy, mergedFields],
   )
 
-  const openFieldColumns = useMemo(() => {
-    return fieldsColumns.map((field) => {
-      const isCollapsed = collapsedColumns.includes(field.id)
-      // count number of tasks in column
-      const count = Object.values(tasksColumns).reduce((acc, column) => {
-        const tasks = column.tasks.filter((task) => task[splitBy] === field.name)
-        return acc + tasks.length
-      }, 0)
+  const customFieldColumns = useMemo(() => {
+    const customFieldColumns = []
+    const fieldColumnsIds = new Set(fieldsColumns.map((field) => field.id))
 
-      return { ...field, isCollapsed, count }
+    for (const key in customColumns) {
+      const group = customColumns[key]
+      const items = group.items?.flatMap((c) => fieldsColumns.find((f) => f.id === c) || []) || []
+      const isCollapsed = collapsedColumns.includes(key)
+      const tasksCount = items.reduce(
+        (acc, column) => acc + (tasksColumns[column.id]?.tasks?.length || 0),
+        0,
+      )
+
+      customFieldColumns.push({
+        ...group,
+        id: key,
+        items,
+        isCollapsed,
+        collapsed: [],
+        count: tasksCount,
+        isCustom: true,
+      })
+
+      items.forEach((column) => fieldColumnsIds.delete(column.id))
+    }
+
+    const remainingColumns = fieldsColumns.filter((field) => fieldColumnsIds.has(field.id))
+    remainingColumns.forEach((column, index) => {
+      const isCollapsed = collapsedColumns.includes(column.id)
+      const tasksCount = tasksColumns[column.id]?.tasks?.length || 0
+      customFieldColumns.push({
+        ...column,
+        items: [column],
+        isCollapsed,
+        count: tasksCount,
+        collapsed: [],
+        isCustom: false,
+        index: index,
+      })
     })
-  }, [fieldsColumns, collapsedColumns])
+
+    return customFieldColumns
+  }, [customColumns, fieldsColumns, collapsedColumns, tasksColumns])
+
+  // now sort the columns by index
+  customFieldColumns.sort((a, b) => a.index - b.index)
 
   // group openFieldColumns isCollapsed adjacent columns into one collapsed column
-  const groupedOpenFieldColumns = useMemo(() => {
-    const grouped = []
-    let currentGroup = []
-    openFieldColumns.forEach((column) => {
-      if (column.isCollapsed) {
-        currentGroup.push(column)
-      } else {
-        if (currentGroup.length) grouped.push(currentGroup)
-        currentGroup = []
-        grouped.push([column])
-      }
-    })
-    if (currentGroup.length) grouped.push(currentGroup)
-    return grouped
-  }, [openFieldColumns])
+  const groupedOpenFieldColumns = useMemo(
+    () =>
+      customFieldColumns.reduce((acc, column) => {
+        const lastColumn = acc[acc.length - 1]
+        if (column.isCollapsed) {
+          // we add items to collapsed column
+          if (lastColumn && lastColumn.isCollapsed === column.isCollapsed) {
+            lastColumn.collapsed.push(column)
+          } else {
+            column.collapsed = [column]
+            acc.push(column)
+          }
+        } else {
+          // we check if this column belongs in a group column and if that group column is already in the list
+          acc.push(column)
+        }
+        return acc
+      }, []),
+    [customFieldColumns],
+  )
 
   // DND Stuff
   const touchSensor = useSensor(TouchSensor)
@@ -203,6 +256,75 @@ const UserDashboardKanBan = ({
     updateTasks({ operations })
   }
 
+  const handleCustomColumnsChange = (
+    { id, name, index, color },
+    { id: addId, index: addIndex },
+    remove,
+  ) => {
+    const newId = `${id}_group`
+    // find group column if there is one
+    const group = customColumns[id] || {
+      id: newId,
+      name: name + ' Group',
+      color: color || '#bfbfbf',
+      items: [id],
+    }
+
+    // if the index before go to that index
+    group.index = addIndex !== undefined ? Math.min(index, addIndex) : index
+
+    // add or remove items
+    if (addId) group.items.push(addId)
+    if (remove) group.items = group.items.filter((i) => i !== remove)
+
+    const newCustomColumnsState = { ...customColumns }
+    newCustomColumnsState[group.id] = group
+
+    // check if addId was in a group column, if so, remove it from that group column
+    if (addId) {
+      for (const key in customColumns) {
+        const otherGroup = customColumns[key]
+        if (otherGroup.items.includes(addId) && otherGroup.id !== group.id) {
+          const newItems = otherGroup.items.filter((i) => i !== addId)
+          if (newItems.length) {
+            newCustomColumnsState[otherGroup.id] = {
+              ...otherGroup,
+              items: newItems,
+            }
+          } else {
+            // delete
+            delete newCustomColumnsState[otherGroup.id]
+          }
+        }
+      }
+    }
+
+    // if no items, remove group column
+    if (!group.items.length) delete newCustomColumnsState[id]
+    setCustomColumns(newCustomColumnsState)
+  }
+
+  const handleRename = (id, name) => {
+    if (customColumns[id]) {
+      const newId = snakeCase(name)
+      const newCustomColumnsState = {
+        ...customColumns,
+        [newId]: { ...customColumns[id], name, id: newId },
+      }
+      // delete old column
+      delete newCustomColumnsState[id]
+      setCustomColumns(newCustomColumnsState)
+    }
+  }
+
+  const handleGroupDelete = (id) => {
+    if (customColumns[id]) {
+      const newCustomColumnsState = { ...customColumns }
+      delete newCustomColumnsState[id]
+      setCustomColumns(newCustomColumnsState)
+    }
+  }
+
   return (
     <>
       <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
@@ -222,6 +344,9 @@ const UserDashboardKanBan = ({
               allUsers={allUsers}
               disabledStatuses={disabledStatuses}
               onCollapsedColumnsChange={handleCollapseToggle}
+              onGroupChange={handleCustomColumnsChange}
+              onGroupRename={handleRename}
+              onGroupDelete={handleGroupDelete}
             />
             <KanBanCardOverlay
               activeDraggingId={activeDraggingId}

@@ -1,4 +1,3 @@
-import { useDroppable } from '@dnd-kit/core'
 import * as Styled from './KanBanColumn.styled'
 import React, { Fragment, forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { getFakeTasks, getGroupedTasks, usePrefetchTask, useTaskClick } from '../../util'
@@ -10,6 +9,7 @@ import { InView, useInView } from 'react-intersection-observer'
 import { useGetTaskContextMenu } from '../../util'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import { toggleMenuOpen } from '/src/features/context'
+import KanBanColumnDropzone from './KanBanColumnDropzone'
 
 const KanBanColumn = forwardRef(
   (
@@ -17,24 +17,21 @@ const KanBanColumn = forwardRef(
       tasks = [],
       id,
       groupByValue = {},
-      columns = {},
+      groupItems = [],
+      column = {},
       isLoading,
       allUsers = [],
-      disabled,
+      disabledStatuses,
       sectionRect,
       sectionRef,
       onToggleCollapse,
+      active,
+      activeColumn,
     },
     ref,
   ) => {
     const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
     const dispatch = useDispatch()
-
-    const column = columns[id] || {}
-    const { isOver, setNodeRef, active, over } = useDroppable({
-      id: id,
-      disabled,
-    })
 
     // DROPDOWN MENU
     const menuId = id
@@ -75,14 +72,9 @@ const KanBanColumn = forwardRef(
 
       const cardsFit = Math.floor(sectionRect?.height / cardHeight)
       setNumberCardsFit(cardsFit)
-    }, [itemsRef.current, tasksCount, sectionRect?.height, active])
+    }, [itemsRef.current, tasksCount, sectionRect?.height])
 
-    // find out which column the active card has come from
-    const activeColumn = Object.values(columns).find((column) =>
-      column.tasks.find((t) => t.id === active?.id),
-    )
     const isColumnActive = activeColumn?.id === id
-    const isOverSelf = over?.id === activeColumn?.id
 
     // PREFETCH TASK WHEN HOVERING
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
@@ -169,26 +161,25 @@ const KanBanColumn = forwardRef(
     }, [inView])
 
     return (
-      <Styled.Column
-        $isOver={isOver}
-        $active={!!active}
-        $isOverSelf={isOverSelf}
-        $isScrolling={isScrolling}
-        isColumnActive={isColumnActive}
-        $disabled={disabled}
-        ref={ref}
-      >
-        <Styled.DropColumn
-          ref={setNodeRef}
+      <Styled.Column ref={ref}>
+        <Styled.DropColumnWrapper
           className="dropzone"
           style={{
             height: `calc(100vh - 32px - ${sectionRect?.top}px)`,
             // display: 'none',
           }}
-          $isOver={isOver}
-          $isOverSelf={isOverSelf}
           $active={!!active}
-        ></Styled.DropColumn>
+        >
+          {active &&
+            groupItems.map((item) => (
+              <KanBanColumnDropzone
+                item={item}
+                key={item.id}
+                activeColumn={activeColumn}
+                disabled={disabledStatuses.includes(item.name)}
+              />
+            ))}
+        </Styled.DropColumnWrapper>
         <Styled.Header $color={column?.color}>
           <h2>
             {column?.name} - {tasksCount}

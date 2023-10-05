@@ -24,7 +24,6 @@ const KanBanCardOverlay = ({ activeDraggingId, selectedTasks, tasks }) => {
           $index={i}
           style={{
             zIndex: -i,
-            // top: `calc((30px - 100%) * ${i})`,
           }}
         />
       ))}

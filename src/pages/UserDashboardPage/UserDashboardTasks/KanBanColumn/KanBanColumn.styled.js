@@ -2,17 +2,55 @@ import styled, { css } from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { Button } from '@ynput/ayon-react-components'
 
-export const DropColumn = styled.div`
+export const DropColumnWrapper = styled.div`
   position: absolute;
   width: 100%;
 
   border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
   ${({ $active }) =>
     $active &&
     css`
-      z-index: 1000;
+      z-index: 100;
     `}
+`
+
+export const DropColumn = styled.div`
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 50%;
+
+  .title {
+    z-index: 100;
+    background-color: ${({ $color }) => $color};
+    padding: var(--padding-l);
+    border-radius: var(--border-radius-xxl);
+    box-shadow: 0 0 10px 0px #0000002b;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    span:first-child {
+      font-size: var(--md-sys-typescale-title-large-font-size);
+    }
+  }
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: ${({ $color }) => $color};
+    opacity: ${({ $active }) => ($active ? 0.5 : 0.08)};
+    transition: opacity 0.2s ease;
+  }
 `
 
 export const Column = styled.div`
@@ -38,41 +76,8 @@ export const Column = styled.div`
     margin-bottom: 0;
     transition: margin-bottom 0.1s ease-in-out;
   }
-  ${({ $isOverSelf, $isOver, $isScrolling }) =>
-    $isOver &&
-    !$isOverSelf &&
-    !$isScrolling &&
-    css`
-      /* last child margin bottom */
-      .items {
-        & > *:last-child {
-          margin-bottom: calc(var(--min-height) - 8px);
-        }
-      }
-    `}
 
-  ${({ $isOver }) =>
-    $isOver &&
-    css`
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-color: white;
-        opacity: 0.05;
-        z-index: 500;
-        border-radius: 16px;
-      }
-    `}
-
-    transition: opacity 0.1s ease-in-out;
-  /* fade out if active and disabled */
-  ${({ $active, $disabled }) =>
-    $active &&
-    $disabled &&
-    css`
-      opacity: 0.2;
-    `}
+  transition: opacity 0.1s ease-in-out;
 `
 
 export const Header = styled.header`

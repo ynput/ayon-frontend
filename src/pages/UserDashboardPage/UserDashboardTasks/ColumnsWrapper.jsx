@@ -1,11 +1,21 @@
-import { Section } from '@ynput/ayon-react-components'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Button,
+  InputText,
+  SaveButton,
+  Section,
+  Spacer,
+  Toolbar,
+} from '@ynput/ayon-react-components'
+import React, { useEffect, useRef, useState } from 'react'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
 import CollapsedColumn from './KanBanColumn/CollapsedColumn'
 import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
 import ColumnMenu from './KanBanColumn/ColumnMenu'
+import { Dialog } from 'primereact/dialog'
+import confirmDelete from '/src/helpers/confirmDelete'
+import { snakeCase } from 'lodash'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -24,18 +34,22 @@ const ColumnsWrapper = ({
   allUsers = [],
   disabledStatuses = [],
   onCollapsedColumnsChange,
+  onGroupChange,
+  onGroupDelete,
+  onGroupRename,
 }) => {
   const { active } = useDndContext()
   const sectionRef = useRef(null)
   const columnsRefs = useRef({})
 
-  const openColumnIds = useMemo(
-    () => fieldsColumns.flatMap((c) => (!c?.isCollapsed ? c[0].id : [])),
-    [fieldsColumns],
+  // find out which column the active card has come from
+  const activeColumn = Object.values(tasksColumns).find((column) =>
+    column.tasks.find((t) => t.id === active?.id),
   )
 
   const [scrollDirection, setScrollDirection] = useState(null)
 
+  const [groupRename, setGroupRename] = useState({ id: null, value: '' })
   // we get section rect to figure out how high to make droppable area
   const [sectionRect, setSectionRect] = useState(null)
 
@@ -50,7 +64,7 @@ const ColumnsWrapper = ({
     const el = sectionRef.current
     if (!el) return
 
-    const speed = 10
+    const speed = 13
 
     let intervalId = null
 
@@ -83,7 +97,7 @@ const ColumnsWrapper = ({
       const { left, right } = el.getBoundingClientRect()
       // xPos of the mouse
       const xPos = event.clientX
-      const threshold = 100
+      const threshold = 120
 
       const newScrollDirection = xPos < left + threshold ? -1 : xPos > right - threshold ? 1 : null
 
@@ -117,43 +131,46 @@ const ColumnsWrapper = ({
         direction="row"
         ref={sectionRef}
       >
-        {fieldsColumns.flatMap((columnsArray = [], i) => {
-          const isCollapsed = columnsArray.some((c) => c.isCollapsed)
-
+        {fieldsColumns.flatMap((column) => {
+          const { id, isCollapsed, items, collapsed } = column
           // return collapsed column if collapsed
           if (isCollapsed)
             return (
-              <CollapsedColumn columns={columnsArray} onChange={onCollapsedColumnsChange} key={i} />
+              <CollapsedColumn columns={collapsed} onChange={onCollapsedColumnsChange} key={id} />
             )
 
-          // for now this should only ever been one item
-          // in the future we may want to allow multiple columns to be grouped into one column
-          return columnsArray.flatMap(({ id }) => {
-            const column = tasksColumns[id]
+          // get all tasks for this column from items
+          const tasks = items.flatMap((item) => {
+            const column = tasksColumns[item.id]
             if (!column) return []
-            return (
-              <KanBanColumn
-                key={id}
-                columns={tasksColumns}
-                tasks={column.tasks}
-                isLoading={isLoading}
-                id={id}
-                groupByValue={groupByValue}
-                allUsers={allUsers}
-                sectionRect={sectionRect}
-                sectionRef={sectionRef}
-                disabled={disabledStatuses.includes(column.name)}
-                onToggleCollapse={() => onCollapsedColumnsChange(id)}
-                ref={(el) => {
-                  columnsRefs.current[id] = el
-                }}
-              />
-            )
+            return column.tasks
           })
+
+          return (
+            <KanBanColumn
+              key={id}
+              column={column}
+              tasks={tasks}
+              groupItems={items}
+              isLoading={isLoading}
+              id={id}
+              groupByValue={groupByValue}
+              allUsers={allUsers}
+              sectionRect={sectionRect}
+              sectionRef={sectionRef}
+              disabledStatuses={disabledStatuses}
+              onToggleCollapse={() => onCollapsedColumnsChange(id)}
+              ref={(el) => {
+                columnsRefs.current[id] = el
+              }}
+              active={active}
+              activeColumn={activeColumn}
+            />
+          )
         })}
       </StyledWrapper>
       {/* Dropdown menu */}
-      {openColumnIds.map((id) => {
+      {fieldsColumns.map(({ id, name, items = [], isCustom, color }, index) => {
         // get button ref
         const columnEl = columnsRefs.current[id]
         if (!columnEl) return null
@@ -161,12 +178,68 @@ const ColumnsWrapper = ({
         const buttonRef = columnEl.querySelector('.column-menu')
         if (!buttonRef) return null
 
+        // all columns except ones in items
+        const otherColumns = Object.values(tasksColumns).filter(
+          (c) => !items.some((i) => i.id === c.id),
+        )
+
         return (
           <MenuContainer id={id} key={id} target={buttonRef}>
-            <ColumnMenu onCollapse={() => onCollapsedColumnsChange(id)} />
+            <ColumnMenu
+              otherColumns={otherColumns}
+              currentColumns={items}
+              onCollapse={() => onCollapsedColumnsChange(id)}
+              onAdd={(_, { id: c, index: ci }) =>
+                onGroupChange({ id, index, name }, { id: c, index: ci })
+              }
+              onCreate={() => {
+                onGroupChange({ id, index, name, color }, {})
+                setGroupRename({ id: `${id}_group`, value: '' })
+              }}
+              onRemove={(_, { id: c }) => onGroupChange({ id }, {}, c)}
+              onRename={() => setGroupRename({ id, value: '' })}
+              onDelete={() =>
+                confirmDelete({
+                  label: 'Column Group',
+                  message:
+                    'Are you sure you want to delete this group? All columns will be split out.',
+                  accept: () => onGroupDelete(id),
+                })
+              }
+              isCustom={isCustom}
+            />
           </MenuContainer>
         )
       })}
+      {/* rename dialog */}
+      <Dialog
+        visible={groupRename?.id}
+        header="Rename group"
+        onHide={() => setGroupRename({ id: null, value: '' })}
+        footer={
+          <Toolbar>
+            <Spacer />
+            <Button label="Cancel" onClick={() => setGroupRename({ id: null, value: '' })} />
+            <SaveButton
+              label="Rename"
+              onClick={() => {
+                onGroupRename(groupRename.id, groupRename.value)
+                setGroupRename({ id: null, value: '' })
+              }}
+              active={
+                groupRename?.value &&
+                fieldsColumns.every(({ id }) => id !== snakeCase(groupRename?.value))
+              }
+            />
+          </Toolbar>
+        }
+      >
+        <InputText
+          value={groupRename?.value}
+          onChange={(e) => setGroupRename({ id: groupRename?.id, value: e.target.value })}
+          style={{ width: 200 }}
+        />
+      </Dialog>
     </>
   )
 }

@@ -7,7 +7,7 @@ import { Button } from '@ynput/ayon-react-components'
 const Menu = ({ menu = [], onClose, footer = '', navigate, compact, ...props }) => {
   const [subMenus, setSubMenus] = useState([])
   //   When a menu item is clicked, the following happens:
-  const handleClick = (e, onClick, url, disableClose) => {
+  const handleClick = (e, item, onClick, url, disableClose) => {
     if (url) {
       if (url.startsWith('http')) {
         window.open(url, '_blank')
@@ -17,7 +17,7 @@ const Menu = ({ menu = [], onClose, footer = '', navigate, compact, ...props }) 
       return
     }
 
-    onClick && onClick(e)
+    onClick && onClick(e, item)
 
     !disableClose && onClose && onClose()
   }

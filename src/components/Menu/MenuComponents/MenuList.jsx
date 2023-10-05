@@ -116,17 +116,17 @@ const MenuList = ({
               tabIndex={0}
               key={`${id}-${i}`}
               {...{ label, icon, highlighted, items, selected }}
-              onClick={(e) =>
+              onClick={(e) => {
                 items.length
-                  ? handleSubMenu(e, id, items)
-                  : handleClick(e, onClick, link, disableClose)
-              }
+                  ? handleSubMenu(e, item, items)
+                  : handleClick(e, item, onClick, link, disableClose)
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   if (items.length) {
                     handleSubMenu(e, id, items)
                   } else {
-                    handleClick(e, onClick, link)
+                    handleClick(e, id, onClick, link)
                   }
                 }
                 const isLastChild = !e.target.nextSibling

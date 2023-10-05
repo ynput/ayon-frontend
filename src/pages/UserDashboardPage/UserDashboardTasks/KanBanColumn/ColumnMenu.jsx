@@ -2,7 +2,18 @@ import React from 'react'
 import { useSelector } from 'react-redux'
 import Menu from '/src/components/Menu/MenuComponents/Menu'
 
-const ColumnMenu = ({ onCollapse, ...props }) => {
+const ColumnMenu = ({
+  onCollapse,
+  isCustom,
+  otherColumns = [],
+  currentColumns = [],
+  onAdd,
+  onRemove,
+  onRename,
+  onDelete,
+  onCreate,
+  ...props
+}) => {
   const user = useSelector((state) => state.user)
   const isUser = user.data.isUser
 
@@ -14,21 +25,49 @@ const ColumnMenu = ({ onCollapse, ...props }) => {
     },
   ]
 
-  if (!isUser) {
-    // items.push({
-    //   id: 'merge',
-    //   label: 'Merge Into',
-    //   items: [
-    //     {
-    //       id: 'column-1',
-    //       label: 'Column 1',
-    //     },
-    //     {
-    //       id: 'column-2',
-    //       label: 'Column 2',
-    //     },
-    //   ],
-    // })
+  if (!isUser && otherColumns.length) {
+    if (isCustom) {
+      items.push({
+        id: 'add',
+        label: 'Add Column',
+        items: otherColumns.map((c, i) => ({
+          id: c.id,
+          label: c.name,
+          index: i,
+          onClick: onAdd,
+        })),
+      })
+
+      if (currentColumns.length > 1) {
+        items.push({
+          id: 'remove',
+          label: 'Remove Column',
+          items: currentColumns.map((c) => ({
+            id: c.id,
+            label: c.name,
+            onClick: onRemove,
+          })),
+        })
+      }
+
+      items.push({
+        id: 'rename',
+        label: 'Rename Group',
+        onClick: onRename,
+      })
+
+      items.push({
+        id: 'delete',
+        label: 'Delete Group',
+        onClick: onDelete,
+      })
+    } else {
+      items.push({
+        id: 'create',
+        label: 'Create Group',
+        onClick: onCreate,
+      })
+    }
   }
 
   return <Menu menu={items} {...props} compact />
