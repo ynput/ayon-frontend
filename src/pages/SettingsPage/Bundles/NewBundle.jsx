@@ -56,7 +56,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
         installerVersion: installers?.[0]?.version,
         name: '',
         ...initBundle,
-        isDev: developerMode,
+        isDev: developerMode || isDev,
         addonDevelopment: { ...initBundle.addonDevelopment, ...initAddonsDev },
       }
       setFormData(initForm)
