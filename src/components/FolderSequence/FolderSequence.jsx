@@ -262,7 +262,6 @@ const FolderSequence = ({
                 options={folders}
                 style={{ width: 160 }}
                 align="right"
-                openOnFocus
                 ref={typeSelectRef}
               />
             </Styled.InputColumn>
