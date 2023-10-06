@@ -26,6 +26,10 @@ const ColumnMenu = ({
   ]
 
   if (!isUser && otherColumns.length) {
+    items.push({
+      id: 'divider',
+    })
+
     if (isCustom) {
       items.push({
         id: 'add',

@@ -11,11 +11,9 @@ import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
 import CollapsedColumn from './KanBanColumn/CollapsedColumn'
-import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
-import ColumnMenu from './KanBanColumn/ColumnMenu'
 import { Dialog } from 'primereact/dialog'
-import confirmDelete from '/src/helpers/confirmDelete'
 import { snakeCase } from 'lodash'
+import ColumnMenuWrapper from './KanBanColumn/ColumnMenuWrapper'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -170,47 +168,20 @@ const ColumnsWrapper = ({
         })}
       </StyledWrapper>
       {/* Dropdown menu */}
-      {fieldsColumns.map(({ id, name, items = [], isCustom, color }, index) => {
-        // get button ref
-        const columnEl = columnsRefs.current[id]
-        if (!columnEl) return null
-        // get more button el
-        const buttonRef = columnEl.querySelector('.column-menu')
-        if (!buttonRef) return null
-
-        // all columns except ones in items
-        const otherColumns = Object.values(tasksColumns).filter(
-          (c) => !items.some((i) => i.id === c.id),
-        )
-
-        return (
-          <MenuContainer id={id} key={id} target={buttonRef}>
-            <ColumnMenu
-              otherColumns={otherColumns}
-              currentColumns={items}
-              onCollapse={() => onCollapsedColumnsChange(id)}
-              onAdd={(_, { id: c, index: ci }) =>
-                onGroupChange({ id, index, name }, { id: c, index: ci })
-              }
-              onCreate={() => {
-                onGroupChange({ id, index, name, color }, {})
-                setGroupRename({ id: `${id}_group`, value: '' })
-              }}
-              onRemove={(_, { id: c }) => onGroupChange({ id }, {}, c)}
-              onRename={() => setGroupRename({ id, value: '' })}
-              onDelete={() =>
-                confirmDelete({
-                  label: 'Column Group',
-                  message:
-                    'Are you sure you want to delete this group? All columns will be split out.',
-                  accept: () => onGroupDelete(id),
-                })
-              }
-              isCustom={isCustom}
-            />
-          </MenuContainer>
-        )
-      })}
+      {fieldsColumns.map((column) => (
+        <ColumnMenuWrapper
+          key={column.id}
+          column={column}
+          columnsRefs={columnsRefs.current}
+          onGroupRename={setGroupRename}
+          {...{
+            tasksColumns,
+            onCollapsedColumnsChange,
+            onGroupChange,
+            onGroupDelete,
+          }}
+        />
+      ))}
       {/* rename dialog */}
       <Dialog
         visible={groupRename?.id}

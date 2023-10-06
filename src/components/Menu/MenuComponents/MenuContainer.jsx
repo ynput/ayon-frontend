@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setMenuOpen } from '/src/features/context'
 import * as Styled from './Menu.styled'
 import { useNavigate } from 'react-router'
 import { createPortal } from 'react-dom'
 
-const MenuContainer = ({ id, target, children, ...props }) => {
+const MenuContainer = ({ id, target, targetId, children, ...props }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const isOpen = useSelector((state) => state.context.menuOpen) === id
@@ -27,18 +27,28 @@ const MenuContainer = ({ id, target, children, ...props }) => {
   // if target is a element, find it's position bottom and right
   // then set the style of the dialog to position it there
 
-  const pos = useMemo(() => {
-    let pos = { top: 8, right: 0 }
-    if (target) {
-      const rect = target.getBoundingClientRect()
-      pos = {
-        ...pos,
-        right: window.innerWidth - rect.right,
-        top: rect.bottom + 8 - 42,
+  const [pos, setPos] = useState({ top: 8, right: 0 })
+
+  function calculatePos(target) {
+    const rect = target.getBoundingClientRect()
+    return {
+      top: rect.bottom + 8 - 42,
+      right: window.innerWidth - rect.right,
+    }
+  }
+
+  useEffect(() => {
+    if (target && isOpen) {
+      setPos(calculatePos(target))
+    } else if (targetId) {
+      const targetElement = document.getElementById(targetId)
+      if (targetElement) {
+        setPos(calculatePos(targetElement))
       }
     }
-    return pos
-  }, [target, isOpen])
+  }, [target, isOpen, targetId])
+
+  // use pos in your component
 
   if (!isOpen) return null
 

@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { Button } from '@ynput/ayon-react-components'
 
@@ -18,6 +18,17 @@ export const DropColumnWrapper = styled.div`
     `}
 `
 
+const FadeInAnimation = keyframes`
+  from {
+    opacity: 0;
+    scale: 0.95;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+`
+
 export const DropColumn = styled.div`
   flex: 1;
   width: 100%;
@@ -25,7 +36,7 @@ export const DropColumn = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-top: 50%;
+  padding-top: 16px;
 
   .title {
     z-index: 100;
@@ -36,9 +47,11 @@ export const DropColumn = styled.div`
     display: flex;
     align-items: center;
     flex-direction: column;
+    min-width: 75%;
+    animation: ${FadeInAnimation} 100ms ease-in-out forwards;
 
     span:first-child {
-      font-size: var(--md-sys-typescale-title-large-font-size);
+      font-size: var(--md-sys-typescale-title-medium-font-size);
     }
   }
   position: relative;
@@ -95,6 +108,7 @@ export const Header = styled.header`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: opacity 50ms;
   }
 
   width: 100%;

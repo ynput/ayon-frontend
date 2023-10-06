@@ -161,7 +161,7 @@ const KanBanColumn = forwardRef(
     }, [inView])
 
     return (
-      <Styled.Column ref={ref}>
+      <Styled.Column ref={ref} id={id}>
         <Styled.DropColumnWrapper
           className="dropzone"
           style={{
@@ -181,7 +181,11 @@ const KanBanColumn = forwardRef(
             ))}
         </Styled.DropColumnWrapper>
         <Styled.Header $color={column?.color}>
-          <h2>
+          <h2
+            style={{
+              opacity: active ? 0 : 1,
+            }}
+          >
             {column?.name} - {tasksCount}
           </h2>
           <Toolbar>
@@ -198,6 +202,7 @@ const KanBanColumn = forwardRef(
               variant="text"
               className={`column-menu ${isMenuOpen ? 'open' : ''}`}
               ref={menuButtonRef}
+              id={`menu-${menuId}`}
               onClick={() => handleToggleMenu(menuId)}
             />
           </Toolbar>
