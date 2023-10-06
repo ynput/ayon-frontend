@@ -47,9 +47,8 @@ const NewSequence = ({
   const typeSelectRef = useRef(null)
 
   const handleShow = () => {
-    const buttonEl = typeSelectRef.current.querySelector('button')
-    // focus name dropdown
-    buttonEl?.focus()
+    // open dropdown
+    typeSelectRef.current?.open()
   }
 
   const title = 'Add Folder Sequence'
@@ -103,14 +102,6 @@ const NewSequence = ({
     // shift + enter submit and don't close
     if (e.shiftKey && e.key === 'Enter') {
       handleSeqSubmit(false)
-    }
-    // if tabbing from dropdown, focus name input
-    if (e.key === 'Tab') {
-      const target = e.target
-      // check if target is inside typeSelectRef.current
-      if (target && typeSelectRef.current.contains(target)) {
-        e.stopPropagation()
-      }
     }
   }
 
