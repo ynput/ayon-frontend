@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setMenuOpen } from '/src/features/context'
 import * as Styled from './Menu.styled'
 import { useNavigate } from 'react-router'
+import { createPortal } from 'react-dom'
 
 const MenuContainer = ({ id, target, children, ...props }) => {
   const dispatch = useDispatch()
@@ -60,7 +61,7 @@ const MenuContainer = ({ id, target, children, ...props }) => {
     if (e.target.id === 'dialog') handleClose()
   }
 
-  return (
+  return createPortal(
     <Styled.Dialog
       open={true}
       onClick={handleOnClick}
@@ -72,7 +73,8 @@ const MenuContainer = ({ id, target, children, ...props }) => {
       <Styled.DialogContent id="content" style={{ ...pos }}>
         {children}
       </Styled.DialogContent>
-    </Styled.Dialog>
+    </Styled.Dialog>,
+    document.body,
   )
 }
 
