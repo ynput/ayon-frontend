@@ -97,6 +97,7 @@ const MenuList = ({
               tabIndex={0}
               key={`${id}-${i}`}
               {...{ label, icon, highlighted, items, selected }}
+              isLink={link}
               onClick={(e) =>
                 items.length
                   ? handleSubMenu(e, id, items)

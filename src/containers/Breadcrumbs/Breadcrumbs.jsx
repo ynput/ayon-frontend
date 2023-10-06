@@ -133,7 +133,7 @@ const Breadcrumbs = () => {
     dispatch(setFocusedProducts(focusedProducts))
     dispatch(setFocusedVersions(focusedVersions))
     dispatch(setFocusedRepresentations(focusedRepresentations))
-    dispatch(setFocusedTasks(focusedTasks))
+    dispatch(setFocusedTasks({ ids: focusedTasks }))
     dispatch(setFocusedWorkfiles(focusedWorkfiles))
   }
 

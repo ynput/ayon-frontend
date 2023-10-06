@@ -100,12 +100,7 @@ const App = () => {
     return <LoginPage isFirstTime={isOnboarding} />
   }
 
-  const onBoardingSkips = ['events', 'explorer', 'doc/api']
-
-  if (
-    (isOnboarding || noAdminUser) &&
-    onBoardingSkips.every((path) => !location.pathname.includes(path))
-  ) {
+  if (isOnboarding || noAdminUser) {
     return (
       <BrowserRouter>
         <QueryParamProvider

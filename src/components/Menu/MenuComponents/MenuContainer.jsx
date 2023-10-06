@@ -2,11 +2,10 @@ import React, { useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setMenuOpen } from '/src/features/context'
 import * as Styled from './Menu.styled'
-import { useNavigate } from 'react-router'
 
 const MenuContainer = ({ id, target, children, ...props }) => {
   const dispatch = useDispatch()
-  const navigate = useNavigate()
+
   const isOpen = useSelector((state) => state.context.menuOpen) === id
   const dialogRef = useRef(null)
 
@@ -40,14 +39,9 @@ const MenuContainer = ({ id, target, children, ...props }) => {
 
   if (!isOpen) return null
 
-  const handleNavigate = (path) => {
-    handleClose()
-    if (path) navigate(path)
-  }
-
   // attach the handleClose as a prop to each child
   children = React.Children.map(children, (child, i) => {
-    return React.cloneElement(child, { onClose: handleClose, index: i, navigate: handleNavigate })
+    return React.cloneElement(child, { onClose: handleClose, index: i })
   })
 
   const handleKeyDown = (e) => {

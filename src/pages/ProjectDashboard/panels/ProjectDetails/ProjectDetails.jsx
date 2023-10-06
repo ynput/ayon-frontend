@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useGetProjectQuery } from '/src/services/project/getProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
 import Thumbnail from '/src/containers/thumbnail'
@@ -10,24 +10,45 @@ import AttribForm from '/src/components/AttribForm/AttribForm'
 import { useGetAnatomySchemaQuery } from '/src/services/anatomy/getAnatomy'
 import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
+import { useUpdateProjectMutation } from '/src/services/project/updateProject'
 import { toast } from 'react-toastify'
 
 const ProjectDetails = ({ projectName }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
 
   // GET DATA
-  const { data = {}, isFetching } = useGetProjectQuery({ projectName })
+  const { data = {}, isFetching, isError } = useGetProjectQuery({ projectName })
   const { data: schema } = useGetAnatomySchemaQuery()
   const fields = schema?.definitions?.ProjectAttribModel?.properties
 
   // UPDATE DATA
-  const [updateAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
+  const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation()
 
   const [editing, setEditing] = useState(false)
 
-  // for updating the project
-  const [attribForm, setAttribForm] = useState({})
+  const projectFormInit = {
+    active: false,
+    code: '',
+    attrib: {},
+  }
+
+  // This is the start, used to compare changes
+  const [initData, setInitData] = useState(projectFormInit)
+  // form for project data
+  const [projectForm, setProjectForm] = useState(projectFormInit)
+
+  // when data has been loading, update the form
+  useEffect(() => {
+    if (!isFetching && !isEmpty(data)) {
+      // update project form with only the fields we need from the projectForm init state
+      const updatedProjectForm = { ...projectFormInit }
+      for (const key in projectFormInit) {
+        updatedProjectForm[key] = data[key]
+      }
+      setProjectForm(updatedProjectForm)
+      setInitData(updatedProjectForm)
+    }
+  }, [data, isFetching])
 
   const { attrib = {}, active, code } = data
 
@@ -56,17 +77,31 @@ const ProjectDetails = ({ projectName }) => {
     name: 'Status',
   })
 
-  const handleAttribChange = (newForm) => {
-    setAttribForm((prev) => ({ ...prev, ...newForm }))
+  const handleProjectChange = (field, value) => {
+    const newProjectForm = { ...projectForm, attrib: { ...projectForm.attrib } }
+
+    // check if field has any '.' in it
+    const fieldSplit = field.split('.')
+    if (fieldSplit.length > 1) {
+      // update nested field
+      const [key, subKey] = fieldSplit
+      newProjectForm[key][subKey] = value
+    } else {
+      // update normal field
+      newProjectForm[field] = value
+    }
+
+    setProjectForm(newProjectForm)
   }
 
   const handleAttribSubmit = async () => {
     try {
-      // validate dates
-      const data = {}
-      for (const key in attribForm) {
+      const data = { ...projectForm }
+      // validate dates inside attrib
+      const attrib = { ...projectForm['attrib'] }
+      for (const key in attrib) {
         const field = fields[key]
-        let value = attribForm[key]
+        let value = attrib[key]
         if (field?.format === 'date-time') {
           if (value) {
             value = new Date(value).toISOString() ?? null
@@ -75,10 +110,10 @@ const ProjectDetails = ({ projectName }) => {
           }
         }
 
-        data[key] = value
+        attrib[key] = value
       }
 
-      await updateAnatomy({ projectName, anatomy: { attributes: data } }).unwrap()
+      await updateProject({ projectName, update: { ...data, attrib } }).unwrap()
 
       setEditing(false)
       toast.success('Project updated')
@@ -89,7 +124,7 @@ const ProjectDetails = ({ projectName }) => {
     }
   }
 
-  const hasChanges = !isEmpty(attrib) && !isEmpty(attribForm) && !isEqual(attrib, attribForm)
+  const hasChanges = !isEqual(initData, projectForm)
 
   return (
     <DashboardPanelWrapper
@@ -105,7 +140,12 @@ const ProjectDetails = ({ projectName }) => {
         !isUser && (
           <Styled.Header>
             {!editing ? (
-              <Button label="Edit" icon="edit" onClick={() => setEditing(true)} />
+              <Button
+                label="Edit"
+                icon="edit"
+                onClick={() => setEditing(true)}
+                disabled={isFetching || isError}
+              />
             ) : (
               <>
                 <Button
@@ -133,10 +173,10 @@ const ProjectDetails = ({ projectName }) => {
       </Styled.Thumbnail>
       {editing ? (
         <AttribForm
-          initData={!isFetching && attrib}
-          form={attribForm}
-          onChange={handleAttribChange}
+          form={projectForm}
+          onChange={(field, value) => handleProjectChange(field, value)}
           fields={fields}
+          isLoading={isFetching}
         />
       ) : (
         <AttributeTable
