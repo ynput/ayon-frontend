@@ -229,7 +229,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
           {(isDev || formData?.isDev) && (
             <>
               <Styled.BadgeButton
-                label="Enable development addon"
+                label="Enable development"
                 icon="code"
                 $hl={'developer-surface'}
                 disabled={!selectedAddons.length}
@@ -239,11 +239,20 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
                     { key: 'enabled', value: true },
                   )
                 }
-                style={{
-                  gridColumn: 'span 2',
-                  justifyContent: 'center',
-                  width: 'auto',
-                }}
+                style={{ width: '100%', gap: 8 }}
+              />
+              <Styled.BadgeButton
+                label="Disable development"
+                icon="code_off"
+                $hl={'developer-surface'}
+                disabled={!selectedAddons.length}
+                onClick={() =>
+                  handleAddonDevChange(
+                    selectedAddons.map((a) => a.name),
+                    { key: 'enabled', value: false },
+                  )
+                }
+                style={{ width: '100%', gap: 8 }}
               />
             </>
           )}
