@@ -9,25 +9,47 @@ const MenuContainer = ({ id, target, targetId, children, ...props }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const isOpen = useSelector((state) => state.context.menuOpen) === id
-  const dialogRef = useRef(null)
-
   const handleClose = () => {
     // close menu
     dispatch(setMenuOpen(false))
   }
+
+  const handleNavigate = (path) => {
+    handleClose()
+    if (path) navigate(path)
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <MenuInner
+      {...{
+        handleClose,
+        handleNavigate,
+        target,
+        targetId,
+        children,
+        ...props,
+      }}
+    />
+  )
+}
+
+const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ...props }) => {
+  const dialogRef = useRef(null)
+
   // when the menu is open, focus the first element
   // this is used to allow keyboard navigation
+  const [pos, setPos] = useState(null)
   useEffect(() => {
-    if (isOpen) {
+    if (pos) {
       const first = dialogRef.current.querySelectorAll('li, button')[0]
       first && first.focus()
     }
-  }, [isOpen, dialogRef])
+  }, [pos, dialogRef])
 
   // if target is a element, find it's position bottom and right
   // then set the style of the dialog to position it there
-
-  const [pos, setPos] = useState({ top: 8, right: 0 })
 
   function calculatePos(target) {
     const rect = target.getBoundingClientRect()
@@ -38,7 +60,7 @@ const MenuContainer = ({ id, target, targetId, children, ...props }) => {
   }
 
   useEffect(() => {
-    if (target && isOpen) {
+    if (target) {
       setPos(calculatePos(target))
     } else if (targetId) {
       const targetElement = document.getElementById(targetId)
@@ -46,16 +68,7 @@ const MenuContainer = ({ id, target, targetId, children, ...props }) => {
         setPos(calculatePos(targetElement))
       }
     }
-  }, [target, isOpen, targetId])
-
-  // use pos in your component
-
-  if (!isOpen) return null
-
-  const handleNavigate = (path) => {
-    handleClose()
-    if (path) navigate(path)
-  }
+  }, [target, targetId])
 
   // attach the handleClose as a prop to each child
   children = React.Children.map(children, (child, i) => {
@@ -70,6 +83,8 @@ const MenuContainer = ({ id, target, targetId, children, ...props }) => {
   const handleOnClick = (e) => {
     if (e.target.id === 'dialog') handleClose()
   }
+
+  if (!pos) return null
 
   return createPortal(
     <Styled.Dialog
