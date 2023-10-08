@@ -35,7 +35,7 @@ const UserDashboardKanBan = ({
 }) => {
   const dispatch = useDispatch()
 
-  const [customColumns, setCustomColumns] = useLocalStorage('dashboard-tasks-columns', {
+  const [columnGroups, setColumnGroups] = useLocalStorage('dashboard-tasks-columnGroups', {
     // not_started: {
     //   id: 'not_started',
     //   name: 'Not Started',
@@ -116,12 +116,12 @@ const UserDashboardKanBan = ({
     [sortedTasks, splitBy, mergedFields],
   )
 
-  const customFieldColumns = useMemo(() => {
-    const customFieldColumns = []
+  const groupFieldColumns = useMemo(() => {
+    const groupFieldColumns = []
     const fieldColumnsIds = new Set(fieldsColumns.map((field) => field.id))
 
-    for (const key in customColumns) {
-      const group = customColumns[key]
+    for (const key in columnGroups) {
+      const group = columnGroups[key]
       const items = group.items?.flatMap((c) => fieldsColumns.find((f) => f.id === c) || []) || []
       const isCollapsed = collapsedColumns.includes(key)
       const tasksCount = items.reduce(
@@ -129,14 +129,14 @@ const UserDashboardKanBan = ({
         0,
       )
 
-      customFieldColumns.push({
+      groupFieldColumns.push({
         ...group,
         id: key,
         items,
         isCollapsed,
         collapsed: [],
         count: tasksCount,
-        isCustom: true,
+        isGroup: true,
       })
 
       items.forEach((column) => fieldColumnsIds.delete(column.id))
@@ -146,27 +146,27 @@ const UserDashboardKanBan = ({
     remainingColumns.forEach((column, index) => {
       const isCollapsed = collapsedColumns.includes(column.id)
       const tasksCount = tasksColumns[column.id]?.tasks?.length || 0
-      customFieldColumns.push({
+      groupFieldColumns.push({
         ...column,
         items: [column],
         isCollapsed,
         count: tasksCount,
         collapsed: [],
-        isCustom: false,
+        isGroup: false,
         index: index,
       })
     })
 
-    return customFieldColumns
-  }, [customColumns, fieldsColumns, collapsedColumns, tasksColumns])
+    return groupFieldColumns
+  }, [columnGroups, fieldsColumns, collapsedColumns, tasksColumns])
 
   // now sort the columns by index
-  customFieldColumns.sort((a, b) => a.index - b.index)
+  groupFieldColumns.sort((a, b) => a.index - b.index)
 
   // group openFieldColumns isCollapsed adjacent columns into one collapsed column
   const groupedOpenFieldColumns = useMemo(
     () =>
-      customFieldColumns.reduce((acc, column) => {
+      groupFieldColumns.reduce((acc, column) => {
         const lastColumn = acc[acc.length - 1]
         if (column.isCollapsed) {
           // we add items to collapsed column
@@ -182,7 +182,7 @@ const UserDashboardKanBan = ({
         }
         return acc
       }, []),
-    [customFieldColumns],
+    [groupFieldColumns],
   )
 
   // DND Stuff
@@ -256,14 +256,14 @@ const UserDashboardKanBan = ({
     updateTasks({ operations })
   }
 
-  const handleCustomColumnsChange = (
+  const handleGroupColumnsChange = (
     { id, name, index, color },
     { id: addId, index: addIndex },
     remove,
   ) => {
     const newId = `${id}_group`
     // find group column if there is one
-    const group = customColumns[id] || {
+    const group = columnGroups[id] || {
       id: newId,
       name: name + ' Group',
       color: color || '#bfbfbf',
@@ -277,51 +277,51 @@ const UserDashboardKanBan = ({
     if (addId) group.items.push(addId)
     if (remove) group.items = group.items.filter((i) => i !== remove)
 
-    const newCustomColumnsState = { ...customColumns }
-    newCustomColumnsState[group.id] = group
+    const newGroupColumnsState = { ...columnGroups }
+    newGroupColumnsState[group.id] = group
 
     // check if addId was in a group column, if so, remove it from that group column
     if (addId) {
-      for (const key in customColumns) {
-        const otherGroup = customColumns[key]
+      for (const key in columnGroups) {
+        const otherGroup = columnGroups[key]
         if (otherGroup.items.includes(addId) && otherGroup.id !== group.id) {
           const newItems = otherGroup.items.filter((i) => i !== addId)
           if (newItems.length) {
-            newCustomColumnsState[otherGroup.id] = {
+            newGroupColumnsState[otherGroup.id] = {
               ...otherGroup,
               items: newItems,
             }
           } else {
             // delete
-            delete newCustomColumnsState[otherGroup.id]
+            delete newGroupColumnsState[otherGroup.id]
           }
         }
       }
     }
 
     // if no items, remove group column
-    if (!group.items.length) delete newCustomColumnsState[id]
-    setCustomColumns(newCustomColumnsState)
+    if (!group.items.length) delete newGroupColumnsState[id]
+    setColumnGroups(newGroupColumnsState)
   }
 
   const handleRename = (id, name) => {
-    if (customColumns[id]) {
+    if (columnGroups[id]) {
       const newId = snakeCase(name)
-      const newCustomColumnsState = {
-        ...customColumns,
-        [newId]: { ...customColumns[id], name, id: newId },
+      const newGroupColumnsState = {
+        ...columnGroups,
+        [newId]: { ...columnGroups[id], name, id: newId },
       }
       // delete old column
-      delete newCustomColumnsState[id]
-      setCustomColumns(newCustomColumnsState)
+      delete newGroupColumnsState[id]
+      setColumnGroups(newGroupColumnsState)
     }
   }
 
   const handleGroupDelete = (id) => {
-    if (customColumns[id]) {
-      const newCustomColumnsState = { ...customColumns }
-      delete newCustomColumnsState[id]
-      setCustomColumns(newCustomColumnsState)
+    if (columnGroups[id]) {
+      const newGroupColumnsState = { ...columnGroups }
+      delete newGroupColumnsState[id]
+      setColumnGroups(newGroupColumnsState)
     }
   }
 
@@ -344,7 +344,7 @@ const UserDashboardKanBan = ({
               allUsers={allUsers}
               disabledStatuses={disabledStatuses}
               onCollapsedColumnsChange={handleCollapseToggle}
-              onGroupChange={handleCustomColumnsChange}
+              onGroupChange={handleGroupColumnsChange}
               onGroupRename={handleRename}
               onGroupDelete={handleGroupDelete}
             />

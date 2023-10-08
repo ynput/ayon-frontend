@@ -4,7 +4,7 @@ import Menu from '/src/components/Menu/MenuComponents/Menu'
 
 const ColumnMenu = ({
   onCollapse,
-  isCustom,
+  isGroup,
   otherColumns = [],
   currentColumns = [],
   onAdd,
@@ -30,7 +30,7 @@ const ColumnMenu = ({
       id: 'divider',
     })
 
-    if (isCustom) {
+    if (isGroup) {
       items.push({
         id: 'add',
         label: 'Add Column',

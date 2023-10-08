@@ -11,7 +11,7 @@ const ColumnMenuWrapper = ({
   onGroupDelete,
   onGroupRename,
 }) => {
-  const { id, index, name, color, items, isCustom } = column
+  const { id, index, name, color, items, isGroup } = column
 
   // all columns except ones in items
   const otherColumns = Object.values(tasksColumns).filter((c) => !items.some((i) => i.id === c.id))
@@ -38,7 +38,7 @@ const ColumnMenuWrapper = ({
             accept: () => onGroupDelete(id),
           })
         }
-        isCustom={isCustom}
+        isGroup={isGroup}
       />
     </MenuContainer>
   )
