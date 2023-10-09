@@ -26,9 +26,11 @@ const ProjectDetails = ({ projectName }) => {
 
   const [editing, setEditing] = useState(false)
 
+  // this where we add new fields to the editing form
   const projectFormInit = {
     active: false,
     code: '',
+    library: false,
     attrib: {},
   }
 
@@ -37,21 +39,30 @@ const ProjectDetails = ({ projectName }) => {
   // form for project data
   const [projectForm, setProjectForm] = useState(projectFormInit)
 
-  // when data has been loading, update the form
+  const setInitFormState = (projectData) => {
+    const updatedProjectForm = { ...projectFormInit }
+    for (const key in projectFormInit) {
+      updatedProjectForm[key] = projectData[key]
+    }
+    setProjectForm(updatedProjectForm)
+    // update init data to compare changes
+    setInitData(updatedProjectForm)
+  }
+
+  // when data has been loaded, update the form
+  // we add projectFormInit fields to the form along with attrib fields
+  // inside AttribForm we validate attrib fields and any missing fields from schema
   useEffect(() => {
     if (!isFetching && !isEmpty(data)) {
       // update project form with only the fields we need from the projectForm init state
-      const updatedProjectForm = { ...projectFormInit }
-      for (const key in projectFormInit) {
-        updatedProjectForm[key] = data[key]
-      }
-      setProjectForm(updatedProjectForm)
-      setInitData(updatedProjectForm)
+      setInitFormState(data)
     }
   }, [data, isFetching])
 
-  const { attrib = {}, active, code } = data
+  const { attrib = {}, active, code, library } = data
 
+  // Every thing below creates the attribute table
+  // this is where we add new fields to the attribute table
   const attribArray = []
   for (const key in fields) {
     let field = fields[key]
@@ -69,6 +80,11 @@ const ProjectDetails = ({ projectName }) => {
   }
 
   attribArray.unshift({
+    name: 'Library',
+    value: !!library,
+  })
+
+  attribArray.unshift({
     value: (
       <Styled.Active $isLoading={isFetching} $isActive={active}>
         {active ? 'active' : ' inactive'}
@@ -76,6 +92,8 @@ const ProjectDetails = ({ projectName }) => {
     ),
     name: 'Status',
   })
+
+  // HANDLERS
 
   const handleProjectChange = (field, value) => {
     const newProjectForm = { ...projectForm, attrib: { ...projectForm.attrib } }
@@ -124,6 +142,13 @@ const ProjectDetails = ({ projectName }) => {
     }
   }
 
+  const handleCancel = () => {
+    // reset the form to the initial state
+    setProjectForm(initData)
+    // close editing
+    setEditing(false)
+  }
+
   const hasChanges = !isEqual(initData, projectForm)
 
   return (
@@ -148,12 +173,7 @@ const ProjectDetails = ({ projectName }) => {
               />
             ) : (
               <>
-                <Button
-                  label="Cancel"
-                  icon="close"
-                  onClick={() => setEditing(false)}
-                  className="cancel"
-                />
+                <Button label="Cancel" icon="close" onClick={handleCancel} className="cancel" />
                 <SaveButton
                   label="Save"
                   active={hasChanges}
