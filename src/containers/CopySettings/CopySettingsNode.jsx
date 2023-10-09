@@ -31,10 +31,10 @@ const FormattedPath = ({ value }) => {
 
 const FormattedValue = ({ value }) => {
   let strval
-  if (typeof value === 'object') strval = 'Complex object'
+  if (typeof value === 'object') strval = '[ complex object ]'
   else if (typeof value === 'string') strval = value
   else strval = JSON.stringify(value)
-  return <ChangeValue>{strval}</ChangeValue>
+  return <ChangeValue>{strval || '[ no value ]'}</ChangeValue>
 }
 
 const CopySettingsNode = ({
