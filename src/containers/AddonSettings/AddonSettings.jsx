@@ -459,8 +459,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
               projectName={projectName}
             />
             <Button
-              icon="local_shipping"
-              tooltip="rocket_launch"
+              icon="rocket_launch"
+              tooltip="Push bundle to production"
               onClick={onPushToProduction}
               disabled={variant !== 'staging' || canCommit}
               style={{ zIndex: 100 }}

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Dialog } from 'primereact/dialog'
 import { toast } from 'react-toastify'
 
-import { Spacer, InputText, Toolbar, SaveButton } from '@ynput/ayon-react-components'
+import { Spacer, InputText, Toolbar, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import {
@@ -22,6 +22,7 @@ const NewProjectDialog = ({ onHide }) => {
   const [codeSet, setCodeSet] = useState(false)
   const [newAnatomy, setNewAnatomy] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState(null)
+  const [isLibrary, setIsLibrary] = useState(false)
 
   // GET SCHEMA DATA
   // '/api/anatomy/schema'
@@ -36,7 +37,6 @@ const NewProjectDialog = ({ onHide }) => {
 
   // Logic
   //
-
   const [createProject, { isLoading }] = useCreateProjectMutation()
 
   const handleSubmit = () => {
@@ -44,6 +44,7 @@ const NewProjectDialog = ({ onHide }) => {
       name,
       code,
       anatomy: newAnatomy, // || originalAnatomy,
+      library: isLibrary,
     })
       .unwrap()
       .then(() => {
@@ -132,6 +133,12 @@ const NewProjectDialog = ({ onHide }) => {
 
   const footer = (
     <Toolbar style={{}}>
+      Library project
+      <InputSwitch
+        checked={isLibrary}
+        onChange={(e) => setIsLibrary(e.target.checked)}
+        style={{ marginLeft: 8 }}
+      />
       <Spacer />
       <SaveButton
         label="Create Project"
