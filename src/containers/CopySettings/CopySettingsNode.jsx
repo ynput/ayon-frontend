@@ -9,7 +9,7 @@ import {
 } from '/src/services/addonSettings'
 
 // TODO: move this to a common location
-import { getValueByPath } from '../AddonSettings/utils'
+import { getValueByPath, sameKeysStructure } from '../AddonSettings/utils'
 import { isEqual } from 'lodash'
 
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
@@ -117,12 +117,15 @@ const CopySettingsNode = ({
       // do not attempt to copy if the values are the same
       if (isEqual(sourceValue, targetValue)) continue
 
+      const compatible = sameKeysStructure(sourceValue, targetValue)
+
       const item = {
         key: id,
         path: sourceOverride.path,
         sourceValue,
         targetValue,
         enabled: true,
+        compatible,
       }
       changes.push(item)
     }
@@ -214,6 +217,9 @@ const CopySettingsNode = ({
             />
             <FormattedPath value={change.path} />
             <Spacer />
+            {!change.compatible && false && (
+              <Icon icon="warning" style={{ color: 'var(--color-hl-error)' }} />
+            )}
             <FormattedValue value={change.targetValue} />
             <Icon icon="trending_flat" />
             <FormattedValue value={change.sourceValue} />
