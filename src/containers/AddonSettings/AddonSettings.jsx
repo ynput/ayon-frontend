@@ -36,7 +36,7 @@ import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } fro
 import arrayEquals from '/src/helpers/arrayEquals'
 
 /*
- * key is {addonName}|{addonVersion}|{environment}|{siteId}|{projectKey}
+ * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
  * if project name or siteid is N/a, use _ instead
  */
 
@@ -57,7 +57,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [changedKeys, setChangedKeys] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
-  const [environment, setEnvironment] = useState('production')
+  const [variant, setVariant] = useState('production')
   const [bundleName, setBundleName] = useState()
 
   const [showCopySettings, setShowCopySettings] = useState(false)
@@ -93,6 +93,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       setCurrentSelection(null)
     }
   }, [uriChanged])
+
+  const user = useSelector((state) => state.user)
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
@@ -271,7 +273,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   // Context menu actions
 
   const onRemoveOverride = async (addon, siteId, path) => {
-    // Remove a single override for this addon (within current project and environment)
+    // Remove a single override for this addon (within current project and variant)
     // path is an array of strings
     try {
       await modifyAddonOverride({
@@ -294,7 +296,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }
 
   const onRemoveAllOverrides = async (addon, siteId) => {
-    // Remove all overrides for this addon (within current project and environment)
+    // Remove all overrides for this addon (within current project and variant)
     try {
       await deleteAddonSettings({
         addonName: addon.name,
@@ -401,7 +403,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         await promoteBundle({ name: bundleName }).unwrap()
         setLocalData({})
         toast.success('Bundle pushed to production')
-        setEnvironment('production')
+        setVariant('production')
       },
       reject: () => {},
     })
@@ -435,38 +437,39 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     return (
       <>
         <Toolbar>
-          <VariantSelector variant={environment} setVariant={setEnvironment} />
-          <Spacer />
+          <VariantSelector variant={variant} setVariant={setVariant} />
         </Toolbar>
-        <Toolbar>
-          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {bundleName}
-          </span>
-          <Spacer />
-          <CopyBundleSettingsButton
-            bundleName={bundleName}
-            variant={environment}
-            disabled={canCommit}
-            localData={localData}
-            changedKeys={changedKeys}
-            setLocalData={setLocalData}
-            setChangedKeys={setChangedKeys}
-            setSelectedAddons={setSelectedAddons}
-            originalData={originalData}
-            setOriginalData={setOriginalData}
-            projectName={projectName}
-          />
-          <Button
-            icon="rocket_launch"
-            tooltip="Push bundle to production"
-            onClick={onPushToProduction}
-            disabled={environment !== 'staging' || canCommit}
-            style={{ zIndex: 100 }}
-          />
-        </Toolbar>
+        {!user?.attrib?.developerMode && (
+          <Toolbar>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {bundleName}
+            </span>
+            <Spacer />
+            <CopyBundleSettingsButton
+              bundleName={bundleName}
+              variant={variant}
+              disabled={canCommit}
+              localData={localData}
+              changedKeys={changedKeys}
+              setLocalData={setLocalData}
+              setChangedKeys={setChangedKeys}
+              setSelectedAddons={setSelectedAddons}
+              originalData={originalData}
+              setOriginalData={setOriginalData}
+              projectName={projectName}
+            />
+            <Button
+              icon="rocket_launch"
+              tooltip="Push bundle to production"
+              onClick={onPushToProduction}
+              disabled={variant !== 'staging' || canCommit}
+              style={{ zIndex: 100 }}
+            />
+          </Toolbar>
+        )}
       </>
     )
-  }, [environment, changedKeys, bundleName, environment, projectName])
+  }, [variant, changedKeys, bundleName, projectName])
 
   const settingsListHeader = useMemo(() => {
     return (
@@ -516,7 +519,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           {showCopySettings && (
             <CopySettingsDialog
               selectedAddons={selectedAddons}
-              variant={environment}
+              variant={variant}
               originalData={originalData}
               setOriginalData={setOriginalData}
               localData={localData}
@@ -530,7 +533,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           <AddonList
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
-            environment={environment}
+            variant={variant}
             onAddonChanged={onAddonChanged}
             setBundleName={setBundleName}
             changedAddonKeys={Object.keys(changedKeys || {})}
@@ -593,7 +596,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           context={{
                             headerProjectName: projectName,
                             headerSiteId: siteId === '_' ? null : siteId,
-                            headerEnvironment: addon.variant,
+                            headerVariant: addon.variant,
                             onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
                             onPinOverride: (path) => onPinOverride(addon, siteId, path),
                             onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),

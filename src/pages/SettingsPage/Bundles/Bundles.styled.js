@@ -1,4 +1,4 @@
-import { Button } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Button } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 const platformColors = {
@@ -39,6 +39,10 @@ export const BadgeButton = styled(Button)`
 
       &:hover {
         background-color: ${`var(--color-hl-${$hl})`};
+        background-color: ${`var(--color-hl-${$hl}-hover)`};
+      }
+      &:disabled:hover {
+        background-color: ${`var(--color-hl-${$hl})`};
       }
     `}
 
@@ -46,7 +50,8 @@ export const BadgeButton = styled(Button)`
 `
 
 export const AddonTools = styled.div`
-  flex: 1;
+  flex: none;
+  max-width: max-content;
   /* 2x2 grid */
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -56,6 +61,24 @@ export const AddonTools = styled.div`
   padding-right: 1px;
 
   button {
-    height: 30px;
+    height: 36px;
+    justify-content: flex-start;
+    padding: 4px 16px;
+  }
+`
+
+export const FilePath = styled.div`
+  display: flex;
+  gap: var(--base-gap-large);
+  width: 100%;
+  padding-left: 4px;
+  align-items: center;
+`
+export const DevSelect = styled(AssigneeSelect)`
+  min-width: 200px;
+
+  .button {
+    border: 1px solid var(--md-sys-color-outline-variant);
+    height: 32px;
   }
 `

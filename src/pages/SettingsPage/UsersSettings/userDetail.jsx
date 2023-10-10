@@ -69,6 +69,13 @@ const fields = [
     },
   },
   {
+    name: 'isDeveloper',
+    label: 'Developer',
+    data: {
+      type: 'boolean',
+    },
+  },
+  {
     name: 'defaultAccessGroups',
     label: 'Default access groups',
     data: {
@@ -115,6 +122,11 @@ const buildFormData = (users = [], attributes) => {
     // isGuest
     if (index !== 0 && initForm.isGuest !== user.isGuest) initForm.isGuest = defaultForm.isGuest
     else initForm.isGuest = user.isGuest
+
+    // isDeveloper
+    if (index !== 0 && initForm.isDeveloper !== user.isDeveloper)
+      initForm.isDeveloper = defaultForm.isDeveloper
+    else initForm.isDeveloper = user.isDeveloper
 
     // userLevel
     let userLevel = 'user'
@@ -245,6 +257,7 @@ const UserDetail = ({
           <li>User Active: {formData.userActive ? 'Yes' : 'No'}</li>
           <li>Access Level: {formData.userLevel}</li>
           <li>Is Guest: {formData.isGuest ? 'Yes' : 'No'}</li>
+          <li>Is Developer: {formData.isDeveloper ? 'Yes' : 'No'}</li>
           <li>
             AccessGroups: {formData.accessGroups?.length ? formData.accessGroups.join(', ') : ''}
           </li>
@@ -275,6 +288,7 @@ const UserDetail = ({
       data.isManager = formData.userLevel === 'manager'
       data.isService = formData.userLevel === 'service'
       data.isGuest = formData.isGuest
+      data.isDeveloper = formData.isDeveloper
 
       const patch = {
         active: formData.userActive,
