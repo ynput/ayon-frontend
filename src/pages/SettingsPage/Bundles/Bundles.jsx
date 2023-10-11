@@ -28,7 +28,7 @@ import { useLocation } from 'react-router'
 import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-const Bundles = () => {
+const Bundles = (props) => {
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
   const location = useLocation()
   const dispatch = useDispatch()
@@ -311,12 +311,18 @@ const Bundles = () => {
           />
         )}
       </Dialog>
-      <main style={{ overflow: 'hidden' }}>
+      <main style={{ overflow: 'hidden' }} {...props}>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>
               <Toolbar>
-                <Button label="Add bundle" icon="add" onClick={handleNewBundleStart} />
+                <Button
+                  label="Add bundle"
+                  icon="add"
+                  onClick={handleNewBundleStart}
+                  data-tooltip="Add new bundle"
+                  data-shortcut="N"
+                />
                 <Button
                   label="Install addons"
                   icon="input_circle"
@@ -347,6 +353,7 @@ const Bundles = () => {
                 onDelete={handleDeleteBundle}
                 toggleBundleStatus={toggleBundleStatus}
                 errorMessage={!isFetching && isError && error?.data?.traceback}
+                developerMode={developerMode}
               />
             </Section>
           </SplitterPanel>
