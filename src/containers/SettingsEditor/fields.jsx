@@ -518,29 +518,6 @@ const ArrayFieldTemplate = (props) => {
       )}
     </FormArrayField>
   )
-
-  /*
-   * THIS IS THE ORIGINAL CODE,
-   * apparently we cannot memoize this
-  const res = useMemo(
-    () => (
-      <FormArrayField>
-        {props.items.map((element) => (
-          <ArrayItemTemplate key={element.name} {...element} />
-        ))}
-
-        {props.canAdd && (
-          <ArrayItemControls>
-            <Button onClick={onAddItem} icon="add" />
-          </ArrayItemControls>
-        )}
-      </FormArrayField>
-    ),
-    [props.items, props.canAdd],
-  )
-
-  return res
-  */
 }
 
 export { ObjectFieldTemplate, FieldTemplate, ArrayFieldTemplate }

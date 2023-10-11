@@ -378,8 +378,11 @@ const TextWidget = (props) => {
   }
 
   const hlstyle = {}
-  if (value !== props.value) hlstyle.outline = '1px solid yellow'
-  else if (originalValue !== undefined && props.value !== originalValue)
+  if (value !== props.value) {
+    if (!['color'].includes(props.schema.widget)) {
+      hlstyle.outline = '1px solid yellow'
+    }
+  } else if (originalValue !== undefined && props.value !== originalValue)
     hlstyle.outline = '1px solid var(--color-changed)'
 
   return (
