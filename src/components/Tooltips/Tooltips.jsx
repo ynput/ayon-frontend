@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as Styled from './Tooltips.styled'
 import { isEqual, snakeCase } from 'lodash'
 
-const getTooltipId = (tooltip, shortcut) => {
-  return snakeCase(tooltip + '-' + shortcut)
+const getTooltipId = (tooltip, shortcut, id) => {
+  return snakeCase(tooltip + ' ' + shortcut + ' ' + id)
 }
 
 const Tooltips = ({ render }) => {
@@ -46,7 +46,7 @@ const Tooltips = ({ render }) => {
       return
     }
 
-    const id = getTooltipId(tooltip?.tooltip, tooltip?.shortcut)
+    const id = getTooltipId(tooltip?.tooltip, tooltip?.shortcut, tooltip?.id)
 
     // new tooltip is set, but it's ref hasn't updated yet
     if (id !== tooltipRef.current.id) return
@@ -99,7 +99,7 @@ const Tooltips = ({ render }) => {
       return
     }
 
-    const id = getTooltipId(tooltipData, shortcutData)
+    const id = getTooltipId(tooltipData, shortcutData, target.id)
 
     // don't rerender if tooltip is already set to same value
     if (tooltip?.id === id) return
@@ -137,8 +137,7 @@ const Tooltips = ({ render }) => {
 
       <Styled.TooltipWidget
         ref={tooltipRef}
-        key={getTooltipId(tooltip?.tooltip, tooltip?.shortcut)}
-        id={getTooltipId(tooltip?.tooltip, tooltip?.shortcut)}
+        id={getTooltipId(tooltip?.tooltip, tooltip?.shortcut, tooltip?.id)}
         className={tooltip?.tooltip ? 'tooltip' : 'tooltip hidden'}
         style={{
           display: tooltip ? 'flex' : 'none',

@@ -16,6 +16,7 @@ export const TooltipWidget = styled.div`
   box-shadow: 0 0 10px 4px rgba(0, 0, 0, 0.4);
   user-select: none;
   pointer-events: none;
+  z-index: 1000;
 
   /* tooltip triangle pointer using ::after */
   &::after {
