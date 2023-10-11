@@ -502,10 +502,13 @@ const ArrayFieldTemplate = (props) => {
     formContext.onSetChangedKeys([{ path, isChanged: true }])
     props.onAddClick()
   }
+
   return (
     <FormArrayField>
       {props.items.map((element) => (
-        <ArrayItemTemplate key={element.name} {...element} />
+        <>
+          <ArrayItemTemplate key={element.key} {...element} />
+        </>
       ))}
 
       {props.canAdd && (
