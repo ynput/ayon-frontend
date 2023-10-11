@@ -41,10 +41,10 @@ const UserAttribForm = ({
 
   const buildForms = (attribs) =>
     attribs.map(({ name, data, input }) => {
-      let inputComp = null
+      let widget = null
 
       if (name.includes('password') && setPassword) {
-        inputComp = (
+        widget = (
           <InputPassword
             value={name.includes('Confirm') ? passwordConfirm : password}
             feedback={false}
@@ -58,7 +58,7 @@ const UserAttribForm = ({
           />
         )
       } else if (data.enum) {
-        inputComp = (
+        widget = (
           <Dropdown
             widthExpand
             value={(data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []}
@@ -72,16 +72,25 @@ const UserAttribForm = ({
             }
           />
         )
-      } else if (data?.type === 'boolean') {
-        inputComp = (
+      } else if (data.type === 'boolean') {
+        if (name === 'developerMode') return null
+
+        widget = (
           <InputSwitch
             checked={formData[name]}
+            onChange={(e) => {
+              setFormData((fd) => {
+                return { ...fd, [name]: e.target.checked }
+              })
+            }}
             disabled={disabled}
-            onChange={(e) => setFormData((fd) => ({ ...fd, [name]: e.target.checked }))}
+            style={{
+              opacity: disabled ? 0.5 : 1,
+            }}
           />
         )
       } else {
-        inputComp = (
+        widget = (
           <InputText
             value={formData[name] || ''}
             disabled={disabled}
@@ -96,10 +105,9 @@ const UserAttribForm = ({
           />
         )
       }
-
       return (
         <FormRow label={data.title} key={name}>
-          {inputComp}
+          {widget}
         </FormRow>
       )
     })
