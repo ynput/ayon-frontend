@@ -73,8 +73,15 @@ const ChangeValue = styled.span`
   text-overflow: ellipsis;
   white-space: nowrap;
   border-radius: 3px;
-  padding: 2px 4px;
+  padding: 2px 6px;
   background-color: var(--color-grey-04);
+  color: #dddddd;
+  cursor: pointer;
+
+  &.dim {
+    font-style: italic;
+    color: #949494;
+  }
 `
 
 export {

@@ -25,16 +25,49 @@ import {
   ChangeValue,
 } from '/src/containers/CopySettings/CopySettingsNode.styled'
 
+import {
+  isSimple,
+  isList,
+  isListOfSimple,
+  isListOfNamedDicts,
+  isCompatibleStructure,
+} from '/src/helpers/objectComparison'
+
 const FormattedPath = ({ value }) => {
   return <div className="path">{value.join(' / ')}</div>
 }
 
 const FormattedValue = ({ value }) => {
-  let strval
-  if (typeof value === 'object') strval = '[ complex object ]'
-  else if (typeof value === 'string') strval = value
-  else strval = JSON.stringify(value)
-  return <ChangeValue>{strval || '[ no value ]'}</ChangeValue>
+  if (isSimple(value)) {
+    if (typeof value === 'boolean') return <ChangeValue>{value ? 'true' : 'false'}</ChangeValue>
+    if (value === '') return <ChangeValue className="dim">no value</ChangeValue>
+    return <ChangeValue>{value}</ChangeValue>
+  } else if (!value) {
+    // evaluate this after isSimple to let booleans pass through
+    return <ChangeValue className="dim">no value</ChangeValue>
+  } else if (isList(value)) {
+    if (value.length === 0) return <ChangeValue className="dim">empty list</ChangeValue>
+
+    if (isListOfSimple(value))
+      return <ChangeValue title={value.join(', ')}>[ {value.join(', ')} ]</ChangeValue>
+
+    const dictNames = isListOfNamedDicts(value)
+    if (dictNames) {
+      return <ChangeValue title={dictNames.join(', ')}>[ {dictNames.join(', ')} ]</ChangeValue>
+    }
+
+    return (
+      <ChangeValue title={JSON.stringify(value, null, 2)} className="dim">
+        [ complex list ]
+      </ChangeValue>
+    )
+  }
+
+  return (
+    <ChangeValue className="dim" title={JSON.stringify(value, null, 2)}>
+      [ complex object ]
+    </ChangeValue>
+  )
 }
 
 const CopySettingsNode = ({
@@ -117,15 +150,17 @@ const CopySettingsNode = ({
       // do not attempt to copy if the values are the same
       if (isEqual(sourceValue, targetValue)) continue
 
-      const compatible = sameKeysStructure(sourceValue, targetValue)
+      //const compatible = sameKeysStructure(sourceValue, targetValue)
+      const compatible = isCompatibleStructure(sourceValue, targetValue)
 
       const item = {
         key: id,
         path: sourceOverride.path,
         sourceValue,
         targetValue,
-        enabled: true,
-        compatible,
+        enabled: !!compatible,
+        compatible: !!compatible,
+        warnings: compatible || [],
       }
       changes.push(item)
     }
@@ -203,6 +238,7 @@ const CopySettingsNode = ({
           <ChangeRow key={change.key} className="change">
             <InputSwitch
               checked={change.enabled}
+              disabled={!change.compatible}
               onChange={(e) => {
                 setNodeData({
                   ...nodeData,
@@ -217,9 +253,8 @@ const CopySettingsNode = ({
             />
             <FormattedPath value={change.path} />
             <Spacer />
-            {!change.compatible && false && (
-              <Icon icon="warning" style={{ color: 'var(--color-hl-error)' }} />
-            )}
+            {!change.compatible && <Icon icon="warning" style={{ color: 'red' }} />}
+            {change.warnings.length > 0 && <Icon icon="warning" style={{ color: 'yellow' }} />}
             <FormattedValue value={change.targetValue} />
             <Icon icon="trending_flat" />
             <FormattedValue value={change.sourceValue} />
