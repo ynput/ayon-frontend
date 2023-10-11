@@ -53,16 +53,20 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
               icon={active && 'check'}
               onClick={() => toggleBundleStatus(name, bundle.name)}
               disabled={bundles.length > 1}
+              data-tooltip={`${!active ? 'Set' : 'Unset'} bundle to ${name}`}
+              data-shortcut={`shift+${name.charAt(0).toUpperCase()}`}
             >
               {!active ? 'Set' : ''} {upperFirst(name)}
             </Styled.BadgeButton>
           ))}
         </>
         <Button
-          label="Duplicate and Edit"
+          label="Duplicate and edit"
           icon="edit_document"
           onClick={() => onDuplicate(bundle.name)}
           disabled={bundles.length > 1}
+          data-tooltip="Creates new duplicated bundle"
+          data-shortcut="shift+D"
         />
       </Toolbar>
       {bundles.length > 1 && bundles.length < 5 ? (

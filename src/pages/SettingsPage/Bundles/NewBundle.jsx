@@ -8,6 +8,7 @@ import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
 import { isEqual, union } from 'lodash'
 import BundleDeps from './BundleDeps'
+import useShortcuts from '/src/hooks/useShortcuts'
 
 const removeEmptyDevAddons = (addons = {}) => {
   if (!addons) return addons
@@ -155,6 +156,17 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     setFormData(newFormData)
   }
 
+  // SHORTCUTS
+  const shortcuts = [
+    {
+      key: 'A',
+      action: () =>
+        selectedAddons.length === addons.length ? setSelectedAddons([]) : setSelectedAddons(addons),
+    },
+  ]
+
+  useShortcuts(shortcuts, [addons, selectedAddons])
+
   return (
     <>
       <Toolbar>
@@ -198,33 +210,41 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
             label="Select all addons"
             icon="select_all"
             onClick={() => setSelectedAddons(addons)}
+            data-shortcut={`shift+A`}
+            id="select"
           />
           <Button
             label="Deselect all addons"
             icon="deselect"
             onClick={() => setSelectedAddons([])}
+            data-shortcut={`shift+A`}
+            id="deselect"
           />
           <Button
             label="Select activated"
             icon="check_circle"
             onClick={() => setSelectedAddons(addons.filter((a) => !!formData?.addons?.[a.name]))}
+            data-tooltip="Select addons that have a version"
           />
           <Button
             label="Select deactivated"
             icon="block"
             onClick={() => setSelectedAddons(addons.filter((a) => !formData?.addons?.[a.name]))}
+            data-tooltip="Select addons that have a NONE version"
           />
           <Button
             label="Version latest"
             icon="vertical_align_top"
             disabled={!selectedAddons.length}
             onClick={() => setSelectedVersion(true)}
+            data-tooltip="Set selected addons to latest version"
           />
           <Button
             label="Version NONE"
             icon="vertical_align_bottom"
             disabled={!selectedAddons.length}
             onClick={() => setSelectedVersion(false)}
+            data-tooltip="Set selected addons to NONE"
           />
           {(isDev || formData?.isDev) && (
             <>
@@ -240,6 +260,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
                   )
                 }
                 style={{ width: '100%', gap: 8 }}
+                data-tooltip="Enable development for selected addons"
               />
               <Styled.BadgeButton
                 label="Disable development"
@@ -253,6 +274,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
                   )
                 }
                 style={{ width: '100%', gap: 8 }}
+                data-tooltip="Disable development for selected addons"
               />
             </>
           )}
