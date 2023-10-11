@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { useState, useEffect } from 'react'
 
-import { Icon, Spacer, InputSwitch } from '@ynput/ayon-react-components'
+import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 
 import {
   useLazyGetAddonSettingsQuery,
@@ -9,7 +9,7 @@ import {
 } from '/src/services/addonSettings'
 
 // TODO: move this to a common location
-import { getValueByPath, sameKeysStructure } from '../AddonSettings/utils'
+import { getValueByPath } from '../AddonSettings/utils'
 import { isEqual } from 'lodash'
 
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
@@ -21,8 +21,8 @@ import {
   NodePanelHeader,
   NodePanelBody,
   NodePanelDirectionSelector,
-  ChangeRow,
   ChangeValue,
+  ChangesTable,
 } from '/src/containers/CopySettings/CopySettingsNode.styled'
 
 import {
@@ -231,36 +231,50 @@ const CopySettingsNode = ({
     </NodePanelHeader>
   )
 
+  // is it a table? it is. So i'm using a table. don't judge me!
   const body = expanded ? (
     <NodePanelBody>
-      <div className="changes">
-        {nodeData.changes.map((change) => (
-          <ChangeRow key={change.key} className="change">
-            <InputSwitch
-              checked={change.enabled}
-              disabled={!change.compatible}
-              onChange={(e) => {
-                setNodeData({
-                  ...nodeData,
-                  changes: nodeData.changes.map((c) => {
-                    if (c.key === change.key) {
-                      c.enabled = e.target.checked
-                    }
-                    return c
-                  }),
-                })
-              }}
-            />
-            <FormattedPath value={change.path} />
-            <Spacer />
-            {!change.compatible && <Icon icon="warning" style={{ color: 'red' }} />}
-            {change.warnings.length > 0 && <Icon icon="warning" style={{ color: 'yellow' }} />}
-            <FormattedValue value={change.targetValue} />
-            <Icon icon="trending_flat" />
-            <FormattedValue value={change.sourceValue} />
-          </ChangeRow>
-        ))}
-      </div>
+      <ChangesTable>
+        <tbody>
+          {nodeData.changes.map((change) => (
+            <tr key={change.key}>
+              <td>
+                <InputSwitch
+                  checked={change.enabled}
+                  disabled={!change.compatible}
+                  onChange={(e) => {
+                    setNodeData({
+                      ...nodeData,
+                      changes: nodeData.changes.map((c) => {
+                        if (c.key === change.key) {
+                          c.enabled = e.target.checked
+                        }
+                        return c
+                      }),
+                    })
+                  }}
+                />
+              </td>
+              <td className="expand">
+                <FormattedPath value={change.path} />
+              </td>
+              <td>
+                <FormattedValue value={change.targetValue} />
+              </td>
+              <td>
+                <Icon icon="trending_flat" />
+              </td>
+              <td>
+                <FormattedValue value={change.sourceValue} />
+              </td>
+              <td>
+                {!change.compatible && <Icon icon="warning" style={{ color: 'red' }} />}
+                {change.warnings.length > 0 && <Icon icon="warning" style={{ color: 'yellow' }} />}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </ChangesTable>
     </NodePanelBody>
   ) : null
 
