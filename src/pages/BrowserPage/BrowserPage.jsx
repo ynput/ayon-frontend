@@ -7,9 +7,9 @@ import TaskList from '/src/containers/taskList'
 import Products from './Products'
 import Detail from './Detail'
 
-const BrowserPage = () => {
+const BrowserPage = (props) => {
   return (
-    <main>
+    <main {...props}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
