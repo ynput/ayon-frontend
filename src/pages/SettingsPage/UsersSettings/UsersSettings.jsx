@@ -44,7 +44,7 @@ const formatAccessGroups = (rowData, selectedProjects) => {
   return { ...rowData, accessGroups: res, accessGroupList: Object.keys(res) }
 }
 
-const UsersSettings = () => {
+const UsersSettings = (props) => {
   // QUERY PARAMS STATE
   const [searchParams] = useSearchParams()
   const queryNames = searchParams.getAll('name')
@@ -198,7 +198,7 @@ const UsersSettings = () => {
   // return null
 
   return (
-    <main>
+    <main {...props}>
       <Section>
         <Toolbar>
           <SelectButton

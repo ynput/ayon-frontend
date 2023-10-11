@@ -3,7 +3,7 @@ import AccessGroupList from './AccessGroupList'
 import AccessGroupDetail from './AccessGroupDetail'
 import ProjectList from '/src/containers/projectList'
 
-const AccessGroups = () => {
+const AccessGroups = (props) => {
   const [projectName, setProjectName] = useState(null)
   const [selectedAccessGroup, setSelectedAccessGroup] = useState(null)
   const [reloadTrigger, setReloadTrigger] = useState(0)
@@ -11,7 +11,7 @@ const AccessGroups = () => {
   const triggerReload = () => setReloadTrigger(reloadTrigger + 1)
 
   return (
-    <main>
+    <main {...props}>
       <ProjectList showNull="( default )" selection={projectName} onSelect={setProjectName} />
 
       <AccessGroupList

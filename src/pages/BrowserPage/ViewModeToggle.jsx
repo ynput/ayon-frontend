@@ -20,21 +20,18 @@ const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
       id: 'list',
       icon: 'format_list_bulleted',
       onClick: () => handleNormalClick('list'),
-      title: 'List View',
       ['data-tooltip']: 'List View',
     },
     {
       id: 'grid',
       icon: 'grid_view',
       onClick: () => handleNormalClick('grid'),
-      title: 'Grid View',
       ['data-tooltip']: 'Grid View',
     },
     {
       id: 'layers',
       icon: 'layers',
       onClick: () => handleGroupClick(),
-      title: 'Grouped View',
       ['data-tooltip']: 'Grouped View',
     },
   ]

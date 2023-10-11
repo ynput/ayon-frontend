@@ -38,7 +38,7 @@ const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
   return editor
 }
 
-const SiteSettings = () => {
+const SiteSettings = (props) => {
   const [selectedAddons, setSelectedAddons] = useState([])
   const [selectedSites, setSelectedSites] = useState([])
   const [newData, setNewData] = useState({})
@@ -69,7 +69,7 @@ const SiteSettings = () => {
   }
 
   return (
-    <main style={{ flexDirection: 'row', flexGrow: 1 }}>
+    <main style={{ flexDirection: 'row', flexGrow: 1 }} {...props}>
       <Section style={{ maxWidth: 400 }}>
         <AddonList
           selectedAddons={selectedAddons}
