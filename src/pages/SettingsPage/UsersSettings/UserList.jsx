@@ -129,7 +129,7 @@ const UserList = ({
           <Column field="attrib.email" header="Email" sortable />
           <Column
             field={'accessGroupList'}
-            header="Access groups"
+            header="Access"
             body={(rowData) =>
               rowData &&
               rowData.accessGroups &&
