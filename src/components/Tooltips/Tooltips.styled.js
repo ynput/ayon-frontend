@@ -5,7 +5,7 @@ export const TooltipWidget = styled.div`
   background-color: hsl(0, 0%, 5%);
   border-radius: var(--border-radius-m);
 
-  transition: opacity 200ms;
+  transition: opacity 300ms;
 
   display: flex;
   align-items: center;

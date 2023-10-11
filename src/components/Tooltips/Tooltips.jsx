@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as Styled from './Tooltips.styled'
-import { isEqual } from 'lodash'
+import { isEqual, snakeCase } from 'lodash'
+
+const getTooltipId = (tooltip, shortcut) => {
+  return snakeCase(tooltip + '-' + shortcut)
+}
 
 const Tooltips = ({ render }) => {
   const tooltipRef = useRef(null)
@@ -42,6 +46,11 @@ const Tooltips = ({ render }) => {
       return
     }
 
+    const id = getTooltipId(tooltip?.tooltip, tooltip?.shortcut)
+
+    // new tooltip is set, but it's ref hasn't updated yet
+    if (id !== tooltipRef.current.id) return
+
     const newTooltipPos = getTooltipPos(tooltip?.target, tooltipRef)
 
     if (isActive && isEqual(tooltip?.pos, newTooltipPos)) return
@@ -49,15 +58,18 @@ const Tooltips = ({ render }) => {
     if (timeoutId) clearTimeout(timeoutId)
 
     if (isActive) {
-      setTooltip((t) => ({ ...t, pos: newTooltipPos, posSet: true }))
+      setTooltip((t) => {
+        if (tooltip?.id !== t?.id) return { ...t, pos: newTooltipPos, hide: true }
+        return { ...t, pos: newTooltipPos, hide: false }
+      })
       setTimeoutId(null)
     } else {
       setIsActive(true)
       setTimeoutId(
-        setTimeout(() => setTooltip((t) => ({ ...t, pos: newTooltipPos, posSet: true })), 350),
+        setTimeout(() => setTooltip((t) => ({ ...t, pos: newTooltipPos, hide: false })), 350),
       )
     }
-  }, [tooltip])
+  }, [tooltip, setTooltip])
 
   // once tooltip has been null for 350ms, set noTimeOut to false
   const [activeTimeoutId, setActiveTimeoutId] = useState(null)
@@ -87,6 +99,11 @@ const Tooltips = ({ render }) => {
       return
     }
 
+    const id = getTooltipId(tooltipData, shortcutData)
+
+    // don't rerender if tooltip is already set to same value
+    if (tooltip?.id === id) return
+
     // find center top position of target element
     const targetRect = target.getBoundingClientRect()
     // target center will also be tooltip left
@@ -99,7 +116,8 @@ const Tooltips = ({ render }) => {
       tooltip: tooltipData ?? '',
       shortcut: shortcutData ?? '',
       target: newTargetPos,
-      posSet: false,
+      id,
+      hide: false,
     }
 
     // check if tooltip is already set to same value
@@ -108,22 +126,24 @@ const Tooltips = ({ render }) => {
     setTooltip(newTooltip)
   }
 
-  console.log(tooltip)
+  const hideTooltip = !tooltip?.pos || tooltip?.hide
 
   return (
     <>
       {render({
-        onMouseOver: (e) => handleMouse(e, tooltip),
+        onMouseOver: handleMouse,
         onMouseOut: handleMouse,
       })}
 
       <Styled.TooltipWidget
         ref={tooltipRef}
+        key={getTooltipId(tooltip?.tooltip, tooltip?.shortcut)}
+        id={getTooltipId(tooltip?.tooltip, tooltip?.shortcut)}
         className={tooltip?.tooltip ? 'tooltip' : 'tooltip hidden'}
         style={{
           display: tooltip ? 'flex' : 'none',
-          visibility: tooltip?.pos ? 'visible' : 'hidden',
-          opacity: tooltip?.pos ? 1 : 0,
+          visibility: hideTooltip ? 'hidden' : 'visible',
+          opacity: hideTooltip ? 0 : 1,
           left: tooltip?.pos?.x || 0,
           top: tooltip?.pos?.y || 0,
           padding: tooltip?.tooltip ? '6px 8px' : 6,
