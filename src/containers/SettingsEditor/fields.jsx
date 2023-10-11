@@ -313,16 +313,17 @@ function FieldTemplate(props) {
   // Context menu
 
   const contextMenuModel = useMemo(() => {
+    const rmPath = override?.inGroup || path
     let model = [
       {
-        label: `Remove ${props.formContext.level} override`,
+        label: `Remove ${props.formContext.level} override from ${rmPath.join(' / ')}`,
         disabled: overrideLevel !== props.formContext.level || !props.formContext.onRemoveOverride,
-        command: () => props.formContext.onRemoveOverride(path),
+        command: () => props.formContext.onRemoveOverride(rmPath),
       },
       {
-        label: `Pin current value as ${props.formContext.level} override`,
+        label: `Pin current ${rmPath.join(' / ')} value as ${props.formContext.level} override`,
         disabled: overrideLevel === props.formContext.level || !props.formContext.onRemoveOverride,
-        command: () => props.formContext.onPinOverride(path),
+        command: () => props.formContext.onPinOverride(rmPath),
       },
       {
         label: 'Copy value',
