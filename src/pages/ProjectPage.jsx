@@ -17,6 +17,7 @@ import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import { Dialog } from 'primereact/dialog'
 import AppNavLinks from '../containers/header/AppNavLinks'
+import Tooltips from '../components/Tooltips/Tooltips'
 
 const ProjectContextInfo = () => {
   /**
@@ -152,23 +153,24 @@ const ProjectPage = () => {
     return <div className="page">Project Not Found, Redirecting...</div>
   }
 
-  let child = null
-  if (module === 'editor') child = <EditorPage />
-  else if (module === 'workfiles') child = <WorkfilesPage />
+  let renderChild = () => null
+  if (module === 'editor') renderChild = (props) => <EditorPage {...props} />
+  else if (module === 'workfiles') renderChild = (props) => <WorkfilesPage {...props} />
   else if (addonName) {
     for (const addon of addonsData) {
       if (addon.name === addonName) {
-        child = (
+        renderChild = (props) => (
           <ProjectAddon
             addonName={addonName}
             addonVersion={addon.version}
             sidebar={addon.settings.sidebar}
+            {...props}
           />
         )
         break
       }
     }
-  } else child = <BrowserPage />
+  } else renderChild = (props) => <BrowserPage {...props} />
 
   return (
     <>
@@ -186,7 +188,7 @@ const ProjectPage = () => {
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
       <AppNavLinks links={links} />
-      {child}
+      <Tooltips render={renderChild} />
     </>
   )
 }

@@ -472,10 +472,24 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
             values={nodeIds.map((id) => nodes[id]?.data)}
             tools={
               <>
-                <Button icon="replay" onClick={handleRevert} disabled={noSelection} />
-                <Button icon="delete" onClick={() => onDelete(nodes)} disabled={noSelection} />
+                <Button
+                  icon="replay"
+                  onClick={handleRevert}
+                  disabled={noSelection}
+                  data-tooltip={'Clear changes'}
+                />
+                <Button
+                  icon="delete"
+                  onClick={() => onDelete(nodes)}
+                  disabled={noSelection}
+                  data-tooltip={'Delete'}
+                />
                 <Link to={`/projects/${projectName}/browser`}>
-                  <Button icon="visibility" disabled={noSelection} />
+                  <Button
+                    icon="visibility"
+                    disabled={noSelection}
+                    data-tooltip={'View in Browser'}
+                  />
                 </Link>
               </>
             }
