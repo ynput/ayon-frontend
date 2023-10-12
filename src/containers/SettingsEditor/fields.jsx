@@ -316,12 +316,14 @@ function FieldTemplate(props) {
     const rmPath = override?.inGroup || path
     let model = [
       {
-        label: `Remove ${props.formContext.level} override from ${rmPath.join(' / ')}`,
+        label: `Remove ${props.formContext.level} override from ${rmPath[rmPath.length - 1]}`,
         disabled: overrideLevel !== props.formContext.level || !props.formContext.onRemoveOverride,
         command: () => props.formContext.onRemoveOverride(rmPath),
       },
       {
-        label: `Pin current ${rmPath.join(' / ')} value as ${props.formContext.level} override`,
+        label: `Pin current ${rmPath[rmPath.length - 1]} value as ${
+          props.formContext.level
+        } override`,
         disabled: overrideLevel === props.formContext.level || !props.formContext.onRemoveOverride,
         command: () => props.formContext.onPinOverride(rmPath),
       },
