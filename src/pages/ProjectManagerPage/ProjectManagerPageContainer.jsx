@@ -1,7 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import ProjectList from '/src/containers/projectList'
-import { useNavigate } from 'react-router'
 
 // Wraps every page on projectManager and provides the project list
 // and other useful props
@@ -13,7 +12,6 @@ const ProjectManagerPageContainer = ({
   onNewProject,
   ...props
 }) => {
-  const navigate = useNavigate()
   // for each child, add the project list react node with the props
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
@@ -27,7 +25,6 @@ const ProjectManagerPageContainer = ({
             hideCode
             isCollapsible
             autoSelect
-            onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
             selection={selection}
             onDeleteProject={onDeleteProject}
             onNewProject={onNewProject}

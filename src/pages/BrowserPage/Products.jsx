@@ -223,7 +223,14 @@ const Products = () => {
             ? 'folder'
             : productTypes[node.data.productType]?.icon || 'inventory_2'
 
-          return <CellWithIcon icon={icon} iconClassName={className} text={node.data.name} />
+          return (
+            <CellWithIcon
+              icon={icon}
+              iconClassName={className}
+              text={node.data.label}
+              name={node.data.name}
+            />
+          )
         },
       },
       {
@@ -531,7 +538,7 @@ const Products = () => {
   const isNone = filteredData.length === 0
 
   return (
-    <Section className="wrap">
+    <Section wrap>
       <Toolbar>
         <InputText
           style={{ width: '200px' }}

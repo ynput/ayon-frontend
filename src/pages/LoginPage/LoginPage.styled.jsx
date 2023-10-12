@@ -7,7 +7,7 @@ export const LoginForm = styled.div`
   align-items: flex-start;
   gap: 64px;
   position: relative;
-  background-color: var(--color-grey-00);
+  background-color: var(--panel-background);
   padding: 64px;
   border-radius: 6px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
@@ -38,7 +38,7 @@ export const LoginForm = styled.div`
 
   /* login */
   & > div:last-child {
-    background-color: var(--color-grey-01);
+    background-color: var(--md-sys-color-surface-container);
   }
 
   button {

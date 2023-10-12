@@ -7,7 +7,6 @@ import styled from 'styled-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
-import arrayEquals from '/src/helpers/arrayEquals'
 import { Badge, BadgeWrapper } from '/src/components/Badge'
 
 const FormArrayField = styled.div`
@@ -39,7 +38,7 @@ const ArrayItemControls = styled.div`
   button {
     border-radius: 50%;
     width: 30px;
-    height: 22px;
+    height: 30px;
   }
 `
 
@@ -175,9 +174,6 @@ function ObjectFieldTemplate(props) {
 
   if (['compact', 'root', 'expanded'].includes(props.schema.layout)) return fields
 
-  // In case of "pseudo-dicts" (array of objects with a "name" attribute)
-  // use the "name" attributeas the title
-
   const contextMenuItems = [
     {
       label: 'Copy',
@@ -198,6 +194,8 @@ function ObjectFieldTemplate(props) {
   // Title + handle root object
 
   let title = props.title
+  // In case of "pseudo-dicts" (array of objects with a "name" attribute)
+  // use the "name" attributeas the title
   if ('name' in props.schema.properties) {
     let label = null
     if ('label' in props.schema.properties) label = props.formData.label
@@ -215,8 +213,16 @@ function ObjectFieldTemplate(props) {
       <Badge hl="site">{props.formContext.headerSiteId}</Badge>
     )
 
-    const envMark = props.formContext.headerEnvironment && (
-      <Badge hl={props.formContext.headerEnvironment}>{props.formContext.headerEnvironment}</Badge>
+    const envMark = props.formContext.headerVariant && (
+      <Badge
+        hl={
+          ['production', 'staging'].includes(props.formContext.headerVariant)
+            ? props.formContext.headerVariant
+            : 'developer'
+        }
+      >
+        {props.formContext.headerVariant}
+      </Badge>
     )
 
     title = (
@@ -307,16 +313,19 @@ function FieldTemplate(props) {
   // Context menu
 
   const contextMenuModel = useMemo(() => {
+    const rmPath = override?.inGroup || path
     let model = [
       {
-        label: `Remove ${props.formContext.level} override`,
+        label: `Remove ${props.formContext.level} override from ${rmPath[rmPath.length - 1]}`,
         disabled: overrideLevel !== props.formContext.level || !props.formContext.onRemoveOverride,
-        command: () => props.formContext.onRemoveOverride(path),
+        command: () => props.formContext.onRemoveOverride(rmPath),
       },
       {
-        label: `Pin current value as ${props.formContext.level} override`,
+        label: `Pin current ${rmPath[rmPath.length - 1]} value as ${
+          props.formContext.level
+        } override`,
         disabled: overrideLevel === props.formContext.level || !props.formContext.onRemoveOverride,
-        command: () => props.formContext.onPinOverride(path),
+        command: () => props.formContext.onPinOverride(rmPath),
       },
       {
         label: 'Copy value',
@@ -370,6 +379,7 @@ function FieldTemplate(props) {
         onMouseUp={() => {
           if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
         }}
+        onContextMenu={onContextMenu}
       >
         {props.children}
       </SettingsPanel>
@@ -385,9 +395,12 @@ function FieldTemplate(props) {
 
   // do not show error for color widgets (they are declared as strings, but
   // contains arrays. The error is not relevant for the user)
-  let className = `form-inline-field ${
-    props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
-  }`
+  //
+  // TODO: ignoring errors for now. Too many false positives
+  let className = `form-inline-field`
+  // let className = `form-inline-field ${
+  //   props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
+  // }`
 
   const inlineHelp = useMemo(() => {
     return (
@@ -407,8 +420,9 @@ function FieldTemplate(props) {
           <div className={`form-inline-field-label ${overrideLevel}`}>
             <span
               onClick={() => {
-                if (props.formContext.onSetBreadcrumbs)
-                  props.formContext.onSetBreadcrumbs(override.path)
+                if (props.formContext.onSetBreadcrumbs) {
+                  if (override?.path) props.formContext.onSetBreadcrumbs(override.path)
+                }
               }}
               style={labelStyle}
             >
@@ -443,10 +457,7 @@ const ArrayItemTemplate = (props) => {
     const parentId = props.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
     const formContext = props.children._owner.memoizedProps.formContext
     const path = formContext.overrides[parentId].path
-    const newChangedKeys = formContext.changedKeys
-      .filter((key) => !arrayEquals(key, path))
-      .concat([path])
-    formContext.onSetChangedKeys(newChangedKeys)
+    formContext.onSetChangedKeys([{ path, isChanged: true }])
   }
 
   const onRemoveItem = () => {
@@ -486,24 +497,30 @@ const ArrayItemTemplate = (props) => {
 const ArrayFieldTemplate = (props) => {
   /* Complete array including the add button */
 
-  const res = useMemo(
-    () => (
-      <FormArrayField>
-        {props.items.map((element) => (
-          <ArrayItemTemplate key={element.name} {...element} />
-        ))}
+  const onAddItem = () => {
+    const id = props.idSchema.$id
+    const formContext = props.formContext
+    const path = formContext.overrides[id]?.path
 
-        {props.canAdd && (
-          <ArrayItemControls>
-            <Button onClick={props.onAddClick} icon="add" />
-          </ArrayItemControls>
-        )}
-      </FormArrayField>
-    ),
-    [props.items, props.canAdd],
+    formContext.onSetChangedKeys([{ path, isChanged: true }])
+    props.onAddClick()
+  }
+
+  return (
+    <FormArrayField>
+      {props.items.map((element) => (
+        <>
+          <ArrayItemTemplate key={element.key} {...element} />
+        </>
+      ))}
+
+      {props.canAdd && (
+        <ArrayItemControls>
+          <Button onClick={onAddItem} icon="add" />
+        </ArrayItemControls>
+      )}
+    </FormArrayField>
   )
-
-  return res
 }
 
 export { ObjectFieldTemplate, FieldTemplate, ArrayFieldTemplate }

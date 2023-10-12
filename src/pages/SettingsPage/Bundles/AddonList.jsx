@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useMemo } from 'react'
-import { VersionSelect } from '@ynput/ayon-react-components'
 import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { SocketContext } from '/src/context/websocketContext'
 import { rcompare } from 'semver'
+import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
+import { FilePath } from './Bundles.styled'
 
 const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
   const options = useMemo(
@@ -13,19 +14,18 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
         ? selection.map((s) => {
             const foundAddon = addons.find((a) => a.name === s.name)
             if (!foundAddon) return ['NONE']
-            const versionList = Object.keys(foundAddon.versions || {}).sort((a, b) =>
-              rcompare(a, b),
-            )
+            const versionList = Object.keys(foundAddon.versions || {})
+            versionList.sort((a, b) => rcompare(a, b))
             return [...versionList, 'NONE']
           })
-        : [[...versions, 'NONE']],
+        : [[...versions.sort((a, b) => rcompare(a, b)), 'NONE']],
 
     [selection, addons],
   )
 
   return (
     <VersionSelect
-      style={{ width: 200 }}
+      style={{ width: 200, height: 32 }}
       buttonStyle={{ zIndex: 0 }}
       versions={options}
       value={version ? [version] : []}
@@ -37,7 +37,17 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
 
 const AddonList = React.forwardRef(
   (
-    { formData, setFormData, readOnly, selected = [], setSelected, style, diffAddonVersions },
+    {
+      formData,
+      setFormData,
+      readOnly,
+      selected = [],
+      setSelected,
+      style,
+      diffAddonVersions,
+      isDev,
+      onDevChange,
+    },
     ref,
   ) => {
     const { data: addons = [], refetch } = useGetAddonListQuery({
@@ -71,6 +81,7 @@ const AddonList = React.forwardRef(
         return {
           ...addon,
           version: formData?.addons?.[addon.name] || 'NONE',
+          dev: formData?.addonDevelopment?.[addon.name],
         }
       })
     }, [addons, formData])
@@ -95,7 +106,7 @@ const AddonList = React.forwardRef(
         <Column
           header="Name"
           field="name"
-          style={{ padding: '8px !important' }}
+          style={{ padding: '8px !important', maxWidth: isDev ? 250 : 'unset' }}
           bodyStyle={{ height: 38 }}
           sortable
         />
@@ -103,7 +114,7 @@ const AddonList = React.forwardRef(
           sortable
           field="version"
           header="Version"
-          style={{ maxWidth: 120 }}
+          style={{ maxWidth: 200 }}
           bodyStyle={{ padding: 8 }}
           body={(addon) => {
             if (readOnly) return formData?.addons?.[addon.name] || 'NONE'
@@ -117,10 +128,36 @@ const AddonList = React.forwardRef(
                 addons={addons}
                 setVersion={(version) => onSetVersion(addon.name, version)}
                 versions={Object.keys(addon.versions || {})}
+                isDev={isDev}
               />
             )
           }}
         />
+        {isDev && (
+          <Column
+            field="path"
+            header="Addon directory"
+            body={(addon) => (
+              <FilePath>
+                <InputSwitch
+                  checked={addon.dev?.enabled}
+                  onChange={() =>
+                    onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
+                  }
+                />
+                <InputText
+                  value={addon.dev?.path}
+                  style={{ width: '100%' }}
+                  placeholder="/path/to/dev/addon..."
+                  onChange={(e) =>
+                    onDevChange([addon.name], { value: e.target.value, key: 'path' })
+                  }
+                  disabled={!addon.dev?.enabled}
+                />
+              </FilePath>
+            )}
+          />
+        )}
       </DataTable>
     )
   },

@@ -17,7 +17,7 @@ const addTemplateToItems = (items, ref) => {
 }
 
 const useCreateContext = (menuList) => {
-  const { openContext, ref } = useContextMenu()
+  const { openContext, ref, isContextOpen, closeContext } = useContextMenu()
 
   const getModel = useCallback(
     (menuList, ref) => {
@@ -43,7 +43,7 @@ const useCreateContext = (menuList) => {
     openContext(e, newModel || model)
   }
 
-  return [handleOpen]
+  return [handleOpen, closeContext, isContextOpen, ref]
 }
 
 export default useCreateContext

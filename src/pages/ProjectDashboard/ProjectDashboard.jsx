@@ -7,7 +7,7 @@ import { Section } from '@ynput/ayon-react-components'
 // import ProjectHealth from './panels/ProjectHealth'
 import DashboardPanelsContainer from './panels/DashboardPanelsContainer'
 import ProjectLatest from './panels/ProjectLatest'
-import ProjectDetails from './panels/ProjectDetails'
+import ProjectDetails from './panels/ProjectDetails/ProjectDetails'
 import ProjectTeams from './panels/ProjectTeams'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 
@@ -28,16 +28,16 @@ const PanelsContainerStyled = styled.div`
   overflow: hidden;
 `
 
-const ProjectDashboard = ({ projectName, projectList }) => {
+const ProjectDashboard = ({ projectName }) => {
   return (
-    <ProjectManagerPageLayout projectList={projectList}>
+    <ProjectManagerPageLayout passthrough>
       {projectName && (
         <Section
           style={{
             display: 'grid',
-            gridTemplateColumns: 'auto minmax(300px, 20vw)',
-            height: `calc(100% + 8px)`,
+            gridTemplateColumns: 'auto minmax(400px, 20vw)',
             alignItems: 'start',
+            height: '100%',
           }}
         >
           <PanelsContainerStyled>

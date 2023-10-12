@@ -26,7 +26,7 @@ const buildEventTileQuery = (type) => {
   `
 }
 
-const buildEntitiesQuery = (type, attribs) => {
+export const buildEntitiesQuery = (type, attribs) => {
   let f_attribs = attribs || ''
   if (!attribs) {
     for (const attrib of ayonClient.settings.attributes) {

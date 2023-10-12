@@ -1,13 +1,19 @@
 import { useEffect, useState, useMemo } from 'react'
 
 import { Dialog } from 'primereact/dialog'
-import { confirmDialog } from 'primereact/confirmdialog'
 import { InputText } from 'primereact/inputtext'
 
 import { toast } from 'react-toastify'
 
 import SettingsEditor from '/src/containers/SettingsEditor'
-import { Spacer, Button, Section, Toolbar, ScrollPanel } from '@ynput/ayon-react-components'
+import {
+  Spacer,
+  Button,
+  Section,
+  Toolbar,
+  ScrollPanel,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 
 import {
   useGetAnatomyPresetQuery,
@@ -21,7 +27,7 @@ import {
   useUpdatePrimaryPresetMutation,
 } from '/src/services/anatomy/updateAnatomy'
 import { isEqual } from 'lodash'
-import SaveButton from '/src/components/SaveButton'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const AnatomyPresets = () => {
   const [originalData, setOriginalData] = useState(null)
@@ -88,27 +94,13 @@ const AnatomyPresets = () => {
   // DELETE PRESET
   const handleDeletePreset = (name, isPrimary) => {
     console.log('handleDeletePreset')
-    confirmDialog({
-      header: 'Delete Preset',
-      message: `Are you sure you want to delete the preset ${name}?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Delete',
-      accept: () => {
-        deletePreset({ name })
-          .unwrap()
-          .then(() => {
-            if (isPrimary) {
-              setSelectedPreset('_')
-            }
-            toast.info(`Preset ${name} deleted`)
-          })
-          .catch((err) => {
-            toast.error(err.message)
-          })
-      },
-      rejectLabel: 'Cancel',
-      reject: () => {
-        // do nothing
+    confirmDelete({
+      label: `Preset: ${name}`,
+      accept: async () => {
+        await deletePreset({ name }).unwrap()
+        if (isPrimary) {
+          setSelectedPreset('_')
+        }
       },
     })
   }
@@ -200,10 +192,11 @@ const AnatomyPresets = () => {
             onClick={() => setPrimaryPreset(selectedPreset)}
           />
           <Button
-            label="Delete the preset"
+            label="Delete preset"
             icon="delete"
             disabled={selectedPreset === '_'}
             onClick={() => handleDeletePreset(selectedPreset, isSelectedPrimary)}
+            style={{ visibility: selectedPreset === '_' ? 'hidden' : 'visible' }}
           />
           <Spacer />
           <Button
@@ -213,12 +206,15 @@ const AnatomyPresets = () => {
               setNewPresetName('')
               setShowNameDialog(true)
             }}
+            variant={selectedPreset === '_' ? 'filled' : 'surface'}
           />
+
           <SaveButton
             label="Save Current Preset"
             saving={isUpdating}
             active={isChanged && selectedPreset !== '_'}
             onClick={() => savePreset(selectedPreset)}
+            variant={selectedPreset === '_' ? 'surface' : 'filled'}
           />
         </Toolbar>
 

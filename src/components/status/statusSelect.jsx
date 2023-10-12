@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import { Dropdown } from '@ynput/ayon-react-components'
 import StatusField from './statusField'
 import { useSelector } from 'react-redux'
@@ -26,11 +25,22 @@ const StatusSelect = ({
   disableMessage,
   disabled,
   widthExpand,
+  options,
+  invert = false,
+  ...props
 }) => {
-  const statusesObject = useSelector((state) => state.project.statuses)
+  const statusesObject = options
+    ? options.reduce(
+        (acc, status) => ({
+          ...acc,
+          [status.name]: status,
+        }),
+        {},
+      )
+    : useSelector((state) => state.project.statuses)
   const statusesOrder = useSelector((state) => state.project.statusesOrder)
   // ordered array of statuses objects
-  const statuses = statusesOrder.map((status) => statusesObject[status])
+  const statuses = options || statusesOrder.map((status) => statusesObject[status])
 
   if (!value && !placeholder) return null
 
@@ -43,7 +53,8 @@ const StatusSelect = ({
   const charWidth = 7
   const gap = 5
   const iconWidth = 20
-  const longestStatus = [...statuses].sort((a, b) => b.name.length - a.name.length)[0].name.length
+  const statusesSortedByLength = [...statuses].sort((a, b) => b.name.length - a.name.length)[0]
+  const longestStatus = statusesSortedByLength?.name?.length
   const calcMaxWidth = longestStatus * charWidth + gap + iconWidth + 16
 
   maxWidth = maxWidth || calcMaxWidth
@@ -53,6 +64,7 @@ const StatusSelect = ({
 
   return (
     <StyledDropdown
+      {...props}
       message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
       widthExpand={widthExpand}
       onOpen={onOpen}
@@ -70,43 +82,26 @@ const StatusSelect = ({
           height={height}
           placeholder={placeholder}
           statuses={statusesObject}
+          invert={invert}
+          className={'value'}
         />
       )}
       dataKey={'name'}
       options={statuses}
-      itemTemplate={(status, isActive) => (
-        <StatusField
-          value={status.name}
-          isSelecting
-          isActive={!isMixed && isActive}
-          align={align}
-          height={height}
-          statuses={statusesObject}
-        />
-      )}
+      itemTemplate={(status, isActive) =>
+        statuses.find((s) => s.name === status.name) && (
+          <StatusField
+            value={status.name}
+            isSelecting
+            isActive={!isMixed && isActive}
+            align={align}
+            height={height}
+            statuses={statusesObject}
+          />
+        )
+      }
     />
   )
-}
-
-StatusSelect.propTypes = {
-  size: PropTypes.oneOf(['full', 'short', 'icon']),
-  align: PropTypes.oneOf(['left', 'right']),
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool, PropTypes.array]),
-  statuses: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      color: PropTypes.string.isRequired,
-      state: PropTypes.string.isRequired,
-    }).isRequired,
-  ),
-  onChange: PropTypes.func.isRequired,
-  maxWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  multipleSelected: PropTypes.number,
-  onClick: PropTypes.func,
-  isChanged: PropTypes.object,
-  disableMessage: PropTypes.bool,
-  disabled: PropTypes.bool,
-  widthExpand: PropTypes.bool,
 }
 
 export default StatusSelect

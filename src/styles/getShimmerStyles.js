@@ -10,8 +10,8 @@ const shimmerAnimation = keyframes`
 `
 
 function getShimmerStyles(
-  color1 = 'var(--color-grey-01)',
-  color2 = 'var(--color-grey-02)',
+  color1 = 'var(--md-sys-color-surface-container-high)',
+  color2 = 'var(--md-sys-color-surface-container-high-hover)',
   config = {},
 ) {
   const { speed = '1.2s', opacity = 0.25 } = config

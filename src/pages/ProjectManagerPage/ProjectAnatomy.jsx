@@ -1,14 +1,13 @@
 import { toast } from 'react-toastify'
 import { useState, useEffect, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import { Section, ScrollPanel } from '@ynput/ayon-react-components'
+import { Section, ScrollPanel, SaveButton, Spacer } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
 import { useGetAnatomySchemaQuery } from '../../services/anatomy/getAnatomy'
 import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 import { setUri } from '/src/features/context'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
-import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
@@ -74,12 +73,16 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
     <ProjectManagerPageLayout
       projectList={projectList}
       toolbar={
-        <SaveButton
-          label="Save changes"
-          onClick={saveAnatomy}
-          active={hasChanges}
-          saving={isUpdating}
-        />
+        <>
+          <Spacer />
+          <SaveButton
+            label="Save changes"
+            onClick={saveAnatomy}
+            active={hasChanges}
+            saving={isUpdating}
+            style={{ marginRight: 20 }}
+          />
+        </>
       }
     >
       <Section>

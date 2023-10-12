@@ -25,31 +25,23 @@ function ShortcutsProvider(props) {
     return () => clearTimeout(timer)
   }, [lastPressed])
 
-  const settings = useMemo(
+  const navigation = useMemo(
     () => [
+      // project settings
+      { key: 'p+p', action: () => navigate('/manageProjects/anatomy') },
+      // studio settings
       { key: 's+s', action: () => navigate('/settings/studio') },
-      { key: 's+b', action: () => navigate('/settings/bundles') },
-      { key: 's+u', action: () => navigate('/settings/users') },
-      { key: 's+a', action: () => navigate('/settings/attributes') },
-      { key: 's+p', action: () => navigate('/settings/anatomyPresets') },
-      { key: 's+c', action: () => navigate('/settings/connect') },
+      // dashboard
+      { key: 'd+d', action: () => navigate('/dashboard') },
+      // user settings
+      { key: 'u+u', action: () => navigate('/settings/users') },
+      // events page
+      { key: 'e+e', action: () => navigate('/events') },
     ],
     [navigate],
   )
 
-  // dashboard, teams, anatomy, projectSettings
-
-  const manageProjects = useMemo(
-    () => [
-      { key: 'm+m', action: () => navigate('/manageProjects/dashboard') },
-      { key: 'm+t', action: () => navigate('/manageProjects/teams') },
-      { key: 'm+a', action: () => navigate('/manageProjects/anatomy') },
-      { key: 'm+s', action: () => navigate('/manageProjects/projectSettings') },
-    ],
-    [navigate],
-  )
-
-  const globalActions = useMemo(
+  const navBar = useMemo(
     () => [
       { key: '1', action: () => dispatch(toggleMenuOpen('project')) },
       { key: '8', action: () => dispatch(toggleMenuOpen('help')) },
@@ -62,7 +54,7 @@ function ShortcutsProvider(props) {
   // when these variables change, update shortcutshh
   const deps = []
 
-  const defaultShortcuts = [...settings, ...manageProjects, ...globalActions]
+  const defaultShortcuts = [...navigation, ...navBar]
 
   // start off with global shortcuts but others can be set per page
   const [shortcuts, setShortcuts] = useState(defaultShortcuts)
@@ -74,11 +66,17 @@ function ShortcutsProvider(props) {
 
   const handleKeyPress = (e) => {
     // check target isn't an input
-    if (e.target.tagName === 'INPUT' || disabled) return
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName) || disabled) return
+    // or has blocked shortcuts className
+    if (e.target.classList.contains('block-shortcuts')) return
+    // or any of its parents
+    if (e.target.closest('.block-shortcuts')) return
 
     let singleKey = e.key
     // add ctrl_ prefix if ctrl or cmd is pressed
     if (e.ctrlKey || e.metaKey) singleKey = 'ctrl+' + singleKey
+    // support alt
+    if (e.altKey) singleKey = 'alt+' + singleKey
 
     const combo = lastPressed + '+' + singleKey
     // first check if the key pressed is a shortcut
@@ -87,7 +85,9 @@ function ShortcutsProvider(props) {
 
     setLastPressed(singleKey)
 
-    if (!shortcut?.action) return
+    if (!shortcut) return
+
+    if (!shortcut.action || shortcut.disabled) return
     // console.log(shortcut)
 
     // if it is, prevent default browser behavior

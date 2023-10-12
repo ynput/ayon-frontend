@@ -16,6 +16,11 @@ const NameField = ({
 
   const chobj = changes[node.id]
   let value = chobj?._name || chobj?._name === '' ? chobj._name : node.name
+  const name = value
+  // is label
+  const label = chobj?._label || chobj?._label === '' ? chobj._label : node.label
+
+  if (label) value = label
 
   if (!styled) return value
 
@@ -25,7 +30,7 @@ const NameField = ({
   if (chobj?.errors?._name) {
     textStyle.color = 'var(--color-hl-error)'
   }
-  if (chobj && '_name' in chobj) textStyle.color = 'var(--color-hl-00)'
+  if (chobj && '_name' in chobj) textStyle.color = 'var(--color-changed)'
 
   if (node.__entityType === 'task') {
     icon = tasks[chobj?._taskType || node.taskType]?.icon || 'check_circle'
@@ -45,6 +50,7 @@ const NameField = ({
         prefix && !['undefined', 'null', ''].includes(prefix) ? prefix + ' | ' : ''
       }${value}`}
       {...{ style, iconStyle, textStyle }}
+      name={name}
     />
   )
 }

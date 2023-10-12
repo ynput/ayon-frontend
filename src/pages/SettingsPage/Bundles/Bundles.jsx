@@ -20,12 +20,16 @@ import AddonUpload from '../AddonInstall/AddonUpload'
 import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useLocation } from 'react-router'
 
+import confirmDelete from '/src/helpers/confirmDelete'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
+
 const Bundles = () => {
+  const developerMode = useSelector((state) => state.user.attrib.developerMode)
   const location = useLocation()
   const dispatch = useDispatch()
   // addon install dialog
@@ -44,8 +48,16 @@ const Bundles = () => {
   const [showArchived, setShowArchived] = useLocalStorage('bundles-archived', true)
 
   // REDUX QUERIES
-  let { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
+  let {
+    data: bundleList = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+  } = useGetBundleListQuery({ archived: true })
+  // GET INSTALLERS
   const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
+  // GET ADDONS
   const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
     showVersions: true,
   })
@@ -59,6 +71,14 @@ const Bundles = () => {
     }
     return bundleList
   }, [bundleList, showArchived])
+
+  // filter out isDev bundles if developerMode off
+  bundleList = useMemo(() => {
+    if (!developerMode) {
+      return [...bundleList].filter((bundle) => !bundle.isDev)
+    }
+    return bundleList
+  }, [bundleList, developerMode])
 
   // if there is a url query ?selected={name} = latest then select the bundle and remove the query
   useEffect(() => {
@@ -234,12 +254,16 @@ const Bundles = () => {
     }
   }
 
-  const handleDeleteBundle = async () => {
-    setSelectedBundles([])
-    for (const name of selectedBundles) {
-      deleteBundle({ name })
-    }
-  }
+  const handleDeleteBundle = async () =>
+    confirmDelete({
+      label: `${selectedBundles.length} bundles`,
+      accept: async () => {
+        setSelectedBundles([])
+        for (const name of selectedBundles) {
+          await deleteBundle({ name }).unwrap()
+        }
+      },
+    })
 
   const { confirmRestart } = useServerRestart()
 
@@ -268,6 +292,9 @@ const Bundles = () => {
       break
   }
 
+  // at 1310px wide
+  const isCompacted = useMemo(() => window.innerWidth < 1310, [])
+
   return (
     <>
       <Dialog
@@ -285,61 +312,80 @@ const Bundles = () => {
         )}
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
-        <Section style={{ minWidth: 400, maxWidth: 400, zIndex: 10 }}>
-          <Toolbar>
-            <Button label="Create new bundle" icon="add" onClick={handleNewBundleStart} />
-            <Button
-              label="Install addons"
-              icon="input_circle"
-              onClick={() => setUploadOpen('addon')}
-            />
-            <Button
-              label="Upload Launcher"
-              icon="upload"
-              onClick={() => setUploadOpen('installer')}
-            />
-            <Button
-              label="Upload Dependency Package"
-              icon="upload"
-              onClick={() => setUploadOpen('package')}
-            />
-            <span style={{ whiteSpace: 'nowrap' }}>Show Archived</span>
-            <InputSwitch
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-            />
-          </Toolbar>
-          <BundleList
-            selectedBundles={selectedBundles}
-            onBundleSelect={handleBundleSelect}
-            bundleList={bundleList}
-            isLoading={isLoading}
-            onDuplicate={handleDuplicateBundle}
-            onDelete={handleDeleteBundle}
-            toggleBundleStatus={toggleBundleStatus}
-          />
-        </Section>
-
-        {newBundleOpen ? (
-          <NewBundle
-            initBundle={newBundleOpen}
-            onSave={handleNewBundleEnd}
-            isLoading={isLoadingInstallers}
-            installers={installerVersions}
-            addons={addons}
-          />
-        ) : (
-          !!bundlesData.length && (
-            <BundleDetail
-              bundles={bundlesData}
-              onDuplicate={handleDuplicateBundle}
-              isLoading={isLoadingInstallers || isLoadingAddons}
-              installers={installerVersions}
-              toggleBundleStatus={toggleBundleStatus}
-              addons={addons}
-            />
-          )
-        )}
+        <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
+          <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
+            <Section style={{ height: '100%' }}>
+              <Toolbar>
+                <Button label="Add bundle" icon="add" onClick={handleNewBundleStart} />
+                <Button
+                  label="Install addons"
+                  icon="input_circle"
+                  onClick={() => setUploadOpen('addon')}
+                />
+                <Button
+                  label={`${isCompacted ? '' : 'Upload'} Launcher`}
+                  icon="upload"
+                  onClick={() => setUploadOpen('installer')}
+                />
+                <Button
+                  label={`${isCompacted ? '' : 'Upload'} Dependency Package`}
+                  icon="upload"
+                  onClick={() => setUploadOpen('package')}
+                />
+                <span style={{ whiteSpace: 'nowrap' }}>Show Archived</span>
+                <InputSwitch
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                />
+              </Toolbar>
+              <BundleList
+                selectedBundles={selectedBundles}
+                onBundleSelect={handleBundleSelect}
+                bundleList={bundleList}
+                isLoading={isLoading}
+                onDuplicate={handleDuplicateBundle}
+                onDelete={handleDeleteBundle}
+                toggleBundleStatus={toggleBundleStatus}
+                errorMessage={!isFetching && isError && error?.data?.traceback}
+              />
+            </Section>
+          </SplitterPanel>
+          <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
+            <Section style={{ height: '100%' }}>
+              {newBundleOpen ? (
+                <NewBundle
+                  initBundle={newBundleOpen}
+                  onSave={handleNewBundleEnd}
+                  isLoading={isLoadingInstallers || isFetching}
+                  installers={installerVersions}
+                  addons={addons}
+                  developerMode={developerMode}
+                />
+              ) : (
+                !!bundlesData.length &&
+                (bundlesData.length === 1 && bundlesData[0].isDev ? (
+                  <NewBundle
+                    initBundle={bundlesData[0]}
+                    isLoading={isLoadingInstallers || isFetching}
+                    installers={installerVersions}
+                    addons={addons}
+                    isDev
+                  />
+                ) : (
+                  <BundleDetail
+                    bundles={bundlesData}
+                    onDuplicate={handleDuplicateBundle}
+                    isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
+                    installers={installerVersions}
+                    toggleBundleStatus={toggleBundleStatus}
+                    addons={addons}
+                    developerMode={developerMode}
+                  />
+                ))
+              )}
+            </Section>
+          </SplitterPanel>
+        </Splitter>
       </main>
     </>
   )

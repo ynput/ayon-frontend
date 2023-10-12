@@ -38,7 +38,11 @@ const getStorage = (storageUsage) => {
 
   //   percentage over 60 orange, over 80 red
   const color =
-    percentage > 80 ? 'var(--color-hl-error)' : percentage > 60 ? 'var(--color-hl-01)' : null
+    percentage > 80
+      ? 'var(--color-hl-error)'
+      : percentage > 60
+      ? 'var(--md-custom-color-warning)'
+      : null
 
   return { percentage, color }
 }
@@ -71,7 +75,7 @@ const ProjectHealth = ({ projectName, share, position }) => {
 
   const taskValues = [
     { value: onTrack, label: 'On Track' },
-    { value: 100 - onTrack, label: 'Overdue', color: 'var(--color-hl-01)' },
+    { value: 100 - onTrack, label: 'Overdue', color: 'var(--md-custom-color-warning)' },
   ]
 
   const statusValues = Object.entries(statuses).map(([key, value]) => ({

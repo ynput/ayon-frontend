@@ -10,7 +10,7 @@ import {
   IconSelect,
 } from '@ynput/ayon-react-components'
 
-import arrayEquals from '/src/helpers/arrayEquals'
+import { isEqual } from 'lodash'
 
 const addDecimalPoint = (value) => {
   const valueString = value.toString(10)
@@ -18,25 +18,31 @@ const addDecimalPoint = (value) => {
   else return valueString
 }
 
-const updateOverrides = (props, changed, path) => {
-  if (!props.formContext) {
-    return // WARN!
+const updateChangedKeys = (props, changed, path) => {
+  if (!props.formContext) return // WARN! (but shouldn't happen)
+  if (!path?.length) return // WARN!
+  props.formContext.onSetChangedKeys([{ path, isChanged: changed }])
+}
+
+const equiv = (a, b) => {
+  if (typeof a !== typeof b) return false
+
+  if (typeof a === 'object' && a?.length) {
+    if (a?.length !== b?.length) return false
+    // compare two arrays. return true if they contain the same elements
+    // order doesn't matter
+    if (a.length !== b.length) return false
+    for (const i of a) {
+      if (!b.includes(i)) return false
+    }
+    return true
   }
 
-  let newChangedKeys
-  if (changed) {
-    newChangedKeys = props.formContext?.changedKeys
-      .filter((key) => !arrayEquals(key, path))
-      .concat([path])
-  } else {
-    newChangedKeys = props.formContext?.changedKeys.filter((key) => !arrayEquals(key, path))
-  }
-
-  props.formContext.onSetChangedKeys(newChangedKeys)
+  return isEqual(a, b)
 }
 
 const parseContext = (props) => {
-  const result = { originalValue: null, path: [] }
+  const result = { originalValue: undefined, path: [] }
   if (props.formContext?.overrides && props.formContext.overrides[props.id]) {
     result.originalValue = props.formContext.overrides[props.id].originalValue
     result.path = props.formContext.overrides[props.id].path
@@ -47,23 +53,52 @@ const parseContext = (props) => {
 const CheckboxWidget = function (props) {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState(null)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
+    // Initial push to formData
+    // Used when the item is a part of an array
+    // and it is newly added
+    if (!props.onChange) return
+    if (value === null) return
+    if (value === props.value) return
+    if (initialized) return
+
+    setInitialized(true)
+    if (path?.length) return
+    setTimeout(() => {
+      props.onChange(value)
+    }, 300)
+  }, [props.onChange, value])
+
+  useEffect(() => {
+    console.log(props.id, props.value, value)
+    // Sync the local state with the formData
+    if (props.value === undefined) return
+    if (value === props.value) return
     setValue(props.value || false)
   }, [props.value])
 
   useEffect(() => {
+    // When a switch is switched, update the formData
+    // and the changed keys.
+    // Also set the breadcrumbs
+
+    // we don't want to push the data directly in onChange,
+    // because we want to first update the widget.
+    // Value propagation can wait
+
+    if (!props.onChange) return
     if (value === null) return
-    if (value !== props.value) {
-      props.onChange(value)
-      // this timeout must be here. idk why. if not,
-      // the value will be set to the original value or smth
-      setTimeout(() => {
-        const isChanged = value !== originalValue
-        updateOverrides(props, isChanged, path)
-        props.formContext?.onSetBreadcrumbs(path)
-      }, 100)
-    }
+    if (value === props.value) return
+    // this timeout must be here. idk why. if not,
+    // the value will be set to the original value or smth
+    props.onChange(value)
+    setTimeout(() => {
+      const isChanged = value !== originalValue
+      updateChangedKeys(props, isChanged, path)
+      props.formContext?.onSetBreadcrumbs(path)
+    }, 100)
   }, [value])
 
   const onChange = (e) => {
@@ -71,42 +106,72 @@ const CheckboxWidget = function (props) {
     setValue(newValue)
   }
 
-  // we need value || false here. in the useeffect above
-  // it is necessarty to check against null (which happens
-  // right after the component is mounted), but during the
-  // same render, we need the value here...
+  return (
+    <span style={value !== props.value ? { outline: '1px solid yellow' } : {}}>
+      <InputSwitch checked={value || false} onChange={onChange} />
+      {/* {JSON.stringify(props.value)} / {JSON.stringify(value)}  */}
+    </span>
+  )
 
-  return <InputSwitch checked={value || false} onChange={onChange} />
+  // For debugging
+  /* 
+  return (
+    <>
+      <InputSwitch checked={value || false} onChange={onChange} />
+      {JSON.stringify(value)}
+      {JSON.stringify(props.value) || 'und'}
+    </>
+  )
+  */
 }
 
 const SelectWidget = (props) => {
   const { originalValue, path } = parseContext(props)
+  const [value, setValue] = useState(null)
+  const [initialized, setInitialized] = useState(false)
+
+  useEffect(() => {
+    // Initial push to formData
+    // Used when the item is a part of an array
+    // and it is newly added
+    if (!props.onChange) return
+    if (value === null) return
+    if (value === props.value) return
+    if (initialized) return
+
+    setInitialized(true)
+    if (path?.length) return
+
+    setTimeout(() => {
+      props.onChange(value)
+    }, 200)
+  }, [props.onChange, value])
+
+  useEffect(() => {
+    // Sync the local state with the formData
+    if (props.value === undefined) return
+    if (equiv(value, props.value)) return
+    setValue(props.value || (props.multiple ? [] : ''))
+  }, [props.value])
+
+  useEffect(() => {
+    if (value === null) return
+    const isChanged = !equiv(value, props.value)
+    if (!isChanged) {
+      return
+    }
+    props.onChange(value)
+    setTimeout(() => {
+      updateChangedKeys(props, !equiv(value, props.originalValue), path)
+    }, 100)
+  }, [value])
+
   const enumLabels = props.schema?.enumLabels || {}
   const options = []
   for (const opt of props.options.enumOptions) {
-    const value = opt.value
-    const label = enumLabels[value] || value
-    options.push({ label, value })
-  }
-
-  // Ensure the value is in the options
-  let value
-  if (props.multiple) {
-    value = props.value || []
-    value = value.filter((v) => options.find((o) => o.value === v))
-  } else {
-    value = props.value || ''
-    if (!options.find((o) => o.value === value)) value = ''
-  }
-
-  const tooltip = []
-  if (props.rawErrors) {
-    for (const err of props.rawErrors) tooltip.push(err)
-  }
-
-  const onChange = (value) => {
-    updateOverrides(props, value !== originalValue, path)
-    props.onChange(value)
+    const _value = opt.value
+    const label = enumLabels[_value] || _value
+    options.push({ label, value: _value })
   }
 
   const onFocus = (e) => {
@@ -114,64 +179,94 @@ const SelectWidget = (props) => {
     props.onFocus(e)
   }
 
-  if (props.multiple) {
-    return (
-      <>
-        <Dropdown
-          multiSelect
-          widthExpand
-          options={options}
-          value={value}
-          onChange={onChange}
-          onFocus={onFocus}
-          placeholder={props.schema?.placeholder}
-          disabled={props.schema?.disabled}
-          className={`form-field`}
-        />
-      </>
-    )
+  const tooltip = []
+  if (props.rawErrors) {
+    for (const err of props.rawErrors) tooltip.push(err)
   }
+
+  const hlstyle = {}
+  if (!equiv(value, props.value)) {
+    hlstyle.outline = '1px solid yellow'
+  } else if (originalValue && !equiv(props.value, originalValue)) {
+    hlstyle.outline = '1px solid var(--color-changed)'
+  }
+
+  let renderableValue
+  if (value === null) renderableValue = []
+  else if (props.multiple) renderableValue = value
+  else renderableValue = [value]
 
   return (
     <Dropdown
       widthExpand
       options={options}
-      value={[value]}
-      onChange={(e) => onChange(e[0])}
+      value={renderableValue}
+      onChange={props.multiple ? setValue : (e) => setValue(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
       optionLabel="label"
       optionValue="value"
-      tooltip={tooltip.join('\n')}
       tooltipOptions={{ position: 'bottom' }}
       placeholder={props.schema?.placeholder}
       disabled={props.schema?.disabled}
       className={`form-field`}
+      multiSelect={props.multiple}
+      style={hlstyle}
     />
   )
 }
 
+const getDefaultValue = (props) => {
+  //console.log("Creating default value for", props.id)
+  if (props.value !== undefined) return props.value
+  if (props.schema.widget === 'color') {
+    if (props.schema.colorFormat === 'hex') return props.schema.colorAlpha ? '#00000000' : '#000000'
+    return props.schema.colorAlpha ? [0, 0, 0, 0] : [0, 0, 0]
+  }
+  if (props.schema.type === 'string') return ''
+  if (props.schema.type === 'integer') return 0
+}
+
 const TextWidget = (props) => {
   const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState('')
+  const [value, setValue] = useState(null)
+  const [initialized, setInitialized] = useState(false)
+
+  const doInitialPush = () => {
+    // Initial push to formData
+    // Used when the item is a part of an array
+    // and it is newly added
+    if (!props.onChange) return
+    if (value === null) return
+    if (value === props.value) return
+    if (initialized) return
+
+    //console.log("Initial push for", props.id, "with value", value)
+    setInitialized(true)
+    setTimeout(() => {
+      props.onChange(value)
+    }, 200)
+  }
 
   useEffect(() => {
-    if (props.schema.type === 'string' && props.schema.widget !== 'color')
-      setValue(props.value || '')
-    else if (props.schema.type === 'integer') setValue(props.value || 0)
-    else setValue(props.value || false)
+    // Sync the local state with the formData
+    if (props.value === undefined) return
+    if (equiv(value, props.value)) return
+    //console.log("Syncing local state for", props.id, JSON.stringify(props.value))
+    setValue(props.value)
   }, [props.value])
-
-  const onChange = (newValue) => {
-    setValue(newValue)
-  }
 
   const onChangeCommit = () => {
     if (value === props.value) return
     const isChanged = value !== originalValue
     props.onChange(value)
-    props.formContext?.onSetBreadcrumbs(path)
-    updateOverrides(props, isChanged, path)
+    setTimeout(() => {
+      updateChangedKeys(props, isChanged, path)
+    }, 100)
+  }
+
+  const onChange = (newValue) => {
+    setValue(newValue)
   }
 
   const tooltip = []
@@ -196,9 +291,9 @@ const TextWidget = (props) => {
     Input = InputNumber
     if (props.schema.type === 'number') {
       opts.step = 0.1
-      opts.value = addDecimalPoint(value)
+      opts.value = addDecimalPoint(value || 0)
     } else {
-      opts.value = value
+      opts.value = value || 0
       opts.step = 1
     }
     if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
@@ -219,13 +314,13 @@ const TextWidget = (props) => {
     // Color picker
     //
     Input = InputColor
-    opts.value = value
+    opts.value = value || getDefaultValue(props)
     opts.format = props.schema.colorFormat || 'hex'
     opts.alpha = props.schema.colorAlpha || false
     opts.onChange = (e) => {
       // internal state is handled by the color picker,
       // so we shouldn't need to debounce this
-      updateOverrides(props, e.target.value !== originalValue, path)
+      updateChangedKeys(props, e.target.value !== originalValue, path)
       props.onChange(e.target.value)
     }
   } else if (props.schema.widget === 'icon') {
@@ -242,14 +337,14 @@ const TextWidget = (props) => {
     Input = InputTextarea
     opts.autoResize = true
     opts.rows = 8
-    opts.value = value
+    opts.value = value || ''
     opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
       onChange(e.target.value)
     }
   } else if (props.schema.widget === 'hierarchy') {
     Input = InputText
-    opts.value = value
+    opts.value = value || ''
     opts.onBlur = onChangeCommit
     opts.placeholder = `Hierarchy for ${props.formContext?.headerProjectName}`
     opts.onChange = (e) => {
@@ -258,7 +353,7 @@ const TextWidget = (props) => {
   } else {
     // Default text input
     Input = InputText
-    opts.value = value
+    opts.value = value || ''
     opts.onBlur = onChangeCommit
     opts.onChange = (e) => {
       onChange(e.target.value)
@@ -277,20 +372,28 @@ const TextWidget = (props) => {
   }
 
   const onFocus = (e) => {
-    props.formContext?.onSetBreadcrumbs(path)
+    doInitialPush()
+    props.formContext.onSetBreadcrumbs(path)
     props.onFocus(e)
   }
 
+  const hlstyle = {}
+  if (value !== props.value) {
+    if (!['color'].includes(props.schema.widget)) {
+      hlstyle.outline = '1px solid yellow'
+    }
+  } else if (originalValue !== undefined && props.value !== originalValue)
+    hlstyle.outline = '1px solid var(--color-changed)'
+
   return (
-    <>
-      <Input
-        className={`form-field ${props.rawErrors?.length ? 'p-invalid error' : ''}`}
-        onFocus={onFocus}
-        tooltip={tooltip.join('\n')}
-        tooltipOptions={{ position: 'bottom' }}
-        {...opts}
-      />
-    </>
+    <Input
+      className={`form-field`}
+      onFocus={onFocus}
+      tooltip={tooltip.join('\n')}
+      tooltipOptions={{ position: 'bottom' }}
+      {...opts}
+      style={hlstyle}
+    />
   )
 }
 
@@ -323,7 +426,7 @@ const DateTimeWidget = (props) => {
     const isChanged = newValue !== originalValue
     props.onChange(newValue)
     props.formContext?.onSetBreadcrumbs(path)
-    updateOverrides(props, isChanged, path)
+    updateChangedKeys(props, isChanged, path)
   }
 
   return <InputDate selected={value || undefined} onChange={onChange} onFocus={onFocus} />

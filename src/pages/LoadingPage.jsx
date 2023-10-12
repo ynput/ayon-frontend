@@ -37,7 +37,7 @@ const pulse = keyframes`
 const StyledLoader = styled.div`
   position: fixed;
   inset: 0;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-background);
   display: flex;
   flex-direction: column;
   justify-content: center;

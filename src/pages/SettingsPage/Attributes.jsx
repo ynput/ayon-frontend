@@ -9,13 +9,13 @@ import {
   Toolbar,
   InputText,
   Spacer,
+  SaveButton,
 } from '@ynput/ayon-react-components'
 import AttributeEditor from '../../containers/attributes/attributeEditor'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttributes'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useCreateContext from '/src/hooks/useCreateContext'
-import SaveButton from '/src/components/SaveButton'
 import { isEqual } from 'lodash'
 import useServerRestart from '/src/hooks/useServerRestart'
 
@@ -128,6 +128,7 @@ const Attributes = () => {
       label: 'Delete',
       icon: 'delete',
       command: () => onDelete(),
+      danger: true,
     },
   ])
 
@@ -169,7 +170,6 @@ const Attributes = () => {
             />
             <SaveButton
               label="Save attributes changes"
-              icon="check"
               onClick={onSave}
               active={isChanges}
               saving={updateLoading}

@@ -41,6 +41,10 @@ export const Details = styled.div`
     line-height: inherit;
     user-select: text;
   }
+
+  .error {
+    color: var(--md-sys-color-error);
+  }
 `
 
 export const Buttons = styled.div`

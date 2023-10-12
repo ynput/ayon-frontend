@@ -9,6 +9,7 @@ const initialState = {
     versions: [],
     representations: [],
     tasks: [],
+    tasksNames: [],
     workfiles: [],
     editor: [],
     lastFocused: null,
@@ -56,7 +57,8 @@ const contextSlice = createSlice({
 
     setFocusedTasks: (state, action) => {
       state.focused.type = 'task'
-      state.focused.tasks = action.payload
+      state.focused.tasks = action.payload.ids || []
+      if ('names' in action.payload) state.focused.tasksNames = action.payload.names || []
       state.focused.versions = []
     },
 
@@ -122,7 +124,22 @@ const contextSlice = createSlice({
     setUriChanged: (state, action) => {
       state.uriChanged = state.uriChanged + 1
     },
-
+    onUriNavigate: (state, action) => {
+      // focus folders
+      state.focused.folders = action.payload.folders
+      // focus tasks
+      state.focused.tasks = action.payload.tasks
+      // focus products
+      state.focused.products = action.payload.products
+      // focus versions
+      state.focused.versions = action.payload.versions
+      // focus representations
+      state.focused.representations = action.payload.representations
+      // focus workfiles
+      state.focused.workfiles = action.payload.workfiles
+      // finally set focused type
+      state.focused.type = action.payload.type
+    },
     onFocusChanged: (state, action) => {
       state.focused.lastFocused = action.payload
     },
@@ -202,6 +219,7 @@ export const {
   onUploadFinished,
   setMenuOpen,
   toggleMenuOpen,
+  onUriNavigate,
 } = contextSlice.actions
 
 export default contextSlice.reducer

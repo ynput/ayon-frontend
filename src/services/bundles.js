@@ -3,8 +3,8 @@ import { ayonApi } from './ayon'
 const getBundles = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getBundleList: build.query({
-      query: ({ archived = false }) => ({
-        url: `/api/bundles?archived=${archived}`,
+      query: ({ archived }) => ({
+        url: `/api/bundles?archived=${archived || false}`,
       }),
       transformResponse: (res) => res.bundles,
       providesTags: () => [{ type: 'bundleList' }],
@@ -36,6 +36,22 @@ const getBundles = ayonApi.injectEndpoints({
         { type: 'bundleList' },
         { type: 'addonList' },
         { type: 'addonSettingsList' },
+      ],
+    }),
+
+    promoteBundle: build.mutation({
+      query: ({ name }) => ({
+        url: `/api/bundles/${name}`,
+        method: 'POST',
+        body: { action: 'promote' },
+      }),
+      // eslint-disable-next-line no-unused-vars
+      invalidatesTags: (result, error, id) => [
+        { type: 'bundleList' },
+        { type: 'addonList' },
+        { type: 'addonSettingsList' },
+        { type: 'addonSettings' },
+        { type: 'addonSettingsOverrides' },
       ],
     }),
 
@@ -78,7 +94,7 @@ const getBundles = ayonApi.injectEndpoints({
       onQueryStarted: async ({ name, archived = true, patch }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           ayonApi.util.updateQueryData('getBundleList', { archived }, (draft) => {
-            if (!patch) throw new Error('patch not found')
+            if (!patch) return
             const bundleIndex = draft.findIndex((bundle) => bundle.name === name)
             if (bundleIndex === -1) throw new Error('bundle not found')
             draft[bundleIndex] = patch
@@ -106,4 +122,5 @@ export const {
   useDeleteBundleMutation,
   useCreateBundleMutation,
   useUpdateBundleMutation,
+  usePromoteBundleMutation,
 } = getBundles

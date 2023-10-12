@@ -8,10 +8,10 @@ import {
   FormRow,
   InputText,
   Panel,
+  SaveButton,
 } from '@ynput/ayon-react-components'
 import DetailHeader from '/src/components/DetailHeader'
 import checkName from '/src/helpers/checkName'
-import SaveButton from '/src/components/SaveButton'
 
 const CreateNewTeam = ({
   rolesList,
@@ -116,7 +116,7 @@ const CreateNewTeam = ({
     <>
       <DetailHeader
         onClose={() => onClose(false)}
-        style={{ borderTop: '2px solid var(--color-hl-00)' }}
+        style={{ borderTop: '2px solid var(--md-sys-color-primary)' }}
       >
         <div
           style={{
@@ -146,9 +146,6 @@ const CreateNewTeam = ({
               editor
               emptyIcon={false}
               emptyMessage="Add Team Members..."
-              style={{
-                border: '1px solid var(--color-grey-03)',
-              }}
             />
           </FormRow>
 
@@ -172,7 +169,7 @@ const CreateNewTeam = ({
       </Panel>
       <Panel
         style={{
-          borderBottom: '2px solid var(--color-hl-00)',
+          borderBottom: '2px solid var(--md-sys-color-primary)',
         }}
       >
         <div

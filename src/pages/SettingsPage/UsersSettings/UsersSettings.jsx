@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { confirmDialog } from 'primereact/confirmdialog'
 import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
@@ -20,28 +19,29 @@ import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 // TODO: Remove classname assignments and do in styled components
-const formatRoles = (rowData, selectedProjects) => {
+const formatAccessGroups = (rowData, selectedProjects) => {
   let res = {}
   if (rowData.isAdmin) res.admin = { cls: 'role admin' }
   else if (rowData.isService) res.service = { cls: 'role manager' }
   else if (rowData.isManager) res.manager = { cls: 'role manager' }
   else if (!selectedProjects) {
-    for (const name of rowData.defaultRoles || []) res[name] = { cls: 'role default' }
+    for (const name of rowData.defaultAccessGroups || []) res[name] = { cls: 'role default' }
   } else {
-    const roleSet = rowData.roles
+    const agSet = rowData.accessGroups || {}
     for (const projectName of selectedProjects) {
-      for (const roleName of roleSet[projectName] || []) {
-        if (roleName in res) res[roleName].count += 1
-        else res[roleName] = { count: 1 }
-        res[roleName].cls =
-          res[roleName].count === selectedProjects.length ? 'role all' : 'role partial'
+      for (const agName of agSet[projectName] || []) {
+        if (agName in res) res[agName].count += 1
+        else res[agName] = { count: 1 }
+        res[agName].cls =
+          res[agName].count === selectedProjects.length ? 'role all' : 'role partial'
       }
     }
   }
 
-  return { ...rowData, roles: res, rolesList: Object.keys(res) }
+  return { ...rowData, accessGroups: res, accessGroupList: Object.keys(res) }
 }
 
 const UsersSettings = () => {
@@ -93,11 +93,11 @@ const UsersSettings = () => {
         // user level not user
         if (user.isManager || user.isAdmin || user.isService) return true
 
-        // check user has role in selected projects
-        const roleSet = user.roles
-        let hasRole = selectedProjects.some((project) => roleSet[project]?.length)
+        // check user has access group in selected projects
+        const agSet = user.accessGroups
+        let hasAccessGroup = selectedProjects.some((project) => agSet[project]?.length)
 
-        return hasRole
+        return hasAccessGroup
       })
     } else {
       return userList
@@ -105,10 +105,9 @@ const UsersSettings = () => {
   }, [userList, selectedProjects])
 
   const onDelete = async () => {
-    confirmDialog({
-      message: `Are you sure you want to delete ${selectedUsers.length} user(s)?`,
-      header: 'Delete users',
-      icon: 'pi pi-exclamation-triangle',
+    confirmDelete({
+      label: `${selectedUsers.length} Users`,
+      showToasts: false,
       accept: async () => {
         toastId.current = toast.info('Deleting users...')
         let i = 0
@@ -127,7 +126,6 @@ const UsersSettings = () => {
         }
         toast.update(toastId.current, { render: `Deleted ${i} user(s)`, type: toast.TYPE.SUCCESS })
       },
-      reject: () => {},
     })
   }
 
@@ -156,16 +154,22 @@ const UsersSettings = () => {
 
   if (showProjectUsers) userList = filteredUserList
 
-  let userListWithRoles = useMemo(
-    () => userList.map((user) => formatRoles(user, selectedProjects)),
+  let userListWithAccessGroups = useMemo(
+    () => userList.map((user) => formatAccessGroups(user, selectedProjects)),
     [userList, selectedProjects],
   )
 
-  const searchableFields = ['name', 'attrib.fullName', 'attrib.email', 'rolesList', 'hasPassword']
+  const searchableFields = [
+    'name',
+    'attrib.fullName',
+    'attrib.email',
+    'accessGroupList',
+    'hasPassword',
+  ]
 
   const [search, setSearch, filteredData] = useSearchFilter(
     searchableFields,
-    userListWithRoles,
+    userListWithAccessGroups,
     'users',
   )
 
@@ -237,7 +241,7 @@ const UsersSettings = () => {
               selection={selectedProjects}
               onSelect={setSelectedProjects}
               style={{ maxWidth: 'unset' }}
-              className="wrap"
+              wrap
             />
           </SplitterPanel>
           <SplitterPanel size={50}>
@@ -281,7 +285,7 @@ const UsersSettings = () => {
               )
             )}
             <NewUser
-              onHide={(newUsers) => {
+              onHide={(newUsers = []) => {
                 setShowNewUser(false)
                 if (newUsers.length) setSelectedUsers(newUsers)
               }}

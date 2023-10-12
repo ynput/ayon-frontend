@@ -46,7 +46,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
       (installer) => installer.platform === userPlatform,
     )
     if (!foundInstaller?.sources?.length) return null
-    const foundInstallerUrl = foundInstaller.sources.find((source) => source.type === 'url')?.url
+    const foundInstallerUrl = foundInstaller.sources.find((source) => source.type === 'http')?.url
     if (foundInstallerUrl) return { url: foundInstallerUrl, filename: foundInstaller.filename }
     const foundInstallerFile = foundInstaller.sources.find((source) => source.type === 'server')
     if (foundInstallerFile) {
@@ -91,7 +91,7 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
   const handleDownloadClick = async (sources, filename) => {
     // find a source of type === 'server
     const serverSource = sources.find((source) => source.type === 'server')
-    const urlSource = sources.find((source) => source.type === 'url')
+    const urlSource = sources.find((source) => source.type === 'http')
     if (serverSource || urlSource) {
       const url = serverSource
         ? `/api/desktop/installers/${filename}?token=${localStorage.getItem('accessToken')}`
@@ -149,30 +149,29 @@ const InstallerDownload = ({ isSpecial, isMenu }) => {
     }
   }, [foundGroupedInstallers, directDownload])
 
-  menuItems.items.push(
-    ...[
-      {
-        id: 'divider',
-      },
-      {
-        id: 'all',
-        label: 'All Launchers',
-        items: Object.entries(otherGroupedInstallers).flatMap(([, installers = []], i) => {
-          const items = installers.map((installer = {}) => ({
-            id: installer.filename,
-            label: `${installer.filename} - ${
-              installer.platform === 'darwin' ? 'macOS' : installer.platform
-            }`,
-            highlighted: directDownload?.filename === installer.filename,
-            onClick: () => handleDownloadClick(installer.sources, installer.filename),
-          }))
-          if (i !== 0) items.unshift({ id: 'divider' })
+  if (Object.entries(otherGroupedInstallers).length) {
+    if (Object.entries(foundGroupedInstallers).length) {
+      menuItems.items.push({ id: 'divider' })
+    }
 
-          return items
-        }),
-      },
-    ],
-  )
+    menuItems.items.push({
+      id: 'all',
+      label: 'All Launchers',
+      items: Object.entries(otherGroupedInstallers).flatMap(([, installers = []], i) => {
+        const items = installers.map((installer = {}) => ({
+          id: installer.filename,
+          label: `${installer.filename} - ${
+            installer.platform === 'darwin' ? 'macOS' : installer.platform
+          }`,
+          highlighted: directDownload?.filename === installer.filename,
+          onClick: () => handleDownloadClick(installer.sources, installer.filename),
+        }))
+        if (i !== 0) items.unshift({ id: 'divider' })
+
+        return items
+      }),
+    })
+  }
 
   if (isMenu) {
     return menuItems

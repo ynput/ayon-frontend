@@ -3,15 +3,11 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
-import { confirmDialog } from 'primereact/confirmdialog'
-import { toast } from 'react-toastify'
-
 import AddonSettings from '/src/containers/AddonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
-import ProjectDashboard from '/src/pages/ProjectDashboard'
 
 import { selectProject } from '/src/features/context'
 import { useDeleteProjectMutation } from '/src/services/project/updateProject'
@@ -19,6 +15,7 @@ import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AppNavLinks from '/src/containers/header/AppNavLinks'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -67,37 +64,17 @@ const ProjectManagerPage = () => {
 
   const [deleteProject] = useDeleteProjectMutation()
 
-  const deletePreset = () => {
-    confirmDialog({
-      header: 'Delete Project',
-      message: `Are you sure you want to delete the project: ${selectedProject}?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Delete',
-      accept: () => {
-        deleteProject({ projectName: selectedProject })
-          .unwrap()
-          .then(() => {
-            toast.info(`Project ${selectedProject} deleted`)
-            setSelectedProject(null)
-          })
-          .catch((err) => {
-            toast.error(err.message)
-          })
-      },
-      rejectLabel: 'Cancel',
-      reject: () => {
-        // do nothing
+  const handleDeleteProject = (sel) => {
+    confirmDelete({
+      label: `Project: ${sel}`,
+      accept: async () => {
+        await deleteProject({ projectName: sel }).unwrap()
+        setSelectedProject(null)
       },
     })
   }
 
   let links = [
-    {
-      name: 'Dashboard',
-      path: '/manageProjects/dashboard',
-      module: 'dashboard',
-      accessLevels: [],
-    },
     {
       name: 'Anatomy',
       path: '/manageProjects/anatomy',
@@ -149,9 +126,8 @@ const ProjectManagerPage = () => {
         onNoProject={(s) => setSelectedProject(s)}
         isUser={isUser}
         onNewProject={() => setShowNewProject(true)}
-        onDeleteProject={deletePreset}
+        onDeleteProject={handleDeleteProject}
       >
-        {module === 'dashboard' && <ProjectDashboard />}
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}

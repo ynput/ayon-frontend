@@ -11,7 +11,7 @@ const PanelWrapper = styled.div`
 
   &.selected {
     > .panel-conent {
-      border-left-color: var(--color-hl-00) !important;
+      border-left-color: var(--color-changed) !important;
     }
   }
 `
@@ -31,11 +31,12 @@ const PanelHeader = styled.div`
 
   h4 {
     margin: 0;
-    padding:0;
+    padding: 0;
     margin-left: 8px;
     border: 0;
     font-size: 1rem;
     color: white;
+    white-space: nowrap;
 
     display: flex;
     align-items: center;
@@ -44,18 +45,21 @@ const PanelHeader = styled.div`
 
     .new-object {
       font-style: italic;
-      color: var(--color-hl-error);
+      color: red;
     }
   }
 
   small {
     margin-left: 20px;
     opacity: 0.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .panel-toggler {
     border-radius: 50%;
-
+  }
 `
 
 const PanelContent = styled.div`

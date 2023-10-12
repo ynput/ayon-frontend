@@ -3,6 +3,8 @@ import React, { createContext, useContext, useRef, useState } from 'react'
 const ContextMenuContext = createContext()
 
 function ContextMenuProvider(props) {
+  const [isContextOpen, setIsContextOpen] = useState(false)
+
   const ref = useRef(null)
   const [model, setModel] = useState([])
 
@@ -13,8 +15,15 @@ function ContextMenuProvider(props) {
     ref.current.show(event)
   }
 
+  function closeContext() {
+    if (!ref.current) return
+    ref.current.hide()
+  }
+
   return (
-    <ContextMenuContext.Provider value={{ openContext, ref, model }}>
+    <ContextMenuContext.Provider
+      value={{ openContext, closeContext, ref, model, isContextOpen, setIsContextOpen }}
+    >
       {props.children}
     </ContextMenuContext.Provider>
   )

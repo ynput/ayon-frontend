@@ -16,8 +16,8 @@ const RowStyled = styled.div`
 const StyledLoading = styled.div`
   position: absolute;
   inset: 8px;
-  background-color: var(--color-grey-01);
-  border-radius: var(--border-radius);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--border-radius-m);
   ${getShimmerStyles()}
 `
 

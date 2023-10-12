@@ -10,6 +10,7 @@ import {
   Dropdown,
   AssigneeSelect,
   InputDate,
+  InputSwitch,
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -100,10 +101,25 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
   const createInitialForm = () => {
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
+    const labelValues = getFieldValue('label', '_label')
+
     const assigneesValues = getFieldValue('assignees', '_assignees', [])
 
     const disableMessage = 'Names Can Not Be The Same...'
     const initialForm = {
+      _label: {
+        changeKey: '_label',
+        label: 'Label',
+        field: 'label',
+        type: 'string',
+        disabled: !singleSelect,
+        placeholder: !singleSelect ? disableMessage : '',
+        attrib: {
+          type: 'string',
+        },
+        ...labelValues,
+        value: singleSelect ? labelValues.value : disableMessage,
+      },
       _name: {
         changeKey: '_name',
         label: 'Name',
@@ -121,14 +137,14 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
         changeKey: '_status',
         label: 'Status',
         field: 'status',
-        placeholder: `Multiple (${statusValues.isMultiple && statusValues.isMultiple.join(', ')})`,
+        placeholder: `Mixed (${statusValues.isMultiple && statusValues.isMultiple.join(', ')})`,
         ...statusValues,
       },
       _assignees: {
         changeKey: '_assignees',
         label: 'Assignees',
         field: 'assignees',
-        disabled: types.includes('folder'),
+        disabled: !types.includes('task'),
         placeholder: `Folders Can Not Have Assignees...`,
         ...assigneesValues,
       },
@@ -147,7 +163,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
       if (hasMixedTypes) {
         placeholder = 'Mixed Entity Types...'
       } else if (isMultiple) {
-        placeholder = `Multiple (${isMultiple.join(', ')})`
+        placeholder = `Mixed (${isMultiple.join(', ')})`
       }
 
       initialForm[changeKey] = {
@@ -170,7 +186,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
       const field = 'attrib.' + name
       const { isMultiple, isChanged, isOwn, value } = getFieldValue(field, changeKey)
       const disabled = !types.every((t) => scope.includes(t))
-      const placeholder = isMultiple && !disabled ? `Multiple (${isMultiple.join(', ')})` : ''
+      const placeholder = isMultiple && !disabled ? `Mixed (${isMultiple.join(', ')})` : ''
 
       // create object
       const newRow = {
@@ -332,6 +348,25 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
         isMultiple: oldValue?.isMultiple && !isChanged,
       }
 
+      // if the label is changed and the entity is new, change the name as well
+      // first check if all nodes are newNodes
+      const allNewNodes = nodeIds.every((id) => nodes[id]?.data?.__isNew)
+      if (allNewNodes && changeKey === '_label') {
+        // replace space with underscore, set to lowercase and remove special characters and any non alphanumeric characters from the start
+        const name = newValue
+          .replace(/\s/g, '_')
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, '')
+          .replace(/^[^a-z]+/g, '')
+        newForm._name = {
+          ...newForm._name,
+          value: name,
+          isChanged: true,
+          isOwn: true,
+          isMultiple: false,
+        }
+      }
+
       setLocalChange(true)
 
       if (setFormNew) return setFormNew(newForm)
@@ -430,7 +465,7 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
   }, [form, nodes, changes])
 
   return (
-    <Section className="wrap">
+    <Section wrap>
       {!noSelection && (
         <>
           <EntityDetailsHeader
@@ -473,14 +508,14 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                 }
 
                 const changedStyles = {
-                  backgroundColor: isChanged ? 'var(--color-hl-00)' : 'initial',
+                  backgroundColor: isChanged ? 'var(--color-changed)' : 'initial',
+                  color: isChanged ? 'var(--color-on-changed)' : 'initial',
                 }
 
                 let disabledStyles = {}
                 if (disabled) {
                   disabledStyles = {
-                    color: 'var(--color-text-dim)',
-                    backgroundColor: 'var(--input-disabled-background-color)',
+                    opacity: 0.7,
                     fontStyle: 'italic',
                   }
                 }
@@ -488,7 +523,9 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                 // pick a react input
                 let input
 
-                if (field.includes('Type')) {
+                if (field === 'name') {
+                  input = <InputText value={value} disabled readOnly />
+                } else if (field.includes('Type')) {
                   input = (
                     <TypeEditor
                       value={isMultiple ? isMultiple : [value]}
@@ -511,9 +548,11 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       maxWidth={'100%'}
                       style={{
-                        ...changedStyles,
-                        border: '1px solid var(--color-grey-03)',
+                        border: isChanged
+                          ? '3px solid var(--md-sys-color-primary)'
+                          : '1px solid var(--md-sys-color-outline-variant)',
                       }}
+                      isChanged={isChanged}
                       height={30}
                       placeholder={placeholder}
                       disableMessage
@@ -532,7 +571,10 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       emptyIcon={false}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       editor
-                      buttonStyle={{ border: '1px solid var(--color-grey-03)', overflow: 'hidden' }}
+                      buttonStyle={{
+                        border: '1px solid var(--md-sys-color-outline-variant)',
+                        overflow: 'hidden',
+                      }}
                       isChanged={isChanged}
                       widthExpand
                     />
@@ -568,14 +610,32 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                       style={{
                         ...changedStyles,
                         color: isChanged
-                          ? 'black'
+                          ? 'var(--color-on-changed)'
                           : !isOwn
-                          ? 'var(--color-grey-06)'
-                          : 'var(--color-text)',
+                          ? 'var(--md-ref-palette-neutral-variant60)'
+                          : 'var(--md-sys-color-on-surface-variant)',
                         ...disabledStyles,
                         width: '100%',
                       }}
                       isClearable={isOwn}
+                    />
+                  )
+                } else if (attrib?.type === 'boolean') {
+                  input = (
+                    <InputSwitch
+                      checked={value || false}
+                      disabled={disabled}
+                      onChange={(e) => handleLocalChange(e.target.checked, changeKey, field)}
+                      style={{
+                        ...changedStyles,
+                        color: isChanged
+                          ? 'var(--color-on-changed)'
+                          : !isOwn
+                          ? 'var(--md-ref-palette-neutral-variant60)'
+                          : 'var(--md-sys-color-on-surface-variant)',
+                        ...disabledStyles,
+                        width: '100%',
+                      }}
                     />
                   )
                 } else {
@@ -591,8 +651,8 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
                         color: isChanged
                           ? 'black'
                           : !isOwn
-                          ? 'var(--color-grey-06)'
-                          : 'var(--color-text)',
+                          ? 'var(--md-ref-palette-neutral-variant60'
+                          : 'var(--md-sys-color-on-surface-variant)',
                         ...disabledStyles,
                         width: '100%',
                       }}

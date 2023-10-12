@@ -39,9 +39,9 @@ const SuggestionsStyled = styled.ul`
   display: flex;
   flex-direction: column;
   z-index: 9;
-  border: 1px solid var(--color-grey-03);
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-top: none;
-  background-color: var(--color-grey-00);
+  background-color: var(--md-sys-color-surface-container-low);
   border-radius: 0 0 3px 3px;
   padding: 0px;
   margin: 0px;
@@ -88,7 +88,7 @@ const SuggestionItemStyled = styled.li`
   ${({ activeIndex, index }) =>
     activeIndex === index &&
     css`
-      background-color: var(--color-grey-02);
+      background-color: var(--md-sys-color-surface-container-low-hover);
     `}
 
   &.results span {
@@ -146,11 +146,11 @@ const SearchDropdown = ({
     onClose && onClose()
   }
 
-  const handleSubmit = (e, useAll) => {
+  const handleSubmit = (e, useAll, preventClose) => {
     e && e.preventDefault()
     const input = inputRef.current.value
 
-    closeSearch()
+    !preventClose && closeSearch()
     // if active index true find item
     const item = suggestionsSpliced[activeIndex]
 
@@ -183,6 +183,16 @@ const SearchDropdown = ({
     // update search results
     handleFilterResults(finalSearch)
   }
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (search) {
+        handleSubmit(null, true, true)
+      }
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [search])
 
   const handleOnChange = (e) => {
     const inputText = e.target.value
@@ -283,7 +293,7 @@ const SearchDropdown = ({
     >
       {suggestionsOpen && <BackdropStyled onClick={handleBlur} />}
       <InputTextStyled
-        placeholder="Filter folders..."
+        placeholder="Filter folders & tasks..."
         value={search}
         onChange={handleOnChange}
         onFocus={handleFocus}

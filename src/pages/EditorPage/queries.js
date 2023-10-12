@@ -8,6 +8,7 @@ const BASE_QUERY = `
           node {
             id
             name
+            label
             folderType
             hasChildren
             hasTasks
@@ -26,6 +27,7 @@ const BASE_QUERY = `
         edges {
           node {
             id
+            label
             name
             taskType
             ownAttrib

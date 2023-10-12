@@ -8,7 +8,7 @@ import './SettingsEditor.sass'
 
 const FormWrapper = styled.div`
   [data-fieldid='${(props) => props.currentSelection}'] {
-    border-left: 1px solid var(--color-hl-00) !important;
+    border-left: 1px solid var(--color-changed) !important;
     border-radius: 4px;
     background-color: rgba(0, 0, 0, 0.2);
   }
@@ -164,11 +164,11 @@ const SettingsEditor = ({
         formData={formData}
         formContext={fullContext}
         widgets={widgets}
-        liveValidate={true}
         FieldTemplate={FieldTemplate}
         ObjectFieldTemplate={ObjectFieldTemplate}
         ArrayFieldTemplate={ArrayFieldTemplate}
         onChange={(evt) => onChange(evt.formData)}
+        onError={(evt) => console.log('Form contains errors:', evt)}
       >
         <div />
       </Form>

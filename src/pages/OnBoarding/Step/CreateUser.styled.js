@@ -30,7 +30,7 @@ export const Form = styled.form`
   }
 
   input:invalid {
-    border-color: var(--color-grey-03);
+    border-color: var(--md-sys-color-outline-variant);
   }
 `
 

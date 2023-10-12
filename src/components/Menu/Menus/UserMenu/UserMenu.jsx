@@ -2,10 +2,10 @@ import React from 'react'
 import * as Styled from './UserMenu.styled'
 import { Button, UserImage } from '@ynput/ayon-react-components'
 import Font from '/src/theme/typography.module.css'
-import Colors from '/src/theme/colors.module.scss'
 import { useLogOutMutation } from '/src/services/auth/getAuth'
+import { NavLink } from 'react-router-dom'
 
-export const UserMenu = ({ user, onClose, navigate }) => {
+export const UserMenu = ({ user, onClose }) => {
   const [logout] = useLogOutMutation()
 
   const handleLogOut = () => {
@@ -26,26 +26,17 @@ export const UserMenu = ({ user, onClose, navigate }) => {
             {fullName ? (
               <span>{fullName}</span>
             ) : (
-              <span onClick={() => navigate('/profile')} className={Colors['error-text']}>
-                Set Full Name
-              </span>
+              <NavLink to="/profile">
+                <span className={'error'}>Set Full Name</span>
+              </NavLink>
             )}
           </Styled.Details>
         </Styled.Header>
         <Styled.Buttons>
-          <Button
-            variant="surface"
-            icon="manage_accounts"
-            label="Edit"
-            onClick={() => navigate('/profile')}
-          />
-          <Button
-            variant="tonal"
-            icon="logout"
-            label="Sign out"
-            onClick={handleLogOut}
-            className="close"
-          />
+          <NavLink to="/profile">
+            <Button variant="surface" icon="person" label="Profile" />
+          </NavLink>
+          <Button icon="logout" label="Sign out" onClick={handleLogOut} className="close" />
         </Styled.Buttons>
       </Styled.Content>
       {footer && <Styled.Footer>{footer}</Styled.Footer>}

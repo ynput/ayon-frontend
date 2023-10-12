@@ -22,7 +22,7 @@ const StyledUserImage = styled(UserImage)`
 const PanelStyled = styled(Panel)`
   flex-direction: row;
   align-items: center;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   padding: 8px;
   gap: 8px;
 
@@ -31,8 +31,11 @@ const PanelStyled = styled(Panel)`
     !disableHover &&
     css`
       &:hover {
-        background-color: var(--color-grey-02);
+        background-color: var(--md-sys-color-surface-container-high-hover);
         cursor: pointer;
+      }
+      &:active {
+        background-color: var(--md-sys-color-surface-container-high-active);
       }
     `}
 
@@ -43,25 +46,30 @@ const PanelStyled = styled(Panel)`
       ${getShimmerStyles()}
 
       :hover {
-        background-color: var(--color-grey-01);
+        background-color: var(--md-sys-color-surface-container-high);
       }
     `}
 `
 
-const TitleStyled = styled.strong`
+const TitleStyled = styled.span`
   white-space: nowrap;
   width: 100%;
   position: relative;
   display: inline-block;
   overflow-x: clip;
   text-overflow: ellipsis;
+
+  font-weight: bold;
 `
 
 const StyledLoading = styled.div`
   position: absolute;
   inset: 0;
-  border-radius: var(--border-radius);
-  ${getShimmerStyles('var(--color-grey-03)', 'var(--color-grey-04)')}
+  border-radius: var(--border-radius-m);
+  ${getShimmerStyles(
+    'var(--md-sys-color-surface-container-highest)',
+    'var(--md-sys-color-surface-container-highest-hover',
+  )}
 `
 
 const UserTile = ({
@@ -85,6 +93,8 @@ const UserTile = ({
     },
   )
 
+  if (!data || !data.length) return null
+
   const loadingState = isLoading || isFetching || isWaiting
 
   // if user is not passed in, use data from query
@@ -92,23 +102,24 @@ const UserTile = ({
     if ((data?.length && !isLoading && !isFetching) || suspense) {
       // using useGetUserByNameQuery
       user = { ...data[0] }
-      if (user.roles) {
-        user.roles = JSON.parse(user.roles)
+      if (user.accessGroups) {
+        user.accessGroups = JSON.parse(user.accessGroups)
       }
     } else if (isError) return <PanelStyled>Not Found</PanelStyled>
   }
 
-  const { name, attrib, updatedAt, isManager, isAdmin, isService, roles } = user || {}
+  const { name, attrib, updatedAt, isManager, isAdmin, isService, accessGroups } = user || {}
   const isSelf = name === currentUser
 
+  // TODO: change names here
   let rolesHeader = leaderRoles || []
   if (!isLoading && !leaderRoles) {
     // add admin, manager, service
     if (isAdmin) rolesHeader.push('admin')
     else if (isService) rolesHeader.push('service')
     else if (isManager) rolesHeader.push('manager')
-    else if (isObject(roles) && !Array.isArray(roles)) {
-      Object.values(roles).forEach((roles2) => {
+    else if (isObject(accessGroups) && !Array.isArray(accessGroups)) {
+      Object.values(accessGroups).forEach((roles2) => {
         roles2.forEach((role) => !rolesHeader.includes(role) && rolesHeader.push(role))
       })
     }
@@ -131,7 +142,6 @@ const UserTile = ({
         <TitleStyled style={{ whiteSpace: 'nowrap' }}>
           {!loadingState && (attrib?.fullName ? `${attrib?.fullName} (${name})` : name)}
         </TitleStyled>
-        <br />
         <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
           {!loadingState ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
         </span>

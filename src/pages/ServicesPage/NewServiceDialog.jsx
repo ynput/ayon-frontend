@@ -3,7 +3,15 @@ import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
 import { Dropdown } from 'primereact/dropdown'
-import { FormLayout, FormRow, Spacer, Button, InputText } from '@ynput/ayon-react-components'
+import {
+  FormLayout,
+  FormRow,
+  Spacer,
+  InputText,
+  SaveButton,
+  Button,
+  Toolbar,
+} from '@ynput/ayon-react-components'
 
 const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [addonData, setAddonData] = useState([])
@@ -77,17 +85,22 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
     selectedAddon?.name && selectedVersion && selectedService && selectedHost && serviceName?.length
 
   const footer = (
-    <>
+    <Toolbar>
       <Spacer />
-      <Button label="Spawn" icon="settings_slow_motion" disabled={!canSubmit} onClick={submit} />
-    </>
+      <Button label="Cancel" onClick={onHide} variant="text" />
+      <SaveButton label="Spawn" icon="settings_slow_motion" active={canSubmit} onClick={submit} />
+    </Toolbar>
   )
 
   return (
     <Dialog visible={true} header="New service" onHide={onHide} footer={footer}>
       <FormLayout>
-        <FormRow label="Service name">
-          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
+        <FormRow label="Host">
+          <Dropdown
+            options={hostOptions}
+            value={selectedHost}
+            onChange={(e) => setSelectedHost(e.value)}
+          />
         </FormRow>
 
         <FormRow label="Addon name">
@@ -110,16 +123,15 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
           <Dropdown
             options={serviceOptions}
             value={selectedService}
-            onChange={(e) => setSelectedService(e.value)}
+            onChange={(e) => {
+              setSelectedService(e.value)
+              setServiceName(e.value)
+            }}
           />
         </FormRow>
 
-        <FormRow label="Host">
-          <Dropdown
-            options={hostOptions}
-            value={selectedHost}
-            onChange={(e) => setSelectedHost(e.value)}
-          />
+        <FormRow label="Service name">
+          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
         </FormRow>
       </FormLayout>
     </Dialog>

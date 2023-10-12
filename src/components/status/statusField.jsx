@@ -4,18 +4,18 @@ import styled, { css } from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
 
 const hoverStyle = css`
-  background-color: var(--color-grey-02);
-  color: ${({ color }) => color};
+  background-color: var(--md-sys-color-surface-container-low-hover);
+  color: ${({ $color }) => $color};
 `
 
 const invertHoverStyle = css`
   /* flips the bg color for text color */
-  background-color: ${({ color }) => color};
+  background-color: ${({ $color }) => $color};
   color: black;
 `
 const defaultStyle = css`
   /* default text color */
-  color: ${({ color }) => color};
+  color: ${({ $color }) => $color};
   background-color: transparent;
 `
 
@@ -34,12 +34,12 @@ const StatusStyled = styled.div`
 
   /* ICON */
   .material-symbols-outlined {
-    font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 20;
+    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
     /* always taks parents color */
     color: inherit;
   }
 
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-m);
   /* same height as a row */
   height: 27px;
   min-height: 27px;
@@ -47,8 +47,8 @@ const StatusStyled = styled.div`
   ${defaultStyle}
 
   /* selecting styles */
-  ${({ isSelecting }) =>
-    isSelecting &&
+  ${({ $isSelecting }) =>
+    $isSelecting &&
     css`
       border-radius: 0;
       height: 27px;
@@ -59,16 +59,18 @@ const StatusStyled = styled.div`
 
 
     /* Only happens when a change has been made and dropdown closed */
-    ${({ isChanging, isSelecting }) =>
-    isChanging &&
-    !isSelecting &&
-    css`
-      ${invertHoverStyle}
-    `}
+    /* or invert prop */
+    ${({ $isChanging, $isSelecting, $invert }) =>
+    ($isChanging && !$isSelecting) ||
+    ($invert &&
+      css`
+        ${invertHoverStyle}
+      `)}
+
 
     /* A transition animation for onChange animation */
-    ${({ isSelecting }) =>
-    !isSelecting &&
+    ${({ $isSelecting }) =>
+    !$isSelecting &&
     css`
       &:not(:hover) {
         transition: background-color 0.1s, color 0.3s;
@@ -81,9 +83,9 @@ const StatusStyled = styled.div`
     /* ${hoverStyle} */
   }
 
-  ${({ isActive, isSelecting }) =>
-    isActive &&
-    isSelecting &&
+  ${({ $isActive, $isSelecting }) =>
+    $isActive &&
+    $isSelecting &&
     css`
       ${invertHoverStyle}
 
@@ -93,8 +95,8 @@ const StatusStyled = styled.div`
     `}
 
   /* ALIGNMENT */
-  ${({ align }) =>
-    align === 'right' &&
+  ${({ $align }) =>
+    $align === 'right' &&
     css`
       justify-content: end;
 
@@ -104,8 +106,8 @@ const StatusStyled = styled.div`
     `}
 
     /* ICON ONLY STYLES */
-      ${({ size }) =>
-    size === 'icon' &&
+      ${({ $size }) =>
+    $size === 'icon' &&
     css`
       width: 100%;
 
@@ -123,31 +125,39 @@ const StatusField = ({
   isSelecting,
   size = 'full',
   align = 'left',
-  onClick,
   style,
   height,
   placeholder,
   statuses = {},
+  invert,
+  className,
+  ...props
 }) => {
-  const { shortName, color, icon } = statuses[value] || {}
+  const {
+    shortName,
+    color = 'var(--md-sys-color-surface-container-highest)',
+    icon = 'help_center',
+  } = statuses[value] || {}
 
   let shownValue = value || placeholder || 'None'
 
   return (
     <StatusStyled
+      {...props}
       style={{ ...style, height }}
-      onClick={onClick}
-      color={color}
-      isActive={isActive}
       id={shownValue}
-      isSelecting={isSelecting}
-      align={align}
-      isChanging={isChanging}
-      size={size}
+      $color={color}
+      $isActive={isActive}
+      $isSelecting={isSelecting}
+      $align={align}
+      $isChanging={isChanging}
+      $size={size}
+      $invert={invert}
       placeholder={!value && placeholder ? placeholder : ''}
+      className={className + ' status-field'}
     >
       {icon && <Icon icon={icon} />}
-      {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
+      <span>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
     </StatusStyled>
   )
 }

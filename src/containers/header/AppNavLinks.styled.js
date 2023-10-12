@@ -1,11 +1,9 @@
 import styled from 'styled-components'
 
 export const NavBar = styled.nav`
-  background-color: var(--color-grey-00);
   padding-right: 8px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  /* FIX: these needs to be changed to new theme */
-  background-color: var(--color-grey-00);
+  background-color: var(--panel-background);
   padding: 0 8px;
 
   ul {
@@ -36,6 +34,7 @@ export const NavBar = styled.nav`
 `
 
 export const NavItem = styled.li`
+  user-select: none;
   /* NavLink */
   a {
     padding: 2px 4px;
@@ -46,23 +45,12 @@ export const NavItem = styled.li`
 
     /* this will be fixed with theme buttons */
     button {
-      background-color: unset;
       padding: 4px 16px;
       max-height: unset;
-      user-select: none;
-
-      &:hover {
-        background-color: var(--color-grey-01);
-      }
-
-      /* temp fix */
-      &:focus {
-        outline: none;
-      }
     }
 
     &.active {
-      background-color: var(--color-grey-01);
+      background-color: var(--md-sys-color-background);
       border: 1px solid var(--md-sys-color-outline-variant);
       border-bottom: 1px solid var(--color-grey-01);
 
@@ -71,6 +59,8 @@ export const NavItem = styled.li`
           background-color: unset;
         }
       }
+
+      border-bottom: 1px solid var(--md-sys-color-background);
     }
   }
 `

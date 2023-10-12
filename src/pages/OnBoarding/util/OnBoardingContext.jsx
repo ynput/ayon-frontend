@@ -82,9 +82,12 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const { data: ynputConnect, isLoading: isLoadingConnect } = useGetYnputConnectionsQuery({})
 
   // get releases data
-  const { data: releases = [], isLoading: isLoadingReleases } = useGetReleasesQuery({
-    ynputConnect,
-  })
+  const { data: releases = [], isLoading: isLoadingReleases } = useGetReleasesQuery(
+    {
+      ynputConnect,
+    },
+    { skip: !ynputConnect },
+  )
 
   const [stepIndex, setStepIndex] = useState(initStep)
   const previousStep = () => setStepIndex(stepIndex - 1)
@@ -122,16 +125,13 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   // get selected release data
   const { data: release = {} } = useGetReleaseQuery(
     { name: selectedPreset },
-    { skip: !selectedPreset },
+    { skip: !selectedPreset || stepIndex !== 7 },
   )
-  // lazy
-  const [getRelease] = useLazyGetReleaseQuery()
 
-  // once releases are loaded, set selectedPreset to the first one and pre-cache each release
+  // // once releases are loaded, set selectedPreset to the first one and pre-cache each release
   useEffect(() => {
     if (releases.length) {
       setSelectedPreset(releases[0].name)
-      releases.forEach(({ name }) => getRelease({ name }))
     }
   }, [releases])
 
@@ -180,9 +180,13 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     }
   }, [isSuccess, isFetching, isFinished])
 
+  const [getRelease, { isFetching: isLoadingRelease }] = useLazyGetReleaseQuery()
+
   const handleSubmit = async () => {
     // install addons, installers, dep packages
     try {
+      // get release data
+      const release = await getRelease({ name: selectedPreset }).unwrap()
       // create array of addon urls based on selected addons
       const addons = release.addons
         .filter((addon) => selectedAddons.includes(addon.name) && !!addon.url)
@@ -191,13 +195,13 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
       // sources = [{type: url, url: 'https://...'}, {type: file, url: 'filename.exe'}}]
       // for every installer, get all the sources urls and filter out the ones that are not urls
       const installers = release.installers.reduce((acc, installer) => {
-        const sources = installer.sources.filter(({ type, url }) => type === 'url' && !!url)
+        const sources = installer.sources.filter(({ type, url }) => type === 'http' && !!url)
         return [...acc, ...sources.map(({ url }) => ({ url, data: installer }))]
       }, [])
 
       // same as above but for dep packages
       const depPackages = release.dependencyPackages.reduce((acc, depPackage) => {
-        const sources = depPackage.sources.filter(({ type, url }) => type === 'url' && !!url)
+        const sources = depPackage.sources.filter(({ type, url }) => type === 'http' && !!url)
         return [...acc, ...sources.map(({ url }) => ({ url, data: depPackage }))]
       }, [])
 
@@ -265,6 +269,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     isLoadingReleases,
     setIsConnecting,
     isConnecting,
+    isLoadingRelease,
   }
 
   return <OnBoardingContext.Provider value={contextValue}>{children}</OnBoardingContext.Provider>

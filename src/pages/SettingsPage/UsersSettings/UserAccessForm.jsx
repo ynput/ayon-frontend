@@ -1,10 +1,10 @@
 import { useSelector } from 'react-redux'
 import { InputSwitch, FormLayout, FormRow } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
-import RolesDropdown from '/src/containers/rolesDropdown'
+import AccessGroupsDropdown from '/src/containers/AccessGroupsDropdown'
 import { isEqual } from 'lodash'
 
-const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled }) => {
+const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled, isNew }) => {
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
 
   const userLevels = [
@@ -29,30 +29,32 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
     })
   }
 
-  const userLevel = formData.userLevel === 'user'
-  const managerLevel = formData.userLevel === 'manager'
+  const userLevel = formData?.userLevel === 'user'
+  const managerLevel = formData?.userLevel === 'manager'
 
-  const isDefaultRoles = !selectedProjects?.length
-  const defaultRoles = formData.defaultRoles
+  const isDefaultAccessGroups = !selectedProjects?.length || isNew
+  const defaultAccessGroups = formData?.defaultAccessGroups
 
-  // check to see if the roles of each project are the same
-  const allRolesTheSame = selectedProjects?.every((projectName) => {
-    return isEqual(formData.roles[projectName], formData.roles[selectedProjects[0]])
+  // check to see if the access groups of each project are the same
+  const allAccessGroupsTheSame = selectedProjects?.every((projectName) => {
+    return isEqual(formData?.accessGroups[projectName], formData?.accessGroups[selectedProjects[0]])
   })
 
-  const projectRoles = allRolesTheSame ? formData.roles[selectedProjects[0]] || [] : []
+  const projectAccessGroups = allAccessGroupsTheSame
+    ? (formData?.accessGroups && formData?.accessGroups[selectedProjects[0]]) || []
+    : []
 
-  const handleRolesChange = (value) => {
-    if (!isDefaultRoles) {
-      // create new object with the new roles for selected projects
-      const newRoles = selectedProjects.reduce((acc, projectName) => {
+  const handleAccessGroupsChange = (value) => {
+    if (!isDefaultAccessGroups) {
+      // create new object with the new access groups for selected projects
+      const newAccessGroups = selectedProjects.reduce((acc, projectName) => {
         acc[projectName] = value
         return acc
       }, {})
 
-      updateFormData('roles', { ...formData.roles, ...newRoles })
+      updateFormData('accessGroups', { ...formData?.accessGroups, ...newAccessGroups })
     } else {
-      updateFormData('defaultRoles', value)
+      updateFormData('defaultAccessGroups', value)
     }
   }
 
@@ -63,7 +65,7 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
         <FormRow label="User active">
           <SelectButton
             unselectable={false}
-            value={formData.userActive}
+            value={formData?.userActive}
             onChange={(e) => updateFormData('userActive', e.value)}
             options={activeOptions}
           />
@@ -72,7 +74,7 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
         <FormRow label="Access level">
           <SelectButton
             unselectable={false}
-            value={formData.userLevel}
+            value={formData?.userLevel}
             onChange={(e) => updateFormData('userLevel', e.value)}
             options={userLevels}
             disabled={disabled}
@@ -82,7 +84,7 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
         {(userLevel || managerLevel) && (
           <FormRow label="Guest">
             <InputSwitch
-              checked={formData.isGuest}
+              checked={formData?.isGuest}
               onChange={(e) => updateFormData('isGuest', e.target.checked)}
               disabled={disabled}
               style={{
@@ -92,17 +94,27 @@ const UserAccessForm = ({ formData, setFormData, selectedProjects = [], disabled
           </FormRow>
         )}
 
+        <FormRow label="Developer">
+          <InputSwitch
+            checked={formData?.isDeveloper}
+            onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
+          />
+        </FormRow>
+
         {userLevel && (
           <>
             <FormRow label={'Access Groups'}>
-              <RolesDropdown
+              <AccessGroupsDropdown
                 style={{ flexGrow: 1 }}
-                selectedRoles={!isDefaultRoles ? projectRoles : defaultRoles}
-                setSelectedRoles={handleRolesChange}
-                placeholder={
-                  !allRolesTheSame && !isDefaultRoles ? 'Mixed Roles' : 'Select access groups...'
+                selectedAccessGroups={
+                  !isDefaultAccessGroups ? projectAccessGroups : defaultAccessGroups
                 }
-                // onClearNoValue={!allRolesTheSame}
+                setSelectedAccessGroups={handleAccessGroupsChange}
+                placeholder={
+                  !allAccessGroupsTheSame && !isDefaultAccessGroups
+                    ? 'Mixed access groups'
+                    : 'Select access groups...'
+                }
               />
             </FormRow>
           </>

@@ -69,11 +69,12 @@ const ProjectPage = () => {
     // so i commented this out - this means project change won't trigger
     // breadcrumbs update, until something is clicked. but i think that's ok for now.
 
+    const newUri = `ayon+entity://${projectName}`
     // this might work
-    if (!uri) {
+    if (!uri?.includes(newUri)) {
       dispatch(setUri(`ayon+entity://${projectName}`))
     }
-  }, [projectName])
+  }, [projectName, uri])
 
   useEffect(() => {
     // Clear URI when project page is unmounted
@@ -123,11 +124,11 @@ const ProjectPage = () => {
       {
         node: (
           <Button
-            className="transparent"
             icon="more_horiz"
             onClick={() => {
               setShowContextDialog(true)
             }}
+            variant="text"
           />
         ),
       },
@@ -146,7 +147,7 @@ const ProjectPage = () => {
   // error
   if (isError) {
     setTimeout(() => {
-      navigate('/manageProjects/dashboard')
+      navigate('/dashboard/overview')
     }, 1500)
     return <div className="page">Project Not Found, Redirecting...</div>
   }

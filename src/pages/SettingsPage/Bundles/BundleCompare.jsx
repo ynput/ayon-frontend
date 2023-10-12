@@ -31,7 +31,7 @@ const BundleCompare = ({ bundles = [], addons }) => {
   useScrollSync(addonListRefs, [bundles])
 
   return (
-    <Section style={{ flexDirection: 'row', alignItems: 'flex-start', overflow: 'auto' }}>
+    <Section direction="row" style={{ alignItems: 'flex-start', overflow: 'auto' }}>
       {bundles.map((bundle, index) => (
         <Panel key={bundle.name} style={{ overflow: 'hidden', height: '100%' }}>
           <h2>{bundle.name}</h2>

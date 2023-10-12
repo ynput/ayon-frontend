@@ -8,7 +8,7 @@ export const TileStyled = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   padding: 12px 8px;
   border-radius: var(--base-input-border-radius);
   user-select: none;
@@ -18,7 +18,7 @@ export const TileStyled = styled.div`
   overflow: hidden;
 
   &:hover {
-    background-color: var(--color-grey-02);
+    background-color: var(--md-sys-color-surface-container-high-hover);
   }
 
   h3 {
@@ -37,7 +37,7 @@ export const TileStyled = styled.div`
 const StyledLoading = styled.div`
   position: absolute;
   inset: 0;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   ${getShimmerStyles()}
 `
 

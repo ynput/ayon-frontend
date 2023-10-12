@@ -3,20 +3,73 @@ import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TimestampField } from '/src/containers/fieldFormat'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './NewServiceDialog'
 import useCreateContext from '/src/hooks/useCreateContext'
+import confirmDelete from '/src/helpers/confirmDelete'
+import styled from 'styled-components'
+
+const StatusBadge = styled.span`
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 0.25rem;
+  color: #fff;
+  font-size: 0.8rem;
+
+  &.running {
+    background-color: #28a745;
+  }
+
+  &.not-running {
+    background-color: #dc3545;
+  }
+
+  &.stopping {
+    background-color: #ffc107;
+  }
+
+  &.disabled {
+    background-color: #007bff;
+  }
+
+  &.unreachable {
+    background-color: #ff1010;
+  }
+`
 
 const formatStatus = (rowData) => {
-  if (!rowData.shouldRun) return rowData.isRunning ? 'STOPPING' : 'DISABLED'
-  return rowData.isRunning ? 'RUNNING' : 'NOT RUNNING'
+  const now = new Date()
+  const lastSeen = new Date(rowData.lastSeen)
+  if (lastSeen < now - 30000)
+    return <StatusBadge className="unreachable">Worker unreachable</StatusBadge>
+
+  if (!rowData.shouldRun)
+    return rowData.isRunning ? (
+      <StatusBadge className="stopping">Stopping</StatusBadge>
+    ) : (
+      <StatusBadge className="disabled">Disabled</StatusBadge>
+    )
+
+  return rowData.isRunning ? (
+    <StatusBadge className="running">Running</StatusBadge>
+  ) : (
+    <StatusBadge className="not-running">Not running</StatusBadge>
+  )
 }
 
 const ServicesPage = () => {
   const [services, setServices] = useState([])
   const [showNewService, setShowNewService] = useState(false)
   const [selectedServices, setSelectedServices] = useState([])
+
+  useEffect(() => {
+    //preselect the first service
+    // (to avoid empty selection, with which context menu behaves weirdly)
+
+    if (services?.length && !selectedServices.length) {
+      setSelectedServices([services[0].name])
+    }
+  }, [services, selectedServices])
 
   const loadServices = () => {
     axios.get('/api/services').then((response) => {
@@ -25,13 +78,23 @@ const ServicesPage = () => {
   }
 
   const deleteSelected = () => {
-    for (const serviceName of selectedServices) {
-      axios
-        .delete(`/api/services/${serviceName}`)
-        .then(() => toast.success(`${serviceName} deleted`))
-        .catch(() => toast.error(`Unable to delete ${serviceName}`))
-        .finally(() => loadServices())
-    }
+    confirmDelete({
+      label: 'Services',
+      accept: async () => {
+        for (const serviceName of selectedServices) {
+          try {
+            await axios.delete(`/api/services/${serviceName}`)
+
+            toast.success(`${serviceName} deleted`)
+          } catch (error) {
+            toast.error(`Unable to delete ${serviceName}`)
+          }
+        }
+
+        loadServices()
+      },
+      showToasts: false,
+    })
   }
 
   const enableSelected = () => {
@@ -69,19 +132,23 @@ const ServicesPage = () => {
   const ctxMenuItems = useMemo(() => {
     return [
       {
-        label: 'Delete selected',
-        disabled: !selectedServices?.length,
-        command: deleteSelected,
-      },
-      {
         label: 'Enable selected',
         disabled: !selectedServices?.length,
         command: enableSelected,
+        icon: 'check',
       },
       {
         label: 'Disable selected',
         disabled: !selectedServices?.length,
         command: disableSelected,
+        icon: 'cancel',
+      },
+      {
+        label: 'Delete selected',
+        disabled: !selectedServices?.length,
+        command: deleteSelected,
+        danger: true,
+        icon: 'delete',
       },
     ]
   }, [selectedServices])
@@ -121,12 +188,7 @@ const ServicesPage = () => {
               field="isRunning"
               header="Status"
               body={formatStatus}
-              style={{ maxWidth: 120 }}
-            />
-            <Column
-              field="lastSeen"
-              header="Last seen"
-              body={(rowData) => rowData.lastSeen && <TimestampField value={rowData.lastSeen} />}
+              style={{ maxWidth: 130, textAlign: 'center' }}
             />
           </DataTable>
         </TablePanel>

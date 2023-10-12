@@ -22,7 +22,7 @@ const VersionList = (row, onSelectVersion) => {
   return (
     <>
       <Menu model={versions} popup ref={menu} />
-      <Button link label={currentVersion} onClick={(e) => menu.current.toggle(e)} />
+      <Button variant="text" label={currentVersion} onClick={(e) => menu.current.toggle(e)} />
     </>
   )
 }

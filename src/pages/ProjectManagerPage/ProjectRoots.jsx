@@ -2,10 +2,16 @@ import ayonClient from '/src/ayon'
 import { useState, useMemo, useEffect } from 'react'
 import { useGetProjectQuery } from '../../services/project/getProject'
 import { useGetCustomRootsQuery, useSetCustomRootsMutation } from '/src/services/customRoots'
-import { InputText, FormLayout, FormRow, Panel, Section } from '@ynput/ayon-react-components'
+import {
+  InputText,
+  FormLayout,
+  FormRow,
+  Panel,
+  Section,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import { toast } from 'react-toastify'
-import SaveButton from '/src/components/SaveButton'
 
 const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots, { isLoading }] = useSetCustomRootsMutation()

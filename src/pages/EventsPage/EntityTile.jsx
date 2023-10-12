@@ -12,7 +12,7 @@ import { useSelector } from 'react-redux'
 const PanelStyled = styled(Panel)`
   flex-direction: row;
   align-items: center;
-  background-color: var(--color-grey-01);
+  background-color: var(--md-sys-color-surface-container-high);
   overflow: hidden;
 
   span {
@@ -34,7 +34,7 @@ const PanelStyled = styled(Panel)`
     !disableHover &&
     css`
       &:hover {
-        background-color: var(--color-grey-02);
+        background-color: var(--md-sys-color-surface-container-high-hover);
         cursor: pointer;
       }
     `}

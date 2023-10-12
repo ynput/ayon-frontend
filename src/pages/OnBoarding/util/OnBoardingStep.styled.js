@@ -9,6 +9,14 @@ export const Logo = styled.img`
   transform: translateX(-50%);
 `
 
+export const BG = styled.img`
+  position: fixed;
+  z-index: -10;
+  object-fit: cover;
+  width: 100vw;
+  height: 100vh;
+`
+
 export const StepPanel = styled(Panel)`
   display: flex;
   flex-direction: row;
@@ -17,7 +25,7 @@ export const StepPanel = styled(Panel)`
   justify-content: flex-start;
   gap: 32px;
   position: relative;
-  background-color: var(--color-grey-00);
+  background-color: var(--panel-background);
   padding: 64px;
   border-radius: 6px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
@@ -57,7 +65,7 @@ export const More = styled.section`
   height: 100%;
 
   /* border right */
-  border-right: 2px solid var(--color-grey-01);
+  border-right: 2px solid var(--md-sys-color-outline-variant);
   padding-right: 32px;
 
   .skip {
@@ -91,6 +99,7 @@ export const PresetsContainer = styled.ul`
   padding: 0;
   margin: 0;
   flex: 1;
+  overflow: auto;
 `
 
 export const AddonsContainer = styled.div`

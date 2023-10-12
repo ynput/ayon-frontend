@@ -5,8 +5,9 @@ import {
   useDeleteSecretMutation,
 } from '/src/services/secrets'
 import styled from 'styled-components'
-import { InputText, Button, ScrollPanel, Section } from '@ynput/ayon-react-components'
+import { InputText, Button, ScrollPanel, Section, SaveButton } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const SecretList = styled.div`
   display: flex;
@@ -22,7 +23,7 @@ const StyledSecretItem = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 600px;
 
   input:nth-child(2) {
@@ -64,8 +65,11 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
     }
   }
 
-  const handleDelete = () => {
-    deleteSecret({ name })
+  const handleDelete = async () => {
+    confirmDelete({
+      label: 'Secret',
+      accept: async () => await deleteSecret({ name }).unwrap(),
+    })
   }
 
   return (
@@ -84,8 +88,14 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
         placeholder="Secret value"
       />
 
-      <Button icon={'check'} onClick={handleSave} />
-      <Button icon="delete" onClick={handleDelete} disabled={!stored} />
+      <SaveButton
+        active={stored || (name.length > 0 && value.length > 0)}
+        icon={stored ? 'check' : 'add'}
+        onClick={handleSave}
+        variant={stored ? 'surface' : 'filled'}
+        label={stored ? '' : 'Add'}
+      />
+      {stored && <Button icon="delete" onClick={handleDelete} />}
     </StyledSecretItem>
   )
 }

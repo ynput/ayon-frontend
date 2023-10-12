@@ -1,5 +1,5 @@
 import ayonClient from '/src/ayon'
-import { stringEditor, integerEditor, floatEditor, enumEditor } from './editors'
+import { Icon } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
 
 // TODO rename .jsx -> .js
@@ -20,6 +20,8 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
     const fieldType = ayonClient.settings.attributes.find((attrib) => attrib.name === fieldName)
       .data.type
     if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
+    if (fieldType === 'boolean')
+      return !value ? '' : <Icon icon="check" className={`editor-field ${className}`} />
   }
 
   return <span className={`editor-field ${className}`}>{value}</span>
@@ -32,11 +34,11 @@ const formatType = (node, changes, styled = true) => {
 
   if (node.__entityType === 'folder') {
     value = '_folderType' in chobj ? chobj._folderType : node.folderType
-    if ('_folderType' in chobj) style.color = 'var(--color-hl-changed)'
+    if ('_folderType' in chobj) style.color = 'var(--color-changed)'
   } else {
     value = chobj?._taskType ? chobj._taskType : node.taskType
     if (!value) style.color = 'var(--color-hl-error)'
-    else if ('_taskType' in chobj) style.color = 'var(--color-hl-changed)'
+    else if ('_taskType' in chobj) style.color = 'var(--color-changed)'
   }
 
   if (!styled) return value
@@ -53,21 +55,9 @@ const getColumns = () => {
   let cols = []
   for (const attrib of ayonClient.settings.attributes) {
     if (attrib.scope.includes('folder')) {
-      let editor
-      if (attrib.data.type === 'integer') {
-        editor = integerEditor
-      } else if (attrib.data.type === 'float') {
-        editor = floatEditor
-      } else if (attrib.data.enum && attrib.data.enum.length > 0) {
-        editor = enumEditor
-      } else {
-        editor = stringEditor
-      }
       cols.push({
         name: attrib.name,
         title: attrib.data.title,
-        editor: editor,
-        editorSettings: attrib.data,
         type: attrib.data.type,
       })
     }

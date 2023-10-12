@@ -36,14 +36,14 @@ export const DownloadButton = styled(Button)`
 
 export const InstallerDropdown = styled(Dropdown)`
   .button {
-    background-color: var(--button-background);
+    background-color: var(--md-sys-color-surface-container-highest);
     padding: 5.25px 8px;
     padding-right: 4px;
     height: unset;
     border-radius: 0 4px 4px 0;
 
     &:hover {
-      background-color: var(--button-background-hover);
+      background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
 
@@ -109,7 +109,7 @@ export const Item = styled.div`
     css`
       &,
       .icon {
-        color: var(--color-hl-00);
+        color: var(--md-sys-color-primary-container);
       }
     `}
 `

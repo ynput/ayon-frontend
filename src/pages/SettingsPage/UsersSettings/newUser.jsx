@@ -13,10 +13,10 @@ import styled from 'styled-components'
 const SectionStyled = styled(Section)`
   & > div {
     :first-child {
-      border-top: 2px solid var(--color-hl-studio);
+      border-top: 2px solid var(--md-sys-color-tertiary-fixed-dim);
     }
     :last-child {
-      border-bottom: 2px solid var(--color-hl-studio);
+      border-bottom: 2px solid var(--md-sys-color-tertiary-fixed-dim);
     }
   }
 `
@@ -74,11 +74,12 @@ const NewUser = ({ onHide, open, onSuccess }) => {
     else if (formData.userLevel === 'manager') payload.data.isManager = true
     else if (formData.userLevel === 'service') payload.data.isService = true
     else {
-      payload.data.defaultRoles = formData.defaultRoles || []
+      payload.data.defaultAccessGroups = formData.defaultAccessGroups || []
       if (selectedProjects) {
-        const roles = {}
-        for (const projectName of selectedProjects) roles[projectName] = payload.data.defaultRoles
-        payload.data.roles = roles
+        const accessGroups = {}
+        for (const projectName of selectedProjects)
+          accessGroups[projectName] = payload.data.defaultAccessGroups
+        payload.data.accessGroups = accessGroups
       }
     }
 
@@ -92,11 +93,13 @@ const NewUser = ({ onHide, open, onSuccess }) => {
       setAddedUsers([...addedUsers, formData.Username])
       // keep re-usable data in the form
       setPassword('')
+      setPasswordConfirm('')
       setFormData((fd) => {
-        return { roles: fd.roles, userLevel: fd.userLevel }
+        return { accessGroups: fd.accessGroups, userLevel: fd.userLevel }
       })
 
       onSuccess && onSuccess(formData.Username)
+      onHide([formData.Username])
     } catch (error) {
       console.error(error)
       toast.error(`Unable to create user: ${error.detail}`)
@@ -126,7 +129,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
   if (!open) return null
 
   return (
-    <SectionStyled className="wrap" style={{ gap: 4, maxHeight: '100%', bottom: 'unset' }}>
+    <SectionStyled wrap style={{ gap: 4, maxHeight: '100%', bottom: 'unset' }}>
       <DetailHeader onClose={handleClose}>
         <UserImage
           src={formData?.avatarUrl}
@@ -145,7 +148,11 @@ const NewUser = ({ onHide, open, onSuccess }) => {
             formData={formData}
             setFormData={setFormData}
             attributes={[
-              { name: 'Username', data: { title: 'Username' } },
+              {
+                name: 'Username',
+                data: { title: 'Username' },
+                input: { placeholder: 'No spaces allowed' },
+              },
               { name: 'password', data: { title: 'Password' } },
               { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
               ...attributes,
@@ -154,12 +161,12 @@ const NewUser = ({ onHide, open, onSuccess }) => {
           />
         </Panel>
         <Panel>
-          <UserAccessForm formData={formData} setFormData={setFormData} hideProjectRoles />
+          <UserAccessForm formData={formData} setFormData={setFormData} isNew />
         </Panel>
         {formData.userLevel === 'user' && (
           <Panel>
             <span style={{ margin: '8px 0' }}>
-              <b>Apply default roles to:</b>
+              <b>Apply default access groups to:</b>
             </span>
             <ProjectList
               selection={selectedProjects}

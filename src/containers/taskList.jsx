@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
@@ -11,16 +11,17 @@ import { setFocusedTasks, setPairing, setUri } from '/src/features/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '/src/services/getTasks'
 import useCreateContext from '../hooks/useCreateContext'
-import NoTasks from '/src/components/NoTasks'
+import NoEntityFound from '../components/NoEntityFound'
 
-const TaskList = ({ style = {} }) => {
-  const tasks = useSelector((state) => state.project.tasks)
+const TaskList = ({ style = {}, autoSelect = false }) => {
+  const tasksTypes = useSelector((state) => state.project.tasks)
 
   const dispatch = useDispatch()
 
   const projectName = useSelector((state) => state.project.name)
   const folderIds = useSelector((state) => state.context.focused.folders)
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
+  const previousTasksNames = useSelector((state) => state.context.focused.tasksNames)
   const pairing = useSelector((state) => state.context.pairing)
   const userName = useSelector((state) => state.user.name)
 
@@ -33,7 +34,7 @@ const TaskList = ({ style = {} }) => {
   //
 
   let {
-    data = [],
+    data: tasksData = [],
     isFetching,
     isError,
     error,
@@ -45,12 +46,25 @@ const TaskList = ({ style = {} }) => {
     return r
   }, [focusedTasks])
 
+  // when folder selection changes try to keep the same task(name) selected
+  useEffect(() => {
+    if (autoSelect && !isFetching && tasksData.length && previousTasksNames.length) {
+      // filter out tasks with different names to
+      const matchedTasksIds = tasksData
+        .filter((task) => previousTasksNames.includes(task.data.name))
+        .map((task) => task.data.id)
+
+      dispatch(setFocusedTasks({ ids: matchedTasksIds }))
+      // set pairing
+      setPairs(matchedTasksIds)
+    }
+  }, [folderIds, isFetching, autoSelect, previousTasksNames, tasksData, dispatch])
+
   //
   // Handlers
   //
 
-  const onSelectionChange = (event) => {
-    const taskIds = Object.keys(event.value).filter((k) => k.length === 32)
+  const setPairs = (taskIds) => {
     let pairs = []
     for (const tid of taskIds) {
       pairs.push({
@@ -58,13 +72,26 @@ const TaskList = ({ style = {} }) => {
       })
     }
     dispatch(setPairing(pairs))
-    dispatch(setFocusedTasks(taskIds))
+  }
+
+  const onSelectionChange = (event) => {
+    const taskIds = Object.keys(event.value).filter((k) => k.length === 32)
+
+    setPairs(taskIds)
+
+    const names = []
+    for (const tid of taskIds) {
+      const task = tasksData.find((t) => t.data?.id === tid)
+      if (task) names.push(task.data?.name)
+    }
+
+    dispatch(setFocusedTasks({ ids: taskIds, names }))
   }
 
   const onContextMenuSelectionChange = (event) => {
     if (focusedTasks.includes(event.value)) return
     dispatch(setPairing([{ taskId: event.value }]))
-    dispatch(setFocusedTasks([event.value]))
+    dispatch(setFocusedTasks({ ids: [event.value] }))
   }
 
   //
@@ -72,7 +99,7 @@ const TaskList = ({ style = {} }) => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup ? 'folder' : tasks[node.data.taskType]?.icon
+    const icon = node.data.isGroup ? 'folder' : tasksTypes[node.data.taskType]?.icon
     let className = ''
     let i = 0
     for (const pair of pairing) {
@@ -86,8 +113,9 @@ const TaskList = ({ style = {} }) => {
     return (
       <CellWithIcon
         icon={icon}
-        text={node.data.label || node.data.name}
+        text={node.data.label}
         iconClassName={className}
+        name={node.data.name}
       />
     )
   }
@@ -116,7 +144,7 @@ const TaskList = ({ style = {} }) => {
     if (tableHeader?.contains(e.target) || table?.contains(e.target)) return
 
     // deselect all
-    dispatch(setFocusedTasks([]))
+    dispatch(setFocusedTasks({ ids: [], names: [] }))
     // remove paring
     dispatch(setPairing([]))
   }
@@ -141,10 +169,10 @@ const TaskList = ({ style = {} }) => {
   }, [])
 
   if (isFetching) {
-    data = loadingData
+    tasksData = loadingData
   }
 
-  const noTasks = !isFetching && data.length === 0
+  const noTasks = !isFetching && tasksData.length === 0
 
   return (
     <Section style={style}>
@@ -157,10 +185,10 @@ const TaskList = ({ style = {} }) => {
           onHide={() => setShowDetail(false)}
         />
         {noTasks ? (
-          <NoTasks></NoTasks>
+          <NoEntityFound type="task" />
         ) : (
           <TreeTable
-            value={data}
+            value={tasksData}
             scrollable="true"
             scrollHeight="100%"
             emptyMessage=" "

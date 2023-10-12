@@ -2,7 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
 import TeamList from '/src/containers/TeamList'
 import { ArrayParam, useQueryParam } from 'use-query-params'
-import { Button, InputSwitch, InputText, Section, Spacer } from '@ynput/ayon-react-components'
+import {
+  Button,
+  InputSwitch,
+  InputText,
+  SaveButton,
+  Section,
+  Spacer,
+} from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '/src/services/user/getUsers'
@@ -11,12 +18,11 @@ import TeamDetails from './TeamDetails'
 import { useDeleteTeamMutation, useUpdateTeamsMutation } from '/src/services/team/updateTeams'
 import { toast } from 'react-toastify'
 import CreateNewTeam from './CreateNewTeam'
-import { confirmDialog } from 'primereact/confirmdialog'
 import styled from 'styled-components'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
-import SaveButton from '/src/components/SaveButton'
 import { Dialog } from 'primereact/dialog'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -356,14 +362,10 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   const toastId = useRef(null)
   // DELETE TEAM
   const onDelete = async () => {
-    confirmDialog({
-      message: `Are you sure you want to delete ${selectedTeams.length} team(s)?`,
-      header: 'Delete Teams',
-      icon: 'pi pi-exclamation-triangle',
-      accept: async () => {
-        handleDeleteTeams(selectedTeams)
-      },
-      reject: () => {},
+    confirmDelete({
+      label: `${selectedTeams.length} team(s)`,
+      accept: async () => await handleDeleteTeams(selectedTeams),
+      showToasts: false,
     })
   }
 

@@ -11,7 +11,7 @@ import { Dialog } from 'primereact/dialog'
 const ShareStyled = styled.div`
   padding: 16px;
 
-  background-color: var(--color-grey-00);
+  background-color: var(--panel-background);
   border-radius: 3px;
   position: relative;
   display: flex;
@@ -27,7 +27,7 @@ const ShareStyled = styled.div`
   }
 
   pre {
-    background-color: var(--color-grey-00);
+    background-color: var(--panel-background);
     padding: 16px;
     border-radius: 3px;
     margin-top: 0;
@@ -37,17 +37,17 @@ const ShareStyled = styled.div`
   padding-right: 48px;
 
   button {
-    background-color: var(--color-grey-00);
+    background-color: var(--panel-background);
   }
 
   img {
     max-width: 30vw;
-    box-shadow: 0 0 10px 0px var(--color-grey-01);
+    box-shadow: 0 0 10px 0px var(--panel-background);
   }
 
   /* if panel is url link */
   :has(> span) {
-    background-color: var(--color-grey-00);
+    background-color: var(--panel-background);
     padding: 16px 48px 16px 16px;
 
     button {

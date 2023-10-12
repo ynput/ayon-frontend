@@ -10,7 +10,8 @@ import { useGetAddonSettingsListQuery } from '/src/services/addonSettings'
 const AddonList = ({
   selectedAddons,
   setSelectedAddons,
-  environment = 'production', // 'production' or 'staging'
+  onContextMenu,
+  variant = 'production', // 'production' or 'staging'
   siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
   onAddonChanged = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
   changedAddonKeys = null, // List of addon keys that have changed
@@ -21,13 +22,13 @@ const AddonList = ({
   const { data, loading, isError } = useGetAddonSettingsListQuery({
     projectName,
     siteId,
-    variant: environment,
+    variant,
   })
   const uriChanged = useSelector((state) => state.context.uriChanged)
 
   const [preferredSelection, setPreferredSelection] = useState([])
 
-  // Filter addons by environment
+  // Filter addons by variant
   // add 'version' property to each addon
   const addons = useMemo(() => {
     if (loading) return []
@@ -43,18 +44,18 @@ const AddonList = ({
       } else if (projectName && !addon.hasProjectSettings) continue
       else if (!addon.hasSettings) continue
 
-      const addonKey = `${addon.name}|${addon.version}|${environment}|${siteId || '_'}|${
+      const addonKey = `${addon.name}|${addon.version}|${variant}|${siteId || '_'}|${
         projectName || '_'
       }`
 
       result.push({
         ...addon,
         key: addonKey,
-        variant: environment,
+        variant,
       })
     }
     return result
-  }, [data, environment, siteSettings])
+  }, [data, variant, siteSettings])
 
   useEffect(() => {
     if (setBundleName) {
@@ -67,7 +68,7 @@ const AddonList = ({
   }, [data?.bundleName, isError])
 
   useEffect(() => {
-    // Maintain selection when addons are changed due to environment change
+    // Maintain selection when addons are changed due to variant change
     const newSelection = []
     for (const addon of addons) {
       if (selectedAddons.find((a) => a.name === addon.name)) {
@@ -94,8 +95,19 @@ const AddonList = ({
   }, [addons, uriChanged])
 
   const onSelectionChange = (e) => {
-    setPreferredSelection(e.value)
-    setSelectedAddons(e.value)
+    // if e.value is an array [], just set the selection
+
+    if (Array.isArray(e.value) && e.value?.length) {
+      setPreferredSelection(e.value)
+      setSelectedAddons(e.value)
+      return
+    }
+
+    if (e.value?.name) {
+      const index = selectedAddons.findIndex((a) => a.name === e.value.name)
+      if (index > -1) return
+      setSelectedAddons([e.value])
+    }
   }
 
   const rowDataClassNameFormatter = (rowData) => {
@@ -116,8 +128,10 @@ const AddonList = ({
           scrollHeight="flex"
           selection={selectedAddons}
           onSelectionChange={onSelectionChange}
+          onContextMenuSelectionChange={onSelectionChange}
+          onContextMenu={onContextMenu}
           rowClassName={rowDataClassNameFormatter}
-          emptyMessage={isError ? `WARNING: No bundle set to ${environment}` : 'No addons found'}
+          emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
         >
           <Column field="title" header="Addon" />
           <Column field="version" header="Version" style={{ maxWidth: 80 }} />

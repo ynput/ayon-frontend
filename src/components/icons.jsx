@@ -9,11 +9,17 @@ const CellWithIcon = ({
   className,
   style,
   iconStyle,
+  name,
 }) => {
   return (
     <span
       className={className || ''}
-      style={{ alignItems: 'center', position: 'relative', overflow: 'hidden', ...style }}
+      style={{
+        alignItems: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+        ...style,
+      }}
     >
       <Icon
         icon={icon}
@@ -21,10 +27,11 @@ const CellWithIcon = ({
         style={{ marginRight: '0.6rem', ...iconStyle }}
       />
       <span
+        title={name}
         style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...textStyle }}
         className={`cell-with-icon-text ${textClassName}`}
       >
-        {text}
+        {text || name}
       </span>
     </span>
   )

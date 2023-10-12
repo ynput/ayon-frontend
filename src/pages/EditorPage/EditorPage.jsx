@@ -1,8 +1,15 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
-import { Spacer, Button, Section, Toolbar, TablePanel, Icon } from '@ynput/ayon-react-components'
+import {
+  Spacer,
+  Button,
+  Section,
+  Toolbar,
+  TablePanel,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -37,11 +44,15 @@ import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '/src/helpers/checkName'
 import useCreateContext from '/src/hooks/useCreateContext'
-import SaveButton from '/src/components/SaveButton'
+import { ayonApi } from '/src/services/ayon'
+import { confirmDialog } from 'primereact/confirmdialog'
+import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
+import NewSequence from './NewSequence'
+import useShortcuts from '/src/hooks/useShortcuts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
-  const { folders: foldersObject, tasks = [], folders = [], attrib } = project
+  const { folders: foldersObject, tasks = [], attrib } = project
 
   // eslint-disable-next-line no-unused-vars
   // const context = useSelector((state) => ({ ...state.context }))
@@ -66,14 +77,12 @@ const EditorPage = () => {
     a.scope.some((s) => ['folder', 'task'].includes(s)),
   )
 
-  const [errors, setErrors] = useState({})
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
   const [searchIds, setSearchIds] = useState({})
 
   // NEW STATES
   const [newEntity, setNewEntity] = useState('')
-  const [newEntityData, setNewEntityData] = useState({})
 
   // columns widths
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
@@ -278,17 +287,6 @@ const EditorPage = () => {
 
   let columns = useMemo(() => getColumns(), [])
 
-  const formatError = (rowData) => {
-    // Format the error icon for the given row
-    // If the row has no error, return null,
-    // otherwise return the error icon with the error message
-    // as tooltip.
-    const error = errors[rowData.id]
-    if (error) {
-      return <Icon icon="warning" style={{ color: 'var(--color-hl-error)' }} title={error} />
-    }
-  }
-
   // on first render, get selection from focused folders and tasks
   // for further selections, focusedEditor is used
   useEffect(() => {
@@ -323,6 +321,22 @@ const EditorPage = () => {
     })
     return data
   }, [rootDataCache, newNodes, changes, projectName])
+
+  // create an array of folder names and a map of task names with parentId as the value
+  const [folderNamesMap, taskNamesMap] = useMemo(() => {
+    const folders = new Map()
+    const tasks = new Map()
+    for (const key in rootData) {
+      const entity = rootData[key].data
+      if (!entity) continue
+      if (entity.__entityType === 'folder') {
+        folders.set(entity.name, entity.id)
+      } else if (entity.__entityType === 'task') {
+        tasks.set(entity.name, entity.__parentId)
+      }
+    }
+    return [folders, tasks]
+  }, [rootData])
 
   // SEARCH FILTER
   // if search results filter out nodes
@@ -452,6 +466,8 @@ const EditorPage = () => {
         childrenLength: folder.childrenLength,
         name: folder.value,
         parents: folder.parents,
+        id: folder.id,
+        label: folder.label,
       })
     }
 
@@ -461,7 +477,7 @@ const EditorPage = () => {
   const searchFilter = (search, suggestions) => {
     // filter through suggestions
     const filtered = suggestions.filter((folder) =>
-      folder.keywords.some((key) => key.includes(search)),
+      folder.keywords.some((key) => key.toLowerCase().includes(search.toLowerCase())),
     )
     return filtered
   }
@@ -537,15 +553,101 @@ const EditorPage = () => {
   }, [focusedEditor, rootData])
 
   // disable adding new nodes
-  const disableAddNew =
-    isEmpty(currentSelection) || Object.keys(currentSelection).some((id) => rootData[id]?.leaf)
+  const disableAddNew = isEmpty(currentSelection)
 
   //
   // Commit changes
   //
 
-  const onCommit = async (e, overrideChanges) => {
-    e?.preventDefault()
+  const commitNewNodes = (commitChanges, updates, parentPatches) => {
+    // Create a map to store the newNodes parentIds.
+    const newNodesParentIdsMap = new Map()
+    for (const id in newNodes) {
+      const parentId = newNodes[id].parentId || newNodes[id].folderId
+      newNodesParentIdsMap.set(id, parentId)
+    }
+    for (const id in newNodes) {
+      const entity = newNodes[id]
+      const entityType = entity.__entityType
+      const newEntity = { ...entity }
+      const entityChanges = commitChanges[entity.id]
+
+      // it is a new entity, so only valid attributes are those
+      // stored in `changes`. The rest are inherited ones
+      let ownAttrib = [...entity.ownAttrib] || []
+      const parent = rootData[entity.parentId || entity.folderId]
+      // copy over own attrib
+      let patchAttrib = { ...entity.attrib } || {}
+      // copy over parents if they have any
+      if (parent) {
+        patchAttrib = { ...parent?.data?.attrib } || {}
+      }
+      for (const key in entityChanges || {}) {
+        if (key.startsWith('__')) continue
+        if (key.startsWith('_')) {
+          newEntity[key.substring(1)] = entityChanges[key]
+        } else {
+          if (entityChanges[key]) {
+            ownAttrib.push(key)
+            patchAttrib[key] = entityChanges[key]
+          }
+        }
+      }
+
+      // check name
+      newEntity.name = checkName(newEntity.name)
+
+      // we use a different set of attributes for the newEntity than the patch
+      const newEntityAttribs = { ...patchAttrib }
+      // remove any attribs that are not ownAttrib
+      for (const key in newEntityAttribs) {
+        if (!ownAttrib.includes(key)) delete newEntityAttribs[key]
+      }
+      // add to newEntity
+      newEntity.attrib = newEntityAttribs
+
+      const patch = {
+        data: {
+          ...newEntity,
+          name: newEntity.name,
+          attrib: patchAttrib,
+          ownAttrib,
+        },
+        leaf: !!entity.leaf || entityType === 'task',
+      }
+
+      // if it's a folder, leaf is false
+      if (entityType === 'folder') {
+        patch.leaf = false
+      }
+
+      updates.push({
+        id: entity.id,
+        entityId: entity.id,
+        type: 'create',
+        entityType,
+        data: newEntity,
+        patch,
+        depth: entity.depth,
+      })
+
+      if (!parent?.data?.hasChildren && entity.__parentId !== 'root' && parent) {
+        const parentPatch = {
+          data: { ...parent.data, hasTasks: entityType === 'task', hasChildren: true },
+          leaf: false,
+        }
+
+        // push to array to be added all together later
+        parentPatches.push(parentPatch)
+      }
+    } // CREATE NEW ENTITIES
+  }
+
+  const [commitUpdating, setCommitUpdating] = useState(false)
+
+  const handleCommit = async (overrideChanges) => {
+    console.time('commit')
+
     const updates = []
     const parentPatches = []
     const commitChanges = overrideChanges || changes
@@ -635,89 +737,10 @@ const EditorPage = () => {
     // CREATE NEW ENTITIES
     //
 
-    const newNodesParentIds = Object.values(newNodes).map((n) => n.parentId || n.folderId)
-
     // skip new nodes if force saving
     if (!forcedSave) {
-      for (const id in newNodes) {
-        const entity = newNodes[id]
-        const entityType = entity.__entityType
-        const newEntity = { ...entity }
-        const entityChanges = commitChanges[entity.id]
-
-        // it is a new entity, so only valid attributes are those
-        // stored in `changes`. The rest are inherited ones
-        let ownAttrib = [...entity.ownAttrib] || []
-        const parent = rootData[entity.parentId || entity.folderId]
-        // copy over own attrib
-        let patchAttrib = { ...entity.attrib } || {}
-        // copy over parents if they have any
-        if (parent) {
-          patchAttrib = { ...parent?.data?.attrib } || {}
-        }
-        for (const key in entityChanges || {}) {
-          if (key.startsWith('__')) continue
-          if (key.startsWith('_')) {
-            newEntity[key.substring(1)] = entityChanges[key]
-          } else {
-            if (entityChanges[key]) {
-              ownAttrib.push(key)
-              patchAttrib[key] = entityChanges[key]
-            }
-          }
-        }
-
-        // check name
-        newEntity.name = checkName(newEntity.name)
-
-        // we use a different set of attributes for the newEntity than the patch
-        const newEntityAttribs = { ...patchAttrib }
-        // remove any attribs that are not ownAttrib
-        for (const key in newEntityAttribs) {
-          if (!ownAttrib.includes(key)) delete newEntityAttribs[key]
-        }
-        // add to newEntity
-        newEntity.attrib = newEntityAttribs
-
-        const patch = {
-          data: {
-            ...newEntity,
-            name: newEntity.name,
-            attrib: patchAttrib,
-            ownAttrib,
-          },
-          leaf: !!entity.leaf,
-        }
-
-        // check if this newNode has any child newNodes (is it a parent)
-        if (newNodesParentIds.includes(id)) {
-          patch.data.hasChildren = true
-          patch.leaf = false
-        }
-        // if it's a folder, leaf is false
-        if (entityType === 'folder') {
-          patch.leaf = false
-        }
-
-        updates.push({
-          id: entity.id,
-          entityId: entity.id,
-          type: 'create',
-          entityType,
-          data: newEntity,
-          patch,
-        })
-
-        if (!parent?.data?.hasChildren && entity.__parentId !== 'root' && parent) {
-          const parentPatch = {
-            data: { ...parent.data, hasTasks: entityType === 'task', hasChildren: true },
-            leaf: false,
-          }
-
-          // push to array to be added all together later
-          parentPatches.push(parentPatch)
-        }
-      } // CREATE NEW ENTITIES
+      // CREATE NEW ENTITIES
+      commitNewNodes(commitChanges, updates, parentPatches)
     }
 
     // validation
@@ -725,28 +748,40 @@ const EditorPage = () => {
     const changesErrors = []
     const errorMessages = []
 
-    for (const op of updates) {
-      if (op.type === 'delete') continue
-      const name = op.data.name
-      const parentId = op.data.__parentId
+    // Create a hash table to store the rootData items.
+    const rootDataHashTable = new Map()
+    for (const id in rootData) {
+      rootDataHashTable.set(id, rootData[id])
+    }
 
-      for (const id in rootData) {
-        const data = rootData[id]?.data
-        if (data.__parentId === parentId) {
-          // found sibling (same parent) check name is different
-          if (name === data.name && id !== op.entityId) {
-            const msg = 'Sibling entities can not have the same name.'
-            // ERROR SAME NAME
-            changesErrors.push({
-              id: op.data.id,
-              ...commitChanges[id],
-              errors: {
-                _name: msg,
-              },
-            })
-            if (!errorMessages.includes(msg)) errorMessages.push(msg)
-          }
-        }
+    // sort updates by depth so lowest comes first
+    updates.sort((a, b) => {
+      a.depth = a.depth || 0
+      b.depth = b.depth || 0
+      return a.depth - b.depth
+    })
+
+    // Iterate over the updates array.
+    for (const op of updates) {
+      // Compare the update to the rootData item.
+      if (op.type === 'delete') continue
+
+      // Look up the corresponding rootData item by its ID.
+      const rootDataItem = rootDataHashTable.get(op.data.__parentId)
+      if (!rootDataItem) continue
+      const name = op.data.name
+      if (name === rootDataItem.name && op.entityId !== rootDataItem.id) {
+        // The update and the rootData item have the same name.
+        const msg = 'Sibling entities can not have the same name.'
+        // ERROR SAME NAME
+        changesErrors.push({
+          id: op.data.id,
+          ...commitChanges[op.entityId],
+          errors: {
+            _name: msg,
+          },
+        })
+        if (!errorMessages.includes(msg)) errorMessages.push(msg)
       }
     }
 
@@ -755,60 +790,100 @@ const EditorPage = () => {
       toast.warning('Error Committing: ' + errorMessages.toString())
       // update changes to show errors
       dispatch(onNewChanges(changesErrors))
-
       return
     }
 
-    // Send the changes to the server
+    // split the updates into chunks of 1000
+    // to avoid payload too large error
+    const chunkedUpdates = []
+    const chunkSize = 1000
+    for (let i = 0; i < updates.length; i += chunkSize) {
+      chunkedUpdates.push(updates.slice(i, i + chunkSize))
+    }
 
-    return await updateEditor({ updates, projectName, rootData })
-      .unwrap()
-      .then((res) => {
+    setCommitUpdating(true)
+    try {
+      for (const updates of chunkedUpdates) {
+        const res = await updateEditor({ updates, projectName, rootData }).unwrap()
+
         if (!res.success) {
-          toast.warn('Errors occurred during save')
+          const messages = []
+          res.operations.forEach((op) => {
+            if (op.success) return
+            messages.push(op.detail)
+          })
+          for (const msg of messages) {
+            toast.error('Error: ' + msg)
+          }
+          setCommitUpdating(false)
           return null
-        } else {
-          toast.success('Changes saved')
-          const updated = []
-          const deleted = []
-
-          // create object of updated/new branches
-          for (const op of updates) {
-            if (op.type === 'delete') {
-              deleted.push(op.id)
-            } else {
-              updated.push(op.patch)
-            }
-          }
-
-          // add new branches to redux editor slice
-          dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))
-          if (parentPatches.length) {
-            dispatch(nodesUpdated({ updated: parentPatches, forcedSave }))
-          }
-          // update children
-          const childUpdates = getChildAttribUpdates(updates)
-          dispatch(nodesUpdated({ updated: childUpdates, forcedSave }))
-          // update selection (remove from deleted)
-          handleSelectionChange(newSelection)
         }
+      }
+      setCommitUpdating(false)
 
-        setErrors(() => {
-          const result = {}
-          for (const op of res.operations) {
-            if (!op.success) result[op.id] = op.error
-          }
-          return result
-        })
+      // once everything has finished
+      toast.success('Changes saved')
+      const updated = []
+      const deleted = []
 
-        return true
+      // create object of updated/new branches
+      for (const op of updates) {
+        if (op.type === 'delete') {
+          deleted.push(op.id)
+        } else {
+          updated.push(op.patch)
+        }
+      }
+
+      // invalidate these tags ['hierarchy', 'folder', 'task']
+      // so that the query will be executed again
+      // and the new data will be fetched
+      dispatch(ayonApi.util.invalidateTags(['hierarchy', 'folder', 'task']))
+
+      // add new branches to redux editor slice
+      dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))
+      if (parentPatches.length) {
+        dispatch(nodesUpdated({ updated: parentPatches, forcedSave }))
+      }
+      // update children
+      const childUpdates = getChildAttribUpdates(updates)
+      dispatch(nodesUpdated({ updated: childUpdates, forcedSave }))
+      // update selection (remove from deleted)
+      handleSelectionChange(newSelection)
+
+      return updates
+    } catch (error) {
+      setCommitUpdating(false)
+      toast.error('Unable to save changes')
+      console.log(updates)
+      console.error(error)
+    }
+  }
+
+  const onCommit = async (e, overridesChanges) => {
+    e?.preventDefault()
+
+    if (Object.keys(changes).length + Object.keys(newNodes).length > 1000) {
+      // show warning
+      confirmDialog({
+        style: { maxWidth: 400 },
+        message: `You are about to save ${
+          Object.keys(changes).length + Object.keys(newNodes).length
+        } changes. This may take a while and freeze the server for everyone else. Are you sure you want to continue?`,
+        header: 'Confirm Large Save',
+        accept: async () => {
+          const res = await handleCommit(overridesChanges)
+          return res
+          // save
+        },
+        reject: () => {
+          // don't save
+          return
+        },
       })
-      .catch((err) => {
-        toast.error("Unable to save changes. This shouldn't happen.")
-        console.log(updates)
-        console.error(err)
-        return null
-      })
+    } else {
+      handleCommit(overridesChanges)
+    }
   }
 
   const handleForceChange = async (key, value, ids, entityType) => {
@@ -867,33 +942,18 @@ const EditorPage = () => {
 
   const canCommit = !isEmpty(changes) || !isEmpty(newNodes)
 
-  const addNewEntity = (eType, root) => {
-    setNewEntity(eType)
-
-    // set any default data
-    const initData = {}
-
-    let type = eType === 'task' ? tasks : folders
-    if (type) {
-      initData.type = Object.keys(type)[0]
-    }
-    if (root) {
-      initData.parentIds = ['root']
-    }
-
-    // set name to type
-    initData.name = initData.type.toLowerCase()
-
-    setNewEntityData(initData)
-  }
-
   const handleCloseNew = () => {
     setNewEntity('')
-    setNewEntityData({})
   }
 
-  const addNode = (entityType, root, data = {}) => {
+  const addNodes = (entityType, root, nodesData = [], sequence) => {
     const parents = root ? [null] : futureParents
+
+    // for leaf nodes, add parents to parents
+    for (const id of focusedTasks) {
+      const parent = rootData[id]?.data?.folderId
+      if (!parents.includes(parent)) parents.push(parent)
+    }
 
     if (!parents.length) {
       console.log('Nothing to add')
@@ -915,34 +975,45 @@ const EditorPage = () => {
         parentData = rootData[parentId]?.data || {}
       }
 
-      const newNode = {
-        leaf: true,
-        name: `new${capitalize(entityType)}${
-          Object.values(newNodes).filter((n) => n?.name?.includes(`new${capitalize(entityType)}`))
-            .length + parents.indexOf(parentId)
-        }`,
-        id: uuid1().replace(/-/g, ''),
-        status: parentData?.status || 'Not ready',
-        attrib: parentData?.attrib || {},
-        ownAttrib: [],
-        __entityType: entityType,
-        __parentId: parentId || 'root',
-        __isNew: true,
-      }
-      if (entityType === 'folder') {
-        newNode['parentId'] = parentId
-        newNode['folderType'] = parentData?.folderType
-        if (newNode.__parentId === 'root') {
-          // all attrib are it's own
-          newNode['ownAttrib'] = Object.keys(newNode.attrib)
+      for (const data of nodesData) {
+        const newNode = {
+          leaf: true,
+          name: `new${capitalize(entityType)}${
+            Object.values(newNodes).filter((n) => n?.name?.includes(`new${capitalize(entityType)}`))
+              .length + parents.indexOf(parentId)
+          }`,
+          id: uuid1().replace(/-/g, ''),
+          status: parentData?.status || 'Not ready',
+          attrib: parentData?.attrib || {},
+          ownAttrib: [],
+          __entityType: entityType,
+          __parentId: parentId || 'root',
+          __isNew: true,
         }
-        folderIds.push(newNode.id)
-      } else if (entityType === 'task') {
-        newNode['folderId'] = parentId
-        newNode['taskType'] = 'Generic'
-        taskIds.push(newNode.id)
+
+        const newData = { ...data }
+
+        if (newData.__prefix && parentData.name && parentData.label) {
+          // prefix the parent to the name and label
+          newData.name = `${parentData.name}${newData.name}`
+          newData.label = `${parentData.label}${newData.label}`
+        }
+
+        if (entityType === 'folder') {
+          newNode['parentId'] = parentId
+          newNode['folderType'] = parentData?.folderType
+          if (newNode.__parentId === 'root') {
+            // all attrib are it's own
+            newNode['ownAttrib'] = Object.keys(newNode.attrib)
+          }
+          folderIds.push(newNode.id)
+        } else if (entityType === 'task') {
+          newNode['folderId'] = parentId
+          newNode['taskType'] = 'Generic'
+          taskIds.push(newNode.id)
+        }
+        addingNewNodes.push({ ...newNode, ...newData })
       }
-      addingNewNodes.push({ ...newNode, ...data })
     }
 
     // update new nodes state
@@ -952,15 +1023,29 @@ const EditorPage = () => {
       // Update expanded folders context object
       const exps = { ...expandedFolders }
       const loadBranches = []
+      let count = 0
       for (const id of parents) {
+        if (count >= 1) break // exit loop after first two items
         exps[id] = true
         if (rootData[id]?.data?.hasChildren) {
           loadBranches.push(id)
         }
+        count++
       }
       dispatch(setExpandedFolders(exps))
       // get new branch
       loadNewBranches(loadBranches)
+
+      // only auto select for sequences
+      if (sequence) {
+        // update selection to new nodes
+        const newSelection = {}
+        for (const id of folderIds) {
+          newSelection[id] = true
+        }
+
+        if (!isEmpty(newSelection)) handleSelectionChange(newSelection)
+      }
     }
   } // Add node
 
@@ -968,11 +1053,9 @@ const EditorPage = () => {
   // Other user events handlers (Toolbar)
   //
 
-  const onDelete = () => {
-    const newIds = Object.keys(newNodes).filter((i) => i in currentSelection)
-    const modifiedIds = Object.keys(currentSelection).filter(
-      (i) => !newIds.includes(i) && i in currentSelection,
-    )
+  const onDelete = (sel) => {
+    const newIds = Object.keys(newNodes).filter((i) => i in sel)
+    const modifiedIds = Object.keys(sel).filter((i) => !newIds.includes(i) && i in sel)
 
     // remove from newNodes state and the tree table
     dispatch(onRevert(newIds))
@@ -987,8 +1070,8 @@ const EditorPage = () => {
         newSelection = {}
       } else {
         // preserve selection of non newItems
-        newSelection = { ...currentSelection }
-        for (const id in currentSelection) {
+        newSelection = { ...sel }
+        for (const id in sel) {
           if (newIds.includes(id)) delete newSelection[id]
         }
       }
@@ -1022,22 +1105,8 @@ const EditorPage = () => {
     handleSelectionChange({})
   }
 
-  const revertChangesOnSelection = useCallback(() => {
-    // remove from newNodes and changes from state
+  const revertChangesOnSelection = (currentSelection) =>
     dispatch(onRevert(Object.keys(currentSelection)))
-  }, [currentSelection, changes, newNodes])
-
-  // Context menu
-
-  const onContextMenuSelectionChange = (event) => {
-    if (!(event.value in currentSelection)) {
-      let newSelection = {
-        [event.value]: true,
-      }
-
-      handleSelectionChange(newSelection)
-    }
-  }
 
   // CONTEXT MENUS
 
@@ -1045,9 +1114,9 @@ const EditorPage = () => {
   const ctxMenuGlobalItems = useMemo(
     () => [
       {
-        label: 'Add Folder',
+        label: 'Add Folders',
         icon: 'create_new_folder',
-        command: () => addNewEntity('folder', true),
+        command: () => setNewEntity('folder'),
       },
       {
         label: 'Save All Changes',
@@ -1068,45 +1137,58 @@ const EditorPage = () => {
 
   const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
 
-  // Context menu items on table items
-  const ctxMenuTableItems = useMemo(
-    () => [
+  const getCtxMenuTableItems = (sel) => {
+    return [
       {
-        label: 'Add Folder',
+        label: 'Add Folders',
         icon: 'create_new_folder',
-        command: () => addNewEntity('folder'),
-        disabled: disableAddNew,
+        command: () => setNewEntity('folder'),
       },
       {
-        label: 'Add Task',
+        label: 'Add Tasks',
         icon: 'add_task',
-        command: () => addNewEntity('task'),
-        disabled: disableAddNew,
+        command: () => setNewEntity('task'),
       },
       {
         label: 'Delete',
         icon: 'delete',
-        command: onDelete,
+        command: () => onDelete(sel),
+        danger: true,
       },
       {
         label: 'Save All Changes',
         icon: 'check',
-        command: onCommit,
+        command: () => onCommit(),
         disabled: !canCommit,
         isSave: canCommit,
       },
       {
         label: 'Clear Changes',
         icon: 'clear',
-        command: revertChangesOnSelection,
+        command: () => revertChangesOnSelection(sel),
         disabled: !canCommit,
       },
-    ],
+    ]
+  }
 
-    [currentSelection, canCommit],
-  )
+  const [ctxMenuTableShow] = useCreateContext([])
 
-  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+  // Context menu
+
+  // When right clicking on the already selected node, we don't want to change the selection
+  const onContextMenu = (event) => {
+    let selection = currentSelection
+    if (event?.node?.key && !(event.node.key in currentSelection)) {
+      let newSelection = {
+        [event.node.key]: true,
+      }
+
+      selection = newSelection
+
+      handleSelectionChange(newSelection)
+    }
+    ctxMenuTableShow(event.originalEvent, getCtxMenuTableItems(selection))
+  }
 
   //
   // Table event handlers
@@ -1249,7 +1331,7 @@ const EditorPage = () => {
             folders={foldersObject}
           />
         )}
-        style={{ width: columnsWidths['name'], maxWidth: 300, height: 33 }}
+        style={{ width: columnsWidths['name'] || 230, height: 33 }}
         sortable
       />,
       <Column
@@ -1257,14 +1339,14 @@ const EditorPage = () => {
         key="type"
         header="Type"
         body={(rowData) => formatType(rowData.data, changes)}
-        style={{ width: columnsWidths['type'], maxWidth: 200 }}
+        style={{ width: columnsWidths['type'] || 140 }}
       />,
       ...columns.map((col) => (
         <Column
           key={col.name}
           header={col.title}
           field={col.name}
-          style={{ width: columnsWidths[col.name] }}
+          style={{ width: columnsWidths[col.name] || 140 }}
           body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
         />
       )),
@@ -1349,31 +1431,71 @@ const EditorPage = () => {
     treeData = loadingTreeData
   }
 
+  const shortcuts = [
+    {
+      key: 'n',
+      action: () => setNewEntity('folder'),
+    },
+    {
+      key: 'm',
+      action: () => setNewEntity('sequence'),
+    },
+    {
+      key: 't',
+      action: () => setNewEntity('task'),
+      disabled: disableAddNew,
+    },
+  ]
+
+  useShortcuts(shortcuts, [disableAddNew])
+
   //
   // Render the TreeTable
 
   return (
-    <main>
-      <NewEntity
-        type={newEntity}
-        data={newEntityData}
-        visible={!!newEntity}
-        onHide={handleCloseNew}
-        onConfirm={addNode}
-      />
+    <main className="editor-page">
+      {newEntity &&
+        (newEntity === 'sequence' ? (
+          <NewSequence
+            visible={newEntity === 'sequence'}
+            onHide={() => setNewEntity('')}
+            onConfirm={addNodes}
+            currentSelection={currentSelection}
+            folderNames={folderNamesMap}
+          />
+        ) : (
+          <NewEntity
+            type={newEntity}
+            visible={!!newEntity}
+            onHide={handleCloseNew}
+            onConfirm={addNodes}
+            currentSelection={currentSelection}
+            folderNames={folderNamesMap}
+            taskNames={taskNamesMap}
+          />
+        ))}
       <Section>
         <Toolbar>
           <Button
             icon="create_new_folder"
-            label="Add folder"
-            onClick={() => addNewEntity('folder', disableAddNew)}
+            label="Add folders"
+            onClick={() => setNewEntity('folder')}
+            title='Press "n" to create folders'
+          />
+          <Button
+            icon="topic"
+            label="Add folder sequence"
+            onClick={() => setNewEntity('sequence')}
+            title='Press "m" to create a folder sequence'
           />
           <Button
             icon="add_task"
-            label="Add task"
+            label="Add tasks"
             disabled={disableAddNew}
-            onClick={() => addNewEntity('task')}
+            onClick={() => setNewEntity('task')}
+            title='Press "t" to create tasks'
           />
+          <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect
             options={filterOptions}
             value={shownColumns}
@@ -1391,14 +1513,18 @@ const EditorPage = () => {
             isLoading={isSearchLoading}
           />
           <Spacer />
-          {canCommit && <>Unsaved Changes</>}
           <Button
             icon="clear"
             label="Clear All Changes"
             onClick={handleRevert}
             disabled={!canCommit}
           />
-          <SaveButton label="Save Changes" onClick={onCommit} active={canCommit} />
+          <SaveButton
+            label="Save Changes"
+            onClick={onCommit}
+            active={canCommit}
+            saving={commitUpdating}
+          />
         </Toolbar>
         <Splitter
           style={{ width: '100%', height: '100%' }}
@@ -1429,8 +1555,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                   }
                 }}
-                onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
-                onContextMenuSelectionChange={onContextMenuSelectionChange}
+                onContextMenu={onContextMenu}
                 onColumnResizeEnd={setColumnWidths}
                 reorderableColumns
                 onColReorder={handleColumnReorder}
@@ -1438,12 +1563,6 @@ const EditorPage = () => {
                 className={fullPageLoading ? 'table-loading' : undefined}
               >
                 {allColumns}
-                <Column
-                  field="error"
-                  header=""
-                  body={(rowData) => formatError(rowData.data)}
-                  style={{ width: 24 }}
-                />
               </TreeTable>
             </TablePanel>
           </SplitterPanel>
@@ -1452,8 +1571,8 @@ const EditorPage = () => {
               editorMode
               nodes={editorNodes}
               onChange={(c) => throttledEditorChanges(c)}
-              onDelete={onDelete}
-              onRevert={revertChangesOnSelection}
+              onDelete={() => onDelete(currentSelection)}
+              onRevert={() => revertChangesOnSelection(currentSelection)}
               attribs={attribFields}
               projectName={projectName}
               onForceChange={handleForceChange}

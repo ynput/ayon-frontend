@@ -6,7 +6,8 @@ import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetTeamsQuery } from '../../../services/team/getTeams'
 import { Button } from '@ynput/ayon-react-components'
 import getShimmerStyles from '/src/styles/getShimmerStyles'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import TeamMembersStacked from '/src/components/TeamMembersStacked/TeamMembersStacked'
 
 const subTitle = (members, leaders) => {
   let mt = ''
@@ -17,16 +18,30 @@ const subTitle = (members, leaders) => {
   if (leaders > 0) lt = leaders + ' leader'
   if (leaders > 1) lt += 's'
 
-  return `${mt} ${mt && '-'} ${lt}`
+  return `${mt} ${mt && lt && '-'} ${lt}`
 }
 
-const StyledLoading = styled.div`
-  position: absolute;
-  inset: 8px;
-  height: 26px;
-  background-color: var(--color-grey-01);
+const StyledTeam = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  padding-top: 4px;
   border-radius: var(--border-radius);
-  ${getShimmerStyles()}
+  overflow: hidden;
+  position: relative;
+
+  &,
+  a > div {
+    background-color: var(--md-sys-color-surface-container);
+  }
+
+  ${({ $isLoading }) =>
+    $isLoading &&
+    css`
+      min-height: 100px;
+      ${getShimmerStyles()}
+    `}
 `
 
 const ProjectTeams = ({ projectName }) => {
@@ -46,40 +61,53 @@ const ProjectTeams = ({ projectName }) => {
   }
 
   return (
-    <DashboardPanelWrapper
-      title={`Teams - ${data.length}`}
-      header={isFetching && <StyledLoading />}
-    >
-      {data.map(
-        (team, i) =>
-          !!team.leaders.length && (
-            <Fragment key={i}>
+    <DashboardPanelWrapper title={`Teams - ${data.length}`}>
+      {data.map((team, i) => (
+        <StyledTeam key={i} $isLoading={isFetching}>
+          {!isFetching && (
+            <>
               <h2 style={{ position: 'relative' }}>
-                <span>{team.name}</span>
-                <span>{subTitle(team.memberCount - team.leaders.length, team.leaders.length)}</span>
-                {team.isLoading && <StyledLoading style={{ inset: 0 }} />}
+                {team.name} <span>{subTitle(team.members?.length, team.leaders?.length)}</span>
               </h2>
-              {team.leaders.map((leader, i) => (
-                <Link
-                  key={`${leader.name}-${i}`}
-                  to={`/manageProjects/teams?project=${projectName}&teams=${team.name}&name=${leader.name}`}
-                  style={{ position: 'relative' }}
-                >
-                  <UserTile
-                    userName={leader.name}
-                    leaderRoles={leader.roles}
-                    isWaiting={isFetching}
+
+              {!!team.leaders?.length && (
+                <>
+                  {team.leaders?.map((leader, i) => (
+                    <Link
+                      key={`${leader.name}-${i}`}
+                      to={`/manageProjects/teams?project=${projectName}&teams=${team.name}&name=${leader.name}`}
+                      style={{ position: 'relative' }}
+                    >
+                      <UserTile
+                        userName={leader.name}
+                        leaderRoles={leader.roles}
+                        isWaiting={isFetching}
+                      >
+                        leader
+                      </UserTile>
+                    </Link>
+                  ))}
+                </>
+              )}
+              <Link to={`/manageProjects/teams?project=${projectName}&teams=${team.name}`}>
+                {!!team.members?.length && (
+                  <TeamMembersStacked
+                    names={team.members?.map((m) => m.name)}
+                    projectName={projectName}
                   />
-                </Link>
-              ))}
-            </Fragment>
-          ),
-      )}
-      {!isFetching && !data.length && (
+                )}
+              </Link>
+            </>
+          )}
+        </StyledTeam>
+      ))}
+      {!isFetching && (
         <>
-          <h2 style={{ position: 'relative' }}>
-            <span>No teams found</span>
-          </h2>
+          {!data.length && (
+            <h2 style={{ position: 'relative' }}>
+              <span>No teams found</span>
+            </h2>
+          )}
           <Link to={`/manageProjects/teams?project=${projectName}`}>
             <Button style={{ width: '100%', maxHeight: 'unset', height: 36 }} icon="group_add">
               Create new team

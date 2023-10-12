@@ -40,7 +40,7 @@ const TagsField = ({ value }) => {
 
   return (
     <TagsContainer>
-      {isMulti && <span>{'Multiple ('}</span>}
+      {isMulti && <span>{'Mixed ('}</span>}
       {value.map(
         (tag) =>
           typeof tag === 'string' && (
@@ -62,7 +62,7 @@ const DateTimeContainer = styled.div`
   gap: 8px;
   align-items: center;
   > span:first-child {
-    color: var(--color-text-dim);
+    color: var(--md-sys-color-on-surface-variant);
   }
 `
 
