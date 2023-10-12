@@ -10,7 +10,6 @@ export const HelpMenu = ({ user, ...props }) => {
       label: 'Documentation',
       link: 'https://ayon.ynput.io/',
       icon: 'description',
-      highlighted: true,
     },
     {
       id: 'forum',

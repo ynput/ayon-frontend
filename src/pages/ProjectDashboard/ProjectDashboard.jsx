@@ -28,16 +28,16 @@ const PanelsContainerStyled = styled.div`
   overflow: hidden;
 `
 
-const ProjectDashboard = ({ projectName, projectList }) => {
+const ProjectDashboard = ({ projectName }) => {
   return (
-    <ProjectManagerPageLayout projectList={projectList}>
+    <ProjectManagerPageLayout passthrough>
       {projectName && (
         <Section
           style={{
             display: 'grid',
             gridTemplateColumns: 'auto minmax(400px, 20vw)',
-            height: `calc(100% + 8px)`,
             alignItems: 'start',
+            height: '100%',
           }}
         >
           <PanelsContainerStyled>

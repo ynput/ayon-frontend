@@ -8,7 +8,7 @@ import { ayonApi } from '/src/services/ayon'
 import MenuList from '/src/components/Menu/MenuComponents/MenuList'
 import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import { useMemo, useRef, useState } from 'react'
-import { Button, InputText, Section } from '@ynput/ayon-react-components'
+import { InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import ProjectButton from '/src/components/ProjectButton/ProjectButton'
@@ -59,7 +59,7 @@ const ProjectMenu = ({ visible, onHide }) => {
           {
             label: 'Project Settings',
             icon: 'settings_applications',
-            command: () => navigate(`/manageProjects/projectSettings?project=${projectName}`),
+            command: () => navigate(`/manageProjects/anatomy?project=${projectName}`),
           },
         ],
       )
@@ -70,7 +70,7 @@ const ProjectMenu = ({ visible, onHide }) => {
 
   const handleEditClick = (e, name) => {
     e.stopPropagation()
-    navigate(`/manageProjects/projectSettings?project=${name}`)
+    navigate(`/manageProjects/anatomy?project=${name}`)
     onHide()
   }
 
@@ -155,12 +155,6 @@ const ProjectMenu = ({ visible, onHide }) => {
     setSearchOpen(false)
   }
 
-  const handleAllClick = () => {
-    onHide()
-
-    navigate('/manageProjects/dashboard')
-  }
-
   const handleSearchClick = (e) => {
     e.stopPropagation()
     setSearchOpen(true)
@@ -178,26 +172,18 @@ const ProjectMenu = ({ visible, onHide }) => {
       onHide={handleHide}
     >
       <Section>
-        <Styled.Header>
-          <Button
-            label="All Projects"
-            variant="tonal"
-            icon="empty_dashboard"
-            onClick={handleAllClick}
+        {!searchOpen ? (
+          <Styled.Search icon="search" variant="text" onClick={handleSearchClick} />
+        ) : (
+          <InputText
+            placeholder="Search projects..."
+            value={projectsFilter}
+            onChange={(e) => setProjectsFilter(e.target.value)}
+            ref={searchRef}
+            autoFocus
           />
-          {!searchOpen ? (
-            <Button label="Search" icon="search" variant="text" onClick={handleSearchClick} />
-          ) : (
-            <InputText
-              placeholder="Search projects..."
-              value={projectsFilter}
-              onChange={(e) => setProjectsFilter(e.target.value)}
-              ref={searchRef}
-              autoFocus
-            />
-          )}
-        </Styled.Header>
-        <Styled.Divider />
+        )}
+
         <Styled.All>
           <h3>Projects</h3>
           <MenuList items={filteredMenuItems} handleClick={(e, onClick) => onClick()} level={0} />

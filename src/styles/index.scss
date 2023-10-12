@@ -35,6 +35,7 @@ body {
     flex-direction: row;
     gap: 8px;
     padding: 8px;
+    position: relative;
 
     &.center {
       flex-direction: column;
@@ -213,6 +214,10 @@ input:-webkit-autofill:focus {
 .faded {
   color: rgba(234, 240, 246, 0.3);
   font-style: italic;
+}
+
+p strong {
+  font-weight: 800;
 }
 // Highlighting (used to match product/tasks in the browser)
 
@@ -405,7 +410,7 @@ a {
   &.datetime.isMultiple:not(.isChanged) {
     .field {
       &::after {
-        content: 'Multiple';
+        content: 'Mixed';
         display: block;
         position: absolute;
         left: 8px;
@@ -676,6 +681,25 @@ a {
 // project side bar menu
 .p-sidebar-left {
   align-items: flex-start;
+}
+
+.dashboard-tasks {
+  .p-splitter-gutter {
+    z-index: 100;
+    align-items: flex-start;
+    translate: 6px 0;
+    transform-origin: left;
+
+    .p-splitter-gutter-handle {
+      height: 34px;
+      background: var(--md-sys-color-outline-variant);
+      border-radius: var(--border-radius);
+
+      &:hover {
+        background: var(--md-sys-color-outline);
+      }
+    }
+  }
 }
 
 // confirm dialog buttons

@@ -30,7 +30,7 @@ const EntityDetailsPanel = ({
       }
     }
     // reformat data, check if all nodes have the same attribs values
-    // if they are different, display Multiple(value1, value2)
+    // if they are different, display Mixed(value1, value2)
     // if they are the same, display value1
     const attribs = {}
     for (const node of nodes) {
@@ -52,11 +52,11 @@ const EntityDetailsPanel = ({
       // compare arrays if they are arrays
       if (uniqueValues.length > 1 && uniqueValues.flat().length > 1) {
         if (key.includes('Date')) {
-          attribsData[key] = `Multiple(${uniqueValues
+          attribsData[key] = `Mixed(${uniqueValues
             .map((v) => (v ? format(new Date(v), 'dd/MM/yyyy') : 'null'))
             .join(', ')})`
         } else {
-          attribsData[key] = `Multiple(${uniqueValues
+          attribsData[key] = `Mixed(${uniqueValues
             .map((v) => (v?.length || typeof v === 'number' ? v : 'null'))
             .join(', ')})`
         }

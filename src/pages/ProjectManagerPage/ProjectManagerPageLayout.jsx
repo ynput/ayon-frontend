@@ -6,7 +6,7 @@ const ProjectManagerPageLayout = ({ projectList, children, passthrough, toolbar 
   if (passthrough) return children
   return (
     <main style={{ overflowY: 'clip' }}>
-      {projectList}
+      {projectList && projectList}
       <Section
         style={{
           alignItems: 'start',

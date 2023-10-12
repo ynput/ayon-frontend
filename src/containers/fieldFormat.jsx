@@ -40,7 +40,7 @@ const TagsField = ({ value }) => {
 
   return (
     <TagsContainer>
-      {isMulti && <span>{'Multiple ('}</span>}
+      {isMulti && <span>{'Mixed ('}</span>}
       {value.map(
         (tag) =>
           typeof tag === 'string' && (

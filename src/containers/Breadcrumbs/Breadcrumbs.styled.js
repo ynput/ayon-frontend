@@ -13,7 +13,11 @@ export const Crumbtainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+
+  button {
+    border-radius: 0 var(--border-radius-m) var(--border-radius-m) 0;
+    z-index: 100;
+  }
 `
 
 export const CrumbsForm = styled.form`
@@ -23,6 +27,7 @@ export const CrumbsForm = styled.form`
   }
 
   label {
+    z-index: 100;
     display: inline-grid;
     vertical-align: top;
     align-items: center;
@@ -80,6 +85,7 @@ export const CrumbsForm = styled.form`
         color: var(--md-sys-color-on-secondary-container);
         outline: none;
         border-color: var(--md-sys-color-outline);
+        border-radius: var(--border-radius-m);
 
         box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
       }

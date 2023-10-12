@@ -31,14 +31,14 @@ const StackedGridTiles = styled.div`
   }
 `
 
-const NoProducts = () => {
+const NoProducts = ({ label }) => {
   return (
-    <NoneFound>
+    <NoneFound className="no-products">
       <StackedGridTiles>
         <EntityGridTile isError />
         <EntityGridTile isError />
       </StackedGridTiles>
-      <span style={{ opacity: 0.5 }}>No products found</span>
+      <span style={{ opacity: 0.5 }}>{label || 'No products found'}</span>
     </NoneFound>
   )
 }

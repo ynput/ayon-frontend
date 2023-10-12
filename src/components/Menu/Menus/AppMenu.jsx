@@ -46,11 +46,10 @@ export const AppMenu = ({ user, ...props }) => {
       link: '/settings/bundles',
       label: 'Studio Settings',
       icon: 'settings',
-      highlighted: true,
     },
     {
       id: 'projectsManager',
-      link: '/manageProjects/projectSettings',
+      link: '/manageProjects/anatomy',
       label: 'Projects Settings',
       icon: 'settings_applications',
     },

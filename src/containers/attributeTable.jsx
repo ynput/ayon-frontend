@@ -3,6 +3,7 @@ import { TableRow } from '@ynput/ayon-react-components'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
 import copyToClipboard from '../helpers/copyToClipboard'
 import getShimmerStyles from '../styles/getShimmerStyles'
+import { format } from 'date-fns'
 
 const AttributeTableContainer = styled.div`
   display: flex;
@@ -62,6 +63,20 @@ const AttributeTable = ({
       {data &&
         [...extraFields, ...attribFields].map(({ name, data: attribData = {} }) => {
           let value = data[name]
+
+          if (value && name.includes('Date') && !value.includes('Mixed')) {
+            value = format(new Date(value), 'dd/MM/yyyy')
+          }
+
+          // if value is an array
+          if (Array.isArray(value)) {
+            value = value.join(', ')
+          }
+
+          // if value is an object
+          if (typeof value === 'object' && value !== null) {
+            value = JSON.stringify(value)
+          }
 
           if (!attribData) return null
 
