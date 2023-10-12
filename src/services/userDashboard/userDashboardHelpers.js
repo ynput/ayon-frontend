@@ -48,5 +48,9 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
 
 export const taskProvideTags = (result, type = 'task') =>
   result?.length
-    ? [...result.map(({ id }) => ({ type, id })), { type, id: 'TASKS' }]
+    ? [
+        ...result.map(({ id }) => ({ type, id })),
+        { type, id: 'TASKS' },
+        { type: 'kanBanTask', id: 'TASKS' },
+      ]
     : [{ type, id: 'TASKS' }]

@@ -12,6 +12,7 @@ import { buildEntitiesQuery } from '../entity/getEntity'
 
 const getUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
+    // called by getKanBan only
     getProjectTasks: build.query({
       query: ({ assignees = [], projectName }) => ({
         url: '/graphql',
@@ -122,6 +123,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
         PubSub.unsubscribe(token)
       },
     }),
+    // main query to get all kanban tasks
     getKanBan: build.query({
       async queryFn({ projects = [], assignees = [] }, { dispatch }) {
         console.log('fetching kanban')
