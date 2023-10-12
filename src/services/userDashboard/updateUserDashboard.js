@@ -17,9 +17,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
             draft[taskIndex] = newData
           }),
         )
-        // invalidate task to force refetch of getKanBan query
-        // but because we just updated the tasks cache it should be instant
-        dispatch(ayonApi.util.invalidateTags([{ type: 'kanBanTask', id: taskId }]))
+
         try {
           await queryFulfilled
         } catch (error) {
@@ -41,7 +39,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
 
         try {
           for (const { projectName, data, id } of operations) {
-            await dispatch(
+            dispatch(
               ayonApi.endpoints.updateTask.initiate({
                 projectName: projectName,
                 taskId: id,
@@ -50,6 +48,12 @@ const updateUserDashboard = ayonApi.injectEndpoints({
               }),
             )
           }
+
+          // invalidate task to force refetch of getKanBan query
+          // but because we just updated the tasks cache it should be instant
+          dispatch(
+            ayonApi.util.invalidateTags(operations.map((o) => ({ type: 'kanBanTask', id: o.id }))),
+          )
 
           return { data: operations }
         } catch (error) {
