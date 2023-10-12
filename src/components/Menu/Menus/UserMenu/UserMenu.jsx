@@ -36,13 +36,7 @@ export const UserMenu = ({ user, onClose }) => {
           <NavLink to="/profile">
             <Button variant="surface" icon="manage_accounts" label="Edit" />
           </NavLink>
-          <Button
-            variant="tonal"
-            icon="logout"
-            label="Sign out"
-            onClick={handleLogOut}
-            className="close"
-          />
+          <Button icon="logout" label="Sign out" onClick={handleLogOut} className="close" />
         </Styled.Buttons>
       </Styled.Content>
       {footer && <Styled.Footer>{footer}</Styled.Footer>}
