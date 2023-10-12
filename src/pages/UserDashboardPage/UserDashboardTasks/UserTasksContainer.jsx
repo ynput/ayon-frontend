@@ -113,7 +113,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [projectsInfo, selectedTasksProjects, statusesOptions],
   )
 
-  const { data: projectUsers } = useGetKanBanUsersQuery(
+  const { data: projectUsers = [] } = useGetKanBanUsersQuery(
     { projects: selectedProjects },
     { skip: !selectedProjects?.length },
   )
