@@ -15,7 +15,6 @@ const MenuList = ({
   onClose,
   itemClassName,
   itemStyle,
-  compact,
   ...props
 }) => {
   const itemRefs = useRef([])
@@ -25,28 +24,13 @@ const MenuList = ({
 
   const handleSubMenu = (e, id, items) => {
     if (!itemRefs.current[id] || !menuRef.current) return
-    const menuRect = menuRef.current.getBoundingClientRect()
-    const liItemRect = itemRefs.current[id].getBoundingClientRect()
-
-    // calculate the position of the submenu
-    const top = itemRefs.current[id].offsetTop + (style?.top || 0)
-    const gap = 4
-    const left = (style?.left || 0) + menuRect.width + gap
-    let right = 0
-    // check if the submenu is off the screen on the right, if so flip to left hand side
-
-    if (liItemRect.left + liItemRect.width + left > window.innerWidth) {
-      right = liItemRect.width + gap
-    }
-
-    const pos = { top }
-    if (right) pos.right = right
-    else pos.left = left
-
     onSubMenu &&
       onSubMenu(e, {
         id,
-        style: pos,
+        style: {
+          top: itemRefs.current[id].offsetTop + (style?.top || 0) - 4,
+          right: menuRef.current.getBoundingClientRect().width + (style?.right || 0) - 12,
+        },
         items,
         level: level,
       })
@@ -69,16 +53,13 @@ const MenuList = ({
   // check that the menu is not off the screen
   useEffect(() => {
     if (!menuRef.current) return
-    const { height } = menuRef.current.getBoundingClientRect()
-    const top = style?.top || 0
+    const { top, height } = menuRef.current.getBoundingClientRect()
     const windowHeight = window.innerHeight
     if (top + height > windowHeight) {
       const newTop = windowHeight - height - 60
       setTop(newTop)
-    } else {
-      setTop(top)
     }
-  }, [menuRef.current, style?.top, subMenu])
+  }, [menuRef.current])
 
   return (
     <Styled.MenuWrapper
@@ -89,7 +70,7 @@ const MenuList = ({
       {...props}
       ref={menuRef}
     >
-      <Styled.Menu className={compact ? 'compact' : ''}>
+      <Styled.Menu>
         {items.map((item, i) => {
           // if item is a node, return it
           if (item.node) {
@@ -117,17 +98,17 @@ const MenuList = ({
               key={`${id}-${i}`}
               {...{ label, icon, highlighted, items, selected }}
               isLink={link}
-              onClick={(e) => {
+              onClick={(e) =>
                 items.length
-                  ? handleSubMenu(e, item, items)
-                  : handleClick(e, item, onClick, link, disableClose)
-              }}
+                  ? handleSubMenu(e, id, items)
+                  : handleClick(e, onClick, link, disableClose)
+              }
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   if (items.length) {
                     handleSubMenu(e, id, items)
                   } else {
-                    handleClick(e, id, onClick, link)
+                    handleClick(e, onClick, link)
                   }
                 }
                 const isLastChild = !e.target.nextSibling

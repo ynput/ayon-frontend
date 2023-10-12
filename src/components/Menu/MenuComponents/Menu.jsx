@@ -4,14 +4,14 @@ import MenuList from './MenuList'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'
 
-const Menu = ({ menu = [], onClose, footer = '', compact, ...props }) => {
+const Menu = ({ menu = [], onClose, footer = '', ...props }) => {
   const [subMenus, setSubMenus] = useState([])
   //   When a menu item is clicked, the following happens:
   const handleClick = (e, onClick, url, disableClose) => {
     // this is handled by Link component inside the MenuItem
     if (url) return onClose()
 
-    onClick && onClick(e, item)
+    onClick && onClick(e)
 
     !disableClose && onClose && onClose()
   }
@@ -55,13 +55,7 @@ const Menu = ({ menu = [], onClose, footer = '', compact, ...props }) => {
   return (
     <>
       <Styled.Section {...props}>
-        <MenuList
-          items={menu}
-          handleClick={handleClick}
-          onSubMenu={handleSubMenu}
-          level={0}
-          compact={compact}
-        />
+        <MenuList items={menu} handleClick={handleClick} onSubMenu={handleSubMenu} level={0} />
         {footer && (
           <Styled.Footer>
             {footer}
@@ -79,7 +73,6 @@ const Menu = ({ menu = [], onClose, footer = '', compact, ...props }) => {
           onSubMenu={handleSubMenu}
           onClose={() => setSubMenus(subMenus.filter((m) => m.id !== menu.id))}
           onChange={onMenuEnter}
-          compact={compact}
         />
       ))}
     </>

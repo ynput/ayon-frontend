@@ -5,10 +5,9 @@ import * as Styled from './Menu.styled'
 import { useNavigate } from 'react-router'
 import { createPortal } from 'react-dom'
 
-
 const MenuContainer = ({ id, target, targetId, children, ...props }) => {
   const dispatch = useDispatch()
-
+  const navigate = useNavigate()
   const isOpen = useSelector((state) => state.context.menuOpen) === id
   const handleClose = () => {
     // close menu
@@ -69,14 +68,11 @@ const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ..
         setPos(calculatePos(targetElement))
       }
     }
-
   }, [target, targetId])
-
-  if (!isOpen) return null
 
   // attach the handleClose as a prop to each child
   children = React.Children.map(children, (child, i) => {
-    return React.cloneElement(child, { onClose: handleClose, index: i })
+    return React.cloneElement(child, { onClose: handleClose, index: i, navigate: handleNavigate })
   })
 
   const handleKeyDown = (e) => {
