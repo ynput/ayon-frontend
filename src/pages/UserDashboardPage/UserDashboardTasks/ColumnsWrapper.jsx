@@ -1,19 +1,9 @@
-import {
-  Button,
-  InputText,
-  SaveButton,
-  Section,
-  Spacer,
-  Toolbar,
-} from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 import React, { useEffect, useRef, useState } from 'react'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
 import CollapsedColumn from './KanBanColumn/CollapsedColumn'
-import { Dialog } from 'primereact/dialog'
-import { snakeCase } from 'lodash'
-import ColumnMenuWrapper from './KanBanColumn/ColumnMenuWrapper'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -32,9 +22,6 @@ const ColumnsWrapper = ({
   allUsers = [],
   disabledStatuses = [],
   onCollapsedColumnsChange,
-  onGroupChange,
-  onGroupDelete,
-  onGroupRename,
 }) => {
   const { active } = useDndContext()
   const sectionRef = useRef(null)
@@ -47,7 +34,6 @@ const ColumnsWrapper = ({
 
   const [scrollDirection, setScrollDirection] = useState(null)
 
-  const [groupRename, setGroupRename] = useState({ id: null, value: '' })
   // we get section rect to figure out how high to make droppable area
   const [sectionRect, setSectionRect] = useState(null)
 
@@ -167,50 +153,6 @@ const ColumnsWrapper = ({
           )
         })}
       </StyledWrapper>
-      {/* Dropdown menu */}
-      {fieldsColumns.map((column) => (
-        <ColumnMenuWrapper
-          key={column.id}
-          column={column}
-          columnsRefs={columnsRefs.current}
-          onGroupRename={setGroupRename}
-          {...{
-            tasksColumns,
-            onCollapsedColumnsChange,
-            onGroupChange,
-            onGroupDelete,
-          }}
-        />
-      ))}
-      {/* rename dialog */}
-      <Dialog
-        visible={groupRename?.id}
-        header="Rename group"
-        onHide={() => setGroupRename({ id: null, value: '' })}
-        footer={
-          <Toolbar>
-            <Spacer />
-            <Button label="Cancel" onClick={() => setGroupRename({ id: null, value: '' })} />
-            <SaveButton
-              label="Rename"
-              onClick={() => {
-                onGroupRename(groupRename.id, groupRename.value)
-                setGroupRename({ id: null, value: '' })
-              }}
-              active={
-                groupRename?.value &&
-                fieldsColumns.every(({ id }) => id !== snakeCase(groupRename?.value))
-              }
-            />
-          </Toolbar>
-        }
-      >
-        <InputText
-          value={groupRename?.value}
-          onChange={(e) => setGroupRename({ id: groupRename?.id, value: e.target.value })}
-          style={{ width: 200 }}
-        />
-      </Dialog>
     </>
   )
 }

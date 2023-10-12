@@ -8,7 +8,6 @@ import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
 import { useGetTaskContextMenu } from '../../util'
 import 'react-perfect-scrollbar/dist/css/styles.css'
-import { toggleMenuOpen } from '/src/features/context'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 
 const KanBanColumn = forwardRef(
@@ -32,12 +31,6 @@ const KanBanColumn = forwardRef(
   ) => {
     const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
     const dispatch = useDispatch()
-
-    // DROPDOWN MENU
-    const menuId = id
-    const menuButtonRef = useRef(null)
-    const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
-    const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
 
     const tasksCount = tasks.length
 
@@ -195,15 +188,6 @@ const KanBanColumn = forwardRef(
               variant="text"
               className="collapse"
               onClick={onToggleCollapse}
-            />
-            {/* {more options} */}
-            <Styled.MenuButton
-              icon="more_horiz"
-              variant="text"
-              className={`column-menu ${isMenuOpen ? 'open' : ''}`}
-              ref={menuButtonRef}
-              id={`menu-${menuId}`}
-              onClick={() => handleToggleMenu(menuId)}
             />
           </Toolbar>
         </Styled.Header>

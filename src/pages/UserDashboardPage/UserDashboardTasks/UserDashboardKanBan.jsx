@@ -21,8 +21,6 @@ import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboa
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import UserDashboardList from './UserDashboardList/UserDashboardList'
-import useLocalStorage from '/src/hooks/useLocalStorage'
-import { snakeCase } from 'lodash'
 
 const UserDashboardKanBan = ({
   tasks,
@@ -35,17 +33,7 @@ const UserDashboardKanBan = ({
 }) => {
   const dispatch = useDispatch()
 
-  const [columnGroups, setColumnGroups] = useLocalStorage('dashboard-tasks-columnGroups', {
-    // not_started: {
-    //   id: 'not_started',
-    //   name: 'Not Started',
-    //   state: 'not_started',
-    //   shortName: 'NST',
-    //   color: '#FFD166',
-    //   items: ['ready_to_start', 'not_ready', 'waiting'],
-    //   index: 1,
-    // },
-  })
+  let columnGroups = {}
 
   // KANBAN or TASKS
   const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
@@ -256,75 +244,6 @@ const UserDashboardKanBan = ({
     updateTasks({ operations })
   }
 
-  const handleGroupColumnsChange = (
-    { id, name, index, color },
-    { id: addId, index: addIndex },
-    remove,
-  ) => {
-    const newId = `${id}_group`
-    // find group column if there is one
-    const group = columnGroups[id] || {
-      id: newId,
-      name: name + ' Group',
-      color: color || '#bfbfbf',
-      items: [id],
-    }
-
-    // if the index before go to that index
-    group.index = addIndex !== undefined ? Math.min(index, addIndex) : index
-
-    // add or remove items
-    if (addId) group.items.push(addId)
-    if (remove) group.items = group.items.filter((i) => i !== remove)
-
-    const newGroupColumnsState = { ...columnGroups }
-    newGroupColumnsState[group.id] = group
-
-    // check if addId was in a group column, if so, remove it from that group column
-    if (addId) {
-      for (const key in columnGroups) {
-        const otherGroup = columnGroups[key]
-        if (otherGroup.items.includes(addId) && otherGroup.id !== group.id) {
-          const newItems = otherGroup.items.filter((i) => i !== addId)
-          if (newItems.length) {
-            newGroupColumnsState[otherGroup.id] = {
-              ...otherGroup,
-              items: newItems,
-            }
-          } else {
-            // delete
-            delete newGroupColumnsState[otherGroup.id]
-          }
-        }
-      }
-    }
-
-    // if no items, remove group column
-    if (!group.items.length) delete newGroupColumnsState[id]
-    setColumnGroups(newGroupColumnsState)
-  }
-
-  const handleRename = (id, name) => {
-    if (columnGroups[id]) {
-      const newId = snakeCase(name)
-      const newGroupColumnsState = {
-        ...columnGroups,
-        [newId]: { ...columnGroups[id], name, id: newId },
-      }
-      // delete old column
-      delete newGroupColumnsState[id]
-      setColumnGroups(newGroupColumnsState)
-    }
-  }
-
-  const handleGroupDelete = (id) => {
-    if (columnGroups[id]) {
-      const newGroupColumnsState = { ...columnGroups }
-      delete newGroupColumnsState[id]
-      setColumnGroups(newGroupColumnsState)
-    }
-  }
-
   return (
     <>
       <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
@@ -344,9 +263,6 @@ const UserDashboardKanBan = ({
               allUsers={allUsers}
               disabledStatuses={disabledStatuses}
               onCollapsedColumnsChange={handleCollapseToggle}
-              onGroupChange={handleGroupColumnsChange}
-              onGroupRename={handleRename}
-              onGroupDelete={handleGroupDelete}
             />
             <KanBanCardOverlay
               activeDraggingId={activeDraggingId}
