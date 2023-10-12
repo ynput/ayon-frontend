@@ -94,7 +94,7 @@ const getBundles = ayonApi.injectEndpoints({
       onQueryStarted: async ({ name, archived = true, patch }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           ayonApi.util.updateQueryData('getBundleList', { archived }, (draft) => {
-            if (!patch) throw new Error('patch not found')
+            if (!patch) return
             const bundleIndex = draft.findIndex((bundle) => bundle.name === name)
             if (bundleIndex === -1) throw new Error('bundle not found')
             draft[bundleIndex] = patch

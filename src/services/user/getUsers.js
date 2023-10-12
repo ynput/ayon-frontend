@@ -10,6 +10,7 @@ const USER_BY_NAME_QUERY = `
           isAdmin
           isManager
           isService
+          isDeveloper
           isGuest
           active
           accessGroups
@@ -32,6 +33,7 @@ const USERS_QUERY = `
           isAdmin
           isManager
           isService
+          isDeveloper
           isGuest
           active
           accessGroups

@@ -20,7 +20,7 @@ import AddonUpload from '../AddonInstall/AddonUpload'
 import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import useServerRestart from '/src/hooks/useServerRestart'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useLocation } from 'react-router'
@@ -29,6 +29,7 @@ import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 const Bundles = () => {
+  const developerMode = useSelector((state) => state.user.attrib.developerMode)
   const location = useLocation()
   const dispatch = useDispatch()
   // addon install dialog
@@ -47,8 +48,16 @@ const Bundles = () => {
   const [showArchived, setShowArchived] = useLocalStorage('bundles-archived', true)
 
   // REDUX QUERIES
-  let { data: bundleList = [], isLoading } = useGetBundleListQuery({ archived: true })
+  let {
+    data: bundleList = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+  } = useGetBundleListQuery({ archived: true })
+  // GET INSTALLERS
   const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
+  // GET ADDONS
   const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
     showVersions: true,
   })
@@ -62,6 +71,14 @@ const Bundles = () => {
     }
     return bundleList
   }, [bundleList, showArchived])
+
+  // filter out isDev bundles if developerMode off
+  bundleList = useMemo(() => {
+    if (!developerMode) {
+      return [...bundleList].filter((bundle) => !bundle.isDev)
+    }
+    return bundleList
+  }, [bundleList, developerMode])
 
   // if there is a url query ?selected={name} = latest then select the bundle and remove the query
   useEffect(() => {
@@ -296,10 +313,10 @@ const Bundles = () => {
       </Dialog>
       <main style={{ overflow: 'hidden' }}>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
-          <SplitterPanel style={{ minWidth: 400, maxWidth: 800, zIndex: 10 }} size={30}>
+          <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>
               <Toolbar>
-                <Button label="Create new bundle" icon="add" onClick={handleNewBundleStart} />
+                <Button label="Add bundle" icon="add" onClick={handleNewBundleStart} />
                 <Button
                   label="Install addons"
                   icon="input_circle"
@@ -329,6 +346,7 @@ const Bundles = () => {
                 onDuplicate={handleDuplicateBundle}
                 onDelete={handleDeleteBundle}
                 toggleBundleStatus={toggleBundleStatus}
+                errorMessage={!isFetching && isError && error?.data?.traceback}
               />
             </Section>
           </SplitterPanel>
@@ -338,21 +356,32 @@ const Bundles = () => {
                 <NewBundle
                   initBundle={newBundleOpen}
                   onSave={handleNewBundleEnd}
-                  isLoading={isLoadingInstallers}
+                  isLoading={isLoadingInstallers || isFetching}
                   installers={installerVersions}
                   addons={addons}
+                  developerMode={developerMode}
                 />
               ) : (
-                !!bundlesData.length && (
+                !!bundlesData.length &&
+                (bundlesData.length === 1 && bundlesData[0].isDev ? (
+                  <NewBundle
+                    initBundle={bundlesData[0]}
+                    isLoading={isLoadingInstallers || isFetching}
+                    installers={installerVersions}
+                    addons={addons}
+                    isDev
+                  />
+                ) : (
                   <BundleDetail
                     bundles={bundlesData}
                     onDuplicate={handleDuplicateBundle}
-                    isLoading={isLoadingInstallers || isLoadingAddons}
+                    isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
                     installers={installerVersions}
                     toggleBundleStatus={toggleBundleStatus}
                     addons={addons}
+                    developerMode={developerMode}
                   />
-                )
+                ))
               )}
             </Section>
           </SplitterPanel>

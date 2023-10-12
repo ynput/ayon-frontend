@@ -3,20 +3,21 @@ import { ayonApi } from '../ayon'
 const updateProject = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     createProject: build.mutation({
-      query: ({ name, code, anatomy }) => ({
+      query: ({ name, code, anatomy, library }) => ({
         url: `/api/projects`,
         method: 'POST',
         body: {
           name,
           code,
           anatomy,
+          library,
         },
       }),
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
       async onQueryStarted({ ...patch }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
           ayonApi.util.updateQueryData('getAllProjects', undefined, (draft) => {
-            const newProject = { name: patch.name, code: patch.code }
+            const newProject = { name: patch.name, code: patch.code, library: patch.library }
             draft.push(newProject)
           }),
         )
@@ -44,6 +45,15 @@ const updateProject = ayonApi.injectEndpoints({
       invalidatesTags: (result, error, { projectName }) =>
         error ? [] : [{ type: 'project', id: projectName }],
     }),
+    updateProject: build.mutation({
+      query: ({ projectName, update }) => ({
+        url: `/api/projects/${projectName}`,
+        method: 'PATCH',
+        body: update,
+      }),
+      invalidatesTags: (result, error, { projectName }) =>
+        error ? [] : [{ type: 'project', id: projectName }],
+    }),
   }),
 })
 
@@ -51,4 +61,5 @@ export const {
   useCreateProjectMutation,
   useDeleteProjectMutation,
   useUpdateProjectAnatomyMutation,
+  useUpdateProjectMutation,
 } = updateProject

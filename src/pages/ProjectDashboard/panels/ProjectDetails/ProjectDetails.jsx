@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useGetProjectQuery } from '/src/services/project/getProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
 import Thumbnail from '/src/containers/thumbnail'
@@ -10,27 +10,59 @@ import AttribForm from '/src/components/AttribForm/AttribForm'
 import { useGetAnatomySchemaQuery } from '/src/services/anatomy/getAnatomy'
 import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
+import { useUpdateProjectMutation } from '/src/services/project/updateProject'
 import { toast } from 'react-toastify'
 
 const ProjectDetails = ({ projectName }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
 
   // GET DATA
-  const { data = {}, isFetching } = useGetProjectQuery({ projectName })
+  const { data = {}, isFetching, isError } = useGetProjectQuery({ projectName })
   const { data: schema } = useGetAnatomySchemaQuery()
   const fields = schema?.definitions?.ProjectAttribModel?.properties
 
   // UPDATE DATA
-  const [updateAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
+  const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation()
 
   const [editing, setEditing] = useState(false)
 
-  // for updating the project
-  const [attribForm, setAttribForm] = useState({})
+  // this where we add new fields to the editing form
+  const projectFormInit = {
+    active: false,
+    code: '',
+    library: false,
+    attrib: {},
+  }
 
-  const { attrib = {}, active, code } = data
+  // This is the start, used to compare changes
+  const [initData, setInitData] = useState(projectFormInit)
+  // form for project data
+  const [projectForm, setProjectForm] = useState(projectFormInit)
 
+  const setInitFormState = (projectData) => {
+    const updatedProjectForm = { ...projectFormInit }
+    for (const key in projectFormInit) {
+      updatedProjectForm[key] = projectData[key]
+    }
+    setProjectForm(updatedProjectForm)
+    // update init data to compare changes
+    setInitData(updatedProjectForm)
+  }
+
+  // when data has been loaded, update the form
+  // we add projectFormInit fields to the form along with attrib fields
+  // inside AttribForm we validate attrib fields and any missing fields from schema
+  useEffect(() => {
+    if (!isFetching && !isEmpty(data)) {
+      // update project form with only the fields we need from the projectForm init state
+      setInitFormState(data)
+    }
+  }, [data, isFetching])
+
+  const { attrib = {}, active, code, library } = data
+
+  // Every thing below creates the attribute table
+  // this is where we add new fields to the attribute table
   const attribArray = []
   for (const key in fields) {
     let field = fields[key]
@@ -48,6 +80,11 @@ const ProjectDetails = ({ projectName }) => {
   }
 
   attribArray.unshift({
+    name: 'Library',
+    value: !!library,
+  })
+
+  attribArray.unshift({
     value: (
       <Styled.Active $isLoading={isFetching} $isActive={active}>
         {active ? 'active' : ' inactive'}
@@ -56,17 +93,33 @@ const ProjectDetails = ({ projectName }) => {
     name: 'Status',
   })
 
-  const handleAttribChange = (newForm) => {
-    setAttribForm((prev) => ({ ...prev, ...newForm }))
+  // HANDLERS
+
+  const handleProjectChange = (field, value) => {
+    const newProjectForm = { ...projectForm, attrib: { ...projectForm.attrib } }
+
+    // check if field has any '.' in it
+    const fieldSplit = field.split('.')
+    if (fieldSplit.length > 1) {
+      // update nested field
+      const [key, subKey] = fieldSplit
+      newProjectForm[key][subKey] = value
+    } else {
+      // update normal field
+      newProjectForm[field] = value
+    }
+
+    setProjectForm(newProjectForm)
   }
 
   const handleAttribSubmit = async () => {
     try {
-      // validate dates
-      const data = {}
-      for (const key in attribForm) {
+      const data = { ...projectForm }
+      // validate dates inside attrib
+      const attrib = { ...projectForm['attrib'] }
+      for (const key in attrib) {
         const field = fields[key]
-        let value = attribForm[key]
+        let value = attrib[key]
         if (field?.format === 'date-time') {
           if (value) {
             value = new Date(value).toISOString() ?? null
@@ -75,10 +128,10 @@ const ProjectDetails = ({ projectName }) => {
           }
         }
 
-        data[key] = value
+        attrib[key] = value
       }
 
-      await updateAnatomy({ projectName, anatomy: { attributes: data } }).unwrap()
+      await updateProject({ projectName, update: { ...data, attrib } }).unwrap()
 
       setEditing(false)
       toast.success('Project updated')
@@ -89,7 +142,14 @@ const ProjectDetails = ({ projectName }) => {
     }
   }
 
-  const hasChanges = !isEmpty(attrib) && !isEmpty(attribForm) && !isEqual(attrib, attribForm)
+  const handleCancel = () => {
+    // reset the form to the initial state
+    setProjectForm(initData)
+    // close editing
+    setEditing(false)
+  }
+
+  const hasChanges = !isEqual(initData, projectForm)
 
   return (
     <DashboardPanelWrapper
@@ -105,15 +165,15 @@ const ProjectDetails = ({ projectName }) => {
         !isUser && (
           <Styled.Header>
             {!editing ? (
-              <Button label="Edit" icon="edit" onClick={() => setEditing(true)} />
+              <Button
+                label="Edit"
+                icon="edit"
+                onClick={() => setEditing(true)}
+                disabled={isFetching || isError}
+              />
             ) : (
               <>
-                <Button
-                  label="Cancel"
-                  icon="close"
-                  onClick={() => setEditing(false)}
-                  className="cancel"
-                />
+                <Button label="Cancel" icon="close" onClick={handleCancel} className="cancel" />
                 <SaveButton
                   label="Save"
                   active={hasChanges}
@@ -133,10 +193,10 @@ const ProjectDetails = ({ projectName }) => {
       </Styled.Thumbnail>
       {editing ? (
         <AttribForm
-          initData={!isFetching && attrib}
-          form={attribForm}
-          onChange={handleAttribChange}
+          form={projectForm}
+          onChange={(field, value) => handleProjectChange(field, value)}
           fields={fields}
+          isLoading={isFetching}
         />
       ) : (
         <AttributeTable

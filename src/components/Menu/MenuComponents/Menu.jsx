@@ -4,18 +4,12 @@ import MenuList from './MenuList'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'
 
-const Menu = ({ menu = [], onClose, footer = '', navigate, compact, ...props }) => {
+const Menu = ({ menu = [], onClose, footer = '', compact, ...props }) => {
   const [subMenus, setSubMenus] = useState([])
   //   When a menu item is clicked, the following happens:
-  const handleClick = (e, item, onClick, url, disableClose) => {
-    if (url) {
-      if (url.startsWith('http')) {
-        window.open(url, '_blank')
-      } else {
-        navigate(url)
-      }
-      return
-    }
+  const handleClick = (e, onClick, url, disableClose) => {
+    // this is handled by Link component inside the MenuItem
+    if (url) return onClose()
 
     onClick && onClick(e, item)
 

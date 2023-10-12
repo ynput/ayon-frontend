@@ -97,8 +97,8 @@ const ProjectMenu = ({ visible, onHide }) => {
     return menuItems.sort((a, b) => {
       if (a.pinned && !b.pinned) return -1
       if (!a.pinned && b.pinned) return 1
-      if (a.label[0] < b.label[0]) return -1
-      if (a.label[0] > b.label[0]) return 1
+      if (a.label.toLowerCase() < b.label.toLowerCase()) return -1
+      if (a.label.toLowerCase() > b.label.toLowerCase()) return 1
       return 0
     })
   }, [menuItems])

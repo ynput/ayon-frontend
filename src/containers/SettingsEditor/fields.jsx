@@ -213,8 +213,16 @@ function ObjectFieldTemplate(props) {
       <Badge hl="site">{props.formContext.headerSiteId}</Badge>
     )
 
-    const envMark = props.formContext.headerEnvironment && (
-      <Badge hl={props.formContext.headerEnvironment}>{props.formContext.headerEnvironment}</Badge>
+    const envMark = props.formContext.headerVariant && (
+      <Badge
+        hl={
+          ['production', 'staging'].includes(props.formContext.headerVariant)
+            ? props.formContext.headerVariant
+            : 'developer'
+        }
+      >
+        {props.formContext.headerVariant}
+      </Badge>
     )
 
     title = (
@@ -305,16 +313,19 @@ function FieldTemplate(props) {
   // Context menu
 
   const contextMenuModel = useMemo(() => {
+    const rmPath = override?.inGroup || path
     let model = [
       {
-        label: `Remove ${props.formContext.level} override`,
+        label: `Remove ${props.formContext.level} override from ${rmPath[rmPath.length - 1]}`,
         disabled: overrideLevel !== props.formContext.level || !props.formContext.onRemoveOverride,
-        command: () => props.formContext.onRemoveOverride(path),
+        command: () => props.formContext.onRemoveOverride(rmPath),
       },
       {
-        label: `Pin current value as ${props.formContext.level} override`,
+        label: `Pin current ${rmPath[rmPath.length - 1]} value as ${
+          props.formContext.level
+        } override`,
         disabled: overrideLevel === props.formContext.level || !props.formContext.onRemoveOverride,
-        command: () => props.formContext.onPinOverride(path),
+        command: () => props.formContext.onPinOverride(rmPath),
       },
       {
         label: 'Copy value',
@@ -494,10 +505,13 @@ const ArrayFieldTemplate = (props) => {
     formContext.onSetChangedKeys([{ path, isChanged: true }])
     props.onAddClick()
   }
+
   return (
     <FormArrayField>
       {props.items.map((element) => (
-        <ArrayItemTemplate key={element.name} {...element} />
+        <>
+          <ArrayItemTemplate key={element.key} {...element} />
+        </>
       ))}
 
       {props.canAdd && (
@@ -507,29 +521,6 @@ const ArrayFieldTemplate = (props) => {
       )}
     </FormArrayField>
   )
-
-  /*
-   * THIS IS THE ORIGINAL CODE,
-   * apparently we cannot memoize this
-  const res = useMemo(
-    () => (
-      <FormArrayField>
-        {props.items.map((element) => (
-          <ArrayItemTemplate key={element.name} {...element} />
-        ))}
-
-        {props.canAdd && (
-          <ArrayItemControls>
-            <Button onClick={onAddItem} icon="add" />
-          </ArrayItemControls>
-        )}
-      </FormArrayField>
-    ),
-    [props.items, props.canAdd],
-  )
-
-  return res
-  */
 }
 
 export { ObjectFieldTemplate, FieldTemplate, ArrayFieldTemplate }

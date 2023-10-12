@@ -10,6 +10,14 @@ body {
   scrollbar-width: thin;
 }
 
+:root {
+  --color-hl-developer-container: hsl(272, 23%, 22%);
+  --color-hl-developer-container-hover: hsl(272, 23%, 25%);
+  --color-hl-developer-hover: hsl(272, 96%, 83%);
+  --color-hl-developer-surface: hsl(272, 30%, 70%);
+  --color-hl-developer-surface-hover: hsl(272, 30%, 75%);
+}
+
 #root {
   position: absolute;
   overflow: hidden;
@@ -127,12 +135,6 @@ input:-webkit-autofill:focus {
   // dates
   td > div > span {
     color: var(--color-changed) !important;
-  }
-}
-
-.p-treetable .p-treetable-tbody {
-  tr.not-focused-task {
-    opacity: 0.5;
   }
 }
 

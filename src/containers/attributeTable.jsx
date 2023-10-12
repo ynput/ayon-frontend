@@ -1,4 +1,3 @@
-import { format } from 'date-fns'
 import styled from 'styled-components'
 import { TableRow } from '@ynput/ayon-react-components'
 import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
@@ -64,6 +63,7 @@ const AttributeTable = ({
         [...extraFields, ...attribFields].map(({ name, data: attribData = {} }) => {
           let value = data[name]
 
+
           if (value && name.includes('Date') && !value.includes('Mixed')) {
             value = format(new Date(value), 'dd/MM/yyyy')
           }
@@ -93,12 +93,7 @@ const AttributeTable = ({
 
       {projectAttrib &&
         projectAttrib.map(({ name, value }) => (
-          <TableRow
-            key={name}
-            name={name}
-            value={value === 0 ? '0' : value}
-            onCopy={copyToClipboard}
-          />
+          <TableRow key={name} name={name} value={value} onCopy={copyToClipboard} />
         ))}
     </AttributeTableContainer>
   )

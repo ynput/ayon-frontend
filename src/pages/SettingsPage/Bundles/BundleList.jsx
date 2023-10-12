@@ -15,6 +15,7 @@ const BundleList = ({
   onDuplicate,
   onDelete,
   toggleBundleStatus,
+  errorMessage,
 }) => {
   const [updateBundle] = useUpdateBundleMutation()
 
@@ -35,57 +36,42 @@ const BundleList = ({
     }
   }
 
+  const getBundleStatusItem = (status, bundle, disabledExtra) => {
+    const key = 'is' + status.charAt(0).toUpperCase() + status.slice(1)
+    const setLabel = 'Set ' + status
+    const unsetLabel = 'Unset ' + status
+    const isStatus = bundle[key]
+    const label = isStatus ? unsetLabel : setLabel
+    const icon = isStatus ? 'cancel' : 'check'
+    const command = () => toggleBundleStatus(status, bundle.name)
+    const disabled = selectedBundles.length > 1 || disabledExtra
+    return { label, icon, command, disabled }
+  }
+
   const [ctxMenuShow] = useCreateContext([])
 
   const onContextMenu = (e) => {
     const ctxMenuItems = []
-    const activeBundle = e?.data?.name
-    const isArchived = e?.data?.isArchived
-    const isProduction = e?.data?.isProduction
-    const isStaging = e?.data?.isStaging
-    if (!activeBundle) {
+    const activeBundle = e?.data
+    if (!activeBundle) return
+    const { name: activeBundleName, isArchived, isProduction, isStaging, isDev } = e?.data || {}
+    if (!activeBundleName) {
       return
     }
     if (!isArchived) {
       // production
-      if (isProduction) {
-        ctxMenuItems.push({
-          label: 'Unset Production',
-          icon: 'cancel',
-          command: () => toggleBundleStatus('production', activeBundle),
-          disabled: selectedBundles.length > 1,
-        })
-      } else {
-        ctxMenuItems.push({
-          label: 'Set Production',
-          icon: 'check',
-          command: () => toggleBundleStatus('production', activeBundle),
-          disabled: selectedBundles.length > 1,
-        })
-      }
+      ctxMenuItems.push(getBundleStatusItem('production', activeBundle, isDev))
       // staging
-      if (isStaging) {
-        ctxMenuItems.push({
-          label: 'Unset Staging',
-          icon: 'cancel',
-          command: () => toggleBundleStatus('staging', activeBundle),
-          disabled: selectedBundles.length > 1,
-        })
-      } else {
-        ctxMenuItems.push({
-          label: 'Set Staging',
-          icon: 'check',
-          command: () => toggleBundleStatus('staging', activeBundle),
-          disabled: selectedBundles.length > 1,
-        })
-      }
+      ctxMenuItems.push(getBundleStatusItem('staging', activeBundle, isDev))
+      // dev
+      ctxMenuItems.push(getBundleStatusItem('dev', activeBundle, isProduction || isStaging))
     }
 
     // duplicate and edit
     ctxMenuItems.push({
       label: 'Duplicate and Edit',
       icon: 'edit_document',
-      command: () => onDuplicate(activeBundle),
+      command: () => onDuplicate(activeBundleName),
       disabled: selectedBundles.length > 1,
     })
 
@@ -125,6 +111,9 @@ const BundleList = ({
       >
         {rowData.isProduction && <Badge hl="production">Production</Badge>}
         {rowData.isStaging && <Badge hl="staging">Staging</Badge>}
+        {rowData.isDev && (
+          <Badge hl="developer">Dev{rowData.activeUser && ` (${rowData.activeUser})`}</Badge>
+        )}
       </BadgeWrapper>
     )
   }
@@ -156,6 +145,7 @@ const BundleList = ({
         rowClassName={(rowData) => (rowData?.isArchived ? 'archived' : '')}
         className="bundles-table"
         resizableColumns
+        emptyMessage={errorMessage ? 'Error: ' + errorMessage : 'No bundles found'}
       >
         <Column
           field="name"

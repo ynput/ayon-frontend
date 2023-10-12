@@ -5,6 +5,7 @@ import {
   InputPassword,
   Divider,
   Dropdown,
+  InputSwitch,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -39,9 +40,11 @@ const UserAttribForm = ({
   )
 
   const buildForms = (attribs) =>
-    attribs.map(({ name, data, input }) => (
-      <FormRow label={data.title} key={name}>
-        {name.includes('password') && setPassword ? (
+    attribs.map(({ name, data, input }) => {
+      let widget = null
+
+      if (name.includes('password') && setPassword) {
+        widget = (
           <InputPassword
             value={name.includes('Confirm') ? passwordConfirm : password}
             feedback={false}
@@ -53,7 +56,9 @@ const UserAttribForm = ({
             disabled={disabled}
             autoComplete="new-password"
           />
-        ) : data.enum ? (
+        )
+      } else if (data.enum) {
+        widget = (
           <Dropdown
             widthExpand
             value={(data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []}
@@ -66,7 +71,26 @@ const UserAttribForm = ({
               })
             }
           />
-        ) : (
+        )
+      } else if (data.type === 'boolean') {
+        if (name === 'developerMode') return null
+
+        widget = (
+          <InputSwitch
+            checked={formData[name]}
+            onChange={(e) => {
+              setFormData((fd) => {
+                return { ...fd, [name]: e.target.checked }
+              })
+            }}
+            disabled={disabled}
+            style={{
+              opacity: disabled ? 0.5 : 1,
+            }}
+          />
+        )
+      } else {
+        widget = (
           <InputText
             value={formData[name] || ''}
             disabled={disabled}
@@ -79,9 +103,14 @@ const UserAttribForm = ({
             autoComplete="cc-csc"
             {...input}
           />
-        )}
-      </FormRow>
-    ))
+        )
+      }
+      return (
+        <FormRow label={data.title} key={name}>
+          {widget}
+        </FormRow>
+      )
+    })
 
   return (
     <>

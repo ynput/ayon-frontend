@@ -9,6 +9,7 @@ const initialState = {
     versions: [],
     representations: [],
     tasks: [],
+    tasksNames: [],
     workfiles: [],
     editor: [],
     lastFocused: null,
@@ -56,7 +57,8 @@ const contextSlice = createSlice({
 
     setFocusedTasks: (state, action) => {
       state.focused.type = 'task'
-      state.focused.tasks = action.payload
+      state.focused.tasks = action.payload.ids || []
+      if ('names' in action.payload) state.focused.tasksNames = action.payload.names || []
       state.focused.versions = []
     },
 

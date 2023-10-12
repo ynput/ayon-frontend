@@ -170,7 +170,6 @@ const Attributes = () => {
             />
             <SaveButton
               label="Save attributes changes"
-              icon="check"
               onClick={onSave}
               active={isChanges}
               saving={updateLoading}

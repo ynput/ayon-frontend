@@ -2,12 +2,13 @@ import { Icon } from '@ynput/ayon-react-components'
 import React, { forwardRef } from 'react'
 import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
+import { Link } from 'react-router-dom'
 
 const MenuItem = forwardRef(
-  ({ label, icon, highlighted, selected, items = [], className, ...props }, ref) => {
+  ({ label, icon, highlighted, selected, items = [], className, isLink, ...props }, ref) => {
     const labelsArray = isArray(label) ? label : [label]
 
-    return (
+    const Item = (
       <Styled.Item
         ref={ref}
         className={`menu-item ${highlighted ? 'highlighted' : ''} ${
@@ -24,6 +25,12 @@ const MenuItem = forwardRef(
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>
     )
+
+    if (isLink) {
+      return <Link to={isLink}>{Item}</Link>
+    } else {
+      return Item
+    }
   },
 )
 

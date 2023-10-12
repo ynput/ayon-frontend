@@ -123,9 +123,8 @@ const NewEntity = ({
   const labelRef = useRef(null)
 
   const handleShow = () => {
-    const buttonEl = typeSelectRef.current.querySelector('button')
-    // focus name dropdown
-    buttonEl?.focus()
+    // open dropdown
+    typeSelectRef.current?.open()
   }
 
   const handleSubmit = (hide = false) => {
@@ -168,14 +167,6 @@ const NewEntity = ({
     if (e.shiftKey && e.key === 'Enter') {
       handleSubmit(false)
     }
-    // if tabbing from dropdown, focus name input
-    if (e.key === 'Tab') {
-      const target = e.target
-      // check if target is inside typeSelectRef.current
-      if (target && typeSelectRef.current.contains(target)) {
-        e.stopPropagation()
-      }
-    }
   }
 
   if (!entityType) return null
@@ -217,7 +208,6 @@ const NewEntity = ({
           options={typeOptions}
           style={{ width: 160 }}
           ref={typeSelectRef}
-          openOnFocus
         />
         <InputText
           value={entityData.label}
