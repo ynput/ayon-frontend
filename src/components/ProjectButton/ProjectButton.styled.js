@@ -22,6 +22,10 @@ export const Project = styled.div`
     }
   }
 
+  &.highlighted {
+    background-color: var(--md-sys-color-primary-container);
+  }
+
   .code {
     flex: 0;
     padding-right: var(--padding-m);

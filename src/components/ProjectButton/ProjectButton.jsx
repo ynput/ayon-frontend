@@ -2,9 +2,13 @@ import { Button } from '@ynput/ayon-react-components'
 import React from 'react'
 import * as Styled from './ProjectButton.styled'
 
-const ProjectButton = ({ label, code, onPin, onEdit, ...props }) => {
+const ProjectButton = ({ label, code, onPin, onEdit, className, highlighted, ...props }) => {
   return (
-    <Styled.Project {...props} tabIndex={0}>
+    <Styled.Project
+      {...props}
+      tabIndex={0}
+      className={`${className} ${highlighted ? 'highlighted' : ''}`}
+    >
       <span>{label}</span>
       {/* code hides on hover */}
       {code && <span className="code">{code}</span>}

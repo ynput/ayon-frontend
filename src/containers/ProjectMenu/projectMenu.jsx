@@ -84,6 +84,7 @@ const ProjectMenu = ({ visible, onHide }) => {
           label={project.name}
           code={project.code}
           className={pinned.includes(project.name) ? 'pinned' : ''}
+          highlighted={projectSelected === project.name}
           onPin={(e) => handlePinChange(project.name, e)}
           onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
           onClick={() => onProjectSelect(project.name)}
