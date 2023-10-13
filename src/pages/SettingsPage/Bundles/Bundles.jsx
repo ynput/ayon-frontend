@@ -29,7 +29,7 @@ import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import useShortcuts from '/src/hooks/useShortcuts'
 
-const Bundles = (props) => {
+const Bundles = () => {
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
   const location = useLocation()
   const dispatch = useDispatch()
@@ -351,7 +351,7 @@ const Bundles = (props) => {
           />
         )}
       </Dialog>
-      <main style={{ overflow: 'hidden' }} {...props}>
+      <main style={{ overflow: 'hidden' }}>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>

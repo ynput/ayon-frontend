@@ -50,7 +50,7 @@ import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
 import useShortcuts from '/src/hooks/useShortcuts'
 
-const EditorPage = (props) => {
+const EditorPage = () => {
   const project = useSelector((state) => state.project)
   const { folders: foldersObject, tasks = [], attrib } = project
 
@@ -1453,7 +1453,7 @@ const EditorPage = (props) => {
   // Render the TreeTable
 
   return (
-    <main className="editor-page" {...props}>
+    <main className="editor-page">
       {newEntity &&
         (newEntity === 'sequence' ? (
           <NewSequence

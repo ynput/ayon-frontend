@@ -19,7 +19,7 @@ import useCreateContext from '/src/hooks/useCreateContext'
 import { isEqual } from 'lodash'
 import useServerRestart from '/src/hooks/useServerRestart'
 
-const Attributes = (props) => {
+const Attributes = () => {
   const [attributes, setAttributes] = useState([])
   const [selectedAttribute, setSelectedAttribute] = useState(null)
   const [showEditor, setShowEditor] = useState(false)
@@ -136,7 +136,7 @@ const Attributes = (props) => {
 
   return (
     <>
-      <main {...props}>
+      <main>
         {showEditor && (
           <AttributeEditor
             attribute={selectedAttribute}

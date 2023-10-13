@@ -100,11 +100,11 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
   )
 }
 
-const Secrets = (props) => {
+const Secrets = () => {
   const { data } = useGetSecretsQuery()
 
   return (
-    <Section {...props}>
+    <Section>
       <ScrollPanel
         style={{
           height: '100%',

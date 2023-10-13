@@ -4,7 +4,6 @@ import { useGetSettingsAddonsQuery } from '../../services/addons/getAddons'
 
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '/src/containers/header/AppNavLinks'
-import Tooltips from '/src/components/Tooltips/Tooltips'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -46,39 +45,26 @@ const SettingsPage = () => {
       }
     }
 
-    let moduleComponent
-
     switch (module) {
       case 'anatomyPresets':
-        moduleComponent = (props) => <AnatomyPresets {...props} />
-        break
+        return <AnatomyPresets />
       case 'bundles':
-        moduleComponent = (props) => <Bundles {...props} />
-        break
+        return <Bundles />
       case 'studio':
-        moduleComponent = (props) => <StudioSettings {...props} />
-        break
+        return <StudioSettings />
       case 'site':
-        moduleComponent = (props) => <SiteSettings {...props} />
-        break
+        return <SiteSettings />
       case 'users':
-        moduleComponent = (props) => <UsersSettings {...props} />
-        break
+        return <UsersSettings />
       case 'accessGroups':
-        moduleComponent = (props) => <AccessGroups {...props} />
-        break
+        return <AccessGroups />
       case 'attributes':
-        moduleComponent = (props) => <Attributes {...props} />
-        break
+        return <Attributes />
       case 'secrets':
-        moduleComponent = (props) => <Secrets {...props} />
-        break
+        return <Secrets />
       default:
-        moduleComponent = () => <Navigate to="/settings" />
-        break
+        return <Navigate to="/settings" />
     }
-
-    return moduleComponent
   }, [module, addonName, addonsData])
 
   const links = useMemo(() => {
@@ -150,7 +136,7 @@ const SettingsPage = () => {
   return (
     <>
       <AppNavLinks links={links} />
-      <Tooltips render={moduleComponent} />
+      {moduleComponent}
     </>
   )
 }

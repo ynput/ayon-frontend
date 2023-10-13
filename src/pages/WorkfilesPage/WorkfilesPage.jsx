@@ -5,7 +5,7 @@ import WorkfileList from './WorkfileList'
 import WorkfileDetail from './WorkfileDetail'
 import { useSelector } from 'react-redux'
 
-const WorkfilesPage = (props) => {
+const WorkfilesPage = () => {
   const projectName = useSelector((state) => state.project.name)
   const [selectedWorkfile, setSelectedWorkfile] = useState(null)
 
@@ -15,7 +15,7 @@ const WorkfilesPage = (props) => {
   }, [projectName])
 
   return (
-    <main {...props}>
+    <main>
       <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
       <TaskList style={{ flex: 0.75, minWidth: 250, maxWidth: 500 }} autoSelect />
       <WorkfileList

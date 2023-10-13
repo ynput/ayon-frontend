@@ -1,8 +1,8 @@
 import AddonSettings from '/src/containers/AddonSettings'
 
-const StudioSettings = (props) => {
+const StudioSettings = () => {
   return (
-    <main {...props}>
+    <main>
       <AddonSettings />
     </main>
   )

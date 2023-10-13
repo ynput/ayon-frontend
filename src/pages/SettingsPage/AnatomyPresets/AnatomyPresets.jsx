@@ -29,7 +29,7 @@ import {
 import { isEqual } from 'lodash'
 import confirmDelete from '/src/helpers/confirmDelete'
 
-const AnatomyPresets = (props) => {
+const AnatomyPresets = () => {
   const [originalData, setOriginalData] = useState(null)
   const [newData, setNewData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState('_')
@@ -146,7 +146,7 @@ const AnatomyPresets = (props) => {
   }, [schema, originalData])
 
   return (
-    <main {...props}>
+    <main>
       {showNameDialog && (
         <Dialog
           header="Preset name"
