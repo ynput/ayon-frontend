@@ -84,6 +84,13 @@ const ProjectDetails = ({ projectName }) => {
     value: !!library,
   })
 
+  // project code
+  attribArray.unshift({
+    name: 'Code',
+    value: code,
+  })
+
+  // Active status
   attribArray.unshift({
     value: (
       <Styled.Active $isLoading={isFetching} $isActive={active}>

@@ -22,6 +22,16 @@ export const Project = styled.div`
     }
   }
 
+  &.highlighted {
+    background-color: var(--md-sys-color-primary-container);
+  }
+
+  .code {
+    flex: 0;
+    padding-right: var(--padding-m);
+    color: var(--md-sys-color-outline);
+  }
+
   /* button default hidden */
   button {
     display: none;
@@ -33,6 +43,11 @@ export const Project = styled.div`
     background-color: var(--md-sys-color-surface-container-highest);
     button {
       display: flex;
+    }
+
+    /* hide code on hover */
+    .code {
+      display: none;
     }
   }
 
