@@ -82,6 +82,7 @@ const ProjectMenu = ({ visible, onHide }) => {
       node: (
         <ProjectButton
           label={project.name}
+          code={project.code}
           className={pinned.includes(project.name) ? 'pinned' : ''}
           onPin={(e) => handlePinChange(project.name, e)}
           onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
