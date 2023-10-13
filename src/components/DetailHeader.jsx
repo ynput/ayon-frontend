@@ -32,7 +32,12 @@ const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) =
 
   return (
     <>
-      <Dialog header={dialogTitle} visible={showContext} onHide={() => setShowContext(false)}>
+      <Dialog
+        header={dialogTitle}
+        visible={showContext}
+        onHide={() => setShowContext(false)}
+        appendTo={document.getElementById('root')}
+      >
         <pre
           style={{
             whiteSpace: 'pre-wrap',
@@ -44,7 +49,12 @@ const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) =
       <HeaderStyled style={style}>
         <div>{children}</div>
         {context && (
-          <Button icon="more_vert" variant="text" onClick={() => setShowContext(!showContext)} />
+          <Button
+            icon="more_vert"
+            variant="text"
+            onClick={() => setShowContext(!showContext)}
+            data-tooltip="Full context data"
+          />
         )}
         {onClose && <Button icon="close" variant="text" onClick={onClose} />}
       </HeaderStyled>

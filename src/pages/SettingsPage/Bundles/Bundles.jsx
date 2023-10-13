@@ -342,6 +342,7 @@ const Bundles = () => {
         style={{ width: 400, height: 400, overflow: 'hidden' }}
         header={uploadHeader}
         onHide={handleAddonInstallFinish}
+        appendTo={document.getElementById('root')}
       >
         {uploadOpen && (
           <AddonUpload
