@@ -68,7 +68,7 @@ const useTooltip = () => {
         setTimeout(() => {
           setIsActive(true)
           setTooltip((t) => ({ ...t, pos: newTooltipPos, hide: false }))
-        }, 400),
+        }, 500),
       )
     }
   }, [tooltip, setTooltip])
