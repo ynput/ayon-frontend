@@ -58,23 +58,43 @@ const NodePanelDirectionSelector = styled.div`
   }
 `
 
-const ChangeRow = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--color-grey-02);
-`
-
 const ChangeValue = styled.span`
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   border-radius: 3px;
-  padding: 2px 4px;
+  padding: 2px 6px;
   background-color: var(--color-grey-04);
+  color: #dddddd;
+  cursor: pointer;
+
+  &.dim {
+    font-style: italic;
+    color: #949494;
+  }
+`
+
+const ChangesTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+
+  tr {
+    height: 24px;
+    border-bottom: 1px solid var(--color-grey-02);
+
+    &:hover {
+      background-color: var(--color-grey-02);
+    }
+  }
+
+  td {
+    width: 1px;
+    padding: 4px 8px;
+    &.expand {
+      width: auto;
+    }
+  }
 `
 
 export {
@@ -82,6 +102,6 @@ export {
   NodePanelHeader,
   NodePanelBody,
   NodePanelDirectionSelector,
-  ChangeRow,
   ChangeValue,
+  ChangesTable,
 }

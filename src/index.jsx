@@ -10,6 +10,7 @@ import userReducer from './features/user'
 import contextReducer from './features/context'
 import projectReducer from './features/project'
 import editorReducer from './features/editor'
+import dashboardReducer, { dashboardLocalItems } from './features/dashboard'
 
 import App from './app'
 
@@ -23,6 +24,7 @@ import { ayonApi } from './services/ayon'
 import { setupListeners } from '@reduxjs/toolkit/dist/query'
 import short from 'short-uuid'
 import { SocketProvider } from './context/websocketContext'
+import localStorageMiddleware from './features/middleware/localStorageMiddleware'
 
 // generate unique session id
 window.senderId = short.generate()
@@ -33,9 +35,13 @@ const store = configureStore({
     context: contextReducer,
     project: projectReducer,
     editor: editorReducer,
+    dashboard: dashboardReducer,
     [ayonApi.reducerPath]: ayonApi.reducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(ayonApi.middleware),
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware()
+      .concat(ayonApi.middleware)
+      .concat(localStorageMiddleware({ ...dashboardLocalItems })),
 })
 
 setupListeners(store.dispatch)

@@ -1,3 +1,4 @@
+import { Button } from '@ynput/ayon-react-components'
 import { Sidebar } from 'primereact/sidebar'
 import styled from 'styled-components'
 
@@ -17,6 +18,7 @@ export const ProjectSidebar = styled(Sidebar)`
   h3 {
     border: none;
     color: var(--md-sys-color-outline);
+    padding-left: var(--padding-m);
   }
 
   .p-sidebar-content {
@@ -61,6 +63,7 @@ export const All = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  gap: 4px;
 
   menu {
     flex: 1;
@@ -75,20 +78,10 @@ export const Divider = styled.hr`
   border-color: var(--md-sys-color-surface-container-highest);
 `
 
-export const Header = styled.header`
-  padding-bottom: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  position: relative;
-
-  button {
-    justify-content: flex-start;
-    padding: 6px 12px;
-  }
-
-  input,
-  button {
-    width: 100%;
-  }
+export const Search = styled(Button)`
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: min-content;
+  padding: 4px;
 `

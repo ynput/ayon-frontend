@@ -15,9 +15,14 @@ function ContextMenuProvider(props) {
     ref.current.show(event)
   }
 
+  function closeContext() {
+    if (!ref.current) return
+    ref.current.hide()
+  }
+
   return (
     <ContextMenuContext.Provider
-      value={{ openContext, ref, model, isContextOpen, setIsContextOpen }}
+      value={{ openContext, closeContext, ref, model, isContextOpen, setIsContextOpen }}
     >
       {props.children}
     </ContextMenuContext.Provider>

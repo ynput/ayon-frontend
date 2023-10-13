@@ -20,6 +20,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const EventsPage = lazy(() => import('./pages/EventsPage'))
 const ServicesPage = lazy(() => import('./pages/ServicesPage'))
+const UserDashboardPage = lazy(() => import('./pages/UserDashboardPage'))
 
 import { login } from './features/user'
 import ProtectedRoute from './containers/ProtectedRoute'
@@ -158,16 +159,15 @@ const App = () => {
                 <ShareDialog />
                 <ConfirmDialog />
                 <Routes>
-                  <Route
-                    path="/"
-                    exact
-                    element={<Navigate replace to="/manageProjects/dashboard" />}
-                  />
+                  <Route path="/" exact element={<Navigate replace to="/dashboard/tasks" />} />
                   <Route
                     path="/manageProjects"
                     exact
-                    element={<Navigate replace to="/manageProjects/dashboard" />}
+                    element={<Navigate replace to="/manageProjects/anatomy" />}
                   />
+
+                  <Route path="/dashboard" element={<Navigate replace to="/dashboard/tasks" />} />
+                  <Route path="/dashboard/:module" exact element={<UserDashboardPage />} />
 
                   <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
                   <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />

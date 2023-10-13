@@ -106,6 +106,12 @@ export const Menu = styled.menu`
   gap: 8px;
   padding: 8px;
 
+  /* shrink the padding when compact */
+  &.compact {
+    padding: 4px;
+    gap: 4px;
+  }
+
   /* colors */
   background-color: var(--md-sys-color-surface-container-high);
 
