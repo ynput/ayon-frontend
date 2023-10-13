@@ -27,15 +27,15 @@ export const Container = styled.div`
       display: block;
 
       font-size: var(--md-sys-typescale-headline-medium-font-size);
+      user-select: none;
     }
   }
 
-  a {
-    z-index: 20;
-  }
   button {
     margin-top: 40px;
-    padding: 16px 32px;
+    padding: 16px 16px;
     font-size: var(--md-sys-typescale-title-medium-font-size);
+    z-index: 20;
+    border-radius: var(--border-radius-xxl);
   }
 `

@@ -195,7 +195,10 @@ const ProjectList = ({
         menuItems.push({
           label: 'Manage Project',
           icon: 'settings_applications',
-          command: () => navigate(`/manageProjects?project=${sel[0]}`),
+          command: () => {
+            closeContextMenu()
+            navigate(`/manageProjects?project=${sel[0]}`)
+          },
         })
       }
 
@@ -221,7 +224,7 @@ const ProjectList = ({
   )
 
   // create the ref and model
-  const [tableContextMenuShow] = useCreateContext([])
+  const [tableContextMenuShow, closeContextMenu] = useCreateContext([])
 
   // When right clicking on the already selected node, we don't want to change the selection
   const onContextMenu = (event) => {

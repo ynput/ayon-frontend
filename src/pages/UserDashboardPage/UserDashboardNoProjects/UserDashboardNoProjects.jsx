@@ -1,16 +1,32 @@
-import React from 'react'
+import React, { useState } from 'react'
 import * as Styled from './UserDashboardNoProjects.styled'
 import NoProducts from '../../BrowserPage/NoProducts'
 import { Button } from '@ynput/ayon-react-components'
-import { Link } from 'react-router-dom'
+import NewProjectDialog from '../../ProjectManagerPage/NewProjectDialog'
+import { useNavigate } from 'react-router'
 
 const UserDashboardNoProjects = () => {
+  const [openNewProject, setOpenNewProject] = useState()
+  const navigate = useNavigate()
+
   return (
     <Styled.Container>
       <NoProducts label="No Projects" />
-      <Link to="/manageProjects/new">
-        <Button label="Create first project" variant="filled" icon="create_new_folder" />
-      </Link>
+
+      <Button
+        label="Create first project"
+        variant="filled"
+        icon="create_new_folder"
+        onClick={() => setOpenNewProject(true)}
+      />
+      {openNewProject && (
+        <NewProjectDialog
+          onHide={(name) => {
+            setOpenNewProject(false)
+            navigate(`/manageProjects?project=${name}`)
+          }}
+        />
+      )}
     </Styled.Container>
   )
 }
