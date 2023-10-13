@@ -21,9 +21,7 @@ const ProjectManagerPageContainer = ({
         isUser: isUser,
         projectList: (
           <ProjectList
-            styleSection={{ maxWidth: 180, minWidth: 180 }}
-            hideCode
-            isCollapsible
+            styleSection={{ maxWidth: 300, minWidth: 300 }}
             autoSelect
             selection={selection}
             onDeleteProject={onDeleteProject}
