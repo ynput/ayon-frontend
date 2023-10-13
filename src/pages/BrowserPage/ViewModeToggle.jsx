@@ -26,7 +26,7 @@ const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
       id: 'grid',
       icon: 'grid_view',
       onClick: () => handleNormalClick('grid'),
-      ['data-tooltip']: 'Grid View',
+      ['data-tooltip']: 'Card View',
     },
     {
       id: 'layers',
