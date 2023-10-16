@@ -66,7 +66,7 @@ const RequestModal = ({ onClose, callback = () => {}, requestType = null, ...pro
   }
 }
 
-const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
+const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   const addonRef = useRef(null)
   const [loading, setLoading] = useState(true)
   const [requestModal, setRequestModal] = useState(false)
@@ -134,7 +134,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar }) => {
   }
 
   return (
-    <main>
+    <main {...props}>
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />

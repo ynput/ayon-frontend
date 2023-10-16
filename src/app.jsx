@@ -1,7 +1,7 @@
 import ayonClient from '/src/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
-import { useEffect, useState, Suspense, lazy } from 'react'
+import { useEffect, useState, Suspense, lazy, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
@@ -34,6 +34,7 @@ import LoadingPage from './pages/LoadingPage'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import OnBoardingPage from './pages/OnBoarding'
 import ServerRestartBanner from './components/ServerRestartBanner'
+import useTooltip from './hooks/Tooltip/useTooltip'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -94,15 +95,108 @@ const App = () => {
       })
   }, [dispatch, storedAccessToken, isOnboarding])
 
-  if (loading) return <LoadingPage />
+  const [handleMouse, tooltipComponent] = useTooltip()
 
-  // User is not logged in
-  if (!user.name && !noAdminUser) {
-    return <LoginPage isFirstTime={isOnboarding} />
-  }
+  useEffect(() => {
+    const root = document.getElementById('root')
+    const portal = document.body.lastElementChild
 
-  if (isOnboarding || noAdminUser) {
-    return (
+    // attach mouseOver event listener to root element
+    root.addEventListener('mouseover', handleMouse)
+
+    if (portal) {
+      portal.addEventListener('mouseover', handleMouse)
+    }
+
+    // cleanup
+    return () => {
+      root.removeEventListener('mouseover', handleMouse)
+      if (portal) {
+        portal.removeEventListener('mouseover', handleMouse)
+      }
+    }
+  }, [])
+
+  const isUser = user?.data?.isUser
+
+  // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
+  const mainComponent = useMemo(
+    () => (
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={<LoadingPage />}>
+          <ContextMenuProvider>
+            <GlobalContextMenu />
+            <BrowserRouter>
+              <ServerRestartBanner />
+              <ShortcutsProvider>
+                <QueryParamProvider
+                  adapter={ReactRouter6Adapter}
+                  options={{
+                    updateType: 'replaceIn',
+                  }}
+                >
+                  <Header />
+                  <ShareDialog />
+                  <ConfirmDialog />
+                  <Routes>
+                    <Route path="/" exact element={<Navigate replace to="/dashboard/tasks" />} />
+                    <Route
+                      path="/manageProjects"
+                      exact
+                      element={<Navigate replace to="/manageProjects/anatomy" />}
+                    />
+
+                    <Route path="/dashboard" element={<Navigate replace to="/dashboard/tasks" />} />
+                    <Route path="/dashboard/:module" exact element={<UserDashboardPage />} />
+
+                    <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
+                    <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+                    <Route
+                      path={'/projects/:projectName/addon/:addonName'}
+                      element={<ProjectPage />}
+                    />
+                    <Route
+                      path="/settings"
+                      exact
+                      element={<Navigate replace to="/settings/anatomyPresets" />}
+                    />
+                    <Route path="/settings/:module" exact element={<SettingsPage />} />
+                    <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
+                    <Route
+                      path="/services"
+                      element={
+                        <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                          <ServicesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/explorer" element={<ExplorerPage />} />
+                    <Route path="/doc/api" element={<APIDocsPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/events" element={<EventsPage />} />
+                    <Route element={<ErrorPage code="404" />} />
+                  </Routes>
+                </QueryParamProvider>
+              </ShortcutsProvider>
+            </BrowserRouter>
+          </ContextMenuProvider>
+        </Suspense>
+      </ErrorBoundary>
+    ),
+    [isUser],
+  )
+
+  const loadingComponent = useMemo(() => <LoadingPage />, [])
+
+  const loginComponent = useMemo(() => <LoginPage isFirstTime={isOnboarding} />, [isOnboarding])
+
+  const errorComponent = useMemo(
+    () => <ErrorPage code={serverError} message="Server connection failed" />,
+    [serverError],
+  )
+
+  const onboardingComponent = useMemo(
+    () => (
       <BrowserRouter>
         <QueryParamProvider
           adapter={ReactRouter6Adapter}
@@ -117,91 +211,52 @@ const App = () => {
           />
         </QueryParamProvider>
       </BrowserRouter>
+    ),
+    [isOnboarding, noAdminUser],
+  )
+
+  // Then use the state of the app to determine which component to render
+
+  if (loading) return loadingComponent
+
+  // User is not logged in
+  if (!user.name && !noAdminUser) {
+    return (
+      <>
+        {loginComponent}
+        {tooltipComponent}
+      </>
     )
   }
 
-  const isUser = user?.data?.isUser
+  if (isOnboarding || noAdminUser) {
+    return (
+      <>
+        {onboardingComponent}
+        {tooltipComponent}
+      </>
+    )
+  }
 
   if (window.location.pathname.startsWith('/login')) {
     // already logged in, but stuck on the login page
     window.history.replaceState({}, document.title, '/')
-    return isOnboarding ? null : <LoadingPage />
+    return isOnboarding ? null : loadingComponent
   }
 
   // stuck on onboarding page
   if (window.location.pathname.startsWith('/onboarding')) {
     window.history.replaceState({}, document.title, '/settings/bundles?selected=latest')
-    return <LoadingPage />
+    return loadingComponent
   }
 
-  if (serverError && !noAdminUser)
-    return <ErrorPage code={serverError} message="Server connection failed" />
-
-  //
-  // RENDER THE MAIN APP
-  //
+  if (serverError && !noAdminUser) return errorComponent
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Suspense fallback={<LoadingPage />}>
-        <ContextMenuProvider>
-          <GlobalContextMenu />
-          <BrowserRouter>
-            <ServerRestartBanner />
-            <ShortcutsProvider>
-              <QueryParamProvider
-                adapter={ReactRouter6Adapter}
-                options={{
-                  updateType: 'replaceIn',
-                }}
-              >
-                <Header />
-                <ShareDialog />
-                <ConfirmDialog />
-                <Routes>
-                  <Route path="/" exact element={<Navigate replace to="/dashboard/tasks" />} />
-                  <Route
-                    path="/manageProjects"
-                    exact
-                    element={<Navigate replace to="/manageProjects/anatomy" />}
-                  />
-
-                  <Route path="/dashboard" element={<Navigate replace to="/dashboard/tasks" />} />
-                  <Route path="/dashboard/:module" exact element={<UserDashboardPage />} />
-
-                  <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-                  <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-                  <Route
-                    path={'/projects/:projectName/addon/:addonName'}
-                    element={<ProjectPage />}
-                  />
-                  <Route
-                    path="/settings"
-                    exact
-                    element={<Navigate replace to="/settings/anatomyPresets" />}
-                  />
-                  <Route path="/settings/:module" exact element={<SettingsPage />} />
-                  <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
-                  <Route
-                    path="/services"
-                    element={
-                      <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                        <ServicesPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="/explorer" element={<ExplorerPage />} />
-                  <Route path="/doc/api" element={<APIDocsPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/events" element={<EventsPage />} />
-                  <Route element={<ErrorPage code="404" />} />
-                </Routes>
-              </QueryParamProvider>
-            </ShortcutsProvider>
-          </BrowserRouter>
-        </ContextMenuProvider>
-      </Suspense>
-    </ErrorBoundary>
+    <>
+      {mainComponent}
+      {tooltipComponent}
+    </>
   )
 }
 

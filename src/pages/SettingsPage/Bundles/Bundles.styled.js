@@ -46,7 +46,7 @@ export const BadgeButton = styled(Button)`
       }
     `}
 
-  width: 140px;
+  width: 130px;
 `
 
 export const AddonTools = styled.div`

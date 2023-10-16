@@ -48,7 +48,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
 
     return (
       <RowStyled>
-        <Button onClick={restartEvent} label="Restart" />
+        <Button onClick={restartEvent} label="Restart" data-tooltip="Restart the event" />
       </RowStyled>
     )
   }, [event])

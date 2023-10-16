@@ -16,6 +16,7 @@ const BundleList = ({
   onDelete,
   toggleBundleStatus,
   errorMessage,
+  developerMode,
 }) => {
   const [updateBundle] = useUpdateBundleMutation()
 
@@ -42,7 +43,7 @@ const BundleList = ({
     const unsetLabel = 'Unset ' + status
     const isStatus = bundle[key]
     const label = isStatus ? unsetLabel : setLabel
-    const icon = isStatus ? 'cancel' : 'check'
+    const icon = isStatus ? 'remove' : 'add'
     const command = () => toggleBundleStatus(status, bundle.name)
     const disabled = selectedBundles.length > 1 || disabledExtra
     return { label, icon, command, disabled }
@@ -64,7 +65,8 @@ const BundleList = ({
       // staging
       ctxMenuItems.push(getBundleStatusItem('staging', activeBundle, isDev))
       // dev
-      ctxMenuItems.push(getBundleStatusItem('dev', activeBundle, isProduction || isStaging))
+      if (developerMode)
+        ctxMenuItems.push(getBundleStatusItem('dev', activeBundle, isProduction || isStaging))
     }
 
     // duplicate and edit

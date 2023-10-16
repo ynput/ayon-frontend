@@ -129,12 +129,14 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
         onClick={() => setView('list')}
         selected={view === 'list'}
         icon="format_list_bulleted"
+        data-tooltip="List view"
       />
       <Button
         label="Board"
         onClick={() => setView('kanban')}
         selected={view === 'kanban'}
         icon="view_kanban"
+        data-tooltip="Board (kanban) view"
       />
     </Styled.TasksToolbar>
   )

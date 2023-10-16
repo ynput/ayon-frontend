@@ -18,6 +18,7 @@ const MeOrUserSwitch = ({ value = [], onAssignee, onMe, options = [], isMe, ...p
         variant="surface"
         selected={isMe}
         onClick={onMe}
+        data-tooltip="View my tasks"
       />
 
       <AssigneeSelect
@@ -31,6 +32,7 @@ const MeOrUserSwitch = ({ value = [], onAssignee, onMe, options = [], isMe, ...p
         emptyIcon="groups"
         emptyMessage="Assignees"
         style={{ zIndex: 'none' }}
+        data-tooltip="View other users tasks"
       />
     </Styled.MeOrUserSwitchContainer>
   )

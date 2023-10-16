@@ -460,7 +460,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             />
             <Button
               icon="rocket_launch"
-              tooltip="Push bundle to production"
+              data-tooltip="Push bundle to production"
               onClick={onPushToProduction}
               disabled={variant !== 'staging' || canCommit}
               style={{ zIndex: 100 }}
@@ -480,6 +480,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             setShowHelp(!showHelp)
           }}
           icon="help"
+          data-tooltip="Show help descriptions"
         />
       </Toolbar>
     )

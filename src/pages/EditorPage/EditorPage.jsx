@@ -1480,20 +1480,23 @@ const EditorPage = () => {
             icon="create_new_folder"
             label="Add folders"
             onClick={() => setNewEntity('folder')}
-            title='Press "n" to create folders'
+            data-tooltip="Add new folders"
+            data-shortcut="N"
           />
           <Button
             icon="topic"
             label="Add folder sequence"
             onClick={() => setNewEntity('sequence')}
-            title='Press "m" to create a folder sequence'
+            data-tooltip="Add new folder sequence"
+            data-shortcut="M"
           />
           <Button
             icon="add_task"
             label="Add tasks"
             disabled={disableAddNew}
             onClick={() => setNewEntity('task')}
-            title='Press "t" to create tasks'
+            data-tooltip="Add new tasks"
+            data-shortcut="T"
           />
           <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect
