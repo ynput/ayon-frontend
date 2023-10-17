@@ -11,6 +11,22 @@ function ShortcutsProvider(props) {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
+  // keep track of what's being hovered
+  const [hovered, setHovered] = useState(null)
+
+  useEffect(() => {
+    document.addEventListener('mouseover', (e) => {
+      setHovered(e.target)
+    })
+
+    return () => {
+      // clean up event listeners
+      document.removeEventListener('mouseover', (e) => {
+        setHovered(e.target)
+      })
+    }
+  }, [])
+
   // logout
   const [logout] = useLogOutMutation()
 
@@ -93,8 +109,14 @@ function ShortcutsProvider(props) {
     // if it is, prevent default browser behavior
     e.preventDefault()
 
+    // check if the shortcut has a closest selector
+    if (shortcut.closest) {
+      // if it does, check if the target matches the selector
+      if (!hovered || !hovered.closest(shortcut.closest)) return
+    }
+
     // and run the action
-    shortcut.action()
+    shortcut.action(hovered)
   }
 
   // listen for key presses
