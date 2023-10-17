@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -69,17 +69,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   const projectKey = projectName || '_'
 
-  useEffect(() => {
-    if (selectedAddons.length !== 1) {
-      setCurrentSelection(null)
-      return
-    }
-
-    const addonName = selectedAddons[0].name
-    const addonVersion = selectedAddons[0].version
-    const siteId = selectedAddons[0].siteId
-    const path = selectedAddons[0].path
-
+  const onAddonFocus = ({ addonName, addonVersion, siteId, path }) => {
     if (!path?.length) {
       setCurrentSelection(null)
       return
@@ -96,7 +86,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       path,
       fieldId,
     })
-  }, [selectedAddons])
+  }
 
   const user = useSelector((state) => state.user)
 
@@ -157,19 +147,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       }
       return newData
     })
-  }
-
-  const onAddonChanged = (addonName) => {
-    // TODO: deprecated?
-    // not sure why this is here. I think it was used to reload addons when
-    // an addon was changed ouside the form (e.g. copying settings using addon list ctx menu)
-    // But we should probably get rid of outside changes
-    console.warn('Called onAddonChanged. This is deprecated.')
-    for (const key in localData) {
-      if (addonName === key.split('|')[0]) {
-        reloadAddons([key])
-      }
-    }
   }
 
   const onSave = async () => {
@@ -539,7 +516,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
             variant={variant}
-            onAddonChanged={onAddonChanged}
+            onAddonFocus={onAddonFocus}
             setBundleName={setBundleName}
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}

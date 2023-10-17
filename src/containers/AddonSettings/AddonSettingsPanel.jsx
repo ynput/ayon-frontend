@@ -90,7 +90,6 @@ const AddonSettingsPanel = ({
   }, [localData])
 
   const breadcrumbs = useMemo(() => {
-    console.log('CurrentSel', currentSelection)
     if (!currentSelection) return null
     if (currentSelection.addonString !== `${addon.name}@${addon.version}`) return null
     return currentSelection.path

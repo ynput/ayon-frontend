@@ -153,7 +153,7 @@ function ObjectFieldTemplate(props) {
     return (
       <>
         {longDescription}
-        <div className={className}>
+        <div className={className} data-fieldid={props.id}>
           {props.properties
             .filter(
               (element) =>
@@ -376,7 +376,7 @@ function FieldTemplate(props) {
         title={props.schema.title}
         description={props.schema.description}
         className={classes.join(' ')}
-        onMouseUp={() => {
+        onClick={() => {
           if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
         }}
         onContextMenu={onContextMenu}

@@ -72,7 +72,7 @@ const CheckboxWidget = function (props) {
   }, [props.onChange, value])
 
   useEffect(() => {
-    console.log(props.id, props.value, value)
+    //console.log(props.id, props.value, value)
     // Sync the local state with the formData
     if (props.value === undefined) return
     if (value === props.value) return

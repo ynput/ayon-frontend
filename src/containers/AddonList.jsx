@@ -13,7 +13,7 @@ const AddonList = ({
   onContextMenu,
   variant = 'production', // 'production' or 'staging'
   siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
-  onAddonChanged = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
+  onAddonFocus = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
   changedAddonKeys = null, // List of addon keys that have changed
   projectName, // used for chaged addons
   siteId, // used for chaged addons
@@ -94,8 +94,13 @@ const AddonList = ({
         (a) => a.name === addonName && (addonVersion ? a.version === addonVersion : true),
       )
       if (addon) {
-        setSelectedAddons([{ ...addon, siteId, path }])
-        onAddonChanged(addonName)
+        setSelectedAddons([addon])
+        onAddonFocus({
+          addonName,
+          addonVersion: addon.version,
+          siteId,
+          path,
+        })
       }
     }
   }, [addons, uriChanged])
