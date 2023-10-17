@@ -113,21 +113,25 @@ const useUriNavigate = () => {
         if ('project' in qp && 'site' in qp) {
           targetUrl = `manageProjects/siteSettings?`
           targetUrl += `project=${qp.project}&site=${qp.site}`
-          targetUrl += `&addonName=${addonName}&addonVersion=${addonVersion}`
+          targetUrl += `&addonName=${addonName}`
+          if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
           targetUrl += `&settingsPath=${settingsPath.join('|')}`
         } else if ('project' in qp) {
           targetUrl = `manageProjects/projectSettings?`
           targetUrl += `project=${qp.project}`
-          targetUrl += `&addonName=${addonName}&addonVersion=${addonVersion}`
+          targetUrl += `&addonName=${addonName}`
+          if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
           targetUrl += `&settingsPath=${settingsPath.join('|')}`
         } else if ('site' in qp) {
           targetUrl = `settings/site?`
           targetUrl += `site=${qp.site}`
-          targetUrl += `&addonName=${addonName}&addonVersion=${addonVersion}`
+          targetUrl += `&addonName=${addonName}`
+          if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
           targetUrl += `&settingsPath=${settingsPath.join('|')}`
         } else {
           targetUrl = `settings/studio`
-          targetUrl += `?addonName=${addonName}&addonVersion=${addonVersion}`
+          targetUrl += `?addonName=${addonName}`
+          if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
           targetUrl += `&settingsPath=${settingsPath.join('|')}`
         }
 
