@@ -22,6 +22,7 @@ import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettings'
 import VariantSelector from './VariantSelector'
 import CopySettingsDialog from '/src/containers/CopySettings/CopySettingsDialog'
+import RawSettingsDialog from '/src/containers/RawSettingsDialog'
 
 import {
   useSetAddonSettingsMutation,
@@ -61,6 +62,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [bundleName, setBundleName] = useState()
 
   const [showCopySettings, setShowCopySettings] = useState(false)
+  const [showRawEdit, setShowRawEdit] = useState(false)
 
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
@@ -137,6 +139,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }
 
   const reloadAddons = (keys) => {
+    console.log('reloadAddons', keys)
     setLocalData((localData) => {
       const newData = {}
       for (const key in localData) {
@@ -401,6 +404,12 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           command: () => setShowCopySettings(true),
         },
       ]
+      //(if admin)
+      menuItems.push({
+        label: 'Low-level editor',
+        command: () => setShowRawEdit(true),
+        disabled: selectedAddons.length !== 1,
+      })
       addonListContextMenu(e.originalEvent, menuItems)
     }, 50)
   }
@@ -510,6 +519,18 @@ const AddonSettings = ({ projectName, showSites = false }) => {
               setChangedKeys={setChangedKeys}
               projectName={projectName}
               onClose={() => setShowCopySettings(false)}
+            />
+          )}
+          {showRawEdit && (
+            <RawSettingsDialog
+              addonName={selectedAddons[0].name}
+              addonVersion={selectedAddons[0].version}
+              variant={variant}
+              reloadAddons={reloadAddons}
+              projectName={projectName}
+              onClose={() => {
+                setShowRawEdit(false)
+              }}
             />
           )}
           <AddonList
