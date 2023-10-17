@@ -97,7 +97,7 @@ const AddonSettingsPanel = ({
 
   useEffect(() => {
     let uri = `ayon+settings://${addon.name}`
-    if (addon.version) uri += `:${addon.version}`
+    //if (addon.version) uri += `:${addon.version}`
     if (currentSelection?.path) uri += `/${currentSelection.path.join('/')}`
     if (projectName) uri += `?project=${projectName}`
     if (siteId) uri += `&site=${siteId}`

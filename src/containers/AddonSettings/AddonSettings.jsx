@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -67,32 +67,26 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
   const [promoteBundle] = usePromoteBundleMutation()
 
-  const uriChanged = useSelector((state) => state.context.uriChanged)
-
   const projectKey = projectName || '_'
 
-  useEffect(() => {
-    const url = new URL(window.location.href)
-    const addonName = url.searchParams.get('addonName')
-    const addonVersion = url.searchParams.get('addonVersion')
-    const addonString = `${addonName}@${addonVersion}`
-    const siteId = url.searchParams.get('site')
-    const path = url.searchParams.get('settingsPath')?.split('|') || []
-    const fieldId = path.length ? `root_${path.join('_')}` : 'root'
-
-    if (addonName && addonVersion) {
-      setCurrentSelection({
-        addonName,
-        addonVersion,
-        addonString,
-        siteId,
-        path,
-        fieldId,
-      })
-    } else {
+  const onAddonFocus = ({ addonName, addonVersion, siteId, path }) => {
+    if (!path?.length) {
       setCurrentSelection(null)
+      return
     }
-  }, [uriChanged])
+
+    const fieldId = path.length ? `root_${path.join('_')}` : 'root'
+    const addonString = `${addonName}@${addonVersion}`
+
+    setCurrentSelection({
+      addonName,
+      addonVersion,
+      addonString,
+      siteId,
+      path,
+      fieldId,
+    })
+  }
 
   const user = useSelector((state) => state.user)
 
@@ -153,19 +147,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       }
       return newData
     })
-  }
-
-  const onAddonChanged = (addonName) => {
-    // TODO: deprecated?
-    // not sure why this is here. I think it was used to reload addons when
-    // an addon was changed ouside the form (e.g. copying settings using addon list ctx menu)
-    // But we should probably get rid of outside changes
-    console.warn('Called onAddonChanged. This is deprecated.')
-    for (const key in localData) {
-      if (addonName === key.split('|')[0]) {
-        reloadAddons([key])
-      }
-    }
   }
 
   const onSave = async () => {
@@ -484,7 +465,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         />
       </Toolbar>
     )
-  }, [showHelp, currentSelection, changedKeys])
+  }, [showHelp])
 
   const commitToolbar = useMemo(
     () => (
@@ -535,7 +516,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
             variant={variant}
-            onAddonChanged={onAddonChanged}
+            onAddonFocus={onAddonFocus}
             setBundleName={setBundleName}
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
