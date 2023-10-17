@@ -85,8 +85,10 @@ const AddonList = ({
     const addonName = url.searchParams.get('addonName')
     const addonVersion = url.searchParams.get('addonVersion')
 
-    if (addonName && addonVersion) {
-      const addon = addons.find((a) => a.name === addonName && a.version === addonVersion)
+    if (addonName) {
+      const addon = addons.find(
+        (a) => a.name === addonName && (addonVersion ? a.version === addonVersion : true),
+      )
       if (addon) {
         setSelectedAddons([addon])
         onAddonChanged(addonName)

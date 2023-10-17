@@ -110,30 +110,16 @@ const useUriNavigate = () => {
 
         let targetUrl = ''
 
-        if ('project' in qp && 'site' in qp) {
-          targetUrl = `manageProjects/siteSettings?`
-          targetUrl += `project=${qp.project}&site=${qp.site}`
-          targetUrl += `&addonName=${addonName}`
-          if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
-          targetUrl += `&settingsPath=${settingsPath.join('|')}`
-        } else if ('project' in qp) {
-          targetUrl = `manageProjects/projectSettings?`
-          targetUrl += `project=${qp.project}`
-          targetUrl += `&addonName=${addonName}`
-          if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
-          targetUrl += `&settingsPath=${settingsPath.join('|')}`
-        } else if ('site' in qp) {
-          targetUrl = `settings/site?`
-          targetUrl += `site=${qp.site}`
-          targetUrl += `&addonName=${addonName}`
-          if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
-          targetUrl += `&settingsPath=${settingsPath.join('|')}`
-        } else {
-          targetUrl = `settings/studio`
-          targetUrl += `?addonName=${addonName}`
-          if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
-          targetUrl += `&settingsPath=${settingsPath.join('|')}`
-        }
+        if ('project' in qp && 'site' in qp)
+          targetUrl = `manageProjects/siteSettings?${qp.project}&site=${qp.site}&`
+        else if ('project' in qp)
+          targetUrl = `manageProjects/projectSettings?project=${qp.project}&`
+        else if ('site' in qp) targetUrl = `settings/site?site=${qp.site}&`
+        else targetUrl = `settings/studio?`
+
+        targetUrl += `addonName=${addonName}`
+        if (addonVersion) targetUrl += `&addonVersion=${addonVersion}`
+        if (settingsPath?.length) targetUrl += `&settingsPath=${settingsPath.join('|')}`
 
         navigate(targetUrl)
         dispatch(setUri(localUri))
