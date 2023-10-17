@@ -85,12 +85,16 @@ const AddonList = ({
     const addonName = url.searchParams.get('addonName')
     const addonVersion = url.searchParams.get('addonVersion')
 
+    // additional properties received from ayon+settings:// uri
+    const siteId = url.searchParams.get('site') || undefined
+    const path = url.searchParams.get('settingsPath')?.split('|') || undefined
+
     if (addonName) {
       const addon = addons.find(
         (a) => a.name === addonName && (addonVersion ? a.version === addonVersion : true),
       )
       if (addon) {
-        setSelectedAddons([addon])
+        setSelectedAddons([{ ...addon, siteId, path }])
         onAddonChanged(addonName)
       }
     }

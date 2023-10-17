@@ -67,32 +67,36 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
   const [promoteBundle] = usePromoteBundleMutation()
 
-  const uriChanged = useSelector((state) => state.context.uriChanged)
-
   const projectKey = projectName || '_'
 
   useEffect(() => {
-    const url = new URL(window.location.href)
-    const addonName = url.searchParams.get('addonName')
-    const addonVersion = url.searchParams.get('addonVersion')
-    const addonString = `${addonName}@${addonVersion}`
-    const siteId = url.searchParams.get('site')
-    const path = url.searchParams.get('settingsPath')?.split('|') || []
-    const fieldId = path.length ? `root_${path.join('_')}` : 'root'
-
-    if (addonName && addonVersion) {
-      setCurrentSelection({
-        addonName,
-        addonVersion,
-        addonString,
-        siteId,
-        path,
-        fieldId,
-      })
-    } else {
+    if (selectedAddons.length !== 1) {
       setCurrentSelection(null)
+      return
     }
-  }, [uriChanged])
+
+    const addonName = selectedAddons[0].name
+    const addonVersion = selectedAddons[0].version
+    const siteId = selectedAddons[0].siteId
+    const path = selectedAddons[0].path
+
+    if (!path?.length) {
+      setCurrentSelection(null)
+      return
+    }
+
+    const fieldId = path.length ? `root_${path.join('_')}` : 'root'
+    const addonString = `${addonName}@${addonVersion}`
+
+    setCurrentSelection({
+      addonName,
+      addonVersion,
+      addonString,
+      siteId,
+      path,
+      fieldId,
+    })
+  }, [selectedAddons])
 
   const user = useSelector((state) => state.user)
 
@@ -484,7 +488,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         />
       </Toolbar>
     )
-  }, [showHelp, currentSelection, changedKeys])
+  }, [showHelp])
 
   const commitToolbar = useMemo(
     () => (

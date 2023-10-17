@@ -90,6 +90,7 @@ const AddonSettingsPanel = ({
   }, [localData])
 
   const breadcrumbs = useMemo(() => {
+    console.log('CurrentSel', currentSelection)
     if (!currentSelection) return null
     if (currentSelection.addonString !== `${addon.name}@${addon.version}`) return null
     return currentSelection.path
@@ -97,7 +98,7 @@ const AddonSettingsPanel = ({
 
   useEffect(() => {
     let uri = `ayon+settings://${addon.name}`
-    if (addon.version) uri += `:${addon.version}`
+    //if (addon.version) uri += `:${addon.version}`
     if (currentSelection?.path) uri += `/${currentSelection.path.join('/')}`
     if (projectName) uri += `?project=${projectName}`
     if (siteId) uri += `&site=${siteId}`
