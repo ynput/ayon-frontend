@@ -37,6 +37,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
     { id: 'projectName', label: 'Project', sortOrder: true },
     { id: 'status', label: 'Status', sortOrder: true },
     { id: 'taskType', label: 'Type', sortOrder: true },
+    { id: 'folderName', label: 'Folder', sortOrder: true },
   ]
 
   const assigneesGroupBy = { id: 'assignees', label: 'Assignee', sortOrder: true }

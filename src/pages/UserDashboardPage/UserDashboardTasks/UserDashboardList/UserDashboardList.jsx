@@ -1,11 +1,13 @@
 import * as Styled from './UserDashboardList.styled'
 import ListGroup from '../ListGroup/ListGroup'
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { onTaskSelected } from '/src/features/dashboard'
+import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
 import { getFakeTasks, usePrefetchTask, useTaskClick } from '../../util'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
+import useShortcuts from '/src/hooks/useShortcuts'
+import getPreviousTagElement from '/src/helpers/getPreviousTagElement'
 
 const UserDashboardList = ({
   groupedTasks = {},
@@ -172,6 +174,45 @@ const UserDashboardList = ({
     taskClick(e, id, taskIds)
   }
 
+  // COLLAPSED GROUPS
+  const collapsedGroups = useSelector((state) => state.dashboard.tasks.collapsedColumns)
+  const setCollapsedGroups = (ids) => dispatch(onCollapsedColumnsChanged(ids))
+
+  const handleCollapseToggle = useCallback(
+    (id) => {
+      const newCollapsedGroups = collapsedGroups.includes(id)
+        ? collapsedGroups.filter((groupId) => groupId !== id)
+        : [...collapsedGroups, id]
+      setCollapsedGroups(newCollapsedGroups)
+    },
+    [collapsedGroups],
+  )
+
+  // when users presses "c" over a group
+  const handleShortcutCollapse = (target) => {
+    if (!target) return
+    let id
+    // check if target is HEADER or has 'group-header' class
+    if (target.tagName === 'HEADER' || target.classList.contains('group-header')) {
+      id = target.id
+    } else if (target.closest('.group-header') || target.closest('header')) {
+      id = target.closest('.group-header').id
+      if (!id) id = target.closest('header').id
+    }
+    // check if target has closest li
+    else if (target.closest('li')) {
+      const li = target.closest('li')
+      const previousHeader = getPreviousTagElement(li, 'HEADER')
+
+      if (!previousHeader) return
+
+      id = previousHeader.id
+    } else return
+
+    // update state
+    id && handleCollapseToggle(id)
+  }
+
   const [updateTasks] = useUpdateTasksMutation()
   const handleUpdate = async (field, value) => {
     try {
@@ -191,8 +232,6 @@ const UserDashboardList = ({
   }
 
   // return 5 fake loading events if loading
-  // return 5 fake loading events if loading
-
   const [fakeColumns, fakeColumnsObject] = useMemo(() => {
     const fakeTasks = getFakeTasks(5)
     const columnsObject = fakeTasks.reduce((acc, column) => {
@@ -205,8 +244,21 @@ const UserDashboardList = ({
     return [fakeTasks, columnsObject]
   }, [])
 
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'c',
+        action: handleShortcutCollapse,
+        closest: '.tasks-list',
+      },
+    ],
+    [collapsedGroups],
+  )
+
+  useShortcuts(shortcuts, [collapsedGroups])
+
   return (
-    <Styled.ListContainer onKeyDown={handleKeyDown}>
+    <Styled.ListContainer onKeyDown={handleKeyDown} className="tasks-list">
       <Styled.Inner ref={containerRef}>
         {isLoading
           ? fakeColumns.map((c) => (
@@ -232,6 +284,8 @@ const UserDashboardList = ({
                   disabledProjectUsers={disabledProjectUsers}
                   onUpdate={handleUpdate}
                   assigneesIsMe={assigneesIsMe}
+                  isCollapsed={collapsedGroups.includes(id)}
+                  onCollapseChange={handleCollapseToggle}
                 />
               )
             })}

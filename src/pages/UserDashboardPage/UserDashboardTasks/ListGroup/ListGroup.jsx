@@ -1,6 +1,6 @@
 import React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { onCollapsedColumnsChanged } from '/src/features/dashboard'
+import { useDispatch } from 'react-redux'
+
 import { useGetTaskContextMenu } from '/src/pages/UserDashboardPage/util'
 import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
@@ -19,22 +19,12 @@ const ListGroup = ({
   onUpdate,
   assigneesIsMe,
   allUsers = [],
+  onCollapseChange,
+  isCollapsed,
   isLoading,
 }) => {
   const dispatch = useDispatch()
   const column = groups[id] || {}
-
-  // COLLAPSED GROUPS
-  const collapsedGroups = useSelector((state) => state.dashboard.tasks.collapsedColumns)
-  const setCollapsedGroups = (ids) => dispatch(onCollapsedColumnsChanged(ids))
-  const isCollapsed = collapsedGroups.includes(id)
-
-  const handleCollapseToggle = (id) => {
-    const newCollapsedGroups = collapsedGroups.includes(id)
-      ? collapsedGroups.filter((groupId) => groupId !== id)
-      : [...collapsedGroups, id]
-    setCollapsedGroups(newCollapsedGroups)
-  }
 
   // CONTEXT MENU
   const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
@@ -47,12 +37,20 @@ const ListGroup = ({
             borderBottomColor: !isCollapsed && (column?.color ?? 'var(--md-sys-color-outline)'),
           }}
           $isCollapsed={isCollapsed}
-          onDoubleClick={() => handleCollapseToggle(id)}
+          onDoubleClick={() => onCollapseChange(id)}
           $isLoading={column?.isLoading}
+          className="group-header"
+          id={id}
         >
           {!column.isLoading && (
             <>
-              <Button icon="expand_more" variant="text" onClick={() => handleCollapseToggle(id)} />
+              <Button
+                icon="expand_more"
+                variant="text"
+                onClick={() => onCollapseChange(id)}
+                data-tooltip={'Collapse/Expand'}
+                data-shortcut={'C'}
+              />
               <span>
                 {column?.name} - {column?.tasks?.length}
               </span>
