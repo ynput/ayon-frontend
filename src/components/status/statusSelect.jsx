@@ -57,7 +57,7 @@ const StatusSelect = ({
   const longestStatus = statusesSortedByLength?.name?.length
   const calcMaxWidth = longestStatus * charWidth + gap + iconWidth + 16
 
-  maxWidth = maxWidth || calcMaxWidth
+  maxWidth = maxWidth || calcMaxWidth || 'unset'
 
   const dropdownValue = Array.isArray(value) ? uniq(value) : [value]
   const isMixed = dropdownValue.length > 1
