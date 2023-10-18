@@ -509,9 +509,7 @@ const ArrayFieldTemplate = (props) => {
   return (
     <FormArrayField>
       {props.items.map((element) => (
-        <>
-          <ArrayItemTemplate key={element.key} {...element} />
-        </>
+        <ArrayItemTemplate key={element.key} {...element} />
       ))}
 
       {props.canAdd && (
