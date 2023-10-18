@@ -254,68 +254,124 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     }
   }
 
+  //
   // Context menu actions
+  //
 
   const onRemoveOverride = async (addon, siteId, path) => {
     // Remove a single override for this addon (within current project and variant)
     // path is an array of strings
-    try {
-      await modifyAddonOverride({
-        addonName: addon.name,
-        addonVersion: addon.version,
-        projectName: projectKey,
-        siteId,
-        path,
-        variant: addon.variant,
-        action: 'delete',
-      }).unwrap()
-    } catch (e) {
-      toast.error(`Unable to remove ${addon.variant} override of ${addon.name} ${addon.version} `)
-      console.error(e)
-      return
+    const message = (
+      <>
+        <p>This action will instanlty remove the selected override.</p>
+        <p>Are you sure you want to continue?</p>
+      </>
+    )
+
+    const executeRemove = async () => {
+      try {
+        await modifyAddonOverride({
+          addonName: addon.name,
+          addonVersion: addon.version,
+          projectName: projectKey,
+          siteId,
+          path,
+          variant: addon.variant,
+          action: 'delete',
+        }).unwrap()
+      } catch (e) {
+        toast.error(`Unable to remove ${addon.variant} override of ${addon.name} ${addon.version} `)
+        console.error(e)
+        return
+      }
+
+      toast.success('Override removed')
+      reloadAddons([
+        `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`,
+      ])
     }
 
-    toast.success('Override removed')
-    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
+    confirmDialog({
+      header: 'Remove selected override',
+      message,
+      accept: executeRemove,
+      reject: () => {},
+    })
   }
 
   const onRemoveAllOverrides = async (addon, siteId) => {
     // Remove all overrides for this addon (within current project and variant)
-    try {
-      await deleteAddonSettings({
-        addonName: addon.name,
-        addonVersion: addon.version,
-        projectName: projectKey,
-        variant: addon.variant,
-        siteId,
-      }).unwrap()
-    } catch (e) {
-      toast.error(`Unable to remove overrides of ${addon.name} ${addon.version} `)
-      console.error(e)
-      return
+    const message = (
+      <>
+        <p>This action will instanlty remove all overrides for this addon.</p>
+        <p>Are you sure you want to proceed?</p>
+      </>
+    )
+
+    const executeRemove = async () => {
+      try {
+        await deleteAddonSettings({
+          addonName: addon.name,
+          addonVersion: addon.version,
+          projectName: projectKey,
+          variant: addon.variant,
+          siteId,
+        }).unwrap()
+      } catch (e) {
+        toast.error(`Unable to remove overrides of ${addon.name} ${addon.version} `)
+        console.error(e)
+        return
+      }
+      toast.success('Overrides removed')
+      reloadAddons([
+        `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`,
+      ])
     }
-    toast.success('Overrides removed')
-    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
+
+    confirmDialog({
+      header: 'Remove all overrides',
+      message,
+      accept: executeRemove,
+      reject: () => {},
+    })
   }
 
   const onPinOverride = async (addon, siteId, path) => {
-    try {
-      await modifyAddonOverride({
-        addonName: addon.name,
-        addonVersion: addon.version,
-        projectName: projectKey,
-        siteId,
-        path,
-        variant: addon.variant,
-        action: 'pin',
-      }).unwrap()
-    } catch (e) {
-      toast.error(`Unable to pin override of ${addon.name} ${addon.version} `)
-      console.error(e)
-      return
+    const message = (
+      <>
+        <p>This action will instanlty pin the current value as an override. </p>
+        <p>Are you sure you want to proceed?</p>
+      </>
+    )
+
+    const executePin = async () => {
+      try {
+        await modifyAddonOverride({
+          addonName: addon.name,
+          addonVersion: addon.version,
+          projectName: projectKey,
+          siteId,
+          path,
+          variant: addon.variant,
+          action: 'pin',
+        }).unwrap()
+      } catch (e) {
+        toast.error(`Unable to pin override of ${addon.name} ${addon.version} `)
+        console.error(e)
+        return
+      }
+      toast.success('Override pinned')
+      reloadAddons([
+        `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`,
+      ])
     }
-    toast.success('Override pinned')
-    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
+
+    confirmDialog({
+      header: 'Pin override',
+      message,
+      accept: executePin,
+      reject: () => {},
+    })
   }
 
   const pushValueToPath = (addon, siteId, path, value) => {
