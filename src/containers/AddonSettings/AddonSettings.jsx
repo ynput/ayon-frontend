@@ -615,7 +615,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           <Section>
             <ScrollPanel className="transparent nopad" style={{ flexGrow: 1, minWidth: 750 }}>
               {selectedAddons
-                .filter((addon) => addon.version)
+                .filter((addon) => !addon.isBroken)
                 .reverse()
                 .map((addon) => {
                   const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']

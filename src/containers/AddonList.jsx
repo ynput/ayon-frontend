@@ -42,7 +42,7 @@ const AddonList = ({
           // project site overrides
           continue
       } else if (projectName && !addon.hasProjectSettings) continue
-      else if (!addon.hasSettings) continue
+      else if (!addon.hasSettings && !addon.isBroken) continue
 
       const addonKey = `${addon.name}|${addon.version}|${variant}|${siteId || '_'}|${
         projectName || '_'
@@ -123,6 +123,7 @@ const AddonList = ({
 
   const rowDataClassNameFormatter = (rowData) => {
     if (changedAddonKeys && changedAddonKeys.includes(rowData.key)) return 'changed'
+    if (rowData.isBroken) return 'broken-addon-row'
     if (rowData.hasProjectSiteOverrides) return 'changed-site'
     if (rowData.hasProjectOverrides) return 'changed-project'
     if (rowData.hasStudioOverrides) return 'changed-studio'
