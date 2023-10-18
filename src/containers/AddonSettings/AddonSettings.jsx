@@ -404,12 +404,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           command: () => setShowCopySettings(true),
         },
       ]
-      //(if admin)
-      menuItems.push({
-        label: 'Low-level editor',
-        command: () => setShowRawEdit(true),
-        disabled: selectedAddons.length !== 1,
-      })
+      if (user?.data?.isAdmin) {
+        menuItems.push({
+          label: 'Low-level editor',
+          command: () => setShowRawEdit(true),
+          disabled: selectedAddons.length !== 1,
+        })
+      }
       addonListContextMenu(e.originalEvent, menuItems)
     }, 50)
   }
