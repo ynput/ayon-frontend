@@ -11,22 +11,6 @@ function ShortcutsProvider(props) {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  // keep track of what's being hovered
-  const [hovered, setHovered] = useState(null)
-
-  useEffect(() => {
-    document.addEventListener('mouseover', (e) => {
-      setHovered(e.target)
-    })
-
-    return () => {
-      // clean up event listeners
-      document.removeEventListener('mouseover', (e) => {
-        setHovered(e.target)
-      })
-    }
-  }, [])
-
   // logout
   const [logout] = useLogOutMutation()
 
@@ -72,6 +56,8 @@ function ShortcutsProvider(props) {
 
   const defaultShortcuts = [...navigation, ...navBar]
 
+  // keep track of what's being hovered
+  const [hovered, setHovered] = useState(null)
   // start off with global shortcuts but others can be set per page
   const [shortcuts, setShortcuts] = useState(defaultShortcuts)
 
@@ -137,6 +123,21 @@ function ShortcutsProvider(props) {
     // console.log('removing shortcuts', shortcutsToRemove)
     setShortcuts((oldShortcuts) => oldShortcuts.filter((s) => !shortcutsToRemove.includes(s.key)))
   }
+
+  useEffect(() => {
+    if (shortcuts.some((s) => s.closest)) {
+      document.addEventListener('mouseover', (e) => {
+        setHovered(e.target)
+      })
+    }
+
+    return () => {
+      // clean up event listeners
+      document.removeEventListener('mouseover', (e) => {
+        setHovered(e.target)
+      })
+    }
+  }, [shortcuts])
 
   return (
     <ShortcutsContext.Provider
