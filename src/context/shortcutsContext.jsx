@@ -124,19 +124,21 @@ function ShortcutsProvider(props) {
     setShortcuts((oldShortcuts) => oldShortcuts.filter((s) => !shortcutsToRemove.includes(s.key)))
   }
 
+  const removeEventListener = () =>
+    document.removeEventListener('mouseover', (e) => {
+      setHovered(e.target)
+    })
+
   useEffect(() => {
     if (shortcuts.some((s) => s.closest)) {
       document.addEventListener('mouseover', (e) => {
         setHovered(e.target)
       })
+    } else {
+      removeEventListener()
     }
 
-    return () => {
-      // clean up event listeners
-      document.removeEventListener('mouseover', (e) => {
-        setHovered(e.target)
-      })
-    }
+    return () => removeEventListener()
   }, [shortcuts])
 
   return (
