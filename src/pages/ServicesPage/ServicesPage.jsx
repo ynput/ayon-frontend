@@ -38,9 +38,9 @@ const StatusBadge = styled.span`
 `
 
 const formatStatus = (rowData) => {
-  const now = new Date()
-  const lastSeen = new Date(rowData.lastSeen)
-  if (lastSeen < now - 30000)
+  if (rowData.lastSeenDelta === undefined || rowData.lastSeenDelta === null)
+    return <StatusBadge>Unknown</StatusBadge>
+  if (rowData.lastSeenDelta > 10000)
     return <StatusBadge className="unreachable">Worker unreachable</StatusBadge>
 
   if (!rowData.shouldRun)
