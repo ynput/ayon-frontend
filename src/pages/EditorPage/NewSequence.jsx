@@ -116,6 +116,7 @@ const NewSequence = ({
       onShow={handleShow}
       resizable={false}
       draggable={false}
+      appendTo={document.getElementById('root')}
       footer={
         <Toolbar>
           <Spacer />

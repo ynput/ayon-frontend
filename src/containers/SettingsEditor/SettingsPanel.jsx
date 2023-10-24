@@ -83,11 +83,12 @@ const Panel = ({
   children,
   onHeaderClick,
   onContextMenu,
+  objId,
 }) => {
   const toggleIcon = expanded ? 'expand_more' : 'chevron_right'
 
   return (
-    <PanelWrapper className={`panel ${className}`}>
+    <PanelWrapper className={`panel ${className}`} data-fieldid={objId}>
       <PanelHeader
         className="panel-header"
         onContextMenu={onContextMenu}
@@ -147,6 +148,7 @@ const SettingsPanel = ({
       className={nclass}
       onHeaderClick={onClick}
       onContextMenu={onContextMenu}
+      objId={objId}
     >
       {children}
     </Panel>

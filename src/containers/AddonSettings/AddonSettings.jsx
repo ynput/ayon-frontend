@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -22,6 +22,7 @@ import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettings'
 import VariantSelector from './VariantSelector'
 import CopySettingsDialog from '/src/containers/CopySettings/CopySettingsDialog'
+import RawSettingsDialog from '/src/containers/RawSettingsDialog'
 
 import {
   useSetAddonSettingsMutation,
@@ -61,38 +62,33 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [bundleName, setBundleName] = useState()
 
   const [showCopySettings, setShowCopySettings] = useState(false)
+  const [showRawEdit, setShowRawEdit] = useState(false)
 
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
   const [promoteBundle] = usePromoteBundleMutation()
 
-  const uriChanged = useSelector((state) => state.context.uriChanged)
-
   const projectKey = projectName || '_'
 
-  useEffect(() => {
-    const url = new URL(window.location.href)
-    const addonName = url.searchParams.get('addonName')
-    const addonVersion = url.searchParams.get('addonVersion')
-    const addonString = `${addonName}@${addonVersion}`
-    const siteId = url.searchParams.get('site')
-    const path = url.searchParams.get('settingsPath')?.split('|') || []
-    const fieldId = path.length ? `root_${path.join('_')}` : 'root'
-
-    if (addonName && addonVersion) {
-      setCurrentSelection({
-        addonName,
-        addonVersion,
-        addonString,
-        siteId,
-        path,
-        fieldId,
-      })
-    } else {
+  const onAddonFocus = ({ addonName, addonVersion, siteId, path }) => {
+    if (!path?.length) {
       setCurrentSelection(null)
+      return
     }
-  }, [uriChanged])
+
+    const fieldId = path.length ? `root_${path.join('_')}` : 'root'
+    const addonString = `${addonName}@${addonVersion}`
+
+    setCurrentSelection({
+      addonName,
+      addonVersion,
+      addonString,
+      siteId,
+      path,
+      fieldId,
+    })
+  }
 
   const user = useSelector((state) => state.user)
 
@@ -143,6 +139,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }
 
   const reloadAddons = (keys) => {
+    console.log('reloadAddons', keys)
     setLocalData((localData) => {
       const newData = {}
       for (const key in localData) {
@@ -153,19 +150,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       }
       return newData
     })
-  }
-
-  const onAddonChanged = (addonName) => {
-    // TODO: deprecated?
-    // not sure why this is here. I think it was used to reload addons when
-    // an addon was changed ouside the form (e.g. copying settings using addon list ctx menu)
-    // But we should probably get rid of outside changes
-    console.warn('Called onAddonChanged. This is deprecated.')
-    for (const key in localData) {
-      if (addonName === key.split('|')[0]) {
-        reloadAddons([key])
-      }
-    }
   }
 
   const onSave = async () => {
@@ -270,68 +254,124 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     }
   }
 
+  //
   // Context menu actions
+  //
 
   const onRemoveOverride = async (addon, siteId, path) => {
     // Remove a single override for this addon (within current project and variant)
     // path is an array of strings
-    try {
-      await modifyAddonOverride({
-        addonName: addon.name,
-        addonVersion: addon.version,
-        projectName: projectKey,
-        siteId,
-        path,
-        variant: addon.variant,
-        action: 'delete',
-      }).unwrap()
-    } catch (e) {
-      toast.error(`Unable to remove ${addon.variant} override of ${addon.name} ${addon.version} `)
-      console.error(e)
-      return
+    const message = (
+      <>
+        <p>This action will instanlty remove the selected override.</p>
+        <p>Are you sure you want to continue?</p>
+      </>
+    )
+
+    const executeRemove = async () => {
+      try {
+        await modifyAddonOverride({
+          addonName: addon.name,
+          addonVersion: addon.version,
+          projectName: projectKey,
+          siteId,
+          path,
+          variant: addon.variant,
+          action: 'delete',
+        }).unwrap()
+      } catch (e) {
+        toast.error(`Unable to remove ${addon.variant} override of ${addon.name} ${addon.version} `)
+        console.error(e)
+        return
+      }
+
+      toast.success('Override removed')
+      reloadAddons([
+        `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`,
+      ])
     }
 
-    toast.success('Override removed')
-    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
+    confirmDialog({
+      header: 'Remove selected override',
+      message,
+      accept: executeRemove,
+      reject: () => {},
+    })
   }
 
   const onRemoveAllOverrides = async (addon, siteId) => {
     // Remove all overrides for this addon (within current project and variant)
-    try {
-      await deleteAddonSettings({
-        addonName: addon.name,
-        addonVersion: addon.version,
-        projectName: projectKey,
-        variant: addon.variant,
-        siteId,
-      }).unwrap()
-    } catch (e) {
-      toast.error(`Unable to remove overrides of ${addon.name} ${addon.version} `)
-      console.error(e)
-      return
+    const message = (
+      <>
+        <p>This action will instanlty remove all overrides for this addon.</p>
+        <p>Are you sure you want to proceed?</p>
+      </>
+    )
+
+    const executeRemove = async () => {
+      try {
+        await deleteAddonSettings({
+          addonName: addon.name,
+          addonVersion: addon.version,
+          projectName: projectKey,
+          variant: addon.variant,
+          siteId,
+        }).unwrap()
+      } catch (e) {
+        toast.error(`Unable to remove overrides of ${addon.name} ${addon.version} `)
+        console.error(e)
+        return
+      }
+      toast.success('Overrides removed')
+      reloadAddons([
+        `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`,
+      ])
     }
-    toast.success('Overrides removed')
-    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
+
+    confirmDialog({
+      header: 'Remove all overrides',
+      message,
+      accept: executeRemove,
+      reject: () => {},
+    })
   }
 
   const onPinOverride = async (addon, siteId, path) => {
-    try {
-      await modifyAddonOverride({
-        addonName: addon.name,
-        addonVersion: addon.version,
-        projectName: projectKey,
-        siteId,
-        path,
-        variant: addon.variant,
-        action: 'pin',
-      }).unwrap()
-    } catch (e) {
-      toast.error(`Unable to pin override of ${addon.name} ${addon.version} `)
-      console.error(e)
-      return
+    const message = (
+      <>
+        <p>This action will instanlty pin the current value as an override. </p>
+        <p>Are you sure you want to proceed?</p>
+      </>
+    )
+
+    const executePin = async () => {
+      try {
+        await modifyAddonOverride({
+          addonName: addon.name,
+          addonVersion: addon.version,
+          projectName: projectKey,
+          siteId,
+          path,
+          variant: addon.variant,
+          action: 'pin',
+        }).unwrap()
+      } catch (e) {
+        toast.error(`Unable to pin override of ${addon.name} ${addon.version} `)
+        console.error(e)
+        return
+      }
+      toast.success('Override pinned')
+      reloadAddons([
+        `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`,
+      ])
     }
-    toast.success('Override pinned')
-    reloadAddons([`${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`])
+
+    confirmDialog({
+      header: 'Pin override',
+      message,
+      accept: executePin,
+      reject: () => {},
+    })
   }
 
   const pushValueToPath = (addon, siteId, path, value) => {
@@ -420,6 +460,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           command: () => setShowCopySettings(true),
         },
       ]
+      if (user?.data?.isAdmin) {
+        menuItems.push({
+          label: 'Low-level editor',
+          command: () => setShowRawEdit(true),
+          disabled: selectedAddons.length !== 1,
+        })
+      }
       addonListContextMenu(e.originalEvent, menuItems)
     }, 50)
   }
@@ -460,7 +507,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             />
             <Button
               icon="rocket_launch"
-              tooltip="Push bundle to production"
+              data-tooltip="Push bundle to production"
               onClick={onPushToProduction}
               disabled={variant !== 'staging' || canCommit}
               style={{ zIndex: 100 }}
@@ -480,10 +527,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             setShowHelp(!showHelp)
           }}
           icon="help"
+          data-tooltip="Show help descriptions"
         />
       </Toolbar>
     )
-  }, [showHelp, currentSelection, changedKeys])
+  }, [showHelp])
 
   const commitToolbar = useMemo(
     () => (
@@ -530,11 +578,23 @@ const AddonSettings = ({ projectName, showSites = false }) => {
               onClose={() => setShowCopySettings(false)}
             />
           )}
+          {showRawEdit && (
+            <RawSettingsDialog
+              addonName={selectedAddons[0].name}
+              addonVersion={selectedAddons[0].version}
+              variant={variant}
+              reloadAddons={reloadAddons}
+              projectName={projectName}
+              onClose={() => {
+                setShowRawEdit(false)
+              }}
+            />
+          )}
           <AddonList
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
             variant={variant}
-            onAddonChanged={onAddonChanged}
+            onAddonFocus={onAddonFocus}
             setBundleName={setBundleName}
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
@@ -555,7 +615,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           <Section>
             <ScrollPanel className="transparent nopad" style={{ flexGrow: 1, minWidth: 750 }}>
               {selectedAddons
-                .filter((addon) => addon.version)
+                .filter((addon) => !addon.isBroken)
                 .reverse()
                 .map((addon) => {
                   const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']

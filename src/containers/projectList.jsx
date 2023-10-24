@@ -190,6 +190,18 @@ const ProjectList = ({
         },
       ]
 
+      // if not on project manager page
+      if (!isProjectManager) {
+        menuItems.push({
+          label: 'Manage Project',
+          icon: 'settings_applications',
+          command: () => {
+            closeContextMenu()
+            navigate(`/manageProjects?project=${sel[0]}`)
+          },
+        })
+      }
+
       const managerMenuItems = [
         {
           label: 'Create Project',
@@ -212,19 +224,24 @@ const ProjectList = ({
   )
 
   // create the ref and model
-  const [tableContextMenuShow] = useCreateContext([])
+  const [tableContextMenuShow, closeContextMenu] = useCreateContext([])
 
   // When right clicking on the already selected node, we don't want to change the selection
   const onContextMenu = (event) => {
     let newSelection = selection
-    if (
-      event?.data?.name &&
-      (typeof selection === 'string'
-        ? selection !== event.data.name
-        : !(event.data.name in selection))
-    ) {
-      onSelect([event.data.name])
+
+    if (multiselect) {
+      if (event?.data?.name && !selection?.includes(event.data.name)) {
+        // if the selection does not include the clicked node, new selection is the clicked node
+        newSelection = [event.data.name]
+        // update selection state
+        onSelect(newSelection)
+      }
+    } else {
+      // single select gets converted to array
       newSelection = [event.data.name]
+      // update selection state
+      onSelect(event.data.name)
     }
 
     tableContextMenuShow(event.originalEvent, getContextItems(newSelection))

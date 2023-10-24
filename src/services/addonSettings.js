@@ -79,6 +79,55 @@ const addonSettings = ayonApi.injectEndpoints({
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
+    getRawAddonSettingsOverrides: build.query({
+      query: ({ addonName, addonVersion, projectName, siteId, variant }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/rawOverrides${apiSuffix(
+          projectName,
+          siteId,
+          variant,
+        )}`,
+        method: 'GET',
+      }),
+    }),
+
+    setRawAddonSettingsOverrides: build.mutation({
+      query: ({ addonName, addonVersion, projectName, siteId, variant, data }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/rawOverrides${apiSuffix(
+          projectName,
+          siteId,
+          variant,
+        )}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, arg) => [
+        {
+          type: 'addonSettings',
+          addonName: arg.addonName,
+          addonVersion: arg.addonVersion,
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+          variant: arg.variant,
+        },
+        {
+          type: 'addonSettingsOverrides',
+          addonName: arg.addonName,
+          addonVersion: arg.addonVersion,
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+          variant: arg.variant,
+        },
+        {
+          type: 'addonSettingsList',
+          projectName: arg.projectName,
+          siteId: arg.siteId,
+          variant: arg.variant,
+        },
+      ],
+      transformErrorResponse: (error) =>
+        error.data.detail ? error.data : { detail: `Error ${error.status}` },
+    }),
+
     setAddonSettings: build.mutation({
       query: ({ addonName, addonVersion, projectName, siteId, data, variant }) => ({
         url: `/api/addons/${addonName}/${addonVersion}/settings${apiSuffix(
@@ -209,4 +258,6 @@ export const {
   useSetAddonSettingsMutation,
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
+  useSetRawAddonSettingsOverridesMutation,
+  useLazyGetRawAddonSettingsOverridesQuery,
 } = addonSettings

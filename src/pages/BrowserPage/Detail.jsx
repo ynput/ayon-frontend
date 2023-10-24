@@ -261,7 +261,7 @@ const Detail = () => {
             enableEdit &&
             !showLoading && (
               <Link to={enableEdit ? `/projects/${projectName}/editor` : '#'}>
-                <Button icon="edit" disabled={!enableEdit} variant="text" />
+                <Button icon="edit" disabled={!enableEdit} variant="text" data-tooltip={'Edit'} />
               </Link>
             )
           }

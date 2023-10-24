@@ -73,6 +73,7 @@ const ProjectLatest = ({ projectName }) => {
       icon={{
         link: '/events',
         icon: 'history',
+        tooltip: 'Events page',
       }}
     >
       {rows.map((row, i) => (

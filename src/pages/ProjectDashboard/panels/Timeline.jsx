@@ -171,7 +171,7 @@ const Timeline = ({ projectName }) => {
       }}
       stylePanel={{ height: '100%' }}
     >
-      <TailsStyled>{startString}</TailsStyled>
+      <TailsStyled data-tooltip={'Start date'}>{startString}</TailsStyled>
       <ProgressStyled animation={animation} onAnimationEnd={() => setAnimation(false)}>
         <ProgressBar
           isLoading={isFetching}
@@ -188,7 +188,9 @@ const Timeline = ({ projectName }) => {
         />
         <MarkerStyled left={percentage}>{!isFetching && `Day ${done}`}</MarkerStyled>
       </ProgressStyled>
-      <TailsStyled end="true">{endString}</TailsStyled>
+      <TailsStyled end="true" data-tooltip={'End date'}>
+        {endString}
+      </TailsStyled>
       {isFetching && <StyledLoading />}
     </DashboardPanelWrapper>
   )

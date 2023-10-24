@@ -11,11 +11,22 @@ body {
 }
 
 :root {
+  // developer colors
   --color-hl-developer-container: hsl(272, 23%, 22%);
   --color-hl-developer-container-hover: hsl(272, 23%, 25%);
   --color-hl-developer-hover: hsl(272, 96%, 83%);
   --color-hl-developer-surface: hsl(272, 30%, 70%);
   --color-hl-developer-surface-hover: hsl(272, 30%, 75%);
+
+  // production colors
+  --color-hl-production: var(--md-sys-color-tertiary);
+  --color-hl-production-hover: var(--md-sys-color-tertiary-hover);
+  --color-hl-production-active: var(--md-sys-color-tertiary-active);
+
+  // staging colors
+  --color-hl-staging: hsl(357, 100%, 76%);
+  --color-hl-staging-hover: hsl(357, 100%, 73%);
+  --color-hl-staging-active: hsl(357, 100%, 70%);
 }
 
 #root {
@@ -743,4 +754,10 @@ a {
       }
     }
   }
+}
+
+
+.broken-addon-row {
+  color: red !important;
+  font-style: italic;
 }

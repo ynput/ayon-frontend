@@ -33,8 +33,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const taskFields = {
     status: { plural: 'statuses', isEditable: true },
     taskType: { plural: 'task_types', isEditable: true },
-    folderName: { plural: 'folder_names', isEditable: false },
-    projectName: { plural: 'projectNames', isEditable: false },
+    folderType: { plural: 'folder_types', isEditable: false },
   }
 
   //  get kanban tasks for all projects by assigned user (me)

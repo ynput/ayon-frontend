@@ -26,7 +26,11 @@ const BundleDepPackage = ({ children, label, onEdit }) => {
         {children || '(NONE)'}
         {/* <span> (author)</span> */}
       </span>
-      <Button icon={children ? 'edit' : 'add'} onClick={onEdit} />
+      <Button
+        icon={children ? 'edit' : 'add'}
+        onClick={onEdit}
+        data-tooltip={children ? 'Edit dependency package' : 'Add dependency package'}
+      />
     </StyledFormRow>
   )
 }

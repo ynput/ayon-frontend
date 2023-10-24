@@ -27,6 +27,7 @@ import { useLocation } from 'react-router'
 
 import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import useShortcuts from '/src/hooks/useShortcuts'
 
 const Bundles = () => {
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
@@ -294,6 +295,45 @@ const Bundles = () => {
 
   // at 1310px wide
   const isCompacted = useMemo(() => window.innerWidth < 1310, [])
+  // SHORTCUTS
+  const shortcuts = [
+    {
+      key: 'n',
+      action: () => handleNewBundleStart(),
+    },
+    {
+      key: 'a',
+      action: () => setUploadOpen('addon'),
+    },
+    {
+      key: 'l',
+      action: () => setUploadOpen('installer'),
+    },
+    {
+      key: 'p',
+      action: () => setUploadOpen('package'),
+    },
+    {
+      key: 'S',
+      action: () => toggleBundleStatus('staging', selectedBundles[0]),
+      disabled: selectedBundles.length !== 1,
+    },
+    {
+      key: 'P',
+      action: () => toggleBundleStatus('production', selectedBundles[0]),
+      disabled: selectedBundles.length !== 1,
+    },
+    {
+      key: 'D',
+      action: () => handleDuplicateBundle(selectedBundles[0]),
+      disabled: selectedBundles.length !== 1 && !newBundleOpen,
+    },
+  ]
+
+  const prodBundle = useMemo(() => bundlesData.find((b) => b.isProduction), [bundlesData])
+  const stageBundle = useMemo(() => bundlesData.find((b) => b.isStaging), [bundlesData])
+
+  useShortcuts(shortcuts, [selectedBundles, newBundleOpen, prodBundle, stageBundle])
 
   return (
     <>
@@ -302,6 +342,7 @@ const Bundles = () => {
         style={{ width: 400, height: 400, overflow: 'hidden' }}
         header={uploadHeader}
         onHide={handleAddonInstallFinish}
+        appendTo={document.getElementById('root')}
       >
         {uploadOpen && (
           <AddonUpload
@@ -316,21 +357,33 @@ const Bundles = () => {
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>
               <Toolbar>
-                <Button label="Add bundle" icon="add" onClick={handleNewBundleStart} />
+                <Button
+                  label="Add bundle"
+                  icon="add"
+                  onClick={handleNewBundleStart}
+                  data-tooltip="Add new bundle"
+                  data-shortcut="N"
+                />
                 <Button
                   label="Install addons"
                   icon="input_circle"
                   onClick={() => setUploadOpen('addon')}
+                  data-tooltip="Install addon zip files"
+                  data-shortcut="A"
                 />
                 <Button
                   label={`${isCompacted ? '' : 'Upload'} Launcher`}
                   icon="upload"
                   onClick={() => setUploadOpen('installer')}
+                  data-tooltip="Upload launchers for download"
+                  data-shortcut="L"
                 />
                 <Button
                   label={`${isCompacted ? '' : 'Upload'} Dependency Package`}
                   icon="upload"
                   onClick={() => setUploadOpen('package')}
+                  data-tooltip="Upload dependency packages"
+                  data-shortcut="P"
                 />
                 <span style={{ whiteSpace: 'nowrap' }}>Show Archived</span>
                 <InputSwitch
@@ -347,6 +400,7 @@ const Bundles = () => {
                 onDelete={handleDeleteBundle}
                 toggleBundleStatus={toggleBundleStatus}
                 errorMessage={!isFetching && isError && error?.data?.traceback}
+                developerMode={developerMode}
               />
             </Section>
           </SplitterPanel>

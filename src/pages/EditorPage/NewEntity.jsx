@@ -52,16 +52,36 @@ const NewEntity = ({
   useEffect(() => {
     if (type !== entityType && type) {
       setEntityType(type)
-      const task = {
-        label: 'Generic',
-        name: 'generic',
-        type: 'Generic',
-      }
+      let task = {}
+      if ('Generic' in typeOptions)
+        task = {
+          name: 'generic',
+          label: 'generic',
+          type: 'Generic',
+        }
 
-      const folder = {
-        label: 'Folder',
-        name: 'folder',
-        type: 'Folder',
+      let folder = ''
+      if ('Folder' in typeOptions)
+        folder = {
+          name: 'folder',
+          label: 'folder',
+          type: 'Folder',
+        }
+
+      // fallback to first option
+      if (isEmpty(task) && !isEmpty(typeOptions)) {
+        const firstType = Object.values(typeOptions)[0]
+        if (firstType) {
+          const name = firstType.shortName || firstType.name?.toLowerCase()
+
+          folder = {
+            type: firstType.name,
+            name: name,
+            label: name,
+          }
+
+          task = folder
+        }
       }
 
       // set defaults
@@ -100,7 +120,9 @@ const NewEntity = ({
         if (!matches || !typeOption) return
         // if name is same as type, update name
         const newName =
-          type === 'folder' ? typeOption.shortName || typeOption.name : typeOption.name
+          type === 'folder'
+            ? typeOption.shortName || typeOption.name.toLowerCase()
+            : typeOption.name.toLowerCase()
         newState.name = newName
         newState.label = newName
       }
@@ -181,6 +203,7 @@ const NewEntity = ({
       onShow={handleShow}
       resizable={false}
       draggable={false}
+      appendTo={document.getElementById('root')}
       footer={
         <Toolbar>
           <Spacer />

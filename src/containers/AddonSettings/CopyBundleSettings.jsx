@@ -454,7 +454,7 @@ const CopyBundleSettingsButton = ({
     <>
       <Button
         icon="input"
-        tooltip="Copy bundle settings from..."
+        data-tooltip="Copy settings from"
         onClick={() => setDialogVisible(true)}
         disabled={disabled || !bundleName}
       />
@@ -465,6 +465,7 @@ const CopyBundleSettingsButton = ({
           onHide={() => setDialogVisible(false)}
           style={{ width: '80%', height: '80%' }}
           footer={footer}
+          appendTo={document.getElementById('root')}
         >
           <DialogBody>
             <ToolPanel>

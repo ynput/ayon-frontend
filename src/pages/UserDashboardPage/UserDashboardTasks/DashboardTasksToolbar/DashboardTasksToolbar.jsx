@@ -37,6 +37,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
     { id: 'projectName', label: 'Project', sortOrder: true },
     { id: 'status', label: 'Status', sortOrder: true },
     { id: 'taskType', label: 'Type', sortOrder: true },
+    { id: 'folderName', label: 'Folder', sortOrder: true },
   ]
 
   const assigneesGroupBy = { id: 'assignees', label: 'Assignee', sortOrder: true }
@@ -129,12 +130,14 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
         onClick={() => setView('list')}
         selected={view === 'list'}
         icon="format_list_bulleted"
+        data-tooltip="List view"
       />
       <Button
         label="Board"
         onClick={() => setView('kanban')}
         selected={view === 'kanban'}
         icon="view_kanban"
+        data-tooltip="Board (kanban) view"
       />
     </Styled.TasksToolbar>
   )
