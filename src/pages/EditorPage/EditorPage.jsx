@@ -397,6 +397,8 @@ const EditorPage = () => {
         if (!node.leaf) {
           node.children = []
           if (childId in expandedFolders) buildHierarchy(childId, node.children)
+          // sort children by name
+          node.children = sortByKey(node.children, 'name')
         }
         target.push(node)
       }
