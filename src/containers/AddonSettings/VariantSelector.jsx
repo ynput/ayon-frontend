@@ -23,25 +23,32 @@ const DropdownBadge = styled.span`
 `
 
 const DevModeSelector = ({ variant, setVariant, disabled }) => {
-  const { data: bundleList } = useGetBundleListQuery({})
+  const { data } = useGetBundleListQuery({})
   const userName = useSelector((state) => state.user.name)
 
+  const bundleList = useMemo(() => {
+    return [
+      { label: 'Production', name: 'production' },
+      { label: 'Staging', name: 'staging' },
+      ...(data || []).filter((b) => !b?.isArchived && b?.isDev),
+    ]
+  }, [data])
+
   const bundleOptions = useMemo(() => {
-    if (!bundleList?.length) return []
-    const bundles = bundleList.filter((b) => !b?.isArchived && b?.isDev)
-    return bundles.map((b) => ({ label: b.name, value: b.name, active: b.activeUser === userName }))
+    return bundleList.map((b) => ({
+      label: b.label || b.name,
+      value: b.name,
+      active: b.activeUser === userName,
+    }))
   }, [bundleList])
 
   useEffect(() => {
     // Bundle preselection
-    if (!bundleList?.length) return
-    const bundles = bundleList.filter((b) => !b?.isArchived && b?.isDev)
-    if (!bundles.length) return
-    const selectedBundle = bundles.find((b) => b.name === variant)
+    const selectedBundle = bundleList.find((b) => b.name === variant)
     if (!selectedBundle) {
-      const userBundle = bundles.find((b) => b.activeUser === userName)
+      const userBundle = bundleList.find((b) => b.activeUser === userName)
       if (userBundle) return setVariant(userBundle.name)
-      else return setVariant(bundles[0].name)
+      else return setVariant(bundleList[0].name)
     }
   }, [bundleList, variant])
 
