@@ -74,12 +74,14 @@ const SettingsPage = () => {
         path: '/settings/bundles',
         module: 'bundles',
         accessLevels: ['manager'],
+        shortcut: 'B+B',
       },
       {
         name: 'Studio settings',
         path: '/settings/studio',
         module: 'studio',
         accessLevels: ['manager'],
+        shortcut: 'S+S',
       },
       {
         name: 'Site settings',
@@ -104,6 +106,7 @@ const SettingsPage = () => {
         path: '/settings/users',
         module: 'users',
         accessLevels: ['manager'],
+        shortcut: 'U+U',
       },
       {
         name: 'Permissions',
