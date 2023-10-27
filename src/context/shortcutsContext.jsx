@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { toggleMenuOpen } from '../features/context'
 import { useLogOutMutation } from '../services/auth/getAuth'
+import { useSearchParams } from 'react-router-dom'
 
 const ShortcutsContext = createContext()
 
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const dispatch = useDispatch()
 
   // logout
@@ -27,9 +29,16 @@ function ShortcutsProvider(props) {
   const navigation = useMemo(
     () => [
       // project settings
-      { key: 'p+p', action: () => navigate('/manageProjects/anatomy') },
+      {
+        key: 'p+p',
+        action: () => navigate('/manageProjects/projectSettings?' + searchParams.toString()),
+      },
+      // project settings anatomy
+      { key: 'a+a', action: () => navigate('/manageProjects/anatomy?' + searchParams.toString()) },
       // studio settings
       { key: 's+s', action: () => navigate('/settings/studio') },
+      // bundles settings
+      { key: 'b+b', action: () => navigate('/settings/bundles') },
       // dashboard
       { key: 'd+d', action: () => navigate('/dashboard') },
       // user settings
@@ -37,7 +46,7 @@ function ShortcutsProvider(props) {
       // events page
       { key: 'e+e', action: () => navigate('/events') },
     ],
-    [navigate],
+    [navigate, searchParams],
   )
 
   const navBar = useMemo(
@@ -51,7 +60,7 @@ function ShortcutsProvider(props) {
     [navigate],
   )
   // when these variables change, update shortcutshh
-  const deps = []
+  const deps = [searchParams]
 
   const defaultShortcuts = [...navigation, ...navBar]
 
