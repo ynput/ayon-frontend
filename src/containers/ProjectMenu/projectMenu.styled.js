@@ -1,6 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
 import { Sidebar } from 'primereact/sidebar'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
 export const ProjectSidebar = styled(Sidebar)`
   /* height: calc(100% - 42px - 8px) !important;
@@ -84,4 +84,22 @@ export const Search = styled(Button)`
   top: 4px;
   width: min-content;
   padding: 4px;
+`
+
+const FadeInAnimation = keyframes`
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+`
+
+export const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: ${FadeInAnimation} 0.1s ease-in-out;
 `
