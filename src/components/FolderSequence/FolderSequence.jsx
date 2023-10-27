@@ -57,6 +57,8 @@ const FolderSequence = ({
 }) => {
   const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
 
+  const disablePrefix = (!nesting && isRoot) || prefixDisabled
+
   const folders = useSelector((state) => state.project.folders) || []
   const tasks = useSelector((state) => state.project.tasks) || []
 
@@ -70,6 +72,7 @@ const FolderSequence = ({
   const [sequence, setSequence] = useState(initSeq)
 
   const baseRef = useRef(null)
+  const prefixRef = useRef(null)
   const handleChange = (e) => {
     e?.preventDefault && e?.preventDefault()
 
@@ -144,12 +147,18 @@ const FolderSequence = ({
       setSequence(seq)
     }
 
-    // focus base input if changing type
+    // focus switch if not disabled else base input if changing type
     if (fieldId === 'type') {
-      setTimeout(() => {
-        baseRef.current.focus()
-        baseRef.current.select()
-      }, 50)
+      if (disablePrefix) {
+        setTimeout(() => {
+          baseRef.current.focus()
+          baseRef.current.select()
+        }, 50)
+      } else {
+        setTimeout(() => {
+          prefixRef.current.focus()
+        }, 50)
+      }
     }
   }
 
@@ -277,7 +286,8 @@ const FolderSequence = ({
                       checked={prefix}
                       id={'prefix'}
                       onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
-                      disabled={(!nesting && isRoot) || prefixDisabled}
+                      disabled={disablePrefix}
+                      ref={prefixRef}
                     />
                   </Styled.InputColumn>
                   <Icon icon="trending_flat" />
