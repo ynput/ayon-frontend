@@ -53,6 +53,7 @@ const FolderSequence = ({
   prefixExample = '',
   prefixDisabled,
   typeSelectRef,
+  onLastInputKeydown,
   ...props
 }) => {
   const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
@@ -347,6 +348,7 @@ const FolderSequence = ({
                 placeholder="15..."
                 min={2}
                 onFocus={(e) => e.target.select()}
+                onKeyDown={onLastInputKeydown}
               />
             </Styled.InputColumn>
 

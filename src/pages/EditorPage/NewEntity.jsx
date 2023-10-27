@@ -181,14 +181,15 @@ const NewEntity = ({
     }
   }
 
-  const handleKeyDown = (e) => {
-    // ctrl + enter submit and close
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      handleSubmit(true)
-    }
-    // shift + enter submit and don't close
-    if (e.shiftKey && e.key === 'Enter') {
-      handleSubmit(false)
+  const handleKeyDown = (e, lastInput) => {
+    if (e.key === 'Enter') {
+      if (lastInput) {
+        handleSubmit(true)
+      } else if (e.ctrlKey || e.metaKey) {
+        handleSubmit(true)
+      } else if (e.shiftKey) {
+        handleSubmit(false)
+      }
     }
   }
 
@@ -251,6 +252,7 @@ const NewEntity = ({
           onChange={(e) => handleChange(e.target.value, 'label')}
           ref={labelRef}
           onFocus={() => setNameFocused(true)}
+          onKeyDown={(e) => handleKeyDown(e, true)}
         />
       </ContentStyled>
     </Dialog>
