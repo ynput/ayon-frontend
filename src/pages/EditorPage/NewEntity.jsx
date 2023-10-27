@@ -32,6 +32,7 @@ const NewEntity = ({
   folderNames = new Map(),
   taskNames = new Map(),
 }) => {
+  const [nameFocused, setNameFocused] = useState(false)
   const [entityType, setEntityType] = useState(null)
   //   build out form state
   const initData = { label: '', name: '', type: '' }
@@ -136,7 +137,7 @@ const NewEntity = ({
     if (id === 'type') {
       setTimeout(() => {
         labelRef.current.focus()
-      }, 50)
+      }, 100)
     }
   }
 
@@ -180,14 +181,25 @@ const NewEntity = ({
     }
   }
 
-  const handleKeyDown = (e) => {
-    // ctrl + enter submit and close
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      handleSubmit(true)
+  const handleKeyDown = (e, lastInput) => {
+    if (e.key === 'Enter') {
+      if (lastInput) {
+        handleSubmit(true)
+      } else if (e.ctrlKey || e.metaKey) {
+        handleSubmit(true)
+      } else if (e.shiftKey) {
+        handleSubmit(false)
+      }
     }
-    // shift + enter submit and don't close
-    if (e.shiftKey && e.key === 'Enter') {
-      handleSubmit(false)
+  }
+
+  const handleTypeSelectFocus = () => {
+    if (nameFocused) {
+      setNameFocused(false)
+      // super hacky way to fix clicking on type select when name is focused
+      setTimeout(() => {
+        typeSelectRef.current?.open()
+      }, 100)
     }
   }
 
@@ -205,7 +217,7 @@ const NewEntity = ({
       draggable={false}
       appendTo={document.getElementById('root')}
       footer={
-        <Toolbar>
+        <Toolbar onFocus={() => setNameFocused(false)}>
           <Spacer />
           <Button
             label={`Add`}
@@ -223,6 +235,7 @@ const NewEntity = ({
         </Toolbar>
       }
       onKeyDown={handleKeyDown}
+      onClick={(e) => e.target.tagName !== 'INPUT' && setNameFocused(false)}
     >
       <ContentStyled>
         <TypeEditor
@@ -231,11 +244,15 @@ const NewEntity = ({
           options={typeOptions}
           style={{ width: 160 }}
           ref={typeSelectRef}
+          onFocus={handleTypeSelectFocus}
+          onClick={() => setNameFocused(false)}
         />
         <InputText
           value={entityData.label}
           onChange={(e) => handleChange(e.target.value, 'label')}
           ref={labelRef}
+          onFocus={() => setNameFocused(true)}
+          onKeyDown={(e) => handleKeyDown(e, true)}
         />
       </ContentStyled>
     </Dialog>

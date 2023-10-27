@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import AppNavLinks from '/src/containers/header/AppNavLinks'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
 import ProjectList from '/src/containers/projectList'
@@ -10,6 +10,7 @@ import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDash
 import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import ProjectDashboard from '../ProjectDashboard'
+import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 
 const UserDashboardPage = () => {
   let { module } = useParams()
@@ -27,6 +28,9 @@ const UserDashboardPage = () => {
       accessLevels: [],
     },
   ]
+
+  const navigate = useNavigate()
+  const [showNewProject, setShowNewProject] = useState(false)
 
   //   redux states
   const dispatch = useDispatch()
@@ -74,8 +78,12 @@ const UserDashboardPage = () => {
             onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}
             onNoProject={(p) => p && setSelectedProjects([p])}
             autoSelect
-            onSelectAll={(projects) => setSelectedProjects(projects)}
+            onSelectAll={
+              module !== 'overview' ? (projects) => setSelectedProjects(projects) : undefined
+            }
             onSelectAllDisabled={!isProjectsMultiSelect}
+            isProjectManager={module === 'overview'}
+            onNewProject={() => setShowNewProject(true)}
           />
           {module === 'tasks' && (
             <UserTasksContainer
@@ -86,6 +94,14 @@ const UserDashboardPage = () => {
           {module === 'overview' && <ProjectDashboard projectName={selectedProjects[0]} />}
         </Section>
       </main>
+      {showNewProject && (
+        <NewProjectDialog
+          onHide={(name) => {
+            setShowNewProject(false)
+            navigate(`/manageProjects/anatomy?project=${name}`)
+          }}
+        />
+      )}
     </>
   )
 }

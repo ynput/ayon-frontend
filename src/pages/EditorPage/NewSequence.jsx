@@ -94,14 +94,15 @@ const NewSequence = ({
     }
   }
 
-  const handleKeyDown = (e) => {
-    // ctrl + enter submit and close
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      handleSeqSubmit(true)
-    }
-    // shift + enter submit and don't close
-    if (e.shiftKey && e.key === 'Enter') {
-      handleSeqSubmit(false)
+  const handleKeyDown = (e, lastInput) => {
+    if (e.key === 'Enter') {
+      if (lastInput) {
+        handleSeqSubmit(true)
+      } else if (e.ctrlKey || e.metaKey) {
+        handleSeqSubmit(true)
+      } else if (e.shiftKey) {
+        handleSeqSubmit(false)
+      }
     }
   }
 
@@ -144,6 +145,7 @@ const NewSequence = ({
         prefixExample={createSeq.prefix ? examplePrefix : ''}
         prefixDisabled={multipleSelection}
         typeSelectRef={typeSelectRef}
+        onLastInputKeydown={(e) => handleKeyDown(e, true)}
       />
     </Dialog>
   )

@@ -80,16 +80,15 @@ const Thumbnail = ({
       {...props}
     >
       {(!isLoading || !thumbLoaded) && !disabled && <Icon icon={icon || 'image'} />}
-      {(entityType && !(isWrongEntity || !entityId)) ||
-        (src && (
-          <ImageStyled
-            alt={`Entity thumbnail ${entityId}`}
-            src={src || `${url}${queryArgs}`}
-            style={{ display: thumbLoaded ? 'block' : 'none' }}
-            onError={() => setThumbLoaded(false)}
-            onLoad={() => setThumbLoaded(true)}
-          />
-        ))}
+      {((entityType && !(isWrongEntity || !entityId)) || src) && (
+        <ImageStyled
+          alt={`Entity thumbnail ${entityId}`}
+          src={src || `${url}${queryArgs}`}
+          style={{ display: thumbLoaded ? 'block' : 'none' }}
+          onError={() => setThumbLoaded(false)}
+          onLoad={() => setThumbLoaded(true)}
+        />
+      )}
     </ThumbnailStyled>
   )
 }

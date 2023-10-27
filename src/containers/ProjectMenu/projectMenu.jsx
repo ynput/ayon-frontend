@@ -12,6 +12,7 @@ import { InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import ProjectButton from '/src/components/ProjectButton/ProjectButton'
+import { createPortal } from 'react-dom'
 
 const ProjectMenu = ({ visible, onHide }) => {
   const navigate = useNavigate()
@@ -165,33 +166,36 @@ const ProjectMenu = ({ visible, onHide }) => {
   if (!visible) return null
 
   return (
-    <Styled.ProjectSidebar
-      position="left"
-      visible={true}
-      modal={false}
-      showCloseIcon={false}
-      onShow={() => searchRef.current?.focus()}
-      onHide={handleHide}
-    >
-      <Section>
-        {!searchOpen ? (
-          <Styled.Search icon="search" variant="text" onClick={handleSearchClick} />
-        ) : (
-          <InputText
-            placeholder="Search projects..."
-            value={projectsFilter}
-            onChange={(e) => setProjectsFilter(e.target.value)}
-            ref={searchRef}
-            autoFocus
-          />
-        )}
+    <>
+      {createPortal(<Styled.Overlay />, document.body)}
+      <Styled.ProjectSidebar
+        position="left"
+        visible={true}
+        modal={false}
+        showCloseIcon={false}
+        onShow={() => searchRef.current?.focus()}
+        onHide={handleHide}
+      >
+        <Section>
+          {!searchOpen ? (
+            <Styled.Search icon="search" variant="text" onClick={handleSearchClick} />
+          ) : (
+            <InputText
+              placeholder="Search projects..."
+              value={projectsFilter}
+              onChange={(e) => setProjectsFilter(e.target.value)}
+              ref={searchRef}
+              autoFocus
+            />
+          )}
 
-        <Styled.All>
-          <h3>Projects</h3>
-          <MenuList items={filteredMenuItems} handleClick={(e, onClick) => onClick()} level={0} />
-        </Styled.All>
-      </Section>
-    </Styled.ProjectSidebar>
+          <Styled.All>
+            <h3>Projects</h3>
+            <MenuList items={filteredMenuItems} handleClick={(e, onClick) => onClick()} level={0} />
+          </Styled.All>
+        </Section>
+      </Styled.ProjectSidebar>
+    </>
   )
 }
 
