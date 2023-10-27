@@ -8,7 +8,7 @@ const VersionList = (row, onSelectVersion) => {
 
   const versions = useMemo(() => {
     if (!row.versionList) return []
-    return row.versionList.map((version) => {
+    const versions = row.versionList.map((version) => {
       if (version.id === row.versionId) setCurrentVersion(version.name)
       return {
         id: version.id,
@@ -16,6 +16,15 @@ const VersionList = (row, onSelectVersion) => {
         command: () => onSelectVersion(row.id, version.id),
       }
     })
+
+    // sort versions by name
+    versions.sort((a, b) => {
+      if (b.label < a.label) return -1
+      if (b.label > a.label) return 1
+      return 0
+    })
+
+    return versions
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row.versionList, row.versionId, row.id, menu])
 
