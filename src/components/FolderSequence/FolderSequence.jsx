@@ -53,9 +53,12 @@ const FolderSequence = ({
   prefixExample = '',
   prefixDisabled,
   typeSelectRef,
+  onLastInputKeydown,
   ...props
 }) => {
   const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
+
+  const disablePrefix = (!nesting && isRoot) || prefixDisabled
 
   const folders = useSelector((state) => state.project.folders) || []
   const tasks = useSelector((state) => state.project.tasks) || []
@@ -70,6 +73,7 @@ const FolderSequence = ({
   const [sequence, setSequence] = useState(initSeq)
 
   const baseRef = useRef(null)
+  const prefixRef = useRef(null)
   const handleChange = (e) => {
     e?.preventDefault && e?.preventDefault()
 
@@ -144,12 +148,18 @@ const FolderSequence = ({
       setSequence(seq)
     }
 
-    // focus base input if changing type
+    // focus switch if not disabled else base input if changing type
     if (fieldId === 'type') {
-      setTimeout(() => {
-        baseRef.current.focus()
-        baseRef.current.select()
-      }, 50)
+      if (disablePrefix) {
+        setTimeout(() => {
+          baseRef.current.focus()
+          baseRef.current.select()
+        }, 50)
+      } else {
+        setTimeout(() => {
+          prefixRef.current.focus()
+        }, 50)
+      }
     }
   }
 
@@ -277,7 +287,9 @@ const FolderSequence = ({
                       checked={prefix}
                       id={'prefix'}
                       onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
-                      disabled={(!nesting && isRoot) || prefixDisabled}
+                      disabled={disablePrefix}
+                      ref={prefixRef}
+                      switchStyle={{ margin: '4px 0' }}
                     />
                   </Styled.InputColumn>
                   <Icon icon="trending_flat" />
@@ -336,6 +348,7 @@ const FolderSequence = ({
                 placeholder="15..."
                 min={2}
                 onFocus={(e) => e.target.select()}
+                onKeyDown={onLastInputKeydown}
               />
             </Styled.InputColumn>
 

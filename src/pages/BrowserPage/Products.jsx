@@ -237,7 +237,7 @@ const Products = () => {
         field: 'versionStatus',
         header: 'Version Status',
         width: 150,
-        style: { overflow: 'visible' },
+        style: { height: 'max-content' },
         body: (node) => {
           if (node.data.isGroup) return ''
           const statusMaxWidth = 120

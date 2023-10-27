@@ -105,7 +105,6 @@ export const InputColumn = styled.div`
   }
 
   label {
-    overflow: hidden;
     width: 100%;
     text-overflow: ellipsis;
     white-space: nowrap;

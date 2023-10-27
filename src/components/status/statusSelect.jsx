@@ -15,7 +15,7 @@ const StatusSelect = ({
   value,
   size = 'full',
   maxWidth,
-  height,
+  height = 30,
   align,
   onChange,
   onOpen,
