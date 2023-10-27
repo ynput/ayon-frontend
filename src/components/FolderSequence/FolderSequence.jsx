@@ -288,6 +288,7 @@ const FolderSequence = ({
                       onChange={() => handleChange({ target: { value: !prefix, id: 'prefix' } })}
                       disabled={disablePrefix}
                       ref={prefixRef}
+                      switchStyle={{ margin: '4px 0' }}
                     />
                   </Styled.InputColumn>
                   <Icon icon="trending_flat" />
