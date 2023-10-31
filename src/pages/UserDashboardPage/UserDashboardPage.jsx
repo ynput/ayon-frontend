@@ -20,6 +20,7 @@ const UserDashboardPage = () => {
       path: '/dashboard/tasks',
       module: 'tasks',
       accessLevels: [],
+      shortcut: 'D+D',
     },
     {
       name: 'Overview',
