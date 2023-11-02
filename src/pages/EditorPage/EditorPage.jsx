@@ -52,7 +52,7 @@ import useShortcuts from '/src/hooks/useShortcuts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
-  const { folders: foldersObject, tasks = [], attrib } = project
+  const { folders: foldersObject, tasks = [], attrib, statusesOrder = [] } = project
 
   // eslint-disable-next-line no-unused-vars
   // const context = useSelector((state) => ({ ...state.context }))
@@ -985,7 +985,7 @@ const EditorPage = () => {
               .length + parents.indexOf(parentId)
           }`,
           id: uuid1().replace(/-/g, ''),
-          status: parentData?.status || 'Not ready',
+          status: parentData?.status || statusesOrder[0] || undefined,
           attrib: parentData?.attrib || {},
           ownAttrib: [],
           __entityType: entityType,
