@@ -24,8 +24,13 @@ const ErrorFallback = ({ error }) => {
           label={'Reload page'}
           icon="sync"
           variant="filled"
-          onClick={() => window.location.reload()}
+          onClick={() => window.location.reload(true)}
         />
+        <span>1. If that does not work: try shift + ctrl/cmd + R</span>
+        <span>
+          2. If reloading does not work: try shift + ctrl/cmd + delete. Then clear Cached images and
+          files.
+        </span>
       </StyledPanel>
     )
   }

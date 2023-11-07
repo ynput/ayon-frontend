@@ -110,11 +110,17 @@ const ProfilePage = () => {
   }
 
   const onSave = async () => {
+    const attrib = {
+      ...userData.attrib,
+      ...formData,
+      developerMode: !!userData.attrib.developerMode,
+    }
+
     try {
       await updateUser({
         name: userData.name,
         patch: {
-          attrib: formData,
+          attrib,
         },
       }).unwrap()
 
