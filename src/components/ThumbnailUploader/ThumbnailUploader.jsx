@@ -120,7 +120,7 @@ const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage })
           onDragLeave={() => setDragHover(false)}
           onDrop={handleInputDrop}
           onChange={handleInputChange}
-          accept="image/*"
+          accept=".png, .jpeg, .jpg"
         />
 
         {!!selectedFiles.length && imagePreview && (
