@@ -41,7 +41,7 @@ const StackedStyled = styled.div`
   height: 100%;
 `
 
-const StackedThumbnails = ({ thumbnails = [], isLoading, projectName, className, onUpload }) => {
+const StackedThumbnails = ({ thumbnails = [], isLoading, projectName, className, ...props }) => {
   const projectName2 = projectName || useSelector((state) => state.project.name)
   // limit to 5 users
   thumbnails = thumbnails.slice(0, 5)
@@ -61,7 +61,7 @@ const StackedThumbnails = ({ thumbnails = [], isLoading, projectName, className,
             src={thumb.src}
             isStacked={thumbnails.length > 1}
             {...thumb}
-            onUpload={onUpload}
+            {...props}
           />
         ) : null,
       )}
