@@ -183,6 +183,7 @@ const NewEntity = ({
   }
 
   const handleKeyDown = (e, lastInput) => {
+    e?.stopPropagation()
     if (e.key === 'Enter') {
       if (lastInput && !e.shiftKey) {
         handleSubmit(true)

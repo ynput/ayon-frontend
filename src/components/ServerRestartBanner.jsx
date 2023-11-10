@@ -7,11 +7,9 @@ const ServerRestartBanner = ({ message, active }) => {
 
   if (!serverIsRestarting && !active) return null
 
-  let shownMessage = message || 'Server is restarting. Hang tight!'
-
   return (
     <>
-      <LoadingPage message={shownMessage} />
+      <LoadingPage message={message} />
     </>
   )
 }
