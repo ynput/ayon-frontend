@@ -66,6 +66,7 @@ const Thumbnail = ({
   uploadEntities,
   isStacked,
   onUpload,
+  portalId,
   ...props
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
@@ -102,6 +103,7 @@ const Thumbnail = ({
           key={entityId}
           existingImage={thumbLoaded}
           onUpload={onUpload}
+          portalId={portalId}
         />
       )}
     </ThumbnailStyled>

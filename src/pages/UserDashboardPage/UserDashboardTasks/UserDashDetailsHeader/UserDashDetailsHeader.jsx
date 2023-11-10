@@ -113,6 +113,8 @@ const UserDashDetailsHeader = ({
     })
     .map((action) => action.id)
 
+  const portalId = 'dashboard-details-header'
+
   return (
     <Section
       style={{
@@ -124,6 +126,7 @@ const UserDashDetailsHeader = ({
         overflow: 'hidden',
         height: attributesOpen ? '100%' : 'unset',
       }}
+      id={portalId}
     >
       <Styled.Path
         value={pathArray.join(' / ')}
@@ -134,7 +137,7 @@ const UserDashDetailsHeader = ({
         style={{ zIndex: 100 }}
       />
       <Styled.Header>
-        <StackedThumbnails thumbnails={thumbnails} projectName={projectName} />
+        <StackedThumbnails thumbnails={thumbnails} projectName={projectName} portalId={portalId} />
         <Styled.Content>
           <h2>{!isMultiple ? singleTask.folderName : `${tasks.length} tasks selected`}</h2>
           <h3>{!isMultiple ? singleTask.name : tasks.map((t) => t.name).join(', ')}</h3>
