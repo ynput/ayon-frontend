@@ -32,7 +32,7 @@ const ImageStyled = styled.div`
   max-width: 250px;
 `
 
-const ThumbnailGallery = ({ thumbnails = [], type, isLoading }) => {
+const ThumbnailGallery = ({ thumbnails = [], type, isLoading, ...props }) => {
   const projectName = useSelector((state) => state.project.name)
   const [index, setIndex] = useState(0)
 
@@ -69,6 +69,7 @@ const ThumbnailGallery = ({ thumbnails = [], type, isLoading }) => {
             entityUpdatedAt={thumbnails[index].updatedAt}
             isLoading={isLoading}
             shimmer
+            {...props}
           />
           <span style={{ opacity: isMultiple ? 1 : 0 }}>{thumbnails[index].name}</span>
         </ImageStyled>

@@ -25,6 +25,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           patchResult.undo()
         }
       },
+      // this triggers a refetch of getKanBan
       invalidatesTags: (result, error, { taskId }) => [{ type: 'task', id: taskId }],
     }),
     updateTasks: build.mutation({

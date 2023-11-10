@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import getShimmerStyles from '../styles/getShimmerStyles'
 import { Icon } from '@ynput/ayon-react-components'
 import ThumbnailUploader from '../components/ThumbnailUploader/ThumbnailUploader'
+import { createPortal } from 'react-dom'
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -67,6 +68,7 @@ const Thumbnail = ({
   isStacked,
   onUpload,
   portalId,
+  disableUpload,
   ...props
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
@@ -76,6 +78,43 @@ const Thumbnail = ({
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
   const queryArgs = `?updatedAt=${entityUpdatedAt}&token=${localStorage.getItem('accessToken')}`
   const isWrongEntity = ['product'].includes(entityType)
+  const portalEl = document.getElementById(portalId)
+
+  const [showPortal, setShowPortal] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  // if portalEl is true, attach an event listener for drag events
+  useEffect(() => {
+    if (!portalEl) return
+    const handleDragOver = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setShowPortal(true)
+    }
+    const handleDragLeave = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setShowPortal(false)
+    }
+
+    portalEl.addEventListener('dragover', handleDragOver)
+    portalEl.addEventListener('dragleave', handleDragLeave)
+
+    return () => {
+      portalEl.removeEventListener('dragover', handleDragOver)
+      portalEl.removeEventListener('dragleave', handleDragLeave)
+    }
+  }, [portalEl])
+
+  const thumbnailProps = {
+    entities: uploadEntities,
+    entityType,
+    entityId,
+    projectName,
+    key: entityId,
+    existingImage: thumbLoaded,
+    onUpload: onUpload,
+    portalId,
+  }
 
   return (
     <ThumbnailStyled
@@ -94,17 +133,29 @@ const Thumbnail = ({
           onLoad={() => setThumbLoaded(true)}
         />
       )}
-      {entityType && entityId && !isStacked && projectName && (
-        <ThumbnailUploader
-          entities={uploadEntities}
-          entityType={entityType}
-          entityId={entityId}
-          projectName={projectName}
-          key={entityId}
-          existingImage={thumbLoaded}
-          onUpload={onUpload}
-          portalId={portalId}
-        />
+      {entityType && entityId && !isStacked && projectName && !disableUpload && (
+        <>
+          <ThumbnailUploader {...thumbnailProps} />
+          {portalEl &&
+            (showPortal || isUploading) &&
+            createPortal(
+              <ThumbnailUploader
+                {...thumbnailProps}
+                isPortal={true}
+                onUpload={(v) => {
+                  setIsUploading(false)
+
+                  onUpload && onUpload(v)
+
+                  setTimeout(() => {
+                    setShowPortal(false)
+                  }, 800)
+                }}
+                onUploading={() => setIsUploading(true)}
+              />,
+              portalEl,
+            )}
+        </>
       )}
     </ThumbnailStyled>
   )

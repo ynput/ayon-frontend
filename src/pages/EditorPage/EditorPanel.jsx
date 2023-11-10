@@ -473,7 +473,7 @@ const EditorPanel = ({
   }, [form, nodes, changes])
 
   return (
-    <Section wrap>
+    <Section wrap id="editor-entity-details-container">
       {!noSelection && (
         <>
           <EntityDetailsHeader

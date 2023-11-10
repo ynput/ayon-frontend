@@ -225,6 +225,7 @@ const EntityGridTile = ({
           projectName={projectName}
           entityUpdatedAt={updatedAt}
           className={'thumbnail'}
+          disableUpload
         />
         <div>
           <IconStyled icon={typeIcon} />

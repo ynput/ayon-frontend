@@ -5,7 +5,15 @@ import axios from 'axios'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 
-const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage, onUpload }) => {
+const ThumbnailUploader = ({
+  entityType,
+  entityId,
+  projectName,
+  existingImage,
+  onUpload,
+  onUploading,
+  isPortal,
+}) => {
   const dispatch = useDispatch()
   const [dragHover, setDragHover] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
@@ -18,6 +26,7 @@ const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage, o
   const handleFileUpload = async (files) => {
     // we select this to trigger preview image
     setSelectedFiles(files)
+    onUploading && onUploading()
 
     const abortController = new AbortController()
     const cancelToken = axios.CancelToken
@@ -36,7 +45,7 @@ const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage, o
 
     try {
       // for a single file we just use single entityId
-      await axios.post(
+      const res = await axios.post(
         `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`,
         files[0],
         opts,
@@ -44,11 +53,16 @@ const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage, o
 
       setUploadSuccess(true)
 
-      onUpload && onUpload({ type: entityType, id: entityId })
+      onUpload && onUpload({ type: entityType, id: entityId, thumbnailId: res.data?.id })
 
       // if success then we need to refresh the thumbnail
       // which means invalidating the entityCache
-      dispatch(ayonApi.util.invalidateTags([{ type: entityType, id: entityId }]))
+      dispatch(
+        ayonApi.util.invalidateTags([
+          { type: entityType, id: entityId },
+          { type: 'kanBanTask', id: entityId },
+        ]),
+      )
     } catch (error) {
       console.error(error)
       setUploadError(error.response?.data.detail)
@@ -99,58 +113,46 @@ const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage, o
     handleFileUpload(e.dataTransfer.files)
   }
 
-  const totalFileSize = Array.from(selectedFiles).reduce(
-    (acc, file) => acc + file.size / 1024 / 1024,
-    0,
-  )
-
   return (
-    <>
-      <Styled.ThumbnailUploaderWrapper
-        $dragHover={dragHover}
-        $uploading={!!selectedFiles.length}
-        $existingImage={existingImage}
-        $success={uploadSuccess}
-      >
-        <div className="bg" />
-        <Icon icon="cloud_upload" className="upload" />
-        <Styled.ThumbnailInput
-          type="file"
-          onDragEnter={() => setDragHover(true)}
-          onDragLeave={() => setDragHover(false)}
-          onDrop={handleInputDrop}
-          onChange={handleInputChange}
-          accept=".png, .jpeg, .jpg"
-        />
+    <Styled.ThumbnailUploaderWrapper
+      $dragHover={dragHover}
+      $uploading={!!selectedFiles.length}
+      $existingImage={existingImage}
+      $success={uploadSuccess}
+      $isPortal={isPortal}
+    >
+      <div className="bg" />
+      <Icon icon="cloud_upload" className="upload" />
+      <Styled.ThumbnailInput
+        type="file"
+        onDragEnter={() => setDragHover(true)}
+        onDragLeave={() => setDragHover(false)}
+        onDrop={handleInputDrop}
+        onChange={handleInputChange}
+        accept=".png, .jpeg, .jpg"
+      />
 
-        {!!selectedFiles.length && imagePreview && (
-          <Styled.ThumbnailUploading $success={uploadSuccess}>
-            <Styled.UploadPreview
-              src={imagePreview}
-              className="preview"
-              $progress={uploadProgress}
-            />
-            {uploadError ? (
-              <Styled.UploadError>{uploadError}</Styled.UploadError>
-            ) : (
-              totalFileSize > 1 && (
-                <Styled.UploadProgress $progress={uploadProgress} className="progress" />
-              )
-            )}
-          </Styled.ThumbnailUploading>
-        )}
-        {uploadError && (
-          <Styled.Close
-            icon="close"
-            variant="text"
-            onClick={() => {
-              setUploadError('')
-              setSelectedFiles([])
-            }}
-          />
-        )}
-      </Styled.ThumbnailUploaderWrapper>
-    </>
+      {!!selectedFiles.length && imagePreview && (
+        <Styled.ThumbnailUploading $success={uploadSuccess} $isPortal={isPortal}>
+          <Styled.UploadPreview src={imagePreview} className="preview" />
+          {uploadError ? (
+            <Styled.UploadError>{uploadError}</Styled.UploadError>
+          ) : (
+            <Styled.UploadProgress $progress={uploadProgress} className="progress" />
+          )}
+        </Styled.ThumbnailUploading>
+      )}
+      {uploadError && (
+        <Styled.Close
+          icon="close"
+          variant="text"
+          onClick={() => {
+            setUploadError('')
+            setSelectedFiles([])
+          }}
+        />
+      )}
+    </Styled.ThumbnailUploaderWrapper>
   )
 }
 

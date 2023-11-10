@@ -84,6 +84,7 @@ const EntityDetailsHeader = ({
           thumbnails={thumbnails}
           isLoading={isLoading}
           onUpload={onThumbnailUpload}
+          portalId={'editor-entity-details-container'}
         />
       )}
       {isLoading ? (

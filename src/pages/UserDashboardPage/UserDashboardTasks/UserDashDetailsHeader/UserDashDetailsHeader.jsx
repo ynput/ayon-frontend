@@ -58,6 +58,8 @@ const UserDashDetailsHeader = ({
 
   const [updateTasks] = useUpdateTasksMutation()
   const handleUpdate = async (field, value) => {
+    if (value === null || value === undefined) return console.error('value is null or undefined')
+
     try {
       // build tasks operations array
       const tasksOperations = tasks.map((task) => ({
@@ -137,7 +139,12 @@ const UserDashDetailsHeader = ({
         style={{ zIndex: 100 }}
       />
       <Styled.Header>
-        <StackedThumbnails thumbnails={thumbnails} projectName={projectName} portalId={portalId} />
+        <StackedThumbnails
+          thumbnails={thumbnails}
+          projectName={projectName}
+          portalId={portalId}
+          onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
+        />
         <Styled.Content>
           <h2>{!isMultiple ? singleTask.folderName : `${tasks.length} tasks selected`}</h2>
           <h3>{!isMultiple ? singleTask.name : tasks.map((t) => t.name).join(', ')}</h3>
