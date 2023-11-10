@@ -7,6 +7,7 @@ const TASK_FRAGMENT = `
     assignees
     updatedAt
     folderId
+    thumbnailId
     attrib {
       endDate
     }

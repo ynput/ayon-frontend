@@ -41,8 +41,8 @@ const StackedStyled = styled.div`
   height: 100%;
 `
 
-const StackedThumbnails = ({ thumbnails = [], isLoading, className }) => {
-  const projectName = useSelector((state) => state.project.name)
+const StackedThumbnails = ({ thumbnails = [], isLoading, projectName, className }) => {
+  const projectName2 = projectName || useSelector((state) => state.project.name)
   // limit to 5 users
   thumbnails = thumbnails.slice(0, 5)
 
@@ -51,7 +51,7 @@ const StackedThumbnails = ({ thumbnails = [], isLoading, className }) => {
       {thumbnails.map((thumb, i) =>
         thumb ? (
           <Thumbnail
-            projectName={projectName}
+            projectName={projectName2}
             entityType={thumb.type}
             entityId={thumb.id}
             key={thumb.id || thumb.src || i}
@@ -59,6 +59,7 @@ const StackedThumbnails = ({ thumbnails = [], isLoading, className }) => {
             entityUpdatedAt={thumb.updatedAt}
             isLoading={isLoading}
             src={thumb.src}
+            isStacked={thumbnails.length > 1}
             {...thumb}
           />
         ) : null,

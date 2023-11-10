@@ -26,6 +26,7 @@ const ImageStyled = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 
   width: 100%;
   max-width: 250px;
@@ -58,6 +59,7 @@ const ThumbnailGallery = ({ thumbnails = [], type, isLoading }) => {
       {thumbnails[index] && (
         <ImageStyled>
           <Thumbnail
+            uploadEntities={thumbnails}
             entityType={type}
             entityId={thumbnails[index].id}
             projectName={projectName}

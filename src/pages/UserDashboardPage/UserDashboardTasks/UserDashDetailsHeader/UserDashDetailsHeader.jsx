@@ -34,6 +34,7 @@ const UserDashDetailsHeader = ({
   const selectedTasksAssignees = useMemo(() => union(...tasks.map((t) => t.assignees)), [tasks])
 
   const singleTask = tasks[0]
+  const projectName = tasks.length > 1 ? null : singleTask.projectName
 
   const thumbnails = useMemo(
     () =>
@@ -42,6 +43,8 @@ const UserDashDetailsHeader = ({
         .map((t) => ({
           src: t.thumbnailUrl,
           icon: t.taskIcon,
+          id: t.id,
+          type: 'task',
         })),
     [tasks],
   )
@@ -131,7 +134,7 @@ const UserDashDetailsHeader = ({
         style={{ zIndex: 100 }}
       />
       <Styled.Header>
-        <StackedThumbnails thumbnails={thumbnails} />
+        <StackedThumbnails thumbnails={thumbnails} projectName={projectName} />
         <Styled.Content>
           <h2>{!isMultiple ? singleTask.folderName : `${tasks.length} tasks selected`}</h2>
           <h3>{!isMultiple ? singleTask.name : tasks.map((t) => t.name).join(', ')}</h3>

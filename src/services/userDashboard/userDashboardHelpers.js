@@ -1,6 +1,6 @@
-const getVersionThumbnailUrl = (version, projectName, accessToken) => {
-  return version?.thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${version?.thumbnailId}?updatedAt=${version.updatedAt}&token=${accessToken}`
+const getThumbnailUrl = (thumbnailId, updatedAt, projectName, accessToken) => {
+  return thumbnailId
+    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}&token=${accessToken}`
     : null
 }
 
@@ -10,12 +10,15 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
 
     const accessToken = localStorage.getItem('accessToken')
 
-    const thumbnailUrl = getVersionThumbnailUrl(latestVersion, projectName, accessToken)
+    // use task thumbnail if it exists, otherwise use latest version thumbnail
+    const thumbnailId = task?.thumbnailId || latestVersion?.thumbnailId
+    const updatedAt = task?.thumbnailId ? task?.updatedAt : latestVersion?.updatedAt
+    const thumbnailUrl = getThumbnailUrl(thumbnailId, updatedAt, projectName, accessToken)
 
     const allVersions =
       task?.allVersions?.edges.map(({ node }) => ({
         ...node,
-        thumbnailUrl: getVersionThumbnailUrl(node, projectName, accessToken),
+        thumbnailUrl: getThumbnailUrl(node, projectName, accessToken),
       })) || []
 
     // create a short path [code][.../][end of path by depth joined by /][taskName]
@@ -38,7 +41,6 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       path: `${projectName}/${task.folder?.path}`,
       shortPath,
       latestVersionId: latestVersion?.id,
-      latestVersionThumbnailId: latestVersion?.thumbnailId,
       thumbnailUrl,
       allVersions,
       projectName: projectName,

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import getShimmerStyles from '../styles/getShimmerStyles'
 import { Icon } from '@ynput/ayon-react-components'
+import ThumbnailUploader from '../components/ThumbnailUploader/ThumbnailUploader'
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -31,7 +32,7 @@ const ThumbnailStyled = styled.div`
     color: var(--md-sys-color-outline);
 
     opacity: 0;
-    /* delay being seen by 1s */
+    /* delay being seen by 0.3s */
     animation: ${fadeIn} 0.1s 0.3s forwards;
   }
 
@@ -62,6 +63,8 @@ const Thumbnail = ({
   className,
   disabled,
   src,
+  uploadEntities,
+  isStacked,
   ...props
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
@@ -70,7 +73,7 @@ const Thumbnail = ({
 
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
   const queryArgs = `?updatedAt=${entityUpdatedAt}&token=${localStorage.getItem('accessToken')}`
-  const isWrongEntity = ['task', 'product'].includes(entityType)
+  const isWrongEntity = ['product'].includes(entityType)
 
   return (
     <ThumbnailStyled
@@ -87,6 +90,16 @@ const Thumbnail = ({
           style={{ display: thumbLoaded ? 'block' : 'none' }}
           onError={() => setThumbLoaded(false)}
           onLoad={() => setThumbLoaded(true)}
+        />
+      )}
+      {entityType && entityId && !isStacked && projectName && (
+        <ThumbnailUploader
+          entities={uploadEntities}
+          entityType={entityType}
+          entityId={entityId}
+          projectName={projectName}
+          key={entityId}
+          existingImage={thumbLoaded}
         />
       )}
     </ThumbnailStyled>

@@ -155,9 +155,7 @@ fragment taskTileFragment on TaskNode {
   name
   status
   icon: taskType
-  thumbnailEntityId: folder {
-    id
-  }
+  thumbnailEntityId: id
   subTitle: folder {
     name
   }
