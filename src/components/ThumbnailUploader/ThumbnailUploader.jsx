@@ -5,7 +5,7 @@ import axios from 'axios'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch } from 'react-redux'
 
-const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage }) => {
+const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage, onUpload }) => {
   const dispatch = useDispatch()
   const [dragHover, setDragHover] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
@@ -44,7 +44,7 @@ const ThumbnailUploader = ({ entityType, entityId, projectName, existingImage })
 
       setUploadSuccess(true)
 
-      console.log({ type: entityType, id: entityId })
+      onUpload && onUpload({ type: entityType, id: entityId })
 
       // if success then we need to refresh the thumbnail
       // which means invalidating the entityCache

@@ -65,6 +65,7 @@ const Thumbnail = ({
   src,
   uploadEntities,
   isStacked,
+  onUpload,
   ...props
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
@@ -100,6 +101,7 @@ const Thumbnail = ({
           projectName={projectName}
           key={entityId}
           existingImage={thumbLoaded}
+          onUpload={onUpload}
         />
       )}
     </ThumbnailStyled>
