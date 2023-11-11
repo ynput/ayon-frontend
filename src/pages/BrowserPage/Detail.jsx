@@ -106,6 +106,7 @@ const Detail = () => {
         ids: ids,
         data: { [field]: value },
         patches,
+        disabledInvalidation: isVersion,
       }).unwrap()
 
       console.log('fulfilled', payload)
