@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react'
 import * as Styled from './ThumbnailUploader.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
-import { ayonApi } from '/src/services/ayon'
-import { useDispatch } from 'react-redux'
 
 const ThumbnailUploader = ({
   entityType,
@@ -15,7 +13,6 @@ const ThumbnailUploader = ({
   isPortal,
   entities,
 }) => {
-  const dispatch = useDispatch()
   const [dragHover, setDragHover] = useState(false)
   const [imagePreviews, setImagePreviews] = useState([])
   const [selectedFiles, setSelectedFiles] = useState([])
@@ -87,15 +84,6 @@ const ThumbnailUploader = ({
       }
 
       setUploadSuccess(true)
-
-      // if success then we need to refresh the thumbnail
-      // which means invalidating the entityCache
-      dispatch(
-        ayonApi.util.invalidateTags([
-          { type: entityType, id: entityId },
-          { type: 'kanBanTask', id: entityId },
-        ]),
-      )
     } catch (error) {
       console.error(error)
       setUploadError(error.response?.data.detail)

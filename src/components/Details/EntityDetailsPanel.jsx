@@ -13,6 +13,7 @@ const EntityDetailsPanel = ({
   hideNull,
   style,
   isLoading,
+  onThumbnailUpload,
 }) => {
   // NOTE: You are probably looking for EntityDetailsPanelContainer.jsx
   if (nodes.length === 0) return null
@@ -89,6 +90,7 @@ const EntityDetailsPanel = ({
         type={type}
         isLoading={isLoading}
         portalId={portalId}
+        onUpload={onThumbnailUpload}
       />
       <AttributeTable
         entityType={type}
