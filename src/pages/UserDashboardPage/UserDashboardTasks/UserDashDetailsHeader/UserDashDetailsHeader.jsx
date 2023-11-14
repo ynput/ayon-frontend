@@ -4,14 +4,12 @@ import { useDispatch } from 'react-redux'
 import * as Styled from './UserDashDetailsHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
-import { useGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 
 import { union } from 'lodash'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
 import { onAttributesOpenChanged } from '/src/features/dashboard'
-import TaskAttributes from '../TaskAttributes/TaskAttributes'
 
 const UserDashDetailsHeader = ({
   tasks = [],
@@ -23,12 +21,6 @@ const UserDashDetailsHeader = ({
 }) => {
   const dispatch = useDispatch()
   const setAttributesOpen = (value) => dispatch(onAttributesOpenChanged(value))
-
-  // now we get the full details data for selected tasks
-  const { data: tasksDetailsData, isFetching: isLoadingTasksDetails } = useGetTasksDetailsQuery(
-    { tasks: tasks },
-    { skip: !tasks?.length },
-  )
 
   // for selected tasks, get flat list of assignees
   const selectedTasksAssignees = useMemo(() => union(...tasks.map((t) => t.assignees)), [tasks])
@@ -123,10 +115,9 @@ const UserDashDetailsHeader = ({
         padding: 8,
         alignItems: 'flex-start',
         gap: 8,
-        borderBottom: !attributesOpen ? '1px solid var(--md-sys-color-outline-variant)' : 'none',
+        borderBottom: '1px solid var(--md-sys-color-outline-variant)',
         flex: 'none',
         overflow: 'hidden',
-        height: attributesOpen ? '100%' : 'unset',
       }}
       id={portalId}
     >
@@ -185,9 +176,6 @@ const UserDashDetailsHeader = ({
           iconProps={{ style: { transform: !attributesOpen ? 'scaleX(-1)' : '' } }}
         />
       </Styled.Footer>
-      {attributesOpen && (
-        <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
-      )}
     </Section>
   )
 }
