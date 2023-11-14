@@ -96,7 +96,7 @@ const NewSequence = ({
 
   const handleKeyDown = (e, lastInput) => {
     if (e.key === 'Enter') {
-      if (lastInput) {
+      if (lastInput && !e.shiftKey) {
         handleSeqSubmit(true)
       } else if (e.ctrlKey || e.metaKey) {
         handleSeqSubmit(true)

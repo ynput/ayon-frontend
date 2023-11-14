@@ -5,7 +5,10 @@ import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 
 const MenuItem = forwardRef(
-  ({ label, icon, highlighted, selected, items = [], className, isLink, ...props }, ref) => {
+  (
+    { label, icon, highlighted, selected, items = [], className, isLink, shortcut, ...props },
+    ref,
+  ) => {
     const labelsArray = isArray(label) ? label : [label]
 
     const Item = (
@@ -22,6 +25,7 @@ const MenuItem = forwardRef(
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
         ))}
+        {shortcut && <Styled.Shortcut>{shortcut}</Styled.Shortcut>}
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>
     )

@@ -46,12 +46,14 @@ export const AppMenu = ({ user, ...props }) => {
       link: '/settings/bundles',
       label: 'Studio Settings',
       icon: 'settings',
+      shortcut: 'S+S',
     },
     {
       id: 'projectsManager',
       link: '/manageProjects/anatomy',
       label: 'Projects Settings',
       icon: 'settings_applications',
+      shortcut: 'P+P',
     },
     // this is weird I know, instead of returning a node, we return a menu object with sub menus
     InstallerDownload({ isMenu: true }),
@@ -64,6 +66,7 @@ export const AppMenu = ({ user, ...props }) => {
       link: '/events',
       label: 'Event Viewer',
       icon: 'history',
+      shortcut: 'E+E',
     },
     {
       id: 'services',

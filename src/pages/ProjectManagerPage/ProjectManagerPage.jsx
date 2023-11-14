@@ -80,12 +80,14 @@ const ProjectManagerPage = () => {
       path: '/manageProjects/anatomy',
       module: 'anatomy',
       accessLevels: ['manager'],
+      shortcut: 'A+A',
     },
     {
       name: 'Project settings',
       path: '/manageProjects/projectSettings',
       module: 'projectSettings',
       accessLevels: ['manager'],
+      shortcut: 'P+P',
     },
     {
       name: 'Site settings',
