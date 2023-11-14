@@ -77,10 +77,8 @@ const EntityDetailsPanel = ({
     }
   }
 
-  const portalId = 'entity-details-panel'
-
   return (
-    <Panel style={{ height: '100%', overflow: 'hidden', ...style }} id={portalId}>
+    <Panel style={{ height: '100%', overflow: 'hidden', ...style }}>
       <ThumbnailGallery
         thumbnails={nodes.map((n) => ({
           id: n.id,
@@ -89,7 +87,6 @@ const EntityDetailsPanel = ({
         }))}
         type={type}
         isLoading={isLoading}
-        portalId={portalId}
         onUpload={onThumbnailUpload}
       />
       <AttributeTable
