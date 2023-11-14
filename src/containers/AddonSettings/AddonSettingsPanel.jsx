@@ -40,6 +40,7 @@ const AddonSettingsPanel = ({
   } = useGetAddonSettingsSchemaQuery({
     addonName: addon.name,
     addonVersion: addon.version,
+    variant: addon.variant,
     projectName,
     siteId,
   })

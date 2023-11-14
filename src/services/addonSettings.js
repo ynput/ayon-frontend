@@ -36,8 +36,12 @@ const addonSettings = ayonApi.injectEndpoints({
     }),
 
     getAddonSettingsSchema: build.query({
-      query: ({ addonName, addonVersion, projectName, siteId }) => ({
-        url: `/api/addons/${addonName}/${addonVersion}/schema${apiSuffix(projectName, siteId)}`,
+      query: ({ addonName, addonVersion, projectName, siteId, variant }) => ({
+        url: `/api/addons/${addonName}/${addonVersion}/schema${apiSuffix(
+          projectName,
+          siteId,
+          variant,
+        )}`,
         method: 'GET',
       }),
 
