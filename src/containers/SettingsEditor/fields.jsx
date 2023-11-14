@@ -275,7 +275,13 @@ function FieldTemplate(props) {
   const [contextMenu] = useCreateContext([])
 
   // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
-  if (!(props.schema.scope || ['studio', 'project']).includes(props.formContext.level)) return null
+
+  if (
+    props.schema.scope !== undefined &&
+    !(props.schema.scope || ['studio', 'project']).includes(props.formContext.level)
+  ) {
+    return null
+  }
 
   const divider = useMemo(() => {
     if (props.schema.section)
