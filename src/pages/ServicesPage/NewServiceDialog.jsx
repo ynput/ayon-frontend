@@ -12,6 +12,7 @@ import {
   Button,
   Toolbar,
 } from '@ynput/ayon-react-components'
+import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 
 const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [addonData, setAddonData] = useState([])
@@ -21,6 +22,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [selectedVersion, setSelectedVersion] = useState(null)
   const [selectedService, setSelectedService] = useState(null)
   const [selectedHost, setSelectedHost] = useState(null)
+  const [settingsVariant, setSettingsVariant] = useState('production')
 
   useEffect(() => {
     axios.get('/api/addons?details=1').then((response) => {
@@ -65,12 +67,32 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   }, [selectedVersion, selectedAddon?.name])
 
   const submit = () => {
+    /*
+    volumes: list[str] | None = Field(None, title="Volumes", example=["/tmp:/tmp"])
+    ports: list[str] | None = Field(None, title="Ports", example=["8080:8080"])
+    mem_limit: str | None = Field(None, title="Memory Limit", example="1g")
+    user: str | None = Field(None, title="User", example="1000")
+    env: dict[str, Any] = Field(default_factory=dict)
+    */
+
+    const serviceConfig = {
+      volumes: [],
+      ports: [],
+      mem_limit: null,
+      user: null,
+      env: {},
+    }
+    if (settingsVariant !== 'production') {
+      serviceConfig.env.AYON_DEFAULT_SETTINGS_VARIANT = settingsVariant
+    }
+
     axios
       .put(`/api/services/${serviceName}`, {
         addonName: selectedAddon.name,
         addonVersion: selectedVersion,
         service: selectedService,
         hostname: selectedHost,
+        config: serviceConfig,
       })
       .then(() => {
         toast.success(`Service spawned`)
@@ -127,6 +149,15 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
               setSelectedService(e.value)
               setServiceName(e.value)
             }}
+          />
+        </FormRow>
+
+        <FormRow label="Settings variant">
+          <VariantSelector
+            addonName={selectedAddon?.name}
+            addonVersion={selectedVersion}
+            variant={settingsVariant}
+            setVariant={setSettingsVariant}
           />
         </FormRow>
 
