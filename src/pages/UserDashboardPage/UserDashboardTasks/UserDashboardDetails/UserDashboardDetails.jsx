@@ -4,6 +4,8 @@ import UserDashDetailsHeader from '../UserDashDetailsHeader/UserDashDetailsHeade
 import { useSelector } from 'react-redux'
 import Feed from '/src/containers/Feed/Feed'
 import getCommentsForTasks from '/src/containers/Feed/commentsData'
+import { useGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
+import TaskAttributes from '../TaskAttributes/TaskAttributes'
 
 const UserDashboardDetails = ({
   tasks = [],
@@ -22,6 +24,12 @@ const UserDashboardDetails = ({
     if (!selectedTasksIds?.length) return []
     return tasks.filter((task) => selectedTasksIds.includes(task.id))
   }, [selectedTasksIds, tasks])
+
+  // now we get the full details data for selected tasks
+  const { data: tasksDetailsData, isFetching: isLoadingTasksDetails } = useGetTasksDetailsQuery(
+    { tasks: tasks },
+    { skip: !tasks?.length },
+  )
 
   const commentsData = useMemo(() => getCommentsForTasks(tasks, projectUsers), [tasks])
 
@@ -42,6 +50,9 @@ const UserDashboardDetails = ({
           selectedTasksProjects={selectedTasksProjects}
           commentsData={commentsData}
         />
+      )}
+      {attributesOpen && (
+        <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
       )}
     </Panel>
   )

@@ -41,7 +41,15 @@ const getInputProps = (attrib = {}) => {
   return props
 }
 
-const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onForceChange }) => {
+const EditorPanel = ({
+  onDelete,
+  onChange,
+  onRevert,
+  attribs,
+  projectName,
+  onForceChange,
+  onThumbnailUpload,
+}) => {
   // SELECTORS
   const selected = useSelector((state) => state.context.focused.editor)
   const editorNodes = useSelector((state) => state.editor.nodes)
@@ -465,11 +473,12 @@ const EditorPanel = ({ onDelete, onChange, onRevert, attribs, projectName, onFor
   }, [form, nodes, changes])
 
   return (
-    <Section wrap>
+    <Section wrap id="editor-entity-details-container">
       {!noSelection && (
         <>
           <EntityDetailsHeader
             values={nodeIds.map((id) => nodes[id]?.data)}
+            onThumbnailUpload={onThumbnailUpload}
             tools={
               <>
                 <Button

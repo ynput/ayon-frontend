@@ -89,7 +89,6 @@ const Detail = () => {
             for (const id of ids) {
               draft.forEach((p) => {
                 if (p.versionId === id) {
-                  console.log('here')
                   p.versionStatus = value
                 }
               })
@@ -106,6 +105,7 @@ const Detail = () => {
         ids: ids,
         data: { [field]: value },
         patches,
+        disabledInvalidation: isVersion,
       }).unwrap()
 
       console.log('fulfilled', payload)
@@ -115,6 +115,70 @@ const Detail = () => {
       if (productsPatch) {
         productsPatch.undo()
       }
+    }
+  }
+
+  // patch in new thumbnail data for both product list and
+  const handleVersionThumbnailUpdate = (value) => {
+    const { id, thumbnailId, type } = value || {}
+
+    // only update if type is version and id and thumbnailId is set
+    if (!id || !thumbnailId) return
+
+    // create a fake updatedAt
+    const updatedAt = new Date().toISOString()
+
+    let success1 = false
+    let success2 = false
+
+    // patch new updatedAt for getEntitiesDetails
+    dispatch(
+      ayonApi.util.updateQueryData(
+        'getEntitiesDetails',
+        { projectName, ids: ids, type },
+        (draft) => {
+          // find the product in the cache that match the ids
+          // and update the updatedAt
+          let item = draft.find((p) => p.node.id === id)
+          if (item) {
+            success2 = true
+            item.node.updatedAt = updatedAt
+          }
+        },
+      ),
+    )
+
+    const invalidate = () => {
+      dispatch(ayonApi.util.invalidateTags([{ type: type, id: id }]))
+    }
+
+    if (type !== 'version') {
+      if (!success1) {
+        // patching failed so lets invalidate the cache
+        invalidate()
+      }
+    }
+
+    // patch in the new updatedAt for version id on getProductList
+    dispatch(
+      ayonApi.util.updateQueryData(
+        'getProductList',
+        { projectName, ids: focusedFolders },
+        (draft) => {
+          // find the product in the cache that match the ids
+          // and update the versionUpdatedAt
+          let item = draft.find((p) => p.versionId === id)
+          if (item) {
+            success1 = true
+            item.versionUpdatedAt = updatedAt
+          }
+        },
+      ),
+    )
+
+    if (!success1 || !success2) {
+      // patching failed so lets invalidate the cache
+      invalidate()
     }
   }
 
@@ -275,6 +339,7 @@ const Detail = () => {
           hideNull={isVersion}
           style={{ height: isVersion ? 'unset' : '100%' }}
           isLoading={showLoading}
+          onThumbnailUpload={handleVersionThumbnailUpdate}
         />
         {isVersion && (
           <RepresentationList representations={representations} projectName={projectName} />

@@ -186,6 +186,7 @@ const ProductsGrid = ({
                         }`}
                         thumbnailEntityId={product.versionId}
                         thumbnailEntityType="version"
+                        updatedAt={product.versionUpdatedAt}
                         onClick={(e) => handleSelection(e, product)}
                         selected={product.id in selection}
                         onContextMenu={(e) => handleContext(e, product.id)}

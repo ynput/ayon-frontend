@@ -27,7 +27,13 @@ const StyledLoading = styled.div`
   ${getShimmerStyles()}
 `
 
-const EntityDetailsHeader = ({ values = [], tools, isLoading, hideThumbnail }) => {
+const EntityDetailsHeader = ({
+  values = [],
+  tools,
+  isLoading,
+  hideThumbnail,
+  onThumbnailUpload,
+}) => {
   const { folders, tasks, productTypes } = useSelector((state) => state.project)
   const changes = useSelector((state) => state.editor.changes)
   const uri = useSelector((state) => state.context.uri)
@@ -73,7 +79,14 @@ const EntityDetailsHeader = ({ values = [], tools, isLoading, hideThumbnail }) =
 
   return (
     <DetailHeader>
-      {!hideThumbnail && <StackedThumbnails thumbnails={thumbnails} isLoading={isLoading} />}
+      {!hideThumbnail && (
+        <StackedThumbnails
+          thumbnails={thumbnails}
+          isLoading={isLoading}
+          onUpload={onThumbnailUpload}
+          portalId={'editor-entity-details-container'}
+        />
+      )}
       {isLoading ? (
         <StyledLoading />
       ) : (

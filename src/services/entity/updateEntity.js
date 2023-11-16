@@ -11,10 +11,10 @@ const updateEntity = ayonApi.injectEndpoints({
           operations: buildOperations(ids || patches.map((p) => p.id), type, data),
         },
       }),
-      invalidatesTags: (result, error, { ids, type }) => [
-        ...ids.map((id) => ({ type, id })),
-        { type: 'kanBanTask', id: 'TASKS' },
-      ],
+      invalidatesTags: (result, error, { ids, type, disabledInvalidation }) =>
+        disabledInvalidation
+          ? []
+          : [...ids.map((id) => ({ type, id })), { type: 'kanBanTask', id: 'TASKS' }],
       async onQueryStarted(
         { projectName, type, patches, data, ids },
         { dispatch, queryFulfilled },

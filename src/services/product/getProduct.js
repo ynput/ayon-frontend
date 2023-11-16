@@ -61,6 +61,7 @@ const parseProductData = (data) => {
       versionId: vers && vers.id ? vers.id : null,
       versionName: vers && vers.name ? vers.name : '',
       versionStatus: vers.status || null,
+      versionUpdatedAt: vers.updatedAt || null,
       taskId: vers && vers.taskId ? vers.taskId : null,
       taskName: vers && vers.task ? vers.task.name : null,
       frames: parseProductFrames(product),
@@ -117,6 +118,7 @@ query ProductsList($projectName: String!, $ids: [String!]!) {
                         name
                         author
                         createdAt
+                        updatedAt
                         taskId
                         task {
                           name
@@ -173,7 +175,12 @@ const getProduct = ayonApi.injectEndpoints({
       }),
       transformResponse: (response) => parseProductData(response.data),
       providesTags: (result) =>
-        result ? [...result.map(({ id }) => ({ type: 'product', id }))] : ['product'],
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'product', id })),
+              ...result.map(({ versionId }) => ({ type: 'version', id: versionId })),
+            ]
+          : ['product', 'version'],
     }),
     getProductVersion: build.query({
       query: ({ projectName, versionId }) => ({

@@ -26,12 +26,13 @@ const ImageStyled = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 
   width: 100%;
   max-width: 250px;
 `
 
-const ThumbnailGallery = ({ thumbnails = [], type, isLoading }) => {
+const ThumbnailGallery = ({ thumbnails = [], type, isLoading, ...props }) => {
   const projectName = useSelector((state) => state.project.name)
   const [index, setIndex] = useState(0)
 
@@ -58,6 +59,7 @@ const ThumbnailGallery = ({ thumbnails = [], type, isLoading }) => {
       {thumbnails[index] && (
         <ImageStyled>
           <Thumbnail
+            uploadEntities={thumbnails}
             entityType={type}
             entityId={thumbnails[index].id}
             projectName={projectName}
@@ -67,6 +69,10 @@ const ThumbnailGallery = ({ thumbnails = [], type, isLoading }) => {
             entityUpdatedAt={thumbnails[index].updatedAt}
             isLoading={isLoading}
             shimmer
+            isUploadButton
+            portalId={'thumbnail-portal'}
+            id={'thumbnail-portal'}
+            {...props}
           />
           <span style={{ opacity: isMultiple ? 1 : 0 }}>{thumbnails[index].name}</span>
         </ImageStyled>

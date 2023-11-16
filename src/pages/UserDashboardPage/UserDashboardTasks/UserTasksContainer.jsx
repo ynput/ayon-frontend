@@ -13,6 +13,12 @@ import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '/src/features/context'
 
+const getThumbnailUrl = (thumbnailId, updatedAt, projectName, accessToken) => {
+  return thumbnailId
+    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}&token=${accessToken}`
+    : null
+}
+
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
@@ -65,15 +71,25 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   // filter out tasks that don't have a assignees
   tasks = tasks.filter((task) => task.assignees?.some((assignee) => assignees.includes(assignee)))
 
+  const accessToken = localStorage.getItem('accessToken')
+
+  // add icons to tasks and also add thumbnailUrl
   const tasksWithIcons = tasks.map((task) => {
+    const thumbnailId = task?.thumbnailId ? task?.thumbnailId : task.latestVersionThumbnailId
+    const updatedAt = task?.thumbnailId ? task?.updatedAt : task.latestVersionUpdatedAt
+
+    const thumbnailUrl = getThumbnailUrl(thumbnailId, updatedAt, task.projectName, accessToken)
+
+    const updatedTask = { ...task, thumbnailUrl }
+
     const projectInfo = projectsInfo[task.projectName]
-    if (!projectInfo?.statuses) return task
+    if (!projectInfo?.statuses) return updatedTask
     const findStatus = projectInfo.statuses?.find((status) => status.name === task.status)
-    if (!findStatus) return task
+    if (!findStatus) return updatedTask
     const findTaskIcon = projectInfo.task_types?.find((type) => type.name === task.taskType)
-    if (!findTaskIcon) return task
+    if (!findTaskIcon) return updatedTask
     return {
-      ...task,
+      ...updatedTask,
       statusIcon: findStatus?.icon,
       statusColor: findStatus?.color,
       taskIcon: findTaskIcon?.icon,

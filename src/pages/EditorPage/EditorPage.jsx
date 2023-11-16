@@ -1317,6 +1317,24 @@ const EditorPage = () => {
     }
   }
 
+  // when a thumbnail is uploaded, refetch data for that entity
+  const handleThumbnailUpload = (uploaded = {}) => {
+    const { id, type } = uploaded
+
+    if (!id || !type) return
+
+    // refetch data for that entity
+    if (type === 'folder') {
+      loadNewBranches([id], true)
+    } else {
+      // it's a task so we need to find it in data and then refetch it's parent
+      const parent = rootData[id]?.data?.folderId
+      if (parent) {
+        loadNewBranches([parent], true)
+      }
+    }
+  }
+
   let allColumns = useMemo(
     () => [
       <Column
@@ -1581,6 +1599,7 @@ const EditorPage = () => {
               attribs={attribFields}
               projectName={projectName}
               onForceChange={handleForceChange}
+              onThumbnailUpload={handleThumbnailUpload}
             />
           </SplitterPanel>
         </Splitter>

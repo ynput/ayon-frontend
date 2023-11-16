@@ -1,22 +1,13 @@
-const getVersionThumbnailUrl = (version, projectName, accessToken) => {
-  return version?.thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${version?.thumbnailId}?updatedAt=${version.updatedAt}&token=${accessToken}`
-    : null
-}
+// NOTE: THIS DOES NOT RUN WHEN PATCHING THE TASKS
 
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
     const latestVersion = task.versions?.edges[0]?.node
 
-    const accessToken = localStorage.getItem('accessToken')
+    // use task thumbnail if it exists, otherwise use latest version thumbnail
+    const thumbnailId = task?.thumbnailId || latestVersion?.thumbnailId
 
-    const thumbnailUrl = getVersionThumbnailUrl(latestVersion, projectName, accessToken)
-
-    const allVersions =
-      task?.allVersions?.edges.map(({ node }) => ({
-        ...node,
-        thumbnailUrl: getVersionThumbnailUrl(node, projectName, accessToken),
-      })) || []
+    const allVersions = task?.allVersions?.edges.map(({ node }) => node) || []
 
     // create a short path [code][.../][end of path by depth joined by /][taskName]
     const depth = 2
@@ -39,7 +30,8 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       shortPath,
       latestVersionId: latestVersion?.id,
       latestVersionThumbnailId: latestVersion?.thumbnailId,
-      thumbnailUrl,
+      latestVersionUpdatedAt: latestVersion?.updatedAt,
+      thumbnailId,
       allVersions,
       projectName: projectName,
       projectCode: code,
