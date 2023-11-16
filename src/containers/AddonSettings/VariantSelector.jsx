@@ -94,7 +94,7 @@ const VariantSelector = ({ variant, setVariant, disabled }) => {
   }
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'row', gap: 6 }}>
       <Button
         label="Production"
         onClick={() => setVariant('production')}
@@ -107,7 +107,7 @@ const VariantSelector = ({ variant, setVariant, disabled }) => {
         style={variant === 'staging' ? styleHlStag : {}}
         disabled={disabled}
       />
-    </>
+    </div>
   )
 }
 
