@@ -69,6 +69,7 @@ const Thumbnail = ({
   onUpload,
   portalId,
   disableUpload,
+  isUploadButton,
   ...props
 }) => {
   // Display image only when loaded to avoid flickering and displaying,
@@ -114,6 +115,7 @@ const Thumbnail = ({
     existingImage: thumbLoaded,
     onUpload: onUpload,
     portalId,
+    isButton: isUploadButton,
   }
 
   return (

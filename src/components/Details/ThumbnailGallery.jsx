@@ -69,6 +69,7 @@ const ThumbnailGallery = ({ thumbnails = [], type, isLoading, ...props }) => {
             entityUpdatedAt={thumbnails[index].updatedAt}
             isLoading={isLoading}
             shimmer
+            isUploadButton
             {...props}
           />
           <span style={{ opacity: isMultiple ? 1 : 0 }}>{thumbnails[index].name}</span>

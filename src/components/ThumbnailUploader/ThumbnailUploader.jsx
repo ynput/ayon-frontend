@@ -12,6 +12,7 @@ const ThumbnailUploader = ({
   onUploading,
   isPortal,
   entities,
+  isButton,
 }) => {
   const [dragHover, setDragHover] = useState(false)
   const [imagePreviews, setImagePreviews] = useState([])
@@ -142,17 +143,30 @@ const ThumbnailUploader = ({
       $existingImage={existingImage}
       $success={uploadSuccess}
       $isPortal={isPortal}
+      $isButton={isButton}
     >
-      <div className="bg" />
-      <Icon icon="cloud_upload" className="upload" />
-      <Styled.ThumbnailInput
-        type="file"
-        onDragEnter={() => setDragHover(true)}
-        onDragLeave={() => setDragHover(false)}
-        onDrop={handleInputDrop}
-        onChange={handleInputChange}
-        accept=".png, .jpeg, .jpg"
-      />
+      {isButton ? (
+        <Styled.UploadButton
+          icon="edit"
+          className="upload-button"
+          iconProps={{ className: 'edit' }}
+        >
+          <Styled.ButtonInput type="file" onChange={handleInputChange} accept=".png, .jpeg, .jpg" />
+        </Styled.UploadButton>
+      ) : (
+        <>
+          <div className="bg" />
+          <Icon icon="cloud_upload" className="upload" />
+          <Styled.ThumbnailInput
+            type="file"
+            onDragEnter={() => setDragHover(true)}
+            onDragLeave={() => setDragHover(false)}
+            onDrop={handleInputDrop}
+            onChange={handleInputChange}
+            accept=".png, .jpeg, .jpg"
+          />
+        </>
+      )}
 
       {!!selectedFiles.length && imagePreviews.length && (
         <Styled.ThumbnailUploading $success={uploadSuccess} $isPortal={isPortal}>

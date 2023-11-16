@@ -91,11 +91,48 @@ export const ThumbnailUploaderWrapper = styled.div`
         opacity: 0;
       }
     `}
+
+    ${({ $isButton }) =>
+    $isButton &&
+    css`
+      align-items: flex-start;
+      justify-content: flex-end;
+
+      &:hover {
+        .upload-button {
+          opacity: 1;
+        }
+      }
+    `}
 `
 
 export const ThumbnailInput = styled.input`
   position: absolute;
   inset: 0;
+  opacity: 0;
+  cursor: pointer;
+`
+
+export const UploadButton = styled(Button)`
+  position: relative;
+  height: 32px;
+  width: 32px;
+  margin-right: 4px;
+  margin-top: 4px;
+  overflow: hidden;
+
+  opacity: 0;
+
+  .edit {
+    font-size: 1.4285rem;
+    background-color: unset;
+    cursor: pointer;
+  }
+`
+
+export const ButtonInput = styled.input`
+  position: absolute;
+  inset: -40px;
   opacity: 0;
   cursor: pointer;
 `
