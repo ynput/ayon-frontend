@@ -70,6 +70,8 @@ const ThumbnailGallery = ({ thumbnails = [], type, isLoading, ...props }) => {
             isLoading={isLoading}
             shimmer
             isUploadButton
+            portalId={'thumbnail-portal'}
+            id={'thumbnail-portal'}
             {...props}
           />
           <span style={{ opacity: isMultiple ? 1 : 0 }}>{thumbnails[index].name}</span>

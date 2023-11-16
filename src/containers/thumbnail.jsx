@@ -86,6 +86,7 @@ const Thumbnail = ({
   // if portalEl is true, attach an event listener for drag events
   useEffect(() => {
     if (!portalEl) return
+
     const handleDragOver = (e) => {
       e.preventDefault()
       e.stopPropagation()
@@ -115,7 +116,6 @@ const Thumbnail = ({
     existingImage: thumbLoaded,
     onUpload: onUpload,
     portalId,
-    isButton: isUploadButton,
   }
 
   return (
@@ -137,7 +137,7 @@ const Thumbnail = ({
       )}
       {entityType && entityId && !isStacked && projectName && !disableUpload && (
         <>
-          <ThumbnailUploader {...thumbnailProps} />
+          <ThumbnailUploader {...thumbnailProps} isButton={isUploadButton} />
           {portalEl &&
             (showPortal || isUploading) &&
             createPortal(
