@@ -613,7 +613,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className={showHelp && 'settings-help-visible'}>
           {settingsListHeader}
           <Section>
-            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1, minWidth: 750 }}>
+            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
               {selectedAddons
                 .filter((addon) => !addon.isBroken)
                 .reverse()
@@ -673,7 +673,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           </Section>
         </Section>
       </SplitterPanel>
-      <SplitterPanel>
+      <SplitterPanel size={20}>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable changes={changedKeys} onRevert={onRevertChange} />
