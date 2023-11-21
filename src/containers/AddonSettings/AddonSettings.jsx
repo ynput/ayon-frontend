@@ -585,6 +585,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
               variant={variant}
               reloadAddons={reloadAddons}
               projectName={projectName}
+              siteId={showSites ? selectedSites[0] || '_' : undefined}
               onClose={() => {
                 setShowRawEdit(false)
               }}
