@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -77,11 +77,12 @@ const ServicesPage = () => {
     })
   }
 
-  const deleteSelected = () => {
+  const deleteSelected = (selected) => {
     confirmDelete({
       label: 'Services',
       accept: async () => {
-        for (const serviceName of selectedServices) {
+        const patches = selected ? selected : selectedServices
+        for (const serviceName of patches) {
           try {
             await axios.delete(`/api/services/${serviceName}`)
 
@@ -97,8 +98,9 @@ const ServicesPage = () => {
     })
   }
 
-  const enableSelected = () => {
-    for (const serviceName of selectedServices) {
+  const enableSelected = (selected) => {
+    const patches = selected ? selected : selectedServices
+    for (const serviceName of patches) {
       axios
         .patch(`/api/services/${serviceName}`, { shouldRun: true })
         .then(() => toast.success(`${serviceName} enabled`))
@@ -106,8 +108,9 @@ const ServicesPage = () => {
         .finally(() => loadServices())
     }
   }
-  const disableSelected = () => {
-    for (const serviceName of selectedServices) {
+  const disableSelected = (selected) => {
+    const patches = selected ? selected : selectedServices
+    for (const serviceName of patches) {
       axios
         .patch(`/api/services/${serviceName}`, { shouldRun: false })
         .then(() => toast.success(`${serviceName} disabled`))
@@ -129,31 +132,38 @@ const ServicesPage = () => {
     return services.filter((i) => selectedServices.includes(i.name))
   }, [selectedServices, services])
 
-  const ctxMenuItems = useMemo(() => {
-    return [
-      {
-        label: 'Enable selected',
-        disabled: !selectedServices?.length,
-        command: enableSelected,
-        icon: 'check',
-      },
-      {
-        label: 'Disable selected',
-        disabled: !selectedServices?.length,
-        command: disableSelected,
-        icon: 'cancel',
-      },
-      {
-        label: 'Delete selected',
-        disabled: !selectedServices?.length,
-        command: deleteSelected,
-        danger: true,
-        icon: 'delete',
-      },
-    ]
-  }, [selectedServices])
+  const getCtxMenuItems = useCallback(
+    (data) => {
+      const serviceName = data?.name
 
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+      const services = selectedServices.includes(serviceName) ? selectedServices : [serviceName]
+
+      return [
+        {
+          label: 'Enable selected',
+          disabled: !services.length,
+          command: () => enableSelected(services),
+          icon: 'check',
+        },
+        {
+          label: 'Disable selected',
+          disabled: !services.length,
+          command: () => disableSelected(services),
+          icon: 'cancel',
+        },
+        {
+          label: 'Delete selected',
+          disabled: !services.length,
+          command: () => deleteSelected(services),
+          danger: true,
+          icon: 'delete',
+        },
+      ]
+    },
+    [selectedServices],
+  )
+
+  const [ctxMenuShow] = useCreateContext([])
 
   return (
     <main>
@@ -173,7 +183,7 @@ const ServicesPage = () => {
             dataKey="name"
             selectionMode="multiple"
             selection={selection}
-            onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
+            onContextMenu={(e) => ctxMenuShow(e.originalEvent, getCtxMenuItems(e.data))}
             onSelectionChange={(e) => setSelectedServices(e.value.map((i) => i.name))}
             onContextMenuSelectionChange={(e) => {
               if (!selectedServices.includes(e.value.name)) setSelectedServices([e.value.name])
