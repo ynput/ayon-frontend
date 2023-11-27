@@ -137,6 +137,10 @@ export const Item = styled.li`
   position: relative;
   user-select: none;
 
+  span {
+    display: inline-block;
+  }
+
   :hover {
     background-color: var(--md-sys-color-surface-container-highest);
   }

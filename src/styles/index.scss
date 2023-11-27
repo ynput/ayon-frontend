@@ -756,8 +756,12 @@ a {
   }
 }
 
-
 .broken-addon-row {
   color: red !important;
   font-style: italic;
+}
+
+.p-sidebar-left .p-sidebar {
+  min-width: 20rem;
+  width: auto;
 }
