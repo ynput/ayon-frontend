@@ -5,6 +5,7 @@ export const Container = styled.div`
   position: relative;
   display: flex;
   align-items: center;
+  z-index: 50;
 `
 
 export const ButtonColors = css`
