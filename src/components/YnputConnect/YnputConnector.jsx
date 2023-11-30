@@ -117,10 +117,10 @@ const YnputConnector = ({
 
       <Styled.DropdownContainer $isOpen={isOpen}>
         <Styled.Dropdown className="dropdown">
-          <span>Name: {connectData?.userName || user?.name}</span>
-          <span>Email: {connectData?.userEmail || user?.email}</span>
+          <span>Instance: {connectData?.instanceName || '???'}</span>
+          <span>Organization: {connectData?.orgName || '???'}</span>
           <Styled.Footer>
-            {showDisconnect && (
+            {showDisconnect && !connectData?.managed && (
               <Styled.Button onClick={handleDisconnect} className="disconnect">
                 Disconnect
               </Styled.Button>
