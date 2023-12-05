@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import YnputCloudButton from './YnputCloudButton'
-import {
-  useConnectYnputMutation,
-  useDiscountYnputMutation,
-  useGetYnputConnectionsQuery,
-} from '/src/services/ynputConnect'
+import { useConnectYnputMutation, useGetYnputConnectionsQuery } from '/src/services/ynputConnect'
 import LoadingPage from '/src/pages/LoadingPage'
 import * as Styled from './YnputConnect.styled'
 import { useLocation } from 'react-router'
@@ -22,7 +18,6 @@ const YnputConnector = ({
   showDropdown = true,
   initIsOpen = false,
   showStatus = true,
-  showDisconnect = true,
   smallLogo = false,
   onClick,
   styleContainer,
@@ -40,7 +35,6 @@ const YnputConnector = ({
   } = useGetYnputConnectionsQuery({}, { skip: !currentUser.name })
 
   const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation()
-  const [disconnect] = useDiscountYnputMutation()
 
   useEffect(() => {
     if (queryKey) {
@@ -86,11 +80,6 @@ const YnputConnector = ({
     window.location.href = loginUrl
   }
 
-  const handleDisconnect = async () => {
-    setIsOpen(false)
-    disconnect()
-  }
-
   const handleClick = (event) => {
     event?.preventDefault()
     onClick && onClick(event)
@@ -119,13 +108,6 @@ const YnputConnector = ({
         <Styled.Dropdown className="dropdown">
           <span>Name: {connectData?.userName || user?.name}</span>
           <span>Email: {connectData?.userEmail || user?.email}</span>
-          <Styled.Footer>
-            {showDisconnect && (
-              <Styled.Button onClick={handleDisconnect} className="disconnect">
-                Disconnect
-              </Styled.Button>
-            )}
-          </Styled.Footer>
         </Styled.Dropdown>
       </Styled.DropdownContainer>
     </Styled.Container>

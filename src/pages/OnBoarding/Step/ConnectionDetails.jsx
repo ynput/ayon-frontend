@@ -10,7 +10,6 @@ export const ConnectionDetails = ({ Header, Body, Footer, userForm }) => {
       <YnputConnector
         initIsOpen={true}
         showDropdown={false}
-        showDisconnect={false}
         styleContainer={{ width: '70%', margin: '8px 0' }}
         style={{ width: '100%' }}
         user={userForm}
