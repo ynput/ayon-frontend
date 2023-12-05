@@ -33,6 +33,10 @@ export const HeaderButton = styled(ayonButton)`
 
   ${buttonStyles}
 
+  img {
+    margin: auto;
+  }
+
   .icon {
     color: var(--md-sys-color-on-tertiary);
     font-size: 2rem;
