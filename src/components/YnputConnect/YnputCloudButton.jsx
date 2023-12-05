@@ -3,7 +3,7 @@ import * as Styled from './YnputConnect.styled'
 import { Icon, Spacer } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
 
-const YnputConnectButton = React.forwardRef(
+const YnputCloudButton = React.forwardRef(
   ({ isConnected, showStatus, showDropdown, isOpen, isLoading, smallLogo, ...props }, ref) => {
     return (
       <Styled.HeaderButton
@@ -39,6 +39,6 @@ const YnputConnectButton = React.forwardRef(
   },
 )
 
-YnputConnectButton.displayName = 'YnputConnectButton'
+YnputCloudButton.displayName = 'YnputCloudButton'
 
-export default YnputConnectButton
+export default YnputCloudButton

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
-import YnputConnectButton from './YnputConnectButton'
+import YnputCloudButton from './YnputCloudButton'
 import {
   useConnectYnputMutation,
   useDiscountYnputMutation,
@@ -103,7 +103,7 @@ const YnputConnector = ({
 
   return (
     <Styled.Container style={styleContainer}>
-      <YnputConnectButton
+      <YnputCloudButton
         disabled={disabled}
         isLoading={isLoadingConnect || isLoading}
         onClick={handleClick}
