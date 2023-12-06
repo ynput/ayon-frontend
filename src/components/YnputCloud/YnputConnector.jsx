@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
-import YnputConnectButton from './YnputConnectButton'
+import YnputCloudButton from './YnputCloudButton'
 import {
   useConnectYnputMutation,
   useDiscountYnputMutation,
   useGetYnputConnectionsQuery,
 } from '/src/services/ynputConnect'
 import LoadingPage from '/src/pages/LoadingPage'
-import * as Styled from './YnputConnect.styled'
+import * as Styled from './YnputCloud.styled'
 import { useLocation } from 'react-router'
 import { useSelector } from 'react-redux'
 
@@ -103,7 +103,7 @@ const YnputConnector = ({
 
   return (
     <Styled.Container style={styleContainer}>
-      <YnputConnectButton
+      <YnputCloudButton
         disabled={disabled}
         isLoading={isLoadingConnect || isLoading}
         onClick={handleClick}
