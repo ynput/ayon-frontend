@@ -9,7 +9,7 @@ const ProjectButton = ({ label, code, onPin, onEdit, className, highlighted, ...
       tabIndex={0}
       className={`${className} ${highlighted ? 'highlighted' : ''}`}
     >
-      <span>{label}</span>
+      <span style={{ marginRight: 8 }}>{label}</span>
       {/* code hides on hover */}
       {code && <span className="code">{code}</span>}
       {/* hover buttons */}

@@ -42,6 +42,28 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
     }))
   }, [bundleList])
 
+  const formatValue = (value) => {
+    if (!bundleOptions.length) return ''
+    if (!value.length) return ''
+    const selectedBundle = bundleOptions.find((b) => b.value === value[0])
+    return (
+      <BundleDropdownItem>
+        {selectedBundle.label || selectedBundle.name}
+        <span>
+          {selectedBundle.active && <DropdownBadge>A</DropdownBadge>}
+          {selectedBundle.value === 'staging' && (
+            <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>S</DropdownBadge>
+          )}
+          {selectedBundle.value === 'production' && (
+            <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
+              P
+            </DropdownBadge>
+          )}
+        </span>
+      </BundleDropdownItem>
+    )
+  }
+
   useEffect(() => {
     // Bundle preselection
     const selectedBundle = bundleList.find((b) => b.name === variant)
@@ -59,11 +81,22 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
       onChange={(e) => setVariant(e[0])}
       disabled={disabled}
       style={{ flexGrow: 1 }}
+      valueTemplate={formatValue}
       itemTemplate={(option) => (
         <BundleDropdownItem>
+          {option.label}
           <span>
-            {option.label}
             {option.active && <DropdownBadge>A</DropdownBadge>}
+            {option.value === 'staging' && (
+              <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>
+                S
+              </DropdownBadge>
+            )}
+            {option.value === 'production' && (
+              <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
+                P
+              </DropdownBadge>
+            )}
           </span>
         </BundleDropdownItem>
       )}

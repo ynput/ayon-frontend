@@ -141,7 +141,7 @@ const ProjectManagerPage = () => {
         <NewProjectDialog
           onHide={(name) => {
             setShowNewProject(false)
-            setSelectedProject(name)
+            if (name) setSelectedProject(name)
           }}
         />
       )}

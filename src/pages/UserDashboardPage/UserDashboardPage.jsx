@@ -99,7 +99,7 @@ const UserDashboardPage = () => {
         <NewProjectDialog
           onHide={(name) => {
             setShowNewProject(false)
-            navigate(`/manageProjects/anatomy?project=${name}`)
+            if (name) navigate(`/manageProjects/anatomy?project=${name}`)
           }}
         />
       )}
