@@ -140,13 +140,13 @@ const ServicesPage = () => {
 
       return [
         {
-          label: 'Enable selected',
+          label: 'Start selected',
           disabled: !services.length,
           command: () => enableSelected(services),
           icon: 'check',
         },
         {
-          label: 'Disable selected',
+          label: 'Stop selected',
           disabled: !services.length,
           command: () => disableSelected(services),
           icon: 'cancel',
@@ -194,6 +194,7 @@ const ServicesPage = () => {
             <Column field="addonVersion" header="Addon version" />
             <Column field="service" header="Service" />
             <Column field="hostname" header="Host" />
+            <Column field="data.env.AYON_DEFAULT_SETTINGS_VARIANT" header="Settings variant" />
             <Column
               field="isRunning"
               header="Status"
