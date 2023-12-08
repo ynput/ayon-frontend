@@ -155,9 +155,10 @@ const NewEntity = ({
     if (!entityData.label || !entityData.type) return
 
     // check name is unique
-    if (folderNames.has(entityData.name) && type === 'folder')
-      return toast.warning('Folder names must be unique')
-    else if (taskNames.get(entityData.name) in currentSelection) {
+    //if (folderNames.has(entityData.name) && type === 'folder')
+    if (folderNames.get(entityData.name) in currentSelection) {
+      return toast.warning('Sibling Folder names must be unique')
+    } else if (taskNames.get(entityData.name) in currentSelection) {
       return toast.warning('Sibling Task names must be unique')
     }
 

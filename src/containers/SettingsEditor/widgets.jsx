@@ -218,11 +218,11 @@ const SelectWidget = (props) => {
 
 const getDefaultValue = (props) => {
   //console.log("Creating default value for", props.id)
-  if (props.value !== undefined) return props.value
-  if (props.schema.widget === 'color') {
+  if (props.schema.widget === 'color' && !props.value) {
     if (props.schema.colorFormat === 'hex') return props.schema.colorAlpha ? '#00000000' : '#000000'
     return props.schema.colorAlpha ? [0, 0, 0, 0] : [0, 0, 0]
   }
+  if (props.value !== undefined) return props.value
   if (props.schema.type === 'string') return ''
   if (props.schema.type === 'integer') return 0
 }
