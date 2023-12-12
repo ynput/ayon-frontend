@@ -1,26 +1,32 @@
 import { toast } from 'react-toastify'
 
-const copyToClipboard = (message) => {
+const copyToClipboard = (message, toastMessage = false) => {
   if (!message) return
 
   try {
     if (navigator.clipboard) {
       navigator.clipboard
         .writeText(message)
-        .then(() => toast.success(`Copied To Clipboard: "${message}"`))
+        .then(() => {
+          let toastText = 'Copied To Clipboard'
+          if (toastMessage) {
+            toastText += `: "${message}"`
+          }
+          toast.success(toastText)
+        })
         .catch((err) => {
           console.error('Could not copy text: ', err)
           toast.error('Could not copy text')
         })
     } else {
-      fallbackCopyTextToClipboard(message)
+      fallbackCopyTextToClipboard(message, toastMessage)
     }
   } catch (error) {
     console.error('Unexpected error: ', error)
   }
 }
 
-const fallbackCopyTextToClipboard = (text) => {
+const fallbackCopyTextToClipboard = (text, toastMessage = false) => {
   let textarea = document.createElement('textarea')
   textarea.textContent = text
   textarea.style.position = 'fixed' // Prevent scrolling to bottom of page in MS Edge.
@@ -29,7 +35,11 @@ const fallbackCopyTextToClipboard = (text) => {
 
   try {
     document.execCommand('copy') // Security exception may be thrown by some browsers.
-    toast.success(`Copied To Clipboard: "${text}"`)
+    let toastText = 'Copied To Clipboard'
+    if (toastMessage) {
+      toastText += `: "${text}"`
+    }
+    toast.success(toastText)
   } catch (ex) {
     console.warn('Copy to clipboard failed.', ex)
     toast.error('Could not copy text')
