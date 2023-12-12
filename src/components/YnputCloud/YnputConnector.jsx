@@ -8,7 +8,7 @@ import {
   useGetYnputConnectionsQuery,
 } from '/src/services/ynputConnect'
 import LoadingPage from '/src/pages/LoadingPage'
-import * as Styled from './YnputConnect.styled'
+import * as Styled from './YnputCloud.styled'
 import { useLocation } from 'react-router'
 import { useSelector } from 'react-redux'
 
@@ -117,8 +117,8 @@ const YnputConnector = ({
 
       <Styled.DropdownContainer $isOpen={isOpen}>
         <Styled.Dropdown className="dropdown">
-          <span>Name: {connectData?.userName || user?.name}</span>
-          <span>Email: {connectData?.userEmail || user?.email}</span>
+          <span>Instance: {connectData?.instanceName || '???'}</span>
+          <span>Organization: {connectData?.orgName || '???'}</span>
           {showDisconnect && (
             <Styled.Footer>
               <Styled.Button onClick={handleDisconnect} className="disconnect">

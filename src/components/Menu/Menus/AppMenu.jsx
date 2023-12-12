@@ -3,7 +3,7 @@ import InstallerDownload from '/src/components/InstallerDownload/InstallerDownlo
 import Menu from '../MenuComponents/Menu'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { useRestartServerMutation } from '/src/services/restartServer'
-import YnputConnector from '../../YnputCloud/YnputConnector'
+import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 

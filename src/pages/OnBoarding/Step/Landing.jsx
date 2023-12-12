@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import YnputConnector from '../../../components/YnputCloud/YnputConnector'
+import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 
 export const Landing = ({ Header, Body, nextStep, setUserForm, setIsConnecting }) => {
   const [showMore, setShowMore] = useState(false)
@@ -19,13 +19,13 @@ export const Landing = ({ Header, Body, nextStep, setUserForm, setIsConnecting }
       {showMore && (
         <>
           <Styled.More>
-            <Header>{`What is Ynput Connect?`}</Header>
+            <Header>{`What is Ynput Cloud?`}</Header>
             <Body>
-              AYON is a highly modular platform. Connecting your Ynput account to AYON lets us
+              AYON is a highly modular platform. Connecting your Ynput Cloud account to AYON lets us
               automatically download and setup all you need to take full advantage of AYON in your
               production.
               <br /> <br />
-              If you are in offline environment or you would rather download and install all the
+              If you are in an offline environment or you would rather download and install all the
               addons, desktop distribution and dependencies manually, you can skip this step.
             </Body>
             <Styled.Skip className="skip" onClick={(e) => nextStep(e, 1)}>
