@@ -30,6 +30,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import useShortcuts from '/src/hooks/useShortcuts'
 
 const Bundles = () => {
+  const userName = useSelector((state) => state.user.name)
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
   const location = useLocation()
   const dispatch = useDispatch()
@@ -97,6 +98,10 @@ const Bundles = () => {
       // select bundle by name if in bundle list
       const bundle = bundleList.find((b) => b.name === selected)
       if (bundle) setSelectedBundles([selected])
+    } else if (developerMode) {
+      // select first users dev mode bundle
+      const devBundle = bundleList.find((b) => b.isDev && b.activeUser === userName)
+      if (devBundle) setSelectedBundles([devBundle.name])
     }
 
     // delete
