@@ -1,4 +1,4 @@
-const CloudLogo = ({ darkMode, monoChrome, ...props }) => (
+const CloudLogo = ({ darkMode, ...props }) => (
   <svg viewBox="0 0 1402 254" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <g clipPath="url(#clip0_138_97)">
       <path
@@ -35,7 +35,7 @@ const CloudLogo = ({ darkMode, monoChrome, ...props }) => (
       />
       <path
         d="M73.8961 190.012L36.9481 254.055L0 190.012H73.8961Z"
-        fill={!monoChrome ? '#00D7A0' : darkMode ? 'white' : 'black'}
+        fill={darkMode ? '#00D7A0' : 'black'}
       />
     </g>
     <defs>

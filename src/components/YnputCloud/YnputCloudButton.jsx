@@ -19,7 +19,7 @@ const YnputCloudButton = React.forwardRef(
         $darkMode={darkMode}
         style={{ borderRadius: 8 }}
       >
-        <CloudLogo style={{ height: smallLogo ? 20 : 29 }} darkMode={darkMode} monoChrome />
+        <CloudLogo style={{ height: smallLogo ? 20 : 29 }} darkMode={darkMode} />
         {(showStatus || showDropdown) && (
           <Styled.Status className="status">
             {showStatus && (
