@@ -102,6 +102,8 @@ const YnputConnector = ({
     }
   }
 
+  if (isLoading) return null
+
   return (
     <Styled.Container style={styleContainer} $darkMode={isConnected && darkMode}>
       <YnputCloudButton
