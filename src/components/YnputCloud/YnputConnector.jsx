@@ -27,6 +27,7 @@ const YnputConnector = ({
   onClick,
   styleContainer,
   user,
+  darkMode,
   ...props
 }) => {
   const location = useLocation()
@@ -102,7 +103,7 @@ const YnputConnector = ({
   }
 
   return (
-    <Styled.Container style={styleContainer} $darkMode={props.darkMode}>
+    <Styled.Container style={styleContainer} $darkMode={isConnected && darkMode}>
       <YnputCloudButton
         disabled={disabled}
         isLoading={isLoadingConnect || isLoading}
@@ -112,6 +113,7 @@ const YnputConnector = ({
         isConnected={isConnected}
         isOpen={isOpen}
         smallLogo={smallLogo}
+        darkMode={isConnected && darkMode}
         {...props}
       />
 
