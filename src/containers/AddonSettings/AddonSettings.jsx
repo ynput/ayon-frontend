@@ -502,7 +502,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <>
         <Toolbar>
           <VariantSelector variant={variant} setVariant={setVariant} />
-          {copySettingsButton}
+          {developerMode && copySettingsButton}
         </Toolbar>
         {!developerMode && (
           <Toolbar>
