@@ -105,7 +105,14 @@ export const AppMenu = ({ user, ...props }) => {
   return (
     <>
       <Menu menu={items} footer={ayonClient.settings?.version} {...props} />
-      {isAdmin && <YnputConnector redirect={location.pathname + '/appMenu'} smallLogo />}
+      {isAdmin && (
+        <YnputConnector
+          redirect={location.pathname + '/appMenu'}
+          smallLogo
+          darkMode
+          showDisconnect={false}
+        />
+      )}
     </>
   )
 }

@@ -102,7 +102,7 @@ const YnputConnector = ({
   }
 
   return (
-    <Styled.Container style={styleContainer}>
+    <Styled.Container style={styleContainer} $darkMode={props.darkMode}>
       <YnputConnectButton
         disabled={disabled}
         isLoading={isLoadingConnect || isLoading}
@@ -119,13 +119,13 @@ const YnputConnector = ({
         <Styled.Dropdown className="dropdown">
           <span>Name: {connectData?.userName || user?.name}</span>
           <span>Email: {connectData?.userEmail || user?.email}</span>
-          <Styled.Footer>
-            {showDisconnect && (
+          {showDisconnect && (
+            <Styled.Footer>
               <Styled.Button onClick={handleDisconnect} className="disconnect">
                 Disconnect
               </Styled.Button>
-            )}
-          </Styled.Footer>
+            </Styled.Footer>
+          )}
         </Styled.Dropdown>
       </Styled.DropdownContainer>
     </Styled.Container>
