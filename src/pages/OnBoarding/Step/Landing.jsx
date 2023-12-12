@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import YnputConnector from '../../../components/YnputConnect/YnputConnector'
+import YnputConnector from '../../../components/YnputCloud/YnputConnector'
 
 export const Landing = ({ Header, Body, nextStep, setUserForm, setIsConnecting }) => {
   const [showMore, setShowMore] = useState(false)

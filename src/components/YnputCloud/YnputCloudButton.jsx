@@ -1,10 +1,10 @@
 import React from 'react'
-import * as Styled from './YnputConnect.styled'
+import * as Styled from './YnputCloud.styled'
 import { Icon, Spacer } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
 import CloudLogo from '/src/svg/CloudLogo'
 
-const YnputConnectButton = React.forwardRef(
+const YnputCloudButton = React.forwardRef(
   (
     { isConnected, showStatus, showDropdown, isOpen, isLoading, smallLogo, darkMode, ...props },
     ref,
@@ -39,6 +39,6 @@ const YnputConnectButton = React.forwardRef(
   },
 )
 
-YnputConnectButton.displayName = 'YnputConnectButton'
+YnputCloudButton.displayName = 'YnputCloudButton'
 
-export default YnputConnectButton
+export default YnputCloudButton

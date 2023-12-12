@@ -1,6 +1,6 @@
 import React from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import YnputConnector from '/src/components/YnputConnect/YnputConnector'
+import YnputConnector from '../../../components/YnputCloud/YnputConnector'
 
 export const ConnectionDetails = ({ Header, Body, Footer, userForm }) => {
   return (
