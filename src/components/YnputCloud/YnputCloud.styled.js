@@ -35,9 +35,24 @@ export const HeaderButton = styled(ayonButton)`
 
   .icon {
     color: var(--md-sys-color-on-tertiary);
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-variation-settings: 'FILL' 1;
   }
+
+  /* if $darkMode show inverse colors */
+  ${({ $darkMode }) =>
+    $darkMode &&
+    css`
+      background-color: var(--md-sys-color-surface-container-lowest);
+      color: var(--md-sys-color-on-surface);
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-low);
+      }
+
+      .icon {
+        color: var(--md-sys-color-on-surface);
+      }
+    `}
 
   /* when loading show shimmer */
   ${({ $isLoading }) =>
@@ -72,7 +87,10 @@ export const Container = styled.div`
   display: grid;
   flex-direction: column;
   align-items: center;
-  background-color: var(--md-sys-color-tertiary-container);
+  background-color: ${({ $darkMode }) =>
+    $darkMode
+      ? 'var(--md-sys-color-surface-container-lowest)'
+      : 'var(--md-sys-color-tertiary-container)'};
   border-radius: 8px;
   gap: 0;
 `

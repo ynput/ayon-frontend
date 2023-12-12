@@ -27,6 +27,7 @@ const YnputConnector = ({
   onClick,
   styleContainer,
   user,
+  darkMode,
   ...props
 }) => {
   const location = useLocation()
@@ -101,8 +102,10 @@ const YnputConnector = ({
     }
   }
 
+  if (isLoading) return null
+
   return (
-    <Styled.Container style={styleContainer}>
+    <Styled.Container style={styleContainer} $darkMode={isConnected && darkMode}>
       <YnputCloudButton
         disabled={disabled}
         isLoading={isLoadingConnect || isLoading}
@@ -112,6 +115,7 @@ const YnputConnector = ({
         isConnected={isConnected}
         isOpen={isOpen}
         smallLogo={smallLogo}
+        darkMode={isConnected && darkMode}
         {...props}
       />
 
@@ -119,13 +123,13 @@ const YnputConnector = ({
         <Styled.Dropdown className="dropdown">
           <span>Instance: {connectData?.instanceName || '???'}</span>
           <span>Organization: {connectData?.orgName || '???'}</span>
-          <Styled.Footer>
-            {showDisconnect && !connectData?.managed && (
+          {showDisconnect && (
+            <Styled.Footer>
               <Styled.Button onClick={handleDisconnect} className="disconnect">
                 Disconnect
               </Styled.Button>
-            )}
-          </Styled.Footer>
+            </Styled.Footer>
+          )}
         </Styled.Dropdown>
       </Styled.DropdownContainer>
     </Styled.Container>
