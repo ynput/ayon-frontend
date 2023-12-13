@@ -91,6 +91,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }
 
   const user = useSelector((state) => state.user)
+  const developerMode = user?.attrib?.developerMode
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
@@ -479,30 +480,35 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     // site settings do not have variants
     if (showSites) return
 
+    const copySettingsButton = (
+      <CopyBundleSettingsButton
+        bundleName={bundleName}
+        variant={variant}
+        disabled={canCommit}
+        localData={localData}
+        changedKeys={changedKeys}
+        setLocalData={setLocalData}
+        setChangedKeys={setChangedKeys}
+        setSelectedAddons={setSelectedAddons}
+        originalData={originalData}
+        setOriginalData={setOriginalData}
+        projectName={projectName}
+      />
+    )
+
     return (
       <>
         <Toolbar>
           <VariantSelector variant={variant} setVariant={setVariant} />
+          {developerMode && copySettingsButton}
         </Toolbar>
-        {!user?.attrib?.developerMode && (
+        {!developerMode && (
           <Toolbar>
             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {bundleName}
             </span>
             <Spacer />
-            <CopyBundleSettingsButton
-              bundleName={bundleName}
-              variant={variant}
-              disabled={canCommit}
-              localData={localData}
-              changedKeys={changedKeys}
-              setLocalData={setLocalData}
-              setChangedKeys={setChangedKeys}
-              setSelectedAddons={setSelectedAddons}
-              originalData={originalData}
-              setOriginalData={setOriginalData}
-              projectName={projectName}
-            />
+            {copySettingsButton}
             <Button
               icon="rocket_launch"
               data-tooltip="Push bundle to production"
@@ -514,7 +520,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         )}
       </>
     )
-  }, [variant, changedKeys, bundleName, projectName])
+  }, [variant, changedKeys, bundleName, projectName, developerMode])
 
   const settingsListHeader = useMemo(() => {
     return (

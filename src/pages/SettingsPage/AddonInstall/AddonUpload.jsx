@@ -84,7 +84,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
       console.log('finished: created ' + type)
       return true
     } catch (error) {
-      setErrorMessage(error?.data?.detail)
+      setErrorMessage(error?.response?.data?.detail)
       console.error(error)
       return false
     }
@@ -215,7 +215,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
       setIsUploading(false)
       setIsComplete(true)
       dispatch(onUploadFinished())
-      setErrorMessage('ERROR: ' + error?.response?.data?.traceback)
+      setErrorMessage('ERROR: ' + error?.response?.data?.detail)
     }
   }
 

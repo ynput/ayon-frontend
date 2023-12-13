@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
@@ -36,12 +36,25 @@ const AnatomyPresets = () => {
   const [showNameDialog, setShowNameDialog] = useState(false)
   const [newPresetName, setNewPresetName] = useState('')
 
+  const nameInputRef = useRef(null)
+
   //
   // Hooks
   //
 
   // get presets lists data
   const { data: presetList = [], isLoading } = useGetAnatomyPresetsQuery()
+
+  useEffect(() => {
+    // preselect primary preset if there is one
+    // otherwise select default preset
+    const primaryPreset = presetList.find((p) => p.primary === 'PRIMARY')
+    if (primaryPreset) {
+      setSelectedPreset(primaryPreset.name)
+    } else {
+      setSelectedPreset('_')
+    }
+  }, [presetList])
 
   const isSelectedPrimary = useMemo(() => {
     // find preset in list
@@ -67,6 +80,15 @@ const AnatomyPresets = () => {
     if (!originalData || !newData) return false
     return !isEqual(originalData, newData)
   }, [newData, originalData])
+
+  useEffect(() => {
+    // focus input when dialog is shown
+    if (showNameDialog && nameInputRef.current) {
+      setTimeout(() => {
+        nameInputRef.current.focus()
+      }, 100)
+    }
+  }, [showNameDialog, nameInputRef])
 
   //
   // Actions
@@ -164,6 +186,7 @@ const AnatomyPresets = () => {
         >
           <InputText
             value={newPresetName}
+            ref={nameInputRef}
             onChange={(e) => setNewPresetName(e.target.value)}
             placeholder="Preset name"
             style={{

@@ -1,10 +1,14 @@
 import React from 'react'
-import * as Styled from './YnputConnect.styled'
+import * as Styled from './YnputCloud.styled'
 import { Icon, Spacer } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
+import CloudLogo from '/src/svg/CloudLogo'
 
-const YnputConnectButton = React.forwardRef(
-  ({ isConnected, showStatus, showDropdown, isOpen, isLoading, smallLogo, ...props }, ref) => {
+const YnputCloudButton = React.forwardRef(
+  (
+    { isConnected, showStatus, showDropdown, isOpen, isLoading, smallLogo, darkMode, ...props },
+    ref,
+  ) => {
     return (
       <Styled.HeaderButton
         {...props}
@@ -12,14 +16,10 @@ const YnputConnectButton = React.forwardRef(
         $disabled={props.disabled || isLoading}
         $isLoading={isLoading}
         $isOpen={isOpen}
+        $darkMode={darkMode}
         style={{ borderRadius: 8 }}
       >
-        <img
-          src="/ynput-connect-logo.svg"
-          style={{
-            height: smallLogo ? 20 : 29,
-          }}
-        />
+        <CloudLogo style={{ height: smallLogo ? 20 : 29 }} darkMode={darkMode} />
         {(showStatus || showDropdown) && (
           <Styled.Status className="status">
             {showStatus && (
@@ -39,6 +39,6 @@ const YnputConnectButton = React.forwardRef(
   },
 )
 
-YnputConnectButton.displayName = 'YnputConnectButton'
+YnputCloudButton.displayName = 'YnputCloudButton'
 
-export default YnputConnectButton
+export default YnputCloudButton
