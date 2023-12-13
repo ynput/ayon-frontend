@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
-import YnputConnectButton from './YnputConnectButton'
+import YnputCloudButton from './YnputCloudButton'
 import {
   useConnectYnputMutation,
   useDiscountYnputMutation,
   useGetYnputConnectionsQuery,
 } from '/src/services/ynputConnect'
 import LoadingPage from '/src/pages/LoadingPage'
-import * as Styled from './YnputConnect.styled'
+import * as Styled from './YnputCloud.styled'
 import { useLocation } from 'react-router'
 import { useSelector } from 'react-redux'
 
@@ -27,6 +27,7 @@ const YnputConnector = ({
   onClick,
   styleContainer,
   user,
+  darkMode,
   ...props
 }) => {
   const location = useLocation()
@@ -101,9 +102,11 @@ const YnputConnector = ({
     }
   }
 
+  if (isLoading) return null
+
   return (
-    <Styled.Container style={styleContainer}>
-      <YnputConnectButton
+    <Styled.Container style={styleContainer} $darkMode={isConnected && darkMode}>
+      <YnputCloudButton
         disabled={disabled}
         isLoading={isLoadingConnect || isLoading}
         onClick={handleClick}
@@ -112,20 +115,21 @@ const YnputConnector = ({
         isConnected={isConnected}
         isOpen={isOpen}
         smallLogo={smallLogo}
+        darkMode={isConnected && darkMode}
         {...props}
       />
 
       <Styled.DropdownContainer $isOpen={isOpen}>
         <Styled.Dropdown className="dropdown">
-          <span>Name: {connectData?.userName || user?.name}</span>
-          <span>Email: {connectData?.userEmail || user?.email}</span>
-          <Styled.Footer>
-            {showDisconnect && (
+          <span>Instance: {connectData?.instanceName || '???'}</span>
+          <span>Organization: {connectData?.orgName || '???'}</span>
+          {showDisconnect && (
+            <Styled.Footer>
               <Styled.Button onClick={handleDisconnect} className="disconnect">
                 Disconnect
               </Styled.Button>
-            )}
-          </Styled.Footer>
+            </Styled.Footer>
+          )}
         </Styled.Dropdown>
       </Styled.DropdownContainer>
     </Styled.Container>

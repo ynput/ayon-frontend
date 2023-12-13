@@ -1,8 +1,8 @@
 import React from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 
-import YnputConnector from '../../../components/YnputConnect/YnputConnector'
-import * as YnputConnect from '../../../components/YnputConnect/YnputConnect.styled'
+import YnputConnector from '/src/components/YnputCloud/YnputConnector'
+import * as YnputConnect from '/src/components/YnputCloud/YnputCloud.styled'
 
 export const BootstrapStart = ({
   nextStep,

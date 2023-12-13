@@ -1,6 +1,6 @@
 import React from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import YnputConnector from '/src/components/YnputConnect/YnputConnector'
+import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 
 export const ConnectionDetails = ({ Header, Body, Footer, userForm }) => {
   return (
@@ -10,7 +10,6 @@ export const ConnectionDetails = ({ Header, Body, Footer, userForm }) => {
       <YnputConnector
         initIsOpen={true}
         showDropdown={false}
-        showDisconnect={false}
         styleContainer={{ width: '70%', margin: '8px 0' }}
         style={{ width: '100%' }}
         user={userForm}
