@@ -11,6 +11,7 @@ import {
   useSetRawAddonSettingsOverridesMutation,
   useLazyGetRawAddonSettingsOverridesQuery,
 } from '/src/services/addonSettings'
+import copyToClipboard from '/src/helpers/copyToClipboard'
 
 const EditorWrapper = styled.div`
   position: relative;
@@ -124,14 +125,7 @@ const RawSettingsDialog = ({
 
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
-      <Button
-        label="Copy"
-        icon="content_copy"
-        onClick={() => {
-          navigator.clipboard.writeText(code)
-          toast.success('Copied to clipboard')
-        }}
-      />
+      <Button label="Copy" icon="content_copy" onClick={() => copyToClipboard(code)} />
       <SaveButton label="Save" icon="save" active={!warn} onClick={onSave} />
     </div>
   )

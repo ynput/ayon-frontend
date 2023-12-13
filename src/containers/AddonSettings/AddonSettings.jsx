@@ -410,15 +410,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }
 
   const onPasteValue = async (addon, siteId, path) => {
-    const text = await navigator.clipboard.readText()
-    let value
     try {
-      value = JSON.parse(text)
+      const text = await navigator.clipboard.readText()
+      const value = JSON.parse(text)
+      pushValueToPath(addon, siteId, path, value)
     } catch (e) {
       toast.error('Cannot paste, invalid clipboard contents')
-      return
     }
-    pushValueToPath(addon, siteId, path, value)
   } // paste
 
   const onPushToProduction = async () => {
