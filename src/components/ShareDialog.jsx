@@ -5,7 +5,6 @@ import { closeShare } from '../features/context'
 import { Button } from '@ynput/ayon-react-components'
 import copyToClipboard from '../helpers/copyToClipboard'
 import { TabView, TabPanel } from 'primereact/tabview'
-import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
 
 const ShareStyled = styled.div`
@@ -73,8 +72,7 @@ const ShareDialog = () => {
   const copyImage = async (img) => {
     const blob = await convertToBlob(img)
     // copies image to clipboard
-    navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })])
-    toast.info('Image copied to clipboard')
+    copyToClipboard([new ClipboardItem({ [blob.type]: blob })])
   }
 
   const string = JSON.stringify(data, null, 2).replace(/"/g, '').replace(/{|}/g, '').slice(1, -1)

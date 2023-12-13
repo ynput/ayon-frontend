@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
-import { toast } from 'react-toastify'
 import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
 import useUriNavigate from '/src/hooks/useUriNavigate'
+import copyToClipboard from '/src/helpers/copyToClipboard'
 
 const uri2crumbs = (uri = '', pathname) => {
   // parse uri to path and query params
@@ -104,8 +104,7 @@ const Breadcrumbs = () => {
   }
 
   const onCopy = () => {
-    navigator.clipboard.writeText(localUri)
-    toast.success('Copied to clipboard')
+    copyToClipboard(localUri)
   }
 
   const handleKeyDown = (e) => {

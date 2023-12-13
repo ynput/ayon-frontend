@@ -7,6 +7,7 @@ import { useUpdateUserAPIKeyMutation } from '../services/user/updateUser'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 import confirmDelete from '../helpers/confirmDelete'
+import copyToClipboard from '../helpers/copyToClipboard'
 
 const PanelStyled = styled(Panel)`
   flex-direction: row;
@@ -76,8 +77,7 @@ const ApiKeyManager = ({ preview, name }) => {
   }
 
   const handleCopyKey = () => {
-    navigator.clipboard.writeText(newKey.key)
-    toast.success('API Key Copied')
+    copyToClipboard(newKey.key)
   }
 
   if (preview || newKey?.key)

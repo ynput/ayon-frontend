@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { toast } from 'react-toastify'
 import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './SettingsPanel'
@@ -8,6 +7,7 @@ import useCreateContext from '/src/hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
 import { Badge, BadgeWrapper } from '/src/components/Badge'
+import copyToClipboard from '/src/helpers/copyToClipboard'
 
 const FormArrayField = styled.div`
   flex-grow: 1;
@@ -177,10 +177,7 @@ function ObjectFieldTemplate(props) {
   const contextMenuItems = [
     {
       label: 'Copy',
-      command: () => {
-        navigator.clipboard.writeText(JSON.stringify(props.formData, null, 2))
-        toast.success('Copied to clipboard')
-      },
+      command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
     },
     {
       label: 'Paste',
@@ -336,10 +333,7 @@ function FieldTemplate(props) {
       {
         label: 'Copy value',
         disabled: !props.formContext.onCopyValue,
-        command: () => {
-          navigator.clipboard.writeText(JSON.stringify(props.formData, null, 2))
-          toast.success('Copied to clipboard')
-        },
+        command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
       },
       {
         label: 'Paste value',
