@@ -37,7 +37,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     data: tasksData = [],
     isFetching,
     isError,
-    error,
   } = useGetTasksQuery({ projectName, folderIds, userName }, { skip: !folderIds.length })
 
   const selectedTasks = useMemo(() => {
@@ -94,6 +93,25 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     dispatch(setFocusedTasks({ ids: [event.value] }))
   }
 
+  // CONTEXT MENU
+  const ctxMenuItems = [
+    {
+      label: 'Detail',
+      command: () => setShowDetail(true),
+      icon: 'database',
+    },
+  ]
+
+  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 6 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
   //
   // Render
   //
@@ -121,8 +139,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   }
 
   if (isError) {
-    toast.error(`Unable to load tasks. ${error}`)
-
+    toast.error(`Unable to load tasks.`)
     return <>Error</>
   }
 
@@ -148,25 +165,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     // remove paring
     dispatch(setPairing([]))
   }
-
-  // CONTEXT MENU
-  const ctxMenuItems = [
-    {
-      label: 'Detail',
-      command: () => setShowDetail(true),
-      icon: 'database',
-    },
-  ]
-
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
-
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 6 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
 
   if (isFetching) {
     tasksData = loadingData
