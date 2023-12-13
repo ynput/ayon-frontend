@@ -42,13 +42,15 @@ const EntityDetailsHeader = ({
 
   const isMultiple = values.length > 1
 
-  let subTitle = ''
+  let subTitle = '',
+    breadcrumbs = []
   if (isMultiple) {
     subTitle = values.map((v) => v?.name).join(', ')
   } else if (uri) {
     const [path, qs] = uri.split('://')[1].split('?')
     //eslint-disable-next-line
-    const [_, ...breadcrumbs] = path.split('/').filter((p) => p)
+    const [_, ...bc] = path.split('/').filter((p) => p)
+    breadcrumbs = bc
     const qp = qs
       ? qs.split('&').reduce((acc, curr) => {
           if (!curr) return acc
@@ -110,7 +112,7 @@ const EntityDetailsHeader = ({
             value={subTitle}
             style={{ left: -3 }}
             align="left"
-            onClick={copyToClipboard}
+            onClick={() => copyToClipboard(breadcrumbs.join('/'), true)}
           />
         </div>
       )}
