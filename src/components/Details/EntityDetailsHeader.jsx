@@ -45,7 +45,12 @@ const EntityDetailsHeader = ({
   let subTitle = '',
     breadcrumbs = []
   if (isMultiple) {
-    subTitle = values.map((v) => v?.name).join(', ')
+    subTitle = values
+      .map((v) => v?.name)
+      .slice(0, 5)
+      .join(', ')
+
+    if (values.length > 5) subTitle += ' +' + (values.length - 5)
   } else if (uri) {
     const [path, qs] = uri.split('://')[1].split('?')
     //eslint-disable-next-line
