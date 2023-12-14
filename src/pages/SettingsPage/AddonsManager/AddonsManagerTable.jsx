@@ -32,6 +32,14 @@ const AddonsManagerTable = ({
           headerStyle={{ width: 50 }}
           body={(d) => <BundleStatus statuses={d.status} />}
           sortable
+          sortFunction={(event) => {
+            // sort by status length
+            return event.data.sort((a, b) =>
+              event.order === 1
+                ? b.status.length - a.status.length
+                : a.status.length - b.status.length,
+            )
+          }}
         />
       </DataTable>
     </TablePanel>
