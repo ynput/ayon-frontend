@@ -3,7 +3,7 @@ import ayonClient from '/src/ayon'
 const BASE_QUERY = `
   query FolderTree($projectName: String!, $parents: [String!]!) {
     project(name: $projectName) {
-      folders(parentIds: $parents) {
+      folders(parentIds: $parents, sortBy: "name", last: 1000) {
         edges {
           node {
             id
