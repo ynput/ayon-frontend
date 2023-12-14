@@ -1287,7 +1287,7 @@ const EditorPage = () => {
 
       // parent node could be a new node
       if (!parentNode) parentNode = newNodes[endFolder.parentId]
-      if (parentNode) parents.push(parentNode.label || parentNode.name)
+      if (parentNode) parents.push(parentNode.name)
       if (parentNode?.parents?.length) {
         parents.push(...parentNode.parents)
       } else if (parentNode.__isNew) {
@@ -1296,10 +1296,10 @@ const EditorPage = () => {
           const parent = newNodes[node.parentId] || searchableFoldersSet.get(node.parentId)
           if (parent) {
             if (parent.__isNew) {
-              parents.unshift(parent.label || parent.name)
+              parents.unshift(parent.name)
               getParents(parent)
             } else {
-              parents.unshift(parent.label || parent.name)
+              parents.unshift(parent.name)
             }
           }
         }
@@ -1308,7 +1308,7 @@ const EditorPage = () => {
       }
     }
 
-    const pathNames = [...parents, endFolder.label || endFolder.name]
+    const pathNames = [...parents, endFolder.name]
 
     if (pathNames.length) {
       let uri = `ayon+entity://${projectName}`
