@@ -833,7 +833,10 @@ const EditorPage = () => {
         if (op.type === 'delete') {
           deleted.push(op.id)
         } else {
-          updated.push(op.patch)
+          const patch = { ...op.patch }
+          // delete: __isNew
+          delete patch.data.__isNew
+          updated.push(patch)
         }
       }
 
