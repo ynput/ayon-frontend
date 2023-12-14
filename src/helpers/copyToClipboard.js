@@ -10,7 +10,7 @@ const copyToClipboard = (message, toastMessage = false) => {
         .then(() => {
           let toastText = 'Copied To Clipboard'
           if (toastMessage) {
-            toastText += `: "${message}"`
+            toastText += `: ${message}`
           }
           toast.success(toastText)
         })

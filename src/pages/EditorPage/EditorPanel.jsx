@@ -66,6 +66,7 @@ const EditorPanel = ({
   const [localChange, setLocalChange] = useState(false)
   const [nodeIds, setNodeIds] = useState([])
   const [nodes, setNodes] = useState({})
+  const [isNew, setIsNew] = useState(false)
   const [form, setForm] = useState({})
   // used to rebuild fields for when the type changes
   const [type, setType] = useState(null)
@@ -78,14 +79,16 @@ const EditorPanel = ({
 
     for (const id of selected) {
       if (id in editorNodes) {
+        setIsNew(false)
         formNodes[id] = editorNodes[id]
       } else if (id in newNodes) {
         formNodes[id] = { leaf: newNodes[id]?.__entityType !== 'folder', data: newNodes[id] }
+        setIsNew(true)
       }
     }
 
     setNodes(formNodes)
-  }, [selected, editorNodes])
+  }, [selected, editorNodes, newNodes])
 
   const noSelection = !nodeIds.length
   let singleSelect = null
@@ -356,25 +359,6 @@ const EditorPanel = ({
         isMultiple: oldValue?.isMultiple && !isChanged,
       }
 
-      // if the label is changed and the entity is new, change the name as well
-      // first check if all nodes are newNodes
-      const allNewNodes = nodeIds.every((id) => nodes[id]?.data?.__isNew)
-      if (allNewNodes && changeKey === '_label') {
-        // replace space with underscore, set to lowercase and remove special characters and any non alphanumeric characters from the start
-        const name = newValue
-          .replace(/\s/g, '_')
-          .toLowerCase()
-          .replace(/[^a-z0-9_]/g, '')
-          .replace(/^[^a-z]+/g, '')
-        newForm._name = {
-          ...newForm._name,
-          value: name,
-          isChanged: true,
-          isOwn: true,
-          isMultiple: false,
-        }
-      }
-
       setLocalChange(true)
 
       if (setFormNew) return setFormNew(newForm)
@@ -542,7 +526,7 @@ const EditorPanel = ({
                 // pick a react input
                 let input
 
-                if (field === 'name') {
+                if (field === 'name' && !isNew) {
                   input = <InputText value={value} disabled readOnly />
                 } else if (field.includes('Type')) {
                   input = (

@@ -833,7 +833,10 @@ const EditorPage = () => {
         if (op.type === 'delete') {
           deleted.push(op.id)
         } else {
-          updated.push(op.patch)
+          const patch = { ...op.patch }
+          // delete: __isNew
+          delete patch.data.__isNew
+          updated.push(patch)
         }
       }
 
@@ -1261,17 +1264,55 @@ const EditorPage = () => {
   }
 
   const onRowClick = (event) => {
-    let node = event.node.data
+    const node = event.node.data
+    //
+    let endFolder
     if (node.__entityType === 'folder') {
-      node = event.node.data
+      endFolder = node
     } else if (node.__entityType === 'task') {
       // find the parent folder
-      node = searchableFoldersSet.get(node.__parentId)
+      endFolder = searchableFoldersSet.get(node.__parentId)
+
+      if (!endFolder) {
+        // the parent could be a new node, so look in newNodes
+        endFolder = newNodes[node.__parentId]
+      }
     }
 
-    if (node?.parents) {
+    const parents = endFolder?.parents || []
+
+    if (!parents?.length && endFolder?.parentId) {
+      // get any parents of that parent and add
+      let parentNode = searchableFoldersSet.get(endFolder.parentId)
+
+      // parent node could be a new node
+      if (!parentNode) parentNode = newNodes[endFolder.parentId]
+      if (parentNode) parents.push(parentNode.name)
+      if (parentNode?.parents?.length) {
+        parents.push(...parentNode.parents)
+      } else if (parentNode.__isNew) {
+        // we need to recursively find parents until we find a parent that is not new
+        const getParents = (node) => {
+          const parent = newNodes[node.parentId] || searchableFoldersSet.get(node.parentId)
+          if (parent) {
+            if (parent.__isNew) {
+              parents.unshift(parent.name)
+              getParents(parent)
+            } else {
+              parents.unshift(parent.name)
+            }
+          }
+        }
+
+        getParents(parentNode)
+      }
+    }
+
+    const pathNames = [...parents, endFolder.name]
+
+    if (pathNames.length) {
       let uri = `ayon+entity://${projectName}`
-      uri += `/${node.parents.join('/')}/${node.name}`
+      uri += `/${pathNames.join('/')}`
       if (event.node.data.__entityType === 'task') {
         uri += `?task=${event.node?.data?.name}`
       }

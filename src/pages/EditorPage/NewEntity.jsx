@@ -226,13 +226,14 @@ const NewEntity = ({
             variant="text"
             onClick={() => handleSubmit(false)}
             disabled={addDisabled}
-            title={'Shift + Enter'}
+            data-shortcut="Shift+Enter"
           />
           <SaveButton
             label={`Add and Close`}
             onClick={() => handleSubmit(true)}
             active={!addDisabled}
             title="Ctrl/Cmd + Enter"
+            data-shortcut="Ctrl/Cmd+Enter"
           />
         </Toolbar>
       }

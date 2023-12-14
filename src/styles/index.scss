@@ -139,7 +139,7 @@ input:-webkit-autofill:focus {
 
 .p-treetable .p-treetable-tbody > tr.new {
   border-left: 4px solid var(--color-changed);
-  span {
+  span:not(.changed) {
     color: var(--color-changed) !important;
   }
 

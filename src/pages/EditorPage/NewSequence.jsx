@@ -125,13 +125,13 @@ const NewSequence = ({
             label="Add"
             disabled={addDisabled}
             onClick={() => handleSeqSubmit(false)}
-            title={'Shift + Enter'}
+            data-shortcut="Shift+Enter"
           />
           <SaveButton
             label={'Add and Close'}
             onClick={() => handleSeqSubmit(true)}
             active={!addDisabled}
-            title="Ctrl/Cmd + Enter"
+            data-shortcut="Ctrl/Cmd+Enter"
           />
         </Toolbar>
       }
