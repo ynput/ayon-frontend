@@ -37,14 +37,16 @@ const AddonsManagerTable = ({
   }
 
   const createContextItems = (selected, enabled) => {
-    return [
-      {
+    let items = []
+
+    if (onDelete) {
+      items.push({
         label: deleteLabel,
         icon: deleteIcon,
         disabled: !enabled,
         command: () => handleDelete(undefined, selected),
-      },
-    ]
+      })
+    }
   }
 
   const [ctxMenuShow] = useCreateContext([])
@@ -74,13 +76,15 @@ const AddonsManagerTable = ({
 
   return (
     <Section style={{ height: '100%' }}>
-      <Button
-        icon={deleteIcon}
-        disabled={tableSelection.some((v) => v.status?.length)}
-        onClick={(e) => handleDelete(e, selection)}
-      >
-        {deleteLabel} {header}
-      </Button>
+      {onDelete && (
+        <Button
+          icon={deleteIcon}
+          disabled={tableSelection.some((v) => v.status?.length)}
+          onClick={(e) => handleDelete(e, selection)}
+        >
+          {deleteLabel} {header}
+        </Button>
+      )}
       <TablePanel style={{ height: '100%' }}>
         <DataTable
           {...props}

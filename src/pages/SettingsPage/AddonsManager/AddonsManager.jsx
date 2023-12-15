@@ -33,7 +33,7 @@ const AddonsManager = () => {
   const { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap } =
     useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions)
 
-  // HANDLERS
+  // SELECTION HANDLERS vvv
   const handleVersionSelect = (versions) => {
     setSelectedVersions(versions)
 
@@ -52,7 +52,9 @@ const AddonsManager = () => {
     const newVersions = selectedVersions.filter((v) => addons.some((a) => v.includes(a)))
     handleVersionSelect(newVersions)
   }
+  // SELECTION HANDLERS ^^^
 
+  // DELETE HANDLERS vvv
   const handleBundlesArchive = async (selected = []) => {
     const bundleMap = new Map(bundles.map((bundle) => [bundle.name, bundle]))
 
@@ -65,6 +67,15 @@ const AddonsManager = () => {
     await Promise.all(updatePromises)
   }
 
+  const handleDeleteVersions = async (versions = []) => {
+    console.log(versions)
+  }
+
+  const handleDeleteWholeAddons = async (addons = []) => {
+    console.log(addons)
+  }
+  // DELETE HANDLERS ^^^
+
   return (
     <Section style={{ overflow: 'hidden' }}>
       <Splitter style={{ height: '100%', padding: 8 }}>
@@ -75,6 +86,7 @@ const AddonsManager = () => {
             value={addonsTableData}
             selection={selectedAddons}
             onChange={handleAddonsSelect}
+            onDelete={handleDeleteWholeAddons}
             field={'name'}
           />
         </SplitterPanel>
@@ -86,6 +98,7 @@ const AddonsManager = () => {
             selection={selectedVersions}
             onChange={handleVersionSelect}
             field={'version'}
+            onDelete={handleDeleteVersions}
           />
         </SplitterPanel>
         <SplitterPanel>
