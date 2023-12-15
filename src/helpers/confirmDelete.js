@@ -12,15 +12,28 @@ const confirmDelete = ({
     header: props.header || `Delete ${label}`,
     message,
     accept: async () => {
-      // try catch to update api key using unwrap and toast results
+      const toastId = showToasts
+        ? toast.loading(`Deleting ${label.toLowerCase()}...`, { autoClose: false })
+        : null
       try {
         await accept()
 
-        showToasts && toast.success(label + ' deleted')
+        showToasts &&
+          toast.update(toastId, {
+            render: `${label} deleted`,
+            type: toast.TYPE.SUCCESS,
+            autoClose: 5000,
+            isLoading: false,
+          })
       } catch (error) {
         console.error(error)
-        //   toast error
-        showToasts && toast.error('Error deleting ' + label)
+
+        showToasts &&
+          toast.update(toastId, {
+            render: `Error deleting ${label}`,
+            type: toast.TYPE.ERROR,
+            autoClose: 5000,
+          })
       }
     },
     reject: () => {},
