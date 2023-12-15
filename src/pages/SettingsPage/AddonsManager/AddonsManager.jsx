@@ -3,13 +3,9 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { useGetBundleListQuery } from '/src/services/bundles'
 import { useMemo, useState } from 'react'
-import {
-  transformAddonsTable,
-  transformAddonsWithBundles,
-  transformBundlesTable,
-  transformVersionsTable,
-} from './helpers'
+import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
+import useGetTableData from './useGetTableData'
 
 const AddonsManager = () => {
   const { data: addons = [] } = useGetAddonListQuery()
@@ -29,27 +25,11 @@ const AddonsManager = () => {
   // selected bundle name or null
   const [selectedBundles, setSelectedBundles] = useState([])
 
-  // status  = ['active', 'production', 'staging', 'dev'] | []
-  // active:  addon has some versions with bundles
-  // For each status (production, staging, dev), check if the addon has any versions with bundles of that status.
-  // []: addon has no versions with bundles
-  // simplify data down to [{name, status}]  const addonsTableData = useMemo(() => {
-  const addonsTableData = useMemo(
-    () => transformAddonsTable(addonsVersionsBundles),
-    [addonsVersionsBundles],
-  )
+  // different functions to transform the data for each table
+  const { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap } =
+    useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions)
 
-  // based on selectedAddons, create versionsTableData in the same format as addonsTableData
-  const [filteredVersionsMap, versionsTableData] = useMemo(
-    () => transformVersionsTable(addonsVersionsBundles, selectedAddons),
-    [selectedAddons, addonsVersionsBundles],
-  )
-
-  const bundlesTableData = useMemo(
-    () => transformBundlesTable(addonsVersionsBundles, selectedAddons, selectedVersions),
-    [addonsVersionsBundles, selectedAddons, selectedVersions],
-  )
-
+  // HANDLERS
   const handleVersionSelect = (versions) => {
     setSelectedVersions(versions)
 
