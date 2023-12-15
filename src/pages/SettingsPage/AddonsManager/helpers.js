@@ -103,7 +103,7 @@ export const transformVersionsTable = (data, addons = []) => {
     tableData.push({ version, status })
   })
 
-  return tableData
+  return [versionsMap, tableData]
 }
 
 // returns map of unique bundles for addons and versions

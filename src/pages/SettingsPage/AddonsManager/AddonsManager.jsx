@@ -40,7 +40,7 @@ const AddonsManager = () => {
   )
 
   // based on selectedAddons, create versionsTableData in the same format as addonsTableData
-  const versionsTableData = useMemo(
+  const [filteredVersionsMap, versionsTableData] = useMemo(
     () => transformVersionsTable(addonsVersionsBundles, selectedAddons),
     [selectedAddons, addonsVersionsBundles],
   )
@@ -48,6 +48,30 @@ const AddonsManager = () => {
   const bundlesTableData = useMemo(
     () => transformBundlesTable(addonsVersionsBundles, selectedAddons, selectedVersions),
     [addonsVersionsBundles, selectedAddons, selectedVersions],
+  )
+
+  const handleVersionSelect = (versions) => {
+    setSelectedVersions(versions)
+
+    // remove bundles that are not in the selected versions
+    const newBundles = selectedBundles.filter((b) =>
+      selectedVersions.some((v) => filteredVersionsMap.get(v)?.has(b)),
+    )
+
+    setSelectedBundles(newBundles)
+  }
+
+  const handleAddonsSelect = (addons) => {
+    setSelectedAddons(addons)
+
+    // remove versions that are not in the selected addons
+    const newVersions = selectedVersions.filter((v) => addons.some((a) => v.includes(a)))
+    handleVersionSelect(newVersions)
+  }
+
+  // do any of the selectedBundles have status 'production', 'staging', 'dev'?
+  const isSelectedBundlesProtected = selectedBundles.some((b) =>
+    bundlesTableData.some((d) => d.name === b && d.status.length),
   )
 
   return (
@@ -58,8 +82,9 @@ const AddonsManager = () => {
             header="Addons"
             value={addonsTableData}
             selection={selectedAddons}
-            onChange={setSelectedAddons}
+            onChange={handleAddonsSelect}
             field={'name'}
+            enableDelete={!!selectedAddons.length && !versionsTableData.length}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -67,8 +92,9 @@ const AddonsManager = () => {
             header="Versions"
             value={versionsTableData}
             selection={selectedVersions}
-            onChange={setSelectedVersions}
+            onChange={handleVersionSelect}
             field={'version'}
+            enableDelete={!!selectedVersions.length && !bundlesTableData.length}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -78,6 +104,7 @@ const AddonsManager = () => {
             selection={selectedBundles}
             onChange={setSelectedBundles}
             field={'name'}
+            enableDelete={!!selectedBundles.length && !isSelectedBundlesProtected}
           />
         </SplitterPanel>
         <SplitterPanel>
