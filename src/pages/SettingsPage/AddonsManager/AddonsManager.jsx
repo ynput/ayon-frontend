@@ -1,13 +1,14 @@
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
-import { useGetBundleListQuery } from '/src/services/bundles'
+import { useGetBundleListQuery, useUpdateBundleMutation } from '/src/services/bundles'
 import { useMemo, useState } from 'react'
 import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
 import useGetTableData from './useGetTableData'
 
 const AddonsManager = () => {
+  // QUERIES
   const { data: addons = [] } = useGetAddonListQuery()
   const { data: bundles = [] } = useGetBundleListQuery({ archived: false })
 
@@ -16,6 +17,9 @@ const AddonsManager = () => {
     () => transformAddonsWithBundles(addons, bundles),
     [bundles, addons],
   )
+
+  // MUTATIONS
+  const [updateBundle] = useUpdateBundleMutation()
 
   // STATES
   // selected addon name or null
@@ -49,42 +53,51 @@ const AddonsManager = () => {
     handleVersionSelect(newVersions)
   }
 
-  // do any of the selectedBundles have status 'production', 'staging', 'dev'?
-  const isSelectedBundlesProtected = selectedBundles.some((b) =>
-    bundlesTableData.some((d) => d.name === b && d.status.length),
-  )
+  const handleBundlesArchive = async (selected = []) => {
+    const bundleMap = new Map(bundles.map((bundle) => [bundle.name, bundle]))
+
+    const updatePromises = selected.map((bundleName) => {
+      const bundleData = bundleMap.get(bundleName)
+      if (!bundleData || bundleData.isProduction || bundleData.isStaging || bundleData.isDev) return
+      return updateBundle({ name: bundleName, data: { isArchived: true } })
+    })
+
+    await Promise.all(updatePromises)
+  }
 
   return (
     <Section style={{ overflow: 'hidden' }}>
       <Splitter style={{ height: '100%', padding: 8 }}>
         <SplitterPanel>
+          {/* ADDONS TABLE */}
           <AddonsManagerTable
             header="Addons"
             value={addonsTableData}
             selection={selectedAddons}
             onChange={handleAddonsSelect}
             field={'name'}
-            enableDelete={!!selectedAddons.length && !versionsTableData.length}
           />
         </SplitterPanel>
         <SplitterPanel>
+          {/* VERSIONS TABLE */}
           <AddonsManagerTable
             header="Versions"
             value={versionsTableData}
             selection={selectedVersions}
             onChange={handleVersionSelect}
             field={'version'}
-            enableDelete={!!selectedVersions.length && !bundlesTableData.length}
           />
         </SplitterPanel>
         <SplitterPanel>
+          {/* BUNDLES TABLE */}
           <AddonsManagerTable
             header="Bundles"
             value={bundlesTableData}
             selection={selectedBundles}
             onChange={setSelectedBundles}
             field={'name'}
-            enableDelete={!!selectedBundles.length && !isSelectedBundlesProtected}
+            onDelete={handleBundlesArchive}
+            isArchive
           />
         </SplitterPanel>
         <SplitterPanel>
