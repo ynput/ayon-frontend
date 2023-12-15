@@ -2,12 +2,20 @@ import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { useGetBundleListQuery, useUpdateBundleMutation } from '/src/services/bundles'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
 import useGetTableData from './useGetTableData'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  onSelectedAddons,
+  onSelectedBundles,
+  onSelectedVersions,
+} from '/src/features/addonsManager'
+import { useNavigate } from 'react-router'
 
 const AddonsManager = () => {
+  const navigate = useNavigate()
   // QUERIES
   const { data: addons = [] } = useGetAddonListQuery()
   const { data: bundles = [] } = useGetBundleListQuery({ archived: false })
@@ -21,13 +29,16 @@ const AddonsManager = () => {
   // MUTATIONS
   const [updateBundle] = useUpdateBundleMutation()
 
-  // STATES
-  // selected addon name or null
-  const [selectedAddons, setSelectedAddons] = useState([])
-  // selected addon version or null
-  const [selectedVersions, setSelectedVersions] = useState([])
-  // selected bundle name or null
-  const [selectedBundles, setSelectedBundles] = useState([])
+  // SELECTION STATES (handled in redux)
+  const dispatch = useDispatch()
+
+  const selectedAddons = useSelector((state) => state.addonsManager.selectedAddons)
+  const selectedVersions = useSelector((state) => state.addonsManager.selectedVersions)
+  const selectedBundles = useSelector((state) => state.addonsManager.selectedBundles)
+
+  const setSelectedAddons = (addons) => dispatch(onSelectedAddons(addons))
+  const setSelectedVersions = (versions) => dispatch(onSelectedVersions(versions))
+  const setSelectedBundles = (bundles) => dispatch(onSelectedBundles(bundles))
 
   // different functions to transform the data for each table
   const { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap } =
@@ -111,6 +122,13 @@ const AddonsManager = () => {
             field={'name'}
             onDelete={handleBundlesArchive}
             isArchive
+            getExtraContext={(sel) => [
+              {
+                label: 'View bundle',
+                command: () => navigate(`/settings/bundles?selected=${sel[0]}`),
+                icon: 'arrow_circle_right',
+              },
+            ]}
           />
         </SplitterPanel>
         <SplitterPanel>

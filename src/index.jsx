@@ -11,6 +11,7 @@ import contextReducer from './features/context'
 import projectReducer from './features/project'
 import editorReducer from './features/editor'
 import dashboardReducer, { dashboardLocalItems } from './features/dashboard'
+import addonsManagerReducer from './features/addonsManager'
 
 import App from './app'
 
@@ -36,6 +37,7 @@ const store = configureStore({
     project: projectReducer,
     editor: editorReducer,
     dashboard: dashboardReducer,
+    addonsManager: addonsManagerReducer,
     [ayonApi.reducerPath]: ayonApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>

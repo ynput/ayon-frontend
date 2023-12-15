@@ -13,6 +13,7 @@ const AddonsManagerTable = ({
   value = [],
   onChange,
   onDelete,
+  getExtraContext = () => [],
   ...props
 }) => {
   const deleteLabel = isArchive ? 'Archive' : 'Delete'
@@ -47,6 +48,12 @@ const AddonsManagerTable = ({
         command: () => handleDelete(undefined, selected),
       })
     }
+
+    if (getExtraContext) {
+      items = items.concat(getExtraContext(selected))
+    }
+
+    return items
   }
 
   const [ctxMenuShow] = useCreateContext([])
