@@ -13,7 +13,7 @@ const AddonsManagerTable = ({
   value = [],
   onChange,
   onDelete,
-  getExtraContext = () => [],
+  extraContext,
   ...props
 }) => {
   const deleteLabel = isArchive ? 'Archive' : 'Delete'
@@ -49,8 +49,8 @@ const AddonsManagerTable = ({
       })
     }
 
-    if (getExtraContext) {
-      items = items.concat(getExtraContext(selected))
+    if (extraContext) {
+      items = items.concat(extraContext(selected))
     }
 
     return items

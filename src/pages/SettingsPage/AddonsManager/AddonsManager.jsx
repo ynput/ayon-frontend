@@ -122,7 +122,7 @@ const AddonsManager = () => {
             field={'name'}
             onDelete={handleBundlesArchive}
             isArchive
-            getExtraContext={(sel) => [
+            extraContext={(sel) => [
               {
                 label: 'View bundle',
                 command: () => navigate(`/settings/bundles?selected=${sel[0]}`),
