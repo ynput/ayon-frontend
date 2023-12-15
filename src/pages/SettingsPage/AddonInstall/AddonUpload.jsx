@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, FileUpload, SaveButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { ayonApi } from '/src/services/ayon'
@@ -38,7 +38,7 @@ const StyledProgressBar = styled.hr`
   transition: width 0.3s;
 `
 
-const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
+const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props }) => {
   const dispatch = useDispatch()
   const [files, setFiles] = useState([])
   const [isUploading, setIsUploading] = useState(false)
@@ -54,6 +54,8 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
 
   let endPoint = 'installers'
   if (type === 'package') endPoint = 'dependency_packages'
+  const typeLabel =
+    type === 'package' ? 'Dependency Package' : type === 'addon' ? 'Addon' : 'Installer'
 
   // first create the installer using the .json file
   const handleCreateInstaller = async (files) => {
@@ -224,6 +226,11 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
     else return handleInstallerPackage()
   }
 
+  // when dropOnly, auto upload when files has length
+  useEffect(() => {
+    if (files.length && dropOnly) handleSubmit()
+  }, [files])
+
   let message = ''
   // complete message
   if (isComplete && !isUploading) {
@@ -236,9 +243,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
     if (type === 'addon') {
       message = 'Supports multiple .zip files.'
     } else {
-      message = `Supports multiple .json and ${
-        type === 'package' ? 'Dependency Package' : 'Installer'
-      }  files.`
+      message = `Supports multiple .json and ${typeLabel}  files.`
     }
   }
   // default message
@@ -248,25 +253,30 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall }) => {
     <FileUpload
       files={files}
       setFiles={setFiles}
+      title={typeLabel + ' Uploader'}
+      header={<></>}
       accept={type === 'addon' ? ['.zip'] : ['*']}
       allowMultiple
-      placeholder="Drop files here"
+      placeholder={`Drop ${typeLabel} files`}
       isSuccess={isComplete}
       footer={
-        <StyledFooter style={{ display: 'flex', width: '100%' }}>
-          {message}
-          {isUploading && <StyledProgressBar $progress={progress} />}
-          <div>
-            {onClose && <Button onClick={onClose} label="Close" />}
-            <SaveButton
-              active={files.length}
-              label="Upload"
-              onClick={handleSubmit}
-              saving={isUploading}
-            />
-          </div>
-        </StyledFooter>
+        !dropOnly && (
+          <StyledFooter style={{ display: 'flex', width: '100%' }}>
+            {message}
+            {isUploading && <StyledProgressBar $progress={progress} />}
+            <div>
+              {onClose && <Button onClick={onClose} label="Close" />}
+              <SaveButton
+                active={files.length}
+                label="Upload"
+                onClick={handleSubmit}
+                saving={isUploading}
+              />
+            </div>
+          </StyledFooter>
+        )
       }
+      {...props}
     />
   )
 }
