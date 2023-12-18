@@ -159,12 +159,12 @@ const Products = () => {
       const ids = products.map(({ versionId }) => versionId)
 
       // update version status
-
       const payload = await updateEntity({
         projectName,
         type: 'version',
         ids: ids,
         data: { ['status']: value },
+        disabledInvalidation: true,
       }).unwrap()
 
       // create new patch data of products
@@ -173,8 +173,6 @@ const Products = () => {
         versionStatus: ids.includes(versionId) ? value : versionStatus,
         versionId,
       }))
-
-      console.log(patchData)
 
       // update products cache
       dispatch(
@@ -186,6 +184,13 @@ const Products = () => {
           },
         ),
       )
+
+      // invalidate 'productsVersion' query (specific version query)
+      // we do this so that when we select this version again, it doesn't use stale version query
+      dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'productsVersion', id }))))
+
+      // invalidate 'detail' query (details panel)
+      dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
 
       console.log('fulfilled', payload)
     } catch (error) {
@@ -279,7 +284,7 @@ const Products = () => {
         header: 'Version',
         width: 70,
         body: (node) =>
-          VersionList({ ...node.data }, async (productId, versionId) => {
+          VersionList({ ...node.data }, async (productId, versionId, versionName) => {
             // load data here and patch into cache
             const res = await handleVersionChange([[productId, versionId]])
             if (res) {
@@ -296,6 +301,12 @@ const Products = () => {
               )
               // set selected product
               dispatch(productSelected({ products: [productId], versions: [versionId] }))
+              // update breadcrumbs
+              let uri = `ayon+entity://${projectName}/`
+              uri += `${node.data.parents.join('/')}/${node.data.folder}`
+              uri += `?product=${node.data.name}`
+              uri += `&version=${versionName}`
+              dispatch(setUri(uri))
             }
           }), // end VersionList
       },

@@ -108,6 +108,12 @@ const Detail = () => {
         disabledInvalidation: isVersion,
       }).unwrap()
 
+      if (isVersion) {
+        // invalidate 'productsVersion' query (specific version query)
+        // we do this so that when we select this version again, it doesn't use stale version query
+        dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'productsVersion', id }))))
+      }
+
       console.log('fulfilled', payload)
     } catch (error) {
       console.error('rejected', error)

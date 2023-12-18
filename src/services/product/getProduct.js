@@ -192,6 +192,14 @@ const getProduct = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (response) => response?.data?.project?.version || {},
+      providesTags: (result) =>
+        result
+          ? [
+              { type: 'version', id: result.id },
+              { type: 'product', id: result.productId },
+              { type: 'productsVersion', id: result.id },
+            ]
+          : [],
     }),
   }),
 })

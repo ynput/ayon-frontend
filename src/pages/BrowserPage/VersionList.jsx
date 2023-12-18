@@ -13,7 +13,7 @@ const VersionList = (row, onSelectVersion) => {
       return {
         id: version.id,
         label: version.name,
-        command: () => onSelectVersion(row.id, version.id),
+        command: () => onSelectVersion(row.id, version.id, version.name),
       }
     })
 
