@@ -5,12 +5,15 @@ const useServerRestart = () => {
   const [restartServer] = useRestartServerMutation()
 
   // ask if the user wants to restart the server after saving
-  const confirmRestart = (message = 'Restart Server?') =>
+  const confirmRestart = (message = 'Restart Server?', middleware) =>
     confirmDialog({
       message,
       header: 'Restart Server',
       icon: 'pi pi-exclamation-triangle',
-      accept: () => restartServer(),
+      accept: () => {
+        if (middleware) middleware()
+        restartServer()
+      },
       reject: () => {},
     })
 

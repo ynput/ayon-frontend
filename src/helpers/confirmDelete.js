@@ -8,6 +8,8 @@ const confirmDelete = ({
   accept = async () => {},
   showToasts = true,
   isArchive = false,
+  onSuccess,
+  onError,
   ...props
 }) => {
   const deleteLabel = isArchive ? 'Archive' : 'Delete'
@@ -33,6 +35,8 @@ const confirmDelete = ({
             autoClose: 5000,
             isLoading: false,
           })
+
+        onSuccess && onSuccess()
       } catch (error) {
         console.error(error)
 
@@ -41,7 +45,10 @@ const confirmDelete = ({
             render: `Error ${deleteLabelPresent} ${label}`,
             type: toast.TYPE.ERROR,
             autoClose: 5000,
+            isLoading: false,
           })
+
+        onError && onError(error)
       }
     },
     reject: () => {},

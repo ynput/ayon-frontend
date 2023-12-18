@@ -1,15 +1,20 @@
 import { useMemo } from 'react'
 import { transformAddonsTable, transformBundlesTable, transformVersionsTable } from './helpers'
 
-const useGetTableData = (addonsVersionsBundles, selectedAddons, selectedVersions) => {
+const useGetTableData = (
+  addonsVersionsBundles,
+  selectedAddons,
+  selectedVersions,
+  deletedVersions = [],
+) => {
   const addonsTableData = useMemo(
     () => transformAddonsTable(addonsVersionsBundles),
     [addonsVersionsBundles],
   )
 
   const [filteredVersionsMap, versionsTableData] = useMemo(
-    () => transformVersionsTable(addonsVersionsBundles, selectedAddons),
-    [selectedAddons, addonsVersionsBundles],
+    () => transformVersionsTable(addonsVersionsBundles, selectedAddons, deletedVersions),
+    [selectedAddons, addonsVersionsBundles, deletedVersions],
   )
 
   const bundlesTableData = useMemo(

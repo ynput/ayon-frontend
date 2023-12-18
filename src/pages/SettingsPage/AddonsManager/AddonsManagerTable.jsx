@@ -6,13 +6,15 @@ import useCreateContext from '/src/hooks/useCreateContext'
 import confirmDelete from '/src/helpers/confirmDelete'
 
 const AddonsManagerTable = ({
-  header = '',
+  title = '',
+  header,
   isArchive = false,
   field = '',
   selection = [],
   value = [],
   onChange,
   onDelete,
+  onDeleteSuccess,
   extraContext,
   ...props
 }) => {
@@ -24,7 +26,7 @@ const AddonsManagerTable = ({
     e?.preventDefault()
 
     confirmDelete({
-      label: header,
+      label: title,
       message: (
         <ul>
           {selected.map((item, index) => (
@@ -33,6 +35,7 @@ const AddonsManagerTable = ({
         </ul>
       ),
       accept: async () => await onDelete(selected),
+      onSuccess: () => onDeleteSuccess && onDeleteSuccess(selected),
       isArchive,
     })
   }
@@ -89,9 +92,10 @@ const AddonsManagerTable = ({
           disabled={tableSelection.some((v) => v.status?.length)}
           onClick={(e) => handleDelete(e, selection)}
         >
-          {deleteLabel} {header}
+          {deleteLabel} {title}
         </Button>
       )}
+      {header && header}
       <TablePanel style={{ height: '100%' }}>
         <DataTable
           {...props}
@@ -103,7 +107,7 @@ const AddonsManagerTable = ({
           selection={tableSelection}
           onContextMenu={handleContextClick}
         >
-          <Column field={field} header={header} sortable />
+          <Column field={field} header={title} sortable />
           <Column
             field="status"
             header={'Status'}

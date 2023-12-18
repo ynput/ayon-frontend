@@ -81,7 +81,7 @@ export const getVersionsForAddons = (data, addons = []) => {
 }
 
 // versions: maps of the versions
-export const transformVersionsTable = (data, addons = []) => {
+export const transformVersionsTable = (data, addons = [], deletedVersions) => {
   const versionsMap = getVersionsForAddons(data, addons)
 
   if (!versionsMap) return []
@@ -89,8 +89,12 @@ export const transformVersionsTable = (data, addons = []) => {
   let tableData = []
   versionsMap.forEach((bundlesMap, version) => {
     const status = []
-    if (bundlesMap.size > 0) {
+    if (deletedVersions.includes(version)) {
+      status.push('error')
+      version = version + ' (deleted)'
+    } else if (bundlesMap.size > 0) {
       const bundlesArray = Array.from(bundlesMap.values())
+
       statuses.forEach((s) => {
         if (bundlesArray.some((bundle) => bundle[`is${s.charAt(0).toUpperCase() + s.slice(1)}`])) {
           status.push(s)

@@ -1,4 +1,4 @@
-import { Section } from '@ynput/ayon-react-components'
+import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { useGetBundleListQuery, useUpdateBundleMutation } from '/src/services/bundles'
@@ -8,11 +8,14 @@ import AddonsManagerTable from './AddonsManagerTable'
 import useGetTableData from './useGetTableData'
 import { useDispatch, useSelector } from 'react-redux'
 import {
+  onDeletedVersions,
   onSelectedAddons,
   onSelectedBundles,
   onSelectedVersions,
 } from '/src/features/addonsManager'
 import { useNavigate } from 'react-router'
+import { useDeleteAddonVersionsMutation } from '/src/services/addons/updateAddons'
+import useServerRestart from '/src/hooks/useServerRestart'
 // import AddonUpload from '../AddonInstall/AddonUpload'
 
 const AddonsManager = () => {
@@ -29,6 +32,7 @@ const AddonsManager = () => {
 
   // MUTATIONS
   const [updateBundle] = useUpdateBundleMutation()
+  const [deleteAddonVersions] = useDeleteAddonVersionsMutation()
 
   // SELECTION STATES (handled in redux)
   const dispatch = useDispatch()
@@ -36,14 +40,16 @@ const AddonsManager = () => {
   const selectedAddons = useSelector((state) => state.addonsManager.selectedAddons)
   const selectedVersions = useSelector((state) => state.addonsManager.selectedVersions)
   const selectedBundles = useSelector((state) => state.addonsManager.selectedBundles)
+  const deletedVersions = useSelector((state) => state.addonsManager.deletedVersions)
 
   const setSelectedAddons = (addons) => dispatch(onSelectedAddons(addons))
   const setSelectedVersions = (versions) => dispatch(onSelectedVersions(versions))
   const setSelectedBundles = (bundles) => dispatch(onSelectedBundles(bundles))
+  const setDeletedVersions = (versions) => dispatch(onDeletedVersions(versions))
 
   // different functions to transform the data for each table
   const { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap } =
-    useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions)
+    useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions, deletedVersions)
 
   // SELECTION HANDLERS vvv
   const handleVersionSelect = (versions) => {
@@ -67,6 +73,7 @@ const AddonsManager = () => {
   // SELECTION HANDLERS ^^^
 
   // DELETE HANDLERS vvv
+  // Note: we don't use any try/catch here because confirm delete catches errors and displays them
   const handleBundlesArchive = async (selected = []) => {
     const bundleMap = new Map(bundles.map((bundle) => [bundle.name, bundle]))
 
@@ -80,13 +87,46 @@ const AddonsManager = () => {
   }
 
   const handleDeleteVersions = async (versions = []) => {
-    console.log(versions)
-  }
+    const addonsToDelete = []
+    for (const version of versions) {
+      const addonName = version.split('-')[0]
+      const addonVersion = version.split('-')[1]
+      // check addonName and addonVersion exist
+      const addon = addons.find((a) => a.name === addonName)
+      const addonVersionExists = Object.entries(addon?.versions || {}).some(
+        ([v]) => v === addonVersion,
+      )
 
-  const handleDeleteWholeAddons = async (addons = []) => {
-    console.log(addons)
+      if (addonVersionExists) {
+        addonsToDelete.push({ name: addonName, version: addonVersion })
+      }
+    }
+
+    await deleteAddonVersions({ addons: addonsToDelete })
   }
   // DELETE HANDLERS ^^^
+
+  // RESTART SERVER
+  const { confirmRestart } = useServerRestart()
+  const restartServer = () => {
+    // remove deleted versions from deletedVersions state and restart server
+    confirmRestart('Restart server to see addon changes?', () => setDeletedVersions([]))
+  }
+
+  // DELETE SUCCESS HANDLERS vvv
+  const handleDeleteVersionsSuccess = async (versions = []) => {
+    // remove versions from selectedVersions
+    const newVersions = selectedVersions.filter((v) => !versions.includes(v))
+    setSelectedVersions(newVersions)
+    // add versions to deletedVersions state
+    setDeletedVersions([...deletedVersions, ...versions])
+    // ask if they want to restart the server for the changes to take effect
+    restartServer()
+  }
+  // DELETE SUCCESS HANDLERS ^^^
+
+  // If any version is in error (deleted) state, enable restart button
+  const restartEnabled = deletedVersions?.length
 
   return (
     <Section style={{ overflow: 'hidden' }}>
@@ -94,29 +134,39 @@ const AddonsManager = () => {
         <SplitterPanel>
           {/* ADDONS TABLE */}
           <AddonsManagerTable
-            header="Addons"
+            title="Addons"
             value={addonsTableData}
             selection={selectedAddons}
             onChange={handleAddonsSelect}
-            onDelete={handleDeleteWholeAddons}
+            header={
+              <Button
+                disabled={!restartEnabled}
+                icon={'restart_alt'}
+                onClick={restartServer}
+                variant={restartEnabled ? 'filled' : 'surface'}
+              >
+                Restart Server
+              </Button>
+            }
             field={'name'}
           />
         </SplitterPanel>
         <SplitterPanel>
           {/* VERSIONS TABLE */}
           <AddonsManagerTable
-            header="Versions"
+            title="Versions"
             value={versionsTableData}
             selection={selectedVersions}
             onChange={handleVersionSelect}
             field={'version'}
             onDelete={handleDeleteVersions}
+            onDeleteSuccess={handleDeleteVersionsSuccess}
           />
         </SplitterPanel>
         <SplitterPanel>
           {/* BUNDLES TABLE */}
           <AddonsManagerTable
-            header="Bundles"
+            title="Bundles"
             value={bundlesTableData}
             selection={selectedBundles}
             onChange={setSelectedBundles}
