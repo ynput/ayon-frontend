@@ -279,7 +279,7 @@ const Products = () => {
         header: 'Version',
         width: 70,
         body: (node) =>
-          VersionList({ ...node.data }, async (productId, versionId) => {
+          VersionList({ ...node.data }, async (productId, versionId, versionName) => {
             // load data here and patch into cache
             const res = await handleVersionChange([[productId, versionId]])
             if (res) {
@@ -296,6 +296,12 @@ const Products = () => {
               )
               // set selected product
               dispatch(productSelected({ products: [productId], versions: [versionId] }))
+              // update breadcrumbs
+              let uri = `ayon+entity://${projectName}/`
+              uri += `${node.data.parents.join('/')}/${node.data.folder}`
+              uri += `?product=${node.data.name}`
+              uri += `&version=${versionName}`
+              dispatch(setUri(uri))
             }
           }), // end VersionList
       },
