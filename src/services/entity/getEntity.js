@@ -169,10 +169,10 @@ const getEntity = ayonApi.injectEndpoints({
       providesTags: (result, error, { type }) =>
         result
           ? [
-              ...result.map(({ node }) => {
-                // console.log({ type: type, id: node.id })
-                return { type: type, id: node.id }
-              }),
+              ...result.flatMap(({ node }) => [
+                { type: type, id: node.id },
+                { type: 'detail', id: node.id },
+              ]),
             ]
           : [type],
     }),
