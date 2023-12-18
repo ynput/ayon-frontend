@@ -13,7 +13,7 @@ import {
   onSelectedVersions,
 } from '/src/features/addonsManager'
 import { useNavigate } from 'react-router'
-import AddonUpload from '../AddonInstall/AddonUpload'
+// import AddonUpload from '../AddonInstall/AddonUpload'
 
 const AddonsManager = () => {
   const navigate = useNavigate()
@@ -132,7 +132,7 @@ const AddonsManager = () => {
             ]}
           />
         </SplitterPanel>
-        <SplitterPanel>
+        {/* <SplitterPanel>
           <Section style={{ height: '100%' }}>
             <h2 style={{ margin: 0, paddingTop: 8 }}>Addon Upload</h2>
             <AddonUpload type="addon" dropOnly />
@@ -141,7 +141,7 @@ const AddonsManager = () => {
             <h2 style={{ margin: 0 }}>Installer Upload</h2>
             <AddonUpload type="installer" dropOnly />
           </Section>
-        </SplitterPanel>
+        </SplitterPanel> */}
       </Splitter>
     </Section>
   )
