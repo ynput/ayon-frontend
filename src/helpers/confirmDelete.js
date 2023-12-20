@@ -1,3 +1,4 @@
+import { upperFirst } from 'lodash'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
@@ -6,28 +7,57 @@ const confirmDelete = ({
   message = 'Are you sure? This cannot be undone',
   accept = async () => {},
   showToasts = true,
+  isArchive = false,
+  onSuccess,
+  onError,
   ...props
-}) =>
-  confirmDialog({
-    header: props.header || `Delete ${label}`,
+}) => {
+  const deleteLabel = isArchive ? 'Archive' : 'Delete'
+  const deleteLabelPresent = isArchive ? 'archiving' : 'deleting'
+  const deleteLabelPast = isArchive ? 'archived' : 'deleted'
+
+  return confirmDialog({
+    header: props.header || `${deleteLabel} ${label}`,
     message,
     accept: async () => {
-      // try catch to update api key using unwrap and toast results
+      const toastId = showToasts
+        ? toast.loading(`${upperFirst(deleteLabelPresent)} ${label.toLowerCase()}...`, {
+            autoClose: false,
+          })
+        : null
       try {
         await accept()
 
-        showToasts && toast.success(label + ' deleted')
+        showToasts &&
+          toast.update(toastId, {
+            render: `${label} ${deleteLabelPast}`,
+            type: toast.TYPE.SUCCESS,
+            autoClose: 5000,
+            isLoading: false,
+          })
+
+        onSuccess && onSuccess()
       } catch (error) {
         console.error(error)
-        //   toast error
-        showToasts && toast.error('Error deleting ' + label)
+
+        showToasts &&
+          toast.update(toastId, {
+            render: `Error ${deleteLabelPresent} ${label}`,
+            type: toast.TYPE.ERROR,
+            autoClose: 5000,
+            isLoading: false,
+          })
+
+        onError && onError(error)
       }
     },
     reject: () => {},
-    acceptLabel: 'Delete',
+    acceptLabel: upperFirst(deleteLabel),
     rejectLabel: 'Cancel',
     acceptClassName: 'button-danger',
+    style: { minWidth: 400, maxWidth: 600 },
     ...props,
   })
+}
 
 export default confirmDelete

@@ -13,6 +13,7 @@ const UsersSettings = lazy(() => import('./UsersSettings'))
 const AccessGroups = lazy(() => import('./AccessGroups'))
 const Attributes = lazy(() => import('./Attributes'))
 const Secrets = lazy(() => import('./Secrets'))
+const AddonsManager = lazy(() => import('./AddonsManager'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
@@ -46,10 +47,12 @@ const SettingsPage = () => {
     }
 
     switch (module) {
-      case 'anatomyPresets':
-        return <AnatomyPresets />
+      case 'addons':
+        return <AddonsManager />
       case 'bundles':
         return <Bundles />
+      case 'anatomyPresets':
+        return <AnatomyPresets />
       case 'studio':
         return <StudioSettings />
       case 'site':
@@ -69,6 +72,13 @@ const SettingsPage = () => {
 
   const links = useMemo(() => {
     let result = [
+      {
+        name: 'Addons',
+        path: '/settings/addons',
+        module: 'addons',
+        accessLevels: ['manager'],
+      },
+
       {
         name: 'Bundles',
         path: '/settings/bundles',
