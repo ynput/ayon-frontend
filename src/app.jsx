@@ -35,6 +35,7 @@ import { ConfirmDialog } from 'primereact/confirmdialog'
 import OnBoardingPage from './pages/OnBoarding'
 import ServerRestartBanner from './components/ServerRestartBanner'
 import useTooltip from './hooks/Tooltip/useTooltip'
+import MarketPage from './pages/MarketPage'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -170,6 +171,7 @@ const App = () => {
                         </ProtectedRoute>
                       }
                     />
+                    <Route path="/market" element={<MarketPage />} />
                     <Route path="/explorer" element={<ExplorerPage />} />
                     <Route path="/doc/api" element={<APIDocsPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
