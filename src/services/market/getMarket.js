@@ -9,7 +9,14 @@ const getMarket = ayonApi.injectEndpoints({
         method: 'GET',
       }),
       providesTags: (addons) => addons?.map(({ id }) => ({ type: 'marketAddon', id })) || [],
-      transformResponse: (response) => response?.addons || [],
+      transformResponse: (response) =>
+        (response?.addons || []).map((addon) => {
+          const isInstalled = addon.currentLatestVersion !== null
+          const isOfficial = addon.orgName === 'ynput-official'
+          const isOutdated = addon.latestVersion !== addon.currentLatestVersion
+
+          return { ...addon, isOfficial, isInstalled, isOutdated, isVerified: false }
+        }),
     }),
     // getMarketAddon
     getMarketAddon: build.query({

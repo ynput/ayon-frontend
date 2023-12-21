@@ -32,7 +32,11 @@ const MarketAddonCard = ({
       </Styled.Content>
       {!isPlaceholder && (
         <Styled.Buttons>
-          {isInstalled && !isOutdated && <Styled.Tag disabled>Installed</Styled.Tag>}
+          {isInstalled && !isOutdated && (
+            <Styled.Tag disabled className="installed">
+              Installed
+            </Styled.Tag>
+          )}
           {isInstalled && isOutdated && <Styled.Tag className="update">Update</Styled.Tag>}
           {!isInstalled && <Styled.Tag className="install">Install</Styled.Tag>}
         </Styled.Buttons>

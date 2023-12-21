@@ -91,4 +91,9 @@ export const Tag = styled.div`
   &.install {
     background-color: var(--md-sys-color-surface-container-high);
   }
+
+  &.installed {
+    opacity: 0.5;
+    font-style: italic;
+  }
 `

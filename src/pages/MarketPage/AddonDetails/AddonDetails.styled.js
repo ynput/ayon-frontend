@@ -105,4 +105,14 @@ export const MetaPanelRow = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-small);
+
+  .value {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .more:hover {
+    cursor: pointer;
+    text-decoration: underline;
+  }
 `

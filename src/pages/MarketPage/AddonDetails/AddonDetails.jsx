@@ -36,7 +36,7 @@ const AddonDetails = ({ addon = {} }) => {
   const versionsToShow = versionKeys.length
     ? showAllVersions
       ? versionKeys
-      : versionKeys.slice(0, 3)
+      : versionKeys.slice(0, 2)
     : []
   const nOfMoreVersions = versionKeys.length - versionsToShow.length
 
@@ -60,6 +60,7 @@ const AddonDetails = ({ addon = {} }) => {
             </Styled.Header>
             <Styled.Description>{description}</Styled.Description>
           </Styled.Left>
+          {/* RIGHT PANEL */}
           <Styled.Right className={Type.bodyMedium}>
             {isInstalled && !isOutdated && <Button>Uninstall</Button>}
             {isInstalled && isOutdated && (
@@ -76,7 +77,9 @@ const AddonDetails = ({ addon = {} }) => {
                   ? versionsToShow.map((version) => <span key={version}>{version}</span>)
                   : 'Not installed'}
                 {!!nOfMoreVersions && (
-                  <span onClick={() => setShowAllVersions(true)}>+{nOfMoreVersions} more</span>
+                  <span className="more" onClick={() => setShowAllVersions(true)}>
+                    +{nOfMoreVersions} more
+                  </span>
                 )}
               </MetaPanelRow>
             </Styled.MetaPanel>

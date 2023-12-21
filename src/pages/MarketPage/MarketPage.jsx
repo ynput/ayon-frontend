@@ -1,7 +1,7 @@
 import { Section } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
 import AddonFilters from './AddonFilters'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   useGetMarketAddonQuery,
   useGetMarketAddonsQuery,
@@ -11,7 +11,7 @@ import AddonsList from './AddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './AddonDetails/AddonDetails'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
-import mergeAddonsData, { mergeAddonWithInstalled } from './mergeAddonsData'
+import { mergeAddonWithInstalled } from './mergeAddonsData'
 
 const placeholders = [...Array(10)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -21,39 +21,88 @@ const placeholders = [...Array(10)].map((_, i) => ({
 
 const MarketPage = () => {
   // GET ALL ADDONS IN MARKET
-  const { data: marketAddons, isLoading: isLoadingMarket, isError } = useGetMarketAddonsQuery()
-  // GET ALL INSTALLED ADDONS
-  const { data: installedAddons, isLoading: isLoadingInstalled } = useGetAddonListQuery()
-
-  const isLoading = isLoadingMarket || isLoadingInstalled
-
-  const addons = useMemo(() => {
-    return isLoading ? [] : mergeAddonsData(marketAddons, installedAddons)
-  }, [isLoading, marketAddons, installedAddons])
+  const {
+    data: marketAddonsData = [],
+    isLoading: isLoadingMarket,
+    isError,
+  } = useGetMarketAddonsQuery()
+  // GET ALL INSTALLED ADDONS for addon details
+  const { data: installedAddons = [], isLoading: isLoadingInstalled } = useGetAddonListQuery()
 
   const [selectedAddonId, setSelectedAddonId] = useState(null)
 
   // GET SELECTED ADDON
-  const { data: selectedAddon = {} } = useGetMarketAddonQuery(selectedAddonId, {
-    skip: !selectedAddonId,
-  })
+  const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useGetMarketAddonQuery(
+    selectedAddonId,
+    {
+      skip: !selectedAddonId,
+    },
+  )
+  const marketAddons = useMemo(() => {
+    const sortedData = [...marketAddonsData]
+    // sort by isInstalled, isOutdated, isOfficial, name
+    sortedData?.sort(
+      (a, b) =>
+        b.isInstalled - a.isInstalled ||
+        b.isOutdated - a.isOutdated ||
+        b.isOfficial - a.isOfficial ||
+        a.name.localeCompare(b.name),
+    )
 
-  // Merge selected addon with installed addon
-  const selectedAddonMerged = useMemo(() => {
-    return mergeAddonWithInstalled(selectedAddon, installedAddons)
-  }, [selectedAddon, installedAddons])
+    return sortedData
+  }, [marketAddonsData])
+
+  // merge selected addon with found addon in marketAddons
+  const selectedAddon = useMemo(() => {
+    if (!selectedAddonId || !marketAddons) return {}
+    const found = marketAddons.find((addon) => addon.name === selectedAddonId) || {}
+    const merge =
+      mergeAddonWithInstalled(
+        {
+          ...found,
+          ...selectedAddonData,
+        },
+        installedAddons,
+      ) || []
+
+    return merge
+  }, [selectedAddonData, marketAddons])
 
   // GET SELECTED ADDON LAZY for performance (fetches on addon hover)
-  const [getAddon] = useLazyGetMarketAddonQuery()
+  const [fetchAddonData] = useLazyGetMarketAddonQuery()
 
   const [cachedIds, setCachedIds] = useState([])
   // prefetch addon
   const handleHover = async (id) => {
-    if (isLoading) return
+    if (isLoadingMarket) return
     if (cachedIds.includes(id)) return
     setCachedIds([...cachedIds, id])
-    await getAddon(id)
+    await fetchAddonData(id, true)
   }
+
+  // once addons are loaded, prefetch the first 3 addons
+  useEffect(() => {
+    if (!marketAddons || isLoadingMarket) return
+    const firstThree = marketAddons.slice(0, 3)
+    firstThree.forEach((addon) => {
+      setCachedIds([...cachedIds, addon.name])
+      fetchAddonData(addon.name, true)
+    })
+  }, [marketAddons, isLoadingMarket, setCachedIds])
+
+  // pre-fetch next addon in the list when an addon is selected
+  // only if it's not already cached and we aren't fetching already
+  useEffect(() => {
+    if (!selectedAddonId || isLoadingMarket || isFetchingAddon) return
+    const index = marketAddons.findIndex((addon) => addon.name === selectedAddonId)
+    for (let i = index + 1; i <= index + 3; i++) {
+      const nextAddon = marketAddons[i]
+      if (nextAddon && !cachedIds.includes(nextAddon.name)) {
+        setCachedIds([...cachedIds, nextAddon.name])
+        fetchAddonData(nextAddon.name, true)
+      }
+    }
+  }, [selectedAddonId, isLoadingMarket, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
 
   // FILTER ADDONS BY FIELDS
   // const [filter, setFilter] = useState([])
@@ -79,12 +128,12 @@ const MarketPage = () => {
       <Section style={{ overflow: 'hidden', flexDirection: 'row' }}>
         <AddonFilters />
         <AddonsList
-          addons={isLoading ? placeholders : addons}
+          addons={isLoadingMarket ? placeholders : marketAddons}
           selected={selectedAddonId}
           onSelect={setSelectedAddonId}
           onHover={handleHover}
         />
-        <AddonDetails addon={selectedAddonMerged} />
+        <AddonDetails addon={selectedAddon} isLoading={isLoadingInstalled || isFetchingAddon} />
       </Section>
     </main>
   )
