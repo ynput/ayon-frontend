@@ -7,7 +7,8 @@ export const PanelContainer = styled(Panel)`
 
   flex: 1;
   max-width: 600px;
-  min-width: 300px;
+  min-width: 250px;
+  padding: var(--padding-l);
 
   &.noData {
     background-color: unset;

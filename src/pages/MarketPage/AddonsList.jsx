@@ -68,6 +68,7 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover }) => {
         {filteredAddons.map(
           ({
             name,
+            title,
             orgTitle,
             icon,
             isOfficial,
@@ -79,7 +80,7 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover }) => {
             return (
               <MarketAddonCard
                 key={name}
-                title={name}
+                title={title}
                 author={orgTitle}
                 icon={icon}
                 isOfficial={isOfficial}

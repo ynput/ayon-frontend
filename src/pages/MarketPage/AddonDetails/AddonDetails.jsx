@@ -18,6 +18,7 @@ const AddonDetails = ({ addon = {} }) => {
   // versions: is an array of all versions INSTALLED of the addon
   const {
     name,
+    title,
     description,
     icon,
     isInstalled,
@@ -57,7 +58,7 @@ const AddonDetails = ({ addon = {} }) => {
             <Styled.Header>
               <AddonIcon size={64} src={icon} alt={name + ' icon'} />
               <div className="titles">
-                <h2 className={Type.headlineSmall}>{name}</h2>
+                <h2 className={Type.headlineSmall}>{title}</h2>
                 <span className={classNames(verifiedString.toLowerCase(), 'verification')}>
                   {verifiedIcon}
                   {verifiedString}
