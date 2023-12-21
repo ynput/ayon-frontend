@@ -16,7 +16,7 @@ const MetaPanelRow = ({ label, children }) => (
   </Styled.MetaPanelRow>
 )
 
-const AddonDetails = ({ addon = {}, isLoading }) => {
+const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
   // latestVersion: is the latest version of the addon
   // versions: is an array of all versions INSTALLED of the addon
   const {
@@ -25,6 +25,8 @@ const AddonDetails = ({ addon = {}, isLoading }) => {
     description,
     icon,
     isInstalled,
+    isInstalling,
+    isFinished,
     isOutdated,
     // versions = [],
     installedVersions = {},
@@ -57,7 +59,39 @@ const AddonDetails = ({ addon = {}, isLoading }) => {
   // sets selected addon and redirects to addons
   const { onUninstall } = useUninstall(name)
 
-  const { installAddon, isLoading: isInstalling } = useInstall(name, latestVersion)
+  const { installAddon } = useInstall(name, latestVersion, onInstall)
+
+  let actionButton = null
+
+  if (isInstalling) {
+    actionButton = (
+      <SaveButton active saving disabled>
+        Installing...
+      </SaveButton>
+    )
+  } else if (isFinished) {
+    actionButton = (
+      <Button disabled icon={'check_circle'}>
+        Installed!
+      </Button>
+    )
+  } else if (isInstalled && !isOutdated) {
+    actionButton = <Button onClick={onUninstall}>Uninstall</Button>
+  } else if (isInstalled && isOutdated) {
+    actionButton = (
+      <Button
+        variant="filled"
+        icon={'upgrade'}
+        onClick={installAddon}
+      >{`Update to v${latestVersion}`}</Button>
+    )
+  } else {
+    actionButton = (
+      <Button variant="filled" icon={'download_for_offline'} onClick={installAddon}>
+        Install
+      </Button>
+    )
+  }
 
   return (
     <Styled.PanelContainer direction="row" className={classNames({ noData: !name })}>
@@ -80,25 +114,7 @@ const AddonDetails = ({ addon = {}, isLoading }) => {
           </Styled.Left>
           {/* RIGHT PANEL */}
           <Styled.Right className={classNames(Type.bodyMedium, { isLoading })}>
-            {isInstalled && !isOutdated && <Button onClick={onUninstall}>Uninstall</Button>}
-            {isInstalled && isOutdated && (
-              <SaveButton
-                active
-                saving={isInstalling}
-                icon={!isInstalling && 'upgrade'}
-                onClick={installAddon}
-              >{`Update to v${latestVersion}`}</SaveButton>
-            )}
-            {!isInstalled && (
-              <SaveButton
-                active
-                saving={isInstalling}
-                icon={!isInstalling && 'download_for_offline'}
-                onClick={installAddon}
-              >
-                Install
-              </SaveButton>
-            )}
+            {actionButton}
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Installed Versions">
                 {versionsToShow.length

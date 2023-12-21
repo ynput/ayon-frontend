@@ -65,36 +65,18 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover }) => {
         />
       </div>
       <StyledList>
-        {filteredAddons.map(
-          ({
-            name,
-            title,
-            orgTitle,
-            icon,
-            isOfficial,
-            isVerified,
-            isInstalled,
-            isOutdated,
-            isPlaceholder,
-          }) => {
-            return (
-              <MarketAddonCard
-                key={name}
-                title={title}
-                author={orgTitle}
-                icon={icon}
-                isOfficial={isOfficial}
-                isVerified={isVerified}
-                isInstalled={isInstalled}
-                isOutdated={isOutdated}
-                onClick={() => onSelect(name)}
-                isSelected={selected === name}
-                isPlaceholder={isPlaceholder}
-                onMouseOver={() => onHover(name)}
-              />
-            )
-          },
-        )}
+        {filteredAddons.map(({ name, orgTitle, ...props }) => {
+          return (
+            <MarketAddonCard
+              key={name}
+              author={orgTitle}
+              onClick={() => onSelect(name)}
+              isSelected={selected === name}
+              onMouseOver={() => onHover(name)}
+              {...props}
+            />
+          )
+        })}
       </StyledList>
     </StyledAddonList>
   )

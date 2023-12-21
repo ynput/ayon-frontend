@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   useGetMarketAddonQuery,
   useGetMarketAddonsQuery,
+  useGetMarketInstallEventsQuery,
   useLazyGetMarketAddonQuery,
 } from '/src/services/market/getMarket'
 import AddonsList from './AddonsList'
@@ -30,6 +31,36 @@ const MarketPage = () => {
   // GET ALL INSTALLED ADDONS for addon details
   const { data: installedAddons = [], isLoading: isLoadingInstalled } = useGetAddonListQuery()
 
+  // keep track of which addons are being installed
+  const [installingAddons, setInstallingAddons] = useState([])
+  const [finishedInstalling, setFinishedInstalling] = useState([])
+
+  // subscribe to install events
+  const { data: installProgress = [] } = useGetMarketInstallEventsQuery()
+
+  // keep track of install events and update installing addons
+  // this is used to show loading and done states on addons
+  useEffect(() => {
+    if (!installProgress.length) return
+
+    // check for any addons that are still installing
+    const installing = installProgress
+      .filter((event) => event.status === 'in_progress')
+      .map((e) => e?.summary?.addon_name)
+    const finished = installProgress
+      .filter((event) => event.status === 'finished')
+      .map((e) => e?.summary?.addon_name)
+
+    // now update installing addons by removing finished
+    const newInstalling = [...new Set([...installingAddons, ...installing])].filter(
+      (addon) => !finished.includes(addon),
+    )
+    const newFinished = [...finishedInstalling, ...finished]
+
+    setInstallingAddons(newInstalling)
+    setFinishedInstalling(newFinished)
+  }, [installProgress])
+
   const [selectedAddonId, setSelectedAddonId] = useState(null)
 
   // GET SELECTED ADDON
@@ -45,7 +76,7 @@ const MarketPage = () => {
   // [{isInstalled: false}]
   const [filter, setFilter] = useState([])
 
-  const marketAddons = useMemo(() => {
+  let marketAddons = useMemo(() => {
     const sortedData = [...marketAddonsData]
     // sort by isInstalled, isOutdated, isOfficial, name
     sortedData?.sort(
@@ -68,6 +99,21 @@ const MarketPage = () => {
 
     return sortedData
   }, [marketAddonsData, filter])
+
+  // update addon if installingAddons or finishedInstalling changes
+  marketAddons = useMemo(() => {
+    if (!marketAddons.length || (!installingAddons.length && !finishedInstalling.length))
+      return marketAddons
+    return marketAddons.map((addon) => {
+      const isInstalling = installingAddons.includes(addon.name)
+      const isFinished = finishedInstalling.includes(addon.name)
+      return {
+        ...addon,
+        isInstalling,
+        isFinished,
+      }
+    })
+  }, [marketAddons, installingAddons, finishedInstalling])
 
   // merge selected addon with found addon in marketAddons
   const selectedAddon = useMemo(() => {
@@ -148,7 +194,12 @@ const MarketPage = () => {
           onSelect={setSelectedAddonId}
           onHover={handleHover}
         />
-        <AddonDetails addon={selectedAddon} isLoading={isLoadingInstalled || isFetchingAddon} />
+        <AddonDetails
+          addon={selectedAddon}
+          isLoading={isLoadingInstalled || isFetchingAddon}
+          setInstallingAddons={setInstallingAddons}
+          onInstall={(name) => setInstallingAddons([...installingAddons, name])}
+        />
       </Section>
     </main>
   )

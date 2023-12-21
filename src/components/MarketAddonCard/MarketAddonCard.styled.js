@@ -1,5 +1,5 @@
 import { getShimmerStyles } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
 export const Container = styled.div`
   padding: 6px 12px;
@@ -68,12 +68,26 @@ export const Buttons = styled.div`
   flex: 1;
 `
 
+const SpinAnimation = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg)
+  }
+`
+
 export const Tag = styled.div`
   user-select: none;
   padding: 4px 12px;
   border-radius: var(--border-radius-l);
   min-width: 75px;
-  text-align: center;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--base-gap-small);
+
   &.update {
     background-color: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
@@ -85,5 +99,9 @@ export const Tag = styled.div`
   &.installed {
     opacity: 0.5;
     font-style: italic;
+  }
+
+  &.installing .icon {
+    animation: ${SpinAnimation} 1s linear infinite;
   }
 `

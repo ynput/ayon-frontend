@@ -1,4 +1,19 @@
 import { ayonApi } from '../ayon'
+import PubSub from '/src/pubsub'
+const EVENTS_QUERY = `
+query InstallEvents {
+  events(last: 100) {
+    edges {
+      node {
+        id
+        status
+        description
+        summary
+      }
+    }
+  }
+}
+`
 
 const getMarket = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -55,6 +70,53 @@ const getMarket = ayonApi.injectEndpoints({
         { type: 'marketAddon', id: 'LIST' },
       ],
     }),
+    getMarketInstallEvents: build.query({
+      query: () => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: EVENTS_QUERY,
+        },
+      }),
+      transformResponse: (response) =>
+        response?.data?.events?.edges
+          ?.map(({ node }) => node)
+          .filter((e) => e.status !== 'finished'),
+      async onCacheEntryAdded(_args, { updateCachedData, cacheEntryRemoved }) {
+        let subscriptions = []
+        try {
+          const handlePubSub = (topic, message) => {
+            if (topic === 'client.connected') {
+              return
+            }
+
+            // update cache
+            updateCachedData((draft) => {
+              if (!draft) return (draft = [message])
+              // find index of event
+              const index = draft?.findIndex((e) => e.id === message.id)
+              // replace event
+              if (index !== -1) {
+                draft[index] = message
+              } else {
+                // add event
+                draft.push(message)
+              }
+            })
+          }
+
+          const sub = PubSub.subscribe('addon.install_from_url', handlePubSub)
+          subscriptions.push(sub)
+        } catch (error) {
+          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
+          // in which case `cacheDataLoaded` will throw
+          console.error(error)
+        }
+        await cacheEntryRemoved
+        // unsubscribe from all topics
+        subscriptions.forEach((sub) => PubSub.unsubscribe(sub))
+      },
+    }),
   }), // endpoints
 })
 
@@ -63,4 +125,6 @@ export const {
   useGetMarketAddonQuery,
   useLazyGetMarketAddonQuery,
   useLazyGetMarketAddonVersionQuery,
+  useGetMarketAddonVersionQuery,
+  useGetMarketInstallEventsQuery,
 } = getMarket

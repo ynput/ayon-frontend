@@ -40,6 +40,14 @@ const queryUpload = async (arg, api, { endpoint, method = 'put', overwrite = fal
         fullEndpoint += `?url=${file.url}`
       }
 
+      if (file.name) {
+        fullEndpoint += `&addonName=${file.name}`
+      }
+
+      if (file.version) {
+        fullEndpoint += `&addonVersion=${file.version}`
+      }
+
       if (overwrite) {
         if (file.url) {
           fullEndpoint += `&overwrite=true`

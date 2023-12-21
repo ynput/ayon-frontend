@@ -3,6 +3,7 @@ import * as Styled from './MarketAddonCard.styled'
 import Type from '/src/theme/typography.module.css'
 import AddonIcon from '../AddonIcon/AddonIcon'
 import { Icon } from '@ynput/ayon-react-components'
+import { upperFirst } from 'lodash'
 
 const MarketAddonCard = ({
   title,
@@ -14,12 +15,23 @@ const MarketAddonCard = ({
   isInstalled,
   isOutdated,
   isPlaceholder,
+  isInstalling,
+  isFinished,
   ...props
 }) => {
+  let state = 'install'
+  if (isInstalled && !isOutdated) state = 'installed'
+  if (isInstalled && isOutdated) state = 'update'
+  if (isInstalling) state = 'installing'
+  if (isFinished) state = 'finished'
+
+  let stateIcon = null
+  if (isInstalling) stateIcon = 'sync'
+  if (isFinished) stateIcon = 'check_circle'
+
   return (
     <Styled.Container {...props} className={classNames({ isSelected, isPlaceholder })}>
       <AddonIcon isPlaceholder={isPlaceholder} size={32} src={icon} alt={title + ' icon'} />
-
       <Styled.Content className="content">
         <Styled.TitleWrapper className="header">
           <Styled.Title className={Type.titleMedium}>{title}</Styled.Title>
@@ -34,13 +46,10 @@ const MarketAddonCard = ({
       </Styled.Content>
       {!isPlaceholder && (
         <Styled.Buttons>
-          {isInstalled && !isOutdated && (
-            <Styled.Tag disabled className="installed">
-              Installed
-            </Styled.Tag>
-          )}
-          {isInstalled && isOutdated && <Styled.Tag className="update">Update</Styled.Tag>}
-          {!isInstalled && <Styled.Tag className="install">Install</Styled.Tag>}
+          <Styled.Tag className={state}>
+            {stateIcon && <Icon icon={stateIcon} />}
+            {upperFirst(state)}
+          </Styled.Tag>
         </Styled.Buttons>
       )}
     </Styled.Container>
