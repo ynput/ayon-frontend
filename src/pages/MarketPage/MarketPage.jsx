@@ -1,4 +1,4 @@
-import { Section } from '@ynput/ayon-react-components'
+import { Button, Section } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
 import AddonFilters from './AddonFilters'
 import { useEffect, useMemo, useState } from 'react'
@@ -14,12 +14,25 @@ import AddonDetails from './AddonDetails/AddonDetails'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { mergeAddonWithInstalled } from './mergeAddonsData'
 import { throttle } from 'lodash'
+import styled from 'styled-components'
+import useServerRestart from '/src/hooks/useServerRestart'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
   isPlaceholder: true,
   orgTitle: 'Loading...',
 }))
+
+const StyledHeader = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 8px;
+
+  h1 {
+    margin: 8px;
+  }
+`
 
 const MarketPage = () => {
   // GET ALL ADDONS IN MARKET
@@ -51,15 +64,15 @@ const MarketPage = () => {
       .filter((event) => event.status === 'finished')
       .map((e) => e?.summary?.addon_name)
 
-    // now update installing addons by removing finished
-    const newInstalling = [...new Set([...installingAddons, ...installing])].filter(
-      (addon) => !finished.includes(addon),
-    )
-    const newFinished = [...finishedInstalling, ...finished]
+    setInstallingAddons((currentInstallingAddons) => {
+      const newInstalling = [...new Set([...currentInstallingAddons, ...installing])]
+        .filter((addon) => !finished.includes(addon))
+        .filter((a) => a)
+      return newInstalling
+    })
 
-    setInstallingAddons(newInstalling)
-    setFinishedInstalling(newFinished)
-  }, [installProgress])
+    setFinishedInstalling((f) => [...new Set([...f, ...finished])] || [])
+  }, [installProgress, setInstallingAddons, setFinishedInstalling])
 
   const [selectedAddonId, setSelectedAddonId] = useState(null)
 
@@ -173,6 +186,10 @@ const MarketPage = () => {
     }
   }, [selectedAddonId, isLoadingMarket, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
 
+  // restart server for changes to take effect
+  const { confirmRestart } = useServerRestart()
+  const restartEnabled = finishedInstalling.length && !installingAddons.length
+
   if (isError)
     return (
       <Section
@@ -190,7 +207,17 @@ const MarketPage = () => {
 
   return (
     <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
-      <h1 className={Type.headlineSmall}>Addon Market</h1>
+      <StyledHeader>
+        <h1 className={Type.headlineSmall}>Addon Market</h1>
+        <Button
+          disabled={!restartEnabled}
+          variant={restartEnabled ? 'filled' : 'surface'}
+          icon="restart_alt"
+          onClick={() => confirmRestart('Restart the server to apply changes?')}
+        >
+          Restart Server
+        </Button>
+      </StyledHeader>
       <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
         <AddonFilters onSelect={setFilter} />
         <AddonsList
