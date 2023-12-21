@@ -23,6 +23,7 @@ const StyledAddonList = styled.div`
 const StyledInput = styled(InputText)`
   max-height: 40px;
   height: 40px;
+  width: 100%;
 `
 
 const StyledList = styled(PerfectScrollbar)`
@@ -58,7 +59,6 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover }) => {
     <StyledAddonList>
       <div className="search">
         <StyledInput
-          className="search"
           placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
