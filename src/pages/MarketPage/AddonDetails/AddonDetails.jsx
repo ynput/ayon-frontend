@@ -1,4 +1,4 @@
-import { Button, Icon } from '@ynput/ayon-react-components'
+import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import * as Styled from './AddonDetails.styled'
 import Type from '/src/theme/typography.module.css'
@@ -6,6 +6,8 @@ import { classNames } from 'primereact/utils'
 import { isEmpty } from 'lodash'
 import AddonIcon from '/src/components/AddonIcon/AddonIcon'
 import { rcompare } from 'semver'
+import useUninstall from './useUninstall'
+import useInstall from './useInstall'
 
 const MetaPanelRow = ({ label, children }) => (
   <Styled.MetaPanelRow>
@@ -52,6 +54,11 @@ const AddonDetails = ({ addon = {}, isLoading }) => {
   if (isVerified && !isOfficial) verifiedIcon = <Icon icon="new_releases" />
   if (isOfficial) verifiedIcon = <img src="/favicon-32x32.png" width={15} height={15} />
 
+  // sets selected addon and redirects to addons
+  const { onUninstall } = useUninstall(name)
+
+  const { installAddon, isLoading: isInstalling } = useInstall(name, latestVersion)
+
   return (
     <Styled.PanelContainer direction="row" className={classNames({ noData: !name })}>
       {name && (
@@ -73,14 +80,24 @@ const AddonDetails = ({ addon = {}, isLoading }) => {
           </Styled.Left>
           {/* RIGHT PANEL */}
           <Styled.Right className={classNames(Type.bodyMedium, { isLoading })}>
-            {isInstalled && !isOutdated && <Button>Uninstall</Button>}
+            {isInstalled && !isOutdated && <Button onClick={onUninstall}>Uninstall</Button>}
             {isInstalled && isOutdated && (
-              <Button variant="filled" icon={'upgrade'}>{`Update to v${latestVersion}`}</Button>
+              <SaveButton
+                active
+                saving={isInstalling}
+                icon={!isInstalling && 'upgrade'}
+                onClick={installAddon}
+              >{`Update to v${latestVersion}`}</SaveButton>
             )}
             {!isInstalled && (
-              <Button variant="filled" icon="download_for_offline">
+              <SaveButton
+                active
+                saving={isInstalling}
+                icon={!isInstalling && 'download_for_offline'}
+                onClick={installAddon}
+              >
                 Install
-              </Button>
+              </SaveButton>
             )}
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Installed Versions">
