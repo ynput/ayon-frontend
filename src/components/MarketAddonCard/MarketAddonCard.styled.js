@@ -28,23 +28,12 @@ export const Container = styled.div`
   &.isPlaceholder {
     ${getShimmerStyles()}
 
-    .icon, .content {
+    .content {
       border-radius: var(--border-radius-m);
       overflow: hidden;
       position: relative;
       ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
     }
-  }
-`
-
-export const Icon = styled.div`
-  &,
-  img {
-    width: 32px;
-    height: 32px;
-  }
-  img {
-    object-fit: contain;
   }
 `
 

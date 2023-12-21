@@ -4,6 +4,7 @@ import * as Styled from './AddonDetails.styled'
 import Type from '/src/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
 import { isEmpty } from 'lodash'
+import AddonIcon from '/src/components/AddonIcon/AddonIcon'
 
 const MetaPanelRow = ({ label, children }) => (
   <Styled.MetaPanelRow>
@@ -50,9 +51,7 @@ const AddonDetails = ({ addon = {} }) => {
         <>
           <Styled.Left className={Type.bodyLarge}>
             <Styled.Header>
-              <div className="icon">
-                <img src={icon} alt={name + ' icon'} />
-              </div>
+              <AddonIcon size={64} src={icon} alt={name + ' icon'} />
               <div className="titles">
                 <h2 className={Type.headlineSmall}>{name}</h2>
                 <span>{verifiedString}</span>

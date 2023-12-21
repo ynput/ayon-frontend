@@ -1,6 +1,7 @@
 import { classNames } from 'primereact/utils'
 import * as Styled from './MarketAddonCard.styled'
 import Type from '/src/theme/typography.module.css'
+import AddonIcon from '../AddonIcon/AddonIcon'
 
 const MarketAddonCard = ({
   title,
@@ -16,9 +17,7 @@ const MarketAddonCard = ({
 }) => {
   return (
     <Styled.Container {...props} className={classNames({ isSelected, isPlaceholder })}>
-      <Styled.Icon className="icon">
-        <img src={icon} alt={title + ' icon'} />
-      </Styled.Icon>
+      <AddonIcon isPlaceholder={isPlaceholder} size={32} src={icon} alt={title + ' icon'} />
 
       <Styled.Content className="content">
         <Styled.TitleWrapper className="header">

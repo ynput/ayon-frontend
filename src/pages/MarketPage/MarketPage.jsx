@@ -12,6 +12,7 @@ import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './AddonDetails/AddonDetails'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { mergeAddonWithInstalled } from './mergeAddonsData'
+import { throttle } from 'lodash'
 
 const placeholders = [...Array(10)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -73,12 +74,12 @@ const MarketPage = () => {
 
   const [cachedIds, setCachedIds] = useState([])
   // prefetch addon
-  const handleHover = async (id) => {
+  const handleHover = throttle(async (id) => {
     if (isLoadingMarket) return
     if (cachedIds.includes(id)) return
     setCachedIds([...cachedIds, id])
     await fetchAddonData(id, true)
-  }
+  }, 1000)
 
   // once addons are loaded, prefetch the first 3 addons
   useEffect(() => {

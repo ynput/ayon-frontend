@@ -54,23 +54,9 @@ export const Header = styled.div`
     }
   }
 
-  .icon {
-    width: 64px;
-    height: 64px;
-    img {
-      width: 64px;
-      height: 64px;
-      object-fit: contain;
-    }
-  }
-
   /* loading styles */
   &.isPlaceholder {
     .titles > * {
-      ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
-      border-radius: var(--border-radius);
-    }
-    .icon {
       ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
       border-radius: var(--border-radius);
     }
