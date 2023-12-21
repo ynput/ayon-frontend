@@ -9,9 +9,9 @@ import {
 } from '/src/services/market/getMarket'
 import AddonsList from './AddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
-import AddonDetails from './AddonDetails'
+import AddonDetails from './AddonDetails/AddonDetails'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
-import mergeAddonsData from './mergeAddonsData'
+import mergeAddonsData, { mergeAddonWithInstalled } from './mergeAddonsData'
 
 const placeholders = [...Array(10)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -21,7 +21,7 @@ const placeholders = [...Array(10)].map((_, i) => ({
 
 const MarketPage = () => {
   // GET ALL ADDONS IN MARKET
-  const { data: marketAddons, isLoading: isLoadingMarket } = useGetMarketAddonsQuery()
+  const { data: marketAddons, isLoading: isLoadingMarket, isError } = useGetMarketAddonsQuery()
   // GET ALL INSTALLED ADDONS
   const { data: installedAddons, isLoading: isLoadingInstalled } = useGetAddonListQuery()
 
@@ -38,6 +38,11 @@ const MarketPage = () => {
     skip: !selectedAddonId,
   })
 
+  // Merge selected addon with installed addon
+  const selectedAddonMerged = useMemo(() => {
+    return mergeAddonWithInstalled(selectedAddon, installedAddons)
+  }, [selectedAddon, installedAddons])
+
   // GET SELECTED ADDON LAZY for performance (fetches on addon hover)
   const [getAddon] = useLazyGetMarketAddonQuery()
 
@@ -53,6 +58,21 @@ const MarketPage = () => {
   // FILTER ADDONS BY FIELDS
   // const [filter, setFilter] = useState([])
 
+  if (isError)
+    return (
+      <Section
+        style={{
+          width: '100%',
+          height: '100%',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+        }}
+      >
+        <span>Error loading addons...</span>
+      </Section>
+    )
+
   return (
     <main style={{ flexDirection: 'column', overflow: 'hidden', paddingBottom: 0 }}>
       <h1 className={Type.headlineSmall}>Addon Market</h1>
@@ -64,7 +84,7 @@ const MarketPage = () => {
           onSelect={setSelectedAddonId}
           onHover={handleHover}
         />
-        <AddonDetails addon={selectedAddon} />
+        <AddonDetails addon={selectedAddonMerged} />
       </Section>
     </main>
   )

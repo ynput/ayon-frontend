@@ -2,7 +2,9 @@ import React from 'react'
 import styled from 'styled-components'
 
 const StyledList = styled.div`
-  width: 250px;
+  flex: 0.5;
+  min-width: 200px;
+  max-width: 300px;
 `
 
 const AddonFilters = () => {

@@ -5,7 +5,7 @@ const getMarket = ayonApi.injectEndpoints({
     // getMarketAddons
     getMarketAddons: build.query({
       query: () => ({
-        url: `/api/marketplace/addons`,
+        url: `/api/market/addons`,
         method: 'GET',
       }),
       providesTags: (addons) => addons?.map(({ id }) => ({ type: 'marketAddon', id })) || [],
@@ -14,7 +14,7 @@ const getMarket = ayonApi.injectEndpoints({
     // getMarketAddon
     getMarketAddon: build.query({
       query: (id) => ({
-        url: `/api/marketplace/addons/${id}`,
+        url: `/api/market/addons/${id}`,
         method: 'GET',
       }),
       providesTags: (result, error, id) => [{ type: 'marketAddon', id }],

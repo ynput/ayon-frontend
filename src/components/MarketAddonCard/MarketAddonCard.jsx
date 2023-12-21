@@ -1,12 +1,11 @@
 import { classNames } from 'primereact/utils'
 import * as Styled from './MarketAddonCard.styled'
 import Type from '/src/theme/typography.module.css'
-import { Button } from '@ynput/ayon-react-components'
 
 const MarketAddonCard = ({
   title,
   author,
-  icon = 'slack-icon.png',
+  icon,
   isSelected,
   isOfficial,
   isVerified,
@@ -33,13 +32,9 @@ const MarketAddonCard = ({
       </Styled.Content>
       {!isPlaceholder && (
         <Styled.Buttons>
-          {isInstalled && !isOutdated && (
-            <Button disabled variant="text">
-              Installed
-            </Button>
-          )}
-          {isInstalled && isOutdated && <Button variant="filled">Update</Button>}
-          {!isInstalled && <Button>Install</Button>}
+          {isInstalled && !isOutdated && <Styled.Tag disabled>Installed</Styled.Tag>}
+          {isInstalled && isOutdated && <Styled.Tag className="update">Update</Styled.Tag>}
+          {!isInstalled && <Styled.Tag className="install">Install</Styled.Tag>}
         </Styled.Buttons>
       )}
     </Styled.Container>

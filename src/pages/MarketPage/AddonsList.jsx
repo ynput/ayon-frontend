@@ -12,6 +12,7 @@ const StyledList = styled(PerfectScrollbar)`
   flex: 1;
   border-radius: var(--border-radius-m);
   padding-bottom: 40px;
+  min-width: 400px;
 
   .ps__rail-y {
     z-index: 100;
@@ -25,7 +26,7 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover }) => {
         ({
           name,
           orgTitle,
-          //   icon = 'slack-icon.png',
+          icon,
           isOfficial,
           isVerified,
           isInstalled,
@@ -37,7 +38,7 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover }) => {
               key={name}
               title={name}
               author={orgTitle}
-              // icon={icon}
+              icon={icon}
               isOfficial={isOfficial}
               isVerified={isVerified}
               isInstalled={isInstalled}

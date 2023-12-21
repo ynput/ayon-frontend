@@ -77,3 +77,18 @@ export const Buttons = styled.div`
   justify-content: flex-end;
   flex: 1;
 `
+
+export const Tag = styled.div`
+  user-select: none;
+  padding: 4px 12px;
+  border-radius: var(--border-radius-l);
+  min-width: 75px;
+  text-align: center;
+  &.update {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+  }
+  &.install {
+    background-color: var(--md-sys-color-surface-container-high);
+  }
+`
