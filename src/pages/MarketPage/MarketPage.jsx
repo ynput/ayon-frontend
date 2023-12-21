@@ -127,7 +127,7 @@ const MarketPage = () => {
     )
 
   return (
-    <main style={{ flexDirection: 'column', overflow: 'hidden', paddingBottom: 0 }}>
+    <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
       <h1 className={Type.headlineSmall}>Addon Market</h1>
       <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
         <AddonFilters />
