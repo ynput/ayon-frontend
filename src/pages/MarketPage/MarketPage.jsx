@@ -76,6 +76,11 @@ const MarketPage = () => {
   // [{isInstalled: false}]
   const [filter, setFilter] = useState([])
 
+  // // merge installed with market addons
+  // let marketAddons = useMemo(() => {
+  //   return mergeAddonsData(marketAddonsData, installedAddons)
+  // }, [marketAddonsData, installedAddons])
+
   let marketAddons = useMemo(() => {
     const sortedData = [...marketAddonsData]
     // sort by isInstalled, isOutdated, isOfficial, name
