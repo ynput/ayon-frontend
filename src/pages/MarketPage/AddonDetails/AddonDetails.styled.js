@@ -1,4 +1,5 @@
 import { Panel, getShimmerStyles } from '@ynput/ayon-react-components'
+import ReactMarkdown from 'react-markdown'
 import styled from 'styled-components'
 
 export const PanelContainer = styled(Panel)`
@@ -39,6 +40,13 @@ export const Right = styled.div`
   & > button {
     width: 100%;
   }
+
+  &.isLoading > button {
+    position: relative;
+    overflow: hidden;
+    background-color: unset;
+    ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
+  }
 `
 
 // header is in the left column and contains icon, title and verification status
@@ -76,19 +84,28 @@ export const Header = styled.div`
   /* loading styles */
   &.isPlaceholder {
     .titles > * {
+      position: relative;
       ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
       border-radius: var(--border-radius);
+      overflow: hidden;
+      margin: 1px 0;
     }
   }
 `
 
 // description in the left column
-export const Description = styled.div`
+export const Description = styled(ReactMarkdown)`
+  position: relative;
   /* loading styles */
   &.isPlaceholder {
     color: transparent;
-    ${getShimmerStyles()}
+    ${getShimmerStyles(
+      'var(--md-sys-color-surface-container)',
+      'var(--md-sys-color-surface-container-high)',
+      { opacity: 1 },
+    )}
     border-radius: var(--border-radius);
+    min-height: 80px;
   }
 `
 
@@ -101,9 +118,19 @@ export const MetaPanel = styled.div`
   align-items: flex-start;
   gap: 10px;
   border-radius: var(--border-radius-m);
+  overflow: hidden;
   width: 100%;
-
+  position: relative;
   background-color: var(--md-sys-color-surface-container);
+
+  &.isPlaceholder {
+    ${getShimmerStyles(
+      'var(--md-sys-color-surface-container)',
+      'var(--md-sys-color-surface-container-high)',
+      { opacity: 1 },
+    )}
+    border-radius: var(--border-radius-m);
+  }
 `
 
 export const MetaPanelRow = styled.div`

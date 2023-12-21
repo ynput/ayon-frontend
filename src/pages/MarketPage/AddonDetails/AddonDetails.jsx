@@ -13,7 +13,7 @@ const MetaPanelRow = ({ label, children }) => (
   </Styled.MetaPanelRow>
 )
 
-const AddonDetails = ({ addon = {} }) => {
+const AddonDetails = ({ addon = {}, isLoading }) => {
   // latestVersion: is the latest version of the addon
   // versions: is an array of all versions INSTALLED of the addon
   const {
@@ -26,7 +26,7 @@ const AddonDetails = ({ addon = {} }) => {
     // versions = [],
     installedVersions = {},
     latestVersion,
-    productionVersion, // which version is running in production
+    currentProductionVersion,
     orgTitle,
     isVerified,
     isOfficial,
@@ -55,8 +55,8 @@ const AddonDetails = ({ addon = {} }) => {
       {name && (
         <>
           <Styled.Left className={Type.bodyLarge}>
-            <Styled.Header>
-              <AddonIcon size={64} src={icon} alt={name + ' icon'} />
+            <Styled.Header className={classNames({ isPlaceholder: isLoading })}>
+              <AddonIcon size={64} src={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
               <div className="titles">
                 <h2 className={Type.headlineSmall}>{title}</h2>
                 <span className={classNames(verifiedString.toLowerCase(), 'verification')}>
@@ -65,10 +65,12 @@ const AddonDetails = ({ addon = {} }) => {
                 </span>
               </div>
             </Styled.Header>
-            <Styled.Description>{description}</Styled.Description>
+            <Styled.Description className={classNames({ isPlaceholder: isLoading })}>
+              {description}
+            </Styled.Description>
           </Styled.Left>
           {/* RIGHT PANEL */}
-          <Styled.Right className={Type.bodyMedium}>
+          <Styled.Right className={classNames(Type.bodyMedium, { isLoading })}>
             {isInstalled && !isOutdated && <Button>Uninstall</Button>}
             {isInstalled && isOutdated && (
               <Button variant="filled" icon={'upgrade'}>{`Update to v${latestVersion}`}</Button>
@@ -78,7 +80,7 @@ const AddonDetails = ({ addon = {} }) => {
                 Install
               </Button>
             )}
-            <Styled.MetaPanel>
+            <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Installed Versions">
                 {versionsToShow.length
                   ? versionsToShow.map((version) => <span key={version}>{version}</span>)
@@ -90,12 +92,14 @@ const AddonDetails = ({ addon = {} }) => {
                 )}
               </MetaPanelRow>
             </Styled.MetaPanel>
-            <Styled.MetaPanel>
+            <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Production Usage">
-                {productionVersion ? `Version: v${productionVersion}` : 'Not used in Production'}
+                {currentProductionVersion
+                  ? `v${currentProductionVersion}`
+                  : 'Not used in Production'}
               </MetaPanelRow>
             </Styled.MetaPanel>
-            <Styled.MetaPanel>
+            <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
               <MetaPanelRow label="Latest Version">v{latestVersion}</MetaPanelRow>
             </Styled.MetaPanel>

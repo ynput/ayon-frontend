@@ -14,7 +14,7 @@ import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { mergeAddonWithInstalled } from './mergeAddonsData'
 import { throttle } from 'lodash'
 
-const placeholders = [...Array(10)].map((_, i) => ({
+const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
   isPlaceholder: true,
   orgTitle: 'Loading...',
@@ -57,8 +57,6 @@ const MarketPage = () => {
   const selectedAddon = useMemo(() => {
     if (!selectedAddonId || !marketAddons) return {}
     const found = marketAddons.find((addon) => addon.name === selectedAddonId) || {}
-
-    console.log(found, selectedAddonData)
 
     const merge =
       mergeAddonWithInstalled(
