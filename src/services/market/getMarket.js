@@ -14,8 +14,16 @@ const getMarket = ayonApi.injectEndpoints({
           const isInstalled = addon.currentLatestVersion !== null
           const isOfficial = addon.orgName === 'ynput-official'
           const isOutdated = addon.latestVersion !== addon.currentLatestVersion
+          const isProductionOutdated = addon.currentLatestVersion !== addon.currentProductionVersion
 
-          return { ...addon, isOfficial, isInstalled, isOutdated, isVerified: false }
+          return {
+            ...addon,
+            isOfficial,
+            isInstalled,
+            isOutdated,
+            isProductionOutdated,
+            isVerified: false,
+          }
         }),
     }),
     // getMarketAddon

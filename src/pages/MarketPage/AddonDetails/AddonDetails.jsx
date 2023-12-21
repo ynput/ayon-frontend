@@ -5,6 +5,7 @@ import Type from '/src/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
 import { isEmpty } from 'lodash'
 import AddonIcon from '/src/components/AddonIcon/AddonIcon'
+import { rcompare } from 'semver'
 
 const MetaPanelRow = ({ label, children }) => (
   <Styled.MetaPanelRow>
@@ -35,12 +36,13 @@ const AddonDetails = ({ addon = {}, isLoading }) => {
   const [showAllVersions, setShowAllVersions] = useState(false)
 
   const versionKeys = isEmpty(installedVersions) ? [] : Object.keys(installedVersions)
-  const versionsToShow = versionKeys.length
+  const versionKeysSorted = versionKeys.sort((a, b) => rcompare(a, b))
+  const versionsToShow = versionKeysSorted.length
     ? showAllVersions
-      ? versionKeys
-      : versionKeys.slice(0, 2)
+      ? versionKeysSorted
+      : versionKeysSorted.slice(0, 2)
     : []
-  const nOfMoreVersions = versionKeys.length - versionsToShow.length
+  const nOfMoreVersions = versionKeysSorted.length - versionsToShow.length
 
   let verifiedString = 'Unverified'
   if (isVerified && !isOfficial) verifiedString = 'Verified'

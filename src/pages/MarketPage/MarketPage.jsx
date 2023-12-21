@@ -39,6 +39,12 @@ const MarketPage = () => {
       skip: !selectedAddonId,
     },
   )
+
+  // FILTER ADDONS BY FIELDS
+  // [{isOutdated: true}]
+  // [{isInstalled: false}]
+  const [filter, setFilter] = useState([])
+
   const marketAddons = useMemo(() => {
     const sortedData = [...marketAddonsData]
     // sort by isInstalled, isOutdated, isOfficial, name
@@ -50,8 +56,18 @@ const MarketPage = () => {
         a.name.localeCompare(b.name),
     )
 
+    if (filter.length) {
+      return sortedData.filter((addon) => {
+        return filter.every((f) => {
+          return Object.keys(f).every((key) => {
+            return typeof f[key] === 'function' ? f[key](addon[key], addon) : addon[key] == f[key]
+          })
+        })
+      })
+    }
+
     return sortedData
-  }, [marketAddonsData])
+  }, [marketAddonsData, filter])
 
   // merge selected addon with found addon in marketAddons
   const selectedAddon = useMemo(() => {
@@ -106,9 +122,6 @@ const MarketPage = () => {
     }
   }, [selectedAddonId, isLoadingMarket, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
 
-  // FILTER ADDONS BY FIELDS
-  // const [filter, setFilter] = useState([])
-
   if (isError)
     return (
       <Section
@@ -128,7 +141,7 @@ const MarketPage = () => {
     <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
       <h1 className={Type.headlineSmall}>Addon Market</h1>
       <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
-        <AddonFilters />
+        <AddonFilters onSelect={setFilter} />
         <AddonsList
           addons={isLoadingMarket ? placeholders : marketAddons}
           selected={selectedAddonId}
