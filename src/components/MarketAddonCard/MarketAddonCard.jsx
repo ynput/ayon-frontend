@@ -2,6 +2,7 @@ import { classNames } from 'primereact/utils'
 import * as Styled from './MarketAddonCard.styled'
 import Type from '/src/theme/typography.module.css'
 import AddonIcon from '../AddonIcon/AddonIcon'
+import { Icon } from '@ynput/ayon-react-components'
 
 const MarketAddonCard = ({
   title,
@@ -22,8 +23,10 @@ const MarketAddonCard = ({
       <Styled.Content className="content">
         <Styled.TitleWrapper className="header">
           <Styled.Title className={Type.titleMedium}>{title}</Styled.Title>
-          {isOfficial && <div>Official</div>}
-          {isVerified && !isOfficial && <div>Verified</div>}
+          {isOfficial && <img src="/favicon-32x32.png" width={15} height={15} />}
+          {isVerified && !isOfficial && (
+            <Icon icon="new_release" style={{ color: '    var(--md-sys-color-secondary)' }} />
+          )}
         </Styled.TitleWrapper>
         <Styled.AuthorWrapper className="details">
           <Styled.Author className={Type.labelMedium}>{author}</Styled.Author>

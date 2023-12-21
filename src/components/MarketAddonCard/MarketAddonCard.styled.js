@@ -21,6 +21,7 @@ export const Container = styled.div`
 
   &.isSelected {
     background-color: var(--md-sys-color-primary-container);
+
     border-radius: var(--border-radius-m);
     border-color: var(--md-sys-color-primary);
   }
@@ -48,7 +49,7 @@ export const TitleWrapper = styled.div`
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: var(--base-gap-small);
 `
 
 export const Title = styled.div``

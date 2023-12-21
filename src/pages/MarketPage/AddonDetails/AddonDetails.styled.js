@@ -58,6 +58,20 @@ export const Header = styled.div`
     }
   }
 
+  .verification {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
+  }
+
+  .verified {
+    color: var(--md-sys-color-primary);
+  }
+
+  .official {
+    color: var(--md-sys-color-tertiary);
+  }
+
   /* loading styles */
   &.isPlaceholder {
     .titles > * {

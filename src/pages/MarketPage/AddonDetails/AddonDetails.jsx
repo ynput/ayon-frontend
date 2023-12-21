@@ -1,4 +1,4 @@
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import * as Styled from './AddonDetails.styled'
 import Type from '/src/theme/typography.module.css'
@@ -45,6 +45,10 @@ const AddonDetails = ({ addon = {} }) => {
   if (isVerified && !isOfficial) verifiedString = 'Verified'
   if (isOfficial) verifiedString = 'Official'
 
+  let verifiedIcon = <Icon icon="public" />
+  if (isVerified && !isOfficial) verifiedIcon = <Icon icon="new_releases" />
+  if (isOfficial) verifiedIcon = <img src="/favicon-32x32.png" width={15} height={15} />
+
   return (
     <Styled.PanelContainer direction="row" className={classNames({ noData: !name })}>
       {name && (
@@ -54,7 +58,10 @@ const AddonDetails = ({ addon = {} }) => {
               <AddonIcon size={64} src={icon} alt={name + ' icon'} />
               <div className="titles">
                 <h2 className={Type.headlineSmall}>{name}</h2>
-                <span>{verifiedString}</span>
+                <span className={classNames(verifiedString.toLowerCase(), 'verification')}>
+                  {verifiedIcon}
+                  {verifiedString}
+                </span>
               </div>
             </Styled.Header>
             <Styled.Description>{description}</Styled.Description>
