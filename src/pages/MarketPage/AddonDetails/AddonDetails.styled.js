@@ -8,6 +8,10 @@ export const PanelContainer = styled(Panel)`
   flex: 1;
   max-width: 600px;
   min-width: 300px;
+
+  &.noData {
+    background-color: unset;
+  }
 `
 
 // contains main body of content like, icon. title, description, etc

@@ -12,8 +12,8 @@ export const mergeAddonWithInstalled = (market, installed = []) => {
 
   // merge
   const merge = {
-    ...marketAddon,
     ...installedAddon,
+    ...marketAddon,
     versions: marketAddon.versions,
     installedVersions: installedAddon.versions,
   }

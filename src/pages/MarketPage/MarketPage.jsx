@@ -57,6 +57,9 @@ const MarketPage = () => {
   const selectedAddon = useMemo(() => {
     if (!selectedAddonId || !marketAddons) return {}
     const found = marketAddons.find((addon) => addon.name === selectedAddonId) || {}
+
+    console.log(found, selectedAddonData)
+
     const merge =
       mergeAddonWithInstalled(
         {
@@ -126,7 +129,7 @@ const MarketPage = () => {
   return (
     <main style={{ flexDirection: 'column', overflow: 'hidden', paddingBottom: 0 }}>
       <h1 className={Type.headlineSmall}>Addon Market</h1>
-      <Section style={{ overflow: 'hidden', flexDirection: 'row' }}>
+      <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
         <AddonFilters />
         <AddonsList
           addons={isLoadingMarket ? placeholders : marketAddons}

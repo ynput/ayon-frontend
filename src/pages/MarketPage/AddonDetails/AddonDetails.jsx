@@ -43,10 +43,10 @@ const AddonDetails = ({ addon = {} }) => {
 
   let verifiedString = 'Unverified'
   if (isVerified && !isOfficial) verifiedString = 'Verified'
-  if (isVerified && isOfficial) verifiedString = 'Official'
+  if (isOfficial) verifiedString = 'Official'
 
   return (
-    <Styled.PanelContainer direction="row">
+    <Styled.PanelContainer direction="row" className={classNames({ noData: !name })}>
       {name && (
         <>
           <Styled.Left className={Type.bodyLarge}>
