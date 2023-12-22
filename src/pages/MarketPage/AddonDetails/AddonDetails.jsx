@@ -7,11 +7,21 @@ import { isEmpty } from 'lodash'
 import AddonIcon from '/src/components/AddonIcon/AddonIcon'
 import { rcompare } from 'semver'
 import useUninstall from './useUninstall'
+import { Link } from 'react-router-dom'
 
-const MetaPanelRow = ({ label, children }) => (
-  <Styled.MetaPanelRow>
+const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) => (
+  <Styled.MetaPanelRow {...props}>
     <span className={classNames('label', Type.titleMedium)}>{label}</span>
-    <span className="value">{children}</span>
+    <span
+      className="value"
+      style={{
+        flexDirection: valueDirection,
+        alignItems: valueDirection === 'column' ? 'flex-start' : 'center',
+        gap: valueDirection === 'column' ? '0' : 8,
+      }}
+    >
+      {children}
+    </span>
   </Styled.MetaPanelRow>
 )
 
@@ -27,9 +37,11 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
     isInstalling,
     isFinished,
     isOutdated,
+    isProductionOutdated,
     // versions = [],
     installedVersions = {},
     latestVersion,
+    currentLatestVersion,
     currentProductionVersion,
     orgTitle,
     isVerified,
@@ -43,7 +55,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
   const versionsToShow = versionKeysSorted.length
     ? showAllVersions
       ? versionKeysSorted
-      : versionKeysSorted.slice(0, 2)
+      : versionKeysSorted.slice(0, 1)
     : []
   const nOfMoreVersions = versionKeysSorted.length - versionsToShow.length
 
@@ -131,8 +143,18 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
               </MetaPanelRow>
             </Styled.MetaPanel>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
-              <MetaPanelRow label="Production Usage">
-                {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
+              <MetaPanelRow label="Production Usage" valueDirection="row">
+                <span>
+                  {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
+                </span>
+                {isProductionOutdated && (
+                  <Link to={'/settings/bundles'}>
+                    <Styled.UseButton variant="tonal">
+                      Use {currentLatestVersion}
+                      <Icon icon="arrow_forward" />
+                    </Styled.UseButton>
+                  </Link>
+                )}
               </MetaPanelRow>
             </Styled.MetaPanel>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>

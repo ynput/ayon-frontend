@@ -1,4 +1,4 @@
-import { Panel, getShimmerStyles } from '@ynput/ayon-react-components'
+import { Button, Panel, getShimmerStyles } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import styled from 'styled-components'
 
@@ -147,4 +147,11 @@ export const MetaPanelRow = styled.div`
     cursor: pointer;
     text-decoration: underline;
   }
+`
+
+export const UseButton = styled(Button)`
+  padding: 2px 6px;
+  width: fit-content;
+  margin-left: auto;
+  gap: var(--base-gap-small);
 `
