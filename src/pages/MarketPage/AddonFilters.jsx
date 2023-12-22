@@ -16,6 +16,7 @@ const StyledList = styled(Panel)`
     padding: 4px 8px;
     flex-direction: column;
     align-items: flex-start;
+    user-select: none;
     gap: 10px;
     align-self: stretch;
     border-radius: var(--border-radius-m);
@@ -37,16 +38,19 @@ const AddonFilters = ({ onSelect }) => {
       id: 'all',
       name: 'All',
       filter: [],
+      tooltip: 'All addons, installed or not',
     },
     {
       id: 'updates',
-      name: 'Updates',
+      name: 'Updates Available',
       filter: [{ isOutdated: true }, { isInstalled: true }],
+      tooltip: 'Addons with updates available',
     },
     {
       id: 'production',
       name: 'In Production',
       filter: [{ currentProductionVersion: (v) => v }, { isInstalled: true }],
+      tooltip: 'Addons used in the production bundle',
     },
     {
       id: 'production-outdated',
@@ -54,12 +58,14 @@ const AddonFilters = ({ onSelect }) => {
       filter: [
         { isProductionOutdated: true, isInstalled: true, currentProductionVersion: (v) => v },
       ],
+      tooltip: 'Addons using an outdated version in the production bundle',
     },
 
     {
       id: 'uninstalled',
-      name: 'Recommended',
+      name: 'Not Installed',
       filter: [{ isInstalled: false }],
+      tooltip: 'Addons available to install',
     },
   ]
 
@@ -79,6 +85,7 @@ const AddonFilters = ({ onSelect }) => {
           className={classNames('item', { isSelected: selected === filter.id })}
           id={filter.id}
           onClick={(e) => handleSelect(e, filter.filter)}
+          data-tooltip={filter.tooltip}
         >
           {filter.name}
         </div>
