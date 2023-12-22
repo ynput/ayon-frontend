@@ -7,6 +7,8 @@ import { upperFirst } from 'lodash'
 
 const MarketAddonCard = ({
   title,
+  name,
+  latestVersion,
   author,
   icon,
   isSelected,
@@ -17,6 +19,7 @@ const MarketAddonCard = ({
   isPlaceholder,
   isInstalling,
   isFinished,
+  onInstall,
   ...props
 }) => {
   let state = 'install'
@@ -28,6 +31,16 @@ const MarketAddonCard = ({
   let stateIcon = null
   if (isInstalling) stateIcon = 'sync'
   if (isFinished) stateIcon = 'check_circle'
+
+  let stateVariant = 'light'
+  if (state === 'install') stateVariant = 'surface'
+  if (state === 'update') stateVariant = 'filled'
+
+  const handleActionClick = () => {
+    if (['install', 'update'].includes(state)) {
+      onInstall(name, latestVersion)
+    }
+  }
 
   return (
     <Styled.Container {...props} className={classNames({ isSelected, isPlaceholder })}>
@@ -46,7 +59,7 @@ const MarketAddonCard = ({
       </Styled.Content>
       {!isPlaceholder && (
         <Styled.Buttons>
-          <Styled.Tag className={state}>
+          <Styled.Tag variant={stateVariant} className={state} onClick={handleActionClick}>
             {stateIcon && <Icon icon={stateIcon} />}
             {upperFirst(state)}
           </Styled.Tag>

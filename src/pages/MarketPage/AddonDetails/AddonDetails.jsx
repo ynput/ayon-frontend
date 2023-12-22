@@ -7,7 +7,6 @@ import { isEmpty } from 'lodash'
 import AddonIcon from '/src/components/AddonIcon/AddonIcon'
 import { rcompare } from 'semver'
 import useUninstall from './useUninstall'
-import useInstall from './useInstall'
 
 const MetaPanelRow = ({ label, children }) => (
   <Styled.MetaPanelRow>
@@ -59,7 +58,11 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
   // sets selected addon and redirects to addons
   const { onUninstall } = useUninstall(name)
 
-  const { installAddon } = useInstall(name, latestVersion, onInstall)
+  // All the install logic is handled in the parent component (MarketPage.jsx)
+  // Okay it's actually handled in the hook useInstall.js
+  const handleInstall = () => {
+    onInstall && onInstall(name, latestVersion)
+  }
 
   let actionButton = null
 
@@ -82,12 +85,12 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
       <Button
         variant="filled"
         icon={'upgrade'}
-        onClick={installAddon}
+        onClick={handleInstall}
       >{`Update to v${latestVersion}`}</Button>
     )
   } else {
     actionButton = (
-      <Button variant="filled" icon={'download_for_offline'} onClick={installAddon}>
+      <Button variant="filled" icon={'download_for_offline'} onClick={handleInstall}>
         {`Install v${latestVersion}`}
       </Button>
     )
@@ -129,14 +132,12 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
             </Styled.MetaPanel>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Production Usage">
-                {currentProductionVersion
-                  ? `v${currentProductionVersion}`
-                  : 'Not used in Production'}
+                {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
               </MetaPanelRow>
             </Styled.MetaPanel>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
-              <MetaPanelRow label="Latest Version">v{latestVersion}</MetaPanelRow>
+              <MetaPanelRow label="Latest Version">{latestVersion}</MetaPanelRow>
             </Styled.MetaPanel>
           </Styled.Right>
         </>

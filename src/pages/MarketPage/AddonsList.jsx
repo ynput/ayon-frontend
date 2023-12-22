@@ -41,7 +41,7 @@ const StyledList = styled(PerfectScrollbar)`
   }
 `
 
-const AddonsList = ({ addons = [], selected, onSelect, onHover }) => {
+const AddonsList = ({ addons = [], selected, onSelect, onHover, onInstall }) => {
   const [search, setSearch] = useState('')
 
   // filter addons by search
@@ -73,6 +73,8 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover }) => {
               onClick={() => onSelect(name)}
               isSelected={selected === name}
               onMouseOver={() => onHover(name)}
+              onInstall={onInstall}
+              name={name}
               {...props}
             />
           )

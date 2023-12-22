@@ -16,6 +16,7 @@ import { mergeAddonWithInstalled } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import styled from 'styled-components'
 import useServerRestart from '/src/hooks/useServerRestart'
+import useInstall from './AddonDetails/useInstall'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -186,6 +187,8 @@ const MarketPage = () => {
     }
   }, [selectedAddonId, isLoadingMarket, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
 
+  const { installAddon } = useInstall((name) => setInstallingAddons((a) => [...a, name]))
+
   // restart server for changes to take effect
   const { confirmRestart } = useServerRestart()
   const restartEnabled = finishedInstalling.length && !installingAddons.length
@@ -225,12 +228,13 @@ const MarketPage = () => {
           selected={selectedAddonId}
           onSelect={setSelectedAddonId}
           onHover={handleHover}
+          onInstall={installAddon}
         />
         <AddonDetails
           addon={selectedAddon}
           isLoading={isLoadingInstalled || isFetchingAddon}
           setInstallingAddons={setInstallingAddons}
-          onInstall={(name) => setInstallingAddons([...installingAddons, name])}
+          onInstall={installAddon}
         />
       </Section>
     </main>
