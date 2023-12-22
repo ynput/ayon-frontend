@@ -5,6 +5,21 @@ import Type from '/src/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
 import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 
+const StyledSection = styled(Section)`
+  height: 100%;
+  flex: 0.5;
+  min-width: 210px;
+  max-width: 300px;
+
+  .connector {
+    background-color: var(--md-sys-color-surface-container-low);
+
+    & > button {
+      background-color: var(--md-sys-color-surface-container-low);
+    }
+  }
+`
+
 const StyledList = styled(Panel)`
   height: 100%;
 
@@ -74,7 +89,7 @@ const AddonFilters = ({ onSelect }) => {
   }
 
   return (
-    <Section style={{ height: '100%', flex: 0.5, minWidth: 210, maxWidth: 300 }}>
+    <StyledSection>
       <StyledList>
         <div className={classNames('title', Type.titleMedium)}>Installed</div>
         {installFilters.map((filter) => (
@@ -90,7 +105,7 @@ const AddonFilters = ({ onSelect }) => {
         ))}
       </StyledList>
       <YnputConnector darkMode smallLogo />
-    </Section>
+    </StyledSection>
   )
 }
 
