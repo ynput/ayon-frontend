@@ -1,14 +1,11 @@
-import { Panel } from '@ynput/ayon-react-components'
+import { Panel, Section } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import styled from 'styled-components'
 import Type from '/src/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
+import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 
 const StyledList = styled(Panel)`
-  flex: 0.5;
-  min-width: 200px;
-  max-width: 300px;
-
   height: 100%;
 
   .item {
@@ -77,20 +74,23 @@ const AddonFilters = ({ onSelect }) => {
   }
 
   return (
-    <StyledList>
-      <div className={classNames('title', Type.titleMedium)}>Installed</div>
-      {installFilters.map((filter) => (
-        <div
-          key={filter.id}
-          className={classNames('item', { isSelected: selected === filter.id })}
-          id={filter.id}
-          onClick={(e) => handleSelect(e, filter.filter)}
-          data-tooltip={filter.tooltip}
-        >
-          {filter.name}
-        </div>
-      ))}
-    </StyledList>
+    <Section style={{ height: '100%', flex: 0.5, minWidth: 210, maxWidth: 300 }}>
+      <StyledList>
+        <div className={classNames('title', Type.titleMedium)}>Installed</div>
+        {installFilters.map((filter) => (
+          <div
+            key={filter.id}
+            className={classNames('item', { isSelected: selected === filter.id })}
+            id={filter.id}
+            onClick={(e) => handleSelect(e, filter.filter)}
+            data-tooltip={filter.tooltip}
+          >
+            {filter.name}
+          </div>
+        ))}
+      </StyledList>
+      <YnputConnector darkMode smallLogo />
+    </Section>
   )
 }
 

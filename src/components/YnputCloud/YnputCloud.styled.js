@@ -136,6 +136,8 @@ export const Footer = styled.footer`
 `
 
 export const Button = styled(ayonButton)`
-  ${buttonStyles}
+  border-radius: var(--base-input-border-radius);
+  padding: 8px 16px;
+  max-height: unset;
   flex: 1;
 `

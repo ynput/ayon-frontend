@@ -125,7 +125,11 @@ const YnputConnector = ({
           <span>Organization: {connectData?.orgName || '???'}</span>
           {showDisconnect && (
             <Styled.Footer>
-              <Styled.Button onClick={handleDisconnect} className="disconnect">
+              <Styled.Button
+                onClick={handleDisconnect}
+                className="disconnect"
+                variant={darkMode ? 'surface' : 'tertiary'}
+              >
                 Disconnect
               </Styled.Button>
             </Styled.Footer>
