@@ -7,7 +7,7 @@ export const PanelContainer = styled(Panel)`
   flex-wrap: wrap;
 
   flex: 1;
-  max-width: 600px;
+  max-width: 800px;
   min-width: 250px;
   padding: var(--padding-l);
 

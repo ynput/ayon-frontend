@@ -29,6 +29,9 @@ const StyledHeader = styled.header`
   justify-content: space-between;
   align-items: flex-end;
   padding: 0 8px;
+  max-width: 1900px;
+  width: 100%;
+  margin: auto;
 
   h1 {
     margin: 8px;

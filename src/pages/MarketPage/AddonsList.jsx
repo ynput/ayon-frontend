@@ -10,6 +10,7 @@ const StyledAddonList = styled.div`
   gap: var(--base-gap-large);
   height: 100%;
   min-width: 400px;
+  max-width: 800px;
   overflow: hidden;
   flex: 1;
 
