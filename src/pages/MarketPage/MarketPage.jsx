@@ -189,6 +189,12 @@ const MarketPage = () => {
 
   const { installAddon } = useInstall((name) => setInstallingAddons((a) => [...a, name]))
 
+  const handleRestarted = () => {
+    // reset installing addons
+    setInstallingAddons([])
+    setFinishedInstalling([])
+  }
+
   // restart server for changes to take effect
   const { confirmRestart } = useServerRestart()
   const restartEnabled = finishedInstalling.length && !installingAddons.length
@@ -216,7 +222,7 @@ const MarketPage = () => {
           disabled={!restartEnabled}
           variant={restartEnabled ? 'filled' : 'surface'}
           icon="restart_alt"
-          onClick={() => confirmRestart('Restart the server to apply changes?')}
+          onClick={() => confirmRestart('Restart the server to apply changes?', handleRestarted)}
         >
           Restart Server
         </Button>
