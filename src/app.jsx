@@ -171,7 +171,14 @@ const App = () => {
                         </ProtectedRoute>
                       }
                     />
-                    <Route path="/market" element={<MarketPage />} />
+                    <Route
+                      path="/market"
+                      element={
+                        <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                          <MarketPage />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route path="/explorer" element={<ExplorerPage />} />
                     <Route path="/doc/api" element={<APIDocsPage />} />
                     <Route path="/profile" element={<ProfilePage />} />

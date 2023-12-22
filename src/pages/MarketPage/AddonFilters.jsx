@@ -16,6 +16,9 @@ const StyledSection = styled(Section)`
 
     & > button {
       background-color: var(--md-sys-color-surface-container-low);
+      :hover {
+        background-color: var(--md-sys-color-surface-container-high);
+      }
     }
   }
 `
