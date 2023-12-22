@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import MarketAddonCard from '/src/components/MarketAddonCard/MarketAddonCard'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
@@ -42,7 +42,7 @@ const StyledList = styled(PerfectScrollbar)`
   }
 `
 
-const AddonsList = ({ addons = [], selected, onSelect, onHover, onInstall }) => {
+const AddonsList = ({ addons = [], selected, onSelect, onHover, onInstall, isLoading }) => {
   const [search, setSearch] = useState('')
 
   // filter addons by search
@@ -56,8 +56,29 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover, onInstall }) => 
     [addons, search],
   )
 
+  const listRef = useRef(null)
+  const scrollRef = useRef(null)
+  const [initialScreenFinish, setInitialScreenFinish] = useState(false)
+  // when addons have finished loading, scroll to position of selected addon (from a redirect)
+  useEffect(() => {
+    if (listRef.current && selected && !isLoading && !initialScreenFinish) {
+      const scrollContainer = listRef.current.querySelector('.scrollbar-container')
+
+      if (scrollContainer) {
+        const el = scrollContainer.querySelector(`#${selected}`)
+        // get top of element in scroll container
+        const top = el.getBoundingClientRect().top
+        if (el) {
+          scrollContainer.scrollTo({ top: top - 200 })
+        }
+      }
+    }
+
+    if (!isLoading && !initialScreenFinish) setInitialScreenFinish(true)
+  }, [isLoading, selected, initialScreenFinish, listRef.current])
+
   return (
-    <StyledAddonList>
+    <StyledAddonList ref={listRef}>
       <div className="search">
         <StyledInput
           placeholder="Search"
@@ -65,10 +86,11 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover, onInstall }) => 
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <StyledList>
+      <StyledList ref={scrollRef} containerRef={(el) => (listRef.current = el)}>
         {filteredAddons.map(({ name, orgTitle, ...props }) => {
           return (
             <MarketAddonCard
+              id={name}
               key={name}
               author={orgTitle}
               onClick={() => onSelect(name)}

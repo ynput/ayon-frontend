@@ -28,6 +28,7 @@ const YnputConnector = ({
   styleContainer,
   user,
   darkMode,
+  skip,
   ...props
 }) => {
   const location = useLocation()
@@ -38,7 +39,7 @@ const YnputConnector = ({
     data: connectData,
     isLoading,
     isError,
-  } = useGetYnputConnectionsQuery({}, { skip: !currentUser.name })
+  } = useGetYnputConnectionsQuery({}, { skip: !currentUser.name || skip })
 
   const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation()
   const [disconnect] = useDiscountYnputMutation()

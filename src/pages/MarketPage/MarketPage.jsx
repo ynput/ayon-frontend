@@ -2,6 +2,8 @@ import { Button, Section } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
 import AddonFilters from './AddonFilters'
 import { useEffect, useMemo, useState } from 'react'
+import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+
 import {
   useGetMarketAddonQuery,
   useGetMarketAddonsQuery,
@@ -17,6 +19,7 @@ import { throttle } from 'lodash'
 import styled from 'styled-components'
 import useServerRestart from '/src/hooks/useServerRestart'
 import useInstall from './AddonDetails/useInstall'
+import ConnectDialog from './ConnectDialog/ConnectDialog'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -52,8 +55,18 @@ const MarketPage = () => {
   const [installingAddons, setInstallingAddons] = useState([])
   const [finishedInstalling, setFinishedInstalling] = useState([])
 
+  const [isCloudConnected, setIsCloudConnected] = useState(false)
+  // if the user hasn't connected to ynput cloud yet
+  const [showConnectDialog, setShowConnectDialog] = useState(false)
+
   // subscribe to install events
   const { data: installProgress = [] } = useGetMarketInstallEventsQuery()
+
+  // QUERY PARAMS STATE
+  const [selectedAddonId, setSelectedAddonId] = useQueryParam(
+    'addon',
+    withDefault(StringParam, null),
+  )
 
   // keep track of install events and update installing addons
   // this is used to show loading and done states on addons
@@ -77,8 +90,6 @@ const MarketPage = () => {
 
     setFinishedInstalling((f) => [...new Set([...f, ...finished])] || [])
   }, [installProgress, setInstallingAddons, setFinishedInstalling])
-
-  const [selectedAddonId, setSelectedAddonId] = useState(null)
 
   // GET SELECTED ADDON
   const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useGetMarketAddonQuery(
@@ -192,6 +203,14 @@ const MarketPage = () => {
 
   const { installAddon } = useInstall((name) => setInstallingAddons((a) => [...a, name]))
 
+  const handleInstall = (name, version) => {
+    if (isCloudConnected) {
+      installAddon(name, version)
+    } else {
+      setShowConnectDialog(true)
+    }
+  }
+
   const handleRestarted = () => {
     // reset installing addons
     setInstallingAddons([])
@@ -218,35 +237,43 @@ const MarketPage = () => {
     )
 
   return (
-    <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
-      <StyledHeader>
-        <h1 className={Type.headlineSmall}>Addon Market</h1>
-        <Button
-          disabled={!restartEnabled}
-          variant={restartEnabled ? 'filled' : 'surface'}
-          icon="restart_alt"
-          onClick={() => confirmRestart('Restart the server to apply changes?', handleRestarted)}
-        >
-          Restart Server
-        </Button>
-      </StyledHeader>
-      <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
-        <AddonFilters onSelect={setFilter} />
-        <AddonsList
-          addons={isLoadingMarket ? placeholders : marketAddons}
-          selected={selectedAddonId}
-          onSelect={setSelectedAddonId}
-          onHover={handleHover}
-          onInstall={installAddon}
-        />
-        <AddonDetails
-          addon={selectedAddon}
-          isLoading={isLoadingInstalled || isFetchingAddon}
-          setInstallingAddons={setInstallingAddons}
-          onInstall={installAddon}
-        />
-      </Section>
-    </main>
+    <>
+      <ConnectDialog
+        visible={showConnectDialog}
+        onHide={() => setShowConnectDialog(false)}
+        redirect={`/market?addon=${selectedAddonId}`}
+      />
+      <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
+        <StyledHeader>
+          <h1 className={Type.headlineSmall}>Addon Market</h1>
+          <Button
+            disabled={!restartEnabled}
+            variant={restartEnabled ? 'filled' : 'surface'}
+            icon="restart_alt"
+            onClick={() => confirmRestart('Restart the server to apply changes?', handleRestarted)}
+          >
+            Restart Server
+          </Button>
+        </StyledHeader>
+        <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
+          <AddonFilters onSelect={setFilter} onConnection={(user) => setIsCloudConnected(!!user)} />
+          <AddonsList
+            addons={isLoadingMarket ? placeholders : marketAddons}
+            selected={selectedAddonId}
+            onSelect={setSelectedAddonId}
+            onHover={handleHover}
+            onInstall={handleInstall}
+            isLoading={isLoadingMarket}
+          />
+          <AddonDetails
+            addon={selectedAddon}
+            isLoading={isLoadingInstalled || isFetchingAddon}
+            setInstallingAddons={setInstallingAddons}
+            onInstall={handleInstall}
+          />
+        </Section>
+      </main>
+    </>
   )
 }
 

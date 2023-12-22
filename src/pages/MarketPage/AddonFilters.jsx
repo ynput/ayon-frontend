@@ -10,17 +10,6 @@ const StyledSection = styled(Section)`
   flex: 0.5;
   min-width: 210px;
   max-width: 300px;
-
-  .connector {
-    background-color: var(--md-sys-color-surface-container-low);
-
-    & > button {
-      background-color: var(--md-sys-color-surface-container-low);
-      :hover {
-        background-color: var(--md-sys-color-surface-container-high);
-      }
-    }
-  }
 `
 
 const StyledList = styled(Panel)`
@@ -47,7 +36,7 @@ const StyledList = styled(Panel)`
   }
 `
 
-const AddonFilters = ({ onSelect }) => {
+const AddonFilters = ({ onSelect, onConnection }) => {
   const installFilters = [
     {
       id: 'all',
@@ -107,7 +96,7 @@ const AddonFilters = ({ onSelect }) => {
           </div>
         ))}
       </StyledList>
-      <YnputConnector darkMode smallLogo />
+      <YnputConnector darkMode smallLogo onConnection={onConnection} />
     </StyledSection>
   )
 }
