@@ -1,4 +1,4 @@
-import { AssigneeSelect, Button } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Button, Toolbar } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 const platformColors = {
@@ -47,6 +47,32 @@ export const BadgeButton = styled(Button)`
     `}
 
   width: 130px;
+
+  /* hide when screen is smaller than 1250px */
+  @media (max-width: 1250px) {
+    display: none;
+  }
+`
+
+export const MainToolbar = styled(Toolbar)`
+  .small {
+    display: none;
+  }
+  /* less than 1000px use small instead of large */
+  @media (max-width: 1000px) {
+    .large {
+      display: none;
+    }
+    .small {
+      display: in;
+    }
+  }
+  /* less than 720px */
+  @media (max-width: 720px) {
+    .small {
+      display: none;
+    }
+  }
 `
 
 export const AddonTools = styled.div`

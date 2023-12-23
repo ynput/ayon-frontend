@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 
-import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
-
+import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
+import * as Styled from './Bundles.styled'
 import {
   useDeleteBundleMutation,
   useGetBundleListQuery,
@@ -300,8 +300,6 @@ const Bundles = () => {
       break
   }
 
-  // at 1310px wide
-  const isCompacted = useMemo(() => window.innerWidth < 1310, [])
   // SHORTCUTS
   const shortcuts = [
     {
@@ -363,41 +361,51 @@ const Bundles = () => {
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>
-              <Toolbar>
+              <Styled.MainToolbar>
                 <Button
-                  label="Add bundle"
                   icon="add"
                   onClick={handleNewBundleStart}
                   data-tooltip="Add new bundle"
                   data-shortcut="N"
-                />
+                >
+                  <span>Add Bundle</span>
+                </Button>
                 <Button
-                  label="Install addons"
                   icon="input_circle"
                   onClick={() => setUploadOpen('addon')}
                   data-tooltip="Install addon zip files"
                   data-shortcut="A"
-                />
+                >
+                  <span className="large">Install addons</span>
+                  <span className="small">Addons</span>
+                </Button>
                 <Button
-                  label={`${isCompacted ? '' : 'Upload'} Launcher`}
                   icon="upload"
                   onClick={() => setUploadOpen('installer')}
                   data-tooltip="Upload launchers for download"
                   data-shortcut="L"
-                />
+                >
+                  <span className="large">Upload Launcher</span>
+                  <span className="small">Launcher</span>
+                </Button>
                 <Button
-                  label={`${isCompacted ? '' : 'Upload'} Dependency Package`}
                   icon="upload"
                   onClick={() => setUploadOpen('package')}
                   data-tooltip="Upload dependency packages"
                   data-shortcut="P"
-                />
-                <span style={{ whiteSpace: 'nowrap' }}>Show Archived</span>
+                >
+                  <span className="large">Upload Dependency Package</span>
+                  <span className="small">Package</span>
+                </Button>
+                <span style={{ whiteSpace: 'nowrap' }} className="large">
+                  Show Archived
+                </span>
+                <span className="small">Archived</span>
                 <InputSwitch
                   checked={showArchived}
                   onChange={(e) => setShowArchived(e.target.checked)}
                 />
-              </Toolbar>
+              </Styled.MainToolbar>
               <BundleList
                 selectedBundles={selectedBundles}
                 onBundleSelect={handleBundleSelect}
