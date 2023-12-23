@@ -1,4 +1,4 @@
-import { Button, Section } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { useGetBundleListQuery, useUpdateBundleMutation } from '/src/services/bundles'
@@ -15,7 +15,7 @@ import {
 } from '/src/features/addonsManager'
 import { useNavigate } from 'react-router'
 import { useDeleteAddonVersionsMutation } from '/src/services/addons/updateAddons'
-import useServerRestart from '/src/hooks/useServerRestart'
+import { useRestart } from '/src/context/restartContext'
 // import AddonUpload from '../AddonInstall/AddonUpload'
 
 const AddonsManager = () => {
@@ -107,10 +107,10 @@ const AddonsManager = () => {
   // DELETE HANDLERS ^^^
 
   // RESTART SERVER
-  const { confirmRestart } = useServerRestart()
+  const { restartRequired } = useRestart()
   const restartServer = () => {
     // remove deleted versions from deletedVersions state and restart server
-    confirmRestart('Restart server to see addon changes?', () => setDeletedVersions([]))
+    restartRequired({ middleware: () => setDeletedVersions([]) })
   }
 
   // DELETE SUCCESS HANDLERS vvv
@@ -125,9 +125,6 @@ const AddonsManager = () => {
   }
   // DELETE SUCCESS HANDLERS ^^^
 
-  // If any version is in error (deleted) state, enable restart button
-  const restartEnabled = deletedVersions?.length
-
   return (
     <Section style={{ overflow: 'hidden' }}>
       <Splitter style={{ height: '100%', padding: 8 }}>
@@ -138,16 +135,6 @@ const AddonsManager = () => {
             value={addonsTableData}
             selection={selectedAddons}
             onChange={handleAddonsSelect}
-            header={
-              <Button
-                disabled={!restartEnabled}
-                icon={'restart_alt'}
-                onClick={restartServer}
-                variant={restartEnabled ? 'filled' : 'surface'}
-              >
-                Restart Server
-              </Button>
-            }
             field={'name'}
           />
         </SplitterPanel>

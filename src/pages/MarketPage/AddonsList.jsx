@@ -34,7 +34,7 @@ const StyledList = styled(PerfectScrollbar)`
   height: 100%;
   width: unset;
   border-radius: var(--border-radius-m);
-  padding-bottom: 40px;
+  padding-bottom: 100px;
   background-color: var(--md-sys-color-surface-container-low);
 
   .ps__rail-y {

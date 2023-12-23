@@ -21,13 +21,13 @@ import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch, useSelector } from 'react-redux'
-import useServerRestart from '/src/hooks/useServerRestart'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useLocation } from 'react-router'
 
 import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import useShortcuts from '/src/hooks/useShortcuts'
+import { useRestart } from '/src/context/restartContext'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -271,15 +271,13 @@ const Bundles = () => {
       },
     })
 
-  const { confirmRestart } = useServerRestart()
+  const { restartRequired: restartRequiredBanner } = useRestart()
 
   const handleAddonInstallFinish = () => {
     setUploadOpen(false)
     if (restartRequired) {
       setRestartRequired(false)
-      // ask if you want to restart the server
-      const message = 'Restart the server to apply changes?'
-      confirmRestart(message)
+      restartRequiredBanner()
     }
   }
 

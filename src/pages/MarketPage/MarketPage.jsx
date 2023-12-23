@@ -1,4 +1,4 @@
-import { Button, Section } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
 import AddonFilters from './AddonFilters'
 import { useEffect, useMemo, useState } from 'react'
@@ -17,9 +17,9 @@ import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { mergeAddonWithInstalled } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import styled from 'styled-components'
-import useServerRestart from '/src/hooks/useServerRestart'
 import useInstall from './AddonDetails/useInstall'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
+import { useRestart } from '/src/context/restartContext'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -90,6 +90,19 @@ const MarketPage = () => {
 
     setFinishedInstalling((f) => [...new Set([...f, ...finished])] || [])
   }, [installProgress, setInstallingAddons, setFinishedInstalling])
+
+  const { restartRequired, restartConfig } = useRestart()
+  // callback when restart is requested
+  const handleRestarted = () => {
+    // reset installing addons
+    setInstallingAddons([])
+    setFinishedInstalling([])
+  }
+  // once finished installing has length, show restart banner
+  useEffect(() => {
+    if (!finishedInstalling.length || restartConfig) return
+    restartRequired({ middleware: handleRestarted })
+  }, [finishedInstalling, restartRequired, restartConfig])
 
   // GET SELECTED ADDON
   const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useGetMarketAddonQuery(
@@ -203,6 +216,7 @@ const MarketPage = () => {
 
   const { installAddon } = useInstall((name) => setInstallingAddons((a) => [...a, name]))
 
+  // INSTALL/UPDATE ADDON
   const handleInstall = (name, version) => {
     if (isCloudConnected) {
       installAddon(name, version)
@@ -210,16 +224,6 @@ const MarketPage = () => {
       setShowConnectDialog(true)
     }
   }
-
-  const handleRestarted = () => {
-    // reset installing addons
-    setInstallingAddons([])
-    setFinishedInstalling([])
-  }
-
-  // restart server for changes to take effect
-  const { confirmRestart } = useServerRestart()
-  const restartEnabled = finishedInstalling.length && !installingAddons.length
 
   if (isError)
     return (
@@ -246,14 +250,6 @@ const MarketPage = () => {
       <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
         <StyledHeader>
           <h1 className={Type.headlineSmall}>Addon Market</h1>
-          <Button
-            disabled={!restartEnabled}
-            variant={restartEnabled ? 'filled' : 'surface'}
-            icon="restart_alt"
-            onClick={() => confirmRestart('Restart the server to apply changes?', handleRestarted)}
-          >
-            Restart Server
-          </Button>
         </StyledHeader>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
           <AddonFilters onSelect={setFilter} onConnection={(user) => setIsCloudConnected(!!user)} />
