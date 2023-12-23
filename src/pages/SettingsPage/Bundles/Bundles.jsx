@@ -83,6 +83,7 @@ const Bundles = () => {
   }, [bundleList, developerMode])
 
   // if there is a url query ?selected={name} = latest then select the bundle and remove the query
+  // if selected = prod then select the production bundle
   useEffect(() => {
     if (isLoading) return
     const search = new URLSearchParams(location.search)
@@ -94,6 +95,9 @@ const Bundles = () => {
       if (latest) {
         setSelectedBundles([latest.name])
       }
+    } else if (selected === 'prod') {
+      const prod = bundleList.find((b) => b.isProduction)
+      if (prod) setSelectedBundles([prod.name])
     } else if (selected) {
       // select bundle by name if in bundle list
       const bundle = bundleList.find((b) => b.name === selected)

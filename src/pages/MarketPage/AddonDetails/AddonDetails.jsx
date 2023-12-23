@@ -148,7 +148,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
                   {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
                 </span>
                 {isProductionOutdated && (
-                  <Link to={'/settings/bundles'}>
+                  <Link to={'/settings/bundles?selected=prod'}>
                     <Styled.UseButton variant="tonal">
                       Use {currentLatestVersion}
                       <Icon icon="arrow_forward" />
