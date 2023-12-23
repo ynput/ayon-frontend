@@ -35,7 +35,7 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
   )
 }
 
-const AddonList = React.forwardRef(
+const BundlesAddonList = React.forwardRef(
   (
     {
       formData,
@@ -164,6 +164,6 @@ const AddonList = React.forwardRef(
 )
 
 // displayName
-AddonList.displayName = 'AddonList'
+BundlesAddonList.displayName = 'BundlesAddonList'
 
-export default AddonList
+export default BundlesAddonList
