@@ -147,13 +147,14 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
                 <span>
                   {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
                 </span>
-
-                <Link to={'/settings/bundles?selected=prod'}>
-                  <Styled.UseButton variant="tonal">
-                    {isProductionOutdated ? `Use ${currentLatestVersion}` : 'Bundle'}
-                    <Icon icon="arrow_forward" />
-                  </Styled.UseButton>
-                </Link>
+                {currentProductionVersion && (
+                  <Link to={`/settings/bundles?selected=prod&addon=${name}`}>
+                    <Styled.UseButton variant="tonal">
+                      {isProductionOutdated ? `Use ${currentLatestVersion}` : 'Bundle'}
+                      <Icon icon="arrow_forward" />
+                    </Styled.UseButton>
+                  </Link>
+                )}
               </MetaPanelRow>
             </Styled.MetaPanel>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
