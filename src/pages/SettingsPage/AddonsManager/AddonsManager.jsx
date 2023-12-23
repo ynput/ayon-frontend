@@ -1,4 +1,4 @@
-import { Section } from '@ynput/ayon-react-components'
+import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { useGetBundleListQuery, useUpdateBundleMutation } from '/src/services/bundles'
@@ -16,6 +16,7 @@ import {
 import { useNavigate } from 'react-router'
 import { useDeleteAddonVersionsMutation } from '/src/services/addons/updateAddons'
 import { useRestart } from '/src/context/restartContext'
+import { Link } from 'react-router-dom'
 // import AddonUpload from '../AddonInstall/AddonUpload'
 
 const AddonsManager = () => {
@@ -136,6 +137,11 @@ const AddonsManager = () => {
             selection={selectedAddons}
             onChange={handleAddonsSelect}
             field={'name'}
+            header={
+              <Link to="/market">
+                <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
+              </Link>
+            }
           />
         </SplitterPanel>
         <SplitterPanel>

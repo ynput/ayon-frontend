@@ -18,7 +18,7 @@ const AddonsManagerTable = ({
   extraContext,
   ...props
 }) => {
-  const deleteLabel = isArchive ? 'Archive' : 'Delete'
+  const deleteLabel = isArchive ? 'Archive' : 'Uninstall'
   const deleteIcon = isArchive ? 'archive' : 'delete'
   const tableSelection = value?.filter((d) => selection.includes(d && d[field]))
 
