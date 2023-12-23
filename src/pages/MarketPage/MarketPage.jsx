@@ -10,7 +10,7 @@ import {
   useGetMarketInstallEventsQuery,
   useLazyGetMarketAddonQuery,
 } from '/src/services/market/getMarket'
-import AddonsList from './AddonsList'
+import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './AddonDetails/AddonDetails'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
@@ -253,7 +253,7 @@ const MarketPage = () => {
         </StyledHeader>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
           <AddonFilters onSelect={setFilter} onConnection={(user) => setIsCloudConnected(!!user)} />
-          <AddonsList
+          <MarketAddonsList
             addons={isLoadingMarket ? placeholders : marketAddons}
             selected={selectedAddonId}
             onSelect={setSelectedAddonId}

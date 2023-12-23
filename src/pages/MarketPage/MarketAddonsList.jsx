@@ -42,7 +42,7 @@ const StyledList = styled(PerfectScrollbar)`
   }
 `
 
-const AddonsList = ({ addons = [], selected, onSelect, onHover, onInstall, isLoading }) => {
+const MarketAddonsList = ({ addons = [], selected, onSelect, onHover, onInstall, isLoading }) => {
   const [search, setSearch] = useState('')
 
   // filter addons by search
@@ -65,10 +65,10 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover, onInstall, isLoa
       const scrollContainer = listRef.current.querySelector('.scrollbar-container')
 
       if (scrollContainer) {
-        const el = scrollContainer.querySelector(`#${selected}`)
+        const el = scrollContainer.querySelector(`[id="${selected}"]`)
         // get top of element in scroll container
-        const top = el.getBoundingClientRect().top
         if (el) {
+          const top = el.getBoundingClientRect().top
           scrollContainer.scrollTo({ top: top - 200 })
         }
       }
@@ -107,4 +107,4 @@ const AddonsList = ({ addons = [], selected, onSelect, onHover, onInstall, isLoa
   )
 }
 
-export default AddonsList
+export default MarketAddonsList

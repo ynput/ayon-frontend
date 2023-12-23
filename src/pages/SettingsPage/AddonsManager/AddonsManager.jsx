@@ -126,6 +126,14 @@ const AddonsManager = () => {
   }
   // DELETE SUCCESS HANDLERS ^^^
 
+  const viewInMarket = (selected) => [
+    {
+      label: 'View in Market',
+      command: () => navigate(`/market?addon=${selected[0].split('-')[0]}`),
+      icon: 'store',
+    },
+  ]
+
   return (
     <Section style={{ overflow: 'hidden' }}>
       <Splitter style={{ height: '100%', padding: 8 }}>
@@ -142,6 +150,7 @@ const AddonsManager = () => {
                 <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
               </Link>
             }
+            extraContext={viewInMarket}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -154,6 +163,7 @@ const AddonsManager = () => {
             field={'version'}
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
+            extraContext={viewInMarket}
           />
         </SplitterPanel>
         <SplitterPanel>
