@@ -108,6 +108,10 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
     )
   }
 
+  // query string used for duplicating bundles with new version
+  const addonVersionObject = { [name]: currentLatestVersion }
+  const duplicateQueryString = encodeURIComponent(JSON.stringify(addonVersionObject))
+
   return (
     <Styled.PanelContainer direction="row" className={classNames({ noData: !name })}>
       {name && (
@@ -147,14 +151,24 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
                 <span>
                   {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
                 </span>
-                {currentProductionVersion && (
-                  <Link to={`/settings/bundles?selected=prod&addon=${name}`}>
-                    <Styled.UseButton variant="tonal">
-                      {isProductionOutdated ? `Use ${currentLatestVersion}` : 'Bundle'}
-                      <Icon icon="arrow_forward" />
-                    </Styled.UseButton>
-                  </Link>
-                )}
+                {currentProductionVersion &&
+                  (isProductionOutdated ? (
+                    <Link
+                      to={`/settings/bundles?duplicate=prod&addon=${name}&versions=${duplicateQueryString}`}
+                    >
+                      <Styled.UseButton variant="tonal">
+                        Use {currentLatestVersion}
+                        <Icon icon="arrow_forward" />
+                      </Styled.UseButton>
+                    </Link>
+                  ) : (
+                    <Link to={`/settings/bundles?bundle=prod&addon=${name}`}>
+                      <Styled.UseButton variant="tonal">
+                        Bundle
+                        <Icon icon="arrow_forward" />
+                      </Styled.UseButton>
+                    </Link>
+                  ))}
               </MetaPanelRow>
             </Styled.MetaPanel>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>

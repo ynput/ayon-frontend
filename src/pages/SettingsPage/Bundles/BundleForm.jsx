@@ -140,7 +140,6 @@ const BundleForm = ({
       <Divider />
       <StyledColumns style={{ maxWidth: 1500 }}>
         <section style={{ height: '100%', minWidth: 500, flex: 1 }}>
-          <h2>Addons</h2>
           <section style={{ height: '100%' }}>
             <BundlesAddonList
               readOnly={!isNew}

@@ -22,17 +22,16 @@ import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch, useSelector } from 'react-redux'
 import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useLocation } from 'react-router'
 
 import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import useShortcuts from '/src/hooks/useShortcuts'
 import { useRestart } from '/src/context/restartContext'
+import { useSearchParams } from 'react-router-dom'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
-  const location = useLocation()
   const dispatch = useDispatch()
   // addon install dialog
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -82,36 +81,48 @@ const Bundles = () => {
     return bundleList
   }, [bundleList, developerMode])
 
-  // if there is a url query ?selected={name} = latest then select the bundle and remove the query
+  const getBundleFromQuery = (param) => {
+    if (!param) return null
+
+    if (param === 'latest') {
+      return bundleList[0]
+    } else if (param === 'prod') {
+      return bundleList.find((b) => b.isProduction)
+    } else if (param) {
+      return bundleList.find((b) => b.name === param)
+    } else if (developerMode) {
+      return bundleList.find((b) => b.isDev && b.activeUser === userName)
+    }
+  }
+
+  const [searchParams, setSearchParams] = useSearchParams()
+  // if there is a url query ?bundle={name} = latest then select the bundle and remove the query
   // if selected = prod then select the production bundle
   useEffect(() => {
     if (isLoading) return
-    const search = new URLSearchParams(location.search)
-    const selected = search.get('selected')
-    // if selected = latest then select the latest bundle createdAt
-    if (selected === 'latest') {
-      const latest = bundleList[0]
+    const bundleParam = searchParams.get('bundle')
+    // if bundleParam = latest then select the latest bundle createdAt
+    const foundBundle = getBundleFromQuery(bundleParam)
 
-      if (latest) {
-        setSelectedBundles([latest.name])
+    if (foundBundle) {
+      setSelectedBundles([foundBundle.name])
+    }
+
+    const duplicateParam = searchParams.get('duplicate')
+
+    if (duplicateParam) {
+      const foundDuplicate = getBundleFromQuery(duplicateParam)
+      if (foundDuplicate) {
+        // setSelectedBundles([foundDuplicate.name])
+        handleDuplicateBundle(foundDuplicate.name)
       }
-    } else if (selected === 'prod') {
-      const prod = bundleList.find((b) => b.isProduction)
-      if (prod) setSelectedBundles([prod.name])
-    } else if (selected) {
-      // select bundle by name if in bundle list
-      const bundle = bundleList.find((b) => b.name === selected)
-      if (bundle) setSelectedBundles([selected])
-    } else if (developerMode) {
-      // select first users dev mode bundle
-      const devBundle = bundleList.find((b) => b.isDev && b.activeUser === userName)
-      if (devBundle) setSelectedBundles([devBundle.name])
     }
 
     // delete
-    search.delete('selected')
-    window.history.replaceState({}, '', `${location.pathname}${search.size ? '?' : ''}${search}`)
-  }, [location.search, isLoading, bundleList])
+    searchParams.delete('bundle')
+    searchParams.delete('duplicate')
+    setSearchParams(searchParams)
+  }, [searchParams, isLoading, bundleList])
 
   // REDUX MUTATIONS
   const [deleteBundle] = useDeleteBundleMutation()

@@ -129,7 +129,7 @@ const BundlesAddonList = React.forwardRef(
         selection={selected}
         onSelectionChange={(e) => setSelected(e.value)}
         onContextMenu={handleContextClick}
-        tableStyle={{ marginBottom: 80, ...style }}
+        tableStyle={{ ...style }}
         className="addons-table"
         rowClassName={(rowData) => diffAddonVersions?.includes(rowData.name) && 'diff-version'}
         ref={ref}

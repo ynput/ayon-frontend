@@ -6,7 +6,7 @@ import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
 import { upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
-import { useSearchParams } from 'react-router-dom'
+import useAddonSelection from './useAddonSelection'
 
 const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus, addons }) => {
   const [selectedBundle, setSelectedBundle] = useState(null)
@@ -30,39 +30,9 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
     },
   ]
 
+  // Select addon if query search has addon=addonName
   const addonListRef = useRef()
-  const [searchParams, setSearchParams] = useSearchParams()
-  // if there is a url query addon={name}
-  useEffect(() => {
-    if (addons.length === 0 || !addonListRef.current) return
-
-    const addon = searchParams.get('addon')
-    // no addon query
-    if (!addon) return
-
-    const foundAddon = addons.find((a) => a.name === addon)
-    const foundIndex = addons.findIndex((a) => a.name === addon)
-
-    if (foundAddon) {
-      setSelectedAddons([foundAddon])
-
-      const tableEl = addonListRef.current.getTable()
-      if (tableEl) {
-        const tbody = tableEl.querySelector('tbody')
-        const selectedRow = tbody.children[foundIndex]
-
-        if (selectedRow) {
-          selectedRow.scrollIntoView({
-            block: 'center',
-          })
-        }
-      }
-    }
-
-    // delete
-    searchParams.delete('addon')
-    setSearchParams(searchParams)
-  }, [searchParams, addons, addonListRef])
+  useAddonSelection(addons, setSelectedAddons, addonListRef, [formData])
 
   // every time we select a new bundle, update the form data
   useEffect(() => {
