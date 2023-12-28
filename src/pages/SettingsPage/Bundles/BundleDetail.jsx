@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 // import { toast } from 'react-toastify'
 import { Toolbar, Spacer, Button } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
@@ -6,6 +6,7 @@ import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
 import { upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
+import useAddonSelection from './useAddonSelection'
 
 const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus, addons }) => {
   const [selectedBundle, setSelectedBundle] = useState(null)
@@ -28,6 +29,10 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
       active: bundles.length > 1 ? false : bundle?.isProduction,
     },
   ]
+
+  // Select addon if query search has addon=addonName
+  const addonListRef = useRef()
+  useAddonSelection(addons, setSelectedAddons, addonListRef, [formData])
 
   // every time we select a new bundle, update the form data
   useEffect(() => {
@@ -74,6 +79,7 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
       ) : (
         <BundleForm
           isNew={false}
+          addonListRef={addonListRef}
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
         >
           <BundleDeps bundle={bundle} />

@@ -28,6 +28,7 @@ const YnputConnector = ({
   styleContainer,
   user,
   darkMode,
+  skip,
   ...props
 }) => {
   const location = useLocation()
@@ -38,7 +39,7 @@ const YnputConnector = ({
     data: connectData,
     isLoading,
     isError,
-  } = useGetYnputConnectionsQuery({}, { skip: !currentUser.name })
+  } = useGetYnputConnectionsQuery({}, { skip: !currentUser.name || skip })
 
   const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation()
   const [disconnect] = useDiscountYnputMutation()
@@ -105,7 +106,11 @@ const YnputConnector = ({
   if (isLoading) return null
 
   return (
-    <Styled.Container style={styleContainer} $darkMode={isConnected && darkMode}>
+    <Styled.Container
+      style={styleContainer}
+      $darkMode={isConnected && darkMode}
+      className="connector"
+    >
       <YnputCloudButton
         disabled={disabled}
         isLoading={isLoadingConnect || isLoading}
@@ -125,7 +130,11 @@ const YnputConnector = ({
           <span>Organization: {connectData?.orgName || '???'}</span>
           {showDisconnect && (
             <Styled.Footer>
-              <Styled.Button onClick={handleDisconnect} className="disconnect">
+              <Styled.Button
+                onClick={handleDisconnect}
+                className="disconnect"
+                variant={darkMode ? 'surface' : 'tertiary'}
+              >
                 Disconnect
               </Styled.Button>
             </Styled.Footer>

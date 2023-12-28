@@ -33,8 +33,9 @@ import { GlobalContextMenu } from './components/GlobalContextMenu'
 import LoadingPage from './pages/LoadingPage'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import OnBoardingPage from './pages/OnBoarding'
-import ServerRestartBanner from './components/ServerRestartBanner'
 import useTooltip from './hooks/Tooltip/useTooltip'
+import MarketPage from './pages/MarketPage'
+import { RestartProvider } from './context/restartContext'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -124,62 +125,74 @@ const App = () => {
     () => (
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Suspense fallback={<LoadingPage />}>
-          <ContextMenuProvider>
-            <GlobalContextMenu />
-            <BrowserRouter>
-              <ServerRestartBanner />
-              <ShortcutsProvider>
-                <QueryParamProvider
-                  adapter={ReactRouter6Adapter}
-                  options={{
-                    updateType: 'replaceIn',
-                  }}
-                >
-                  <Header />
-                  <ShareDialog />
-                  <ConfirmDialog />
-                  <Routes>
-                    <Route path="/" exact element={<Navigate replace to="/dashboard/tasks" />} />
-                    <Route
-                      path="/manageProjects"
-                      exact
-                      element={<Navigate replace to="/manageProjects/anatomy" />}
-                    />
+          <RestartProvider>
+            <ContextMenuProvider>
+              <GlobalContextMenu />
+              <BrowserRouter>
+                <ShortcutsProvider>
+                  <QueryParamProvider
+                    adapter={ReactRouter6Adapter}
+                    options={{
+                      updateType: 'replaceIn',
+                    }}
+                  >
+                    <Header />
+                    <ShareDialog />
+                    <ConfirmDialog />
+                    <Routes>
+                      <Route path="/" exact element={<Navigate replace to="/dashboard/tasks" />} />
+                      <Route
+                        path="/manageProjects"
+                        exact
+                        element={<Navigate replace to="/manageProjects/anatomy" />}
+                      />
 
-                    <Route path="/dashboard" element={<Navigate replace to="/dashboard/tasks" />} />
-                    <Route path="/dashboard/:module" exact element={<UserDashboardPage />} />
+                      <Route
+                        path="/dashboard"
+                        element={<Navigate replace to="/dashboard/tasks" />}
+                      />
+                      <Route path="/dashboard/:module" exact element={<UserDashboardPage />} />
 
-                    <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-                    <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-                    <Route
-                      path={'/projects/:projectName/addon/:addonName'}
-                      element={<ProjectPage />}
-                    />
-                    <Route
-                      path="/settings"
-                      exact
-                      element={<Navigate replace to="/settings/anatomyPresets" />}
-                    />
-                    <Route path="/settings/:module" exact element={<SettingsPage />} />
-                    <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
-                    <Route
-                      path="/services"
-                      element={
-                        <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                          <ServicesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route path="/explorer" element={<ExplorerPage />} />
-                    <Route path="/doc/api" element={<APIDocsPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/events" element={<EventsPage />} />
-                    <Route element={<ErrorPage code="404" />} />
-                  </Routes>
-                </QueryParamProvider>
-              </ShortcutsProvider>
-            </BrowserRouter>
-          </ContextMenuProvider>
+                      <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
+                      <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
+                      <Route
+                        path={'/projects/:projectName/addon/:addonName'}
+                        element={<ProjectPage />}
+                      />
+                      <Route
+                        path="/settings"
+                        exact
+                        element={<Navigate replace to="/settings/anatomyPresets" />}
+                      />
+                      <Route path="/settings/:module" exact element={<SettingsPage />} />
+                      <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
+                      <Route
+                        path="/services"
+                        element={
+                          <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                            <ServicesPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/market"
+                        element={
+                          <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                            <MarketPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route path="/explorer" element={<ExplorerPage />} />
+                      <Route path="/doc/api" element={<APIDocsPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/events" element={<EventsPage />} />
+                      <Route element={<ErrorPage code="404" />} />
+                    </Routes>
+                  </QueryParamProvider>
+                </ShortcutsProvider>
+              </BrowserRouter>
+            </ContextMenuProvider>
+          </RestartProvider>
         </Suspense>
       </ErrorBoundary>
     ),
@@ -246,7 +259,7 @@ const App = () => {
 
   // stuck on onboarding page
   if (window.location.pathname.startsWith('/onboarding')) {
-    window.history.replaceState({}, document.title, '/settings/bundles?selected=latest')
+    window.history.replaceState({}, document.title, '/settings/bundles?bundle=latest')
     return loadingComponent
   }
 

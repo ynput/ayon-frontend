@@ -1,6 +1,6 @@
 import { Panel, Section } from '@ynput/ayon-react-components'
 import React, { useRef, useState } from 'react'
-import AddonList from './AddonList'
+import BundlesAddonList from './BundlesAddonList'
 import useScrollSync from '/src/hooks/useScrollSync'
 
 const BundleCompare = ({ bundles = [], addons }) => {
@@ -36,7 +36,7 @@ const BundleCompare = ({ bundles = [], addons }) => {
         <Panel key={bundle.name} style={{ overflow: 'hidden', height: '100%' }}>
           <h2>{bundle.name}</h2>
           <span>Installer: {bundle.installerVersion}</span>
-          <AddonList
+          <BundlesAddonList
             readOnly
             formData={bundle}
             setSelected={setSelectedAddons}

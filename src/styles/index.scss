@@ -474,6 +474,10 @@ a {
   animation: shimmerAnimation $speed linear infinite;
 }
 
+.p-datatable-tbody {
+  padding-bottom: 60px;
+}
+
 .table-loading {
   .p-treetable-tbody,
   .p-datatable-tbody {

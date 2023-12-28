@@ -6,6 +6,8 @@ import { SocketContext } from '/src/context/websocketContext'
 import { rcompare } from 'semver'
 import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath } from './Bundles.styled'
+import useCreateContext from '/src/hooks/useCreateContext'
+import { useNavigate } from 'react-router'
 
 const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
   const options = useMemo(
@@ -35,7 +37,7 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
   )
 }
 
-const AddonList = React.forwardRef(
+const BundlesAddonList = React.forwardRef(
   (
     {
       formData,
@@ -50,6 +52,8 @@ const AddonList = React.forwardRef(
     },
     ref,
   ) => {
+    const navigate = useNavigate()
+
     const { data: addons = [], refetch } = useGetAddonListQuery({
       showVersions: true,
     })
@@ -86,6 +90,34 @@ const AddonList = React.forwardRef(
       })
     }, [addons, formData])
 
+    const createContextItems = (selected) => {
+      let items = [
+        {
+          label: 'View in Market',
+          icon: 'store',
+          command: () => navigate(`/market/?addon=${selected.name}`),
+        },
+      ]
+
+      return items
+    }
+
+    const [ctxMenuShow] = useCreateContext([])
+
+    const handleContextClick = (e) => {
+      let contextSelection = []
+      // is new click not in original selection?
+      if (selected.name !== e.data.name) {
+        // then update selection to new click
+        setSelected(e.data)
+        contextSelection = e.data
+      } else {
+        contextSelection = selected
+      }
+
+      ctxMenuShow(e.originalEvent, createContextItems(contextSelection))
+    }
+
     return (
       <DataTable
         value={addonsTable}
@@ -94,11 +126,10 @@ const AddonList = React.forwardRef(
         selectionMode="multiple"
         responsive="true"
         dataKey="name"
-        // onContextMenu={(e) => onContextMenu(e)}
         selection={selected}
         onSelectionChange={(e) => setSelected(e.value)}
-        onContextMenuSelectionChange={(e) => setSelected(e.value)}
-        tableStyle={{ marginBottom: 80, ...style }}
+        onContextMenu={handleContextClick}
+        tableStyle={{ ...style }}
         className="addons-table"
         rowClassName={(rowData) => diffAddonVersions?.includes(rowData.name) && 'diff-version'}
         ref={ref}
@@ -164,6 +195,6 @@ const AddonList = React.forwardRef(
 )
 
 // displayName
-AddonList.displayName = 'AddonList'
+BundlesAddonList.displayName = 'BundlesAddonList'
 
-export default AddonList
+export default BundlesAddonList

@@ -52,6 +52,7 @@ const getBundles = ayonApi.injectEndpoints({
         { type: 'addonSettingsList' },
         { type: 'addonSettings' },
         { type: 'addonSettingsOverrides' },
+        { type: 'marketAddon' },
       ],
     }),
 
@@ -111,6 +112,7 @@ const getBundles = ayonApi.injectEndpoints({
         { type: 'bundleList' },
         { type: 'addonList' },
         { type: 'addonSettingsList' },
+        { type: 'marketAddon' },
       ],
     }),
   }), // endpoints

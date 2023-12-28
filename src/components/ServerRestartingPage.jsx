@@ -2,7 +2,7 @@ import LoadingPage from '../pages/LoadingPage'
 import { useContext } from 'react'
 import { SocketContext } from '../context/websocketContext'
 
-const ServerRestartBanner = ({ message, active }) => {
+const ServerRestartingPage = ({ message, active }) => {
   const serverIsRestarting = useContext(SocketContext)?.serverRestartingVisible || false
 
   if (!serverIsRestarting && !active) return null
@@ -14,4 +14,4 @@ const ServerRestartBanner = ({ message, active }) => {
   )
 }
 
-export default ServerRestartBanner
+export default ServerRestartingPage

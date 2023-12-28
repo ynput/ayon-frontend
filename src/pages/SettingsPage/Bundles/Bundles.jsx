@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 
-import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
-
+import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
+import * as Styled from './Bundles.styled'
 import {
   useDeleteBundleMutation,
   useGetBundleListQuery,
@@ -21,18 +21,17 @@ import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch, useSelector } from 'react-redux'
-import useServerRestart from '/src/hooks/useServerRestart'
 import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useLocation } from 'react-router'
 
 import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import useShortcuts from '/src/hooks/useShortcuts'
+import { useRestart } from '/src/context/restartContext'
+import { useSearchParams } from 'react-router-dom'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
-  const location = useLocation()
   const dispatch = useDispatch()
   // addon install dialog
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -82,32 +81,48 @@ const Bundles = () => {
     return bundleList
   }, [bundleList, developerMode])
 
-  // if there is a url query ?selected={name} = latest then select the bundle and remove the query
+  const getBundleFromQuery = (param) => {
+    if (!param) return null
+
+    if (param === 'latest') {
+      return bundleList[0]
+    } else if (param === 'prod') {
+      return bundleList.find((b) => b.isProduction)
+    } else if (param) {
+      return bundleList.find((b) => b.name === param)
+    } else if (developerMode) {
+      return bundleList.find((b) => b.isDev && b.activeUser === userName)
+    }
+  }
+
+  const [searchParams, setSearchParams] = useSearchParams()
+  // if there is a url query ?bundle={name} = latest then select the bundle and remove the query
+  // if selected = prod then select the production bundle
   useEffect(() => {
     if (isLoading) return
-    const search = new URLSearchParams(location.search)
-    const selected = search.get('selected')
-    // if selected = latest then select the latest bundle createdAt
-    if (selected === 'latest') {
-      const latest = bundleList[0]
+    const bundleParam = searchParams.get('bundle')
+    // if bundleParam = latest then select the latest bundle createdAt
+    const foundBundle = getBundleFromQuery(bundleParam)
 
-      if (latest) {
-        setSelectedBundles([latest.name])
+    if (foundBundle) {
+      setSelectedBundles([foundBundle.name])
+    }
+
+    const duplicateParam = searchParams.get('duplicate')
+
+    if (duplicateParam) {
+      const foundDuplicate = getBundleFromQuery(duplicateParam)
+      if (foundDuplicate) {
+        // setSelectedBundles([foundDuplicate.name])
+        handleDuplicateBundle(foundDuplicate.name)
       }
-    } else if (selected) {
-      // select bundle by name if in bundle list
-      const bundle = bundleList.find((b) => b.name === selected)
-      if (bundle) setSelectedBundles([selected])
-    } else if (developerMode) {
-      // select first users dev mode bundle
-      const devBundle = bundleList.find((b) => b.isDev && b.activeUser === userName)
-      if (devBundle) setSelectedBundles([devBundle.name])
     }
 
     // delete
-    search.delete('selected')
-    window.history.replaceState({}, '', `${location.pathname}${search.size ? '?' : ''}${search}`)
-  }, [location.search, isLoading, bundleList])
+    searchParams.delete('bundle')
+    searchParams.delete('duplicate')
+    setSearchParams(searchParams)
+  }, [searchParams, isLoading, bundleList])
 
   // REDUX MUTATIONS
   const [deleteBundle] = useDeleteBundleMutation()
@@ -271,15 +286,13 @@ const Bundles = () => {
       },
     })
 
-  const { confirmRestart } = useServerRestart()
+  const { restartRequired: restartRequiredBanner } = useRestart()
 
   const handleAddonInstallFinish = () => {
     setUploadOpen(false)
     if (restartRequired) {
       setRestartRequired(false)
-      // ask if you want to restart the server
-      const message = 'Restart the server to apply changes?'
-      confirmRestart(message)
+      restartRequiredBanner()
     }
   }
 
@@ -298,8 +311,6 @@ const Bundles = () => {
       break
   }
 
-  // at 1310px wide
-  const isCompacted = useMemo(() => window.innerWidth < 1310, [])
   // SHORTCUTS
   const shortcuts = [
     {
@@ -361,41 +372,51 @@ const Bundles = () => {
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>
-              <Toolbar>
+              <Styled.MainToolbar>
                 <Button
-                  label="Add bundle"
                   icon="add"
                   onClick={handleNewBundleStart}
                   data-tooltip="Add new bundle"
                   data-shortcut="N"
-                />
+                >
+                  <span>Add Bundle</span>
+                </Button>
                 <Button
-                  label="Install addons"
                   icon="input_circle"
                   onClick={() => setUploadOpen('addon')}
                   data-tooltip="Install addon zip files"
                   data-shortcut="A"
-                />
+                >
+                  <span className="large">Install addons</span>
+                  <span className="small">Addons</span>
+                </Button>
                 <Button
-                  label={`${isCompacted ? '' : 'Upload'} Launcher`}
                   icon="upload"
                   onClick={() => setUploadOpen('installer')}
                   data-tooltip="Upload launchers for download"
                   data-shortcut="L"
-                />
+                >
+                  <span className="large">Upload Launcher</span>
+                  <span className="small">Launcher</span>
+                </Button>
                 <Button
-                  label={`${isCompacted ? '' : 'Upload'} Dependency Package`}
                   icon="upload"
                   onClick={() => setUploadOpen('package')}
                   data-tooltip="Upload dependency packages"
                   data-shortcut="P"
-                />
-                <span style={{ whiteSpace: 'nowrap' }}>Show Archived</span>
+                >
+                  <span className="large">Upload Dependency Package</span>
+                  <span className="small">Package</span>
+                </Button>
+                <span style={{ whiteSpace: 'nowrap' }} className="large">
+                  Show Archived
+                </span>
+                <span className="small">Archived</span>
                 <InputSwitch
                   checked={showArchived}
                   onChange={(e) => setShowArchived(e.target.checked)}
                 />
-              </Toolbar>
+              </Styled.MainToolbar>
               <BundleList
                 selectedBundles={selectedBundles}
                 onBundleSelect={handleBundleSelect}

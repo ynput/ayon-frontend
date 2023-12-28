@@ -15,7 +15,8 @@ import {
 } from '/src/features/addonsManager'
 import { useNavigate } from 'react-router'
 import { useDeleteAddonVersionsMutation } from '/src/services/addons/updateAddons'
-import useServerRestart from '/src/hooks/useServerRestart'
+import { useRestart } from '/src/context/restartContext'
+import { Link } from 'react-router-dom'
 // import AddonUpload from '../AddonInstall/AddonUpload'
 
 const AddonsManager = () => {
@@ -107,10 +108,10 @@ const AddonsManager = () => {
   // DELETE HANDLERS ^^^
 
   // RESTART SERVER
-  const { confirmRestart } = useServerRestart()
+  const { restartRequired } = useRestart()
   const restartServer = () => {
     // remove deleted versions from deletedVersions state and restart server
-    confirmRestart('Restart server to see addon changes?', () => setDeletedVersions([]))
+    restartRequired({ middleware: () => setDeletedVersions([]) })
   }
 
   // DELETE SUCCESS HANDLERS vvv
@@ -125,8 +126,13 @@ const AddonsManager = () => {
   }
   // DELETE SUCCESS HANDLERS ^^^
 
-  // If any version is in error (deleted) state, enable restart button
-  const restartEnabled = deletedVersions?.length
+  const viewInMarket = (selected) => [
+    {
+      label: 'View in Market',
+      command: () => navigate(`/market?addon=${selected[0].split('-')[0]}`),
+      icon: 'store',
+    },
+  ]
 
   return (
     <Section style={{ overflow: 'hidden' }}>
@@ -138,17 +144,13 @@ const AddonsManager = () => {
             value={addonsTableData}
             selection={selectedAddons}
             onChange={handleAddonsSelect}
-            header={
-              <Button
-                disabled={!restartEnabled}
-                icon={'restart_alt'}
-                onClick={restartServer}
-                variant={restartEnabled ? 'filled' : 'surface'}
-              >
-                Restart Server
-              </Button>
-            }
             field={'name'}
+            header={
+              <Link to="/market">
+                <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
+              </Link>
+            }
+            extraContext={viewInMarket}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -161,6 +163,7 @@ const AddonsManager = () => {
             field={'version'}
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
+            extraContext={viewInMarket}
           />
         </SplitterPanel>
         <SplitterPanel>

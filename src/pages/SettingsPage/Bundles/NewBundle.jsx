@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { useCreateBundleMutation, useUpdateBundleMutation } from '/src/services/bundles'
@@ -9,6 +9,8 @@ import getLatestSemver from './getLatestSemver'
 import { isEqual, union } from 'lodash'
 import BundleDeps from './BundleDeps'
 import useShortcuts from '/src/hooks/useShortcuts'
+import useAddonSelection from './useAddonSelection'
+import { useSearchParams } from 'react-router-dom'
 
 const removeEmptyDevAddons = (addons = {}) => {
   if (!addons) return addons
@@ -63,6 +65,43 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
       setFormData(initForm)
     }
   }, [initBundle, installers, isLoading, addons])
+
+  // Select addon if query search has addon=addonName
+  const addonListRef = useRef()
+  useAddonSelection(addons, setSelectedAddons, addonListRef, [formData])
+
+  // if there's a a version param of {[addonName]: version}, select that addon
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  useEffect(() => {
+    if (!formData || !searchParams) return
+
+    const addonVersionString = searchParams.get('versions')
+
+    if (addonVersionString) {
+      const addonVersionObject = JSON.parse(decodeURIComponent(addonVersionString)) || {}
+
+      for (const addon in addonVersionObject) {
+        const version = addonVersionObject[addon]
+
+        // get addon from addons
+        const addonObject = addons.find((a) => a.name === addon)
+        if (!addonObject) continue
+
+        // check addon has version
+        if (version in addonObject.versions && addon in formData.addons) {
+          // update from formData
+          const newFormData = { ...formData, addons: { ...formData.addons, [addon]: version } }
+
+          setFormData(newFormData)
+        }
+      }
+    }
+
+    // delete search params
+    searchParams.delete('versions')
+    setSearchParams(searchParams)
+  }, [searchParams, formData])
 
   const handleSave = async () => {
     if (!formData?.name) {
@@ -204,6 +243,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
         formData={formData}
         onAddonDevChange={handleAddonDevChange}
         developerMode={developerMode}
+        addonListRef={addonListRef}
       >
         <Styled.AddonTools>
           <Button

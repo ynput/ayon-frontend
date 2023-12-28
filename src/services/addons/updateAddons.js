@@ -6,6 +6,7 @@ const updateAddons = ayonApi.injectEndpoints({
     uploadAddons: build.mutation({
       queryFn: (arg, api) =>
         queryUpload(arg, api, { endpoint: '/api/addons/install', method: 'post' }),
+      invalidatesTags: ['info', 'bundleList', 'addonList', 'addonSettingsList', 'marketAddon'],
     }),
     // delete multiple addons (and all versions) at once
     deleteAddons: build.mutation({
@@ -43,8 +44,42 @@ const updateAddons = ayonApi.injectEndpoints({
       },
       invalidatesTags: ['addonList'],
     }),
+    installAddons: build.mutation({
+      queryFn: async (arg, api) => {
+        const { addons = [] } = arg || {}
+
+        try {
+          // first, upload all addons
+          const addonsRes = await queryUpload({ files: addons }, api, {
+            endpoint: '/api/addons/install',
+            method: 'post',
+            fromUrl: true,
+          })
+
+          // add eventIds to array
+          const eventIds = [...(addonsRes.data || [])]
+
+          return { data: eventIds }
+        } catch (error) {
+          console.error(error)
+          return { error: error?.response?.data?.detail || 'Upload error' }
+        }
+      },
+      invalidatesTags: [
+        'info',
+        'bundleList',
+        'addonList',
+        'addonSettingsList',
+        'installerList',
+        'dependencyPackageList',
+      ],
+    }),
   }), // endpoints
 })
 
-export const { useUploadAddonsMutation, useDeleteAddonsMutation, useDeleteAddonVersionsMutation } =
-  updateAddons
+export const {
+  useUploadAddonsMutation,
+  useDeleteAddonsMutation,
+  useDeleteAddonVersionsMutation,
+  useInstallAddonsMutation,
+} = updateAddons

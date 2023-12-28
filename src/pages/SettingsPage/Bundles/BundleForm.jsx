@@ -9,7 +9,7 @@ import {
 } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
 import styled from 'styled-components'
-import AddonList from './AddonList'
+import BundlesAddonList from './BundlesAddonList'
 import * as Styled from './Bundles.styled'
 import { upperFirst } from 'lodash'
 import InstallerSelector from './InstallerSelector'
@@ -35,6 +35,7 @@ const BundleForm = ({
   setSelectedAddons,
   onAddonDevChange,
   developerMode,
+  addonListRef,
 }) => {
   const showNameError = formData && !formData?.name && isNew
   const currentUser = useSelector((state) => state.user.name)
@@ -139,15 +140,15 @@ const BundleForm = ({
       <Divider />
       <StyledColumns style={{ maxWidth: 1500 }}>
         <section style={{ height: '100%', minWidth: 500, flex: 1 }}>
-          <h2>Addons</h2>
           <section style={{ height: '100%' }}>
-            <AddonList
+            <BundlesAddonList
               readOnly={!isNew}
               {...{ formData, setFormData }}
               setSelected={setSelectedAddons}
               selected={selectedAddons}
               isDev={isDev || formData.isDev}
               onDevChange={onAddonDevChange}
+              ref={addonListRef}
             />
           </section>
         </section>

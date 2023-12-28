@@ -7,7 +7,7 @@ import { Navigate, useLocation } from 'react-router'
 import StepWrapper from './util/StepWrapper'
 import { useRestartServerMutation } from '/src/services/restartServer'
 import { SocketContext } from '/src/context/websocketContext'
-import ServerRestartBanner from '/src/components/ServerRestartBanner'
+import ServerRestartingPage from '/src/components/ServerRestartingPage'
 
 const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
   const [isFinishing, setIsFinishing] = useState(false)
@@ -61,7 +61,7 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
           <Step.ProgressInstall step={7} />
         </StepWrapper>
         {isFinishing && (
-          <ServerRestartBanner
+          <ServerRestartingPage
             active={isFinishing}
             message={'Almost there! Restarting server to apply setup...'}
           />
