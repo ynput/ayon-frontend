@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import YnputCloudButton from './YnputCloudButton'
@@ -68,6 +68,12 @@ const YnputConnector = ({
     }
   }, [isLoading, isError, connectData, onConnection])
 
+  const productName = useMemo(() => {
+    if (!connectData?.subscriptions?.length) return
+
+    return connectData.subscriptions.find((sub) => sub.productType === 'ayon')?.name
+  }, [connectData])
+
   if (isLoading && showLoading)
     return (
       <Section style={{ position: 'relative', height: '100%' }}>
@@ -126,6 +132,7 @@ const YnputConnector = ({
 
       <Styled.DropdownContainer $isOpen={isOpen}>
         <Styled.Dropdown className="dropdown">
+          {productName && <span>{productName}</span>}
           <span>Instance: {connectData?.instanceName || '???'}</span>
           <span>Organization: {connectData?.orgName || '???'}</span>
           {showDisconnect && (
