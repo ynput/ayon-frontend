@@ -99,7 +99,7 @@ const ProjectManagerPage = () => {
       name: 'Roots',
       path: '/manageProjects/roots',
       module: 'roots',
-      accessLevels: ['manager'],
+      accessLevels: [],
     },
     {
       name: 'Teams',
