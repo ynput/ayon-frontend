@@ -94,13 +94,16 @@ const getProject = ayonApi.injectEndpoints({
       },
     }),
     getAllProjects: build.query({
-      query: () => ({
-        url: `/api/projects`,
+      query: ({ showInactive = false }) => ({
+        url: `/api/projects${!showInactive ? '?active=true' : ''}`,
         method: 'GET',
       }),
       transformResponse: (res) => res.projects,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      providesTags: () => ['project', 'projects'],
+      providesTags: (res, error, { showInactive }) => [
+        { type: 'project' },
+        { type: 'projects', showInactive },
+      ],
     }),
     getProjectAnatomy: build.query({
       query: ({ projectName }) => ({
