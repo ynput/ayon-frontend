@@ -27,7 +27,7 @@ const ProjectMenu = ({ visible, onHide }) => {
 
   const [projectsFilter, setProjectsFilter] = useState('')
 
-  const { data: projects = [] } = useGetAllProjectsQuery()
+  const { data: projects = [] } = useGetAllProjectsQuery({ showInactive: false })
 
   const [showContext] = useCreateContext([])
 

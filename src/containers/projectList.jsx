@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react'
+import { useSelector } from 'react-redux'
 import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
@@ -30,6 +31,13 @@ const StyledProjectName = styled.div`
   span:last-child {
     opacity: 0;
   }
+
+  ${({ $isActive }) =>
+    !$isActive &&
+    css`
+      font-style: italic;
+      color: var(--md-ref-palette-secondary50);
+    `}
 
   /* when closed show code and hide title */
   ${({ $isOpen }) =>
@@ -104,11 +112,21 @@ const ProjectList = ({
 }) => {
   const navigate = useNavigate()
   const tableRef = useRef(null)
+  const user = useSelector((state) => state.user)
 
   // const user = useSelector((state) => state.user)
   // QUERY HOOK
   // ( default ) gets added in transformResponse
-  const { data = [], isLoading, isFetching, isError, error, isSuccess } = useGetAllProjectsQuery()
+
+  const showInactive = isProjectManager && (user?.data?.isAdmin || user?.data?.isManager)
+  const {
+    data = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    isSuccess,
+  } = useGetAllProjectsQuery({ showInactive })
   if (isError) {
     console.error(error)
   }
@@ -326,7 +344,10 @@ const ProjectList = ({
               </>
             }
             body={(rowData) => (
-              <StyledProjectName $isOpen={!collapsed}>
+              <StyledProjectName
+                $isOpen={!collapsed}
+                $isActive={rowData.name === '_' || rowData.active}
+              >
                 <span>{formatName(rowData, showNull)}</span>
                 <span>{formatName(rowData, showNull, 'code')}</span>
               </StyledProjectName>
