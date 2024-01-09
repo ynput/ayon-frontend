@@ -14,7 +14,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
   const dispatch = useDispatch()
 
   const user = useSelector((state) => state.user)
-  const isManager = user?.data?.isManager
+  const isManager = user?.data?.isManager || user?.data?.isAdmin
 
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
