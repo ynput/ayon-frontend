@@ -14,7 +14,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
   const dispatch = useDispatch()
 
   const user = useSelector((state) => state.user)
-  const isAdmin = user?.data?.isAdmin
+  const isManager = user?.data?.isManager
 
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
@@ -110,7 +110,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
         value={filterValue}
         onChange={(e) => setFilterValue(e.target.value)}
       />
-      {isAdmin && !isLoadingAllUsers && (
+      {isManager && !isLoadingAllUsers && (
         <MeOrUserSwitch
           value={assignees}
           onAssignee={(a) => handleAssigneesChange(false, a)}
