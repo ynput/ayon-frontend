@@ -26,6 +26,7 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
     if (fieldType === 'boolean')
       return !value ? '' : <Icon icon="check" className={`editor-field ${className}`} />
     if (fieldType === 'list_of_strings') {
+      if (!value?.length) return ''
       const _enum = attribSettings.enum
       const labels = _enum
         .filter((item) => value.includes(item.value))
