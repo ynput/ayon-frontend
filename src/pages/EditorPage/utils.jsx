@@ -6,6 +6,7 @@ import { TimestampField } from '/src/containers/fieldFormat'
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
 
+  let tooltip = null
   let className = ''
   let value = node.attrib && node.attrib[fieldName]
   if (chobj && fieldName in chobj) {
@@ -17,14 +18,29 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   if (!styled) return value
 
   if (ayonClient.settings.attributes.length) {
-    const fieldType = ayonClient.settings.attributes.find((attrib) => attrib.name === fieldName)
-      .data.type
+    const attribSettings = ayonClient.settings.attributes.find(
+      (attrib) => attrib.name === fieldName,
+    ).data
+    const fieldType = attribSettings.type
     if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
     if (fieldType === 'boolean')
       return !value ? '' : <Icon icon="check" className={`editor-field ${className}`} />
+    if (fieldType === 'list_of_strings') {
+      const _enum = attribSettings.enum
+      const labels = _enum
+        .filter((item) => value.includes(item.value))
+        .map((item) => item.label || item.value)
+      const values = _enum.filter((item) => value.includes(item.value)).map((item) => item.value)
+      value = labels.join(', ')
+      tooltip = values.join(', ')
+    }
   }
 
-  return <span className={`editor-field ${className}`}>{value}</span>
+  return (
+    <span className={`editor-field ${className}`} title={tooltip}>
+      {value}
+    </span>
+  )
 }
 
 const formatType = (node, changes, styled = true) => {
