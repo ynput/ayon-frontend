@@ -591,18 +591,25 @@ const EditorPanel = ({
                   }
 
                   input = (
-                    <Dropdown
-                      value={enumValue}
-                      isChanged={isChanged}
-                      options={attrib?.enum}
-                      onChange={(v) =>
-                        handleLocalChange(isMultiSelect ? v : v[0], changeKey, field)
-                      }
-                      multiSelect={isMultiSelect}
-                      widthExpand
-                      emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
-                      isMultiple={!!isMultiple}
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: 4 }}>
+                      <Dropdown
+                        style={{ flexGrow: 1 }}
+                        value={enumValue}
+                        isChanged={isChanged}
+                        options={attrib?.enum}
+                        onChange={(v) =>
+                          handleLocalChange(isMultiSelect ? v : v[0], changeKey, field)
+                        }
+                        multiSelect={isMultiSelect}
+                        widthExpand
+                        emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
+                        isMultiple={!!isMultiple}
+                      />
+                      <Button
+                        onClick={() => handleLocalChange(null, changeKey, field)}
+                        label="Inherit"
+                      />
+                    </div>
                   )
                 } else if (isDate) {
                   input = (
