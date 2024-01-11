@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
+import { rcompare } from 'semver'
 import { Dialog } from 'primereact/dialog'
 import { Dropdown } from 'primereact/dropdown'
 import {
@@ -53,6 +54,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
     if (!selectedAddon) return []
     return Object.keys(selectedAddon.versions)
       .filter((v) => Object.keys(selectedAddon.versions[v].services || []).length)
+      .sort((a, b) => rcompare(a, b))
       .map((v) => {
         return { value: v, label: `${selectedAddon.title} ${v}` }
       })
