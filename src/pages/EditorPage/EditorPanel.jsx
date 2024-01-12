@@ -23,6 +23,18 @@ import TypeEditor from './TypeEditor'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import { Link } from 'react-router-dom'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
+import styled from 'styled-components'
+
+const SubRow = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+
+  > *:first-child {
+    flex-grow: 1;
+    margin-right: 4px;
+  }
+`
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -591,25 +603,19 @@ const EditorPanel = ({
                   }
 
                   input = (
-                    <div style={{ display: 'flex', flexDirection: 'row', gap: 4 }}>
-                      <Dropdown
-                        style={{ flexGrow: 1 }}
-                        value={enumValue}
-                        isChanged={isChanged}
-                        options={attrib?.enum}
-                        onChange={(v) =>
-                          handleLocalChange(isMultiSelect ? v : v[0], changeKey, field)
-                        }
-                        multiSelect={isMultiSelect}
-                        widthExpand
-                        emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
-                        isMultiple={!!isMultiple}
-                      />
-                      <Button
-                        onClick={() => handleLocalChange(null, changeKey, field)}
-                        label="Inherit"
-                      />
-                    </div>
+                    <Dropdown
+                      style={{ flexGrow: 1 }}
+                      value={enumValue}
+                      isChanged={isChanged}
+                      options={attrib?.enum}
+                      onChange={(v) =>
+                        handleLocalChange(isMultiSelect ? v : v[0], changeKey, field)
+                      }
+                      multiSelect={isMultiSelect}
+                      widthExpand
+                      emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
+                      isMultiple={!!isMultiple}
+                    />
                   )
                 } else if (isDate) {
                   input = (
@@ -688,7 +694,16 @@ const EditorPanel = ({
                       overflow: !isDate ? 'hidden' : 'visible',
                     }}
                   >
-                    {input}
+                    <SubRow>
+                      {input}
+                      {attrib && !['name', 'label'].includes(field) && (
+                        <Button
+                          onClick={() => handleLocalChange(null, changeKey, field)}
+                          icon={'backspace'}
+                          tooltip="Clear field"
+                        />
+                      )}
+                    </SubRow>
                   </FormRow>
                 )
               })}
