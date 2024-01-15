@@ -8,7 +8,7 @@ import useLocalStorage from '../hooks/useLocalStorage'
 const RestartContext = createContext()
 
 function RestartProvider(props) {
-  const [restartConfig, setRequestConfig] = useLocalStorage('restart', null)
+  const [restartConfig, setRestartConfig] = useLocalStorage('restart', null)
   const [restartServer] = useRestartServerMutation()
 
   // ask if the user wants to restart the server after saving
@@ -20,14 +20,14 @@ function RestartProvider(props) {
       contentStyle: { display: 'none' },
       accept: () => {
         if (middleware) middleware()
-        setRequestConfig(null)
+        setRestartConfig(null)
         restartServer()
       },
       reject: () => {},
     })
 
   const restartRequired = ({ message, middleware } = {}) => {
-    setRequestConfig({
+    setRestartConfig({
       message,
       middleware,
     })
@@ -39,7 +39,7 @@ function RestartProvider(props) {
 
   return (
     <RestartContext.Provider
-      value={{ restartRequired, confirmRestart, restartConfig, setRequestConfig }}
+      value={{ restartRequired, confirmRestart, restartConfig, setRestartConfig }}
     >
       {props.children}
       {restartConfig && (
