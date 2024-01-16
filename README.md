@@ -1,13 +1,7 @@
-# Ayon server web interface
+Ayon server frontend
+====================
 
-All the Ayon web frontends are for preview purposes and convenience only at the moment to make it easier to explore the database records during the development phase. Any functionality they have or lack at the moment is not guaranteed in future releases. 
+This repository contains React frontend code for Ayon server.
 
-## Requirements
-
-- nodejs >= 18
-- yarn
-
-## Building
-
- - Run `yarn prepare` to install git pre-commit hooks for linting
- - Run `yarn install && yarn build`
+Visit [AYON documentation](https://ayon.ynput.io/docs/system_introduction/) for more information
+or check out [ayon-docker](https://github.com/ynput/ayon-docker) repository for the reference Docker setup.
