@@ -253,8 +253,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
     <FileUpload
       files={files}
       setFiles={setFiles}
-      title={typeLabel + ' Uploader'}
-      header={<></>}
+      title={' '}
       accept={type === 'addon' ? ['.zip'] : ['*']}
       allowMultiple
       placeholder={`Drop ${typeLabel} files`}
