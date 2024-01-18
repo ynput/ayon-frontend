@@ -1,6 +1,6 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
-import { useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useGetBundleListQuery } from '/src/services/bundles'
 import styled from 'styled-components'
 
@@ -24,6 +24,7 @@ const DropdownBadge = styled.span`
 
 const DevModeSelector = ({ variant, setVariant, disabled }) => {
   const { data } = useGetBundleListQuery({})
+  const [variantSelected, setVariantSelected] = useState(false)
   const userName = useSelector((state) => state.user.name)
 
   const bundleList = useMemo(() => {
@@ -40,6 +41,10 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
       value: b.name,
       active: b.activeUser === userName,
     }))
+  }, [bundleList])
+
+  useEffect(() => {
+    setVariantSelected(false)
   }, [bundleList])
 
   const formatValue = (value) => {
@@ -67,10 +72,11 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
   useEffect(() => {
     // Bundle preselection
     const selectedBundle = bundleList.find((b) => b.name === variant)
-    if (!selectedBundle) {
+    if (!selectedBundle || !variantSelected) {
       const userBundle = bundleList.find((b) => b.activeUser === userName)
-      if (userBundle) return setVariant(userBundle.name)
-      else return setVariant(bundleList[0].name)
+      if (userBundle) setVariant(userBundle.name)
+      else setVariant(bundleList[0].name)
+      setVariantSelected(true)
     }
   }, [bundleList, variant])
 
