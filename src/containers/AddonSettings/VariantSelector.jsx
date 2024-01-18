@@ -1,6 +1,6 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
-import { useState, useMemo, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useGetBundleListQuery } from '/src/services/bundles'
 import styled from 'styled-components'
 
@@ -24,7 +24,6 @@ const DropdownBadge = styled.span`
 
 const DevModeSelector = ({ variant, setVariant, disabled }) => {
   const { data } = useGetBundleListQuery({})
-  const [variantSelected, setVariantSelected] = useState(false)
   const userName = useSelector((state) => state.user.name)
 
   const bundleList = useMemo(() => {
@@ -41,10 +40,6 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
       value: b.name,
       active: b.activeUser === userName,
     }))
-  }, [bundleList])
-
-  useEffect(() => {
-    setVariantSelected(false)
   }, [bundleList])
 
   const formatValue = (value) => {
@@ -71,14 +66,11 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
 
   useEffect(() => {
     // Bundle preselection
-    const selectedBundle = bundleList.find((b) => b.name === variant)
-    if (!selectedBundle || !variantSelected) {
-      const userBundle = bundleList.find((b) => b.activeUser === userName)
-      if (userBundle) setVariant(userBundle.name)
-      else setVariant(bundleList[0].name)
-      setVariantSelected(true)
-    }
-  }, [bundleList, variant])
+    if (!bundleList.length) return
+    const userBundle = bundleList.find((b) => b.activeUser === userName)
+    if (userBundle) setVariant(userBundle.name)
+    else setVariant(bundleList[0].name)
+  }, [bundleList])
 
   return (
     <Dropdown
@@ -114,7 +106,7 @@ const VariantSelector = ({ variant, setVariant, disabled }) => {
   const user = useSelector((state) => state.user)
 
   useEffect(() => {
-    if (!user.attrib.developerMode && !['staging', 'production'].includes(variant)) {
+    if (!user.attrib.developerMode) {
       setVariant('production')
     }
   }, [user.attrib.developerMode])
