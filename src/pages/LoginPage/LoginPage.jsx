@@ -158,6 +158,7 @@ const LoginPage = ({ isFirstTime }) => {
                 : null // ssoOptions.map
             }
           </Styled.Methods>
+          {info?.passwordRecoveryAvailable && <a href="/passwordReset">Reset password</a>}
         </Panel>
       </Styled.LoginForm>
     </main>

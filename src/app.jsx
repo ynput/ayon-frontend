@@ -21,6 +21,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const EventsPage = lazy(() => import('./pages/EventsPage'))
 const ServicesPage = lazy(() => import('./pages/ServicesPage'))
 const UserDashboardPage = lazy(() => import('./pages/UserDashboardPage'))
+const PasswordResetPage = lazy(() => import('./pages/PasswordResetPage'))
 
 import { login } from './features/user'
 import ProtectedRoute from './containers/ProtectedRoute'
@@ -231,6 +232,11 @@ const App = () => {
   // Then use the state of the app to determine which component to render
 
   if (loading) return loadingComponent
+
+  if (window.location.pathname.startsWith('/passwordReset')) {
+    if (!user.name) return <PasswordResetPage />
+    else window.history.replaceState({}, document.title, '/')
+  }
 
   // User is not logged in
   if (!user.name && !noAdminUser) {
