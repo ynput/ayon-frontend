@@ -5,7 +5,6 @@ import { InputText } from 'primereact/inputtext'
 
 import { toast } from 'react-toastify'
 
-import SettingsEditor from '/src/containers/SettingsEditor'
 import {
   Spacer,
   Button,
@@ -15,27 +14,23 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 
-import {
-  useGetAnatomyPresetQuery,
-  useGetAnatomyPresetsQuery,
-  useGetAnatomySchemaQuery,
-} from '../../../services/anatomy/getAnatomy'
+import { useGetAnatomyPresetsQuery } from '/src/services/anatomy/getAnatomy'
 import PresetList from './PresetList'
+import AnatomyEditor from '/src/containers/AnatomyEditor'
 import {
   useDeletePresetMutation,
   useUpdatePresetMutation,
   useUpdatePrimaryPresetMutation,
 } from '/src/services/anatomy/updateAnatomy'
-import { isEqual } from 'lodash'
 import confirmDelete from '/src/helpers/confirmDelete'
 
 const AnatomyPresets = () => {
-  const [originalData, setOriginalData] = useState(null)
   const [formData, setFormData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState('_')
   const [showNameDialog, setShowNameDialog] = useState(false)
   const [newPresetName, setNewPresetName] = useState('')
   const [breadcrumbs, setBreadcrumbs] = useState([])
+  const [isChanged, setIsChanged] = useState(false)
 
   const nameInputRef = useRef(null)
 
@@ -62,25 +57,6 @@ const AnatomyPresets = () => {
     const preset = presetList.find((p) => p.name === selectedPreset)
     return preset && preset.primary === 'PRIMARY'
   }, [selectedPreset, presetList])
-
-  const { data: schema } = useGetAnatomySchemaQuery()
-
-  const { data: anatomyData, isSuccess } = useGetAnatomyPresetQuery(
-    { preset: selectedPreset },
-    { skip: !selectedPreset },
-  )
-
-  useEffect(() => {
-    if ((isSuccess, anatomyData)) {
-      setFormData(anatomyData)
-      setOriginalData(anatomyData)
-    }
-  }, [selectedPreset, isSuccess, anatomyData])
-
-  const isChanged = useMemo(() => {
-    if (!originalData || !formData) return false
-    return !isEqual(originalData, formData)
-  }, [formData, originalData])
 
   useEffect(() => {
     // focus input when dialog is shown
@@ -154,20 +130,6 @@ const AnatomyPresets = () => {
   //
   // Render
   //
-
-  const editor =
-    schema && originalData ? (
-      <SettingsEditor
-        schema={schema}
-        originalData={originalData}
-        formData={formData}
-        onChange={setFormData}
-        onSetBreadcrumbs={setBreadcrumbs}
-        breadcrumbs={breadcrumbs}
-      />
-    ) : (
-      'Loading...'
-    )
 
   return (
     <main>
@@ -244,7 +206,14 @@ const AnatomyPresets = () => {
         </Toolbar>
 
         <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
-          {editor}
+          <AnatomyEditor
+            formData={formData}
+            setFormData={setFormData}
+            preset={selectedPreset}
+            breadcrumbs={breadcrumbs}
+            setBreadcrumbs={setBreadcrumbs}
+            setIsChanged={setIsChanged}
+          />
         </ScrollPanel>
       </Section>
     </main>

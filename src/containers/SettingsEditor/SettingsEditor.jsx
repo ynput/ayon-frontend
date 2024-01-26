@@ -168,7 +168,6 @@ const SettingsEditor = ({
   }
 
   const currentId = totallyRealBreadcrumbs && `root_${totallyRealBreadcrumbs.join('_')}`
-  console.log('currentId', currentId)
 
   return (
     <FormWrapper currentSelection={currentId}>
