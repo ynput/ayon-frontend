@@ -32,6 +32,10 @@ const sameKeysStructure = (obj1, obj2) => {
       return true
     }
   }
+
+  // just assume someone won't paste invalid array items here
+  if (Array.isArray(obj1) && Array.isArray(obj2)) return true
+
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false
   const obj1Keys = Object.keys(obj1)
   const obj2Keys = Object.keys(obj2)

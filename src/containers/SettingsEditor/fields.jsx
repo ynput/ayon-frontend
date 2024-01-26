@@ -332,7 +332,6 @@ function FieldTemplate(props) {
       },
       {
         label: 'Copy value',
-        disabled: !props.formContext.onCopyValue,
         command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
       },
       {
