@@ -35,6 +35,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
 import arrayEquals from '/src/helpers/arrayEquals'
+import { cloneDeep } from 'lodash'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -398,8 +399,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return
     }
 
-    const newData = { ...localData }
-    const nk = setValueByPath(localData[key], path, value)
+    let newData = { ...localData }
+
+    let currentAddonData = cloneDeep(localData[key])
+    let nk = setValueByPath(currentAddonData, path, value)
     newData[key] = nk
 
     const newChangedKeys = { ...changedKeys }
@@ -416,6 +419,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       const value = JSON.parse(text)
       pushValueToPath(addon, siteId, path, value)
     } catch (e) {
+      console.error(e)
       toast.error('Cannot paste, invalid clipboard contents')
     }
   } // paste
