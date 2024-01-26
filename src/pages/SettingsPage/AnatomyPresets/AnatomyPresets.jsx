@@ -31,10 +31,11 @@ import confirmDelete from '/src/helpers/confirmDelete'
 
 const AnatomyPresets = () => {
   const [originalData, setOriginalData] = useState(null)
-  const [newData, setNewData] = useState(null)
+  const [formData, setFormData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState('_')
   const [showNameDialog, setShowNameDialog] = useState(false)
   const [newPresetName, setNewPresetName] = useState('')
+  const [breadcrumbs, setBreadcrumbs] = useState([])
 
   const nameInputRef = useRef(null)
 
@@ -71,15 +72,15 @@ const AnatomyPresets = () => {
 
   useEffect(() => {
     if ((isSuccess, anatomyData)) {
-      setNewData(anatomyData)
+      setFormData(anatomyData)
       setOriginalData(anatomyData)
     }
   }, [selectedPreset, isSuccess, anatomyData])
 
   const isChanged = useMemo(() => {
-    if (!originalData || !newData) return false
-    return !isEqual(originalData, newData)
-  }, [newData, originalData])
+    if (!originalData || !formData) return false
+    return !isEqual(originalData, formData)
+  }, [formData, originalData])
 
   useEffect(() => {
     // focus input when dialog is shown
@@ -101,7 +102,7 @@ const AnatomyPresets = () => {
 
   // SAVE PRESET
   const savePreset = (name) => {
-    updatePreset({ name, data: newData })
+    updatePreset({ name, data: formData })
       .unwrap()
       .then(() => {
         setSelectedPreset(name)
@@ -146,26 +147,27 @@ const AnatomyPresets = () => {
       })
   }
 
-  const onSetBreadcrumbs = (e) => {
-    console.log('onSetBreadcrumbs', e)
-  }
+  useEffect(() => {
+    console.log('Bread', breadcrumbs)
+  }, [breadcrumbs])
 
   //
   // Render
   //
 
-  const editor = useMemo(() => {
-    if (!(schema && originalData)) return 'Loading editor...'
-
-    return (
+  const editor =
+    schema && originalData ? (
       <SettingsEditor
         schema={schema}
-        formData={originalData}
-        onChange={setNewData}
-        onSetBreadcrumbs={onSetBreadcrumbs}
+        originalData={originalData}
+        formData={formData}
+        onChange={setFormData}
+        onSetBreadcrumbs={setBreadcrumbs}
+        breadcrumbs={breadcrumbs}
       />
+    ) : (
+      'Loading...'
     )
-  }, [schema, originalData])
 
   return (
     <main>

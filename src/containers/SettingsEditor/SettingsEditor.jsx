@@ -1,5 +1,5 @@
 import Form from '@rjsf/core'
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import styled from 'styled-components'
 
 import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
@@ -112,6 +112,8 @@ const SettingsEditor = ({
     return <div></div>
   }
 
+  const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
+
   const originalOverrides = useMemo(() => {
     const result = buildOverrides(originalData, true)
     for (const key in overrides) {
@@ -145,16 +147,28 @@ const SettingsEditor = ({
 
   // we need to add the props.context to form context independently
   // otherwise it breaks memoized overrides
+  //
+
+  const setBc = (bc) => {
+    if (breadcrumbs === undefined) {
+      console.log('setlocalBreadcrumbs', bc)
+      setLocalBreadcrumbs(bc)
+    }
+    if (onSetBreadcrumbs) onSetBreadcrumbs(bc)
+  }
+
+  const totallyRealBreadcrumbs = breadcrumbs === undefined ? localBreadcrumbs : breadcrumbs
 
   const fullContext = {
     ...context,
     ...formContext,
     onSetChangedKeys: onSetChangedKeys || noop,
-    onSetBreadcrumbs: onSetBreadcrumbs || noop,
-    breadcrumbs: breadcrumbs || [],
+    onSetBreadcrumbs: setBc,
+    breadcrumbs: totallyRealBreadcrumbs,
   }
 
-  const currentId = breadcrumbs && `root_${breadcrumbs.join('_')}`
+  const currentId = totallyRealBreadcrumbs && `root_${totallyRealBreadcrumbs.join('_')}`
+  console.log('currentId', currentId)
 
   return (
     <FormWrapper currentSelection={currentId}>
