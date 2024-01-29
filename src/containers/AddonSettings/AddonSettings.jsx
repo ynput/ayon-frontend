@@ -36,6 +36,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
 import arrayEquals from '/src/helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
+import pasteFromClipboard from '/src/helpers/pasteFromClipboard'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -415,7 +416,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   const onPasteValue = async (addon, siteId, path) => {
     try {
-      const text = await navigator.clipboard.readText()
+      const text = await pasteFromClipboard()
+      if (!text) {
+        toast.error('Cannot paste, clipboard is empty')
+        return
+      }
       const value = JSON.parse(text)
       pushValueToPath(addon, siteId, path, value)
     } catch (e) {

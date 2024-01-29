@@ -14,6 +14,7 @@ import {
   sameKeysStructure,
 } from '/src/containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'
+import pasteFromClipboard from '/src/helpers/pasteFromClipboard'
 
 const AnatomyEditor = ({
   preset,
@@ -47,7 +48,7 @@ const AnatomyEditor = ({
 
   const onPasteValue = async (path) => {
     try {
-      const text = await navigator.clipboard.readText()
+      const text = await pasteFromClipboard()
       const value = JSON.parse(text)
       const oldValue = getValueByPath(formData, path)
       if (!sameKeysStructure(oldValue, value)) {
