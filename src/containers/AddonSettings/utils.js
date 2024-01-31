@@ -27,7 +27,7 @@ const setValueByPath = (obj, path, value) => {
 }
 
 const sameKeysStructure = (obj1, obj2) => {
-  for (const type of ['string', 'number', 'boolean']) {
+  for (const type of ['string', 'number', 'boolean', 'undefined', 'null']) {
     if (typeof obj1 === type && typeof obj2 === type) {
       return true
     }
@@ -37,18 +37,24 @@ const sameKeysStructure = (obj1, obj2) => {
   if (Array.isArray(obj1) && Array.isArray(obj2)) return true
 
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false
-  const obj1Keys = Object.keys(obj1)
-  const obj2Keys = Object.keys(obj2)
-  if (obj1Keys.length !== obj2Keys.length) {
-    console.warn('Len cond failed on ', obj1Keys, obj2Keys)
-    return false
-  }
+  // console.log('obj1', obj1)
+  // console.log('obj2', obj2)
+  const obj1Keys = Object.keys(obj1 || {})
+  //const obj2Keys = Object.keys(obj2 || {})
+
+  // this is a bit too strict. schemas may change slightly, but still be compatible
+  // if (obj1Keys.length !== obj2Keys.length) {
+  //   console.warn('Len cond failed on ', obj1Keys, obj2Keys)
+  //   return false
+  // }
+
   for (const key of obj1Keys) {
     // Let's allow this and see what happens
     // if (!obj2Keys.includes(key)) return false
 
     if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
-      if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) continue // just assume someone won't paste invalid array items here
+      // just assume someone won't paste invalid array items here
+      if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) continue
 
       if (!sameKeysStructure(obj1[key], obj2[key])) {
         console.warn('Struct cond failed on ', obj1[key], obj2[key])
