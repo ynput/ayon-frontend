@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify'
 import { useState } from 'react'
-import { Section, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
+import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
 import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '/src/containers/AnatomyEditor'
@@ -67,16 +67,14 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
         </>
       }
     >
-      <Section>
-        <Section>
-          <AnatomyEditor
-            projectName={projectName}
-            formData={formData}
-            setFormData={setFormData}
-            setIsChanged={setIsChanged}
-          />
-        </Section>
-      </Section>
+      <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
+        <AnatomyEditor
+          projectName={projectName}
+          formData={formData}
+          setFormData={setFormData}
+          setIsChanged={setIsChanged}
+        />
+      </ScrollPanel>
     </ProjectManagerPageLayout>
   )
 }
