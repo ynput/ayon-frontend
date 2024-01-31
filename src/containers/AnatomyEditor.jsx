@@ -42,12 +42,16 @@ const AnatomyEditor = ({
 
   const { data: schema } = useGetAnatomySchemaQuery()
 
-  const { data: anatomyPresetData } = useGetAnatomyPresetQuery({ preset }, { skip: !preset })
-  const { data: projectAnatomyData } = useGetProjectAnatomyQuery(
+  const { data: anatomyPresetData, isLoading: presetLoading } = useGetAnatomyPresetQuery(
+    { preset },
+    { skip: !preset },
+  )
+  const { data: projectAnatomyData, isLoading: prjLoading } = useGetProjectAnatomyQuery(
     { projectName },
     { skip: !projectName },
   )
   const dispatch = useDispatch()
+  const isLoading = presetLoading || prjLoading
 
   useEffect(() => {
     if (!anatomyPresetData) return
@@ -87,6 +91,10 @@ const AnatomyEditor = ({
     } catch (e) {
       console.error(e)
     }
+  }
+
+  if (isLoading) {
+    return 'Loading...'
   }
 
   if (!(preset || projectName)) return 'No preset or project selected'
