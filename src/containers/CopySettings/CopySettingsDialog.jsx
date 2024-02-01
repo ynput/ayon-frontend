@@ -3,9 +3,11 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 
-import { ScrollPanel, Button, Spacer } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { ScrollPanel, Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import BundleDropdown from '/src/containers/BundleDropdown'
+import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 
+import { Dialog } from 'primereact/dialog'
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
@@ -22,8 +24,12 @@ const CopySettingsDialog = ({
   setChangedKeys,
   projectName,
   onClose,
+  pickByBundle = false,
 }) => {
   const [nodes, setNodes] = useState([])
+
+  const [sourceBundle, setSourceBundle] = useState(null)
+  const [sourceVariant, setSourceVariant] = useState(null)
 
   const doTheMagic = () => {
     const newLocalData = cloneDeep(localData)
@@ -103,6 +109,14 @@ const CopySettingsDialog = ({
     </div>
   )
 
+  const toolbar = pickByBundle && (
+    <Toolbar>
+      <BundleDropdown style={{}} />
+      <VariantSelector />
+      <Spacer />
+    </Toolbar>
+  )
+
   return (
     <Dialog
       visible
@@ -111,26 +125,39 @@ const CopySettingsDialog = ({
       header="Copy Settings"
       footer={footer}
     >
-      <ScrollPanel style={{ width: '100%', height: '100%', background: 'transparent' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
-          {selectedAddons.map((addon) => (
-            <CopySettingsNode
-              key={`${addon.name}_${addon.version}`}
-              addonName={addon.name}
-              targetVersion={addon.version}
-              targetVariant={variant}
-              targetProjectName={projectName}
-              nodeData={nodes[addon.name]}
-              setNodeData={(data) => {
-                setNodes((n) => ({
-                  ...n,
-                  [addon.name]: data,
-                }))
-              }}
-            />
-          ))}
-        </div>
-      </ScrollPanel>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        {toolbar}
+        <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}
+          >
+            {selectedAddons.map((addon) => (
+              <CopySettingsNode
+                key={`${addon.name}_${addon.version}`}
+                addonName={addon.name}
+                targetVersion={addon.version}
+                targetVariant={variant}
+                targetProjectName={projectName}
+                nodeData={nodes[addon.name]}
+                setNodeData={(data) => {
+                  setNodes((n) => ({
+                    ...n,
+                    [addon.name]: data,
+                  }))
+                }}
+              />
+            ))}
+          </div>
+        </ScrollPanel>
+      </div>
     </Dialog>
   )
 }

@@ -78,12 +78,18 @@ const CopySettingsNode = ({
 
   nodeData,
   setNodeData,
+
+  forcedSourceVersion,
+  forcedSourceVariant,
+  forcedSourceProjectName,
 }) => {
   const defaultSourceVariant = targetVariant === 'staging' ? 'production' : 'staging'
 
-  const [sourceVersion, setSourceVersion] = useState(targetVersion)
-  const [sourceVariant, setSourceVariant] = useState(defaultSourceVariant)
-  const [sourceProjectName, setSourceProjectName] = useState(targetProjectName)
+  const [sourceVersion, setSourceVersion] = useState(forcedSourceVersion || targetVersion)
+  const [sourceVariant, setSourceVariant] = useState(forcedSourceVariant || defaultSourceVariant)
+  const [sourceProjectName, setSourceProjectName] = useState(
+    forcedSourceProjectName || targetProjectName,
+  )
   const [loading, setLoading] = useState(false)
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
@@ -203,12 +209,21 @@ const CopySettingsNode = ({
         addonName={addonName}
         addonVersion={sourceVersion}
         setAddonVersion={setSourceVersion}
+        disabled={forcedSourceVersion}
       />
 
       {sourceProjectName && (
-        <ProjectDropdown projectName={sourceProjectName} setProjectName={setSourceProjectName} />
+        <ProjectDropdown
+          projectName={sourceProjectName}
+          setProjectName={setSourceProjectName}
+          disabled={forcedSourceProjectName}
+        />
       )}
-      <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
+      <VariantSelector
+        variant={sourceVariant}
+        setVariant={setSourceVariant}
+        disabled={forcedSourceVariant}
+      />
 
       <NodePanelDirectionSelector>
         {nodeData?.available ? (

@@ -1,6 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+/************* DEPRECATED *************/
+/*
+
+
+import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Dropdown, Toolbar, TablePanel, Spacer } from '@ynput/ayon-react-components'
+import { Button, Toolbar, TablePanel, Spacer } from '@ynput/ayon-react-components'
 
 import { Dialog } from 'primereact/dialog'
 import { TreeTable } from 'primereact/treetable'
@@ -11,138 +15,13 @@ import {
   useLazyGetAddonSettingsQuery,
   useLazyGetAddonSettingsOverridesQuery,
 } from '/src/services/addonSettings'
-import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 
 import VariantSelector from './VariantSelector'
 import { getValueByPath, setValueByPath } from './utils'
 
 import { cloneDeep, isEqual } from 'lodash'
 
-import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
-
-const DialogBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`
-
-const ToolPanel = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex-grow: 1;
-  gap: 16px;
-  align-items: center;
-  justify-content: flex-center;
-`
-
-const ToolSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  gap: 8px;
-`
-
-const ToolSectionSeparator = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .icon {
-    font-size: 4rem;
-    padding: 12px;
-    border-radius: var(--border-radius-m);
-    user-select: none;
-  }
-`
-
-const BundleDropdownItem = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 8px;
-`
-
-const DropdownBadge = styled.span`
-  border-radius: 3px;
-  padding: 2px 4px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: black;
-`
-
-const formatBundleDropdownItem = (bundle) => {
-  let prodBadge = null
-  let stagBadge = null
-  if (bundle.isProduction) {
-    prodBadge = (
-      <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
-        Production
-      </DropdownBadge>
-    )
-  }
-  if (bundle.isStaging) {
-    stagBadge = (
-      <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>Staging</DropdownBadge>
-    )
-  }
-
-  return (
-    <BundleDropdownItem>
-      {bundle.value}{' '}
-      <span>
-        {prodBadge} {stagBadge}
-      </span>
-    </BundleDropdownItem>
-  )
-}
-
-const BundleDropdown = ({ bundleName, setBundleName, disabled }) => {
-  const { data, isLoading, isError } = useGetBundleListQuery({})
-
-  const bundleOptions = useMemo(() => {
-    if (isLoading || isError) return []
-    return data.map((bundle) => ({
-      value: bundle.name,
-      label: bundle.name,
-      isProduction: bundle.isProduction,
-      isStaging: bundle.isStaging,
-    }))
-  }, [data])
-
-  return (
-    <Dropdown
-      value={bundleName ? [bundleName] : null}
-      options={bundleOptions}
-      onChange={(e) => setBundleName(e[0])}
-      placeholder="Select a bundle"
-      style={{ flexGrow: 1 }}
-      disabled={disabled}
-      itemTemplate={formatBundleDropdownItem}
-    />
-  )
-}
-
-const ProjectDropdown = ({ projectName, setProjectName, disabled }) => {
-  const { data, isLoading, isError } = useGetAllProjectsQuery()
-
-  const projectOptions = useMemo(() => {
-    if (isLoading || isError) return []
-    return data.map((i) => ({ value: i.name }))
-  }, [data])
-
-  return (
-    <Dropdown
-      value={projectName ? [projectName] : null}
-      options={projectOptions}
-      onChange={(e) => setProjectName(e[0])}
-      placeholder="Select a project"
-      style={{ flexGrow: 1 }}
-      disabled={disabled}
-    />
-  )
-}
 
 const CopySettingsTable = ({
   sourceBundle,
@@ -494,13 +373,13 @@ const CopyBundleSettingsButton = ({
               <ToolSection>
                 <Toolbar>
                   Target bundle
-                  <BundleDropdown bundleName={bundleName} setBundleName={() => {}} disabled />
-                  <VariantSelector variant={variant} setVariant={() => {}} disabled />
+                  <BundleDropdown bundleName={bundleName} setBundleName={() => { }} disabled />
+                  <VariantSelector variant={variant} setVariant={() => { }} disabled />
                 </Toolbar>
                 {projectName && (
                   <Toolbar>
                     Target project
-                    <ProjectDropdown projectName={projectName} setProjectName={() => {}} disabled />
+                    <ProjectDropdown projectName={projectName} setProjectName={() => { }} disabled />
                   </Toolbar>
                 )}
               </ToolSection>
@@ -523,3 +402,4 @@ const CopyBundleSettingsButton = ({
 }
 
 export default CopyBundleSettingsButton
+*/

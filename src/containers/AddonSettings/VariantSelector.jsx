@@ -106,7 +106,7 @@ const VariantSelector = ({ variant, setVariant, disabled }) => {
   const user = useSelector((state) => state.user)
 
   useEffect(() => {
-    if (!user.attrib.developerMode) {
+    if (!user.attrib.developerMode && !['staging', 'production'].includes(variant)) {
       setVariant('production')
     }
   }, [user.attrib.developerMode])
