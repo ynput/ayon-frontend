@@ -1,6 +1,6 @@
 import { ayonApi } from '../ayon'
 import PubSub from '/src/pubsub'
-import { lt } from 'semver'
+// import { lt } from 'semver'
 
 const EVENTS_QUERY = `
 query InstallEvents {
@@ -37,17 +37,18 @@ const getMarket = ayonApi.injectEndpoints({
         (response?.addons || []).map((addon) => {
           const isInstalled = addon.currentLatestVersion !== null
           const isOfficial = addon.orgName === 'ynput-official'
-          const isOutdated =
-            addon.latestVersion &&
-            addon.currentLatestVersion &&
-            lt(addon.currentLatestVersion, addon.latestVersion)
+          // NOTE: isOutdated is now provided directly from the server
+          // const isOutdated =
+          //   addon.latestVersion &&
+          //   addon.currentLatestVersion &&
+          //   lt(addon.currentLatestVersion, addon.latestVersion)
           const isProductionOutdated = addon.currentLatestVersion !== addon.currentProductionVersion
 
           return {
             ...addon,
             isOfficial,
             isInstalled,
-            isOutdated,
+            //isOutdated,
             isProductionOutdated,
             isVerified: false,
           }
