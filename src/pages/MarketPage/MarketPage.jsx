@@ -76,10 +76,10 @@ const MarketPage = () => {
     // check for any addons that are still installing
     const installing = installProgress
       .filter((event) => event.status === 'in_progress')
-      .map((e) => e?.summary?.addon_name)
+      .map((e) => e?.summary?.zip_info?.name)
     const finished = installProgress
       .filter((event) => event.status === 'finished')
-      .map((e) => e?.summary?.addon_name)
+      .map((e) => e?.summary?.zip_info?.name)
 
     setInstallingAddons((currentInstallingAddons) => {
       const newInstalling = [...new Set([...currentInstallingAddons, ...installing])]
@@ -123,12 +123,13 @@ const MarketPage = () => {
   // }, [marketAddonsData, installedAddons])
 
   let marketAddons = useMemo(() => {
+    console.log(marketAddonsData)
     const sortedData = [...marketAddonsData]
     // sort by isInstalled, isOutdated, isOfficial, name
     sortedData?.sort(
       (a, b) =>
         b.isInstalled - a.isInstalled ||
-        b.isOutdated - a.isOutdated ||
+        !!b.isOutdated - !!a.isOutdated ||
         b.isOfficial - a.isOfficial ||
         a.name.localeCompare(b.name),
     )

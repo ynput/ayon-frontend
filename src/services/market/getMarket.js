@@ -35,7 +35,7 @@ const getMarket = ayonApi.injectEndpoints({
         ] || [],
       transformResponse: (response) =>
         (response?.addons || []).map((addon) => {
-          const isInstalled = addon.currentLatestVersion !== null
+          const isInstalled = !!addon.currentLatestVersion
           const isOfficial = addon.orgName === 'ynput-official'
           // NOTE: isOutdated is now provided directly from the server
           // const isOutdated =
