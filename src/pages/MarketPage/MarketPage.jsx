@@ -76,10 +76,10 @@ const MarketPage = () => {
     // check for any addons that are still installing
     const installing = installProgress
       .filter((event) => event.status === 'in_progress')
-      .map((e) => e?.summary?.zip_info?.name)
+      .map((e) => e?.summary?.name)
     const finished = installProgress
       .filter((event) => event.status === 'finished')
-      .map((e) => e?.summary?.zip_info?.name)
+      .map((e) => e?.summary?.name)
 
     setInstallingAddons((currentInstallingAddons) => {
       const newInstalling = [...new Set([...currentInstallingAddons, ...installing])]
