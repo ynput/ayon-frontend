@@ -14,15 +14,15 @@ const useInstall = (onInstall) => {
       if (!version) return new Error('No version found')
       if (!name) return new Error('No name found')
 
-      onInstall(name)
       // first get version to get url
       const { data, error } = await getAddonVersion({ id: name, version })
 
       if (error) throw new Error(error.message)
 
-      if (!data?.url) return new Error('No url found')
+      if (!data?.url) throw new Error('No install candidate found')
 
       await installAddons({ addons: [{ url: data.url, name, version }] }).unwrap()
+      onInstall(name)
     } catch (error) {
       console.error(error)
 
