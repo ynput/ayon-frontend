@@ -13,6 +13,7 @@ const updateEditor = ayonApi.injectEndpoints({
             entityType: op?.entityType,
             id: op?.id,
             type: op?.type,
+            force: op?.force,
           })),
         },
       }),

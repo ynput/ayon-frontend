@@ -674,6 +674,7 @@ const EditorPage = () => {
           type: 'delete',
           entityType,
           entityId,
+          // force: true # TODO toggleable for managers
         })
 
         // remove from selection
