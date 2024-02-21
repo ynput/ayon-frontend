@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-// import { toast } from 'react-toastify'
+import { toast } from 'react-toastify'
 import { Toolbar, Spacer, Button } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import BundleForm from './BundleForm'
@@ -7,12 +7,14 @@ import BundleDeps from './BundleDeps'
 import { upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
+import { useUpdateBundleMutation } from '/src/services/bundles'
 
 const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus, addons }) => {
   const [selectedBundle, setSelectedBundle] = useState(null)
 
   const [formData, setFormData] = useState({})
   const [selectedAddons, setSelectedAddons] = useState([])
+  const [updateBundle] = useUpdateBundleMutation()
 
   // data for first selected bundle
   const bundle = useMemo(() => {
@@ -46,6 +48,12 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
     }
   }, [bundles, selectedBundle])
 
+  const onSaveBundle = async () => {
+    console.log('onSaveBundle', formData)
+    await updateBundle({ name: bundle.name, data: formData }).unwrap()
+    toast.success('Bundle updated')
+  }
+
   return (
     <>
       <Toolbar>
@@ -72,6 +80,14 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
           disabled={bundles.length > 1}
           data-tooltip="Creates new duplicated bundle"
           data-shortcut="shift+D"
+        />
+        <Button
+          label="Update the bundle"
+          icon="check"
+          onClick={() => onSaveBundle()}
+          disabled={bundles.length > 1}
+          data-tooltip="Update the current bundle"
+          data-shortcut="shift+S"
         />
       </Toolbar>
       {bundles.length > 1 && bundles.length < 5 ? (
