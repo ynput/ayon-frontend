@@ -9,6 +9,7 @@ import {
   FormRow,
   Spacer,
   InputText,
+  InputTextarea,
   SaveButton,
   Button,
   Toolbar,
@@ -24,6 +25,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [selectedService, setSelectedService] = useState(null)
   const [selectedHost, setSelectedHost] = useState(null)
   const [settingsVariant, setSettingsVariant] = useState('production')
+  const [storages, setStorages] = useState('')
 
   useEffect(() => {
     axios.get('/api/addons?details=1').then((response) => {
@@ -86,6 +88,10 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
     }
     if (settingsVariant !== 'production') {
       serviceConfig.env.AYON_DEFAULT_SETTINGS_VARIANT = settingsVariant
+    }
+
+    if (storages) {
+      serviceConfig.volumes = storages.split('\n').map((s) => s.trim())
     }
 
     axios
@@ -165,6 +171,14 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
 
         <FormRow label="Service name">
           <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
+        </FormRow>
+
+        <FormRow label="Storages">
+          <InputTextarea
+            value={storages}
+            onChange={(e) => setStorages(e.target.value)}
+            placeholder="/local/path:/container/path"
+          />
         </FormRow>
       </FormLayout>
     </Dialog>
