@@ -71,7 +71,7 @@ export const getVersionsForAddons = (data, addons = []) => {
       const versionsMap = data.get(addonName)
       versionsMap.forEach((bundlesMap, version) => {
         if (!result.has(version)) {
-          result.set(addonName + '-' + version, bundlesMap)
+          result.set(addonName + ' ' + version, bundlesMap)
         }
       })
     }

@@ -90,8 +90,8 @@ const AddonsManager = () => {
   const handleDeleteVersions = async (versions = []) => {
     const addonsToDelete = []
     for (const version of versions) {
-      const addonName = version.split('-')[0]
-      const addonVersion = version.split('-')[1]
+      const addonName = version.split(' ')[0]
+      const addonVersion = version.split(' ')[1]
       // check addonName and addonVersion exist
       const addon = addons.find((a) => a.name === addonName)
       const addonVersionExists = Object.entries(addon?.versions || {}).some(
@@ -129,7 +129,7 @@ const AddonsManager = () => {
   const viewInMarket = (selected) => [
     {
       label: 'View in Market',
-      command: () => navigate(`/market?addon=${selected[0].split('-')[0]}`),
+      command: () => navigate(`/market?addon=${selected[0].split(' ')[0]}`),
       icon: 'store',
     },
   ]
