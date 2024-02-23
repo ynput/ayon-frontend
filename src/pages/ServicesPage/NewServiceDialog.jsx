@@ -7,6 +7,7 @@ import { Dropdown } from 'primereact/dropdown'
 import {
   FormLayout,
   FormRow,
+  Divider,
   Spacer,
   InputText,
   InputTextarea,
@@ -123,7 +124,13 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   )
 
   return (
-    <Dialog visible={true} header="New service" onHide={onHide} footer={footer}>
+    <Dialog
+      visible={true}
+      header="Spawn a new service"
+      onHide={onHide}
+      footer={footer}
+      style={{ width: 550 }}
+    >
       <FormLayout>
         <FormRow label="Host">
           <Dropdown
@@ -160,6 +167,14 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
           />
         </FormRow>
 
+        <FormRow label="Service name">
+          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
+        </FormRow>
+      </FormLayout>
+
+      <Divider>Advanced settings</Divider>
+
+      <FormLayout>
         <FormRow label="Settings variant">
           <VariantSelector
             addonName={selectedAddon?.name}
@@ -169,13 +184,10 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
           />
         </FormRow>
 
-        <FormRow label="Service name">
-          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
-        </FormRow>
-
         <FormRow label="Storages">
           <InputTextarea
             value={storages}
+            style={{ minHeight: 80 }}
             onChange={(e) => setStorages(e.target.value)}
             placeholder="/local/path:/container/path"
           />
