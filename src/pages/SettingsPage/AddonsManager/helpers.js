@@ -118,7 +118,7 @@ export const getUniqueBundlesForAddonsAndVersions = (data, addons = [], versions
     if (data.has(addonName)) {
       const versionsMap = data.get(addonName)
       versionsMap.forEach((bundlesMap, version) => {
-        if (versions.includes(addonName + '-' + version)) {
+        if (versions.includes(addonName + ' ' + version)) {
           bundlesMap.forEach((bundle, bundleName) => {
             if (!result.has(bundleName)) {
               result.set(bundleName, bundle)
