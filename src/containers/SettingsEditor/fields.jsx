@@ -174,19 +174,50 @@ function ObjectFieldTemplate(props) {
 
   if (['compact', 'root', 'expanded'].includes(props.schema.layout)) return fields
 
-  const contextMenuItems = [
-    {
-      label: 'Copy',
-      command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
-    },
-    {
-      label: 'Paste',
-      disabled: !props.formContext.onPasteValue,
-      command: () => {
-        props.formContext.onPasteValue(path || [])
+  const contextMenuModel = useMemo(() => {
+    let model = []
+
+    if (props.idSchema.$id === 'root') {
+      model.push({
+        label: `Remove all ${props.formContext.level} overrides`,
+        disabled: !props.formContext.onRemoveAllOverrides,
+        command: () => {
+          props.formContext.onRemoveAllOverrides()
+        },
+      })
+    } else {
+      const rmPath = override?.inGroup || path || ['root']
+      if (props.formContext.onPinOverride)
+        model.push({
+          label: `Pin current ${rmPath[rmPath.length - 1]} value as ${
+            props.formContext.level
+          } override`,
+          command: () => props.formContext.onPinOverride(rmPath),
+          disabled: overrideLevel === props.formContext.level,
+        })
+      if (props.formContext.onRemoveOverride)
+        model.push({
+          label: `Remove ${props.formContext.level} override from ${rmPath[rmPath.length - 1]}`,
+          command: () => props.formContext.onRemoveOverride(rmPath),
+          disabled: overrideLevel !== props.formContext.level,
+        })
+    }
+
+    model.push(
+      {
+        label: 'Copy',
+        command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
       },
-    },
-  ]
+      {
+        label: 'Paste',
+        disabled: !props.formContext.onPasteValue,
+        command: () => {
+          props.formContext.onPasteValue(path || [])
+        },
+      },
+    )
+    return model
+  }, [override, overrideLevel, path])
 
   // Title + handle root object
 
@@ -232,23 +263,15 @@ function ObjectFieldTemplate(props) {
         </BadgeWrapper>
       </>
     )
-
-    contextMenuItems.push({
-      label: `Remove all ${props.formContext.level} overrides`,
-      disabled: !props.formContext.onRemoveAllOverrides,
-      command: () => {
-        props.formContext.onRemoveAllOverrides()
-      },
-    })
   }
 
   // Execute context menu
 
   const onContextMenu = (e) => {
     if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path || [])
-    if (!contextMenuItems?.length) return
+    if (!contextMenuModel?.length) return
     e.preventDefault()
-    contextMenu(e, contextMenuItems)
+    contextMenu(e, contextMenuModel)
   }
 
   return (
@@ -317,29 +340,34 @@ function FieldTemplate(props) {
 
   const contextMenuModel = useMemo(() => {
     const rmPath = override?.inGroup || path
-    let model = [
-      {
-        label: `Remove ${props.formContext.level} override from ${rmPath[rmPath.length - 1]}`,
-        disabled: overrideLevel !== props.formContext.level || !props.formContext.onRemoveOverride,
-        command: () => props.formContext.onRemoveOverride(rmPath),
-      },
-      {
+    let model = []
+
+    if (props.formContext.onPinOverride)
+      model.push({
         label: `Pin current ${rmPath[rmPath.length - 1]} value as ${
           props.formContext.level
         } override`,
-        disabled: overrideLevel === props.formContext.level || !props.formContext.onRemoveOverride,
         command: () => props.formContext.onPinOverride(rmPath),
-      },
-      {
-        label: 'Copy value',
-        command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
-      },
-      {
-        label: 'Paste value',
-        disabled: !props.formContext.onPasteValue,
-        command: () => props.formContext.onPasteValue(path),
-      },
-    ]
+        disabled: overrideLevel === props.formContext.level,
+      })
+
+    if (props.formContext.onRemoveOverride)
+      model.push({
+        label: `Remove ${props.formContext.level} override from ${rmPath[rmPath.length - 1]}`,
+        command: () => props.formContext.onRemoveOverride(rmPath),
+        disabled: overrideLevel !== props.formContext.level,
+      })
+
+    model.push({
+      label: 'Copy',
+      command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
+    })
+
+    model.push({
+      label: 'Paste',
+      disabled: !props.formContext.onPasteValue,
+      command: () => props.formContext.onPasteValue(path),
+    })
 
     return model
   }, [override, path])

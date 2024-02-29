@@ -7,8 +7,10 @@ import { Dropdown } from 'primereact/dropdown'
 import {
   FormLayout,
   FormRow,
+  Divider,
   Spacer,
   InputText,
+  InputTextarea,
   SaveButton,
   Button,
   Toolbar,
@@ -24,6 +26,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [selectedService, setSelectedService] = useState(null)
   const [selectedHost, setSelectedHost] = useState(null)
   const [settingsVariant, setSettingsVariant] = useState('production')
+  const [storages, setStorages] = useState('')
 
   useEffect(() => {
     axios.get('/api/addons?details=1').then((response) => {
@@ -88,6 +91,10 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
       serviceConfig.env.AYON_DEFAULT_SETTINGS_VARIANT = settingsVariant
     }
 
+    if (storages) {
+      serviceConfig.volumes = storages.split('\n').map((s) => s.trim())
+    }
+
     axios
       .put(`/api/services/${serviceName}`, {
         addonName: selectedAddon.name,
@@ -117,7 +124,13 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   )
 
   return (
-    <Dialog visible={true} header="New service" onHide={onHide} footer={footer}>
+    <Dialog
+      visible={true}
+      header="Spawn a new service"
+      onHide={onHide}
+      footer={footer}
+      style={{ width: 550 }}
+    >
       <FormLayout>
         <FormRow label="Host">
           <Dropdown
@@ -154,6 +167,14 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
           />
         </FormRow>
 
+        <FormRow label="Service name">
+          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
+        </FormRow>
+      </FormLayout>
+
+      <Divider>Advanced settings</Divider>
+
+      <FormLayout>
         <FormRow label="Settings variant">
           <VariantSelector
             addonName={selectedAddon?.name}
@@ -163,8 +184,13 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
           />
         </FormRow>
 
-        <FormRow label="Service name">
-          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
+        <FormRow label="Storages">
+          <InputTextarea
+            value={storages}
+            style={{ minHeight: 80 }}
+            onChange={(e) => setStorages(e.target.value)}
+            placeholder="/local/path:/container/path"
+          />
         </FormRow>
       </FormLayout>
     </Dialog>

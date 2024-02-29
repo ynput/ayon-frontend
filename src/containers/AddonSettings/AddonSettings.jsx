@@ -389,7 +389,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       toast.error('No data to paste')
       return
     }
-    const oldValue = getValueByPath(allData, path)
+    const oldValue = path.length === 0 ? allData : getValueByPath(allData, path)
     if (oldValue === undefined) {
       toast.error('No data to paste')
       return
@@ -403,8 +403,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     let newData = { ...localData }
 
     let currentAddonData = cloneDeep(localData[key])
-    let nk = setValueByPath(currentAddonData, path, value)
-    newData[key] = nk
+    if (path.length === 0) {
+      newData[key] = value
+    } else {
+      newData[key] = setValueByPath(currentAddonData, path, value)
+    }
 
     const newChangedKeys = { ...changedKeys }
     const no = compareObjects(localData[key], newData[key])

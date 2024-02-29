@@ -1,5 +1,8 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 
+import copyToClipboard from '/src/helpers/copyToClipboard'
+import pasteFromClipboard from '/src/helpers/pasteFromClipboard'
+
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 
@@ -174,6 +177,35 @@ const AnatomyPresets = () => {
       <Section>
         <Toolbar>
           <Button
+            label="Copy anatomy"
+            icon="content_copy"
+            onClick={() => {
+              copyToClipboard(JSON.stringify(formData, null, 2))
+            }}
+          />
+          <Button
+            label="Paste anatomy"
+            icon="content_paste"
+            onClick={async () => {
+              const content = await pasteFromClipboard()
+              if (!content) {
+                toast.error('Clipboard is empty')
+                return
+              }
+              try {
+                const data = JSON.parse(content)
+                setFormData(data)
+                setIsChanged(true)
+                toast.info('Anatomy pasted')
+              } catch (err) {
+                console.log(err)
+                toast.error('Clipboard content is not valid JSON')
+              }
+            }}
+          />
+
+          <Spacer />
+          <Button
             label="Set as primary"
             icon="flag"
             onClick={() => setPrimaryPreset(selectedPreset)}
@@ -183,9 +215,8 @@ const AnatomyPresets = () => {
             icon="delete"
             disabled={selectedPreset === '_'}
             onClick={() => handleDeletePreset(selectedPreset, isSelectedPrimary)}
-            style={{ visibility: selectedPreset === '_' ? 'hidden' : 'visible' }}
+            style={{ display: selectedPreset === '_' ? 'none' : 'flex' }}
           />
-          <Spacer />
           <Button
             label="Save as a new preset"
             icon="add"

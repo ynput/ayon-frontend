@@ -28,7 +28,11 @@ const baseQuery = fetchBaseQuery({
 const wrappedBaseQuery = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions)
 
-  if (result.error?.status === 401 && !args.url.includes('connect')) {
+  if (
+    result.error?.status === 401 &&
+    !args.url.includes('connect') &&
+    !args.url.startsWith('/login')
+  ) {
     window.location.href = '/login'
   }
   return result

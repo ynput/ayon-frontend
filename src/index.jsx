@@ -53,7 +53,11 @@ axios.interceptors.response.use(
     return response
   },
   (error) => {
-    if (error.response.status === 401 && window.location.pathname !== '/') {
+    if (
+      error.response.status === 401 &&
+      window.location.pathname !== '/' &&
+      !window.location.pathname.startsWith('/login')
+    ) {
       window.location.href = '/'
     }
     return Promise.reject(error)

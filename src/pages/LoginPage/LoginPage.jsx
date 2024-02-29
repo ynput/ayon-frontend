@@ -11,6 +11,13 @@ import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
 
+const clearQueryParams = () => {
+  const url = new URL(window.location)
+  url.search = ''
+  console.log('clearQueryParams', url.href)
+  history.pushState({}, '', url.href)
+}
+
 const LoginPage = ({ isFirstTime }) => {
   const dispatch = useDispatch()
   const [name, setName] = useState('')
@@ -24,10 +31,22 @@ const LoginPage = ({ isFirstTime }) => {
   // OAuth2 handler after redirect from provider
   useEffect(() => {
     const provider = window.location.pathname.split('/')[2]
+    if (!provider) {
+      return
+    }
     const qs = new URLSearchParams(window.location.search)
 
     if (info?.ssoOptions?.length) {
+      window.history.replaceState({}, document.title, window.location.pathname)
       const providerConfig = info.ssoOptions.find((o) => o.name === provider)
+
+      // if query string is empty, abort
+      if (!qs.toString()) {
+        return
+      }
+
+      // add provider to the query
+      qs.append('ayonProvider', provider)
 
       if (!providerConfig) {
         return
@@ -58,6 +77,8 @@ const LoginPage = ({ isFirstTime }) => {
           )
         })
         .finally(() => {
+          // clear the query string
+          clearQueryParams()
           setIsLoading(false)
         })
     }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import {
   Button,
@@ -21,10 +21,11 @@ import {
 import confirmDelete from '/src/helpers/confirmDelete'
 
 const AccessGroupDetail = ({ projectName, accessGroup }) => {
-  const [newData, setNewData] = useState(null)
+  const [originalData, setOriginalData] = useState(null)
+  const [formData, setFormData] = useState(null)
   const accessGroupName = accessGroup?.name
 
-  const { data: originalData } = useGetAccessGroupQuery(
+  const { data } = useGetAccessGroupQuery(
     {
       name: accessGroupName,
       projectName: projectName || '_',
@@ -34,6 +35,12 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
 
   const { data: schema } = useGetAccessGroupSchemaQuery()
 
+  useEffect(() => {
+    if (!data) return
+    setFormData(data)
+    setOriginalData(data)
+  }, [data])
+
   // mutations
   const [updateAccessGroup, { isLoading: saving }] = useUpdateAccessGroupMutation()
   const [deleteAccessGroup] = useDeleteAccessGroupMutation()
@@ -41,16 +48,16 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
   const isProjectLevel = accessGroup?.isProjectLevel
 
   const isChanged = useMemo(() => {
-    if (!originalData || !newData) return false
-    return !isEqual(originalData, newData)
-  }, [newData, originalData])
+    if (!originalData || !formData) return false
+    return !isEqual(originalData, formData)
+  }, [formData, originalData])
 
   const onSave = async () => {
     try {
       await updateAccessGroup({
         name: accessGroupName,
         projectName: projectName || '_',
-        data: newData,
+        data: formData,
       }).unwrap()
       toast.success('Access group saved')
     } catch (err) {
@@ -64,22 +71,6 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
       label: 'Access group',
       accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
     })
-
-  const editor = useMemo(() => {
-    if (!(schema && originalData)) return <></>
-
-    return (
-      <SettingsEditor
-        schema={schema}
-        formData={originalData}
-        onChange={setNewData}
-        level={isProjectLevel ? 'project' : 'studio'}
-        context={{
-          headerProjectName: projectName,
-        }}
-      />
-    )
-  }, [schema, originalData])
 
   return (
     <Section>
@@ -103,7 +94,16 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
         scrollStyle={{ padding: 0 }}
         style={{ flexGrow: 1 }}
       >
-        {editor}
+        <SettingsEditor
+          schema={schema}
+          originalData={originalData}
+          formData={formData}
+          onChange={setFormData}
+          level={isProjectLevel ? 'project' : 'studio'}
+          context={{
+            headerProjectName: projectName,
+          }}
+        />
       </ScrollPanel>
     </Section>
   )

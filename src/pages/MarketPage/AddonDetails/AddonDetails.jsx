@@ -46,6 +46,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
     orgTitle,
     isVerified,
     isOfficial,
+    warning,
   } = addon
 
   const [showAllVersions, setShowAllVersions] = useState(false)
@@ -92,7 +93,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
     )
   } else if (isInstalled && !isOutdated) {
     actionButton = <Button onClick={onUninstall}>Uninstall</Button>
-  } else if (isInstalled && isOutdated) {
+  } else if (isInstalled && isOutdated && latestVersion) {
     actionButton = (
       <Button
         variant="filled"
@@ -100,7 +101,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
         onClick={handleInstall}
       >{`Update to v${latestVersion}`}</Button>
     )
-  } else {
+  } else if (latestVersion) {
     actionButton = (
       <Button variant="filled" icon={'download_for_offline'} onClick={handleInstall}>
         {`Install v${latestVersion}`}
@@ -173,7 +174,10 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
             </Styled.MetaPanel>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
-              <MetaPanelRow label="Latest Version">{latestVersion}</MetaPanelRow>
+              <MetaPanelRow label="Latest Version">
+                {latestVersion && <p>{latestVersion}</p>}
+                {warning && <p>{warning}</p>}
+              </MetaPanelRow>
             </Styled.MetaPanel>
           </Styled.Right>
         </>

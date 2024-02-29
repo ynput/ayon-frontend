@@ -146,7 +146,7 @@ const AddonList = ({
           emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
         >
           <Column field="title" header="Addon" />
-          <Column field="version" header="Version" style={{ maxWidth: 80 }} />
+          <Column field="version" header="Version" style={{ maxWidth: 110 }} />
         </DataTable>
       </TablePanel>
     </Section>

@@ -73,7 +73,7 @@ const BundlesAddonList = React.forwardRef(
         const addons = { ...(newFormData.addons || {}) }
 
         for (const addon of versionsToSet) {
-          addons[addon] = version === 'NONE' ? undefined : version
+          addons[addon] = version === 'NONE' ? null : version
         }
         newFormData.addons = addons
         return newFormData
@@ -148,7 +148,8 @@ const BundlesAddonList = React.forwardRef(
           style={{ maxWidth: 200 }}
           bodyStyle={{ padding: 8 }}
           body={(addon) => {
-            if (readOnly) return formData?.addons?.[addon.name] || 'NONE'
+            if (readOnly && addon.addonType === 'pipeline')
+              return formData?.addons?.[addon.name] || 'NONE'
             // get all selected versions
             return (
               <AddonListItem
@@ -157,7 +158,7 @@ const BundlesAddonList = React.forwardRef(
                 version={addon.version}
                 selection={selected}
                 addons={addons}
-                setVersion={(version) => onSetVersion(addon.name, version)}
+                setVersion={(version) => onSetVersion(addon.name, version || null)}
                 versions={Object.keys(addon.versions || {})}
                 isDev={isDev}
               />

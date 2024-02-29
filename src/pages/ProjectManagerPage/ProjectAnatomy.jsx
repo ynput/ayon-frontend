@@ -1,9 +1,12 @@
 import { toast } from 'react-toastify'
 import { useState } from 'react'
-import { Section, SaveButton, Spacer } from '@ynput/ayon-react-components'
+import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
 import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '/src/containers/AnatomyEditor'
+
+import copyToClipboard from '/src/helpers/copyToClipboard'
+import pasteFromClipboard from '/src/helpers/pasteFromClipboard'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
   const [formData, setFormData] = useState(null)
@@ -27,27 +30,51 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
       projectList={projectList}
       toolbar={
         <>
+          <Button
+            label="Copy anatomy"
+            icon="content_copy"
+            onClick={() => {
+              copyToClipboard(JSON.stringify(formData, null, 2))
+            }}
+          />
+          <Button
+            label="Paste anatomy"
+            icon="content_paste"
+            onClick={async () => {
+              const content = await pasteFromClipboard()
+              if (!content) {
+                toast.error('Clipboard is empty')
+                return
+              }
+              try {
+                const data = JSON.parse(content)
+                setFormData(data)
+                setIsChanged(true)
+                toast.info('Anatomy pasted')
+              } catch (err) {
+                console.log(err)
+                toast.error('Clipboard content is not valid JSON')
+              }
+            }}
+          />
           <Spacer />
           <SaveButton
             label="Save changes"
             onClick={saveAnatomy}
             active={isChanged}
             saving={isUpdating}
-            style={{ marginRight: 20 }}
           />
         </>
       }
     >
-      <Section>
-        <Section>
-          <AnatomyEditor
-            projectName={projectName}
-            formData={formData}
-            setFormData={setFormData}
-            setIsChanged={setIsChanged}
-          />
-        </Section>
-      </Section>
+      <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
+        <AnatomyEditor
+          projectName={projectName}
+          formData={formData}
+          setFormData={setFormData}
+          setIsChanged={setIsChanged}
+        />
+      </ScrollPanel>
     </ProjectManagerPageLayout>
   )
 }
