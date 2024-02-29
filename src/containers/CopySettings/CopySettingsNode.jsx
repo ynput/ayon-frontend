@@ -114,6 +114,7 @@ const CopySettingsNode = ({
       addonVersion: sourceVersion,
       variant: sourceVariant,
       projectName: sourceProjectName,
+      asVersion: targetVersion,
     })
 
     const sourceSettings = await triggerGetSettings({
@@ -121,6 +122,7 @@ const CopySettingsNode = ({
       addonVersion: sourceVersion,
       variant: sourceVariant,
       projectName: sourceProjectName,
+      asVersion: targetVersion,
     })
 
     // TODO: we may use this to display whether there
