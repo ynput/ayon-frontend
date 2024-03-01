@@ -11,6 +11,7 @@ import { Dialog } from 'primereact/dialog'
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
+import { useGetBundleListQuery } from '/src/services/bundles'
 import { cloneDeep } from 'lodash'
 
 const CopySettingsDialog = ({
@@ -30,6 +31,20 @@ const CopySettingsDialog = ({
 
   const [sourceBundle, setSourceBundle] = useState(null)
   const [sourceVariant, setSourceVariant] = useState(null)
+
+  const {
+    data: bundlesData,
+    isLoading: bundlesLoading,
+    isError: bundlesError,
+  } = useGetBundleListQuery({}, { skip: !pickByBundle })
+
+  const sourceVersions = useMemo(() => {
+    if (bundlesLoading || bundlesError) return {}
+    if (!sourceBundle) return {}
+
+    const sb = bundlesData.find((i) => i.name === sourceBundle)
+    return sb?.addons || {}
+  }, [sourceBundle, bundlesData, bundlesLoading, bundlesError])
 
   const doTheMagic = () => {
     const newLocalData = cloneDeep(localData)
@@ -111,8 +126,12 @@ const CopySettingsDialog = ({
 
   const toolbar = pickByBundle && (
     <Toolbar>
-      <BundleDropdown style={{}} />
-      <VariantSelector />
+      <BundleDropdown
+        style={{ flexGrow: 1 }}
+        bundleName={sourceBundle}
+        setBundleName={setSourceBundle}
+      />
+      <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
       <Spacer />
     </Toolbar>
   )
@@ -122,7 +141,7 @@ const CopySettingsDialog = ({
       visible
       onHide={onClose}
       style={{ width: '80vw', height: '80vh' }}
-      header="Copy Settings"
+      header={`Copy ${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
       footer={footer}
     >
       <div
@@ -139,22 +158,26 @@ const CopySettingsDialog = ({
           <div
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}
           >
-            {selectedAddons.map((addon) => (
-              <CopySettingsNode
-                key={`${addon.name}_${addon.version}`}
-                addonName={addon.name}
-                targetVersion={addon.version}
-                targetVariant={variant}
-                targetProjectName={projectName}
-                nodeData={nodes[addon.name]}
-                setNodeData={(data) => {
-                  setNodes((n) => ({
-                    ...n,
-                    [addon.name]: data,
-                  }))
-                }}
-              />
-            ))}
+            {selectedAddons
+              .filter((addon) => !pickByBundle || sourceVersions[addon.name])
+              .map((addon) => (
+                <CopySettingsNode
+                  key={`${addon.name}_${addon.version}`}
+                  addonName={addon.name}
+                  targetVersion={addon.version}
+                  targetVariant={variant}
+                  targetProjectName={projectName}
+                  nodeData={nodes[addon.name]}
+                  setNodeData={(data) => {
+                    setNodes((n) => ({
+                      ...n,
+                      [addon.name]: data,
+                    }))
+                  }}
+                  forcedSourceVariant={sourceVariant}
+                  forcedSourceVersion={pickByBundle ? sourceVersions[addon.name] : null}
+                />
+              ))}
           </div>
         </ScrollPanel>
       </div>

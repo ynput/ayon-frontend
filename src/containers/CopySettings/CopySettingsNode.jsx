@@ -83,10 +83,8 @@ const CopySettingsNode = ({
   forcedSourceVariant,
   forcedSourceProjectName,
 }) => {
-  const defaultSourceVariant = targetVariant === 'staging' ? 'production' : 'staging'
-
-  const [sourceVersion, setSourceVersion] = useState(forcedSourceVersion || targetVersion)
-  const [sourceVariant, setSourceVariant] = useState(forcedSourceVariant || defaultSourceVariant)
+  const [sourceVersion, setSourceVersion] = useState(null)
+  const [sourceVariant, setSourceVariant] = useState(null)
   const [sourceProjectName, setSourceProjectName] = useState(
     forcedSourceProjectName || targetProjectName,
   )
@@ -95,7 +93,25 @@ const CopySettingsNode = ({
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
   const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
 
+  useEffect(() => {
+    if (forcedSourceVersion && forcedSourceVersion !== sourceVersion) {
+      setSourceVersion(forcedSourceVersion)
+    } else if (forcedSourceVersion === null && sourceVersion === null) {
+      setSourceVersion(targetVersion)
+    }
+  }, [forcedSourceVersion])
+
+  useEffect(() => {
+    if (forcedSourceVariant && forcedSourceVariant !== sourceVariant) {
+      setSourceVariant(forcedSourceVariant)
+    } else if (forcedSourceVariant === null && sourceVariant === null) {
+      const defaultSourceVariant = targetVariant === 'staging' ? 'production' : 'staging'
+      setSourceVariant(defaultSourceVariant)
+    }
+  }, [forcedSourceVariant])
+
   const loadNodeData = async () => {
+    if (!sourceVersion || !sourceVariant) return
     setLoading(true)
 
     if (
@@ -174,7 +190,7 @@ const CopySettingsNode = ({
     }
 
     if (!changes.length) {
-      setNodeData({ message: 'no changes to copy' })
+      setNodeData({ message: 'no changes to copy', enabled: false })
     }
 
     setNodeData({
@@ -192,10 +208,13 @@ const CopySettingsNode = ({
   } //loadNodeData
 
   useEffect(() => {
+    console.log('LOAD', addonName, sourceVersion, sourceVariant, sourceProjectName)
     loadNodeData()
   }, [sourceVersion, sourceVariant, sourceProjectName])
 
   const expanded = !!(nodeData?.available && nodeData?.enabled)
+
+  if (forcedSourceVersion && forcedSourceVariant && !nodeData?.available) return null
 
   const header = (
     <NodePanelHeader className={expanded ? 'expanded' : undefined}>
@@ -221,11 +240,13 @@ const CopySettingsNode = ({
           disabled={forcedSourceProjectName}
         />
       )}
-      <VariantSelector
-        variant={sourceVariant}
-        setVariant={setSourceVariant}
-        disabled={forcedSourceVariant}
-      />
+      {!forcedSourceVariant && (
+        <VariantSelector
+          variant={sourceVariant}
+          setVariant={setSourceVariant}
+          disabled={forcedSourceVariant}
+        />
+      )}
 
       <NodePanelDirectionSelector>
         {nodeData?.available ? (
@@ -244,7 +265,9 @@ const CopySettingsNode = ({
       {targetProjectName && (
         <ProjectDropdown projectName={targetProjectName} setProjectName={() => {}} disabled />
       )}
-      <VariantSelector variant={targetVariant} setVariant={() => {}} disabled />
+      {/*
+      <VariantSelector variant={targetVariant} setVariant={() => { }} disabled />
+      */}
     </NodePanelHeader>
   )
 
@@ -276,13 +299,13 @@ const CopySettingsNode = ({
                 <FormattedPath value={change.path} />
               </td>
               <td>
-                <FormattedValue value={change.targetValue} />
+                <FormattedValue value={change.sourceValue} />
               </td>
               <td>
                 <Icon icon="trending_flat" />
               </td>
               <td>
-                <FormattedValue value={change.sourceValue} />
+                <FormattedValue value={change.targetValue} />
               </td>
               <td>
                 {!change.compatible && <Icon icon="warning" style={{ color: 'red' }} />}
