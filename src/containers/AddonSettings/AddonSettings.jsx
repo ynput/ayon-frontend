@@ -36,7 +36,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
 import arrayEquals from '/src/helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
-import pasteFromClipboard from '/src/helpers/pasteFromClipboard'
+import { usePaste } from '/src/context/pasteContext'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -70,6 +70,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
   const [promoteBundle] = usePromoteBundleMutation()
+  const { requestPaste } = usePaste()
 
   const projectKey = projectName || '_'
 
@@ -397,6 +398,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
     if (!sameKeysStructure(oldValue, value)) {
       toast.error('Icompatible data structure')
+      console.log('Old value', oldValue)
+      console.log('New value', value)
       return
     }
 
@@ -418,18 +421,19 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }
 
   const onPasteValue = async (addon, siteId, path) => {
-    try {
-      const text = await pasteFromClipboard()
-      if (!text) {
-        toast.error('Cannot paste, clipboard is empty')
-        return
-      }
-      const value = JSON.parse(text)
-      pushValueToPath(addon, siteId, path, value)
-    } catch (e) {
-      console.error(e)
-      toast.error('Cannot paste, invalid clipboard contents')
+    const pastedContent = await requestPaste()
+    if (!pastedContent) {
+      toast.error('No content to paste')
+      return
     }
+    let value
+    try {
+      value = JSON.parse(pastedContent)
+    } catch (e) {
+      toast.error('Invalid JSON')
+      return
+    }
+    pushValueToPath(addon, siteId, path, value)
   } // paste
 
   const onPushToProduction = async () => {

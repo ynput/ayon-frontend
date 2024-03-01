@@ -6,13 +6,14 @@ import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '/src/containers/AnatomyEditor'
 
 import copyToClipboard from '/src/helpers/copyToClipboard'
-import pasteFromClipboard from '/src/helpers/pasteFromClipboard'
+import { usePaste } from '/src/context/pasteContext'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
   const [formData, setFormData] = useState(null)
   const [isChanged, setIsChanged] = useState(false)
 
   const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
+  const { requestPaste } = usePaste()
 
   const saveAnatomy = () => {
     updateProjectAnatomy({ projectName, anatomy: formData })
@@ -23,6 +24,22 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
       .catch((err) => {
         toast.error(err.message)
       })
+  }
+
+  const onPasteAnatomy = async () => {
+    const pastedContent = await requestPaste()
+    if (!pastedContent) {
+      toast.error('No content to paste')
+      return
+    }
+    let value
+    try {
+      value = JSON.parse(pastedContent)
+    } catch (e) {
+      toast.error('Invalid JSON')
+      return
+    }
+    setFormData(value)
   }
 
   return (
@@ -37,26 +54,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
               copyToClipboard(JSON.stringify(formData, null, 2))
             }}
           />
-          <Button
-            label="Paste anatomy"
-            icon="content_paste"
-            onClick={async () => {
-              const content = await pasteFromClipboard()
-              if (!content) {
-                toast.error('Clipboard is empty')
-                return
-              }
-              try {
-                const data = JSON.parse(content)
-                setFormData(data)
-                setIsChanged(true)
-                toast.info('Anatomy pasted')
-              } catch (err) {
-                console.log(err)
-                toast.error('Clipboard content is not valid JSON')
-              }
-            }}
-          />
+          <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
           <Spacer />
           <SaveButton
             label="Save changes"
