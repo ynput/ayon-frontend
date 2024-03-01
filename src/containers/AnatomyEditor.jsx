@@ -27,7 +27,7 @@ import {
   sameKeysStructure,
 } from '/src/containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'
-import pasteFromClipboard from '/src/helpers/pasteFromClipboard'
+import { usePaste } from '/src/context/pasteContext'
 
 const AnatomyEditor = ({
   preset,
@@ -39,7 +39,7 @@ const AnatomyEditor = ({
   setIsChanged,
 }) => {
   const [originalData, setOriginalData] = useState(null)
-
+  const { requestPaste } = usePaste()
   const { data: schema } = useGetAnatomySchemaQuery()
 
   const { data: anatomyPresetData, isLoading: presetLoading } = useGetAnatomyPresetQuery(
@@ -75,22 +75,28 @@ const AnatomyEditor = ({
   }, [formData, originalData, setIsChanged])
 
   const onPasteValue = async (path) => {
-    try {
-      const text = await pasteFromClipboard()
-      const value = JSON.parse(text)
-      const oldValue = getValueByPath(formData, path)
-      if (!sameKeysStructure(oldValue, value)) {
-        toast.error('Icompatible data structure')
-        return
-      }
-
-      let newData = cloneDeep(formData)
-      newData = setValueByPath(formData, path, value)
-
-      setFormData(newData)
-    } catch (e) {
-      console.error(e)
+    const pastedContent = await requestPaste()
+    if (!pastedContent) {
+      toast.error('No content to paste')
+      return
     }
+    let value
+    try {
+      value = JSON.parse(pastedContent)
+    } catch (e) {
+      toast.error('Invalid JSON')
+      return
+    }
+    const oldValue = getValueByPath(formData, path)
+    if (!sameKeysStructure(oldValue, value)) {
+      toast.error('Icompatible data structure')
+      return
+    }
+
+    let newData = cloneDeep(formData)
+    newData = setValueByPath(formData, path, value)
+
+    setFormData(newData)
   }
 
   if (isLoading) {
