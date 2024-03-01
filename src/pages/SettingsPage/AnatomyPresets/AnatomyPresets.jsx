@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 
 import copyToClipboard from '/src/helpers/copyToClipboard'
-import pasteFromClipboard from '/src/helpers/pasteFromClipboard'
+import { usePaste } from '/src/context/pasteContext'
 
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
@@ -36,6 +36,7 @@ const AnatomyPresets = () => {
   const [isChanged, setIsChanged] = useState(false)
 
   const nameInputRef = useRef(null)
+  const { requestPaste } = usePaste()
 
   //
   // Hooks
@@ -130,6 +131,23 @@ const AnatomyPresets = () => {
     console.log('Bread', breadcrumbs)
   }, [breadcrumbs])
 
+  const onPasteAnatomy = async () => {
+    const pastedContent = await requestPaste()
+    if (!pastedContent) {
+      toast.error('No content to paste')
+      return
+    }
+    let value
+    try {
+      value = JSON.parse(pastedContent)
+    } catch (e) {
+      toast.error('Invalid JSON')
+      return
+    }
+    setFormData(value)
+    setIsChanged(true)
+  }
+
   //
   // Render
   //
@@ -183,26 +201,7 @@ const AnatomyPresets = () => {
               copyToClipboard(JSON.stringify(formData, null, 2))
             }}
           />
-          <Button
-            label="Paste anatomy"
-            icon="content_paste"
-            onClick={async () => {
-              const content = await pasteFromClipboard()
-              if (!content) {
-                toast.error('Clipboard is empty')
-                return
-              }
-              try {
-                const data = JSON.parse(content)
-                setFormData(data)
-                setIsChanged(true)
-                toast.info('Anatomy pasted')
-              } catch (err) {
-                console.log(err)
-                toast.error('Clipboard content is not valid JSON')
-              }
-            }}
-          />
+          <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
 
           <Spacer />
           <Button
