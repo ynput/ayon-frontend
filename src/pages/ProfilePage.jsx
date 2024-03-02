@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import SessionList from '/src/containers/SessionList'
 import {
   FormRow,
   Section,
@@ -10,7 +9,6 @@ import {
   SaveButton,
   InputText,
 } from '@ynput/ayon-react-components'
-import { useGetMeQuery } from '../services/user/getUsers'
 import { useUpdateUserMutation } from '../services/user/updateUser'
 import UserDetailsHeader from '../components/User/UserDetailsHeader'
 import styled from 'styled-components'
@@ -41,12 +39,9 @@ export const PanelButtonsStyled = styled(Panel)`
   }
 `
 
-const ProfilePage = () => {
+const ProfilePage = ({ user = {}, isLoading }) => {
   const dispatch = useDispatch()
   const attributes = ayonClient.getAttribsByScope('user')
-  // RTK QUERIES
-  // GET USER DATA
-  const { data: userData, isLoading, isError } = useGetMeQuery()
   const [showSetPassword, setShowSetPassword] = useState(false)
 
   // UPDATE USER DATA
@@ -66,8 +61,8 @@ const ProfilePage = () => {
 
   // once user data is loaded, set form data
   useEffect(() => {
-    if (userData && !isLoading) {
-      const { attrib } = userData
+    if (user && !isLoading) {
+      const { attrib } = user
 
       const newFormData = {}
       attributes.forEach((att) => {
@@ -79,7 +74,7 @@ const ProfilePage = () => {
       setInitData(newFormData)
 
       // // set name
-      setName(userData.name)
+      setName(user.name)
     }
 
     return () => {
@@ -87,7 +82,7 @@ const ProfilePage = () => {
       setFormData(initialFormData)
       setName('')
     }
-  }, [isLoading, userData])
+  }, [isLoading, user])
 
   // look for changes when formData changes
   useEffect(() => {
@@ -100,10 +95,6 @@ const ProfilePage = () => {
     }
   }, [formData, initData])
 
-  if (isError) {
-    toast.error('Unable to load user data')
-  }
-
   const onCancel = () => {
     // reset data back to init
     setFormData(initData)
@@ -111,14 +102,14 @@ const ProfilePage = () => {
 
   const onSave = async () => {
     const attrib = {
-      ...userData.attrib,
+      ...user.attrib,
       ...formData,
-      developerMode: !!userData.attrib.developerMode,
+      developerMode: !!user.attrib.developerMode,
     }
 
     try {
       await updateUser({
-        name: userData.name,
+        name: user.name,
         patch: {
           attrib,
         },
@@ -140,13 +131,8 @@ const ProfilePage = () => {
 
   return (
     <main>
-      <Section style={{ flex: 2 }}>
-        <h2>Active sessions</h2>
-        <SessionList userName={userData?.name} />
-      </Section>
       <Section style={{ flex: 1, maxWidth: 500, minWidth: 370 }}>
-        <h2>Profile</h2>
-        <UserDetailsHeader users={[userData]} />
+        <UserDetailsHeader users={[user]} />
         <FormsStyled>
           <Panel>
             <FormRow label="Username" key="Username">
@@ -175,7 +161,7 @@ const ProfilePage = () => {
       </Section>
       {showSetPassword && (
         <SetPasswordDialog
-          selectedUsers={[userData?.name]}
+          selectedUsers={[user?.name]}
           onHide={() => {
             setShowSetPassword(false)
           }}

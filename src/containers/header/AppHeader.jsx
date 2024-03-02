@@ -76,7 +76,7 @@ const Header = () => {
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef(null)
   const userButtonRef = useRef(null)
-  const appButtonRef = useRef(null)
+  // const appButtonRef = useRef(null)
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -183,17 +183,18 @@ const Header = () => {
       </HeaderButton>
       <MenuContainer id="user" target={userButtonRef.current}>
         <UserMenu user={user} />
+        {!user?.data?.isUser ? <AppMenu user={user} /> : <></>}
       </MenuContainer>
-      <HeaderButton
+      {/* <HeaderButton
         icon="apps"
         onClick={() => handleToggleMenu('app')}
         ref={appButtonRef}
         active={menuOpen === 'app'}
         variant="text"
-      />
-      <MenuContainer id="app" target={appButtonRef.current}>
+      /> */}
+      {/* <MenuContainer id="app" target={appButtonRef.current}>
         <AppMenu user={user} />
-      </MenuContainer>
+      </MenuContainer> */}
     </nav>
   )
 }

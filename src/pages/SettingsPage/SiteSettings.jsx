@@ -7,6 +7,7 @@ import SiteList from '/src/containers/SiteList'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '/src/services/siteSettings'
 import { useSetSiteSettingsMutation } from '/src/services/siteSettings'
+import ProjectList from '/src/containers/projectList'
 
 const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
   const { data: schema, isLoading: schemaLoading } = useGetSiteSettingsSchemaQuery({
@@ -39,6 +40,7 @@ const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
 }
 
 const SiteSettings = () => {
+  const [selectedProjects, setSelectedProjects] = useState([])
   const [selectedAddons, setSelectedAddons] = useState([])
   const [selectedSites, setSelectedSites] = useState([])
   const [newData, setNewData] = useState({})
@@ -70,6 +72,14 @@ const SiteSettings = () => {
 
   return (
     <main style={{ flexDirection: 'row', flexGrow: 1 }}>
+      <ProjectList
+        styleSection={{ maxWidth: 300, minWidth: 300 }}
+        autoSelect
+        selection={selectedProjects}
+        onSelect={setSelectedProjects}
+        multiselect
+        showNull
+      />
       <Section style={{ maxWidth: 400 }}>
         <AddonList
           selectedAddons={selectedAddons}

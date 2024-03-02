@@ -26,15 +26,16 @@ export const UserMenu = ({ user, onClose }) => {
             {fullName ? (
               <span>{fullName}</span>
             ) : (
-              <NavLink to="/profile">
+              <NavLink to="/account/profile">
                 <span className={'error'}>Set Full Name</span>
               </NavLink>
             )}
           </Styled.Details>
         </Styled.Header>
+        <hr />
         <Styled.Buttons>
-          <NavLink to="/profile">
-            <Button variant="surface" icon="person" label="Profile" />
+          <NavLink to="/account/profile">
+            <Button variant="surface" icon="manage_accounts" label="Account" />
           </NavLink>
           <Button icon="logout" label="Sign out" onClick={handleLogOut} className="close" />
         </Styled.Buttons>

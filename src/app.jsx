@@ -16,7 +16,7 @@ const ProjectPage = lazy(() => import('./pages/ProjectPage'))
 const ProjectManagerPage = lazy(() => import('./pages/ProjectManagerPage'))
 const ExplorerPage = lazy(() => import('./pages/ExplorerPage'))
 const APIDocsPage = lazy(() => import('./pages/APIDocsPage'))
-const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const AccountPage = lazy(() => import('./pages/AccountPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const EventsPage = lazy(() => import('./pages/EventsPage'))
 const ServicesPage = lazy(() => import('./pages/ServicesPage'))
@@ -192,7 +192,12 @@ const App = () => {
                         />
                         <Route path="/explorer" element={<ExplorerPage />} />
                         <Route path="/doc/api" element={<APIDocsPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route
+                          path="/account"
+                          exact
+                          element={<Navigate replace to="/account/profile" />}
+                        />
+                        <Route path="/account/:module" exact element={<AccountPage />} />
                         <Route path="/events" element={<EventsPage />} />
                         <Route element={<ErrorPage code="404" />} />
                       </Routes>

@@ -10,8 +10,8 @@ import {
   Section,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import { toast } from 'react-toastify'
+import ProjectList from '/src/containers/projectList'
 
 const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots, { isLoading }] = useSetCustomRootsMutation()
@@ -69,15 +69,22 @@ const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   )
 }
 
-const ProjectRoots = ({ projectName, projectList }) => {
+const ProjectRoots = () => {
+  const [selectedProject, setSelectedProject] = useState(null)
+
+  console.log(selectedProject)
+
   const {
     data: project,
     isLoading: projectLoading,
     isError,
-  } = useGetProjectQuery({ projectName }, { skip: !projectName })
-  const { data: rootOverrides, isLoading: overridesLoading } = useGetCustomRootsQuery({
-    projectName,
-  })
+  } = useGetProjectQuery({ projectName: selectedProject }, { skip: !selectedProject })
+  const { data: rootOverrides, isLoading: overridesLoading } = useGetCustomRootsQuery(
+    {
+      projectName: selectedProject,
+    },
+    { skip: !selectedProject },
+  )
 
   const forms = useMemo(() => {
     const forms = []
@@ -93,7 +100,7 @@ const ProjectRoots = ({ projectName, projectList }) => {
         })
       }
       forms.push({
-        projectName,
+        selectedProject,
         siteId: site.id,
         siteName: site.hostname,
         roots,
@@ -104,17 +111,23 @@ const ProjectRoots = ({ projectName, projectList }) => {
 
   if (projectLoading || overridesLoading) return <>loading</>
 
-  if (isError) return <>error</>
+  if (isError) return <>Error loading project...</>
 
   // if (forms.length === 0) return <h1>No sites configured</h1>
   return (
-    <ProjectManagerPageLayout {...{ projectList }}>
+    <main>
+      <ProjectList
+        styleSection={{ maxWidth: 300, minWidth: 300 }}
+        autoSelect
+        selection={selectedProject}
+        onSelect={setSelectedProject}
+      />
       <Section className="invisible" style={{ maxWidth: 600 }}>
         {forms.map((form) => (
           <ProjectRootForm key={form.siteId} {...form} />
         ))}
       </Section>
-    </ProjectManagerPageLayout>
+    </main>
   )
 }
 

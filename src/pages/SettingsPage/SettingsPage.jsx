@@ -8,7 +8,6 @@ import AppNavLinks from '/src/containers/header/AppNavLinks'
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
 const StudioSettings = lazy(() => import('./StudioSettings'))
-const SiteSettings = lazy(() => import('./SiteSettings'))
 const UsersSettings = lazy(() => import('./UsersSettings'))
 const AccessGroups = lazy(() => import('./AccessGroups'))
 const Attributes = lazy(() => import('./Attributes'))
@@ -55,8 +54,6 @@ const SettingsPage = () => {
         return <AnatomyPresets />
       case 'studio':
         return <StudioSettings />
-      case 'site':
-        return <SiteSettings />
       case 'users':
         return <UsersSettings />
       case 'accessGroups':
@@ -92,12 +89,6 @@ const SettingsPage = () => {
         module: 'studio',
         accessLevels: ['manager'],
         shortcut: 'S+S',
-      },
-      {
-        name: 'Site settings',
-        path: '/settings/site',
-        module: 'site',
-        accessLevels: [],
       },
       {
         name: 'Anatomy presets',

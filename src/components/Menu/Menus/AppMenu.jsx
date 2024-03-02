@@ -1,5 +1,4 @@
 import ayonClient from '/src/ayon'
-import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import Menu from '../MenuComponents/Menu'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { useRestartServerMutation } from '/src/services/restartServer'
@@ -45,24 +44,24 @@ export const AppMenu = ({ user, ...props }) => {
     }
   }
 
-  const items = [
-    {
+  const items = []
+
+  if (!isUser) {
+    items.push({
       id: 'settings',
       link: '/settings/bundles',
       label: 'Studio Settings',
       icon: 'settings',
       shortcut: 'S+S',
-    },
-    {
+    })
+    items.push({
       id: 'projectsManager',
       link: '/manageProjects/anatomy',
       label: 'Projects Settings',
       icon: 'settings_applications',
       shortcut: 'P+P',
-    },
-  ]
+    })
 
-  if (!isUser) {
     items.push({
       id: 'market',
       link: '/market',
@@ -70,9 +69,6 @@ export const AppMenu = ({ user, ...props }) => {
       icon: 'store',
     })
   }
-
-  // this is weird I know, instead of returning a node, we return a menu object with sub menus
-  items.push(InstallerDownload({ isMenu: true }))
 
   const managerItems = [
     { id: 'divider' },

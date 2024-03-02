@@ -18,7 +18,16 @@ export const Content = styled.div`
   padding: 8px;
   flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
+  width: 100%;
+
+  /* divider */
+  hr {
+    margin: 0;
+    width: 100%;
+    border-style: solid;
+    opacity: 0.5;
+    border-color: var(--md-sys-color-surface-container-highest);
+  }
 `
 
 // header
@@ -27,6 +36,7 @@ export const Header = styled.header`
   align-items: center;
   gap: 8px;
   align-self: stretch;
+  margin-bottom: 16px;
 `
 
 export const Details = styled.div`
@@ -49,12 +59,16 @@ export const Details = styled.div`
 
 export const Buttons = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 4px;
+  width: 100%;
+  margin-top: 8px;
 
-  /* FIX: until new buttons */
   button {
+    background-color: unset;
+    justify-content: flex-start;
+    width: 100%;
     padding: 6px 16px 6px 12px;
-    max-height: unset;
   }
 `
 
