@@ -6,6 +6,8 @@ import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import useLocalStorage from '/src/hooks/useLocalStorage'
+import { UserMenu } from '.'
+import { useLogOutMutation } from '/src/services/auth/getAuth'
 
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin
@@ -44,34 +46,45 @@ export const AppMenu = ({ user, ...props }) => {
     }
   }
 
-  const items = []
+  // sign out
+  const [logout] = useLogOutMutation()
 
-  if (!isUser) {
-    items.push({
+  const handleLogOut = () => {
+    // onClose && onClose()
+    logout()
+  }
+
+  const items = [
+    {
+      id: 'account',
+      link: '/account/profile',
+      label: 'Account',
+      icon: 'person',
+    },
+  ]
+
+  const managerItems = [
+    { id: 'divider' },
+    {
       id: 'settings',
       link: '/settings/bundles',
       label: 'Studio Settings',
       icon: 'settings',
       shortcut: 'S+S',
-    })
-    items.push({
+    },
+    {
       id: 'projectsManager',
       link: '/manageProjects/anatomy',
       label: 'Projects Settings',
       icon: 'settings_applications',
       shortcut: 'P+P',
-    })
-
-    items.push({
+    },
+    {
       id: 'market',
       link: '/market',
       label: 'Addon Market',
       icon: 'store',
-    })
-  }
-
-  const managerItems = [
-    { id: 'divider' },
+    },
     {
       id: 'events',
       link: '/events',
@@ -108,14 +121,33 @@ export const AppMenu = ({ user, ...props }) => {
     },
   ]
 
-  // { node:  },
-
   // add protected items if user is admin
   if (isAdmin) items.push(...adminItems)
 
+  // final user items (sign out)
+  const finalItems = [
+    {
+      id: 'divider',
+    },
+    {
+      id: 'signOut',
+      label: 'Sign out',
+      icon: 'logout',
+      onClick: handleLogOut,
+    },
+  ]
+
+  // add final items for all users
+  items.push(...finalItems)
+
   return (
     <>
-      <Menu menu={items} footer={ayonClient.settings?.version} {...props} />
+      <Menu
+        menu={items}
+        header={<UserMenu user={user} />}
+        footer={!isUser && ayonClient.settings?.version}
+        {...props}
+      />
       {isAdmin && (
         <YnputConnector
           redirect={location.pathname + '/appMenu'}

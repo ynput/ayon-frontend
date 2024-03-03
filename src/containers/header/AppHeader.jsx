@@ -9,7 +9,7 @@ import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
-import { HelpMenu, UserMenu } from '/src/components/Menu'
+import { HelpMenu } from '/src/components/Menu'
 import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import { toast } from 'react-toastify'
@@ -182,19 +182,8 @@ const Header = () => {
         />
       </HeaderButton>
       <MenuContainer id="user" target={userButtonRef.current}>
-        <UserMenu user={user} />
-        {!user?.data?.isUser ? <AppMenu user={user} /> : <></>}
-      </MenuContainer>
-      {/* <HeaderButton
-        icon="apps"
-        onClick={() => handleToggleMenu('app')}
-        ref={appButtonRef}
-        active={menuOpen === 'app'}
-        variant="text"
-      /> */}
-      {/* <MenuContainer id="app" target={appButtonRef.current}>
         <AppMenu user={user} />
-      </MenuContainer> */}
+      </MenuContainer>
     </nav>
   )
 }
