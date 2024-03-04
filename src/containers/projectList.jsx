@@ -226,13 +226,15 @@ const ProjectList = ({
           icon: 'create_new_folder',
           command: onNewProject,
         },
-        {
+      ]
+
+      if (onDeleteProject)
+        managerMenuItems.push({
           label: 'Delete Project',
           icon: 'delete',
           command: () => onDeleteProject(sel[0]),
           danger: true,
-        },
-      ]
+        })
 
       if (isProjectManager) menuItems.push(...managerMenuItems)
 
