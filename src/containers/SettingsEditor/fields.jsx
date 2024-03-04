@@ -225,7 +225,7 @@ function ObjectFieldTemplate(props) {
   // In case of "pseudo-dicts" (array of objects with a "name" attribute)
   // use the "name" attributeas the title
 
-  if (props.schema?.properties) {
+  if (!props.schema?.properties) {
     console.warn(`object schema does not have any props:`, props.schema)
   }
 
