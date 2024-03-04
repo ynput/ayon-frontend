@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { Dropdown } from '@ynput/ayon-react-components'
 
 const ProjectDropdown = ({ projectName, setProjectName, disabled }) => {
-  const { data, isLoading, isError } = useGetAllProjectsQuery()
+  const { data, isLoading, isError } = useGetAllProjectsQuery({ showInactive: false })
 
   const projectOptions = useMemo(() => {
     if (isLoading || isError) return []

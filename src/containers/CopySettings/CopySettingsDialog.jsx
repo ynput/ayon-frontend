@@ -4,7 +4,9 @@ import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 
 import { ScrollPanel, Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
+
 import BundleDropdown from '/src/containers/BundleDropdown'
+import ProjectDropdown from '/src/containers/ProjectDropdown'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 
 import { Dialog } from 'primereact/dialog'
@@ -31,6 +33,7 @@ const CopySettingsDialog = ({
 
   const [sourceBundle, setSourceBundle] = useState(null)
   const [sourceVariant, setSourceVariant] = useState(null)
+  const [sourceProjectName, setSourceProjectName] = useState(null)
 
   const {
     data: bundlesData,
@@ -132,6 +135,9 @@ const CopySettingsDialog = ({
         setBundleName={setSourceBundle}
       />
       <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
+      {projectName && (
+        <ProjectDropdown projectName={sourceProjectName} setProjectName={setSourceProjectName} />
+      )}
       <Spacer />
     </Toolbar>
   )
@@ -176,6 +182,7 @@ const CopySettingsDialog = ({
                   }}
                   forcedSourceVariant={sourceVariant}
                   forcedSourceVersion={pickByBundle ? sourceVersions[addon.name] : null}
+                  forcedSourceProjectName={pickByBundle ? sourceProjectName : null}
                 />
               ))}
           </div>

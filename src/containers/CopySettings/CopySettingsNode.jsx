@@ -13,7 +13,7 @@ import { getValueByPath } from '../AddonSettings/utils'
 import { isEqual } from 'lodash'
 
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
-import ProjectDropdown from '/src/containers/CopySettings/ProjectDropdown'
+import ProjectDropdown from '/src/containers/ProjectDropdown'
 import AddonDropdown from '/src/containers/CopySettings/AddonDropdown'
 
 import {
@@ -85,9 +85,7 @@ const CopySettingsNode = ({
 }) => {
   const [sourceVersion, setSourceVersion] = useState(null)
   const [sourceVariant, setSourceVariant] = useState(null)
-  const [sourceProjectName, setSourceProjectName] = useState(
-    forcedSourceProjectName || targetProjectName,
-  )
+  const [sourceProjectName, setSourceProjectName] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
@@ -110,8 +108,18 @@ const CopySettingsNode = ({
     }
   }, [forcedSourceVariant])
 
+  useEffect(() => {
+    if (forcedSourceProjectName && forcedSourceProjectName !== sourceProjectName) {
+      console.log('forcedSourceProjectName', forcedSourceProjectName)
+      setSourceProjectName(forcedSourceProjectName)
+    } else if (forcedSourceProjectName === null && sourceProjectName === null) {
+      setSourceProjectName(null)
+    }
+  }, [forcedSourceProjectName])
+
   const loadNodeData = async () => {
     if (!sourceVersion || !sourceVariant) return
+    if (targetProjectName && !sourceProjectName) return
     setLoading(true)
 
     if (
@@ -190,7 +198,9 @@ const CopySettingsNode = ({
     }
 
     if (!changes.length) {
-      setNodeData({ message: 'no changes to copy', enabled: false })
+      setNodeData({ message: 'no overrides to copy', enabled: false })
+      setLoading(false)
+      return
     }
 
     setNodeData({
@@ -255,68 +265,77 @@ const CopySettingsNode = ({
           <span className="message">{nodeData?.message || 'Nothing to copy'}</span>
         )}
       </NodePanelDirectionSelector>
-
       <AddonDropdown
         addonName={addonName}
         addonVersion={targetVersion}
         setAddonVersion={() => {}}
         disabled
       />
-      {targetProjectName && (
-        <ProjectDropdown projectName={targetProjectName} setProjectName={() => {}} disabled />
-      )}
       {/*
+      {targetProjectName && (
+        <ProjectDropdown projectName={targetProjectName} setProjectName={() => { }} disabled />
+      )}
       <VariantSelector variant={targetVariant} setVariant={() => { }} disabled />
       */}
     </NodePanelHeader>
   )
 
   // is it a table? it is. So i'm using a table. don't judge me!
-  const body = expanded ? (
+  // i am almost 40 years old and i can use a table if i want to.
+
+  const body = (
     <NodePanelBody>
       <ChangesTable>
-        <tbody>
-          {nodeData.changes.map((change) => (
-            <tr key={change.key}>
+        <tr>
+          <th className="btn">&nbsp;</th>
+          <th>Path</th>
+          <th className="valpvw">Current&nbsp;value</th>
+          <th className="valpvw">New&nbsp;value</th>
+        </tr>
+        {(nodeData?.changes || []).map((change) => (
+          <tr key={change.key}>
+            <td>
+              <InputSwitch
+                checked={change.enabled}
+                disabled={!change.compatible}
+                onChange={(e) => {
+                  setNodeData({
+                    ...nodeData,
+                    changes: nodeData.changes.map((c) => {
+                      if (c.key === change.key) {
+                        c.enabled = e.target.checked
+                      }
+                      return c
+                    }),
+                  })
+                }}
+              />
+            </td>
+            <td>
+              {' '}
+              <FormattedPath value={change.path} />{' '}
+            </td>
+            <td>
+              {' '}
+              <FormattedValue value={change.targetValue} />{' '}
+            </td>
+            <td>
+              {' '}
+              <FormattedValue value={change.sourceValue} />{' '}
+            </td>
+
+            {/*
               <td>
-                <InputSwitch
-                  checked={change.enabled}
-                  disabled={!change.compatible}
-                  onChange={(e) => {
-                    setNodeData({
-                      ...nodeData,
-                      changes: nodeData.changes.map((c) => {
-                        if (c.key === change.key) {
-                          c.enabled = e.target.checked
-                        }
-                        return c
-                      }),
-                    })
-                  }}
-                />
-              </td>
-              <td className="expand">
-                <FormattedPath value={change.path} />
-              </td>
-              <td>
-                <FormattedValue value={change.sourceValue} />
-              </td>
-              <td>
-                <Icon icon="trending_flat" />
-              </td>
-              <td>
-                <FormattedValue value={change.targetValue} />
-              </td>
-              <td>
+                &nbsp;
                 {!change.compatible && <Icon icon="warning" style={{ color: 'red' }} />}
                 {change.warnings.length > 0 && <Icon icon="warning" style={{ color: 'yellow' }} />}
               </td>
-            </tr>
-          ))}
-        </tbody>
+              */}
+          </tr>
+        ))}
       </ChangesTable>
     </NodePanelBody>
-  ) : null
+  )
 
   return (
     <NodePanelWrapper className={expanded ? 'expanded' : undefined}>

@@ -88,11 +88,24 @@ const ChangesTable = styled.table`
     }
   }
 
-  td {
+  .btn {
     width: 1px;
+  }
+
+  .valpvw {
+    width: 25%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  td,
+  th {
     padding: 4px 8px;
-    &.expand {
-      width: auto;
+    text-align: left;
+
+    &th {
+      font-weight: bold;
+      text-align: left;
     }
   }
 `
