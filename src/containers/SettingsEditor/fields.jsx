@@ -224,9 +224,14 @@ function ObjectFieldTemplate(props) {
   let title = props.title
   // In case of "pseudo-dicts" (array of objects with a "name" attribute)
   // use the "name" attributeas the title
-  if ('name' in props.schema.properties) {
+
+  if (props.schema?.properties) {
+    console.warn(`object schema does not have any props:`, props.schema)
+  }
+
+  if ('name' in (props.schema.properties || {})) {
     let label = null
-    if ('label' in props.schema.properties) label = props.formData.label
+    if ('label' in (props.schema.properties || {})) label = props.formData.label
     title = label || props.formData.name || <span className="new-object">Unnamed item</span>
   }
 
