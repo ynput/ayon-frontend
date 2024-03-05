@@ -5,7 +5,6 @@ import {
   Section,
   Panel,
   LockedInput,
-  Button,
   SaveButton,
   InputText,
 } from '@ynput/ayon-react-components'
@@ -25,6 +24,7 @@ const FormsStyled = styled.section`
   gap: 4px;
   display: flex;
   flex-direction: column;
+  max-width: 600px;
 
   & > *:last-child {
     /* flex: 1; */
@@ -95,11 +95,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }, [formData, initData])
 
-  const onCancel = () => {
-    // reset data back to init
-    setFormData(initData)
-  }
-
   const onSave = async () => {
     const attrib = {
       ...user.attrib,
@@ -131,8 +126,8 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
   return (
     <main>
-      <Section style={{ flex: 1, maxWidth: 500, minWidth: 370 }}>
-        <UserDetailsHeader users={[user]} />
+      <Section>
+        <UserDetailsHeader users={[user]} style={{ maxWidth: 600 }} />
         <FormsStyled>
           <Panel>
             <FormRow label="Username" key="Username">
@@ -147,16 +142,14 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               />
             </FormRow>
             <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
-          </Panel>
-          <PanelButtonsStyled>
-            <Button onClick={onCancel} label="Cancel" icon="cancel" disabled={!changesMade} />
             <SaveButton
               onClick={onSave}
-              label="Save"
+              label="Save profile"
               active={changesMade}
               saving={isUpdatingUser}
+              style={{ padding: '6px 18px', marginLeft: 'auto' }}
             />
-          </PanelButtonsStyled>
+          </Panel>
         </FormsStyled>
       </Section>
       {showSetPassword && (
