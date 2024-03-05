@@ -129,6 +129,7 @@ const CopySettingsDialog = ({
 
   const toolbar = pickByBundle && (
     <Toolbar>
+      Copy settings from
       <BundleDropdown
         style={{ flexGrow: 1 }}
         bundleName={sourceBundle}
