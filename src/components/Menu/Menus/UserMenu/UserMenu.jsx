@@ -1,11 +1,10 @@
-import ayonClient from '/src/ayon'
 import UserMenuHeader from './UserMenuHeader'
 import Menu from '../../MenuComponents/Menu'
 import { useLogOutMutation } from '/src/services/auth/getAuth'
 
 export const UserMenu = ({ user, ...props }) => {
   const fullName = user?.attrib?.fullName
-  const isUser = user?.data?.isUser
+  // const isUser = user?.data?.isUser
 
   // sign out
   const [logout] = useLogOutMutation()
@@ -22,12 +21,12 @@ export const UserMenu = ({ user, ...props }) => {
       label: 'Account',
       icon: 'person',
     },
-    {
-      id: 'settings',
-      link: '/account/settings',
-      label: 'Settings',
-      icon: 'settings',
-    },
+    // {
+    //   id: 'settings',
+    //   link: '/account/settings',
+    //   label: 'Settings',
+    //   icon: 'settings',
+    // },
     {
       id: 'downloads',
       link: '/account/downloads',
@@ -47,12 +46,7 @@ export const UserMenu = ({ user, ...props }) => {
 
   return (
     <>
-      <Menu
-        menu={items}
-        header={<UserMenuHeader user={user} fullName={fullName} />}
-        footer={!isUser && ayonClient.settings?.version}
-        {...props}
-      />
+      <Menu menu={items} header={<UserMenuHeader user={user} fullName={fullName} />} {...props} />
     </>
   )
 }

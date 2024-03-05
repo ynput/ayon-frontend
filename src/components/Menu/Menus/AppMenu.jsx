@@ -5,6 +5,7 @@ import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import useLocalStorage from '/src/hooks/useLocalStorage'
+import ayonClient from '/src/ayon'
 
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin
@@ -53,15 +54,16 @@ export const AppMenu = ({ user, ...props }) => {
     },
   ]
 
-  const managerItems = [
-    {
+  if (!isUser)
+    items.unshift({
       id: 'settings',
       link: '/settings/bundles',
       label: 'Studio Settings',
       icon: 'settings',
       shortcut: 'S+S',
-    },
+    })
 
+  const managerItems = [
     {
       id: 'market',
       link: '/market',
@@ -109,7 +111,7 @@ export const AppMenu = ({ user, ...props }) => {
 
   return (
     <>
-      <Menu menu={items} {...props} />
+      <Menu menu={items} {...props} footer={!isUser && ayonClient.settings?.version} />
       {isAdmin && (
         <YnputConnector
           redirect={location.pathname + '/appMenu'}
