@@ -7,6 +7,7 @@ import styled from 'styled-components'
 import AppNavLinks from '../../containers/header/AppNavLinks'
 // import SiteSettings from './SiteSettingsPage'
 import ProfilePage from './ProfilePage'
+import DownloadsPage from './DownloadsPage/DownloadsPage'
 
 export const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
@@ -30,7 +31,7 @@ const AccountPage = () => {
       case 'sessions':
         return <SessionList userName={userData?.name} />
       case 'downloads':
-        return <>Downloads</>
+        return <DownloadsPage />
       case 'settings':
         return <>Settings</>
       default:
