@@ -126,7 +126,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
   return (
     <main>
-      <Section>
+      <Section style={{ paddingTop: 16 }}>
         <UserDetailsHeader users={[user]} style={{ maxWidth: 600 }} />
         <FormsStyled>
           <Panel>

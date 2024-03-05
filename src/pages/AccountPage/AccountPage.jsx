@@ -50,12 +50,12 @@ const AccountPage = () => {
       path: '/account/sessions',
       module: 'sessions',
     },
-    { name: 'Downloads', path: '/account/downloads', module: 'downloads' },
-    {
-      name: 'Settings',
-      path: '/account/settings',
-      module: 'settings',
-    },
+    { name: 'Launchers', path: '/account/downloads', module: 'downloads' },
+    // {
+    //   name: 'Settings',
+    //   path: '/account/settings',
+    //   module: 'settings',
+    // },
   ]
 
   return (

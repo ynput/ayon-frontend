@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { useGetBundleListQuery } from '/src/services/bundles'
 import { useGetInstallerListQuery } from '/src/services/installers'
 import { coerce, rcompare } from 'semver'
+import useLocalStorage from '/src/hooks/useLocalStorage'
+import { toast } from 'react-toastify'
 
 const useGetInstallerDownload = () => {
   const { data: installers = [] } = useGetInstallerListQuery()
@@ -111,12 +113,44 @@ const useGetInstallerDownload = () => {
     return null
   }, [productionInstallers])
 
-  return [
-    productionInstallersGroupedByPlatform,
-    nonProductionInstallersGroupedByPlatform,
+  const [installersDownloaded, setInstallersDownloaded] = useLocalStorage(
+    'installers-downloaded',
+    [],
+  )
+
+  const downloadFromUrl = (url, filename) => {
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.parentNode.removeChild(link)
+    // set localStorage
+    setInstallersDownloaded([...installersDownloaded, filename])
+  }
+
+  const handleDownload = async (sources, filename) => {
+    // find a source of type === 'server
+    const serverSource = sources.find((source) => source.type === 'server')
+    const urlSource = sources.find((source) => source.type === 'http')
+    if (serverSource || urlSource) {
+      const url = serverSource
+        ? `/api/desktop/installers/${filename}?token=${localStorage.getItem('accessToken')}`
+        : urlSource.url
+      // download the file
+      downloadFromUrl(url, filename)
+    } else {
+      toast.error('URL for launcher not found')
+    }
+  }
+
+  return {
+    prodInstallers: productionInstallersGroupedByPlatform,
+    nonProdInstallers: nonProductionInstallersGroupedByPlatform,
     directDownload,
-    userPlatform,
-  ]
+    platform: userPlatform,
+    handleDownload,
+  }
 }
 
 export default useGetInstallerDownload

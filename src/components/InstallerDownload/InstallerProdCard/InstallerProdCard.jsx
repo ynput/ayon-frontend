@@ -38,7 +38,7 @@ const InstallerProdCard = ({ platform, isFeatured = false, installers = [], onIn
               key={installer.filename}
               onClick={() => onInstall(installer)}
               variant={isFeatured ? 'filled' : 'text'}
-              icon={isFeatured ? 'download' : null}
+              icon={isFeatured ? 'install_desktop' : null}
             >
               {installer.filename}
             </Button>

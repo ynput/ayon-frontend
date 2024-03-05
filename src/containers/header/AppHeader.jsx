@@ -7,7 +7,7 @@ import HeaderButton from './HeaderButton'
 import AppMenu from '../../components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
-import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
+import InstallerDownloadPrompt from '../../components/InstallerDownload/InstallerDownloadPrompt'
 import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
 import { HelpMenu, UserMenu } from '/src/components/Menu'
 import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
@@ -151,7 +151,7 @@ const Header = () => {
 
       <Breadcrumbs />
       <Spacer />
-      <InstallerDownload isSpecial />
+      <InstallerDownloadPrompt />
       {isDeveloper && (
         <DeveloperSwitch $isChecked={developerMode} onClick={handleDeveloperMode}>
           <span>Developer Mode</span>

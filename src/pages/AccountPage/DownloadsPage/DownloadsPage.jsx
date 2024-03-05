@@ -2,8 +2,7 @@ import useGetInstallerDownload from '/src/components/InstallerDownload/useGetIns
 import * as Styled from './DownloadsPage.styled'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
 import InstallerProdCard from '/src/components/InstallerDownload/InstallerProdCard/InstallerProdCard'
-import useLocalStorage from '/src/hooks/useLocalStorage'
-import { toast } from 'react-toastify'
+
 import WindowsLogo from '/src/svg/WindowsLogo'
 import AppleLogo from '/src/svg/AppleLogo'
 import LinuxLogo from '/src/svg/LinuxLogo'
@@ -25,40 +24,9 @@ const getPlatformIcon = (platform) => {
 }
 
 const DownloadsPage = () => {
-  const [installersDownloaded, setInstallersDownloaded] = useLocalStorage(
-    'installers-downloaded',
-    [],
-  )
   //  production installers grouped by platform
   //  non-production installers grouped by version
-  const [productionDownloads = {}, nonProductionDownloads = {}, , platform] =
-    useGetInstallerDownload()
-
-  const downloadFromUrl = (url, filename) => {
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', filename)
-    document.body.appendChild(link)
-    link.click()
-    link.parentNode.removeChild(link)
-    // set localStorage
-    setInstallersDownloaded([...installersDownloaded, filename])
-  }
-
-  const handleDownloadClick = async (sources, filename) => {
-    // find a source of type === 'server
-    const serverSource = sources.find((source) => source.type === 'server')
-    const urlSource = sources.find((source) => source.type === 'http')
-    if (serverSource || urlSource) {
-      const url = serverSource
-        ? `/api/desktop/installers/${filename}?token=${localStorage.getItem('accessToken')}`
-        : urlSource.url
-      // download the file
-      downloadFromUrl(url, filename)
-    } else {
-      toast.error('URL for launcher not found')
-    }
-  }
+  const { prodInstallers, nonProdInstallers, platform, handleDownload } = useGetInstallerDownload()
 
   const platforms = ['windows', 'darwin', 'linux']
 
@@ -72,17 +40,15 @@ const DownloadsPage = () => {
                 key={p}
                 platform={p}
                 isFeatured={p === platform}
-                installers={productionDownloads[p]}
-                onInstall={(installer) =>
-                  handleDownloadClick(installer.sources, installer.filename)
-                }
+                installers={prodInstallers[p]}
+                onInstall={(installer) => handleDownload(installer.sources, installer.filename)}
               />
             ))}
           </Styled.Header>
           <Panel style={{ overflow: 'auto' }}>
             <h2>All Versions</h2>
             <Styled.All>
-              {Object.entries(nonProductionDownloads).map(([version, installers]) => (
+              {Object.entries(nonProdInstallers).map(([version, installers]) => (
                 <div key={version}>
                   <Styled.Installer variant="text">
                     <span>
@@ -92,7 +58,7 @@ const DownloadsPage = () => {
                       {installers.map((installer) => (
                         <Button
                           key={installer.filename}
-                          onClick={() => handleDownloadClick(installer.sources, installer.filename)}
+                          onClick={() => handleDownload(installer.sources, installer.filename)}
                           variant="text"
                           style={{
                             order:
