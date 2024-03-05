@@ -6,6 +6,7 @@ import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import AddonSettings from '/src/containers/AddonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
+import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 
 import { selectProject } from '/src/features/context'
@@ -20,6 +21,13 @@ const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
     <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
       <AddonSettings projectName={projectName} />
+    </ProjectManagerPageLayout>
+  )
+}
+const SiteSettings = ({ projectList, projectManager, projectName }) => {
+  return (
+    <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
+      <AddonSettings showSites projectName={projectName} />
     </ProjectManagerPageLayout>
   )
 }
@@ -82,6 +90,18 @@ const ProjectManagerPage = () => {
       shortcut: 'P+P',
     },
     {
+      name: 'Site settings',
+      path: '/manageProjects/siteSettings',
+      module: 'siteSettings',
+      accessLevels: [],
+    },
+    {
+      name: 'Roots',
+      path: '/manageProjects/roots',
+      module: 'roots',
+      accessLevels: [],
+    },
+    {
       name: 'Teams',
       path: '/manageProjects/teams',
       module: 'teams',
@@ -112,6 +132,8 @@ const ProjectManagerPage = () => {
       >
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}
+        {module === 'siteSettings' && <SiteSettings />}
+        {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
       </ProjectManagerPageContainer>
 

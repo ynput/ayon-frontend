@@ -9,7 +9,7 @@ import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
 import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
-import { HelpMenu } from '/src/components/Menu'
+import { HelpMenu, UserMenu } from '/src/components/Menu'
 import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import { toast } from 'react-toastify'
@@ -76,7 +76,7 @@ const Header = () => {
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef(null)
   const userButtonRef = useRef(null)
-  // const appButtonRef = useRef(null)
+  const appButtonRef = useRef(null)
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -158,6 +158,8 @@ const Header = () => {
           <StyledSwitch checked={developerMode} readOnly />
         </DeveloperSwitch>
       )}
+
+      {/* help icon and menu vvv */}
       <HeaderButton
         icon="help"
         ref={helpButtonRef}
@@ -168,6 +170,22 @@ const Header = () => {
       <MenuContainer id="help" target={helpButtonRef.current}>
         <HelpMenu user={user} />
       </MenuContainer>
+      {/* help icon and menu ^^^ */}
+
+      {/* App icon and menu vvv */}
+      <HeaderButton
+        icon="apps"
+        onClick={() => handleToggleMenu('app')}
+        ref={appButtonRef}
+        active={menuOpen === 'app'}
+        variant="text"
+      />
+      <MenuContainer id="app" target={appButtonRef.current}>
+        <AppMenu user={user} />
+      </MenuContainer>
+      {/* App icon and menu ^^^ */}
+
+      {/* User icon and menu vvv */}
       <HeaderButton
         active={menuOpen === 'user'}
         onClick={() => handleToggleMenu('user')}
@@ -182,8 +200,9 @@ const Header = () => {
         />
       </HeaderButton>
       <MenuContainer id="user" target={userButtonRef.current}>
-        <AppMenu user={user} />
+        <UserMenu user={user} />
       </MenuContainer>
+      {/* User icon and menu ^^^ */}
     </nav>
   )
 }

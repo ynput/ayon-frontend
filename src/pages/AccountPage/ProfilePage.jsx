@@ -9,13 +9,13 @@ import {
   SaveButton,
   InputText,
 } from '@ynput/ayon-react-components'
-import { useUpdateUserMutation } from '../services/user/updateUser'
-import UserDetailsHeader from '../components/User/UserDetailsHeader'
+import { useUpdateUserMutation } from '../../services/user/updateUser'
+import UserDetailsHeader from '../../components/User/UserDetailsHeader'
 import styled from 'styled-components'
-import UserAttribForm from './SettingsPage/UsersSettings/UserAttribForm'
-import SetPasswordDialog from './SettingsPage/UsersSettings/SetPasswordDialog'
-import ayonClient from '../ayon'
-import { onProfileUpdate } from '../features/user'
+import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
+import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
+import ayonClient from '../../ayon'
+import { onProfileUpdate } from '../../features/user'
 import { useDispatch } from 'react-redux'
 
 const FormsStyled = styled.section`

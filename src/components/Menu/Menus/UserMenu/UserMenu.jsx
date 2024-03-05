@@ -1,27 +1,59 @@
-import React from 'react'
-import * as Styled from './UserMenu.styled'
-import { UserImage } from '@ynput/ayon-react-components'
-import Font from '/src/theme/typography.module.css'
+import ayonClient from '/src/ayon'
+import UserMenuHeader from './UserMenuHeader'
+import Menu from '../../MenuComponents/Menu'
+import { useLogOutMutation } from '/src/services/auth/getAuth'
 
-import { NavLink } from 'react-router-dom'
-
-export const UserMenu = ({ user }) => {
+export const UserMenu = ({ user, ...props }) => {
   const fullName = user?.attrib?.fullName
+  const isUser = user?.data?.isUser
+
+  // sign out
+  const [logout] = useLogOutMutation()
+
+  const handleLogOut = () => {
+    // onClose && onClose()
+    logout()
+  }
+
+  const items = [
+    {
+      id: 'account',
+      link: '/account/profile',
+      label: 'Account',
+      icon: 'person',
+    },
+    {
+      id: 'settings',
+      link: '/account/settings',
+      label: 'Settings',
+      icon: 'settings',
+    },
+    {
+      id: 'downloads',
+      link: '/account/downloads',
+      label: 'Download Launcher',
+      icon: 'install_desktop',
+    },
+    {
+      id: 'divider',
+    },
+    {
+      id: 'signOut',
+      label: 'Sign out',
+      icon: 'logout',
+      onClick: handleLogOut,
+    },
+  ]
 
   return (
-    <Styled.Header>
-      <UserImage size={30} src={user?.attrib?.avatarUrl} fullName={fullName || user?.name} />
-      <Styled.Details className={Font.titleSmall}>
-        <span>{user?.name}</span>
-        {fullName ? (
-          <span>{fullName}</span>
-        ) : (
-          <NavLink to="/account/profile">
-            <span className={'error'}>Set Full Name</span>
-          </NavLink>
-        )}
-      </Styled.Details>
-    </Styled.Header>
+    <>
+      <Menu
+        menu={items}
+        header={<UserMenuHeader user={user} fullName={fullName} />}
+        footer={!isUser && ayonClient.settings?.version}
+        {...props}
+      />
+    </>
   )
 }
 
