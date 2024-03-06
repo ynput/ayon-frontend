@@ -56,7 +56,6 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
 
       const initForm = {
         addons: initAddons,
-        installerVersion: installers?.[0]?.version,
         name: '',
         ...initBundle,
         isDev: developerMode || isDev,
