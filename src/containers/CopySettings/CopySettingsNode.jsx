@@ -218,13 +218,15 @@ const CopySettingsNode = ({
   } //loadNodeData
 
   useEffect(() => {
-    console.log('LOAD', addonName, sourceVersion, sourceVariant, sourceProjectName)
+    //console.log('LOAD', addonName, sourceVersion, sourceVariant, sourceProjectName)
     loadNodeData()
   }, [sourceVersion, sourceVariant, sourceProjectName])
 
   const expanded = !!(nodeData?.available && nodeData?.enabled)
 
-  if (forcedSourceVersion && forcedSourceVariant && !nodeData?.available) return null
+  if (forcedSourceVersion && forcedSourceVariant && !nodeData?.available) {
+    return null
+  }
 
   const header = (
     <NodePanelHeader className={expanded ? 'expanded' : undefined}>
