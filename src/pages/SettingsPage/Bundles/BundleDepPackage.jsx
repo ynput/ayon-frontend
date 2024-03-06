@@ -22,15 +22,15 @@ const StyledFormRow = styled(FormRow)`
 const BundleDepPackage = ({ children, label, onEdit }) => {
   return (
     <StyledFormRow label={label}>
-      <span>
-        {children || '(NONE)'}
-        {/* <span> (author)</span> */}
-      </span>
       <Button
         icon={children ? 'edit' : 'add'}
         onClick={onEdit}
         data-tooltip={children ? 'Edit dependency package' : 'Add dependency package'}
       />
+      <span>
+        {children || '(NONE)'}
+        {/* <span> (author)</span> */}
+      </span>
     </StyledFormRow>
   )
 }
