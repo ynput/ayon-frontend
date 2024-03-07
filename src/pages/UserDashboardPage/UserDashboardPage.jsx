@@ -49,7 +49,7 @@ const UserDashboardPage = () => {
 
   // get projects list
   const { data: projects = [], isLoading: isLoadingProjects } = useGetAllProjectsQuery({
-    showInactive: false,
+    showInactive: true,
   })
   // attach projects: ['project_name'] to each projectInfo
   const projectsInfoWithProjects = useMemo(() => {

@@ -51,8 +51,14 @@ const updateProject = ayonApi.injectEndpoints({
         method: 'PATCH',
         body: update,
       }),
-      invalidatesTags: (result, error, { projectName }) =>
-        error ? [] : [{ type: 'project', id: projectName }],
+      invalidatesTags: (result, error, { projectName, update }) =>
+        error
+          ? []
+          : 'active' in update
+          ? // if active is updated, invalidate all projects
+            [{ type: 'project' }]
+          : // if not, invalidate only the updated project
+            [{ type: 'project', id: projectName }],
     }),
   }),
 })
