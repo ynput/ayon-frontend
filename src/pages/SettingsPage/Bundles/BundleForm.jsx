@@ -36,6 +36,7 @@ const BundleForm = ({
   onAddonDevChange,
   developerMode,
   addonListRef,
+  onAddonAutoUpdate,
 }) => {
   const showNameError = formData && !formData?.name && isNew
   const currentUser = useSelector((state) => state.user.name)
@@ -149,6 +150,7 @@ const BundleForm = ({
               isDev={isDev || formData.isDev}
               onDevChange={onAddonDevChange}
               ref={addonListRef}
+              onAddonAutoUpdate={onAddonAutoUpdate}
             />
           </section>
         </section>
