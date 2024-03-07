@@ -37,7 +37,7 @@ const customRoots = ayonApi.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: ['customRoots'],
+      invalidatesTags: ['customRoots', 'siteRoots'],
 
       async onQueryStarted({ projectName, siteId, data }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(

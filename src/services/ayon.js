@@ -70,6 +70,7 @@ export const ayonApi = createApi({
     'secrets',
     'session',
     'settingsAddons',
+    'siteRoots',
     'siteSettings',
     'siteSettingsSchema',
     'tag',
