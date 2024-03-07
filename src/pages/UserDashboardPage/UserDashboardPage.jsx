@@ -11,6 +11,8 @@ import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
+import { useDeleteProjectMutation } from '/src/services/project/updateProject'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const UserDashboardPage = () => {
   let { module } = useParams()
@@ -59,6 +61,18 @@ const UserDashboardPage = () => {
     return projectsInfoWithProjects
   }, [projectsInfo, isLoadingInfo])
 
+  const [deleteProject] = useDeleteProjectMutation()
+
+  const handleDeleteProject = (sel) => {
+    confirmDelete({
+      label: `Project: ${sel}`,
+      accept: async () => {
+        await deleteProject({ projectName: sel }).unwrap()
+        setSelectedProjects([])
+      },
+    })
+  }
+
   if (isLoadingProjects) return null
 
   if (!projects.length) return <UserDashboardNoProjects />
@@ -87,6 +101,7 @@ const UserDashboardPage = () => {
             onSelectAllDisabled={!isProjectsMultiSelect}
             isProjectManager={module === 'overview'}
             onNewProject={() => setShowNewProject(true)}
+            onDeleteProject={handleDeleteProject}
           />
           {module === 'tasks' && (
             <UserTasksContainer
