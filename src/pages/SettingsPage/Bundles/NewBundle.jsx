@@ -152,10 +152,8 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
       changes.addonDevelopment = removeEmptyDevAddons(changes.addonDevelopment)
     }
 
-    // HACK: include whole bundle data as patch is broken
-
     try {
-      await updateBundle({ name: initBundle.name, data: { ...formData } }).unwrap()
+      await updateBundle({ name: initBundle.name, data: { ...changes } }).unwrap()
 
       toast.success('Dev bundle updated')
       setDevChanges(false)

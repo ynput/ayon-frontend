@@ -35,11 +35,9 @@ const BundleDeps = ({ bundle }) => {
       dependencyPackages: newDeps,
     }
 
-    // HACK: using whole patch data instead of just the dependencyPackages to avoid overwriting other fields
-
     // update bundle on server
     try {
-      await updateBundle({ name: bundle.name, patch, data: patch })
+      await updateBundle({ name: bundle.name, patch, data: { dependencyPackages: newDeps } })
       handleCloseForm()
       toast.success('Bundle Dependency Package updated')
     } catch (error) {
