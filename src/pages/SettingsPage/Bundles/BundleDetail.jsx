@@ -48,10 +48,9 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
     }
   }, [bundles, selectedBundle])
 
-  const onSaveBundle = async () => {
-    console.log('onSaveBundle', formData)
-    await updateBundle({ name: bundle.name, data: formData }).unwrap()
-    toast.success('Bundle updated')
+  const handleAddonAutoSave = async (addon, version) => {
+    await updateBundle({ name: bundle.name, data: { addons: { [addon]: version } } }).unwrap()
+    toast.success(`Bundle addon updated ${addon}: ${version}`)
   }
 
   return (
@@ -81,14 +80,6 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
           data-tooltip="Creates new duplicated bundle"
           data-shortcut="shift+D"
         />
-        <Button
-          label="Update the bundle"
-          icon="check"
-          onClick={() => onSaveBundle()}
-          disabled={bundles.length > 1}
-          data-tooltip="Update the current bundle"
-          data-shortcut="shift+S"
-        />
       </Toolbar>
       {bundles.length > 1 && bundles.length < 5 ? (
         <BundleCompare bundles={bundles} addons={addons} />
@@ -97,6 +88,7 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
           isNew={false}
           addonListRef={addonListRef}
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
+          onAddonAutoUpdate={handleAddonAutoSave}
         >
           <BundleDeps bundle={bundle} />
         </BundleForm>

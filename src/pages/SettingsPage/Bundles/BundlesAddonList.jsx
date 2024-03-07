@@ -49,6 +49,7 @@ const BundlesAddonList = React.forwardRef(
       diffAddonVersions,
       isDev,
       onDevChange,
+      onAddonAutoUpdate,
     },
     ref,
   ) => {
@@ -65,7 +66,7 @@ const BundlesAddonList = React.forwardRef(
 
     // every time readyState changes, refetch selected addons
 
-    const onSetVersion = (addonName, version) => {
+    const onSetVersion = (addonName, version, isPipeline) => {
       const versionsToSet = selected.length > 1 ? selected.map((s) => s.name) : [addonName]
 
       setFormData((prev) => {
@@ -78,6 +79,11 @@ const BundlesAddonList = React.forwardRef(
         newFormData.addons = addons
         return newFormData
       })
+
+      // auto update addon if readOnly and addon.addonType === 'server'
+      if (readOnly && isPipeline) {
+        onAddonAutoUpdate(addonName, version === 'NONE' ? null : version)
+      }
     }
 
     const addonsTable = useMemo(() => {
@@ -158,7 +164,9 @@ const BundlesAddonList = React.forwardRef(
                 version={addon.version}
                 selection={selected}
                 addons={addons}
-                setVersion={(version) => onSetVersion(addon.name, version || null)}
+                setVersion={(version) =>
+                  onSetVersion(addon.name, version || null, addon.addonType === 'server')
+                }
                 versions={Object.keys(addon.versions || {})}
                 isDev={isDev}
               />

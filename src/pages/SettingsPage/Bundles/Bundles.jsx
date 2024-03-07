@@ -157,6 +157,8 @@ const Bundles = () => {
     return result
   }, [bundleList, selectedBundles])
 
+  // takes an array of installer objects (installerList) and groups them by version.
+  // The result is an array of objects, each containing a version number and an array of platforms for that version.
   const installerVersions = useMemo(() => {
     if (!installerList) return []
 
@@ -170,7 +172,7 @@ const Bundles = () => {
     }
 
     return Object.entries(r).map(([version, platforms]) => ({
-      platforms,
+      platforms: platforms.sort(),
       version,
     }))
   }, [installerList])
