@@ -156,7 +156,16 @@ const ProductsGrid = ({
           {groupName && <StyledGroupName>{groupName}</StyledGroupName>}
           <GridLayout ratio={1.777777} minWidth={200} key={index}>
             {isLoading
-              ? Array.from({ length: 20 }).map((_, index) => <EntityCard key={index} isLoading />)
+              ? Array.from({ length: 20 }).map((_, index) => (
+                  <EntityCard
+                    key={index}
+                    isLoading
+                    style={{
+                      minHeight: 'unset',
+                      minWidth: 'unset',
+                    }}
+                  />
+                ))
               : groupData.map(
                   ({ data: product }, index) =>
                     product && (
@@ -183,7 +192,7 @@ const ProductsGrid = ({
                         onContextMenu={(e) => handleContext(e, product.id)}
                         projectName={projectName}
                         isFullHighlight
-                        isActiveAnimate
+                        // isActiveAnimate
                       />
                     ),
                 )}
