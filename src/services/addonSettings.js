@@ -1,6 +1,6 @@
 import { ayonApi } from './ayon'
 
-const apiSuffix = (projectName, siteId, variant) => {
+const apiSuffix = (projectName, siteId, variant, asVersion) => {
   let suffix = ''
   if (projectName && projectName !== '_') {
     suffix += `/${projectName}`
@@ -13,6 +13,13 @@ const apiSuffix = (projectName, siteId, variant) => {
       suffix += `&variant=${variant}`
     } else {
       suffix += `?variant=${variant}`
+    }
+  }
+  if (asVersion) {
+    if (suffix.includes('?')) {
+      suffix += `&as=${asVersion}`
+    } else {
+      suffix += `?as=${asVersion}`
     }
   }
   return suffix
@@ -52,11 +59,12 @@ const addonSettings = ayonApi.injectEndpoints({
     }),
 
     getAddonSettings: build.query({
-      query: ({ addonName, addonVersion, projectName, siteId, variant }) => ({
+      query: ({ addonName, addonVersion, projectName, siteId, variant, asVersion }) => ({
         url: `/api/addons/${addonName}/${addonVersion}/settings${apiSuffix(
           projectName,
           siteId,
           variant,
+          asVersion,
         )}`,
         method: 'GET',
       }),
@@ -68,11 +76,12 @@ const addonSettings = ayonApi.injectEndpoints({
     }),
 
     getAddonSettingsOverrides: build.query({
-      query: ({ addonName, addonVersion, projectName, siteId, variant }) => ({
+      query: ({ addonName, addonVersion, projectName, siteId, variant, asVersion }) => ({
         url: `/api/addons/${addonName}/${addonVersion}/overrides${apiSuffix(
           projectName,
           siteId,
           variant,
+          asVersion,
         )}`,
         method: 'GET',
       }),

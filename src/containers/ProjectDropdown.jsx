@@ -1,6 +1,6 @@
+import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import { useMemo } from 'react'
 import { Dropdown } from '@ynput/ayon-react-components'
-import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 
 const ProjectDropdown = ({ projectName, setProjectName, disabled }) => {
   const { data, isLoading, isError } = useGetAllProjectsQuery({ showInactive: false })

@@ -29,7 +29,7 @@ const AddonDropdown = ({ addonName, addonVersion, setAddonVersion, disabled }) =
       options={versions}
       onChange={(e) => setAddonVersion(e[0])}
       placeholder="Select addon version"
-      style={{ flexGrow: 1 }}
+      style={{ flexGrow: 1, minWidth: '300px' }}
       disabled={disabled}
     />
   )

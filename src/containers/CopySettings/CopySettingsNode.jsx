@@ -13,7 +13,7 @@ import { getValueByPath } from '../AddonSettings/utils'
 import { isEqual } from 'lodash'
 
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
-import ProjectDropdown from '/src/containers/CopySettings/ProjectDropdown'
+import ProjectDropdown from '/src/containers/ProjectDropdown'
 import AddonDropdown from '/src/containers/CopySettings/AddonDropdown'
 
 import {
@@ -78,18 +78,48 @@ const CopySettingsNode = ({
 
   nodeData,
   setNodeData,
-}) => {
-  const defaultSourceVariant = targetVariant === 'staging' ? 'production' : 'staging'
 
-  const [sourceVersion, setSourceVersion] = useState(targetVersion)
-  const [sourceVariant, setSourceVariant] = useState(defaultSourceVariant)
-  const [sourceProjectName, setSourceProjectName] = useState(targetProjectName)
+  forcedSourceVersion,
+  forcedSourceVariant,
+  forcedSourceProjectName,
+}) => {
+  const [sourceVersion, setSourceVersion] = useState(null)
+  const [sourceVariant, setSourceVariant] = useState(null)
+  const [sourceProjectName, setSourceProjectName] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
   const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
 
+  useEffect(() => {
+    if (forcedSourceVersion && forcedSourceVersion !== sourceVersion) {
+      setSourceVersion(forcedSourceVersion)
+    } else if (forcedSourceVersion === null && sourceVersion === null) {
+      setSourceVersion(targetVersion)
+    }
+  }, [forcedSourceVersion])
+
+  useEffect(() => {
+    if (forcedSourceVariant && forcedSourceVariant !== sourceVariant) {
+      setSourceVariant(forcedSourceVariant)
+    } else if (forcedSourceVariant === null && sourceVariant === null) {
+      const defaultSourceVariant = targetVariant === 'staging' ? 'production' : 'staging'
+      setSourceVariant(defaultSourceVariant)
+    }
+  }, [forcedSourceVariant])
+
+  useEffect(() => {
+    if (forcedSourceProjectName && forcedSourceProjectName !== sourceProjectName) {
+      console.log('forcedSourceProjectName', forcedSourceProjectName)
+      setSourceProjectName(forcedSourceProjectName)
+    } else if (forcedSourceProjectName === null && sourceProjectName === null) {
+      setSourceProjectName(null)
+    }
+  }, [forcedSourceProjectName])
+
   const loadNodeData = async () => {
+    if (!sourceVersion || !sourceVariant) return
+    if (targetProjectName && !sourceProjectName) return
     setLoading(true)
 
     if (
@@ -108,6 +138,7 @@ const CopySettingsNode = ({
       addonVersion: sourceVersion,
       variant: sourceVariant,
       projectName: sourceProjectName,
+      asVersion: targetVersion,
     })
 
     const sourceSettings = await triggerGetSettings({
@@ -115,6 +146,7 @@ const CopySettingsNode = ({
       addonVersion: sourceVersion,
       variant: sourceVariant,
       projectName: sourceProjectName,
+      asVersion: targetVersion,
     })
 
     // TODO: we may use this to display whether there
@@ -166,7 +198,9 @@ const CopySettingsNode = ({
     }
 
     if (!changes.length) {
-      setNodeData({ message: 'no changes to copy' })
+      setNodeData({ message: 'no overrides to copy', enabled: false })
+      setLoading(false)
+      return
     }
 
     setNodeData({
@@ -184,10 +218,15 @@ const CopySettingsNode = ({
   } //loadNodeData
 
   useEffect(() => {
+    //console.log('LOAD', addonName, sourceVersion, sourceVariant, sourceProjectName)
     loadNodeData()
   }, [sourceVersion, sourceVariant, sourceProjectName])
 
   const expanded = !!(nodeData?.available && nodeData?.enabled)
+
+  if (forcedSourceVersion && forcedSourceVariant && !nodeData?.available) {
+    return null
+  }
 
   const header = (
     <NodePanelHeader className={expanded ? 'expanded' : undefined}>
@@ -203,12 +242,23 @@ const CopySettingsNode = ({
         addonName={addonName}
         addonVersion={sourceVersion}
         setAddonVersion={setSourceVersion}
+        disabled={forcedSourceVersion}
       />
 
       {sourceProjectName && (
-        <ProjectDropdown projectName={sourceProjectName} setProjectName={setSourceProjectName} />
+        <ProjectDropdown
+          projectName={sourceProjectName}
+          setProjectName={setSourceProjectName}
+          disabled={forcedSourceProjectName}
+        />
       )}
-      <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
+      {!forcedSourceVariant && (
+        <VariantSelector
+          variant={sourceVariant}
+          setVariant={setSourceVariant}
+          disabled={forcedSourceVariant}
+        />
+      )}
 
       <NodePanelDirectionSelector>
         {nodeData?.available ? (
@@ -217,66 +267,77 @@ const CopySettingsNode = ({
           <span className="message">{nodeData?.message || 'Nothing to copy'}</span>
         )}
       </NodePanelDirectionSelector>
-
       <AddonDropdown
         addonName={addonName}
         addonVersion={targetVersion}
         setAddonVersion={() => {}}
         disabled
       />
+      {/*
       {targetProjectName && (
-        <ProjectDropdown projectName={targetProjectName} setProjectName={() => {}} disabled />
+        <ProjectDropdown projectName={targetProjectName} setProjectName={() => { }} disabled />
       )}
-      <VariantSelector variant={targetVariant} setVariant={() => {}} disabled />
+      <VariantSelector variant={targetVariant} setVariant={() => { }} disabled />
+      */}
     </NodePanelHeader>
   )
 
   // is it a table? it is. So i'm using a table. don't judge me!
-  const body = expanded ? (
+  // i am almost 40 years old and i can use a table if i want to.
+
+  const body = (
     <NodePanelBody>
       <ChangesTable>
-        <tbody>
-          {nodeData.changes.map((change) => (
-            <tr key={change.key}>
+        <tr>
+          <th className="btn">&nbsp;</th>
+          <th>Path</th>
+          <th className="valpvw">Current&nbsp;value</th>
+          <th className="valpvw">New&nbsp;value</th>
+        </tr>
+        {(nodeData?.changes || []).map((change) => (
+          <tr key={change.key}>
+            <td>
+              <InputSwitch
+                checked={change.enabled}
+                disabled={!change.compatible}
+                onChange={(e) => {
+                  setNodeData({
+                    ...nodeData,
+                    changes: nodeData.changes.map((c) => {
+                      if (c.key === change.key) {
+                        c.enabled = e.target.checked
+                      }
+                      return c
+                    }),
+                  })
+                }}
+              />
+            </td>
+            <td>
+              {' '}
+              <FormattedPath value={change.path} />{' '}
+            </td>
+            <td>
+              {' '}
+              <FormattedValue value={change.targetValue} />{' '}
+            </td>
+            <td>
+              {' '}
+              <FormattedValue value={change.sourceValue} />{' '}
+            </td>
+
+            {/*
               <td>
-                <InputSwitch
-                  checked={change.enabled}
-                  disabled={!change.compatible}
-                  onChange={(e) => {
-                    setNodeData({
-                      ...nodeData,
-                      changes: nodeData.changes.map((c) => {
-                        if (c.key === change.key) {
-                          c.enabled = e.target.checked
-                        }
-                        return c
-                      }),
-                    })
-                  }}
-                />
-              </td>
-              <td className="expand">
-                <FormattedPath value={change.path} />
-              </td>
-              <td>
-                <FormattedValue value={change.targetValue} />
-              </td>
-              <td>
-                <Icon icon="trending_flat" />
-              </td>
-              <td>
-                <FormattedValue value={change.sourceValue} />
-              </td>
-              <td>
+                &nbsp;
                 {!change.compatible && <Icon icon="warning" style={{ color: 'red' }} />}
                 {change.warnings.length > 0 && <Icon icon="warning" style={{ color: 'yellow' }} />}
               </td>
-            </tr>
-          ))}
-        </tbody>
+              */}
+          </tr>
+        ))}
       </ChangesTable>
     </NodePanelBody>
-  ) : null
+  )
 
   return (
     <NodePanelWrapper className={expanded ? 'expanded' : undefined}>

@@ -3,12 +3,17 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 
-import { ScrollPanel, Button, Spacer } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { ScrollPanel, Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 
+import BundleDropdown from '/src/containers/BundleDropdown'
+import ProjectDropdown from '/src/containers/ProjectDropdown'
+import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
+
+import { Dialog } from 'primereact/dialog'
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
+import { useGetBundleListQuery } from '/src/services/bundles'
 import { cloneDeep } from 'lodash'
 
 const CopySettingsDialog = ({
@@ -22,8 +27,27 @@ const CopySettingsDialog = ({
   setChangedKeys,
   projectName,
   onClose,
+  pickByBundle = false,
 }) => {
   const [nodes, setNodes] = useState([])
+
+  const [sourceBundle, setSourceBundle] = useState(null)
+  const [sourceVariant, setSourceVariant] = useState(null)
+  const [sourceProjectName, setSourceProjectName] = useState(null)
+
+  const {
+    data: bundlesData,
+    isLoading: bundlesLoading,
+    isError: bundlesError,
+  } = useGetBundleListQuery({}, { skip: !pickByBundle })
+
+  const sourceVersions = useMemo(() => {
+    if (bundlesLoading || bundlesError) return {}
+    if (!sourceBundle) return {}
+
+    const sb = bundlesData.find((i) => i.name === sourceBundle)
+    return sb?.addons || {}
+  }, [sourceBundle, bundlesData, bundlesLoading, bundlesError])
 
   const doTheMagic = () => {
     const newLocalData = cloneDeep(localData)
@@ -103,34 +127,68 @@ const CopySettingsDialog = ({
     </div>
   )
 
+  const toolbar = pickByBundle && (
+    <Toolbar>
+      Copy settings from
+      <BundleDropdown
+        style={{ flexGrow: 1 }}
+        bundleName={sourceBundle}
+        setBundleName={setSourceBundle}
+      />
+      <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
+      {projectName && (
+        <ProjectDropdown projectName={sourceProjectName} setProjectName={setSourceProjectName} />
+      )}
+      <Spacer />
+    </Toolbar>
+  )
+
   return (
     <Dialog
       visible
       onHide={onClose}
       style={{ width: '80vw', height: '80vh' }}
-      header="Copy Settings"
+      header={`Copy ${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
       footer={footer}
     >
-      <ScrollPanel style={{ width: '100%', height: '100%', background: 'transparent' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
-          {selectedAddons.map((addon) => (
-            <CopySettingsNode
-              key={`${addon.name}_${addon.version}`}
-              addonName={addon.name}
-              targetVersion={addon.version}
-              targetVariant={variant}
-              targetProjectName={projectName}
-              nodeData={nodes[addon.name]}
-              setNodeData={(data) => {
-                setNodes((n) => ({
-                  ...n,
-                  [addon.name]: data,
-                }))
-              }}
-            />
-          ))}
-        </div>
-      </ScrollPanel>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        {toolbar}
+        <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}
+          >
+            {selectedAddons
+              .filter((addon) => !pickByBundle || sourceVersions[addon.name])
+              .map((addon) => (
+                <CopySettingsNode
+                  key={`${addon.name}_${addon.version}`}
+                  addonName={addon.name}
+                  targetVersion={addon.version}
+                  targetVariant={variant}
+                  targetProjectName={projectName}
+                  nodeData={nodes[addon.name]}
+                  setNodeData={(data) => {
+                    setNodes((n) => ({
+                      ...n,
+                      [addon.name]: data,
+                    }))
+                  }}
+                  forcedSourceVariant={sourceVariant}
+                  forcedSourceVersion={pickByBundle ? sourceVersions[addon.name] : null}
+                  forcedSourceProjectName={pickByBundle ? sourceProjectName : null}
+                />
+              ))}
+          </div>
+        </ScrollPanel>
+      </div>
     </Dialog>
   )
 }
