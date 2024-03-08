@@ -156,14 +156,14 @@ fragment taskTileFragment on TaskNode {
   status
   icon: taskType
   thumbnailEntityId: id
-  subTitle: folder {
-    name
-  }
   profile: assignees
   footer: folder {
     folderType
   }
   updatedAt
+  path: folder {
+    path
+  }
 }
 `
 export const VERSION_TILE_FRAGMENT = `
@@ -177,12 +177,17 @@ fragment versionTileFragment on VersionNode {
     productType
   }
   thumbnailEntityId: id
-  subTitle: version
   profile: author
   footer: product {
     productType
   }
   updatedAt
+  path: product {
+    path:folder {
+      path
+    }
+  }
+  version
 }
 `
 
@@ -195,11 +200,11 @@ fragment productTileFragment on ProductNode {
   thumbnailEntityId: latestVersion {
     id
   }
-  subTitle: folder {
-    name
-  }
   footer: productType
   updatedAt
+  path:folder {
+    path
+  }
 }
 `
 
@@ -210,7 +215,9 @@ fragment folderTileFragment on FolderNode {
   status
   icon: folderType
   thumbnailEntityId: id
-  subTitle: path
   footer: folderType
   updatedAt
+  path: parent {
+    path
+  }
 }`

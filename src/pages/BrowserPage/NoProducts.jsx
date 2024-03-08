@@ -1,6 +1,5 @@
 import React from 'react'
 import styled from 'styled-components'
-import EntityGridTile from '/src/components/EntityGridTile'
 
 const NoneFound = styled.div`
   position: absolute;
@@ -9,10 +8,32 @@ const NoneFound = styled.div`
   transform: translate(-50%, -50%);
 `
 
+const GridTile = styled.div`
+  width: 230px;
+  height: 130px;
+  background-color: var(--md-sys-color-surface-container-low);
+  border: solid 4px var(--md-sys-color-surface-container-high);
+  border-radius: var(--border-radius-xxl);
+
+  span {
+    height: 28px;
+    width: 130px;
+    border-radius: var(--border-radius-l);
+    background-color: var(--md-sys-color-surface-container-high);
+
+    position: absolute;
+    top: 4px;
+    left: 4px;
+  }
+`
+
 // stack grid tiles on top of each other
 const StackedGridTiles = styled.div`
   height: 120px;
   margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+
   & > div {
     position: absolute;
     height: 120px;
@@ -35,8 +56,12 @@ const NoProducts = ({ label }) => {
   return (
     <NoneFound className="no-products">
       <StackedGridTiles>
-        <EntityGridTile isError />
-        <EntityGridTile isError />
+        <GridTile>
+          <span />
+        </GridTile>
+        <GridTile>
+          <span />
+        </GridTile>
       </StackedGridTiles>
       <span style={{ opacity: 0.5 }}>{label || 'No products found'}</span>
     </NoneFound>

@@ -10,6 +10,29 @@ body {
   scrollbar-width: thin;
 }
 
+// perfect-scrollbar
+.ps__rail-y,
+.ps__rail-x {
+  z-index: 100;
+
+  background-color: unset !important;
+
+  .ps__thumb-y,
+  .ps__thumb-x {
+    background-color: var(--md-sys-color-surface-container-high) !important;
+  }
+
+  &:hover,
+  &.ps--clicking {
+    background-color: unset !important;
+    .ps__thumb-y,
+    .ps__thumb-x {
+      background-color: var(--md-sys-color-surface-container-highest) !important;
+      width: 8px !important;
+    }
+  }
+}
+
 :root {
   // developer colors
   --color-hl-developer-container: hsl(272, 23%, 22%);

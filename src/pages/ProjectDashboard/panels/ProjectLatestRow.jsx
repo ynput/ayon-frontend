@@ -1,16 +1,15 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
-// import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import EntityGridTile from '/src/components/EntityGridTile'
 import { useGetProjectDashboardActivityQuery } from '/src/services/getProjectDashboard'
+import { EntityCard } from '@ynput/ayon-react-components'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
   /* columns minWidth 150px, max width 250px */
   display: grid;
   position: relative;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   grid-template-rows: auto;
   grid-auto-rows: 0;
   overflow-y: clip;
@@ -25,6 +24,21 @@ const GridStyled = styled.div`
   }
 `
 
+const EntityCardStyled = styled(EntityCard)`
+  &.isPlaceholder {
+    &::after,
+    .thumbnail::after,
+    .inner-card::after {
+      display: none;
+    }
+
+    opacity: 0.2;
+    user-select: none;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+`
+
 const ProjectLatestRow = ({
   projectName,
   entities,
@@ -32,6 +46,7 @@ const ProjectLatestRow = ({
   filter,
   isProjectLoading,
   rowIndex,
+  onEntityClick,
 }) => {
   const project = useSelector((state) => state.project)
   const { productTypes, folders, tasks, statuses } = project
@@ -83,47 +98,53 @@ const ProjectLatestRow = ({
   if (isNoData) {
     data = [
       {
-        isError: true,
+        className: 'isPlaceholder',
       },
       {
-        isError: true,
+        className: 'isPlaceholder',
       },
       {
-        isError: true,
+        className: 'isPlaceholder',
       },
     ]
   }
 
   if (isProjectLoading || (data.length === 0 && !isNoData)) {
-    data = [
-      {
-        isLoading: true,
-      },
-      {
-        isLoading: true,
-      },
-      {
-        isLoading: true,
-      },
-    ]
+    data = [{}, {}, {}]
   }
+
+  const isLoadingData = isLoading || isFetching || isProjectLoading || isNoData
 
   return (
     <GridStyled>
-      {data.map((entity, index) => (
-        // <Link
-        //   key={`${entity.id}-${index}`}
-        //   to={`/projects/${projectName}/browser?entity=${entity.id}&type=${entity.type}`}
-        // >
-        <EntityGridTile
-          key={`${rowIndex}-${index}`}
-          {...entity}
-          subTitle={null}
-          isError={isNoData}
-          isLoading={isLoading || isFetching || !projectName || isProjectLoading}
-        />
-        // </Link>
-      ))}
+      {data.map(
+        (entity, index) =>
+          entity && (
+            <EntityCardStyled
+              key={`${rowIndex}-${index}`}
+              title={entity.name}
+              titleIcon={entity.typeIcon}
+              subTitle={entity.footer}
+              icon={entity.statusIcon}
+              iconColor={entity.statusColor}
+              className={entity.className}
+              imageUrl={
+                !isLoadingData &&
+                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${
+                  entity.thumbnailEntityId
+                }/thumbnail?updatedAt=${entity.updatedAt}&token=${localStorage.getItem(
+                  'accessToken',
+                )}`
+              }
+              style={{
+                minWidth: 'unset',
+              }}
+              isLoading={isLoadingData}
+              onClick={() => onEntityClick(entity)}
+              isFullHighlight
+            />
+          ),
+      )}
       {isNoData && <span>No Recent Data</span>}
     </GridStyled>
   )

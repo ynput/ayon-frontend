@@ -1,21 +1,17 @@
 import React, { useMemo } from 'react'
 import PropTypes from 'prop-types'
 import GridLayout from '/src/components/GridLayout'
-import EntityGridTile from '/src/components/EntityGridTile'
+import { EntityCard } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import PerfectScrollbar from 'react-perfect-scrollbar'
+import 'react-perfect-scrollbar/dist/css/styles.css'
 
-const StyledGridLayout = styled.div`
-  padding: 16px;
-  padding-right: 0;
+const StyledGridLayout = styled(PerfectScrollbar)`
+  padding: 12px;
   height: 100%;
-  scrollbar-gutter: stable;
 
   & > * {
     margin-bottom: 16px;
-  }
-
-  &::-webkit-scrollbar {
-    width: 20px;
   }
 `
 
@@ -151,46 +147,50 @@ const ProductsGrid = ({
   return (
     <StyledGridLayout
       style={{
-        overflowY: isLoading ? 'hidden' : 'auto',
+        zIndex: 1,
       }}
       onClick={() => onSelectionChange({ value: {} })}
     >
       {Object.entries(groupedData).map(([groupName, groupData], index) => (
         <div key={`groupname-${groupName}`}>
           {groupName && <StyledGroupName>{groupName}</StyledGroupName>}
-          <GridLayout ratio={1.5} minWidth={170} key={index}>
+          <GridLayout ratio={1.777777} minWidth={200} key={index}>
             {isLoading
               ? Array.from({ length: 20 }).map((_, index) => (
-                  <EntityGridTile
-                    style={{
-                      minHeight: 'unset',
-                    }}
+                  <EntityCard
                     key={index}
                     isLoading
+                    style={{
+                      minWidth: 'unset',
+                    }}
                   />
                 ))
               : groupData.map(
                   ({ data: product }, index) =>
                     product && (
-                      <EntityGridTile
+                      <EntityCard
                         style={{
-                          minHeight: 'unset',
+                          minWidth: 'unset',
                         }}
                         key={index}
-                        typeIcon={productTypes[product.productType]?.icon || 'inventory_2'}
-                        statusIcon={statuses[product.versionStatus]?.icon || ''}
-                        statusColor={statuses[product.versionStatus]?.color || ''}
-                        name={product.name}
-                        footer={`${product.versionName}${
+                        title={product.name}
+                        titleIcon={productTypes[product.productType]?.icon || 'inventory_2'}
+                        icon={statuses[product.versionStatus]?.icon || ''}
+                        iconColor={statuses[product.versionStatus]?.color || ''}
+                        imageUrl={`/api/projects/${projectName}/versions/${
+                          product.versionId
+                        }/thumbnail?updatedAt=${
+                          product.versionUpdatedAt
+                        }&token=${localStorage.getItem('accessToken')}`}
+                        subTitle={`${product.versionName}${
                           multipleFoldersSelected && product.folder ? ' - ' + product.folder : ''
                         }`}
-                        thumbnailEntityId={product.versionId}
-                        thumbnailEntityType="version"
-                        updatedAt={product.versionUpdatedAt}
                         onClick={(e) => handleSelection(e, product)}
-                        selected={product.id in selection}
+                        isActive={product.id in selection}
                         onContextMenu={(e) => handleContext(e, product.id)}
                         projectName={projectName}
+                        isFullHighlight
+                        // isActiveAnimate
                       />
                     ),
                 )}
