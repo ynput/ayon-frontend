@@ -34,16 +34,17 @@ const updateEntity = ayonApi.injectEndpoints({
           ),
         )
 
-        // update editor
-        const editorPatch = dispatch(
-          updateNodes({ updated: patches.map((p) => ({ id: p.id, ...data })) }),
-        )
-
         try {
-          await queryFulfilled
+          const result = await queryFulfilled
+
+          if (result.data?.success === false) {
+            throw new Error('Failed to update entities')
+          }
+
+          // update editor only if success
+          dispatch(updateNodes({ updated: patches.map((p) => ({ id: p.id, ...data })) }))
         } catch {
           patchResult.undo()
-          editorPatch.undo()
         }
       },
     }),

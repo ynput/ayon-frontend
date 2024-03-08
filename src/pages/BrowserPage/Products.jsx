@@ -151,13 +151,30 @@ const Products = () => {
 
   // update product status
   const handleStatusChange = async (value, selectedId) => {
-    try {
-      // get selected product ids based on focused selection
-      let productIds = focusedProducts.includes(selectedId) ? focusedProducts : [selectedId]
-      const products = productData.filter(({ id }) => productIds.includes(id))
-      // get version ids from selected products
-      const ids = products.map(({ versionId }) => versionId)
+    // get selected product ids based on focused selection
+    let productIds = focusedProducts.includes(selectedId) ? focusedProducts : [selectedId]
+    const products = productData.filter(({ id }) => productIds.includes(id))
+    // get version ids from selected products
+    const ids = products.map(({ versionId }) => versionId)
 
+    // create new patch data of products
+    const patchData = productData.map(({ versionId, versionStatus, ...product }) => ({
+      ...product,
+      versionStatus: ids.includes(versionId) ? value : versionStatus,
+      versionId,
+    }))
+
+    // update products cache
+    const productsPatch = dispatch(
+      ayonApi.util.updateQueryData(
+        'getProductList',
+        { projectName, ids: focusedFolders },
+        (draft) => {
+          Object.assign(draft, patchData)
+        },
+      ),
+    )
+    try {
       // update version status
       const payload = await updateEntity({
         projectName,
@@ -167,23 +184,9 @@ const Products = () => {
         disabledInvalidation: true,
       }).unwrap()
 
-      // create new patch data of products
-      const patchData = productData.map(({ versionId, versionStatus, ...product }) => ({
-        ...product,
-        versionStatus: ids.includes(versionId) ? value : versionStatus,
-        versionId,
-      }))
-
-      // update products cache
-      dispatch(
-        ayonApi.util.updateQueryData(
-          'getProductList',
-          { projectName, ids: focusedFolders },
-          (draft) => {
-            Object.assign(draft, patchData)
-          },
-        ),
-      )
+      // check the success of the update, otherwise throw error
+      if (payload?.success === false)
+        throw new Error(payload?.operations?.map((o) => o?.detail).join(', ') || 'Failed to update')
 
       // invalidate 'productsVersion' query (specific version query)
       // we do this so that when we select this version again, it doesn't use stale version query
@@ -194,7 +197,11 @@ const Products = () => {
 
       console.log('fulfilled', payload)
     } catch (error) {
-      console.error('rejected', error)
+      console.error(error)
+
+      toast.error(error?.message || 'Failed to update')
+      // we also need to undo the patch
+      productsPatch?.undo()
     }
   }
 

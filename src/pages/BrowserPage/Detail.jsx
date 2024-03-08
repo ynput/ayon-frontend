@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import { ayonApi } from '/src/services/ayon'
+import { toast } from 'react-toastify'
 
 const Detail = () => {
   const focused = useSelector((state) => state.context.focused)
@@ -108,6 +109,10 @@ const Detail = () => {
         disabledInvalidation: isVersion,
       }).unwrap()
 
+      // check the success of the update, otherwise throw error
+      if (payload?.success === false)
+        throw new Error(payload?.operations?.map((o) => o?.detail).join(', ') || 'Failed to update')
+
       if (isVersion) {
         // invalidate 'productsVersion' query (specific version query)
         // we do this so that when we select this version again, it doesn't use stale version query
@@ -116,11 +121,11 @@ const Detail = () => {
 
       console.log('fulfilled', payload)
     } catch (error) {
-      console.error('rejected', error)
+      console.error(error)
+
+      toast.error(error?.message || 'Failed to update')
       // we also need to undo the patch
-      if (productsPatch) {
-        productsPatch.undo()
-      }
+      productsPatch?.undo()
     }
   }
 
