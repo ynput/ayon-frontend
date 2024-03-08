@@ -176,13 +176,13 @@ const EditorPage = () => {
           const currentAttrib = childData?.attrib || {}
 
           // is childData, check ownAttribs for updates
-          for (const key in update?.data?.attrib) {
+          for (const key in update?.patch?.data?.attrib) {
             if (!inheritableAttribs.includes(key)) continue
             if (
               !childData?.ownAttrib?.includes(key) &&
-              currentAttrib[key] !== update.data.attrib[key]
+              currentAttrib[key] !== update?.patch?.data?.attrib[key]
             ) {
-              newAttrib[key] = update.data.attrib[key]
+              newAttrib[key] = update?.patch?.data?.attrib[key]
             }
           }
 
