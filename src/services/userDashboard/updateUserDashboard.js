@@ -1,4 +1,5 @@
 import { ayonApi } from '../ayon'
+import { toast } from 'react-toastify'
 
 const updateUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -22,6 +23,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           await queryFulfilled
         } catch (error) {
           console.error('error updating task', error)
+          toast.error(error?.error?.data?.detail || 'Failed to update task')
           patchResult.undo()
         }
       },
@@ -39,8 +41,9 @@ const updateUserDashboard = ayonApi.injectEndpoints({
         }
 
         try {
+          const promises = []
           for (const { projectName, data, id } of operations) {
-            dispatch(
+            const promise = dispatch(
               ayonApi.endpoints.updateTask.initiate({
                 projectName: projectName,
                 taskId: id,
@@ -48,6 +51,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
                 assignees,
               }),
             )
+            promises.push(promise)
           }
 
           // invalidate task to force refetch of getKanBan query
@@ -55,6 +59,16 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           dispatch(
             ayonApi.util.invalidateTags(operations.map((o) => ({ type: 'kanBanTask', id: o.id }))),
           )
+
+          // check if any of the requests failed and invalidate the tasks cache again to refetch
+          const results = await Promise.allSettled(promises)
+          if (results.some((result) => result.value?.error)) {
+            dispatch(
+              ayonApi.util.invalidateTags(
+                operations.map((o) => ({ type: 'kanBanTask', id: o.id })),
+              ),
+            )
+          }
 
           return { data: operations }
         } catch (error) {
