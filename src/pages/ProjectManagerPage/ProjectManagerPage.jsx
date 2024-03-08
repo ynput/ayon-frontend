@@ -10,7 +10,10 @@ import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 
 import { selectProject } from '/src/features/context'
-import { useDeleteProjectMutation } from '/src/services/project/updateProject'
+import {
+  useDeleteProjectMutation,
+  useUpdateProjectMutation,
+} from '/src/services/project/updateProject'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
@@ -48,6 +51,9 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
+  // UPDATE DATA
+  const [updateProject] = useUpdateProjectMutation()
+
   useEffect(() => {
     // Update project name in header
     dispatch(selectProject(selectedProject))
@@ -72,6 +78,10 @@ const ProjectManagerPage = () => {
         setSelectedProject(null)
       },
     })
+  }
+
+  const handleActivateProject = async (sel, active) => {
+    await updateProject({ projectName: sel, update: { active } }).unwrap()
   }
 
   let links = [
@@ -129,6 +139,7 @@ const ProjectManagerPage = () => {
         isUser={isUser}
         onNewProject={() => setShowNewProject(true)}
         onDeleteProject={handleDeleteProject}
+        onActivateProject={handleActivateProject}
       >
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}

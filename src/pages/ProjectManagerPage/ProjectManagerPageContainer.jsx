@@ -10,6 +10,7 @@ const ProjectManagerPageContainer = ({
   selection,
   onDeleteProject,
   onNewProject,
+  onActivateProject,
   ...props
 }) => {
   // for each child, add the project list react node with the props
@@ -25,6 +26,7 @@ const ProjectManagerPageContainer = ({
             autoSelect
             selection={selection}
             onDeleteProject={onDeleteProject}
+            onActivateProject={onActivateProject}
             onNewProject={onNewProject}
             isProjectManager
             {...props}
@@ -32,6 +34,7 @@ const ProjectManagerPageContainer = ({
         ),
         onDeleteProject,
         onNewProject,
+        onActivateProject,
       })
     }
     return child
