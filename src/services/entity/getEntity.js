@@ -97,6 +97,21 @@ const buildEntityTilesQuery = (entities) => {
   return query
 }
 
+function getNonObjectValue(value) {
+  if (typeof value !== 'object' || value === null) {
+    return value
+  }
+
+  // If value is an object, get the first non-object value from its properties
+  let keys = Object.keys(value)
+  if (keys.length > 0) {
+    return getNonObjectValue(value[keys[0]])
+  }
+
+  // If no non-object value found, return undefined
+  return undefined
+}
+
 export const formatEntityTiles = (project, entities) => {
   // data = {project: {folders: {edges: [{node: {id}}]}}}
 
@@ -134,10 +149,10 @@ export const formatEntityTiles = (project, entities) => {
       if (Array.isArray(entity[attrib])) {
         entity[attrib] = entity[attrib][0]
       } else if (typeof entity[attrib] === 'object') {
-        entity[attrib] = Object.values(entity[attrib])[0]
+        entity[attrib] = getNonObjectValue(Object.values(entity[attrib])[0])
       }
       // if entity type is version, add 0 prefix to version number 1 -> v001, 12 -> v012
-      if (entity.type === 'version' && attrib === 'subTitle') {
+      if (entity.type === 'version' && attrib === 'version') {
         entity[attrib] = 'v' + entity[attrib].toString().padStart(3, '0')
       }
     }

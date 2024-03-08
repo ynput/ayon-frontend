@@ -161,7 +161,6 @@ const ProductsGrid = ({
                     key={index}
                     isLoading
                     style={{
-                      minHeight: 'unset',
                       minWidth: 'unset',
                     }}
                   />
@@ -171,7 +170,6 @@ const ProductsGrid = ({
                     product && (
                       <EntityCard
                         style={{
-                          minHeight: 'unset',
                           minWidth: 'unset',
                         }}
                         key={index}
