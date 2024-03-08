@@ -18,7 +18,7 @@ import sortByKey from '/src/helpers/sortByKey'
 
 import { editorSelectionChanged, setUri, setExpandedFolders } from '/src/features/context'
 
-import { getColumns, formatType, formatAttribute } from './utils'
+import { getColumns, formatType, formatAttribute, formatAssignees } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
@@ -49,6 +49,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
 import useShortcuts from '/src/hooks/useShortcuts'
+import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -92,6 +93,8 @@ const EditorPage = () => {
     { projectName },
     { skip: !projectName },
   )
+
+  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
   // get nodes for tree from redux state
   const rootDataCache = useSelector((state) => state.editor.nodes)
@@ -1323,10 +1326,12 @@ const EditorPage = () => {
     }
   }
 
-  const filterOptions = [{ name: 'name' }, { name: 'type' }, ...columns].map(({ name }) => ({
-    value: name,
-    label: name,
-  }))
+  const filterOptions = [{ name: 'name' }, { name: 'type' }, { name: 'assignees' }, ...columns].map(
+    ({ name }) => ({
+      value: name,
+      label: name,
+    }),
+  )
   const allColumnsNames = filterOptions.map(({ value }) => value)
 
   const [shownColumns, setShownColumns] = useLocalStorage(
@@ -1405,13 +1410,20 @@ const EditorPage = () => {
         body={(rowData) => formatType(rowData.data, changes)}
         style={{ width: columnsWidths['type'] || 140 }}
       />,
+      <Column
+        field="assignees"
+        key="assignees"
+        header="Assignees"
+        body={(rowData) => formatAssignees(rowData.data, changes, allUsers)}
+        style={{ width: columnsWidths['assignees'] || 140 }}
+      />,
       ...columns.map((col) => (
         <Column
           key={col.name}
           header={col.title}
           field={col.name}
           style={{ width: columnsWidths[col.name] || 140 }}
-          body={(rowData) => formatAttribute(rowData.data, changes, col.name)}
+          body={(rowData) => formatAttribute(rowData?.data, changes, col.name)}
         />
       )),
     ],
@@ -1644,6 +1656,7 @@ const EditorPage = () => {
               projectName={projectName}
               onForceChange={handleForceChange}
               onThumbnailUpload={handleThumbnailUpload}
+              allUsers={allUsers}
             />
           </SplitterPanel>
         </Splitter>

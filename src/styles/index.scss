@@ -157,6 +157,11 @@ input:-webkit-autofill:focus {
   }
 }
 
+// always keep avatar text white
+.user-image span {
+  color: var(--md-sys-color-on-surface) !important;
+}
+
 .p-treetable .p-treetable-tbody > tr.changed {
   border-left: 4px solid var(--color-changed) !important;
 }
