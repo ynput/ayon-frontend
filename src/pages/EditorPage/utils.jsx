@@ -1,5 +1,5 @@
 import ayonClient from '/src/ayon'
-import { Icon } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
 
 // TODO rename .jsx -> .js
@@ -67,6 +67,31 @@ const formatType = (node, changes, styled = true) => {
   )
 }
 
+const formatAssignees = (node, changes, allUsers) => {
+  // only show for tasks
+  if (node.__entityType === 'folder') return null
+  const chobj = changes[node.id] || {}
+  const isChanged = '_assignees' in chobj
+  const value = chobj._assignees ? chobj._assignees : node.assignees
+
+  const className = isChanged ? 'editor-field changed' : 'editor-field'
+
+  return (
+    <div className={className}>
+      <AssigneeSelect
+        value={value}
+        options={allUsers}
+        emptyMessage=""
+        emptyIcon={false}
+        buttonStyle={{
+          border: '1px solid var(--md-sys-color-outline-variant)',
+          overflow: 'hidden',
+        }}
+      />
+    </div>
+  )
+}
+
 const getColumns = () => {
   if (ayonClient.settings.attributes.length === 0) return []
   let cols = []
@@ -79,7 +104,8 @@ const getColumns = () => {
       })
     }
   }
+
   return cols
 }
 
-export { getColumns, formatType, formatAttribute }
+export { getColumns, formatType, formatAttribute, formatAssignees }

@@ -22,7 +22,6 @@ import StatusSelect from '/src/components/status/statusSelect'
 import TypeEditor from './TypeEditor'
 import EntityDetailsHeader from '/src/components/Details/EntityDetailsHeader'
 import { Link } from 'react-router-dom'
-import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import styled from 'styled-components'
 
 const SubRow = styled.div`
@@ -61,6 +60,7 @@ const EditorPanel = ({
   projectName,
   onForceChange,
   onThumbnailUpload,
+  allUsers,
 }) => {
   // SELECTORS
   const selected = useSelector((state) => state.context.focused.editor)
@@ -69,9 +69,6 @@ const EditorPanel = ({
   const changes = useSelector((state) => state.editor.changes)
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
-
-  // RTK QUERY
-  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
   // STATES
   // used to throttle changes to redux changes state and keep input fast
