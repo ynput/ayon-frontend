@@ -26,7 +26,11 @@ const updateProducts = ayonApi.injectEndpoints({
           ),
         )
         try {
-          await queryFulfilled
+          const result = await queryFulfilled
+
+          if (result.data?.success === false) {
+            throw new Error('Failed to update products')
+          }
         } catch {
           patchResult.undo()
         }
