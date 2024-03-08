@@ -10,11 +10,15 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   let className = ''
   let value = node.attrib && node.attrib[fieldName]
   if (chobj && fieldName in chobj) {
-    value = chobj[fieldName]
+    // if value is null then it inherits (default value)
+    value = chobj[fieldName] || '(inherited)'
     className = 'changed'
+    // show changed style and inherited style if the change was to set to null (inherited)
+    if (chobj[fieldName] === null) className += ' inherited'
   } else if (node.ownAttrib && !node.ownAttrib.includes(fieldName)) {
     className = 'inherited'
   }
+
   if (!styled) return value
 
   if (ayonClient.settings.attributes.length) {
@@ -23,11 +27,12 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
     ).data
     const fieldType = attribSettings.type
     if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
-    if (fieldType === 'boolean')
+    else if (fieldType === 'boolean')
       return !value ? '' : <Icon icon="check" className={`editor-field ${className}`} />
-    if (fieldType === 'list_of_strings') {
+    else if (fieldType === 'list_of_strings' && typeof value === 'object') {
       if (!value?.length) return ''
       const _enum = attribSettings.enum
+
       const labels = _enum
         .filter((item) => value.includes(item.value))
         .map((item) => item.label || item.value)

@@ -33,6 +33,32 @@ const SubRow = styled.div`
   > *:first-child {
     flex-grow: 1;
     margin-right: 4px;
+
+    /* reveal null button on hover */
+    &:hover + .null {
+      display: block;
+    }
+  }
+
+  /* set to null button */
+  .null {
+    background-color: unset;
+    position: absolute;
+    right: 24px;
+    padding: 2px;
+    top: 4px;
+
+    display: none;
+    &:hover {
+      display: block;
+      background-color: unset;
+    }
+  }
+
+  &.isChanged {
+    .null {
+      color: var(--color-on-changed);
+    }
   }
 `
 
@@ -597,10 +623,13 @@ const EditorPanel = ({
                 } else if (attrib?.enum) {
                   // dropdown
                   const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
-                  let enumValue = value ? (isMultiSelect ? value : [value]) : []
+                  let enumValue = isMultiSelect ? value : [value]
                   if (isMultiple) {
                     enumValue = isMultiSelect ? union(...isMultiple) : isMultiple
                   }
+
+                  // never show value when inherited, just show placeholder
+                  if (!isOwn) enumValue = null
 
                   input = (
                     <Dropdown
@@ -615,6 +644,10 @@ const EditorPanel = ({
                       widthExpand
                       emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
                       isMultiple={!!isMultiple}
+                      onClear={(value) => enumValue && handleLocalChange(value, changeKey, field)}
+                      onClearNullValue
+                      nullPlaceholder="(inherited)"
+                      search={attrib?.enum?.length > 10}
                     />
                   )
                 } else if (isDate) {
@@ -633,7 +666,6 @@ const EditorPanel = ({
                         ...disabledStyles,
                         width: '100%',
                       }}
-                      isClearable={isOwn}
                     />
                   )
                 } else if (attrib?.type === 'boolean') {
@@ -665,12 +697,13 @@ const EditorPanel = ({
                       style={{
                         ...changedStyles,
                         color: isChanged
-                          ? 'black'
+                          ? 'var(--color-on-changed)'
                           : !isOwn
                           ? 'var(--md-ref-palette-neutral-variant60'
                           : 'var(--md-sys-color-on-surface-variant)',
                         ...disabledStyles,
                         width: '100%',
+                        fontStyle: isOwn ? 'normal' : 'italic',
                       }}
                       {...extraProps}
                       onFocus={(e) => e.target?.select()}
@@ -694,13 +727,14 @@ const EditorPanel = ({
                       overflow: !isDate ? 'hidden' : 'visible',
                     }}
                   >
-                    <SubRow>
+                    <SubRow className={isChanged ? 'isChanged' : ''}>
                       {input}
-                      {attrib && !['name', 'label'].includes(field) && (
+                      {attrib && !['name', 'label'].includes(field) && isOwn && (
                         <Button
                           onClick={() => handleLocalChange(null, changeKey, field)}
                           icon={'backspace'}
                           tooltip="Clear field"
+                          className="null"
                         />
                       )}
                     </SubRow>
