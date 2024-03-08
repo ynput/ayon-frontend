@@ -24,6 +24,21 @@ const GridStyled = styled.div`
   }
 `
 
+const EntityCardStyled = styled(EntityCard)`
+  &.isPlaceholder {
+    &::after,
+    .thumbnail::after,
+    .inner-card::after {
+      display: none;
+    }
+
+    opacity: 0.2;
+    user-select: none;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+`
+
 const ProjectLatestRow = ({
   projectName,
   entities,
@@ -83,53 +98,48 @@ const ProjectLatestRow = ({
   if (isNoData) {
     data = [
       {
-        isError: true,
+        className: 'isPlaceholder',
       },
       {
-        isError: true,
+        className: 'isPlaceholder',
       },
       {
-        isError: true,
+        className: 'isPlaceholder',
       },
     ]
   }
 
   if (isProjectLoading || (data.length === 0 && !isNoData)) {
-    data = [
-      {
-        isLoading: true,
-      },
-      {
-        isLoading: true,
-      },
-      {
-        isLoading: true,
-      },
-    ]
+    data = [{}, {}, {}]
   }
+
+  const isLoadingData = isLoading || isFetching || isProjectLoading || isNoData
 
   return (
     <GridStyled>
       {data.map(
         (entity, index) =>
           entity && (
-            <EntityCard
+            <EntityCardStyled
               key={`${rowIndex}-${index}`}
               title={entity.name}
               titleIcon={entity.typeIcon}
               subTitle={entity.footer}
               icon={entity.statusIcon}
               iconColor={entity.statusColor}
-              imageUrl={`/api/projects/${projectName}/${entity.thumbnailEntityType}s/${
-                entity.thumbnailEntityId
-              }/thumbnail?updatedAt=${entity.updatedAt}&token=${localStorage.getItem(
-                'accessToken',
-              )}`}
+              className={entity.className}
+              imageUrl={
+                !isLoadingData &&
+                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${
+                  entity.thumbnailEntityId
+                }/thumbnail?updatedAt=${entity.updatedAt}&token=${localStorage.getItem(
+                  'accessToken',
+                )}`
+              }
               style={{
                 minWidth: 'unset',
               }}
-              isError={isNoData}
-              isLoading={isLoading || isFetching || !projectName || isProjectLoading}
+              isLoading={isLoadingData}
               onClick={() => onEntityClick(entity)}
               isFullHighlight
             />
