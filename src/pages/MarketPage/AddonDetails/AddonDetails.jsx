@@ -25,7 +25,7 @@ const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) 
   </Styled.MetaPanelRow>
 )
 
-const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
+const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
   // latestVersion: is the latest version of the addon
   // versions: is an array of all versions INSTALLED of the addon
   const {
@@ -79,16 +79,23 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall }) => {
 
   let actionButton = null
 
+  // Install button (top right)
   if (isInstalling) {
     actionButton = (
       <SaveButton active saving disabled>
-        Installing...
+        {isOutdated ? 'Updating' : 'Installing'}...
       </SaveButton>
     )
   } else if (isFinished) {
     actionButton = (
       <Button disabled icon={'check_circle'}>
         Installed!
+      </Button>
+    )
+  } else if (isUpdatingAll) {
+    actionButton = (
+      <Button active saving disabled>
+        Pending...
       </Button>
     )
   } else if (isInstalled && !isOutdated) {
