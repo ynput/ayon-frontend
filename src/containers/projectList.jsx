@@ -103,6 +103,7 @@ const ProjectList = ({
   autoSelect,
   isProjectManager,
   onDeleteProject,
+  onActivateProject,
   onNewProject,
   isCollapsible = false,
   collapsedId = 'global',
@@ -228,13 +229,27 @@ const ProjectList = ({
         },
       ]
 
-      if (onDeleteProject)
+      const selObject = data.find((project) => project?.name === sel[0])
+      const active = selObject?.active
+
+      // show deactivate button on active projects and activate on inactive projects
+      if (onActivateProject) {
+        managerMenuItems.push({
+          label: active ? 'Deactivate Project' : 'Activate Project',
+          icon: active ? 'archive' : 'unarchive',
+          command: () => onActivateProject(sel[0], !active),
+        })
+      }
+
+      // only show delete button on non-active projects
+      if (onDeleteProject && selObject && !active) {
         managerMenuItems.push({
           label: 'Delete Project',
           icon: 'delete',
           command: () => onDeleteProject(sel[0]),
           danger: true,
         })
+      }
 
       if (isProjectManager) menuItems.push(...managerMenuItems)
 
