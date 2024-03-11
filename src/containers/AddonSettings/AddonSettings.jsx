@@ -548,6 +548,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           }}
           icon="help"
           data-tooltip="Show help descriptions"
+          selected={showHelp}
         />
       </Toolbar>
     )
