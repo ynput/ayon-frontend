@@ -1,5 +1,6 @@
 import { isEqual, snakeCase } from 'lodash'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import * as Styled from './Tooltip.styled'
 
 const getTooltipId = (tooltip, shortcut, id) => {
@@ -19,7 +20,7 @@ const useTooltip = () => {
     // set tooltip left position
     const tooltipLeft = target.x - tooltipWidth / 2
     // set tooltip top position
-    const tooltipTop = target.y - tooltipHeight - 10
+    const tooltipTop = target.y - tooltipHeight - 0
 
     // make sure tooltip is not outside of viewport
     if (tooltipLeft < 0) {
@@ -35,7 +36,8 @@ const useTooltip = () => {
 
   const [timeoutId, setTimeoutId] = useState(null)
   const [isActive, setIsActive] = useState(false)
-  const delay = 900
+  const defaultDelay = 900
+  const [delay, setDelay] = useState(defaultDelay)
 
   // when tooltip changes, update tooltip position using target position
   useEffect(() => {
@@ -72,7 +74,7 @@ const useTooltip = () => {
         }, delay),
       )
     }
-  }, [tooltip, setTooltip])
+  }, [tooltip, setTooltip, delay])
 
   // once tooltip has been null for 300ms, set noTimeOut to false
   const [activeTimeoutId, setActiveTimeoutId] = useState(null)
@@ -89,15 +91,22 @@ const useTooltip = () => {
     (e) => {
       const target = e.target.closest('[data-tooltip], [data-shortcut]')
 
+      // if we are hovering over the tooltip, don't do anything
+      if (e.target?.closest('.tooltip')) return
+
       if (!target) {
         setTooltip(null)
         // clear timeout if one
         if (timeoutId) clearTimeout(timeoutId)
+
+        return
       }
 
       const tooltipData = target?.dataset?.tooltip
       const shortcutData = target?.dataset?.shortcut
-      const noDelayData = target?.dataset?.tooltipNoDelay
+      const delayData = target?.dataset?.tooltipDelay
+      // what to render as tooltip (pre, div, markdown, etc.)
+      const asData = target?.dataset?.tooltipAs
       // check if data-tooltip attribute exists
       if (!tooltipData && !shortcutData) {
         setTooltip(null)
@@ -111,28 +120,39 @@ const useTooltip = () => {
 
       // find center top position of target element
       const targetRect = target.getBoundingClientRect()
+
       // target center will also be tooltip left
       const targetCenter = targetRect.left + targetRect.width / 2
       // target top will also be tooltip bottom
       const targetTop = target.getBoundingClientRect().top
 
-      const newTargetPos = { x: targetCenter, y: targetTop }
+      const newTargetPos = { x: asData === 'markdown' ? e.x : targetCenter, y: targetTop }
       const newTooltip = {
         tooltip: tooltipData ?? '',
         shortcut: shortcutData ?? '',
         target: newTargetPos,
         id,
         hide: false,
+        as: asData || 'div',
       }
 
       // check if tooltip is already set to same value
       if (isEqual(tooltip, newTooltip) && isEqual(tooltip?.target, newTargetPos)) return
 
-      if (noDelayData) setIsActive(true)
+      if (delayData) {
+        const parsedDelay = parseInt(delayData)
+        if (!isNaN(parsedDelay) && parsedDelay !== defaultDelay) {
+          setDelay(parsedDelay)
+        } else {
+          setDelay(defaultDelay) // replace defaultDelay with your default value
+        }
+      } else if (delay !== defaultDelay) {
+        setDelay(defaultDelay) // replace defaultDelay with your default value
+      }
 
       setTooltip(newTooltip)
     },
-    [setTooltip, tooltip, isActive],
+    [setTooltip, tooltip, isActive, delay],
   )
 
   const hideTooltip = !tooltip?.pos || tooltip?.hide
@@ -149,12 +169,18 @@ const useTooltip = () => {
           opacity: hideTooltip ? 0 : 1,
           left: tooltip?.pos?.x || 0,
           top: tooltip?.pos?.y || 0,
-          padding: tooltip?.tooltip ? '6px 8px' : 6,
         }}
         $targetPos={tooltip?.target}
       >
-        {tooltip?.tooltip}
-        {tooltip?.shortcut && <Styled.Shortcut>{tooltip?.shortcut}</Styled.Shortcut>}
+        <Styled.TooltipInner as={tooltip?.as === 'markdown' ? 'div' : tooltip?.as}>
+          {tooltip?.as === 'markdown' ? (
+            <ReactMarkdown linkTarget={'_blank'}>{tooltip?.tooltip}</ReactMarkdown>
+          ) : (
+            tooltip?.tooltip
+          )}
+
+          {tooltip?.shortcut && <Styled.Shortcut>{tooltip?.shortcut}</Styled.Shortcut>}
+        </Styled.TooltipInner>
       </Styled.TooltipWidget>
     ),
     [tooltip, hideTooltip],

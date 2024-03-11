@@ -58,7 +58,7 @@ const AddonsManager = () => {
 
     // remove bundles that are not in the selected versions
     const newBundles = selectedBundles.filter((b) =>
-      selectedVersions.some((v) => filteredVersionsMap.get(v)?.bundles?.has(b)),
+      selectedVersions.some((v) => filteredVersionsMap.get(v)?.has(b)),
     )
 
     setSelectedBundles(newBundles)

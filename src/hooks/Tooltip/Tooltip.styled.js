@@ -2,37 +2,41 @@ import styled from 'styled-components'
 
 export const TooltipWidget = styled.div`
   position: fixed;
-  background-color: hsl(0, 0%, 5%);
-  border-radius: var(--border-radius-m);
+  z-index: 10000;
 
   transition: opacity 300ms;
+  /* how far up the tooltip us */
+  padding-bottom: 4px;
+
+  max-width: 400px;
+`
+
+export const TooltipInner = styled.div`
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border-radius: var(--border-radius-m);
+  border: solid 1px var(--md-sys-color-outline-variant);
+  padding: 8px;
+  margin: 0;
+  max-width: 400px;
+  overflow: hidden;
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: var(--md-sys-color-primary);
+    text-decoration: underline;
+  }
 
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
-  white-space: nowrap;
+  white-space: break-spaces;
 
   /* box shadow */
   box-shadow: 0 0 10px 0px rgba(0, 0, 0, 0.4);
-  user-select: none;
-  pointer-events: none;
   z-index: 1200;
-
-  /* tooltip triangle pointer using ::after */
-  &::after {
-    content: '';
-    position: fixed;
-
-    left: ${(props) => props?.$targetPos?.x}px;
-    top: ${(props) => props?.$targetPos?.y}px;
-
-    translate: 0 -100%;
-
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: hsl(0, 0%, 5%) transparent transparent transparent;
-  }
 `
 
 export const Shortcut = styled.span`

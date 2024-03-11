@@ -194,6 +194,13 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     setFormData(newFormData)
   }
 
+  // when dep packages are changed in dev mode
+  const handleDepPackagesDevChange = (packages) => {
+    setFormData((prev) => {
+      return { ...prev, dependencyPackages: packages }
+    })
+  }
+
   // SHORTCUTS
   const shortcuts = [
     {
@@ -318,7 +325,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
             </>
           )}
         </Styled.AddonTools>
-        {isDev && <BundleDeps bundle={formData} />}
+        {isDev && <BundleDeps bundle={formData} onChange={handleDepPackagesDevChange} />}
       </BundleForm>
     </>
   )

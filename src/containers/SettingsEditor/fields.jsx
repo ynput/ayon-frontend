@@ -434,20 +434,17 @@ function FieldTemplate(props) {
   //   props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
   // }`
 
-  const inlineHelp = useMemo(() => {
-    return (
-      props.rawDescription && (
-        <div>
-          <ReactMarkdown>{props.rawDescription}</ReactMarkdown>
-        </div>
-      )
-    )
-  }, [props.rawDescription])
-
   return (
     <>
       {divider}
-      <div className={className} data-fieldid={props.id} onContextMenu={onContextMenu}>
+      <div
+        className={className}
+        data-fieldid={props.id}
+        onContextMenu={onContextMenu}
+        data-tooltip={props.rawDescription}
+        data-tooltip-delay={300}
+        data-tooltip-as="markdown"
+      >
         {props.label && (
           <div className={`form-inline-field-label ${overrideLevel}`}>
             <span
@@ -463,7 +460,6 @@ function FieldTemplate(props) {
           </div>
         )}
         <div className={`form-inline-field-widget ${widgetClass}`}>{props.children}</div>
-        <div className="form-inline-field-help">{inlineHelp}</div>
       </div>
     </>
   )

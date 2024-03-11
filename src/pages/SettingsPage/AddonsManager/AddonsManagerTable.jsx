@@ -114,7 +114,8 @@ const AddonsManagerTable = ({
             body={(d) => (
               <span
                 data-tooltip={d?.tooltip}
-                data-tooltip-no-delay={true}
+                data-tooltip-delay={0}
+                data-tooltip-as={'pre'}
                 style={{ width: '100%' }}
               >
                 {d[field]} {d?.suffix}
