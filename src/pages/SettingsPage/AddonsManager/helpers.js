@@ -5,24 +5,32 @@ export const transformAddonsWithBundles = (addons = [], bundles = []) => {
   bundles.forEach((item) => {
     Object.entries(item.addons).forEach(([addonName, version]) => {
       if (!result.has(addonName)) {
+        // create empty array for versions
         result.set(addonName, new Map())
       }
       if (!result.get(addonName).has(version)) {
-        result.get(addonName).set(version, new Map())
+        // create empty array for bundles
+        result.get(addonName).set(version, { bundles: new Map() })
       }
-      result.get(addonName).get(version).set(item.name, item)
+      result.get(addonName).get(version)?.bundles?.set(item.name, item)
     })
   })
 
   // merge in remaining addons and versions from addons (these are versions that are not in bundles)
-  addons.forEach((item) => {
-    Object.entries(item.versions).forEach(([version]) => {
-      if (!result.has(item.name)) {
-        result.set(item.name, new Map())
+  addons.forEach((addon) => {
+    Object.entries(addon.versions).forEach(([versionName, version]) => {
+      if (!result.has(addon.name)) {
+        // create empty array for versions
+        result.set(addon.name, new Map())
       }
-      if (!result.get(item.name).has(version)) {
-        // create empty array for bundles
-        result.get(item.name).set(version, new Map())
+      if (!result.get(addon.name).has(versionName)) {
+        // add version and create empty array for bundles
+        result.get(addon.name).set(versionName, { bundles: new Map(), ...version })
+      } else {
+        // merge version with existing version
+        result
+          .get(addon.name)
+          .set(versionName, { ...result.get(addon.name).get(versionName), ...version })
       }
     })
   })
@@ -41,10 +49,11 @@ export const transformAddonsTable = (addons = []) => {
     let status = []
     if (versionsMap.size > 0) {
       const versionsArray = Array.from(versionsMap.values())
+
       statuses.forEach((s) => {
         if (
-          versionsArray.some((bundles) =>
-            Array.from(bundles.values()).some(
+          versionsArray.some((version) =>
+            Array.from(version.bundles.values()).some(
               (bundle) => bundle[`is${s.charAt(0).toUpperCase() + s.slice(1)}`],
             ),
           )
@@ -52,8 +61,12 @@ export const transformAddonsTable = (addons = []) => {
           status.push(s)
         }
       })
-      if (status.length === 0 && versionsArray.some((bundles) => bundles.size > 0)) {
+      if (status.length === 0 && versionsArray.some((v) => v.bundles?.size > 0)) {
         status.push('active')
+      }
+      // check if any of the versions are broken
+      if (versionsArray.some((v) => v.isBroken)) {
+        status.push('error')
       }
     }
     tableData.push({ name: addonName, status })
@@ -61,7 +74,7 @@ export const transformAddonsTable = (addons = []) => {
   return tableData
 }
 
-// data: map of the addons, versions, bunddles
+// data: map of the addons, versions, bundles
 // get map of unique versions for addons
 export const getVersionsForAddons = (data, addons = []) => {
   const result = new Map()
@@ -69,9 +82,9 @@ export const getVersionsForAddons = (data, addons = []) => {
   addons.forEach((addonName) => {
     if (data.has(addonName)) {
       const versionsMap = data.get(addonName)
-      versionsMap.forEach((bundlesMap, version) => {
-        if (!result.has(version)) {
-          result.set(addonName + ' ' + version, bundlesMap)
+      versionsMap.forEach((version, versionName) => {
+        if (!result.has(versionName)) {
+          result.set(addonName + ' ' + versionName, version)
         }
       })
     }
@@ -87,13 +100,16 @@ export const transformVersionsTable = (data, addons = [], deletedVersions) => {
   if (!versionsMap) return []
 
   let tableData = []
-  versionsMap.forEach((bundlesMap, version) => {
-    const status = []
-    if (deletedVersions.includes(version)) {
+  versionsMap.forEach((version, versionName) => {
+    let status = [],
+      tooltip,
+      suffix
+    if (deletedVersions.includes(versionName)) {
       status.push('error')
-      version = version + ' (deleted)'
-    } else if (bundlesMap.size > 0) {
-      const bundlesArray = Array.from(bundlesMap.values())
+      suffix = '(deleted)'
+      tooltip = 'Restarting the server will remove it from the list.'
+    } else {
+      const bundlesArray = Array.from(version.bundles?.values())
 
       statuses.forEach((s) => {
         if (bundlesArray.some((bundle) => bundle[`is${s.charAt(0).toUpperCase() + s.slice(1)}`])) {
@@ -103,8 +119,15 @@ export const transformVersionsTable = (data, addons = [], deletedVersions) => {
       if (status.length === 0 && bundlesArray.length > 0) {
         status.push('active')
       }
+      // check if version is broken
+      if (version.isBroken) {
+        status.push('error')
+        suffix = '(broken)'
+        tooltip = JSON.stringify(version.reason)
+      }
     }
-    tableData.push({ version, status })
+
+    tableData.push({ version: versionName, status, tooltip, suffix })
   })
 
   return [versionsMap, tableData]
@@ -117,9 +140,9 @@ export const getUniqueBundlesForAddonsAndVersions = (data, addons = [], versions
   addons.forEach((addonName) => {
     if (data.has(addonName)) {
       const versionsMap = data.get(addonName)
-      versionsMap.forEach((bundlesMap, version) => {
-        if (versions.includes(addonName + ' ' + version)) {
-          bundlesMap.forEach((bundle, bundleName) => {
+      versionsMap.forEach((version, versionName) => {
+        if (versions.includes(addonName + ' ' + versionName)) {
+          version.bundles?.forEach((bundle, bundleName) => {
             if (!result.has(bundleName)) {
               result.set(bundleName, bundle)
             }

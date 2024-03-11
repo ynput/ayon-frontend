@@ -77,7 +77,7 @@ const AddonsManagerTable = ({
       contextSelection.length &&
       contextSelection.every((d) => {
         const v = value.find((v) => v[field] === d)
-        if (v) return !v.status.length
+        if (v) return !v.status.filter((s) => s !== 'error').length
         return false
       })
 
@@ -89,7 +89,7 @@ const AddonsManagerTable = ({
       {onDelete && (
         <Button
           icon={deleteIcon}
-          disabled={tableSelection.some((v) => v.status?.length)}
+          disabled={tableSelection.some((v) => v.status?.filter((s) => s !== 'error').length)}
           onClick={(e) => handleDelete(e, selection)}
         >
           {deleteLabel} {title}
@@ -107,7 +107,20 @@ const AddonsManagerTable = ({
           selection={tableSelection}
           onContextMenu={handleContextClick}
         >
-          <Column field={field} header={title} sortable />
+          <Column
+            field={field}
+            header={title}
+            sortable
+            body={(d) => (
+              <span
+                data-tooltip={d?.tooltip}
+                data-tooltip-no-delay={true}
+                style={{ width: '100%' }}
+              >
+                {d[field]} {d?.suffix}
+              </span>
+            )}
+          />
           <Column
             field="status"
             header={'Status'}
