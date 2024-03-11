@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 
@@ -38,35 +38,50 @@ const FormattedPath = ({ value }) => {
 }
 
 const FormattedValue = ({ value }) => {
-  if (isSimple(value)) {
-    if (typeof value === 'boolean') return <ChangeValue>{value ? 'true' : 'false'}</ChangeValue>
-    if (value === '') return <ChangeValue className="dim">no value</ChangeValue>
-    return <ChangeValue>{value}</ChangeValue>
-  } else if (!value) {
-    // evaluate this after isSimple to let booleans pass through
-    return <ChangeValue className="dim">no value</ChangeValue>
-  } else if (isList(value)) {
-    if (value.length === 0) return <ChangeValue className="dim">empty list</ChangeValue>
+  const val = useMemo(() => {
+    if (isSimple(value)) {
+      if (typeof value === 'boolean') return <ChangeValue>{value ? 'true' : 'false'}</ChangeValue>
+      if (value === '') return <ChangeValue className="dim">no value</ChangeValue>
+      return <ChangeValue>{value}</ChangeValue>
+    } else if (!value) {
+      // evaluate this after isSimple to let booleans pass through
+      return <ChangeValue className="dim">no value</ChangeValue>
+    } else if (isList(value)) {
+      if (value.length === 0) return <ChangeValue className="dim">empty list</ChangeValue>
 
-    if (isListOfSimple(value))
-      return <ChangeValue title={value.join(', ')}>[ {value.join(', ')} ]</ChangeValue>
+      if (isListOfSimple(value))
+        return <ChangeValue title={value.join(', ')}>[ {value.join(', ')} ]</ChangeValue>
 
-    const dictNames = isListOfNamedDicts(value)
-    if (dictNames) {
-      return <ChangeValue title={dictNames.join(', ')}>[ {dictNames.join(', ')} ]</ChangeValue>
+      const dictNames = isListOfNamedDicts(value)
+      if (dictNames) {
+        return <ChangeValue title={dictNames.join(', ')}>[ {dictNames.join(', ')} ]</ChangeValue>
+      }
+
+      return (
+        <ChangeValue title={JSON.stringify(value, null, 2)} className="dim">
+          [ complex list ]
+        </ChangeValue>
+      )
     }
 
     return (
-      <ChangeValue title={JSON.stringify(value, null, 2)} className="dim">
-        [ complex list ]
+      <ChangeValue className="dim" title={JSON.stringify(value, null, 2)}>
+        [ complex object ]
       </ChangeValue>
     )
-  }
+  }, [value])
 
   return (
-    <ChangeValue className="dim" title={JSON.stringify(value, null, 2)}>
-      [ complex object ]
-    </ChangeValue>
+    <div
+      style={{
+        maxWidth: '200px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {val}
+    </div>
   )
 }
 
