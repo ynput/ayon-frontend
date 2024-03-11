@@ -242,14 +242,15 @@ const ProjectList = ({
       }
 
       // only show delete button on non-active projects
-      if (onDeleteProject && selObject && !active) {
-        managerMenuItems.push({
-          label: 'Delete Project',
-          icon: 'delete',
-          command: () => onDeleteProject(sel[0]),
-          danger: true,
-        })
-      }
+      const disableDelete = active || !onDeleteProject || !selObject
+
+      managerMenuItems.push({
+        label: disableDelete ? 'Deactivate to Delete' : 'Delete Project',
+        icon: 'delete',
+        command: () => onDeleteProject(sel[0]),
+        danger: true,
+        disabled: disableDelete,
+      })
 
       if (isProjectManager) menuItems.push(...managerMenuItems)
 

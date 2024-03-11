@@ -648,7 +648,7 @@ a {
     &.p-menuitem-active > .p-menuitem-link {
       background-color: var(--md-sys-color-surface-container-lowest-hover);
 
-      &.p-disabled {
+      &.p-disabled:not(.danger) {
         background-color: var(--md-sys-color-surface-container-lowest);
       }
 
