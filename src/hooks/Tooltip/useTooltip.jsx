@@ -35,6 +35,7 @@ const useTooltip = () => {
 
   const [timeoutId, setTimeoutId] = useState(null)
   const [isActive, setIsActive] = useState(false)
+  const delay = 900
 
   // when tooltip changes, update tooltip position using target position
   useEffect(() => {
@@ -68,7 +69,7 @@ const useTooltip = () => {
         setTimeout(() => {
           setIsActive(true)
           setTooltip((t) => ({ ...t, pos: newTooltipPos, hide: false }))
-        }, 900),
+        }, delay),
       )
     }
   }, [tooltip, setTooltip])
@@ -96,6 +97,7 @@ const useTooltip = () => {
 
       const tooltipData = target?.dataset?.tooltip
       const shortcutData = target?.dataset?.shortcut
+      const noDelayData = target?.dataset?.tooltipNoDelay
       // check if data-tooltip attribute exists
       if (!tooltipData && !shortcutData) {
         setTooltip(null)
@@ -125,6 +127,8 @@ const useTooltip = () => {
 
       // check if tooltip is already set to same value
       if (isEqual(tooltip, newTooltip) && isEqual(tooltip?.target, newTargetPos)) return
+
+      if (noDelayData) setIsActive(true)
 
       setTooltip(newTooltip)
     },
