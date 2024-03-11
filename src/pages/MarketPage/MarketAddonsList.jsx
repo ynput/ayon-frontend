@@ -3,6 +3,7 @@ import MarketAddonCard from '/src/components/MarketAddonCard/MarketAddonCard'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { InputText } from '@ynput/ayon-react-components'
+import { Tag } from '/src/components/MarketAddonCard/MarketAddonCard.styled'
 
 const StyledAddonList = styled.div`
   display: flex;
@@ -18,13 +19,23 @@ const StyledAddonList = styled.div`
     padding: 2px;
 
     width: 100%;
+    display: flex;
+    gap: var(--base-gap-large);
+
+    button {
+      height: unset;
+      width: 120px;
+      padding-right: 12px;
+      border-radius: var(--border-radius-m);
+      background-color: var(--md-sys-color-surface-container-high) !important;
+    }
   }
 `
 
 const StyledInput = styled(InputText)`
   max-height: 40px;
   height: 40px;
-  width: 100%;
+  flex: 1;
 `
 
 const StyledList = styled(PerfectScrollbar)`
@@ -42,7 +53,17 @@ const StyledList = styled(PerfectScrollbar)`
   }
 `
 
-const MarketAddonsList = ({ addons = [], selected, onSelect, onHover, onInstall, isLoading }) => {
+const MarketAddonsList = ({
+  addons = [],
+  selected,
+  onSelect,
+  onHover,
+  onInstall,
+  isLoading,
+  onUpdateAll,
+  isUpdatingAll,
+  isUpdatingAllFinished,
+}) => {
   const [search, setSearch] = useState('')
 
   // filter addons by search
@@ -85,6 +106,16 @@ const MarketAddonsList = ({ addons = [], selected, onSelect, onHover, onInstall,
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        {onUpdateAll && (
+          <Tag
+            icon={isUpdatingAll ? 'sync' : isUpdatingAllFinished ? 'check_circle' : 'upgrade'}
+            onClick={onUpdateAll}
+            className={isUpdatingAll ? 'installing' : ''}
+            disabled={isUpdatingAll || isUpdatingAllFinished}
+          >
+            {isUpdatingAll ? 'Updating...' : isUpdatingAllFinished ? 'All Updated' : 'Update All'}
+          </Tag>
+        )}
       </div>
       <StyledList ref={scrollRef} containerRef={(el) => (listRef.current = el)}>
         {filteredAddons.map(({ name, orgTitle, ...props }) => {
@@ -99,6 +130,7 @@ const MarketAddonsList = ({ addons = [], selected, onSelect, onHover, onInstall,
               onInstall={onInstall}
               name={name}
               {...props}
+              x
             />
           )
         })}

@@ -17,6 +17,7 @@ const MarketAddonCard = ({
   isInstalled,
   isOutdated,
   isPlaceholder,
+  isWaiting, // waiting to be installed/updated by update all
   isInstalling,
   isFinished,
   onInstall,
@@ -25,7 +26,8 @@ const MarketAddonCard = ({
   let state = 'install'
   if (isInstalled && !isOutdated) state = 'installed'
   if (isInstalled && isOutdated) state = 'update'
-  if (isInstalling) state = 'installing'
+  if (isWaiting) state = 'pending'
+  if (isInstalling) state = isInstalled && isOutdated ? 'updating' : 'installing'
   if (isFinished) state = 'finished'
 
   let stateIcon = null
@@ -59,7 +61,12 @@ const MarketAddonCard = ({
       </Styled.Content>
       {!isPlaceholder && (
         <Styled.Buttons>
-          <Styled.Tag variant={stateVariant} className={state} onClick={handleActionClick}>
+          <Styled.Tag
+            variant={stateVariant}
+            className={state}
+            onClick={handleActionClick}
+            disabled={isWaiting}
+          >
             {stateIcon && <Icon icon={stateIcon} />}
             {upperFirst(state)}
           </Styled.Tag>

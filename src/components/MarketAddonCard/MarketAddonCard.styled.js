@@ -85,6 +85,8 @@ export const Tag = styled(Button)`
 
   &.installed,
   &.installing,
+  &.pending,
+  &.updating,
   &.finished {
     background-color: unset;
     user-select: none;
@@ -95,9 +97,12 @@ export const Tag = styled(Button)`
     font-style: italic;
   }
 
-  &.installing .icon {
-    user-select: none;
-    animation: ${SpinAnimation} 1s linear infinite;
+  &.installing,
+  &.updating {
+    .icon {
+      user-select: none;
+      animation: ${SpinAnimation} 1s linear infinite;
+    }
   }
 
   &.finished {

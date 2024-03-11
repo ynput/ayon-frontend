@@ -54,6 +54,9 @@ const MarketPage = () => {
   // keep track of which addons are being installed
   const [installingAddons, setInstallingAddons] = useState([])
   const [finishedInstalling, setFinishedInstalling] = useState([])
+  // updating is the same as installing really, false, true, 'finished'
+  const [isUpdatingAll, setIsUpdatingAll] = useState(false)
+  const [isUpdatingAllFinished, setIsUpdatingAllFinished] = useState(false)
 
   const [isCloudConnected, setIsCloudConnected] = useState(false)
   // if the user hasn't connected to ynput cloud yet
@@ -91,18 +94,24 @@ const MarketPage = () => {
     setFinishedInstalling((f) => [...new Set([...f, ...finished])] || [])
   }, [installProgress, setInstallingAddons, setFinishedInstalling])
 
-  const { restartRequired, restartConfig } = useRestart()
+  const { restartRequired } = useRestart()
   // callback when restart is requested
   const handleRestarted = () => {
     // reset installing addons
     setInstallingAddons([])
     setFinishedInstalling([])
+    setIsUpdatingAll(false)
+    setIsUpdatingAllFinished(false)
   }
   // once finished installing has length, show restart banner
   useEffect(() => {
-    if (!finishedInstalling.length || restartConfig) return
+    if (!finishedInstalling.length || installingAddons.length) return
+    // all addons have finished installing
+    setIsUpdatingAll(false)
+    if (isUpdatingAll) setIsUpdatingAllFinished(true)
+
     restartRequired({ middleware: handleRestarted })
-  }, [finishedInstalling, restartRequired, restartConfig])
+  }, [finishedInstalling, installingAddons])
 
   // GET SELECTED ADDON
   const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useGetMarketAddonQuery(
@@ -123,7 +132,6 @@ const MarketPage = () => {
   // }, [marketAddonsData, installedAddons])
 
   let marketAddons = useMemo(() => {
-    console.log(marketAddonsData)
     const sortedData = [...marketAddonsData]
     // sort by isInstalled, isOutdated, isOfficial, name
     sortedData?.sort(
@@ -149,18 +157,23 @@ const MarketPage = () => {
 
   // update addon if installingAddons or finishedInstalling changes
   marketAddons = useMemo(() => {
-    if (!marketAddons.length || (!installingAddons.length && !finishedInstalling.length))
+    if (
+      !marketAddons.length ||
+      (!installingAddons.length && !finishedInstalling.length && !isUpdatingAll)
+    )
       return marketAddons
     return marketAddons.map((addon) => {
+      const isWaiting = addon.isOutdated && addon.isInstalled && isUpdatingAll
       const isInstalling = installingAddons.includes(addon.name)
       const isFinished = finishedInstalling.includes(addon.name)
       return {
         ...addon,
         isInstalling,
         isFinished,
+        isWaiting,
       }
     })
-  }, [marketAddons, installingAddons, finishedInstalling])
+  }, [marketAddons, installingAddons, finishedInstalling, isUpdatingAll])
 
   // merge selected addon with found addon in marketAddons
   const selectedAddon = useMemo(() => {
@@ -220,10 +233,20 @@ const MarketPage = () => {
   // INSTALL/UPDATE ADDON
   const handleInstall = (name, version) => {
     if (isCloudConnected) {
-      installAddon(name, version)
+      return installAddon(name, version)
     } else {
-      setShowConnectDialog(true)
+      return setShowConnectDialog(true)
     }
+  }
+
+  const handleUpdateAll = async () => {
+    setIsUpdatingAll(true)
+    // for each outdated addon, install it
+    marketAddons.forEach((addon) => {
+      if (addon.isOutdated && addon.isInstalled) {
+        handleInstall(addon.name, addon.latestVersion)
+      }
+    })
   }
 
   if (isError)
@@ -261,12 +284,16 @@ const MarketPage = () => {
             onHover={handleHover}
             onInstall={handleInstall}
             isLoading={isLoadingMarket}
+            onUpdateAll={marketAddons.some((addon) => addon.isOutdated) && handleUpdateAll}
+            isUpdatingAll={isUpdatingAll}
+            isUpdatingAllFinished={isUpdatingAllFinished}
           />
           <AddonDetails
             addon={selectedAddon}
             isLoading={isLoadingInstalled || isFetchingAddon}
             setInstallingAddons={setInstallingAddons}
             onInstall={handleInstall}
+            isUpdatingAll={isUpdatingAll}
           />
         </Section>
       </main>
