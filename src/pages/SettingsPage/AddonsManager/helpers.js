@@ -123,7 +123,8 @@ export const transformVersionsTable = (data, addons = [], deletedVersions) => {
       if (version.isBroken) {
         status.push('error')
         suffix = '(broken)'
-        tooltip = JSON.stringify(version.reason)
+        tooltip = 'Addon failed to load. Check logs for details' //JSON.stringify(version.reason)
+        // TODO: allow rendering reason in pre or markdown
       }
     }
 
