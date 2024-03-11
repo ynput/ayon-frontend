@@ -7,7 +7,7 @@ import { Dialog } from 'primereact/dialog'
 import { useGetDependencyPackageListQuery } from '/src/services/dependencyPackages'
 import BundleDepsPicker from './BundleDepsPicker'
 
-const BundleDeps = ({ bundle }) => {
+const BundleDeps = ({ bundle, onChange }) => {
   const initPackageForm = {
     platform: null,
     file: null,
@@ -29,6 +29,12 @@ const BundleDeps = ({ bundle }) => {
       [platform]: packageName || null,
     }
 
+    if (onChange) {
+      onChange(newDeps)
+      handleCloseForm()
+      return
+    }
+
     // update bundle
     const patch = {
       ...bundle,
@@ -37,7 +43,7 @@ const BundleDeps = ({ bundle }) => {
 
     // update bundle on server
     try {
-      await updateBundle({ name: bundle.name, patch, data: { dependencyPackages: newDeps } })
+      await updateBundle({ name: bundle.name, patch, data: patch })
       handleCloseForm()
       toast.success('Bundle Dependency Package updated')
     } catch (error) {
