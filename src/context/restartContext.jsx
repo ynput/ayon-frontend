@@ -1,22 +1,26 @@
 import React, { createContext, useContext, useState } from 'react'
-import {
-  useGetRestartQuery,
-  usePostRestartMutation,
-  useRestartServerMutation,
-} from '../services/restartServer'
+import { useGetRestartQuery, useRestartServerMutation } from '../services/restartServer'
 import RestartBanner from '../components/RestartBanner/RestartBanner'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServerRestartingPage from '../components/ServerRestartingPage'
 import { useSelector } from 'react-redux'
+import useLocalStorage from '../hooks/useLocalStorage'
 
 const RestartContext = createContext()
 
 function RestartProvider(props) {
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
   const [restartServer] = useRestartServerMutation()
-  const [postRestart] = usePostRestartMutation()
 
   const { data: restartData = {} } = useGetRestartQuery({ skip: !isAdmin })
+
+  const [snooze, setSnooze] = useLocalStorage('restart-snooze', null)
+  // sets a local storage item to snooze the banner for the day
+  const handleSnooze = () => {
+    const tonight = new Date()
+    tonight.setHours(20, 0, 0, 0)
+    setSnooze(tonight.toISOString())
+  }
 
   // a function that runs when the server restarts
   const [callback, setCallback] = useState(null)
@@ -30,22 +34,32 @@ function RestartProvider(props) {
       accept: () => {
         if (callback) callback()
         restartServer()
+        // remove snooze local storage
+        localStorage.removeItem('restart-snooze')
       },
       reject: () => {},
     })
 
   // tell the server that a restart is required
-  const restartRequired = async ({ reason, callback } = {}) => {
+  const restartRequired = async ({ callback } = {}) => {
     setCallback(callback)
-    // tell the server that a restart is required
-    await postRestart({ required: true, reason })
   }
 
+  const isRestartRequired = restartData?.required
+
+  const isSnoozing = snooze && new Date(snooze) > new Date() && isRestartRequired
+
   return (
-    <RestartContext.Provider value={{ restartRequired, confirmRestart }}>
+    <RestartContext.Provider
+      value={{ restartRequired, confirmRestart, isRestartRequired, isSnoozing }}
+    >
       {props.children}
-      {restartData?.required && isAdmin && (
-        <RestartBanner message={restartData?.reason} onRestart={confirmRestart} />
+      {isRestartRequired && isAdmin && !isSnoozing && (
+        <RestartBanner
+          message={restartData?.reason}
+          onRestart={confirmRestart}
+          onSnooze={handleSnooze}
+        />
       )}
       <ServerRestartingPage />
     </RestartContext.Provider>

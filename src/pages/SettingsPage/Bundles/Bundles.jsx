@@ -26,7 +26,6 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import useShortcuts from '/src/hooks/useShortcuts'
-import { useRestart } from '/src/context/restartContext'
 import { useSearchParams } from 'react-router-dom'
 
 const Bundles = () => {
@@ -288,13 +287,10 @@ const Bundles = () => {
       },
     })
 
-  const { restartRequired: restartRequiredBanner } = useRestart()
-
   const handleAddonInstallFinish = () => {
     setUploadOpen(false)
     if (restartRequired) {
       setRestartRequired(false)
-      restartRequiredBanner()
     }
   }
 

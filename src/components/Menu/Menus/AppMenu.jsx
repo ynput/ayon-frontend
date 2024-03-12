@@ -11,7 +11,7 @@ export const AppMenu = ({ user, ...props }) => {
   const isAdmin = user?.data?.isAdmin
 
   // restart server
-  const { confirmRestart } = useRestart()
+  const { confirmRestart, isRestartRequired } = useRestart()
 
   // onboarding restart
   const [restartOnBoarding] = useRestartOnBoardingMutation()
@@ -82,9 +82,11 @@ export const AppMenu = ({ user, ...props }) => {
     },
     {
       id: 'restart',
-      label: 'Restart Server',
+      label: isRestartRequired ? 'Restart Required' : 'Restart Server',
       icon: 'restart_alt',
       onClick: confirmRestart,
+      highlighted: isRestartRequired,
+      notification: isRestartRequired,
     },
   ]
 

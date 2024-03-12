@@ -21,6 +21,7 @@ const restartServer = ayonApi.injectEndpoints({
           await cacheDataLoaded
 
           const handlePubSub = async (topic, message) => {
+            localStorage.removeItem('restart-snooze')
             updateCachedData((draft) => {
               Object.assign(draft, { reason: message.description, required: true })
             })
