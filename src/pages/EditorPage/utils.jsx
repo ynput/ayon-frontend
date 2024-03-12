@@ -1,8 +1,8 @@
 import ayonClient from '/src/ayon'
 import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
+import ToolsField from './fields/ToolsField'
 
-// TODO rename .jsx -> .js
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
 
@@ -26,7 +26,9 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
       (attrib) => attrib.name === fieldName,
     ).data
     const fieldType = attribSettings.type
-    if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
+    if (fieldName === 'tools' && value)
+      return <ToolsField value={value} className={className} attrib={attribSettings} />
+    else if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
     else if (fieldType === 'boolean')
       return !value ? '' : <Icon icon="check" className={`editor-field ${className}`} />
     else if (fieldType === 'list_of_strings' && typeof value === 'object') {
