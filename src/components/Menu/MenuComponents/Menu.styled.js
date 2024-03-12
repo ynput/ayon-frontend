@@ -165,6 +165,18 @@ export const Item = styled.li`
       background-color: var(--md-sys-color-primary-container-hover);
     }
   }
+
+  &.notification::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    transform: translate(25%, -25%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--md-sys-color-error);
+  }
 `
 
 export const Footer = styled.footer`

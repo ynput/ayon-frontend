@@ -110,7 +110,7 @@ const MarketPage = () => {
     setIsUpdatingAll(false)
     if (isUpdatingAll) setIsUpdatingAllFinished(true)
 
-    restartRequired({ middleware: handleRestarted })
+    restartRequired({ callback: () => handleRestarted })
   }, [finishedInstalling, installingAddons])
 
   // GET SELECTED ADDON

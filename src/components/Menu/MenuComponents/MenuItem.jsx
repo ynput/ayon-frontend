@@ -3,10 +3,22 @@ import React, { forwardRef } from 'react'
 import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
+import classNames from 'classnames'
 
 const MenuItem = forwardRef(
   (
-    { label, icon, highlighted, selected, items = [], className, isLink, shortcut, ...props },
+    {
+      label,
+      icon,
+      highlighted,
+      notification,
+      selected,
+      items = [],
+      className,
+      isLink,
+      shortcut,
+      ...props
+    },
     ref,
   ) => {
     const labelsArray = isArray(label) ? label : [label]
@@ -14,9 +26,15 @@ const MenuItem = forwardRef(
     const Item = (
       <Styled.Item
         ref={ref}
-        className={`menu-item ${highlighted ? 'highlighted' : ''} ${
-          selected ? 'selected' : ''
-        } ${className}`}
+        className={classNames(
+          'menu-item',
+          {
+            highlighted: highlighted,
+            selected: selected,
+            notification: notification,
+          },
+          className,
+        )}
         icon={icon}
         {...props}
         label={labelsArray.join(', ')}

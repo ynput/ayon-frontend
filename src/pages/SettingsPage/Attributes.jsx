@@ -17,7 +17,6 @@ import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttr
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { isEqual } from 'lodash'
-import { useRestart } from '/src/context/restartContext'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -53,14 +52,11 @@ const Attributes = () => {
     [attributes],
   )
 
-  const { restartRequired } = useRestart()
-
   const onSave = async () => {
     await updateAttributes({ attributes, deleteMissing: true, patches: attributes })
       .unwrap()
       .then(() => {
         toast.success('Attribute set saved')
-        restartRequired()
       })
       .catch((err) => {
         console.error(err)
