@@ -110,7 +110,7 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, data, isFetching } = useGetHierarchyQuery(
+  const { isError, error, data, isFetching, isSuccess } = useGetHierarchyQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -199,7 +199,7 @@ const Hierarchy = (props) => {
   // when selection changes programmatically, expand the parent folders
   // runs every time the uri changes
   useEffect(() => {
-    if (!focusedFolders?.length) return
+    if (!focusedFolders?.length || !isSuccess) return
 
     let toExpand = [...Object.keys(expandedFolders)]
     for (const id of focusedFolders) {
@@ -218,7 +218,7 @@ const Hierarchy = (props) => {
       newExpandedFolders[id] = true
     }
     dispatch(setExpandedFolders(newExpandedFolders))
-  }, [uri])
+  }, [uri, isSuccess])
 
   // Transform the plain list of focused folder ids to a map
   // {id: true}, which is needed for the Treetable

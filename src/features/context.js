@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
 
 const initialState = {
   expandedFolders: {},
@@ -19,7 +20,7 @@ const initialState = {
   reload: {},
   breadcrumbs: { scope: '' },
   share: { name: null, data: null, link: null, img: null },
-  uri: null,
+  uri: getInitialStateLocalStorage('uri', null),
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
@@ -223,3 +224,8 @@ export const {
 } = contextSlice.actions
 
 export default contextSlice.reducer
+
+// topics that need to set localStorage. If there is no explicit value, it will be the payload value
+export const contextLocalItems = {
+  'context/setUri': [{ key: 'uri' }],
+}
