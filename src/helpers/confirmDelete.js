@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 const confirmDelete = ({
   label = '',
   message = 'Are you sure? This cannot be undone',
+  deleteLabel,
   accept = async () => {},
   showToasts = true,
   isArchive = false,
@@ -12,7 +13,7 @@ const confirmDelete = ({
   onError,
   ...props
 }) => {
-  const deleteLabel = isArchive ? 'Archive' : 'Delete'
+  deleteLabel = deleteLabel || (isArchive ? 'Archive' : 'Delete')
   const deleteLabelPresent = isArchive ? 'archiving' : 'deleting'
   const deleteLabelPast = isArchive ? 'archived' : 'deleted'
 
