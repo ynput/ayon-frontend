@@ -876,15 +876,10 @@ const EditorPage = () => {
               deleteLabel: 'Force Delete',
               showToasts: false,
               accept: async () => {
-                // filter out the 409s
-                const failed = res.operations.filter((op) => op.status === 409).map((op) => op.id)
-                // filter out updates that aren't in failed array with correct id
-                const forcedUpdates = updates
-                  .filter((op) => !failed.includes(op.id))
-                  .map((op) => ({ ...op, force: true }))
+                // assign force flag to updates now
+                // we need to save all updates again
+                const forcedUpdates = updates.map((op) => ({ ...op, force: true }))
 
-                console.log(forcedUpdates)
-                // save failed updates again with force flag
                 const res2 = await updateEditor({
                   updates: forcedUpdates,
                   projectName,
@@ -903,7 +898,7 @@ const EditorPage = () => {
                 }
               },
               reject: () => {
-                // don't save
+                // don't save anything
                 setCommitUpdating(false)
                 return
               },
