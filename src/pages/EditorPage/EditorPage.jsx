@@ -50,6 +50,7 @@ import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
 import useShortcuts from '/src/hooks/useShortcuts'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -648,6 +649,51 @@ const EditorPage = () => {
     } // CREATE NEW ENTITIES
   }
 
+  // all the invalidations and patches after a commit is successful
+  const onCommitSuccess = async (
+    updates = [],
+    parentPatches = [],
+    newSelection,
+    forcedSave = false,
+  ) => {
+    setCommitUpdating(false)
+
+    // once everything has finished
+    toast.success('Changes saved')
+    const updated = []
+    const deleted = []
+
+    // create object of updated/new branches
+    for (const op of updates) {
+      if (op.type === 'delete') {
+        deleted.push(op.id)
+      } else {
+        const patch = { ...op.patch }
+        // delete: __isNew
+        delete patch.data.__isNew
+        updated.push(patch)
+      }
+    }
+
+    // invalidate these tags ['hierarchy', 'folder', 'task']
+    // so that the query will be executed again
+    // and the new data will be fetched
+    dispatch(ayonApi.util.invalidateTags(['hierarchy', 'folder', 'task']))
+
+    // add new branches to redux editor slice
+    dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))
+    if (parentPatches.length) {
+      dispatch(nodesUpdated({ updated: parentPatches, forcedSave }))
+    }
+    // update children
+    const childUpdates = getChildAttribUpdates(updates)
+    dispatch(nodesUpdated({ updated: childUpdates, forcedSave }))
+    // update selection (remove from deleted)
+    handleSelectionChange(newSelection)
+
+    return updates
+  }
+
   const [commitUpdating, setCommitUpdating] = useState(false)
 
   const handleCommit = async (overrideChanges) => {
@@ -819,49 +865,62 @@ const EditorPage = () => {
             if (op.success) return
             messages.push(op.detail)
           })
-          for (const msg of messages) {
-            toast.error('Error: ' + msg)
+
+          // if the error is a 409, then ask the user if they want to override
+          if (res?.operations?.some((op) => op.status === 409)) {
+            confirmDelete({
+              style: { maxWidth: 400 },
+              message:
+                'Are you sure you want to permanently delete this folder and all its associated tasks, products, versions, representations, and workfiles?',
+              header: 'Confirm Force Delete',
+              deleteLabel: 'Force Delete',
+              showToasts: false,
+              accept: async () => {
+                // filter out the 409s
+                const failed = res.operations.filter((op) => op.status === 409).map((op) => op.id)
+                // filter out updates that aren't in failed array with correct id
+                const forcedUpdates = updates
+                  .filter((op) => !failed.includes(op.id))
+                  .map((op) => ({ ...op, force: true }))
+
+                console.log(forcedUpdates)
+                // save failed updates again with force flag
+                const res2 = await updateEditor({
+                  updates: forcedUpdates,
+                  projectName,
+                  rootData,
+                }).unwrap()
+
+                if (!res2.success) {
+                  for (const msg of messages) {
+                    toast.error('Error: ' + msg)
+                  }
+                  setCommitUpdating(false)
+                  return null
+                } else {
+                  // continue with patching etc
+                  onCommitSuccess(updates, parentPatches, newSelection, forcedSave)
+                }
+              },
+              reject: () => {
+                // don't save
+                setCommitUpdating(false)
+                return
+              },
+            })
+
+            return
+          } else {
+            for (const msg of messages) {
+              toast.error('Error: ' + msg)
+            }
+            setCommitUpdating(false)
+            return null
           }
-          setCommitUpdating(false)
-          return null
-        }
-      }
-      setCommitUpdating(false)
-
-      // once everything has finished
-      toast.success('Changes saved')
-      const updated = []
-      const deleted = []
-
-      // create object of updated/new branches
-      for (const op of updates) {
-        if (op.type === 'delete') {
-          deleted.push(op.id)
-        } else {
-          const patch = { ...op.patch }
-          // delete: __isNew
-          delete patch.data.__isNew
-          updated.push(patch)
         }
       }
 
-      // invalidate these tags ['hierarchy', 'folder', 'task']
-      // so that the query will be executed again
-      // and the new data will be fetched
-      dispatch(ayonApi.util.invalidateTags(['hierarchy', 'folder', 'task']))
-
-      // add new branches to redux editor slice
-      dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))
-      if (parentPatches.length) {
-        dispatch(nodesUpdated({ updated: parentPatches, forcedSave }))
-      }
-      // update children
-      const childUpdates = getChildAttribUpdates(updates)
-      dispatch(nodesUpdated({ updated: childUpdates, forcedSave }))
-      // update selection (remove from deleted)
-      handleSelectionChange(newSelection)
-
-      return updates
+      onCommitSuccess(updates, parentPatches, newSelection, forcedSave)
     } catch (error) {
       setCommitUpdating(false)
       toast.error('Unable to save changes')
