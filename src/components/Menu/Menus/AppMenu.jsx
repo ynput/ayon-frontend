@@ -1,11 +1,9 @@
 import Menu from '../MenuComponents/Menu'
-import { confirmDialog } from 'primereact/confirmdialog'
-import { useRestartServerMutation } from '/src/services/restartServer'
 import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
-import useLocalStorage from '/src/hooks/useLocalStorage'
 import ayonClient from '/src/ayon'
+import { useRestart } from '/src/context/restartContext'
 
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin
@@ -13,23 +11,7 @@ export const AppMenu = ({ user, ...props }) => {
   const isAdmin = user?.data?.isAdmin
 
   // restart server
-  const [restartServer] = useRestartServerMutation()
-  /* eslint-disable-next-line */
-  const [restartConfig, setRestartConfig] = useLocalStorage('restart', null)
-
-  const handleServerRestart = async () => {
-    confirmDialog({
-      message: 'Are you sure you want to restart the server?',
-      header: 'Restart Server',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        console.log(restartConfig)
-        setRestartConfig(null)
-        restartServer()
-      },
-      reject: () => {},
-    })
-  }
+  const { confirmRestart } = useRestart()
 
   // onboarding restart
   const [restartOnBoarding] = useRestartOnBoardingMutation()
@@ -102,7 +84,7 @@ export const AppMenu = ({ user, ...props }) => {
       id: 'restart',
       label: 'Restart Server',
       icon: 'restart_alt',
-      onClick: handleServerRestart,
+      onClick: confirmRestart,
     },
   ]
 
