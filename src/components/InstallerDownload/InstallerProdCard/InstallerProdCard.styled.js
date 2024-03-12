@@ -6,6 +6,7 @@ export const Card = styled.div`
   align-items: center;
   padding: var(--padding-l);
   border-radius: var(--border-radius-l);
+  overflow: hidden;
 
   background-color: var(--md-sys-color-surface-container-low);
   /* border: 1px solid var(--md-sys-color-surface-container-low); */
@@ -29,4 +30,11 @@ export const DownloadLinks = styled.div`
   flex-direction: column;
   gap: var(--base-gap);
   margin-top: var(--base-gap);
+
+  overflow: hidden;
+  width: 100%;
+
+  button {
+    white-space: pre-wrap;
+  }
 `

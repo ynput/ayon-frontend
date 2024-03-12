@@ -30,9 +30,10 @@ export const All = styled.div`
 export const Installer = styled.div`
   width: 100%;
   display: flex;
-  padding: var(--padding-s);
+  padding: var(--padding-s) var(--padding-m);
   justify-content: space-between;
   border-radius: var(--border-radius-m);
+  align-items: center;
 
   &:hover {
     background-color: var(--md-sys-color-surface-container);
