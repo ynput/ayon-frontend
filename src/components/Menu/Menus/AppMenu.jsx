@@ -1,5 +1,3 @@
-import ayonClient from '/src/ayon'
-import InstallerDownload from '/src/components/InstallerDownload/InstallerDownload'
 import Menu from '../MenuComponents/Menu'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { useRestartServerMutation } from '/src/services/restartServer'
@@ -7,11 +5,12 @@ import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import useLocalStorage from '/src/hooks/useLocalStorage'
+import ayonClient from '/src/ayon'
 
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin
-  const isUser = user.data.isUser
-  const isAdmin = user.data.isAdmin
+  const isUser = user?.data?.isUser
+  const isAdmin = user?.data?.isAdmin
 
   // restart server
   const [restartServer] = useRestartServerMutation()
@@ -47,13 +46,6 @@ export const AppMenu = ({ user, ...props }) => {
 
   const items = [
     {
-      id: 'settings',
-      link: '/settings/bundles',
-      label: 'Studio Settings',
-      icon: 'settings',
-      shortcut: 'S+S',
-    },
-    {
       id: 'projectsManager',
       link: '/manageProjects/anatomy',
       label: 'Projects Settings',
@@ -62,20 +54,22 @@ export const AppMenu = ({ user, ...props }) => {
     },
   ]
 
-  if (!isUser) {
-    items.push({
+  if (!isUser)
+    items.unshift({
+      id: 'settings',
+      link: '/settings/bundles',
+      label: 'Studio Settings',
+      icon: 'settings',
+      shortcut: 'S+S',
+    })
+
+  const managerItems = [
+    {
       id: 'market',
       link: '/market',
       label: 'Addon Market',
       icon: 'store',
-    })
-  }
-
-  // this is weird I know, instead of returning a node, we return a menu object with sub menus
-  items.push(InstallerDownload({ isMenu: true }))
-
-  const managerItems = [
-    { id: 'divider' },
+    },
     {
       id: 'events',
       link: '/events',
@@ -112,14 +106,12 @@ export const AppMenu = ({ user, ...props }) => {
     },
   ]
 
-  // { node:  },
-
   // add protected items if user is admin
   if (isAdmin) items.push(...adminItems)
 
   return (
     <>
-      <Menu menu={items} footer={ayonClient.settings?.version} {...props} />
+      <Menu menu={items} {...props} footer={!isUser && ayonClient.settings?.version} />
       {isAdmin && (
         <YnputConnector
           redirect={location.pathname + '/appMenu'}

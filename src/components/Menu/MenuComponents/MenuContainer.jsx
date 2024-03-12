@@ -15,6 +15,7 @@ const MenuContainer = ({ id, target, targetId, children, ...props }) => {
   }
 
   const handleNavigate = (path) => {
+    console.log('navigate and close')
     handleClose()
     if (path) navigate(path)
   }
