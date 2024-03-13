@@ -1447,13 +1447,31 @@ const EditorPage = () => {
 
   const tableRef = useRef(null)
 
+  // get all ids of the rows in the table, this is useful because the ids are in the same order as the rows
+  const tableRowsIds = useMemo(() => {
+    const rows = []
+    tableRef.current
+      ?.getElement()
+      .querySelectorAll('.p-treetable-tbody tr')
+      .forEach((tr) => {
+        const id = Array.from(tr.classList)
+          .find((c) => c.startsWith('id-'))
+          ?.split('-')[1]
+        if (id) {
+          rows.push(id)
+        }
+      })
+    return rows
+  }, [tableRef.current, treeData])
+
   const handleKeyPress = (event) => {
     if (event.target.tagName === 'TR') {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        const nextEl =
-          event.key === 'ArrowDown'
-            ? event.target.nextElementSibling
-            : event.target.previousElementSibling
+        const direction = event.key === 'ArrowDown' ? 1 : 0
+
+        const nextEl = direction
+          ? event.target.nextElementSibling
+          : event.target.previousElementSibling
 
         if (!nextEl) return
 
@@ -1467,6 +1485,23 @@ const EditorPage = () => {
 
         if (nextId && nextType) {
           let selection = [nextId]
+          if (event.shiftKey) {
+            //  get previous selection
+            const previousSelection = Object.keys(currentSelection)
+
+            // add the range to the selection
+            selection = [...new Set([...selection, ...previousSelection])]
+            // this will make selection in the correct order
+            selection = tableRowsIds.filter((id) => selection.includes(id))
+            const isInPrevious = previousSelection.includes(nextId)
+            if (isInPrevious) {
+              if (direction) {
+                selection.shift()
+              } else {
+                selection.pop()
+              }
+            }
+          }
           // based on type update focused state
           dispatch(editorSelectionChanged({ selection, [nextType + 's']: selection }))
         }
