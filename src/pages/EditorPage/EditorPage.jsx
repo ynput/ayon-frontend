@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
@@ -78,6 +78,8 @@ const EditorPage = () => {
   const attribFields = attribsData.filter((a) =>
     a.scope.some((s) => ['folder', 'task'].includes(s)),
   )
+
+  const pageFocusRef = useRef(null)
 
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
@@ -1008,6 +1010,11 @@ const EditorPage = () => {
 
   const handleCloseNew = () => {
     setNewEntity('')
+
+    const currentFocusEl = pageFocusRef.current
+    if (currentFocusEl) {
+      currentFocusEl.focus()
+    }
   }
 
   const addNodes = (entityType, root, nodesData = [], sequence) => {
@@ -1604,7 +1611,7 @@ const EditorPage = () => {
             taskNames={taskNamesMap}
           />
         ))}
-      <Section>
+      <Section onFocus={(e) => (pageFocusRef.current = e.target)}>
         <Toolbar>
           <Button
             icon="create_new_folder"
