@@ -1445,6 +1445,28 @@ const EditorPage = () => {
     }
   }
 
+  const tableRef = useRef(null)
+
+  const handleTableFocus = (event) => {
+    // check if target is tr
+    if (event.target.tagName === 'TR') {
+      console.log(event)
+      // get folder id from classname id-[id]
+      const id = Array.from(event.target.classList)
+        .filter((c) => c.startsWith('id-'))[0]
+        .split('-')[1]
+      const type = Array.from(event.target.classList)
+        .filter((c) => c.startsWith('type-'))[0]
+        .split('-')[1]
+
+      if (id && type) {
+        const selection = [id]
+        // based on type update focused state
+        dispatch(editorSelectionChanged({ selection, [type + 's']: selection }))
+      }
+    }
+  }
+
   let allColumns = useMemo(
     () => [
       <Column
@@ -1684,6 +1706,7 @@ const EditorPage = () => {
                 expandedKeys={expandedFolders}
                 onToggle={onToggle}
                 selectionMode="multiple"
+                onFocus={handleTableFocus}
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
                 onClick={handleDeselect}
@@ -1693,6 +1716,8 @@ const EditorPage = () => {
                     changed: rowData.key in changes,
                     new: rowData.key in newNodes,
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
+                    ['id-' + rowData.key]: true,
+                    ['type-' + rowData.data.__entityType]: true,
                   }
                 }}
                 onContextMenu={onContextMenu}
@@ -1701,6 +1726,7 @@ const EditorPage = () => {
                 onColReorder={handleColumnReorder}
                 rows={20}
                 className={fullPageLoading ? 'table-loading' : undefined}
+                ref={tableRef}
               >
                 {allColumns}
               </TreeTable>
