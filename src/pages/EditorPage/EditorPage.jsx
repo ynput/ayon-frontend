@@ -1447,22 +1447,29 @@ const EditorPage = () => {
 
   const tableRef = useRef(null)
 
-  const handleTableFocus = (event) => {
-    // check if target is tr
+  const handleKeyPress = (event) => {
     if (event.target.tagName === 'TR') {
-      console.log(event)
-      // get folder id from classname id-[id]
-      const id = Array.from(event.target.classList)
-        .filter((c) => c.startsWith('id-'))[0]
-        .split('-')[1]
-      const type = Array.from(event.target.classList)
-        .filter((c) => c.startsWith('type-'))[0]
-        .split('-')[1]
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        const nextEl =
+          event.key === 'ArrowDown'
+            ? event.target.nextElementSibling
+            : event.target.previousElementSibling
 
-      if (id && type) {
-        const selection = [id]
-        // based on type update focused state
-        dispatch(editorSelectionChanged({ selection, [type + 's']: selection }))
+        if (!nextEl) return
+
+        const nextId = Array.from(nextEl.classList)
+          .filter((c) => c.startsWith('id-'))[0]
+          .split('-')[1]
+
+        const nextType = Array.from(nextEl.classList)
+          .filter((c) => c.startsWith('type-'))[0]
+          .split('-')[1]
+
+        if (nextId && nextType) {
+          let selection = [nextId]
+          // based on type update focused state
+          dispatch(editorSelectionChanged({ selection, [nextType + 's']: selection }))
+        }
       }
     }
   }
@@ -1706,7 +1713,6 @@ const EditorPage = () => {
                 expandedKeys={expandedFolders}
                 onToggle={onToggle}
                 selectionMode="multiple"
-                onFocus={handleTableFocus}
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
                 onClick={handleDeselect}
@@ -1727,6 +1733,7 @@ const EditorPage = () => {
                 rows={20}
                 className={fullPageLoading ? 'table-loading' : undefined}
                 ref={tableRef}
+                onKeyDown={handleKeyPress}
               >
                 {allColumns}
               </TreeTable>
