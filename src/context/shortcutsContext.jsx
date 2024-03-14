@@ -112,7 +112,7 @@ function ShortcutsProvider(props) {
       // check if the shortcut has a closest selector
       if (shortcut.closest) {
         // if it does, check if the target matches the selector
-        if (!hovered || !hovered.closest(shortcut.closest)) return
+        if (!hovered?.target || !hovered?.target?.closest(shortcut.closest)) return
       }
 
       // and run the action
@@ -148,13 +148,13 @@ function ShortcutsProvider(props) {
 
   const removeEventListener = () =>
     document.removeEventListener('mouseover', (e) => {
-      setHovered(e.target)
+      setHovered(e)
     })
 
   useEffect(() => {
     if (shortcuts.some((s) => s.closest)) {
       document.addEventListener('mouseover', (e) => {
-        setHovered(e.target)
+        setHovered(e)
       })
     } else {
       removeEventListener()
