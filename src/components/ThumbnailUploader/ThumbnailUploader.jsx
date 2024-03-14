@@ -150,6 +150,8 @@ const ThumbnailUploader = ({
           icon="edit"
           className="upload-button"
           iconProps={{ className: 'edit' }}
+          data-tooltip={'Upload thumbnail from file'}
+          tooltip=""
         >
           <Styled.ButtonInput type="file" onChange={handleInputChange} accept=".png, .jpeg, .jpg" />
         </Styled.UploadButton>
