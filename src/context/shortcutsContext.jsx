@@ -55,9 +55,9 @@ function ShortcutsProvider(props) {
     () => [
       { key: '1', action: () => dispatch(toggleMenuOpen('project')) },
       { key: '8', action: () => dispatch(toggleMenuOpen('help')) },
-      { key: '9+9', action: () => logout() },
-      { key: '9', action: () => dispatch(toggleMenuOpen('user')) },
-      { key: '0', action: () => dispatch(toggleMenuOpen('app')) },
+      { key: '9', action: () => dispatch(toggleMenuOpen('app')) },
+      { key: '0+0', action: () => logout() },
+      { key: '0', action: () => dispatch(toggleMenuOpen('user')) },
     ],
     [navigate],
   )
