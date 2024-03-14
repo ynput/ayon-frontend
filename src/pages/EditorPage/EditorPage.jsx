@@ -797,7 +797,13 @@ const EditorPage = () => {
               if (index > -1) ownAttrib.splice(index, 1)
               // inherit from parent and add to patchAttrib
               if (parent?.data?.attrib[key]) patchAttrib[key] = parent.data.attrib[key]
-              else patchAttrib[key] = null
+              else {
+                // no parent? it must be root. We need to inherit from project
+                const attrib = attribsData?.find((a) => a.name === key)?.data
+                // get default value or enum values (like tools)
+                const value = attrib?.default || attrib?.enum?.map((e) => e.value)
+                patchAttrib[key] = value || null
+              }
             } else {
               attribChanges[key] = change
               // add to ownAttrib if not already there
