@@ -84,8 +84,9 @@ function ShortcutsProvider(props) {
       if (e.target.closest('.block-shortcuts')) return
 
       let singleKey = e.key
+      const isMeta = e.metaKey || e.ctrlKey
       // add ctrl_ prefix if ctrl or cmd is pressed
-      if (e.ctrlKey || e.metaKey) singleKey = 'ctrl+' + singleKey
+      if (isMeta) singleKey = 'ctrl+' + singleKey
       // support alt
       if (e.altKey) singleKey = 'alt+' + singleKey
 
@@ -116,7 +117,7 @@ function ShortcutsProvider(props) {
       }
 
       // and run the action
-      shortcut.action(hovered)
+      shortcut.action(hovered, isMeta)
     },
     [lastPressed, shortcuts, hovered, disabled],
   )

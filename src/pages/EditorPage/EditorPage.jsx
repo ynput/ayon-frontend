@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
@@ -1266,101 +1266,107 @@ const EditorPage = () => {
   // Table event handlers
   //
 
-  const onToggle = async (e, dc) => {
-    // for double click, check target isn't the expand button
+  const handleToggleFolder = useCallback(
+    async (e, dc, meta) => {
+      // for double click, check target isn't the expand button
 
-    // double click is different to onToggle. onToggle required originalEvent
-    const event = e.originalEvent || e
+      // double click is different to handleToggleFolder. handleToggleFolder required originalEvent
+      const event = e.originalEvent || e
+      const target = event?.target
 
-    if (dc && event.target?.closest('p-treetable-toggler')) return
+      if (dc && target?.closest('p-treetable-toggler')) return
 
-    const isMeta = event.metaKey || event.ctrlKey
+      const isMeta = event.metaKey || event.ctrlKey || meta
 
-    let id
-    // id of the folder that was toggled
-    const classList = event.target?.closest('tr')?.classList
-    if (classList) {
-      id = Array.from(classList)
-        .filter((c) => c.startsWith('id-'))[0]
-        .split('-')[1]
-    }
+      console.log(event)
 
-    if (!id) return
-
-    const newExpanded = { ...expandedFolders }
-    const getNewBranches = []
-    // is the folder toggled in the selection
-    const isToggleSelected = !!currentSelection[id]
-
-    // check if the folder is already expanded
-    const isExpanded = !!expandedFolders[id]
-
-    // 2. collapse all children
-
-    if (isExpanded) {
-      // keep track of closing parents
-      // so we can close any children of the closing parent (if meta)
-      const closingParents = []
-      if (isMeta && isToggleSelected) {
-        // remove all selected
-        const newSelection = { ...currentSelection }
-        for (const key in newSelection) {
-          if (rootData[key]?.data.__entityType === 'folder') {
-            closingParents.push(key)
-            delete newExpanded[key]
-          }
-        }
-      } else {
-        closingParents.push(id)
-        // remove from expandedFolders
-        delete newExpanded[id]
+      let id
+      // id of the folder that was toggled
+      const classList = target?.closest('tr')?.classList
+      if (classList) {
+        id = Array.from(classList)
+          .filter((c) => c.startsWith('id-'))[0]
+          .split('-')[1]
       }
 
-      // close any children of the closing parents
-      if (isMeta) {
-        // for the remaining expanded folders, check if they are children of the closing parents
-        let queue = [...closingParents]
-        while (queue.length > 0) {
-          const id = queue.shift()
-          if (newExpanded[id]) {
-            delete newExpanded[id]
+      if (!id) return
+
+      const newExpanded = { ...expandedFolders }
+      const getNewBranches = []
+      // is the folder toggled in the selection
+      const isToggleSelected = !!currentSelection[id]
+
+      // check if the folder is already expanded
+      const isExpanded = !!expandedFolders[id]
+
+      // 2. collapse all children
+
+      if (isExpanded) {
+        // keep track of closing parents
+        // so we can close any children of the closing parent (if meta)
+        const closingParents = []
+        if (isMeta && isToggleSelected) {
+          // remove all selected
+          const newSelection = { ...currentSelection }
+          for (const key in newSelection) {
+            if (rootData[key]?.data.__entityType === 'folder') {
+              closingParents.push(key)
+              delete newExpanded[key]
+            }
           }
-          for (const childId in rootData) {
-            if (rootData[childId]?.data.__parentId === id) {
-              queue.push(childId)
+        } else {
+          closingParents.push(id)
+          // remove from expandedFolders
+          delete newExpanded[id]
+        }
+
+        // close any children of the closing parents
+        if (isMeta) {
+          // for the remaining expanded folders, check if they are children of the closing parents
+          let queue = [...closingParents]
+          while (queue.length > 0) {
+            const id = queue.shift()
+            if (newExpanded[id]) {
+              delete newExpanded[id]
+            }
+            for (const childId in rootData) {
+              if (rootData[childId]?.data.__parentId === id) {
+                queue.push(childId)
+              }
             }
           }
         }
-      }
-    } else {
-      if (isMeta && isToggleSelected) {
-        // check if there are any other folders selected that are not already expanded (multiple expand)
-        const newSelection = { ...currentSelection }
-        const selectedFolders = Object.keys(newSelection).filter(
-          (k) => newSelection[k].data.__entityType === 'folder',
-        )
-
-        const newExpandedFolders = selectedFolders.filter((f) => !expandedFolders[f])
-
-        for (const folder of newExpandedFolders) {
-          newExpanded[folder] = true
-          // get new branch
-          getNewBranches.push(folder)
-        }
       } else {
-        // add to expandedFolders
-        newExpanded[id] = true
-        // get new branch
-        getNewBranches.push(id)
+        if (isMeta && isToggleSelected) {
+          // check if there are any other folders selected that are not already expanded (multiple expand)
+          const newSelection = { ...currentSelection }
+          const selectedFolders = Object.keys(newSelection).filter(
+            (k) => newSelection[k].data.__entityType === 'folder',
+          )
+
+          const newExpandedFolders = selectedFolders.filter((f) => !expandedFolders[f])
+
+          for (const folder of newExpandedFolders) {
+            newExpanded[folder] = true
+            // get new branch
+            getNewBranches.push(folder)
+          }
+        } else {
+          // add to expandedFolders
+          newExpanded[id] = true
+          // get new branch
+          getNewBranches.push(id)
+        }
       }
-    }
 
-    // updated expanded folders context object
-    dispatch(setExpandedFolders(newExpanded))
+      // updated expanded folders context object
+      dispatch(setExpandedFolders(newExpanded))
 
-    // load new branches
-    loadNewBranches(getNewBranches)
-  }
+      // load new branches
+      loadNewBranches(getNewBranches)
+    },
+    [currentSelection, expandedFolders, rootData, loadNewBranches, dispatch],
+  )
 
   const handleSelectionChange = (value) => {
     const selection = Object.keys(value)
@@ -1698,9 +1704,19 @@ const EditorPage = () => {
       action: () => setNewEntity('task'),
       disabled: disableAddNew,
     },
+    {
+      key: 'c',
+      action: (e) => handleToggleFolder(e, true),
+      closest: 'tr.type-folder',
+    },
+    {
+      key: 'ctrl+c',
+      action: (e) => handleToggleFolder(e, true, true),
+      closest: 'tr.type-folder',
+    },
   ]
 
-  useShortcuts(shortcuts, [disableAddNew])
+  useShortcuts(shortcuts, [disableAddNew, expandedFolders])
 
   //
   // Render the TreeTable
@@ -1798,8 +1814,8 @@ const EditorPage = () => {
                 resizableColumns
                 columnResizeMode="expand"
                 expandedKeys={expandedFolders}
-                onToggle={onToggle}
-                onDoubleClick={(e) => onToggle(e, true)}
+                onToggle={handleToggleFolder}
+                onDoubleClick={(e) => handleToggleFolder(e, true)}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
