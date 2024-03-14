@@ -51,6 +51,7 @@ import NewSequence from './NewSequence'
 import useShortcuts from '/src/hooks/useShortcuts'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import confirmDelete from '/src/helpers/confirmDelete'
+import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -74,6 +75,13 @@ const EditorPage = () => {
 
   // get attrib fields
   let { data: attribsData = [] } = useGetAttributesQuery()
+
+  // get project attribs values (for root inherited attribs)
+  const { data: projectAnatomyData } = useGetProjectAnatomyQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+
   //   filter out scopes
   const attribFields = attribsData.filter((a) =>
     a.scope.some((s) => ['folder', 'task'].includes(s)),
@@ -799,10 +807,9 @@ const EditorPage = () => {
               if (parent?.data?.attrib[key]) patchAttrib[key] = parent.data.attrib[key]
               else {
                 // no parent? it must be root. We need to inherit from project
-                const attrib = attribsData?.find((a) => a.name === key)?.data
-                // get default value or enum values (like tools)
-                const value = attrib?.default || attrib?.enum?.map((e) => e.value)
-                patchAttrib[key] = value || null
+                const attribs = projectAnatomyData?.attributes
+                const attrib = attribs[key]
+                patchAttrib[key] = attrib || null
               }
             } else {
               attribChanges[key] = change
