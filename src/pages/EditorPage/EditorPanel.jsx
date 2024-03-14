@@ -352,7 +352,6 @@ const EditorPanel = ({
 
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
-    console.log(value)
     // console.log('local change', value, changeKey, field, form)
     let newForm = { ...form }
     if (formState) {

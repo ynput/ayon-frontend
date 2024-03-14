@@ -164,46 +164,92 @@ const EditorPage = () => {
     loadNewBranches(branches, isNewProject)
   }, [projectName])
 
-  // get and update children attrib that use it's parents attribs
+  // Function to get and update children attributes that use their parent's attributes
   const getChildAttribUpdates = (updates) => {
+    // Array to store the updated children
     const childrenUpdated = []
-    // create object of updated/new branches
+
+    // Loop through each update
     for (const update of updates) {
+      // Get the ID of the entity being updated
       const updateId = update.entityId || update.data.id
 
-      // find all children of patch
+      // Create a lookup table to store the children of each parent
+      const childrenLookup = {}
+
+      // Loop through each entity in the root data
       for (const id in rootData) {
-        const childData = rootData[id].data
+        // Get the parent ID of the current entity
+        const parentId = rootData[id].data.__parentId
 
-        if (childData?.__parentId === updateId) {
-          const newAttrib = {}
-          const currentAttrib = childData?.attrib || {}
-
-          // is childData, check ownAttribs for updates
-          for (const key in update?.patch?.data?.attrib) {
-            if (!inheritableAttribs.includes(key)) continue
-            if (
-              !childData?.ownAttrib?.includes(key) &&
-              currentAttrib[key] !== update?.patch?.data?.attrib[key]
-            ) {
-              newAttrib[key] = update?.patch?.data?.attrib[key]
-            }
+        // If the entity has a parent
+        if (parentId) {
+          // If the parent doesn't exist in the lookup table, add it
+          if (!childrenLookup[parentId]) {
+            childrenLookup[parentId] = []
           }
 
-          if (!isEmpty(newAttrib)) {
-            // add new child to updates
-            childrenUpdated.push({
-              ...rootData[id],
-              data: {
-                ...childData,
-                attrib: { ...currentAttrib, ...newAttrib },
-              },
-            })
+          // Add the current entity to the parent's list of children in the lookup table
+          childrenLookup[parentId].push(id)
+        }
+      }
+
+      // Function to update the attributes of the children
+      const updateChildren = (updateId) => {
+        // Get the children of the entity being updated from the lookup table
+        const children = childrenLookup[updateId]
+
+        // If the entity has children
+        if (children) {
+          // Loop through each child
+          for (const id of children) {
+            // Get the data of the current child
+            const childData = rootData[id].data
+
+            // Object to store the new attributes
+            const newAttrib = {}
+
+            // Get the current attributes of the child
+            const currentAttrib = childData?.attrib || {}
+
+            // Loop through each attribute in the update
+            for (const key in update?.patch?.data?.attrib) {
+              // If the attribute is not inheritable, skip it
+              if (!inheritableAttribs.includes(key)) continue
+
+              // If the child doesn't have its own value for the attribute and the attribute has changed
+              if (
+                !childData?.ownAttrib?.includes(key) &&
+                currentAttrib[key] !== update?.patch?.data?.attrib[key]
+              ) {
+                // Add the new attribute value to the new attributes object
+                newAttrib[key] = update?.patch?.data?.attrib[key]
+              }
+            }
+
+            // If there are new attributes
+            if (!isEmpty(newAttrib)) {
+              // Add the updated child to the list of updated children
+              childrenUpdated.push({
+                ...rootData[id],
+                data: {
+                  ...childData,
+                  attrib: { ...currentAttrib, ...newAttrib },
+                },
+              })
+            }
+
+            // Recursively update the attributes of the child's children
+            updateChildren(id)
           }
         }
       }
+
+      // Update the attributes of the entity's children
+      updateChildren(updateId)
     }
 
+    // Return the list of updated children
     return childrenUpdated
   }
 
@@ -697,8 +743,6 @@ const EditorPage = () => {
   const [commitUpdating, setCommitUpdating] = useState(false)
 
   const handleCommit = async (overrideChanges) => {
-    console.time('commit')
-
     const updates = []
     const parentPatches = []
     const commitChanges = overrideChanges || changes
