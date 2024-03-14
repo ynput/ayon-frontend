@@ -18,7 +18,9 @@ function ShortcutsProvider(props) {
   // keep track of the last key pressed
   const [lastPressed, setLastPressed] = useState(null)
   // disable shortcuts
-  const [disabled, setDisabled] = useState(false)
+  const [disabled, setDisabled] = useState([])
+  // allow shortcuts
+  const [allowed, setAllowed] = useState([])
 
   // last key pressed should be reset after 200ms
   useEffect(() => {
@@ -77,7 +79,7 @@ function ShortcutsProvider(props) {
   const handleKeyPress = useCallback(
     (e) => {
       // check target isn't an input
-      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName) || disabled) return
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return
       // or has blocked shortcuts className
       if (e.target.classList.contains('block-shortcuts')) return
       // or any of its parents
@@ -90,6 +92,13 @@ function ShortcutsProvider(props) {
       if (e.altKey) singleKey = 'alt+' + singleKey
 
       const combo = lastPressed + '+' + singleKey
+
+      // check if combo is currently disabled or not in allowed list
+      const isDisabled = disabled.includes(combo) || disabled.includes(singleKey)
+      const isAllowed = !allowed.length || allowed.includes(combo) || allowed.includes(singleKey)
+
+      if (isDisabled || !isAllowed) return
+
       // first check if the key pressed is a shortcut
       // const shortcut = shortcuts[e.key] || shortcuts[combo]
       const shortcut = shortcuts.find((s) => s.key === combo || s.key === singleKey)
@@ -118,7 +127,7 @@ function ShortcutsProvider(props) {
       // and run the action
       shortcut.action(hovered)
     },
-    [lastPressed, shortcuts, hovered, disabled],
+    [lastPressed, shortcuts, hovered, disabled, allowed],
   )
 
   // Add event listeners
@@ -168,8 +177,8 @@ function ShortcutsProvider(props) {
       value={{
         addShortcuts,
         removeShortcuts,
-        disableShortcuts: () => setDisabled(true),
-        enableShortcuts: () => setDisabled(false),
+        setDisabled,
+        setAllowed,
       }}
     >
       {props.children}
