@@ -21,14 +21,15 @@ const StyledDropdown = styled(Dropdown)`
       }
     `}
 
+  &.inherited {
+    font-style: italic;
+    color: var(--md-ref-palette-neutral-variant60);
+  }
+
   &.changed {
     .button {
       background-color: var(--color-changed);
       color: var(--md-sys-color-on-primary);
-    }
-
-    &.inherited {
-      font-style: italic;
     }
   }
 `
@@ -46,9 +47,12 @@ const ToolsField = ({ value, className, attrib }) => {
 
   const isInheritedAndChanged = className.includes('inherited') && className.includes('changed')
 
+  if (isInheritedAndChanged) return <span className="editor-field changed">(inherited)</span>
+
+  if (!value?.length) return null
+
   return (
     <StyledDropdown
-      disabled={isInheritedAndChanged}
       value={labels}
       className={className}
       multiSelect
@@ -57,7 +61,7 @@ const ToolsField = ({ value, className, attrib }) => {
       onClose={() => setIsOpen(false)}
       valueTemplate={() => (
         <DefaultValueTemplate value={value}>
-          {isInheritedAndChanged ? '(inherited)' : `(${labels.length}) ${labels.join(', ')}`}
+          {`(${labels?.length}) ${labels?.join(', ')}`}
         </DefaultValueTemplate>
       )}
       $isOpen={isOpen}
