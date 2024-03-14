@@ -152,7 +152,7 @@ const Header = () => {
         </Link>
       </Toolbar>
 
-      <ProjectMenu visible={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
+      <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
 
       <Breadcrumbs />
       <Spacer />

@@ -7,19 +7,33 @@ import { onProjectChange } from '/src/features/editor'
 import { ayonApi } from '/src/services/ayon'
 import MenuList from '/src/components/Menu/MenuComponents/MenuList'
 import { useGetAllProjectsQuery } from '/src/services/project/getProject'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import ProjectButton from '/src/components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
+import { useShortcutsContext } from '/src/context/shortcutsContext'
 
-const ProjectMenu = ({ visible, onHide }) => {
+const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const searchRef = useRef(null)
   const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
   const [searchOpen, setSearchOpen] = useState(false)
+
+  // disable
+  const { setAllowed } = useShortcutsContext()
+
+  useEffect(() => {
+    if (isOpen) {
+      // open only allow project menu shortcuts (block all others)
+      setAllowed(['1', '0', '9', '8'])
+    } else {
+      // close allow all shortcuts
+      setAllowed([])
+    }
+  }, [isOpen])
 
   const projectSelected = useSelector((state) => state.project.name)
   const user = useSelector((state) => state.user)
@@ -163,7 +177,7 @@ const ProjectMenu = ({ visible, onHide }) => {
     setSearchOpen(true)
   }
 
-  if (!visible) return null
+  if (!isOpen) return null
 
   return (
     <>
