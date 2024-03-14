@@ -641,8 +641,12 @@ const EditorPanel = ({
                       widthExpand
                       emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
                       isMultiple={!!isMultiple}
-                      onClear={(value) => handleLocalChange(value, changeKey, field)}
-                      onClearNullValue
+                      onClear={
+                        field !== 'attrib.tools'
+                          ? (value) => handleLocalChange(value, changeKey, field)
+                          : undefined
+                      }
+                      onClearNull={(value) => handleLocalChange(value, changeKey, field)}
                       nullPlaceholder="(inherited)"
                       search={attrib?.enum?.length > 10}
                     />
