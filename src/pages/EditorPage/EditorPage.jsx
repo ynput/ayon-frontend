@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
@@ -78,6 +78,8 @@ const EditorPage = () => {
   const attribFields = attribsData.filter((a) =>
     a.scope.some((s) => ['folder', 'task'].includes(s)),
   )
+
+  const pageFocusRef = useRef(null)
 
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
@@ -1008,6 +1010,11 @@ const EditorPage = () => {
 
   const handleCloseNew = () => {
     setNewEntity('')
+
+    const currentFocusEl = pageFocusRef.current
+    if (currentFocusEl) {
+      currentFocusEl.focus()
+    }
   }
 
   const addNodes = (entityType, root, nodesData = [], sequence) => {
@@ -1259,49 +1266,107 @@ const EditorPage = () => {
   // Table event handlers
   //
 
-  const onToggle = async (event) => {
-    const isMetaKey = event.originalEvent.metaKey || event.originalEvent.ctrlKey
-    const newExpanded = { ...event.value }
-    const removedIds = Object.keys(expandedFolders).filter((id) => !(id in newExpanded))
+  const handleToggleFolder = useCallback(
+    async (e, dc, meta) => {
+      // for double click, check target isn't the expand button
 
-    let newIds = Object.keys(newExpanded)
-    // filter out ids that are already in the expandedFolders object
-    newIds = newIds.filter((id) => !(id in expandedFolders))
+      // double click is different to handleToggleFolder. handleToggleFolder required originalEvent
+      const event = e.originalEvent || e
+      const target = event?.target
 
-    if (newIds.length && isMetaKey) {
-      // find if any of the newIds are in selected folders
-      const selected = Object.keys(currentSelection).filter((id) => newIds.includes(id))
-      if (selected.length) {
-        // we open all selected folders
-        newIds = Object.keys(currentSelection)
-        // expand all currentSelection folders
-        for (const id of newIds) {
-          if (rootData[id]?.data.__entityType === 'folder') {
-            newExpanded[id] = true
+      if (dc && target?.closest('p-treetable-toggler')) return
+
+      const isMeta = event.metaKey || event.ctrlKey || meta
+
+      console.log(event)
+
+      let id
+      // id of the folder that was toggled
+      const classList = target?.closest('tr')?.classList
+      if (classList) {
+        id = Array.from(classList)
+          .filter((c) => c.startsWith('id-'))[0]
+          .split('-')[1]
+      }
+
+      if (!id) return
+
+      const newExpanded = { ...expandedFolders }
+      const getNewBranches = []
+      // is the folder toggled in the selection
+      const isToggleSelected = !!currentSelection[id]
+
+      // check if the folder is already expanded
+      const isExpanded = !!expandedFolders[id]
+
+      // 2. collapse all children
+
+      if (isExpanded) {
+        // keep track of closing parents
+        // so we can close any children of the closing parent (if meta)
+        const closingParents = []
+        if (isMeta && isToggleSelected) {
+          // remove all selected
+          const newSelection = { ...currentSelection }
+          for (const key in newSelection) {
+            if (rootData[key]?.data.__entityType === 'folder') {
+              closingParents.push(key)
+              delete newExpanded[key]
+            }
+          }
+        } else {
+          closingParents.push(id)
+          // remove from expandedFolders
+          delete newExpanded[id]
+        }
+
+        // close any children of the closing parents
+        if (isMeta) {
+          // for the remaining expanded folders, check if they are children of the closing parents
+          let queue = [...closingParents]
+          while (queue.length > 0) {
+            const id = queue.shift()
+            if (newExpanded[id]) {
+              delete newExpanded[id]
+            }
+            for (const childId in rootData) {
+              if (rootData[childId]?.data.__parentId === id) {
+                queue.push(childId)
+              }
+            }
           }
         }
-      }
-    }
+      } else {
+        if (isMeta && isToggleSelected) {
+          // check if there are any other folders selected that are not already expanded (multiple expand)
+          const newSelection = { ...currentSelection }
+          const selectedFolders = Object.keys(newSelection).filter(
+            (k) => newSelection[k].data.__entityType === 'folder',
+          )
 
-    if (removedIds.length && isMetaKey) {
-      // find if any of the newIds are in selected folders
-      const selected = Object.keys(currentSelection).filter((id) => removedIds.includes(id))
-      if (selected.length) {
-        // close all selected folders
-        for (const id in currentSelection) {
-          if (rootData[id]?.data.__entityType === 'folder') {
-            delete newExpanded[id]
+          const newExpandedFolders = selectedFolders.filter((f) => !expandedFolders[f])
+
+          for (const folder of newExpandedFolders) {
+            newExpanded[folder] = true
+            // get new branch
+            getNewBranches.push(folder)
           }
+        } else {
+          // add to expandedFolders
+          newExpanded[id] = true
+          // get new branch
+          getNewBranches.push(id)
         }
       }
-    }
 
-    // updated expanded folders context object
-    dispatch(setExpandedFolders(newExpanded))
+      // updated expanded folders context object
+      dispatch(setExpandedFolders(newExpanded))
 
-    // load new branches
-    loadNewBranches(newIds)
-  }
+      // load new branches
+      loadNewBranches(getNewBranches)
+    },
+    [currentSelection, expandedFolders, rootData, loadNewBranches, dispatch],
+  )
 
   const handleSelectionChange = (value) => {
     const selection = Object.keys(value)
@@ -1434,6 +1499,70 @@ const EditorPage = () => {
       const parent = rootData[id]?.data?.folderId
       if (parent) {
         loadNewBranches([parent], true)
+      }
+    }
+  }
+
+  const tableRef = useRef(null)
+
+  // get all ids of the rows in the table, this is useful because the ids are in the same order as the rows
+  const tableRowsIds = useMemo(() => {
+    const rows = []
+    tableRef.current
+      ?.getElement()
+      .querySelectorAll('.p-treetable-tbody tr')
+      .forEach((tr) => {
+        const id = Array.from(tr.classList)
+          .find((c) => c.startsWith('id-'))
+          ?.split('-')[1]
+        if (id) {
+          rows.push(id)
+        }
+      })
+    return rows
+  }, [tableRef.current, treeData])
+
+  const handleKeyPress = (event) => {
+    if (event.target.tagName === 'TR') {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        const direction = event.key === 'ArrowDown' ? 1 : 0
+
+        const nextEl = direction
+          ? event.target.nextElementSibling
+          : event.target.previousElementSibling
+
+        if (!nextEl) return
+
+        const nextId = Array.from(nextEl.classList)
+          .filter((c) => c.startsWith('id-'))[0]
+          .split('-')[1]
+
+        const nextType = Array.from(nextEl.classList)
+          .filter((c) => c.startsWith('type-'))[0]
+          .split('-')[1]
+
+        if (nextId && nextType) {
+          let selection = [nextId]
+          if (event.shiftKey) {
+            //  get previous selection
+            const previousSelection = Object.keys(currentSelection)
+
+            // add the range to the selection
+            selection = [...new Set([...selection, ...previousSelection])]
+            // this will make selection in the correct order
+            selection = tableRowsIds.filter((id) => selection.includes(id))
+            const isInPrevious = previousSelection.includes(nextId)
+            if (isInPrevious) {
+              if (direction) {
+                selection.shift()
+              } else {
+                selection.pop()
+              }
+            }
+          }
+          // based on type update focused state
+          dispatch(editorSelectionChanged({ selection, [nextType + 's']: selection }))
+        }
       }
     }
   }
@@ -1575,9 +1704,19 @@ const EditorPage = () => {
       action: () => setNewEntity('task'),
       disabled: disableAddNew,
     },
+    {
+      key: 'c',
+      action: (e) => handleToggleFolder(e, true),
+      closest: 'tr.type-folder',
+    },
+    {
+      key: 'ctrl+c',
+      action: (e) => handleToggleFolder(e, true, true),
+      closest: 'tr.type-folder',
+    },
   ]
 
-  useShortcuts(shortcuts, [disableAddNew])
+  useShortcuts(shortcuts, [disableAddNew, expandedFolders])
 
   //
   // Render the TreeTable
@@ -1604,7 +1743,7 @@ const EditorPage = () => {
             taskNames={taskNamesMap}
           />
         ))}
-      <Section>
+      <Section onFocus={(e) => (pageFocusRef.current = e.target)}>
         <Toolbar>
           <Button
             icon="create_new_folder"
@@ -1675,7 +1814,8 @@ const EditorPage = () => {
                 resizableColumns
                 columnResizeMode="expand"
                 expandedKeys={expandedFolders}
-                onToggle={onToggle}
+                onToggle={handleToggleFolder}
+                onDoubleClick={(e) => handleToggleFolder(e, true)}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
@@ -1686,6 +1826,8 @@ const EditorPage = () => {
                     changed: rowData.key in changes,
                     new: rowData.key in newNodes,
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
+                    ['id-' + rowData.key]: true,
+                    ['type-' + rowData.data.__entityType]: true,
                   }
                 }}
                 onContextMenu={onContextMenu}
@@ -1694,6 +1836,8 @@ const EditorPage = () => {
                 onColReorder={handleColumnReorder}
                 rows={20}
                 className={fullPageLoading ? 'table-loading' : undefined}
+                ref={tableRef}
+                onKeyDown={handleKeyPress}
               >
                 {allColumns}
               </TreeTable>

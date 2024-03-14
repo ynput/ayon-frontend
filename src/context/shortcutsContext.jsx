@@ -84,8 +84,9 @@ function ShortcutsProvider(props) {
       if (e.target.closest('.block-shortcuts')) return
 
       let singleKey = e.key
+      const isMeta = e.metaKey || e.ctrlKey
       // add ctrl_ prefix if ctrl or cmd is pressed
-      if (e.ctrlKey || e.metaKey) singleKey = 'ctrl+' + singleKey
+      if (isMeta) singleKey = 'ctrl+' + singleKey
       // support alt
       if (e.altKey) singleKey = 'alt+' + singleKey
 
@@ -112,11 +113,11 @@ function ShortcutsProvider(props) {
       // check if the shortcut has a closest selector
       if (shortcut.closest) {
         // if it does, check if the target matches the selector
-        if (!hovered || !hovered.closest(shortcut.closest)) return
+        if (!hovered?.target || !hovered?.target?.closest(shortcut.closest)) return
       }
 
       // and run the action
-      shortcut.action(hovered)
+      shortcut.action(hovered, isMeta)
     },
     [lastPressed, shortcuts, hovered, disabled],
   )
@@ -148,13 +149,13 @@ function ShortcutsProvider(props) {
 
   const removeEventListener = () =>
     document.removeEventListener('mouseover', (e) => {
-      setHovered(e.target)
+      setHovered(e)
     })
 
   useEffect(() => {
     if (shortcuts.some((s) => s.closest)) {
       document.addEventListener('mouseover', (e) => {
-        setHovered(e.target)
+        setHovered(e)
       })
     } else {
       removeEventListener()
