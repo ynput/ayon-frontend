@@ -73,11 +73,7 @@ const ListItem = ({
       <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
       <Styled.Path>
         <Styled.PathItem>{task.projectCode}</Styled.PathItem>
-        {
-          <Styled.PathItem style={{ marginLeft: hasMorePaths ? 0 : -4 }}>
-            {hasMorePaths ? '...' : ''}
-          </Styled.PathItem>
-        }
+        {hasMorePaths && <Styled.PathItem>...</Styled.PathItem>}
         {pathEnds.map((pathEnd, i, a) => (
           <Styled.PathItem key={i} className={i === a.length - 1 ? 'last' : undefined}>
             {pathEnd}

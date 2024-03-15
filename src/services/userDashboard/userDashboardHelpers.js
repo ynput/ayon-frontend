@@ -11,9 +11,9 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
 
     // create a short path [code][.../][end of path by depth joined by /][taskName]
     const depth = 2
-    const path = task.folder?.path?.split('/')
+    const path = task.folder?.path?.replace(/^\/+|\/+$/g, '').split('/')
     const pathLastItems = path?.slice(-depth)
-    const pathPrefix = path?.length > depth ? '../' : '/'
+    const pathPrefix = path?.length > depth ? '/.../' : '/'
     const shortPath = `${code}${pathPrefix}${pathLastItems?.join('/')}/${task.name}`
 
     return {
@@ -26,7 +26,7 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       endDate: task.attrib?.endDate,
       folderName: task.folder?.name,
       folderId: task.folderId,
-      path: `${projectName}/${task.folder?.path}`,
+      path: `${projectName}${task.folder?.path}`,
       shortPath,
       latestVersionId: latestVersion?.id,
       latestVersionThumbnailId: latestVersion?.thumbnailId,
