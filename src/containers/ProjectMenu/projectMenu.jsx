@@ -7,25 +7,50 @@ import { onProjectChange } from '/src/features/editor'
 import { ayonApi } from '/src/services/ayon'
 import MenuList from '/src/components/Menu/MenuComponents/MenuList'
 import { useGetAllProjectsQuery } from '/src/services/project/getProject'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import ProjectButton from '/src/components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
+import { useShortcutsContext } from '/src/context/shortcutsContext'
+import { classNames } from 'primereact/utils'
 
-const ProjectMenu = ({ visible, onHide }) => {
+const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const menuRef = useRef(null)
   const searchRef = useRef(null)
   const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
   const [searchOpen, setSearchOpen] = useState(false)
+  const [search, setSearch] = useState('')
+
+  // disable
+  const { setAllowed } = useShortcutsContext()
+
+  useEffect(() => {
+    if (isOpen) {
+      // open only allow project menu shortcuts (block all others)
+      setAllowed(['1', '0', '9', '8'])
+    } else {
+      // close allow all shortcuts
+      setAllowed([])
+      // clear search
+      setSearch('')
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (menuRef.current && isOpen) {
+      const el = menuRef.current?.getElement()
+
+      if (el) el.focus()
+    }
+  }, [menuRef.current, isOpen])
 
   const projectSelected = useSelector((state) => state.project.name)
   const user = useSelector((state) => state.user)
   const isUser = user?.data?.isUser
-
-  const [projectsFilter, setProjectsFilter] = useState('')
 
   const { data: projects = [] } = useGetAllProjectsQuery({ showInactive: false })
 
@@ -35,8 +60,10 @@ const ProjectMenu = ({ visible, onHide }) => {
     e.stopPropagation()
     // e.originalEvent.preventDefault()
     if (pinned.includes(projectName)) {
+      // remove from pinned
       setPinned(pinned.filter((p) => p !== projectName))
-    } else if (pinned.length < 5) {
+    } else {
+      // add to pinned
       setPinned([...pinned, projectName])
     }
   }
@@ -84,16 +111,18 @@ const ProjectMenu = ({ visible, onHide }) => {
         <ProjectButton
           label={project.name}
           code={project.code}
-          className={pinned.includes(project.name) ? 'pinned' : ''}
+          className={classNames('project-item', { pinned: pinned.includes(project.name) })}
           highlighted={projectSelected === project.name}
           onPin={(e) => handlePinChange(project.name, e)}
           onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
           onClick={() => onProjectSelect(project.name)}
           onContextMenu={(e) => showContext(e, buildContextMenu(project.name))}
+          id={project.name}
+          key={project.name}
         />
       ),
     }))
-  }, [projects, projectSelected, projectsFilter, pinned])
+  }, [projects, projectSelected, search, pinned])
 
   // sort  by pinned, then alphabetically
   const sortedMenuItems = useMemo(() => {
@@ -114,18 +143,26 @@ const ProjectMenu = ({ visible, onHide }) => {
   // now we have a divider index, we can insert a divider
   const menuItemsWithDivider = useMemo(() => {
     const items = [...sortedMenuItems]
-    if (pinned.length) items.splice(dividerIndex, 0, { id: 'divider' })
+    if (pinned.length !== items.length) items.splice(dividerIndex, 0, { id: 'divider' })
     return items
   }, [sortedMenuItems, dividerIndex])
 
   const filteredMenuItems = useMemo(() => {
     return menuItemsWithDivider.filter((item) => {
-      return !projectsFilter || item?.label?.toLowerCase().includes(projectsFilter.toLowerCase())
+      return !search || item?.label?.toLowerCase().includes(search.toLowerCase())
     })
-  }, [menuItems, projectsFilter])
+  }, [menuItems, search])
+
+  const handleHide = () => {
+    onHide()
+    // close search if it was open
+    setSearchOpen(false)
+    // clear search
+    setSearch('')
+  }
 
   const onProjectSelect = (projectName) => {
-    onHide()
+    handleHide()
 
     // if already on project page, do not navigate
     if (window.location.pathname.includes(projectName)) return
@@ -152,18 +189,95 @@ const ProjectMenu = ({ visible, onHide }) => {
     navigate(link)
   }
 
-  const handleHide = () => {
-    onHide()
-    // close search if it was open
-    setSearchOpen(false)
-  }
-
   const handleSearchClick = (e) => {
     e.stopPropagation()
     setSearchOpen(true)
   }
+  const focusElement = (element) => {
+    if (element) {
+      element.focus()
+    }
+  }
 
-  if (!visible) return null
+  const getSibling = (element, direction) => {
+    const sibling =
+      direction === 'next' ? element.nextElementSibling : element.previousElementSibling
+    return sibling?.tagName === 'HR' ? getSibling(sibling, direction) : sibling
+  }
+
+  const handleArrowKeys = (e) => {
+    const { key, shiftKey } = e
+    const direction = key === 'ArrowUp' || (key === 'Tab' && shiftKey) ? 'prev' : 'next'
+    const edgeElement = direction === 'next' ? 'firstChild' : 'lastChild'
+
+    if (['ArrowDown', 'ArrowUp'].includes(key) || (key === 'Tab' && (shiftKey || !shiftKey))) {
+      e.preventDefault()
+      const focused = document.activeElement
+
+      if (focused && focused.className.includes('project-item')) {
+        const sibling = getSibling(focused, direction)
+        focusElement(sibling || focused.parentElement[edgeElement])
+      } else {
+        const edgeItem = menuRef.current.getElement()?.querySelector(`.project-item`)
+        focusElement(edgeItem)
+      }
+    }
+  }
+
+  // if we start typing, open the search automatically
+  const handleKeyPress = (e) => {
+    //  open search on letter
+    if (e.key?.length === 1 && !searchOpen) {
+      setSearchOpen(true)
+    }
+
+    // close search on escape
+    // close menu on escape (if search is not open)
+    if (e.key === 'Escape') {
+      if (searchOpen && search.length > 0) {
+        setSearchOpen(false)
+        setSearch('')
+      } else {
+        handleHide()
+      }
+    }
+    // pick top result on enter and search
+    else if (e.key === 'Enter') {
+      // get id of focused item
+      const id = e.target?.id
+
+      if (id) {
+        // select project
+        onProjectSelect(id)
+      } else if (searchOpen && search.length > 0 && filteredMenuItems.length > 0) {
+        // select top result
+        const topResult = filteredMenuItems[0]
+        if (topResult) {
+          onProjectSelect(topResult.label)
+        }
+      }
+    } else if (e.key === 'Backspace') {
+      if (searchOpen && search.length > 0) {
+        // focus on search input
+        focusElement(searchRef.current)
+      }
+    } else handleArrowKeys(e)
+  }
+  // Add event listeners
+  useEffect(() => {
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyPress)
+    } else {
+      window.removeEventListener('keydown', handleKeyPress)
+    }
+
+    // Remove event listeners on cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [handleKeyPress, isOpen])
+
+  if (!isOpen) return null
 
   return (
     <>
@@ -173,8 +287,10 @@ const ProjectMenu = ({ visible, onHide }) => {
         visible={true}
         modal={false}
         showCloseIcon={false}
-        onShow={() => searchRef.current?.focus()}
         onHide={handleHide}
+        closeOnEscape={false}
+        ref={menuRef}
+        className="project-menu"
       >
         <Section>
           {!searchOpen ? (
@@ -182,10 +298,10 @@ const ProjectMenu = ({ visible, onHide }) => {
           ) : (
             <InputText
               placeholder="Search projects..."
-              value={projectsFilter}
-              onChange={(e) => setProjectsFilter(e.target.value)}
-              ref={searchRef}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               autoFocus
+              ref={searchRef}
             />
           )}
 
