@@ -199,12 +199,22 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       setSearchOpen(true)
     }
 
+    // close search on escape
+    // close menu on escape (if search is not open)
     if (e.key === 'Escape') {
       if (searchOpen) {
         setSearchOpen(false)
         setSearch('')
       } else {
         handleHide()
+      }
+    }
+
+    // pick top result on enter and search
+    if (e.key === 'Enter' && search) {
+      const topResult = filteredMenuItems[0]
+      if (topResult) {
+        onProjectSelect(topResult.label)
       }
     }
   }
