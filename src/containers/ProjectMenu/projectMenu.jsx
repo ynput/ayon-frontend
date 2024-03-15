@@ -20,6 +20,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const menuRef = useRef(null)
+  const searchRef = useRef(null)
   const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
   const [searchOpen, setSearchOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -255,6 +256,11 @@ const ProjectMenu = ({ isOpen, onHide }) => {
           onProjectSelect(topResult.label)
         }
       }
+    } else if (e.key === 'Backspace') {
+      if (searchOpen && search.length > 0) {
+        // focus on search input
+        focusElement(searchRef.current)
+      }
     } else handleArrowKeys(e)
   }
   // Add event listeners
@@ -295,6 +301,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               autoFocus
+              ref={searchRef}
             />
           )}
 
