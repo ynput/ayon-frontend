@@ -29,8 +29,7 @@ const SiteDropdown = ({ value, onChange, disabled, multiselect = false, allowNul
       options={siteOptions}
       multiSelect={multiselect}
       onChange={handleChange}
-      onClear={() => (allowNull ? onChange(null) : undefined)}
-      onClearNullValue={allowNull}
+      onClearNull={allowNull ? () => onChange(null) : null}
       placeholder="Select a site"
       style={{ flexGrow: 1 }}
       disabled={disabled}

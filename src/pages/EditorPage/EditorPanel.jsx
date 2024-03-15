@@ -352,7 +352,6 @@ const EditorPanel = ({
 
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
-    console.log(value)
     // console.log('local change', value, changeKey, field, form)
     let newForm = { ...form }
     if (formState) {
@@ -642,8 +641,12 @@ const EditorPanel = ({
                       widthExpand
                       emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
                       isMultiple={!!isMultiple}
-                      onClear={(value) => handleLocalChange(value, changeKey, field)}
-                      onClearNullValue
+                      onClear={
+                        field !== 'attrib.tools'
+                          ? (value) => handleLocalChange(value, changeKey, field)
+                          : undefined
+                      }
+                      onClearNull={(value) => handleLocalChange(value, changeKey, field)}
                       nullPlaceholder="(inherited)"
                       search={attrib?.enum?.length > 10}
                     />
