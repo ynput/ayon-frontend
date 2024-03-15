@@ -1709,11 +1709,6 @@ const EditorPage = () => {
       action: (e) => handleToggleFolder(e, true),
       closest: 'tr.type-folder',
     },
-    {
-      key: 'ctrl+c',
-      action: (e) => handleToggleFolder(e, true, true),
-      closest: 'tr.type-folder',
-    },
   ]
 
   useShortcuts(shortcuts, [disableAddNew, expandedFolders])
