@@ -21,7 +21,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const searchRef = useRef(null)
   const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
   const [searchOpen, setSearchOpen] = useState(false)
-  const [projectsFilter, setProjectsFilter] = useState('')
+  const [search, setSearch] = useState('')
 
   // disable
   const { setAllowed } = useShortcutsContext()
@@ -34,7 +34,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       // close allow all shortcuts
       setAllowed([])
       // clear search
-      setProjectsFilter('')
+      setSearch('')
     }
   }, [isOpen])
 
@@ -108,7 +108,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         />
       ),
     }))
-  }, [projects, projectSelected, projectsFilter, pinned])
+  }, [projects, projectSelected, search, pinned])
 
   // sort  by pinned, then alphabetically
   const sortedMenuItems = useMemo(() => {
@@ -135,9 +135,9 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   const filteredMenuItems = useMemo(() => {
     return menuItemsWithDivider.filter((item) => {
-      return !projectsFilter || item?.label?.toLowerCase().includes(projectsFilter.toLowerCase())
+      return !search || item?.label?.toLowerCase().includes(search.toLowerCase())
     })
-  }, [menuItems, projectsFilter])
+  }, [menuItems, search])
 
   const onProjectSelect = (projectName) => {
     onHide()
@@ -178,6 +178,50 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     setSearchOpen(true)
   }
 
+  // if we start typing, open the search automatically
+  const handleKeyPress = (e) => {
+    const bannedKeys = [
+      'Escape',
+      '1',
+      'Tab',
+      'ArrowUp',
+      'ArrowDown',
+      'Enter',
+      'Shift',
+      'Control',
+      'Alt',
+      'Meta',
+      'CapsLock',
+      'Backspace',
+    ]
+
+    if (!bannedKeys.includes(e.key) && !searchOpen) {
+      setSearchOpen(true)
+    }
+
+    if (e.key === 'Escape') {
+      if (searchOpen) {
+        setSearchOpen(false)
+        setSearch('')
+      } else {
+        handleHide()
+      }
+    }
+  }
+  // Add event listeners
+  useEffect(() => {
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyPress)
+    } else {
+      window.removeEventListener('keydown', handleKeyPress)
+    }
+
+    // Remove event listeners on cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [handleKeyPress, isOpen])
+
   if (!isOpen) return null
 
   return (
@@ -188,8 +232,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         visible={true}
         modal={false}
         showCloseIcon={false}
-        onShow={() => searchRef.current?.focus()}
         onHide={handleHide}
+        closeOnEscape={false}
       >
         <Section>
           {!searchOpen ? (
@@ -197,8 +241,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
           ) : (
             <InputText
               placeholder="Search projects..."
-              value={projectsFilter}
-              onChange={(e) => setProjectsFilter(e.target.value)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               ref={searchRef}
               autoFocus
             />
