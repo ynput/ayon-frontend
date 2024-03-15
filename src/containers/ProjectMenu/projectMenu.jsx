@@ -21,6 +21,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const searchRef = useRef(null)
   const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
   const [searchOpen, setSearchOpen] = useState(false)
+  const [projectsFilter, setProjectsFilter] = useState('')
 
   // disable
   const { setAllowed } = useShortcutsContext()
@@ -32,14 +33,14 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     } else {
       // close allow all shortcuts
       setAllowed([])
+      // clear search
+      setProjectsFilter('')
     }
   }, [isOpen])
 
   const projectSelected = useSelector((state) => state.project.name)
   const user = useSelector((state) => state.user)
   const isUser = user?.data?.isUser
-
-  const [projectsFilter, setProjectsFilter] = useState('')
 
   const { data: projects = [] } = useGetAllProjectsQuery({ showInactive: false })
 
