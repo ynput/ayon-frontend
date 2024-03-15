@@ -59,8 +59,10 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     e.stopPropagation()
     // e.originalEvent.preventDefault()
     if (pinned.includes(projectName)) {
+      // remove from pinned
       setPinned(pinned.filter((p) => p !== projectName))
-    } else if (pinned.length < 5) {
+    } else {
+      // add to pinned
       setPinned([...pinned, projectName])
     }
   }
@@ -140,7 +142,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   // now we have a divider index, we can insert a divider
   const menuItemsWithDivider = useMemo(() => {
     const items = [...sortedMenuItems]
-    if (pinned.length) items.splice(dividerIndex, 0, { id: 'divider' })
+    if (pinned.length !== items.length) items.splice(dividerIndex, 0, { id: 'divider' })
     return items
   }, [sortedMenuItems, dividerIndex])
 
