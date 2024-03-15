@@ -14,11 +14,12 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 import ProjectButton from '/src/components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '/src/context/shortcutsContext'
+import { classNames } from 'primereact/utils'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const searchRef = useRef(null)
+  const menuRef = useRef(null)
   const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
   const [searchOpen, setSearchOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -37,6 +38,14 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       setSearch('')
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (menuRef.current && isOpen) {
+      const el = menuRef.current?.getElement()
+
+      if (el) el.focus()
+    }
+  }, [menuRef.current, isOpen])
 
   const projectSelected = useSelector((state) => state.project.name)
   const user = useSelector((state) => state.user)
@@ -99,12 +108,13 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         <ProjectButton
           label={project.name}
           code={project.code}
-          className={pinned.includes(project.name) ? 'pinned' : ''}
+          className={classNames({ pinned: pinned.includes(project.name) })}
           highlighted={projectSelected === project.name}
           onPin={(e) => handlePinChange(project.name, e)}
           onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
           onClick={() => onProjectSelect(project.name)}
           onContextMenu={(e) => showContext(e, buildContextMenu(project.name))}
+          id={project.name}
         />
       ),
     }))
@@ -139,8 +149,16 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     })
   }, [menuItems, search])
 
-  const onProjectSelect = (projectName) => {
+  const handleHide = () => {
     onHide()
+    // close search if it was open
+    setSearchOpen(false)
+    // clear search
+    setSearch('')
+  }
+
+  const onProjectSelect = (projectName) => {
+    handleHide()
 
     // if already on project page, do not navigate
     if (window.location.pathname.includes(projectName)) return
@@ -165,12 +183,6 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       : `/projects/${projectName}/browser`
 
     navigate(link)
-  }
-
-  const handleHide = () => {
-    onHide()
-    // close search if it was open
-    setSearchOpen(false)
   }
 
   const handleSearchClick = (e) => {
@@ -211,10 +223,19 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     }
 
     // pick top result on enter and search
-    if (e.key === 'Enter' && search) {
-      const topResult = filteredMenuItems[0]
-      if (topResult) {
-        onProjectSelect(topResult.label)
+    if (e.key === 'Enter') {
+      // get id of focused item
+      const id = e.target?.id
+
+      if (id) {
+        // select project
+        onProjectSelect(id)
+      } else if (searchOpen && search.length > 0 && filteredMenuItems.length > 0) {
+        // select top result
+        const topResult = filteredMenuItems[0]
+        if (topResult) {
+          onProjectSelect(topResult.label)
+        }
       }
     }
   }
@@ -244,6 +265,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         showCloseIcon={false}
         onHide={handleHide}
         closeOnEscape={false}
+        ref={menuRef}
       >
         <Section>
           {!searchOpen ? (
@@ -253,7 +275,6 @@ const ProjectMenu = ({ isOpen, onHide }) => {
               placeholder="Search projects..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              ref={searchRef}
               autoFocus
             />
           )}
