@@ -2,7 +2,7 @@ import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { Button } from '@ynput/ayon-react-components'
 
-const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
+const ViewModeToggle = ({ onChange, value, grouped, setGrouped, disabled }) => {
   const handleNormalClick = (id) => {
     setGrouped(false)
     onChange(id)
@@ -21,31 +21,35 @@ const ViewModeToggle = ({ onChange, value, grouped, setGrouped }) => {
       icon: 'format_list_bulleted',
       onClick: () => handleNormalClick('list'),
       ['data-tooltip']: 'List View',
+      disabled: disabled.includes('list'),
     },
     {
       id: 'grid',
       icon: 'grid_view',
       onClick: () => handleNormalClick('grid'),
       ['data-tooltip']: 'Card View',
+      disabled: disabled.includes('grid'),
     },
     {
       id: 'layers',
       icon: 'layers',
       onClick: () => handleGroupClick(),
       ['data-tooltip']: 'Grouped View',
+      disabled: disabled.includes('layers'),
     },
   ]
 
-  if (grouped) value = 'layers'
+  if (grouped && value !== 'list') value = 'layers'
 
   return (
     <>
       {items.map((item) => (
         <Button
+          {...item}
+          selected={value === item.id}
           key={item.id}
           className={value === item.id ? 'active' : ''}
-          selected={value === item.id}
-          {...item}
+          data-tooltip={!item.disabled ? item['data-tooltip'] : undefined}
         />
       ))}
     </>

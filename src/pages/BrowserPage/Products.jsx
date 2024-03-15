@@ -578,6 +578,7 @@ const Products = () => {
           onChange={setViewMode}
           grouped={grouped || focusedFolders.length > 1}
           setGrouped={setGrouped}
+          disabled={focusedFolders.length > 1 ? ['grid'] : []}
         />
       </Toolbar>
       <TablePanel style={{ overflow: 'hidden' }} onContextMenu={handleTablePanelContext}>
