@@ -108,13 +108,14 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         <ProjectButton
           label={project.name}
           code={project.code}
-          className={classNames({ pinned: pinned.includes(project.name) })}
+          className={classNames('project-item', { pinned: pinned.includes(project.name) })}
           highlighted={projectSelected === project.name}
           onPin={(e) => handlePinChange(project.name, e)}
           onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
           onClick={() => onProjectSelect(project.name)}
           onContextMenu={(e) => showContext(e, buildContextMenu(project.name))}
           id={project.name}
+          key={project.name}
         />
       ),
     }))
@@ -189,41 +190,56 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     e.stopPropagation()
     setSearchOpen(true)
   }
+  const focusElement = (element) => {
+    if (element) {
+      element.focus()
+    }
+  }
+
+  const getSibling = (element, direction) => {
+    const sibling =
+      direction === 'next' ? element.nextElementSibling : element.previousElementSibling
+    return sibling?.tagName === 'HR' ? getSibling(sibling, direction) : sibling
+  }
+
+  const handleArrowKeys = (e) => {
+    const { key, shiftKey } = e
+    const direction = key === 'ArrowUp' || (key === 'Tab' && shiftKey) ? 'prev' : 'next'
+    const edgeElement = direction === 'next' ? 'firstChild' : 'lastChild'
+
+    if (['ArrowDown', 'ArrowUp'].includes(key) || (key === 'Tab' && (shiftKey || !shiftKey))) {
+      e.preventDefault()
+      const focused = document.activeElement
+
+      if (focused && focused.className.includes('project-item')) {
+        const sibling = getSibling(focused, direction)
+        focusElement(sibling || focused.parentElement[edgeElement])
+      } else {
+        const edgeItem = menuRef.current.getElement()?.querySelector(`.project-item`)
+        focusElement(edgeItem)
+      }
+    }
+  }
 
   // if we start typing, open the search automatically
   const handleKeyPress = (e) => {
-    const bannedKeys = [
-      'Escape',
-      '1',
-      'Tab',
-      'ArrowUp',
-      'ArrowDown',
-      'Enter',
-      'Shift',
-      'Control',
-      'Alt',
-      'Meta',
-      'CapsLock',
-      'Backspace',
-    ]
-
-    if (!bannedKeys.includes(e.key) && !searchOpen) {
+    //  open search on letter
+    if (e.key?.length === 1 && !searchOpen) {
       setSearchOpen(true)
     }
 
     // close search on escape
     // close menu on escape (if search is not open)
     if (e.key === 'Escape') {
-      if (searchOpen) {
+      if (searchOpen && search.length > 0) {
         setSearchOpen(false)
         setSearch('')
       } else {
         handleHide()
       }
     }
-
     // pick top result on enter and search
-    if (e.key === 'Enter') {
+    else if (e.key === 'Enter') {
       // get id of focused item
       const id = e.target?.id
 
@@ -237,7 +253,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
           onProjectSelect(topResult.label)
         }
       }
-    }
+    } else handleArrowKeys(e)
   }
   // Add event listeners
   useEffect(() => {
@@ -266,6 +282,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         onHide={handleHide}
         closeOnEscape={false}
         ref={menuRef}
+        className="project-menu"
       >
         <Section>
           {!searchOpen ? (
