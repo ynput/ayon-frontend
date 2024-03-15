@@ -37,8 +37,6 @@ const StyledDropdown = styled(Dropdown)`
 const ToolsField = ({ value, className, attrib }) => {
   const [isOpen, setIsOpen] = useState(false)
 
-  if (!value || !value.length) console.log('null')
-
   const _enum = attrib?.enum
 
   const labels = _enum
