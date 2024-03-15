@@ -1335,8 +1335,6 @@ const EditorPage = () => {
 
       const isMeta = event.metaKey || event.ctrlKey || meta
 
-      console.log(event)
-
       let id
       // id of the folder that was toggled
       const classList = target?.closest('tr')?.classList
@@ -1351,7 +1349,8 @@ const EditorPage = () => {
       const newExpanded = { ...expandedFolders }
       const getNewBranches = []
       // is the folder toggled in the selection
-      const isToggleSelected = !!currentSelection[id]
+      const isToggledFolderInMultipleSel =
+        !!currentSelection[id] && Object.keys(currentSelection).length > 1
 
       // check if the folder is already expanded
       const isExpanded = !!expandedFolders[id]
@@ -1362,7 +1361,7 @@ const EditorPage = () => {
         // keep track of closing parents
         // so we can close any children of the closing parent (if meta)
         const closingParents = []
-        if (isMeta && isToggleSelected) {
+        if (isMeta && isToggledFolderInMultipleSel) {
           // remove all selected
           const newSelection = { ...currentSelection }
           for (const key in newSelection) {
@@ -1394,7 +1393,7 @@ const EditorPage = () => {
           }
         }
       } else {
-        if (isMeta && isToggleSelected) {
+        if (isMeta && isToggledFolderInMultipleSel) {
           // check if there are any other folders selected that are not already expanded (multiple expand)
           const newSelection = { ...currentSelection }
           const selectedFolders = Object.keys(newSelection).filter(
@@ -1413,6 +1412,29 @@ const EditorPage = () => {
           newExpanded[id] = true
           // get new branch
           getNewBranches.push(id)
+
+          if (isMeta) {
+            // expand all children to id and also id
+
+            // because we don't know the children folders until the parent is expanded
+            // we need to use hierarchy to get all the children of the parent
+            // searchable folders is a flat list of all folders and tasks
+
+            const hierarchyParent = searchableFolders.find((f) => f.id === id)
+
+            if (hierarchyParent) {
+              // loop over it's children and add to expandedFolders
+              const queue = [hierarchyParent]
+              while (queue.length > 0) {
+                const folder = queue.shift()
+                newExpanded[folder.id] = true
+                getNewBranches.push(folder.id)
+                if (folder.children?.length) {
+                  queue.push(...folder.children)
+                }
+              }
+            }
+          }
         }
       }
 
@@ -1764,11 +1786,6 @@ const EditorPage = () => {
     {
       key: 'c',
       action: (e) => handleToggleFolder(e, true),
-      closest: 'tr.type-folder',
-    },
-    {
-      key: 'ctrl+c',
-      action: (e) => handleToggleFolder(e, true, true),
       closest: 'tr.type-folder',
     },
   ]
