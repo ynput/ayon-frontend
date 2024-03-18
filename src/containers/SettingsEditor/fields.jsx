@@ -106,7 +106,7 @@ function ObjectFieldTemplate(props) {
 
   const enabledToggler = useMemo(() => {
     for (const element of props.properties) {
-      if (element.name === 'enabled') {
+      if (element?.name === 'enabled') {
         return <span className="form-object-header-enabled-toggler">{element.content}</span>
       }
     }
@@ -132,7 +132,7 @@ function ObjectFieldTemplate(props) {
       let otherFields = []
 
       for (const element of props.properties) {
-        if (element.name === 'name') nameField = element.content
+        if (element?.name === 'name') nameField = element.content
         else otherFields.push(element.content)
       }
       return (
