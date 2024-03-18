@@ -157,12 +157,10 @@ export const PathItem = styled.span`
     color: var(--md-sys-color-on-surface);
   }
 
-  &:not(:first-child) {
-    &::after {
-      content: '/';
-      margin-left: var(--base-gap-medium);
-      color: var(--md-sys-color-outline);
-    }
+  &::after {
+    content: '/';
+    margin-left: var(--base-gap-medium);
+    color: var(--md-sys-color-outline);
   }
 `
 
