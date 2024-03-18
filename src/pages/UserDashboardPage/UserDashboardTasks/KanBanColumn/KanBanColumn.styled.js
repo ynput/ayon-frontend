@@ -82,7 +82,7 @@ export const Column = styled.div`
   flex: 0;
 
   border-radius: 16px;
-  background-color: var(--md-sys-color-surface-container-lowest);
+  background-color: var(--md-sys-color-surface-container-low);
 
   /* when a card is hovering over the top */
   .items > *:last-child {
@@ -220,7 +220,7 @@ export const Collapsed = styled.div`
   padding-top: 7px;
   padding-bottom: 16px;
   border-radius: 16px;
-  background-color: var(--md-sys-color-surface-container-lowest);
+  background-color: var(--md-sys-color-surface-container-low);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -243,7 +243,7 @@ export const Collapsed = styled.div`
   }
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-lowest-hover);
+    background-color: var(--md-sys-color-surface-container-low-hover);
     h2,
     .icon {
       color: var(--md-sys-color-on-surface);

@@ -25,16 +25,16 @@ export const Item = styled.li`
   cursor: pointer;
   user-select: none;
 
-  background-color: var(--md-sys-color-surface-container-lowest);
+  background-color: var(--md-sys-color-surface-container-low);
   border: 1px solid transparent;
   border-top-color: var(--md-sys-color-outline-variant);
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-lowest-hover);
+    background-color: var(--md-sys-color-surface-container-low-hover);
   }
 
   &:active {
-    background-color: var(--md-sys-color-surface-container-lowest-active);
+    background-color: var(--md-sys-color-surface-container-low-active);
   }
 
   &.selected {
@@ -66,7 +66,7 @@ export const Item = styled.li`
   ${({ $isFirst }) =>
     $isFirst &&
     css`
-      border-top-color: var(--md-sys-color-surface-container-lowest);
+      border-top-color: var(--md-sys-color-surface-container-low);
     `}
   /* if $isLast */
   ${({ $isLast }) =>
@@ -86,7 +86,7 @@ export const Item = styled.li`
       border-color: var(--md-sys-color-surface-container-low);
 
       &:hover {
-        background-color: var(--md-sys-color-surface-container-lowest);
+        background-color: var(--md-sys-color-surface-container-low);
       }
     `}
 `
