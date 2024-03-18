@@ -9,7 +9,7 @@ const GridStyled = styled.div`
   /* columns minWidth 150px, max width 250px */
   display: grid;
   position: relative;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   grid-template-rows: auto;
   grid-auto-rows: 0;
   overflow-y: clip;
@@ -36,6 +36,10 @@ const EntityCardStyled = styled(EntityCard)`
     user-select: none;
     pointer-events: none;
     transition: opacity 0.3s;
+  }
+
+  .status {
+    display: none;
   }
 `
 
@@ -125,8 +129,6 @@ const ProjectLatestRow = ({
               title={entity.name}
               titleIcon={entity.typeIcon}
               subTitle={entity.footer}
-              icon={entity.statusIcon}
-              iconColor={entity.statusColor}
               className={entity.className}
               imageUrl={
                 !isLoadingData &&
