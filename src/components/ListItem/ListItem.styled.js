@@ -208,4 +208,5 @@ export const ItemAssignees = styled(AssigneeSelect)`
 export const Date = styled.span`
   min-width: 90px;
   text-align: right;
+  white-space: nowrap;
 `
