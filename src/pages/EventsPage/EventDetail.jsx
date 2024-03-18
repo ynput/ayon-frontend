@@ -14,7 +14,7 @@ import EntityTile from './EntityTile'
 import { formatDistance } from 'date-fns'
 
 const RowStyled = styled.div`
-  span {
+  span:not(.initials) {
     text-overflow: ellipsis;
     overflow: hidden;
     display: block;
@@ -104,10 +104,15 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
           <RowStyled>
             <h2>User</h2>
             <UserTile userName={userName} suspense={isLoading || isFetching} disableHover>
-              <Button icon="filter_alt" variant="text" onClick={() => onFilter(userName)} />
               <Link to={`/settings/users?name=${userName}`}>
-                <Button icon="manage_accounts" variant="text" />
+                <Button icon="manage_accounts" variant="text" data-tooltip="Manage user" />
               </Link>
+              <Button
+                icon="filter_alt"
+                variant="text"
+                onClick={() => onFilter(userName)}
+                data-tooltip="Filter by user"
+              />
             </UserTile>
           </RowStyled>
         )}
@@ -124,10 +129,19 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
                 })
               }`}
             >
-              <Button icon="filter_alt" variant="text" onClick={() => onFilter(project)} />
-              <Link to={`/manageProjects/dashboard?project=${project}`}>
-                <Button icon="empty_dashboard" variant="text" />
+              <Link to={`/manageProjects?project=${project}`}>
+                <Button
+                  icon="settings_applications"
+                  variant="text"
+                  data-tooltip="Project settings"
+                />
               </Link>
+              <Button
+                icon="filter_alt"
+                variant="text"
+                onClick={() => onFilter(project)}
+                data-tooltip="Filter by project"
+              />
             </EventTile>
           </RowStyled>
         )}
@@ -135,10 +149,12 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
           <RowStyled>
             <h2>Entity</h2>
             <EntityTile id={summary.entityId} type={type} disableHover projectName={project}>
-              <Button icon="filter_alt" variant="text" onClick={() => onFilter(type)} />
-              <Link to={`/projects/${project}/browser?entityId=${summary.entityId}&type=${type}`}>
-                <Button icon="open_in_new" variant="text" />
-              </Link>
+              <Button
+                icon="filter_alt"
+                variant="text"
+                onClick={() => onFilter(type)}
+                data-tooltip={'Filter by ' + type}
+              />
             </EntityTile>
           </RowStyled>
         )}
