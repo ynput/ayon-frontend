@@ -50,7 +50,7 @@ const parseContext = (props) => {
   return result
 }
 
-const CheckboxWidget = function (props) {
+const CheckboxWidget = function(props) {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState(null)
   const [initialized, setInitialized] = useState(false)
@@ -185,7 +185,8 @@ const SelectWidget = (props) => {
   }
 
   const hlstyle = {}
-  if (!equiv(value, props.value)) {
+  if (!equiv(value, props.multiple ? (props.value || []) : props.value)) { 
+    console.log("Highlighting", props.id, value, props.value)
     hlstyle.outline = '1px solid yellow'
   } else if (originalValue && !equiv(props.value, originalValue)) {
     hlstyle.outline = '1px solid var(--color-changed)'
@@ -201,17 +202,17 @@ const SelectWidget = (props) => {
       widthExpand
       options={options}
       value={renderableValue}
-      onChange={props.multiple ? setValue : (e) => setValue(e[0])}
+      onSelectionChange={props.multiple ? setValue : (e) => setValue(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
       optionLabel="label"
-      optionValue="value"
       tooltipOptions={{ position: 'bottom' }}
       placeholder={props.schema?.placeholder}
-      disabled={props.schema?.disabled}
       className={`form-field`}
       multiSelect={props.multiple}
       style={hlstyle}
+      optionValue="value"
+      disabled={props.schema?.disabled}
     />
   )
 }
