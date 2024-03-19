@@ -20,7 +20,7 @@ const NewProjectDialog = ({ onHide }) => {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [codeSet, setCodeSet] = useState(false)
-  const [newAnatomy, setNewAnatomy] = useState(null)
+  const [formData, setFormData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState(null)
   const [isLibrary, setIsLibrary] = useState(false)
 
@@ -43,7 +43,7 @@ const NewProjectDialog = ({ onHide }) => {
     createProject({
       name,
       code,
-      anatomy: newAnatomy, // || originalAnatomy,
+      anatomy: formData,
       library: isLibrary,
     })
       .unwrap()
@@ -123,13 +123,9 @@ const NewProjectDialog = ({ onHide }) => {
   //
 
   useEffect(() => {
-    setNewAnatomy(originalAnatomy)
+    setFormData(originalAnatomy)
   }, [originalAnatomy])
 
-  const editor = useMemo(() => {
-    if (isSchemaLoading || isOriginalAnatomyLoading) return 'Loading editor...'
-    return <SettingsEditor schema={schema} formData={originalAnatomy} onChange={setNewAnatomy} />
-  }, [schema, originalAnatomy])
 
   const footer = (
     <Toolbar style={{}}>
@@ -193,7 +189,10 @@ const NewProjectDialog = ({ onHide }) => {
             tooltip="Project anatomy preset"
           />
         </Toolbar>
-        {editor}
+        { (isSchemaLoading || isOriginalAnatomyLoading) ?
+          'Loading editor...'
+          : <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />
+        }
       </div>
     </Dialog>
   )
