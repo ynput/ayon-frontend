@@ -126,7 +126,6 @@ const NewProjectDialog = ({ onHide }) => {
     setFormData(originalAnatomy)
   }, [originalAnatomy])
 
-
   const footer = (
     <Toolbar style={{}}>
       Library project
@@ -189,10 +188,11 @@ const NewProjectDialog = ({ onHide }) => {
             tooltip="Project anatomy preset"
           />
         </Toolbar>
-        { (isSchemaLoading || isOriginalAnatomyLoading) ?
+        {isSchemaLoading || isOriginalAnatomyLoading ? (
           'Loading editor...'
-          : <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />
-        }
+        ) : (
+          <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />
+        )}
       </div>
     </Dialog>
   )

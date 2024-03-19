@@ -50,7 +50,7 @@ const parseContext = (props) => {
   return result
 }
 
-const CheckboxWidget = function(props) {
+const CheckboxWidget = function (props) {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState(null)
   const [initialized, setInitialized] = useState(false)
@@ -185,8 +185,8 @@ const SelectWidget = (props) => {
   }
 
   const hlstyle = {}
-  if (!equiv(value, props.multiple ? (props.value || []) : props.value)) { 
-    console.log("Highlighting", props.id, value, props.value)
+  if (!equiv(value, props.multiple ? props.value || [] : props.value)) {
+    console.log('Highlighting', props.id, value, props.value)
     hlstyle.outline = '1px solid yellow'
   } else if (originalValue && !equiv(props.value, originalValue)) {
     hlstyle.outline = '1px solid var(--color-changed)'
