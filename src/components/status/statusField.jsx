@@ -81,6 +81,7 @@ const StatusStyled = styled.div`
   /* sets for hover and when active whilst open (top one) */
   :hover {
     /* ${hoverStyle} */
+    filter: brightness(110%);
   }
 
   ${({ $isActive, $isSelecting }) =>
@@ -91,6 +92,9 @@ const StatusStyled = styled.div`
 
       :hover {
         ${invertHoverStyle}
+      }
+      [icon="expand_more"] {
+        transform: rotate(180deg);
       }
     `}
 
@@ -131,6 +135,7 @@ const StatusField = ({
   statuses = {},
   invert,
   className,
+  showChevron,
   ...props
 }) => {
   const {
@@ -158,6 +163,7 @@ const StatusField = ({
     >
       {icon && <Icon icon={icon} />}
       <span>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
+      {showChevron && <Icon icon="expand_more"  />}
     </StatusStyled>
   )
 }
