@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 import GridLayout from '/src/components/GridLayout'
-import { Button, EntityCard } from '@ynput/ayon-react-components'
+import { Button, EntityCard, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
@@ -20,7 +20,7 @@ const StyledGroup = styled.div`
   }
   &.isCollapsed {
     /* rotate icon */
-    .icon {
+    [icon='expand_more'] {
       rotate: -90deg;
     }
   }
@@ -40,11 +40,22 @@ const StyledGroupHeader = styled.div`
   align-items: center;
   gap: 8px;
   padding: var(--padding-s);
+  user-select: none;
 
   &:hover {
     cursor: pointer;
     background-color: var(--md-sys-color-surface-container-low-hover);
     border-radius: var(--border-radius-m);
+  }
+
+  .content {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+
+    .count {
+      color: var(--md-sys-color-outline);
+    }
   }
 
   h2 {
@@ -243,7 +254,11 @@ const ProductsGrid = ({
                   data-shortcut={'C'}
                   data-tooltip-delay={300}
                 />
-                <h2>{groupName}</h2>
+                <span className="content">
+                  <Icon icon={productTypes[groupName]?.icon || 'inventory_2'} />
+                  <h2>{groupName}</h2>
+                  <span className="count">{groupData.length}</span>
+                </span>
               </StyledGroupHeader>
             </div>
           )}
