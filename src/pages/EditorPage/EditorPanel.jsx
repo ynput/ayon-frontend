@@ -196,8 +196,6 @@ const EditorPanel = ({
       },
     }
 
-    console.log('create form')
-
     const type = nodes[nodeIds[0]]?.data?.__entityType
 
     if (type) {
