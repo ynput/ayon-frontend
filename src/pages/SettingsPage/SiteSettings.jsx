@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
 import SettingsEditor from '/src/containers/SettingsEditor'
@@ -9,6 +9,9 @@ import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '/src/ser
 import { useSetSiteSettingsMutation } from '/src/services/siteSettings'
 
 const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
+
+  const [formData, setFormData] = useState(null)
+
   const { data: schema, isLoading: schemaLoading } = useGetSiteSettingsSchemaQuery({
     addonName,
     addonVersion,
@@ -20,22 +23,28 @@ const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
     siteId,
   })
 
-  const editor = useMemo(() => {
-    if (!(schema && originalData)) return 'Loading editor...'
+  useEffect(() => {
+    if (!originalData) return
+    setFormData(originalData)
+  }, [originalData])
+
+  useEffect(() => {
+    onChange(formData)
+  }, [formData])
+
+
+  if (!(schema && originalData)) return 'Loading editor...'
+  if (schemaLoading || settingsLoading) {
+    return 'Loading...'
+  }
 
     return (
       <SettingsEditor
         schema={{ ...schema, title: `${schema.title} (${siteId})` }}
-        formData={originalData}
-        onChange={onChange}
+        formData={formData}
+        onChange={setFormData}
       />
     )
-  }, [schema, originalData, siteId])
-
-  if (schemaLoading || settingsLoading) {
-    return 'Loading...'
-  }
-  return editor
 }
 
 const SiteSettings = () => {
