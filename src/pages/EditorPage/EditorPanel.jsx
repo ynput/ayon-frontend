@@ -301,7 +301,7 @@ const EditorPanel = ({
 
       let value = data
       let parent = ''
-      for (const key of keys) {       
+      for (const key of keys) {  
         if (value) {
           // get value and set for next loop
           value = value[key]
