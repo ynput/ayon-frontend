@@ -11,6 +11,7 @@ import {
   AssigneeSelect,
   InputDate,
   InputSwitch,
+  TagsSelect
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -95,6 +96,8 @@ const EditorPanel = ({
   const changes = useSelector((state) => state.editor.changes)
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
+  const projectTagsOrder = useSelector((state) => state.project.tagsOrder)
+  const projectTagsObject = useSelector((state) => state.project.tags)
 
   // STATES
   // used to throttle changes to redux changes state and keep input fast
@@ -148,6 +151,7 @@ const EditorPanel = ({
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
     const labelValues = getFieldValue('label', '_label')
+    const tagValues = getFieldValue('tags', '_tags')
 
     const assigneesValues = getFieldValue('assignees', '_assignees', [])
 
@@ -193,6 +197,12 @@ const EditorPanel = ({
         disabled: !types.includes('task'),
         placeholder: `Folders Can Not Have Assignees...`,
         ...assigneesValues,
+      },
+      _tags: {
+        changeKey: '_tags',
+        label: 'Tags',
+        field: 'tags',
+        ...tagValues,
       },
     }
 
@@ -291,7 +301,7 @@ const EditorPanel = ({
 
       let value = data
       let parent = ''
-      for (const key of keys) {
+      for (const key of keys) {       
         if (value) {
           // get value and set for next loop
           value = value[key]
@@ -617,6 +627,20 @@ const EditorPanel = ({
                       widthExpand
                     />
                   )
+                    } else if (field === 'tags') {
+                      input = (
+                    <TagsSelect
+                      value={isMultiple ? union(...isMultiple) : value || []}
+                      tags={projectTagsObject}
+                      tagsOrder={projectTagsOrder}
+                      isMultiple={!!isMultiple}
+                      onChange={(v) => handleLocalChange(v, changeKey, field)}
+                      align="right"
+                      styleDropdown={{ overflow: 'hidden' }}
+                      width={200}
+                    />
+                      )
+                    
                 } else if (attrib?.enum) {
                   // dropdown
                   const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
