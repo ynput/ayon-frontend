@@ -319,6 +319,8 @@ const EditorPanel = ({
       }
 
       if ((finalValue && finalValue !== nodeValue) || isMultiple) {
+        // if value is undefined, skip
+        if (nodeValue === undefined) continue
         // if type arrays check dif
         if (Array.isArray(finalValue)) {
           // if not different skip
