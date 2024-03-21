@@ -186,7 +186,6 @@ const SelectWidget = (props) => {
 
   const hlstyle = {}
   if (!equiv(value, props.multiple ? props.value || [] : props.value)) {
-    console.log('Highlighting', props.id, value, props.value)
     hlstyle.outline = '1px solid yellow'
   } else if (originalValue && !equiv(props.value, originalValue)) {
     hlstyle.outline = '1px solid var(--color-changed)'
