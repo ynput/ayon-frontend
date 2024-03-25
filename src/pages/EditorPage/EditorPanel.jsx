@@ -640,7 +640,6 @@ const EditorPanel = ({
                       multipleValues={!!multipleValues}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       align="right"
-                      buttonStyle={borderDynamicStyles}
                       width={200}
                       isChanged={isChanged}
                     />
