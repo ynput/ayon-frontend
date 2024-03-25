@@ -641,6 +641,7 @@ const EditorPanel = ({
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       align="right"
                       width={200}
+                      buttonStyle={{ border: '1px solid var(--md-sys-color-outline-variant)'}}
                       isChanged={isChanged}
                     />
                       )
