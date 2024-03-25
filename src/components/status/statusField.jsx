@@ -57,6 +57,23 @@ const StatusStyled = styled.div`
 
   ${defaultStyle}
 
+  /* Styles for highlighting changed status */
+  ${({ $isChanged }) =>
+  $isChanged &&
+  css`
+    background-color: var(--md-sys-color-primary);
+
+    &,
+    span,
+    .icon {
+      color: var(--md-sys-color-on-primary);
+    }
+
+    :hover {
+      background-color: var(--md-sys-color-primary-hover);
+    }
+  `}
+
   /* selecting styles */
   ${({ $isSelecting }) =>
     $isSelecting &&
@@ -147,6 +164,7 @@ const StatusField = ({
   invert,
   className,
   showChevron,
+  isChanged,
   ...props
 }) => {
   const {
@@ -169,6 +187,7 @@ const StatusField = ({
       $isChanging={isChanging}
       $size={size}
       $invert={invert}
+      $isChanged={isChanged}
       placeholder={!value && placeholder ? placeholder : ''}
       className={className + ' status-field'}
     >
