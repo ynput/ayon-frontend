@@ -96,11 +96,11 @@ const StatusSelect = ({
           <StatusField
             value={status.name}
             isSelecting
-            isActive={!isMixed && isActive}
+            isActive={isActive}
             align={align}
             height={height}
             statuses={statusesObject}
-            showChevron={isActive}
+            showChevron={isMixed ? false : isActive}
           />
         )
       }
