@@ -560,6 +560,12 @@ const EditorPanel = ({
                   color: isChanged ? 'var(--color-on-changed)' : 'initial',
                 }
 
+                const borderDynamicStyles = {
+                  border: isChanged
+                    ? '3px solid var(--md-sys-color-primary)'
+                    : '1px solid var(--md-sys-color-outline-variant)',
+                }
+
                 let disabledStyles = {}
                 if (disabled) {
                   disabledStyles = {
@@ -595,11 +601,7 @@ const EditorPanel = ({
                       multipleSelected={nodeIds.length}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       maxWidth={'100%'}
-                      style={{
-                        border: isChanged
-                          ? '3px solid var(--md-sys-color-primary)'
-                          : '1px solid var(--md-sys-color-outline-variant)',
-                      }}
+                      style={borderDynamicStyles}
                       isChanged={isChanged}
                       height={30}
                       placeholder={placeholder}
@@ -636,13 +638,9 @@ const EditorPanel = ({
                       multipleValues={!!multipleValues}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       align="right"
-                      buttonStyle={{
-                        border: isChanged
-                          ? '3px solid var(--md-sys-color-primary)'
-                          : '1px solid var(--md-sys-color-outline-variant) ',
-                      }}
+                      buttonStyle={borderDynamicStyles}
                       width={200}
-                      style={{color: 'blue'}}
+                      isChanged={isChanged}
                     />
                       )
                     
