@@ -9,6 +9,7 @@ const StyledDropdown = styled(Dropdown)`
   button {
     background-color: unset;
   }
+  display: flex;
 `
 
 const StatusSelect = ({
