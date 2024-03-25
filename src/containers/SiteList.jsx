@@ -7,8 +7,6 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 
 const SiteList = ({ value, onChange, style, multiselect = false }) => {
   const [preferredSite, setPreferredSite] = useLocalStorage('prefferedSite', null)
-  console.log('Preferred Site: ', preferredSite)
-
   const selection = useMemo(() => {
     if (multiselect)
       return ayonClient.settings.sites.filter((site) => (value || []).includes(site.id))

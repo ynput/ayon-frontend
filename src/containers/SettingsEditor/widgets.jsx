@@ -185,7 +185,7 @@ const SelectWidget = (props) => {
   }
 
   const hlstyle = {}
-  if (!equiv(value, props.value)) {
+  if (!equiv(value, props.multiple ? props.value || [] : props.value)) {
     hlstyle.outline = '1px solid yellow'
   } else if (originalValue && !equiv(props.value, originalValue)) {
     hlstyle.outline = '1px solid var(--color-changed)'
@@ -201,17 +201,17 @@ const SelectWidget = (props) => {
       widthExpand
       options={options}
       value={renderableValue}
-      onChange={props.multiple ? setValue : (e) => setValue(e[0])}
+      onSelectionChange={props.multiple ? setValue : (e) => setValue(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
       optionLabel="label"
-      optionValue="value"
       tooltipOptions={{ position: 'bottom' }}
       placeholder={props.schema?.placeholder}
-      disabled={props.schema?.disabled}
       className={`form-field`}
       multiSelect={props.multiple}
       style={hlstyle}
+      optionValue="value"
+      disabled={props.schema?.disabled}
     />
   )
 }
@@ -343,10 +343,11 @@ const TextWidget = (props) => {
       onChange(e.target.value)
     }
   } else if (props.schema.widget === 'hierarchy') {
+    //const projectName = props.formContext?.headerProjectName
     Input = InputText
     opts.value = value || ''
     opts.onBlur = onChangeCommit
-    opts.placeholder = `Hierarchy for ${props.formContext?.headerProjectName}`
+    opts.placeholder = `/path/to/folder`
     opts.onChange = (e) => {
       onChange(e.target.value)
     }

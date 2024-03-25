@@ -506,7 +506,7 @@ const ArrayItemTemplate = (props) => {
     r()
   }
 
-  const rmButton = props.hasRemove && (
+  const rmButton = props.hasRemove && !parentSchema.disabled && (
     <ArrayItemControls>
       <Button onClick={onRemoveItem} icon="close" disabled={undeletable} />
       <Button onClick={onMoveUp} icon="arrow_upward" />
@@ -540,7 +540,7 @@ const ArrayFieldTemplate = (props) => {
         <ArrayItemTemplate key={element.key} {...element} />
       ))}
 
-      {props.canAdd && (
+      {props.canAdd && !props.schema?.disabled && (
         <ArrayItemControls>
           <Button onClick={onAddItem} icon="add" />
         </ArrayItemControls>

@@ -84,6 +84,7 @@ const StatusSelect = ({
           statuses={statusesObject}
           invert={invert}
           className={'value'}
+          showChevron
         />
       )}
       dataKey={'name'}
@@ -97,6 +98,7 @@ const StatusSelect = ({
             align={align}
             height={height}
             statuses={statusesObject}
+            showChevron={isActive}
           />
         )
       }
