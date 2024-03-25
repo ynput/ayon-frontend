@@ -27,6 +27,7 @@ const StatusSelect = ({
   widthExpand,
   options,
   invert = false,
+  isChanged,
   ...props
 }) => {
   const statusesObject = options
@@ -85,6 +86,7 @@ const StatusSelect = ({
           invert={invert}
           className={'value'}
           showChevron
+          isChanged={isChanged}
         />
       )}
       dataKey={'name'}
