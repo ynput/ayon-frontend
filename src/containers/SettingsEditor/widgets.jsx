@@ -343,10 +343,11 @@ const TextWidget = (props) => {
       onChange(e.target.value)
     }
   } else if (props.schema.widget === 'hierarchy') {
+    //const projectName = props.formContext?.headerProjectName
     Input = InputText
     opts.value = value || ''
     opts.onBlur = onChangeCommit
-    opts.placeholder = `Hierarchy for ${props.formContext?.headerProjectName}`
+    opts.placeholder = `/path/to/folder`
     opts.onChange = (e) => {
       onChange(e.target.value)
     }
