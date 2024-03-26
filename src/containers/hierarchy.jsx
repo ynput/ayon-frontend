@@ -116,9 +116,11 @@ const Hierarchy = (props) => {
     for (const folder of data) {
       result[folder.id] = {
         parents: folder.parents,
+        parentId: folder.parentId,
         hasChildren: folder.hasChildren,
       }
     }
+    return result
   }, [data])
 
 
@@ -167,29 +169,44 @@ const Hierarchy = (props) => {
   // Selection
   //
 
-  // when selection changes programmatically, expand the parent folders
+  //when selection changes programmatically, expand the parent folders
   // runs every time the uri changes
-  // useEffect(() => {
-  //   if (!focusedFolders?.length) return
-  //
-  //   let toExpand = [...Object.keys(expandedFolders)]
-  //   for (const id of focusedFolders) {
-  //     toExpand = toExpand.concat(parents[id])
-  //   }
-  //   // de-duplicate toExpand and remove null/undefined
-  //   toExpand = [...new Set(toExpand)]
-  //   toExpand = toExpand.filter((x) => x)
-  //
-  //   // abort if there's no change
-  //   if (toExpand.length === Object.keys(expandedFolders).length) return
-  //
-  //   //create a map of the expanded folders
-  //   const newExpandedFolders = {}
-  //   for (const id of toExpand) {
-  //     newExpandedFolders[id] = true
-  //   }
-  //   dispatch(setExpandedFolders(newExpandedFolders))
-  // }, [uri])
+  useEffect(() => {
+    if (!focusedFolders?.length) return
+
+    console.log("URI CHANGED", uri)
+
+    let toExpand = [...Object.keys(expandedFolders)]
+    console.log(focusedFolders)
+    for (const id of focusedFolders) {
+      let f = keyHelper[id]
+      console.log("Should expand to", f)
+      // get all parents and add them to the list
+
+      while (f && f.parentId) {
+        toExpand.push(f.parentId)
+        f = keyHelper[f.parentId]
+      }
+
+
+    }
+
+    console.log("TO EXPAND", toExpand)
+    // de-duplicate toExpand and remove null/undefined
+    toExpand = toExpand.filter((x) => x)
+
+    // abort if there's no change
+    //if (toExpand.length === Object.keys(expandedFolders).length) return
+
+    console.log("EXPANDING", toExpand)
+
+    //create a map of the expanded folders
+    const newExpandedFolders = {}
+    for (const id of toExpand) {
+      newExpandedFolders[id] = true
+    }
+    dispatch(setExpandedFolders(newExpandedFolders))
+  }, [uri])
 
 
   // Transform the plain list of focused folder ids to a map
@@ -216,6 +233,11 @@ const Hierarchy = (props) => {
     dispatch(setFocusedTasks({ ids: [] }))
     dispatch(setFocusedFolders(selection))
 
+    /*
+     *
+     * I have no clue what this does, @Innders, please?
+     * It is broken now and causes some infinite loops
+
     // for each selected folder, if isLeaf then set expandedFolders
     const newExpandedFolders = {}
     selection.forEach((id) => {
@@ -237,6 +259,7 @@ const Hierarchy = (props) => {
 
     // update redux
     dispatch(setExpandedFolders(mergedExpandedFolders))
+    */
   }
 
   const onContextMenuSelectionChange = (event) => {
