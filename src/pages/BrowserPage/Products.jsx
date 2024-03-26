@@ -248,21 +248,22 @@ const Products = () => {
       {
         field: 'versionStatus',
         header: 'Version Status',
-        width: 150,
+        width: 180,
         style: { height: 'max-content' },
         body: (node) => {
           if (node.data.isGroup) return ''
           const statusMaxWidth = 120
+          const versionStatusWidth = columnsWidths['versionStatus'];
+          const resolveWidth = (statusWidth) => {
+            if (statusWidth < 60) return 'icon';
+            if (statusWidth < statusMaxWidth) return 'short'
+            return 'full';
+          }
+
           return (
             <StatusSelect
               value={node.data.versionStatus}
-              size={
-                columnsWidths['versionStatus'] < statusMaxWidth
-                  ? columnsWidths['versionStatus'] < 60
-                    ? 'icon'
-                    : 'short'
-                  : 'full'
-              }
+              size={resolveWidth(versionStatusWidth)}
               onChange={(v) => handleStatusChange(v, node.data.id)}
               multipleSelected={focusedProducts.length}
               onOpen={() => handleStatusOpen(node.data.id)}

@@ -30,7 +30,10 @@ const StatusStyled = styled.div`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding: 0 4px;
+  padding: 0 8px;
+  justify-content: space-between;
+  max-height: 160px;
+  width: 100%;
 
   /* ICON */
   .material-symbols-outlined {
@@ -43,6 +46,14 @@ const StatusStyled = styled.div`
   /* same height as a row */
   height: 27px;
   min-height: 27px;
+
+  .status-texticon {
+    display: flex;
+  }
+
+  .status-text {
+    margin-left: 8px;
+  }
 
   ${defaultStyle}
 
@@ -180,9 +191,11 @@ const StatusField = ({
       placeholder={!value && placeholder ? placeholder : ''}
       className={className + ' status-field'}
     >
-      {icon && <Icon icon={icon} />}
-      <span>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
-      {showChevron && <Icon icon="expand_more"  />}
+      <div className='status-texticon'>
+        {icon && <Icon icon={icon} />}
+        <span className='status-text'>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
+      </div>
+      {showChevron && <Icon icon="expand_more" />}
     </StatusStyled>
   )
 }
