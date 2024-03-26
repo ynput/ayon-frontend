@@ -19,69 +19,26 @@ import {
 import { useGetProjectFoldersQuery } from '/src/services/getHierarchy'
 import useCreateContext from '../hooks/useCreateContext'
 
-const filterHierarchy = (text, folder, folders) => {
-  // This is no longer used
-  // It is here for the reference how the filtering was implemented.
-  let result = []
-  if (!folder) return []
-  for (const item of folder) {
-    if (item.name && (!text || item.name.toLowerCase().includes(text.toLowerCase()))) {
-      const newChildren = filterHierarchy(false, item.children, folders)
-      result.push({
-        key: item.id,
-        children: newChildren,
-        data: {
-          name: item.name,
-          label: item.label,
-          status: item.status,
-          folderType: item.folderType,
-          // hasProducts: item.hasProducts,
-          hasTasks: item.hasTasks,
-          parents: item.parents,
-          body: (
-            <CellWithIcon
-              icon={folders[item.folderType]?.icon}
-              text={item.label}
-              name={item.name}
-            />
-          ),
-        },
-      })
-    } else if (item.children) {
-      const newChildren = filterHierarchy(text, item.children, folders)
-      if (newChildren.length > 0) {
-        result.push({
-          key: item.id,
-          children: newChildren,
-          data: {
-            name: item.name,
-            label: item.label,
-            status: item.status,
-            folderType: item.folderType,
-            // hasProducts: item.hasProducts,
-            hasTasks: item.hasTasks,
-            parents: item.parents,
-            body: (
-              <CellWithIcon
-                icon={folders[item.folderType]?.icon}
-                text={item.label}
-                name={item.name}
-              />
-            ),
-          },
-        })
-      }
-    }
-  }
-  return result
+
+const itemMatchesQuery = (item, q) => {
+  if (!q) return true
+  if (item.name.toLowerCase().includes(q.toLowerCase())) return true
+  if (item?.label?.toLowerCase().includes(q.toLowerCase())) return true
+  return false
 }
 
+const isArrayInSets = (array, sets) => {
+  return sets.some(set => JSON.stringify(set) === JSON.stringify(array));
+};
 
-
-const buildTree = (parents, parent, folders) => {
+const buildTree = (parents, parent, folders, visiblePaths) => {
   const items = []
   for (const child of (parents[parent] || [])) {
     if (!child) continue
+
+    if (visiblePaths && !isArrayInSets([...child.parents, child.name], visiblePaths)) {
+      continue
+    }
 
     const nchild = {
       key: child.id,
@@ -103,7 +60,7 @@ const buildTree = (parents, parent, folders) => {
      
     }
     if (child.id in parents) {
-      nchild.children = buildTree(parents, child.id, folders)
+      nchild.children = buildTree(parents, child.id, folders, visiblePaths)
     }
     items.push(nchild)
   }
@@ -147,22 +104,9 @@ const Hierarchy = (props) => {
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
   const { isError, error, data, isFetching } = useGetProjectFoldersQuery(
-    { projectName },
+    { projectName, withAttrib: true },
     { skip: !projectName },
   )
-
-  // Transform the flat data into a tree structure
-  const treeData = useMemo(() => {
-    if (!data) return []
-    const parents = {}
-    for (const folder of data) {
-      const parentId = folder.parentId
-      if (!parents[parentId]) parents[parentId] = []
-      parents[parentId].push(folder)
-    }
-    return buildTree(parents, null, folders)
-  }, [data, query])
-
 
   // Simple memo to get necessary folder data by folderId
   const keyHelper = useMemo(() => {
@@ -176,6 +120,45 @@ const Hierarchy = (props) => {
       }
     }
   }, [data])
+
+
+  // Based on the current filter query, find the visible paths
+  // (including parents). If the query is less than 2 characters,
+  // return null (which means all paths are visible)
+  const visiblePaths = useMemo(() => {
+    const result = []
+    if (query.length < 2) return null
+    for (const folder of data) {
+      if (itemMatchesQuery(folder, query)) {
+        result.push([...folder.parents, folder.name])
+        for (let i = 0; i < folder.parents.length; i++) {
+          const parent = folder.parents.slice(0, i + 1)
+          if (!isArrayInSets(parent, result)) {
+            result.push(parent)
+          }
+        }
+      }
+    }
+    return result
+  }, [query, data])
+
+
+  // Transform the flat data into a tree structure
+  // based on the parent-child relationship.
+  // buildTree recursive function also passes down the visiblePaths
+  // to the children, so they can be filtered out if necessary
+  // and "folders" object, which contains the folder types and their icons
+  const treeData = useMemo(() => {
+    if (!data) return []
+    const parents = {}
+    for (const folder of data) {
+      const parentId = folder.parentId
+      if (!parents[parentId]) parents[parentId] = []
+      parents[parentId].push(folder)
+    }
+    return buildTree(parents, null, folders, visiblePaths)
+  }, [data, visiblePaths])
+
 
 
 
