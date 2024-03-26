@@ -31,7 +31,7 @@ const isArrayInSets = (array, sets) => {
   return sets.some(set => JSON.stringify(set) === JSON.stringify(array));
 };
 
-const buildTree = (parents, parent, folders, visiblePaths) => {
+const buildTree = (parents, parent, folderTypes, visiblePaths) => {
   const items = []
   for (const child of (parents[parent] || [])) {
     if (!child) continue
@@ -51,7 +51,7 @@ const buildTree = (parents, parent, folders, visiblePaths) => {
         parents: child.parents,
         body: (
           <CellWithIcon
-            icon={folders[child.folderType]?.icon}
+            icon={folderTypes[child.folderType]?.icon}
             text={child.label}
             name={child.name}
           />
@@ -60,7 +60,7 @@ const buildTree = (parents, parent, folders, visiblePaths) => {
      
     }
     if (child.id in parents) {
-      nchild.children = buildTree(parents, child.id, folders, visiblePaths)
+      nchild.children = buildTree(parents, child.id, folderTypes, visiblePaths)
     }
     items.push(nchild)
   }
@@ -74,7 +74,7 @@ const buildTree = (parents, parent, folders, visiblePaths) => {
 const Hierarchy = (props) => {
   const projectName = useSelector((state) => state.project.name)
   const foldersOrder = useSelector((state) => state.project.foldersOrder || [])
-  const folders = useSelector((state) => state.project.folders || {})
+  const folderTypes = useSelector((state) => state.project.folders || {})
   const folderTypeList = foldersOrder.map((f) => ({ label: f, value: f }))
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
@@ -147,7 +147,7 @@ const Hierarchy = (props) => {
   // based on the parent-child relationship.
   // buildTree recursive function also passes down the visiblePaths
   // to the children, so they can be filtered out if necessary
-  // and "folders" object, which contains the folder types and their icons
+  // and "folderTypes" object, to display the correct icon
   const treeData = useMemo(() => {
     if (!data) return []
     const parents = {}
@@ -156,7 +156,7 @@ const Hierarchy = (props) => {
       if (!parents[parentId]) parents[parentId] = []
       parents[parentId].push(folder)
     }
-    return buildTree(parents, null, folders, visiblePaths)
+    return buildTree(parents, null, folderTypes, visiblePaths)
   }, [data, visiblePaths])
 
 
