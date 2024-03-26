@@ -10,7 +10,15 @@ const getHierarchy = ayonApi.injectEndpoints({
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
       providesTags: ['hierarchy'],
     }),
+    getProjectFolders: build.query({
+      query: ({ projectName, withAttrib }) => ({
+        url: `/api/projects/${projectName}/folders${withAttrib ? '?attrib=true' : ''}`,
+      }),
+      transformResponse: (response) => response.folders,
+      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+      providesTags: ['hierarchy'],
+    }),
   }),
 })
 
-export const { useGetHierarchyQuery } = getHierarchy
+export const { useGetHierarchyQuery, useGetProjectFoldersQuery } = getHierarchy
