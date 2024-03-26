@@ -19,7 +19,6 @@ import {
 import { useGetProjectFoldersQuery } from '/src/services/getHierarchy'
 import useCreateContext from '../hooks/useCreateContext'
 
-
 const itemMatchesQuery = (item, q) => {
   if (!q) return true
   if (item.name.toLowerCase().includes(q.toLowerCase())) return true
@@ -28,12 +27,12 @@ const itemMatchesQuery = (item, q) => {
 }
 
 const isArrayInSets = (array, sets) => {
-  return sets.some(set => JSON.stringify(set) === JSON.stringify(array));
-};
+  return sets.some((set) => JSON.stringify(set) === JSON.stringify(array))
+}
 
 const buildTree = (parents, parent, folderTypes, visiblePaths) => {
   const items = []
-  for (const child of (parents[parent] || [])) {
+  for (const child of parents[parent] || []) {
     if (!child) continue
 
     if (visiblePaths && !isArrayInSets([...child.parents, child.name], visiblePaths)) {
@@ -56,8 +55,7 @@ const buildTree = (parents, parent, folderTypes, visiblePaths) => {
             name={child.name}
           />
         ),
-      }
-     
+      },
     }
     if (child.id in parents) {
       nchild.children = buildTree(parents, child.id, folderTypes, visiblePaths)
@@ -67,9 +65,6 @@ const buildTree = (parents, parent, folderTypes, visiblePaths) => {
   // return items sorted by item.data.name
   return items.sort((a, b) => a.data.name.localeCompare(b.data.name))
 }
-
-
-
 
 const Hierarchy = (props) => {
   const projectName = useSelector((state) => state.project.name)
@@ -123,7 +118,6 @@ const Hierarchy = (props) => {
     return result
   }, [data])
 
-
   // Based on the current filter query, find the visible paths
   // (including parents). If the query is less than 2 characters,
   // return null (which means all paths are visible)
@@ -144,7 +138,6 @@ const Hierarchy = (props) => {
     return result
   }, [query, data])
 
-
   // Transform the flat data into a tree structure
   // based on the parent-child relationship.
   // buildTree recursive function also passes down the visiblePaths
@@ -161,45 +154,25 @@ const Hierarchy = (props) => {
     return buildTree(parents, null, folderTypes, visiblePaths)
   }, [data, visiblePaths])
 
-
-
-
-
   //
   // Selection
   //
 
-  //when selection changes programmatically, expand the parent folders
+  // when selection changes programmatically, expand the parent folders
   // runs every time the uri changes
   useEffect(() => {
     if (!focusedFolders?.length) return
-
-    console.log("URI CHANGED", uri)
-
     let toExpand = [...Object.keys(expandedFolders)]
     console.log(focusedFolders)
     for (const id of focusedFolders) {
       let f = keyHelper[id]
-      console.log("Should expand to", f)
-      // get all parents and add them to the list
-
       while (f && f.parentId) {
         toExpand.push(f.parentId)
         f = keyHelper[f.parentId]
       }
-
-
     }
 
-    console.log("TO EXPAND", toExpand)
-    // de-duplicate toExpand and remove null/undefined
     toExpand = toExpand.filter((x) => x)
-
-    // abort if there's no change
-    //if (toExpand.length === Object.keys(expandedFolders).length) return
-
-    console.log("EXPANDING", toExpand)
-
     //create a map of the expanded folders
     const newExpandedFolders = {}
     for (const id of toExpand) {
@@ -207,7 +180,6 @@ const Hierarchy = (props) => {
     }
     dispatch(setExpandedFolders(newExpandedFolders))
   }, [uri])
-
 
   // Transform the plain list of focused folder ids to a map
   // {id: true}, which is needed for the Treetable
@@ -217,7 +189,6 @@ const Hierarchy = (props) => {
     for (const tid of focusedFolders) r[tid] = true
     return r
   }, [focusedFolders, isFetching])
-
 
   // Set breadcrumbs on row click (the latest selected folder,
   // will be the one that is displayed in the breadcrumbs)
@@ -314,7 +285,6 @@ const Hierarchy = (props) => {
   // create the ref and model
   const [ctxMenuShow] = useCreateContext(contextItems)
 
-
   // create 10 dummy rows, that will be displayed while loading
   const loadingData = useMemo(() => {
     return Array.from({ length: 15 }, (_, i) => ({
@@ -322,7 +292,6 @@ const Hierarchy = (props) => {
       data: {},
     }))
   }, [])
-
 
   //
   // Render
