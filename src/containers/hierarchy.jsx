@@ -35,32 +35,31 @@ const buildTree = (parents, parent, folderTypes, visiblePaths) => {
   for (const child of parents[parent] || []) {
     if (!child) continue
 
-    if (visiblePaths && !isArrayInSets([...child.parents, child.name], visiblePaths)) {
-      continue
+    if (!visiblePaths || visiblePaths.includes(JSON.stringify([...child.parents, child.name]))) {
+      //!isArrayInSets([...child.parents, child.name], visiblePaths)) {
+      const nchild = {
+        key: child.id,
+        data: {
+          name: child.name,
+          label: child.label || child.name,
+          status: child.status,
+          folderType: child.folderType,
+          hasTasks: child.hasTasks,
+          parents: child.parents,
+          body: (
+            <CellWithIcon
+              icon={folderTypes[child.folderType]?.icon}
+              text={child.label}
+              name={child.name}
+            />
+          ),
+        },
+      }
+      if (child.id in parents) {
+        nchild.children = buildTree(parents, child.id, folderTypes, visiblePaths)
+      }
+      items.push(nchild)
     }
-
-    const nchild = {
-      key: child.id,
-      data: {
-        name: child.name,
-        label: child.label || child.name,
-        status: child.status,
-        folderType: child.folderType,
-        hasTasks: child.hasTasks,
-        parents: child.parents,
-        body: (
-          <CellWithIcon
-            icon={folderTypes[child.folderType]?.icon}
-            text={child.label}
-            name={child.name}
-          />
-        ),
-      },
-    }
-    if (child.id in parents) {
-      nchild.children = buildTree(parents, child.id, folderTypes, visiblePaths)
-    }
-    items.push(nchild)
   }
   // return items sorted by item.data.name
   return items.sort((a, b) => a.data.name.localeCompare(b.data.name))
@@ -127,17 +126,16 @@ const Hierarchy = (props) => {
     const result = []
     if (query.length < 2) return null
     for (const folder of data) {
-      if (result.length > 300) {
+      if (result.length > 800) {
         console.log('Aborting search, too many results')
         return null
       }
       if (itemMatchesQuery(folder, query)) {
-        result.push([...folder.parents, folder.name])
+        result.push(JSON.stringify([...folder.parents, folder.name]))
         for (let i = 0; i < folder.parents.length; i++) {
-          const parent = folder.parents.slice(0, i + 1)
-          if (!isArrayInSets(parent, result)) {
-            result.push(parent)
-          }
+          const parent = JSON.stringify(folder.parents.slice(0, i + 1))
+          if (result.includes(parent)) continue
+          result.push(parent)
         }
       }
     }
