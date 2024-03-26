@@ -121,10 +121,16 @@ const Hierarchy = (props) => {
   // Based on the current filter query, find the visible paths
   // (including parents). If the query is less than 2 characters,
   // return null (which means all paths are visible)
+  // When there are more than 300 visible paths, return null - to
+  // prevent performance issues. User should refine their query.
   const visiblePaths = useMemo(() => {
     const result = []
     if (query.length < 2) return null
     for (const folder of data) {
+      if (result.length > 300) {
+        console.log('Aborting search, too many results')
+        return null
+      }
       if (itemMatchesQuery(folder, query)) {
         result.push([...folder.parents, folder.name])
         for (let i = 0; i < folder.parents.length; i++) {
