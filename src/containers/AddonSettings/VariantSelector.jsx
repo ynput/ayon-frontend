@@ -46,6 +46,7 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
     if (!bundleOptions.length) return ''
     if (!value.length) return ''
     const selectedBundle = bundleOptions.find((b) => b.value === value[0])
+    if (!selectedBundle) return ''
     return (
       <BundleDropdownItem>
         {selectedBundle.label || selectedBundle.name}
