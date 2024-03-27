@@ -35,8 +35,8 @@ const StatusStyled = styled.div`
   max-height: 160px;
   width: 100%;
 
-  /* ICON */
-  .material-symbols-outlined {
+  /* STATUS ICON */
+  .status-icon {
     font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
     /* always taks parents color */
     color: inherit;
@@ -123,6 +123,7 @@ const StatusStyled = styled.div`
       }
       [icon="expand_more"] {
         transform: rotate(180deg);
+        ${invertHoverStyle}
       }
     `}
 
@@ -192,7 +193,7 @@ const StatusField = ({
       className={className + ' status-field'}
     >
       <div className='status-texticon'>
-        {icon && <Icon icon={icon} />}
+        {icon && <Icon className='status-icon' icon={icon} />}
         <span className='status-text'>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
       </div>
       {showChevron && <Icon icon="expand_more" />}

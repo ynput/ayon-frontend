@@ -255,9 +255,9 @@ const Products = () => {
           const statusMaxWidth = 120
           const versionStatusWidth = columnsWidths['versionStatus'];
           const resolveWidth = (statusWidth) => {
-            if (statusWidth < 60) return 'icon';
+            if (statusWidth < 60) return 'icon'
             if (statusWidth < statusMaxWidth) return 'short'
-            return 'full';
+            return 'full'
           }
 
           return (
