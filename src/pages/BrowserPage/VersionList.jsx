@@ -2,7 +2,7 @@ import { useRef, useMemo, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu } from 'primereact/menu'
 
-const VersionList = (row, onSelectVersion) => {
+const VersionList = (row, onSelectVersion, selectedVersions) => {
   const menu = useRef(null)
   const [currentVersion, setCurrentVersion] = useState(null)
 
@@ -13,7 +13,7 @@ const VersionList = (row, onSelectVersion) => {
       return {
         id: version.id,
         label: version.name,
-        command: () => onSelectVersion(row.id, version.id, version.name),
+        command: () => onSelectVersion(row.id, version.id, version.name, selectedVersions),
       }
     })
 
@@ -26,7 +26,7 @@ const VersionList = (row, onSelectVersion) => {
 
     return versions
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [row.versionList, row.versionId, row.id, menu])
+  }, [row.versionList, row.versionId, row.id, menu, selectedVersions])
 
   return (
     <>

@@ -21,7 +21,7 @@ import StatusSelect from '/src/components/status/statusSelect'
 
 import {
   useGetProductListQuery,
-  useLazyGetProductVersionQuery,
+  useLazyGetProductsVersionsQuery,
 } from '../../services/product/getProduct'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
@@ -81,23 +81,23 @@ const Products = () => {
   // keep track of which products are loading (mainly used for versions loading)
   const [loadingProducts, setLoadingProducts] = useState([])
 
-  const [getProductVersion] = useLazyGetProductVersionQuery()
-
-  // have the initial override versions been loaded?
-  const [isVersionsLoaded, setIsVersionsLoaded] = useState(false)
+  const [getProductsVersions] = useLazyGetProductsVersionsQuery()
 
   const handleVersionChange = async (productVersionPairs = [[]]) => {
     // productVersionPairs is an array of arrays
 
-    setLoadingProducts(productVersionPairs.map(([pId]) => pId))
+    const productIds = [],
+      versionIds = []
+    for (const [pId, vId] of productVersionPairs) {
+      productIds.push(pId)
+      versionIds.push(vId)
+    }
+
+    setLoadingProducts(productIds)
 
     let isSuccessful = false
     try {
-      const promises = productVersionPairs.map(([, versionId]) => {
-        return getProductVersion({ versionId, projectName }, true).unwrap()
-      })
-
-      const results = await Promise.all(promises)
+      const versions = await getProductsVersions({ versionIds, projectName }, true).unwrap()
 
       // update products cache with new version
       dispatch(
@@ -105,8 +105,10 @@ const Products = () => {
           'getProductList',
           { projectName, ids: focusedFolders },
           (draft) => {
+            console.log('patching versions:', versions)
             // loop through each result and update the corresponding product in the cache
-            results.forEach((result) => {
+            const foundVersions = []
+            versions.forEach((result) => {
               const { productId, id: versionId, name, status } = result
               const product = draft.find((p) => p.id === productId)
               if (product) {
@@ -114,6 +116,7 @@ const Products = () => {
                 product.versionName = name
                 product.versionId = versionId
                 product.versionStatus = status
+                foundVersions.push(versionId)
               }
             })
           },
@@ -133,12 +136,20 @@ const Products = () => {
 
   // if there are version overrides, fetch once productsList is loaded
   useEffect(() => {
-    if (!isSuccess || isVersionsLoaded) return
-    // prevent further calls
-    setIsVersionsLoaded(true)
+    if (!isSuccess) return
 
-    handleVersionChange(Object.entries(selectedVersions))
-  }, [isSuccess])
+    const productVersionPairs = Object.entries(selectedVersions)
+    // check that the product hasn't already got that product patched into it, and it also exists in the patch
+    const filteredProductVersionPairs = productVersionPairs.filter(
+      ([productId, versionId]) =>
+        productData.some((product) => product.id === productId) &&
+        !productData.some((product) => product.versionId === versionId),
+    )
+
+    if (filteredProductVersionPairs.length === 0) return
+
+    handleVersionChange(filteredProductVersionPairs)
+  }, [selectedVersions, productData, isSuccess])
 
   // PUBSUB HOOK
   usePubSub(
@@ -253,7 +264,7 @@ const Products = () => {
         body: (node) => {
           if (node.data.isGroup) return ''
           const statusMaxWidth = 120
-          const versionStatusWidth = columnsWidths['versionStatus'];
+          const versionStatusWidth = columnsWidths['versionStatus']
           const resolveWidth = (statusWidth) => {
             if (statusWidth < 60) return 'icon'
             if (statusWidth < statusMaxWidth) return 'short'
@@ -292,31 +303,32 @@ const Products = () => {
         header: 'Version',
         width: 70,
         body: (node) =>
-          VersionList({ ...node.data }, async (productId, versionId, versionName) => {
-            // load data here and patch into cache
-            const res = await handleVersionChange([[productId, versionId]])
-            if (res) {
-              // copy current selection
-              let newSelection = { ...selectedVersions[node.data.folderId] }
-              // update selection
-              newSelection[productId] = versionId
-              // update selected versions
-              dispatch(
-                setSelectedVersions({
-                  ...selectedVersions,
-                  [node.data.folderId]: newSelection,
-                }),
-              )
-              // set selected product
-              dispatch(productSelected({ products: [productId], versions: [versionId] }))
-              // update breadcrumbs
-              let uri = `ayon+entity://${projectName}/`
-              uri += `${node.data.parents.join('/')}/${node.data.folder}`
-              uri += `?product=${node.data.name}`
-              uri += `&version=${versionName}`
-              dispatch(setUri(uri))
-            }
-          }), // end VersionList
+          VersionList(
+            { ...node.data },
+            async (productId, versionId, versionName, currentSelected) => {
+              console.log('currentSelected:', currentSelected)
+              // load data here and patch into cache
+              const res = await handleVersionChange([[productId, versionId]])
+              if (res) {
+                // copy current selection
+                let newSelection = { ...currentSelected }
+                // update selection
+                newSelection[productId] = versionId
+                // update selected versions
+
+                dispatch(setSelectedVersions(newSelection))
+                // set selected product
+                dispatch(productSelected({ products: [productId], versions: [versionId] }))
+                // update breadcrumbs
+                let uri = `ayon+entity://${projectName}/`
+                uri += `${node.data.parents.join('/')}/${node.data.folder}`
+                uri += `?product=${node.data.name}`
+                uri += `&version=${versionName}`
+                dispatch(setUri(uri))
+              }
+            },
+            selectedVersions,
+          ), // end VersionList
       },
       {
         field: 'createdAt',

@@ -15,12 +15,13 @@ const initialState = {
     editor: [],
     lastFocused: null,
   },
-  selectedVersions: {},
+  selectedVersions: getInitialStateLocalStorage('context/selectedVersions', {}),
+  // selectedVersions: {},
   pairing: [],
   reload: {},
   breadcrumbs: { scope: '' },
   share: { name: null, data: null, link: null, img: null },
-  uri: getInitialStateLocalStorage('uri', null),
+  uri: getInitialStateLocalStorage('context/uri', null),
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
@@ -227,5 +228,7 @@ export default contextSlice.reducer
 
 // topics that need to set localStorage. If there is no explicit value, it will be the payload value
 export const contextLocalItems = {
-  'context/setUri': [{ key: 'uri' }],
+  'context/setUri': [{ key: 'context/uri' }], // when the URI updates
+  'context/setSelectedVersions': [{ key: 'context/selectedVersions' }], // when a version is selected
+  'context/selectProject': [{ key: 'context/selectedVersions', value: {} }], // when a product is selected
 }
