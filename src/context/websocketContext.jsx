@@ -82,7 +82,7 @@ export const SocketProvider = (props) => {
 
     return (message) => {
       // If the function is called more than 10 times per second, return early.
-      if (callCount > 10) {
+      if (callCount > 100) {
         setOverloaded(true)
         return console.log('WS OVERLOAD!!!!')
       }
