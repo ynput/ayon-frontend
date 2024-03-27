@@ -81,10 +81,13 @@ export const SocketProvider = (props) => {
     let lastCall = Date.now()
 
     return (message) => {
-      // If the function is called more than 10 times per second, return early.
-      if (callCount > 100) {
+      // If the function is called more than 100 times per second, return early.
+      const threshold = 100
+      if (callCount > threshold) {
         setOverloaded(true)
-        return console.log('WS OVERLOAD!!!!')
+        return console.log(
+          `Overload: Over ${threshold} messages per second. Ignoring subsequent messages.`,
+        )
       }
 
       const data = JSON.parse(message.data)
