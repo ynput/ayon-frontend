@@ -609,6 +609,7 @@ const EditorPanel = ({
                       placeholder={placeholder}
                       disableMessage
                       widthExpand
+                      isChevron
                     />
                   )
                 } else if (field === 'assignees') {
