@@ -6,6 +6,7 @@ import arrayEquals from '../helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
 import { ayonApi } from '../services/ayon'
+import RefreshToast from '../components/RefreshToast'
 
 export const SocketContext = createContext()
 
@@ -54,20 +55,62 @@ export const SocketProvider = (props) => {
 
   PubSub.setOnSubscriptionsChange((newTopics) => updateTopicsDebounce(newTopics))
 
-  const onMessage = (message) => {
-    const data = JSON.parse(message.data)
-    if (data.topic === 'heartbeat') return
+  const [overloaded, setOverloaded] = useState(false)
+  const [toastShown, setToastShown] = useState(false)
 
-    if (data.topic === 'server.restart_requested') setServerRestartingVisible(true)
+  // when overloaded is true, activate toast
+  useEffect(() => {
+    if (overloaded)
+      if (!toastShown) {
+        toast.warning(<RefreshToast />, {
+          autoClose: false,
+          closeButton: false,
+        })
+        setToastShown(true)
+      }
 
-    if (data.sender === window.senderId) {
-      return // my own message. ignore
+    return () => {
+      setOverloaded(false)
     }
-    if (data.topic === 'shout' && data?.summary?.text) toast.info(data.summary.text)
+  }, [overloaded, setOverloaded])
 
-    console.log('Event RX', data)
-    PubSub.publish(data.topic, data)
-  }
+  // onMessage is a function that is called when a message comes in from the websocket
+  // it is a closure that keeps track of the number of calls and the last call time
+  let onMessage = (() => {
+    let callCount = 0
+    let lastCall = Date.now()
+
+    return (message) => {
+      // If the function is called more than 10 times per second, return early.
+      if (callCount > 10) {
+        setOverloaded(true)
+        return console.log('WS OVERLOAD!!!!')
+      }
+
+      const data = JSON.parse(message.data)
+      if (data.topic === 'heartbeat') return
+
+      if (data.topic === 'server.restart_requested') setServerRestartingVisible(true)
+
+      if (data.sender === window.senderId) {
+        return // my own message. ignore
+      }
+
+      const now = Date.now()
+      if (now - lastCall < 1000) {
+        callCount += 1
+      } else {
+        callCount = 0
+      }
+
+      lastCall = now
+
+      if (data.topic === 'shout' && data?.summary?.text) toast.info(data.summary.text)
+
+      console.log('Event RX', data)
+      PubSub.publish(data.topic, data)
+    }
+  })()
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
