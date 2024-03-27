@@ -107,13 +107,14 @@ const Products = () => {
           (draft) => {
             // loop through each result and update the corresponding product in the cache
             results.forEach((result) => {
-              const { productId, id: versionId, name, status } = result
+              const { productId, id: versionId, name, status, author } = result
               const product = draft.find((p) => p.id === productId)
               if (product) {
                 product.version = result
                 product.versionName = name
                 product.versionId = versionId
                 product.versionStatus = status
+                product.versionAuthor = author
               }
             })
           },
@@ -253,11 +254,11 @@ const Products = () => {
         body: (node) => {
           if (node.data.isGroup) return ''
           const statusMaxWidth = 120
-          const versionStatusWidth = columnsWidths['versionStatus'];
+          const versionStatusWidth = columnsWidths['versionStatus']
           const resolveWidth = (statusWidth) => {
-            if (statusWidth < 60) return 'icon';
+            if (statusWidth < 60) return 'icon'
             if (statusWidth < statusMaxWidth) return 'short'
-            return 'full';
+            return 'full'
           }
 
           return (
@@ -325,7 +326,7 @@ const Products = () => {
         body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
       },
       {
-        field: 'author',
+        field: 'versionAuthor',
         header: 'Author',
         width: 120,
       },
