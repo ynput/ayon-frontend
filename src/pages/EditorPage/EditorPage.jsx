@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { v1 as uuid1 } from 'uuid'
@@ -48,9 +48,10 @@ import { ayonApi } from '/src/services/ayon'
 import { confirmDialog } from 'primereact/confirmdialog'
 import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
-import useShortcuts from '/src/hooks/useShortcuts'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import confirmDelete from '/src/helpers/confirmDelete'
+import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
+import EditorPageShortcuts from './EditorPageShortcuts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -74,10 +75,19 @@ const EditorPage = () => {
 
   // get attrib fields
   let { data: attribsData = [] } = useGetAttributesQuery()
+
+  // get project attribs values (for root inherited attribs)
+  const { data: projectAnatomyData } = useGetProjectAnatomyQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+
   //   filter out scopes
   const attribFields = attribsData.filter((a) =>
     a.scope.some((s) => ['folder', 'task'].includes(s)),
   )
+
+  const pageFocusRef = useRef(null)
 
   // SEARCH STATES
   // object with folderIds, task parentsIds and taskNames
@@ -164,46 +174,92 @@ const EditorPage = () => {
     loadNewBranches(branches, isNewProject)
   }, [projectName])
 
-  // get and update children attrib that use it's parents attribs
+  // Function to get and update children attributes that use their parent's attributes
   const getChildAttribUpdates = (updates) => {
+    // Array to store the updated children
     const childrenUpdated = []
-    // create object of updated/new branches
+
+    // Loop through each update
     for (const update of updates) {
+      // Get the ID of the entity being updated
       const updateId = update.entityId || update.data.id
 
-      // find all children of patch
+      // Create a lookup table to store the children of each parent
+      const childrenLookup = {}
+
+      // Loop through each entity in the root data
       for (const id in rootData) {
-        const childData = rootData[id].data
+        // Get the parent ID of the current entity
+        const parentId = rootData[id].data.__parentId
 
-        if (childData?.__parentId === updateId) {
-          const newAttrib = {}
-          const currentAttrib = childData?.attrib || {}
-
-          // is childData, check ownAttribs for updates
-          for (const key in update?.patch?.data?.attrib) {
-            if (!inheritableAttribs.includes(key)) continue
-            if (
-              !childData?.ownAttrib?.includes(key) &&
-              currentAttrib[key] !== update?.patch?.data?.attrib[key]
-            ) {
-              newAttrib[key] = update?.patch?.data?.attrib[key]
-            }
+        // If the entity has a parent
+        if (parentId) {
+          // If the parent doesn't exist in the lookup table, add it
+          if (!childrenLookup[parentId]) {
+            childrenLookup[parentId] = []
           }
 
-          if (!isEmpty(newAttrib)) {
-            // add new child to updates
-            childrenUpdated.push({
-              ...rootData[id],
-              data: {
-                ...childData,
-                attrib: { ...currentAttrib, ...newAttrib },
-              },
-            })
+          // Add the current entity to the parent's list of children in the lookup table
+          childrenLookup[parentId].push(id)
+        }
+      }
+
+      // Function to update the attributes of the children
+      const updateChildren = (updateId) => {
+        // Get the children of the entity being updated from the lookup table
+        const children = childrenLookup[updateId]
+
+        // If the entity has children
+        if (children) {
+          // Loop through each child
+          for (const id of children) {
+            // Get the data of the current child
+            const childData = rootData[id].data
+
+            // Object to store the new attributes
+            const newAttrib = {}
+
+            // Get the current attributes of the child
+            const currentAttrib = childData?.attrib || {}
+
+            // Loop through each attribute in the update
+            for (const key in update?.patch?.data?.attrib) {
+              // If the attribute is not inheritable, skip it
+              if (!inheritableAttribs.includes(key)) continue
+
+              // If the child doesn't have its own value for the attribute and the attribute has changed
+              if (
+                !childData?.ownAttrib?.includes(key) &&
+                currentAttrib[key] !== update?.patch?.data?.attrib[key]
+              ) {
+                // Add the new attribute value to the new attributes object
+                newAttrib[key] = update?.patch?.data?.attrib[key]
+              }
+            }
+
+            // If there are new attributes
+            if (!isEmpty(newAttrib)) {
+              // Add the updated child to the list of updated children
+              childrenUpdated.push({
+                ...rootData[id],
+                data: {
+                  ...childData,
+                  attrib: { ...currentAttrib, ...newAttrib },
+                },
+              })
+            }
+
+            // Recursively update the attributes of the child's children
+            updateChildren(id)
           }
         }
       }
+
+      // Update the attributes of the entity's children
+      updateChildren(updateId)
     }
 
+    // Return the list of updated children
     return childrenUpdated
   }
 
@@ -697,8 +753,6 @@ const EditorPage = () => {
   const [commitUpdating, setCommitUpdating] = useState(false)
 
   const handleCommit = async (overrideChanges) => {
-    console.time('commit')
-
     const updates = []
     const parentPatches = []
     const commitChanges = overrideChanges || changes
@@ -753,7 +807,12 @@ const EditorPage = () => {
               if (index > -1) ownAttrib.splice(index, 1)
               // inherit from parent and add to patchAttrib
               if (parent?.data?.attrib[key]) patchAttrib[key] = parent.data.attrib[key]
-              else patchAttrib[key] = null
+              else {
+                // no parent? it must be root. We need to inherit from project
+                const attribs = projectAnatomyData?.attributes
+                const attrib = attribs[key]
+                patchAttrib[key] = attrib || null
+              }
             } else {
               attribChanges[key] = change
               // add to ownAttrib if not already there
@@ -1008,6 +1067,11 @@ const EditorPage = () => {
 
   const handleCloseNew = () => {
     setNewEntity('')
+
+    const currentFocusEl = pageFocusRef.current
+    if (currentFocusEl) {
+      currentFocusEl.focus()
+    }
   }
 
   const addNodes = (entityType, root, nodesData = [], sequence) => {
@@ -1259,49 +1323,129 @@ const EditorPage = () => {
   // Table event handlers
   //
 
-  const onToggle = async (event) => {
-    const isMetaKey = event.originalEvent.metaKey || event.originalEvent.ctrlKey
-    const newExpanded = { ...event.value }
-    const removedIds = Object.keys(expandedFolders).filter((id) => !(id in newExpanded))
+  const handleToggleFolder = useCallback(
+    async (e, dc, meta) => {
+      // for double click, check target isn't the expand button
 
-    let newIds = Object.keys(newExpanded)
-    // filter out ids that are already in the expandedFolders object
-    newIds = newIds.filter((id) => !(id in expandedFolders))
+      // double click is different to handleToggleFolder. handleToggleFolder required originalEvent
+      const event = e.originalEvent || e
+      const target = event?.target
 
-    if (newIds.length && isMetaKey) {
-      // find if any of the newIds are in selected folders
-      const selected = Object.keys(currentSelection).filter((id) => newIds.includes(id))
-      if (selected.length) {
-        // we open all selected folders
-        newIds = Object.keys(currentSelection)
-        // expand all currentSelection folders
-        for (const id of newIds) {
-          if (rootData[id]?.data.__entityType === 'folder') {
-            newExpanded[id] = true
+      if (dc && target?.closest('p-treetable-toggler')) return
+
+      const isMeta = event.metaKey || event.ctrlKey || meta
+
+      let id
+      // id of the folder that was toggled
+      const classList = target?.closest('tr')?.classList
+      if (classList) {
+        id = Array.from(classList)
+          .filter((c) => c.startsWith('id-'))[0]
+          .split('-')[1]
+      }
+
+      if (!id) return
+
+      const newExpanded = { ...expandedFolders }
+      const getNewBranches = []
+      // is the folder toggled in the selection
+      const isToggledFolderInMultipleSel =
+        !!currentSelection[id] && Object.keys(currentSelection).length > 1
+
+      // check if the folder is already expanded
+      const isExpanded = !!expandedFolders[id]
+
+      // 2. collapse all children
+
+      if (isExpanded) {
+        // keep track of closing parents
+        // so we can close any children of the closing parent (if meta)
+        const closingParents = []
+        if (isMeta && isToggledFolderInMultipleSel) {
+          // remove all selected
+          const newSelection = { ...currentSelection }
+          for (const key in newSelection) {
+            if (rootData[key]?.data.__entityType === 'folder') {
+              closingParents.push(key)
+              delete newExpanded[key]
+            }
+          }
+        } else {
+          closingParents.push(id)
+          // remove from expandedFolders
+          delete newExpanded[id]
+        }
+
+        // close any children of the closing parents
+        if (isMeta) {
+          // for the remaining expanded folders, check if they are children of the closing parents
+          let queue = [...closingParents]
+          while (queue.length > 0) {
+            const id = queue.shift()
+            if (newExpanded[id]) {
+              delete newExpanded[id]
+            }
+            for (const childId in rootData) {
+              if (rootData[childId]?.data.__parentId === id) {
+                queue.push(childId)
+              }
+            }
+          }
+        }
+      } else {
+        if (isMeta && isToggledFolderInMultipleSel) {
+          // check if there are any other folders selected that are not already expanded (multiple expand)
+          const newSelection = { ...currentSelection }
+          const selectedFolders = Object.keys(newSelection).filter(
+            (k) => newSelection[k].data.__entityType === 'folder',
+          )
+
+          const newExpandedFolders = selectedFolders.filter((f) => !expandedFolders[f])
+
+          for (const folder of newExpandedFolders) {
+            newExpanded[folder] = true
+            // get new branch
+            getNewBranches.push(folder)
+          }
+        } else {
+          // add to expandedFolders
+          newExpanded[id] = true
+          // get new branch
+          getNewBranches.push(id)
+
+          if (isMeta) {
+            // expand all children to id and also id
+
+            // because we don't know the children folders until the parent is expanded
+            // we need to use hierarchy to get all the children of the parent
+            // searchable folders is a flat list of all folders and tasks
+
+            const hierarchyParent = searchableFolders.find((f) => f.id === id)
+
+            if (hierarchyParent) {
+              // loop over it's children and add to expandedFolders
+              const queue = [hierarchyParent]
+              while (queue.length > 0) {
+                const folder = queue.shift()
+                newExpanded[folder.id] = true
+                getNewBranches.push(folder.id)
+                if (folder.children?.length) {
+                  queue.push(...folder.children)
+                }
+              }
+            }
           }
         }
       }
-    }
 
-    if (removedIds.length && isMetaKey) {
-      // find if any of the newIds are in selected folders
-      const selected = Object.keys(currentSelection).filter((id) => removedIds.includes(id))
-      if (selected.length) {
-        // close all selected folders
-        for (const id in currentSelection) {
-          if (rootData[id]?.data.__entityType === 'folder') {
-            delete newExpanded[id]
-          }
-        }
-      }
-    }
+      // updated expanded folders context object
+      dispatch(setExpandedFolders(newExpanded))
 
-    // updated expanded folders context object
-    dispatch(setExpandedFolders(newExpanded))
-
-    // load new branches
-    loadNewBranches(newIds)
-  }
+      // load new branches
+      loadNewBranches(getNewBranches)
+    },
+    [currentSelection, expandedFolders, rootData, loadNewBranches, dispatch],
+  )
 
   const handleSelectionChange = (value) => {
     const selection = Object.keys(value)
@@ -1413,13 +1557,6 @@ const EditorPage = () => {
     localStorage.setItem('editor-columns-order', JSON.stringify(localStorageOrder))
   }
 
-  const handleDeselect = (e) => {
-    // target class is p-treetable-scrollable-body
-    if (e.target.classList.contains('p-treetable-scrollable-body')) {
-      handleSelectionChange({})
-    }
-  }
-
   // when a thumbnail is uploaded, refetch data for that entity
   const handleThumbnailUpload = (uploaded = {}) => {
     const { id, type } = uploaded
@@ -1434,6 +1571,70 @@ const EditorPage = () => {
       const parent = rootData[id]?.data?.folderId
       if (parent) {
         loadNewBranches([parent], true)
+      }
+    }
+  }
+
+  const tableRef = useRef(null)
+
+  // get all ids of the rows in the table, this is useful because the ids are in the same order as the rows
+  const tableRowsIds = useMemo(() => {
+    const rows = []
+    tableRef.current
+      ?.getElement()
+      .querySelectorAll('.p-treetable-tbody tr')
+      .forEach((tr) => {
+        const id = Array.from(tr.classList)
+          .find((c) => c.startsWith('id-'))
+          ?.split('-')[1]
+        if (id) {
+          rows.push(id)
+        }
+      })
+    return rows
+  }, [tableRef.current, treeData])
+
+  const handleKeyPress = (event) => {
+    if (event.target.tagName === 'TR') {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        const direction = event.key === 'ArrowDown' ? 1 : 0
+
+        const nextEl = direction
+          ? event.target.nextElementSibling
+          : event.target.previousElementSibling
+
+        if (!nextEl) return
+
+        const nextId = Array.from(nextEl.classList)
+          .filter((c) => c.startsWith('id-'))[0]
+          .split('-')[1]
+
+        const nextType = Array.from(nextEl.classList)
+          .filter((c) => c.startsWith('type-'))[0]
+          .split('-')[1]
+
+        if (nextId && nextType) {
+          let selection = [nextId]
+          if (event.shiftKey) {
+            //  get previous selection
+            const previousSelection = Object.keys(currentSelection)
+
+            // add the range to the selection
+            selection = [...new Set([...selection, ...previousSelection])]
+            // this will make selection in the correct order
+            selection = tableRowsIds.filter((id) => selection.includes(id))
+            const isInPrevious = previousSelection.includes(nextId)
+            if (isInPrevious) {
+              if (direction) {
+                selection.shift()
+              } else {
+                selection.pop()
+              }
+            }
+          }
+          // based on type update focused state
+          dispatch(editorSelectionChanged({ selection, [nextType + 's']: selection }))
+        }
       }
     }
   }
@@ -1561,29 +1762,18 @@ const EditorPage = () => {
     treeData = loadingTreeData
   }
 
-  const shortcuts = [
-    {
-      key: 'n',
-      action: () => setNewEntity('folder'),
-    },
-    {
-      key: 'm',
-      action: () => setNewEntity('sequence'),
-    },
-    {
-      key: 't',
-      action: () => setNewEntity('task'),
-      disabled: disableAddNew,
-    },
-  ]
-
-  useShortcuts(shortcuts, [disableAddNew])
-
   //
   // Render the TreeTable
 
   return (
     <main className="editor-page">
+      <EditorPageShortcuts
+        {...{
+          setNewEntity,
+          disableAddNew,
+          handleToggleFolder,
+        }}
+      />
       {newEntity &&
         (newEntity === 'sequence' ? (
           <NewSequence
@@ -1604,7 +1794,7 @@ const EditorPage = () => {
             taskNames={taskNamesMap}
           />
         ))}
-      <Section>
+      <Section onFocus={(e) => (pageFocusRef.current = e.target)}>
         <Toolbar>
           <Button
             icon="create_new_folder"
@@ -1675,17 +1865,19 @@ const EditorPage = () => {
                 resizableColumns
                 columnResizeMode="expand"
                 expandedKeys={expandedFolders}
-                onToggle={onToggle}
+                onToggle={handleToggleFolder}
+                onDoubleClick={(e) => handleToggleFolder(e, true)}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
-                onClick={handleDeselect}
                 onRowClick={onRowClick}
                 rowClassName={(rowData) => {
                   return {
                     changed: rowData.key in changes,
                     new: rowData.key in newNodes,
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
+                    ['id-' + rowData.key]: true,
+                    ['type-' + rowData.data.__entityType]: true,
                   }
                 }}
                 onContextMenu={onContextMenu}
@@ -1694,6 +1886,8 @@ const EditorPage = () => {
                 onColReorder={handleColumnReorder}
                 rows={20}
                 className={fullPageLoading ? 'table-loading' : undefined}
+                ref={tableRef}
+                onKeyDown={handleKeyPress}
               >
                 {allColumns}
               </TreeTable>

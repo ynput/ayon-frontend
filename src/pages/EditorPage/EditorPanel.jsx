@@ -11,6 +11,7 @@ import {
   AssigneeSelect,
   InputDate,
   InputSwitch,
+  TagsSelect
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -95,6 +96,8 @@ const EditorPanel = ({
   const changes = useSelector((state) => state.editor.changes)
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
+  const projectTagsOrder = useSelector((state) => state.project.tagsOrder)
+  const projectTagsObject = useSelector((state) => state.project.tags)
 
   // STATES
   // used to throttle changes to redux changes state and keep input fast
@@ -148,6 +151,7 @@ const EditorPanel = ({
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
     const labelValues = getFieldValue('label', '_label')
+    const tagValues = getFieldValue('tags', '_tags')
 
     const assigneesValues = getFieldValue('assignees', '_assignees', [])
 
@@ -183,7 +187,7 @@ const EditorPanel = ({
         changeKey: '_status',
         label: 'Status',
         field: 'status',
-        placeholder: `Mixed (${statusValues.isMultiple && statusValues.isMultiple.join(', ')})`,
+        placeholder: `Mixed (${statusValues.multipleValues && statusValues.multipleValues.join(', ')})`,
         ...statusValues,
       },
       _assignees: {
@@ -194,6 +198,12 @@ const EditorPanel = ({
         placeholder: `Folders Can Not Have Assignees...`,
         ...assigneesValues,
       },
+      _tags: {
+        changeKey: '_tags',
+        label: 'Tags',
+        field: 'tags',
+        ...tagValues,
+      },
     }
 
     const type = nodes[nodeIds[0]]?.data?.__entityType
@@ -203,20 +213,20 @@ const EditorPanel = ({
       // field = folderType or taskType
       const field = `${type}Type`
       const changeKey = '_' + field
-      const { isMultiple, isChanged, isOwn, value } = getFieldValue(field, changeKey)
+      const { multipleValues, isChanged, isOwn, value } = getFieldValue(field, changeKey)
 
       let placeholder = ''
       if (hasMixedTypes) {
         placeholder = 'Mixed Entity Types...'
-      } else if (isMultiple) {
-        placeholder = `Mixed (${isMultiple.join(', ')})`
+      } else if (multipleValues) {
+        placeholder = `Mixed (${multipleValues.join(', ')})`
       }
 
       initialForm[changeKey] = {
         changeKey,
         field,
         placeholder,
-        isMultiple,
+        multipleValues,
         isChanged,
         isOwn,
         value,
@@ -230,9 +240,9 @@ const EditorPanel = ({
       const { name, scope, data } = attrib
       const changeKey = name
       const field = 'attrib.' + name
-      const { isMultiple, isChanged, isOwn, value } = getFieldValue(field, changeKey)
+      const { multipleValues, isChanged, isOwn, value } = getFieldValue(field, changeKey)
       const disabled = !types.every((t) => scope.includes(t))
-      const placeholder = isMultiple && !disabled ? `Mixed (${isMultiple.join(', ')})` : ''
+      const placeholder = multipleValues && !disabled ? `Mixed (${multipleValues.join(', ')})` : ''
 
       // create object
       const newRow = {
@@ -240,7 +250,7 @@ const EditorPanel = ({
         field,
         disabled,
         placeholder,
-        isMultiple,
+        multipleValues,
         isChanged,
         isOwn,
         value,
@@ -279,7 +289,7 @@ const EditorPanel = ({
   // returns [value, isChanged, isOwn]
   const getFieldValue = (field, changeKey, type = '') => {
     let finalValue = '',
-      isMultiple = false,
+      multipleValues = false,
       isChanged = false,
       isOwn = false
     for (const id of nodeIds) {
@@ -318,7 +328,9 @@ const EditorPanel = ({
         isOwn = true
       }
 
-      if ((finalValue && finalValue !== nodeValue) || isMultiple) {
+      if ((finalValue && finalValue !== nodeValue) || multipleValues) {
+        // if value is undefined, skip
+        if (nodeValue === undefined) continue
         // if type arrays check dif
         if (Array.isArray(finalValue)) {
           // if not different skip
@@ -327,14 +339,14 @@ const EditorPanel = ({
             continue
           }
         }
-        // different values, this is a isMultiple filed
+        // different values, this is a multipleValues filed
         // assign array of those values
-        if (!isMultiple) {
+        if (!multipleValues) {
           // first time there has been a dif value
-          isMultiple = [finalValue, nodeValue]
-        } else if (!isMultiple?.includes(nodeValue)) {
+          multipleValues = [finalValue, nodeValue]
+        } else if (!multipleValues?.includes(nodeValue)) {
           // add any more new diff values
-          isMultiple?.push(nodeValue)
+          multipleValues?.push(nodeValue)
         }
       } else {
         // final value
@@ -342,12 +354,12 @@ const EditorPanel = ({
       }
     }
 
-    if (isMultiple) {
+    if (multipleValues) {
       // values are different
       finalValue = type
     }
 
-    return { value: finalValue, isChanged, isOwn, isMultiple }
+    return { value: finalValue, isChanged, isOwn, multipleValues }
   }
 
   // update the local form on changes
@@ -370,7 +382,7 @@ const EditorPanel = ({
 
       let isChanged = true
 
-      if (!oldValue?.isMultiple && !oldValue?.__new) {
+      if (!oldValue?.multipleValues && !oldValue?.__new) {
         for (const id of nodeIds) {
           const ogValue = getFieldInObject(field, nodes[id]?.data)
 
@@ -378,7 +390,7 @@ const EditorPanel = ({
           // (always changed)
           if (!ogValue || nodes[id]?.__new) break
 
-          // dif value or isMultiple
+          // dif value or multipleValues
           isChanged = ogValue?.toString() !== newValue
 
           // stop looping if isChanged is ever true
@@ -391,7 +403,7 @@ const EditorPanel = ({
         value: newValue,
         isChanged,
         isOwn: true,
-        isMultiple: oldValue?.isMultiple && !isChanged,
+        multipleValues: oldValue?.multipleValues && !isChanged,
       }
 
       setLocalChange(true)
@@ -436,7 +448,7 @@ const EditorPanel = ({
         if (changes[nodeIds[0]] && key in changes[nodeIds[0]]) {
           oldChanges = changes[nodeIds[0]][key]
         }
-        // only update again if old !== new
+        // only update agap: 8in if old !== new
         if (oldChanges !== row.value) {
           // console.log('change')
           handleGlobalChange(row.value, row.changeKey)
@@ -532,7 +544,7 @@ const EditorPanel = ({
                   value,
                   isChanged,
                   isOwn,
-                  isMultiple,
+                  multipleValues,
                 } = row || {}
 
                 // input type, step, max, min
@@ -548,6 +560,12 @@ const EditorPanel = ({
                 const changedStyles = {
                   backgroundColor: isChanged ? 'var(--color-changed)' : 'initial',
                   color: isChanged ? 'var(--color-on-changed)' : 'initial',
+                }
+
+                const borderDynamicStyles = {
+                  border: isChanged
+                    ? '3px solid var(--md-sys-color-primary)'
+                    : '1px solid var(--md-sys-color-outline-variant)',
                 }
 
                 let disabledStyles = {}
@@ -566,7 +584,7 @@ const EditorPanel = ({
                 } else if (field.includes('Type')) {
                   input = (
                     <TypeEditor
-                      value={isMultiple ? isMultiple : [value]}
+                      value={multipleValues ? multipleValues : [value]}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       options={typeOptions}
                       style={{
@@ -581,28 +599,25 @@ const EditorPanel = ({
                 } else if (field === 'status') {
                   input = (
                     <StatusSelect
-                      value={isMultiple || value}
+                      value={multipleValues || value}
                       multipleSelected={nodeIds.length}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       maxWidth={'100%'}
-                      style={{
-                        border: isChanged
-                          ? '3px solid var(--md-sys-color-primary)'
-                          : '1px solid var(--md-sys-color-outline-variant)',
-                      }}
+                      style={borderDynamicStyles}
                       isChanged={isChanged}
                       height={30}
                       placeholder={placeholder}
                       disableMessage
                       widthExpand
+                      isChevron
                     />
                   )
                 } else if (field === 'assignees') {
                   input = (
                     <AssigneeSelect
-                      value={isMultiple ? union(...isMultiple) : value || []}
+                      value={multipleValues ? union(...multipleValues) : value || []}
                       options={allUsers}
-                      isMultiple={!!isMultiple}
+                      multipleValues={!!multipleValues}
                       placeholder={placeholder}
                       disabled={disabled}
                       emptyMessage={'None Assigned'}
@@ -617,12 +632,27 @@ const EditorPanel = ({
                       widthExpand
                     />
                   )
+                    } else if (field === 'tags') {
+                      input = (
+                    <TagsSelect
+                      value={multipleValues ? union(...multipleValues) : value || []}
+                      tags={projectTagsObject}
+                      tagsOrder={projectTagsOrder}
+                      multipleValues={!!multipleValues}
+                      onChange={(v) => handleLocalChange(v, changeKey, field)}
+                      align="right"
+                      width={200}
+                      buttonStyle={{ border: '1px solid var(--md-sys-color-outline-variant)'}}
+                      isChanged={isChanged}
+                    />
+                      )
+                    
                 } else if (attrib?.enum) {
                   // dropdown
                   const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
                   let enumValue = isMultiSelect ? value : [value]
-                  if (isMultiple) {
-                    enumValue = isMultiSelect ? union(...isMultiple) : isMultiple
+                  if (multipleValues) {
+                    enumValue = isMultiSelect ? union(...multipleValues) : multipleValues
                   }
 
                   // never show value when inherited, just show placeholder
@@ -640,9 +670,13 @@ const EditorPanel = ({
                       multiSelect={isMultiSelect}
                       widthExpand
                       emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
-                      isMultiple={!!isMultiple}
-                      onClear={(value) => enumValue && handleLocalChange(value, changeKey, field)}
-                      onClearNullValue
+                      multipleValues={!!multipleValues}
+                      onClear={
+                        field !== 'attrib.tools'
+                          ? (value) => handleLocalChange(value, changeKey, field)
+                          : undefined
+                      }
+                      onClearNull={(value) => handleLocalChange(value, changeKey, field)}
                       nullPlaceholder="(inherited)"
                       search={attrib?.enum?.length > 10}
                     />
@@ -717,7 +751,7 @@ const EditorPanel = ({
                     label={label}
                     className={`editor-form ${field} ${disabled ? 'disabled' : ''}${
                       isOwn ? '' : 'inherited'
-                    } ${attrib?.type} ${isMultiple ? 'isMultiple' : ''} ${
+                    } ${attrib?.type} ${multipleValues ? 'multipleValues' : ''} ${
                       isChanged ? 'isChanged' : ''
                     }`}
                     fieldStyle={{

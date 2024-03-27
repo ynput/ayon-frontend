@@ -25,16 +25,16 @@ export const Item = styled.li`
   cursor: pointer;
   user-select: none;
 
-  background-color: var(--md-sys-color-surface-container-lowest);
+  background-color: var(--md-sys-color-surface-container-low);
   border: 1px solid transparent;
   border-top-color: var(--md-sys-color-outline-variant);
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-lowest-hover);
+    background-color: var(--md-sys-color-surface-container-low-hover);
   }
 
   &:active {
-    background-color: var(--md-sys-color-surface-container-lowest-active);
+    background-color: var(--md-sys-color-surface-container-low-active);
   }
 
   &.selected {
@@ -66,7 +66,7 @@ export const Item = styled.li`
   ${({ $isFirst }) =>
     $isFirst &&
     css`
-      border-top-color: var(--md-sys-color-surface-container-lowest);
+      border-top-color: var(--md-sys-color-surface-container-low);
     `}
   /* if $isLast */
   ${({ $isLast }) =>
@@ -86,7 +86,7 @@ export const Item = styled.li`
       border-color: var(--md-sys-color-surface-container-low);
 
       &:hover {
-        background-color: var(--md-sys-color-surface-container-lowest);
+        background-color: var(--md-sys-color-surface-container-low);
       }
     `}
 `
@@ -157,12 +157,10 @@ export const PathItem = styled.span`
     color: var(--md-sys-color-on-surface);
   }
 
-  &:not(:first-child) {
-    &::after {
-      content: '/';
-      margin-left: var(--base-gap-medium);
-      color: var(--md-sys-color-outline);
-    }
+  &::after {
+    content: '/';
+    margin-left: var(--base-gap-medium);
+    color: var(--md-sys-color-outline);
   }
 `
 
@@ -208,4 +206,5 @@ export const ItemAssignees = styled(AssigneeSelect)`
 export const Date = styled.span`
   min-width: 90px;
   text-align: right;
+  white-space: nowrap;
 `

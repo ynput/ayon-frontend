@@ -1,25 +1,68 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 import GridLayout from '/src/components/GridLayout'
-import { EntityCard } from '@ynput/ayon-react-components'
+import { Button, EntityCard, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
+import { classNames } from 'primereact/utils'
+import useShortcuts from '/src/hooks/useShortcuts'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
-  padding: 12px;
+  padding: 4px 12px;
   height: 100%;
+  position: relative;
+`
 
-  & > * {
-    margin-bottom: 16px;
+const StyledGroup = styled.div`
+  .icon {
+    transition: rotate 200ms;
+  }
+  &.isCollapsed {
+    /* rotate icon */
+    [icon='expand_more'] {
+      rotate: -90deg;
+    }
+  }
+
+  .header-wrapper {
+    padding: 8px 0;
+    position: sticky;
+    top: -8px;
+
+    z-index: 100;
+    background-color: var(--md-sys-color-surface-container-low);
   }
 `
 
-const StyledGroupName = styled.h2`
-  font-size: 1.3em;
-  padding-left: 8px;
-  margin: 0;
-  margin-bottom: 8px;
+const StyledGroupHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--padding-s);
+  user-select: none;
+
+  &:hover {
+    cursor: pointer;
+    background-color: var(--md-sys-color-surface-container-low-hover);
+    border-radius: var(--border-radius-m);
+  }
+
+  .content {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+
+    .count {
+      color: var(--md-sys-color-outline);
+    }
+  }
+
+  h2 {
+    font-size: 1.3em;
+    margin: 0;
+    user-select: none;
+  }
 `
 
 const ProductsGrid = ({
@@ -121,6 +164,44 @@ const ProductsGrid = ({
     })
   }
 
+  const [collapsedGroups, setCollapsedGroups] = useState([])
+
+  const handleCollapseChange = (groupName) => {
+    if (collapsedGroups.includes(groupName)) {
+      setCollapsedGroups(collapsedGroups.filter((group) => group !== groupName))
+    } else {
+      setCollapsedGroups([...collapsedGroups, groupName])
+    }
+  }
+
+  const handleShortcutCollapse = (event) => {
+    const target = event?.target
+    if (!target) return
+
+    // get id of the group
+    let groupName = target.querySelector('.products-group')?.id
+    if (!groupName) {
+      groupName = target.closest('.products-group')?.id
+    }
+
+    if (groupName) {
+      handleCollapseChange(groupName)
+    }
+  }
+
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'c',
+        action: handleShortcutCollapse,
+        closest: '.products-group',
+      },
+    ],
+    [collapsedGroups],
+  )
+
+  useShortcuts(shortcuts, [collapsedGroups])
+
   // if groupBy is set, group the data
 
   const groupedData = useMemo(() => {
@@ -152,50 +233,79 @@ const ProductsGrid = ({
       onClick={() => onSelectionChange({ value: {} })}
     >
       {Object.entries(groupedData).map(([groupName, groupData], index) => (
-        <div key={`groupname-${groupName}`}>
-          {groupName && <StyledGroupName>{groupName}</StyledGroupName>}
-          <GridLayout ratio={1.777777} minWidth={200} key={index}>
-            {isLoading
-              ? Array.from({ length: 20 }).map((_, index) => (
-                  <EntityCard
-                    key={index}
-                    isLoading
-                    style={{
-                      minWidth: 'unset',
-                    }}
-                  />
-                ))
-              : groupData.map(
-                  ({ data: product }, index) =>
-                    product && (
-                      <EntityCard
-                        style={{
-                          minWidth: 'unset',
-                        }}
-                        key={index}
-                        title={product.name}
-                        titleIcon={productTypes[product.productType]?.icon || 'inventory_2'}
-                        icon={statuses[product.versionStatus]?.icon || ''}
-                        iconColor={statuses[product.versionStatus]?.color || ''}
-                        imageUrl={`/api/projects/${projectName}/versions/${
-                          product.versionId
-                        }/thumbnail?updatedAt=${
-                          product.versionUpdatedAt
-                        }&token=${localStorage.getItem('accessToken')}`}
-                        subTitle={`${product.versionName}${
-                          multipleFoldersSelected && product.folder ? ' - ' + product.folder : ''
-                        }`}
-                        onClick={(e) => handleSelection(e, product)}
-                        isActive={product.id in selection}
-                        onContextMenu={(e) => handleContext(e, product.id)}
-                        projectName={projectName}
-                        isFullHighlight
-                        // isActiveAnimate
-                      />
-                    ),
-                )}
-          </GridLayout>
-        </div>
+        <StyledGroup
+          key={groupName}
+          id={groupName}
+          className={classNames(
+            { isCollapsed: collapsedGroups.includes(groupName) },
+            'products-group',
+          )}
+        >
+          {groupName && (
+            <div className="header-wrapper">
+              <StyledGroupHeader
+                onClick={() => handleCollapseChange(groupName)}
+                className="products-group-header"
+              >
+                <Button
+                  icon="expand_more"
+                  variant="text"
+                  data-tooltip={'Collapse/Expand'}
+                  data-shortcut={'C'}
+                  data-tooltip-delay={300}
+                />
+                <span className="content">
+                  <Icon icon={productTypes[groupName]?.icon || 'inventory_2'} />
+                  <h2>{groupName}</h2>
+                  <span className="count">{groupData.length}</span>
+                </span>
+              </StyledGroupHeader>
+            </div>
+          )}
+          {!collapsedGroups.includes(groupName) && (
+            <GridLayout ratio={1.777777} minWidth={200} key={index}>
+              {isLoading
+                ? Array.from({ length: 20 }).map((_, index) => (
+                    <EntityCard
+                      key={index}
+                      isLoading
+                      style={{
+                        minWidth: 'unset',
+                      }}
+                    />
+                  ))
+                : groupData.map(
+                    ({ data: product }, index) =>
+                      product && (
+                        <EntityCard
+                          style={{
+                            minWidth: 'unset',
+                          }}
+                          key={index}
+                          title={product.name}
+                          titleIcon={productTypes[product.productType]?.icon || 'inventory_2'}
+                          icon={statuses[product.versionStatus]?.icon || ''}
+                          iconColor={statuses[product.versionStatus]?.color || ''}
+                          imageUrl={`/api/projects/${projectName}/versions/${
+                            product.versionId
+                          }/thumbnail?updatedAt=${
+                            product.versionUpdatedAt
+                          }&token=${localStorage.getItem('accessToken')}`}
+                          subTitle={`${product.versionName}${
+                            multipleFoldersSelected && product.folder ? ' - ' + product.folder : ''
+                          }`}
+                          onClick={(e) => handleSelection(e, product)}
+                          isActive={product.id in selection}
+                          onContextMenu={(e) => handleContext(e, product.id)}
+                          projectName={projectName}
+                          isFullHighlight
+                          // isActiveAnimate
+                        />
+                      ),
+                  )}
+            </GridLayout>
+          )}
+        </StyledGroup>
       ))}
     </StyledGridLayout>
   )

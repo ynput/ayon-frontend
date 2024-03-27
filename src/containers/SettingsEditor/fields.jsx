@@ -106,7 +106,7 @@ function ObjectFieldTemplate(props) {
 
   const enabledToggler = useMemo(() => {
     for (const element of props.properties) {
-      if (element.name === 'enabled') {
+      if (element?.name === 'enabled') {
         return <span className="form-object-header-enabled-toggler">{element.content}</span>
       }
     }
@@ -132,7 +132,7 @@ function ObjectFieldTemplate(props) {
       let otherFields = []
 
       for (const element of props.properties) {
-        if (element.name === 'name') nameField = element.content
+        if (element?.name === 'name') nameField = element.content
         else otherFields.push(element.content)
       }
       return (
@@ -506,7 +506,7 @@ const ArrayItemTemplate = (props) => {
     r()
   }
 
-  const rmButton = props.hasRemove && (
+  const rmButton = props.hasRemove && !parentSchema.disabled && (
     <ArrayItemControls>
       <Button onClick={onRemoveItem} icon="close" disabled={undeletable} />
       <Button onClick={onMoveUp} icon="arrow_upward" />
@@ -540,7 +540,7 @@ const ArrayFieldTemplate = (props) => {
         <ArrayItemTemplate key={element.key} {...element} />
       ))}
 
-      {props.canAdd && (
+      {props.canAdd && !props.schema?.disabled && (
         <ArrayItemControls>
           <Button onClick={onAddItem} icon="add" />
         </ArrayItemControls>

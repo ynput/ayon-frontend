@@ -192,6 +192,8 @@ const NewEntity = ({
       } else if (e.shiftKey) {
         handleSubmit(false)
       }
+    } else if (e.key === 'Escape') {
+      onHide()
     }
   }
 

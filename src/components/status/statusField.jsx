@@ -30,10 +30,13 @@ const StatusStyled = styled.div`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding: 0 4px;
+  padding: 0 8px;
+  justify-content: space-between;
+  max-height: 160px;
+  width: 100%;
 
-  /* ICON */
-  .material-symbols-outlined {
+  /* STATUS ICON */
+  .status-icon {
     font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
     /* always taks parents color */
     color: inherit;
@@ -44,7 +47,32 @@ const StatusStyled = styled.div`
   height: 27px;
   min-height: 27px;
 
+  .status-texticon {
+    display: flex;
+  }
+
+  .status-text {
+    margin-left: 8px;
+  }
+
   ${defaultStyle}
+
+  /* Styles for highlighting changed status */
+  ${({ $isChanged }) =>
+  $isChanged &&
+  css`
+    background-color: var(--md-sys-color-primary);
+
+    &,
+    span,
+    .icon {
+      color: var(--md-sys-color-on-primary);
+    }
+
+    :hover {
+      background-color: var(--md-sys-color-primary-hover);
+    }
+  `}
 
   /* selecting styles */
   ${({ $isSelecting }) =>
@@ -81,6 +109,7 @@ const StatusStyled = styled.div`
   /* sets for hover and when active whilst open (top one) */
   :hover {
     /* ${hoverStyle} */
+    filter: brightness(110%);
   }
 
   ${({ $isActive, $isSelecting }) =>
@@ -90,6 +119,10 @@ const StatusStyled = styled.div`
       ${invertHoverStyle}
 
       :hover {
+        ${invertHoverStyle}
+      }
+      [icon="expand_more"] {
+        transform: rotate(180deg);
         ${invertHoverStyle}
       }
     `}
@@ -131,6 +164,8 @@ const StatusField = ({
   statuses = {},
   invert,
   className,
+  showChevron,
+  isChanged,
   ...props
 }) => {
   const {
@@ -153,11 +188,15 @@ const StatusField = ({
       $isChanging={isChanging}
       $size={size}
       $invert={invert}
+      $isChanged={isChanged}
       placeholder={!value && placeholder ? placeholder : ''}
       className={className + ' status-field'}
     >
-      {icon && <Icon icon={icon} />}
-      <span>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
+      <div className='status-texticon'>
+        {icon && <Icon className='status-icon' icon={icon} />}
+        <span className='status-text'>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
+      </div>
+      {showChevron && <Icon icon="expand_more" />}
     </StatusStyled>
   )
 }

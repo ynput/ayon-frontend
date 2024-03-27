@@ -15,6 +15,8 @@ import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import { toast } from 'react-toastify'
 import { onProfileUpdate } from '/src/features/user'
 import styled from 'styled-components'
+import { useRestart } from '/src/context/restartContext'
+import { classNames } from 'primereact/utils'
 
 const DeveloperSwitch = styled.div`
   display: flex;
@@ -68,6 +70,9 @@ const Header = () => {
   const navigate = useNavigate()
   // get user from redux store
   const user = useSelector((state) => state.user)
+
+  // restart server notification
+  const { isSnoozing } = useRestart()
 
   // Get developer states
   const isDeveloper = user?.data?.isDeveloper
@@ -147,7 +152,7 @@ const Header = () => {
         </Link>
       </Toolbar>
 
-      <ProjectMenu visible={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
+      <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
 
       <Breadcrumbs />
       <Spacer />
@@ -179,6 +184,7 @@ const Header = () => {
         ref={appButtonRef}
         active={menuOpen === 'app'}
         variant="text"
+        className={classNames({ notification: isSnoozing })}
       />
       <MenuContainer id="app" target={appButtonRef.current}>
         <AppMenu user={user} />

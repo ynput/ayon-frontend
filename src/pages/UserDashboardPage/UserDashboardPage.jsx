@@ -11,7 +11,10 @@ import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
-import { useDeleteProjectMutation } from '/src/services/project/updateProject'
+import {
+  useDeleteProjectMutation,
+  useUpdateProjectMutation,
+} from '/src/services/project/updateProject'
 import confirmDelete from '/src/helpers/confirmDelete'
 
 const UserDashboardPage = () => {
@@ -61,6 +64,8 @@ const UserDashboardPage = () => {
     return projectsInfoWithProjects
   }, [projectsInfo, isLoadingInfo])
 
+  // UPDATE/DELETE PROJECT
+  const [updateProject] = useUpdateProjectMutation()
   const [deleteProject] = useDeleteProjectMutation()
 
   const handleDeleteProject = (sel) => {
@@ -71,6 +76,10 @@ const UserDashboardPage = () => {
         setSelectedProjects([])
       },
     })
+  }
+
+  const handleActivateProject = async (sel, active) => {
+    await updateProject({ projectName: sel, update: { active } }).unwrap()
   }
 
   if (isLoadingProjects) return null
@@ -102,6 +111,7 @@ const UserDashboardPage = () => {
             isProjectManager={module === 'overview'}
             onNewProject={() => setShowNewProject(true)}
             onDeleteProject={handleDeleteProject}
+            onActivateProject={handleActivateProject}
           />
           {module === 'tasks' && (
             <UserTasksContainer

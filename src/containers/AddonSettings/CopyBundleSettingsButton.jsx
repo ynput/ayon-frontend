@@ -56,8 +56,8 @@ const CopyBundleSettingsButton = ({
   return (
     <>
       <Button
-        icon="input"
-        data-tooltip="Copy settings from"
+        icon="system_update_alt"
+        data-tooltip="Copy settings from another bundle"
         onClick={() => setDialogVisible(true)}
         disabled={disabled || !bundleName}
       />

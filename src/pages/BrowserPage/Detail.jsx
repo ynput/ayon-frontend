@@ -239,6 +239,7 @@ const Detail = () => {
           align={'right'}
           onChange={(v) => handleEntityChange('status', v)}
           multipleSelected={values.length}
+          maxWidth={'100%'}
           style={{
             paddingLeft: 8,
           }}

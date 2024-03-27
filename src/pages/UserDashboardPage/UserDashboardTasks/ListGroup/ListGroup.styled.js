@@ -12,7 +12,7 @@ export const Header = styled.header`
   user-select: none;
   min-height: 40px;
 
-  border-bottom: 1px solid var(--md-sys-color-surface-container-lowest);
+  border-bottom: 1px solid var(--md-sys-color-surface-container-low);
   background-color: var(--md-sys-color-background);
 
   /* create gap between groups */
@@ -25,7 +25,7 @@ export const Header = styled.header`
     position: absolute;
     inset: 0;
     border-radius: var(--border-radius-m) var(--border-radius-m) 0 0;
-    background-color: var(--md-sys-color-surface-container-lowest);
+    background-color: var(--md-sys-color-surface-container-low);
   }
 
   & > * {

@@ -189,7 +189,8 @@ const UserDashboardList = ({
   )
 
   // when users presses "c" over a group
-  const handleShortcutCollapse = (target) => {
+  const handleShortcutCollapse = (event) => {
+    const target = event?.target
     if (!target) return
     let id
     // check if target is HEADER or has 'group-header' class

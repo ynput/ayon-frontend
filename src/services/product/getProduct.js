@@ -69,6 +69,10 @@ const parseProductData = (data) => {
     }
     s.push(sub)
   }
+
+  // sort alphabetically by name
+  s.sort((a, b) => a.name.localeCompare(b.name))
+
   return s
 }
 

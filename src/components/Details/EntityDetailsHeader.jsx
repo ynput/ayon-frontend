@@ -111,7 +111,7 @@ const EntityDetailsHeader = ({
               prefix={`${values[0]?.product?.name}`}
             />
           ) : (
-            <h2>Multiple Selected ({values.length})</h2>
+            <span style={{ whiteSpace: 'nowrap' }}>Multiple Selected ({values.length})</span>
           )}
           <OverflowField
             value={subTitle}

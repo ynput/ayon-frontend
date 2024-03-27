@@ -151,7 +151,7 @@ const SettingsEditor = ({
 
   const setBc = (bc) => {
     if (breadcrumbs === undefined) {
-      console.log('setlocalBreadcrumbs', bc)
+      //console.log('setlocalBreadcrumbs', bc)
       setLocalBreadcrumbs(bc)
     }
     if (onSetBreadcrumbs) onSetBreadcrumbs(bc)

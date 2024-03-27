@@ -111,7 +111,7 @@ const AddonsManager = () => {
   const { restartRequired } = useRestart()
   const restartServer = () => {
     // remove deleted versions from deletedVersions state and restart server
-    restartRequired({ middleware: () => setDeletedVersions([]) })
+    restartRequired({ callback: () => setDeletedVersions([]) })
   }
 
   // DELETE SUCCESS HANDLERS vvv
