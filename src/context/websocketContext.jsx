@@ -88,11 +88,12 @@ export const SocketProvider = (props) => {
       }
 
       const data = JSON.parse(message.data)
-      if (data.topic === 'heartbeat') return
+      const { topic, sender, summary } = data || {}
+      if (topic === 'heartbeat') return
 
-      if (data.topic === 'server.restart_requested') setServerRestartingVisible(true)
+      if (topic === 'server.restart_requested') setServerRestartingVisible(true)
 
-      if (data.sender === window.senderId) {
+      if (sender === window.senderId) {
         return // my own message. ignore
       }
 
@@ -105,10 +106,10 @@ export const SocketProvider = (props) => {
 
       lastCall = now
 
-      if (data.topic === 'shout' && data?.summary?.text) toast.info(data.summary.text)
+      if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
       console.log('Event RX', data)
-      PubSub.publish(data.topic, data)
+      PubSub.publish(topic, data)
     }
   })()
 
