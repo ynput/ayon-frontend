@@ -15,6 +15,7 @@ import {
   setUri,
   setExpandedFolders,
   setFocusedTasks,
+  setSelectedVersions,
 } from '/src/features/context'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
 import useCreateContext from '../hooks/useCreateContext'
@@ -316,6 +317,11 @@ const Hierarchy = (props) => {
       label: 'Detail',
       command: () => setShowDetail(true),
       icon: 'database',
+    },
+    {
+      label: 'View latest versions',
+      command: () => dispatch(setSelectedVersions({})),
+      icon: 'upgrade',
     },
   ]
   // create the ref and model

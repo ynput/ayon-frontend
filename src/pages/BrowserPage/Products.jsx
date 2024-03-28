@@ -35,6 +35,7 @@ import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
+import { isEmpty } from 'lodash'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -97,7 +98,7 @@ const Products = () => {
 
     const versionsToFetchByFolder = {}
 
-    for (const [versionId, { folderId }] of versionsArray) {
+    for (const [, { versionId, folderId }] of versionsArray) {
       if (focusedFolders.includes(folderId)) {
         if (!versionsToFetchByFolder[folderId]) {
           versionsToFetchByFolder[folderId] = []
@@ -118,10 +119,8 @@ const Products = () => {
       },
     )
 
-    console.time('fetchVersionsData')
     // wait for all versions to be fetched
     const versions = await Promise.all(versionPromises)
-    console.timeEnd('fetchVersionsData')
 
     // update versions state
     const newVersions = versions.flat()
@@ -134,6 +133,13 @@ const Products = () => {
   useEffect(() => {
     fetchVersionsData()
   }, [focusedFolders])
+
+  // if selectedVersions is ever cleared, clear versions state
+  useEffect(() => {
+    if (isEmpty(selectedVersions)) {
+      setProductsVersionsData([])
+    }
+  }, [selectedVersions])
 
   // merge products and versions data
   const listData = useMemo(() => {
@@ -210,17 +216,15 @@ const Products = () => {
             { projectName, folderId },
             (draft) => {
               // loop through each result and update the corresponding version in the cache
-              versions.forEach((result) => {
-                const { id: versionId } = result
-                const versionIndex = draft.findIndex((v) => v.id === versionId)
+              versions.forEach((newVersion) => {
+                const { productId } = newVersion
+                const versionIndex = draft.findIndex((v) => v.productId === productId)
                 if (versionIndex !== -1) {
-                  console.log('updating versions:', result)
                   // If the version is found, update it
-                  draft[versionIndex] = result
+                  draft[versionIndex] = newVersion
                 } else {
-                  console.log('adding versions:', result)
                   // If the version is not found, add it
-                  draft.push(result)
+                  draft.push(newVersion)
                 }
               })
             },
@@ -399,8 +403,7 @@ const Products = () => {
                 // copy current selection
                 let newSelection = { ...currentSelected }
                 // update selection
-                newSelection[versionId] = { productId, folderId }
-                // update selected versions
+                newSelection[productId] = { versionId, folderId }
 
                 dispatch(setSelectedVersions(newSelection))
                 // set selected product
