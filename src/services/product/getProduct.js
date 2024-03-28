@@ -76,6 +76,29 @@ const parseProductData = (data) => {
   return s
 }
 
+const parseVersionsData = (data) =>
+  data?.project?.versions?.edges?.map((edge) => {
+    const node = edge.node || {}
+    return {
+      version: node.version,
+      versionId: node.id,
+      versionName: node.name,
+      versionStatus: node.status,
+      versionUpdatedAt: node.updatedAt,
+      versionAuthor: node.author,
+      productId: node.productId,
+    }
+  })
+
+const getProductVersionTags = (result) =>
+  result
+    ? [
+        ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
+        ...result.map(({ productId }) => ({ type: 'product', id: productId })), // all product tags with id
+        { type: 'productsVersion' },
+      ]
+    : ['version', 'product', 'productsVersion']
+
 const PRODUCT_VERSION_FRAGMENT = `
 fragment ProductVersionFragment on VersionNode {
   id
@@ -141,9 +164,9 @@ ${PRODUCT_VERSION_FRAGMENT}
 
 // get product versions by id
 const PRODUCT_VERSIONS_QUERY = `
-query GetProductsVersions($projectName: String!, $versionIds: [String!]!) {
+query GetProductsVersions($projectName: String!, $ids: [String!]!) {
   project(name: $projectName) {
-    versions(ids: $versionIds) {
+    versions(ids: $ids) {
       edges {
         node {
           ...ProductVersionFragment
@@ -176,26 +199,36 @@ const getProduct = ayonApi.injectEndpoints({
           : ['product', 'version'],
     }),
     getProductsVersions: build.query({
-      query: ({ projectName, versionIds }) => ({
+      query: ({ projectName, ids }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: PRODUCT_VERSIONS_QUERY,
-          variables: { projectName, versionIds },
+          variables: { projectName, ids },
         },
       }),
-      transformResponse: (response) =>
-        response?.data?.project?.versions?.edges?.map((edge) => edge.node) || [],
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'version', id })), // all version tags with id
-              ...result.map(({ productId }) => ({ type: 'product', id: productId })), // all product tags with id
-              { type: 'productsVersion', id: result.id },
-            ]
-          : ['version', 'product', 'productsVersion'],
+      transformResponse: (response) => parseVersionsData(response.data) || [],
+      providesTags: (result) => getProductVersionTags(result),
+    }),
+    getProductVersionsByFolder: build.query({
+      query: ({ projectName, ids }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: PRODUCT_VERSIONS_QUERY,
+          variables: { projectName, ids },
+        },
+      }),
+      transformResponse: (response) => parseVersionsData(response.data) || [],
+      providesTags: (result) => getProductVersionTags(result),
+      serializeQueryArgs: (args) => ({ folder: args.folderId, projectName: args.projectName }), // remove ids from query cache key
     }),
   }),
 })
 
-export const { useGetProductListQuery, useLazyGetProductsVersionsQuery } = getProduct
+export const {
+  useGetProductListQuery,
+  useLazyGetProductsVersionsQuery,
+  useGetProductsVersionsQuery,
+  useLazyGetProductVersionsByFolderQuery,
+} = getProduct

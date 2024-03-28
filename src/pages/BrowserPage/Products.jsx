@@ -21,6 +21,7 @@ import StatusSelect from '/src/components/status/statusSelect'
 
 import {
   useGetProductListQuery,
+  useLazyGetProductVersionsByFolderQuery,
   useLazyGetProductsVersionsQuery,
 } from '../../services/product/getProduct'
 import { MultiSelect } from 'primereact/multiselect'
@@ -65,9 +66,8 @@ const Products = () => {
   const [columnsWidths, setColumnWidths] = useColumnResize('products')
 
   const {
-    data: productData = [],
+    data: productsData = [],
     isLoading,
-    isSuccess,
     refetch,
     isFetching,
   } = useGetProductListQuery(
@@ -81,81 +81,168 @@ const Products = () => {
   // keep track of which products are loading (mainly used for versions loading)
   const [loadingProducts, setLoadingProducts] = useState([])
 
+  // lazy query to fetch versions, the cache is based on versionIds provided
   const [getProductsVersions] = useLazyGetProductsVersionsQuery()
+  // this is a special query that fetches versions, but the cache is based on folderId
+  const [getProductVersionsByFolder] = useLazyGetProductVersionsByFolderQuery()
 
+  const [productsVersionsData, setProductsVersionsData] = useState([])
+  const [isFetchingVersions, setIsFetchingVersions] = useState(true)
+
+  // if any selected versions need loading, fetch them now once
+  // anymore changes to versions from the table will be patched into the local state and query cache
+  const fetchVersionsData = async () => {
+    // versions array is [ [versionId, {productId, folderId}], ...]
+    const versionsArray = Object.entries(selectedVersions)
+
+    const versionsToFetchByFolder = {}
+
+    for (const [versionId, { folderId }] of versionsArray) {
+      if (focusedFolders.includes(folderId)) {
+        if (!versionsToFetchByFolder[folderId]) {
+          versionsToFetchByFolder[folderId] = []
+        }
+        versionsToFetchByFolder[folderId].push(versionId)
+      }
+    }
+
+    setIsFetchingVersions(false)
+
+    const versionPromises = Object.entries(versionsToFetchByFolder).map(
+      ([folderId, versionIds]) => {
+        console.log('fetching data for folder:', folderId, 'versions:', versionIds.length)
+        // this has a cache with argument of folderId
+        // so as long as the folderId is the same, it will not refetch
+        // when a new version is selected, we patch this cache - but that is done in the handleVersionChange function
+        return getProductVersionsByFolder({ ids: versionIds, projectName, folderId }, true).unwrap()
+      },
+    )
+
+    console.time('fetchVersionsData')
+    // wait for all versions to be fetched
+    const versions = await Promise.all(versionPromises)
+    console.timeEnd('fetchVersionsData')
+
+    // update versions state
+    const newVersions = versions.flat()
+    setProductsVersionsData(newVersions)
+
+    setIsFetchingVersions(false)
+  }
+
+  // calls every time focusedFolders changes
+  useEffect(() => {
+    fetchVersionsData()
+  }, [focusedFolders])
+
+  // merge products and versions data
+  const listData = useMemo(() => {
+    // waiting for both products and versions data to be fetched
+    if (isFetching || isFetchingVersions) return []
+
+    // if there aren't any versions to find, return productsData
+    if (!productsVersionsData.length) return productsData
+
+    const versionsToFind = [...productsVersionsData]
+    const mergedData = productsData.map((product) => {
+      if (!versionsToFind.length) return product
+      const version = versionsToFind.find((v) => v.productId === product.id)
+      if (version) {
+        versionsToFind.splice(versionsToFind.indexOf(version), 1)
+        return { ...product, ...version }
+      }
+      return product
+    })
+
+    return mergedData
+  }, [productsVersionsData, productsData, isFetching, isFetchingVersions])
+
+  // get new versions data and patch into cache and update versions local state
   const handleVersionChange = async (productVersionPairs = [[]]) => {
     // productVersionPairs is an array of arrays
 
     const productIds = [],
       versionIds = []
-    for (const [pId, vId] of productVersionPairs) {
+    for (const [vId, pId] of productVersionPairs) {
       productIds.push(pId)
       versionIds.push(vId)
     }
 
     setLoadingProducts(productIds)
 
-    let isSuccessful = false
     try {
-      const versions = await getProductsVersions({ versionIds, projectName }, true).unwrap()
+      const versions = await getProductsVersions({ ids: versionIds, projectName }, true).unwrap()
 
-      // update products cache with new version
-      dispatch(
-        ayonApi.util.updateQueryData(
-          'getProductList',
-          { projectName, ids: focusedFolders },
-          (draft) => {
-            console.log('patching versions:', versions)
-            // loop through each result and update the corresponding product in the cache
-            const foundVersions = []
-            versions.forEach((result) => {
-              const { productId, id: versionId, name, status } = result
-              const product = draft.find((p) => p.id === productId)
-              if (product) {
-                product.version = result
-                product.versionName = name
-                product.versionId = versionId
-                product.versionStatus = status
-                foundVersions.push(versionId)
-              }
-            })
-          },
-        ),
-      )
+      // add or update versions to local state
+      setProductsVersionsData((prev) => {
+        const newVersionProductIds = new Set(versions.map(({ productId }) => productId))
+        const oldVersions = prev.filter(({ productId }) => !newVersionProductIds.has(productId))
+        const newVersionsState = [...oldVersions, ...versions]
 
-      isSuccessful = true
+        return newVersionsState
+      })
+
+      const versionsByFolder = {}
+
+      // group versions by folder
+      versions.forEach((version) => {
+        if (!versionsByFolder[version.folderId]) {
+          versionsByFolder[version.folderId] = []
+        }
+
+        versionsByFolder[version.folderId].push(version)
+      })
+
+      // add or replace versions to local state
+      setProductsVersionsData((prev) => {
+        const newVersionIds = new Set(versions.map(({ versionId }) => versionId))
+        const oldVersions = prev.filter(({ versionId }) => !newVersionIds.has(versionId))
+        const newVersionsState = [...oldVersions, ...versions]
+        return newVersionsState
+      })
+
+      // for each folder, patch the versions into the cache
+      for (const [folderId, versions] of Object.entries(versionsByFolder)) {
+        // update products cache with new version
+        dispatch(
+          ayonApi.util.updateQueryData(
+            'getProductVersionsByFolder',
+            { projectName, folderId },
+            (draft) => {
+              // loop through each result and update the corresponding version in the cache
+              versions.forEach((result) => {
+                const { id: versionId } = result
+                const versionIndex = draft.findIndex((v) => v.id === versionId)
+                if (versionIndex !== -1) {
+                  console.log('updating versions:', result)
+                  // If the version is found, update it
+                  draft[versionIndex] = result
+                } else {
+                  console.log('adding versions:', result)
+                  // If the version is not found, add it
+                  draft.push(result)
+                }
+              })
+            },
+          ),
+        )
+      }
+      setLoadingProducts([])
+
+      return versions
     } catch (error) {
       console.error('Error while loading versions:', error)
       toast.error('Error while loading versions')
+      setLoadingProducts([])
+      return []
     }
-
-    setLoadingProducts([])
-
-    return isSuccessful
   }
-
-  // if there are version overrides, fetch once productsList is loaded
-  useEffect(() => {
-    if (!isSuccess) return
-
-    const productVersionPairs = Object.entries(selectedVersions)
-    // check that the product hasn't already got that product patched into it, and it also exists in the patch
-    const filteredProductVersionPairs = productVersionPairs.filter(
-      ([productId, versionId]) =>
-        productData.some((product) => product.id === productId) &&
-        !productData.some((product) => product.versionId === versionId),
-    )
-
-    if (filteredProductVersionPairs.length === 0) return
-
-    handleVersionChange(filteredProductVersionPairs)
-  }, [selectedVersions, productData, isSuccess])
 
   // PUBSUB HOOK
   usePubSub(
     'entity.product',
     refetch,
-    productData.map(({ id }) => id),
+    listData.map(({ id }) => id),
   )
 
   const [updateEntity] = useUpdateEntitiesDetailsMutation()
@@ -164,12 +251,12 @@ const Products = () => {
   const handleStatusChange = async (value, selectedId) => {
     // get selected product ids based on focused selection
     let productIds = focusedProducts.includes(selectedId) ? focusedProducts : [selectedId]
-    const products = productData.filter(({ id }) => productIds.includes(id))
+    const products = listData.filter(({ id }) => productIds.includes(id))
     // get version ids from selected products
     const ids = products.map(({ versionId }) => versionId)
 
     // create new patch data of products
-    const patchData = productData.map(({ versionId, versionStatus, ...product }) => ({
+    const patchData = listData.map(({ versionId, versionStatus, ...product }) => ({
       ...product,
       versionStatus: ids.includes(versionId) ? value : versionStatus,
       versionId,
@@ -305,15 +392,14 @@ const Products = () => {
         body: (node) =>
           VersionList(
             { ...node.data },
-            async (productId, versionId, versionName, currentSelected) => {
-              console.log('currentSelected:', currentSelected)
+            async ({ versionId, productId, folderId, versionName, currentSelected }) => {
               // load data here and patch into cache
-              const res = await handleVersionChange([[productId, versionId]])
+              const res = await handleVersionChange([[versionId, productId]])
               if (res) {
                 // copy current selection
                 let newSelection = { ...currentSelected }
                 // update selection
-                newSelection[productId] = versionId
+                newSelection[versionId] = { productId, folderId }
                 // update selected versions
 
                 dispatch(setSelectedVersions(newSelection))
@@ -328,6 +414,7 @@ const Products = () => {
               }
             },
             selectedVersions,
+            setProductsVersionsData,
           ), // end VersionList
       },
       {
@@ -355,6 +442,8 @@ const Products = () => {
       selectedVersions,
       handleStatusChange,
       handleStatusOpen,
+      setProductsVersionsData,
+      listData,
     ],
   )
 
@@ -417,20 +506,20 @@ const Products = () => {
   const selectedRows = useMemo(() => {
     if (focusedVersions?.length === 0) return {}
     const productIds = {}
-    for (const sdata of productData) {
+    for (const sdata of listData) {
       if (focusedVersions.includes(sdata.versionId)) {
         productIds[sdata.id] = true
       }
     }
     return productIds
-  }, [productData, focusedVersions])
+  }, [listData, focusedVersions])
 
   // Transform the product data into a TreeTable compatible format
   // by grouping the data by the product name
 
   let tableData = useMemo(() => {
-    return groupResult(productData, 'name')
-  }, [productData])
+    return groupResult(listData, 'name')
+  }, [listData])
 
   const searchableFields = [
     'data.author',
@@ -516,7 +605,7 @@ const Products = () => {
     let versions = []
     let products = []
     const selection = Object.keys(event.value)
-    for (const sdata of productData) {
+    for (const sdata of listData) {
       if (selection.includes(sdata.id)) {
         versions.push(sdata.versionId)
         products.push(sdata.id)
@@ -531,7 +620,7 @@ const Products = () => {
   const onContextMenuSelectionChange = (event) => {
     if (focusedProducts.includes(event.value)) return
     const productId = event.value
-    const versionId = productData.find((s) => s.id === productId).versionId
+    const versionId = listData.find((s) => s.id === productId).versionId
     dispatch(setFocusedProducts([productId]))
     dispatch(setFocusedVersions([versionId]))
   }
