@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useGetWorkfileByIdQuery } from '/src/services/getWorkfiles'
 import { useGetSiteRootsQuery } from '/src/services/customRoots'
-import { toast } from 'react-toastify'
 import SiteDropdown from '/src/containers/SiteDropdown'
 
 const getCurrentPlatform = () => {
@@ -35,16 +34,17 @@ const replaceRoot = (inputStr, replacements) => {
   })
 }
 
-const WorkfileDetail = ({ workfileId, style }) => {
+const WorkfileDetail = ({ style }) => {
   const projectName = useSelector((state) => state.project.name)
+  const focusedWorkfiles = useSelector((state) => state.context.focused.workfiles)
   const [selectedSite, setSelectedSite] = useState(null)
 
-  const {
-    data = {},
-    isLoading,
-    isError,
-    error,
-  } = useGetWorkfileByIdQuery({ projectName, id: workfileId }, { skip: !workfileId })
+  const firstFocusedWorkfile = focusedWorkfiles[0]
+
+  const { data = {}, isLoading } = useGetWorkfileByIdQuery(
+    { projectName, id: firstFocusedWorkfile },
+    { skip: !firstFocusedWorkfile },
+  )
 
   const platform = getCurrentPlatform()
   const { data: rootsData = {} } = useGetSiteRootsQuery({
@@ -52,15 +52,6 @@ const WorkfileDetail = ({ workfileId, style }) => {
     siteId: selectedSite,
     platform,
   })
-
-  if (isError) {
-    // log and toast error
-    console.error(error)
-    toast.error(error.message)
-    toast.error('Error fetching workfile details')
-
-    return <div>Error</div>
-  }
 
   let path = Object.keys(rootsData).length ? replaceRoot(data?.path, rootsData) : data?.path
 
@@ -74,7 +65,7 @@ const WorkfileDetail = ({ workfileId, style }) => {
             <Thumbnail
               projectName={projectName}
               entityType="workfile"
-              entityId={workfileId}
+              entityId={firstFocusedWorkfile}
               entityUpdatedAt={data?.updatedAt}
             />
 

@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
-import { get, set } from 'lodash'
+import { cloneDeep, get, set } from 'lodash'
 
 const initialState = {
   expandedFolders: {},
@@ -43,13 +43,15 @@ const localStorageKeys = [
   'uri',
 ]
 
+const initialStateWithLocalStorage = cloneDeep(initialState)
+
 // replace initialState key values with localStorageKeys
 localStorageKeys.forEach((key) => {
   const localKey = 'context/' + key.replace(/\./g, '/')
-  const initialValue = get(initialState, key)
+  const initialValue = get(initialStateWithLocalStorage, key)
   const newValue = getInitialStateLocalStorage(localKey, initialValue)
 
-  set(initialState, key, newValue)
+  set(initialStateWithLocalStorage, key, newValue)
 })
 
 // each reducer defined how a specific key is updated, using the payload or a specific value
@@ -58,14 +60,38 @@ const reducers = {
     expandedFolders: {
       value: initialState.expandedFolders,
     },
-    focused: {
-      value: initialState.focused,
-    },
     selectedVersions: {
       value: initialState.selectedVersions,
     },
     pairing: {
       value: initialState.pairing,
+    },
+    'focused.type': {
+      value: initialState.focused.type,
+    },
+    'focused.folders': {
+      value: initialState.focused.folders,
+    },
+    'focused.products': {
+      value: initialState.focused.products,
+    },
+    'focused.versions': {
+      value: initialState.focused.versions,
+    },
+    'focused.representations': {
+      value: initialState.focused.representations,
+    },
+    'focused.tasks': {
+      value: initialState.focused.tasks,
+    },
+    'focused.tasksNames': {
+      value: initialState.focused.tasksNames,
+    },
+    'focused.workfiles': {
+      value: initialState.focused.workfiles,
+    },
+    'focused.editor': {
+      value: initialState.focused.editor,
     },
   },
   setExpandedFolders: {
@@ -230,8 +256,6 @@ const reducers = {
   },
 }
 
-// console.log(initialState)
-
 // we use this function to update the state with the reducer values
 const updateStateWithReducer = (reducer, state, action) => {
   if (!reducer) return
@@ -240,7 +264,7 @@ const updateStateWithReducer = (reducer, state, action) => {
     let newValue
     const { value, payload, initFallback } = reducer[k]
     // if value is set, use that
-    if (value) {
+    if (value !== undefined) {
       newValue = value
     }
     // if payload is not a string, use the payload on the action
@@ -255,7 +279,7 @@ const updateStateWithReducer = (reducer, state, action) => {
     }
 
     if (newValue === undefined && initFallback) {
-      newValue = get(initialState, k)
+      newValue = get(initialStateWithLocalStorage, k)
     }
 
     if (newValue !== undefined) {
@@ -266,7 +290,7 @@ const updateStateWithReducer = (reducer, state, action) => {
 
 const contextSlice = createSlice({
   name: 'context',
-  initialState,
+  initialState: initialStateWithLocalStorage,
   reducers: {
     selectProject: (state) => {
       updateStateWithReducer(reducers.selectProject, state)
@@ -441,5 +465,7 @@ Object.entries(reducers).forEach(([reducerKey, reducerStates]) => {
   // add the middleware to the local storage items
   Object.assign(contextLocalItems, middleware)
 })
+
+console.log(contextLocalItems)
 
 export { contextLocalItems }

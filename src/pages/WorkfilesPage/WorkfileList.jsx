@@ -2,14 +2,17 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '/src/components/icons'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useGetWorkfileListQuery } from '../../services/getWorkfiles'
 import NoEntityFound from '/src/components/NoEntityFound'
+import { setFocusedWorkfiles } from '/src/features/context'
 
-const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
+const WorkfileList = ({ style }) => {
+  const dispatch = useDispatch()
   const taskIds = useSelector((state) => state.context.focused.tasks)
   const pairing = useSelector((state) => state.context.pairing)
   const projectName = useSelector((state) => state.project.name)
+  const focusedWorkfiles = useSelector((state) => state.context.focused.workfiles)
 
   const {
     data = [],
@@ -45,6 +48,16 @@ const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
     )
   }
 
+  const handleSelectionChange = (e) => {
+    const value = e.value
+
+    dispatch(setFocusedWorkfiles([value.id]))
+  }
+
+  // get selection using the first workfile id
+  const selectedWorkfile = focusedWorkfiles && focusedWorkfiles[0]
+  const selection = data.find((workfile) => workfile.id === selectedWorkfile)
+
   return (
     <Section style={style}>
       <TablePanel loading={isLoading}>
@@ -58,8 +71,8 @@ const WorkfileList = ({ selectedWorkfile, setSelectedWorkfile, style }) => {
             responsive="true"
             dataKey="id"
             value={taskIds.length ? data : []}
-            selection={selectedWorkfile}
-            onSelectionChange={(e) => setSelectedWorkfile(e.value)}
+            selection={selection}
+            onSelectionChange={handleSelectionChange}
           >
             <Column field="name" header="Name" body={formatName} />
           </DataTable>
