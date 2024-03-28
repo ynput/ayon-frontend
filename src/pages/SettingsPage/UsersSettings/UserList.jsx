@@ -66,18 +66,22 @@ const UserList = ({
 
   const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
-  const ProfileRow = ({ rowData }) => (
+  const ProfileRow = ({ rowData }) => {
+    const { name, attrib: { fullName, avatarUrl } = {}, self } = rowData;
+    return (
     <StyledProfileRow>
       <UserImage
-        fullName={rowData.attrib?.fullName || rowData.name}
+        fullName={fullName}
+        name={name}
         size={25}
         style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
-        highlight={rowData.self}
-        src={rowData.attrib?.avatarUrl}
+        highlight={self}
+        src={avatarUrl}
       />
-      <span>{rowData.self ? `${rowData.name} (me)` : rowData.name}</span>
+      <span>{self ? `${name} (me)` : name}</span>
     </StyledProfileRow>
-  )
+    )
+  }
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
