@@ -1,8 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
+import { get, set } from 'lodash'
 
 const initialState = {
-  expandedFolders: getInitialStateLocalStorage('context/expandedFolders', {}),
+  expandedFolders: {},
   focused: {
     type: null,
     folders: [],
@@ -15,15 +16,252 @@ const initialState = {
     editor: [],
     lastFocused: null,
   },
-  selectedVersions: getInitialStateLocalStorage('context/selectedVersions', {}),
+  selectedVersions: {},
   pairing: [],
   reload: {},
   breadcrumbs: { scope: '' },
   share: { name: null, data: null, link: null, img: null },
-  uri: getInitialStateLocalStorage('context/uri', null),
+  uri: null,
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
+}
+
+// all the keys that are stored in local storage
+const localStorageKeys = [
+  'expandedFolders',
+  'focused.type',
+  'focused.folders',
+  'focused.products',
+  'focused.versions',
+  'focused.representations',
+  'focused.tasks',
+  'focused.tasksNames',
+  'focused.workfiles',
+  'focused.editor',
+  'selectedVersions',
+  'uri',
+]
+
+// replace initialState key values with localStorageKeys
+localStorageKeys.forEach((key) => {
+  const localKey = 'context/' + key.replace(/\./g, '/')
+  const initialValue = get(initialState, key)
+  const newValue = getInitialStateLocalStorage(localKey, initialValue)
+
+  set(initialState, key, newValue)
+})
+
+// each reducer defined how a specific key is updated, using the payload or a specific value
+const reducers = {
+  selectProject: {
+    expandedFolders: {
+      value: initialState.expandedFolders,
+    },
+    focused: {
+      value: initialState.focused,
+    },
+    selectedVersions: {
+      value: initialState.selectedVersions,
+    },
+    pairing: {
+      value: initialState.pairing,
+    },
+  },
+  setExpandedFolders: {
+    expandedFolders: {
+      payload: true,
+    },
+  },
+  setFocusedFolders: {
+    'focused.type': {
+      value: 'folder',
+    },
+    'focused.folders': {
+      payload: true,
+    },
+    'focused.products': {
+      value: [],
+    },
+    'focused.versions': {
+      value: [],
+    },
+    'focused.representations': {
+      value: [],
+    },
+    'focused.tasks': {
+      value: [],
+    },
+    pairing: {
+      value: [],
+    },
+  },
+  setFocusedProducts: {
+    'focused.type': {
+      value: 'product',
+    },
+    'focused.products': {
+      payload: true,
+    },
+    'focused.versions': {
+      value: [],
+    },
+  },
+  setFocusedTasks: {
+    'focused.type': {
+      value: 'task',
+    },
+    'focused.tasks': {
+      payload: 'ids',
+    },
+    'focused.tasksNames': {
+      payload: 'names',
+      initFallback: true,
+    },
+    'focused.versions': {
+      value: [],
+    },
+  },
+  setFocusedWorkfiles: {
+    'focused.type': {
+      value: 'workfile',
+    },
+    'focused.workfiles': {
+      payload: true,
+    },
+  },
+  setFocusedRepresentations: {
+    'focused.type': {
+      value: 'representation',
+    },
+    'focused.representations': {
+      payload: true,
+    },
+  },
+  editorSelectionChanged: {
+    'focused.editor': {
+      payload: 'selection',
+    },
+    'focused.folders': {
+      payload: 'folders',
+    },
+    'focused.tasks': {
+      payload: 'tasks',
+    },
+  },
+  setFocusedVersions: {
+    'focused.type': {
+      value: 'version',
+    },
+    'focused.versions': {
+      payload: true,
+    },
+    'focused.tasks': {
+      value: [],
+    },
+  },
+  setFocusedType: {
+    'focused.type': {
+      payload: 'type',
+    },
+  },
+  setSelectedVersions: {
+    selectedVersions: {
+      payload: true,
+    },
+  },
+  clearFocus: {
+    'focused.type': {
+      value: null,
+    },
+    'focused.folders': {
+      value: [],
+    },
+    'focused.products': {
+      value: [],
+    },
+    'focused.versions': {
+      value: [],
+    },
+  },
+  setPairing: {
+    pairing: {
+      payload: true,
+    },
+  },
+  productSelected: {
+    'focused.type': {
+      value: 'version',
+    },
+    'focused.versions': {
+      payload: 'versions',
+    },
+    'focused.products': {
+      payload: 'products',
+    },
+  },
+  setUri: {
+    uri: {
+      payload: true,
+    },
+  },
+  onUriNavigate: {
+    'focused.folders': {
+      payload: 'folders',
+    },
+    'focused.tasks': {
+      payload: 'tasks',
+    },
+    'focused.products': {
+      payload: 'products',
+    },
+    'focused.versions': {
+      payload: 'versions',
+    },
+    'focused.representations': {
+      payload: 'representations',
+    },
+    'focused.workfiles': {
+      payload: 'workfiles',
+    },
+    'focused.type': {
+      payload: 'type',
+    },
+  },
+}
+
+// console.log(initialState)
+
+// we use this function to update the state with the reducer values
+const updateStateWithReducer = (reducer, state, action) => {
+  if (!reducer) return
+
+  Object.keys(reducer).forEach((k) => {
+    let newValue
+    const { value, payload, initFallback } = reducer[k]
+    // if value is set, use that
+    if (value) {
+      newValue = value
+    }
+    // if payload is not a string, use the payload on the action
+    else if (typeof payload !== 'string') {
+      newValue = action.payload
+    }
+    // if payload is a string, use that as the key, split by '.'
+    else {
+      let payloadValue = get(action.payload, payload)
+
+      newValue = payloadValue
+    }
+
+    if (newValue === undefined && initFallback) {
+      newValue = get(initialState, k)
+    }
+
+    if (newValue !== undefined) {
+      set(state, k, newValue)
+    }
+  })
 }
 
 const contextSlice = createSlice({
@@ -31,120 +269,59 @@ const contextSlice = createSlice({
   initialState,
   reducers: {
     selectProject: (state) => {
-      // reset expandedFolders, focused, selectedVersions, pairing
-      state.expandedFolders = initialState.expandedFolders
-      state.focused = initialState.focused
-      state.selectedVersions = initialState.selectedVersions
-      state.pairing = initialState.pairing
+      updateStateWithReducer(reducers.selectProject, state)
     },
-
     setExpandedFolders: (state, action) => {
-      state.expandedFolders = action.payload
+      updateStateWithReducer(reducers.setExpandedFolders, state, action)
     },
-
     setFocusedFolders: (state, action) => {
-      state.focused.type = 'folder'
-      state.focused.folders = action.payload
-      state.focused.products = []
-      state.focused.versions = []
-      state.pairing = []
+      updateStateWithReducer(reducers.setFocusedFolders, state, action)
     },
-
     setFocusedProducts: (state, action) => {
-      state.focused.type = 'product'
-      state.focused.products = action.payload
-      state.focused.versions = []
+      updateStateWithReducer(reducers.setFocusedProducts, state, action)
     },
-
     setFocusedTasks: (state, action) => {
-      state.focused.type = 'task'
-      state.focused.tasks = action.payload.ids || []
-      if ('names' in action.payload) state.focused.tasksNames = action.payload.names || []
-      state.focused.versions = []
+      updateStateWithReducer(reducers.setFocusedTasks, state, action)
     },
-
     setFocusedWorkfiles: (state, action) => {
-      state.focused.type = 'workfile'
-      state.focused.workfiles = action.payload
+      updateStateWithReducer(reducers.setFocusedWorkfiles, state, action)
     },
-
     setFocusedRepresentations: (state, action) => {
-      state.focused.type = 'representation'
-      state.focused.representations = action.payload
+      updateStateWithReducer(reducers.setFocusedRepresentations, state, action)
     },
-
     editorSelectionChanged: (state, action) => {
-      // updates focused.editor, focused.folders, focused.tasks
-      if (action.payload.tasks) state.focused.tasks = action.payload.tasks
-      if (action.payload.folders) state.focused.folders = action.payload.folders
-      // // take both above and add to focused.editor
-      state.focused.editor = action.payload.selection
+      updateStateWithReducer(reducers.editorSelectionChanged, state, action)
     },
     setFocusedVersions: (state, action) => {
-      if (action.payload === null) {
-        state.focused.type = 'folder'
-        state.focused.versions = []
-      } else {
-        state.focused.type = 'version'
-        state.focused.versions = action.payload
-        state.focused.tasks = []
-      }
+      updateStateWithReducer(reducers.setFocusedVersions, state, action)
     },
     setFocusedType: (state, action) => {
-      state.focused.type = action.payload
+      updateStateWithReducer(reducers.setFocusedType, state, action)
     },
-
     setSelectedVersions: (state, action) => {
-      state.selectedVersions = action.payload
+      updateStateWithReducer(reducers.setSelectedVersions, state, action)
     },
-
-    //eslint-disable-next-line no-unused-vars
-    clearFocus: (state, action) => {
-      state.focused.type = null
-      state.focused.folders = []
-      state.focused.products = []
-      state.focused.versions = []
+    clearFocus: (state) => {
+      updateStateWithReducer(reducers.clearFocus, state)
     },
-
     setPairing: (state, action) => {
-      state.pairing = action.payload
+      updateStateWithReducer(reducers.setPairing, state, action)
     },
     productSelected: (state, action) => {
-      state.focused.type = 'version'
-
-      state.focused.versions = action.payload.versions
-      state.focused.products = action.payload.products
+      updateStateWithReducer(reducers.productSelected, state, action)
     },
-
     setUri: (state, action) => {
-      //console.log('setUri', action.payload)
-      state.uri = action.payload
+      updateStateWithReducer(reducers.setUri, state, action)
     },
-
-    // eslint-disable-next-line no-unused-vars
-    setUriChanged: (state, action) => {
+    setUriChanged: (state) => {
       state.uriChanged = state.uriChanged + 1
     },
     onUriNavigate: (state, action) => {
-      // focus folders
-      state.focused.folders = action.payload.folders
-      // focus tasks
-      state.focused.tasks = action.payload.tasks
-      // focus products
-      state.focused.products = action.payload.products
-      // focus versions
-      state.focused.versions = action.payload.versions
-      // focus representations
-      state.focused.representations = action.payload.representations
-      // focus workfiles
-      state.focused.workfiles = action.payload.workfiles
-      // finally set focused type
-      state.focused.type = action.payload.type
+      updateStateWithReducer(reducers.onUriNavigate, state, action)
     },
     onFocusChanged: (state, action) => {
       state.focused.lastFocused = action.payload
     },
-
     setReload: (state, action) => {
       state.reload = {
         ...state.reload,
@@ -226,15 +403,43 @@ export const {
 export default contextSlice.reducer
 
 // topics that need to set localStorage. If there is no explicit value, it will be the payload value
-export const contextLocalItems = {
-  'context/setUri': [{ key: 'context/uri' }], // when the URI updates
-  'context/setSelectedVersions': [{ key: 'context/selectedVersions' }], // when a version is selected
-  'context/selectProject': [
-    { key: 'context/selectedVersions', value: {} },
-    {
-      key: 'context/expandedFolders',
-      value: {},
-    },
-  ], // when a product is selected, we clear a lot of state
-  'context/setExpandedFolders': [{ key: 'context/expandedFolders' }], // when a folder is expanded
-}
+const contextLocalItems = {}
+
+// for each reducer we check if we need to set localStorage middleware and what values to set
+Object.entries(reducers).forEach(([reducerKey, reducerStates]) => {
+  const statePathKeys = Object.keys(reducerStates)
+  if (statePathKeys.length === 0) return
+
+  const localStates = []
+
+  // check if path is in local storage keys
+  statePathKeys.forEach((key) => {
+    if (localStorageKeys.includes(key)) localStates.push(key)
+  })
+
+  // no local states, return
+  if (localStates.length === 0) return // this reducer does not affect local storage
+
+  // create the middleware object to update local storage
+  const middleware = {
+    ['context/' + reducerKey]: localStates.map((key) => {
+      const value = reducerStates[key].value
+      const payload = reducerStates[key].payload
+      const initialValue = get(initialState, key)
+
+      const stateObj = {
+        key: `context/${key.replace(/\./g, '/')}`,
+        initialValue,
+      }
+      if (value !== undefined) stateObj.value = value
+      else if (typeof payload === 'string') stateObj.payload = payload
+
+      return stateObj
+    }),
+  }
+
+  // add the middleware to the local storage items
+  Object.assign(contextLocalItems, middleware)
+})
+
+export { contextLocalItems }

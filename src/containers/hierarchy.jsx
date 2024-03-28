@@ -14,7 +14,6 @@ import {
   setFocusedFolders,
   setUri,
   setExpandedFolders,
-  setFocusedTasks,
   setSelectedVersions,
 } from '/src/features/context'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
@@ -243,8 +242,7 @@ const Hierarchy = (props) => {
 
   const onSelectionChange = (event) => {
     const selection = Object.keys(event.value)
-    // remove task selection
-    dispatch(setFocusedTasks({ ids: [] }))
+    // set focused folders and remove any focused tasks
     dispatch(setFocusedFolders(selection))
 
     // for each selected folder, if isLeaf then set expandedFolders
