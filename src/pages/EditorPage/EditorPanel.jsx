@@ -99,8 +99,6 @@ const EditorPanel = ({
   const projectTagsOrder = useSelector((state) => state.project.tagsOrder)
   const projectTagsObject = useSelector((state) => state.project.tags)
 
-
-  console.log(allUsers,'allUsers')
   // STATES
   // used to throttle changes to redux changes state and keep input fast
   const [localChange, setLocalChange] = useState(false)
