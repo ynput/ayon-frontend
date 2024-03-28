@@ -86,6 +86,9 @@ const Products = () => {
   // have the initial override versions been loaded?
   const [isVersionsLoaded, setIsVersionsLoaded] = useState(false)
 
+  // handle version change
+  // this function is called when a version is selected
+  // it will load the version data and update the product item cache with the new version data
   const handleVersionChange = async (productVersionPairs = [[]]) => {
     // productVersionPairs is an array of arrays
 
@@ -93,11 +96,13 @@ const Products = () => {
 
     let isSuccessful = false
     try {
-      const promises = productVersionPairs.map(([, versionId]) => {
+      // get data for newly selected versions
+      const versionPromises = productVersionPairs.map(([, versionId]) => {
         return getProductVersion({ versionId, projectName }, true).unwrap()
       })
 
-      const results = await Promise.all(promises)
+      // wait for all versions to load
+      const versionsData = await Promise.all(versionPromises)
 
       // update products cache with new version
       dispatch(
@@ -105,15 +110,16 @@ const Products = () => {
           'getProductList',
           { projectName, ids: focusedFolders },
           (draft) => {
-            // loop through each result and update the corresponding product in the cache
-            results.forEach((result) => {
-              const { productId, id: versionId, name, status } = result
+            // loop through each version and update the corresponding product in the cache
+            versionsData.forEach((version) => {
+              const { productId, id: versionId, name, status, author } = version
               const product = draft.find((p) => p.id === productId)
               if (product) {
-                product.version = result
+                product.version = version
                 product.versionName = name
                 product.versionId = versionId
                 product.versionStatus = status
+                product.versionAuthor = author
               }
             })
           },
@@ -253,7 +259,7 @@ const Products = () => {
         body: (node) => {
           if (node.data.isGroup) return ''
           const statusMaxWidth = 120
-          const versionStatusWidth = columnsWidths['versionStatus'];
+          const versionStatusWidth = columnsWidths['versionStatus']
           const resolveWidth = (statusWidth) => {
             if (statusWidth < 60) return 'icon'
             if (statusWidth < statusMaxWidth) return 'short'
@@ -325,7 +331,7 @@ const Products = () => {
         body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
       },
       {
-        field: 'author',
+        field: 'versionAuthor',
         header: 'Author',
         width: 120,
       },
