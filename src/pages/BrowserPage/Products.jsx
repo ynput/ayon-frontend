@@ -427,7 +427,7 @@ const Products = () => {
         body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
       },
       {
-        field: 'author',
+        field: 'versionAuthor',
         header: 'Author',
         width: 120,
       },

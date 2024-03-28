@@ -21,8 +21,9 @@ const FeedHeader = ({ name, users, date, reference }) => {
   return (
     <Styled.Header>
       <UserImage
-        fullName={user.fullName || user.name}
+        fullName={user.fullName}
         src={user?.avatarUrl || user?.attrib?.avatarUrl}
+        name={user.name}
         size={22}
       />
       <h5>{user.fullName || user.name}</h5>

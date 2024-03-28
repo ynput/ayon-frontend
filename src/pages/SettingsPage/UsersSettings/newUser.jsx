@@ -133,7 +133,8 @@ const NewUser = ({ onHide, open, onSuccess }) => {
       <DetailHeader onClose={handleClose}>
         <UserImage
           src={formData?.avatarUrl}
-          fullName={formData.fullName || formData.Username || '+'}
+          name={formData.Username}
+          fullName={formData.fullName || '+'}
         />
         <div>
           <h2>Create New User</h2>

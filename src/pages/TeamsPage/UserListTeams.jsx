@@ -15,10 +15,12 @@ const StyledProfileRow = styled.div`
 `
 
 const ProfileRow = ({ rowData }) => {
+  const { name, attrib: { fullName, avatarUrl } = {}, self, isMissing } = rowData;
   return (
     <StyledProfileRow>
       <UserImage
-        fullName={rowData?.attrib?.fullName || rowData.name}
+        fullName={fullName}
+        name={name}
         size={25}
         style={{
           margin: 'auto',
@@ -28,15 +30,15 @@ const ProfileRow = ({ rowData }) => {
           maxHeight: 25,
           maxWidth: 25,
         }}
-        highlight={rowData.self}
-        src={rowData?.attrib?.avatarUrl}
+        highlight={self}
+        src={avatarUrl}
       />
       <span
         style={{
-          color: rowData.isMissing ? 'var(--color-hl-error)' : 'inherit',
+          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
         }}
       >
-        {rowData.name}
+        {name}
       </span>
     </StyledProfileRow>
   )
