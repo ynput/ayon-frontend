@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
 
 const initialState = {
-  expandedFolders: {},
+  expandedFolders: getInitialStateLocalStorage('context/expandedFolders', {}),
   focused: {
     type: null,
     folders: [],
@@ -16,7 +16,6 @@ const initialState = {
     lastFocused: null,
   },
   selectedVersions: getInitialStateLocalStorage('context/selectedVersions', {}),
-  // selectedVersions: {},
   pairing: [],
   reload: {},
   breadcrumbs: { scope: '' },
@@ -230,5 +229,12 @@ export default contextSlice.reducer
 export const contextLocalItems = {
   'context/setUri': [{ key: 'context/uri' }], // when the URI updates
   'context/setSelectedVersions': [{ key: 'context/selectedVersions' }], // when a version is selected
-  'context/selectProject': [{ key: 'context/selectedVersions', value: {} }], // when a product is selected
+  'context/selectProject': [
+    { key: 'context/selectedVersions', value: {} },
+    {
+      key: 'context/expandedFolders',
+      value: {},
+    },
+  ], // when a product is selected, we clear a lot of state
+  'context/setExpandedFolders': [{ key: 'context/expandedFolders' }], // when a folder is expanded
 }
