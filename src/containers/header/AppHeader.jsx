@@ -202,7 +202,8 @@ const Header = () => {
         <UserImage
           size={26}
           src={user?.attrib?.avatarUrl}
-          fullName={user?.attrib?.fullName || user?.name}
+          fullName={user?.attrib?.fullName}
+          name={user?.name}
         />
       </HeaderButton>
       <MenuContainer id="user" target={userButtonRef.current}>
