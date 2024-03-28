@@ -49,15 +49,17 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   useEffect(() => {
     if (autoSelect && !isFetching && tasksData.length && previousTasksNames.length) {
       // filter out tasks with different names to
-      const matchedTasksIds = tasksData
-        .filter((task) => previousTasksNames.includes(task.data.name))
-        .map((task) => task.data.id)
 
-      dispatch(setFocusedTasks({ ids: matchedTasksIds }))
+      const matchedTasks = tasksData.filter((task) => previousTasksNames.includes(task.data.name))
+
+      const matchedTasksIds = matchedTasks.map((task) => task.data.id)
+      const matchedTasksNames = matchedTasks.map((task) => task.data.name)
+
+      dispatch(setFocusedTasks({ ids: matchedTasksIds, names: matchedTasksNames }))
       // set pairing
       setPairs(matchedTasksIds)
     }
-  }, [folderIds, isFetching, autoSelect, previousTasksNames, tasksData, dispatch])
+  }, [folderIds, isFetching, autoSelect, tasksData, dispatch])
 
   //
   // Handlers

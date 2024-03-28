@@ -4,18 +4,23 @@ const getInitialStateLocalStorage = (key, initial, types) => {
     return initial || (types && types[0]) || ''
   } else {
     try {
-      const valueParsed = JSON.parse(value)
-      // check initial type matches value type
-      if (initial && typeof initial !== typeof valueParsed) {
-        return initial
+      let valueParsed = JSON.parse(value)
+
+      if (initial) {
+        if (typeof initial !== typeof valueParsed) {
+          valueParsed = initial
+        } else if (Array.isArray(initial) && !Array.isArray(valueParsed)) {
+          valueParsed = initial
+        } else if (!Array.isArray(initial) && Array.isArray(valueParsed)) {
+          valueParsed = initial
+        }
       }
 
-      // check it matches one of the types
-      // otherwise take first type as default
-      if (types?.find((type) => type === valueParsed) || !types?.length) {
-        return valueParsed
+      if (!types?.find((type) => type === valueParsed) && types?.length) {
+        valueParsed = types[0]
       }
-      return types[0]
+
+      return valueParsed
     } catch (error) {
       // remove invalid value
       localStorage.removeItem(key)

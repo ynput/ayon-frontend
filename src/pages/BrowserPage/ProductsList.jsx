@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setExpandedProducts } from '/src/features/context'
 
 const ProductsList = ({
   data,
@@ -16,10 +17,12 @@ const ProductsList = ({
   isLoading,
   loadingProducts,
 }) => {
+  const dispatch = useDispatch()
   // get focused task ids
   const focusedTasks = useSelector((state) => state.context.focused.tasks)
   // get focused type
   const focusedType = useSelector((state) => state.context.focused.type)
+  const expandedProducts = useSelector((state) => state.context.expandedProducts)
 
   const handleColumnReorder = (e) => {
     const localStorageOrder = e.columns.reduce(
@@ -40,6 +43,10 @@ const ProductsList = ({
 
   if (isLoading) {
     data = loadingData
+  }
+
+  const handleGroupExpand = (e) => {
+    dispatch(setExpandedProducts(e.value))
   }
 
   return (
@@ -71,6 +78,8 @@ const ProductsList = ({
       reorderableColumns
       onColReorder={handleColumnReorder}
       className={isLoading ? 'table-loading' : undefined}
+      onToggle={handleGroupExpand}
+      expandedKeys={expandedProducts}
     >
       {columns.map((col, i) => {
         return (

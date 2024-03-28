@@ -7,7 +7,7 @@ import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
 
 import userReducer from './features/user'
-import contextReducer from './features/context'
+import contextReducer, { contextLocalItems } from './features/context'
 import projectReducer from './features/project'
 import editorReducer from './features/editor'
 import dashboardReducer, { dashboardLocalItems } from './features/dashboard'
@@ -43,7 +43,7 @@ const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(ayonApi.middleware)
-      .concat(localStorageMiddleware({ ...dashboardLocalItems })),
+      .concat(localStorageMiddleware({ ...dashboardLocalItems, ...contextLocalItems })),
 })
 
 setupListeners(store.dispatch)
