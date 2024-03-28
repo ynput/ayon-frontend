@@ -134,7 +134,8 @@ const UserTile = ({
     >
       <StyledUserImage
         src={attrib?.avatarUrl}
-        fullName={attrib?.fullName || name}
+        fullName={attrib?.fullName}
+        name={name}
         highlight={isSelf}
         $isLoading={loadingState}
       />

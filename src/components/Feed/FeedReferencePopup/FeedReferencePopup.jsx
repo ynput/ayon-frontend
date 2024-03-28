@@ -4,11 +4,11 @@ import Thumbnail from '/src/containers/thumbnail'
 
 const FeedReferencePopup = ({ type, label, pos = {} }) => {
   // TODO: get data from id and type
-
+  // TODO: See if label contain fullName or name and passed props down correcty in UserImage
   return (
     <Styled.Popup style={pos || {}}>
       {type === 'user' ? (
-        <UserImage src={''} fullName={label} />
+        <UserImage src={''} name={label} />
       ) : (
         <Thumbnail entityType={type} icon="directions_run" />
       )}
