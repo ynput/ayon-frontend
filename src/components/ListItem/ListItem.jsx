@@ -18,6 +18,7 @@ const ListItem = ({
   onUpdate,
   allUsers,
   className,
+  minWidths = {},
   ...props
 }) => {
   if (task.isLoading) {
@@ -26,12 +27,8 @@ const ListItem = ({
 
   if (none) return <Styled.Item className="none">No tasks found</Styled.Item>
 
-  const pathDepth = 2
-  const paths = task?.path?.split('/')?.splice(1)
-  // get the end of the path based on the depth
-  const pathEnds = paths?.slice(-pathDepth)
-  // are there more paths than the depth?
-  const hasMorePaths = paths?.length > pathDepth
+  // path but with last /folderName removed
+  const hoverPath = task.path.split('/').slice(0, -1).join('/')
 
   const endDateDate = task.endDate && new Date(task.endDate)
 
@@ -63,26 +60,25 @@ const ListItem = ({
         value={task.status}
         options={statusesOptions}
         disabledValues={disabledStatuses}
-        invert
         size="icon"
         onOpen={!selected && onClick}
         multipleSelected={selectedLength}
         onChange={(v) => onUpdate('status', v)}
       />
       <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
-      <Styled.Path>
-        <Styled.PathItem>{task.projectCode}</Styled.PathItem>
-        {hasMorePaths && <Styled.PathItem>...</Styled.PathItem>}
-        {pathEnds.map((pathEnd, i, a) => (
-          <Styled.PathItem key={i} className={i === a.length - 1 ? 'last' : undefined}>
-            {pathEnd}
-          </Styled.PathItem>
-        ))}
-        <Styled.Name>
+
+      <span className="folder" style={{ minWidth: minWidths.folder }}>
+        {task.folderName}
+      </span>
+      <Styled.Task className="task" style={{ minWidth: minWidths.task }}>
+        <Styled.Name className="task-icon">
           <Icon icon={task.taskIcon} />
-          <span>{task.name}</span>
         </Styled.Name>
-      </Styled.Path>
+        <Styled.Name>{task.name}</Styled.Name>
+      </Styled.Task>
+
+      <Styled.Name className="path">{hoverPath}</Styled.Name>
+
       <Spacer />
       {!!allUsers.length && (
         <Styled.ItemAssignees
@@ -90,22 +86,13 @@ const ListItem = ({
           value={task.assignees}
           editor
           align="right"
-          size={20}
+          size={18}
           onChange={(v) => onUpdate('assignees', v)}
           disabledValues={disabledProjectUsers}
         />
       )}
-      <Styled.Date
-        style={{
-          color: pastEndDate
-            ? isToday || isTomorrow
-              ? 'var(--md-sys-color-warning)'
-              : 'var(--md-sys-color-error)'
-            : 'inherit',
-        }}
-      >
-        {endDateString}
-      </Styled.Date>
+      <Styled.Date className={classNames({ late: pastEndDate })}>{endDateString}</Styled.Date>
+      <Styled.Code>{task.projectCode}</Styled.Code>
     </Styled.Item>
   )
 }

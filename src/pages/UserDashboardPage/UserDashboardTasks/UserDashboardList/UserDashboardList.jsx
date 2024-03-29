@@ -23,8 +23,8 @@ const UserDashboardList = ({
 
   // create a ref for the list items
   const listItemsRef = useRef([])
-  // keep track of the longest folder name
-  const [minFolderWidth, setMinFolderWidth] = useState(null)
+  // keep track of the longest folder name and task name
+  const [minWidths, setMinWidths] = useState({})
 
   // sort the groupedTasks by id alphabetically based on groupByValue sortBy
   const sortedFields = useMemo(() => {
@@ -71,7 +71,15 @@ const UserDashboardList = ({
       return Math.max(acc, width)
     }, 0)
 
-    setMinFolderWidth(minFolderWidth)
+    // from all of the items, find the one with the longest className='task' and set the width of the task column to that
+    const minTaskWidth = Array.from(listItems).reduce((acc, item) => {
+      const task = item.querySelector('.task')
+      if (!task) return acc
+      const width = task.getBoundingClientRect().width
+      return Math.max(acc, width)
+    }, 0)
+
+    setMinWidths({ folder: minFolderWidth, task: minTaskWidth })
   }, [containerRef.current, isLoading, groupedTasks, groupedFields])
 
   const dispatch = useDispatch()
@@ -308,7 +316,7 @@ const UserDashboardList = ({
                     assigneesIsMe={assigneesIsMe}
                     isCollapsed={collapsedGroups.includes(id)}
                     onCollapseChange={handleCollapseToggle}
-                    minFolderWidth={minFolderWidth}
+                    minWidths={minWidths}
                   />
                 )
               })}

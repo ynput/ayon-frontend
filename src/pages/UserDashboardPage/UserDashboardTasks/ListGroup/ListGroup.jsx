@@ -22,7 +22,7 @@ const ListGroup = ({
   onCollapseChange,
   isCollapsed,
   isLoading,
-  minFolderWidth,
+  minWidths,
 }) => {
   const dispatch = useDispatch()
   const column = groups[id] || {}
@@ -81,7 +81,7 @@ const ListGroup = ({
               onUpdate={onUpdate}
               allUsers={assigneesIsMe ? [] : allUsers}
               className={'card'}
-              minFolderWidth={minFolderWidth}
+              minWidths={minWidths}
             />
           ))}
           {!isLoading && column?.tasks?.length === 0 && <ListItem none />}

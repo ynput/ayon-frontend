@@ -10,15 +10,15 @@ export const Item = styled.li`
   margin: 0;
   padding: 0;
   position: relative;
-  min-height: 42px;
   overflow: hidden;
+  min-height: 34px;
 
   & > * {
     width: min-content;
   }
 
   display: flex;
-  padding: 8px 16px 8px 8px;
+  padding: 5px 8px 5px 8px;
   align-items: center;
   gap: 8px;
   align-self: stretch;
@@ -29,8 +29,18 @@ export const Item = styled.li`
   border: 1px solid transparent;
   border-top-color: var(--md-sys-color-outline-variant);
 
+  /* hide path */
+  .path {
+    display: none;
+  }
+
   &:hover {
     background-color: var(--md-sys-color-surface-container-low-hover);
+
+    /* show path */
+    .path {
+      display: block;
+    }
   }
 
   &:active {
@@ -68,6 +78,11 @@ export const Item = styled.li`
     & + * {
       border-top-color: transparent;
     }
+
+    /* show path */
+    .path {
+      display: block;
+    }
   }
 
   &.loading {
@@ -81,8 +96,8 @@ export const Item = styled.li`
 `
 
 export const ItemStatus = styled(StatusSelect)`
-  height: 24px;
-  width: 24px;
+  height: 22px;
+  width: 22px;
 
   button {
     display: flex;
@@ -93,8 +108,7 @@ export const ItemStatus = styled(StatusSelect)`
     }
 
     .icon {
-      border-radius: var(--border-radius-l);
-      font-size: 16px;
+      font-size: 15px;
     }
     .status-field {
       width: 20px;
@@ -109,11 +123,6 @@ export const ItemStatus = styled(StatusSelect)`
         display: none;
       }
     }
-    .icon {
-      margin: 0;
-      color: var(--md-sys-color-inverse-on-surface);
-      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
-    }
   }
   & > div {
     transform: translateX(-4px);
@@ -121,49 +130,46 @@ export const ItemStatus = styled(StatusSelect)`
 `
 
 export const ItemThumbnail = styled(Thumbnail)`
-  width: 40px;
-  min-width: 40px;
-  height: 24px;
+  width: 39px;
+  min-width: 39px;
+  height: 22px;
   margin: 0;
+  border-radius: var(--border-radius-m);
 
   .icon {
-    font-size: 20px;
+    font-size: 15px;
   }
 `
 
-export const Path = styled.div`
+export const Task = styled.div`
+  margin: 0 16px;
   display: flex;
-  gap: var(--base-gap-medium);
-`
-
-export const PathItem = styled.span`
-  color: var(--md-sys-color-outline);
-
-  &.last {
-    /* last path bold */
-
-    font-weight: 700;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  &::after {
-    content: '/';
-    margin-left: var(--base-gap-medium);
-    color: var(--md-sys-color-outline);
-  }
+  align-items: center;
+  gap: var(--base-gap-small);
 `
 
 export const Name = styled.div`
   display: flex;
+  align-items: center;
   &,
   .icon {
     color: var(--md-sys-color-outline);
   }
+  .icon {
+    font-size: 15px;
+  }
   gap: var(--base-gap-small);
 `
 
+export const Code = styled.span`
+  color: var(--md-sys-color-outline);
+  min-width: 50px;
+  max-width: 50px;
+  text-align: center;
+`
+
 export const ItemAssignees = styled(AssigneeSelect)`
-  height: 24px;
+  height: 22px;
   .button {
     & > div {
       padding: 2px;
@@ -181,6 +187,8 @@ export const ItemAssignees = styled(AssigneeSelect)`
     }
 
     .user-image {
+      width: 18px;
+      height: 18px;
       span {
         display: block;
       }
@@ -193,7 +201,14 @@ export const ItemAssignees = styled(AssigneeSelect)`
 `
 
 export const Date = styled.span`
-  min-width: 90px;
+  min-width: 100px;
+  max-width: 100px;
   text-align: right;
   white-space: nowrap;
+  color: var(--md-sys-color-outline);
+  font-weight: 500;
+
+  &.late {
+    color: var(--md-sys-color-warning);
+  }
 `
