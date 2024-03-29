@@ -2,6 +2,7 @@ import React from 'react'
 import * as Styled from './ListItem.styled'
 import { Icon, Spacer } from '@ynput/ayon-react-components'
 import { addDays, formatDistanceToNow, isSameDay, isValid } from 'date-fns'
+import { classNames } from 'primereact/utils'
 
 const ListItem = ({
   task = {},
@@ -20,7 +21,7 @@ const ListItem = ({
   ...props
 }) => {
   if (task.isLoading) {
-    return <Styled.Item $isLoading={true} className="loading"></Styled.Item>
+    return <Styled.Item className="loading"></Styled.Item>
   }
 
   if (none) return <Styled.Item className="none">No tasks found</Styled.Item>
@@ -50,16 +51,14 @@ const ListItem = ({
     else endDateString = formatDistanceToNow(endDateDate, { addSuffix: true })
   }
 
+  const listItemClass = classNames(className, {
+    selected: selected,
+    last: isLast,
+    first: isFirst,
+  })
+
   return (
-    <Styled.Item
-      $isLast={isLast}
-      $isFirst={isFirst}
-      className={selected ? 'selected ' + className : className}
-      tabIndex={0}
-      id={task.id}
-      onClick={onClick}
-      {...props}
-    >
+    <Styled.Item className={listItemClass} tabIndex={0} id={task.id} onClick={onClick} {...props}>
       <Styled.ItemStatus
         value={task.status}
         options={statusesOptions}

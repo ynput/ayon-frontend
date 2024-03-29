@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import Thumbnail from '/src/containers/thumbnail'
 import StatusSelect from '../status/statusSelect'
 import { AssigneeSelect } from '@ynput/ayon-react-components'
@@ -37,6 +37,14 @@ export const Item = styled.li`
     background-color: var(--md-sys-color-surface-container-low-active);
   }
 
+  &.first {
+    border-top-color: var(--md-sys-color-surface-container-low);
+  }
+
+  &.last {
+    border-radius: 0 0 var(--border-radius-m) var(--border-radius-m);
+  }
+
   &.selected {
     border-radius: var(--border-radius-m);
     background-color: var(--md-sys-color-primary-container);
@@ -62,33 +70,14 @@ export const Item = styled.li`
     }
   }
 
-  /* if $isFirst */
-  ${({ $isFirst }) =>
-    $isFirst &&
-    css`
-      border-top-color: var(--md-sys-color-surface-container-low);
-    `}
-  /* if $isLast */
-  ${({ $isLast }) =>
-    $isLast &&
-    css`
-      border-radius: 0 0 var(--border-radius-m) var(--border-radius-m);
+  &.loading {
+    ${getShimmerStyles()}
+    border-color: var(--md-sys-color-surface-container-low);
 
-      &.selected {
-        border-bottom-color: var(--md-sys-color-primary);
-      }
-    `}
-
-    ${({ $isLoading }) =>
-    $isLoading &&
-    css`
-      ${getShimmerStyles()}
-      border-color: var(--md-sys-color-surface-container-low);
-
-      &:hover {
-        background-color: var(--md-sys-color-surface-container-low);
-      }
-    `}
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low);
+    }
+  }
 `
 
 export const ItemStatus = styled(StatusSelect)`
