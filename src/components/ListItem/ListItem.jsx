@@ -1,6 +1,6 @@
 import React from 'react'
 import * as Styled from './ListItem.styled'
-import { Icon, Spacer } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 import { addDays, formatDistanceToNow, isSameDay, isValid } from 'date-fns'
 import { classNames } from 'primereact/utils'
 
@@ -77,9 +77,8 @@ const ListItem = ({
         <Styled.Name>{task.name}</Styled.Name>
       </Styled.Task>
 
-      <Styled.Name className="path">{hoverPath}</Styled.Name>
+      <Styled.Path className="path">{hoverPath}</Styled.Path>
 
-      <Spacer />
       {!!allUsers.length && (
         <Styled.ItemAssignees
           options={allUsers}

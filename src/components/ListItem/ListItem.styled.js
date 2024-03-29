@@ -29,18 +29,13 @@ export const Item = styled.li`
   border: 1px solid transparent;
   border-top-color: var(--md-sys-color-outline-variant);
 
-  /* hide path */
-  .path {
-    display: none;
+  /* hide path when not hovering or selected */
+  &:not(:hover):not(.selected) .path {
+    opacity: 0;
   }
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-low-hover);
-
-    /* show path */
-    .path {
-      display: block;
-    }
   }
 
   &:active {
@@ -77,11 +72,6 @@ export const Item = styled.li`
     /* bottom border is top of next sibling */
     & + * {
       border-top-color: transparent;
-    }
-
-    /* show path */
-    .path {
-      display: block;
     }
   }
 
@@ -159,6 +149,14 @@ export const Name = styled.div`
     font-size: 15px;
   }
   gap: var(--base-gap-small);
+`
+
+export const Path = styled.span`
+  color: var(--md-sys-color-outline);
+  overflow: hidden;
+  flex: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `
 
 export const Code = styled.span`
