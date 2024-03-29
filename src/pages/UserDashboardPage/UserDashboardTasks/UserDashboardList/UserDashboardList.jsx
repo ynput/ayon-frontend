@@ -6,8 +6,8 @@ import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboa
 import { getFakeTasks, usePrefetchTask, useTaskClick } from '../../util'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
-import useShortcuts from '/src/hooks/useShortcuts'
 import getPreviousTagElement from '/src/helpers/getPreviousTagElement'
+import UserDashboardShortcuts from './UserDashboardShortcuts'
 
 const UserDashboardList = ({
   groupedTasks = {},
@@ -245,53 +245,46 @@ const UserDashboardList = ({
     return [fakeTasks, columnsObject]
   }, [])
 
-  const shortcuts = useMemo(
-    () => [
-      {
-        key: 'c',
-        action: handleShortcutCollapse,
-        closest: '.tasks-list',
-      },
-    ],
-    [collapsedGroups],
-  )
-
-  useShortcuts(shortcuts, [collapsedGroups])
-
   return (
-    <Styled.ListContainer onKeyDown={handleKeyDown} className="tasks-list">
-      <Styled.Inner ref={containerRef}>
-        {isLoading
-          ? fakeColumns.map((c) => (
-              <ListGroup key={c.id} isLoading groups={fakeColumnsObject} id={c.id} />
-            ))
-          : sortedFields.flatMap(({ id }) => {
-              const column = groupedTasks[id]
-              if (!column) return []
+    <>
+      <UserDashboardShortcuts
+        handleShortcutCollapse={handleShortcutCollapse}
+        collapsedGroups={collapsedGroups}
+      />
+      <Styled.ListContainer onKeyDown={handleKeyDown} className="tasks-list">
+        <Styled.Inner ref={containerRef}>
+          {isLoading
+            ? fakeColumns.map((c) => (
+                <ListGroup key={c.id} isLoading groups={fakeColumnsObject} id={c.id} />
+              ))
+            : sortedFields.flatMap(({ id }) => {
+                const column = groupedTasks[id]
+                if (!column) return []
 
-              return (
-                <ListGroup
-                  key={id}
-                  groups={groupedTasks}
-                  tasks={column.tasks}
-                  id={id}
-                  groupByValue={groupByValue}
-                  allUsers={allUsers}
-                  selectedTasks={selectedTasks}
-                  onTaskSelected={handleTaskClick}
-                  onTaskHover={(t) => handlePrefetch(t)}
-                  statusesOptions={statusesOptions}
-                  disabledStatuses={disabledStatuses}
-                  disabledProjectUsers={disabledProjectUsers}
-                  onUpdate={handleUpdate}
-                  assigneesIsMe={assigneesIsMe}
-                  isCollapsed={collapsedGroups.includes(id)}
-                  onCollapseChange={handleCollapseToggle}
-                />
-              )
-            })}
-      </Styled.Inner>
-    </Styled.ListContainer>
+                return (
+                  <ListGroup
+                    key={id}
+                    groups={groupedTasks}
+                    tasks={column.tasks}
+                    id={id}
+                    groupByValue={groupByValue}
+                    allUsers={allUsers}
+                    selectedTasks={selectedTasks}
+                    onTaskSelected={handleTaskClick}
+                    onTaskHover={(t) => handlePrefetch(t)}
+                    statusesOptions={statusesOptions}
+                    disabledStatuses={disabledStatuses}
+                    disabledProjectUsers={disabledProjectUsers}
+                    onUpdate={handleUpdate}
+                    assigneesIsMe={assigneesIsMe}
+                    isCollapsed={collapsedGroups.includes(id)}
+                    onCollapseChange={handleCollapseToggle}
+                  />
+                )
+              })}
+        </Styled.Inner>
+      </Styled.ListContainer>
+    </>
   )
 }
 
