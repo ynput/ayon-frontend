@@ -137,8 +137,16 @@ const UserDashDetailsHeader = ({
           onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
         />
         <Styled.Content>
-          <h2>{!isMultiple ? singleTask.folderName : `${tasks.length} tasks selected`}</h2>
-          <h3>{!isMultiple ? singleTask.name : tasks.map((t) => t.name).join(', ')}</h3>
+          <h2>
+            {!isMultiple
+              ? singleTask.folderLabel || singleTask.folderName
+              : `${tasks.length} tasks selected`}
+          </h2>
+          <h3>
+            {!isMultiple
+              ? singleTask.label || singleTask.name
+              : tasks.map((t) => t.name).join(', ')}
+          </h3>
         </Styled.Content>
       </Styled.Header>
       <Styled.StatusAssigned>
