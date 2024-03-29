@@ -27,7 +27,7 @@ const UserDashboardDetails = ({
 
   // now we get the full details data for selected tasks
   const { data: tasksDetailsData, isFetching: isLoadingTasksDetails } = useGetTasksDetailsQuery(
-    { tasks: tasks },
+    { tasks: selectedTasks },
     { skip: !tasks?.length },
   )
 
