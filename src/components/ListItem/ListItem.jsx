@@ -67,16 +67,20 @@ const ListItem = ({
       />
       <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
 
-      <span className="folder" style={{ minWidth: minWidths.folder }}>
-        {task.folderName}
-      </span>
+      {/* FOLDER LABEL */}
+      <Styled.Folder className="folder" style={{ minWidth: minWidths.folder }}>
+        {task.folderLabel || task.folderName}
+      </Styled.Folder>
+
+      {/* TASK ICON AND LABEL */}
       <Styled.Task className="task" style={{ minWidth: minWidths.task }}>
         <Styled.Name className="task-icon">
           <Icon icon={task.taskIcon} />
         </Styled.Name>
-        <Styled.Name>{task.name}</Styled.Name>
+        <Styled.Name className="task-label">{task.label || task.name}</Styled.Name>
       </Styled.Task>
 
+      {/* PATH SHOW ON HOVER */}
       <Styled.Path className="path">{hoverPath}</Styled.Path>
 
       {!!allUsers.length && (

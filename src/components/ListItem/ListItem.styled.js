@@ -87,7 +87,8 @@ export const Item = styled.li`
 
 export const ItemStatus = styled(StatusSelect)`
   height: 22px;
-  width: 22px;
+  max-width: 22px;
+  min-width: 22px;
 
   button {
     display: flex;
@@ -131,11 +132,26 @@ export const ItemThumbnail = styled(Thumbnail)`
   }
 `
 
-export const Task = styled.div`
+export const Folder = styled.span`
+  max-width: 300px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`
+
+export const Task = styled.span`
   margin: 0 16px;
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
+  overflow: hidden;
+
+  .task-label {
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
 `
 
 export const Name = styled.div`
