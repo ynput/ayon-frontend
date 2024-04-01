@@ -170,7 +170,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
       const newAddons = { ...newFormData.addons }
       for (const addon of selectedAddons) {
         if (!latest) {
-          newAddons[addon.name] = undefined
+          newAddons[addon.name] = null
           continue
         }
         const versionList = Object.keys(addon.versions || {})
