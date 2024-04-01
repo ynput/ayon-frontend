@@ -15,6 +15,13 @@ const HeaderButton = styled(Button)`
   & > span {
     font-size: 26px !important;
   }
+  /* set home icon filled */
+  &#home-button {
+    .icon {
+      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+    }
+    padding-right: 12px;
+  }
 
   /* fix until new buttons come in */
   /* active */
