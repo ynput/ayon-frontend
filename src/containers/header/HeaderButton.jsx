@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
 
 const HeaderButton = styled(Button)`
@@ -25,18 +25,14 @@ const HeaderButton = styled(Button)`
 
   /* fix until new buttons come in */
   /* active */
-  ${({ active }) =>
-    active &&
-    css`
-      background-color: var(--md-sys-color-surface-container-highest);
-    `}
 
-  ${({ $selected }) =>
-    $selected &&
-    css`
-      outline: solid 1px var(--md-sys-color-outline-variant);
-      background-color: var(--md-sys-color-background);
-    `} {
+  &.active {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
+
+  &.selected {
+    outline: solid 1px var(--md-sys-color-outline-variant);
+    background-color: var(--md-sys-color-background);
   }
 
   &::after {

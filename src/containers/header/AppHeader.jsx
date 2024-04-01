@@ -135,7 +135,7 @@ const Header = () => {
           icon="home"
           label="Home"
           variant="nav"
-          $selected={location.pathname.startsWith('/dashboard')}
+          className={classNames({ selected: location.pathname.startsWith('/dashboard') })}
           id="home-button"
         />
       </Link>
@@ -168,7 +168,7 @@ const Header = () => {
         icon="help"
         ref={helpButtonRef}
         onClick={() => handleToggleMenu('help')}
-        active={menuOpen === 'help'}
+        className={classNames({ active: menuOpen === 'help' })}
         variant="text"
       />
       <MenuContainer id="help" target={helpButtonRef.current}>
@@ -181,9 +181,8 @@ const Header = () => {
         icon="apps"
         onClick={() => handleToggleMenu('app')}
         ref={appButtonRef}
-        active={menuOpen === 'app'}
         variant="text"
-        className={classNames({ notification: isSnoozing })}
+        className={classNames({ active: menuOpen === 'app', notification: isSnoozing })}
       />
       <MenuContainer id="app" target={appButtonRef.current}>
         <AppMenu user={user} />
@@ -192,7 +191,7 @@ const Header = () => {
 
       {/* User icon and menu vvv */}
       <HeaderButton
-        active={menuOpen === 'user'}
+        className={classNames({ active: menuOpen === 'user' })}
         onClick={() => handleToggleMenu('user')}
         ref={userButtonRef}
         variant="text"
