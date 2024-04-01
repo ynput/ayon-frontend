@@ -6,7 +6,7 @@ import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import { classNames } from 'primereact/utils'
-import useShortcuts from '/src/hooks/useShortcuts'
+import Shortcuts from '/src/containers/Shortcuts'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
   padding: 4px 12px;
@@ -200,8 +200,6 @@ const ProductsGrid = ({
     [collapsedGroups],
   )
 
-  useShortcuts(shortcuts, [collapsedGroups])
-
   // if groupBy is set, group the data
 
   const groupedData = useMemo(() => {
@@ -232,6 +230,7 @@ const ProductsGrid = ({
       }}
       onClick={() => onSelectionChange({ value: {} })}
     >
+      <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       {Object.entries(groupedData).map(([groupName, groupData], index) => (
         <StyledGroup
           key={groupName}

@@ -25,8 +25,8 @@ import useLocalStorage from '/src/hooks/useLocalStorage'
 
 import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import useShortcuts from '/src/hooks/useShortcuts'
 import { useSearchParams } from 'react-router-dom'
+import Shortcuts from '/src/containers/Shortcuts'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -347,10 +347,14 @@ const Bundles = () => {
   const prodBundle = useMemo(() => bundlesData.find((b) => b.isProduction), [bundlesData])
   const stageBundle = useMemo(() => bundlesData.find((b) => b.isStaging), [bundlesData])
 
-  useShortcuts(shortcuts, [selectedBundles, newBundleOpen, prodBundle, stageBundle])
+  console.log('render')
 
   return (
     <>
+      <Shortcuts
+        shortcuts={shortcuts}
+        deps={[selectedBundles, newBundleOpen, prodBundle, stageBundle]}
+      />
       <Dialog
         visible={uploadOpen}
         style={{ width: 400, height: 400, overflow: 'hidden' }}
