@@ -8,9 +8,9 @@ import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
 import { isEqual, union } from 'lodash'
 import BundleDeps from './BundleDeps'
-import useShortcuts from '/src/hooks/useShortcuts'
 import useAddonSelection from './useAddonSelection'
 import { useSearchParams } from 'react-router-dom'
+import Shortcuts from '/src/containers/Shortcuts'
 
 const removeEmptyDevAddons = (addons = {}) => {
   if (!addons) return addons
@@ -210,10 +210,9 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     },
   ]
 
-  useShortcuts(shortcuts, [addons, selectedAddons])
-
   return (
     <>
+      <Shortcuts shortcuts={shortcuts} deps={[addons, selectedAddons]} />
       <Toolbar>
         <Spacer />
         {isDev && (

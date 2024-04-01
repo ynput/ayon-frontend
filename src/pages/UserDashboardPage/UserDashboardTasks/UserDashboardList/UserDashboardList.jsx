@@ -7,7 +7,7 @@ import { getFakeTasks, usePrefetchTask, useTaskClick } from '../../util'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '/src/helpers/getPreviousTagElement'
-import UserDashboardShortcuts from './UserDashboardShortcuts'
+import Shortcuts from '/src/containers/Shortcuts'
 
 const UserDashboardList = ({
   groupedTasks = {},
@@ -282,12 +282,20 @@ const UserDashboardList = ({
     return [fakeTasks, columnsObject]
   }, [])
 
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'c',
+        action: handleShortcutCollapse,
+        closest: '.tasks-list',
+      },
+    ],
+    [collapsedGroups],
+  )
+
   return (
     <>
-      <UserDashboardShortcuts
-        handleShortcutCollapse={handleShortcutCollapse}
-        collapsedGroups={collapsedGroups}
-      />
+      <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       <Styled.ListContainer onKeyDown={handleKeyDown} className="tasks-list">
         <Styled.Inner ref={containerRef}>
           {isLoading

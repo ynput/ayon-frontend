@@ -51,7 +51,7 @@ import NewSequence from './NewSequence'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import confirmDelete from '/src/helpers/confirmDelete'
 import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
-import EditorPageShortcuts from './EditorPageShortcuts'
+import Shortcuts from '/src/containers/Shortcuts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -1762,18 +1762,33 @@ const EditorPage = () => {
     treeData = loadingTreeData
   }
 
+  const shortcuts = [
+    {
+      key: 'n',
+      action: () => setNewEntity('folder'),
+    },
+    {
+      key: 'm',
+      action: () => setNewEntity('sequence'),
+    },
+    {
+      key: 't',
+      action: () => setNewEntity('task'),
+      disabled: disableAddNew,
+    },
+    {
+      key: 'c',
+      action: (e) => handleToggleFolder(e, true),
+      closest: 'tr.type-folder',
+    },
+  ]
+
   //
   // Render the TreeTable
 
   return (
     <main className="editor-page">
-      <EditorPageShortcuts
-        {...{
-          setNewEntity,
-          disableAddNew,
-          handleToggleFolder,
-        }}
-      />
+      <Shortcuts shortcuts={shortcuts} deps={[disableAddNew, handleToggleFolder]} />
       {newEntity &&
         (newEntity === 'sequence' ? (
           <NewSequence
