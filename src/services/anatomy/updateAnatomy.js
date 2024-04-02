@@ -18,17 +18,24 @@ const getAnatomy = ayonApi.injectEndpoints({
         url: `/api/anatomy/presets/${name}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, { name }) => [{ type: 'anatomyPresets', id: name }],
+      invalidatesTags: (result, error, { name }) => [{ type: 'anatomyPresets', id: name }, { type: 'anatomyPresets', id: 'LIST' }],
     }),
     updatePrimaryPreset: build.mutation({
       query: ({ name }) => ({
         url: `/api/anatomy/presets/${name}/primary`,
         method: 'POST',
       }),
-      invalidatesTags: (result, error, { name }) => [{ type: 'anatomyPresets', id: name }],
+      invalidatesTags: (result, error, { name }) => [{ type: 'anatomyPresets', id: name }, { type: 'anatomyPresets', id: 'LIST' }],
+    }),
+    unsetPrimaryPreset: build.mutation({
+      query: ({ name }) => ({
+        url: `/api/anatomy/presets/${name}/primary`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { name }) => [{ type: 'anatomyPresets', id: name }, { type: 'anatomyPresets', id: 'LIST' }],
     }),
   }),
 })
 
-export const { useUpdatePresetMutation, useDeletePresetMutation, useUpdatePrimaryPresetMutation } =
+export const { useUpdatePresetMutation, useDeletePresetMutation, useUpdatePrimaryPresetMutation, useUnsetPrimaryPresetMutation } =
   getAnatomy
