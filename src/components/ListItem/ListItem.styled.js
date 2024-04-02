@@ -1,7 +1,7 @@
 import styled from 'styled-components'
-import Thumbnail from '/src/containers/thumbnail'
+import ThumbnailSimple from '/src/containers/ThumbnailSimple'
 import StatusSelect from '../status/statusSelect'
-import { AssigneeSelect } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 export const Item = styled.li`
@@ -85,6 +85,21 @@ export const Item = styled.li`
   }
 `
 
+export const SimpleStatus = styled(Icon)`
+  height: 22px;
+  max-width: 22px;
+  min-width: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.icon {
+    font-size: 15px;
+    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
+  }
+`
+
 export const ItemStatus = styled(StatusSelect)`
   height: 22px;
   max-width: 22px;
@@ -120,7 +135,7 @@ export const ItemStatus = styled(StatusSelect)`
   }
 `
 
-export const ItemThumbnail = styled(Thumbnail)`
+export const ItemThumbnail = styled(ThumbnailSimple)`
   width: 39px;
   min-width: 39px;
   height: 22px;
