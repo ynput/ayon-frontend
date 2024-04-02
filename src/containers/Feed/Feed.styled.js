@@ -9,21 +9,6 @@ export const FeedContainer = styled.section`
 
   display: grid;
   grid-template-rows: 1fr auto;
-
-  ::after {
-    content: 'Activity Feed Coming Soon';
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: var(--md-sys-typescale-title-large-font-size);
-  }
-
-  & > * {
-    opacity: 0.2;
-  }
 `
 
 export const FeedContent = styled.div`
