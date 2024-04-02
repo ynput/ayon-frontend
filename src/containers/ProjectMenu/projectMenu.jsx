@@ -165,7 +165,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     handleHide()
 
     // if already on project page, do not navigate
-    if (window.location.pathname.includes(projectName)) return
+    if (window.location.pathname.split('/')[2] === projectName) return
 
     // reset selected folders
     dispatch(selectProject(projectName))
