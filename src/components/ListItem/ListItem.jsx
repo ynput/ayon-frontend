@@ -48,6 +48,11 @@ const ListItem = ({
     else endDateString = formatDistanceToNow(endDateDate, { addSuffix: true })
   }
 
+  // remove "about" from endDateString
+  if (endDateString && endDateString.startsWith('about')) {
+    endDateString = endDateString.slice(6)
+  }
+
   const listItemClass = classNames(className, {
     selected: selected,
     last: isLast,
