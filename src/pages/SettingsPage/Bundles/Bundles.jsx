@@ -347,8 +347,6 @@ const Bundles = () => {
   const prodBundle = useMemo(() => bundlesData.find((b) => b.isProduction), [bundlesData])
   const stageBundle = useMemo(() => bundlesData.find((b) => b.isStaging), [bundlesData])
 
-  console.log('render')
-
   return (
     <>
       <Shortcuts
