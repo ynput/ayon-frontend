@@ -91,7 +91,7 @@ const UserAccessForm = ({ accessGroupsData, formData, setFormData, disabled }) =
                 selectedAccessGroups={defaultAccessGroups}
                 setSelectedAccessGroups={handleAccessGroupsChange}
                 placeholder={'Set access groups...'}
-                isMixed={true}
+                isMultiple={formData._mixedFields?.includes('defaultAccessGroups')}
                 accessGroups={accessGroupsData}
               />
             </FormRow>

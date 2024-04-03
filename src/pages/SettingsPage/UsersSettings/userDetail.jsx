@@ -124,6 +124,13 @@ const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
 
     // if form defaultAccessGroups does no contain an access group in current user, add it
     if (user.defaultAccessGroups) {
+      // check if defaultAccessGroups is the same as the current array
+      if (index !== 0 && !isEqual(initForm.defaultAccessGroups, user.defaultAccessGroups)) {
+        // it's a mixed field, add it to the mixed fields array
+        if (!initForm._mixedFields.includes('defaultAccessGroups'))
+          initForm._mixedFields.push('defaultAccessGroups')
+      }
+
       for (const project in user.defaultAccessGroups) {
         if (!initForm.defaultAccessGroups) initForm.defaultAccessGroups = []
         if (!initForm.defaultAccessGroups.includes(user.defaultAccessGroups[project])) {
@@ -148,10 +155,13 @@ const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
 const buildFormData = (users = [], attributes) => {
   // first build empty form data
   const defaultForm = {
-    ...[...attributes, ...fields].reduce((acc, { name, data }) => {
-      acc[name] = attribTypeDefaults[data?.type]
-      return acc
-    }, {}),
+    ...[...attributes, ...fields].reduce(
+      (acc, { name, data }) => {
+        acc[name] = attribTypeDefaults[data?.type]
+        return acc
+      },
+      { _mixedFields: [] },
+    ),
     // access groups is custom field
     accessGroups: {},
   }
