@@ -6,13 +6,25 @@ const getAccessGroups = ayonApi.injectEndpoints({
       query: (args) => ({
         url: '/api/accessGroups/' + (args?.projectName || '_'),
       }),
-      providesTags: ['accessGroups'],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ name }) => ({ type: 'accessGroup', id: name })),
+              { type: 'accessGroup', id: 'LIST' },
+            ]
+          : [{ type: 'accessGroup', id: 'LIST' }],
     }),
     getAccessGroup: build.query({
       query: ({ name, projectName }) => ({
         url: `/api/accessGroups/${name}/${projectName || '_'}`,
       }),
-      providesTags: (res, error, { name }) => (error ? [] : [{ type: 'accessGroup', id: name }]),
+      providesTags: (result, err, { name }) =>
+        result
+          ? [
+              { type: 'accessGroup', id: name },
+              { type: 'accessGroup', id: 'LIST' },
+            ]
+          : [{ type: 'accessGroup', id: 'LIST' }],
     }),
     getAccessGroupSchema: build.query({
       query: () => ({

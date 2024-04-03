@@ -8,7 +8,7 @@ const setAccessGroups = ayonApi.injectEndpoints({
         method: 'PUT',
         body: {},
       }),
-      invalidatesTags: ['accessGroups'],
+      invalidatesTags: [{ type: 'accessGroup', id: 'LIST' }],
     }),
     updateAccessGroup: build.mutation({
       query: ({ name, projectName = '_', data }) => ({
@@ -16,14 +16,14 @@ const setAccessGroups = ayonApi.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: (res, error, { name }) => [{ type: 'accessGroup', id: name }],
+      invalidatesTags: () => [{ type: 'accessGroup', id: 'LIST' }],
     }),
     deleteAccessGroup: build.mutation({
       query: ({ name, projectName = '_' }) => ({
         url: `/api/accessGroups/${name}/${projectName}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['accessGroups'],
+      invalidatesTags: [{ type: 'accessGroup', id: 'LIST' }],
     }),
   }),
 })
