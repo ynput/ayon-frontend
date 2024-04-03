@@ -21,7 +21,7 @@ const SectionStyled = styled(Section)`
   }
 `
 
-const NewUser = ({ onHide, open, onSuccess }) => {
+const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
@@ -162,7 +162,12 @@ const NewUser = ({ onHide, open, onSuccess }) => {
           />
         </Panel>
         <Panel>
-          <UserAccessForm formData={formData} setFormData={setFormData} isNew />
+          <UserAccessForm
+            formData={formData}
+            setFormData={setFormData}
+            accessGroupsData={accessGroupsData}
+            isNew
+          />
         </Panel>
         {formData.userLevel === 'user' && (
           <Panel>

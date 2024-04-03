@@ -16,7 +16,7 @@ import UserAccessForm from './UserAccessForm'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
-import { isEqual } from 'lodash'
+import { cloneDeep, isEqual } from 'lodash'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -84,22 +84,7 @@ const fields = [
   },
 ]
 
-// this transforms all the selected users into a single form data object
-const buildFormData = (users = [], attributes) => {
-  // first build empty form data
-  const defaultForm = {
-    ...[...attributes, ...fields].reduce((acc, { name, data }) => {
-      acc[name] = attribTypeDefaults[data?.type]
-      return acc
-    }, {}),
-    // access groups is custom field
-    accessGroups: {},
-  }
-
-  const initForm = {
-    ...defaultForm,
-  }
-
+const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
   // now for each user, merge the data into the form
   users.forEach((user, index) => {
     if (!user) return
@@ -137,11 +122,14 @@ const buildFormData = (users = [], attributes) => {
     if (index !== 0 && initForm.userLevel !== userLevel) initForm.userLevel = defaultForm.userLevel
     else initForm.userLevel = userLevel
 
-    // defaultAccessGroups
-    if (index !== 0 && initForm.defaultAccessGroups !== user.defaultAccessGroups) {
-      initForm.defaultAccessGroups = defaultForm.defaultAccessGroups
-    } else {
-      initForm.defaultAccessGroups = user.defaultAccessGroups
+    // if form defaultAccessGroups does no contain an access group in current user, add it
+    if (user.defaultAccessGroups) {
+      for (const project in user.defaultAccessGroups) {
+        if (!initForm.defaultAccessGroups) initForm.defaultAccessGroups = []
+        if (!initForm.defaultAccessGroups.includes(user.defaultAccessGroups[project])) {
+          initForm.defaultAccessGroups.push(user.defaultAccessGroups[project])
+        }
+      }
     }
 
     // AccessGroups
@@ -154,6 +142,24 @@ const buildFormData = (users = [], attributes) => {
       }
     }
   })
+}
+
+// this transforms all the selected users into a single form data object
+const buildFormData = (users = [], attributes) => {
+  // first build empty form data
+  const defaultForm = {
+    ...[...attributes, ...fields].reduce((acc, { name, data }) => {
+      acc[name] = attribTypeDefaults[data?.type]
+      return acc
+    }, {}),
+    // access groups is custom field
+    accessGroups: {},
+  }
+
+  const initForm = cloneDeep(defaultForm)
+
+  // merge the data of all (even just 1) users into the form
+  mergeMultipleUsers(users, defaultForm, initForm)
 
   return initForm
 }
@@ -167,6 +173,7 @@ const UserDetail = ({
   isSelfSelected,
   selectedUserList,
   managerDisabled,
+  accessGroupsData,
 }) => {
   const [formData, setFormData] = useState(null)
   const [initData, setInitData] = useState({})
@@ -181,13 +188,6 @@ const UserDetail = ({
     if (selectedUsers.length === 0) return
 
     setFormUsers(selectedUserList)
-
-    // return if the selectedUsers is the same as formUsers
-    if (
-      formUsers.every((user) => selectedUsers.includes(user.name)) &&
-      selectedUsers.length === formUsers.length
-    )
-      return
 
     const builtFormData = buildFormData(selectedUserList, attributes)
 
@@ -226,7 +226,7 @@ const UserDetail = ({
     } else {
       setChangesMade(false)
     }
-  }, [formData, initData, selectedUsers, formData?.accessGroups])
+  }, [formData, initData, selectedUsers])
 
   // editing a single user, so show attributes form too
   const singleUserEdit = selectedUsers.length === 1 ? formUsers[0] : null
@@ -387,14 +387,12 @@ const UserDetail = ({
             </Panel>
           )}
           {formData && (
-            <Panel>
-              <UserAccessForm
-                formData={formData}
-                setFormData={setFormData}
-                selectedProjects={selectedProjects}
-                disabled={managerDisabled || isSelfSelected}
-              />
-            </Panel>
+            <UserAccessForm
+              formData={formData}
+              setFormData={setFormData}
+              disabled={managerDisabled || isSelfSelected}
+              accessGroupsData={accessGroupsData}
+            />
           )}
         </FormsStyled>
       )}

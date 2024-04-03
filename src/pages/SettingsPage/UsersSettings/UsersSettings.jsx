@@ -20,6 +20,7 @@ import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
 import confirmDelete from '/src/helpers/confirmDelete'
+import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
 
 // TODO: Remove classname assignments and do in styled components
 const formatAccessGroups = (rowData, selectedProjects) => {
@@ -82,6 +83,9 @@ const UsersSettings = () => {
     userList = []
     toast.error('Unable to load users')
   }
+
+  // GET ACCESS GROUPS QUERY
+  const { data: accessGroupsData } = useGetAccessGroupsQuery()
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()
@@ -272,6 +276,7 @@ const UsersSettings = () => {
                 isSelfSelected={isSelfSelected}
                 selectedUserList={selectedUserList}
                 managerDisabled={managerDisabled}
+                accessGroupsData={accessGroupsData}
               />
             ) : (
               !showNewUser && (
@@ -290,6 +295,7 @@ const UsersSettings = () => {
                 if (newUsers.length) setSelectedUsers(newUsers)
               }}
               open={showNewUser && !selectedUsers.length}
+              accessGroupsData={accessGroupsData}
             />
           </SplitterPanel>
         </Splitter>
