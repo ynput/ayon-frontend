@@ -39,6 +39,18 @@ export const PanelButtonsStyled = styled(Panel)`
   }
 `
 
+const AccessGroupsConfirmStyled = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  background-color: var(--md-sys-color-surface-container-low);
+
+  padding: 4px;
+  border-radius: 4px;
+  max-height: 160px;
+  overflow: overlay;
+`
+
 const attribTypeDefaults = {
   string: '',
   boolean: false,
@@ -257,20 +269,20 @@ const UserDetail = ({
       icon: 'pi pi-exclamation-triangle',
       message: (
         <ul>
-          {/* usuers being updates */}
-          <li>
-            Users:{' '}
-            {formUsers.map((user) => (
-              <span key={user.name}>{user.name}, </span>
+          <li>Users: {formUsers.map((user) => user.name).join(', ')}</li>
+          <li>User active: {formData.userActive ? 'Yes' : 'No'}</li>
+          <li>Access level: {formData.userLevel}</li>
+          <li>Is guest: {formData.isGuest ? 'Yes' : 'No'}</li>
+          <li>Is developer: {formData.isDeveloper ? 'Yes' : 'No'}</li>
+          <li>Default access groups: {formData.defaultAccessGroups.join(', ')}</li>
+          <li>Project access groups:</li>
+          <AccessGroupsConfirmStyled>
+            {Object.entries(formData.accessGroups).map(([project, accessGroup]) => (
+              <span className="item" key={project}>
+                {project}: {accessGroup}
+              </span>
             ))}
-          </li>
-          <li>User Active: {formData.userActive ? 'Yes' : 'No'}</li>
-          <li>Access Level: {formData.userLevel}</li>
-          <li>Is Guest: {formData.isGuest ? 'Yes' : 'No'}</li>
-          <li>Is Developer: {formData.isDeveloper ? 'Yes' : 'No'}</li>
-          <li>
-            AccessGroups: {formData.accessGroups?.length ? formData.accessGroups.join(', ') : ''}
-          </li>
+          </AccessGroupsConfirmStyled>
         </ul>
       ),
 
