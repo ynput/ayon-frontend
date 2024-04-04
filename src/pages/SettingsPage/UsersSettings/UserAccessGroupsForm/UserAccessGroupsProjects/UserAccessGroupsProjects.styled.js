@@ -9,6 +9,7 @@ export const Header = styled.header`
 `
 export const ProjectItem = styled.div`
   display: flex;
+  justify-content: space-between;
   padding: 4px 8px;
   align-items: center;
   gap: 8px;
@@ -19,12 +20,25 @@ export const ProjectItem = styled.div`
   /* default styles (inactive) */
   color: var(--md-sys-color-outline);
 
+  /* hide icon until hover or active */
+  .icon {
+    display: none;
+  }
+
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest-hover);
+
+    .icon {
+      display: block;
+    }
   }
 
   &.active {
     color: var(--md-sys-color-on-surface);
+
+    .icon {
+      display: block;
+    }
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-hover);
@@ -35,6 +49,7 @@ export const ProjectItem = styled.div`
     opacity: 0.5;
     user-select: none;
     pointer-events: none;
+    overflow: hidden;
 
     &:hover {
       background-color: transparent;

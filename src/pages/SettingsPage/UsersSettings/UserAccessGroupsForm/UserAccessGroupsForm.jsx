@@ -21,7 +21,8 @@ const UserAccessGroupsForm = ({ value = {}, options = [], projectsList = [], onC
   const accessGroups = Object.entries(value).reduce((acc, [project, accessGroups]) => {
     accessGroups.forEach((ag) => {
       if (!acc[ag]) acc[ag] = []
-      acc[ag].push(project)
+      // check project is in projectsList
+      if (projectsList.find(({ name }) => name === project)) acc[ag].push(project)
     })
     return acc
   }, {})

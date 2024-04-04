@@ -9,6 +9,7 @@ export const Header = styled.header`
 `
 export const AccessGroupItem = styled.div`
   display: flex;
+  justify-content: space-between;
   padding: 4px 8px;
   align-items: center;
   gap: 8px;
@@ -19,19 +20,29 @@ export const AccessGroupItem = styled.div`
   /* default styles (inactive) */
   color: var(--md-sys-color-outline);
 
+  .icon {
+    color: var(--md-sys-color-outline);
+  }
+
+  /* hide icon when not selected, not hovered, not active */
+  /* &:not(.active):not(.selected):not(:hover) .icon {
+    display: none;
+  } */
+
   &:hover {
-    background-color: var(--md-sys-color-surface-container-highest-hover);
+    background-color: var(--md-sys-color-surface-container-hover);
   }
 
   &.active {
     color: var(--md-sys-color-on-surface);
 
+    .icon {
+      color: var(--md-sys-color-on-surface);
+    }
+
     &:hover {
       background-color: var(--md-sys-color-surface-container-hover);
     }
-  }
-
-  &:hover {
   }
 
   &.selected {

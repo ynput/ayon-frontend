@@ -1,4 +1,4 @@
-import { Panel } from '@ynput/ayon-react-components'
+import { Icon, Panel } from '@ynput/ayon-react-components'
 import * as Styled from './UserAccessGroupsProjects.styled'
 import { classNames } from 'primereact/utils'
 
@@ -20,6 +20,7 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
             onClick={() => onChange(name)}
           >
             <span>{name}</span>
+            {!isDisabled && <Icon icon={values.includes(name) ? 'check' : 'add'} />}
           </Styled.ProjectItem>
         ))}
       </Styled.List>
