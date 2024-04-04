@@ -5,23 +5,18 @@ export const getSortedTasks = (tasks = [], sortBy = []) => {
   return [...tasks].sort((a, b) => {
     for (let i = 0; i < sortBy.length; i++) {
       const { id, sortOrder } = sortBy[i]
-      if (id.toLowerCase().includes('date')) {
-        const dateA = new Date(b[id])
-        const dateB = new Date(a[id])
+      const dateA = new Date(b[id])
+      const dateB = new Date(a[id])
+      const decreaseIfSort = sortOrder ? -1 : 1
+      const increaseIfSort = sortOrder ? 1 : -1
+      const isDateField = id.toLowerCase().includes('date')
 
-        if (dateA < dateB) {
-          return sortOrder ? -1 : 1
-        }
-        if (dateA > dateB) {
-          return sortOrder ? 1 : -1
-        }
+      if (isDateField) {
+        if (dateA < dateB) return decreaseIfSort
+        if (dateA > dateB) return increaseIfSort
       } else {
-        if (a[id] < b[id]) {
-          return sortOrder ? -1 : 1
-        }
-        if (a[id] > b[id]) {
-          return sortOrder ? 1 : -1
-        }
+        if (a[id] < b[id]) return decreaseIfSort
+        if (a[id] > b[id]) return increaseIfSort
       }
     }
     return 0
