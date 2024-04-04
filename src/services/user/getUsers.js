@@ -98,7 +98,7 @@ const getUsers = ayonApi.injectEndpoints({
         url: '/api/users',
       }),
       transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
-      providesTags: () => ['user'],
+      providesTags: () => ['user', { type: 'user', id: 'LIST' }],
     }),
     getUsers: build.query({
       query: () => ({
@@ -122,13 +122,18 @@ const getUsers = ayonApi.injectEndpoints({
         }))
       },
       providesTags: (users) =>
-        users ? [...users.map((e) => ({ type: 'user', id: e.name }))] : ['user'],
+        users
+          ? [...users.map((e) => ({ type: 'user', id: e.name })), { type: 'user', id: 'LIST' }]
+          : ['user', { type: 'user', id: 'LIST' }],
     }),
     getUser: build.query({
       query: ({ name }) => ({
         url: `/api/users/${name}`,
       }),
-      providesTags: (res, g, { name }) => [{ type: 'user', id: name }],
+      providesTags: (res, g, { name }) => [
+        { type: 'user', id: name },
+        { type: 'user', id: 'LIST' },
+      ],
     }),
     getUserByName: build.query({
       query: ({ name }) => ({
@@ -141,9 +146,9 @@ const getUsers = ayonApi.injectEndpoints({
       }),
       transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
       providesTags: (res) =>
-        res?.data?.users
-          ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
-          : ['user'],
+        res
+          ? [...res.map((e) => ({ type: 'user', id: e.name }, { type: 'user', id: 'LIST' }))]
+          : ['user', { type: 'user', id: 'LIST' }],
     }),
     getUsersAssignee: build.query({
       query: ({ names, projectName }) => ({
@@ -167,15 +172,18 @@ const getUsers = ayonApi.injectEndpoints({
           }
         }),
       providesTags: (res) =>
-        res?.data?.users
-          ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
-          : ['user'],
+        res
+          ? [...res.map((user) => ({ type: 'user', id: user.name })), { type: 'user', id: 'LIST' }]
+          : [{ type: 'user', id: 'LIST' }],
     }),
     getMe: build.query({
       query: () => ({
         url: '/api/users/me',
       }),
-      providesTags: (res) => [{ type: 'user', id: res?.name }],
+      providesTags: (res) => [
+        { type: 'user', id: res?.name },
+        { type: 'user', id: 'LIST' },
+      ],
     }),
     getUserSessions: build.query({
       query: ({ name }) => ({
