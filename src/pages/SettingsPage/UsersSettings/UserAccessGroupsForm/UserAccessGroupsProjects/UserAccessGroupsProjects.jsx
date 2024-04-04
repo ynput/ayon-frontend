@@ -53,7 +53,7 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
             className={classNames({ active: values.includes(name), disabled: isDisabled })}
             onClick={() => onChange([name])}
           >
-            <span>{name}</span>
+            <span className="name">{name}</span>
             <Icon icon={values.includes(name) ? 'check' : 'add'} />
           </Styled.ProjectItem>
         ))}

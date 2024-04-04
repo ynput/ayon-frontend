@@ -10,6 +10,7 @@ const ContainerStyled = styled.div`
 
   & > * {
     flex: 1;
+    overflow: hidden;
   }
 `
 

@@ -23,6 +23,14 @@ export const ProjectItem = styled.div`
   min-height: 28px;
   overflow: hidden;
 
+  /* text overflow */
+  .name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   /* default styles (inactive) */
   color: var(--md-sys-color-outline);
 

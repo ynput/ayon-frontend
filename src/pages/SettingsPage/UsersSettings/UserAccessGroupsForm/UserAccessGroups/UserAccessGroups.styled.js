@@ -17,6 +17,14 @@ export const AccessGroupItem = styled.div`
   border-radius: var(--border-radius-m);
   cursor: pointer;
 
+  /* text overflow */
+  .name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   /* default styles (inactive) */
   color: var(--md-sys-color-outline);
 

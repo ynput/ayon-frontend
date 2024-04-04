@@ -20,7 +20,9 @@ const UserAccessGroups = ({ values = {}, selected, onChange }) => {
             })}
             onClick={() => onChange(accessGroup)}
           >
-            <span>{`${accessGroup} ${projects.length ? '- ' + projects.length : ''}`}</span>
+            <span className="name">{`${accessGroup} ${
+              projects.length ? '- ' + projects.length : ''
+            }`}</span>
             <Icon icon={projects.length || selected === accessGroup ? 'chevron_right' : 'add'} />
           </Styled.AccessGroupItem>
         ))}
