@@ -36,9 +36,6 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
 
   return (
     <Panel>
-      {/* <Styled.Header>
-        <h4>Projects</h4>
-      </Styled.Header> */}
       <Styled.Buttons>
         {noneEnabled && (
           <Button onClick={handleClearAll} disabled={!noneEnabled}>

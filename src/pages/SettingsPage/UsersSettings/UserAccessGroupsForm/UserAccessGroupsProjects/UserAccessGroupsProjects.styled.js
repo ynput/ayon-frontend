@@ -1,12 +1,5 @@
 import styled from 'styled-components'
 
-export const Header = styled.header`
-  display: flex;
-  padding: 4px 4px 4px 8px;
-  justify-content: space-between;
-  align-items: center;
-  align-self: stretch;
-`
 export const Buttons = styled.header`
   display: flex;
   align-items: center;
