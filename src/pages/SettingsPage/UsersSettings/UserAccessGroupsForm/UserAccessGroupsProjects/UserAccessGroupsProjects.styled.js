@@ -7,6 +7,17 @@ export const Header = styled.header`
   align-items: center;
   align-self: stretch;
 `
+export const Buttons = styled.header`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  button {
+    flex: 1;
+    padding: 4px;
+  }
+`
+
 export const ProjectItem = styled.div`
   display: flex;
   justify-content: space-between;

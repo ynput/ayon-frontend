@@ -34,25 +34,29 @@ const UserAccessGroupsForm = ({ value = {}, options = [], projectsList = [], onC
 
   const [selectedAccessGroup, setSelectedAccessGroup] = useState(null)
 
-  const handleAccessChange = (project) => {
-    // get current access groups for project
-    // note: if project is not in value, it will default to empty array
-    const newProjectAccessGroups = value[project] || []
-
-    // update access groups for project
-    // add or remove access group from project
-    if (newProjectAccessGroups.includes(selectedAccessGroup)) {
-      // remove access group from project
-      newProjectAccessGroups.splice(newProjectAccessGroups.indexOf(selectedAccessGroup), 1)
-    } else {
-      // add access group to project
-      newProjectAccessGroups.push(selectedAccessGroup)
-    }
-
+  const handleAccessChange = (projects) => {
     const newAccessGroups = {
       ...value,
-      [project]: newProjectAccessGroups,
     }
+
+    projects.forEach((project) => {
+      // get current access groups for project
+      // note: if project is not in value, it will default to empty array
+      const newProjectAccessGroups = value[project] || []
+
+      // update access groups for project
+      // add or remove access group from project
+      if (newProjectAccessGroups.includes(selectedAccessGroup)) {
+        // remove access group from project
+        newProjectAccessGroups.splice(newProjectAccessGroups.indexOf(selectedAccessGroup), 1)
+      } else {
+        // add access group to project
+        newProjectAccessGroups.push(selectedAccessGroup)
+      }
+
+      // update access groups for project
+      newAccessGroups[project] = newProjectAccessGroups
+    })
 
     onChange && onChange(newAccessGroups)
   }
