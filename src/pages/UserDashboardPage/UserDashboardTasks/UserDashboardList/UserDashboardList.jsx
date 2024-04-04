@@ -32,25 +32,17 @@ const UserDashboardList = ({
       const asc = groupByValue[0].sortOrder
       // sort by id
       return [...groupedFields].sort((a, b) => {
+        const hasATasksButBDoesNot = a.tasksCount === 0 && b.tasksCount > 0
+        const hasBTasksButADoesNot = b.tasksCount === 0 && a.tasksCount > 0
+        // If one group has tasks and the other does not, put the group without tasks at the end
         if (asc) {
-          // If one group has tasks and the other does not, put the group without tasks at the end
-          if (a.tasksCount > 0 && b.tasksCount === 0) {
-            return -1
-          } else if (a.tasksCount === 0 && b.tasksCount > 0) {
-            return 1
-          }
-
-          // If both groups either have tasks or not, sort by id
+          if (hasBTasksButADoesNot) return -1
+          if (hasATasksButBDoesNot) return 1
+          // if t
           return a.id.localeCompare(b.id)
         } else {
-          // If one group has tasks and the other does not, put the group without tasks at the end
-          if (a.tasksCount > 0 && b.tasksCount === 0) {
-            return -1
-          } else if (a.tasksCount === 0 && b.tasksCount > 0) {
-            return 1
-          }
-
-          // If both groups either have tasks or not, sort by id
+          if (hasBTasksButADoesNot) return -1
+          if (hasATasksButBDoesNot) return 1
           return b.id.localeCompare(a.id)
         }
       })
