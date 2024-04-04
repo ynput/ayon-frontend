@@ -7,7 +7,7 @@ export const Buttons = styled.header`
 
   button {
     flex: 1;
-    padding: 4px;
+    padding: 6px;
   }
 `
 
@@ -20,20 +20,23 @@ export const ProjectItem = styled.div`
   align-self: stretch;
   border-radius: var(--border-radius-m);
   cursor: pointer;
+  min-height: 28px;
+  overflow: hidden;
 
   /* default styles (inactive) */
   color: var(--md-sys-color-outline);
 
   /* hide icon until hover or active */
   .icon {
-    display: none;
+    opacity: 0;
+    user-select: none;
   }
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest-hover);
 
     .icon {
-      display: block;
+      opacity: 1;
     }
   }
 
@@ -41,7 +44,7 @@ export const ProjectItem = styled.div`
     color: var(--md-sys-color-on-surface);
 
     .icon {
-      display: block;
+      opacity: 1;
     }
 
     &:hover {
@@ -54,6 +57,10 @@ export const ProjectItem = styled.div`
     user-select: none;
     pointer-events: none;
     overflow: hidden;
+
+    .icon {
+      opacity: 0;
+    }
 
     &:hover {
       background-color: transparent;

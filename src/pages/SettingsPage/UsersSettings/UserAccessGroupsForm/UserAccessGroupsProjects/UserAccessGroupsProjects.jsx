@@ -54,7 +54,7 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
             onClick={() => onChange([name])}
           >
             <span>{name}</span>
-            {!isDisabled && <Icon icon={values.includes(name) ? 'check' : 'add'} />}
+            <Icon icon={values.includes(name) ? 'check' : 'add'} />
           </Styled.ProjectItem>
         ))}
       </Styled.List>

@@ -24,11 +24,6 @@ export const AccessGroupItem = styled.div`
     color: var(--md-sys-color-outline);
   }
 
-  /* hide icon when not selected, not hovered, not active */
-  /* &:not(.active):not(.selected):not(:hover) .icon {
-    display: none;
-  } */
-
   &:hover {
     background-color: var(--md-sys-color-surface-container-hover);
   }
