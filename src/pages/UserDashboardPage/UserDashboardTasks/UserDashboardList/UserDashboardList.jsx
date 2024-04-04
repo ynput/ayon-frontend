@@ -1,6 +1,6 @@
 import * as Styled from './UserDashboardList.styled'
 import ListGroup from '../ListGroup/ListGroup'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
 import { getFakeTasks, usePrefetchTask, useTaskClick } from '../../util'
@@ -23,6 +23,8 @@ const UserDashboardList = ({
 
   // create a ref for the list items
   const listItemsRef = useRef([])
+  // keep track of the longest folder name and task name
+  const [minWidths, setMinWidths] = useState({})
 
   // sort the groupedTasks by id alphabetically based on groupByValue sortBy
   const sortedFields = useMemo(() => {
@@ -30,9 +32,17 @@ const UserDashboardList = ({
       const asc = groupByValue[0].sortOrder
       // sort by id
       return [...groupedFields].sort((a, b) => {
+        const hasATasksButBDoesNot = a.tasksCount === 0 && b.tasksCount > 0
+        const hasBTasksButADoesNot = b.tasksCount === 0 && a.tasksCount > 0
+        // If one group has tasks and the other does not, put the group without tasks at the end
         if (asc) {
+          if (hasBTasksButADoesNot) return -1
+          if (hasATasksButBDoesNot) return 1
+          // if t
           return a.id.localeCompare(b.id)
         } else {
+          if (hasBTasksButADoesNot) return -1
+          if (hasATasksButBDoesNot) return 1
           return b.id.localeCompare(a.id)
         }
       })
@@ -42,7 +52,26 @@ const UserDashboardList = ({
 
   // store a reference to the list items in the ref
   useEffect(() => {
-    listItemsRef.current = containerRef.current.querySelectorAll('li:not(.none)')
+    const listItems = containerRef.current.querySelectorAll('li:not(.none)')
+    // store the list items in the ref
+    listItemsRef.current = listItems
+    // from all of the items, find the one with the longest className='folder' and set the width of the folder column to that
+    const minFolderWidth = Array.from(listItems).reduce((acc, item) => {
+      const folder = item.querySelector('.folder')
+      if (!folder) return acc
+      const width = folder.getBoundingClientRect().width
+      return Math.max(acc, width)
+    }, 0)
+
+    // from all of the items, find the one with the longest className='task' and set the width of the task column to that
+    const minTaskWidth = Array.from(listItems).reduce((acc, item) => {
+      const task = item.querySelector('.task')
+      if (!task) return acc
+      const width = task.getBoundingClientRect().width
+      return Math.max(acc, width)
+    }, 0)
+
+    setMinWidths({ folder: minFolderWidth, task: minTaskWidth })
   }, [containerRef.current, isLoading, groupedTasks, groupedFields])
 
   const dispatch = useDispatch()
@@ -287,6 +316,7 @@ const UserDashboardList = ({
                     assigneesIsMe={assigneesIsMe}
                     isCollapsed={collapsedGroups.includes(id)}
                     onCollapseChange={handleCollapseToggle}
+                    minWidths={minWidths}
                   />
                 )
               })}

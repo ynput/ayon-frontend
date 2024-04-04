@@ -1,7 +1,7 @@
-import styled, { css } from 'styled-components'
-import Thumbnail from '/src/containers/thumbnail'
+import styled from 'styled-components'
+import ThumbnailSimple from '/src/containers/ThumbnailSimple'
 import StatusSelect from '../status/statusSelect'
-import { AssigneeSelect } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 export const Item = styled.li`
@@ -10,15 +10,15 @@ export const Item = styled.li`
   margin: 0;
   padding: 0;
   position: relative;
-  min-height: 42px;
   overflow: hidden;
+  min-height: 34px;
 
   & > * {
     width: min-content;
   }
 
   display: flex;
-  padding: 8px 16px 8px 8px;
+  padding: 5px 8px 5px 8px;
   align-items: center;
   gap: 8px;
   align-self: stretch;
@@ -29,12 +29,25 @@ export const Item = styled.li`
   border: 1px solid transparent;
   border-top-color: var(--md-sys-color-outline-variant);
 
+  /* hide path when not hovering or selected */
+  &:not(:hover):not(.selected) .path {
+    opacity: 0;
+  }
+
   &:hover {
     background-color: var(--md-sys-color-surface-container-low-hover);
   }
 
   &:active {
     background-color: var(--md-sys-color-surface-container-low-active);
+  }
+
+  &.first {
+    border-top-color: var(--md-sys-color-surface-container-low);
+  }
+
+  &.last {
+    border-radius: 0 0 var(--border-radius-m) var(--border-radius-m);
   }
 
   &.selected {
@@ -62,38 +75,35 @@ export const Item = styled.li`
     }
   }
 
-  /* if $isFirst */
-  ${({ $isFirst }) =>
-    $isFirst &&
-    css`
-      border-top-color: var(--md-sys-color-surface-container-low);
-    `}
-  /* if $isLast */
-  ${({ $isLast }) =>
-    $isLast &&
-    css`
-      border-radius: 0 0 var(--border-radius-m) var(--border-radius-m);
+  &.loading {
+    ${getShimmerStyles()}
+    border-color: var(--md-sys-color-surface-container-low);
 
-      &.selected {
-        border-bottom-color: var(--md-sys-color-primary);
-      }
-    `}
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low);
+    }
+  }
+`
 
-    ${({ $isLoading }) =>
-    $isLoading &&
-    css`
-      ${getShimmerStyles()}
-      border-color: var(--md-sys-color-surface-container-low);
+export const SimpleStatus = styled(Icon)`
+  height: 22px;
+  max-width: 22px;
+  min-width: 22px;
 
-      &:hover {
-        background-color: var(--md-sys-color-surface-container-low);
-      }
-    `}
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.icon {
+    font-size: 15px;
+    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
+  }
 `
 
 export const ItemStatus = styled(StatusSelect)`
-  height: 24px;
-  width: 24px;
+  height: 22px;
+  max-width: 22px;
+  min-width: 22px;
 
   button {
     display: flex;
@@ -104,8 +114,7 @@ export const ItemStatus = styled(StatusSelect)`
     }
 
     .icon {
-      border-radius: var(--border-radius-l);
-      font-size: 16px;
+      font-size: 15px;
     }
     .status-field {
       width: 20px;
@@ -120,61 +129,76 @@ export const ItemStatus = styled(StatusSelect)`
         display: none;
       }
     }
-    .icon {
-      margin: 0;
-      color: var(--md-sys-color-inverse-on-surface);
-      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
-    }
   }
   & > div {
     transform: translateX(-4px);
   }
 `
 
-export const ItemThumbnail = styled(Thumbnail)`
-  width: 40px;
-  min-width: 40px;
-  height: 24px;
+export const ItemThumbnail = styled(ThumbnailSimple)`
+  width: 39px;
+  min-width: 39px;
+  height: 22px;
   margin: 0;
+  border-radius: var(--border-radius-m);
 
   .icon {
-    font-size: 20px;
+    font-size: 15px;
   }
 `
 
-export const Path = styled.div`
+export const Folder = styled.span`
+  max-width: 300px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`
+
+export const Task = styled.span`
+  margin: 0 16px;
   display: flex;
-  gap: var(--base-gap-medium);
-`
+  align-items: center;
+  gap: var(--base-gap-small);
+  overflow: hidden;
 
-export const PathItem = styled.span`
-  color: var(--md-sys-color-outline);
-
-  &.last {
-    /* last path bold */
-
-    font-weight: 700;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  &::after {
-    content: '/';
-    margin-left: var(--base-gap-medium);
-    color: var(--md-sys-color-outline);
+  .task-label {
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 `
 
 export const Name = styled.div`
   display: flex;
+  align-items: center;
   &,
   .icon {
     color: var(--md-sys-color-outline);
   }
+  .icon {
+    font-size: 15px;
+  }
   gap: var(--base-gap-small);
 `
 
+export const Path = styled.span`
+  color: var(--md-sys-color-outline);
+  overflow: hidden;
+  flex: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`
+
+export const Code = styled.span`
+  color: var(--md-sys-color-outline);
+  min-width: 50px;
+  max-width: 50px;
+  text-align: center;
+`
+
 export const ItemAssignees = styled(AssigneeSelect)`
-  height: 24px;
+  height: 22px;
   .button {
     & > div {
       padding: 2px;
@@ -192,6 +216,8 @@ export const ItemAssignees = styled(AssigneeSelect)`
     }
 
     .user-image {
+      width: 18px;
+      height: 18px;
       span {
         display: block;
       }
@@ -204,7 +230,14 @@ export const ItemAssignees = styled(AssigneeSelect)`
 `
 
 export const Date = styled.span`
-  min-width: 90px;
+  min-width: 100px;
+  max-width: 100px;
   text-align: right;
   white-space: nowrap;
+  color: var(--md-sys-color-outline);
+  font-weight: 500;
+
+  &.late {
+    color: var(--md-sys-color-warning);
+  }
 `
