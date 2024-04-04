@@ -2,9 +2,12 @@ import { useSelector } from 'react-redux'
 import { InputSwitch, FormLayout, FormRow, Panel } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import AccessGroupsDropdown from '/src/containers/AccessGroupsDropdown'
+import UserAccessGroups from './UserAccessGroupsForm/UserAccessGroupsForm'
+import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 
 const UserAccessForm = ({ accessGroupsData, formData, setFormData, disabled }) => {
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
+  const { data: projectsList = [] } = useGetAllProjectsQuery({ showInactive: false })
 
   const userLevels = [
     { label: 'User', value: 'user' },
@@ -32,6 +35,7 @@ const UserAccessForm = ({ accessGroupsData, formData, setFormData, disabled }) =
   const isManager = formData?.userLevel === 'manager'
 
   const defaultAccessGroups = formData?.defaultAccessGroups
+  const accessGroups = formData?.accessGroups
 
   const handleAccessGroupsChange = (value) => {
     updateFormData('defaultAccessGroups', value)
@@ -98,6 +102,14 @@ const UserAccessForm = ({ accessGroupsData, formData, setFormData, disabled }) =
           )}
         </FormLayout>
       </Panel>
+      {isUser && (
+        <UserAccessGroups
+          value={accessGroups}
+          options={accessGroupsData}
+          projectsList={projectsList}
+          onChange={(value) => updateFormData('accessGroups', value)}
+        />
+      )}
     </>
   )
 }
