@@ -22,6 +22,7 @@ export const ProjectItem = styled.div`
   cursor: pointer;
   min-height: 28px;
   overflow: hidden;
+  user-select: none;
 
   /* text overflow */
   .name {

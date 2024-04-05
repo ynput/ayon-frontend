@@ -16,6 +16,7 @@ export const AccessGroupItem = styled.div`
   align-self: stretch;
   border-radius: var(--border-radius-m);
   cursor: pointer;
+  user-select: none;
 
   /* text overflow */
   .name {
