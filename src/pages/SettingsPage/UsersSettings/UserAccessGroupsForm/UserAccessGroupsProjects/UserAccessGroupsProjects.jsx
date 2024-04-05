@@ -5,7 +5,13 @@ import { useRef, useState } from 'react'
 import { matchSorter } from 'match-sorter'
 
 // access groups panel
-const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisabled }) => {
+const UserAccessGroupsProjects = ({
+  values = [],
+  activeValues = [],
+  options = [],
+  onChange,
+  isDisabled,
+}) => {
   // sort options alphabetically
   const sortedOptions = [...options].sort((a, b) => a.name.localeCompare(b.name))
 
@@ -215,7 +221,11 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
             tabIndex={0}
           >
             <span className="name">{name}</span>
-            <Icon icon={values.includes(name) ? 'check' : 'add'} />
+            <Icon
+              icon={
+                values.includes(name) ? (activeValues.includes(name) ? 'check' : 'remove') : 'add'
+              }
+            />
           </Styled.ProjectItem>
         ))}
       </Styled.List>
