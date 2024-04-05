@@ -51,9 +51,9 @@ const UserAccessGroupsForm = ({ value = {}, options = [], projectsList = [], onC
         // is this accessGroup inactive for any of the selected projects?
         const notActiveForAll = !activeProjects.includes(project)
 
-        // this project is not active on all selected access groups
-        // so we set it active for all selected access groups (even if it was already active)
         if (notActiveForAll) {
+          // this project is not active on all selected access groups
+          // so we set it active for all selected access groups (even if it was already active)
           if (!newProjectAccessGroups.includes(accessGroup))
             newProjectAccessGroups.push(accessGroup)
         } else {
@@ -95,7 +95,7 @@ const UserAccessGroupsForm = ({ value = {}, options = [], projectsList = [], onC
   }
 
   return (
-    <ContainerStyled>
+    <ContainerStyled id="user-access-groups-form">
       <UserAccessGroups
         values={accessGroups}
         selected={selectedAccessGroups}

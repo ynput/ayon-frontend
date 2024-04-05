@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Panel, SaveButton, Section, UserImage } from '@ynput/ayon-react-components'
-import ProjectList from '/src/containers/projectList'
 import { useAddUserMutation } from '/src/services/user/updateUser'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
@@ -22,7 +21,6 @@ const SectionStyled = styled(Section)`
 `
 
 const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
-  const [selectedProjects, setSelectedProjects] = useState(null)
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -75,12 +73,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
     else if (formData.userLevel === 'service') payload.data.isService = true
     else {
       payload.data.defaultAccessGroups = formData.defaultAccessGroups || []
-      if (selectedProjects) {
-        const accessGroups = {}
-        for (const projectName of selectedProjects)
-          accessGroups[projectName] = payload.data.defaultAccessGroups
-        payload.data.accessGroups = accessGroups
-      }
+      payload.data.accessGroups = formData.accessGroups || {}
     }
 
     payload.name = formData.Username
@@ -161,27 +154,11 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
             {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
           />
         </Panel>
-        <Panel>
-          <UserAccessForm
-            formData={formData}
-            setFormData={setFormData}
-            accessGroupsData={accessGroupsData}
-            isNew
-          />
-        </Panel>
-        {formData.userLevel === 'user' && (
-          <Panel>
-            <span style={{ margin: '8px 0' }}>
-              <b>Apply default access groups to:</b>
-            </span>
-            <ProjectList
-              selection={selectedProjects}
-              onSelect={setSelectedProjects}
-              multiselect={true}
-              styleSection={{ maxWidth: 'unset' }}
-            />
-          </Panel>
-        )}
+        <UserAccessForm
+          formData={formData}
+          onChange={(key, value) => setFormData({ ...formData, [key]: value })}
+          accessGroupsData={accessGroupsData}
+        />
       </Section>
       <PanelButtonsStyled>
         <Button onClick={handleCancel} label="Clear" icon="clear" />

@@ -41,7 +41,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
 
   return (
     <>
-      <Panel>
+      <Panel id="user-access-form">
         <b>Access Control</b>
         <FormLayout>
           <FormRow label="User active">
