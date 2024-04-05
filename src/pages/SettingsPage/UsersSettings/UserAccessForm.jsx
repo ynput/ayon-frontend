@@ -5,7 +5,7 @@ import AccessGroupsDropdown from '/src/containers/AccessGroupsDropdown'
 import UserAccessGroups from './UserAccessGroupsForm/UserAccessGroupsForm'
 import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 
-const UserAccessForm = ({ accessGroupsData, formData, setFormData, disabled }) => {
+const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
   const { data: projectsList = [] } = useGetAllProjectsQuery({ showInactive: false })
 
@@ -26,9 +26,7 @@ const UserAccessForm = ({ accessGroupsData, formData, setFormData, disabled }) =
   ]
 
   const updateFormData = (key, value) => {
-    setFormData((fd) => {
-      return { ...fd, [key]: value }
-    })
+    onChange && onChange(key, value)
   }
 
   const isUser = formData?.userLevel === 'user'

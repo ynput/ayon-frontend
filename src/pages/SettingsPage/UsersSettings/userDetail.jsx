@@ -411,7 +411,7 @@ const UserDetail = ({
           {formData && (
             <UserAccessForm
               formData={formData}
-              setFormData={setFormData}
+              onChange={(key, value) => setFormData({ ...formData, [key]: value })}
               disabled={managerDisabled || isSelfSelected}
               accessGroupsData={accessGroupsData}
             />

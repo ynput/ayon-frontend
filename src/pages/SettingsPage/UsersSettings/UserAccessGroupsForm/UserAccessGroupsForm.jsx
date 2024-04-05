@@ -7,6 +7,7 @@ const ContainerStyled = styled.div`
   display: flex;
   gap: 4px;
   overflow: hidden;
+  min-height: 300px;
 
   & > * {
     flex: 1;
@@ -43,7 +44,8 @@ const UserAccessGroupsForm = ({ value = {}, options = [], projectsList = [], onC
     projects.forEach((project) => {
       // get current access groups for project
       // note: if project is not in value, it will default to empty array
-      const newProjectAccessGroups = value[project] || []
+      // spread the array to create a new array and avoid mutating the original
+      const newProjectAccessGroups = [...(value[project] || [])]
 
       // update access groups for project
       // add or remove access group from project
