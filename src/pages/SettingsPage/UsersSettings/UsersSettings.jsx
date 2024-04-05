@@ -20,6 +20,7 @@ import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
 import confirmDelete from '/src/helpers/confirmDelete'
 import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
+import Shortcuts from '/src/containers/Shortcuts'
 
 // TODO: Remove classname assignments and do in styled components
 const formatAccessGroups = (rowData, selectedProjects) => {
@@ -190,12 +191,20 @@ const UsersSettings = () => {
   // managers can't update admin users
   const managerDisabled = levels.some((l) => ['admin'].includes(l)) && !isAdmin && !isSelfSelected
 
-  // Render
-
-  // return null
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'n',
+        action: () => setShowNewUser(true),
+      },
+    ],
+    [showNewUser],
+  )
 
   return (
     <>
+      <Shortcuts shortcuts={shortcuts} deps={[showNewUser]} />
+
       <NewUser
         onHide={(newUsers = []) => {
           setShowNewUser(false)
@@ -224,7 +233,12 @@ const UsersSettings = () => {
               icon="person_remove"
               disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
             />
-            <Button onClick={openNewUser} label="Add New User" icon="person_add" />
+            <Button
+              onClick={openNewUser}
+              label="Add New User"
+              icon="person_add"
+              data-shortcut="n"
+            />
           </Toolbar>
           <Splitter
             style={{ width: '100%', height: '100%' }}
