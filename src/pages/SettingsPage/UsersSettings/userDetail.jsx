@@ -45,7 +45,7 @@ const AccessGroupsConfirmStyled = styled.div`
 
   background-color: var(--md-sys-color-surface-container-low);
 
-  padding: 4px;
+  padding: 4px 8px;
   border-radius: 4px;
   max-height: 160px;
   overflow: overlay;
@@ -264,9 +264,7 @@ const UserDetail = ({
   const handleMultiSave = () => {
     // if multiple users are selected confirm the action
     confirmDialog({
-      // message: `Are you sure you want update all these users to the same values?`,
-      header: 'Update All Selected Users To The Same Values?',
-      icon: 'pi pi-exclamation-triangle',
+      header: 'Update all selected users to the same values?',
       message: (
         <ul>
           <li>Users: {formUsers.map((user) => user.name).join(', ')}</li>
@@ -279,7 +277,7 @@ const UserDetail = ({
           <AccessGroupsConfirmStyled>
             {Object.entries(formData.accessGroups).map(([project, accessGroup]) => (
               <span className="item" key={project}>
-                {project}: {accessGroup}
+                {project}: {accessGroup?.join(', ')}
               </span>
             ))}
           </AccessGroupsConfirmStyled>
