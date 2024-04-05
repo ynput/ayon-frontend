@@ -1,13 +1,67 @@
+import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
-export const Buttons = styled.header`
+export const Header = styled.header`
+  display: flex;
+  gap: 4px;
+  padding: 4px 0px 4px 8px;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  position: relative;
+
+  input {
+    margin-left: -8px;
+    width: calc(100% + 8px);
+    position: relative;
+    margin-right: -4px;
+  }
+
+  &:not(.searchOpen) {
+    cursor: pointer;
+  }
+
+  /* search button */
+  /* button {
+    padding: 2px;
+  } */
+
+  /* attribute icon='search' */
+  .icon[icon='search'] {
+    color: var(--md-sys-color-outline);
+  }
+
+  &:hover {
+    .icon[icon='search'] {
+      color: var(--md-sys-color-on-surface);
+    }
+  }
+`
+
+export const CloseIcon = styled(Icon)`
+  cursor: pointer;
+
+  position: absolute;
+  right: 6px;
+
+  color: var(--md-sys-color-outline);
+
+  &:hover {
+    color: var(--md-sys-color-on-surface);
+  }
+`
+
+export const Buttons = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
 
+  padding: 1px;
+  margin: -1px;
+
   button {
     flex: 1;
-    padding: 6px;
+    padding: 4px;
   }
 `
 

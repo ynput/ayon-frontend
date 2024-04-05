@@ -1,7 +1,8 @@
-import { Button, Icon, Panel } from '@ynput/ayon-react-components'
+import { Button, Icon, InputText, Panel } from '@ynput/ayon-react-components'
 import * as Styled from './UserAccessGroupsProjects.styled'
 import { classNames } from 'primereact/utils'
 import { useRef, useState } from 'react'
+import { matchSorter } from 'match-sorter'
 
 // access groups panel
 const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisabled }) => {
@@ -10,12 +11,23 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
 
   const isDragging = useRef(false)
 
+  // is the search bar open?
+  const [searchOpen, setSearchOpen] = useState(false)
+  // search string
+  const [search, setSearch] = useState('')
+
+  // if search open, filter options
+  const filteredOptions = matchSorter(sortedOptions, search, { keys: ['name'] })
+
+  // if search is open, use filtered options, otherwise use sorted options
+  const projectOptions = searchOpen ? filteredOptions : sortedOptions
+
   // this keeps track of which projects the mouse is over, to prevent triggering the same project multiple times
   const [currentHoveredIndex, setCurrentHoveredIndex] = useState(null)
   // are we turning on or off
   const [turningOn, setTurningOn] = useState(true)
 
-  const handleMouseDown = (e) => {
+  const handleItemMouseDown = (e) => {
     isDragging.current = true
 
     const itemElement = e.target.closest('.project-item')
@@ -68,6 +80,56 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
     setCurrentHoveredIndex(index)
   }
 
+  // keyboard selection on item
+  const handleItemKeyDown = (e) => {
+    // onChange the project using id if enter or space
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleItemMouseDown(e)
+    }
+  }
+
+  const handleSearchClose = () => {
+    setSearchOpen(false)
+    setSearch('')
+  }
+
+  // search keyboard selection
+  const handleSearchKeyDown = (e) => {
+    if (!searchOpen) return
+
+    // if escape, close search
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      handleSearchClose()
+    }
+
+    // if enter, focus on the first project
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault()
+
+      // select the first project
+      const firstProject = e.target
+        .closest('#user-access-groups-projects')
+        ?.querySelector('.project-item')
+      // focus on the first project
+      if (firstProject) firstProject.focus()
+
+      // only one project from search? select it
+      if (filteredOptions.length === 1) {
+        onChange([filteredOptions[0].name])
+      }
+    }
+  }
+
+  const handleKeyDown = (e) => {
+    // if esc and search is open, close search
+    if (e.key === 'Escape' && searchOpen) {
+      e.preventDefault()
+      handleSearchClose()
+    }
+  }
+
   const handleSelectAll = () => {
     // onChange only the names of the projects that are not already in values
     const addingValues = sortedOptions
@@ -96,7 +158,38 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
   const noneEnabled = !!values.length
 
   return (
-    <Panel onMouseUp={handleMouseUp} onMouseMove={handleMouseMove}>
+    <Panel
+      onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
+      onKeyDown={handleKeyDown}
+      id="user-access-groups-projects"
+    >
+      <Styled.Header
+        onClick={() => !searchOpen && setSearchOpen(true)}
+        className={classNames({ searchOpen })}
+      >
+        {searchOpen ? (
+          <>
+            <InputText
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+              placeholder="Search projects..."
+              onKeyDown={handleSearchKeyDown}
+            />
+            <Styled.CloseIcon icon={searchOpen ? 'close' : 'search'} onClick={handleSearchClose} />
+          </>
+        ) : (
+          <>
+            <span>Projects</span>
+            <Button
+              icon={searchOpen ? 'close' : 'search'}
+              variant="text"
+              onClick={() => setSearchOpen(true)}
+            />
+          </>
+        )}
+      </Styled.Header>
       <Styled.Buttons>
         {noneEnabled && (
           <Button onClick={handleClearAll} disabled={!noneEnabled}>
@@ -108,7 +201,7 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
         </Button>
       </Styled.Buttons>
       <Styled.List>
-        {sortedOptions.map(({ name }) => (
+        {projectOptions.map(({ name }) => (
           <Styled.ProjectItem
             key={name}
             className={classNames('project-item', {
@@ -116,9 +209,10 @@ const UserAccessGroupsProjects = ({ values = [], options = [], onChange, isDisab
               disabled: isDisabled,
               dragging: isDragging.current,
             })}
-            onClick={() => onChange([name])}
-            onMouseDown={handleMouseDown}
+            onMouseDown={handleItemMouseDown}
+            onKeyDown={handleItemKeyDown}
             id={name}
+            tabIndex={0}
           >
             <span className="name">{name}</span>
             <Icon icon={values.includes(name) ? 'check' : 'add'} />

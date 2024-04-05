@@ -1,6 +1,7 @@
-import { Icon, Panel } from '@ynput/ayon-react-components'
+import { Button, Icon, Panel } from '@ynput/ayon-react-components'
 import * as Styled from './UserAccessGroups.styled'
 import { classNames } from 'primereact/utils'
+import { Link } from 'react-router-dom'
 
 // access groups panel
 const UserAccessGroups = ({ values = {}, selected, onChange }) => {
@@ -8,7 +9,10 @@ const UserAccessGroups = ({ values = {}, selected, onChange }) => {
   return (
     <Panel>
       <Styled.Header>
-        <h4>Access Groups</h4>
+        <span>Access Groups</span>
+        <Link to={'/settings/accessGroups'}>
+          <Button icon="group_add" variant="text" />
+        </Link>
       </Styled.Header>
       <Styled.List>
         {sortedValues.map(([accessGroup, projects = []]) => (
