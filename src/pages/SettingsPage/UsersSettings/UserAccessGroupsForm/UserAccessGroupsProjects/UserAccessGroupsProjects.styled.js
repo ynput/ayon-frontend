@@ -30,6 +30,7 @@ export const ProjectItem = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    pointer-events: none;
   }
 
   /* default styles (inactive) */
@@ -46,6 +47,12 @@ export const ProjectItem = styled.div`
 
     .icon {
       opacity: 1;
+    }
+  }
+
+  &.dragging {
+    .icon {
+      opacity: 0;
     }
   }
 
