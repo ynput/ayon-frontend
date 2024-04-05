@@ -146,7 +146,6 @@ const UsersSettings = () => {
 
   const openNewUser = () => {
     setShowNewUser(true)
-    setSelectedUsers([])
   }
 
   // use filteredUserList if a project is selected
@@ -196,75 +195,84 @@ const UsersSettings = () => {
   // return null
 
   return (
-    <main>
-      <Section>
-        <Toolbar>
-          <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
-            <InputText
-              style={{ width: '250px' }}
-              placeholder="Filter users..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autocomplete="search-users"
-            />
-          </form>
-          <Spacer />
-          <Button
-            onClick={onDelete}
-            label="Delete Users"
-            icon="person_remove"
-            disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
-          />
-          <Button onClick={openNewUser} label="Add New User" icon="person_add" />
-        </Toolbar>
-        <Splitter
-          style={{ width: '100%', height: '100%' }}
-          layout="horizontal"
-          stateKey="users-panels"
-          stateStorage="local"
-        >
-          <SplitterPanel size={10}>
-            <ProjectList
-              showNull="No project (all users)"
-              multiselect={true}
-              selection={selectedProjects}
-              onSelect={setSelectedProjects}
-              style={{ maxWidth: 'unset' }}
-              wrap
-            />
-          </SplitterPanel>
-          <SplitterPanel size={50}>
-            <UserList
-              userList={userList}
-              tableList={filteredData}
-              onSelectUsers={setSelectedUsers}
-              isFetching={isFetching}
-              {...{
-                selectedProjects,
-                selectedUsers,
-                setShowSetPassword,
-                setShowRenameUser,
-                onDelete,
-                isLoading,
-                isSelfSelected,
-              }}
-            />
-          </SplitterPanel>
-          <SplitterPanel size={40} style={{ minWidth: 370 }}>
-            {selectedUsers.length ? (
-              <UserDetail
-                setShowRenameUser={setShowRenameUser}
-                selectedUsers={selectedUsers}
-                setShowSetPassword={setShowSetPassword}
-                selectedProjects={selectedProjects}
-                setSelectedUsers={setSelectedUsers}
-                isSelfSelected={isSelfSelected}
-                selectedUserList={selectedUserList}
-                managerDisabled={managerDisabled}
-                accessGroupsData={accessGroupsData}
+    <>
+      <NewUser
+        onHide={(newUsers = []) => {
+          setShowNewUser(false)
+          if (newUsers.length) setSelectedUsers(newUsers)
+        }}
+        open={showNewUser}
+        accessGroupsData={accessGroupsData}
+      />
+
+      <main>
+        <Section>
+          <Toolbar>
+            <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+              <InputText
+                style={{ width: '250px' }}
+                placeholder="Filter users..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autocomplete="search-users"
               />
-            ) : (
-              !showNewUser && (
+            </form>
+            <Spacer />
+            <Button
+              onClick={onDelete}
+              label="Delete Users"
+              icon="person_remove"
+              disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
+            />
+            <Button onClick={openNewUser} label="Add New User" icon="person_add" />
+          </Toolbar>
+          <Splitter
+            style={{ width: '100%', height: '100%' }}
+            layout="horizontal"
+            stateKey="users-panels"
+            stateStorage="local"
+          >
+            <SplitterPanel size={10}>
+              <ProjectList
+                showNull="No project (all users)"
+                multiselect={true}
+                selection={selectedProjects}
+                onSelect={setSelectedProjects}
+                style={{ maxWidth: 'unset' }}
+                wrap
+              />
+            </SplitterPanel>
+            <SplitterPanel size={50}>
+              <UserList
+                userList={userList}
+                tableList={filteredData}
+                onSelectUsers={setSelectedUsers}
+                isFetching={isFetching}
+                {...{
+                  selectedProjects,
+                  selectedUsers,
+                  setShowSetPassword,
+                  setShowRenameUser,
+                  onDelete,
+                  isLoading,
+                  isSelfSelected,
+                }}
+              />
+            </SplitterPanel>
+            <SplitterPanel size={40} style={{ minWidth: 370 }}>
+              {selectedUsers.length ? (
+                <UserDetail
+                  setShowRenameUser={setShowRenameUser}
+                  selectedUsers={selectedUsers}
+                  setShowSetPassword={setShowSetPassword}
+                  selectedProjects={selectedProjects}
+                  setSelectedUsers={setSelectedUsers}
+                  isSelfSelected={isSelfSelected}
+                  selectedUserList={selectedUserList}
+                  managerDisabled={managerDisabled}
+                  accessGroupsData={accessGroupsData}
+                />
+              ) : (
                 <UsersOverview
                   selectedProjects={selectedProjects}
                   userList={filteredUserList}
@@ -272,37 +280,29 @@ const UsersSettings = () => {
                   onTotal={onTotal}
                   search={search}
                 />
-              )
-            )}
-            <NewUser
-              onHide={(newUsers = []) => {
-                setShowNewUser(false)
-                if (newUsers.length) setSelectedUsers(newUsers)
-              }}
-              open={showNewUser && !selectedUsers.length}
-              accessGroupsData={accessGroupsData}
-            />
-          </SplitterPanel>
-        </Splitter>
-      </Section>
+              )}
+            </SplitterPanel>
+          </Splitter>
+        </Section>
 
-      {showRenameUser && (
-        <RenameUserDialog
-          selectedUsers={selectedUsers}
-          onHide={() => setShowRenameUser(false)}
-          onSuccess={(name) => setSelectedUsers([name])}
-        />
-      )}
+        {showRenameUser && (
+          <RenameUserDialog
+            selectedUsers={selectedUsers}
+            onHide={() => setShowRenameUser(false)}
+            onSuccess={(name) => setSelectedUsers([name])}
+          />
+        )}
 
-      {showSetPassword && (
-        <SetPasswordDialog
-          selectedUsers={selectedUsers}
-          onHide={() => {
-            setShowSetPassword(false)
-          }}
-        />
-      )}
-    </main>
+        {showSetPassword && (
+          <SetPasswordDialog
+            selectedUsers={selectedUsers}
+            onHide={() => {
+              setShowSetPassword(false)
+            }}
+          />
+        )}
+      </main>
+    </>
   )
 }
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import UserAccessGroups from './UserAccessGroups/UserAccessGroups'
 import UserAccessGroupsProjects from './UserAccessGroupsProjects/UserAccessGroupsProjects'
+import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 
 const ContainerStyled = styled.div`
   display: flex;
@@ -15,7 +16,8 @@ const ContainerStyled = styled.div`
   }
 `
 
-const UserAccessGroupsForm = ({ value = {}, options = [], projectsList = [], onChange }) => {
+const UserAccessGroupsForm = ({ value = {}, options = [], onChange, disableNewGroup }) => {
+  const { data: projectsList = [] } = useGetAllProjectsQuery({ showInactive: false })
   // value = { projectName: [accessGroup1, accessGroup2]}
   // options = [{ name: projectName }]
 
@@ -100,6 +102,7 @@ const UserAccessGroupsForm = ({ value = {}, options = [], projectsList = [], onC
         values={accessGroups}
         selected={selectedAccessGroups}
         onChange={setSelectedAccessGroups}
+        disableNewGroup={disableNewGroup}
       />
       <UserAccessGroupsProjects
         values={allProjects}

@@ -21,10 +21,9 @@ export const Header = styled.header`
     cursor: pointer;
   }
 
-  /* search button */
-  /* button {
-    padding: 2px;
-  } */
+  &.disabled {
+    pointer-events: none;
+  }
 
   /* attribute icon='search' */
   .icon[icon='search'] {

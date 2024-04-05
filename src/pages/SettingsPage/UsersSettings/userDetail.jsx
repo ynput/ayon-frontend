@@ -17,6 +17,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
+import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -407,11 +408,20 @@ const UserDetail = ({
             </Panel>
           )}
           {formData && (
-            <UserAccessForm
-              formData={formData}
-              onChange={(key, value) => setFormData({ ...formData, [key]: value })}
-              disabled={managerDisabled || isSelfSelected}
-              accessGroupsData={accessGroupsData}
+            <Panel>
+              <UserAccessForm
+                formData={formData}
+                onChange={(key, value) => setFormData({ ...formData, [key]: value })}
+                disabled={managerDisabled || isSelfSelected}
+                accessGroupsData={accessGroupsData}
+              />
+            </Panel>
+          )}
+          {formData?.userLevel === 'user' && (
+            <UserAccessGroupsForm
+              value={formData.accessGroups}
+              options={accessGroupsData}
+              onChange={(value) => setFormData({ ...formData, accessGroups: value })}
             />
           )}
         </FormsStyled>

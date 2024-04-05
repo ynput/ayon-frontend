@@ -172,7 +172,7 @@ const UserAccessGroupsProjects = ({
     >
       <Styled.Header
         onClick={() => !searchOpen && setSearchOpen(true)}
-        className={classNames({ searchOpen })}
+        className={classNames({ searchOpen, disabled: isDisabled })}
       >
         {searchOpen ? (
           <>
@@ -198,11 +198,11 @@ const UserAccessGroupsProjects = ({
       </Styled.Header>
       <Styled.Buttons>
         {noneEnabled && (
-          <Button onClick={handleClearAll} disabled={!noneEnabled}>
+          <Button onClick={handleClearAll} disabled={!noneEnabled || isDisabled}>
             Clear all
           </Button>
         )}
-        <Button onClick={handleSelectAll} disabled={allEnabled}>
+        <Button onClick={handleSelectAll} disabled={allEnabled || isDisabled}>
           {allEnabled ? 'All selected' : noneEnabled ? 'Select all' : 'Select all projects'}
         </Button>
       </Styled.Buttons>

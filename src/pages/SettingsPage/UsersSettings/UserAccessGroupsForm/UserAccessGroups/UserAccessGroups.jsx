@@ -4,7 +4,7 @@ import { classNames } from 'primereact/utils'
 import { Link } from 'react-router-dom'
 
 // access groups panel
-const UserAccessGroups = ({ values = {}, selected = [], onChange }) => {
+const UserAccessGroups = ({ values = {}, selected = [], onChange, disableNewGroup = false }) => {
   const sortedValues = Object.entries(values).sort((a, b) => a[0].localeCompare(b[0]))
 
   const handleAccessGroupClick = (e) => {
@@ -47,7 +47,13 @@ const UserAccessGroups = ({ values = {}, selected = [], onChange }) => {
     <Panel>
       <Styled.Header>
         <span>Access Groups</span>
-        <Link to={'/settings/accessGroups'}>
+        <Link
+          to={disableNewGroup ? '' : '/settings/accessGroups'}
+          style={{
+            opacity: disableNewGroup ? 0 : 1,
+            pointerEvents: disableNewGroup ? 'none' : 'auto',
+          }}
+        >
           <Button icon="group_add" variant="text" />
         </Link>
       </Styled.Header>
