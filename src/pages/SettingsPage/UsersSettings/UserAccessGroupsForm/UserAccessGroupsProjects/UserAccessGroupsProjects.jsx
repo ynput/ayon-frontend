@@ -140,7 +140,7 @@ const UserAccessGroupsProjects = ({
     // onChange only the names of the projects that are not already in values
     const addingValues = sortedOptions
       .map(({ name }) => name)
-      .filter((name) => !values.includes(name))
+      .filter((name) => !activeValues.includes(name))
 
     if (addingValues.length === 0) return
 
@@ -148,18 +148,12 @@ const UserAccessGroupsProjects = ({
   }
 
   const handleClearAll = () => {
-    // onChange only the names of the projects that are in values
-    const removingValues = sortedOptions
-      .map(({ name }) => name)
-      .filter((name) => values.includes(name))
-
-    if (removingValues.length === 0) return
-
-    onChange(removingValues)
+    // use special boolean to clear all
+    onChange([], true)
   }
 
   const allEnabled =
-    !sortedOptions.length || sortedOptions.every(({ name }) => values.includes(name))
+    !sortedOptions.length || sortedOptions.every(({ name }) => activeValues.includes(name))
 
   const noneEnabled = !!values.length
 

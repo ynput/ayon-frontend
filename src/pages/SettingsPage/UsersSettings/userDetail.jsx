@@ -13,7 +13,6 @@ import styled from 'styled-components'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
-import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
@@ -38,18 +37,6 @@ export const PanelButtonsStyled = styled(Panel)`
   & > * {
     flex: 1;
   }
-`
-
-const AccessGroupsConfirmStyled = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  background-color: var(--md-sys-color-surface-container-low);
-
-  padding: 4px 8px;
-  border-radius: 4px;
-  max-height: 160px;
-  overflow: overlay;
 `
 
 const attribTypeDefaults = {
@@ -152,14 +139,10 @@ const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
       }
     }
 
-    // AccessGroups
+    //  we don't merge the access groups at all. Show and save mixed values
     if (user.accessGroups) {
-      for (const project in user.accessGroups) {
-        if (!initForm.accessGroups[project]) initForm.accessGroups[project] = []
-        initForm.accessGroups[project] = [
-          ...new Set([...initForm.accessGroups[project], ...user.accessGroups[project]]),
-        ]
-      }
+      // add access groups to the form with user names as key
+      initForm.accessGroups[user.name] = user.accessGroups
     }
   })
 }
@@ -262,40 +245,12 @@ const UserDetail = ({
   // API
   //
 
-  const handleMultiSave = () => {
-    // if multiple users are selected confirm the action
-    confirmDialog({
-      header: 'Update all selected users to the same values?',
-      message: (
-        <ul>
-          <li>Users: {formUsers.map((user) => user.name).join(', ')}</li>
-          <li>User active: {formData.userActive ? 'Yes' : 'No'}</li>
-          <li>Access level: {formData.userLevel}</li>
-          <li>Is guest: {formData.isGuest ? 'Yes' : 'No'}</li>
-          <li>Is developer: {formData.isDeveloper ? 'Yes' : 'No'}</li>
-          <li>Default access groups: {formData.defaultAccessGroups.join(', ')}</li>
-          <li>Project access groups:</li>
-          <AccessGroupsConfirmStyled>
-            {Object.entries(formData.accessGroups).map(([project, accessGroup]) => (
-              <span className="item" key={project}>
-                {project}: {accessGroup?.join(', ')}
-              </span>
-            ))}
-          </AccessGroupsConfirmStyled>
-        </ul>
-      ),
-
-      accept: onSave,
-      reject: () => {},
-    })
-  }
-
   const onSave = async () => {
     toastId.current = toast.info('Updating user(s)...')
     let i = 0
     for (const user of formUsers) {
       const data = {
-        accessGroups: formData.accessGroups,
+        accessGroups: formData.accessGroups[user.name],
         defaultAccessGroups: formData.defaultAccessGroups,
       }
       const attrib = {}
@@ -434,7 +389,7 @@ const UserDetail = ({
           disabled={!changesMade || selectedUsers.length > 1}
         />
         <SaveButton
-          onClick={() => (selectedUsers.length > 1 ? handleMultiSave() : onSave())}
+          onClick={onSave}
           label="Save selected users"
           active={changesMade}
           saving={isUpdating}

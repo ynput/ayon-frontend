@@ -25,18 +25,20 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [formData, setFormData] = useState({
+
+  const initFormData = {
     userLevel: 'user',
     userActive: true,
     UserImage: '',
-  })
+    isGuest: false,
+    accessGroups: {},
+    defaultAccessGroups: [],
+  }
+
+  const [formData, setFormData] = useState(initFormData)
 
   const initialFormData = () => {
-    return {
-      userLevel: 'user',
-      userActive: true,
-      UserImage: '',
-    }
+    return initFormData
   }
   useEffect(() => {
     // set initial form data
@@ -180,9 +182,11 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         />
         {formData?.userLevel === 'user' && (
           <UserAccessGroupsForm
-            value={formData.accessGroups}
+            // value expects multiple users, so we need to pass an object with the username "_" as the key
+            value={{ _: formData.accessGroups }}
             options={accessGroupsData}
-            onChange={(value) => setFormData({ ...formData, accessGroups: value })}
+            // onChange provides all "users", in this case just the one "_" user
+            onChange={(value) => setFormData({ ...formData, accessGroups: value['_'] })}
             disableNewGroup
           />
         )}
