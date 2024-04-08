@@ -5,7 +5,7 @@ const transformAnatomyPresets = (data) => {
   let primaryPreset = defaultPreset
   let presets = []
   for (const preset of data) {
-    if (preset.primary) primaryPreset = { name: preset.name, title: `<default (${preset.name})>` }
+    if (preset.primary) primaryPreset = { name: preset.name, title: `<default (${preset.name})>`, primary: 'PRIMARY' }
     presets.push({
       name: preset.name,
       title: preset.name,
