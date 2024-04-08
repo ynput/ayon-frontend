@@ -251,6 +251,7 @@ const Detail = () => {
       value: (values) => (
         <TagsSelect
           value={union(...values)}
+          isMultiple={values.some((v) => !isEqual(v, values[0]))}
           tags={projectTagsObject}
           tagsOrder={projectTagsOrder}
           onChange={(v) => handleEntityChange('tags', v)}

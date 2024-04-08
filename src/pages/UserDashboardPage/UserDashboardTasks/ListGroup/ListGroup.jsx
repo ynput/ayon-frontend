@@ -5,6 +5,7 @@ import { useGetTaskContextMenu } from '/src/pages/UserDashboardPage/util'
 import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
 import ListItem from '/src/components/ListItem/ListItem'
+import { InView } from 'react-intersection-observer'
 
 const ListGroup = ({
   tasks = [],
@@ -22,6 +23,7 @@ const ListGroup = ({
   onCollapseChange,
   isCollapsed,
   isLoading,
+  minWidths,
 }) => {
   const dispatch = useDispatch()
   const column = groups[id] || {}
@@ -61,26 +63,32 @@ const ListGroup = ({
       {!isCollapsed && (
         <>
           {column?.tasks?.map((task, i, a) => (
-            <ListItem
-              key={task.id}
-              task={task}
-              isLast={i === a.length - 1}
-              isFirst={i === 0}
-              selected={selectedTasks.includes(task.id)}
-              selectedLength={selectedTasks.length}
-              onClick={(e) => {
-                closeContext()
-                onTaskSelected(e, task.id)
-              }}
-              onContextMenu={(e) => handleContextMenu(e)}
-              onMouseOver={() => onTaskHover(task)}
-              statusesOptions={statusesOptions}
-              disabledStatuses={disabledStatuses}
-              disabledProjectUsers={disabledProjectUsers}
-              onUpdate={onUpdate}
-              allUsers={assigneesIsMe ? [] : allUsers}
-              className={'card'}
-            />
+            <InView key={task.id} rootMargin={'50% 0px 50% 0px'}>
+              {({ inView, ref }) => (
+                <ListItem
+                  ref={ref}
+                  task={task}
+                  isLast={i === a.length - 1}
+                  isFirst={i === 0}
+                  selected={selectedTasks.includes(task.id)}
+                  selectedLength={selectedTasks.length}
+                  onClick={(e) => {
+                    closeContext()
+                    onTaskSelected(e, task.id)
+                  }}
+                  onContextMenu={(e) => handleContextMenu(e)}
+                  onMouseOver={() => onTaskHover(task)}
+                  statusesOptions={statusesOptions}
+                  disabledStatuses={disabledStatuses}
+                  disabledProjectUsers={disabledProjectUsers}
+                  onUpdate={onUpdate}
+                  allUsers={assigneesIsMe ? [] : allUsers}
+                  className={'card'}
+                  minWidths={minWidths}
+                  inView={inView}
+                />
+              )}
+            </InView>
           ))}
           {!isLoading && column?.tasks?.length === 0 && <ListItem none />}
         </>

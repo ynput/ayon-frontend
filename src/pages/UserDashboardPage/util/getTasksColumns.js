@@ -68,5 +68,13 @@ export const getTasksColumns = (tasks = [], splitBy, fields = [], users = []) =>
     }
   }
 
+  columns.forEach((column) => {
+    // find column in splitTasks
+    const columnTasks = splitTasks[column.id]
+    if (columnTasks) {
+      column.tasksCount = columnTasks.tasks?.length
+    }
+  })
+
   return [splitTasks, columns]
 }

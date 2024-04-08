@@ -49,7 +49,11 @@ const MenuItem = forwardRef(
     )
 
     if (isLink) {
-      return <Link to={isLink}>{Item}</Link>
+      return (
+        <Link to={isLink} target={props.target}>
+          {Item}
+        </Link>
+      )
     } else {
       return Item
     }
