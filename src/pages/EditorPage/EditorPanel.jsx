@@ -109,6 +109,9 @@ const EditorPanel = ({
   // used to rebuild fields for when the type changes
   const [type, setType] = useState(null)
 
+  // console.log(form._active.value,'form._active.value')
+  // console.log(form._tags.value,'form._tags.value')
+
   // when selection or nodes change, update nodes state
   useEffect(() => {
     setNodeIds([...selected])
@@ -152,6 +155,7 @@ const EditorPanel = ({
     const nameValues = getFieldValue('name', '_name')
     const labelValues = getFieldValue('label', '_label')
     const tagValues = getFieldValue('tags', '_tags')
+    const activeValues = getFieldValue('active', '_active')
 
     const assigneesValues = getFieldValue('assignees', '_assignees', [])
 
@@ -205,6 +209,12 @@ const EditorPanel = ({
         label: 'Tags',
         field: 'tags',
         ...tagValues,
+      },
+      _active: {
+        changeKey: '_active',
+        label: 'Active',
+        field: 'active',
+        ...activeValues,
       },
     }
 
@@ -450,7 +460,7 @@ const EditorPanel = ({
         if (changes[nodeIds[0]] && key in changes[nodeIds[0]]) {
           oldChanges = changes[nodeIds[0]][key]
         }
-        // only update agap: 8in if old !== new
+        // only update again if old !== new
         if (oldChanges !== row.value) {
           // console.log('change')
           handleGlobalChange(row.value, row.changeKey)
@@ -548,6 +558,8 @@ const EditorPanel = ({
                   isOwn,
                   multipleValues,
                 } = row || {}
+
+                console.log(field,'fieldXXX')
 
                 // input type, step, max, min
                 const extraProps = getInputProps(attrib)
@@ -648,7 +660,27 @@ const EditorPanel = ({
                       isChanged={isChanged}
                     />
                   )
-                } else if (attrib?.enum) {
+                } else if (field === 'active') {
+                  input = (
+                    <InputSwitch
+                    checked={value || false}
+                    disabled={disabled}
+                    onChange={(e) => handleLocalChange(e.target.checked, changeKey, field)}
+                    style={{
+                      ...changedStyles,
+                      color: isChanged
+                        ? 'var(--color-on-changed)'
+                        : !isOwn
+                        ? 'var(--md-ref-palette-neutral-variant60)'
+                        : 'var(--md-sys-color-on-surface-variant)',
+                      ...disabledStyles,
+                      width: '100%',
+                    }}
+                  />
+                  )
+                }
+                
+                else if (attrib?.enum) {
                   // dropdown
                   const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
                   let enumValue = isMultiSelect ? value : [value]

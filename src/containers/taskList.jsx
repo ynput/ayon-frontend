@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
@@ -14,6 +14,7 @@ import useCreateContext from '../hooks/useCreateContext'
 import NoEntityFound from '../components/NoEntityFound'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
+  // const [selectedNodeKey, ] = useState(null);
   const tasksTypes = useSelector((state) => state.project.tasks)
 
   const dispatch = useDispatch()
@@ -26,6 +27,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   const userName = useSelector((state) => state.user.name)
 
   const [showDetail, setShowDetail] = useState(false)
+  const [activeTasks, setActiveTasks] = useState([])
 
   const tableRef = useRef(null)
 
@@ -85,24 +87,77 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     }
 
     dispatch(setFocusedTasks({ ids: taskIds, names }))
+    setActiveTasks({ ids: [event.value] })
   }
 
   const onContextMenuSelectionChange = (event) => {
+    console.log(event.value,'event.value')
     if (focusedTasks.includes(event.value)) return
+    console.log(focusedTasks,'focusedTasks_onContextMenuSelectionChange')
+    console.log({ ids: [event.value] },'taskIds_onContextMenuSelectionChange')
     dispatch(setPairing([{ taskId: event.value }]))
     dispatch(setFocusedTasks({ ids: [event.value] }))
+    setActiveTasks({ ids: [event.value] })
+  }
+
+
+  const updateActiveValues = () => {
+    console.log(focusedTasks,'tasks_activeTasks')
   }
 
   // CONTEXT MENU
-  const ctxMenuItems = [
-    {
-      label: 'Detail',
-      command: () => setShowDetail(true),
-      icon: 'database',
-    },
-  ]
+  const ctxMenuItems = 
+    
 
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+      [
+        {
+          label: 'Detail',
+          command: () => setShowDetail(true),
+          icon: 'database',
+        },
+        {
+          label: 'Deactive',
+          // command: () => setIsActive(!isActive),
+          command: () => {
+            updateActiveValues()
+            // let _tasksData = { ...tasksData };
+
+            // console.log(_tasksData,'AAA_originalTaskData1')
+            // console.log(focusedTasks,'focusedTasks_ctxMenuItems')
+            // console.log(selectedTasks,'selectedTasks_ctxMenuItems')
+            // console.log(three,'three')
+            // console.log(Object.isFrozen(_tasksData),'isFrozen_1')
+    
+            // const updatedTasksData = Object.values(_tasksData).map(task => {
+            //   let individualTask = {...task}
+            //   const updatedTask = {
+            //     ...task,
+            //     data: {
+            //       ...task.data,
+            //       // update active status
+            //       active: false
+            //     }
+            //   }
+            //   const updateFocusedTask = focusedTasks.includes(individualTask.data.id) ? updatedTask : task
+            //   console.log(Object.isFrozen(task),'isFrozen_2')
+            //   console.log(individualTask,'individualTask')
+            //   console.log(Object.isFrozen(task.data),'isFrozen_3')
+            //   console.log(Object.isFrozen(task.data.active),'isFrozen_4')
+            //   console.log(focusedTasks,'focusedTasks')
+    
+            //   return updateFocusedTask
+            // }
+            // );
+    
+            // console.log(updatedTasksData,'updatedTasksDataXXX')
+            console.log(selectedTasks,'Test123')
+            // setActiveTasks(updatedTasksData)
+        },
+          icon: 'toggle_on',
+        },
+      ]
+
+      const [ctxMenuShow] = useCreateContext(ctxMenuItems);
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
@@ -172,6 +227,12 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
   const noTasks = !isFetching && tasksData.length === 0
 
+
+
+  console.log(selectedTasks,'tasks_selectedTasks')
+  console.log(focusedTasks,'tasks_focusedTasks')
+
+
   return (
     <Section style={style}>
       <TablePanel>
@@ -192,7 +253,11 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             emptyMessage=" "
             selectionMode="multiple"
             selectionKeys={selectedTasks}
+            // contextMenuSelectionKey={selectedTasks}
             onSelectionChange={onSelectionChange}
+            // onContextMenu={(e) => onContextMenu(e, focusedTasks)}
+            // onContextMenu={(e) => onContextMenu(e)}
+            // contextMenuSelectionKey={selectedNodeKey}
             onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             onRowClick={onRowClick}
