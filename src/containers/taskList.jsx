@@ -27,7 +27,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   const userName = useSelector((state) => state.user.name)
 
   const [showDetail, setShowDetail] = useState(false)
-  const [activeTasks, setActiveTasks] = useState([])
 
   const tableRef = useRef(null)
 
@@ -87,7 +86,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     }
 
     dispatch(setFocusedTasks({ ids: taskIds, names }))
-    setActiveTasks({ ids: [event.value] })
   }
 
   const dispatchFocusedTasks  = (taskId) => {
@@ -109,17 +107,16 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   }
 
   // CONTEXT MENU
+  const ctxMenuItems = () =>
+    [
+      {
+        label: 'Detail',
+        command: () => setShowDetail(true),
+        icon: 'database',
+      },
+    ]
 
-    const ctxMenuItems = () =>
-      [
-        {
-          label: 'Detail',
-          command: () => setShowDetail(true),
-          icon: 'database',
-        },
-      ]
-
-      const [ctxMenuShow] = useCreateContext([])
+    const [ctxMenuShow] = useCreateContext([])
     
 
   // create 10 dummy rows
