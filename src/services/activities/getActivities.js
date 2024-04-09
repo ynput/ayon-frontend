@@ -19,11 +19,29 @@ const transformActivityData = (data = {}) => {
     // and the values are the new keys to assign the values to
 
     if (!edge.node) {
-      console.error('No node found in activity edge')
       return
     }
 
     const activityNode = edge.node
+
+    // check that the activity hasn't already been added.
+    if (activities.some(({ activityId }) => activityId === activityNode.activityId)) {
+      // oh no this shouldn't happen!
+      // referenceType priorities in order: origin, mention, relation
+
+      // check the referenceType and if the priority is higher than the current one, place the activity in the list
+      if (['origin', 'mention'].includes(activityNode.referenceType)) {
+        const index = activities.findIndex(
+          ({ activityId }) => activityId === activityNode.activityId,
+        )
+        if (index !== -1) {
+          activities[index] = { ...activityNode }
+        }
+      }
+
+      return
+    }
+
     const transformedActivity = { ...edge.node }
 
     // Helper function to get a nested property of an object using a string path
@@ -51,6 +69,8 @@ const transformActivityData = (data = {}) => {
 
     activities.push(transformedActivity)
   }) || []
+
+  return activities
 }
 
 const getActivities = ayonApi.injectEndpoints({
