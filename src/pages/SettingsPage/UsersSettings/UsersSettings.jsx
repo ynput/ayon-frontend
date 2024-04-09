@@ -13,6 +13,7 @@ import UserDetail from './userDetail'
 import UserList from './UserList'
 import { useDeleteUserMutation } from '/src/services/user/updateUser'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { SelectButton } from 'primereact/selectbutton'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
@@ -69,6 +70,8 @@ const UsersSettings = () => {
   const [showNewUser, setShowNewUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
+  // show users for selected projects
+  const [showProjectUsers, setShowProjectUsers] = useState(false)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -140,6 +143,7 @@ const UsersSettings = () => {
     if (total === 'total') {
       setSearch('')
       setSelectedUsers(filteredUserList.map((user) => user.name))
+      if (selectedProjects) setShowProjectUsers(true)
     } else {
       setSearch(total)
     }
@@ -149,8 +153,10 @@ const UsersSettings = () => {
     setShowNewUser(true)
   }
 
-  // use filteredUserList if a project is selected
-  userList = !selectedProjects ? userList : filteredUserList
+  // use filteredUserList if showProjectUsers
+  // else use userList
+
+  if (showProjectUsers) userList = filteredUserList
 
   let userListWithAccessGroups = useMemo(
     () => userList.map((user) => formatAccessGroups(user, selectedProjects)),
@@ -217,9 +223,18 @@ const UsersSettings = () => {
       <main>
         <Section>
           <Toolbar>
+            <SelectButton
+              value={showProjectUsers}
+              options={[
+                { label: 'All Users', value: false },
+                { label: 'Selected Projects', value: true },
+              ]}
+              onChange={(e) => setShowProjectUsers(e.value)}
+              disabled={!selectedProjects}
+            />
             <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
               <InputText
-                style={{ width: '250px' }}
+                style={{ width: '200px' }}
                 placeholder="Filter users..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

@@ -16,11 +16,12 @@ const AccessGroupsDropdown = ({
   }
 
   const options = useMemo(() => accessGroups.map((g) => ({ value: g?.name })), [accessGroups])
+  const sortedAG = [...selectedAccessGroups]?.sort((a, b) => b.localeCompare(a))
 
   return (
     <Dropdown
       style={{ style }}
-      value={selectedAccessGroups || []}
+      value={sortedAG || []}
       options={options}
       onChange={onChange}
       disabled={disabled}

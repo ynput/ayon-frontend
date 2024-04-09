@@ -369,10 +369,11 @@ const UserDetail = ({
                 onChange={(key, value) => setFormData({ ...formData, [key]: value })}
                 disabled={managerDisabled || isSelfSelected}
                 accessGroupsData={accessGroupsData}
+                selectedProjects={selectedProjects}
               />
             </Panel>
           )}
-          {formData?.userLevel === 'user' && (
+          {formData?.userLevel === 'user' && !selectedProjects && (
             <UserAccessGroupsForm
               value={formData.accessGroups}
               options={accessGroupsData}
