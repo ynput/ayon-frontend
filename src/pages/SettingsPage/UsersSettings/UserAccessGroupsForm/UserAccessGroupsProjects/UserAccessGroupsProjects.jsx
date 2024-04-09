@@ -1,7 +1,7 @@
 import { Button, Icon, InputText, Panel } from '@ynput/ayon-react-components'
 import * as Styled from './UserAccessGroupsProjects.styled'
 import { classNames } from 'primereact/utils'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { matchSorter } from 'match-sorter'
 
 // access groups panel
@@ -9,11 +9,29 @@ const UserAccessGroupsProjects = ({
   values = [],
   activeValues = [],
   options = [],
+  selectedAG,
   onChange,
   isDisabled,
 }) => {
-  // sort options alphabetically
-  const sortedOptions = [...options].sort((a, b) => a.name.localeCompare(b.name))
+  const [sortByActive, setSortByActive] = useState(false)
+
+  // sort options by active first, then alphabetically
+  const sortedOptions = useMemo(
+    () =>
+      [...options].sort((a, b) => {
+        // Check if the options are in the values array
+        const aActive = values.includes(a.name)
+        const bActive = values.includes(b.name)
+
+        // If both options have the same active status, sort them alphabetically
+        if (aActive === bActive || !sortByActive) {
+          return a.name.localeCompare(b.name)
+        }
+        // Otherwise, sort them by active status (put active options first)
+        return bActive ? 1 : -1
+      }),
+    [selectedAG, sortByActive],
+  )
 
   const isDragging = useRef(false)
 
@@ -136,27 +154,6 @@ const UserAccessGroupsProjects = ({
     }
   }
 
-  const handleSelectAll = () => {
-    // onChange only the names of the projects that are not already in values
-    const addingValues = sortedOptions
-      .map(({ name }) => name)
-      .filter((name) => !activeValues.includes(name))
-
-    if (addingValues.length === 0) return
-
-    onChange(addingValues)
-  }
-
-  const handleClearAll = () => {
-    // use special boolean to clear all
-    onChange([], true)
-  }
-
-  const allEnabled =
-    !sortedOptions.length || sortedOptions.every(({ name }) => activeValues.includes(name))
-
-  const noneEnabled = !!values.length
-
   return (
     <Panel
       onMouseUp={handleMouseUp}
@@ -164,10 +161,7 @@ const UserAccessGroupsProjects = ({
       onKeyDown={handleKeyDown}
       id="user-access-groups-projects"
     >
-      <Styled.Header
-        onClick={() => !searchOpen && setSearchOpen(true)}
-        className={classNames({ searchOpen, disabled: isDisabled })}
-      >
+      <Styled.Header className={classNames({ searchOpen, disabled: isDisabled })}>
         {searchOpen ? (
           <>
             <InputText
@@ -181,7 +175,14 @@ const UserAccessGroupsProjects = ({
           </>
         ) : (
           <>
-            <span>Projects</span>
+            <span className="title">Projects</span>
+            <Button
+              icon={'sort'}
+              variant="text"
+              data-tooltip="Sort by active projects"
+              selected={sortByActive}
+              onClick={() => setSortByActive(!sortByActive)}
+            />
             <Button
               icon={searchOpen ? 'close' : 'search'}
               variant="text"
@@ -190,16 +191,6 @@ const UserAccessGroupsProjects = ({
           </>
         )}
       </Styled.Header>
-      <Styled.Buttons>
-        {noneEnabled && (
-          <Button onClick={handleClearAll} disabled={!noneEnabled || isDisabled}>
-            Clear all
-          </Button>
-        )}
-        <Button onClick={handleSelectAll} disabled={allEnabled || isDisabled}>
-          {allEnabled ? 'All selected' : noneEnabled ? 'Select all' : 'Select all projects'}
-        </Button>
-      </Styled.Buttons>
       <Styled.List>
         {projectOptions.map(({ name }) => (
           <Styled.ProjectItem

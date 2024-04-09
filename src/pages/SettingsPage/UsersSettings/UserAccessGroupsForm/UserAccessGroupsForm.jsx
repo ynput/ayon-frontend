@@ -60,7 +60,7 @@ const UserAccessGroupsForm = ({ value = {}, options = [], onChange, disableNewGr
     mixedValues,
   )
 
-  const handleAccessChange = (projects, activeProjects, clearAll) => {
+  const handleAccessChange = (projects, activeProjects) => {
     const newUsersAccessGroups = {
       ...value,
     }
@@ -73,50 +73,39 @@ const UserAccessGroupsForm = ({ value = {}, options = [], onChange, disableNewGr
         ...accessGroups,
       }
 
-      if (clearAll) {
-        // clear all selected access groups for projects
+      projects.forEach((project) => {
+        // get current access groups for project
+        // if project is not in value, it will default to empty array
+        // spread the array to create a new array and avoid mutating the original
+        const newProjectAccessGroups = [...(accessGroups[project] || [])]
+
         for (const accessGroup of selectedAccessGroups) {
-          for (const { name: project } of projectsList) {
-            if (newAccessGroups[project]?.includes(accessGroup)) {
-              newAccessGroups[project] = newAccessGroups[project].filter((ag) => ag !== accessGroup)
+          // is this accessGroup inactive for any of the selected projects?
+          const notActiveForAll = !activeProjects.includes(project)
+
+          if (notActiveForAll) {
+            // this project is not active on all selected access groups
+            // so we set it active for all selected access groups (even if it was already active)
+            if (!newProjectAccessGroups.includes(accessGroup))
+              newProjectAccessGroups.push(accessGroup)
+          } else {
+            // otherwise we toggle the access group for the project
+
+            // update access groups for project
+            // add or remove access group from project
+            if (newProjectAccessGroups.includes(accessGroup)) {
+              // remove access group from project
+              newProjectAccessGroups.splice(newProjectAccessGroups.indexOf(accessGroup), 1)
+            } else {
+              // add access group to project
+              newProjectAccessGroups.push(accessGroup)
             }
           }
         }
-      } else {
-        projects.forEach((project) => {
-          // get current access groups for project
-          // if project is not in value, it will default to empty array
-          // spread the array to create a new array and avoid mutating the original
-          const newProjectAccessGroups = [...(accessGroups[project] || [])]
 
-          for (const accessGroup of selectedAccessGroups) {
-            // is this accessGroup inactive for any of the selected projects?
-            const notActiveForAll = !activeProjects.includes(project)
-
-            if (notActiveForAll) {
-              // this project is not active on all selected access groups
-              // so we set it active for all selected access groups (even if it was already active)
-              if (!newProjectAccessGroups.includes(accessGroup))
-                newProjectAccessGroups.push(accessGroup)
-            } else {
-              // otherwise we toggle the access group for the project
-
-              // update access groups for project
-              // add or remove access group from project
-              if (newProjectAccessGroups.includes(accessGroup)) {
-                // remove access group from project
-                newProjectAccessGroups.splice(newProjectAccessGroups.indexOf(accessGroup), 1)
-              } else {
-                // add access group to project
-                newProjectAccessGroups.push(accessGroup)
-              }
-            }
-          }
-
-          // update access groups for project
-          newAccessGroups[project] = newProjectAccessGroups
-        })
-      }
+        // update access groups for project
+        newAccessGroups[project] = newProjectAccessGroups
+      })
 
       // finally update the user access groups
       newUsersAccessGroups[user] = newAccessGroups
@@ -138,6 +127,7 @@ const UserAccessGroupsForm = ({ value = {}, options = [], onChange, disableNewGr
       <UserAccessGroupsProjects
         values={allProjects}
         activeValues={activeProjects}
+        selectedAG={selectedAccessGroups}
         options={projectsList}
         onChange={(p, clearAll) => handleAccessChange(p, activeProjects, clearAll)}
         isDisabled={!selectedAccessGroups.length}

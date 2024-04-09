@@ -68,12 +68,8 @@ const UserAccessGroups = ({ values = {}, selected = [], onChange, disableNewGrou
             onClick={handleAccessGroupClick}
             id={accessGroup}
           >
-            <span className="name">{`${accessGroup} ${
-              projects.length ? '- ' + projects.length : ''
-            }`}</span>
-            <Icon
-              icon={projects.length || selected.includes(accessGroup) ? 'chevron_right' : 'add'}
-            />
+            <span className="name">{`${accessGroup} ${'- ' + projects.length}`}</span>
+            <Icon icon={'chevron_right'} />
           </Styled.AccessGroupItem>
         ))}
       </Styled.List>

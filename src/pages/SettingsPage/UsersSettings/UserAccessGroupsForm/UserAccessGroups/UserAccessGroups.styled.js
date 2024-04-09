@@ -26,24 +26,11 @@ export const AccessGroupItem = styled.div`
     text-overflow: ellipsis;
   }
 
-  /* default styles (inactive) */
-  color: var(--md-sys-color-outline);
-
-  .icon {
-    color: var(--md-sys-color-outline);
-  }
-
   &:hover {
     background-color: var(--md-sys-color-surface-container-hover);
   }
 
   &.active {
-    color: var(--md-sys-color-on-surface);
-
-    .icon {
-      color: var(--md-sys-color-on-surface);
-    }
-
     &:hover {
       background-color: var(--md-sys-color-surface-container-hover);
     }

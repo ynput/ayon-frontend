@@ -25,15 +25,8 @@ export const Header = styled.header`
     pointer-events: none;
   }
 
-  /* attribute icon='search' */
-  .icon[icon='search'] {
-    color: var(--md-sys-color-outline);
-  }
-
-  &:hover {
-    .icon[icon='search'] {
-      color: var(--md-sys-color-on-surface);
-    }
+  .title {
+    flex: 1;
   }
 `
 
