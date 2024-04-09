@@ -10,7 +10,6 @@ const BASE_QUERY = `
             name
             label
             tags
-            active
             folderType
             hasChildren
             hasTasks

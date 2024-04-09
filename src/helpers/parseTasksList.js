@@ -17,7 +17,6 @@ export const parseTasksList = (tasks, userName) => {
       taskType: taskType,
       isMine: assignees.includes(userName) ? 'yes' : '',
       active,
-      
     }))
 
   const grouped = groupResult(parsed, 'name')

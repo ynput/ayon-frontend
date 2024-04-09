@@ -548,7 +548,7 @@ const EditorPanel = ({
                   isOwn,
                   multipleValues,
                 } = row || {}
-s
+
                 // input type, step, max, min
                 const extraProps = getInputProps(attrib)
                 const typeOptions = type === 'folder' ? folders : tasks
