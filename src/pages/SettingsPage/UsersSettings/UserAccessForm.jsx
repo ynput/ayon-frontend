@@ -11,13 +11,7 @@ const FormRowStyled = styled(FormRow)`
   }
 `
 
-const UserAccessForm = ({
-  accessGroupsData,
-  formData,
-  onChange,
-  disabled,
-  selectedProjects = [],
-}) => {
+const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, selectedProjects }) => {
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
 
   const userLevels = [
@@ -151,7 +145,9 @@ const UserAccessForm = ({
         {isUser && (
           <FormRowStyled
             label={'New project access'}
-            data-tooltip={'The default access groups added to a new project for this user.'}
+            data-tooltip={
+              'When a new project is created, the user will be added to these access groups by default.'
+            }
           >
             <AccessGroupsDropdown
               style={{ flexGrow: 1 }}

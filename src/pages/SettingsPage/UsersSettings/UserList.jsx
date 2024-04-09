@@ -67,19 +67,19 @@ const UserList = ({
   const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
   const ProfileRow = ({ rowData }) => {
-    const { name, attrib: { fullName, avatarUrl } = {}, self } = rowData;
+    const { name, attrib: { fullName, avatarUrl } = {}, self } = rowData
     return (
-    <StyledProfileRow>
-      <UserImage
-        fullName={fullName}
-        name={name}
-        size={25}
-        style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
-        highlight={self}
-        src={avatarUrl}
-      />
-      <span>{self ? `${name} (me)` : name}</span>
-    </StyledProfileRow>
+      <StyledProfileRow>
+        <UserImage
+          fullName={fullName}
+          name={name}
+          size={25}
+          style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
+          highlight={self}
+          src={avatarUrl}
+        />
+        <span>{self ? `${name} (me)` : name}</span>
+      </StyledProfileRow>
     )
   }
 
@@ -133,15 +133,18 @@ const UserList = ({
           <Column field="attrib.email" header="Email" sortable />
           <Column
             field={'accessGroupList'}
-            header="Access"
+            header="Project access"
             body={(rowData) =>
               rowData &&
               rowData.accessGroups &&
-              Object.keys(rowData.accessGroups).map((agName) => (
-                <span key={agName} className={rowData.accessGroups[agName].cls}>
-                  {agName}
-                </span>
-              ))
+              [...Object.keys(rowData.accessGroups)]
+                .sort((a, b) => a.localeCompare(b))
+                .map((agName, i, arr) => (
+                  <span key={agName} className={rowData.accessGroups[agName].cls}>
+                    {agName}
+                    {i < arr.length - 1 ? ', ' : ''}
+                  </span>
+                ))
             }
             sortable
             resizeable

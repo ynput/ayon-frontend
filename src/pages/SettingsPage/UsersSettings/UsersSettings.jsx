@@ -23,25 +23,43 @@ import confirmDelete from '/src/helpers/confirmDelete'
 import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
 import Shortcuts from '/src/containers/Shortcuts'
 
-// TODO: Remove classname assignments and do in styled components
+// what to show in the access column
 const formatAccessGroups = (rowData, selectedProjects) => {
   let res = {}
+  // If the user is an admin, add 'admin' role
   if (rowData.isAdmin) res.admin = { cls: 'role admin' }
+  // If the user is a service, add 'service' role
   else if (rowData.isService) res.service = { cls: 'role manager' }
+  // If the user is a manager, add 'manager' role
   else if (rowData.isManager) res.manager = { cls: 'role manager' }
+  // If no projects are selected, add default access groups
   else if (!selectedProjects) {
-    for (const name of rowData.defaultAccessGroups || []) res[name] = { cls: 'role default' }
+    // add all access groups
+    for (const project in rowData.accessGroups) {
+      const projectAG = rowData.accessGroups[project]
+      for (const agName of projectAG) {
+        // add to res if not already there
+        if (!(agName in res)) res[agName] = { cls: 'role' }
+      }
+    }
   } else {
+    // If projects are selected, add access groups for each selected project
     const agSet = rowData.accessGroups || {}
     for (const projectName of selectedProjects) {
       for (const agName of agSet[projectName] || []) {
+        // If the access group is already in the result, increment its count
         if (agName in res) res[agName].count += 1
+        // Otherwise, add the access group to the result with a count of 1
         else res[agName] = { count: 1 }
+        // Set the class of the access group based on whether its count is equal to the number of selected projects
         res[agName].cls =
           res[agName].count === selectedProjects.length ? 'role all' : 'role partial'
       }
     }
   }
+
+  // if res is empty add none
+  if (!Object.keys(res).length) res.none = { cls: 'role partial' }
 
   return { ...rowData, accessGroups: res, accessGroupList: Object.keys(res) }
 }

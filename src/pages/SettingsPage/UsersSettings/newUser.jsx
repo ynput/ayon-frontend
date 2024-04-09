@@ -19,6 +19,11 @@ const FooterButtons = styled.div`
   justify-content: flex-end;
 `
 
+const SubTitleStyled = styled.span`
+  margin-top: 16px;
+  margin-bottom: 0;
+`
+
 const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   const usernameRef = useRef()
 
@@ -180,6 +185,9 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
           onChange={(key, value) => setFormData({ ...formData, [key]: value })}
           accessGroupsData={accessGroupsData}
         />
+        <SubTitleStyled>
+          Give this new user access to projects by adding access groups per project
+        </SubTitleStyled>
         {formData?.userLevel === 'user' && (
           <UserAccessGroupsForm
             // value expects multiple users, so we need to pass an object with the username "_" as the key
