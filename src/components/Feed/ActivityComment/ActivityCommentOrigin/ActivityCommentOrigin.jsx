@@ -1,9 +1,9 @@
 import React from 'react'
-import * as Styled from './ActivityComment.styled'
-import ActivityHeader from '../ActivityHeader/ActivityHeader'
+import * as Styled from './ActivityCommentOrigin.styled'
+import ActivityHeader from '../../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
-import FeedReference from '../FeedReference/FeedReference'
-import CommentWrapper from './CommentWrapper'
+import FeedReference from '../../ActivityReference/ActivityReference'
+import CommentWrapper from '../CommentWrapper'
 import { Icon } from '@ynput/ayon-react-components'
 import Typography from '/src/theme/typography.module.css'
 
@@ -28,8 +28,8 @@ const sanitizeURL = (url = '') => {
   return {}
 }
 
-const ActivityComment = ({ comment, users }) => {
-  const body = comment.body
+const ActivityCommentOrigin = ({ activity, users }) => {
+  const body = activity.body
 
   // on double click, select all body text
   const handleDoubleClick = (e) => {
@@ -42,7 +42,7 @@ const ActivityComment = ({ comment, users }) => {
 
   return (
     <Styled.Comment>
-      <ActivityHeader name={comment.authorName} users={users} date={comment.createdAt} />
+      <ActivityHeader name={activity.authorName} users={users} date={activity.createdAt} />
       <Styled.Body onDoubleClick={handleDoubleClick}>
         <CommentWrapper>
           <ReactMarkdown
@@ -74,9 +74,9 @@ const ActivityComment = ({ comment, users }) => {
             {body}
           </ReactMarkdown>
         </CommentWrapper>
-        {!!comment.attachments?.length && (
+        {!!activity.attachments?.length && (
           <Styled.Attachments>
-            {comment.attachments.map(({ id, type, url, name }) =>
+            {activity.attachments.map(({ id, type, url, name }) =>
               type === 'image' ? (
                 <Styled.AttachmentImg key={id} src={url} />
               ) : (
@@ -93,4 +93,4 @@ const ActivityComment = ({ comment, users }) => {
   )
 }
 
-export default ActivityComment
+export default ActivityCommentOrigin

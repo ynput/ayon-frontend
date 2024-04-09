@@ -1,5 +1,9 @@
 import styled, { css } from 'styled-components'
 
+export const CommentWrapper = styled.div`
+  border-radius: var(--border-radius-m);
+`
+
 export const Comment = styled.li`
   /* reset default */
   list-style: none;
@@ -11,6 +15,8 @@ export const Comment = styled.li`
   gap: 4px;
 
   width: 100%;
+  padding: 8px;
+  border-radius: var(--border-radius-m);
 `
 
 export const Body = styled.div`

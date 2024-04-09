@@ -1,9 +1,9 @@
 import { UserImage } from '@ynput/ayon-react-components'
-import * as Styled from './FeedReferencePopup.styled'
+import * as Styled from './ActivityReferenceTooltip.styled'
 import Thumbnail from '/src/containers/thumbnail'
 import { createPortal } from 'react-dom'
 
-const FeedReferencePopup = ({ type, label, pos = {} }) => {
+const ActivityReferenceTooltip = ({ type, label, pos = {} }) => {
   // TODO: get data from id and type
   // TODO: See if label contain fullName or name and passed props down correcty in UserImage
   return createPortal(
@@ -22,4 +22,4 @@ const FeedReferencePopup = ({ type, label, pos = {} }) => {
   )
 }
 
-export default FeedReferencePopup
+export default ActivityReferenceTooltip

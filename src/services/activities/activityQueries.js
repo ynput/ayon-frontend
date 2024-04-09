@@ -13,6 +13,12 @@ fragment ActivityFragment on ActivityNode {
         avatarUrl
       }
     }
+    origin {
+      id
+      name
+      label
+      type
+    }
   }
 `
 

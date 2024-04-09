@@ -56,4 +56,9 @@ export const Reference = styled.span`
         background-color: var(--md-sys-color-primary-active);
       }
     `}
+
+    /* remove background colour and hover on disabled */
+    &.disabled {
+    background-color: unset;
+  }
 `

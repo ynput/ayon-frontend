@@ -12,8 +12,7 @@ export const FeedContainer = styled.section`
 `
 
 export const FeedContent = styled.div`
-  padding: 8px;
-  gap: 20px;
+  gap: var(--base-gap-large);
   overflow-y: auto;
   padding-bottom: 40px;
 

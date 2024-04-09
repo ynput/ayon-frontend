@@ -66,8 +66,13 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent>
-        {activitiesData.map((event) => (
-          <ActivityItem key={event.activityId} {...event} users={activeUsers} />
+        {activitiesData.map((activity) => (
+          <ActivityItem
+            key={activity.activityId}
+            activity={activity}
+            users={activeUsers}
+            entityType={'task'}
+          />
         ))}
       </Styled.FeedContent>
       {!!tasks.length && (

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import FeedReferencePopup from '../FeedReferencePopup/FeedReferencePopup'
-import * as Styled from './FeedReference.styled'
+import FeedReferencePopup from '../ActivityReferenceTooltip/ActivityReferenceTooltip'
+import * as Styled from './ActivityReference.styled'
 import { Icon } from '@ynput/ayon-react-components'
+import { classNames } from 'primereact/utils'
 
 const typeIcons = {
   user: 'alternate_email',
@@ -10,7 +11,7 @@ const typeIcons = {
 }
 // variants = filled, text
 
-const FeedReference = ({ id, type, variant = 'surface', label, ...props }) => {
+const ActivityReference = ({ id, type, variant = 'surface', label, disabled, ...props }) => {
   const icon = typeIcons[type] || 'link'
   const [refHover, setRefHover] = useState(false)
   const [referenceCenterPos, setReferenceCenterPos] = useState(null)
@@ -32,8 +33,9 @@ const FeedReference = ({ id, type, variant = 'surface', label, ...props }) => {
         icon={icon}
         $variant={variant}
         ref={ref}
-        onMouseEnter={() => setRefHover(true)}
+        onMouseEnter={() => !disabled && setRefHover(true)}
         onMouseLeave={() => setRefHover(false)}
+        className={classNames({ disabled })}
       >
         <Icon icon={icon} />
         {props.children}
@@ -45,4 +47,4 @@ const FeedReference = ({ id, type, variant = 'surface', label, ...props }) => {
   )
 }
 
-export default FeedReference
+export default ActivityReference
