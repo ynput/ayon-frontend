@@ -14,7 +14,6 @@ import useCreateContext from '../hooks/useCreateContext'
 import NoEntityFound from '../components/NoEntityFound'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
-  // const [selectedNodeKey, ] = useState(null);
   const tasksTypes = useSelector((state) => state.project.tasks)
 
   const dispatch = useDispatch()
@@ -152,7 +151,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
       }
     }
 
-    const resolveActiveStyle = () => !isActive ? {opacity: 0.5} : {opacity: 1}
+    const resolveActiveStyle = () => isActive ? {opacity: 1} : {opacity: 0.5}
 
     return (
       <CellWithIcon
@@ -168,7 +167,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
   const renderTaskType = (node) => {
     const isActive = node.data.active
-    console.log(isActive,'isActiveQQQ')
     const taskType = node.data.taskType
     const resolveActiveOpacity = { opacity: isActive ? 1 : 0.5 }
     return <span style={resolveActiveOpacity}>{taskType}</span>;
