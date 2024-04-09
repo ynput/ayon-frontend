@@ -90,74 +90,37 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     setActiveTasks({ ids: [event.value] })
   }
 
-  const onContextMenuSelectionChange = (event) => {
-    console.log(event.value,'event.value')
-    if (focusedTasks.includes(event.value)) return
-    console.log(focusedTasks,'focusedTasks_onContextMenuSelectionChange')
-    console.log({ ids: [event.value] },'taskIds_onContextMenuSelectionChange')
-    dispatch(setPairing([{ taskId: event.value }]))
-    dispatch(setFocusedTasks({ ids: [event.value] }))
-    setActiveTasks({ ids: [event.value] })
+  const dispatchFocusedTasks  = (taskId) => {
+    dispatch(setPairing([{ taskId: taskId }]))
+    dispatch(setFocusedTasks({ ids: [taskId] }))
   }
 
-
-  const updateActiveValues = () => {
-    console.log(focusedTasks,'tasks_activeTasks')
+  const onContextMenu = (event) => {
+    let newFocused = [...focusedTasks]
+    const itemId = event.node.data.id
+    if (itemId && !focusedTasks?.includes(itemId)) {
+      // if the selection does not include the clicked node, new selection is the clicked node
+      newFocused = [itemId]
+      // update selection state
+      dispatchFocusedTasks(itemId)
+    }
+    
+    ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
   }
 
   // CONTEXT MENU
-  const ctxMenuItems = 
-    
 
+    const ctxMenuItems = () =>
       [
         {
           label: 'Detail',
           command: () => setShowDetail(true),
           icon: 'database',
         },
-        {
-          label: 'Deactive',
-          // command: () => setIsActive(!isActive),
-          command: () => {
-            updateActiveValues()
-            // let _tasksData = { ...tasksData };
-
-            // console.log(_tasksData,'AAA_originalTaskData1')
-            // console.log(focusedTasks,'focusedTasks_ctxMenuItems')
-            // console.log(selectedTasks,'selectedTasks_ctxMenuItems')
-            // console.log(three,'three')
-            // console.log(Object.isFrozen(_tasksData),'isFrozen_1')
-    
-            // const updatedTasksData = Object.values(_tasksData).map(task => {
-            //   let individualTask = {...task}
-            //   const updatedTask = {
-            //     ...task,
-            //     data: {
-            //       ...task.data,
-            //       // update active status
-            //       active: false
-            //     }
-            //   }
-            //   const updateFocusedTask = focusedTasks.includes(individualTask.data.id) ? updatedTask : task
-            //   console.log(Object.isFrozen(task),'isFrozen_2')
-            //   console.log(individualTask,'individualTask')
-            //   console.log(Object.isFrozen(task.data),'isFrozen_3')
-            //   console.log(Object.isFrozen(task.data.active),'isFrozen_4')
-            //   console.log(focusedTasks,'focusedTasks')
-    
-            //   return updateFocusedTask
-            // }
-            // );
-    
-            // console.log(updatedTasksData,'updatedTasksDataXXX')
-            console.log(selectedTasks,'Test123')
-            // setActiveTasks(updatedTasksData)
-        },
-          icon: 'toggle_on',
-        },
       ]
 
-      const [ctxMenuShow] = useCreateContext(ctxMenuItems);
+      const [ctxMenuShow] = useCreateContext([])
+    
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
@@ -172,7 +135,16 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup ? 'folder' : tasksTypes[node.data.taskType]?.icon
+    
+    const isActive = node.data.active
+    const isGroup = node.data.isGroup
+
+    const generateIcon = () => {
+      if (!isActive) return 'archive'
+      if (isGroup) return 'folder'
+      return tasksTypes[node.data.taskType]?.icon
+    }
+
     let className = ''
     let i = 0
     for (const pair of pairing) {
@@ -183,15 +155,27 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
       }
     }
 
+    const resolveActiveStyle = () => !isActive ? {opacity: 0.5} : {opacity: 1}
+
     return (
       <CellWithIcon
-        icon={icon}
+        icon={generateIcon()}
         text={node.data.label}
         iconClassName={className}
         name={node.data.name}
+        iconStyle={resolveActiveStyle()}
+        textStyle={resolveActiveStyle()}
       />
     )
   }
+
+  const renderTaskType = (node) => {
+    const isActive = node.data.active
+    const taskType = node.data.taskType
+    const resolveActiveOpacity = { opacity: isActive ? 1 : 0.5 }
+    return <span style={resolveActiveOpacity}>{taskType}</span>;
+  }
+
 
   if (isError) {
     toast.error(`Unable to load tasks.`)
@@ -228,11 +212,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   const noTasks = !isFetching && tasksData.length === 0
 
 
-
-  console.log(selectedTasks,'tasks_selectedTasks')
-  console.log(focusedTasks,'tasks_focusedTasks')
-
-
   return (
     <Section style={style}>
       <TablePanel>
@@ -253,13 +232,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             emptyMessage=" "
             selectionMode="multiple"
             selectionKeys={selectedTasks}
-            // contextMenuSelectionKey={selectedTasks}
-            onSelectionChange={onSelectionChange}
-            // onContextMenu={(e) => onContextMenu(e, focusedTasks)}
-            // onContextMenu={(e) => onContextMenu(e)}
-            // contextMenuSelectionKey={selectedNodeKey}
-            onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
-            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            onSelectionChange={(e) => onSelectionChange(e)}
+            onContextMenu={(e) => onContextMenu(e)}
             onRowClick={onRowClick}
             className={isFetching ? 'table-loading' : undefined}
             onClick={handleDeselect}
@@ -267,7 +241,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
           >
             <Column field="name" header="Task" expander="true" body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
-            <Column field="taskType" header="Task type" style={{ width: 90 }} />
+            <Column field="taskType" header="Task type" style={{ width: 90 }} body={renderTaskType}  />
           </TreeTable>
         )}
       </TablePanel>
