@@ -144,7 +144,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
 
         {isUser && (
           <FormRowStyled
-            label={'New project access'}
+            label={'New projects access'}
             data-tooltip={
               'When a new project is created, the user will be added to these access groups by default.'
             }
@@ -160,7 +160,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
           </FormRowStyled>
         )}
         {isUser && selectedProjects && (
-          <FormRowStyled label={'Existing project access'}>
+          <FormRowStyled label={'Selected projects access'}>
             <AccessGroupsDropdown
               style={{ flexGrow: 1 }}
               selectedAccessGroups={mergedAccessGroups}
