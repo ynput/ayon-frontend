@@ -99,7 +99,6 @@ query Product($projectName: String!, $ids: [String!]!, $versionOverrides: [Strin
                     status
                     createdAt
                     updatedAt
-                    active
                     versionList{
                       id
                       version
@@ -116,7 +115,6 @@ query Product($projectName: String!, $ids: [String!]!, $versionOverrides: [Strin
                           name
                           author
                           createdAt
-                          active
                           taskId
                           attrib {
                               fps
@@ -135,7 +133,6 @@ query Product($projectName: String!, $ids: [String!]!, $versionOverrides: [Strin
                         name
                         author
                         createdAt
-                        active
                         taskId
                         attrib {
                             fps
@@ -216,7 +213,6 @@ fragment folderTileFragment on FolderNode {
   id
   name
   status
-  active
   icon: folderType
   thumbnailEntityId: id
   footer: folderType

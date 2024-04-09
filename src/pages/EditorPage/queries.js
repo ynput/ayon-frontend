@@ -31,7 +31,6 @@ const BASE_QUERY = `
             id
             label
             tags
-            active
             name
             taskType
             ownAttrib

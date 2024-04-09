@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
@@ -168,6 +168,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
   const renderTaskType = (node) => {
     const isActive = node.data.active
+    console.log(isActive,'isActiveQQQ')
     const taskType = node.data.taskType
     const resolveActiveOpacity = { opacity: isActive ? 1 : 0.5 }
     return <span style={resolveActiveOpacity}>{taskType}</span>;
@@ -207,7 +208,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   }
 
   const noTasks = !isFetching && tasksData.length === 0
-
 
   return (
     <Section style={style}>

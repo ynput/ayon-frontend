@@ -50,7 +50,6 @@ const parseProductData = (data) => {
       name: product.name,
       productType: product.productType,
       status: product.status,
-      active: product.active,
       fps: parseProductFps(product),
       resolution: parseProductResolution(product),
       folder: product.folder.label || product.folder.name,
@@ -90,7 +89,6 @@ fragment ProductVersionFragment on VersionNode {
     name
   }
   status
-  active
   attrib {
       fps
       resolutionWidth
@@ -112,7 +110,6 @@ query ProductsList($projectName: String!, $ids: [String!]!) {
                     name
                     productType
                     status
-                    active
                     createdAt
                     versionList{
                       id
@@ -131,7 +128,6 @@ query ProductsList($projectName: String!, $ids: [String!]!) {
                           name
                         }
                         status
-                        active
                         attrib {
                             fps
                             resolutionWidth

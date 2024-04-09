@@ -648,7 +648,7 @@ s
                       isChanged={isChanged}
                     />
                   )
-                  } else if (attrib?.enum) {
+                } else if (attrib?.enum) {
                   // dropdown
                   const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
                   let enumValue = isMultiSelect ? value : [value]
