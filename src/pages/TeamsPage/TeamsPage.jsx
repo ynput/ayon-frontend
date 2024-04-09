@@ -87,6 +87,14 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     users = []
   }
 
+  // filter out users that have 0 accessGroups for the selected projects
+  users = users.filter(
+    (user) =>
+      user.isAdmin ||
+      user.isManager ||
+      (user.accessGroups[projectName] && user.accessGroups[projectName].length),
+  )
+
   // RTK MUTATIONS
   // delete team
   const [deleteTeam] = useDeleteTeamMutation()
