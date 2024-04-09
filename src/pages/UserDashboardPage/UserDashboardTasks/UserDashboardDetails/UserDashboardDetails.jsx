@@ -3,7 +3,6 @@ import React, { useMemo } from 'react'
 import UserDashDetailsHeader from '../UserDashDetailsHeader/UserDashDetailsHeader'
 import { useSelector } from 'react-redux'
 import Feed from '/src/containers/Feed/Feed'
-import getCommentsForTasks from '/src/containers/Feed/commentsData'
 import { useGetTasksDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import TaskAttributes from '../TaskAttributes/TaskAttributes'
 
@@ -31,8 +30,6 @@ const UserDashboardDetails = ({
     { skip: !tasks?.length },
   )
 
-  const commentsData = useMemo(() => getCommentsForTasks(tasks, projectUsers), [tasks])
-
   return (
     <Panel style={{ height: '100%', padding: 0 }}>
       <UserDashDetailsHeader
@@ -48,7 +45,6 @@ const UserDashboardDetails = ({
           tasks={selectedTasks}
           activeUsers={activeProjectUsers}
           selectedTasksProjects={selectedTasksProjects}
-          commentsData={commentsData}
         />
       )}
       {attributesOpen && (

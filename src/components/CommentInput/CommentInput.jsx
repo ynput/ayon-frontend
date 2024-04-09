@@ -12,7 +12,6 @@ import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOpt
 import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
 import { useGetMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
-import { v4 as uuid4 } from 'uuid'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
 
 const CommentInput = ({
@@ -106,7 +105,10 @@ const CommentInput = ({
     // insert space instead of tab or enter
     const replace = mention.type + (mention.search || '')
     const mentionText = mention.type + selectedOption.label
-    const newString = `<a href="@${selectedOption.id}">${mentionText}</a>&nbsp;`
+    const type = typeOptions[mention.type]
+    const href = `${type?.id}:${selectedOption.id}`
+
+    const newString = `<a href="@${href}">${mentionText}</a>&nbsp;`
     const newContent = editorValue.replace(replace, newString)
 
     const deltaContent = quill.clipboard.convert(newContent)
@@ -226,39 +228,23 @@ const CommentInput = ({
   }
 
   const convertToMarkdown = () => {
-    const editor = editorRef.current.getEditor()
-    const unprivilegedEditor = editorRef.current.makeUnprivilegedEditor(editor)
-    const html = unprivilegedEditor.getHTML()
-
     // convert to markdown
-    let markdown = turndownService.turndown(html)
+    let markdown = turndownService.turndown(editorValue)
 
-    // find any
-    const regex = /\[(.*?)\]\((.*?)\)/g
-    const mentions = []
-    let match
-    while ((match = regex.exec(markdown)) !== null) {
-      let link = match[2]
-      const label = match[1]
-      const type = mentionTypes.find((key) => label.startsWith(key))
-      const typeConfig = typeOptions[type]
-      if (link && link.startsWith('@') && typeConfig && label) {
-        const newId = uuid4()
-        const refId = link.substring(1)
+    let body = markdown
 
-        // replace the link with the new id
-        markdown = markdown.replace(new RegExp(link, 'g'), refId)
-
-        mentions.push({
-          label: label.replace(/@/g, ''),
-          refId: refId,
-          refType: typeConfig.id,
-          id: newId,
-        })
-      }
+    // inside the markdown, find characters inside () or [] and replace @ with nothing
+    const regex = /\((.*?)\)|\[(.*?)\]/g
+    const matches = markdown.match(regex)
+    if (matches) {
+      matches.forEach((match) => {
+        console.log('match', match)
+        const newMatch = match.replaceAll('@', '')
+        body = body.replace(match, newMatch)
+      })
     }
 
-    return { body: markdown, references: mentions }
+    return body
   }
 
   const handleSubmit = () => {

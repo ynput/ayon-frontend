@@ -1,12 +1,11 @@
 import React from 'react'
-import * as Styled from './FeedHeader.styled'
+import * as Styled from './ActivityHeader.styled'
 import { UserImage } from '@ynput/ayon-react-components'
 import { useGetUserQuery } from '/src/services/user/getUsers'
 import { formatDistanceToNow, isValid } from 'date-fns'
 import Typography from '/src/theme/typography.module.css'
-import FeedReference from '../FeedReference/FeedReference'
 
-const FeedHeader = ({ name, users, date, reference }) => {
+const ActivityHeader = ({ name, users, date }) => {
   // first check if the users are already in users
   const userInUsers = users?.find((user) => user.name === name)
   // get user based on user name
@@ -27,17 +26,9 @@ const FeedHeader = ({ name, users, date, reference }) => {
         size={22}
       />
       <h5>{user.fullName || user.name}</h5>
-      {reference && (
-        <>
-          <span>on</span>
-          <FeedReference type={reference.refType} variant="text" label={reference.label}>
-            {reference.label}
-          </FeedReference>
-        </>
-      )}
       <Styled.Date className={Typography.bodySmall}>{fuzzyDate}</Styled.Date>
     </Styled.Header>
   )
 }
 
-export default FeedHeader
+export default ActivityHeader

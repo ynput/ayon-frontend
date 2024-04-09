@@ -1,39 +1,34 @@
 import React from 'react'
-import * as Styled from './FeedComment.styled'
-import FeedHeader from '../FeedHeader/FeedHeader'
+import * as Styled from './ActivityComment.styled'
+import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
 import FeedReference from '../FeedReference/FeedReference'
 import CommentWrapper from './CommentWrapper'
 import { Icon } from '@ynput/ayon-react-components'
 import Typography from '/src/theme/typography.module.css'
 
-const getTypeByCount = (count) => {
-  switch (count) {
-    case 1:
-      return 'user'
-
-    case 2:
-      return 'version'
-
-    case 3:
-      return 'task'
-
-    default:
-      return 'user'
+const allowedRefTypes = [
+  'user',
+  'task',
+  'folder',
+  'version',
+  'representation',
+  'workfile',
+  'product',
+]
+const sanitizeURL = (url = '') => {
+  // ensure that the url is valid https url
+  // or a valid {type}:{id} reference
+  if (url.startsWith('https://')) return { url, type: 'url' }
+  if (url.includes(':')) {
+    const sections = url.split(':')
+    const [type, id] = sections
+    if (allowedRefTypes.includes(type) && id && sections.length === 2) return { type, id }
   }
+  return {}
 }
 
-const countAtSymbolsBeforeLink = (link, body) => {
-  const prefix = body.substring(0, body.indexOf(link.substring(1)))
-  //   prefix last 3 characters
-  const last2 = prefix.substring(prefix.length - 2)
-  //   count @ in last 2 characters
-  const atCount = (last2.match(/@/g) || []).length
-
-  return atCount + 1
-}
-
-const FeedComment = ({ comment, users }) => {
+const ActivityComment = ({ comment, users }) => {
   const body = comment.body
 
   // on double click, select all body text
@@ -45,40 +40,27 @@ const FeedComment = ({ comment, users }) => {
     selection.addRange(range)
   }
 
-  const referenceSource = comment?.reference && {
-    label: comment.entityFolder,
-    refId: comment.entityId,
-    refType: comment.entityType,
-  }
-
   return (
     <Styled.Comment>
-      <FeedHeader
-        name={comment.author}
-        users={users}
-        date={comment.createdAt}
-        reference={referenceSource}
-      />
+      <ActivityHeader name={comment.authorName} users={users} date={comment.createdAt} />
       <Styled.Body onDoubleClick={handleDoubleClick}>
         <CommentWrapper>
           <ReactMarkdown
+            urlTransform={(url) => url}
             components={{
-              a: ({ href, children }) => {
-                if (!children[0] || !children[0].includes('@')) return <a href={href}>{children}</a>
-                const link = `[${children[0]}](${href})`
-                //   get number of @ symbols before link
-                const atCount = countAtSymbolsBeforeLink(link, body)
+              a: ({ children, href }) => {
+                const { url, type, id } = sanitizeURL(href)
 
-                const type = getTypeByCount(atCount)
+                // return regular url
+                if (url) <a href={href}>{children}</a>
+                // if no reference type, return regular link with no href
+                if (!type || !id) return <a>{children}</a>
 
-                // find the reference object by the href
-
-                const label = children[0] && children[0].replace('@', '')
-                const entityId = href
+                const label = children && children.replace('@', '')
 
                 return (
                   <FeedReference
-                    id={entityId}
+                    id={id}
                     type={type}
                     style={{ top: 5, userSelect: 'text' }}
                     label={label}
@@ -111,4 +93,4 @@ const FeedComment = ({ comment, users }) => {
   )
 }
 
-export default FeedComment
+export default ActivityComment

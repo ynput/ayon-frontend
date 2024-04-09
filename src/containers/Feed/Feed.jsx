@@ -1,88 +1,73 @@
 import React, { useMemo, useState } from 'react'
-import FeedItem from '/src/components/Feed/FeedItem'
-import { compareAsc } from 'date-fns'
+import ActivityItem from '../../components/Feed/ActivityItem'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import { uuid } from 'short-uuid'
 import { useSelector } from 'react-redux'
+import { useGetActivitiesQuery } from '/src/services/activities/getActivities'
+import { useUpdateActivityMutation } from '/src/services/activities/updateActivities'
+import { v1 as uuid1 } from 'uuid'
+import { formatISO } from 'date-fns'
 
-const Feed = ({ tasks = [], commentsData = [], activeUsers, selectedTasksProjects = [] }) => {
-  const name = useSelector((state) => state.user.name)
+const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
+  const { name, fullName, avatarUrl } = useSelector((state) => state.user)
 
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
-  // for testing only!!!
-  const [textNewComments, setTextNewComments] = useState([])
 
-  const isAllComments = !tasks.length
+  const entitiesToQuery = useMemo(
+    () => tasks.map((task) => ({ id: task.id, projectName: task.projectName, type: 'task' })),
+    [tasks],
+  )
 
-  const entityIds = useMemo(() => tasks.map((task) => task.id), [tasks])
-
-  // GET COMMENTS (FOR NOW DEMO DATA)
-  const events = []
-
-  // add comments to events list
-  if (!isAllComments) {
-    const comments = [...commentsData, ...textNewComments].filter((comment) =>
-      entityIds.includes(comment.entityId),
-    )
-    events.push(...comments)
-  } else {
-    // add all comments but with reference to the task, this gives every comment "on task" tag
-    const allCommentsAsReferences = commentsData.map((comment) => ({
-      ...comment,
-      reference: comment,
-    }))
-    events.push(...allCommentsAsReferences)
-  }
+  const { data: activitiesData = [] } = useGetActivitiesQuery({
+    entities: entitiesToQuery,
+  })
 
   const tasksVersions = tasks.flatMap((task) => task.allVersions) || []
 
-  const references = [...commentsData]
-    .filter(
-      (comment) =>
-        comment?.references.some((ref) => entityIds.includes(ref.refId)) &&
-        !entityIds.includes(comment.entityId),
-    )
-    .map((c) => {
-      const ref = c?.references.find((ref) => entityIds.includes(ref.refId))
+  // used to create and update activities (comments)
+  const [updateActivity] = useUpdateActivityMutation()
 
-      return { reference: ref, ...c }
-    })
-
-  events.push(...references)
-
-  // sort events by date
-  events.sort((a, b) => compareAsc(new Date(a.createdAt), new Date(b.createdAt)))
-
-  const handleCommentSubmit = (value) => {
-    console.log(value)
-    const newComments = []
-
-    for (const task of tasks) {
-      const newComment = {
-        id: uuid(),
-        author: name,
-        body: value?.body,
-        createdAt: new Date(),
-        entityId: task.id,
-        entityName: task.name,
-        entityType: 'task',
-        eventType: 'comment',
-        references: value?.references,
-      }
-
-      newComments.push(newComment)
+  const handleCommentSubmit = async (value) => {
+    const newComment = {
+      body: value,
+      activityType: 'comment',
+      activityId: uuid1().replace(/-/g, ''),
     }
 
-    setTextNewComments([...textNewComments, ...newComments])
+    // TODO: this only works for the first selected task
+    const projectName = selectedTasksProjects[0]
+    const entityType = 'task'
+    const entityId = tasks[0].id
+
+    // create a new patch for optimistic update
+    const patch = {
+      ...newComment,
+      referenceType: 'origin',
+      authorName: name,
+      authorFullName: fullName,
+      authorAvatarUrl: avatarUrl,
+      createdAt: formatISO(new Date()),
+    }
+
+    try {
+      await updateActivity({
+        projectName,
+        entityType,
+        entityId,
+        data: newComment,
+        patch,
+      }).unwrap()
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent>
-        {events.map((event) => (
-          <FeedItem key={event.id} {...event} users={activeUsers} />
+        {activitiesData.map((event) => (
+          <ActivityItem key={event.activityId} {...event} users={activeUsers} />
         ))}
       </Styled.FeedContent>
       {!!tasks.length && (
