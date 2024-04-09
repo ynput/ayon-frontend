@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
+import { Button, Section, Toolbar, InputText, Spacer, Panel } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
@@ -13,7 +13,6 @@ import UserDetail from './userDetail'
 import UserList from './UserList'
 import { useDeleteUserMutation } from '/src/services/user/updateUser'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { SelectButton } from 'primereact/selectbutton'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
@@ -22,6 +21,7 @@ import NewUser from './newUser'
 import confirmDelete from '/src/helpers/confirmDelete'
 import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
 import Shortcuts from '/src/containers/Shortcuts'
+import SwitchButton from '/src/components/SwitchButton/SwitchButton'
 
 // what to show in the access column
 const formatAccessGroups = (rowData, selectedProjects) => {
@@ -89,7 +89,7 @@ const UsersSettings = () => {
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
-  const [showProjectUsers, setShowProjectUsers] = useState(false)
+  const [showAssignedOnly, setShowAssignedOnly] = useState(false)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -110,7 +110,7 @@ const UsersSettings = () => {
   const [deleteUser] = useDeleteUserMutation()
 
   let filteredUserList = useMemo(() => {
-    // filter out users that are not in project if showProjectUsers is true
+    // filter out users that are not in project if showAssignedOnly is true
     if (selectedProjects) {
       return userList.filter((user) => {
         // user level not user
@@ -161,7 +161,7 @@ const UsersSettings = () => {
     if (total === 'total') {
       setSearch('')
       setSelectedUsers(filteredUserList.map((user) => user.name))
-      if (selectedProjects) setShowProjectUsers(true)
+      if (selectedProjects) setShowAssignedOnly(true)
     } else {
       setSearch(total)
     }
@@ -171,10 +171,10 @@ const UsersSettings = () => {
     setShowNewUser(true)
   }
 
-  // use filteredUserList if showProjectUsers
+  // use filteredUserList if showAssignedOnly
   // else use userList
 
-  if (showProjectUsers) userList = filteredUserList
+  if (showAssignedOnly) userList = filteredUserList
 
   let userListWithAccessGroups = useMemo(
     () => userList.map((user) => formatAccessGroups(user, selectedProjects)),
@@ -241,15 +241,6 @@ const UsersSettings = () => {
       <main>
         <Section>
           <Toolbar>
-            <SelectButton
-              value={showProjectUsers}
-              options={[
-                { label: 'All Users', value: false },
-                { label: 'Selected Projects', value: true },
-              ]}
-              onChange={(e) => setShowProjectUsers(e.value)}
-              disabled={!selectedProjects}
-            />
             <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
               <InputText
                 style={{ width: '200px' }}
@@ -279,15 +270,37 @@ const UsersSettings = () => {
             stateKey="users-panels"
             stateStorage="local"
           >
-            <SplitterPanel size={10}>
-              <ProjectList
-                showNull="No project (all users)"
-                multiselect={true}
-                selection={selectedProjects}
-                onSelect={setSelectedProjects}
-                style={{ maxWidth: 'unset' }}
-                wrap
-              />
+            <SplitterPanel size={10} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <Button
+                  icon="checklist"
+                  style={{ flex: 1 }}
+                  selected={!selectedProjects}
+                  onClick={() => setSelectedProjects(null)}
+                >
+                  All users
+                </Button>
+                <SwitchButton
+                  value={showAssignedOnly}
+                  onClick={() => setShowAssignedOnly(!showAssignedOnly)}
+                  label="Assigned only"
+                  disabled={!selectedProjects}
+                  data-tooltip="Show only users with access to selected projects"
+                />
+              </div>
+              <Panel style={{ flex: 1, gap: 0 }}>
+                <h3>Users by project access</h3>
+
+                <Section>
+                  <ProjectList
+                    multiselect={true}
+                    selection={selectedProjects}
+                    onSelect={setSelectedProjects}
+                    style={{ maxWidth: 'unset' }}
+                    wrap
+                  />
+                </Section>
+              </Panel>
             </SplitterPanel>
             <SplitterPanel size={50}>
               <UserList
