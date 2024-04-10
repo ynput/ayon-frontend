@@ -51,6 +51,11 @@ export const Comment = styled.div`
     }
   }
 
+  .ql-bubble .ql-editor a[href^='@'] {
+    text-decoration: none;
+    color: var(--md-sys-color-primary);
+  }
+
   .ql-bubble .ql-tooltip.ql-flip {
     left: 0 !important;
     top: 9px !important;
