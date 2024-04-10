@@ -251,16 +251,16 @@ const CommentInput = ({
         setMention(null)
       }
     } else {
+      // get full string between mention and new delta
       // This is where SEARCH is handled
       if (mention) {
+        const retain = delta.ops[0].retain
         // if space is pressed, remove mention
-        if (currentCharacter === ' ') {
+        if (currentCharacter === ' ' || !retain) {
           setMention(null)
           return
         }
 
-        // get full string between mention and new delta
-        const retain = delta.ops[0].retain
         let distanceMentionToRetain = retain - mention.retain
         if (!isDelete) distanceMentionToRetain++
         const mentionFull = editor.getText(mention.retain, distanceMentionToRetain)
@@ -275,6 +275,27 @@ const CommentInput = ({
           })
         }
       }
+    }
+  }
+
+  const handleToolbarMention = (type) => {
+    // get editor retain
+    const quill = editorRef.current.getEditor()
+
+    let retain = quill.getSelection()?.index || 0
+
+    // get character at retain
+    const currentCharacter = quill.getText(retain - 1, 1)
+
+    // if the current character is a character, increment retain
+    const addSpace = currentCharacter !== ' ' && currentCharacter
+    if (addSpace) {
+      quill.insertText(retain, ' ')
+      retain++
+    }
+
+    for (const string of type) {
+      quill.insertText(retain, string)
     }
   }
 
@@ -380,13 +401,11 @@ const CommentInput = ({
           <Styled.Footer>
             <Styled.Commands>
               {/* mention a user */}
-              <Button icon="alternate_email" />
+              <Button icon="alternate_email" onClick={() => handleToolbarMention('@')} />
               {/* mention a version */}
-              <Button icon="layers" />
+              <Button icon="layers" onClick={() => handleToolbarMention('@@')} />
               {/* mention a task */}
-              <Button icon="check_circle" />
-              {/* attache a file */}
-              <Button icon="attach_file_add" />
+              <Button icon="check_circle" onClick={() => handleToolbarMention('@@@')} />
             </Styled.Commands>
             <SaveButton
               label="Comment"

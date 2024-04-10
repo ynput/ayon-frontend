@@ -12,7 +12,6 @@ const ActivityCommentRef = ({ activity = {}, entityType = '' }) => {
   const { id: originId, name, label, type: originType } = activity.origin || {}
 
   const isMention = referenceType === 'mention'
-  console.log(activity)
 
   const fuzzyDate =
     createdAt && isValid(new Date(createdAt))
