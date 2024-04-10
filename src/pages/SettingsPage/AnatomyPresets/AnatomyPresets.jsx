@@ -24,6 +24,7 @@ import {
   useDeletePresetMutation,
   useUpdatePresetMutation,
   useUpdatePrimaryPresetMutation,
+  useUnsetPrimaryPresetMutation,
 } from '/src/services/anatomy/updateAnatomy'
 import confirmDelete from '/src/helpers/confirmDelete'
 
@@ -79,6 +80,7 @@ const AnatomyPresets = () => {
   const [updatePreset, { isLoading: isUpdating }] = useUpdatePresetMutation()
   const [deletePreset] = useDeletePresetMutation()
   const [updatePrimaryPreset] = useUpdatePrimaryPresetMutation()
+  const [unsetPrimaryPreset] = useUnsetPrimaryPresetMutation()
 
   // SAVE PRESET
   const savePreset = (name) => {
@@ -127,8 +129,21 @@ const AnatomyPresets = () => {
       })
   }
 
+  // UNSET PRIMARY PRESET
+  const unsetPrimary = (name) => {
+    unsetPrimaryPreset({ name })
+      .unwrap()
+      .then(() => {
+        toast.info(`Unset primary preset`)
+      })
+      .catch((err) => {
+        toast.error(err.message)
+      })
+  }
+
+
   useEffect(() => {
-    console.log('Bread', breadcrumbs)
+    // TODO
   }, [breadcrumbs])
 
   const onPasteAnatomy = async () => {
@@ -207,7 +222,14 @@ const AnatomyPresets = () => {
           <Button
             label="Set as primary"
             icon="flag"
+            disabled={isSelectedPrimary}
             onClick={() => setPrimaryPreset(selectedPreset)}
+          />
+          <Button
+            label="Unset primary"
+            icon="flag"
+            disabled={!isSelectedPrimary}
+            onClick={() => unsetPrimary(selectedPreset)}
           />
           <Button
             label="Delete preset"
