@@ -99,6 +99,13 @@ const CommentInput = ({
     }
   }, [newSelection])
 
+  const findStartAndEndIndexes = (string) => {
+    const start = editorValue.indexOf(string)
+    if (start === -1) return []
+    const end = start + string.length
+    return { start, end }
+  }
+
   const handleSelectMention = (selectedOption, retain) => {
     // get option text
     const quill = editorRef.current.getEditor()
@@ -108,10 +115,54 @@ const CommentInput = ({
     const type = typeOptions[mention.type]
     const href = `${type?.id}:${selectedOption.id}`
 
-    const newString = `<a href="@${href}">${mentionText}</a>&nbsp;`
-    const newContent = editorValue.replace(replace, newString)
+    // find all previous mentions (a tags) in the editor
+    const previousMentions = quill.getContents().ops.filter((op) => op.attributes?.link)
 
-    const deltaContent = quill.clipboard.convert(newContent)
+    // find the start and end index of all the found mentions
+    const previousMentionsIndexes = previousMentions.reduce((acc, op) => {
+      const indexes = []
+      if (op.attributes?.link) {
+        indexes.push(findStartAndEndIndexes(op.attributes.link))
+      }
+      if (op.insert) {
+        indexes.push(findStartAndEndIndexes(op.insert))
+      }
+      acc.push(...indexes)
+      return acc
+    }, [])
+
+    // find all indexes of replace in the editor
+    var replaceIndexes = []
+    for (var i = 0; i < editorValue.length; i++) {
+      if (editorValue.substring(i, i + replace.length) === replace) {
+        // check that the i is not between the start and end indexes of a found mentions
+        const isBetween = previousMentionsIndexes.some((index) => i >= index.start && i < index.end)
+        if (!isBetween) {
+          replaceIndexes.push(i)
+        }
+      }
+    }
+
+    if (replaceIndexes.length === 0) {
+      return toast.error('Could not find mention in editor. Please try again.')
+    }
+
+    const replaceStartIndex = replaceIndexes[0]
+    const replaceEndIndex = replaceStartIndex + replace.length
+
+    // remove the original search mention by deleting the text from start to finish
+    const editorValueWithoutMention =
+      editorValue.slice(0, replaceStartIndex) + editorValue.slice(replaceEndIndex)
+
+    const newString = `<a href="@${href}">${mentionText}</a>&nbsp;`
+
+    // now add the new mention in at the same index
+    const editorValueWithNewMention =
+      editorValueWithoutMention.slice(0, replaceStartIndex) +
+      newString +
+      editorValueWithoutMention.slice(replaceStartIndex)
+
+    const deltaContent = quill.clipboard.convert(editorValueWithNewMention)
 
     quill.setContents(deltaContent, 'silent')
 
