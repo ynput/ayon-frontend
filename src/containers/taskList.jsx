@@ -136,22 +136,24 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     const isGroup = node.data.isGroup
 
     const generateIcon = () => {
-      if (!isActive) return 'archive'
+      if (!isActive) return 'visibility_off'
       if (isGroup) return 'folder'
       return tasksTypes[node.data.taskType]?.icon
     }
 
     let className = ''
-    let i = 0
-    for (const pair of pairing) {
-      i++
-      if (pair.taskId === node.data.id) {
-        className = `row-hl-${i}`
-        break
+
+    // Apply color styles only if item is active, the inactive item will remain gray
+    if (isActive) {
+      let i = 0
+      for (const pair of pairing) {
+        i++
+        if (pair.taskId === node.data.id) {
+          className = `row-hl-${i}`
+          break
+        }
       }
     }
-
-    const resolveActiveStyle = () => isActive ? {opacity: 1} : {opacity: 0.5}
 
     return (
       <CellWithIcon
@@ -159,8 +161,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
         text={node.data.label}
         iconClassName={className}
         name={node.data.name}
-        iconStyle={resolveActiveStyle()}
-        textStyle={resolveActiveStyle()}
+        iconStyle={isActive ? {opacity: 1} : {opacity: 0.3}}
+        textStyle={isActive ? {opacity: 1} : {opacity: 0.3}}
       />
     )
   }
@@ -168,7 +170,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   const renderTaskType = (node) => {
     const isActive = node.data.active
     const taskType = node.data.taskType
-    const resolveActiveOpacity = { opacity: isActive ? 1 : 0.5 }
+    const resolveActiveOpacity = { opacity: isActive ? 1 : 0.3 }
     return <span style={resolveActiveOpacity}>{taskType}</span>;
   }
 
