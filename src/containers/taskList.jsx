@@ -155,14 +155,16 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
       }
     }
 
+    const opacityStyle =  isActive ? {opacity: 1} : {opacity: 0.5}
+
     return (
       <CellWithIcon
         icon={generateIcon()}
         text={node.data.label}
         iconClassName={className}
         name={node.data.name}
-        iconStyle={isActive ? {opacity: 1} : {opacity: 0.3}}
-        textStyle={isActive ? {opacity: 1} : {opacity: 0.3}}
+        iconStyle={opacityStyle}
+        textStyle={opacityStyle}
       />
     )
   }
