@@ -3,7 +3,7 @@ import { ayonApi } from '../ayon'
 import { taskProvideTags, transformTasksData } from './userDashboardHelpers'
 import {
   KAN_BAN_ASSIGNEES_QUERY,
-  KAN_BAN_TASK_MENTIONS_QUERY,
+  TASK_MENTION_TASKS,
   KAN_BAN_TASK_QUERY,
   PROJECT_TASKS_QUERY,
 } from './userDashboardQueries'
@@ -308,20 +308,25 @@ const getUserDashboard = ayonApi.injectEndpoints({
         }
       },
     }),
-    getMentionTasks: build.query({
-      query: ({ projectName, assignee }) => ({
+    getTaskMentionTasks: build.query({
+      query: ({ projectName, folderIds = [] }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: KAN_BAN_TASK_MENTIONS_QUERY,
-          variables: { projectName, assignees: [assignee] },
+          query: TASK_MENTION_TASKS,
+          variables: { projectName, folderIds },
         },
       }),
       transformResponse: (response) =>
-        transformTasksData({
-          projectName: response?.data?.project?.projectName,
-          tasks: response?.data?.project?.tasks?.edges?.map((edge) => edge.node),
-        }),
+        response?.data?.project?.folders?.edges?.flatMap(
+          (ef) =>
+            ef?.node?.tasks?.edges.map((et) => ({
+              ...et?.node,
+              label: et?.node?.label || et?.node?.name,
+              folderId: ef?.node?.id,
+              folderLabel: ef?.node?.label || ef?.node?.name,
+            })) || [],
+        ),
       providesTags: (res) =>
         res.map(({ id }) => ({ type: 'kanBanTask', id }, { type: 'task', id })),
     }),
@@ -336,5 +341,5 @@ export const {
   useGetKanBanUsersQuery,
   useGetTasksDetailsQuery,
   useLazyGetTasksDetailsQuery,
-  useGetMentionTasksQuery,
+  useGetTaskMentionTasksQuery,
 } = getUserDashboard

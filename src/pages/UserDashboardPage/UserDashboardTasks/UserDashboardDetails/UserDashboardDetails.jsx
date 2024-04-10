@@ -14,6 +14,7 @@ const UserDashboardDetails = ({
   disabledProjectUsers,
   activeProjectUsers,
   selectedTasksProjects,
+  projectsInfo,
 }) => {
   const selectedTasksIds = useSelector((state) => state.dashboard.tasks.selected)
   const attributesOpen = useSelector((state) => state.dashboard.tasks.attributesOpen)
@@ -45,6 +46,7 @@ const UserDashboardDetails = ({
           tasks={selectedTasks}
           activeUsers={activeProjectUsers}
           selectedTasksProjects={selectedTasksProjects}
+          projectsInfo={projectsInfo}
         />
       )}
       {attributesOpen && (

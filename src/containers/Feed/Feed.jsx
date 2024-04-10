@@ -8,7 +8,7 @@ import { useUpdateActivityMutation } from '/src/services/activities/updateActivi
 import { v1 as uuid1 } from 'uuid'
 import { formatISO } from 'date-fns'
 
-const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
+const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInfo }) => {
   const { name, fullName, avatarUrl } = useSelector((state) => state.user)
 
   // STATES
@@ -85,6 +85,8 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [] }) => {
           selectedTasksProjects={selectedTasksProjects}
           versions={tasksVersions}
           userName={name}
+          entities={tasks}
+          projectsInfo={projectsInfo}
         />
       )}
     </Styled.FeedContainer>

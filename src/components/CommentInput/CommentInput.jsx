@@ -9,7 +9,7 @@ import { toast } from 'react-toastify'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
 import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
-import { useGetMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
+import { useGetTaskMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
 
@@ -20,8 +20,9 @@ const CommentInput = ({
   setIsOpen,
   activeUsers,
   selectedTasksProjects,
-  userName,
+  entities = [],
   versions = [],
+  projectsInfo,
 }) => {
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
@@ -46,11 +47,20 @@ const CommentInput = ({
     }
   }, [initValue, markdownRef.current])
 
-  const { data: mentionTasks } = useGetMentionTasksQuery(
-    { projectName: selectedTasksProjects[0], assignee: userName },
+  // for the task (entity), get all folderIds
+  const folderIds = entities.map((entity) => entity.folderId)
+
+  const singleProjectName = selectedTasksProjects[0]
+  const { data: mentionTasks = [] } = useGetTaskMentionTasksQuery(
+    { projectName: singleProjectName, folderIds },
     {
-      skip: selectedTasksProjects?.length !== 1,
+      skip: selectedTasksProjects?.length !== 1 || !folderIds.length,
     },
+  )
+
+  // filter out the tasks that are currently selected
+  const siblingTasks = mentionTasks.filter(
+    (task) => !entities.some((entity) => entity.id === task.id),
   )
 
   // CONFIG
@@ -80,14 +90,14 @@ const CommentInput = ({
         {
           '@': () => getMentionUsers(activeUsers),
           '@@': () => getMentionVersions(versions),
-          '@@@': () => getMentionTasks(mentionTasks),
+          '@@@': () => getMentionTasks(siblingTasks, projectsInfo, singleProjectName),
         },
         mention?.search,
       ),
     [activeUsers, mention?.type, mention?.search],
   )
 
-  // show first 5
+  // show first 5 and filter itself out
   const shownMentionOptions = mentionOptions.slice(0, 5)
 
   // triggered when a mention is selected

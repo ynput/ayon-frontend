@@ -20,12 +20,20 @@ const ActivityCommentRef = ({ activity = {}, entityType = '' }) => {
 
   return (
     <Styled.Reference>
-      <UserImage fullName={authorFullName} src={authorAvatarUrl} name={authorName} size={22} />
+      <UserImage
+        fullName={authorFullName}
+        src={authorAvatarUrl}
+        name={authorName}
+        size={22}
+        style={{ minWidth: 22, maxWidth: 22 }}
+      />
       <Styled.Text>{authorFullName || authorName}</Styled.Text>
       <Styled.Text>
         <strong>{isMention ? `mentioned` : 'commented'}</strong>
       </Styled.Text>
-      <Styled.Text>{isMention ? `this ${entityType} in` : 'on'}</Styled.Text>
+      <Styled.Text style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {isMention ? `this ${entityType} in` : 'on'}
+      </Styled.Text>
       <FeedReference id={originId} type={originType} label={label || name} disabled>
         {label || name}
       </FeedReference>

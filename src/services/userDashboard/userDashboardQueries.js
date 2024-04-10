@@ -84,22 +84,31 @@ query KanbanProjectAssignees($projectName: String) {
 }
 }`
 
-export const KAN_BAN_TASK_MENTIONS_QUERY = `
-query SearchMentionTasks($projectName: String!, $assignees: [String!]!) {
+export const TASK_MENTION_TASKS = `
+query FoldersTasksForMentions($projectName: String!, $folderIds: [String!]!) {
   project(name: $projectName) {
-    projectName
-    tasks(assignees: $assignees) {
+    folders(ids: $folderIds) {
       edges {
         node {
           id
           name
-          taskType
-          status
-          versions(latestOnly: true) {
+          label
+          tasks {
             edges {
               node {
                 id
+                name
+                label
+                taskType
                 thumbnailId
+                versions(latestOnly: true) {
+                  edges {
+                    node {
+                      id
+                      thumbnailId
+                    }
+                  }
+                }
               }
             }
           }

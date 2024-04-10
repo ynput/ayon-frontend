@@ -1,8 +1,10 @@
 const getMentionVersions = (versions) =>
-  versions.map((v, i) => ({
+  versions.map((v) => ({
+    type: 'version',
     label: v.name,
-    image: v.thumbnailUrl,
-    id: v.id + i.toString(),
+    image: v.thumbnailId,
+    icon: 'layers',
+    id: v.id,
     keywords: [v.name],
   }))
 

@@ -212,6 +212,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             activeProjectUsers={activeProjectUsers}
             disabledProjectUsers={disabledProjectUsers}
             selectedTasksProjects={selectedTasksProjects}
+            projectsInfo={projectsInfo}
           />
         </SplitterPanel>
       ) : (
