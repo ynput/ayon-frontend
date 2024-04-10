@@ -13,7 +13,7 @@ assignees: ''
 
 ### Problems - what problems does this story create?
 
-### Solutions - how do we solve these problems?
+### Proposal - how do we solve these problems?
 
 ### TODO - Actionable steps to solve this
 
