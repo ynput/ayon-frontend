@@ -8,7 +8,7 @@ const sortByName = (a, b) => {
 export const parseTasksList = (tasks, userName) => {
   const parsed = tasks
     .sort(sortByName)
-    .map(({ node: { id, name, label, folder, taskType, assignees } }) => ({
+    .map(({ node: { id, name, active, label, folder, taskType, assignees } }) => ({
       id: id,
       name: name,
       label: label,
@@ -16,6 +16,7 @@ export const parseTasksList = (tasks, userName) => {
       folderPath: folder.path,
       taskType: taskType,
       isMine: assignees.includes(userName) ? 'yes' : '',
+      active,
     }))
 
   const grouped = groupResult(parsed, 'name')

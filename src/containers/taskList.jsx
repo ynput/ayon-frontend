@@ -87,22 +87,36 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     dispatch(setFocusedTasks({ ids: taskIds, names }))
   }
 
-  const onContextMenuSelectionChange = (event) => {
-    if (focusedTasks.includes(event.value)) return
-    dispatch(setPairing([{ taskId: event.value }]))
-    dispatch(setFocusedTasks({ ids: [event.value] }))
+  const dispatchFocusedTasks  = (taskId) => {
+    dispatch(setPairing([{ taskId: taskId }]))
+    dispatch(setFocusedTasks({ ids: [taskId] }))
+  }
+
+  const onContextMenu = (event) => {
+    let newFocused = [...focusedTasks]
+    const itemId = event.node.data.id
+    if (itemId && !focusedTasks?.includes(itemId)) {
+      // if the selection does not include the clicked node, new selection is the clicked node
+      newFocused = [itemId]
+      // update selection state
+      dispatchFocusedTasks(itemId)
+    }
+    
+    ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
   }
 
   // CONTEXT MENU
-  const ctxMenuItems = [
-    {
-      label: 'Detail',
-      command: () => setShowDetail(true),
-      icon: 'database',
-    },
-  ]
+  const ctxMenuItems = () =>
+    [
+      {
+        label: 'Detail',
+        command: () => setShowDetail(true),
+        icon: 'database',
+      },
+    ]
 
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+    const [ctxMenuShow] = useCreateContext([])
+    
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
@@ -117,26 +131,51 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   //
 
   const nameRenderer = (node) => {
-    const icon = node.data.isGroup ? 'folder' : tasksTypes[node.data.taskType]?.icon
+    
+    const isActive = node.data.active
+    const isGroup = node.data.isGroup
+
+    const generateIcon = () => {
+      if (!isActive) return 'visibility_off'
+      if (isGroup) return 'folder'
+      return tasksTypes[node.data.taskType]?.icon
+    }
+
     let className = ''
-    let i = 0
-    for (const pair of pairing) {
-      i++
-      if (pair.taskId === node.data.id) {
-        className = `row-hl-${i}`
-        break
+
+    // Apply color styles only if item is active, the inactive item will remain gray
+    if (isActive) {
+      let i = 0
+      for (const pair of pairing) {
+        i++
+        if (pair.taskId === node.data.id) {
+          className = `row-hl-${i}`
+          break
+        }
       }
     }
 
+    const opacityStyle =  isActive ? {opacity: 1} : {opacity: 0.5}
+
     return (
       <CellWithIcon
-        icon={icon}
+        icon={generateIcon()}
         text={node.data.label}
         iconClassName={className}
         name={node.data.name}
+        iconStyle={opacityStyle}
+        textStyle={opacityStyle}
       />
     )
   }
+
+  const renderTaskType = (node) => {
+    const isActive = node.data.active
+    const taskType = node.data.taskType
+    const resolveActiveOpacity = { opacity: isActive ? 1 : 0.3 }
+    return <span style={resolveActiveOpacity}>{taskType}</span>;
+  }
+
 
   if (isError) {
     toast.error(`Unable to load tasks.`)
@@ -192,9 +231,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             emptyMessage=" "
             selectionMode="multiple"
             selectionKeys={selectedTasks}
-            onSelectionChange={onSelectionChange}
-            onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
-            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            onSelectionChange={(e) => onSelectionChange(e)}
+            onContextMenu={(e) => onContextMenu(e)}
             onRowClick={onRowClick}
             className={isFetching ? 'table-loading' : undefined}
             onClick={handleDeselect}
@@ -202,7 +240,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
           >
             <Column field="name" header="Task" expander="true" body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
-            <Column field="taskType" header="Task type" style={{ width: 90 }} />
+            <Column field="taskType" header="Task type" style={{ width: 90 }} body={renderTaskType}  />
           </TreeTable>
         )}
       </TablePanel>

@@ -450,7 +450,7 @@ const EditorPanel = ({
         if (changes[nodeIds[0]] && key in changes[nodeIds[0]]) {
           oldChanges = changes[nodeIds[0]][key]
         }
-        // only update agap: 8in if old !== new
+        // only update again if old !== new
         if (oldChanges !== row.value) {
           // console.log('change')
           handleGlobalChange(row.value, row.changeKey)
