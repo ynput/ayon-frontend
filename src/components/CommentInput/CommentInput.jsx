@@ -6,7 +6,6 @@ import TurndownService from 'turndown'
 import ReactMarkdown from 'react-markdown'
 import ReactQuill from 'react-quill'
 import { toast } from 'react-toastify'
-import { confirmDialog } from 'primereact/confirmdialog'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
 import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
@@ -29,6 +28,7 @@ const CommentInput = ({
 
   // MENTION STATES
   const [mention, setMention] = useState(null)
+  const [mentionSelectedIndex, setMentionSelectedIndex] = useState(null)
   // REFS
   const editorRef = useRef(null)
   const markdownRef = useRef(null)
@@ -86,6 +86,9 @@ const CommentInput = ({
       ),
     [activeUsers, mention?.type, mention?.search],
   )
+
+  // show first 5
+  const shownMentionOptions = mentionOptions.slice(0, 5)
 
   // triggered when a mention is selected
   const [newSelection, setNewSelection] = useState()
@@ -169,6 +172,7 @@ const CommentInput = ({
     const newSelection = retain + (selectedOption.label.length - (mention.search?.length || 0)) + 1
     setNewSelection(newSelection)
     setMention(null)
+    setMentionSelectedIndex(0)
   }
 
   const handleSelectChange = (option) => {
@@ -185,7 +189,7 @@ const CommentInput = ({
 
     const tabOrEnter = currentCharacter === '\n' || currentCharacter === '\t'
     // find the first option
-    const selectedOption = mentionOptions[0]
+    const selectedOption = mentionOptions[mentionSelectedIndex]
 
     if (mention && tabOrEnter && selectedOption) {
       // get option text
@@ -249,6 +253,7 @@ const CommentInput = ({
         })
       } else {
         setMention(null)
+        setMentionSelectedIndex(0)
       }
     } else {
       // get full string between mention and new delta
@@ -258,6 +263,7 @@ const CommentInput = ({
         // if space is pressed, remove mention
         if (currentCharacter === ' ' || !retain) {
           setMention(null)
+          setMentionSelectedIndex(0)
           return
         }
 
@@ -268,6 +274,7 @@ const CommentInput = ({
         //  check for space in mentionFull
         if (mentionFull.includes(' ')) {
           setMention(null)
+          setMentionSelectedIndex(0)
         } else {
           setMention({
             ...mention,
@@ -343,30 +350,37 @@ const CommentInput = ({
   }
 
   const handleKeyDown = (e) => {
+    if (mention) {
+      // close mention on escape
+      if (e.key === 'Escape') {
+        setMention(null)
+        setMentionSelectedIndex(0)
+        return
+      }
+
+      // add top search of mention
+      if (mention && e.key === 'Tab') {
+        // we handle this in the onChange
+      }
+
+      const arrowDirection = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0
+
+      if (arrowDirection) {
+        // navigate through mentions
+        e.preventDefault()
+        let newIndex = mentionSelectedIndex + arrowDirection
+        if (newIndex < 0) newIndex = shownMentionOptions.length - 1
+        if (newIndex >= shownMentionOptions.length) newIndex = 0
+        setMentionSelectedIndex(newIndex)
+      }
+
+      if (e.key === 'Enter') {
+        // we handle this in the onChange
+      }
+    }
+
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSubmit()
-    }
-
-    if (mention && e.key === 'Tab') {
-      e.preventDefault()
-    }
-
-    if (e.key === 'Escape') {
-      const markdown = editorValue && convertToMarkdown()
-
-      if (markdown) {
-        confirmDialog({
-          message: 'Are you sure you want to discard your changes?',
-          header: 'Confirmation',
-          icon: 'pi pi-exclamation-triangle',
-          accept: () => {
-            setIsOpen(false)
-            setEditorValue('')
-          },
-        })
-      } else {
-        setIsOpen(false)
-      }
     }
   }
 
@@ -417,12 +431,13 @@ const CommentInput = ({
         </Styled.Comment>
         <CommentMentionSelect
           mention={mention}
-          options={mentionOptions}
+          options={shownMentionOptions}
           onChange={handleSelectChange}
           types={mentionTypes}
           config={typeOptions[mention?.type]}
-          noneFound={!mentionOptions.length && mention?.search}
-          noneFoundAtAll={!mentionOptions.length && !mention?.search}
+          noneFound={!shownMentionOptions.length && mention?.search}
+          noneFoundAtAll={!shownMentionOptions.length && !mention?.search}
+          selectedIndex={mentionSelectedIndex}
         />
       </Styled.AutoHeight>
     </>

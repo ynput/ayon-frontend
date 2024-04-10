@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 
 export const MentionSelect = styled.ul`
   margin: 0;
@@ -16,15 +16,6 @@ export const MentionSelect = styled.ul`
 
   /* box shadow */
   box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.4);
-
-  /* before any hover first item selected */
-  ${({ $hasHovered }) =>
-    !$hasHovered &&
-    css`
-      & > *:first-child {
-        background-color: var(--md-sys-color-surface-container-high-hover);
-      }
-    `}
 `
 export const MentionItem = styled.li`
   /* reset defaults*/
@@ -39,7 +30,8 @@ export const MentionItem = styled.li`
   user-select: none;
   cursor: pointer;
 
-  &:hover {
+  &:hover,
+  &.selected {
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
 

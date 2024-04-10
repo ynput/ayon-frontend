@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
 import * as Styled from './CommentMentionSelect.styled'
 import { UserImage } from '@ynput/ayon-react-components'
+import { classNames } from 'primereact/utils'
 
 const CommentMentionSelect = ({
   mention,
   options = [],
+  selectedIndex,
   onChange,
   types = [],
   config = {},
@@ -13,25 +14,16 @@ const CommentMentionSelect = ({
 }) => {
   if (!mention || noneFound) return null
 
-  const [hasHovered, setHasHovered] = useState(false)
-
-  //  show only 5 options
-  const shownOptions = options.filter((_, i) => i < 5)
-
   return (
-    <Styled.MentionSelect
-      tabIndex={0}
-      onMouseEnter={() => setHasHovered(true)}
-      $hasHovered={hasHovered}
-    >
+    <Styled.MentionSelect tabIndex={0}>
       {types.includes(mention.type) &&
-        shownOptions.map((option) => (
+        options.map((option, i) => (
           <Styled.MentionItem
             key={option.id}
             onClick={() => onChange(option)}
             $isCircle={config?.isCircle}
+            className={classNames({ selected: selectedIndex === i })}
           >
-          {/* //TODO: See if options contain fullName that can be then passed down in UserImage   */}
             <UserImage size={20} src={option.image} name={option.label} className="image" />
             <Styled.MentionName>{option.label}</Styled.MentionName>
           </Styled.MentionItem>
