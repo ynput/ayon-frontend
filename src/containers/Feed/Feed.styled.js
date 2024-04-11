@@ -18,4 +18,6 @@ export const FeedContent = styled.div`
 
   display: flex;
   flex-direction: column;
+
+  flex-direction: column-reverse;
 `

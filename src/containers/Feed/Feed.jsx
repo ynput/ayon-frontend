@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import ActivityItem from '../../components/Feed/ActivityItem'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
@@ -22,6 +22,27 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   const { data: activitiesData = [] } = useGetActivitiesQuery({
     entities: entitiesToQuery,
   })
+
+  // sort reversed activities data
+  const reversedActivitiesData = useMemo(() => activitiesData.slice().reverse(), [activitiesData])
+
+  // REFS
+  const feedRef = useRef(null)
+  // const commentInputRef = useRef(null)
+
+  // scroll by height of comment input when it opens or closes
+  // for now use hard coded value
+  useEffect(() => {
+    if (!feedRef.current) return
+    const heightDiff = 93
+
+    const isAtBottom = feedRef.current.scrollTop === 0
+
+    if (!isAtBottom) {
+      if (isCommentInputOpen) feedRef.current.scrollBy(0, heightDiff)
+      else feedRef.current.scrollBy(0, -heightDiff)
+    }
+  }, [isCommentInputOpen, feedRef.current])
 
   const tasksVersions = tasks.flatMap((task) => task.allVersions) || []
 
@@ -65,8 +86,8 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
 
   return (
     <Styled.FeedContainer>
-      <Styled.FeedContent>
-        {activitiesData.map((activity) => (
+      <Styled.FeedContent ref={feedRef}>
+        {reversedActivitiesData.map((activity) => (
           <ActivityItem
             key={activity.activityId}
             activity={activity}
