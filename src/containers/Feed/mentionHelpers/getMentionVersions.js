@@ -5,6 +5,7 @@ const getMentionVersions = (versions) =>
     image: v.thumbnailId,
     icon: 'layers',
     id: v.id,
+    context: v.product?.name,
     keywords: [v.name],
   }))
 

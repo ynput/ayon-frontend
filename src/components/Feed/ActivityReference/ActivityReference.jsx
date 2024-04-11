@@ -35,7 +35,7 @@ const ActivityReference = ({ id, type, variant = 'surface', label, disabled, ...
         ref={ref}
         onMouseEnter={() => !disabled && setRefHover(true)}
         onMouseLeave={() => setRefHover(false)}
-        className={classNames({ disabled })}
+        className={classNames({ disabled }, 'reference')}
       >
         <Icon icon={icon} />
         {props.children}

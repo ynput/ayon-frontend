@@ -29,10 +29,14 @@ const TASK_FRAGMENT = `
     allVersions: versions {
       edges {
         node {
+          id
           name
           version
           thumbnailId
           updatedAt
+          product {
+            name
+          }
         }
       }
     }

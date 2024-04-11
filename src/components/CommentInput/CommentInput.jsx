@@ -29,7 +29,7 @@ const CommentInput = ({
 
   // MENTION STATES
   const [mention, setMention] = useState(null)
-  const [mentionSelectedIndex, setMentionSelectedIndex] = useState(null)
+  const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
   // REFS
   const editorRef = useRef(null)
   const markdownRef = useRef(null)
@@ -67,6 +67,20 @@ const CommentInput = ({
   const placeholder = `Comment or tag with @user, @@version, @@@task...`
 
   var turndownService = new TurndownService()
+  // support lists with checkboxes
+  turndownService.addRule('taskListItems', {
+    filter: function (node) {
+      return node.parentNode.nodeName === 'UL' && node.parentNode.hasAttribute('data-checked')
+    },
+    replacement: function (content, node) {
+      return (
+        (node.parentNode.getAttribute('data-checked') === 'true' ? '* [x]' : '* [ ]') +
+        ' ' +
+        content +
+        '\n\n'
+      )
+    },
+  })
 
   const mentionTypes = ['@', '@@', '@@@']
   const typeOptions = {
@@ -295,7 +309,14 @@ const CommentInput = ({
     }
   }
 
-  const handleToolbarMention = (type) => {
+  async function typeWithDelay(quill, retain, type, delay = 1) {
+    for (let i = 0; i < type.length; i++) {
+      quill.insertText(retain + i, type[i])
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+  }
+
+  const addTextToEditor = (type) => {
     // get editor retain
     const quill = editorRef.current.getEditor()
 
@@ -311,14 +332,13 @@ const CommentInput = ({
       retain++
     }
 
-    for (const string of type) {
-      quill.insertText(retain, string)
-    }
+    // This is hack AF, but it works
+    typeWithDelay(quill, retain, type)
   }
 
-  const convertToMarkdown = () => {
+  const convertToMarkdown = (value) => {
     // convert to markdown
-    let markdown = turndownService.turndown(editorValue)
+    let markdown = turndownService.turndown(value)
 
     let body = markdown
 
@@ -339,7 +359,7 @@ const CommentInput = ({
   const handleSubmit = () => {
     try {
       // convert to markdown
-      const markdown = convertToMarkdown()
+      const markdown = convertToMarkdown(editorValue)
 
       if (markdown && onSubmit) {
         onSubmit(markdown)
@@ -392,6 +412,13 @@ const CommentInput = ({
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSubmit()
     }
+
+    if (e.key === 'Escape') {
+      // get editor value
+      const editor = editorRef.current.getEditor()
+      const text = editor.getText()
+      if (text.length < 2) setIsOpen(false)
+    }
   }
 
   return (
@@ -420,16 +447,24 @@ const CommentInput = ({
             onChange={handleChange}
             readOnly={!isOpen}
             placeholder={placeholder}
+            modules={{
+              toolbar: [
+                [{ header: 1 }, { header: 2 }],
+                ['bold', 'italic', 'underline', 'link'],
+                [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+              ],
+            }}
+            formats={['header', 'bold', 'italic', 'underline', 'strike', 'list', 'bullet', 'link']}
           />
 
           <Styled.Footer>
             <Styled.Commands>
               {/* mention a user */}
-              <Button icon="alternate_email" onClick={() => handleToolbarMention('@')} />
+              <Button icon="alternate_email" onClick={() => addTextToEditor('@')} />
               {/* mention a version */}
-              <Button icon="layers" onClick={() => handleToolbarMention('@@')} />
+              <Button icon="layers" onClick={() => addTextToEditor('@@')} />
               {/* mention a task */}
-              <Button icon="check_circle" onClick={() => handleToolbarMention('@@@')} />
+              <Button icon="check_circle" onClick={() => addTextToEditor('@@@')} />
             </Styled.Commands>
             <SaveButton
               label="Comment"

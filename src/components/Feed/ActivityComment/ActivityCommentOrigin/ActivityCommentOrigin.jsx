@@ -4,8 +4,8 @@ import ActivityHeader from '../../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
 import FeedReference from '../../ActivityReference/ActivityReference'
 import CommentWrapper from '../CommentWrapper'
-import { Icon } from '@ynput/ayon-react-components'
-import Typography from '/src/theme/typography.module.css'
+import remarkGfm from 'remark-gfm'
+import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 
 const allowedRefTypes = [
   'user',
@@ -28,24 +28,23 @@ const sanitizeURL = (url = '') => {
   return {}
 }
 
-const ActivityCommentOrigin = ({ activity, users }) => {
-  const body = activity.body
-
-  // on double click, select all body text
-  const handleDoubleClick = (e) => {
-    const selection = window.getSelection()
-    const range = document.createRange()
-    range.selectNodeContents(e.target)
-    selection.removeAllRanges()
-    selection.addRange(range)
-  }
+const ActivityCommentOrigin = ({ activity = {}, users, onCheckChange, onDelete }) => {
+  const { body, authorName, createdAt, referenceType, activityId } = activity
 
   return (
     <Styled.Comment>
-      <ActivityHeader name={activity.authorName} users={users} date={activity.createdAt} />
-      <Styled.Body onDoubleClick={handleDoubleClick}>
+      <ActivityHeader
+        name={authorName}
+        users={users}
+        date={createdAt}
+        isRef={referenceType !== 'origin'}
+        activity={activity}
+        onDelete={() => onDelete && onDelete(activityId)}
+      />
+      <Styled.Body className="comment-body">
         <CommentWrapper>
           <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
             urlTransform={(url) => url}
             components={{
               a: ({ children, href }) => {
@@ -59,35 +58,29 @@ const ActivityCommentOrigin = ({ activity, users }) => {
                 const label = children && children.replace('@', '')
 
                 return (
-                  <FeedReference
-                    id={id}
-                    type={type}
-                    style={{ top: 5, userSelect: 'text' }}
-                    label={label}
-                  >
+                  <FeedReference id={id} type={type} style={{ userSelect: 'text' }} label={label}>
                     {label}
                   </FeedReference>
                 )
+              },
+              // checkbox inputs
+              input: ({ type, checked, ...props }) => {
+                if (type === 'checkbox') {
+                  return (
+                    <ActivityCheckbox
+                      checked={checked}
+                      onChange={(e) => onCheckChange && onCheckChange(e, activity)}
+                    />
+                  )
+                } else {
+                  return <input type={type} disabled {...props} />
+                }
               },
             }}
           >
             {body}
           </ReactMarkdown>
         </CommentWrapper>
-        {!!activity.attachments?.length && (
-          <Styled.Attachments>
-            {activity.attachments.map(({ id, type, url, name }) =>
-              type === 'image' ? (
-                <Styled.AttachmentImg key={id} src={url} />
-              ) : (
-                <Styled.AttachmentFile key={id}>
-                  <Icon icon="attach_file" />
-                  <Styled.Name className={Typography.labelSmall}>{name}</Styled.Name>
-                </Styled.AttachmentFile>
-              ),
-            )}
-          </Styled.Attachments>
-        )}
       </Styled.Body>
     </Styled.Comment>
   )

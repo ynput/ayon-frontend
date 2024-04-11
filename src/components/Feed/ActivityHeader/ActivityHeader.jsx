@@ -4,8 +4,10 @@ import { UserImage } from '@ynput/ayon-react-components'
 import { useGetUserQuery } from '/src/services/user/getUsers'
 import { formatDistanceToNow, isValid } from 'date-fns'
 import Typography from '/src/theme/typography.module.css'
+import ActivityReference from '../ActivityReference/ActivityReference'
+import { classNames } from 'primereact/utils'
 
-const ActivityHeader = ({ name, users, date }) => {
+const ActivityHeader = ({ name, users, date, isRef, activity, onDelete }) => {
   // first check if the users are already in users
   const userInUsers = users?.find((user) => user.name === name)
   // get user based on user name
@@ -13,6 +15,8 @@ const ActivityHeader = ({ name, users, date }) => {
 
   let user = userData
   if (userInUsers) user = userInUsers
+
+  const isMention = activity.referenceType === 'mention'
 
   const fuzzyDate =
     date && isValid(new Date(date)) ? formatDistanceToNow(new Date(date), { addSuffix: true }) : ''
@@ -26,7 +30,29 @@ const ActivityHeader = ({ name, users, date }) => {
         size={22}
       />
       <h5>{user.fullName || user.name}</h5>
-      <Styled.Date className={Typography.bodySmall}>{fuzzyDate}</Styled.Date>
+      {isRef && (
+        <>
+          <Styled.Text>
+            <strong>{isMention ? `mentioned` : 'commented'}</strong>
+          </Styled.Text>
+          <Styled.Text style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {isMention ? `this ${activity.origin?.type} in` : 'on'}
+          </Styled.Text>
+          <ActivityReference id={activity.origin?.id} type={activity.origin?.type} disabled>
+            {activity.origin?.label || activity.origin?.name}
+          </ActivityReference>
+        </>
+      )}
+
+      <Styled.Tools className="tools">
+        <Styled.ToolButton
+          icon="delete"
+          variant="danger"
+          className="delete"
+          onClick={() => onDelete && onDelete()}
+        />
+      </Styled.Tools>
+      <Styled.Date className={classNames(Typography.bodySmall, 'date')}>{fuzzyDate}</Styled.Date>
     </Styled.Header>
   )
 }

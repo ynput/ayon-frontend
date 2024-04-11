@@ -17,6 +17,17 @@ export const Comment = styled.li`
   width: 100%;
   padding: 8px;
   border-radius: var(--border-radius-m);
+
+  /* hide date and show tools */
+  &:hover {
+    .tools {
+      display: flex;
+    }
+
+    .date {
+      display: none;
+    }
+  }
 `
 
 export const Body = styled.div`
@@ -36,6 +47,42 @@ export const Body = styled.div`
 
   a {
     color: var(--md-sys-color-primary);
+  }
+
+  img {
+    width: 100%;
+  }
+
+  p {
+    .reference {
+      top: 5px;
+    }
+  }
+
+  .contains-task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 8px;
+    margin: 8px 0;
+
+    li {
+      height: 24px;
+      display: flex;
+      align-items: center;
+    }
+
+    p {
+      margin: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .reference {
+      top: 0;
+      margin-left: 4px;
+    }
   }
 `
 
