@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Spacer, UserImage, InputSwitch } from '@ynput/ayon-react-components'
+import { Spacer, InputSwitch } from '@ynput/ayon-react-components'
+import UserImage from '/src/components/UserImage'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
@@ -197,12 +198,7 @@ const Header = () => {
         variant="text"
         style={{ padding: 6 }}
       >
-        <UserImage
-          size={26}
-          src={user?.attrib?.avatarUrl}
-          fullName={user?.attrib?.fullName}
-          name={user?.name}
-        />
+        <UserImage size={26} name={user?.name} />
       </HeaderButton>
       <MenuContainer id="user" target={userButtonRef.current}>
         <UserMenu user={user} />

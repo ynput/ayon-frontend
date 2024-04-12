@@ -50,7 +50,7 @@ const ThumbnailSimple = ({
   ...props
 }) => {
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-  const queryArgs = `?updatedAt=${entityUpdatedAt}&token=${localStorage.getItem('accessToken')}`
+  const queryArgs = `?updatedAt=${entityUpdatedAt}`
   const isWrongEntity = ['product'].includes(entityType)
 
   return (

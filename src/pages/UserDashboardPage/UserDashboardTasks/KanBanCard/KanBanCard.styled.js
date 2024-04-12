@@ -12,11 +12,6 @@ const topAnimation = (i) => keyframes`
 `
 
 export const KanBanEntityCard = styled(EntityCard)`
-  ${({ $isDragging }) =>
-    $isDragging &&
-    css`
-      visibility: hidden;
-    `}
   /* if we are dragging, hide description and rotate */
   ${({ $isOverlay, $index }) =>
     $isOverlay &&

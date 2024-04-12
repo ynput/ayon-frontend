@@ -49,7 +49,7 @@ const CreateNewTeam = ({
       allUsers.map((user) => ({
         name: user.name,
         fullName: user.attrib?.fullName,
-        avatarUrl: user.attrib?.avatarUrl,
+        avatarUrl: `/api/users/${user.name}/avatar`,
       })),
     [allUsers],
   )

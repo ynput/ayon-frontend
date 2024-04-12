@@ -287,9 +287,7 @@ const ProductsGrid = ({
                           iconColor={statuses[product.versionStatus]?.color || ''}
                           imageUrl={`/api/projects/${projectName}/versions/${
                             product.versionId
-                          }/thumbnail?updatedAt=${
-                            product.versionUpdatedAt
-                          }&token=${localStorage.getItem('accessToken')}`}
+                          }/thumbnail?updatedAt=${product.versionUpdatedAt}`}
                           subTitle={`${product.versionName}${
                             multipleFoldersSelected && product.folder ? ' - ' + product.folder : ''
                           }`}

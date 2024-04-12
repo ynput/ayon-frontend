@@ -31,7 +31,6 @@ const CommentMentionSelect = ({
             onClick={() => onChange(option)}
             $isCircle={config?.isCircle}
           >
-          {/* //TODO: See if options contain fullName that can be then passed down in UserImage   */}
             <UserImage size={20} src={option.image} name={option.label} className="image" />
             <Styled.MentionName>{option.label}</Styled.MentionName>
           </Styled.MentionItem>
