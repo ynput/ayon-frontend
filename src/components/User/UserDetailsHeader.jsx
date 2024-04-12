@@ -17,7 +17,7 @@ const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {} }) =
         users={users.map((user) => ({
           fullName: user?.attrib?.fullName,
           name: user?.name,
-          avatarUrl: user?.attrib?.avatarUrl,
+          avatarUrl: `/api/users/${user.name}/avatar`,
           self: user?.self,
         }))}
       />

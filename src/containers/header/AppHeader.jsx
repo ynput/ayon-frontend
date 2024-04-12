@@ -201,7 +201,7 @@ const Header = () => {
       >
         <UserImage
           size={26}
-          src={user?.attrib?.avatarUrl}
+          src={`/api/users/${user.name}/avatar`}
           fullName={user?.attrib?.fullName}
           name={user?.name}
         />

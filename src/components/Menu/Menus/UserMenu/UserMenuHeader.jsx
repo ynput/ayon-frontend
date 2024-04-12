@@ -6,7 +6,7 @@ import { NavLink } from 'react-router-dom'
 const UserMenuHeader = ({ user, fullName }) => {
   return (
     <Styled.Header>
-      <UserImage size={30} src={user?.attrib?.avatarUrl} name={user?.name} fullName={fullName} />
+      <UserImage size={30} src={`/api/users/${user.name}/avatar`} name={user?.name} fullName={fullName} />
       <Styled.Details className={Font.titleSmall}>
         <span>{user?.name}</span>
         {fullName ? (
