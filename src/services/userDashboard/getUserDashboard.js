@@ -220,6 +220,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
           return {
             name: n.name,
             fullName: n.attrib?.fullName,
+            avatarUrl: `/api/users/${n.name}/avatar`,
           }
         }),
     }),
@@ -248,7 +249,11 @@ const getUserDashboard = ayonApi.injectEndpoints({
               if (existingAssignee) {
                 existingAssignee.projects.push(project)
               } else {
-                assignees.push({ ...assignee, projects: [project] })
+                assignees.push({
+                  ...assignee,
+                  avatarUrl: `/api/users/${assignee.name}/avatar`,
+                  projects: [project],
+                })
               }
             })
 

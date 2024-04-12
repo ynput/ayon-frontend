@@ -116,6 +116,7 @@ const getUsers = ayonApi.injectEndpoints({
         return res?.data?.users.edges.map((e) => ({
           ...e.node,
           self: e.node.name === selfName,
+          avatarUrl: `/api/users/${e.node.name}/avatar`,
           accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
         }))
       },
@@ -137,7 +138,11 @@ const getUsers = ayonApi.injectEndpoints({
           variables: { name },
         },
       }),
-      transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
+      transformResponse: (res) =>
+        res?.data?.users.edges.map((e) => ({
+          ...e.node,
+          avatarUrl: `/api/users/${e.node?.name}/avatar`,
+        })),
       providesTags: (res) =>
         res?.data?.users
           ? [...res.data.users.edges.map((e) => ({ type: 'user', id: e.name }))]
@@ -161,6 +166,7 @@ const getUsers = ayonApi.injectEndpoints({
           return {
             name: n.name,
             fullName: n.attrib?.fullName,
+            avatarUrl: `/api/users/${n.name}/avatar`,
           }
         }),
       providesTags: (res) =>
