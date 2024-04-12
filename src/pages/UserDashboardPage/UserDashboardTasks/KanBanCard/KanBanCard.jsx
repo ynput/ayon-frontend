@@ -25,7 +25,9 @@ const KanBanCard = forwardRef(
         <Styled.KanBanEntityCard
           ref={ref}
           id={task.id}
-          imageUrl={task.thumbnailUrl}
+          imageUrl={
+            task.thumbnailUrl || `api/projects/${task.projectName}/tasks/${task.id}/thumbnail`
+          }
           title={task.label || task.name}
           subTitle={task.folderLabel || task.folderName}
           description={task.shortPath}
@@ -34,10 +36,9 @@ const KanBanCard = forwardRef(
           icon={task.statusIcon}
           iconColor={task.statusColor}
           titleIcon={task.taskIcon}
-          style={{ width: 210, ...style }}
+          style={{ width: 210, visibility: isDragging ? 'hidden' : 'visible', ...style }}
           onKeyUp={onKeyUp}
           $isOverlay={isOverlay}
-          $isDragging={isDragging}
           isLoading={props.isLoading}
           assignees={(!assigneesIsMe && !!task.assigneesData?.length && task.assigneesData) || null}
           {...props}
