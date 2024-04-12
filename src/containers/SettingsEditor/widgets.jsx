@@ -262,7 +262,6 @@ const TextWidget = (props) => {
 
   const onChangeCommit = (type) => {
     let commitValue = value
-
     // if number is blank set to 0
     if (['integer', 'number'].includes(type))
       commitValue = checkNumber(originalValue, commitValue, type)
