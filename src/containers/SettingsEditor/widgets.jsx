@@ -12,12 +12,6 @@ import {
 
 import { isEqual } from 'lodash'
 
-const addDecimalPoint = (value) => {
-  const valueString = value.toString(10)
-  if (!valueString.match(/\./)) return valueString.concat('.0')
-  else return valueString
-}
-
 const updateChangedKeys = (props, changed, path) => {
   if (!props.formContext) return // WARN! (but shouldn't happen)
   if (!path?.length) return // WARN!
@@ -256,10 +250,26 @@ const TextWidget = (props) => {
     setValue(props.value)
   }, [props.value])
 
-  const onChangeCommit = () => {
-    if (value === props.value) return
-    const isChanged = value !== originalValue
-    props.onChange(value)
+  const checkNumber = (o, v, t) => {
+    // no value, return original
+    if (v === '') return o || 0
+    // type is integer
+    if (t === 'integer') {
+      const parsed = parseInt(v)
+      return isNaN(parsed) ? 0 : parsed
+    } else return v
+  }
+
+  const onChangeCommit = (type) => {
+    let commitValue = value
+
+    // if number is blank set to 0
+    if (['integer', 'number'].includes(type))
+      commitValue = checkNumber(originalValue, commitValue, type)
+
+    if (commitValue === props.value) return
+    const isChanged = commitValue !== originalValue
+    props.onChange(commitValue)
     setTimeout(() => {
       updateChangedKeys(props, isChanged, path)
     }, 100)
@@ -291,9 +301,9 @@ const TextWidget = (props) => {
     Input = InputNumber
     if (props.schema.type === 'number') {
       opts.step = 0.1
-      opts.value = addDecimalPoint(value || 0)
+      opts.value = value
     } else {
-      opts.value = value || 0
+      opts.value = value
       opts.step = 1
     }
     if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
@@ -304,10 +314,12 @@ const TextWidget = (props) => {
       opts.max = props.schema.exclusiveMaximum - opts.step
     opts.showButtons = true
     opts.useGrouping = false
-    opts.onBlur = onChangeCommit
+    opts.onBlur = () => onChangeCommit(props.schema.type)
     opts.onChange = (e) => {
-      const newValue = parseFloat(e.target.value)
-      onChange(newValue)
+      const value = e.target.value
+      const parsedValue = parseFloat(value)
+      if (isNaN(parsedValue)) return onChange('')
+      onChange(parsedValue)
     }
   } else if (props.schema.widget === 'color') {
     //
