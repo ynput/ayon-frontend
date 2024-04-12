@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Spacer, Toolbar, InputSwitch } from '@ynput/ayon-react-components'
+import { Spacer, InputSwitch } from '@ynput/ayon-react-components'
 import UserImage from '/src/components/UserImage'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
