@@ -76,7 +76,6 @@ query KanbanProjectAssignees($projectName: String) {
       name
       accessGroups
       attrib {
-        avatarUrl
         fullName
       }
     }

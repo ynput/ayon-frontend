@@ -58,7 +58,6 @@ query Assignees($names: [String!]!){
     node {
       name
       attrib {
-        avatarUrl
         fullName
       }
     }
@@ -72,7 +71,6 @@ query Assignees($projectName: String) {
     node {
       name
       attrib {
-        avatarUrl
         fullName
       }
     }
@@ -162,7 +160,6 @@ const getUsers = ayonApi.injectEndpoints({
 
           return {
             name: n.name,
-            avatarUrl: n.attrib?.avatarUrl,
             fullName: n.attrib?.fullName,
           }
         }),

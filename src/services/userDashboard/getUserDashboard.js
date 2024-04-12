@@ -219,7 +219,6 @@ const getUserDashboard = ayonApi.injectEndpoints({
 
           return {
             name: n.name,
-            avatarUrl: n.attrib?.avatarUrl,
             fullName: n.attrib?.fullName,
           }
         }),
