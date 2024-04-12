@@ -13,9 +13,9 @@ import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '/src/features/context'
 
-const getThumbnailUrl = (thumbnailId, updatedAt, projectName, accessToken) => {
+const getThumbnailUrl = (thumbnailId, updatedAt, projectName) => {
   return thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}&token=${accessToken}`
+    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
     : null
 }
 
@@ -71,14 +71,12 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   // filter out tasks that don't have a assignees
   tasks = tasks.filter((task) => task.assignees?.some((assignee) => assignees.includes(assignee)))
 
-  const accessToken = localStorage.getItem('accessToken')
-
   // add icons to tasks and also add thumbnailUrl
   const tasksWithIcons = tasks.map((task) => {
     const thumbnailId = task?.thumbnailId ? task?.thumbnailId : task.latestVersionThumbnailId
     const updatedAt = task?.thumbnailId ? task?.updatedAt : task.latestVersionUpdatedAt
 
-    const thumbnailUrl = getThumbnailUrl(thumbnailId, updatedAt, task.projectName, accessToken)
+    const thumbnailUrl = getThumbnailUrl(thumbnailId, updatedAt, task.projectName)
 
     const updatedTask = { ...task, thumbnailUrl }
 

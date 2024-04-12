@@ -134,9 +134,7 @@ const ProjectLatestRow = ({
                 !isLoadingData &&
                 `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${
                   entity.thumbnailEntityId
-                }/thumbnail?updatedAt=${entity.updatedAt}&token=${localStorage.getItem(
-                  'accessToken',
-                )}`
+                }/thumbnail?updatedAt=${entity.updatedAt}`
               }
               style={{
                 minWidth: 'unset',
