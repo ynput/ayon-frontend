@@ -15,8 +15,6 @@ const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {} }) =
     <DetailHeader onClose={onClose} context={users} dialogTitle="User Context" style={style}>
       <UserImagesStacked
         users={users.map((user) => ({
-          fullName: user?.attrib?.fullName,
-          name: user?.name,
           avatarUrl: `/api/users/${user.name}/avatar`,
           self: user?.self,
         }))}
