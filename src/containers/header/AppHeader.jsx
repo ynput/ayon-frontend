@@ -131,27 +131,26 @@ const Header = () => {
 
   return (
     <nav className="primary" onClick={handleNavClick}>
-      <Toolbar style={{ zIndex: 10, gap: 8 }}>
+      <Link to={'/dashboard/tasks'}>
         <HeaderButton
-          icon="event_list"
-          label="Projects"
+          icon="home"
+          label="Home"
           variant="nav"
-          onClick={() => handleToggleMenu('project')}
-          style={{
-            alignItems: 'center',
-            display: 'flex',
-          }}
+          className={classNames({ selected: location.pathname.startsWith('/dashboard') })}
+          id="home-button"
         />
+      </Link>
 
-        <Link to={'/dashboard/tasks'}>
-          <HeaderButton
-            icon="space_dashboard"
-            label="Dashboard"
-            variant="nav"
-            $selected={location.pathname.startsWith('/dashboard')}
-          />
-        </Link>
-      </Toolbar>
+      <HeaderButton
+        icon="event_list"
+        label="Projects"
+        variant="nav"
+        onClick={() => handleToggleMenu('project')}
+        style={{
+          alignItems: 'center',
+          display: 'flex',
+        }}
+      />
 
       <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
 
@@ -170,7 +169,7 @@ const Header = () => {
         icon="help"
         ref={helpButtonRef}
         onClick={() => handleToggleMenu('help')}
-        active={menuOpen === 'help'}
+        className={classNames({ active: menuOpen === 'help' })}
         variant="text"
       />
       <MenuContainer id="help" target={helpButtonRef.current}>
@@ -183,9 +182,8 @@ const Header = () => {
         icon="apps"
         onClick={() => handleToggleMenu('app')}
         ref={appButtonRef}
-        active={menuOpen === 'app'}
         variant="text"
-        className={classNames({ notification: isSnoozing })}
+        className={classNames({ active: menuOpen === 'app', notification: isSnoozing })}
       />
       <MenuContainer id="app" target={appButtonRef.current}>
         <AppMenu user={user} />
@@ -194,7 +192,7 @@ const Header = () => {
 
       {/* User icon and menu vvv */}
       <HeaderButton
-        active={menuOpen === 'user'}
+        className={classNames({ active: menuOpen === 'user' })}
         onClick={() => handleToggleMenu('user')}
         ref={userButtonRef}
         variant="text"

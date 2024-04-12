@@ -472,6 +472,8 @@ const ArrayItemTemplate = (props) => {
 
   const children = props.children
 
+  console.log(props)
+
   if (itemName && (parentSchema.requiredItems || []).includes(itemName)) {
     undeletable = true
     // TODO: Store this information elsewhere. since swithcing to RTK query
@@ -534,10 +536,16 @@ const ArrayFieldTemplate = (props) => {
     props.onAddClick()
   }
 
+  // for some werird reason, the array sorting breaks when ArrayItemTemplate is
+  // not wraped in react fragment. I suspected it was the key, but it was not.
+  // I have no idea why this works, but it does. Do not touch!
+  
   return (
     <FormArrayField>
       {props.items.map((element) => (
-        <ArrayItemTemplate key={element.key} {...element} />
+        <>
+          <ArrayItemTemplate key={element.key} {...element} />
+        </>
       ))}
 
       {props.canAdd && !props.schema?.disabled && (
