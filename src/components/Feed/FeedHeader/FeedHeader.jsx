@@ -22,7 +22,7 @@ const FeedHeader = ({ name, users, date, reference }) => {
     <Styled.Header>
       <UserImage
         fullName={user.fullName}
-        src={`/api/users/${user.name}/avatar`}
+        src={user.name && `/api/users/${user.name}/avatar`}
         name={user.name}
         size={22}
       />

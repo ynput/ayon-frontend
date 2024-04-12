@@ -37,7 +37,7 @@ const KanBanColumn = forwardRef(
     // create groupBy labels for assignees
     const groupByLabels = useMemo(() => {
       const assigneesLabels = allUsers.map(({ name }) => ({
-        img: `/api/users/${name}/avatar`,
+        img: name && `/api/users/${name}/avatar`,
       }))
 
       return {

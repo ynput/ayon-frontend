@@ -51,7 +51,7 @@ const BundleForm = ({
       devs.map((d) => ({
         name: d.name,
         fullName: d.attrib?.fullName || d.name,
-        avatarUrl: `/api/users/${d.name}/avatar`,
+        avatarUrl: d.name && `/api/users/${d.name}/avatar`,
       })),
     [devs],
   )
