@@ -767,6 +767,7 @@ const EditorPanel = ({
                           icon={'backspace'}
                           tooltip="Clear field"
                           className="null"
+                          tabIndex={-1}
                         />
                       )}
                     </SubRow>
