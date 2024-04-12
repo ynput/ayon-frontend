@@ -25,9 +25,7 @@ const KanBanCard = forwardRef(
         <Styled.KanBanEntityCard
           ref={ref}
           id={task.id}
-          imageUrl={
-            task.thumbnailUrl || `api/projects/${task.projectName}/tasks/${task.id}/thumbnail`
-          }
+          imageUrl={task.thumbnailUrl}
           title={task.label || task.name}
           subTitle={task.folderLabel || task.folderName}
           description={task.shortPath}
