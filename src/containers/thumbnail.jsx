@@ -49,7 +49,6 @@ const ImageStyled = styled.img`
   display: block;
   position: absolute;
   inset: 0;
-  background-color: var(--md-sys-color-surface-container-lowest);
 `
 
 const Thumbnail = ({
