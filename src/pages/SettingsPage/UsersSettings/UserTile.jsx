@@ -1,6 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Panel, UserImage } from '@ynput/ayon-react-components'
+import { Panel } from '@ynput/ayon-react-components'
+import UserImage from '/src/components/UserImage'
+
 import styled, { css } from 'styled-components'
 import { useGetUserByNameQuery } from '/src/services/user/getUsers'
 import { useSelector } from 'react-redux'
@@ -132,13 +134,7 @@ const UserTile = ({
       style={style}
       $isLoading={loadingState}
     >
-      <StyledUserImage
-        src={attrib?.avatarUrl}
-        fullName={attrib?.fullName}
-        name={name}
-        highlight={isSelf}
-        $isLoading={loadingState}
-      />
+      <StyledUserImage name={name} highlight={isSelf} $isLoading={loadingState} />
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <TitleStyled style={{ whiteSpace: 'nowrap' }}>
           {!loadingState && (attrib?.fullName ? `${attrib?.fullName} (${name})` : name)}

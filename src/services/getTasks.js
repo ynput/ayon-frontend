@@ -12,6 +12,7 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
           label
           taskType
           assignees
+          active
           folder {
             name
             label

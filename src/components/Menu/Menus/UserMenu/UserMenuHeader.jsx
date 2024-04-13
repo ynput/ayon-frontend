@@ -1,12 +1,12 @@
 import * as Styled from './UserMenu.styled'
-import { UserImage } from '@ynput/ayon-react-components'
+import UserImage from '/src/components/UserImage'
 import Font from '/src/theme/typography.module.css'
 import { NavLink } from 'react-router-dom'
 
 const UserMenuHeader = ({ user, fullName }) => {
   return (
     <Styled.Header>
-      <UserImage size={30} src={user?.attrib?.avatarUrl} name={user?.name} fullName={fullName} />
+      <UserImage size={30} name={user?.name} />
       <Styled.Details className={Font.titleSmall}>
         <span>{user?.name}</span>
         {fullName ? (

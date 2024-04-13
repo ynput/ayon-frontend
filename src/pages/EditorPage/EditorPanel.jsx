@@ -11,7 +11,7 @@ import {
   AssigneeSelect,
   InputDate,
   InputSwitch,
-  TagsSelect
+  TagsSelect,
 } from '@ynput/ayon-react-components'
 
 import { useSelector } from 'react-redux'
@@ -187,7 +187,9 @@ const EditorPanel = ({
         changeKey: '_status',
         label: 'Status',
         field: 'status',
-        placeholder: `Mixed (${statusValues.multipleValues && statusValues.multipleValues.join(', ')})`,
+        placeholder: `Mixed (${
+          statusValues.multipleValues && statusValues.multipleValues.join(', ')
+        })`,
         ...statusValues,
       },
       _assignees: {
@@ -448,7 +450,7 @@ const EditorPanel = ({
         if (changes[nodeIds[0]] && key in changes[nodeIds[0]]) {
           oldChanges = changes[nodeIds[0]][key]
         }
-        // only update agap: 8in if old !== new
+        // only update again if old !== new
         if (oldChanges !== row.value) {
           // console.log('change')
           handleGlobalChange(row.value, row.changeKey)
@@ -632,21 +634,20 @@ const EditorPanel = ({
                       widthExpand
                     />
                   )
-                    } else if (field === 'tags') {
-                      input = (
+                } else if (field === 'tags') {
+                  input = (
                     <TagsSelect
                       value={multipleValues ? union(...multipleValues) : value || []}
                       tags={projectTagsObject}
                       tagsOrder={projectTagsOrder}
-                      multipleValues={!!multipleValues}
+                      isMultiple={!!multipleValues}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
                       align="right"
                       width={200}
-                      buttonStyle={{ border: '1px solid var(--md-sys-color-outline-variant)'}}
+                      buttonStyle={{ border: '1px solid var(--md-sys-color-outline-variant)' }}
                       isChanged={isChanged}
                     />
-                      )
-                    
+                  )
                 } else if (attrib?.enum) {
                   // dropdown
                   const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
@@ -766,6 +767,7 @@ const EditorPanel = ({
                           icon={'backspace'}
                           tooltip="Clear field"
                           className="null"
+                          tabIndex={-1}
                         />
                       )}
                     </SubRow>

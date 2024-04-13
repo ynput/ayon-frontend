@@ -10,18 +10,21 @@ export const HelpMenu = ({ user, ...props }) => {
       label: 'Documentation',
       link: 'https://ayon.ynput.io/',
       icon: 'description',
+      target: '_blank',
     },
     {
       id: 'forum',
       label: 'Community Forum',
       link: 'https://community.ynput.io/',
       icon: 'forum',
+      target: '_blank',
     },
     {
       id: 'bug',
       label: 'Report a Bug',
       link: 'https://github.com/ynput/ayon-frontend/issues/new',
       icon: 'bug_report',
+      target: '_blank',
     },
     { id: 'divider' },
     {
@@ -29,12 +32,14 @@ export const HelpMenu = ({ user, ...props }) => {
       label: 'REST API',
       link: '/doc/api',
       icon: 'api',
+      target: '_blank',
     },
     {
       id: 'graphql',
       label: 'Graphql Explorer',
       link: '/explorer',
       icon: 'hub',
+      target: '_blank',
     },
   ]
 
@@ -47,6 +52,7 @@ export const HelpMenu = ({ user, ...props }) => {
       label: 'Get Support',
       link: 'https://ynput.io/services',
       icon: 'support_agent',
+      target: '_blank',
     },
   ]
 

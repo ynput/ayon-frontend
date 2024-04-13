@@ -2,6 +2,7 @@ const TASK_FRAGMENT = `
   fragment TaskFragment on TaskNode {
     id
     name
+    label
     status
     taskType
     assignees
@@ -13,6 +14,7 @@ const TASK_FRAGMENT = `
     }
     folder {
       name
+      label
       path
     }
     versions(latestOnly: true) {
@@ -74,7 +76,6 @@ query KanbanProjectAssignees($projectName: String) {
       name
       accessGroups
       attrib {
-        avatarUrl
         fullName
       }
     }
