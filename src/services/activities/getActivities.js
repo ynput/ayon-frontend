@@ -115,7 +115,8 @@ const getActivities = ayonApi.injectEndpoints({
     }),
     // getActivities is a custom query that calls getActivity for each entity
     getActivities: build.query({
-      async queryFn({ entities = [] }, { dispatch }) {
+      async queryFn({ entities = [] }, { dispatch, forced }) {
+        console.log('getActivities for all selected entities')
         try {
           const allActivities = []
           for (const entity of entities) {
@@ -126,7 +127,7 @@ const getActivities = ayonApi.injectEndpoints({
             const response = await dispatch(
               ayonApi.endpoints.getActivity.initiate(
                 { projectName, entityId, entityType },
-                { forceRefetch: false },
+                { forceRefetch: forced },
               ),
             )
 

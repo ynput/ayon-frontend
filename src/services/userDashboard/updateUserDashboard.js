@@ -71,12 +71,11 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           }
 
           const activityTags = []
-          // if the change was a status change, invalidate the activity query of the entity
+          // if the change was a status change, invalidate the activity query of the entity activities
           operations.forEach((operation) => {
             if ('status' in operation.data) {
-              const getActivityTags = [{ type: 'entityActivities', id: operation.id }]
               const getActivitiesTags = [{ type: 'entitiesActivities', id: operation.id }]
-              activityTags.push(...getActivityTags, ...getActivitiesTags)
+              activityTags.push(...getActivitiesTags)
             }
           })
 
