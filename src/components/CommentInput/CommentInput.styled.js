@@ -34,7 +34,7 @@ export const Comment = styled.div`
       cursor: pointer !important;
     }
     &:hover {
-      background-color: var(--md-sys-color-surface-container-hover);
+      background-color: var(--md-sys-color-surface-container-high);
     }
 
     /* hide toolbar */
@@ -109,7 +109,7 @@ export const Comment = styled.div`
   .ql-toolbar.ql-snow {
     border: none;
     background-color: var(--md-sys-color-surface-container);
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    border-bottom: 1px solid var(--md-sys-color-surface-container-hover);
     padding: var(--padding-s);
     display: flex;
     height: unset;
@@ -145,7 +145,7 @@ export const Footer = styled.footer`
   display: flex;
   justify-content: space-between;
   padding: var(--padding-m);
-  border-top: 1px solid var(--md-sys-color-outline-variant);
+  border-top: 1px solid var(--md-sys-color-surface-container-hover);
   background-color: var(--md-sys-color-surface-container);
   z-index: 100;
 
