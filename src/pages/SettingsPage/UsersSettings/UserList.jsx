@@ -1,6 +1,8 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
+import { TablePanel, Section } from '@ynput/ayon-react-components'
+import UserImage from '/src/components/UserImage'
+
 import './users.scss'
 
 import { useMemo } from 'react'
@@ -67,19 +69,17 @@ const UserList = ({
   const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
 
   const ProfileRow = ({ rowData }) => {
-    const { name, attrib: { fullName, avatarUrl } = {}, self } = rowData;
+    const { name, self } = rowData
     return (
-    <StyledProfileRow>
-      <UserImage
-        fullName={fullName}
-        name={name}
-        size={25}
-        style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
-        highlight={self}
-        src={avatarUrl}
-      />
-      <span>{self ? `${name} (me)` : name}</span>
-    </StyledProfileRow>
+      <StyledProfileRow>
+        <UserImage
+          name={name}
+          size={25}
+          style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
+          highlight={self}
+        />
+        <span>{self ? `${name} (me)` : name}</span>
+      </StyledProfileRow>
     )
   }
 

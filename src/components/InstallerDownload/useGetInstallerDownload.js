@@ -101,9 +101,7 @@ const useGetInstallerDownload = () => {
 
     // If a server source is found, build the download URL
     if (foundInstallerFile) {
-      const url = `/api/desktop/installers/${foundInstaller.filename}?token=${localStorage.getItem(
-        'accessToken',
-      )}`
+      const url = `/api/desktop/installers/${foundInstaller.filename}`
 
       // If the URL is successfully built, return an object with the URL and filename
       if (url) return { url, filename: foundInstaller.filename }
@@ -135,7 +133,7 @@ const useGetInstallerDownload = () => {
     const urlSource = sources.find((source) => source.type === 'http')
     if (serverSource || urlSource) {
       const url = serverSource
-        ? `/api/desktop/installers/${filename}?token=${localStorage.getItem('accessToken')}`
+        ? `/api/desktop/installers/${filename}`
         : urlSource.url
       // download the file
       downloadFromUrl(url, filename)

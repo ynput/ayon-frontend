@@ -1,6 +1,7 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TablePanel, Section, UserImage } from '@ynput/ayon-react-components'
+import { TablePanel, Section } from '@ynput/ayon-react-components'
+import UserImage from '/src/components/UserImage'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
@@ -15,11 +16,10 @@ const StyledProfileRow = styled.div`
 `
 
 const ProfileRow = ({ rowData }) => {
-  const { name, attrib: { fullName, avatarUrl } = {}, self, isMissing } = rowData;
+  const { name, self, isMissing } = rowData
   return (
     <StyledProfileRow>
       <UserImage
-        fullName={fullName}
         name={name}
         size={25}
         style={{
@@ -31,7 +31,6 @@ const ProfileRow = ({ rowData }) => {
           maxWidth: 25,
         }}
         highlight={self}
-        src={avatarUrl}
       />
       <span
         style={{

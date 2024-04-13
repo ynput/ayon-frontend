@@ -49,7 +49,6 @@ const ImageStyled = styled.img`
   display: block;
   position: absolute;
   inset: 0;
-  background-color: var(--md-sys-color-surface-container-lowest);
 `
 
 const Thumbnail = ({
@@ -77,7 +76,7 @@ const Thumbnail = ({
   const [thumbLoaded, setThumbLoaded] = useState(false)
 
   const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-  const queryArgs = `?updatedAt=${entityUpdatedAt}&token=${localStorage.getItem('accessToken')}`
+  const queryArgs = `?updatedAt=${entityUpdatedAt}`
   const isWrongEntity = ['product'].includes(entityType)
   const portalEl = document.getElementById(portalId)
 

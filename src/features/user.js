@@ -9,6 +9,7 @@ const userSlice = createSlice({
       if (action.payload.accessToken) {
         localStorage.setItem('accessToken', action.payload.accessToken)
         axios.defaults.headers.common['Authorization'] = `Bearer ${action.payloadaccessToken}`
+        document.cookie = `accessToken=${action.payload.accessToken}; path=/; max-age=86400`
       }
 
       const user = { ...action.payload.user, data: { ...action.payload.user?.data } }

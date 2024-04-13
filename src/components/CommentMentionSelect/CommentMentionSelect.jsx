@@ -1,5 +1,6 @@
 import * as Styled from './CommentMentionSelect.styled'
-import { Icon, UserImage } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
+import UserImage from '/src/components/UserImage'
 import { classNames } from 'primereact/utils'
 
 const CommentMentionSelect = ({
@@ -40,7 +41,7 @@ const CommentMentionSelect = ({
             className={classNames({ selected: selectedIndex === i })}
           >
             {option.type === 'user' ? (
-              <UserImage size={20} src={option.image} name={option.label} className="image" />
+              <UserImage size={20} name={option.label} className="image" />
             ) : (
               <Icon icon={option.icon} size={20} className="image" />
             )}
