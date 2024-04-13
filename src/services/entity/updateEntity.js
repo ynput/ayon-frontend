@@ -1,6 +1,21 @@
 import { ayonApi, buildOperations } from '../ayon'
 import { updateNodes } from '/src/features/editor'
 
+const invalidateTag = ({ ids, type, disabledInvalidation, data }) => {
+  // don't invalidate if disabled
+  if (disabledInvalidation) return []
+
+  const baseTags = [...ids.map((id) => ({ type, id })), { type: 'kanBanTask', id: 'TASKS' }]
+
+  // if the change was a status change, invalidate the activity query of the entity
+  if ('status' in data) {
+    const getActivityTags = ids.map((id) => ({ type: 'entityActivities', id }))
+    const getActivitiesTags = ids.map((id) => ({ type: 'entitiesActivities', id }))
+    baseTags.push(...getActivityTags, ...getActivitiesTags)
+  }
+  return baseTags
+}
+
 const updateEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     updateEntitiesDetails: build.mutation({
@@ -11,10 +26,7 @@ const updateEntity = ayonApi.injectEndpoints({
           operations: buildOperations(ids || patches.map((p) => p.id), type, data),
         },
       }),
-      invalidatesTags: (result, error, { ids, type, disabledInvalidation }) =>
-        disabledInvalidation
-          ? []
-          : [...ids.map((id) => ({ type, id })), { type: 'kanBanTask', id: 'TASKS' }],
+      invalidatesTags: (result, error, args) => result && invalidateTag(args),
       async onQueryStarted(
         { projectName, type, patches, data, ids },
         { dispatch, queryFulfilled },
