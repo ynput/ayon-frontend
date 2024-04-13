@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -18,26 +18,36 @@ export const Comment = styled.div`
   border-radius: var(--border-radius-l);
   overflow: hidden;
 
-  /* isOpen styles */
-  ${({ $isOpen }) =>
-    $isOpen
-      ? css`
-          /* box shadow */
-          box-shadow: 0 -3px 10px 0 rgba(0, 0, 0, 0.2);
+  &.isOpen {
+    /* box shadow */
+    box-shadow: 0 -3px 10px 0 rgba(0, 0, 0, 0.2);
 
-          .quill {
-            background-color: var(--md-sys-color-surface-container-lowest);
-          }
-        `
-      : css`
-          cursor: pointer;
-          .ql-editor > * {
-            cursor: pointer !important;
-          }
-          &:hover {
-            background-color: var(--md-sys-color-surface-container-hover);
-          }
-        `}
+    .quill {
+      background-color: var(--md-sys-color-surface-container);
+    }
+  }
+
+  /* CLOSED */
+  &.isClosed {
+    cursor: pointer;
+    .ql-editor > * {
+      cursor: pointer !important;
+    }
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-hover);
+    }
+
+    /* hide toolbar */
+    .ql-toolbar.ql-snow {
+      height: 0;
+      padding: 0;
+      margin: 0;
+      border-width: 0;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+  }
 
   .ql-editor.ql-blank::before {
     color: var(--md-sys-color-on-surface);
@@ -76,30 +86,57 @@ export const Comment = styled.div`
     }
   }
 
-  .ql-editor a {
-    ::before,
-    ::after {
-      display: none;
+  /* container styles reset */
+  .ql-container.ql-snow {
+    border: none;
+
+    .ql-editor {
+      a {
+        ::before,
+        ::after {
+          display: none;
+        }
+      }
+
+      a[href^='@'] {
+        text-decoration: none;
+        color: var(--md-sys-color-primary);
+      }
     }
   }
 
-  .ql-bubble .ql-editor a[href^='@'] {
-    text-decoration: none;
-    color: var(--md-sys-color-primary);
-  }
+  /* toolbar styles */
+  .ql-toolbar.ql-snow {
+    border: none;
+    background-color: var(--md-sys-color-surface-container);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    padding: var(--padding-s);
+    display: flex;
+    height: unset;
+    width: unset;
 
-  .ql-bubble .ql-tooltip.ql-flip {
-    left: 0 !important;
-    top: 9px !important;
-    position: fixed;
-    translate: 0 calc(-100% - 4px);
+    .ql-formats {
+      height: 32px;
+      margin-right: 8px;
+      padding-right: 8px;
+      border-right: 1px solid var(--md-sys-color-surface-container-hover);
 
-    background-color: var(--md-sys-color-surface-container-lowest);
-    outline: 1px solid var(--md-sys-color-outline-variant);
-    border-radius: 8px;
+      /* remove border for last child */
+      &:last-child {
+        border-right: none;
+      }
+    }
 
-    .ql-tooltip-arrow {
-      display: none;
+    button {
+      float: none;
+      padding: 6px;
+      border-radius: var(--border-radius-m);
+      height: 32px;
+      width: 32px;
+    }
+
+    button:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
 `
@@ -109,6 +146,8 @@ export const Footer = styled.footer`
   justify-content: space-between;
   padding: var(--padding-m);
   border-top: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface-container);
+  z-index: 100;
 
   /* remove save button icon */
   & > button.comment {

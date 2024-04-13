@@ -9,6 +9,7 @@ export const FeedContainer = styled.section`
 
   display: grid;
   grid-template-rows: 1fr auto;
+  background-color: var(--md-sys-color-surface-container-low);
 `
 
 export const FeedContent = styled.div`

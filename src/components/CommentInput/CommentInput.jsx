@@ -5,9 +5,7 @@ import 'react-quill/dist/quill.bubble.css'
 import ReactMarkdown from 'react-markdown'
 
 import ReactQuill from 'react-quill'
-import Quill from 'quill'
-import ImageUploader from 'quill-image-uploader'
-import 'quill-image-uploader/dist/quill.imageUploader.min.css'
+import { classNames } from 'primereact/utils'
 
 import { toast } from 'react-toastify'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
@@ -17,8 +15,6 @@ import { useGetTaskMentionTasksQuery } from '/src/services/userDashboard/getUser
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
 import { convertToMarkdown, parseImages, quillModules } from './helpers'
-
-Quill.register('modules/imageUploader', ImageUploader)
 
 const CommentInput = ({
   initValue,
@@ -405,7 +401,7 @@ const CommentInput = ({
       >
         <Styled.Comment
           $isOpen={isOpen}
-          className="block-shortcuts"
+          className={classNames('block-shortcuts', { isOpen, isClosed: !isOpen })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
         >
@@ -413,9 +409,10 @@ const CommentInput = ({
             {/* this is purely used to translate the markdown into html for Editor */}
             <ReactMarkdown>{initValue}</ReactMarkdown>
           </Styled.Markdown>
+          {/* QUILL is configured in helpers file */}
           <ReactQuill
-            theme="bubble"
-            style={{ minHeight: isOpen ? initHeight : 44, maxHeight: 300 }}
+            theme="snow"
+            style={{ minHeight: isOpen ? initHeight + 41 : 44, maxHeight: 300 }}
             ref={editorRef}
             value={editorValue}
             onChange={handleChange}
@@ -438,11 +435,11 @@ const CommentInput = ({
           <Styled.Footer>
             <Styled.Commands>
               {/* mention a user */}
-              <Button icon="alternate_email" onClick={() => addTextToEditor('@')} />
+              <Button icon="alternate_email" variant="text" onClick={() => addTextToEditor('@')} />
               {/* mention a version */}
-              <Button icon="layers" onClick={() => addTextToEditor('@@')} />
+              <Button icon="layers" variant="text" onClick={() => addTextToEditor('@@')} />
               {/* mention a task */}
-              <Button icon="check_circle" onClick={() => addTextToEditor('@@@')} />
+              <Button icon="check_circle" variant="text" onClick={() => addTextToEditor('@@@')} />
             </Styled.Commands>
             <SaveButton
               label="Comment"
