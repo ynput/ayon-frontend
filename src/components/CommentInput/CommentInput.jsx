@@ -65,9 +65,19 @@ const CommentInput = ({
   const siblingTasks = mentionTasks.filter(
     (task) => !entities.some((entity) => entity.id === task.id),
   )
-
   // CONFIG
-  const placeholder = `Comment or tag with @user, @@version, @@@task...`
+  const placeholder = isOpen
+    ? `Comment or mention with @user, @@version, @@@task...`
+    : 'Add a comment...'
+
+  // update placeholder on editor when isOpen
+  useEffect(() => {
+    const quill = editorRef.current.getEditor()
+    if (quill) {
+      const container = quill.container
+      container?.firstChild?.setAttribute('data-placeholder', placeholder)
+    }
+  }, [isOpen, editorRef])
 
   const mentionTypes = ['@', '@@', '@@@']
   const typeOptions = {
@@ -440,6 +450,7 @@ const CommentInput = ({
                 variant="text"
                 onClick={() => addTextToEditor('@')}
                 data-tooltip={'Mention user'}
+                data-shortcut={'@'}
               />
               {/* mention a version */}
               <Button
@@ -447,6 +458,7 @@ const CommentInput = ({
                 variant="text"
                 onClick={() => addTextToEditor('@@')}
                 data-tooltip={'Mention version'}
+                data-shortcut={'@@'}
               />
               {/* mention a task */}
               <Button
@@ -454,6 +466,7 @@ const CommentInput = ({
                 variant="text"
                 onClick={() => addTextToEditor('@@@')}
                 data-tooltip={'Mention task'}
+                data-shortcut={'@@@'}
               />
             </Styled.Commands>
             <SaveButton
