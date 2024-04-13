@@ -2,19 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import ActivityItem from '../../components/Feed/ActivityItem'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import { useSelector } from 'react-redux'
 import { useGetActivitiesQuery } from '/src/services/activities/getActivities'
-import {
-  useCreateEntityActivityMutation,
-  useDeleteActivityMutation,
-  useUpdateActivityMutation,
-} from '/src/services/activities/updateActivities'
-import { v1 as uuid1 } from 'uuid'
-import { formatISO } from 'date-fns'
+import useCommentMutations from './hooks/useCommentMutations'
 
 const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInfo }) => {
-  const { name, fullName, avatarUrl } = useSelector((state) => state.user)
-
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
 
@@ -50,80 +41,21 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
 
   const tasksVersions = tasks.flatMap((task) => task.allVersions) || []
 
-  // used to create and update activities (comments)
-  const [createEntityActivity] = useCreateEntityActivityMutation()
-  const [updateActivity] = useUpdateActivityMutation()
-  const [deleteActivity] = useDeleteActivityMutation()
-
   // TODO: this only works for the first selected task
   const projectName = selectedTasksProjects[0]
   const entityType = 'task'
   const entityId = tasks[0].id
 
-  const handleCommentSubmit = async (value) => {
-    const newId = uuid1().replace(/-/g, '')
+  // comment mutations here!
+  const { submitComment, updateComment, deleteComment } = useCommentMutations({
+    projectName,
+    entityType,
+    entityId,
+    entitiesToQuery,
+  })
 
-    const newComment = {
-      body: value,
-      activityType: 'comment',
-      id: newId,
-    }
-
-    // create a new patch for optimistic update
-    const patch = {
-      body: value,
-      activityType: 'comment',
-      activityId: newId,
-      referenceType: 'origin',
-      authorName: name,
-      authorFullName: fullName,
-      authorAvatarUrl: avatarUrl,
-      createdAt: formatISO(new Date()),
-    }
-
-    // we only need these args to update the cache of the original query
-    const argsForCachingMatching = { entities: entitiesToQuery }
-
-    try {
-      await createEntityActivity({
-        projectName,
-        entityType,
-        entityId,
-        data: newComment,
-        patch,
-        ...argsForCachingMatching,
-      }).unwrap()
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  const handleCommentUpdate = async (activity, value) => {
-    const updatedActivity = {
-      body: value,
-    }
-
-    const patch = {
-      ...activity,
-      ...updatedActivity,
-    }
-
-    // we only need these args to update the cache of the original query
-    const argsForCachingMatching = { entityType, entityId, entities: entitiesToQuery }
-
-    try {
-      await updateActivity({
-        projectName,
-        data: updatedActivity,
-        activityId: activity.activityId,
-        patch,
-        ...argsForCachingMatching,
-      }).unwrap()
-    } catch (error) {
-      // error is handled in the mutation
-    }
-  }
-
+  // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
+  // Then update comment with new body
   const handleCommentChecked = (e, activity) => {
     const target = e?.target
     if (!target || !activity) return console.log('no target or activity')
@@ -166,25 +98,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
 
     if (!newBody) return
 
-    handleCommentUpdate(activity, newBody)
-  }
-
-  const handleCommentDelete = async (id) => {
-    // we only need these args to update the cache of the original query
-    const argsForCachingMatching = { entityType, entityId, entities: entitiesToQuery }
-
-    if (!id) return
-
-    try {
-      await deleteActivity({
-        projectName,
-        activityId: id,
-        patch: { activityId: id },
-        ...argsForCachingMatching,
-      }).unwrap()
-    } catch (error) {
-      // error is handled in the mutation
-    }
+    updateComment(activity, newBody)
   }
 
   return (
@@ -197,14 +111,14 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
             users={activeUsers}
             entityType={'task'}
             onCheckChange={handleCommentChecked}
-            onDelete={handleCommentDelete}
+            onDelete={deleteComment}
           />
         ))}
       </Styled.FeedContent>
       {!!tasks.length && (
         <CommentInput
           initValue={null}
-          onSubmit={handleCommentSubmit}
+          onSubmit={submitComment}
           isOpen={isCommentInputOpen}
           setIsOpen={setIsCommentInputOpen}
           activeUsers={activeUsers}
