@@ -63,10 +63,29 @@ const abortController = new AbortController()
 const cancelToken = axios.CancelToken
 const cancelTokenSource = cancelToken.source()
 
+// QUILL CONFIG
+import Quill from 'quill'
+import ImageUploader from 'quill-image-uploader'
+import 'quill-image-uploader/dist/quill.imageUploader.min.css'
+Quill.register('modules/imageUploader', ImageUploader)
+
+// override icons with material icons
+const getIcon = (icon) => '<span class="material-symbols-outlined icon">' + icon + '</span>'
+
+var icons = Quill.import('ui/icons')
+icons['header']['2'] = getIcon('format_h1')
+icons['bold'] = getIcon('format_bold')
+icons['italic'] = getIcon('format_italic')
+icons['underline'] = getIcon('format_underlined')
+icons['link'] = getIcon('link')
+icons['list']['ordered'] = getIcon('format_list_numbered')
+icons['list']['bullet'] = getIcon('format_list_bulleted')
+icons['list']['check'] = getIcon('checklist')
+icons['image'] = getIcon('image')
+
 export const quillModules = {
   toolbar: [
-    [{ header: 1 }, { header: 2 }],
-    ['bold', 'italic', 'underline', 'link'],
+    [{ header: 2 }, 'bold', 'italic', 'underline', 'link'],
     [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
     ['image'],
   ],
