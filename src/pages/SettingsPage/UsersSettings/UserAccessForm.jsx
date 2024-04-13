@@ -153,7 +153,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
               style={{ flexGrow: 1 }}
               selectedAccessGroups={defaultAccessGroups}
               setSelectedAccessGroups={handleDefaultAccessGroupsChange}
-              placeholder={'Set access groups...'}
+              placeholder={'Add access groups...'}
               isMultiple={formData._mixedFields?.includes('defaultAccessGroups')}
               accessGroups={accessGroupsData}
             />
@@ -165,7 +165,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
               style={{ flexGrow: 1 }}
               selectedAccessGroups={mergedAccessGroups}
               setSelectedAccessGroups={handleProjectAccessGroupsChange}
-              placeholder={'Set access groups...'}
+              placeholder={'Add access groups...'}
               isMultiple={!allTheSame}
               accessGroups={accessGroupsData}
             />

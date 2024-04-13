@@ -89,7 +89,7 @@ const UsersSettings = () => {
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
-  const [showAssignedOnly, setShowAssignedOnly] = useState(false)
+  const [projectAccessOnly, setProjectAccessOnly] = useState(true)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -110,7 +110,7 @@ const UsersSettings = () => {
   const [deleteUser] = useDeleteUserMutation()
 
   let filteredUserList = useMemo(() => {
-    // filter out users that are not in project if showAssignedOnly is true
+    // filter out users that are not in project if projectAccessOnly is true
     if (selectedProjects) {
       return userList.filter((user) => {
         // user level not user
@@ -161,7 +161,7 @@ const UsersSettings = () => {
     if (total === 'total') {
       setSearch('')
       setSelectedUsers(filteredUserList.map((user) => user.name))
-      if (selectedProjects) setShowAssignedOnly(true)
+      if (selectedProjects) setProjectAccessOnly(true)
     } else {
       setSearch(total)
     }
@@ -171,10 +171,10 @@ const UsersSettings = () => {
     setShowNewUser(true)
   }
 
-  // use filteredUserList if showAssignedOnly
+  // use filteredUserList if projectAccessOnly
   // else use userList
 
-  if (showAssignedOnly) userList = filteredUserList
+  if (projectAccessOnly) userList = filteredUserList
 
   let userListWithAccessGroups = useMemo(
     () => userList.map((user) => formatAccessGroups(user, selectedProjects)),
@@ -278,19 +278,17 @@ const UsersSettings = () => {
                   selected={!selectedProjects}
                   onClick={() => setSelectedProjects(null)}
                 >
-                  All users
+                  Show all users
                 </Button>
-                <SwitchButton
-                  value={showAssignedOnly}
-                  onClick={() => setShowAssignedOnly(!showAssignedOnly)}
-                  label="Assigned only"
-                  disabled={!selectedProjects}
-                  data-tooltip="Show only users with access to selected projects"
-                />
               </div>
               <Panel style={{ flex: 1, gap: 0 }}>
-                <h3>Users by project access</h3>
-
+                <SwitchButton
+                  value={!selectedProjects ? false : projectAccessOnly}
+                  onClick={() => setProjectAccessOnly(!projectAccessOnly)}
+                  label="Filter users by project access"
+                  disabled={!selectedProjects}
+                  data-tooltip="Filter users with access to the selected projects. Turn off to see all users."
+                />
                 <Section>
                   <ProjectList
                     multiselect={true}
