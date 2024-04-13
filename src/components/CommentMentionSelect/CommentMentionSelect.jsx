@@ -41,7 +41,7 @@ const CommentMentionSelect = ({
             className={classNames({ selected: selectedIndex === i })}
           >
             {option.type === 'user' ? (
-              <UserImage size={20} name={option.label} className="image" />
+              <UserImage size={20} name={option.id} className="image" />
             ) : (
               <Icon icon={option.icon} size={20} className="image" />
             )}
