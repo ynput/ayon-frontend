@@ -96,11 +96,48 @@ export const Comment = styled.div`
         ::after {
           display: none;
         }
+
+        color: var(--md-sys-color-primary);
       }
 
       a[href^='@'] {
         text-decoration: none;
         color: var(--md-sys-color-primary);
+      }
+    }
+
+    /* link popup */
+    .ql-tooltip {
+      box-shadow: none;
+      background-color: var(--md-sys-color-surface-container-lowest);
+      border-color: var(--md-sys-color-surface-container-low);
+      border-radius: var(--border-radius-l);
+      padding: 4px;
+      overflow: hidden;
+
+      input {
+        width: 250px;
+        border: none;
+        background-color: var(--md-sys-color-surface-container-lowest);
+
+        &:focus-visible {
+          outline: none;
+        }
+      }
+
+      a {
+        color: var(--md-sys-color-primary);
+      }
+
+      /* remove before text */
+      /* remove save button */
+      &::before,
+      .ql-action {
+        display: none;
+      }
+
+      .ql-remove {
+        color: var(--md-sys-color-on-surface-variant);
       }
     }
   }
