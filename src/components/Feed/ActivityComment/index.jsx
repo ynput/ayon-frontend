@@ -1,4 +1,4 @@
-import ActivityCommentOrigin from './ActivityCommentOrigin/ActivityCommentOrigin'
+import ActivityCommentOrigin from './ActivityComment/ActivityComment'
 
 const index = (props) => {
   return <ActivityCommentOrigin {...props} />

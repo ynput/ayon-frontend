@@ -1,5 +1,5 @@
 import React from 'react'
-import * as Styled from './ActivityCommentOrigin.styled'
+import * as Styled from './ActivityComment.styled'
 import ActivityHeader from '../../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
 import FeedReference from '../../ActivityReference/ActivityReference'
@@ -28,7 +28,7 @@ const sanitizeURL = (url = '') => {
   return {}
 }
 
-const ActivityCommentOrigin = ({ activity = {}, users, onCheckChange, onDelete }) => {
+const ActivityComment = ({ activity = {}, users, onCheckChange, onDelete }) => {
   const { body, authorName, createdAt, referenceType, activityId } = activity
 
   return (
@@ -86,4 +86,4 @@ const ActivityCommentOrigin = ({ activity = {}, users, onCheckChange, onDelete }
   )
 }
 
-export default ActivityCommentOrigin
+export default ActivityComment
