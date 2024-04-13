@@ -435,11 +435,26 @@ const CommentInput = ({
           <Styled.Footer>
             <Styled.Commands>
               {/* mention a user */}
-              <Button icon="alternate_email" variant="text" onClick={() => addTextToEditor('@')} />
+              <Button
+                icon="alternate_email"
+                variant="text"
+                onClick={() => addTextToEditor('@')}
+                data-tooltip={'Mention user'}
+              />
               {/* mention a version */}
-              <Button icon="layers" variant="text" onClick={() => addTextToEditor('@@')} />
+              <Button
+                icon="layers"
+                variant="text"
+                onClick={() => addTextToEditor('@@')}
+                data-tooltip={'Mention version'}
+              />
               {/* mention a task */}
-              <Button icon="check_circle" variant="text" onClick={() => addTextToEditor('@@@')} />
+              <Button
+                icon="check_circle"
+                variant="text"
+                onClick={() => addTextToEditor('@@@')}
+                data-tooltip={'Mention task'}
+              />
             </Styled.Commands>
             <SaveButton
               label="Comment"
