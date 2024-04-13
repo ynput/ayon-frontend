@@ -2,9 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as Styled from './CommentInput.styled'
 import { Button, SaveButton } from '@ynput/ayon-react-components'
 import 'react-quill/dist/quill.bubble.css'
-import TurndownService from 'turndown'
 import ReactMarkdown from 'react-markdown'
+
 import ReactQuill from 'react-quill'
+import Quill from 'quill'
+import ImageUploader from 'quill-image-uploader'
+import 'quill-image-uploader/dist/quill.imageUploader.min.css'
+
 import { toast } from 'react-toastify'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
 import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOptions'
@@ -12,6 +16,9 @@ import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers
 import { useGetTaskMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
+import { convertToMarkdown, parseImages, quillModules } from './helpers'
+
+Quill.register('modules/imageUploader', ImageUploader)
 
 const CommentInput = ({
   initValue,
@@ -65,22 +72,6 @@ const CommentInput = ({
 
   // CONFIG
   const placeholder = `Comment or tag with @user, @@version, @@@task...`
-
-  var turndownService = new TurndownService()
-  // support lists with checkboxes
-  turndownService.addRule('taskListItems', {
-    filter: function (node) {
-      return node.parentNode.nodeName === 'UL' && node.parentNode.hasAttribute('data-checked')
-    },
-    replacement: function (content, node) {
-      return (
-        (node.parentNode.getAttribute('data-checked') === 'true' ? '* [x]' : '* [ ]') +
-        ' ' +
-        content +
-        '\n\n'
-      )
-    },
-  })
 
   const mentionTypes = ['@', '@@', '@@@']
   const typeOptions = {
@@ -336,33 +327,16 @@ const CommentInput = ({
     typeWithDelay(quill, retain, type)
   }
 
-  const convertToMarkdown = (value) => {
-    // convert to markdown
-    let markdown = turndownService.turndown(value)
-
-    let body = markdown
-
-    // inside the markdown, find characters inside () or [] and replace @ with nothing
-    const regex = /\((.*?)\)|\[(.*?)\]/g
-    const matches = markdown.match(regex)
-    if (matches) {
-      matches.forEach((match) => {
-        console.log('match', match)
-        const newMatch = match.replaceAll('@', '')
-        body = body.replace(match, newMatch)
-      })
-    }
-
-    return body
-  }
-
   const handleSubmit = () => {
     try {
       // convert to markdown
       const markdown = convertToMarkdown(editorValue)
 
-      if (markdown && onSubmit) {
-        onSubmit(markdown)
+      // remove img query params
+      const markdownParsed = parseImages(markdown)
+
+      if (markdownParsed && onSubmit) {
+        onSubmit(markdownParsed)
         setEditorValue('')
       }
     } catch (error) {
@@ -447,14 +421,18 @@ const CommentInput = ({
             onChange={handleChange}
             readOnly={!isOpen}
             placeholder={placeholder}
-            modules={{
-              toolbar: [
-                [{ header: 1 }, { header: 2 }],
-                ['bold', 'italic', 'underline', 'link'],
-                [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-              ],
-            }}
-            formats={['header', 'bold', 'italic', 'underline', 'strike', 'list', 'bullet', 'link']}
+            modules={quillModules}
+            formats={[
+              'header',
+              'bold',
+              'italic',
+              'underline',
+              'strike',
+              'list',
+              'bullet',
+              'link',
+              'image',
+            ]}
           />
 
           <Styled.Footer>

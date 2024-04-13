@@ -56,3 +56,48 @@ export const parseImages = (body) => {
 
   return newBody
 }
+
+import axios from 'axios'
+// quillModules
+const abortController = new AbortController()
+const cancelToken = axios.CancelToken
+const cancelTokenSource = cancelToken.source()
+
+export const quillModules = {
+  toolbar: [
+    [{ header: 1 }, { header: 2 }],
+    ['bold', 'italic', 'underline', 'link'],
+    [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+    ['image'],
+  ],
+  imageUploader: {
+    upload: (file) => {
+      return new Promise((resolve, reject) => {
+        const formData = new FormData()
+        formData.append('image', file)
+
+        const opts = {
+          signal: abortController.signal,
+          cancelToken: cancelTokenSource.token,
+          headers: {
+            'Content-Type': file.type,
+          },
+        }
+
+        axios
+          .post('http://localhost:3000/api/projects/no_comment/thumbnails', file, opts)
+          .then((result) => {
+            const thumbnailId = result.data.id
+
+            const thumbnailUrl =
+              'http://localhost:3000/api/projects/no_comment/thumbnails/' + thumbnailId
+            resolve(thumbnailUrl)
+          })
+          .catch((error) => {
+            reject('Upload failed')
+            console.error('Error:', error)
+          })
+      })
+    },
+  },
+}
