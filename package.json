@@ -19,7 +19,7 @@
     "@ynput/ayon-react-components": "^0.5.13",
     "axios": "^1.6.3",
     "chart.js": "^4.2.0",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.6.0",
     "html-to-image": "^1.11.11",
     "lodash": "^4.17.21",
     "luxon": "^2.4.0",
