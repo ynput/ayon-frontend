@@ -2,6 +2,7 @@ export const ACTIVITY_FRAGMENT = `
 fragment ActivityFragment on ActivityNode {
     activityId
     activityType
+    activityData
     referenceType
     referenceId
     body
@@ -10,7 +11,6 @@ fragment ActivityFragment on ActivityNode {
       name
       attrib {
         fullName
-        avatarUrl
       }
     }
     origin {

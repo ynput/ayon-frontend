@@ -152,7 +152,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   }, [selectedTasksProjects, projectUsers])
 
   const isLoadingAll = isLoadingInfo || isLoadingTasks
-  const detailsMinWidth = 400
+  const detailsMinWidth = 533
   const detailsMaxWidth = '40vw'
   const detailsMaxMaxWidth = 700
 

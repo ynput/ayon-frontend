@@ -4,6 +4,7 @@ import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
 import { useGetActivitiesQuery } from '/src/services/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
+import useTransformActivities from './hooks/useTransformActivities'
 
 const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInfo }) => {
   // STATES
@@ -18,8 +19,10 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     entities: entitiesToQuery,
   })
 
-  // sort reversed activities data
-  const reversedActivitiesData = useMemo(() => activitiesData.slice().reverse(), [activitiesData])
+  // do any transformation on activities data
+  // 1. status change activities, attach status data based on projectName
+  // 2. reverse the order
+  const transformedActivitiesData = useTransformActivities(activitiesData, projectsInfo)
 
   // REFS
   const feedRef = useRef(null)
@@ -104,11 +107,10 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
-        {reversedActivitiesData.map((activity) => (
+        {transformedActivitiesData.map((activity) => (
           <ActivityItem
             key={activity.activityId}
             activity={activity}
-            users={activeUsers}
             entityType={'task'}
             onCheckChange={handleCommentChecked}
             onDelete={deleteComment}
@@ -124,7 +126,6 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
           activeUsers={activeUsers}
           selectedTasksProjects={selectedTasksProjects}
           versions={tasksVersions}
-          userName={name}
           entities={tasks}
           projectsInfo={projectsInfo}
         />

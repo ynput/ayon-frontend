@@ -25,7 +25,7 @@ export const Comment = styled.li`
     }
 
     .date {
-      display: none;
+      opacity: 0;
     }
   }
 `

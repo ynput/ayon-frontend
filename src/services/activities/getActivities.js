@@ -10,6 +10,19 @@ const remappingItems = {
   'author.attrib.avatarUrl': 'authorAvatarUrl',
 }
 
+// Helper function to get a nested property of an object using a string path
+const getNestedProperty = (obj, path) => path.split('.').reduce((o, p) => (o || {})[p], obj)
+
+// Helper function to delete a nested property of an object using a string path
+const deleteNestedProperty = (obj, path) => {
+  const pathParts = path.split('.')
+  const lastPart = pathParts.pop()
+  const target = pathParts.reduce((o, p) => (o || {})[p], obj)
+  if (target && lastPart) {
+    delete target[lastPart]
+  }
+}
+
 // we flatten the activity object a little bit
 const transformActivityData = (data = {}) => {
   const activities = []
@@ -17,12 +30,13 @@ const transformActivityData = (data = {}) => {
   data?.project?.task?.activities?.edges?.forEach((edge) => {
     // remapping keys are the fields path in the object
     // and the values are the new keys to assign the values to
+    const data = edge.node
 
-    if (!edge.node) {
+    if (!data) {
       return
     }
 
-    const activityNode = edge.node
+    const activityNode = data
 
     // check that the activity hasn't already been added.
     if (activities.some(({ activityId }) => activityId === activityNode.activityId)) {
@@ -42,20 +56,7 @@ const transformActivityData = (data = {}) => {
       return
     }
 
-    const transformedActivity = { ...edge.node }
-
-    // Helper function to get a nested property of an object using a string path
-    const getNestedProperty = (obj, path) => path.split('.').reduce((o, p) => (o || {})[p], obj)
-
-    // Helper function to delete a nested property of an object using a string path
-    const deleteNestedProperty = (obj, path) => {
-      const pathParts = path.split('.')
-      const lastPart = pathParts.pop()
-      const target = pathParts.reduce((o, p) => (o || {})[p], obj)
-      if (target && lastPart) {
-        delete target[lastPart]
-      }
-    }
+    const transformedActivity = { ...data }
 
     //   Here we do the remapping of the nested properties
     for (const [key, newKey] of Object.entries(remappingItems)) {
@@ -66,6 +67,19 @@ const transformActivityData = (data = {}) => {
         deleteNestedProperty(activityNode, key)
       }
     }
+
+    // parse fields that are JSON strings
+    const jsonFields = ['activityData']
+
+    jsonFields.forEach((field) => {
+      if (activityNode[field]) {
+        try {
+          transformedActivity[field] = JSON.parse(activityNode[field])
+        } catch (e) {
+          console.error('Error parsing JSON field', field, activityNode[field])
+        }
+      }
+    })
 
     activities.push(transformedActivity)
   }) || []

@@ -28,14 +28,16 @@ const sanitizeURL = (url = '') => {
   return {}
 }
 
-const ActivityComment = ({ activity = {}, users, onCheckChange, onDelete }) => {
-  const { body, authorName, createdAt, referenceType, activityId } = activity
+const ActivityComment = ({ activity = {}, onCheckChange, onDelete }) => {
+  let { body, authorName, authorFullName, createdAt, referenceType, activityId, author } = activity
+  if (!authorName) authorName = author?.name || ''
+  if (!authorFullName) authorFullName = author?.fullName || authorName || 'Unknown'
 
   return (
     <Styled.Comment>
       <ActivityHeader
         name={authorName}
-        users={users}
+        fullName={authorFullName || authorName}
         date={createdAt}
         isRef={referenceType !== 'origin'}
         activity={activity}

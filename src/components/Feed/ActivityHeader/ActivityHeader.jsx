@@ -1,58 +1,48 @@
 import React from 'react'
 import * as Styled from './ActivityHeader.styled'
-import { UserImage } from '@ynput/ayon-react-components'
-import { useGetUserQuery } from '/src/services/user/getUsers'
-import { formatDistanceToNow, isValid } from 'date-fns'
-import Typography from '/src/theme/typography.module.css'
+import UserImage from '/src/components/UserImage'
+
 import ActivityReference from '../ActivityReference/ActivityReference'
-import { classNames } from 'primereact/utils'
+import ActivityDate from '../ActivityDate'
 
-const ActivityHeader = ({ name, users, date, isRef, activity, onDelete }) => {
-  // first check if the users are already in users
-  const userInUsers = users?.find((user) => user.name === name)
-  // get user based on user name
-  const { data: userData = {} } = useGetUserQuery({ name }, { skip: userInUsers || !name })
-
-  let user = userData
-  if (userInUsers) user = userInUsers
-
-  const isMention = activity.referenceType === 'mention'
-
-  const fuzzyDate =
-    date && isValid(new Date(date)) ? formatDistanceToNow(new Date(date), { addSuffix: true }) : ''
+const ActivityHeader = ({ name, fullName, date, isRef, activity = {}, onDelete, children }) => {
+  const { referenceType, origin = {} } = activity
+  const isMention = referenceType === 'mention'
 
   return (
     <Styled.Header>
-      <UserImage
-        fullName={user.fullName}
-        src={user?.avatarUrl || user?.attrib?.avatarUrl}
-        name={user.name}
-        size={22}
-      />
-      <h5>{user.fullName || user.name}</h5>
-      {isRef && (
-        <>
-          <Styled.Text>
-            <strong>{isMention ? `mentioned` : 'commented'}</strong>
-          </Styled.Text>
-          <Styled.Text style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {isMention ? `this ${activity.origin?.type} in` : 'on'}
-          </Styled.Text>
-          <ActivityReference id={activity.origin?.id} type={activity.origin?.type} disabled>
-            {activity.origin?.label || activity.origin?.name}
-          </ActivityReference>
-        </>
-      )}
+      <Styled.Body>
+        {name && <UserImage name={name} size={22} />}
+        <h5>{fullName}</h5>
+        {isRef && (
+          <>
+            <Styled.Text>
+              <strong>{isMention ? `mentioned` : 'commented'}</strong>
+            </Styled.Text>
+            <Styled.Text style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {isMention ? `this ${origin?.type} in` : 'on'}
+            </Styled.Text>
+            <ActivityReference id={origin?.id} type={origin?.type} disabled>
+              {origin?.label || origin?.name}
+            </ActivityReference>
+          </>
+        )}
 
-      <Styled.Tools className="tools">
-        <Styled.ToolButton
-          icon="delete"
-          variant="danger"
-          className="delete"
-          onClick={() => onDelete && onDelete()}
-        />
-      </Styled.Tools>
-      <Styled.Date className={classNames(Typography.bodySmall, 'date')}>{fuzzyDate}</Styled.Date>
+        {/* custom children, like status change */}
+        {children}
+
+        <Styled.Tools className="tools">
+          {onDelete && (
+            <Styled.ToolButton
+              icon="delete"
+              variant="danger"
+              className="delete"
+              onClick={onDelete}
+            />
+          )}
+        </Styled.Tools>
+      </Styled.Body>
+      <ActivityDate date={date} />
     </Styled.Header>
   )
 }

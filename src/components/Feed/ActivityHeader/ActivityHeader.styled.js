@@ -3,10 +3,9 @@ import { Button } from '@ynput/ayon-react-components'
 
 export const Header = styled.header`
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 4px;
   position: relative;
-  flex-wrap: wrap;
 
   h5 {
     margin: 0 4px;
@@ -14,8 +13,11 @@ export const Header = styled.header`
   }
 `
 
-export const Date = styled.span`
-  margin-left: auto;
+export const Body = styled.div`
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
 `
 
 export const Tools = styled.div`
