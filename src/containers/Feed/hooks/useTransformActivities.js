@@ -6,17 +6,17 @@ const groupMinorActivities = (activities, types) => {
   // Initialize an empty array to hold the current group of minor activities
   let group = []
 
-  const pushGroupToActivities = (isLastGroup, index) => {
+  const pushGroupToActivities = (isFirstGroup, index) => {
     // If the group has more than two activities, push it as a group excluding the first item if it's the last group
     if (group.length > 2) {
       // Push the first item individually if it's the last group
-      if (isLastGroup) {
+      if (isFirstGroup) {
         groupedActivities.push(group[0])
       }
       // Push the rest of the group as a group
       groupedActivities.push({
         activityType: 'group',
-        items: isLastGroup ? group.slice(1) : group,
+        items: isFirstGroup ? group.slice(1) : group,
         activityId: 'group-' + index,
       })
     }
@@ -35,13 +35,14 @@ const groupMinorActivities = (activities, types) => {
     }
     // If the activity is not a minor activity, push the current group to the groupedActivities array and push the activity itself
     else {
-      pushGroupToActivities(false, groupedActivities.length)
+      const isFirstGroup = groupedActivities.length === 0
+      pushGroupToActivities(isFirstGroup, groupedActivities.length)
       groupedActivities.push(activity)
     }
   }
 
   // After all activities have been processed, push the last group to the groupedActivities array
-  pushGroupToActivities(true, groupedActivities.length)
+  pushGroupToActivities(false, groupedActivities.length)
 
   // Return the grouped activities
   return groupedActivities
