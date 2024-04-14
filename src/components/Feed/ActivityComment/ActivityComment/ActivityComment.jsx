@@ -6,6 +6,7 @@ import ActivityReference from '../../ActivityReference/ActivityReference'
 import CommentWrapper from '../CommentWrapper'
 import remarkGfm from 'remark-gfm'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
+import { classNames } from 'primereact/utils'
 
 const allowedRefTypes = [
   'user',
@@ -29,12 +30,13 @@ const sanitizeURL = (url = '') => {
 }
 
 const ActivityComment = ({ activity = {}, onCheckChange, onDelete }) => {
-  let { body, authorName, authorFullName, createdAt, referenceType, activityId, author } = activity
+  let { body, authorName, authorFullName, createdAt, referenceType, activityId, author, isOwner } =
+    activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName || 'Unknown'
 
   return (
-    <Styled.Comment>
+    <Styled.Comment className={classNames('comment', { isOwner })}>
       <ActivityHeader
         name={authorName}
         fullName={authorFullName || authorName}

@@ -24,7 +24,7 @@ const deleteNestedProperty = (obj, path) => {
 }
 
 // we flatten the activity object a little bit
-const transformActivityData = (data = {}) => {
+const transformActivityData = (data = {}, currentUser) => {
   const activities = []
   // loop over each activity and remap the nested properties
   data?.project?.task?.activities?.edges?.forEach((edge) => {
@@ -56,7 +56,10 @@ const transformActivityData = (data = {}) => {
       return
     }
 
-    const transformedActivity = { ...data }
+    const isOwner = currentUser === activityNode.author?.name
+
+    // copy the activity object and add isOwner property
+    const transformedActivity = { ...data, isOwner }
 
     //   Here we do the remapping of the nested properties
     for (const [key, newKey] of Object.entries(remappingItems)) {
@@ -100,8 +103,8 @@ const getActivities = ayonApi.injectEndpoints({
           variables: { projectName, entityId },
         },
       }),
-      transformResponse: (res) =>
-        transformActivityData(res?.data).sort((a, b) =>
+      transformResponse: (res, meta, { currentUser }) =>
+        transformActivityData(res?.data, currentUser).sort((a, b) =>
           compareAsc(new Date(a.createdAt), new Date(b.createdAt)),
         ),
       providesTags: (result, error, { entityId }) =>
@@ -112,12 +115,16 @@ const getActivities = ayonApi.injectEndpoints({
               { type: 'activity', id: 'LIST' },
             ]
           : [{ type: 'activity', id: 'LIST' }],
+      // don't include the name in the query args cache key
+      // eslint-disable-next-line no-unused-vars
+      serializeQueryArgs: ({ queryArgs: { currentUser, ...rest } }) => rest,
     }),
     // getActivities is a custom query that calls getActivity for each entity
     getActivities: build.query({
-      async queryFn({ entities = [] }, { dispatch, forced }) {
+      async queryFn({ entities = [] }, { dispatch, forced, getState }) {
         console.log('getActivities for all selected entities')
         try {
+          const currentUser = getState().user.name
           const allActivities = []
           for (const entity of entities) {
             const { id: entityId, projectName, type: entityType } = entity
@@ -126,7 +133,7 @@ const getActivities = ayonApi.injectEndpoints({
             // fetch activities for each entity
             const response = await dispatch(
               ayonApi.endpoints.getActivity.initiate(
-                { projectName, entityId, entityType },
+                { projectName, entityId, entityType, currentUser },
                 { forceRefetch: forced },
               ),
             )

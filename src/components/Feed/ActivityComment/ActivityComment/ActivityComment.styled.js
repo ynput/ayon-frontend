@@ -19,7 +19,7 @@ export const Comment = styled.li`
   border-radius: var(--border-radius-m);
 
   /* hide date and show tools */
-  &:hover {
+  &.isOwner:hover {
     .tools {
       display: flex;
     }

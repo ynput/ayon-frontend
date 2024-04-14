@@ -6,7 +6,7 @@ import ActivityReference from '../ActivityReference/ActivityReference'
 import ActivityDate from '../ActivityDate'
 
 const ActivityHeader = ({ name, fullName, date, isRef, activity = {}, onDelete, children }) => {
-  const { referenceType, origin = {} } = activity
+  const { referenceType, origin = {}, isOwner } = activity
   const isMention = referenceType === 'mention'
 
   return (
@@ -32,7 +32,7 @@ const ActivityHeader = ({ name, fullName, date, isRef, activity = {}, onDelete, 
         {children}
 
         <Styled.Tools className="tools">
-          {onDelete && (
+          {isOwner && onDelete && (
             <Styled.ToolButton
               icon="delete"
               variant="danger"
