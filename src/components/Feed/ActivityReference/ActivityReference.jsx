@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import FeedReferencePopup from '../ActivityReferenceTooltip/ActivityReferenceTooltip'
+import ActivityReferenceTooltip from '../ActivityReferenceTooltip/ActivityReferenceTooltip'
 import * as Styled from './ActivityReference.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
@@ -11,7 +11,7 @@ const typeIcons = {
 }
 // variants = filled, text
 
-const ActivityReference = ({ id, type, variant = 'surface', label, disabled, ...props }) => {
+const ActivityReference = ({ id, type, variant = 'surface', label, name, disabled, ...props }) => {
   const icon = typeIcons[type] || 'link'
   const [refHover, setRefHover] = useState(false)
   const [referenceCenterPos, setReferenceCenterPos] = useState(null)
@@ -41,7 +41,13 @@ const ActivityReference = ({ id, type, variant = 'surface', label, disabled, ...
         {props.children}
       </Styled.Reference>
       {refHover && (
-        <FeedReferencePopup type={type} id={id} pos={referenceCenterPos} label={label} />
+        <ActivityReferenceTooltip
+          type={type}
+          id={id}
+          pos={referenceCenterPos}
+          label={label}
+          name={name}
+        />
       )}
     </>
   )

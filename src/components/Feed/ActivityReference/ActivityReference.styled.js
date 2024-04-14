@@ -6,12 +6,12 @@ export const Reference = styled.span`
   border-radius: var(--border-radius-m);
   width: min-content;
   position: relative;
-
+  user-select: none;
   padding: 0;
   padding-right: 4px;
   white-space: nowrap;
   cursor: pointer;
-  user-select: none;
+
   align-items: center;
 
   &,

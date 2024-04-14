@@ -2,7 +2,7 @@ import React from 'react'
 import * as Styled from './ActivityComment.styled'
 import ActivityHeader from '../../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
-import FeedReference from '../../ActivityReference/ActivityReference'
+import ActivityReference from '../../ActivityReference/ActivityReference'
 import CommentWrapper from '../CommentWrapper'
 import remarkGfm from 'remark-gfm'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
@@ -60,9 +60,9 @@ const ActivityComment = ({ activity = {}, onCheckChange, onDelete }) => {
                 const label = children && children.replace('@', '')
 
                 return (
-                  <FeedReference id={id} type={type} style={{ userSelect: 'text' }} label={label}>
+                  <ActivityReference id={id} type={type} label={label} name={id}>
                     {label}
-                  </FeedReference>
+                  </ActivityReference>
                 )
               },
               // checkbox inputs
