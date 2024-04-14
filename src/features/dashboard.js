@@ -13,7 +13,7 @@ const dashboardSlice = createSlice({
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
       assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
-      attributesOpen: getInitialStateLocalStorage('dashboard-tasks-attributesOpen', true),
+      attributesOpen: getInitialStateLocalStorage('dashboard-tasks-attributesOpen', false),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
     },
   },
