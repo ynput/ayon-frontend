@@ -21,6 +21,7 @@ export const Body = styled.div`
   align-items: center;
   flex: 1;
   gap: 4px;
+  padding: 0px 4px;
 
   .icon {
     font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;

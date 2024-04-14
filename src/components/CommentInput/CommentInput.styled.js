@@ -6,6 +6,8 @@ export const AutoHeight = styled.div`
   height: 100%;
   /* transition: translate 0.1s, margin-top 0.1s; */
   position: relative;
+
+  padding: 4px;
 `
 
 export const Comment = styled.div`

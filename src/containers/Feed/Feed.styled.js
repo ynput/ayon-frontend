@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 
 export const FeedContainer = styled.section`
-  padding: 8px;
+  padding: 4px;
   overflow: hidden;
   position: relative;
 

@@ -6,6 +6,7 @@ export const Header = styled.header`
   align-items: flex-end;
   gap: 4px;
   position: relative;
+  padding: 0 4px;
 
   h5 {
     margin: 0 4px;

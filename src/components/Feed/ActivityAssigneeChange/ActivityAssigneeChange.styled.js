@@ -7,7 +7,7 @@ export const StatusChange = styled.li`
   padding: 0;
 
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   width: 100%;
   padding: 4px 8px;
@@ -20,7 +20,8 @@ export const Body = styled.div`
   flex-wrap: wrap;
   align-items: center;
   flex: 1;
-  gap: 4px;
+  gap: var(--base-gap-small);
+  padding: 0px 4px;
 `
 
 export const Text = styled.span`
