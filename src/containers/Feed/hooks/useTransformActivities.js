@@ -53,7 +53,6 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
   let currentActivity = null
 
   for (const activity of activities) {
-    console.log(activity)
     if (activity.activityType === type) {
       if (!currentActivity) {
         // Start a new sequence of the same type
