@@ -53,36 +53,44 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
   let currentActivity = null
 
   for (const activity of activities) {
-    if (
-      activity.activityType === type &&
-      (!currentActivity || currentActivity.authorName === activity.authorName)
-    ) {
+    console.log(activity)
+    if (activity.activityType === type) {
       if (!currentActivity) {
         // Start a new sequence of the same type
         currentActivity = cloneDeep(activity)
-      } else {
+      } else if (currentActivity.authorName === activity.authorName) {
         // Continue the sequence, update the newValue from the current activity
         currentActivity[oldKey] = activity[oldKey]
         // also update newValue
         currentActivity.activityData.oldValue = activity.activityData.oldValue
+      } else {
+        // If the author is different, end the current sequence and start a new one
+        if (currentActivity.activityData.oldValue !== currentActivity.activityData.newValue) {
+          mergedActivities.push(currentActivity)
+        }
+        currentActivity = cloneDeep(activity)
       }
     } else {
       if (currentActivity) {
         // End of the sequence,
-
         // check the old value and new value are different
-        if (currentActivity.activityData.oldValue === currentActivity.activityData.newValue) {
-          // if they are the same, skip activity because nothing has changed
-        } else {
+        if (currentActivity.activityData.oldValue !== currentActivity.activityData.newValue) {
           // push it to the merged activities
           mergedActivities.push(currentActivity)
         }
-
         currentActivity = null
       }
       // Push the activity of a different type
       mergedActivities.push(activity)
     }
+  }
+
+  // If there's a sequence left after the loop, push it to the merged activities
+  if (
+    currentActivity &&
+    currentActivity.activityData.oldValue !== currentActivity.activityData.newValue
+  ) {
+    mergedActivities.push(currentActivity)
   }
 
   // If there's a sequence left after the loop, push it to the merged activities
