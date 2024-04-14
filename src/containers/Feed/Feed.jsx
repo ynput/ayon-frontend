@@ -111,7 +111,6 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
           <ActivityItem
             key={activity.activityId}
             activity={activity}
-            entityType={'task'}
             onCheckChange={handleCommentChecked}
             onDelete={deleteComment}
           />
