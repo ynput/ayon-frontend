@@ -29,6 +29,6 @@ export const More = styled.div`
   }
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-highest-hover);
+    background-color: var(--md-sys-color-surface-container-hover);
   }
 `
