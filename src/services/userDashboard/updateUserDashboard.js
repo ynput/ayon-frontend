@@ -71,9 +71,17 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           }
 
           const activityTags = []
-          // if the change was a status change, invalidate the activity query of the entity activities
+
+          // these are the fields that if changed will trigger a new activity
+          const fieldsWithNewActivity = ['status', 'assignees']
+
+          // invalidate the activity query of the entity activities
           operations.forEach((operation) => {
-            if ('status' in operation.data) {
+            // check if any of the fields in the operation data are in the fieldsWithNewActivity array
+            const hasAtLeastOneField = fieldsWithNewActivity.some(
+              (field) => field in (operation.data || {}),
+            )
+            if (hasAtLeastOneField) {
               const getActivitiesTags = [{ type: 'entitiesActivities', id: operation.id }]
               activityTags.push(...getActivitiesTags)
             }

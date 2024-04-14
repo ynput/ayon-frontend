@@ -27,8 +27,10 @@ const getFuzzyDate = (date) => {
   // remove 'about' from the string
   fuzzyDate = fuzzyDate.replace('about', '')
   // replace minutes with min
-  fuzzyDate = fuzzyDate.replace('minutes', 'min')
+  fuzzyDate = fuzzyDate.replace('minutes', 'mins')
   fuzzyDate = fuzzyDate.replace('minute', 'min')
+  // remove the word ' ago'
+  fuzzyDate = fuzzyDate.replace(' ago', '')
 
   return fuzzyDate
 }
