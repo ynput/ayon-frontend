@@ -394,11 +394,12 @@ const CommentInput = ({
     }
 
     if (e.key === 'Escape') {
+      // always close editor
+      setIsOpen(false)
       // get editor value
       const editor = editorRef.current.getEditor()
       const text = editor.getText()
       if (text.length < 2) {
-        setIsOpen(false)
         setEditorValue('')
       }
     }

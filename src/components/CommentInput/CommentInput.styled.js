@@ -137,6 +137,11 @@ export const Comment = styled.div`
 
     .ql-container.ql-snow {
       padding-bottom: 0;
+      height: 44px;
+
+      .ql-editor {
+        overflow: hidden;
+      }
     }
 
     /* hide toolbar */
