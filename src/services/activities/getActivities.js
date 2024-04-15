@@ -99,7 +99,7 @@ const transformActivityData = (data = {}, currentUser) => {
 const transformVersionsData = (data = {}, currentUser) => {
   const versions = []
   // loop over each activity and remap the nested properties
-  data?.project?.task?.versions?.edges?.forEach((edge) => {
+  data?.project?.versions?.edges?.forEach((edge) => {
     // remapping keys are the fields path in the object
     // and the values are the new keys to assign the values to
     const data = edge.node

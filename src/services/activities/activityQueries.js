@@ -58,13 +58,10 @@ fragment VersionFragment on VersionNode {
 export const ENTITY_VERSIONS = (type) => `
 query getTaskVersions($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
-    ${type}(id: $entityId) {
-      id
-			versions {
-        edges {
-          node {
-            ...VersionFragment
-          }
+    versions(${type}Ids: [$entityId]) {
+      edges {
+        node{
+          ...VersionFragment
         }
       }
     }
