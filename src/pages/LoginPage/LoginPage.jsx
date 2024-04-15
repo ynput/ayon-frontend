@@ -7,7 +7,7 @@ import { login } from '/src/features/user'
 import { ayonApi } from '../../services/ayon'
 import AuthLink from './AuthLink'
 import { useGetInfoQuery } from '/src/services/auth/getAuth'
-import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
+import ReactMarkdown from 'react-markdown'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
 
