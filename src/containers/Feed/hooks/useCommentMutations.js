@@ -33,6 +33,7 @@ const useCommentMutations = ({ projectName, entityType, entityId, entitiesToQuer
       authorName: name,
       authorFullName: fullName,
       createdAt: formatISO(new Date()),
+      isOwner: true,
     }
 
     // we only need these args to update the cache of the original query

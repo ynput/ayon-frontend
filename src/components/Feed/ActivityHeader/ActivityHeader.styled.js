@@ -31,6 +31,11 @@ export const Tools = styled.div`
 
 export const ToolButton = styled(Button)`
   padding: 4px;
+
+  [icon='edit_square'] {
+    position: relative;
+    top: -1px;
+  }
 `
 
 export const Reference = styled.li`

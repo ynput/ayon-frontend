@@ -3,6 +3,7 @@ import styled from 'styled-components'
 export const MentionSelect = styled.ul`
   margin: 0;
   translate: 0 -100%;
+  z-index: 1000;
 
   background-color: var(--md-sys-color-surface-container-high);
   padding: 0;

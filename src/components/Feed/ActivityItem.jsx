@@ -4,10 +4,10 @@ import ActivityStatusChange from './ActivityStatusChange/ActivityStatusChange'
 import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeChange'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
 
-const ActivityItem = ({ activity, fromGroup, ...props }) => {
+const ActivityItem = ({ activity, fromGroup, editProps, ...props }) => {
   switch (activity.activityType) {
     case 'comment':
-      return <ActivityComment activity={activity} {...props} />
+      return <ActivityComment activity={activity} editProps={editProps} {...props} />
     case 'status.change':
       return <ActivityStatusChange activity={activity} {...props} />
     case 'assignee.add':

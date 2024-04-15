@@ -51,11 +51,7 @@ const ActivityHeader = ({
 
         <Styled.Tools className={'tools'} ref={moreRef}>
           {isOwner && onEdit && (
-            <Styled.ToolButton
-              icon="edit_square"
-              variant="text"
-              onClick={() => handleToggleMenu(id)}
-            />
+            <Styled.ToolButton icon="edit_square" variant="text" onClick={onEdit} />
           )}
           {isOwner && (
             <Styled.ToolButton

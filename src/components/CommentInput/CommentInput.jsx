@@ -20,12 +20,14 @@ const CommentInput = ({
   initValue,
   onSubmit,
   isOpen,
-  setIsOpen,
+  onClose,
+  onOpen,
   activeUsers,
-  selectedTasksProjects,
+  projectName,
   entities = [],
   versions = [],
   projectsInfo,
+  isEditing,
 }) => {
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
@@ -50,14 +52,25 @@ const CommentInput = ({
     }
   }, [initValue, markdownRef.current])
 
+  // When editing, set selection to the end of the editor
+  useEffect(() => {
+    if (initHeight && editorRef.current && isEditing) {
+      const editor = editorRef.current.getEditor()
+      if (!editor) return
+      const length = editor.getLength()
+      if (length < 2) return
+      console.log(length)
+      editor.setSelection(length)
+    }
+  }, [initHeight, editorRef.current, isEditing])
+
   // for the task (entity), get all folderIds
   const folderIds = entities.map((entity) => entity.folderId)
 
-  const singleProjectName = selectedTasksProjects[0]
   const { data: mentionTasks = [] } = useGetTaskMentionTasksQuery(
-    { projectName: singleProjectName, folderIds },
+    { projectName: projectName, folderIds },
     {
-      skip: selectedTasksProjects?.length !== 1 || !folderIds.length,
+      skip: !projectName || !folderIds.length,
     },
   )
 
@@ -101,7 +114,7 @@ const CommentInput = ({
         {
           '@': () => getMentionUsers(activeUsers),
           '@@': () => getMentionVersions(versions),
-          '@@@': () => getMentionTasks(siblingTasks, projectsInfo, singleProjectName),
+          '@@@': () => getMentionTasks(siblingTasks, projectsInfo, projectName),
         },
         mention?.search,
       ),
@@ -354,9 +367,20 @@ const CommentInput = ({
   const handleOpenClick = () => {
     if (isOpen) return
 
-    setIsOpen(true)
+    onOpen && onOpen()
     editorRef.current.getEditor().enable()
     editorRef.current.focus()
+  }
+
+  const handleClose = () => {
+    // always close editor
+    onClose && onClose()
+    // get editor value
+    const editor = editorRef.current.getEditor()
+    const text = editor.getText()
+    if (text.length < 2 || isEditing) {
+      setEditorValue('')
+    }
   }
 
   const handleKeyDown = (e) => {
@@ -394,16 +418,12 @@ const CommentInput = ({
     }
 
     if (e.key === 'Escape') {
-      // always close editor
-      setIsOpen(false)
-      // get editor value
-      const editor = editorRef.current.getEditor()
-      const text = editor.getText()
-      if (text.length < 2) {
-        setEditorValue('')
-      }
+      handleClose()
     }
   }
+
+  let quillMinHeight = isOpen ? initHeight + 41 : 44
+  if (isEditing) quillMinHeight = undefined
 
   return (
     <>
@@ -411,11 +431,11 @@ const CommentInput = ({
         style={{
           translate: isOpen ? '0' : '0 50px',
           marginTop: isOpen ? '0' : '-50px',
+          padding: isEditing ? 0 : 4,
         }}
       >
         <Styled.Comment
-          $isOpen={isOpen}
-          className={classNames('block-shortcuts', { isOpen, isClosed: !isOpen })}
+          className={classNames('block-shortcuts', { isOpen, isClosed: !isOpen, isEditing })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
         >
@@ -426,7 +446,7 @@ const CommentInput = ({
           {/* QUILL is configured in helpers file */}
           <ReactQuill
             theme="snow"
-            style={{ minHeight: isOpen ? initHeight + 41 : 44, maxHeight: 300 }}
+            style={{ minHeight: quillMinHeight, maxHeight: 300 }}
             ref={editorRef}
             value={editorValue}
             onChange={handleChange}
@@ -447,7 +467,7 @@ const CommentInput = ({
           />
 
           <Styled.Footer>
-            <Styled.Commands>
+            <Styled.Buttons>
               {/* mention a user */}
               <Button
                 icon="person"
@@ -472,13 +492,20 @@ const CommentInput = ({
                 data-tooltip={'Mention task'}
                 data-shortcut={'@@@'}
               />
-            </Styled.Commands>
-            <SaveButton
-              label="Comment"
-              className="comment"
-              active={!!editorValue}
-              onClick={handleSubmit}
-            />
+            </Styled.Buttons>
+            <Styled.Buttons>
+              {isEditing && (
+                <Button variant="text" onClick={handleClose}>
+                  Cancel
+                </Button>
+              )}
+              <SaveButton
+                label={isEditing ? 'Save' : 'Comment'}
+                className="comment"
+                active={!!editorValue}
+                onClick={handleSubmit}
+              />
+            </Styled.Buttons>
           </Styled.Footer>
         </Styled.Comment>
         <CommentMentionSelect

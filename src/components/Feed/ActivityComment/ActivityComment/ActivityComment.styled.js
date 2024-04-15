@@ -27,16 +27,22 @@ export const Comment = styled.li`
       }
     }
 
-    /* on hover show menu and hide date */
-    &:hover,
-    &.isMenuOpen {
-      .tools {
-        opacity: 1;
-      }
+    .isEditing {
+      z-index: 1000;
+    }
 
-      .date {
-        opacity: 0;
-        display: none;
+    :not(.isEditing) {
+      /* on hover show menu and hide date */
+      &:hover,
+      &.isMenuOpen {
+        .tools {
+          opacity: 1;
+        }
+
+        .date {
+          opacity: 0;
+          display: none;
+        }
       }
     }
 
@@ -71,6 +77,7 @@ export const Body = styled.div`
   }
 
   p {
+    word-break: break-all;
     .reference {
       top: 5px;
     }
@@ -99,6 +106,11 @@ export const Body = styled.div`
       top: 0;
       margin-left: 4px;
     }
+  }
+
+  &.isEditing {
+    border: 1px solid var(--md-sys-color-surface-container-hover);
+    padding: 0;
   }
 `
 

@@ -6,8 +6,6 @@ export const AutoHeight = styled.div`
   height: 100%;
   /* transition: translate 0.1s, margin-top 0.1s; */
   position: relative;
-
-  padding: 4px;
 `
 
 export const Comment = styled.div`
@@ -69,11 +67,16 @@ export const Comment = styled.div`
   /* container styles reset */
   .ql-container.ql-snow {
     border: none;
+    /* takes into account the top toolbar */
     height: calc(100% - 41px);
-    padding-bottom: 18px;
 
     .ql-editor {
       padding-bottom: 0;
+
+      p {
+        margin-bottom: 14px;
+      }
+
       a {
         ::before,
         ::after {
@@ -190,6 +193,27 @@ export const Comment = styled.div`
       background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
+
+  /* EDITING */
+  &.isEditing {
+    /* remove box shadow */
+    box-shadow: none;
+    /* remove outline */
+    outline: none;
+
+    /* hide toolbar */
+    .ql-toolbar.ql-snow {
+      display: none;
+    }
+
+    .ql-container.ql-snow {
+      height: 100%;
+
+      .ql-editor {
+        padding: 8px;
+      }
+    }
+  }
 `
 
 export const Footer = styled.footer`
@@ -201,14 +225,15 @@ export const Footer = styled.footer`
   z-index: 100;
 
   /* remove save button icon */
-  & > button.comment {
+  .comment {
+    min-width: 75px;
     .icon {
       display: none;
     }
   }
 `
 
-export const Commands = styled.div`
+export const Buttons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
 `
