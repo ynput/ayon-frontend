@@ -1639,6 +1639,12 @@ const EditorPage = () => {
     }
   }
 
+  const handleDoubleClick = (e) => {
+    // check if type-folder
+    const isFolder = e.target.closest('tr.type-folder')
+    if (isFolder) handleToggleFolder(e, true)
+  }
+
   let allColumns = useMemo(
     () => [
       <Column
@@ -1881,7 +1887,7 @@ const EditorPage = () => {
                 columnResizeMode="expand"
                 expandedKeys={expandedFolders}
                 onToggle={handleToggleFolder}
-                onDoubleClick={(e) => handleToggleFolder(e, true)}
+                onDoubleClick={handleDoubleClick}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
