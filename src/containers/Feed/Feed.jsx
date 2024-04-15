@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import ActivityItem from '../../components/Feed/ActivityItem'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import { useGetActivitiesQuery } from '/src/services/activities/getActivities'
+import { useGetActivitiesQuery, useGetVersionsQuery } from '/src/services/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 
@@ -16,6 +16,11 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   )
 
   const { data: activitiesData = [] } = useGetActivitiesQuery({
+    entities: entitiesToQuery,
+  })
+
+  // get all versions for the task
+  const { data: versionsData = [] } = useGetVersionsQuery({
     entities: entitiesToQuery,
   })
 
@@ -41,8 +46,6 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
       else feedRef.current.scrollBy(0, -heightDiff)
     }
   }, [isCommentInputOpen, feedRef.current])
-
-  const tasksVersions = tasks.flatMap((task) => task.allVersions) || []
 
   // TODO: this only works for the first selected task
   const projectName = selectedTasksProjects[0]
@@ -124,7 +127,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
           setIsOpen={setIsCommentInputOpen}
           activeUsers={activeUsers}
           selectedTasksProjects={selectedTasksProjects}
-          versions={tasksVersions}
+          versions={versionsData}
           entities={tasks}
           projectsInfo={projectsInfo}
         />

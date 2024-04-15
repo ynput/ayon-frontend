@@ -81,6 +81,7 @@ export const ayonApi = createApi({
     'team',
     'user',
     'version',
+    'entitiesVersions',
     'workfile',
     'kanBanTask',
     'detail',

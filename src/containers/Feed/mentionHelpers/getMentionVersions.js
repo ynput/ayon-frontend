@@ -5,8 +5,9 @@ const getMentionVersions = (versions) =>
     image: v.thumbnailId,
     icon: 'layers',
     id: v.id,
+    createdAt: v.createdAt,
     context: v.product?.name,
-    keywords: [v.name],
+    keywords: [v.name, v.product?.name],
   }))
 
 export default getMentionVersions

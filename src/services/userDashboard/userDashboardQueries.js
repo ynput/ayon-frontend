@@ -17,29 +17,6 @@ const TASK_FRAGMENT = `
       label
       path
     }
-    versions(latestOnly: true) {
-      edges {
-        node {
-          id
-          thumbnailId
-          updatedAt
-        }
-      }
-    }
-    allVersions: versions {
-      edges {
-        node {
-          id
-          name
-          version
-          thumbnailId
-          updatedAt
-          product {
-            name
-          }
-        }
-      }
-    }
   }
 `
 

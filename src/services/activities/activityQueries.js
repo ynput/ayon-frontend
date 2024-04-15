@@ -39,3 +39,36 @@ query getEntityActivity($projectName: String!, $entityId: String!) {
   }
 ${ACTIVITY_FRAGMENT}
 `
+
+const VERSION_FRAGMENT = `
+fragment VersionFragment on VersionNode {
+  id
+  name
+  productId
+  author
+  createdAt
+  author
+  version
+  product {
+    name
+  }
+}
+`
+
+export const ENTITY_VERSIONS = (type) => `
+query getTaskVersions($projectName: String!, $entityId: String!) {
+  project(name: $projectName) {
+    ${type}(id: $entityId) {
+      id
+			versions {
+        edges {
+          node {
+            ...VersionFragment
+          }
+        }
+      }
+    }
+  }
+}
+${VERSION_FRAGMENT}
+`

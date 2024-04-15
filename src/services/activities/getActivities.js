@@ -1,14 +1,7 @@
 import { ayonApi } from '../ayon'
 // import PubSub from '/src/pubsub'
-import { ENTITY_ACTIVITIES } from './activityQueries'
+import { ENTITY_ACTIVITIES, ENTITY_VERSIONS } from './activityQueries'
 import { compareAsc } from 'date-fns'
-
-// remapping of nested properties to flat properties
-const remappingItems = {
-  'author.name': 'authorName',
-  'author.attrib.fullName': 'authorFullName',
-  'author.attrib.avatarUrl': 'authorAvatarUrl',
-}
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = (obj, path) => path.split('.').reduce((o, p) => (o || {})[p], obj)
@@ -21,6 +14,21 @@ const deleteNestedProperty = (obj, path) => {
   if (target && lastPart) {
     delete target[lastPart]
   }
+}
+
+function remapNestedProperties(object, remappingItems) {
+  const transformedObject = { ...object }
+
+  for (const [key, newKey] of Object.entries(remappingItems)) {
+    if (getNestedProperty(transformedObject, key) !== undefined) {
+      // Get deeply nested value from key using "." notation
+      transformedObject[newKey] = getNestedProperty(transformedObject, key)
+      // Delete the old key from the object
+      deleteNestedProperty(transformedObject, key)
+    }
+  }
+
+  return transformedObject
 }
 
 // we flatten the activity object a little bit
@@ -56,20 +64,18 @@ const transformActivityData = (data = {}, currentUser) => {
       return
     }
 
-    const isOwner = currentUser === activityNode.author?.name
-
-    // copy the activity object and add isOwner property
-    const transformedActivity = { ...data, isOwner }
-
-    //   Here we do the remapping of the nested properties
-    for (const [key, newKey] of Object.entries(remappingItems)) {
-      if (getNestedProperty(activityNode, key) !== undefined) {
-        // Get deeply nested value from key using "." notation
-        transformedActivity[newKey] = getNestedProperty(activityNode, key)
-        // Delete the old key from the activity
-        deleteNestedProperty(activityNode, key)
-      }
+    // remapping of nested properties to flat properties
+    const remappingItems = {
+      'author.name': 'authorName',
+      'author.attrib.fullName': 'authorFullName',
+      'author.attrib.avatarUrl': 'authorAvatarUrl',
     }
+
+    const transformedActivity = remapNestedProperties(activityNode, remappingItems)
+
+    // add isOwner property
+    const isOwner = currentUser === activityNode.author?.name
+    transformedActivity.isOwner = isOwner
 
     // parse fields that are JSON strings
     const jsonFields = ['activityData']
@@ -88,6 +94,32 @@ const transformActivityData = (data = {}, currentUser) => {
   }) || []
 
   return activities
+}
+// we flatten the version object a little bit
+const transformVersionsData = (data = {}, currentUser) => {
+  const versions = []
+  // loop over each activity and remap the nested properties
+  data?.project?.task?.versions?.edges?.forEach((edge) => {
+    // remapping keys are the fields path in the object
+    // and the values are the new keys to assign the values to
+    const data = edge.node
+
+    if (!data) {
+      return
+    }
+
+    const versionNode = data
+
+    // add isOwner
+    const isOwner = currentUser === versionNode.author?.name
+
+    const transformedVersion = { ...versionNode, isOwner }
+    transformedVersion.isOwner = isOwner
+
+    versions.push(transformedVersion)
+  }) || []
+
+  return versions
 }
 
 const getActivities = ayonApi.injectEndpoints({
@@ -164,9 +196,76 @@ const getActivities = ayonApi.injectEndpoints({
             ]
           : [{ type: 'entitiesActivities', id: 'LIST' }],
     }),
+    // get all versions for a task, used as an activity and version mentions
+    getEntityVersions: build.query({
+      query: ({ projectName, entityId, entityType }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: ENTITY_VERSIONS(entityType),
+          variables: { projectName, entityId },
+        },
+      }),
+      transformResponse: (res, meta, { currentUser }) =>
+        transformVersionsData(res?.data, currentUser).sort((a, b) =>
+          compareAsc(new Date(a.createdAt), new Date(b.createdAt)),
+        ),
+      providesTags: (result) =>
+        result
+          ? [...result.map((a) => ({ type: 'version', id: a.id })), { type: 'version', id: 'LIST' }]
+          : [{ type: 'version', id: 'LIST' }],
+      // don't include the name in the query args cache key
+      // eslint-disable-next-line no-unused-vars
+      serializeQueryArgs: ({ queryArgs: { currentUser, ...rest } }) => rest,
+    }),
+    // getVersions is a custom query that calls getTaskVersions for each entity
+    getVersions: build.query({
+      async queryFn({ entities = [] }, { dispatch, forced, getState }) {
+        console.log('getVersions for all selected entities')
+        try {
+          const currentUser = getState().user.name
+          const allVersions = []
+          for (const entity of entities) {
+            const { id: entityId, projectName, type: entityType } = entity
+            if (!entityId) continue
+
+            // fetch activities for each entity
+            const response = await dispatch(
+              ayonApi.endpoints.getEntityVersions.initiate(
+                { projectName, entityId, entityType, currentUser },
+                { forceRefetch: forced },
+              ),
+            )
+
+            if (response.status === 'rejected') {
+              console.error('No activities found', entityId)
+              return { error: new Error('No activities found', entityId) }
+            }
+
+            response.data.forEach((versionsData) => {
+              // add activities to allVersions
+              allVersions.push({ ...versionsData, entityId: entityId, entityType, projectName })
+            })
+          }
+
+          return { data: allVersions }
+        } catch (error) {
+          console.error(error)
+          return error
+        }
+      },
+      //   Id is the entity id, incase we want invalidate ALL activities for one or more entities
+      providesTags: (result, error, { entities = [] }) =>
+        result
+          ? [
+              ...entities.map((entity) => ({ type: 'entitiesVersions', id: entity.id })),
+              { type: 'entitiesVersions', id: 'LIST' },
+            ]
+          : [{ type: 'entitiesVersions', id: 'LIST' }],
+    }),
   }),
 })
 
 //
 
-export const { useGetActivitiesQuery } = getActivities
+export const { useGetActivitiesQuery, useGetVersionsQuery } = getActivities

@@ -203,7 +203,6 @@ export default UserDashDetailsHeader
 //   "folderId": "739a748e3da311eeac5d0242ac120004",
 //   "path": "assets/characters/00_kloecksiouys_mccrietsoiwn",
 //   "projectName": "demo_Commercial",
-//   "latestVersionId": "73c080f23da311eeac5d0242ac120004",
 //   "latestVersionThumbnailId": "08b9986c474811eea5d60242ac120004",
 //   "thumbnailUrl": "/api/projects/demo_Commercial/thumbnails/08b9986c474811eea5d60242ac120004?updatedAt=2023-08-30T15:14:45.427705+00:00&token=0848587a83cd065914bf9e6c0792bdd246910cbd2ea520115f802d6adbc9e396",
 //   "statusIcon": "play_arrow",

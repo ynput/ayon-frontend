@@ -7,8 +7,6 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
     // use task thumbnail if it exists, otherwise use latest version thumbnail
     const thumbnailId = task?.thumbnailId || latestVersion?.thumbnailId
 
-    const allVersions = task?.allVersions?.edges.map(({ node }) => node) || []
-
     // create a short path [code][.../][end of path by depth joined by /][taskName]
     const depth = 2
     const path = task.folder?.path?.replace(/^\/+|\/+$/g, '').split('/')
@@ -30,11 +28,7 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       folderId: task.folderId,
       path: `${projectName}${task.folder?.path}`,
       shortPath,
-      latestVersionId: latestVersion?.id,
-      latestVersionThumbnailId: latestVersion?.thumbnailId,
-      latestVersionUpdatedAt: latestVersion?.updatedAt,
       thumbnailId,
-      allVersions,
       projectName: projectName,
       projectCode: code,
     }
