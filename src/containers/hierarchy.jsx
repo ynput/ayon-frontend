@@ -16,68 +16,59 @@ import {
   setExpandedFolders,
   setFocusedTasks,
 } from '/src/features/context'
-import { useGetHierarchyQuery } from '/src/services/getHierarchy'
+import { useGetProjectFoldersQuery } from '/src/services/getHierarchy'
 import useCreateContext from '../hooks/useCreateContext'
 
-const filterHierarchy = (text, folder, folders) => {
-  let result = []
-  if (!folder) return []
-  for (const item of folder) {
-    if (item.name && (!text || item.name.toLowerCase().includes(text.toLowerCase()))) {
-      const newChildren = filterHierarchy(false, item.children, folders)
-      result.push({
-        key: item.id,
-        children: newChildren,
+const itemMatchesQuery = (item, q) => {
+  if (!q) return true
+  if (item.name.toLowerCase().includes(q.toLowerCase())) return true
+  if (item?.label?.toLowerCase().includes(q.toLowerCase())) return true
+  return false
+}
+
+const isArrayInSets = (array, sets) => {
+  return sets.some((set) => JSON.stringify(set) === JSON.stringify(array))
+}
+
+const buildTree = (parents, parent, folderTypes, visiblePaths) => {
+  const items = []
+  for (const child of parents[parent] || []) {
+    if (!child) continue
+
+    if (!visiblePaths || visiblePaths.includes(JSON.stringify([...child.parents, child.name]))) {
+      //!isArrayInSets([...child.parents, child.name], visiblePaths)) {
+      const nchild = {
+        key: child.id,
         data: {
-          name: item.name,
-          label: item.label,
-          status: item.status,
-          folderType: item.folderType,
-          // hasProducts: item.hasProducts,
-          hasTasks: item.hasTasks,
-          parents: item.parents,
+          name: child.name,
+          label: child.label || child.name,
+          status: child.status,
+          folderType: child.folderType,
+          hasTasks: child.hasTasks,
+          parents: child.parents,
           body: (
             <CellWithIcon
-              icon={folders[item.folderType]?.icon}
-              text={item.label}
-              name={item.name}
+              icon={folderTypes[child.folderType]?.icon}
+              text={child.label}
+              name={child.name}
             />
           ),
         },
-      })
-    } else if (item.children) {
-      const newChildren = filterHierarchy(text, item.children, folders)
-      if (newChildren.length > 0) {
-        result.push({
-          key: item.id,
-          children: newChildren,
-          data: {
-            name: item.name,
-            label: item.label,
-            status: item.status,
-            folderType: item.folderType,
-            // hasProducts: item.hasProducts,
-            hasTasks: item.hasTasks,
-            parents: item.parents,
-            body: (
-              <CellWithIcon
-                icon={folders[item.folderType]?.icon}
-                text={item.label}
-                name={item.name}
-              />
-            ),
-          },
-        })
       }
+      if (child.id in parents) {
+        nchild.children = buildTree(parents, child.id, folderTypes, visiblePaths)
+      }
+      items.push(nchild)
     }
   }
-  return result
+  // return items sorted by item.data.name
+  return items.sort((a, b) => a.data.name.localeCompare(b.data.name))
 }
 
 const Hierarchy = (props) => {
   const projectName = useSelector((state) => state.project.name)
   const foldersOrder = useSelector((state) => state.project.foldersOrder || [])
-  const folders = useSelector((state) => state.project.folders || {})
+  const folderTypes = useSelector((state) => state.project.folders || {})
   const folderTypeList = foldersOrder.map((f) => ({ label: f, value: f }))
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
@@ -104,93 +95,68 @@ const Hierarchy = (props) => {
     return 'Folder types'
   }
 
-  //
-  // Hooks
-  //
-
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, data, isFetching } = useGetHierarchyQuery(
-    { projectName },
+  const { isError, error, data, isFetching } = useGetProjectFoldersQuery(
+    { projectName, withAttrib: true },
     { skip: !projectName },
   )
 
-  // We already have the data, so we can do the client-side filtering
-  // and tree transformation
-
-  const parents = useMemo(() => {
-    if (!data) return []
-
+  // Simple memo to get necessary folder data by folderId
+  const keyHelper = useMemo(() => {
+    if (!data) return {}
     const result = {}
 
-    const crawl = (folder, ex) => {
-      const parents = [...(ex || []), folder.parentId]
-      result[folder.id] = parents
-      if (folder.children) {
-        folder.children.forEach((child) => {
-          crawl(child, parents)
-        })
+    for (const folder of data) {
+      result[folder.id] = {
+        parents: folder.parents,
+        parentId: folder.parentId,
+        hasChildren: folder.hasChildren,
       }
     }
-
-    data.forEach((folder) => {
-      crawl(folder)
-    })
-
     return result
   }, [data])
 
-  let treeData = useMemo(() => {
-    if (!data) return []
-    return filterHierarchy(query, data, folders)
-  }, [data, query, isFetching])
-
-  function filterArray(arr = [], filter = []) {
-    return arr
-      .map((item) => {
-        const children = filterArray(item.children, filter)
-        if (filter.includes(item.data.folderType) || children.length > 0) {
-          return {
-            ...item,
-            children,
-          }
-        }
+  // Based on the current filter query, find the visible paths
+  // (including parents). If the query is less than 2 characters,
+  // return null (which means all paths are visible)
+  // When there are more than 300 visible paths, return null - to
+  // prevent performance issues. User should refine their query.
+  const visiblePaths = useMemo(() => {
+    const result = []
+    if (query.length < 2) return null
+    for (const folder of data) {
+      if (result.length > 800) {
+        console.log('Aborting search, too many results')
         return null
-      })
-      .filter((item) => item !== null)
-  }
-
-  const createDataObject = (data = []) => {
-    let hierarchyObject = {}
-
-    data.forEach((item) => {
-      hierarchyObject[item.id] = { ...item, isLeaf: !item.children?.length }
-
-      if (item.children?.length > 0) {
-        hierarchyObject = { ...hierarchyObject, ...createDataObject(item.children) }
       }
-    })
-
-    return hierarchyObject
-  }
-
-  const hierarchyObjectData = useMemo(() => {
-    if (data) {
-      return createDataObject(data)
+      if (itemMatchesQuery(folder, query)) {
+        result.push(JSON.stringify([...folder.parents, folder.name]))
+        for (let i = 0; i < folder.parents.length; i++) {
+          const parent = JSON.stringify(folder.parents.slice(0, i + 1))
+          if (result.includes(parent)) continue
+          result.push(parent)
+        }
+      }
     }
-  }, [data, isFetching])
+    return result
+  }, [query, data])
 
-  const treeDataFlat = useMemo(() => {
-    if (selectedFolderTypes.length) {
-      const filtered = filterArray(treeData, selectedFolderTypes)
-
-      return filtered
+  // Transform the flat data into a tree structure
+  // based on the parent-child relationship.
+  // buildTree recursive function also passes down the visiblePaths
+  // to the children, so they can be filtered out if necessary
+  // and "folderTypes" object, to display the correct icon
+  const treeData = useMemo(() => {
+    if (!data) return []
+    const parents = {}
+    for (const folder of data) {
+      const parentId = folder.parentId
+      if (!parents[parentId]) parents[parentId] = []
+      parents[parentId].push(folder)
     }
-  }, [treeData, selectedFolderTypes, isFetching])
-
-  if (treeDataFlat) {
-    treeData = treeDataFlat
-  }
+    return buildTree(parents, null, folderTypes, visiblePaths)
+  }, [data, visiblePaths])
 
   //
   // Selection
@@ -200,18 +166,17 @@ const Hierarchy = (props) => {
   // runs every time the uri changes
   useEffect(() => {
     if (!focusedFolders?.length) return
-
     let toExpand = [...Object.keys(expandedFolders)]
+    console.log(focusedFolders)
     for (const id of focusedFolders) {
-      toExpand = toExpand.concat(parents[id])
+      let f = keyHelper[id]
+      while (f && f.parentId) {
+        toExpand.push(f.parentId)
+        f = keyHelper[f.parentId]
+      }
     }
-    // de-duplicate toExpand and remove null/undefined
-    toExpand = [...new Set(toExpand)]
+
     toExpand = toExpand.filter((x) => x)
-
-    // abort if there's no change
-    if (toExpand.length === Object.keys(expandedFolders).length) return
-
     //create a map of the expanded folders
     const newExpandedFolders = {}
     for (const id of toExpand) {
@@ -222,7 +187,6 @@ const Hierarchy = (props) => {
 
   // Transform the plain list of focused folder ids to a map
   // {id: true}, which is needed for the Treetable
-
   const selectedFolders = useMemo(() => {
     if (!focusedFolders) return []
     const r = {}
@@ -232,24 +196,27 @@ const Hierarchy = (props) => {
 
   // Set breadcrumbs on row click (the latest selected folder,
   // will be the one that is displayed in the breadcrumbs)
-
   const onRowClick = (event) => {
     const node = event.node.data
     dispatch(setUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`))
   }
 
   // Update the folder selection in the project context
-
   const onSelectionChange = (event) => {
     const selection = Object.keys(event.value)
     // remove task selection
     dispatch(setFocusedTasks({ ids: [] }))
     dispatch(setFocusedFolders(selection))
 
+    /*
+     *
+     * I have no clue what this does, @Innders, please?
+     * It is broken now and causes some infinite loops
+
     // for each selected folder, if isLeaf then set expandedFolders
     const newExpandedFolders = {}
     selection.forEach((id) => {
-      if (hierarchyObjectData[id].isLeaf) {
+      if (!keyHelper[id].hasChildren) {
         newExpandedFolders[id] = true
       }
     })
@@ -258,7 +225,7 @@ const Hierarchy = (props) => {
     // filter out the old expanded folders that are isLeaf
     oldExpandedFolders = Object.fromEntries(
       Object.keys(oldExpandedFolders)
-        .filter((id) => !hierarchyObjectData[id] || !hierarchyObjectData[id].isLeaf)
+        .filter((id) => !keyHelper[id] || keyHelper[id].hasChildren)
         .map((id) => [id, true]),
     )
 
@@ -267,6 +234,7 @@ const Hierarchy = (props) => {
 
     // update redux
     dispatch(setExpandedFolders(mergedExpandedFolders))
+    */
   }
 
   const onContextMenuSelectionChange = (event) => {
@@ -321,17 +289,13 @@ const Hierarchy = (props) => {
   // create the ref and model
   const [ctxMenuShow] = useCreateContext(contextItems)
 
-  // create 10 dummy rows
+  // create 10 dummy rows, that will be displayed while loading
   const loadingData = useMemo(() => {
     return Array.from({ length: 15 }, (_, i) => ({
       key: i,
       data: {},
     }))
   }, [])
-
-  if (isFetching) {
-    treeData = loadingData
-  }
 
   //
   // Render
@@ -340,7 +304,7 @@ const Hierarchy = (props) => {
   const table = useMemo(() => {
     return (
       <TreeTable
-        value={treeData}
+        value={treeData || loadingData}
         responsive="true"
         scrollable
         scrollHeight="100%"
