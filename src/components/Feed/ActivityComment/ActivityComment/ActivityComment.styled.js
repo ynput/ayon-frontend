@@ -68,7 +68,6 @@ export const Body = styled.div`
     margin: 8px 0;
 
     li {
-      height: 24px;
       display: flex;
       align-items: center;
     }
@@ -76,7 +75,7 @@ export const Body = styled.div`
     p {
       margin: 0;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
     }
 
     .reference {

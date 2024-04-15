@@ -10,11 +10,14 @@ export const Checkbox = styled.label`
     opacity: 0;
     width: 0;
     height: 0;
+    position: absolute;
   }
 
   .icon {
     user-select: none;
     font-size: 24px;
+    position: relative;
+    top: -1px;
   }
 
   &.checked {
