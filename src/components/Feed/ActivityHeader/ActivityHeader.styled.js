@@ -27,16 +27,10 @@ export const Tools = styled.div`
   position: absolute;
   right: 0;
   bottom: 0;
-
-  /* revealed on hover in ActivityCommentOrigin.styled.js */
-  display: none;
-  z-index: 100;
 `
 
 export const ToolButton = styled(Button)`
   padding: 4px;
-  background-color: unset;
-  color: var(--md-sys-color-on-surface);
 `
 
 export const Reference = styled.li`

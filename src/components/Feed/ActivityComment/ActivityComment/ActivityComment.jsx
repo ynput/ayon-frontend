@@ -7,6 +7,7 @@ import CommentWrapper from '../CommentWrapper'
 import remarkGfm from 'remark-gfm'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import { classNames } from 'primereact/utils'
+import { useSelector } from 'react-redux'
 
 const allowedRefTypes = [
   'user',
@@ -34,9 +35,11 @@ const ActivityComment = ({ activity = {}, onCheckChange, onDelete }) => {
     activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName || 'Unknown'
+  const menuId = 'comment-' + activity.activityId
+  const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
 
   return (
-    <Styled.Comment className={classNames('comment', { isOwner })}>
+    <Styled.Comment className={classNames('comment', { isOwner, isMenuOpen })}>
       <ActivityHeader
         name={authorName}
         fullName={authorFullName || authorName}
@@ -44,6 +47,7 @@ const ActivityComment = ({ activity = {}, onCheckChange, onDelete }) => {
         isRef={referenceType !== 'origin'}
         activity={activity}
         onDelete={() => onDelete && onDelete(activityId)}
+        id={menuId}
       />
       <Styled.Body className="comment-body">
         <CommentWrapper>

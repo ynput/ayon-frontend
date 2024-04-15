@@ -13,6 +13,7 @@ const MenuItem = forwardRef(
       highlighted,
       notification,
       selected,
+      danger,
       items = [],
       className,
       isLink,
@@ -32,6 +33,7 @@ const MenuItem = forwardRef(
             highlighted: highlighted,
             selected: selected,
             notification: notification,
+            danger: danger,
           },
           className,
         )}

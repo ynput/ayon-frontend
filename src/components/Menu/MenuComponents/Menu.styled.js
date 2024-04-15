@@ -177,6 +177,22 @@ export const Item = styled.li`
     border-radius: 50%;
     background-color: var(--md-sys-color-error);
   }
+
+  &.danger {
+    &,
+    .icon {
+      color: var(--md-sys-color-error);
+    }
+
+    &:hover {
+      background-color: var(--md-sys-color-error-container);
+
+      &,
+      .icon {
+        color: var(--md-sys-color-on-error-container);
+      }
+    }
+  }
 `
 
 export const Footer = styled.footer`

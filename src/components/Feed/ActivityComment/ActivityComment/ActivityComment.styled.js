@@ -19,13 +19,30 @@ export const Comment = styled.li`
   border-radius: var(--border-radius-m);
 
   /* hide date and show tools */
-  &.isOwner:hover {
-    .tools {
-      display: flex;
+  &.isOwner {
+    /* by default hide menu */
+    &:not(.isMenuOpen) {
+      .tools {
+        opacity: 0;
+      }
     }
 
-    .date {
-      opacity: 0;
+    /* on hover show menu and hide date */
+    &:hover,
+    &.isMenuOpen {
+      .tools {
+        opacity: 1;
+      }
+
+      .date {
+        opacity: 0;
+        display: none;
+      }
+    }
+
+    /* when project menu open set button background */
+    &.isMenuOpen .more {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
 `

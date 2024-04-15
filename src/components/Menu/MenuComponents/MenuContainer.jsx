@@ -68,6 +68,8 @@ const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ..
       if (targetElement) {
         setPos(calculatePos(targetElement))
       }
+    } else {
+      console.log('no target or targetId')
     }
   }, [target, targetId])
 
@@ -85,7 +87,7 @@ const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ..
     if (e.target.id === 'dialog') handleClose()
   }
 
-  if (!pos) return null
+  if (!pos) return
 
   return createPortal(
     <Styled.Dialog
