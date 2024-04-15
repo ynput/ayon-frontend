@@ -29,28 +29,6 @@ export const Comment = styled.div`
     }
   }
 
-  /* CLOSED */
-  &.isClosed {
-    cursor: pointer;
-    .ql-editor > * {
-      cursor: pointer !important;
-    }
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-high);
-    }
-
-    /* hide toolbar */
-    .ql-toolbar.ql-snow {
-      height: 0;
-      padding: 0;
-      margin: 0;
-      border-width: 0;
-      opacity: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-  }
-
   .ql-editor.ql-blank::before {
     color: var(--md-sys-color-on-surface);
     opacity: 0.25;
@@ -91,8 +69,11 @@ export const Comment = styled.div`
   /* container styles reset */
   .ql-container.ql-snow {
     border: none;
+    height: calc(100% - 41px);
+    padding-bottom: 18px;
 
     .ql-editor {
+      padding-bottom: 0;
       a {
         ::before,
         ::after {
@@ -141,6 +122,32 @@ export const Comment = styled.div`
       .ql-remove {
         color: var(--md-sys-color-on-surface-variant);
       }
+    }
+  }
+
+  /* CLOSED */
+  &.isClosed {
+    cursor: pointer;
+    .ql-editor > * {
+      cursor: pointer !important;
+    }
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high);
+    }
+
+    .ql-container.ql-snow {
+      padding-bottom: 0;
+    }
+
+    /* hide toolbar */
+    .ql-toolbar.ql-snow {
+      height: 0;
+      padding: 0;
+      margin: 0;
+      border-width: 0;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
     }
   }
 
