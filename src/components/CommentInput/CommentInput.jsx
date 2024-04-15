@@ -449,7 +449,7 @@ const CommentInput = ({
             <Styled.Commands>
               {/* mention a user */}
               <Button
-                icon="alternate_email"
+                icon="person"
                 variant="text"
                 onClick={() => addTextToEditor('@')}
                 data-tooltip={'Mention user'}
