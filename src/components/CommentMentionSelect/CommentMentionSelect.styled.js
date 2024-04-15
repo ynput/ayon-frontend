@@ -10,8 +10,8 @@ export const MentionSelect = styled.ul`
   position: absolute;
 
   top: -4px;
-  right: 0;
-  left: 0;
+  right: 4px;
+  left: 4px;
   border-radius: var(--border-radius-m);
 
   /* box shadow */
