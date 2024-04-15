@@ -74,7 +74,7 @@ const transformActivityData = (data = {}, currentUser) => {
     const transformedActivity = remapNestedProperties(activityNode, remappingItems)
 
     // add isOwner property
-    const isOwner = currentUser === activityNode.author?.name
+    const isOwner = currentUser === transformedActivity.authorName
     transformedActivity.isOwner = isOwner
 
     // parse fields that are JSON strings
