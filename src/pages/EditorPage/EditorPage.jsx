@@ -1557,6 +1557,13 @@ const EditorPage = () => {
     localStorage.setItem('editor-columns-order', JSON.stringify(localStorageOrder))
   }
 
+  const handleDeselect = (e) => {
+    // target class is p-treetable-scrollable-body
+    if (e.target.classList.contains('p-treetable-scrollable-body')) {
+      handleSelectionChange({})
+    }
+  }
+
   // when a thumbnail is uploaded, refetch data for that entity
   const handleThumbnailUpload = (uploaded = {}) => {
     const { id, type } = uploaded
@@ -1891,6 +1898,7 @@ const EditorPage = () => {
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
+                onClick={handleDeselect}
                 onRowClick={onRowClick}
                 rowClassName={(rowData) => {
                   return {
