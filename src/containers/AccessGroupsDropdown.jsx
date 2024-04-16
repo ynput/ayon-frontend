@@ -1,5 +1,5 @@
-import { useGetAccessGroupsQuery } from '../services/accessGroups/getAccessGroups'
 import { Dropdown } from '@ynput/ayon-react-components'
+import { useMemo } from 'react'
 
 const AccessGroupsDropdown = ({
   selectedAccessGroups,
@@ -7,25 +7,26 @@ const AccessGroupsDropdown = ({
   style,
   disabled,
   placeholder,
+  accessGroups = [],
   ...props
 }) => {
-  const { data, isLoading } = useGetAccessGroupsQuery()
-
   const onChange = (e) => {
     if (!setSelectedAccessGroups) return
     setSelectedAccessGroups(e)
   }
 
+  const options = useMemo(() => accessGroups.map((g) => ({ value: g?.name })), [accessGroups])
+  const sortedAG = [...selectedAccessGroups]?.sort((a, b) => b.localeCompare(a))
+
   return (
     <Dropdown
       style={{ style }}
-      value={selectedAccessGroups || []}
-      options={(data || []).map((i) => ({ value: i.name }))}
+      value={sortedAG || []}
+      options={options}
       onChange={onChange}
       disabled={disabled}
       placeholder={placeholder}
       widthExpand
-      disable={isLoading}
       multiSelect
       onClear={() => setSelectedAccessGroups([])}
       {...props}

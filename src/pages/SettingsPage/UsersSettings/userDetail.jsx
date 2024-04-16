@@ -13,10 +13,10 @@ import styled from 'styled-components'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
-import { confirmDialog } from 'primereact/confirmdialog'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
-import { isEqual } from 'lodash'
+import { cloneDeep, isEqual } from 'lodash'
+import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -84,22 +84,7 @@ const fields = [
   },
 ]
 
-// this transforms all the selected users into a single form data object
-const buildFormData = (users = [], attributes) => {
-  // first build empty form data
-  const defaultForm = {
-    ...[...attributes, ...fields].reduce((acc, { name, data }) => {
-      acc[name] = attribTypeDefaults[data?.type]
-      return acc
-    }, {}),
-    // access groups is custom field
-    accessGroups: {},
-  }
-
-  const initForm = {
-    ...defaultForm,
-  }
-
+const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
   // now for each user, merge the data into the form
   users.forEach((user, index) => {
     if (!user) return
@@ -137,23 +122,50 @@ const buildFormData = (users = [], attributes) => {
     if (index !== 0 && initForm.userLevel !== userLevel) initForm.userLevel = defaultForm.userLevel
     else initForm.userLevel = userLevel
 
-    // defaultAccessGroups
-    if (index !== 0 && initForm.defaultAccessGroups !== user.defaultAccessGroups) {
-      initForm.defaultAccessGroups = defaultForm.defaultAccessGroups
-    } else {
-      initForm.defaultAccessGroups = user.defaultAccessGroups
-    }
+    // if form defaultAccessGroups does no contain an access group in current user, add it
+    if (user.defaultAccessGroups) {
+      // check if defaultAccessGroups is the same as the current array
+      if (index !== 0 && !isEqual(initForm.defaultAccessGroups, user.defaultAccessGroups)) {
+        // it's a mixed field, add it to the mixed fields array
+        if (!initForm._mixedFields.includes('defaultAccessGroups'))
+          initForm._mixedFields.push('defaultAccessGroups')
+      }
 
-    // AccessGroups
-    if (user.accessGroups) {
-      for (const project in user.accessGroups) {
-        if (!initForm.accessGroups[project]) initForm.accessGroups[project] = []
-        initForm.accessGroups[project] = [
-          ...new Set([...initForm.accessGroups[project], ...user.accessGroups[project]]),
-        ]
+      for (const project in user.defaultAccessGroups) {
+        if (!initForm.defaultAccessGroups) initForm.defaultAccessGroups = []
+        if (!initForm.defaultAccessGroups.includes(user.defaultAccessGroups[project])) {
+          initForm.defaultAccessGroups.push(user.defaultAccessGroups[project])
+        }
       }
     }
+
+    //  we don't merge the access groups at all. Show and save mixed values
+    if (user.accessGroups) {
+      // add access groups to the form with user names as key
+      initForm.accessGroups[user.name] = user.accessGroups
+    }
   })
+}
+
+// this transforms all the selected users into a single form data object
+const buildFormData = (users = [], attributes) => {
+  // first build empty form data
+  const defaultForm = {
+    ...[...attributes, ...fields].reduce(
+      (acc, { name, data }) => {
+        acc[name] = attribTypeDefaults[data?.type]
+        return acc
+      },
+      { _mixedFields: [] },
+    ),
+    // access groups is custom field
+    accessGroups: {},
+  }
+
+  const initForm = cloneDeep(defaultForm)
+
+  // merge the data of all (even just 1) users into the form
+  mergeMultipleUsers(users, defaultForm, initForm)
 
   return initForm
 }
@@ -167,6 +179,7 @@ const UserDetail = ({
   isSelfSelected,
   selectedUserList,
   managerDisabled,
+  accessGroupsData,
 }) => {
   const [formData, setFormData] = useState(null)
   const [initData, setInitData] = useState({})
@@ -181,13 +194,6 @@ const UserDetail = ({
     if (selectedUsers.length === 0) return
 
     setFormUsers(selectedUserList)
-
-    // return if the selectedUsers is the same as formUsers
-    if (
-      formUsers.every((user) => selectedUsers.includes(user.name)) &&
-      selectedUsers.length === formUsers.length
-    )
-      return
 
     const builtFormData = buildFormData(selectedUserList, attributes)
 
@@ -226,7 +232,7 @@ const UserDetail = ({
     } else {
       setChangesMade(false)
     }
-  }, [formData, initData, selectedUsers, formData?.accessGroups])
+  }, [formData, initData, selectedUsers])
 
   // editing a single user, so show attributes form too
   const singleUserEdit = selectedUsers.length === 1 ? formUsers[0] : null
@@ -239,42 +245,12 @@ const UserDetail = ({
   // API
   //
 
-  const handleMultiSave = () => {
-    // if multiple users are selected confirm the action
-    confirmDialog({
-      // message: `Are you sure you want update all these users to the same values?`,
-      header: 'Update All Selected Users To The Same Values?',
-      icon: 'pi pi-exclamation-triangle',
-      message: (
-        <ul>
-          {/* usuers being updates */}
-          <li>
-            Users:{' '}
-            {formUsers.map((user) => (
-              <span key={user.name}>{user.name}, </span>
-            ))}
-          </li>
-          <li>User Active: {formData.userActive ? 'Yes' : 'No'}</li>
-          <li>Access Level: {formData.userLevel}</li>
-          <li>Is Guest: {formData.isGuest ? 'Yes' : 'No'}</li>
-          <li>Is Developer: {formData.isDeveloper ? 'Yes' : 'No'}</li>
-          <li>
-            AccessGroups: {formData.accessGroups?.length ? formData.accessGroups.join(', ') : ''}
-          </li>
-        </ul>
-      ),
-
-      accept: onSave,
-      reject: () => {},
-    })
-  }
-
   const onSave = async () => {
     toastId.current = toast.info('Updating user(s)...')
     let i = 0
     for (const user of formUsers) {
       const data = {
-        accessGroups: formData.accessGroups,
+        accessGroups: formData.accessGroups[user.name],
         defaultAccessGroups: formData.defaultAccessGroups,
       }
       const attrib = {}
@@ -390,11 +366,19 @@ const UserDetail = ({
             <Panel>
               <UserAccessForm
                 formData={formData}
-                setFormData={setFormData}
-                selectedProjects={selectedProjects}
+                onChange={(key, value) => setFormData({ ...formData, [key]: value })}
                 disabled={managerDisabled || isSelfSelected}
+                accessGroupsData={accessGroupsData}
+                selectedProjects={selectedProjects}
               />
             </Panel>
+          )}
+          {formData?.userLevel === 'user' && !selectedProjects && (
+            <UserAccessGroupsForm
+              value={formData.accessGroups}
+              options={accessGroupsData}
+              onChange={(value) => setFormData({ ...formData, accessGroups: value })}
+            />
           )}
         </FormsStyled>
       )}
@@ -406,7 +390,7 @@ const UserDetail = ({
           disabled={!changesMade || selectedUsers.length > 1}
         />
         <SaveButton
-          onClick={() => (selectedUsers.length > 1 ? handleMultiSave() : onSave())}
+          onClick={onSave}
           label="Save selected users"
           active={changesMade}
           saving={isUpdating}
