@@ -28,7 +28,6 @@ export const convertToMarkdown = (value) => {
   if (matches) {
     matches.forEach((match) => {
       if (match.includes('http')) return
-      console.log('match', match)
       const newMatch = match.replaceAll('@', '')
       body = body.replace(match, newMatch)
     })

@@ -15,6 +15,7 @@ import { useGetTaskMentionTasksQuery } from '/src/services/userDashboard/getUser
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
 import { convertToMarkdown, parseImages, quillModules } from './helpers'
+import remarkGfm from 'remark-gfm'
 
 const CommentInput = ({
   initValue,
@@ -59,7 +60,6 @@ const CommentInput = ({
       if (!editor) return
       const length = editor.getLength()
       if (length < 2) return
-      console.log(length)
       editor.setSelection(length)
     }
   }, [initHeight, editorRef.current, isEditing])
@@ -422,6 +422,19 @@ const CommentInput = ({
     }
   }
 
+  // transform url to mention (if it is a mention)
+  const urlToMention = (href) => {
+    if (!href) return { href }
+    // check href is a mention
+    const type = href && href.split(':')[0]
+    // find the type in mention options
+    const typeSymbol = Object.entries(typeOptions).find(([, value]) => value.id === type)?.[0]
+    if (!typeSymbol) return { href }
+    // prefix @ to the href
+    const newHref = '@' + href
+    return { href: newHref, type: typeSymbol }
+  }
+
   let quillMinHeight = isOpen ? initHeight + 41 : 44
   if (isEditing) quillMinHeight = undefined
 
@@ -441,7 +454,24 @@ const CommentInput = ({
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
-            <ReactMarkdown>{initValue}</ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              urlTransform={(url) => url}
+              components={{
+                a: ({ children, href }) => {
+                  const { href: newHref, type } = urlToMention(href)
+
+                  return (
+                    <a href={newHref}>
+                      {type}
+                      {children}
+                    </a>
+                  )
+                },
+              }}
+            >
+              {initValue}
+            </ReactMarkdown>
           </Styled.Markdown>
           {/* QUILL is configured in helpers file */}
           <ReactQuill
