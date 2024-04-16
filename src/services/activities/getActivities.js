@@ -1,6 +1,6 @@
 import { ayonApi } from '../ayon'
 // import PubSub from '/src/pubsub'
-import { ENTITY_ACTIVITIES, ENTITY_VERSIONS } from './activityQueries'
+import { ENTITY_ACTIVITIES, ENTITY_TOOLTIP, ENTITY_VERSIONS } from './activityQueries'
 import { compareAsc } from 'date-fns'
 
 // Helper function to get a nested property of an object using a string path
@@ -263,9 +263,21 @@ const getActivities = ayonApi.injectEndpoints({
             ]
           : [{ type: 'entitiesVersions', id: 'LIST' }],
     }),
+    // get data for a reference tooltip based on type,id and projectName
+    getEntityTooltip: build.query({
+      query: ({ projectName, entityId, entityType }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: ENTITY_TOOLTIP(entityType),
+          variables: { projectName, entityId },
+        },
+      }),
+    }),
   }),
 })
 
 //
 
-export const { useGetActivitiesQuery, useGetVersionsQuery } = getActivities
+export const { useGetActivitiesQuery, useGetVersionsQuery, useGetEntityTooltipQuery } =
+  getActivities

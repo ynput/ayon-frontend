@@ -69,3 +69,41 @@ query getTaskVersions($projectName: String!, $entityId: String!) {
 }
 ${VERSION_FRAGMENT}
 `
+
+const getTypeFields = (type) => {
+  switch (type) {
+    case 'task':
+      return `
+        assignees
+        taskType
+        folder {
+          path
+        }  
+      `
+    case 'version':
+      return `
+        product {
+          name
+          folder {
+            path
+          }
+        }
+      `
+    default:
+      return ''
+  }
+}
+
+export const ENTITY_TOOLTIP = (type) => `
+query EntityTooltip($projectName: String!, $entityId: String!) {
+  project(name: $projectName) {
+    ${type}(id: $entityId) {
+      id
+      name
+      status
+      thumbnailId
+      ${getTypeFields(type)}
+    }
+  }
+}
+`

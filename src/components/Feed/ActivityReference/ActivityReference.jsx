@@ -11,7 +11,16 @@ const typeIcons = {
 }
 // variants = filled, text
 
-const ActivityReference = ({ id, type, variant = 'surface', label, name, disabled, ...props }) => {
+const ActivityReference = ({
+  id,
+  type,
+  variant = 'surface',
+  label,
+  name,
+  disabled,
+  projectName,
+  ...props
+}) => {
   const icon = typeIcons[type] || 'link'
   const [refHover, setRefHover] = useState(false)
   const [referenceCenterPos, setReferenceCenterPos] = useState(null)
@@ -42,11 +51,8 @@ const ActivityReference = ({ id, type, variant = 'surface', label, name, disable
       </Styled.Reference>
       {refHover && (
         <ActivityReferenceTooltip
-          type={type}
-          id={id}
           pos={referenceCenterPos}
-          label={label}
-          name={name}
+          {...{ type, id, label, name, projectName }}
         />
       )}
     </>

@@ -103,7 +103,9 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
 const useTransformActivities = (activities = [], projectsInfo = {}) => {
   const transformedActivitiesData = useMemo(() => {
     return activities.map((activity) => {
-      const newActivity = { ...activity }
+      const newActivity = { ...activity, origin: { ...activity.origin } }
+
+      // find status icon and data for status change activities
       if (newActivity.activityType === 'status.change') {
         const projectInfo = projectsInfo[newActivity.projectName]
         if (!projectInfo) return newActivity
@@ -116,6 +118,7 @@ const useTransformActivities = (activities = [], projectsInfo = {}) => {
         newActivity.oldStatus = { ...oldStatus, name: oldStatusName }
         newActivity.newStatus = { ...newStatus, name: newStatusName }
       }
+
       return newActivity
     })
   }, [activities])

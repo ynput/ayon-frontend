@@ -32,13 +32,21 @@ const sanitizeURL = (url = '') => {
 }
 
 const ActivityComment = ({ activity = {}, onCheckChange, onDelete, onUpdate, editProps = {} }) => {
-  let { body, authorName, authorFullName, createdAt, referenceType, activityId, author, isOwner } =
-    activity
+  let {
+    body,
+    authorName,
+    authorFullName,
+    createdAt,
+    referenceType,
+    activityId,
+    author,
+    isOwner,
+    projectName,
+  } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName || 'Unknown'
   const menuId = 'comment-' + activity.activityId
   const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
-
   // EDITING
   const [isEditing, setIsEditing] = useState(false)
 
@@ -94,7 +102,7 @@ const ActivityComment = ({ activity = {}, onCheckChange, onDelete, onUpdate, edi
                   const label = children && children.replace('@', '')
 
                   return (
-                    <ActivityReference id={id} type={type} label={label} name={id}>
+                    <ActivityReference name={id} {...{ type, id, label, projectName }}>
                       {label}
                     </ActivityReference>
                   )

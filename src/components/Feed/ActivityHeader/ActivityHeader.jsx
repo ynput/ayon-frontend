@@ -19,7 +19,7 @@ const ActivityHeader = ({
   children,
   id,
 }) => {
-  const { referenceType, origin = {}, isOwner } = activity
+  const { referenceType, origin = {}, isOwner, projectName } = activity
   const isMention = referenceType === 'mention'
 
   // open menu
@@ -40,7 +40,12 @@ const ActivityHeader = ({
             <Styled.Text style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isMention ? `this ${origin?.type} in` : 'on'}
             </Styled.Text>
-            <ActivityReference id={origin?.id} type={origin?.type} variant="text">
+            <ActivityReference
+              id={origin?.id}
+              type={origin?.type}
+              projectName={projectName}
+              variant="text"
+            >
               {origin?.label || origin?.name}
             </ActivityReference>
           </>

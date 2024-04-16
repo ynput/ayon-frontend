@@ -1,20 +1,16 @@
-import UserImage from '/src/components/UserImage'
 import * as Styled from './ActivityReferenceTooltip.styled'
-import Thumbnail from '/src/containers/thumbnail'
 import { createPortal } from 'react-dom'
+import EntityTooltip from '../../Tooltips/EntityTooltip/EntityTooltip'
+import UserTooltip from '../../Tooltips/UserTooltip/UserTooltip'
 
-const ActivityReferenceTooltip = ({ type, label, name, pos = {} }) => {
+const ActivityReferenceTooltip = ({ type, label, name, pos = {}, id, projectName }) => {
   return createPortal(
     <Styled.Popup style={pos || {}}>
       {type === 'user' ? (
-        <UserImage name={name} />
+        <UserTooltip name={name} label={label} />
       ) : (
-        <Thumbnail entityType={type} icon="directions_run" />
+        <EntityTooltip {...{ type, label, name, id, projectName }} />
       )}
-      <Styled.Content>
-        <span>{type === 'user' ? label : 'ShotName'}</span>
-        <span className={'label'}>{type === 'user' ? name : label}</span>
-      </Styled.Content>
     </Styled.Popup>,
     document.body,
   )
