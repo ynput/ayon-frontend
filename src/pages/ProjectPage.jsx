@@ -10,7 +10,6 @@ import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
 
 import usePubSub from '/src/hooks/usePubSub'
-import { setUri } from '/src/features/context'
 import { selectProject } from '/src/features/project'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
@@ -44,7 +43,6 @@ const ProjectPage = () => {
    * project data to the store, and renders the requested page.
    */
 
-  const uri = useSelector((state) => state.context.uri)
   const navigate = useNavigate()
   const { projectName, module, addonName } = useParams()
   const dispatch = useDispatch()
@@ -61,25 +59,6 @@ const ProjectPage = () => {
     refetch: refetchAddons,
     isUninitialized: addonsIsUninitialized,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
-
-  useEffect(() => {
-    // originally, i thought we could dispatch bare project name
-    // to set breadcrumbs, but that resets the uri, when the project change
-    // is done by pasting a new uri.
-    // so i commented this out - this means project change won't trigger
-    // breadcrumbs update, until something is clicked. but i think that's ok for now.
-
-    const newUri = `ayon+entity://${projectName}`
-    // this might work
-    if (!uri?.includes(newUri)) {
-      dispatch(setUri(`ayon+entity://${projectName}`))
-    }
-  }, [projectName, uri])
-
-  useEffect(() => {
-    // Clear URI when project page is unmounted
-    return () => dispatch(setUri(null))
-  }, [])
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {

@@ -76,6 +76,29 @@ const parseProductData = (data) => {
   return s
 }
 
+const parseVersionsData = (data) =>
+  data?.project?.versions?.edges?.map((edge) => {
+    const node = edge.node || {}
+    return {
+      version: node.version,
+      versionId: node.id,
+      versionName: node.name,
+      versionStatus: node.status,
+      versionUpdatedAt: node.updatedAt,
+      versionAuthor: node.author,
+      productId: node.productId,
+    }
+  })
+
+const getProductVersionTags = (result) =>
+  result
+    ? [
+        ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
+        ...result.map(({ productId }) => ({ type: 'product', id: productId })), // all product tags with id
+        { type: 'productsVersion' },
+      ]
+    : ['version', 'product', 'productsVersion']
+
 const PRODUCT_VERSION_FRAGMENT = `
 fragment ProductVersionFragment on VersionNode {
   id
@@ -84,6 +107,7 @@ fragment ProductVersionFragment on VersionNode {
   name
   author
   createdAt
+  updatedAt
   taskId
   task {
     name
@@ -97,7 +121,6 @@ fragment ProductVersionFragment on VersionNode {
       frameEnd
   }
 }
-
 `
 
 const PRODUCTS_LIST_QUERY = `
@@ -117,24 +140,7 @@ query ProductsList($projectName: String!, $ids: [String!]!) {
                       name
                     }
                     latestVersion{
-                        id
-                        version
-                        name
-                        author
-                        createdAt
-                        updatedAt
-                        taskId
-                        task {
-                          name
-                        }
-                        status
-                        attrib {
-                            fps
-                            resolutionWidth
-                            resolutionHeight
-                            frameStart
-                            frameEnd
-                        }
+                      ...ProductVersionFragment
                     }
                     folder {
                         id
@@ -153,13 +159,19 @@ query ProductsList($projectName: String!, $ids: [String!]!) {
         }
     }
 }
+${PRODUCT_VERSION_FRAGMENT}
 `
 
-const PRODUCT_VERSION_QUERY = `
-query GetProductVersion($projectName: String!, $versionId: String!) {
+// get product versions by id
+const PRODUCT_VERSIONS_QUERY = `
+query GetProductsVersions($projectName: String!, $ids: [String!]!) {
   project(name: $projectName) {
-    version(id: $versionId) {
-      ...ProductVersionFragment
+    versions(ids: $ids) {
+      edges {
+        node {
+          ...ProductVersionFragment
+        }
+      }
     }
   }
 }
@@ -186,26 +198,37 @@ const getProduct = ayonApi.injectEndpoints({
             ]
           : ['product', 'version'],
     }),
-    getProductVersion: build.query({
-      query: ({ projectName, versionId }) => ({
+    getProductsVersions: build.query({
+      query: ({ projectName, ids }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: PRODUCT_VERSION_QUERY,
-          variables: { projectName, versionId },
+          query: PRODUCT_VERSIONS_QUERY,
+          variables: { projectName, ids },
         },
       }),
-      transformResponse: (response) => response?.data?.project?.version || {},
-      providesTags: (result) =>
-        result
-          ? [
-              { type: 'version', id: result.id },
-              { type: 'product', id: result.productId },
-              { type: 'productsVersion', id: result.id },
-            ]
-          : [],
+      transformResponse: (response) => parseVersionsData(response.data) || [],
+      providesTags: (result) => getProductVersionTags(result),
+    }),
+    getProductVersionsByFolder: build.query({
+      query: ({ projectName, ids }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: PRODUCT_VERSIONS_QUERY,
+          variables: { projectName, ids },
+        },
+      }),
+      transformResponse: (response) => parseVersionsData(response.data) || [],
+      providesTags: (result) => getProductVersionTags(result),
+      serializeQueryArgs: (args) => ({ folder: args.folderId, projectName: args.projectName }), // remove ids from query cache key
     }),
   }),
 })
 
-export const { useGetProductListQuery, useLazyGetProductVersionQuery } = getProduct
+export const {
+  useGetProductListQuery,
+  useLazyGetProductsVersionsQuery,
+  useGetProductsVersionsQuery,
+  useLazyGetProductVersionsByFolderQuery,
+} = getProduct
