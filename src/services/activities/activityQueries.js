@@ -70,20 +70,25 @@ query getTaskVersions($projectName: String!, $entityId: String!) {
 ${VERSION_FRAGMENT}
 `
 
-const getTypeFields = (type) => {
+export const getTypeFields = (type) => {
   switch (type) {
     case 'task':
       return `
+        label
         assignees
         taskType
         folder {
+          name
+          label
           path
         }  
       `
     case 'version':
       return `
+        author
         product {
           name
+          productType
           folder {
             path
           }

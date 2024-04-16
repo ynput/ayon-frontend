@@ -122,6 +122,52 @@ const transformVersionsData = (data = {}, currentUser) => {
   return versions
 }
 
+const transformTaskTooltip = (data = {}) => {
+  const { id, label, name, status, thumbnailId, assignees, taskType, folder = {} } = data
+  const tooltip = {
+    id,
+    type: 'task',
+    title: label || name,
+    subTitle: folder.label || folder.name,
+    status,
+    thumbnailId,
+    users: assignees,
+    entityType: taskType,
+    path: folder.path,
+  }
+
+  return tooltip
+}
+
+const transformVersionTooltip = (data = {}) => {
+  const { id, name, status, thumbnailId, author, product = {} } = data
+  const tooltip = {
+    id,
+    type: 'version',
+    title: name,
+    subTitle: product.name,
+    status,
+    thumbnailId,
+    users: [author],
+    entityType: product.productType,
+    path: product.folder?.path,
+  }
+
+  return tooltip
+}
+
+// different types have different tooltip data, we need to create a single data model
+const transformTooltipData = (data = {}, type) => {
+  switch (type) {
+    case 'task':
+      return transformTaskTooltip(data.task)
+    case 'version':
+      return transformVersionTooltip(data.version)
+    default:
+      return {}
+  }
+}
+
 const getActivities = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     // a single entities activities
@@ -273,6 +319,8 @@ const getActivities = ayonApi.injectEndpoints({
           variables: { projectName, entityId },
         },
       }),
+      transformResponse: (res, meta, { entityType }) =>
+        transformTooltipData(res?.data?.project, entityType),
     }),
   }),
 })
