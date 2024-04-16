@@ -40,7 +40,7 @@ const ActivityHeader = ({
             <Styled.Text style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isMention ? `this ${origin?.type} in` : 'on'}
             </Styled.Text>
-            <ActivityReference id={origin?.id} type={origin?.type} disabled>
+            <ActivityReference id={origin?.id} type={origin?.type} variant="text">
               {origin?.label || origin?.name}
             </ActivityReference>
           </>
