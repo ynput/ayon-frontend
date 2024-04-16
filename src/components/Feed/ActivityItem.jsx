@@ -1,5 +1,5 @@
 import React from 'react'
-import ActivityComment from './ActivityComment'
+import ActivityComment from './ActivityComment/ActivityComment'
 import ActivityStatusChange from './ActivityStatusChange/ActivityStatusChange'
 import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeChange'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
