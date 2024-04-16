@@ -1247,21 +1247,8 @@ const EditorPage = () => {
         icon: 'create_new_folder',
         command: () => setNewEntity('folder'),
       },
-      {
-        label: 'Save All Changes',
-        icon: 'check',
-        command: onCommit,
-        disabled: !canCommit,
-        isSave: canCommit,
-      },
-      {
-        label: 'Clear All Changes',
-        icon: 'clear',
-        command: handleRevert,
-        disabled: !canCommit,
-      },
     ],
-    [canCommit, onCommit, handleRevert],
+    [],
   )
 
   const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
@@ -1279,23 +1266,16 @@ const EditorPage = () => {
         command: () => setNewEntity('task'),
       },
       {
-        label: 'Delete',
-        icon: 'delete',
-        command: () => onDelete(sel),
-        danger: true,
-      },
-      {
-        label: 'Save All Changes',
-        icon: 'check',
-        command: () => onCommit(),
-        disabled: !canCommit,
-        isSave: canCommit,
-      },
-      {
         label: 'Clear Changes',
         icon: 'clear',
         command: () => revertChangesOnSelection(sel),
         disabled: !canCommit,
+      },
+      {
+        label: 'Delete',
+        icon: 'delete',
+        command: () => onDelete(sel),
+        danger: true,
       },
     ]
   }
