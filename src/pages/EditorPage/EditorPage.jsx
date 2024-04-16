@@ -382,22 +382,6 @@ const EditorPage = () => {
     return data
   }, [rootDataCache, newNodes, changes, projectName])
 
-  // create an array of folder names and a map of task names with parentId as the value
-  const [folderNamesMap, taskNamesMap] = useMemo(() => {
-    const folders = new Map()
-    const tasks = new Map()
-    for (const key in rootData) {
-      const entity = rootData[key].data
-      if (!entity) continue
-      if (entity.__entityType === 'folder') {
-        folders.set(entity.name, entity.id)
-      } else if (entity.__entityType === 'task') {
-        tasks.set(entity.name, entity.__parentId)
-      }
-    }
-    return [folders, tasks]
-  }, [rootData])
-
   // SEARCH FILTER
   // if search results filter out nodes
   const filteredNodeData = useMemo(() => {
@@ -966,7 +950,11 @@ const EditorPage = () => {
             return
           } else {
             for (const msg of messages) {
-              toast.error('Error: ' + msg)
+              if (msg.includes('duplicate key value violates unique constraint')) {
+                toast.error('Error: Duplicate name found in sibling entities')
+              } else {
+                toast.error('Error: ' + msg)
+              }
             }
             setCommitUpdating(false)
             return null
@@ -1809,7 +1797,6 @@ const EditorPage = () => {
             onHide={() => setNewEntity('')}
             onConfirm={addNodes}
             currentSelection={currentSelection}
-            folderNames={folderNamesMap}
           />
         ) : (
           <NewEntity
@@ -1818,8 +1805,6 @@ const EditorPage = () => {
             onHide={handleCloseNew}
             onConfirm={addNodes}
             currentSelection={currentSelection}
-            folderNames={folderNamesMap}
-            taskNames={taskNamesMap}
           />
         ))}
       <Section onFocus={(e) => (pageFocusRef.current = e.target)}>
