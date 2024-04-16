@@ -44,7 +44,6 @@ export const ayonApi = createApi({
   baseQuery: wrappedBaseQuery,
   tagTypes: [
     'accessGroup',
-    'accessGroups',
     'addonList',
     'addonSettings',
     'addonSettingsList',

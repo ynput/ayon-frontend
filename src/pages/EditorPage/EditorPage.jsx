@@ -382,22 +382,6 @@ const EditorPage = () => {
     return data
   }, [rootDataCache, newNodes, changes, projectName])
 
-  // create an array of folder names and a map of task names with parentId as the value
-  const [folderNamesMap, taskNamesMap] = useMemo(() => {
-    const folders = new Map()
-    const tasks = new Map()
-    for (const key in rootData) {
-      const entity = rootData[key].data
-      if (!entity) continue
-      if (entity.__entityType === 'folder') {
-        folders.set(entity.name, entity.id)
-      } else if (entity.__entityType === 'task') {
-        tasks.set(entity.name, entity.__parentId)
-      }
-    }
-    return [folders, tasks]
-  }, [rootData])
-
   // SEARCH FILTER
   // if search results filter out nodes
   const filteredNodeData = useMemo(() => {
@@ -966,7 +950,11 @@ const EditorPage = () => {
             return
           } else {
             for (const msg of messages) {
-              toast.error('Error: ' + msg)
+              if (msg.includes('duplicate key value violates unique constraint')) {
+                toast.error('Error: Duplicate name found in sibling entities')
+              } else {
+                toast.error('Error: ' + msg)
+              }
             }
             setCommitUpdating(false)
             return null
@@ -1247,21 +1235,8 @@ const EditorPage = () => {
         icon: 'create_new_folder',
         command: () => setNewEntity('folder'),
       },
-      {
-        label: 'Save All Changes',
-        icon: 'check',
-        command: onCommit,
-        disabled: !canCommit,
-        isSave: canCommit,
-      },
-      {
-        label: 'Clear All Changes',
-        icon: 'clear',
-        command: handleRevert,
-        disabled: !canCommit,
-      },
     ],
-    [canCommit, onCommit, handleRevert],
+    [],
   )
 
   const [ctxMenuGlobalShow] = useCreateContext(ctxMenuGlobalItems)
@@ -1279,23 +1254,16 @@ const EditorPage = () => {
         command: () => setNewEntity('task'),
       },
       {
-        label: 'Delete',
-        icon: 'delete',
-        command: () => onDelete(sel),
-        danger: true,
-      },
-      {
-        label: 'Save All Changes',
-        icon: 'check',
-        command: () => onCommit(),
-        disabled: !canCommit,
-        isSave: canCommit,
-      },
-      {
         label: 'Clear Changes',
         icon: 'clear',
         command: () => revertChangesOnSelection(sel),
         disabled: !canCommit,
+      },
+      {
+        label: 'Delete',
+        icon: 'delete',
+        command: () => onDelete(sel),
+        danger: true,
       },
     ]
   }
@@ -1557,6 +1525,13 @@ const EditorPage = () => {
     localStorage.setItem('editor-columns-order', JSON.stringify(localStorageOrder))
   }
 
+  const handleDeselect = (e) => {
+    // target class is p-treetable-scrollable-body
+    if (e.target.classList.contains('p-treetable-scrollable-body')) {
+      handleSelectionChange({})
+    }
+  }
+
   // when a thumbnail is uploaded, refetch data for that entity
   const handleThumbnailUpload = (uploaded = {}) => {
     const { id, type } = uploaded
@@ -1637,6 +1612,12 @@ const EditorPage = () => {
         }
       }
     }
+  }
+
+  const handleDoubleClick = (e) => {
+    // check if type-folder
+    const isFolder = e.target.closest('tr.type-folder')
+    if (isFolder) handleToggleFolder(e, true)
   }
 
   let allColumns = useMemo(
@@ -1796,7 +1777,6 @@ const EditorPage = () => {
             onHide={() => setNewEntity('')}
             onConfirm={addNodes}
             currentSelection={currentSelection}
-            folderNames={folderNamesMap}
           />
         ) : (
           <NewEntity
@@ -1805,8 +1785,6 @@ const EditorPage = () => {
             onHide={handleCloseNew}
             onConfirm={addNodes}
             currentSelection={currentSelection}
-            folderNames={folderNamesMap}
-            taskNames={taskNamesMap}
           />
         ))}
       <Section onFocus={(e) => (pageFocusRef.current = e.target)}>
@@ -1881,10 +1859,11 @@ const EditorPage = () => {
                 columnResizeMode="expand"
                 expandedKeys={expandedFolders}
                 onToggle={handleToggleFolder}
-                onDoubleClick={(e) => handleToggleFolder(e, true)}
+                onDoubleClick={handleDoubleClick}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
+                onClick={handleDeselect}
                 onRowClick={onRowClick}
                 rowClassName={(rowData) => {
                   return {

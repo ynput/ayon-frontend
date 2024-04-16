@@ -6,15 +6,8 @@ import { Dialog } from 'primereact/dialog'
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
 import { isEmpty } from 'lodash'
-import { toast } from 'react-toastify'
 
-const NewSequence = ({
-  visible,
-  onConfirm,
-  onHide,
-  currentSelection = {},
-  folderNames = new Map(),
-}) => {
+const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   const isRoot = isEmpty(currentSelection)
   const multipleSelection = Object.keys(currentSelection).length > 1
   const examplePrefix = isRoot
@@ -70,19 +63,6 @@ const NewSequence = ({
         label: item.replace(/\s/g, '_'),
         __prefix: createSeq.prefix,
       })
-    }
-
-    // check if any of the names are already in use
-    const names = nodes.map((n) => n.name)
-    const duplicateNames = []
-    for (const name of names) {
-      if (folderNames.has(name)) {
-        duplicateNames.push(name)
-      }
-    }
-
-    if (duplicateNames.length > 0) {
-      return toast.warning('Folder names must be unique: ' + duplicateNames.join(', '))
     }
 
     onConfirm('folder', isRoot, nodes, true)

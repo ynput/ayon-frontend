@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
+import { Button, Section, Toolbar, InputText, Spacer, Panel } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
@@ -13,33 +13,53 @@ import UserDetail from './userDetail'
 import UserList from './UserList'
 import { useDeleteUserMutation } from '/src/services/user/updateUser'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { SelectButton } from 'primereact/selectbutton'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
 import confirmDelete from '/src/helpers/confirmDelete'
+import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
+import Shortcuts from '/src/containers/Shortcuts'
+import SwitchButton from '/src/components/SwitchButton/SwitchButton'
 
-// TODO: Remove classname assignments and do in styled components
+// what to show in the access column
 const formatAccessGroups = (rowData, selectedProjects) => {
   let res = {}
+  // If the user is an admin, add 'admin' role
   if (rowData.isAdmin) res.admin = { cls: 'role admin' }
+  // If the user is a service, add 'service' role
   else if (rowData.isService) res.service = { cls: 'role manager' }
+  // If the user is a manager, add 'manager' role
   else if (rowData.isManager) res.manager = { cls: 'role manager' }
+  // If no projects are selected, add default access groups
   else if (!selectedProjects) {
-    for (const name of rowData.defaultAccessGroups || []) res[name] = { cls: 'role default' }
+    // add all access groups
+    for (const project in rowData.accessGroups) {
+      const projectAG = rowData.accessGroups[project]
+      for (const agName of projectAG) {
+        // add to res if not already there
+        if (!(agName in res)) res[agName] = { cls: 'role' }
+      }
+    }
   } else {
+    // If projects are selected, add access groups for each selected project
     const agSet = rowData.accessGroups || {}
     for (const projectName of selectedProjects) {
       for (const agName of agSet[projectName] || []) {
+        // If the access group is already in the result, increment its count
         if (agName in res) res[agName].count += 1
+        // Otherwise, add the access group to the result with a count of 1
         else res[agName] = { count: 1 }
+        // Set the class of the access group based on whether its count is equal to the number of selected projects
         res[agName].cls =
           res[agName].count === selectedProjects.length ? 'role all' : 'role partial'
       }
     }
   }
+
+  // if res is empty add none
+  if (!Object.keys(res).length) res.none = { cls: 'role partial' }
 
   return { ...rowData, accessGroups: res, accessGroupList: Object.keys(res) }
 }
@@ -69,7 +89,7 @@ const UsersSettings = () => {
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
-  const [showProjectUsers, setShowProjectUsers] = useState(false)
+  const [projectAccessOnly, setProjectAccessOnly] = useState(true)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -83,11 +103,14 @@ const UsersSettings = () => {
     toast.error('Unable to load users')
   }
 
+  // GET ACCESS GROUPS QUERY
+  const { data: accessGroupsData } = useGetAccessGroupsQuery()
+
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()
 
   let filteredUserList = useMemo(() => {
-    // filter out users that are not in project if showProjectUsers is true
+    // filter out users that are not in project if projectAccessOnly is true
     if (selectedProjects) {
       return userList.filter((user) => {
         // user level not user
@@ -130,7 +153,7 @@ const UsersSettings = () => {
   }
 
   const onTotal = (total) => {
-    // if total already in serch, remove it
+    // if total already in search, remove it
     if (search === total) return setSearch('')
 
     // if "total" select all users
@@ -138,7 +161,7 @@ const UsersSettings = () => {
     if (total === 'total') {
       setSearch('')
       setSelectedUsers(filteredUserList.map((user) => user.name))
-      if (selectedProjects) setShowProjectUsers(true)
+      if (selectedProjects) setProjectAccessOnly(true)
     } else {
       setSearch(total)
     }
@@ -146,13 +169,12 @@ const UsersSettings = () => {
 
   const openNewUser = () => {
     setShowNewUser(true)
-    setSelectedUsers([])
   }
 
-  // use filteredUserList if showProjectUsers
+  // use filteredUserList if projectAccessOnly
   // else use userList
 
-  if (showProjectUsers) userList = filteredUserList
+  if (projectAccessOnly) userList = filteredUserList
 
   let userListWithAccessGroups = useMemo(
     () => userList.map((user) => formatAccessGroups(user, selectedProjects)),
@@ -193,88 +215,122 @@ const UsersSettings = () => {
   // managers can't update admin users
   const managerDisabled = levels.some((l) => ['admin'].includes(l)) && !isAdmin && !isSelfSelected
 
-  // Render
-
-  // return null
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'n',
+        action: () => setShowNewUser(true),
+      },
+    ],
+    [showNewUser],
+  )
 
   return (
-    <main>
-      <Section>
-        <Toolbar>
-          <SelectButton
-            value={showProjectUsers}
-            options={[
-              { label: 'All Users', value: false },
-              { label: 'Selected Projects', value: true },
-            ]}
-            onChange={(e) => setShowProjectUsers(e.value)}
-            disabled={!selectedProjects}
-          />
-          <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
-            <InputText
-              style={{ width: '200px' }}
-              placeholder="Filter users..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autocomplete="search-users"
-            />
-          </form>
-          <Spacer />
-          <Button
-            onClick={onDelete}
-            label="Delete Users"
-            icon="person_remove"
-            disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
-          />
-          <Button onClick={openNewUser} label="Add New User" icon="person_add" />
-        </Toolbar>
-        <Splitter
-          style={{ width: '100%', height: '100%' }}
-          layout="horizontal"
-          stateKey="users-panels"
-          stateStorage="local"
-        >
-          <SplitterPanel size={10}>
-            <ProjectList
-              showNull="( default )"
-              multiselect={true}
-              selection={selectedProjects}
-              onSelect={setSelectedProjects}
-              style={{ maxWidth: 'unset' }}
-              wrap
-            />
-          </SplitterPanel>
-          <SplitterPanel size={50}>
-            <UserList
-              userList={userList}
-              tableList={filteredData}
-              onSelectUsers={setSelectedUsers}
-              isFetching={isFetching}
-              {...{
-                selectedProjects,
-                selectedUsers,
-                setShowSetPassword,
-                setShowRenameUser,
-                onDelete,
-                isLoading,
-                isSelfSelected,
-              }}
-            />
-          </SplitterPanel>
-          <SplitterPanel size={40} style={{ minWidth: 370 }}>
-            {selectedUsers.length ? (
-              <UserDetail
-                setShowRenameUser={setShowRenameUser}
-                selectedUsers={selectedUsers}
-                setShowSetPassword={setShowSetPassword}
-                selectedProjects={selectedProjects}
-                setSelectedUsers={setSelectedUsers}
-                isSelfSelected={isSelfSelected}
-                selectedUserList={selectedUserList}
-                managerDisabled={managerDisabled}
+    <>
+      <Shortcuts shortcuts={shortcuts} deps={[showNewUser]} />
+
+      <NewUser
+        onHide={(newUsers = []) => {
+          setShowNewUser(false)
+          if (newUsers.length) setSelectedUsers(newUsers)
+        }}
+        open={showNewUser}
+        accessGroupsData={accessGroupsData}
+      />
+
+      <main>
+        <Section>
+          <Toolbar>
+            <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+              <InputText
+                style={{ width: '200px' }}
+                placeholder="Filter users..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autocomplete="search-users"
               />
-            ) : (
-              !showNewUser && (
+            </form>
+            <Spacer />
+            <Button
+              onClick={onDelete}
+              label="Delete Users"
+              icon="person_remove"
+              disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
+            />
+            <Button
+              onClick={openNewUser}
+              label="Add New User"
+              icon="person_add"
+              data-shortcut="n"
+            />
+          </Toolbar>
+          <Splitter
+            style={{ width: '100%', height: '100%' }}
+            layout="horizontal"
+            stateKey="users-panels"
+            stateStorage="local"
+          >
+            <SplitterPanel size={10} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <Button
+                  icon="checklist"
+                  style={{ flex: 1 }}
+                  selected={!selectedProjects}
+                  onClick={() => setSelectedProjects(null)}
+                >
+                  Show all users
+                </Button>
+              </div>
+              <Panel style={{ flex: 1, gap: 0 }}>
+                <SwitchButton
+                  value={!selectedProjects ? false : projectAccessOnly}
+                  onClick={() => setProjectAccessOnly(!projectAccessOnly)}
+                  label="Filter users by project access"
+                  disabled={!selectedProjects}
+                  data-tooltip="Filter users with access to the selected projects. Turn off to see all users."
+                />
+                <Section>
+                  <ProjectList
+                    multiselect={true}
+                    selection={selectedProjects}
+                    onSelect={setSelectedProjects}
+                    style={{ maxWidth: 'unset' }}
+                    wrap
+                  />
+                </Section>
+              </Panel>
+            </SplitterPanel>
+            <SplitterPanel size={50}>
+              <UserList
+                userList={userList}
+                tableList={filteredData}
+                onSelectUsers={setSelectedUsers}
+                isFetching={isFetching}
+                {...{
+                  selectedProjects,
+                  selectedUsers,
+                  setShowSetPassword,
+                  setShowRenameUser,
+                  onDelete,
+                  isLoading,
+                  isSelfSelected,
+                }}
+              />
+            </SplitterPanel>
+            <SplitterPanel size={40} style={{ minWidth: 370 }}>
+              {selectedUsers.length ? (
+                <UserDetail
+                  setShowRenameUser={setShowRenameUser}
+                  selectedUsers={selectedUsers}
+                  setShowSetPassword={setShowSetPassword}
+                  selectedProjects={selectedProjects}
+                  setSelectedUsers={setSelectedUsers}
+                  isSelfSelected={isSelfSelected}
+                  selectedUserList={selectedUserList}
+                  managerDisabled={managerDisabled}
+                  accessGroupsData={accessGroupsData}
+                />
+              ) : (
                 <UsersOverview
                   selectedProjects={selectedProjects}
                   userList={filteredUserList}
@@ -282,36 +338,29 @@ const UsersSettings = () => {
                   onTotal={onTotal}
                   search={search}
                 />
-              )
-            )}
-            <NewUser
-              onHide={(newUsers = []) => {
-                setShowNewUser(false)
-                if (newUsers.length) setSelectedUsers(newUsers)
-              }}
-              open={showNewUser && !selectedUsers.length}
-            />
-          </SplitterPanel>
-        </Splitter>
-      </Section>
+              )}
+            </SplitterPanel>
+          </Splitter>
+        </Section>
 
-      {showRenameUser && (
-        <RenameUserDialog
-          selectedUsers={selectedUsers}
-          onHide={() => setShowRenameUser(false)}
-          onSuccess={(name) => setSelectedUsers([name])}
-        />
-      )}
+        {showRenameUser && (
+          <RenameUserDialog
+            selectedUsers={selectedUsers}
+            onHide={() => setShowRenameUser(false)}
+            onSuccess={(name) => setSelectedUsers([name])}
+          />
+        )}
 
-      {showSetPassword && (
-        <SetPasswordDialog
-          selectedUsers={selectedUsers}
-          onHide={() => {
-            setShowSetPassword(false)
-          }}
-        />
-      )}
-    </main>
+        {showSetPassword && (
+          <SetPasswordDialog
+            selectedUsers={selectedUsers}
+            onHide={() => {
+              setShowSetPassword(false)
+            }}
+          />
+        )}
+      </main>
+    </>
   )
 }
 

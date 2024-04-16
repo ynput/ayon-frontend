@@ -1,43 +1,49 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Panel, SaveButton, Section, UserImage } from '@ynput/ayon-react-components'
-import ProjectList from '/src/containers/projectList'
+import { Button, Divider, SaveButton, Section } from '@ynput/ayon-react-components'
 import { useAddUserMutation } from '/src/services/user/updateUser'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
-import DetailHeader from '/src/components/DetailHeader'
-import { PanelButtonsStyled } from './userDetail'
-import styled from 'styled-components'
 
-const SectionStyled = styled(Section)`
-  & > div {
-    :first-child {
-      border-top: 2px solid var(--md-sys-color-tertiary-fixed-dim);
-    }
-    :last-child {
-      border-bottom: 2px solid var(--md-sys-color-tertiary-fixed-dim);
-    }
-  }
+import styled from 'styled-components'
+import { Dialog } from 'primereact/dialog'
+import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
+
+const DividerSmallStyled = styled(Divider)`
+  margin: 8px 0;
 `
 
-const NewUser = ({ onHide, open, onSuccess }) => {
-  const [selectedProjects, setSelectedProjects] = useState(null)
+const FooterButtons = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`
+
+const SubTitleStyled = styled.span`
+  margin-top: 16px;
+  margin-bottom: 0;
+`
+
+const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
+  const usernameRef = useRef()
+
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [formData, setFormData] = useState({
+
+  const initFormData = {
     userLevel: 'user',
     userActive: true,
     UserImage: '',
-  })
+    isGuest: false,
+    accessGroups: {},
+    defaultAccessGroups: [],
+  }
+
+  const [formData, setFormData] = useState(initFormData)
 
   const initialFormData = () => {
-    return {
-      userLevel: 'user',
-      userActive: true,
-      UserImage: '',
-    }
+    return initFormData
   }
   useEffect(() => {
     // set initial form data
@@ -48,7 +54,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
 
   const attributes = ayonClient.getAttribsByScope('user')
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (close) => {
     const payload = {}
     if (!formData.Username) {
       toast.error('Login name must be provided')
@@ -75,12 +81,7 @@ const NewUser = ({ onHide, open, onSuccess }) => {
     else if (formData.userLevel === 'service') payload.data.isService = true
     else {
       payload.data.defaultAccessGroups = formData.defaultAccessGroups || []
-      if (selectedProjects) {
-        const accessGroups = {}
-        for (const projectName of selectedProjects)
-          accessGroups[projectName] = payload.data.defaultAccessGroups
-        payload.data.accessGroups = accessGroups
-      }
+      payload.data.accessGroups = formData.accessGroups || {}
     }
 
     payload.name = formData.Username
@@ -99,18 +100,16 @@ const NewUser = ({ onHide, open, onSuccess }) => {
       })
 
       onSuccess && onSuccess(formData.Username)
-      onHide([formData.Username])
+
+      if (close) {
+        onHide([formData.Username])
+      } else {
+        usernameRef.current?.focus()
+      }
     } catch (error) {
       console.error(error)
       toast.error(`Unable to create user: ${error.detail}`)
     }
-  }
-
-  const handleCancel = () => {
-    // clear all forms
-    setFormData(initialFormData())
-    setPassword('')
-    setPasswordConfirm('')
   }
 
   const handleClose = () => {
@@ -124,70 +123,83 @@ const NewUser = ({ onHide, open, onSuccess }) => {
     onHide(addedUsers)
   }
 
-  // When hide the dialog here so that state is maintained
-  // even when the dialog is closed
+  const handleKeyDown = (e) => {
+    // if enter then submit
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || e.shiftKey) && formData.Username) {
+      e.preventDefault()
+      const closeOnSubmit = e.ctrlKey || e.metaKey
+      handleSubmit(closeOnSubmit)
+    }
+  }
+
   if (!open) return null
 
   return (
-    <SectionStyled wrap style={{ gap: 4, maxHeight: '100%', bottom: 'unset' }}>
-      <DetailHeader onClose={handleClose}>
-        <UserImage
-          src={formData?.avatarUrl}
-          name={formData.Username}
-          fullName={formData.fullName || '+'}
-        />
-        <div>
-          <h2>Create New User</h2>
-          <span style={{ opacity: addedUsers.length ? 1 : 0 }}>
-            Previously Created: {addedUsers.join(', ')}
-          </span>
-        </div>
-      </DetailHeader>
-      <Section style={{ overflow: 'auto', gap: 4 }}>
-        <Panel>
-          <UserAttribForm
-            formData={formData}
-            setFormData={setFormData}
-            attributes={[
-              {
-                name: 'Username',
-                data: { title: 'Username' },
-                input: { placeholder: 'No spaces allowed' },
-              },
-              { name: 'password', data: { title: 'Password' } },
-              { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
-              ...attributes,
-            ]}
-            {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
+    <Dialog
+      onKeyDown={handleKeyDown}
+      visible
+      style={{
+        width: '90vw',
+        maxWidth: 700,
+      }}
+      header={'Create New User'}
+      onHide={handleClose}
+      appendTo={document.body.querySelector('#root')}
+      footer={
+        <FooterButtons>
+          <Button
+            label="Create user"
+            onClick={() => handleSubmit(false)}
+            disabled={!formData.Username}
+            data-shortcut="Shift+Enter"
+          ></Button>
+          <SaveButton
+            onClick={() => handleSubmit(true)}
+            label="Create and close"
+            active={formData.Username}
+            saving={isCreatingUser}
+            data-shortcut="Ctrl/Cmd+Enter"
           />
-        </Panel>
-        <Panel>
-          <UserAccessForm formData={formData} setFormData={setFormData} isNew />
-        </Panel>
-        {formData.userLevel === 'user' && (
-          <Panel>
-            <span style={{ margin: '8px 0' }}>
-              <b>Apply default access groups to:</b>
-            </span>
-            <ProjectList
-              selection={selectedProjects}
-              onSelect={setSelectedProjects}
-              multiselect={true}
-              styleSection={{ maxWidth: 'unset' }}
-            />
-          </Panel>
+        </FooterButtons>
+      }
+    >
+      <Section>
+        <UserAttribForm
+          formData={formData}
+          setFormData={setFormData}
+          attributes={[
+            {
+              name: 'Username',
+              data: { title: 'Username' },
+              input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
+            },
+            { name: 'password', data: { title: 'Password' } },
+            { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
+            ...attributes,
+          ]}
+          {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
+        />
+        <DividerSmallStyled />
+        <UserAccessForm
+          formData={formData}
+          onChange={(key, value) => setFormData({ ...formData, [key]: value })}
+          accessGroupsData={accessGroupsData}
+        />
+        <SubTitleStyled>
+          Give this new user access to projects by adding access groups per project
+        </SubTitleStyled>
+        {formData?.userLevel === 'user' && (
+          <UserAccessGroupsForm
+            // value expects multiple users, so we need to pass an object with the username "_" as the key
+            value={{ _: formData.accessGroups }}
+            options={accessGroupsData}
+            // onChange provides all "users", in this case just the one "_" user
+            onChange={(value) => setFormData({ ...formData, accessGroups: value['_'] })}
+            disableNewGroup
+          />
         )}
       </Section>
-      <PanelButtonsStyled>
-        <Button onClick={handleCancel} label="Clear" icon="clear" />
-        <SaveButton
-          onClick={handleSubmit}
-          label="Create New User"
-          active={formData.Username}
-          saving={isCreatingUser}
-        />
-      </PanelButtonsStyled>
-    </SectionStyled>
+    </Dialog>
   )
 }
 

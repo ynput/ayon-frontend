@@ -10,7 +10,6 @@ import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import checkName from '/src/helpers/checkName'
 import { Dialog } from 'primereact/dialog'
-import { toast } from 'react-toastify'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -23,15 +22,7 @@ const ContentStyled = styled.div`
   }
 `
 
-const NewEntity = ({
-  type,
-  currentSelection = {},
-  visible,
-  onConfirm,
-  onHide,
-  folderNames = new Map(),
-  taskNames = new Map(),
-}) => {
+const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) => {
   const [nameFocused, setNameFocused] = useState(false)
   const [entityType, setEntityType] = useState(null)
   //   build out form state
@@ -153,14 +144,6 @@ const NewEntity = ({
   const handleSubmit = (hide = false) => {
     // first check name and type valid
     if (!entityData.label || !entityData.type) return
-
-    // check name is unique
-    //if (folderNames.has(entityData.name) && type === 'folder')
-    if (folderNames.get(entityData.name) in currentSelection) {
-      return toast.warning('Sibling Folder names must be unique')
-    } else if (taskNames.get(entityData.name) in currentSelection) {
-      return toast.warning('Sibling Task names must be unique')
-    }
 
     // convert type to correct key
     // convert name to camelCase
