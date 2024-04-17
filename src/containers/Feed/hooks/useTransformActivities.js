@@ -128,7 +128,7 @@ const useTransformActivities = (activities = [], projectInfo = {}) => {
   const reversedActivitiesData = useMemo(
     () =>
       transformedActivitiesData.sort((a, b) =>
-        compareAsc(new Date(a.createdAt), new Date(b.createdAt)),
+        compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
       ),
     [transformedActivitiesData],
   )

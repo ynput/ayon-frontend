@@ -16,20 +16,13 @@ const updateCache = (draft, patch = {}, isDelete) => {
 }
 
 const patchActivities = async (
-  { projectName, entityType, patch, entityId, entities },
+  { projectName, patch, entityIds },
   { dispatch, queryFulfilled },
   method,
 ) => {
   // patch new data into the cache of a single entities activities
   const patchResult = dispatch(
-    ayonApi.util.updateQueryData('getActivity', { projectName, entityId, entityType }, (draft) =>
-      updateCache(draft, patch, method === 'delete'),
-    ),
-  )
-
-  // patch new data into the getActivities cache
-  const patchResult2 = dispatch(
-    ayonApi.util.updateQueryData('getActivities', { entities }, (draft) =>
+    ayonApi.util.updateQueryData('getActivities', { projectName, entityIds }, (draft) =>
       updateCache(draft, patch, method === 'delete'),
     ),
   )
@@ -41,7 +34,6 @@ const patchActivities = async (
     console.error(message, error)
     toast.error(message)
     patchResult.undo()
-    patchResult2.undo()
   }
 }
 
@@ -64,8 +56,8 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'create')
       },
-      // this triggers a refetch of getKanBan
-      invalidatesTags: (result, error, args) => generateInvalidationTags(args),
+      // // this triggers a refetch of getKanBan
+      // invalidatesTags: (result, error, args) => generateInvalidationTags(args),
     }),
 
     updateActivity: build.mutation({
@@ -89,9 +81,6 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'delete')
       },
-      // this triggers a refetch of getKanBan
-      invalidatesTags: (result, error, args) =>
-        generateInvalidationTags({ data: { activityId: args.activityId }, ...args }),
     }),
   }),
 })

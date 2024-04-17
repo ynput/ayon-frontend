@@ -6,8 +6,10 @@ import { useGetActivitiesQuery, useGetVersionsQuery } from '/src/services/activi
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
+import { useSelector } from 'react-redux'
 
 const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInfo }) => {
+  const userName = useSelector((state) => state.user.name)
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
 
@@ -28,6 +30,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     projectName: projectName,
     cursor: currentCursor,
     last: 20,
+    currentUser: userName,
   })
 
   // get all versions for the task
@@ -64,7 +67,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     projectName,
     entityType,
     entityId,
-    entitiesToQuery,
+    entityIds,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
