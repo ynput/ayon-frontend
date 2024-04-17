@@ -14,12 +14,12 @@ const getActivities = ayonApi.injectEndpoints({
     // a single entities activities
     // most often called by getActivities
     getActivity: build.query({
-      query: ({ projectName, entityId, entityType }) => ({
+      query: ({ projectName, entityId, entityType, cursor }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: ENTITY_ACTIVITIES(entityType),
-          variables: { projectName, entityId },
+          query: ENTITY_ACTIVITIES(entityType, 20),
+          variables: { projectName, entityId, cursor },
         },
       }),
       transformResponse: (res, meta, { currentUser }) =>
@@ -34,14 +34,30 @@ const getActivities = ayonApi.injectEndpoints({
               { type: 'activity', id: 'LIST' },
             ]
           : [{ type: 'activity', id: 'LIST' }],
-      // don't include the name in the query args cache key
-      // eslint-disable-next-line no-unused-vars
-      serializeQueryArgs: ({ queryArgs: { currentUser, ...rest } }) => rest,
+      // don't include the name or cursor in the query args cache key
+      serializeQueryArgs: ({ queryArgs: { projectName, entityId, entityType } }) => ({
+        projectName,
+        entityId,
+        entityType,
+      }),
+      // Always merge incoming data to the cache entry
+      merge: (currentCache, newItems) => {
+        const uniqueNewItems = newItems.filter(
+          (newItem) =>
+            !currentCache.some((cachedItem) => cachedItem.activityId === newItem.activityId),
+        )
+
+        currentCache.unshift(...uniqueNewItems)
+      },
+      // Refetch when the page arg changes
+      forceRefetch({ currentArg, previousArg }) {
+        // if (!currentArg) return true
+        return currentArg !== previousArg
+      },
     }),
     // getActivities is a custom query that calls getActivity for each entity
     getActivities: build.query({
-      async queryFn({ entities = [] }, { dispatch, forced, getState }) {
-        console.log('getActivities for all selected entities')
+      async queryFn({ entities = [], cursor }, { dispatch, forced, getState }) {
         try {
           const currentUser = getState().user.name
           const allActivities = []
@@ -52,7 +68,7 @@ const getActivities = ayonApi.injectEndpoints({
             // fetch activities for each entity
             const response = await dispatch(
               ayonApi.endpoints.getActivity.initiate(
-                { projectName, entityId, entityType, currentUser },
+                { projectName, entityId, entityType, currentUser, cursor },
                 { forceRefetch: forced },
               ),
             )
@@ -62,7 +78,7 @@ const getActivities = ayonApi.injectEndpoints({
               return { error: new Error('No activities found', entityId) }
             }
 
-            response.data.forEach((activitiesData) => {
+            response.data?.forEach((activitiesData) => {
               // add activities to allActivities
               allActivities.push({ ...activitiesData, entityId: entityId, entityType, projectName })
             })
@@ -73,6 +89,12 @@ const getActivities = ayonApi.injectEndpoints({
           console.error(error)
           return error
         }
+      },
+      serializeQueryArgs: ({ entities = [] }) => ({ entities }),
+      // Refetch when the page arg changes
+      forceRefetch({ currentArg, previousArg }) {
+        // if (!currentArg) return true
+        return currentArg !== previousArg
       },
       //   Id is the entity id, incase we want invalidate ALL activities for one or more entities
       providesTags: (result, error, { entities = [] }) =>

@@ -29,11 +29,15 @@ function remapNestedProperties(object, remappingItems) {
 // we flatten the activity object a little bit
 export const transformActivityData = (data = {}, currentUser) => {
   const activities = []
+  const hasPreviousPage = data?.project?.task?.activities?.pageInfo?.hasPreviousPage
+
+  const edges = data?.project?.task?.activities?.edges || []
   // loop over each activity and remap the nested properties
-  data?.project?.task?.activities?.edges?.forEach((edge) => {
+  edges.forEach((edge, index) => {
     // remapping keys are the fields path in the object
     // and the values are the new keys to assign the values to
     const data = edge.node
+    const cursor = edge.cursor
 
     if (!data) {
       return
@@ -71,6 +75,13 @@ export const transformActivityData = (data = {}, currentUser) => {
     // add isOwner property
     const isOwner = currentUser === transformedActivity.authorName
     transformedActivity.isOwner = isOwner
+
+    // add cursor
+    transformedActivity.cursor = cursor
+    // if last item, add hasPreviousPage
+    if (index === edges.length - 1) {
+      transformedActivity.hasPreviousPage = hasPreviousPage
+    }
 
     // parse fields that are JSON strings
     const jsonFields = ['activityData']

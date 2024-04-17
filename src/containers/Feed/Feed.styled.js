@@ -22,3 +22,8 @@ export const FeedContent = styled.div`
 
   flex-direction: column-reverse;
 `
+
+export const LoadMore = styled.span`
+  padding: 8px;
+  color: var(--md-sys-color-outline);
+`

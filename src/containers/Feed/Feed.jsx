@@ -5,6 +5,7 @@ import * as Styled from './Feed.styled'
 import { useGetActivitiesQuery, useGetVersionsQuery } from '/src/services/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
+import { InView } from 'react-intersection-observer'
 
 const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInfo }) => {
   // STATES
@@ -15,8 +16,11 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     [tasks],
   )
 
+  const [currentCursor, setCurrentCursor] = useState(null)
+
   const { data: activitiesData = [] } = useGetActivitiesQuery({
     entities: entitiesToQuery,
+    cursor: currentCursor,
   })
 
   // get all versions for the task
@@ -107,6 +111,18 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     updateComment(activity, newBody)
   }
 
+  // get cursor of last activity
+  const cursor = activitiesData[0]?.cursor
+  // get hasPreviousPage of last activity
+  const hasPreviousPage = activitiesData[0]?.hasPreviousPage
+
+  const handleGetMoreActivities = () => {
+    if (!hasPreviousPage) return console.log('No more activities to load')
+    if (!cursor) return console.log('No cursor found')
+    // get more activities
+    setCurrentCursor(cursor)
+  }
+
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
@@ -126,6 +142,9 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
             }}
           />
         ))}
+        <InView marginHeight={200} onChange={(inView) => inView && handleGetMoreActivities()}>
+          {hasPreviousPage && <Styled.LoadMore>Loading more activities...</Styled.LoadMore>}
+        </InView>
       </Styled.FeedContent>
       {!!tasks.length && (
         <CommentInput
