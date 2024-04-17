@@ -44,7 +44,6 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
   const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo)
-
   // REFS
   const feedRef = useRef(null)
   // const commentInputRef = useRef(null)
@@ -118,10 +117,11 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     updateComment(activity, newBody)
   }
 
+  const lastActivity = transformedActivitiesData[transformedActivitiesData.length - 1]
   // get cursor of last activity
-  const cursor = transformedActivitiesData[0]?.cursor
+  const cursor = lastActivity?.cursor
   // get hasPreviousPage of last activity
-  const hasPreviousPage = transformedActivitiesData[0]?.hasPreviousPage
+  const hasPreviousPage = lastActivity?.hasPreviousPage
 
   const handleGetMoreActivities = () => {
     if (!hasPreviousPage) return console.log('No more activities to load')
@@ -134,28 +134,28 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
-        {transformedActivitiesData.map((activity, i, a) => (
-          <InView
+        {transformedActivitiesData.map((activity) => (
+          <ActivityItem
             key={activity.activityId}
-            onChange={(inView) => inView && a.length - 3 === i && handleGetMoreActivities()}
-          >
-            <ActivityItem
-              activity={activity}
-              onCheckChange={handleCommentChecked}
-              onDelete={deleteComment}
-              onUpdate={(value) => updateComment(activity, value)}
-              projectInfo={projectInfo}
-              projectName={projectName}
-              editProps={{
-                activeUsers,
-                projectName,
-                entities: tasks,
-                versions: versionsData,
-              }}
-            />
-          </InView>
+            activity={activity}
+            onCheckChange={handleCommentChecked}
+            onDelete={deleteComment}
+            onUpdate={(value) => updateComment(activity, value)}
+            projectInfo={projectInfo}
+            projectName={projectName}
+            editProps={{
+              activeUsers,
+              projectName,
+              entities: tasks,
+              versions: versionsData,
+            }}
+          />
         ))}
-        <Styled.LoadMore>Task created</Styled.LoadMore>
+        <InView onChange={(inView) => inView && handleGetMoreActivities()} threshold={1}>
+          <Styled.LoadMore style={{ height: 0 }}>
+            {hasPreviousPage ? 'Loading more...' : ''}
+          </Styled.LoadMore>
+        </InView>
       </Styled.FeedContent>
       {!!tasks.length && (
         <CommentInput
