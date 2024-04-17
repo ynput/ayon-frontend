@@ -49,7 +49,7 @@ const ThumbnailSimple = ({
   src,
   ...props
 }) => {
-  const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
+  const url = projectName && `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
   const queryArgs = `?updatedAt=${entityUpdatedAt}`
   const isWrongEntity = ['product'].includes(entityType)
 

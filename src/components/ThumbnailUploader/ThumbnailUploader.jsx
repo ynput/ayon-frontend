@@ -76,7 +76,7 @@ const ThumbnailUploader = ({
 
         // for a single file we just use single entityId
         const res = await axios.post(
-          `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`,
+          projectName && `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`,
           file,
           opts,
         )
