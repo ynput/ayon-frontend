@@ -15,12 +15,12 @@ const getActivities = ayonApi.injectEndpoints({
     // a single entities activities
     // most often called by getActivities
     getActivities: build.query({
-      query: ({ projectName, entityIds, cursor, last }) => ({
+      query: ({ projectName, entityIds, cursor, last, referenceTypes }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: ACTIVITIES,
-          variables: { projectName, entityIds, cursor, last },
+          variables: { projectName, entityIds, cursor, last, referenceTypes },
         },
       }),
       transformResponse: (res, meta, { currentUser }) =>

@@ -31,6 +31,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     cursor: currentCursor,
     last: 20,
     currentUser: userName,
+    referenceTypes: ['origin', 'mention', 'relation'],
   })
 
   // get all versions for the task
