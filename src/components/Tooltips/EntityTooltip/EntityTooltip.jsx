@@ -13,7 +13,7 @@ const EntityTooltip = ({ type, id, pos: { left, top } = {}, projectName, project
   const width = 220
 
   // check x is not offScreen
-  if (left + width > window.innerWidth) left = window.innerWidth - width / 2
+  if (left + width / 2 > window.innerWidth) left = window.innerWidth - width / 2
 
   const { title, subTitle, path, taskType, productType, users = [], thumbnailId, updatedAt } = data
 

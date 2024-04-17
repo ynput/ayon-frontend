@@ -19,8 +19,9 @@ const ActivityHeader = ({
   children,
   id,
   projectInfo,
+  projectName,
 }) => {
-  const { referenceType, origin = {}, isOwner, projectName } = activity
+  const { referenceType, origin = {}, isOwner } = activity
   const isMention = referenceType === 'mention'
 
   // open menu

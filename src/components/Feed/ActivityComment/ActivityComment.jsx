@@ -83,6 +83,7 @@ const ActivityComment = ({
         onDelete={() => onDelete && onDelete(activityId)}
         onEdit={handleEditComment}
         projectInfo={projectInfo}
+        projectName={projectName}
       />
       <Styled.Body className={classNames('comment-body', { isEditing })}>
         {isEditing ? (
