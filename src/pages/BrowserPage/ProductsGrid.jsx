@@ -285,7 +285,7 @@ const ProductsGrid = ({
                           titleIcon={productTypes[product.productType]?.icon || 'inventory_2'}
                           icon={statuses[product.versionStatus]?.icon || ''}
                           iconColor={statuses[product.versionStatus]?.color || ''}
-                          imageUrl={`/api/projects/${projectName}/versions/${
+                          imageUrl={projectName && `/api/projects/${projectName}/versions/${
                             product.versionId
                           }/thumbnail?updatedAt=${product.versionUpdatedAt}`}
                           subTitle={`${product.versionName}${
