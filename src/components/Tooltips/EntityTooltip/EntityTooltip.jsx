@@ -3,12 +3,17 @@ import { productTypes } from '/src/features/project'
 import { getThumbnailUrl } from '/src/pages/UserDashboardPage/UserDashboardTasks/UserTasksContainer'
 import { useGetEntityTooltipQuery } from '/src/services/activities/getActivities'
 
-const EntityTooltip = ({ type, id, pos, projectName, projectInfo = {} }) => {
+const EntityTooltip = ({ type, id, pos: { left, top } = {}, projectName, projectInfo = {} }) => {
   const skip = !projectName || !type || !id
   const { data = {}, isFetching } = useGetEntityTooltipQuery(
     { entityType: type, entityId: id, projectName },
     { skip: skip },
   )
+
+  const width = 220
+
+  // check x is not offScreen
+  if (left + width > window.innerWidth) left = window.innerWidth - width / 2
 
   const { title, subTitle, path, taskType, productType, users = [], thumbnailId, updatedAt } = data
 
@@ -27,7 +32,7 @@ const EntityTooltip = ({ type, id, pos, projectName, projectInfo = {} }) => {
 
   return (
     <Styled.TooltipEntityCard
-      style={{ ...pos }}
+      style={{ left, top, maxWidth: width }}
       {...{ title, subTitle }}
       description={projectName + path}
       isLoading={isFetching || skip}

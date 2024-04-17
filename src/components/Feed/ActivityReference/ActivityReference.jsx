@@ -32,17 +32,7 @@ const ActivityReference = ({
   //   find the center of the reference
   useEffect(() => {
     if (!ref.current) return
-    let { x, y, width, height } = ref.current.getBoundingClientRect()
-
-    // check if x or y are off screen
-    const screenWidth = window.innerWidth
-    const screenHeight = window.innerHeight
-
-    if (x < 0) x = 0
-    if (y < 0) y = 0
-
-    if (x + width > screenWidth) x = screenWidth - width - 8
-    if (y + height > screenHeight) y = screenHeight - height - 8
+    const { x, y, width } = ref.current.getBoundingClientRect()
 
     setReferenceCenterPos({ left: x + width / 2, top: y })
   }, [ref.current, refHover])
