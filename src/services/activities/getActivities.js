@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash'
 import { ayonApi } from '../ayon'
 import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
 import {
@@ -6,39 +7,38 @@ import {
   transformVersionsData,
 } from './activitiesHelpers'
 // import PubSub from '/src/pubsub'
-import { ENTITY_ACTIVITIES, ENTITY_TOOLTIP, ENTITY_VERSIONS } from './activityQueries'
+import { ACTIVITIES, ENTITY_TOOLTIP, ENTITY_VERSIONS } from './activityQueries'
 import { compareAsc } from 'date-fns'
 
 const getActivities = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     // a single entities activities
     // most often called by getActivities
-    getActivity: build.query({
-      query: ({ projectName, entityId, entityType, cursor }) => ({
+    getActivities: build.query({
+      query: ({ projectName, entityIds, cursor, last }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: ENTITY_ACTIVITIES(entityType, 20),
-          variables: { projectName, entityId, cursor },
+          query: ACTIVITIES,
+          variables: { projectName, entityIds, cursor, last },
         },
       }),
       transformResponse: (res, meta, { currentUser }) =>
-        transformActivityData(res?.data, currentUser).sort((a, b) =>
-          compareAsc(new Date(a.createdAt), new Date(b.createdAt)),
-        ),
-      providesTags: (result, error, { entityId }) =>
+        transformActivityData(res?.data, currentUser),
+
+      providesTags: (result, error, { entityIds }) =>
         result
           ? [
               ...result.map((a) => ({ type: 'activity', id: a.activityId })),
-              { type: 'entityActivities', id: entityId },
               { type: 'activity', id: 'LIST' },
+              ...entityIds.map((id) => ({ type: 'entityActivities', id: id })),
+              { type: 'entityActivities', id: 'LIST' },
             ]
           : [{ type: 'activity', id: 'LIST' }],
       // don't include the name or cursor in the query args cache key
-      serializeQueryArgs: ({ queryArgs: { projectName, entityId, entityType } }) => ({
+      serializeQueryArgs: ({ queryArgs: { projectName, entityIds } }) => ({
         projectName,
-        entityId,
-        entityType,
+        entityIds,
       }),
       // Always merge incoming data to the cache entry
       merge: (currentCache, newItems) => {
@@ -47,64 +47,12 @@ const getActivities = ayonApi.injectEndpoints({
             !currentCache.some((cachedItem) => cachedItem.activityId === newItem.activityId),
         )
 
-        currentCache.unshift(...uniqueNewItems)
+        currentCache.push(...uniqueNewItems)
       },
       // Refetch when the page arg changes
       forceRefetch({ currentArg, previousArg }) {
-        // if (!currentArg) return true
-        return currentArg !== previousArg
+        return !isEqual(currentArg, previousArg)
       },
-    }),
-    // getActivities is a custom query that calls getActivity for each entity
-    getActivities: build.query({
-      async queryFn({ entities = [], cursor }, { dispatch, forced, getState }) {
-        try {
-          const currentUser = getState().user.name
-          const allActivities = []
-          for (const entity of entities) {
-            const { id: entityId, projectName, type: entityType } = entity
-            if (!entityId) continue
-
-            // fetch activities for each entity
-            const response = await dispatch(
-              ayonApi.endpoints.getActivity.initiate(
-                { projectName, entityId, entityType, currentUser, cursor },
-                { forceRefetch: forced },
-              ),
-            )
-
-            if (response.status === 'rejected') {
-              console.error('No activities found', entityId)
-              return { error: new Error('No activities found', entityId) }
-            }
-
-            response.data?.forEach((activitiesData) => {
-              // add activities to allActivities
-              allActivities.push({ ...activitiesData, entityId: entityId, entityType, projectName })
-            })
-          }
-
-          return { data: allActivities }
-        } catch (error) {
-          console.error(error)
-          return error
-        }
-      },
-      serializeQueryArgs: ({ entities = [] }) => ({ entities }),
-      // Refetch when the page arg changes
-      forceRefetch({ currentArg, previousArg }) {
-        // if (!currentArg) return true
-        return currentArg !== previousArg
-      },
-      //   Id is the entity id, incase we want invalidate ALL activities for one or more entities
-      providesTags: (result, error, { entities = [] }) =>
-        result
-          ? [
-              ...result.map((a) => ({ type: 'activity', id: a.activityId })),
-              ...entities.map((entity) => ({ type: 'entitiesActivities', id: entity.id })),
-              { type: 'entitiesActivities', id: 'LIST' },
-            ]
-          : [{ type: 'entitiesActivities', id: 'LIST' }],
     }),
     // get all versions for a task, used as an activity and version mentions
     getEntityVersions: build.query({

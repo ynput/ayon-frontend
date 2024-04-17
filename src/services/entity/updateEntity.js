@@ -9,7 +9,7 @@ const invalidateTag = ({ ids, type, disabledInvalidation, data }) => {
 
   // if the change was a status change, invalidate the activity query of the entity
   if ('status' in data) {
-    const getActivitiesTags = ids.map((id) => ({ type: 'entitiesActivities', id }))
+    const getActivitiesTags = ids.map((id) => ({ type: 'entityActivities', id }))
     baseTags.push(...getActivitiesTags)
   }
   return baseTags

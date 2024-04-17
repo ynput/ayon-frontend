@@ -1,3 +1,4 @@
+import { compareAsc } from 'date-fns'
 import { cloneDeep } from 'lodash'
 import { useMemo } from 'react'
 
@@ -101,14 +102,13 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
   return mergedActivities
 }
 
-const useTransformActivities = (activities = [], projectsInfo = {}) => {
+const useTransformActivities = (activities = [], projectInfo = {}) => {
   const transformedActivitiesData = useMemo(() => {
     return activities.map((activity) => {
       const newActivity = { ...activity, origin: { ...activity.origin } }
 
       // find status icon and data for status change activities
       if (newActivity.activityType === 'status.change') {
-        const projectInfo = projectsInfo[newActivity.projectName]
         if (!projectInfo) return newActivity
         const oldStatusName = newActivity.activityData?.oldValue
         const newStatusName = newActivity.activityData?.newValue
@@ -124,9 +124,12 @@ const useTransformActivities = (activities = [], projectsInfo = {}) => {
     })
   }, [activities])
 
-  // sort reversed activities data
+  // sort createdAt oldest first (because we are using flex: column-reverse)
   const reversedActivitiesData = useMemo(
-    () => transformedActivitiesData.slice().reverse(),
+    () =>
+      transformedActivitiesData.sort((a, b) =>
+        compareAsc(new Date(a.createdAt), new Date(b.createdAt)),
+      ),
     [transformedActivitiesData],
   )
 

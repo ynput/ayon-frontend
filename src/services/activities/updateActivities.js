@@ -50,8 +50,6 @@ const generateInvalidationTags = ({ entityId, data }) => [
   { type: 'activity', id: data.activityId },
   // invalidate getActivity for the entity (all activities for the entity)
   { type: 'entityActivities', id: entityId },
-  // invalidate getActivities query
-  { type: 'entitiesActivities', id: entityId },
 ]
 
 const updateActivities = ayonApi.injectEndpoints({

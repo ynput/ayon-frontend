@@ -15,12 +15,19 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     () => tasks.map((task) => ({ id: task.id, projectName: task.projectName, type: 'task' })),
     [tasks],
   )
+  const entityIds = entitiesToQuery.map((entity) => entity.id)
 
   const [currentCursor, setCurrentCursor] = useState(null)
 
+  const projectName = selectedTasksProjects[0]
+  const entityType = 'task'
+  const entityId = tasks[0].id
+
   const { data: activitiesData = [] } = useGetActivitiesQuery({
-    entities: entitiesToQuery,
+    entityIds: entityIds,
+    projectName: projectName,
     cursor: currentCursor,
+    last: 20,
   })
 
   // get all versions for the task
@@ -31,7 +38,10 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
-  const transformedActivitiesData = useTransformActivities(activitiesData, projectsInfo)
+  const transformedActivitiesData = useTransformActivities(
+    activitiesData,
+    projectsInfo[projectName],
+  )
 
   // REFS
   const feedRef = useRef(null)
@@ -50,11 +60,6 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
       else feedRef.current.scrollBy(0, -heightDiff)
     }
   }, [isCommentInputOpen, feedRef.current])
-
-  // TODO: this only works for the first selected task
-  const projectName = selectedTasksProjects[0]
-  const entityType = 'task'
-  const entityId = tasks[0].id
 
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
@@ -112,9 +117,9 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   }
 
   // get cursor of last activity
-  const cursor = activitiesData[0]?.cursor
+  const cursor = transformedActivitiesData[0]?.cursor
   // get hasPreviousPage of last activity
-  const hasPreviousPage = activitiesData[0]?.hasPreviousPage
+  const hasPreviousPage = transformedActivitiesData[0]?.hasPreviousPage
 
   const handleGetMoreActivities = () => {
     if (!hasPreviousPage) return console.log('No more activities to load')
@@ -145,6 +150,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
         <InView marginHeight={200} onChange={(inView) => inView && handleGetMoreActivities()}>
           {hasPreviousPage && <Styled.LoadMore>Loading more activities...</Styled.LoadMore>}
         </InView>
+        <Styled.LoadMore>Task created</Styled.LoadMore>
       </Styled.FeedContent>
       {!!tasks.length && (
         <CommentInput

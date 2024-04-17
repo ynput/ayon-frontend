@@ -82,7 +82,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
               (field) => field in (operation.data || {}),
             )
             if (hasAtLeastOneField) {
-              const getActivitiesTags = [{ type: 'entitiesActivities', id: operation.id }]
+              const getActivitiesTags = [{ type: 'entityActivities', id: operation.id }]
               activityTags.push(...getActivitiesTags)
             }
           })

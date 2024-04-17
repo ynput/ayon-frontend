@@ -22,25 +22,23 @@ fragment ActivityFragment on ActivityNode {
   }
 `
 
-export const ENTITY_ACTIVITIES = (type, last) => `
-query getEntityActivity($projectName: String!, $entityId: String!, $cursor: String) {
-    project(name: $projectName) {
-      ${type}(id: $entityId) {
-        name
-        activities(last: ${last}, before: $cursor) {
-          pageInfo {
-            hasPreviousPage
-          }
-          edges {
-            cursor
-            node {
-              ...ActivityFragment
-            }
-          }
+export const ACTIVITIES = `
+query getEntitiesActivities($projectName: String!, $entityIds: [String!]!, $cursor: String, $last: Int) {
+  project(name: $projectName) {
+    name
+    activities(entityIds: $entityIds, last: $last, before: $cursor) {
+      pageInfo {
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...ActivityFragment
         }
       }
     }
   }
+}
 ${ACTIVITY_FRAGMENT}
 `
 

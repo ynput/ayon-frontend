@@ -53,7 +53,6 @@ export const ayonApi = createApi({
     'attribute',
     'activity',
     'entityActivities',
-    'entitiesActivities',
     'branch',
     'bundleList',
     'connections',
