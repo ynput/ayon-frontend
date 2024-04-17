@@ -26,4 +26,5 @@ export const FeedContent = styled.div`
 export const LoadMore = styled.span`
   padding: 8px;
   color: var(--md-sys-color-outline);
+  font-size: 11px;
 `

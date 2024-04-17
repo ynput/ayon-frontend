@@ -4,9 +4,10 @@ import { getThumbnailUrl } from '/src/pages/UserDashboardPage/UserDashboardTasks
 import { useGetEntityTooltipQuery } from '/src/services/activities/getActivities'
 
 const EntityTooltip = ({ type, id, pos, projectName, projectInfo = {} }) => {
+  const skip = !projectName || !type || !id
   const { data = {}, isFetching } = useGetEntityTooltipQuery(
     { entityType: type, entityId: id, projectName },
-    { skip: !projectName || !type || !id },
+    { skip: skip },
   )
 
   const { title, subTitle, path, taskType, productType, users = [], thumbnailId, updatedAt } = data
@@ -29,7 +30,7 @@ const EntityTooltip = ({ type, id, pos, projectName, projectInfo = {} }) => {
       style={{ ...pos }}
       {...{ title, subTitle }}
       description={projectName + path}
-      isLoading={isFetching}
+      isLoading={isFetching || skip}
       assignees={users}
       titleIcon={icons[type]}
       icon={status?.icon}

@@ -4,11 +4,7 @@ import ActivityStatusChange from './ActivityStatusChange/ActivityStatusChange'
 import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeChange'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
 
-const ActivityItem = ({ activity = {}, fromGroup, projectsInfo = {}, editProps, ...props }) => {
-  // extra out projectInfo for item
-  const { projectName } = activity
-  const projectInfo = projectsInfo[projectName] || {}
-
+const ActivityItem = ({ activity = {}, fromGroup, projectInfo = {}, editProps, ...props }) => {
   switch (activity.activityType) {
     case 'comment':
       return <ActivityComment {...{ activity, projectInfo, editProps }} {...props} />

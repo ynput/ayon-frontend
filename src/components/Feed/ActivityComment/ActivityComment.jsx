@@ -38,6 +38,7 @@ const ActivityComment = ({
   onUpdate,
   projectInfo,
   editProps = {},
+  projectName,
 }) => {
   let {
     body,
@@ -49,7 +50,6 @@ const ActivityComment = ({
     activityId,
     author,
     isOwner,
-    projectName,
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName || 'Unknown'
