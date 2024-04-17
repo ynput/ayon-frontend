@@ -37,6 +37,46 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
   )
 }
 
+const AddonItem = ({currentVersion, allVersions }) => {
+  console.log(typeof(allVersions),'allVersionsQQQ')
+  console.log(currentVersion,'currentVersionQQQ')
+  const checkLatestVersion = (currentVersion, allVersions) => {
+    if (currentVersion === 'NONE') return currentVersion
+
+
+    // Convert the current version string to an array of numbers
+    const currentVersionList = currentVersion.split('.').map(Number);
+
+    // Get all versions as arrays of numbers
+    const allVersionsList = Object.keys(allVersions).map(version => version.split('.').map(Number));
+
+    // Check if any version has a higher major digit
+    if (allVersionsList.some(versionList => versionList[0] > currentVersionList[0])) {
+      return false;
+    }
+
+    // If major versions are the same, check for higher minor or patch versions
+    return !allVersionsList.some((versionList, index) => {
+      // Skip comparison if current version is already ahead
+      if (currentVersionList[index] > versionList[index]) {
+        return false;
+      }
+      // If a higher minor or patch version is found, return true (not latest)
+      return currentVersionList[index] < versionList[index];
+    });
+}
+  console.log(checkLatestVersion(currentVersion,allVersions),'checkLatest')
+
+
+  const versionNumber = currentVersion
+  return (
+    <>
+      <span>{versionNumber}</span>
+      <span>{checkLatestVersion(currentVersion,allVersions)}</span>
+    </>
+  )
+}
+
 const BundlesAddonList = React.forwardRef(
   (
     {
@@ -154,8 +194,14 @@ const BundlesAddonList = React.forwardRef(
           style={{ maxWidth: 200 }}
           bodyStyle={{ padding: 8 }}
           body={(addon) => {
-            if (readOnly && addon.addonType === 'pipeline')
-              return formData?.addons?.[addon.name] || 'NONE'
+            const isPipeline =  addon.addonType === 'pipeline'
+            const addonVersion = formData?.addons?.[addon.name]
+            const currentVersion = addon.version
+            const allVersions = addon.versions
+
+            console.log(addonVersion,'addonVersion')
+            console.log(addon,'addonXXX')
+            if (readOnly && isPipeline) return <AddonItem currentVersion={currentVersion} allVersions={allVersions}/>
             // get all selected versions
             return (
               <AddonListItem
