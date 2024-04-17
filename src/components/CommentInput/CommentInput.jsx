@@ -27,7 +27,7 @@ const CommentInput = ({
   projectName,
   entities = [],
   versions = [],
-  projectsInfo,
+  projectInfo,
   isEditing,
 }) => {
   const [initHeight, setInitHeight] = useState(88)
@@ -114,7 +114,7 @@ const CommentInput = ({
         {
           '@': () => getMentionUsers(activeUsers),
           '@@': () => getMentionVersions(versions),
-          '@@@': () => getMentionTasks(siblingTasks, projectsInfo, projectName),
+          '@@@': () => getMentionTasks(siblingTasks, projectInfo.task_types, projectName),
         },
         mention?.search,
       ),

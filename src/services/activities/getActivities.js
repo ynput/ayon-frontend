@@ -1,172 +1,13 @@
 import { ayonApi } from '../ayon'
+import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
+import {
+  transformActivityData,
+  transformTooltipData,
+  transformVersionsData,
+} from './activitiesHelpers'
 // import PubSub from '/src/pubsub'
 import { ENTITY_ACTIVITIES, ENTITY_TOOLTIP, ENTITY_VERSIONS } from './activityQueries'
 import { compareAsc } from 'date-fns'
-
-// Helper function to get a nested property of an object using a string path
-const getNestedProperty = (obj, path) => path.split('.').reduce((o, p) => (o || {})[p], obj)
-
-// Helper function to delete a nested property of an object using a string path
-const deleteNestedProperty = (obj, path) => {
-  const pathParts = path.split('.')
-  const lastPart = pathParts.pop()
-  const target = pathParts.reduce((o, p) => (o || {})[p], obj)
-  if (target && lastPart) {
-    delete target[lastPart]
-  }
-}
-
-function remapNestedProperties(object, remappingItems) {
-  const transformedObject = { ...object }
-
-  for (const [key, newKey] of Object.entries(remappingItems)) {
-    if (getNestedProperty(transformedObject, key) !== undefined) {
-      // Get deeply nested value from key using "." notation
-      transformedObject[newKey] = getNestedProperty(transformedObject, key)
-      // Delete the old key from the object
-      deleteNestedProperty(transformedObject, key)
-    }
-  }
-
-  return transformedObject
-}
-
-// we flatten the activity object a little bit
-const transformActivityData = (data = {}, currentUser) => {
-  const activities = []
-  // loop over each activity and remap the nested properties
-  data?.project?.task?.activities?.edges?.forEach((edge) => {
-    // remapping keys are the fields path in the object
-    // and the values are the new keys to assign the values to
-    const data = edge.node
-
-    if (!data) {
-      return
-    }
-
-    const activityNode = data
-
-    // check that the activity hasn't already been added.
-    if (activities.some(({ activityId }) => activityId === activityNode.activityId)) {
-      // oh no this shouldn't happen!
-      // referenceType priorities in order: origin, mention, relation
-
-      // check the referenceType and if the priority is higher than the current one, place the activity in the list
-      if (['origin', 'mention'].includes(activityNode.referenceType)) {
-        const index = activities.findIndex(
-          ({ activityId }) => activityId === activityNode.activityId,
-        )
-        if (index !== -1) {
-          activities[index] = { ...activityNode }
-        }
-      }
-
-      return
-    }
-
-    // remapping of nested properties to flat properties
-    const remappingItems = {
-      'author.name': 'authorName',
-      'author.attrib.fullName': 'authorFullName',
-      'author.attrib.avatarUrl': 'authorAvatarUrl',
-    }
-
-    const transformedActivity = remapNestedProperties(activityNode, remappingItems)
-
-    // add isOwner property
-    const isOwner = currentUser === transformedActivity.authorName
-    transformedActivity.isOwner = isOwner
-
-    // parse fields that are JSON strings
-    const jsonFields = ['activityData']
-
-    jsonFields.forEach((field) => {
-      if (activityNode[field]) {
-        try {
-          transformedActivity[field] = JSON.parse(activityNode[field])
-        } catch (e) {
-          console.error('Error parsing JSON field', field, activityNode[field])
-        }
-      }
-    })
-
-    activities.push(transformedActivity)
-  }) || []
-
-  return activities
-}
-// we flatten the version object a little bit
-const transformVersionsData = (data = {}, currentUser) => {
-  const versions = []
-  // loop over each activity and remap the nested properties
-  data?.project?.versions?.edges?.forEach((edge) => {
-    // remapping keys are the fields path in the object
-    // and the values are the new keys to assign the values to
-    const data = edge.node
-
-    if (!data) {
-      return
-    }
-
-    const versionNode = data
-
-    // add isOwner
-    const isOwner = currentUser === versionNode.author?.name
-
-    const transformedVersion = { ...versionNode, isOwner }
-    transformedVersion.isOwner = isOwner
-
-    versions.push(transformedVersion)
-  }) || []
-
-  return versions
-}
-
-const transformTaskTooltip = (data = {}) => {
-  const { id, label, name, status, thumbnailId, assignees, taskType, folder = {} } = data
-  const tooltip = {
-    id,
-    type: 'task',
-    title: label || name,
-    subTitle: folder.label || folder.name,
-    status,
-    thumbnailId,
-    users: assignees,
-    entityType: taskType,
-    path: folder.path,
-  }
-
-  return tooltip
-}
-
-const transformVersionTooltip = (data = {}) => {
-  const { id, name, status, thumbnailId, author, product = {} } = data
-  const tooltip = {
-    id,
-    type: 'version',
-    title: name,
-    subTitle: product.name,
-    status,
-    thumbnailId,
-    users: [author],
-    entityType: product.productType,
-    path: product.folder?.path,
-  }
-
-  return tooltip
-}
-
-// different types have different tooltip data, we need to create a single data model
-const transformTooltipData = (data = {}, type) => {
-  switch (type) {
-    case 'task':
-      return transformTaskTooltip(data.task)
-    case 'version':
-      return transformVersionTooltip(data.version)
-    default:
-      return {}
-  }
-}
 
 const getActivities = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -237,6 +78,7 @@ const getActivities = ayonApi.injectEndpoints({
       providesTags: (result, error, { entities = [] }) =>
         result
           ? [
+              ...result.map((a) => ({ type: 'activity', id: a.activityId })),
               ...entities.map((entity) => ({ type: 'entitiesActivities', id: entity.id })),
               { type: 'entitiesActivities', id: 'LIST' },
             ]
@@ -321,6 +163,7 @@ const getActivities = ayonApi.injectEndpoints({
       }),
       transformResponse: (res, meta, { entityType }) =>
         transformTooltipData(res?.data?.project, entityType),
+      providesTags: (res, error, { entityType }) => taskProvideTags([res], 'task', entityType),
     }),
   }),
 })

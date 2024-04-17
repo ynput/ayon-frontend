@@ -32,7 +32,7 @@ const UserDashboardDetails = ({
   )
 
   return (
-    <Panel style={{ height: '100%', padding: 0 }}>
+    <Panel style={{ height: '100%', padding: 0, boxShadow: '-2px 0 6px #00000047', zIndex: 80 }}>
       <UserDashDetailsHeader
         tasks={selectedTasks}
         users={projectUsers}

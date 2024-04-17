@@ -17,8 +17,10 @@ const ActivityReference = ({
   variant = 'surface',
   label,
   name,
+  isEntity,
   disabled,
   projectName,
+  projectInfo,
   ...props
 }) => {
   const icon = typeIcons[type] || 'link'
@@ -44,7 +46,7 @@ const ActivityReference = ({
         ref={ref}
         onMouseEnter={() => !disabled && setRefHover(true)}
         onMouseLeave={() => setRefHover(false)}
-        className={classNames({ disabled }, 'reference')}
+        className={classNames({ disabled, isEntity }, 'reference')}
       >
         <Icon icon={icon} />
         {props.children}
@@ -52,7 +54,7 @@ const ActivityReference = ({
       {refHover && (
         <ActivityReferenceTooltip
           pos={referenceCenterPos}
-          {...{ type, id, label, name, projectName }}
+          {...{ type, id, label, name, projectName, projectInfo }}
         />
       )}
     </>

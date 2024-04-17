@@ -36,17 +36,14 @@ import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { isEmpty } from 'lodash'
+import { productTypes } from '/src/features/project'
 
 const Products = () => {
   const dispatch = useDispatch()
 
   // context
   // project redux
-  const {
-    productTypes,
-    name: projectName,
-    statuses: statusesObject,
-  } = useSelector((state) => state.project)
+  const { name: projectName, statuses: statusesObject } = useSelector((state) => state.project)
   // focused redux
   const {
     versions: focusedVersions,

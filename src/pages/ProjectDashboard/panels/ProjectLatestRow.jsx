@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { useGetProjectDashboardActivityQuery } from '/src/services/getProjectDashboard'
 import { EntityCard } from '@ynput/ayon-react-components'
+import { productTypes } from '/src/features/project'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
@@ -53,7 +54,7 @@ const ProjectLatestRow = ({
   onEntityClick,
 }) => {
   const project = useSelector((state) => state.project)
-  const { productTypes, folders, tasks, statuses } = project
+  const { folders, tasks, statuses } = project
   // transform args object to graphql arguments string
   // {sortBy: "updatedAt", last: 4, statuses: ["On hold"]} => `sortBy: "updatedAt", last: 4, statuses: ["On hold"]`
   const argsString = Object.keys(args)
@@ -132,9 +133,7 @@ const ProjectLatestRow = ({
               className={entity.className}
               imageUrl={
                 !isLoadingData &&
-                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${
-                  entity.thumbnailEntityId
-                }/thumbnail?updatedAt=${entity.updatedAt}`
+                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${entity.thumbnailEntityId}/thumbnail?updatedAt=${entity.updatedAt}`
               }
               style={{
                 minWidth: 'unset',

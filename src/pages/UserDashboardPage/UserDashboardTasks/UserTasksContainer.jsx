@@ -13,7 +13,7 @@ import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '/src/features/context'
 
-const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName) => {
+export const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName) => {
   if (!projectName || (!thumbnailId && !taskId)) return null
 
   return thumbnailId

@@ -18,6 +18,7 @@ const ActivityHeader = ({
   onEdit,
   children,
   id,
+  projectInfo,
 }) => {
   const { referenceType, origin = {}, isOwner, projectName } = activity
   const isMention = referenceType === 'mention'
@@ -45,6 +46,7 @@ const ActivityHeader = ({
               type={origin?.type}
               projectName={projectName}
               variant="text"
+              projectInfo={projectInfo}
             >
               {origin?.label || origin?.name}
             </ActivityReference>

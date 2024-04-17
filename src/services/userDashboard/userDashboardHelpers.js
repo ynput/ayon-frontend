@@ -1,5 +1,7 @@
 // NOTE: THIS DOES NOT RUN WHEN PATCHING THE TASKS
 
+import { upperCase, upperFirst } from 'lodash'
+
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
     const latestVersion = task.versions?.edges[0]?.node
@@ -34,11 +36,11 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
     }
   })
 
-export const taskProvideTags = (result, type = 'task') =>
+export const taskProvideTags = (result, type = 'task', entityType = 'task') =>
   result?.length
     ? [
         ...result.map(({ id }) => ({ type, id })),
-        { type, id: 'TASKS' },
-        { type: 'kanBanTask', id: 'TASKS' },
+        { type, id: upperCase(entityType) + 'S' },
+        { type: `kanBan${upperFirst(entityType)}`, id: upperCase(entityType) + 'S' },
       ]
-    : [{ type, id: 'TASKS' }]
+    : [{ type, id: upperCase(entityType) + 'S' }]

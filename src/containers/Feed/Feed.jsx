@@ -107,8 +107,6 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     updateComment(activity, newBody)
   }
 
-  const singleProjectName = selectedTasksProjects[0]
-
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
@@ -119,12 +117,12 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
             onCheckChange={handleCommentChecked}
             onDelete={deleteComment}
             onUpdate={(value) => updateComment(activity, value)}
+            projectsInfo={projectsInfo}
             editProps={{
               activeUsers,
-              projectName: singleProjectName,
+              projectName,
               entities: tasks,
               versions: versionsData,
-              projectsInfo,
             }}
           />
         ))}
@@ -137,10 +135,10 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
           onClose={() => setIsCommentInputOpen(false)}
           onOpen={() => setIsCommentInputOpen(true)}
           activeUsers={activeUsers}
-          projectName={singleProjectName}
+          projectName={projectName}
           versions={versionsData}
           entities={tasks}
-          projectsInfo={projectsInfo}
+          projectInfo={projectsInfo[projectName]}
         />
       )}
     </Styled.FeedContainer>

@@ -107,6 +107,7 @@ query EntityTooltip($projectName: String!, $entityId: String!) {
       name
       status
       thumbnailId
+      updatedAt
       ${getTypeFields(type)}
     }
   }

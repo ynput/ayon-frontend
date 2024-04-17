@@ -31,13 +31,21 @@ const sanitizeURL = (url = '') => {
   return {}
 }
 
-const ActivityComment = ({ activity = {}, onCheckChange, onDelete, onUpdate, editProps = {} }) => {
+const ActivityComment = ({
+  activity = {},
+  onCheckChange,
+  onDelete,
+  onUpdate,
+  projectInfo,
+  editProps = {},
+}) => {
   let {
     body,
     authorName,
     authorFullName,
     createdAt,
     referenceType,
+    entityId,
     activityId,
     author,
     isOwner,
@@ -74,6 +82,7 @@ const ActivityComment = ({ activity = {}, onCheckChange, onDelete, onUpdate, edi
         activity={activity}
         onDelete={() => onDelete && onDelete(activityId)}
         onEdit={handleEditComment}
+        projectInfo={projectInfo}
       />
       <Styled.Body className={classNames('comment-body', { isEditing })}>
         {isEditing ? (
@@ -83,6 +92,7 @@ const ActivityComment = ({ activity = {}, onCheckChange, onDelete, onUpdate, edi
             isEditing
             onClose={handleEditCancel}
             onSubmit={handleSave}
+            projectInfo={projectInfo}
             {...editProps}
           />
         ) : (
@@ -100,9 +110,15 @@ const ActivityComment = ({ activity = {}, onCheckChange, onDelete, onUpdate, edi
                   if (!type || !id) return <a>{children}</a>
 
                   const label = children && children.replace('@', '')
+                  // is this ref the same as the current task id
+                  const isEntity = id === entityId
 
                   return (
-                    <ActivityReference name={id} {...{ type, id, label, projectName }}>
+                    <ActivityReference
+                      name={id}
+                      {...{ type, id, label, projectName, projectInfo }}
+                      variant={isEntity ? 'filled' : 'primary'}
+                    >
                       {label}
                     </ActivityReference>
                   )
