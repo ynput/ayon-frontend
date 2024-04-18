@@ -6,6 +6,22 @@ export const AutoHeight = styled.div`
   height: 100%;
   /* transition: translate 0.1s, margin-top 0.1s; */
   position: relative;
+
+  /* when closed default */
+  translate: 0 50px;
+  margin-top: -50px;
+
+  /* when open */
+  &.isOpen {
+    translate: 0 0;
+    margin-top: 0;
+  }
+
+  padding: 0 4px 4px 4px;
+  /* when editing */
+  &.isEditing {
+    padding: 0;
+  }
 `
 
 export const Comment = styled.div`

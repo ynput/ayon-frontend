@@ -440,13 +440,7 @@ const CommentInput = ({
 
   return (
     <>
-      <Styled.AutoHeight
-        style={{
-          translate: isOpen ? '0' : '0 50px',
-          marginTop: isOpen ? '0' : '-50px',
-          padding: isEditing ? 0 : 4,
-        }}
-      >
+      <Styled.AutoHeight className={classNames({ isOpen, isEditing })}>
         <Styled.Comment
           className={classNames('block-shortcuts', { isOpen, isClosed: !isOpen, isEditing })}
           onKeyDown={handleKeyDown}
