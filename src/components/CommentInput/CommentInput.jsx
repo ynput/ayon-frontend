@@ -462,6 +462,35 @@ const CommentInput = ({
                     </a>
                   )
                 },
+                // transform ul checklist into multiple uls
+                ul: (props) => {
+                  if (!props.className?.includes('contains-task-list')) return <ul {...props} />
+
+                  // split each li item into its own ul
+                  const items = props.node?.children?.filter((item) => item.tagName === 'li')
+                  const elements = props?.children?.filter((item) => item.type === 'li')
+                  const uls = items.map((liItem, index) => {
+                    const element = elements[index]
+
+                    let checked = false
+                    // get checked prop
+                    liItem.children
+                      .filter((item) => item.type === 'element')
+                      .forEach((el) =>
+                        el?.children?.forEach((child) => {
+                          if (child.tagName === 'input') {
+                            checked = child.properties.checked
+                          }
+                        }),
+                      )
+                    return (
+                      <ul key={index} data-checked={checked}>
+                        <li>{element}</li>
+                      </ul>
+                    )
+                  })
+                  return uls
+                },
               }}
             >
               {initValue}

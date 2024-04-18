@@ -48,10 +48,15 @@ export const Comment = styled.div`
     opacity: 0.25;
   }
 
+  .ql-editor {
+    ul,
+    ol {
+      padding-left: 0;
+    }
+  }
+
   /* check box styles */
   .ql-editor ul {
-    padding-left: 0;
-
     &[data-checked='true'] {
       li {
         display: flex;
