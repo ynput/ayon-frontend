@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import PropTypes from 'prop-types'
-import { Dialog } from 'primereact/dialog'
+import { Dialog } from '@ynput/ayon-react-components'
 
 import { Button, InputPassword, FormLayout, FormRow } from '@ynput/ayon-react-components'
 
@@ -40,7 +40,7 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
     }
   }
   return (
-    <Dialog header={`Set password for: ${name}`} visible={true} onHide={onHide}>
+    <Dialog size="sm" header={`Set password for: ${name}`} isOpen={true} onClose={onHide}>
       <FormLayout>
         <FormRow label="New Password">
           <InputPassword

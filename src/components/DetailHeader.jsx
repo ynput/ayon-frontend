@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { Panel, Button } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { Panel, Button, Dialog } from '@ynput/ayon-react-components'
 
 const HeaderStyled = styled(Panel)`
   gap: 8px;
@@ -34,15 +33,11 @@ const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) =
     <>
       <Dialog
         header={dialogTitle}
-        visible={showContext}
-        onHide={() => setShowContext(false)}
-        appendTo={document.getElementById('root')}
+        isOpen={showContext}
+        onClose={() => setShowContext(false)}
+        size="lg"
       >
-        <pre
-          style={{
-            whiteSpace: 'pre-wrap',
-          }}
-        >
+        <pre style={{whiteSpace: 'pre-wrap'}} >
           {JSON.stringify(context, null, 2)}
         </pre>
       </Dialog>
