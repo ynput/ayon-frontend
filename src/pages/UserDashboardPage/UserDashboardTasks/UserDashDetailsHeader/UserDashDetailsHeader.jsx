@@ -4,7 +4,7 @@ import * as Styled from './UserDashDetailsHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
 
-import { union } from 'lodash'
+import { isEqual, union } from 'lodash'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
@@ -14,8 +14,9 @@ const UserDashDetailsHeader = ({
   tasks = [],
   disabledProjectUsers,
   users = [],
-  statusesOptions,
+  statusesOptions = [],
   disabledStatuses,
+  tagsOptions = [],
 }) => {
   // for selected tasks, get flat list of assignees
   const selectedTasksAssignees = useMemo(() => union(...tasks.map((t) => t.assignees)), [tasks])
@@ -40,6 +41,15 @@ const UserDashDetailsHeader = ({
   // this means that if we have 2 tasks from 2 different projects, we need to get the intersection of the statuses of those 2 projects
   //  and it prevents us from showing statuses that are not available for the selected tasks
   const statusesValue = useMemo(() => tasks.map((t) => t.status), [tasks])
+  const tagsValues = useMemo(() => tasks.map((t) => t.tags), [tasks])
+  const tagsOptionsObject = useMemo(
+    () =>
+      tagsOptions.reduce((acc, tag) => {
+        acc[tag.name] = tag
+        return acc
+      }, {}),
+    [tagsOptions],
+  )
 
   const isMultiple = tasks.length > 1
 
@@ -166,8 +176,13 @@ const UserDashDetailsHeader = ({
             <label>Actions</label>
           </Styled.ContentRow>
           <Styled.ContentRow>
-            {/* TODO: finish this */}
-            <TagsSelect value={[]} tags={[]} />
+            <TagsSelect
+              value={union(...tagsValues)}
+              isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
+              tags={tagsOptionsObject}
+              editable
+              onChange={(value) => handleUpdate('tags', value)}
+            />
             <Actions options={actions} pinned={pinned} />
           </Styled.ContentRow>
         </Styled.Section>

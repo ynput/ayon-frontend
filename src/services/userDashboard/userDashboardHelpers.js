@@ -21,6 +21,7 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       name: task.name,
       label: task.label,
       status: task.status,
+      tags: task.tags,
       taskType: task.taskType,
       assignees: task.assignees,
       updatedAt: task.updatedAt,

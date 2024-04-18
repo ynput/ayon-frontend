@@ -8,7 +8,8 @@ import TaskAttributes from '../TaskAttributes/TaskAttributes'
 
 const UserDashboardDetails = ({
   tasks = [],
-  statusesOptions,
+  statusesOptions = [],
+  tagsOptions = [],
   disabledStatuses,
   projectUsers,
   disabledProjectUsers,
@@ -41,6 +42,7 @@ const UserDashboardDetails = ({
         disabledProjectUsers={disabledProjectUsers}
         statusesOptions={statusesOptions}
         disabledStatuses={disabledStatuses}
+        tagsOptions={tagsOptions}
       />
       {filter === 'details' ? (
         <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />

@@ -117,17 +117,23 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [projectsInfo, isLoadingInfo],
   )
 
+  const statusesIntersection = useMemo(
+    () => getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects),
+    [projectsInfo, selectedTasksProjects],
+  )
+
   const disabledStatuses = useMemo(
     () =>
       statusesOptions
-        .filter(
-          (s) =>
-            !getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects).some(
-              (s2) => s2.name === s.name,
-            ),
-        )
+        .filter((s) => !statusesIntersection.some((s2) => s2.name === s.name))
         .map((s) => s.name),
     [projectsInfo, selectedTasksProjects, statusesOptions],
+  )
+
+  // find the intersection of all the tags of the projects for the selected tasks
+  const tagsOptions = useMemo(
+    () => getIntersectionFields(projectsInfo, 'tags', selectedTasksProjects),
+    [projectsInfo, selectedTasksProjects],
   )
 
   const { data: projectUsers = [] } = useGetKanBanUsersQuery(
@@ -210,6 +216,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             tasks={tasksWithIcons}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
+            tagsOptions={tagsOptions}
             projectUsers={projectUsers}
             activeProjectUsers={activeProjectUsers}
             disabledProjectUsers={disabledProjectUsers}

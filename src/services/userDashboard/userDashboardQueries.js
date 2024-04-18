@@ -4,6 +4,7 @@ const TASK_FRAGMENT = `
     name
     label
     status
+    tags
     taskType
     assignees
     updatedAt
