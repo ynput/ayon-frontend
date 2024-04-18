@@ -23,10 +23,10 @@ fragment ActivityFragment on ActivityNode {
 `
 
 export const ACTIVITIES = `
-query getEntitiesActivities($projectName: String!, $entityIds: [String!]!, $cursor: String, $last: Int, $referenceTypes: [String!]) {
+query getEntitiesActivities($projectName: String!, $entityIds: [String!]!, $cursor: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!]) {
   project(name: $projectName) {
     name
-    activities(entityIds: $entityIds, last: $last, before: $cursor, referenceTypes: $referenceTypes ) {
+    activities(entityIds: $entityIds, last: $last, before: $cursor, referenceTypes: $referenceTypes, activityTypes: $activityTypes) {
       pageInfo {
         hasPreviousPage
       }

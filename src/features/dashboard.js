@@ -16,6 +16,9 @@ const dashboardSlice = createSlice({
       attributesOpen: getInitialStateLocalStorage('dashboard-tasks-attributesOpen', false),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
     },
+    details: {
+      filter: getInitialStateLocalStorage('dashboard-details-filter', 'activity'),
+    },
   },
   reducers: {
     onProjectSelected: (state, { payload = [] }) => {
@@ -37,8 +40,8 @@ const dashboardSlice = createSlice({
       state.tasks.assignees = assignees
       state.tasks.assigneesIsMe = assigneesIsMe
     },
-    onAttributesOpenChanged: (state, { payload }) => {
-      state.tasks.attributesOpen = payload
+    onDetailsFilterChange: (state, { payload }) => {
+      state.details.filter = payload
     },
     onCollapsedColumnsChanged: (state, { payload }) => {
       state.tasks.collapsedColumns = payload
@@ -68,7 +71,7 @@ export const {
   onTasksGroupByChanged,
   onTasksFilterChanged,
   onAssigneesChanged,
-  onAttributesOpenChanged,
+  onDetailsFilterChange,
   onCollapsedColumnsChanged,
   onPrefetchIds,
   onClearDashboard,
@@ -87,6 +90,6 @@ export const dashboardLocalItems = {
     { key: 'dashboard-tasks-assigneesIsMe', payload: 'assigneesIsMe' },
   ],
   'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
-  'dashboard/onAttributesOpenChanged': [{ key: 'dashboard-tasks-attributesOpen' }],
+  'dashboard/onDetailsFilterChange': [{ key: 'dashboard-details-filter' }],
   'dashboard/onCollapsedColumnsChanged': [{ key: 'dashboard-tasks-collapsedColumns' }],
 }

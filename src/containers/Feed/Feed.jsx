@@ -8,7 +8,7 @@ import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
 import { useSelector } from 'react-redux'
 
-const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInfo }) => {
+const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInfo, filter }) => {
   const userName = useSelector((state) => state.user.name)
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
@@ -19,19 +19,23 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   )
   const entityIds = entitiesToQuery.map((entity) => entity.id)
 
-  const [currentCursor, setCurrentCursor] = useState(null)
+  const [currentCursors, setCurrentCursors] = useState({})
 
   const projectName = selectedTasksProjects[0]
   const entityType = 'task'
   const entityId = tasks[0].id
 
+  let activityType = 'comment'
+  if (filter === 'checklists') activityType = 'checklist'
+
   const { data: activitiesData = [] } = useGetActivitiesQuery({
     entityIds: entityIds,
     projectName: projectName,
-    cursor: currentCursor,
+    cursor: currentCursors[activityType],
     last: 20,
     currentUser: userName,
     referenceTypes: ['origin', 'mention', 'relation'],
+    activityTypes: [activityType],
   })
 
   // get all versions for the task
@@ -40,10 +44,20 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   })
 
   const projectInfo = projectsInfo[projectName]
+
+  // TODO: transform versions data into activity data
+  const versionActivities = []
+
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
   const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo)
+
+  // TODO: merge in the versions data with the activities data
+
+  // if filter is versions, show only version activities
+  const activitiesToShow = filter === 'versions' ? versionActivities : transformedActivitiesData
+
   // REFS
   const feedRef = useRef(null)
   // const commentInputRef = useRef(null)
@@ -68,6 +82,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     entityType,
     entityId,
     entityIds,
+    activityTypes: [activityType],
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
@@ -117,7 +132,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     updateComment(activity, newBody)
   }
 
-  const lastActivity = transformedActivitiesData[transformedActivitiesData.length - 1]
+  const lastActivity = activitiesToShow[activitiesToShow.length - 1]
   // get cursor of last activity
   const cursor = lastActivity?.cursor
   // get hasPreviousPage of last activity
@@ -128,13 +143,13 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     if (!cursor) return console.log('No cursor found')
     console.log('fetching more activities...')
     // get more activities
-    setCurrentCursor(cursor)
+    setCurrentCursors({ ...currentCursors, [activityType]: cursor })
   }
 
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
-        {transformedActivitiesData.map((activity) => (
+        {activitiesToShow.map((activity) => (
           <ActivityItem
             key={activity.activityId}
             activity={activity}

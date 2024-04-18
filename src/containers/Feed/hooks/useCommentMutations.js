@@ -7,7 +7,7 @@ import {
 } from '/src/services/activities/updateActivities'
 import { useSelector } from 'react-redux'
 
-const useCommentMutations = ({ projectName, entityType, entityId, entityIds }) => {
+const useCommentMutations = ({ projectName, entityType, entityId, entityIds, activityTypes }) => {
   const { name, fullName } = useSelector((state) => state.user)
 
   // used to create and update activities (comments)
@@ -37,7 +37,7 @@ const useCommentMutations = ({ projectName, entityType, entityId, entityIds }) =
     }
 
     // we only need these args to update the cache of the original query
-    const argsForCachingMatching = { entityIds: entityIds }
+    const argsForCachingMatching = { entityIds, activityTypes }
 
     try {
       await createEntityActivity({
@@ -64,7 +64,7 @@ const useCommentMutations = ({ projectName, entityType, entityId, entityIds }) =
     }
 
     // we only need these args to update the cache of the original query
-    const argsForCachingMatching = { entityType, entityIds: entityIds }
+    const argsForCachingMatching = { entityType, entityIds, activityTypes }
 
     try {
       await updateActivity({
@@ -81,7 +81,7 @@ const useCommentMutations = ({ projectName, entityType, entityId, entityIds }) =
 
   const deleteComment = async (id) => {
     // we only need these args to update the cache of the original query
-    const argsForCachingMatching = { entityType, entityIds: entityIds }
+    const argsForCachingMatching = { entityType, entityIds, activityTypes }
 
     if (!id) return
 

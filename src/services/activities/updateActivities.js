@@ -16,14 +16,16 @@ const updateCache = (draft, patch = {}, isDelete) => {
 }
 
 const patchActivities = async (
-  { projectName, patch, entityIds },
+  { projectName, patch, entityIds, activityTypes = [] },
   { dispatch, queryFulfilled },
   method,
 ) => {
   // patch new data into the cache of a single entities activities
   const patchResult = dispatch(
-    ayonApi.util.updateQueryData('getActivities', { projectName, entityIds }, (draft) =>
-      updateCache(draft, patch, method === 'delete'),
+    ayonApi.util.updateQueryData(
+      'getActivities',
+      { projectName, entityIds, activityTypes },
+      (draft) => updateCache(draft, patch, method === 'delete'),
     ),
   )
 
@@ -37,11 +39,18 @@ const patchActivities = async (
   }
 }
 
-const generateInvalidationTags = ({ entityId, data }) => [
+// all activityTypes
+const allActivityTypes = ['comment', 'checklist']
+
+const generateInvalidationTags = ({ activityTypes = [], entityId, data }) => [
   // invalidate getActivity by the activityId (getActivity has many activityIds)
   { type: 'activity', id: data.activityId },
   // invalidate getActivity for the entity (all activities for the entity)
   { type: 'entityActivities', id: entityId },
+  // invalidate other activityTypes for the entity (comment would invalidate checklist)
+  ...allActivityTypes
+    .filter((type) => activityTypes.includes(type))
+    .map((type) => ({ type: 'entityActivities', id: type })),
 ]
 
 const updateActivities = ayonApi.injectEndpoints({
@@ -56,8 +65,7 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'create')
       },
-      // // this triggers a refetch of getKanBan
-      // invalidatesTags: (result, error, args) => generateInvalidationTags(args),
+      invalidatesTags: (result, error, args) => generateInvalidationTags(args),
     }),
 
     updateActivity: build.mutation({
@@ -69,7 +77,6 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'update')
       },
-      // this triggers a refetch of getKanBan
       invalidatesTags: (result, error, args) =>
         generateInvalidationTags({ data: { activityId: args.activityId }, ...args }),
     }),
@@ -81,6 +88,7 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'delete')
       },
+      invalidatesTags: (result, error, args) => generateInvalidationTags(args),
     }),
   }),
 })

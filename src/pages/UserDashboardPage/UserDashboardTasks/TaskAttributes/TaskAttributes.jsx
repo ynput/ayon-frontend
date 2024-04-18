@@ -12,8 +12,13 @@ const TaskAttributes = ({ tasks = [], isLoading }) => {
   )
 
   return (
-    <Section style={{ padding: '0px 8px' }}>
-      <AttributeTable entityType={'task'} data={attribsData} isLoading={isLoading} />
+    <Section style={{ padding: 8, overflow: 'hidden' }}>
+      <AttributeTable
+        style={{ overflow: 'auto', paddingTop: 45 }}
+        entityType={'task'}
+        data={attribsData}
+        isLoading={isLoading}
+      />
     </Section>
   )
 }

@@ -1,6 +1,5 @@
-import { AssigneeSelect, Button, Section, Spacer } from '@ynput/ayon-react-components'
+import { AssigneeSelect, TagsSelect } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
-import { useDispatch } from 'react-redux'
 import * as Styled from './UserDashDetailsHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
@@ -9,19 +8,15 @@ import { union } from 'lodash'
 import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
-import { onAttributesOpenChanged } from '/src/features/dashboard'
+import UserDashDetailsFilters from '../UserDashDetailsFilters/UserDashDetailsFilters'
 
 const UserDashDetailsHeader = ({
   tasks = [],
   disabledProjectUsers,
   users = [],
-  attributesOpen,
   statusesOptions,
   disabledStatuses,
 }) => {
-  const dispatch = useDispatch()
-  const setAttributesOpen = (value) => dispatch(onAttributesOpenChanged(value))
-
   // for selected tasks, get flat list of assignees
   const selectedTasksAssignees = useMemo(() => union(...tasks.map((t) => t.assignees)), [tasks])
 
@@ -110,81 +105,75 @@ const UserDashDetailsHeader = ({
   const portalId = 'dashboard-details-header'
 
   return (
-    <Section
-      style={{
-        padding: 8,
-        alignItems: 'flex-start',
-        gap: 8,
-        borderBottom: '1px solid var(--md-sys-color-outline-variant)',
-        flex: 'none',
-        overflow: 'hidden',
-      }}
-      id={portalId}
-    >
-      <Styled.Path
-        value={pathArray.join(' / ')}
-        align="left"
-        onClick={handleCopyPath}
-        isCopy
-        icon="content_copy"
-        style={{ zIndex: 100 }}
-      />
-      <Styled.Header>
-        <StackedThumbnails
-          thumbnails={thumbnails}
-          projectName={projectName}
-          portalId={portalId}
-          onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
+    <Styled.Container>
+      <Styled.SectionWrapper id={portalId}>
+        <Styled.Path
+          value={pathArray.join(' / ')}
+          align="left"
+          onClick={handleCopyPath}
+          isCopy
+          icon="content_copy"
+          style={{ zIndex: 100 }}
         />
-        <Styled.Content>
-          <h2>
-            {!isMultiple
-              ? singleTask.folderLabel || singleTask.folderName
-              : `${tasks.length} tasks selected`}
-          </h2>
-          <h3>
-            {!isMultiple
-              ? singleTask.label || singleTask.name
-              : tasks.map((t) => t.name).join(', ')}
-          </h3>
-        </Styled.Content>
-      </Styled.Header>
-      <Styled.StatusAssigned>
-        <Styled.ContentRow>
-          <label>Status</label>
-          <label>Assigned</label>
-        </Styled.ContentRow>
-        <Styled.ContentRow>
-          <Styled.TaskStatusSelect
-            value={statusesValue}
-            options={statusesOptions}
-            disabledValues={disabledStatuses}
-            invert
-            style={{ maxWidth: 'unset' }}
-            onChange={(value) => handleUpdate('status', value)}
+        <Styled.Header>
+          <StackedThumbnails
+            thumbnails={thumbnails}
+            projectName={projectName}
+            portalId={portalId}
+            onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
           />
-          <AssigneeSelect
-            value={isMultiple ? selectedTasksAssignees : singleTask.assignees}
-            options={users}
-            disabledValues={disabledProjectUsers.map((u) => u.name)}
-            isMultiple={isMultiple && selectedTasksAssignees.length > 1}
-            editor
-            align="right"
-            onChange={(value) => handleUpdate('assignees', value)}
-          />
-        </Styled.ContentRow>
-      </Styled.StatusAssigned>
-      <Styled.Footer>
-        <Actions options={actions} pinned={pinned} />
-        <Spacer />
-        <Button
-          icon={attributesOpen ? 'forum' : 'segment'}
-          onClick={() => setAttributesOpen(!attributesOpen)}
-          label={attributesOpen ? 'Activity' : 'Details'}
-          iconProps={{ style: { transform: !attributesOpen ? 'scaleX(-1)' : '' } }}
-        />
-      </Styled.Footer>
-    </Section>
+          <Styled.Content>
+            <h2>
+              {!isMultiple
+                ? singleTask.folderLabel || singleTask.folderName
+                : `${tasks.length} tasks selected`}
+            </h2>
+            <h3>
+              {!isMultiple
+                ? singleTask.label || singleTask.name
+                : tasks.map((t) => t.name).join(', ')}
+            </h3>
+          </Styled.Content>
+        </Styled.Header>
+        <Styled.Section>
+          <Styled.ContentRow>
+            <label>Status</label>
+            <label>Assigned</label>
+          </Styled.ContentRow>
+          <Styled.ContentRow>
+            <Styled.TaskStatusSelect
+              value={statusesValue}
+              options={statusesOptions}
+              disabledValues={disabledStatuses}
+              invert
+              style={{ maxWidth: 'unset' }}
+              onChange={(value) => handleUpdate('status', value)}
+            />
+            <AssigneeSelect
+              value={isMultiple ? selectedTasksAssignees : singleTask.assignees}
+              options={users}
+              disabledValues={disabledProjectUsers.map((u) => u.name)}
+              isMultiple={isMultiple && selectedTasksAssignees.length > 1}
+              editor
+              align="right"
+              onChange={(value) => handleUpdate('assignees', value)}
+            />
+          </Styled.ContentRow>
+        </Styled.Section>
+        <Styled.Section>
+          <Styled.ContentRow>
+            <label>Tags</label>
+            <label>Actions</label>
+          </Styled.ContentRow>
+          <Styled.ContentRow>
+            {/* TODO: finish this */}
+            <TagsSelect value={[]} tags={[]} />
+            <Actions options={actions} pinned={pinned} />
+          </Styled.ContentRow>
+        </Styled.Section>
+      </Styled.SectionWrapper>
+      <UserDashDetailsFilters />
+    </Styled.Container>
   )
 }
 

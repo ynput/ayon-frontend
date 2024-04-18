@@ -15,30 +15,32 @@ const getActivities = ayonApi.injectEndpoints({
     // a single entities activities
     // most often called by getActivities
     getActivities: build.query({
-      query: ({ projectName, entityIds, cursor, last, referenceTypes }) => ({
+      query: ({ projectName, entityIds, cursor, last, referenceTypes, activityTypes }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: ACTIVITIES,
-          variables: { projectName, entityIds, cursor, last, referenceTypes },
+          variables: { projectName, entityIds, cursor, last, referenceTypes, activityTypes },
         },
       }),
       transformResponse: (res, meta, { currentUser }) =>
         transformActivityData(res?.data, currentUser),
 
-      providesTags: (result, error, { entityIds }) =>
+      providesTags: (result, error, { entityIds, activityTypes = [] }) =>
         result
           ? [
               ...result.map((a) => ({ type: 'activity', id: a.activityId })),
               { type: 'activity', id: 'LIST' },
               ...entityIds.map((id) => ({ type: 'entityActivities', id: id })),
               { type: 'entityActivities', id: 'LIST' },
+              ...activityTypes.map((type) => ({ type: 'entityActivities', id: type })),
             ]
           : [{ type: 'activity', id: 'LIST' }],
       // don't include the name or cursor in the query args cache key
-      serializeQueryArgs: ({ queryArgs: { projectName, entityIds } }) => ({
+      serializeQueryArgs: ({ queryArgs: { projectName, entityIds, activityTypes } }) => ({
         projectName,
         entityIds,
+        activityTypes,
       }),
       // Always merge incoming data to the cache entry
       merge: (currentCache, newItems) => {

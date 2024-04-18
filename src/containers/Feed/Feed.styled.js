@@ -2,6 +2,7 @@ import styled from 'styled-components'
 
 export const FeedContainer = styled.section`
   padding: 4px;
+  padding-top: 0;
   overflow: hidden;
   position: relative;
 
@@ -24,7 +25,7 @@ export const FeedContent = styled.div`
 `
 
 export const LoadMore = styled.span`
-  padding: 8px;
+  padding: 16px 8px;
   color: var(--md-sys-color-outline);
   font-size: 11px;
 `

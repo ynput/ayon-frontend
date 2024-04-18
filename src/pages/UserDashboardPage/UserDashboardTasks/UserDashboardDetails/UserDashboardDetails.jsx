@@ -17,7 +17,7 @@ const UserDashboardDetails = ({
   projectsInfo,
 }) => {
   const selectedTasksIds = useSelector((state) => state.dashboard.tasks.selected)
-  const attributesOpen = useSelector((state) => state.dashboard.tasks.attributesOpen)
+  const filter = useSelector((state) => state.dashboard.details.filter)
 
   //   find selected tasks
   const selectedTasks = useMemo(() => {
@@ -32,25 +32,26 @@ const UserDashboardDetails = ({
   )
 
   return (
-    <Panel style={{ height: '100%', padding: 0, boxShadow: '-2px 0 6px #00000047', zIndex: 80 }}>
+    <Panel
+      style={{ gap: 0, height: '100%', padding: 0, boxShadow: '-2px 0 6px #00000047', zIndex: 80 }}
+    >
       <UserDashDetailsHeader
         tasks={selectedTasks}
         users={projectUsers}
         disabledProjectUsers={disabledProjectUsers}
-        attributesOpen={attributesOpen}
         statusesOptions={statusesOptions}
         disabledStatuses={disabledStatuses}
       />
-      {(!attributesOpen || !selectedTasks.length) && (
+      {filter === 'details' ? (
+        <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
+      ) : (
         <Feed
           tasks={selectedTasks}
           activeUsers={activeProjectUsers}
           selectedTasksProjects={selectedTasksProjects}
           projectsInfo={projectsInfo}
+          filter={filter}
         />
-      )}
-      {attributesOpen && (
-        <TaskAttributes tasks={tasksDetailsData} isLoading={isLoadingTasksDetails} />
       )}
     </Panel>
   )
