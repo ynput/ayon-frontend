@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './SettingsPanel'
@@ -538,12 +538,13 @@ const ArrayFieldTemplate = (props) => {
   // not wraped in react fragment. I suspected it was the key, but it was not.
   // I have no idea why this works, but it does. Do not touch!
 
+
   return (
     <FormArrayField>
-      {props.items.map((element) => (
-        <>
-          <ArrayItemTemplate key={element.key} {...element} />
-        </>
+      {props.items.map((element, idx) => (
+        <React.Fragment key={idx}>
+          <ArrayItemTemplate {...element} />
+        </React.Fragment>
       ))}
 
       {props.canAdd && !props.schema?.disabled && (
