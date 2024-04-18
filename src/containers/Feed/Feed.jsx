@@ -184,6 +184,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
           versions={versionsData}
           entities={tasks}
           projectInfo={projectsInfo[projectName]}
+          filter={filter}
         />
       )}
     </Styled.FeedContainer>

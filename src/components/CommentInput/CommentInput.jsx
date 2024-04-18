@@ -29,6 +29,7 @@ const CommentInput = ({
   versions = [],
   projectInfo,
   isEditing,
+  filter,
 }) => {
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
@@ -50,8 +51,14 @@ const CommentInput = ({
       // get height of markdown
       const height = markdownRef.current.offsetHeight
       setInitHeight(height)
+    } else if (isOpen) {
+      // if filter === checklist start with a checklist item
+      if (filter === 'checklists') {
+        console.log('checklists')
+        setEditorValue(`<ul data-checked="false"><li> </li></ul>`)
+      }
     }
-  }, [initValue, markdownRef.current])
+  }, [initValue, isOpen, markdownRef.current, filter])
 
   // When editing, set selection to the end of the editor
   useEffect(() => {
