@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Dialog } from 'primereact/dialog'
+import { Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 
 import { Spacer, InputText, Toolbar, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
@@ -149,10 +149,10 @@ const NewProjectDialog = ({ onHide }) => {
     <Dialog
       header="Create a new project"
       footer={footer}
-      visible="true"
-      onHide={onHide}
+      isOpen={true}
+      onClose={onHide}
+      size="full"
       style={{
-        width: '50vw',
         height: '80%',
       }}
     >
