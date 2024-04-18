@@ -41,6 +41,7 @@
     "react-toastify": "^9.0.3",
     "react-transition-group": "^4.4.2",
     "react-use-websocket": "^4.2.0",
+    "rehype-external-links": "^3.0.0",
     "remark-gfm": "^4.0.0",
     "sass": "^1.62.0",
     "semver": "^7.6.0",
