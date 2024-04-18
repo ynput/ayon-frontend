@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
 import { getFakeTasks, usePrefetchTask, useTaskClick } from '../../util'
-import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '/src/helpers/getPreviousTagElement'
 import Shortcuts from '/src/containers/Shortcuts'
@@ -243,7 +243,7 @@ const UserDashboardList = ({
     id && handleCollapseToggle(id)
   }
 
-  const [updateTasks] = useUpdateTasksMutation()
+  const [updateEntities] = useUpdateEntitiesMutation()
   const handleUpdate = async (field, value) => {
     try {
       // build tasks operations array
@@ -255,7 +255,7 @@ const UserDashboardList = ({
         },
       }))
 
-      await updateTasks({ operations: tasksOperations })
+      await updateEntities({ operations: tasksOperations, entityType: 'task' })
     } catch (error) {
       toast.error('Error updating task(s)')
     }

@@ -12,6 +12,7 @@ import UserDashboardDetails from './UserDashboardDetails/UserDashboardDetails'
 import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '/src/features/context'
+import UserDashboardSlideOut from './UserDashboardSlideOut/UserDashboardSlideOut'
 
 export const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName) => {
   if (!projectName || (!thumbnailId && !taskId)) return null
@@ -162,6 +163,9 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const detailsMaxWidth = '40vw'
   const detailsMaxMaxWidth = 700
 
+  const projectName = selectedTasksProjects[0]
+  const projectInfo = projectsInfo[projectName]
+
   if (isError)
     return (
       <Section style={{ textAlign: 'center' }}>
@@ -213,7 +217,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           }}
         >
           <UserDashboardDetails
-            tasks={tasksWithIcons}
+            entities={selectedTasksData}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             tagsOptions={tagsOptions}
@@ -221,8 +225,11 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             activeProjectUsers={activeProjectUsers}
             disabledProjectUsers={disabledProjectUsers}
             selectedTasksProjects={selectedTasksProjects}
-            projectsInfo={projectsInfo}
+            projectsInfo={projectInfo}
+            projectName={projectName}
+            entityType="task"
           />
+          <UserDashboardSlideOut projectsInfo={projectsInfo} />
         </SplitterPanel>
       ) : (
         <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

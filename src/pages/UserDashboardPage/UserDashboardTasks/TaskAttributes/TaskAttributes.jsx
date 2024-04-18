@@ -3,19 +3,19 @@ import AttributeTable from '/src/containers/attributeTable'
 import formatAttributesData from './formatAttributesData'
 import { Section } from '@ynput/ayon-react-components'
 
-const TaskAttributes = ({ tasks = [], isLoading }) => {
-  // we need to get the attributes of the selected tasks
+const TaskAttributes = ({ entities = [], isLoading, entityType }) => {
+  // we need to get the attributes of the selected entities
 
   const attribsData = useMemo(
-    () => (!isLoading ? formatAttributesData(tasks) : {}),
-    [tasks, isLoading],
+    () => (!isLoading ? formatAttributesData(entities) : {}),
+    [entities, isLoading],
   )
 
   return (
     <Section style={{ padding: 8, overflow: 'hidden' }}>
       <AttributeTable
         style={{ overflow: 'auto', paddingTop: 45 }}
-        entityType={'task'}
+        entityType={entityType}
         data={attribsData}
         isLoading={isLoading}
       />

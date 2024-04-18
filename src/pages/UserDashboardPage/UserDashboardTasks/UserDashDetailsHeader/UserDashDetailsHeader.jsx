@@ -5,43 +5,48 @@ import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
 
 import { isEqual, union } from 'lodash'
-import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
 import UserDashDetailsFilters from '../UserDashDetailsFilters/UserDashDetailsFilters'
 
 const UserDashDetailsHeader = ({
-  tasks = [],
-  disabledProjectUsers,
+  entityType,
+  entities = [],
+  disabledAssignees = [],
   users = [],
   statusesOptions = [],
   disabledStatuses,
   tagsOptions = [],
+  onClose,
 }) => {
-  // for selected tasks, get flat list of assignees
-  const selectedTasksAssignees = useMemo(() => union(...tasks.map((t) => t.assignees)), [tasks])
+  // for selected entities, get flat list of assignees
+  const selectedTasksAssignees = useMemo(
+    () => union(...entities.map((entity) => entity.assignees || entity.author || [])),
+    [entities],
+  )
 
-  const singleTask = tasks[0]
-  const projectName = tasks.length > 1 ? null : singleTask.projectName
+  const singleTask = entities[0]
+  const projectName = entities.length > 1 ? null : singleTask?.projectName
 
   const thumbnails = useMemo(
     () =>
-      tasks
-        .filter((t, i) => i <= 5)
-        .map((t) => ({
-          src: t.thumbnailUrl,
-          icon: t.taskIcon,
-          id: t.id,
-          type: 'task',
+      entities
+        .filter((entity, i) => i <= 5)
+        .map((entity) => ({
+          src: entity.thumbnailUrl,
+          icon: entity.taskIcon,
+          id: entity.id,
+          type: entityType,
         })),
-    [tasks],
+    [entities],
   )
 
-  // we need to get the intersection of all the statuses of the projects for the selected tasks
-  // this means that if we have 2 tasks from 2 different projects, we need to get the intersection of the statuses of those 2 projects
-  //  and it prevents us from showing statuses that are not available for the selected tasks
-  const statusesValue = useMemo(() => tasks.map((t) => t.status), [tasks])
-  const tagsValues = useMemo(() => tasks.map((t) => t.tags), [tasks])
+  // we need to get the intersection of all the statuses of the projects for the selected entities
+  // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
+  //  and it prevents us from showing statuses that are not available for the selected entities
+  const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
+  const tagsValues = useMemo(() => entities.map((t) => t.tags), [entities])
   const tagsOptionsObject = useMemo(
     () =>
       tagsOptions.reduce((acc, tag) => {
@@ -51,25 +56,25 @@ const UserDashDetailsHeader = ({
     [tagsOptions],
   )
 
-  const isMultiple = tasks.length > 1
+  const isMultiple = entities.length > 1
 
-  const [updateTasks] = useUpdateTasksMutation()
+  const [updateEntities] = useUpdateEntitiesMutation()
   const handleUpdate = async (field, value) => {
     if (value === null || value === undefined) return console.error('value is null or undefined')
 
     try {
-      // build tasks operations array
-      const tasksOperations = tasks.map((task) => ({
-        id: task.id,
-        projectName: task.projectName,
+      // build entities operations array
+      const operations = entities.map((entity) => ({
+        id: entity.id,
+        projectName: entity.projectName,
         data: {
           [field]: value,
         },
       }))
 
-      await updateTasks({ operations: tasksOperations })
+      await updateEntities({ operations, entityType })
     } catch (error) {
-      toast.error('Error updating task(s)')
+      toast.error('Error updating' + entityType)
     }
   }
 
@@ -108,11 +113,13 @@ const UserDashDetailsHeader = ({
     .filter((action) => {
       const actions = actionTaskTypes[action.pinned]
       if (!actions) return false
-      return actions.some((action) => action.toLowerCase() === singleTask.taskType.toLowerCase())
+      return actions.some((action) => action.toLowerCase() === singleTask.taskType?.toLowerCase())
     })
     .map((action) => action.id)
 
   const portalId = 'dashboard-details-header'
+
+  const hasUser = ['task', 'version'].includes(entityType)
 
   return (
     <Styled.Container>
@@ -125,6 +132,7 @@ const UserDashDetailsHeader = ({
           icon="content_copy"
           style={{ zIndex: 100 }}
         />
+        {onClose && <Styled.CloseButton onClick={onClose} icon="close" variant="text" />}
         <Styled.Header>
           <StackedThumbnails
             thumbnails={thumbnails}
@@ -136,19 +144,19 @@ const UserDashDetailsHeader = ({
             <h2>
               {!isMultiple
                 ? singleTask.folderLabel || singleTask.folderName
-                : `${tasks.length} tasks selected`}
+                : `${entities.length} ${entityType}s selected`}
             </h2>
             <h3>
               {!isMultiple
                 ? singleTask.label || singleTask.name
-                : tasks.map((t) => t.name).join(', ')}
+                : entities.map((t) => t.name).join(', ')}
             </h3>
           </Styled.Content>
         </Styled.Header>
         <Styled.Section>
           <Styled.ContentRow>
             <label>Status</label>
-            <label>Assigned</label>
+            {hasUser && <label>Assigned</label>}
           </Styled.ContentRow>
           <Styled.ContentRow>
             <Styled.TaskStatusSelect
@@ -159,15 +167,17 @@ const UserDashDetailsHeader = ({
               style={{ maxWidth: 'unset' }}
               onChange={(value) => handleUpdate('status', value)}
             />
-            <AssigneeSelect
-              value={isMultiple ? selectedTasksAssignees : singleTask.assignees}
-              options={users}
-              disabledValues={disabledProjectUsers.map((u) => u.name)}
-              isMultiple={isMultiple && selectedTasksAssignees.length > 1}
-              editor
-              align="right"
-              onChange={(value) => handleUpdate('assignees', value)}
-            />
+            {hasUser && (
+              <AssigneeSelect
+                value={isMultiple ? selectedTasksAssignees : singleTask.assignees}
+                options={users}
+                disabledValues={disabledAssignees.map((u) => u.name)}
+                isMultiple={isMultiple && selectedTasksAssignees.length > 1}
+                editor={entityType === 'task'}
+                align="right"
+                onChange={(value) => handleUpdate('assignees', value)}
+              />
+            )}
           </Styled.ContentRow>
         </Styled.Section>
         <Styled.Section>

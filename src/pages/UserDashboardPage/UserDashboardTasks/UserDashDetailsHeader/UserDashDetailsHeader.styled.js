@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import StatusSelect from '/src/components/status/statusSelect'
-import { OverflowField, Section as SectionARC } from '@ynput/ayon-react-components'
+import { Button, OverflowField, Section as SectionARC } from '@ynput/ayon-react-components'
 
 export const Container = styled.div`
   position: relative;
@@ -13,6 +13,14 @@ export const SectionWrapper = styled(SectionARC)`
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex: none;
   overflow: hidden;
+`
+
+export const CloseButton = styled(Button)`
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: fit-content;
+  z-index: 100;
 `
 
 export const Header = styled.header`

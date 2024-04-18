@@ -19,6 +19,11 @@ const dashboardSlice = createSlice({
     details: {
       filter: getInitialStateLocalStorage('dashboard-details-filter', 'activity'),
     },
+    slideOut: {
+      entityType: '',
+      entityId: '',
+      projectName: '',
+    },
   },
   reducers: {
     onProjectSelected: (state, { payload = [] }) => {
@@ -58,8 +63,19 @@ const dashboardSlice = createSlice({
       state.tasks.filter = ''
       state.tasks.assignees = []
       state.tasks.assigneesIsMe = true
-      state.tasks.attributesOpen = false
+      state.details.filter = 'activity'
       state.tasks.collapsedColumns = []
+    },
+    onReferenceClick: (state, { payload }) => {
+      // open slide out
+      state.slideOut.entityType = payload.entityType
+      state.slideOut.entityId = payload.entityId
+      state.slideOut.projectName = payload.projectName
+    },
+    onSlideOutClose: (state) => {
+      state.slideOut.entityType = ''
+      state.slideOut.entityId = ''
+      state.slideOut.projectName = ''
     },
   },
 })
@@ -75,6 +91,8 @@ export const {
   onCollapsedColumnsChanged,
   onPrefetchIds,
   onClearDashboard,
+  onReferenceClick,
+  onSlideOutClose,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer
 

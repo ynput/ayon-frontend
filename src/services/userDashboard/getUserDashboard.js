@@ -267,45 +267,48 @@ const getUserDashboard = ayonApi.injectEndpoints({
         }
       },
     }),
-    getTaskDetails: build.query({
-      query: ({ projectName, ids }) => ({
+    getDashboardEntityDetails: build.query({
+      query: ({ projectName, ids, entityType }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: buildEntitiesQuery('task'),
+          query: buildEntitiesQuery(entityType),
           variables: { projectName, ids },
         },
       }),
       transformResponse: (res) => res?.data?.project?.tasks?.edges?.map((e) => e?.node || {}),
     }),
-    getTasksDetails: build.query({
-      async queryFn({ tasks = [] }, { dispatch }) {
+    getDashboardEntitiesDetails: build.query({
+      async queryFn({ entities = [], entityIds = [], entityType, projectName }, { dispatch }) {
         try {
-          const tasksDetails = []
-          for (const task of tasks) {
-            // find tasks that are not in this project
-            const taskIds = [task.id]
-            const projectName = task.projectName
-            if (taskIds.length === 0) continue
+          let entitiesData = []
+          // if entityIds are provided then there's no data already fetched
+          if (entityIds.length) entitiesData = entityIds.map((id) => ({ id }))
+          else entitiesData = entities
+
+          const entitiesDetails = []
+          for (const entity of entitiesData) {
+            // find entities that are not in this project
+            const entityIds = [entity.id]
 
             const response = await dispatch(
-              ayonApi.endpoints.getTaskDetails.initiate(
-                { projectName, ids: taskIds },
+              ayonApi.endpoints.getDashboardEntityDetails.initiate(
+                { projectName: projectName || entity.projectName, ids: entityIds, entityType },
                 { forceRefetch: false },
               ),
             )
 
             if (response.status === 'rejected') {
-              console.error('No tasks found', taskIds)
-              return { error: new Error('No tasks found', taskIds) }
+              console.error('No entities found', entityIds)
+              continue
             }
 
-            response.data.forEach((taskData) => {
-              tasksDetails.push({ ...task, ...taskData })
+            response.data?.forEach((taskData) => {
+              entitiesDetails.push({ ...entity, ...taskData })
             })
           }
 
-          return { data: tasksDetails }
+          return { data: entitiesDetails }
         } catch (error) {
           console.error(error)
           return error
@@ -332,7 +335,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
             })) || [],
         ),
       providesTags: (res) =>
-        res.map(({ id }) => ({ type: 'kanBanTask', id }, { type: 'task', id })),
+        res && res.map(({ id }) => ({ type: 'kanBanTask', id }, { type: 'task', id })),
     }),
   }),
 })
@@ -343,7 +346,7 @@ export const {
   useGetKanBanQuery,
   useGetProjectsInfoQuery,
   useGetKanBanUsersQuery,
-  useGetTasksDetailsQuery,
-  useLazyGetTasksDetailsQuery,
+  useGetDashboardEntitiesDetailsQuery,
+  useLazyGetDashboardEntitiesDetailsQuery,
   useGetTaskMentionTasksQuery,
 } = getUserDashboard

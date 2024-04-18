@@ -6,24 +6,32 @@ import { useGetActivitiesQuery, useGetVersionsQuery } from '/src/services/activi
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { onReferenceClick } from '/src/features/dashboard'
 
-const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInfo, filter }) => {
+const Feed = ({
+  entities = [],
+  activeUsers,
+  projectInfo = {},
+  projectName,
+  filter,
+  entityType,
+}) => {
+  const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
 
   const entitiesToQuery = useMemo(
-    () => tasks.map((task) => ({ id: task.id, projectName: task.projectName, type: 'task' })),
-    [tasks],
+    () =>
+      entities.map((entity) => ({ id: entity.id, projectName: entity.projectName, entityType })),
+    [entities],
   )
   const entityIds = entitiesToQuery.map((entity) => entity.id)
 
   const [currentCursors, setCurrentCursors] = useState({})
 
-  const projectName = selectedTasksProjects[0]
-  const entityType = 'task'
-  const entityId = tasks[0].id
+  const entityId = entities[0]?.id
 
   let activityType = 'comment'
   if (filter === 'checklists') activityType = 'checklist'
@@ -38,12 +46,10 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     activityTypes: [activityType],
   })
 
-  // get all versions for the task
+  // get all versions for the entity
   const { data: versionsData = [] } = useGetVersionsQuery({
     entities: entitiesToQuery,
   })
-
-  const projectInfo = projectsInfo[projectName]
 
   // TODO: transform versions data into activity data
   const versionActivities = []
@@ -79,7 +85,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
     projectName,
-    entityType,
+    entityType: entityType,
     entityId,
     entityIds,
     activityTypes: [activityType],
@@ -146,6 +152,15 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
     setCurrentCursors({ ...currentCursors, [activityType]: cursor })
   }
 
+  const handleRefClick = (ref = {}) => {
+    const { entityId, entityType, projectName } = ref
+
+    if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
+
+    // open slide out panel
+    dispatch(onReferenceClick({ entityId, entityType, projectName }))
+  }
+
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
@@ -158,10 +173,12 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
             onUpdate={(value) => updateComment(activity, value)}
             projectInfo={projectInfo}
             projectName={projectName}
+            entityType={entityType}
+            onReferenceClick={handleRefClick}
             editProps={{
               activeUsers,
               projectName,
-              entities: tasks,
+              entities: entities,
               versions: versionsData,
             }}
           />
@@ -172,7 +189,7 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
           </Styled.LoadMore>
         </InView>
       </Styled.FeedContent>
-      {!!tasks.length && (
+      {!!entities.length && (
         <CommentInput
           initValue={null}
           onSubmit={submitComment}
@@ -182,8 +199,8 @@ const Feed = ({ tasks = [], activeUsers, selectedTasksProjects = [], projectsInf
           activeUsers={activeUsers}
           projectName={projectName}
           versions={versionsData}
-          entities={tasks}
-          projectInfo={projectsInfo[projectName]}
+          entities={entities}
+          projectInfo={projectInfo}
           filter={filter}
         />
       )}

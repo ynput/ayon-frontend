@@ -39,6 +39,8 @@ const ActivityComment = ({
   projectInfo,
   editProps = {},
   projectName,
+  entityType,
+  onReferenceClick,
 }) => {
   let {
     body,
@@ -84,6 +86,8 @@ const ActivityComment = ({
         onEdit={handleEditComment}
         projectInfo={projectInfo}
         projectName={projectName}
+        entityType={entityType}
+        onReferenceClick={onReferenceClick}
       />
       <Styled.Body className={classNames('comment-body', { isEditing })}>
         {isEditing ? (
@@ -119,6 +123,10 @@ const ActivityComment = ({
                       name={id}
                       {...{ type, id, label, projectName, projectInfo }}
                       variant={isEntity ? 'filled' : 'primary'}
+                      onClick={() =>
+                        type !== 'user' &&
+                        onReferenceClick({ entityId: id, entityType: type, projectName })
+                      }
                     >
                       {label}
                     </ActivityReference>

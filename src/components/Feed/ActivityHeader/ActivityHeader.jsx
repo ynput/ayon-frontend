@@ -20,6 +20,8 @@ const ActivityHeader = ({
   id,
   projectInfo,
   projectName,
+  entityType,
+  onReferenceClick,
 }) => {
   const { referenceType, origin = {}, isOwner } = activity
   const isMention = referenceType === 'mention'
@@ -40,7 +42,7 @@ const ActivityHeader = ({
               <strong>{isMention ? `mentioned` : 'commented'}</strong>
             </Styled.Text>
             <Styled.Text style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isMention ? `this ${origin?.type} in` : 'on'}
+              {isMention ? `this ${entityType} in` : 'on'}
             </Styled.Text>
             <ActivityReference
               id={origin?.id}
@@ -48,6 +50,9 @@ const ActivityHeader = ({
               projectName={projectName}
               variant="text"
               projectInfo={projectInfo}
+              onClick={() =>
+                onReferenceClick({ entityId: origin?.id, entityType: origin?.type, projectName })
+              }
             >
               {origin?.label || origin?.name}
             </ActivityReference>

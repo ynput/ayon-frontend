@@ -86,7 +86,7 @@ const getActivities = ayonApi.injectEndpoints({
           const currentUser = getState().user.name
           const allVersions = []
           for (const entity of entities) {
-            const { id: entityId, projectName, type: entityType } = entity
+            const { id: entityId, projectName, entityType } = entity
             if (!entityId) continue
 
             // fetch activities for each entity
@@ -102,7 +102,7 @@ const getActivities = ayonApi.injectEndpoints({
               return { error: new Error('No activities found', entityId) }
             }
 
-            response.data.forEach((versionsData) => {
+            response.data?.forEach((versionsData) => {
               // add activities to allVersions
               allVersions.push({ ...versionsData, entityId: entityId, entityType, projectName })
             })
