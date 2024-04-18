@@ -13,11 +13,11 @@ const UserDashDetailsFilters = () => {
       label: 'Activity',
       icon: 'forum',
     },
-    {
-      id: 'versions',
-      label: 'Versions',
-      icon: 'layers',
-    },
+    // {
+    //   id: 'versions',
+    //   label: 'Versions',
+    //   icon: 'layers',
+    // },
     {
       id: 'checklists',
       label: 'Checklists',
