@@ -326,7 +326,7 @@ const UserDetail = ({
     // add admin, manager, service
     if (isUserManager) replaceAccessRoles('manager')
     if (isUserAdmin) replaceAccessRoles('admin')
-    else if (user.isService) accessGroups.push('service')
+    if (user.isService) replaceAccessRoles('service')
 
     return [...new Set([...acc, ...accessGroups])]
   }, [])
