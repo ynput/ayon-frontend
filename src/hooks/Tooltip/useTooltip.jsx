@@ -2,6 +2,7 @@ import { isEqual, snakeCase } from 'lodash'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import * as Styled from './Tooltip.styled'
+import rehypeExternalLinks from 'rehype-external-links'
 
 const getTooltipId = (tooltip, shortcut, id) => {
   return snakeCase(tooltip + ' ' + shortcut + ' ' + id)
@@ -174,7 +175,9 @@ const useTooltip = () => {
       >
         <Styled.TooltipInner as={tooltip?.as === 'markdown' ? 'div' : tooltip?.as}>
           {tooltip?.as === 'markdown' ? (
-            <ReactMarkdown linkTarget={'_blank'}>{tooltip?.tooltip}</ReactMarkdown>
+            <ReactMarkdown rehypePlugins={[[rehypeExternalLinks, { target: '_blank' }]]}>
+              {tooltip?.tooltip}
+            </ReactMarkdown>
           ) : (
             tooltip?.tooltip
           )}
