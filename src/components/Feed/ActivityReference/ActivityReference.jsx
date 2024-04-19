@@ -21,6 +21,7 @@ const ActivityReference = ({
   disabled,
   projectName,
   projectInfo,
+  onClick,
   ...props
 }) => {
   const icon = typeIcons[type] || 'link'
@@ -37,6 +38,12 @@ const ActivityReference = ({
     setReferenceCenterPos({ left: x + width / 2, top: y })
   }, [ref.current, refHover])
 
+  const handleClick = () => {
+    onClick && onClick()
+    // close hover
+    setRefHover(false)
+  }
+
   return (
     <>
       <Styled.Reference
@@ -47,6 +54,7 @@ const ActivityReference = ({
         ref={ref}
         onMouseEnter={() => !disabled && setRefHover(true)}
         onMouseLeave={() => setRefHover(false)}
+        onClick={handleClick}
         className={classNames({ disabled, isEntity }, 'reference')}
       >
         <Icon icon={icon} />

@@ -4,7 +4,7 @@
 import useShortcuts from '../hooks/useShortcuts'
 
 const Shortcuts = ({ shortcuts = [], deps = [] }) => {
-  useShortcuts(shortcuts, [deps])
+  useShortcuts(shortcuts, deps)
 
   return null
 }

@@ -20,7 +20,7 @@ export const CloseButton = styled(Button)`
   right: 4px;
   top: 4px;
   width: fit-content;
-  z-index: 100;
+  z-index: 50;
 `
 
 export const Header = styled.header`
@@ -35,6 +35,16 @@ export const Header = styled.header`
 `
 
 export const Path = styled(OverflowField)`
+  position: relative;
+
+  &:hover {
+    z-index: 100;
+  }
+
+  &.onClose {
+    padding-right: 40px;
+  }
+
   & > span {
     -webkit-transform: translate3d(0, 0, 0);
   }

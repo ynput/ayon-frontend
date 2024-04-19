@@ -1,3 +1,4 @@
+import { getShimmerStyles } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const FeedContainer = styled.section`
@@ -28,4 +29,16 @@ export const LoadMore = styled.span`
   padding: 16px 8px;
   color: var(--md-sys-color-outline);
   font-size: 11px;
+`
+
+export const Placeholder = styled.div`
+  height: 100px;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 8px 0;
+
+  position: relative;
+
+  ${getShimmerStyles()}
 `

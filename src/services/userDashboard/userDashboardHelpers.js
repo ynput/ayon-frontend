@@ -1,6 +1,7 @@
 // NOTE: THIS DOES NOT RUN WHEN PATCHING THE TASKS
 
 import { upperCase, upperFirst } from 'lodash'
+import { productTypes } from '/src/features/project'
 
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
@@ -21,7 +22,6 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       name: task.name,
       label: task.label,
       status: task.status,
-      tags: task.tags,
       taskType: task.taskType,
       assignees: task.assignees,
       updatedAt: task.updatedAt,
@@ -34,8 +34,55 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       thumbnailId,
       projectName: projectName,
       projectCode: code,
+      folder: task.folder,
     }
   })
+
+export const transformEntityData = ({ entity = {}, entityType, projectName, projectInfo }) => {
+  // fields that are top level for all entity types
+  const sharedFields = ['id', 'tags', 'status', 'updatedAt', 'thumbnailId']
+  const baseDetailsData = sharedFields.reduce((acc, field) => {
+    if (entity[field]) {
+      acc[field] = entity[field]
+    }
+    return acc
+  }, {})
+
+  baseDetailsData['projectName'] = projectName
+  baseDetailsData['entityType'] = entityType
+
+  switch (entityType) {
+    case 'task': {
+      const path = `${projectName}${entity.folder?.path}/${entity.name}`
+      const tasks = projectInfo.task_types || []
+      const icon = tasks.find((task) => task.name === entity.taskType)?.icon
+      return {
+        ...baseDetailsData,
+        title: entity?.folder?.label || entity?.folder?.name || 'Unknown Folder',
+        subTitle: entity.label || entity.name,
+        users: entity.assignees,
+        path: path,
+        folderId: entity.folderId,
+        icon: icon,
+      }
+    }
+    case 'version': {
+      const path = `${projectName}${entity.product?.folder?.path}/${entity.product?.name}/${entity.name}`
+      const icon = productTypes[entity.product?.productType]?.icon
+      return {
+        ...baseDetailsData,
+        title: entity?.product?.name || 'Unknown Product',
+        subTitle: entity.name || entity.version,
+        users: [entity.author],
+        path: path,
+        folderId: entity.product?.folder?.id,
+        icon: icon || 'layers',
+      }
+    }
+    default:
+      return baseDetailsData
+  }
+}
 
 export const taskProvideTags = (result, type = 'task', entityType = 'task') =>
   result?.length

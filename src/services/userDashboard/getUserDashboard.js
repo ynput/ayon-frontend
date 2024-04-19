@@ -1,14 +1,14 @@
 import { isEqual } from 'lodash'
 import { ayonApi } from '../ayon'
-import { taskProvideTags, transformTasksData } from './userDashboardHelpers'
+import { taskProvideTags, transformEntityData, transformTasksData } from './userDashboardHelpers'
 import {
   KAN_BAN_ASSIGNEES_QUERY,
   TASK_MENTION_TASKS,
   KAN_BAN_TASK_QUERY,
   PROJECT_TASKS_QUERY,
+  buildDetailsQuery,
 } from './userDashboardQueries'
 import PubSub from '/src/pubsub'
-import { buildEntitiesQuery } from '../entity/getEntity'
 
 const getUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -18,7 +18,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: PROJECT_TASKS_QUERY,
+          query: PROJECT_TASKS_QUERY(['endDate']),
           variables: { assignees, projectName },
         },
       }),
@@ -56,7 +56,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
             // then get the task data from the entity id
             const response = await dispatch(
               ayonApi.endpoints.getKanBanTask.initiate(
-                { projectName, taskId: entityId },
+                { projectName, entityId },
                 { forceRefetch: true },
               ),
             )
@@ -187,12 +187,12 @@ const getUserDashboard = ayonApi.injectEndpoints({
       },
     }),
     getKanBanTask: build.query({
-      query: ({ taskId, projectName }) => ({
+      query: ({ entityId, projectName }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: KAN_BAN_TASK_QUERY,
-          variables: { taskId, projectName },
+          query: KAN_BAN_TASK_QUERY(['endDate']),
+          variables: { entityId, projectName },
         },
       }),
       transformResponse: (response) =>
@@ -268,44 +268,53 @@ const getUserDashboard = ayonApi.injectEndpoints({
       },
     }),
     getDashboardEntityDetails: build.query({
-      query: ({ projectName, ids, entityType }) => ({
+      query: ({ projectName, entityId, entityType }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: buildEntitiesQuery(entityType),
-          variables: { projectName, ids },
+          query: buildDetailsQuery(entityType),
+          variables: { projectName, entityId },
         },
       }),
-      transformResponse: (res) => res?.data?.project?.tasks?.edges?.map((e) => e?.node || {}),
+      transformResponse: (response, meta, { entityType, projectName, projectInfo }) =>
+        transformEntityData({
+          projectName: projectName,
+          entity: response?.data?.project && response?.data?.project[entityType],
+          entityType,
+          projectInfo,
+        }),
     }),
     getDashboardEntitiesDetails: build.query({
-      async queryFn({ entities = [], entityIds = [], entityType, projectName }, { dispatch }) {
+      async queryFn(
+        { entities = [], entityIds = [], entityType, projectName, projectInfo },
+        { dispatch },
+      ) {
         try {
           let entitiesData = []
           // if entityIds are provided then there's no data already fetched
-          if (entityIds.length) entitiesData = entityIds.map((id) => ({ id }))
+          if (entityIds.length) entitiesData = entityIds?.map((id) => ({ id }))
           else entitiesData = entities
 
           const entitiesDetails = []
           for (const entity of entitiesData) {
-            // find entities that are not in this project
-            const entityIds = [entity.id]
-
             const response = await dispatch(
               ayonApi.endpoints.getDashboardEntityDetails.initiate(
-                { projectName: projectName || entity.projectName, ids: entityIds, entityType },
+                {
+                  projectName: projectName || entity.projectName,
+                  entityId: entity.id,
+                  entityType,
+                  projectInfo,
+                },
                 { forceRefetch: false },
               ),
             )
 
             if (response.status === 'rejected') {
-              console.error('No entities found', entityIds)
+              console.error('No entity found')
               continue
             }
 
-            response.data?.forEach((taskData) => {
-              entitiesDetails.push({ ...entity, ...taskData })
-            })
+            entitiesDetails.push(response.data)
           }
 
           return { data: entitiesDetails }

@@ -36,7 +36,7 @@ const Feed = ({
   let activityType = 'comment'
   if (filter === 'checklists') activityType = 'checklist'
 
-  const { data: activitiesData = [] } = useGetActivitiesQuery({
+  const { data: activitiesData = [], isFetching: isFetchingActivities } = useGetActivitiesQuery({
     entityIds: entityIds,
     projectName: projectName,
     cursor: currentCursors[activityType],
@@ -154,6 +154,9 @@ const Feed = ({
 
   const handleRefClick = (ref = {}) => {
     const { entityId, entityType, projectName } = ref
+    const supportedTypes = ['version', 'task']
+
+    if (!supportedTypes.includes(entityType)) return console.log('Entity type not supported yet')
 
     if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
 
@@ -161,28 +164,45 @@ const Feed = ({
     dispatch(onReferenceClick({ entityId, entityType, projectName }))
   }
 
+  const getRandomNumberBetween = (min = 50, max = 200) => {
+    return Math.floor(Math.random() * (max - min + 1) + min)
+  }
+
+  const placeholders = useMemo(
+    () =>
+      new Array(10)
+        .fill(0)
+        .map((_, index) => (
+          <Styled.Placeholder key={index} style={{ minHeight: getRandomNumberBetween() }} />
+        )),
+
+    [],
+  )
+
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
-        {activitiesToShow.map((activity) => (
-          <ActivityItem
-            key={activity.activityId}
-            activity={activity}
-            onCheckChange={handleCommentChecked}
-            onDelete={deleteComment}
-            onUpdate={(value) => updateComment(activity, value)}
-            projectInfo={projectInfo}
-            projectName={projectName}
-            entityType={entityType}
-            onReferenceClick={handleRefClick}
-            editProps={{
-              activeUsers,
-              projectName,
-              entities: entities,
-              versions: versionsData,
-            }}
-          />
-        ))}
+        {!isFetchingActivities
+          ? activitiesToShow.map((activity) => (
+              <ActivityItem
+                key={activity.activityId}
+                activity={activity}
+                onCheckChange={handleCommentChecked}
+                onDelete={deleteComment}
+                onUpdate={(value) => updateComment(activity, value)}
+                projectInfo={projectInfo}
+                projectName={projectName}
+                entityType={entityType}
+                onReferenceClick={handleRefClick}
+                editProps={{
+                  activeUsers,
+                  projectName,
+                  entities: entities,
+                  versions: versionsData,
+                }}
+              />
+            ))
+          : placeholders}
         <InView onChange={(inView) => inView && handleGetMoreActivities()} threshold={1}>
           <Styled.LoadMore style={{ height: 0 }}>
             {hasPreviousPage ? 'Loading more...' : ''}

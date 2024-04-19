@@ -72,10 +72,10 @@ const CommentInput = ({
   }, [initHeight, editorRef.current, isEditing])
 
   // for the task (entity), get all folderIds
-  const folderIds = entities.map((entity) => entity.folderId)
+  const folderIds = entities.flatMap((entity) => entity.folderId || [])
 
   const { data: mentionTasks = [] } = useGetTaskMentionTasksQuery(
-    { projectName: projectName, folderIds },
+    { projectName, folderIds },
     {
       skip: !projectName || !folderIds.length,
     },
