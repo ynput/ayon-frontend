@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { usePaste } from '/src/context/pasteContext'
 
-import { Dialog } from 'primereact/dialog'
+import { Dialog } from '@ynput/ayon-react-components'
 import { InputText } from 'primereact/inputtext'
 
 import { toast } from 'react-toastify'
@@ -172,9 +172,10 @@ const AnatomyPresets = () => {
       {showNameDialog && (
         <Dialog
           header="Preset name"
-          visible="true"
-          onHide={() => setShowNameDialog(false)}
+          isOpen={true}
+          onClose={() => setShowNameDialog(false)}
           style={{ minWidth: 300 }}
+          size="sm"
           footer={
             <SaveButton
               label="Create New Preset"

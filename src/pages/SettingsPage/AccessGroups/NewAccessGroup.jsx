@@ -1,8 +1,7 @@
-import { FormLayout, FormRow, InputText, SaveButton, Spacer } from '@ynput/ayon-react-components'
+import { FormLayout, FormRow, InputText, SaveButton, Spacer, Dialog } from '@ynput/ayon-react-components'
 import { useMemo, useState } from 'react'
 import { useCreateAccessGroupMutation } from '/src/services/accessGroups/updateAccessGroups'
 import { toast } from 'react-toastify'
-import { Dialog } from 'primereact/dialog'
 
 const NewAccessGroup = ({ onClose, accessGroupList }) => {
   const [accessGroupName, setAccessGroupName] = useState('')
@@ -56,9 +55,10 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     <Dialog
       header="New access group"
       footer={footer}
-      onHide={onClose}
-      visible={true}
-      bodyStyle={{ width: 400, overflow: 'hidden' }}
+      onClose={onClose}
+      isOpen={true}
+      style={{ width: 400, overflow: 'hidden' }}
+      size="sm"
     >
       <FormLayout>
         <FormRow label="Access group name">
