@@ -39,20 +39,6 @@ const patchActivities = async (
   }
 }
 
-// all activityTypes
-const allActivityTypes = ['comment', 'checklist']
-
-const generateInvalidationTags = ({ activityTypes = [], entityId, data }) => [
-  // invalidate getActivity by the activityId (getActivity has many activityIds)
-  { type: 'activity', id: data.activityId },
-  // invalidate getActivity for the entity (all activities for the entity)
-  { type: 'entityActivities', id: entityId },
-  // invalidate other activityTypes for the entity (comment would invalidate checklist)
-  ...allActivityTypes
-    .filter((type) => activityTypes.includes(type))
-    .map((type) => ({ type: 'entityActivities', id: type })),
-]
-
 const updateActivities = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     createEntityActivity: build.mutation({
@@ -65,7 +51,6 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'create')
       },
-      invalidatesTags: (result, error, args) => generateInvalidationTags(args),
     }),
 
     updateActivity: build.mutation({
@@ -77,8 +62,6 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'update')
       },
-      invalidatesTags: (result, error, args) =>
-        generateInvalidationTags({ data: { activityId: args.activityId }, ...args }),
     }),
     deleteActivity: build.mutation({
       query: ({ projectName, activityId }) => ({
@@ -88,7 +71,6 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'delete')
       },
-      invalidatesTags: (result, error, args) => generateInvalidationTags(args),
     }),
   }),
 })
