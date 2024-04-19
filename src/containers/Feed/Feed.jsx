@@ -16,6 +16,7 @@ const Feed = ({
   projectName,
   filter,
   entityType,
+  isSlideOut,
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
@@ -36,7 +37,11 @@ const Feed = ({
   let activityType = 'comment'
   if (filter === 'checklists') activityType = 'checklist'
 
-  const { data: activitiesData = [], isFetching: isFetchingActivities } = useGetActivitiesQuery({
+  const {
+    data: activitiesData = [],
+    isFetching: isFetchingActivities,
+    currentData,
+  } = useGetActivitiesQuery({
     entityIds: entityIds,
     projectName: projectName,
     cursor: currentCursors[activityType],
@@ -182,8 +187,9 @@ const Feed = ({
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
-        {!isFetchingActivities
-          ? activitiesToShow.map((activity) => (
+        {isFetchingActivities && !currentData
+          ? placeholders
+          : activitiesToShow.map((activity) => (
               <ActivityItem
                 key={activity.activityId}
                 activity={activity}
@@ -194,6 +200,7 @@ const Feed = ({
                 projectName={projectName}
                 entityType={entityType}
                 onReferenceClick={handleRefClick}
+                isSlideOut={isSlideOut}
                 editProps={{
                   activeUsers,
                   projectName,
@@ -201,8 +208,7 @@ const Feed = ({
                   versions: versionsData,
                 }}
               />
-            ))
-          : placeholders}
+            ))}
         <InView onChange={(inView) => inView && handleGetMoreActivities()} threshold={1}>
           <Styled.LoadMore style={{ height: 0 }}>
             {hasPreviousPage ? 'Loading more...' : ''}

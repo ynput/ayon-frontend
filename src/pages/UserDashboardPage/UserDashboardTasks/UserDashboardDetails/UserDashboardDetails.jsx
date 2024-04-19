@@ -23,17 +23,23 @@ const UserDashboardDetails = ({
   projectInfo,
   projectName,
   onClose,
+  isSlideOut,
   style = {},
 }) => {
   const filter = useSelector((state) => state.dashboard.details.filter)
   // now we get the full details data for selected entities
+
+  const entitiesToQuery = entityIds.length
+    ? entityIds.map((id) => ({ id, projectName }))
+    : entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+
   const {
     data: detailsData = {},
     isFetching: isLoadingEntitiesDetails,
     isSuccess,
     isError,
   } = useGetDashboardEntitiesDetailsQuery(
-    { entities, entityType, entityIds, projectName, projectInfo },
+    { entityType, entities: entitiesToQuery, projectInfo },
     { skip: !entities.length && !entityIds.length },
   )
 
@@ -84,6 +90,7 @@ const UserDashboardDetails = ({
             projectInfo={projectInfo}
             projectName={projectName}
             filter={filter}
+            isSlideOut={isSlideOut}
           />
         )}
       </Panel>

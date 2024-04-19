@@ -63,6 +63,7 @@ const UserDashboardSlideOut = ({ projectsInfo }) => {
         tagsOptions={tags}
         projectUsers={users}
         activeProjectUsers={users}
+        isSlideOut
       />
       <Shortcuts shortcuts={[{ key: 'Escape', action: handleClose }]} deps={[]} />
     </Styled.SlideOut>

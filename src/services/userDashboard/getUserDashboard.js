@@ -283,24 +283,28 @@ const getUserDashboard = ayonApi.injectEndpoints({
           entityType,
           projectInfo,
         }),
+      serializeQueryArgs: ({ queryArgs: { projectName, entityId, entityType } }) => ({
+        projectName,
+        entityId,
+        entityType,
+      }),
+      providesTags: (res, error, { entityId, entityType }) =>
+        res
+          ? [
+              { type: entityType, id: entityId },
+              { type: entityType, id: 'LIST' },
+            ]
+          : [{ type: entityType, id: 'LIST' }],
     }),
     getDashboardEntitiesDetails: build.query({
-      async queryFn(
-        { entities = [], entityIds = [], entityType, projectName, projectInfo },
-        { dispatch },
-      ) {
+      async queryFn({ entities = [], entityType, projectInfo }, { dispatch }) {
         try {
-          let entitiesData = []
-          // if entityIds are provided then there's no data already fetched
-          if (entityIds.length) entitiesData = entityIds?.map((id) => ({ id }))
-          else entitiesData = entities
-
           const entitiesDetails = []
-          for (const entity of entitiesData) {
+          for (const entity of entities) {
             const response = await dispatch(
               ayonApi.endpoints.getDashboardEntityDetails.initiate(
                 {
-                  projectName: projectName || entity.projectName,
+                  projectName: entity.projectName,
                   entityId: entity.id,
                   entityType,
                   projectInfo,
@@ -323,6 +327,10 @@ const getUserDashboard = ayonApi.injectEndpoints({
           return error
         }
       },
+      serializeQueryArgs: ({ queryArgs: { entities, entityType } }) => ({
+        entities,
+        entityType,
+      }),
     }),
     getTaskMentionTasks: build.query({
       query: ({ projectName, folderIds = [] }) => ({

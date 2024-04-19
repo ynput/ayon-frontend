@@ -55,7 +55,8 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
     case 'task': {
       const path = `${projectName}${entity.folder?.path}/${entity.name}`
       const tasks = projectInfo.task_types || []
-      const icon = tasks.find((task) => task.name === entity.taskType)?.icon
+      const entitySubType = entity.taskType
+      const icon = tasks.find((task) => task.name === entitySubType)?.icon
       return {
         ...baseDetailsData,
         title: entity?.folder?.label || entity?.folder?.name || 'Unknown Folder',
@@ -64,11 +65,13 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         path: path,
         folderId: entity.folderId,
         icon: icon,
+        entitySubType: entitySubType,
       }
     }
     case 'version': {
       const path = `${projectName}${entity.product?.folder?.path}/${entity.product?.name}/${entity.name}`
-      const icon = productTypes[entity.product?.productType]?.icon
+      const entitySubType = entity.product?.productType
+      const icon = productTypes[entitySubType]?.icon
       return {
         ...baseDetailsData,
         title: entity?.product?.name || 'Unknown Product',
@@ -77,6 +80,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         path: path,
         folderId: entity.product?.folder?.id,
         icon: icon || 'layers',
+        entitySubType: entitySubType,
       }
     }
     default:

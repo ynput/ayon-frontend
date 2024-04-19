@@ -41,6 +41,7 @@ const ActivityComment = ({
   projectName,
   entityType,
   onReferenceClick,
+  isSlideOut,
 }) => {
   let {
     body,
@@ -55,10 +56,13 @@ const ActivityComment = ({
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName || 'Unknown'
-  const menuId = 'comment-' + activity.activityId
+  let menuId = 'comment-' + activity.activityId
+  if (isSlideOut) menuId += '-slideout'
   const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
   // EDITING
   const [isEditing, setIsEditing] = useState(false)
+
+  console.log(menuId)
 
   const handleEditComment = () => {
     setIsEditing(true)

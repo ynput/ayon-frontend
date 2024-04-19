@@ -113,13 +113,27 @@ const UserDashDetailsHeader = ({
     .filter((action) => {
       const actions = actionTaskTypes[action.pinned]
       if (!actions) return false
-      return actions.some((action) => action.toLowerCase() === singleEntity.taskType?.toLowerCase())
+      return actions.some(
+        (action) => action.toLowerCase() === singleEntity.entitySubType?.toLowerCase(),
+      )
     })
     .map((action) => action.id)
 
   const portalId = 'dashboard-details-header'
 
-  const hasUser = ['task', 'version'].includes(entityType)
+  const hasUser =
+    ['task', 'version'].includes(entityType) &&
+    (selectedTasksAssignees.length > 0 || entityType === 'task')
+
+  const usersOptions = users.map((u) => u)
+  if (hasUser) {
+    // check if all users are in options, otherwise add them
+    const allUsers = users.map((u) => u.name)
+    const usersToAdd = selectedTasksAssignees.filter((u) => !allUsers.includes(u))
+    if (usersToAdd.length) {
+      usersOptions.push(...usersToAdd.map((u) => ({ name: u, fullName: u })))
+    }
+  }
 
   return (
     <Styled.Container>
@@ -157,10 +171,6 @@ const UserDashDetailsHeader = ({
         </Styled.Header>
         <Styled.Section>
           <Styled.ContentRow>
-            <label>Status</label>
-            {hasUser && <label>Assigned</label>}
-          </Styled.ContentRow>
-          <Styled.ContentRow>
             <Styled.TaskStatusSelect
               value={statusesValue}
               options={statusesOptions}
@@ -171,8 +181,8 @@ const UserDashDetailsHeader = ({
             />
             {hasUser && (
               <AssigneeSelect
-                value={isMultiple ? selectedTasksAssignees : singleEntity.assignees}
-                options={users}
+                value={selectedTasksAssignees}
+                options={usersOptions}
                 disabledValues={disabledAssignees.map((u) => u.name)}
                 isMultiple={isMultiple && selectedTasksAssignees.length > 1}
                 editor={entityType === 'task'}
@@ -183,10 +193,6 @@ const UserDashDetailsHeader = ({
           </Styled.ContentRow>
         </Styled.Section>
         <Styled.Section>
-          <Styled.ContentRow>
-            <label>Actions</label>
-            <label>Tags</label>
-          </Styled.ContentRow>
           <Styled.ContentRow>
             <Actions options={actions} pinned={pinned} />
             <TagsSelect

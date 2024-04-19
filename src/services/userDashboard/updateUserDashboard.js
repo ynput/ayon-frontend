@@ -27,12 +27,28 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           )
         }
 
+        const entities = [{ projectName, id: taskId }]
+        // update any entity details panels in dashboard
+        let entityDetailsResult = dispatch(
+          ayonApi.util.updateQueryData(
+            'getDashboardEntitiesDetails',
+            { entities, entityType },
+            (draft) => {
+              const entityIndex = draft.findIndex((entity) => entity.id === taskId)
+              if (entityIndex === -1) return
+              const newData = { ...draft[entityIndex], ...data }
+              draft[entityIndex] = newData
+            },
+          ),
+        )
+
         try {
           await queryFulfilled
         } catch (error) {
           console.error('error updating ' + entityType, error)
           toast.error(error?.error?.data?.detail || 'Failed to update task')
           patchResult?.undo()
+          entityDetailsResult?.undo()
         }
       },
       // this triggers a refetch of anything with the entity id tag
