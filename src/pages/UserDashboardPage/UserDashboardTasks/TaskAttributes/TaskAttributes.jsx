@@ -14,7 +14,7 @@ const TaskAttributes = ({ entities = [], isLoading, entityType }) => {
   return (
     <Section style={{ padding: 8, overflow: 'hidden' }}>
       <AttributeTable
-        style={{ overflow: 'auto', paddingTop: 45 }}
+        style={{ overflow: 'auto', marginTop: 45 }}
         entityType={entityType}
         data={attribsData}
         isLoading={isLoading}

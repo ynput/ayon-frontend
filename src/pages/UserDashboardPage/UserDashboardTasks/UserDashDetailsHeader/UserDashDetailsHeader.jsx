@@ -19,6 +19,7 @@ const UserDashDetailsHeader = ({
   disabledStatuses,
   tagsOptions = [],
   onClose,
+  isSlideOut,
 }) => {
   // for selected entities, get flat list of assignees
   const selectedTasksAssignees = useMemo(
@@ -205,7 +206,7 @@ const UserDashDetailsHeader = ({
           </Styled.ContentRow>
         </Styled.Section>
       </Styled.SectionWrapper>
-      <UserDashDetailsFilters />
+      <UserDashDetailsFilters isSlideOut={isSlideOut} />
     </Styled.Container>
   )
 }

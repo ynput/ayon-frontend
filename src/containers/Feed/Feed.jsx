@@ -14,12 +14,14 @@ const Feed = ({
   activeUsers,
   projectInfo = {},
   projectName,
-  filter,
   entityType,
   isSlideOut,
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
+  const path = isSlideOut ? 'slideOut' : 'details'
+  const activityTypes = useSelector((state) => state.dashboard[path].activityTypes)
+  const filter = useSelector((state) => state.dashboard[path].filter)
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
 
@@ -34,9 +36,6 @@ const Feed = ({
 
   const entityId = entities[0]?.id
 
-  let activityType = 'comment'
-  if (filter === 'checklists') activityType = 'checklist'
-
   const {
     data: activitiesData = [],
     isFetching: isFetchingActivities,
@@ -44,11 +43,11 @@ const Feed = ({
   } = useGetActivitiesQuery({
     entityIds: entityIds,
     projectName: projectName,
-    cursor: currentCursors[activityType],
+    cursor: currentCursors[filter],
     last: 20,
     currentUser: userName,
     referenceTypes: ['origin', 'mention', 'relation'],
-    activityTypes: [activityType],
+    activityTypes: activityTypes,
   })
 
   // get all versions for the entity
@@ -93,7 +92,7 @@ const Feed = ({
     entityType: entityType,
     entityId,
     entityIds,
-    activityTypes: [activityType],
+    activityTypes,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
@@ -154,7 +153,7 @@ const Feed = ({
     if (!cursor) return console.log('No cursor found')
     console.log('fetching more activities...')
     // get more activities
-    setCurrentCursors({ ...currentCursors, [activityType]: cursor })
+    setCurrentCursors({ ...currentCursors, [filter]: cursor })
   }
 
   const handleRefClick = (ref = {}) => {

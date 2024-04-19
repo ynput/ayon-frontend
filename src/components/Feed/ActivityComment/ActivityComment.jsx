@@ -62,8 +62,6 @@ const ActivityComment = ({
   // EDITING
   const [isEditing, setIsEditing] = useState(false)
 
-  console.log(menuId)
-
   const handleEditComment = () => {
     setIsEditing(true)
   }

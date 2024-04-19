@@ -1,6 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
 
+const filterActivityTypes = {
+  activity: ['comment', 'status.change', 'assignee.add', 'assignee.remove'],
+  comments: ['comment'],
+  versions: ['version'],
+  checklists: ['checklist'],
+}
+
 const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState: {
@@ -13,16 +20,22 @@ const dashboardSlice = createSlice({
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
       assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
-      attributesOpen: getInitialStateLocalStorage('dashboard-tasks-attributesOpen', false),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
     },
     details: {
       filter: getInitialStateLocalStorage('dashboard-details-filter', 'activity'),
+      activityTypes:
+        filterActivityTypes[getInitialStateLocalStorage('dashboard-details-filter', 'activity')] ||
+        [],
+      attributesOpen: false,
     },
     slideOut: {
       entityType: '',
       entityId: '',
       projectName: '',
+      filter: 'activity',
+      activityTypes: filterActivityTypes.activity,
+      attributesOpen: false,
     },
   },
   reducers: {
@@ -45,8 +58,18 @@ const dashboardSlice = createSlice({
       state.tasks.assignees = assignees
       state.tasks.assigneesIsMe = assigneesIsMe
     },
-    onDetailsFilterChange: (state, { payload }) => {
-      state.details.filter = payload
+    onAttribsOpenChange: (state, { payload }) => {
+      const location = payload.isSlideOut ? 'slideOut' : 'details'
+      // toggle the details open
+      state[location].attributesOpen = !state[location].attributesOpen
+    },
+    onFeedFilterChange: (state, { payload }) => {
+      const location = payload.isSlideOut ? 'slideOut' : 'details'
+      state[location].filter = payload.value
+      state[location].activityTypes =
+        filterActivityTypes[payload.value] || filterActivityTypes.activity
+      // hide attributes when changing feed
+      state[location].attributesOpen = false
     },
     onCollapsedColumnsChanged: (state, { payload }) => {
       state.tasks.collapsedColumns = payload
@@ -87,7 +110,8 @@ export const {
   onTasksGroupByChanged,
   onTasksFilterChanged,
   onAssigneesChanged,
-  onDetailsFilterChange,
+  onAttribsOpenChange,
+  onFeedFilterChange,
   onCollapsedColumnsChanged,
   onPrefetchIds,
   onClearDashboard,
@@ -108,6 +132,6 @@ export const dashboardLocalItems = {
     { key: 'dashboard-tasks-assigneesIsMe', payload: 'assigneesIsMe' },
   ],
   'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
-  'dashboard/onDetailsFilterChange': [{ key: 'dashboard-details-filter' }],
+  'dashboard/onFeedFilterChange': [{ key: 'dashboard-details-filter' }],
   'dashboard/onCollapsedColumnsChanged': [{ key: 'dashboard-tasks-collapsedColumns' }],
 }

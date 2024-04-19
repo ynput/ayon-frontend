@@ -1,17 +1,28 @@
 import * as Styled from './UserDashDetailsFilters.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { onDetailsFilterChange } from '/src/features/dashboard'
+import { onAttribsOpenChange, onFeedFilterChange } from '/src/features/dashboard'
+import { Spacer } from '@ynput/ayon-react-components'
 
-const UserDashDetailsFilters = () => {
+const UserDashDetailsFilters = ({ isSlideOut }) => {
   const dispatch = useDispatch()
-  const setAttributesOpen = (value) => dispatch(onDetailsFilterChange(value))
-  const selectedFilter = useSelector((state) => state.dashboard.details.filter)
+  const setFeedFilter = (value) => dispatch(onFeedFilterChange({ value, isSlideOut }))
+  const toggleAttribsOpen = () => dispatch(onAttribsOpenChange({ isSlideOut }))
 
-  const filters = [
+  const filtersStateLocation = isSlideOut ? 'slideOut' : 'details'
+
+  const selectedFilter = useSelector((state) => state.dashboard[filtersStateLocation].filter)
+  const attribsOpen = useSelector((state) => state.dashboard[filtersStateLocation].attributesOpen)
+
+  const filtersLeft = [
     {
       id: 'activity',
       label: 'Activity',
       icon: 'forum',
+    },
+    {
+      id: 'comments',
+      label: 'Comments',
+      icon: 'chat',
     },
     // {
     //   id: 'versions',
@@ -23,24 +34,26 @@ const UserDashDetailsFilters = () => {
       label: 'Checklists',
       icon: 'checklist',
     },
-    {
-      id: 'details',
-      label: 'Details',
-      icon: 'segment',
-    },
   ]
 
   return (
     <Styled.FiltersToolbar>
-      {filters.map((filter) => (
+      {filtersLeft.map((filter) => (
         <Styled.FilterButton
           key={filter.id}
-          selected={filter.id === selectedFilter}
-          onClick={() => setAttributesOpen(filter.id)}
-          //   icon={filter.icon}
+          selected={filter.id === selectedFilter && !attribsOpen}
+          onClick={() => setFeedFilter(filter.id)}
           label={filter.label}
         />
       ))}
+      <Spacer />
+      <Styled.FilterButton
+        icon="segment"
+        onClick={toggleAttribsOpen}
+        selected={attribsOpen}
+        data-tooltip="Attributes"
+        data-tooltip-delay={0}
+      />
     </Styled.FiltersToolbar>
   )
 }

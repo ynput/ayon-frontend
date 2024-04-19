@@ -26,7 +26,8 @@ const UserDashboardDetails = ({
   isSlideOut,
   style = {},
 }) => {
-  const filter = useSelector((state) => state.dashboard.details.filter)
+  const path = isSlideOut ? 'slideOut' : 'details'
+  const attributesOpen = useSelector((state) => state.dashboard[path].attributesOpen)
   // now we get the full details data for selected entities
 
   const entitiesToQuery = entityIds.length
@@ -74,8 +75,9 @@ const UserDashboardDetails = ({
           disabledStatuses={disabledStatuses}
           tagsOptions={tagsOptions}
           onClose={onClose}
+          isSlideOut={isSlideOut}
         />
-        {filter === 'details' ? (
+        {attributesOpen ? (
           <TaskAttributes
             entityType={entityType}
             entities={entityDetailsData}
@@ -89,7 +91,6 @@ const UserDashboardDetails = ({
             selectedTasksProjects={selectedTasksProjects}
             projectInfo={projectInfo}
             projectName={projectName}
-            filter={filter}
             isSlideOut={isSlideOut}
           />
         )}

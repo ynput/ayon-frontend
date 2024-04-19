@@ -24,7 +24,6 @@ const UserDashboardSlideOut = ({ projectsInfo }) => {
         setPreviouslyOpen(true)
         setSlideOutShown(true)
       } else {
-        console.log('Hide!')
         // hide slide out when loading new one
         setSlideOutShown(false)
         // then show slide out when new one is loaded
@@ -36,14 +35,12 @@ const UserDashboardSlideOut = ({ projectsInfo }) => {
       slideTimeOut && clearTimeout(slideTimeOut)
       setSlideOutShown(false)
     }
-  }, [isSlideOutOpen, slideOut])
+  }, [isSlideOutOpen, entityId])
 
   const { data: users } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
   const projectInfo = projectsInfo[projectName] || {}
   const { statuses = [], tags = [] } = projectInfo
-
-  console.log(slideOutShown)
 
   if (!isSlideOutOpen) return null
 
