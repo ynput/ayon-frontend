@@ -3,13 +3,12 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 
-import { ScrollPanel, Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { ScrollPanel, Button, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-components'
 
 import BundleDropdown from '/src/containers/BundleDropdown'
 import ProjectDropdown from '/src/containers/ProjectDropdown'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 
-import { Dialog } from 'primereact/dialog'
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
@@ -145,8 +144,10 @@ const CopySettingsDialog = ({
 
   return (
     <Dialog
-      visible
-      onHide={onClose}
+      isOpen
+      onClose={onClose}
+      
+      size='full'
       style={{ width: '80vw', height: '80vh' }}
       header={`Copy ${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
       footer={footer}
