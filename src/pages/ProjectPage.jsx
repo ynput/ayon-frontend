@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Dialog } from '@ynput/ayon-react-components'
 
 import BrowserPage from './BrowserPage'
 import EditorPage from './EditorPage'
@@ -14,7 +14,6 @@ import { selectProject } from '/src/features/project'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
-import { Dialog } from 'primereact/dialog'
 import AppNavLinks from '../containers/header/AppNavLinks'
 
 const ProjectContextInfo = () => {
@@ -152,15 +151,11 @@ const ProjectPage = () => {
   return (
     <>
       <Dialog
-        header="Project Context"
-        visible={showContextDialog}
-        onHide={() => setShowContextDialog(false)}
-        style={{
-          overflow: 'hidden',
-        }}
-        bodyStyle={{
-          overflow: 'auto',
-        }}
+        header="Project Contexts"
+        isOpen={showContextDialog}
+        onClose={() => setShowContextDialog(false)}
+        size="lg"
+        style={{ overflow: 'hidden', width: 500}}
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>

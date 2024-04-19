@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { rcompare } from 'semver'
-import { Dialog } from 'primereact/dialog'
+import { Dialog } from '@ynput/ayon-react-components'
 import { Dropdown } from 'primereact/dropdown'
 import {
   FormLayout,
@@ -125,11 +125,12 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
 
   return (
     <Dialog
-      visible={true}
+      isOpen={true}
       header="Spawn a new service"
-      onHide={onHide}
+      onClose={onHide}
       footer={footer}
       style={{ width: 550 }}
+      size="md"
     >
       <FormLayout>
         <FormRow label="Host">
