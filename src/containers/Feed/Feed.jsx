@@ -8,6 +8,7 @@ import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
 import { onReferenceClick } from '/src/features/dashboard'
+import useSaveScrollPos from './hooks/useSaveScrollPos'
 
 const Feed = ({
   entities = [],
@@ -24,6 +25,7 @@ const Feed = ({
   const filter = useSelector((state) => state.dashboard[path].filter)
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
+  const [currentCursors, setCurrentCursors] = useState({})
 
   const entitiesToQuery = useMemo(
     () =>
@@ -31,8 +33,6 @@ const Feed = ({
     [entities],
   )
   const entityIds = entitiesToQuery.map((entity) => entity.id)
-
-  const [currentCursors, setCurrentCursors] = useState({})
 
   const entityId = entities[0]?.id
 
@@ -85,6 +85,9 @@ const Feed = ({
       else feedRef.current.scrollBy(0, -heightDiff)
     }
   }, [isCommentInputOpen, feedRef.current])
+
+  // save scroll position of a feed
+  useSaveScrollPos({ entities, feedRef })
 
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
