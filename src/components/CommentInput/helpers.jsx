@@ -56,6 +56,13 @@ export const parseImages = (body) => {
   return newBody
 }
 
+export async function typeWithDelay(quill, retain, type, delay = 1) {
+  for (let i = 0; i < type.length; i++) {
+    quill.insertText(retain + i, type[i])
+    await new Promise((resolve) => setTimeout(resolve, delay))
+  }
+}
+
 import axios from 'axios'
 // quillModules
 const abortController = new AbortController()
@@ -81,6 +88,18 @@ icons['list']['ordered'] = getIcon('format_list_numbered')
 icons['list']['bullet'] = getIcon('format_list_bulleted')
 icons['list']['check'] = getIcon('checklist')
 icons['image'] = getIcon('image')
+
+export const quillFormats = [
+  'header',
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'list',
+  'bullet',
+  'link',
+  'image',
+]
 
 export const quillModules = {
   toolbar: [

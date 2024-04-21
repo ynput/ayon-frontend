@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as Styled from './CommentInput.styled'
 import { Button, SaveButton } from '@ynput/ayon-react-components'
 import 'react-quill/dist/quill.bubble.css'
-import ReactMarkdown from 'react-markdown'
 
 import ReactQuill from 'react-quill'
 import { classNames } from 'primereact/utils'
@@ -14,8 +13,16 @@ import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers
 import { useGetTaskMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
-import { convertToMarkdown, parseImages, quillModules } from './helpers'
-import remarkGfm from 'remark-gfm'
+import {
+  convertToMarkdown,
+  parseImages,
+  quillFormats,
+  quillModules,
+  typeWithDelay,
+} from './helpers'
+import useInitialValue from './hooks/useInitialValue'
+import useSetCursorEnd from './hooks/useSetCursorEnd'
+import InputMarkdownConvert from './InputMarkdownConvert'
 
 const CommentInput = ({
   initValue,
@@ -41,35 +48,11 @@ const CommentInput = ({
   const editorRef = useRef(null)
   const markdownRef = useRef(null)
 
-  // Set initial value
-  useEffect(() => {
-    if (markdownRef.current && initValue) {
-      // convert markdown to html
-      const html = markdownRef.current.innerHTML
-      setEditorValue(html)
-      // set html to editor
-      // get height of markdown
-      const height = markdownRef.current.offsetHeight
-      setInitHeight(height)
-    } else if (isOpen) {
-      // if filter === checklist start with a checklist item
-      if (filter === 'checklists') {
-        console.log('checklists')
-        setEditorValue(`<ul data-checked="false"><li> </li></ul>`)
-      }
-    }
-  }, [initValue, isOpen, markdownRef.current, filter])
+  // if there is an initial value, set it so the editor is prefilled
+  useInitialValue({ markdownRef, initValue, setEditorValue, setInitHeight, isOpen, filter })
 
   // When editing, set selection to the end of the editor
-  useEffect(() => {
-    if (initHeight && editorRef.current && isEditing) {
-      const editor = editorRef.current.getEditor()
-      if (!editor) return
-      const length = editor.getLength()
-      if (length < 2) return
-      editor.setSelection(length)
-    }
-  }, [initHeight, editorRef.current, isEditing])
+  useSetCursorEnd({ initHeight, editorRef, isEditing })
 
   // for the task (entity), get all folderIds
   const folderIds = entities.flatMap((entity) => entity.folderId || [])
@@ -326,13 +309,6 @@ const CommentInput = ({
     }
   }
 
-  async function typeWithDelay(quill, retain, type, delay = 1) {
-    for (let i = 0; i < type.length; i++) {
-      quill.insertText(retain + i, type[i])
-      await new Promise((resolve) => setTimeout(resolve, delay))
-    }
-  }
-
   const addTextToEditor = (type) => {
     // get editor retain
     const quill = editorRef.current.getEditor()
@@ -429,19 +405,6 @@ const CommentInput = ({
     }
   }
 
-  // transform url to mention (if it is a mention)
-  const urlToMention = (href) => {
-    if (!href) return { href }
-    // check href is a mention
-    const type = href && href.split(':')[0]
-    // find the type in mention options
-    const typeSymbol = Object.entries(typeOptions).find(([, value]) => value.id === type)?.[0]
-    if (!typeSymbol) return { href }
-    // prefix @ to the href
-    const newHref = '@' + href
-    return { href: newHref, type: typeSymbol }
-  }
-
   let quillMinHeight = isOpen ? initHeight + 41 : 44
   if (isEditing) quillMinHeight = undefined
 
@@ -455,53 +418,7 @@ const CommentInput = ({
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              urlTransform={(url) => url}
-              components={{
-                a: ({ children, href }) => {
-                  const { href: newHref, type } = urlToMention(href)
-
-                  return (
-                    <a href={newHref}>
-                      {type}
-                      {children}
-                    </a>
-                  )
-                },
-                // transform ul checklist into multiple uls
-                ul: (props) => {
-                  if (!props.className?.includes('contains-task-list')) return <ul {...props} />
-
-                  // split each li item into its own ul
-                  const items = props.node?.children?.filter((item) => item.tagName === 'li')
-                  const elements = props?.children?.filter((item) => item.type === 'li')
-                  const uls = items.map((liItem, index) => {
-                    const element = elements[index]
-
-                    let checked = false
-                    // get checked prop
-                    liItem.children
-                      .filter((item) => item.type === 'element')
-                      .forEach((el) =>
-                        el?.children?.forEach((child) => {
-                          if (child.tagName === 'input') {
-                            checked = child.properties.checked
-                          }
-                        }),
-                      )
-                    return (
-                      <ul key={index} data-checked={checked}>
-                        <li>{element}</li>
-                      </ul>
-                    )
-                  })
-                  return uls
-                },
-              }}
-            >
-              {initValue}
-            </ReactMarkdown>
+            <InputMarkdownConvert typeOptions={typeOptions} initValue={editorValue} />
           </Styled.Markdown>
           {/* QUILL is configured in helpers file */}
           <ReactQuill
@@ -513,17 +430,7 @@ const CommentInput = ({
             readOnly={!isOpen}
             placeholder={placeholder}
             modules={quillModules}
-            formats={[
-              'header',
-              'bold',
-              'italic',
-              'underline',
-              'strike',
-              'list',
-              'bullet',
-              'link',
-              'image',
-            ]}
+            formats={quillFormats}
           />
 
           <Styled.Footer>

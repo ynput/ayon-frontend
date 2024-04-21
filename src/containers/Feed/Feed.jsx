@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import ActivityItem from '../../components/Feed/ActivityItem'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
@@ -9,6 +9,8 @@ import { InView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
 import { onReferenceClick } from '/src/features/dashboard'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
+import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
+import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
 
 const Feed = ({
   entities = [],
@@ -34,8 +36,7 @@ const Feed = ({
   )
   const entityIds = entitiesToQuery.map((entity) => entity.id)
 
-  const entityId = entities[0]?.id
-
+  // QUERY MADE TO GET ACTIVITIES
   const {
     data: activitiesData = [],
     isFetching: isFetchingActivities,
@@ -49,6 +50,7 @@ const Feed = ({
     referenceTypes: ['origin', 'mention', 'relation'],
     activityTypes: activityTypes,
   })
+  // QUERY MADE TO GET ACTIVITIES
 
   // get all versions for the entity
   const { data: versionsData = [] } = useGetVersionsQuery({
@@ -73,22 +75,17 @@ const Feed = ({
   // const commentInputRef = useRef(null)
 
   // scroll by height of comment input when it opens or closes
-  // for now use hard coded value
-  useEffect(() => {
-    if (!feedRef.current) return
-    const heightDiff = 93
-
-    const isAtBottom = feedRef.current.scrollTop === 0
-
-    if (!isAtBottom) {
-      if (isCommentInputOpen) feedRef.current.scrollBy(0, heightDiff)
-      else feedRef.current.scrollBy(0, -heightDiff)
-    }
-  }, [isCommentInputOpen, feedRef.current])
+  useScrollOnInputOpen({ feedRef, isCommentInputOpen, height: 93 })
 
   // save scroll position of a feed
   useSaveScrollPos({ entities, feedRef })
 
+  const { cursor, hasPreviousPage } = useMemo(
+    () => getNextPage({ activities: activitiesToShow }),
+    [activitiesToShow],
+  )
+
+  const entityId = entities[0]?.id
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
     projectName,
@@ -145,18 +142,9 @@ const Feed = ({
     updateComment(activity, newBody)
   }
 
-  const lastActivity = activitiesToShow[activitiesToShow.length - 1]
-  // get cursor of last activity
-  let cursor = lastActivity?.cursor
-  // get hasPreviousPage of last activity
-  let hasPreviousPage = lastActivity?.hasPreviousPage
-  if (lastActivity?.activityType === 'group') {
-    const lastGroupActivity = lastActivity.items[lastActivity.items.length - 1]
-    cursor = lastGroupActivity?.cursor
-    hasPreviousPage = lastGroupActivity?.hasPreviousPage
-  }
-
+  // when we scroll to the top of the feed, fetch more activities
   const handleGetMoreActivities = () => {
+    // get cursor of last activity and if there is a next page
     if (!hasPreviousPage) return console.log('No more activities to load')
     if (!cursor) return console.log('No cursor found')
     console.log('fetching more activities...')
@@ -176,26 +164,13 @@ const Feed = ({
     dispatch(onReferenceClick({ entityId, entityType, projectName }))
   }
 
-  const getRandomNumberBetween = (min = 50, max = 200) => {
-    return Math.floor(Math.random() * (max - min + 1) + min)
-  }
-
-  const placeholders = useMemo(
-    () =>
-      new Array(10)
-        .fill(0)
-        .map((_, index) => (
-          <Styled.Placeholder key={index} style={{ minHeight: getRandomNumberBetween() }} />
-        )),
-
-    [],
-  )
+  const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
   return (
     <Styled.FeedContainer>
       <Styled.FeedContent ref={feedRef}>
         {isFetchingActivities && !currentData
-          ? placeholders
+          ? loadingPlaceholders
           : activitiesToShow.map((activity) => (
               <ActivityItem
                 key={activity.activityId}
