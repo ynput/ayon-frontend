@@ -144,9 +144,14 @@ const Feed = ({
 
   const lastActivity = activitiesToShow[activitiesToShow.length - 1]
   // get cursor of last activity
-  const cursor = lastActivity?.cursor
+  let cursor = lastActivity?.cursor
   // get hasPreviousPage of last activity
-  const hasPreviousPage = lastActivity?.hasPreviousPage
+  let hasPreviousPage = lastActivity?.hasPreviousPage
+  if (lastActivity?.activityType === 'group') {
+    const lastGroupActivity = lastActivity.items[lastActivity.items.length - 1]
+    cursor = lastGroupActivity?.cursor
+    hasPreviousPage = lastGroupActivity?.hasPreviousPage
+  }
 
   const handleGetMoreActivities = () => {
     if (!hasPreviousPage) return console.log('No more activities to load')
