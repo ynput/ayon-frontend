@@ -12,8 +12,7 @@ import { compareAsc } from 'date-fns'
 
 const getActivities = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    // a single entities activities
-    // most often called by getActivities
+    // get multiple entities activities
     getActivities: build.query({
       query: ({ projectName, entityIds, cursor, last, referenceTypes, activityTypes }) => ({
         url: '/graphql',
@@ -142,5 +141,10 @@ const getActivities = ayonApi.injectEndpoints({
 
 //
 
-export const { useGetActivitiesQuery, useGetVersionsQuery, useGetEntityTooltipQuery } =
-  getActivities
+export const {
+  useGetActivitiesQuery,
+  useLazyGetActivitiesQuery,
+  useGetVersionsQuery,
+  useGetEntityTooltipQuery,
+  u,
+} = getActivities
