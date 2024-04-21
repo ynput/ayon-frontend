@@ -137,77 +137,73 @@ const UserDashDetailsHeader = ({
   }
 
   return (
-    <Styled.Container>
-      <Styled.SectionWrapper id={portalId}>
-        <Styled.Path
-          value={pathArray.join(' / ')}
-          align="left"
-          onClick={handleCopyPath}
-          isCopy
-          icon="content_copy"
-          className={classNames({ onClose })}
+    <Styled.SectionWrapper id={portalId}>
+      <Styled.Path
+        value={pathArray.join(' / ')}
+        align="left"
+        onClick={handleCopyPath}
+        isCopy
+        icon="content_copy"
+        className={classNames({ onClose })}
+      />
+      {onClose && (
+        <Styled.CloseButton
+          onClick={onClose}
+          icon="close"
+          variant="text"
+          data-shortcut="Esc"
+          data-tooltip-delay={0}
         />
-        {onClose && (
-          <Styled.CloseButton
-            onClick={onClose}
-            icon="close"
-            variant="text"
-            data-shortcut="Esc"
-            data-tooltip-delay={0}
+      )}
+      <Styled.Header>
+        <StackedThumbnails
+          thumbnails={thumbnails}
+          projectName={projectName}
+          portalId={portalId}
+          onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
+        />
+        <Styled.Content>
+          <h2>{!isMultiple ? singleEntity.title : `${entities.length} ${entityType}s selected`}</h2>
+          <h3>{!isMultiple ? singleEntity.subTitle : entities.map((t) => t.name).join(', ')}</h3>
+        </Styled.Content>
+      </Styled.Header>
+      <Styled.Section>
+        <Styled.ContentRow>
+          <Styled.TaskStatusSelect
+            value={statusesValue}
+            options={statusesOptions}
+            disabledValues={disabledStatuses}
+            invert
+            style={{ maxWidth: 'unset' }}
+            onChange={(value) => handleUpdate('status', value)}
           />
-        )}
-        <Styled.Header>
-          <StackedThumbnails
-            thumbnails={thumbnails}
-            projectName={projectName}
-            portalId={portalId}
-            onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
+          {hasUser && (
+            <AssigneeSelect
+              value={selectedTasksAssignees}
+              options={usersOptions}
+              disabledValues={disabledAssignees.map((u) => u.name)}
+              isMultiple={isMultiple && selectedTasksAssignees.length > 1}
+              editor={entityType === 'task'}
+              align="right"
+              onChange={(value) => handleUpdate('assignees', value)}
+            />
+          )}
+        </Styled.ContentRow>
+      </Styled.Section>
+      <Styled.Section>
+        <Styled.ContentRow>
+          <Actions options={actions} pinned={pinned} />
+          <TagsSelect
+            value={union(...tagsValues)}
+            isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
+            tags={tagsOptionsObject}
+            editable
+            onChange={(value) => handleUpdate('tags', value)}
           />
-          <Styled.Content>
-            <h2>
-              {!isMultiple ? singleEntity.title : `${entities.length} ${entityType}s selected`}
-            </h2>
-            <h3>{!isMultiple ? singleEntity.subTitle : entities.map((t) => t.name).join(', ')}</h3>
-          </Styled.Content>
-        </Styled.Header>
-        <Styled.Section>
-          <Styled.ContentRow>
-            <Styled.TaskStatusSelect
-              value={statusesValue}
-              options={statusesOptions}
-              disabledValues={disabledStatuses}
-              invert
-              style={{ maxWidth: 'unset' }}
-              onChange={(value) => handleUpdate('status', value)}
-            />
-            {hasUser && (
-              <AssigneeSelect
-                value={selectedTasksAssignees}
-                options={usersOptions}
-                disabledValues={disabledAssignees.map((u) => u.name)}
-                isMultiple={isMultiple && selectedTasksAssignees.length > 1}
-                editor={entityType === 'task'}
-                align="right"
-                onChange={(value) => handleUpdate('assignees', value)}
-              />
-            )}
-          </Styled.ContentRow>
-        </Styled.Section>
-        <Styled.Section>
-          <Styled.ContentRow>
-            <Actions options={actions} pinned={pinned} />
-            <TagsSelect
-              value={union(...tagsValues)}
-              isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
-              tags={tagsOptionsObject}
-              editable
-              onChange={(value) => handleUpdate('tags', value)}
-            />
-          </Styled.ContentRow>
-        </Styled.Section>
-      </Styled.SectionWrapper>
+        </Styled.ContentRow>
+      </Styled.Section>
       <UserDashDetailsFilters isSlideOut={isSlideOut} />
-    </Styled.Container>
+    </Styled.SectionWrapper>
   )
 }
 

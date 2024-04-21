@@ -16,7 +16,7 @@ const UserDashDetailsFilters = ({ isSlideOut }) => {
   const filtersLeft = [
     {
       id: 'activity',
-      label: 'Activity',
+      label: 'All activity',
       icon: 'forum',
     },
     {
@@ -43,7 +43,10 @@ const UserDashDetailsFilters = ({ isSlideOut }) => {
           key={filter.id}
           selected={filter.id === selectedFilter && !attribsOpen}
           onClick={() => setFeedFilter(filter.id)}
-          label={filter.label}
+          // label={filter.label}
+          icon={filter.icon}
+          data-tooltip={filter.label}
+          data-tooltip-delay={0}
         />
       ))}
       <Spacer />
