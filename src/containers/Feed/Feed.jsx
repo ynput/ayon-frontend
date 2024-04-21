@@ -41,15 +41,19 @@ const Feed = ({
     data: activitiesData = [],
     isFetching: isFetchingActivities,
     currentData,
-  } = useGetActivitiesQuery({
-    entityIds: entityIds,
-    projectName: projectName,
-    cursor: currentCursors[filter],
-    last: 20,
-    currentUser: userName,
-    referenceTypes: ['origin', 'mention', 'relation'],
-    activityTypes: activityTypes,
-  })
+  } = useGetActivitiesQuery(
+    {
+      entityIds: entityIds,
+      projectName: projectName,
+      cursor: currentCursors[filter],
+      last: 20,
+      currentUser: userName,
+      referenceTypes: ['origin', 'mention', 'relation'],
+      activityTypes: activityTypes,
+      filter,
+    },
+    { skip: !entities.length || !filter || !activityTypes || !projectName },
+  )
   // QUERY MADE TO GET ACTIVITIES
 
   // get all versions for the entity
@@ -93,6 +97,7 @@ const Feed = ({
     entityId,
     entityIds,
     activityTypes,
+    filter,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown

@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
 
-const filterActivityTypes = {
+export const filterActivityTypes = {
   activity: ['comment', 'status.change', 'assignee.add', 'assignee.remove'],
   comments: ['comment'],
   versions: ['version'],

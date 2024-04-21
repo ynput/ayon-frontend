@@ -24,8 +24,7 @@ const getActivities = ayonApi.injectEndpoints({
       }),
       transformResponse: (res, meta, { currentUser }) =>
         transformActivityData(res?.data, currentUser),
-
-      providesTags: (result, error, { entityIds, activityTypes = [] }) =>
+      providesTags: (result, error, { entityIds, activityTypes = [], filter }) =>
         result
           ? [
               ...result.map((a) => ({ type: 'activity', id: a.activityId })),
@@ -33,13 +32,16 @@ const getActivities = ayonApi.injectEndpoints({
               ...entityIds.map((id) => ({ type: 'entityActivities', id: id })),
               { type: 'entityActivities', id: 'LIST' },
               ...activityTypes.map((type) => ({ type: 'entityActivities', id: type })),
+              // filter is used when a comment is made, to refetch the activities of other filters
+              ...entityIds.map((id) => ({ type: 'entityActivities', id: id + '-' + filter })),
             ]
           : [{ type: 'activity', id: 'LIST' }],
       // don't include the name or cursor in the query args cache key
-      serializeQueryArgs: ({ queryArgs: { projectName, entityIds, activityTypes } }) => ({
+      serializeQueryArgs: ({ queryArgs: { projectName, entityIds, activityTypes, filter } }) => ({
         projectName,
         entityIds,
         activityTypes,
+        filter,
       }),
       // Always merge incoming data to the cache entry
       merge: (currentCache, newItems) => {

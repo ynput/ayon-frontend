@@ -1,12 +1,13 @@
 import { ayonApi } from '../ayon'
 import { toast } from 'react-toastify'
+import { filterActivityTypes } from '/src/features/dashboard'
 
 const updateCache = (draft, patch = {}, isDelete) => {
   // find the index of the activity to update
   const index = draft.findIndex((a) => a.activityId === patch.activityId)
   if (index === -1) {
     // add to the end of the list
-    draft.push(patch)
+    draft.unshift(patch)
   } else if (isDelete) {
     draft.splice(index, 1)
   } else {
@@ -16,7 +17,7 @@ const updateCache = (draft, patch = {}, isDelete) => {
 }
 
 const patchActivities = async (
-  { projectName, patch, entityIds, activityTypes = [] },
+  { projectName, patch, entityIds, activityTypes = [], filter },
   { dispatch, queryFulfilled },
   method,
 ) => {
@@ -24,7 +25,7 @@ const patchActivities = async (
   const patchResult = dispatch(
     ayonApi.util.updateQueryData(
       'getActivities',
-      { projectName, entityIds, activityTypes },
+      { projectName, entityIds, activityTypes, filter },
       (draft) => updateCache(draft, patch, method === 'delete'),
     ),
   )
@@ -39,6 +40,15 @@ const patchActivities = async (
   }
 }
 
+const getTags = ({ entityId, filter }) => {
+  const invalidateFilters = Object.keys(filterActivityTypes).filter((key) => key !== filter)
+
+  return invalidateFilters.map((filter) => ({
+    type: 'entityActivities',
+    id: entityId + '-' + filter,
+  }))
+}
+
 const updateActivities = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     createEntityActivity: build.mutation({
@@ -51,6 +61,8 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'create')
       },
+      // invalidate other filters that might be affected by this new activity (comments, checklists, etc)
+      invalidatesTags: (result, error, { entityId, filter }) => getTags({ entityId, filter }),
     }),
 
     updateActivity: build.mutation({
@@ -62,6 +74,8 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'update')
       },
+      // invalidate other filters that might be affected by this new activity (comments, checklists, etc)
+      invalidatesTags: (result, error, { entityId, filter }) => getTags({ entityId, filter }),
     }),
     deleteActivity: build.mutation({
       query: ({ projectName, activityId }) => ({
@@ -71,6 +85,8 @@ const updateActivities = ayonApi.injectEndpoints({
       async onQueryStarted(args, api) {
         patchActivities(args, api, 'delete')
       },
+      // invalidate other filters that might be affected by this new activity (comments, checklists, etc)
+      invalidatesTags: (result, error, { entityId, filter }) => getTags({ entityId, filter }),
     }),
   }),
 })

@@ -7,7 +7,14 @@ import {
 } from '/src/services/activities/updateActivities'
 import { useSelector } from 'react-redux'
 
-const useCommentMutations = ({ projectName, entityType, entityId, entityIds, activityTypes }) => {
+const useCommentMutations = ({
+  projectName,
+  entityType,
+  entityId,
+  entityIds,
+  activityTypes,
+  filter,
+}) => {
   const { name, fullName } = useSelector((state) => state.user)
 
   // used to create and update activities (comments)
@@ -46,6 +53,7 @@ const useCommentMutations = ({ projectName, entityType, entityId, entityIds, act
         entityId,
         data: newComment,
         patch,
+        filter,
         ...argsForCachingMatching,
       }).unwrap()
     } catch (error) {
@@ -72,6 +80,7 @@ const useCommentMutations = ({ projectName, entityType, entityId, entityIds, act
         data: updatedActivity,
         activityId: activity.activityId,
         patch,
+        filter,
         ...argsForCachingMatching,
       }).unwrap()
     } catch (error) {
@@ -89,6 +98,7 @@ const useCommentMutations = ({ projectName, entityType, entityId, entityIds, act
       await deleteActivity({
         projectName,
         activityId: id,
+        filter,
         patch: { activityId: id },
         ...argsForCachingMatching,
       }).unwrap()
