@@ -418,7 +418,7 @@ const CommentInput = ({
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
-            <InputMarkdownConvert typeOptions={typeOptions} initValue={editorValue} />
+            <InputMarkdownConvert typeOptions={typeOptions} initValue={initValue} />
           </Styled.Markdown>
           {/* QUILL is configured in helpers file */}
           <ReactQuill
