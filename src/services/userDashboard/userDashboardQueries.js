@@ -13,6 +13,7 @@ const TASK_FRAGMENT = (attribs = []) => `
     taskType
     assignees
     updatedAt
+    createdAt
     folderId
     thumbnailId
     attrib {
@@ -118,6 +119,7 @@ export const VERSION_DETAILS = (attribs = []) => `
                 status
                 tags
                 updatedAt
+                createdAt
                 thumbnailId
                 product {
                   name

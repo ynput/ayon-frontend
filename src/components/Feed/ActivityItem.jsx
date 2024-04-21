@@ -3,8 +3,23 @@ import ActivityComment from './ActivityComment/ActivityComment'
 import ActivityStatusChange from './ActivityStatusChange/ActivityStatusChange'
 import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeChange'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
+import styled from 'styled-components'
+import { format } from 'date-fns'
+import { isValid } from 'date-fns'
 
-const ActivityItem = ({ activity = {}, fromGroup, projectInfo = {}, editProps, ...props }) => {
+const FeedEnd = styled.div`
+  padding: 0 10px;
+  color: var(--md-sys-color-outline);
+`
+
+const ActivityItem = ({
+  activity = {},
+  fromGroup,
+  projectInfo = {},
+  createdAts = [],
+  editProps,
+  ...props
+}) => {
   switch (activity.activityType) {
     case 'comment':
       return <ActivityComment {...{ activity, projectInfo, editProps }} {...props} />
@@ -17,6 +32,14 @@ const ActivityItem = ({ activity = {}, fromGroup, projectInfo = {}, editProps, .
     case 'group':
       // fromGroup prevents infinite recursion
       return !fromGroup && <ActivityGroup activities={activity.items} {...props} />
+    case 'end':
+      return (
+        <FeedEnd>{`Task${createdAts.length > 1 ? 's' : ''} created: ${createdAts
+          .map((c) =>
+            isValid(new Date(c)) ? format(new Date(c), 'do MMMM y, H:mm') : 'At some point...',
+          )
+          .join(', ')}`}</FeedEnd>
+      )
     default:
       return null
   }

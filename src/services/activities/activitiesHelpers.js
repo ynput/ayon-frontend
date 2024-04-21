@@ -100,6 +100,11 @@ export const transformActivityData = (data = {}, currentUser) => {
     activities.push(transformedActivity)
   }) || []
 
+  // when there are no activities and hasPreviousPage is false, add an "createdAt" activity as the last activity
+  if (hasPreviousPage === false) {
+    activities.push({ hasPreviousPage: false, activityType: 'end', activityId: 'end' })
+  }
+
   return activities
 }
 // we flatten the version object a little bit

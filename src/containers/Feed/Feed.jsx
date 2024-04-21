@@ -205,6 +205,7 @@ const Feed = ({
                 entityType={entityType}
                 onReferenceClick={handleRefClick}
                 isSlideOut={isSlideOut}
+                createdAts={entities.map((e) => e.createdAt)}
                 editProps={{
                   activeUsers,
                   projectName,
