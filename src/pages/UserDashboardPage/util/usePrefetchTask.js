@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux'
 import { onPrefetchIds } from '/src/features/dashboard'
 import { useLazyGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 
-export const usePrefetchTask = (dispatch) => {
+export const usePrefetchTask = (dispatch, projectsInfo) => {
   // keep track of the ids that have been pre-fetched to avoid fetching them again
   const prefetchedIds = useSelector((state) => state.dashboard.prefetchedIds)
   const setPrefetchedIds = (ids) => dispatch(onPrefetchIds(ids))
@@ -14,9 +14,10 @@ export const usePrefetchTask = (dispatch) => {
     setPrefetchedIds([...prefetchedIds, task.id])
 
     const entities = [{ id: task.id, projectName: task.projectName }]
+    const projectInfo = projectsInfo[task.projectName]
 
     // pre-fetch the task details
-    getEntitiesDetails({ entities: entities })
+    getEntitiesDetails({ entities: entities, entityType: 'task', projectInfo })
   }
   return handlePrefetch
 }

@@ -18,6 +18,7 @@ const UserDashboardList = ({
   statusesOptions,
   disabledStatuses,
   disabledProjectUsers,
+  projectsInfo,
 }) => {
   const containerRef = useRef(null)
 
@@ -100,7 +101,7 @@ const UserDashboardList = ({
 
   // PREFETCH TASK WHEN HOVERING
   // we keep track of the ids that have been pre-fetched to avoid fetching them again
-  const handlePrefetch = usePrefetchTask(dispatch)
+  const handlePrefetch = usePrefetchTask(dispatch, projectsInfo)
 
   // HANDLE TASK CLICK
   const taskClick = useTaskClick(dispatch)

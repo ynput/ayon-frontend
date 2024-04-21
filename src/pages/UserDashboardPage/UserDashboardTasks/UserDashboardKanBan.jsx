@@ -263,6 +263,7 @@ const UserDashboardKanBan = ({
               allUsers={allUsers}
               disabledStatuses={disabledStatuses}
               onCollapsedColumnsChange={handleCollapseToggle}
+              projectsInfo={projectsInfo}
             />
             <KanBanCardOverlay
               activeDraggingId={activeDraggingId}
@@ -282,6 +283,7 @@ const UserDashboardKanBan = ({
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             disabledProjectUsers={disabledProjectUsers}
+            projectsInfo={projectsInfo}
           />
         )}
       </Section>
