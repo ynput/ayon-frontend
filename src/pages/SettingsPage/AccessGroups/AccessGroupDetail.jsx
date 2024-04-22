@@ -20,6 +20,11 @@ import {
 } from '/src/services/accessGroups/updateAccessGroups'
 import confirmDelete from '/src/helpers/confirmDelete'
 
+
+const PROJECT_GROUP_MSG = "Delete project access group"
+
+const GLOBAL_GROUP_MSG = "Delete global access group"
+
 const AccessGroupDetail = ({ projectName, accessGroup }) => {
   const [originalData, setOriginalData] = useState(null)
   const [formData, setFormData] = useState(null)
@@ -66,19 +71,27 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
     }
   }
 
-  const onDelete = async () =>
-    confirmDelete({
-      label: 'Access group',
-      accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
-    })
+  const globalGroupPayload = {
+    label: 'Global access group',
+    accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName: '_' }).unwrap(),
+    message: <><p>Are you sure you want to delete this global access group ?</p><p>Group will be deleted for ALL projects.</p><p>This cannot be undone.</p> </>
+  }
+
+  const projectGroupPayload = {
+    label: 'Project access group',
+    accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
+    message: <p>Are you sure you want to delete project access group ? This cannot be undone.</p>
+  }
+
+  const onDelete = async () => confirmDelete(isProjectLevel ? projectGroupPayload : globalGroupPayload)
 
   return (
     <Section>
       <Toolbar>
         <Button
           onClick={onDelete}
-          label="Delete project access group"
-          disabled={!(projectName && isProjectLevel)}
+          label={isProjectLevel ? PROJECT_GROUP_MSG : GLOBAL_GROUP_MSG}
+          disabled={!(projectName)}
           icon="group_remove"
         />
         <Spacer />
