@@ -217,7 +217,7 @@ function ObjectFieldTemplate(props) {
       },
     )
     return model
-  }, [override, overrideLevel, path])
+  }, [override, overrideLevel, path, props.formData])
 
   // Title + handle root object
 
