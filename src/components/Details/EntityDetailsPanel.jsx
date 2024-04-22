@@ -79,16 +79,18 @@ const EntityDetailsPanel = ({
 
   return (
     <Panel style={{ height: '100%', overflow: 'hidden', ...style }}>
-      <ThumbnailGallery
-        thumbnails={nodes.map((n) => ({
-          id: n.id,
-          name: n.name,
-          updatedAt: n.updatedAt,
-        }))}
-        type={type}
-        isLoading={isLoading}
-        onUpload={onThumbnailUpload}
-      />
+      {type !== 'representation' && (
+        <ThumbnailGallery
+          thumbnails={nodes.map((n) => ({
+            id: n.id,
+            name: n.name,
+            updatedAt: n.updatedAt,
+          }))}
+          type={type}
+          isLoading={isLoading}
+          onUpload={onThumbnailUpload}
+        />
+      )}
       <AttributeTable
         entityType={type}
         data={attribsData}
