@@ -79,8 +79,6 @@ const Detail = () => {
     [versionsDataForReps, showRepsList],
   )
 
-  console.log(representations)
-
   // PATCH ENTITY DATA
   const [updateEntity] = useUpdateEntitiesDetailsMutation()
 
@@ -135,7 +133,6 @@ const Detail = () => {
         dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'productsVersion', id }))))
       }
 
-      console.log('fulfilled', payload)
     } catch (error) {
       console.error(error)
 
