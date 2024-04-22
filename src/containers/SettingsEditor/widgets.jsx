@@ -300,11 +300,10 @@ const TextWidget = (props) => {
     Input = InputNumber
     if (props.schema.type === 'number') {
       opts.step = 0.1
-      opts.value = value
     } else {
-      opts.value = value
       opts.step = 1
     }
+    opts.value = value || ""
     if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
     if (props.schema.maximum !== undefined) opts.max = props.schema.maximum
     if (props.schema.exclusiveMinimum !== undefined)

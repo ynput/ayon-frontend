@@ -5,6 +5,7 @@ import { cloneDeep, get, set } from 'lodash'
 const initialState = {
   expandedFolders: {},
   expandedProducts: {},
+  expandedRepresentations: {},
   focused: {
     type: null,
     folders: [],
@@ -32,6 +33,7 @@ const initialState = {
 const localStorageKeys = [
   'expandedFolders',
   'expandedProducts',
+  'expandedRepresentations',
   'focused.type',
   'focused.folders',
   'focused.products',
@@ -103,6 +105,11 @@ const reducers = {
   },
   setExpandedProducts: {
     expandedProducts: {
+      payload: true,
+    },
+  },
+  setExpandedReps: {
+    expandedRepresentations: {
       payload: true,
     },
   },
@@ -232,6 +239,9 @@ const reducers = {
     'focused.products': {
       payload: 'products',
     },
+    'focused.representations': {
+      value: [],
+    },
   },
   setUri: {
     uri: {
@@ -307,6 +317,9 @@ const contextSlice = createSlice({
     },
     setExpandedProducts: (state, action) => {
       updateStateWithReducer(reducers.setExpandedProducts, state, action)
+    },
+    setExpandedReps: (state, action) => {
+      updateStateWithReducer(reducers.setExpandedReps, state, action)
     },
     setFocusedFolders: (state, action) => {
       updateStateWithReducer(reducers.setFocusedFolders, state, action)
@@ -415,6 +428,7 @@ export const {
   setFocusedRepresentations,
   setSelectedVersions,
   setExpandedFolders,
+  setExpandedReps,
   setExpandedProducts,
   setPairing,
   setReload,

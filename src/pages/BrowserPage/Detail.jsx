@@ -27,7 +27,7 @@ const Detail = () => {
   const projectTagsOrder = useSelector((state) => state.project.tagsOrder)
   const projectTagsObject = useSelector((state) => state.project.tags)
 
-  // GET RTK QUERY
+  // GET ENTITY DATA
   let {
     data: entitiesData = [],
     isError,
@@ -39,6 +39,18 @@ const Detail = () => {
       type: type,
     },
     { skip: !ids.length || !type },
+  )
+
+  const isRep = type === 'representation'
+  const repVersionIds = focused.versions || []
+  // GET VERSION REPS if type is representation based on rep versionId
+  let { data: repsVersionsData = [], isFetching: isFetchingReps } = useGetEntitiesDetailsQuery(
+    {
+      projectName,
+      ids: repVersionIds,
+      type: 'version',
+    },
+    { skip: !isRep || !repVersionIds.length },
   )
 
   const [showLoading, setShowLoading] = useState(true)
@@ -58,11 +70,13 @@ const Detail = () => {
   const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
   const isVersion = type === 'version'
+  const showRepsList = ['version', 'representation'].includes(type)
+  const versionsDataForReps = isRep && !isFetchingReps ? repsVersionsData : entitiesData
 
   // if representation, get the representations from the versions
   const representations = useMemo(
-    () => (!showLoading && !isError && isVersion && transformVersionsData(entitiesData)) || [],
-    [entitiesData, isError, showLoading, type],
+    () => (showRepsList && transformVersionsData(versionsDataForReps)) || [],
+    [versionsDataForReps, showRepsList],
   )
 
   // PATCH ENTITY DATA
@@ -119,7 +133,6 @@ const Detail = () => {
         dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'productsVersion', id }))))
       }
 
-      console.log('fulfilled', payload)
     } catch (error) {
       console.error(error)
 
@@ -354,7 +367,7 @@ const Detail = () => {
           isLoading={showLoading}
           onThumbnailUpload={handleVersionThumbnailUpdate}
         />
-        {isVersion && (
+        {showRepsList && (
           <RepresentationList representations={representations} projectName={projectName} />
         )}
       </Section>
