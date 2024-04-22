@@ -75,7 +75,7 @@ const Thumbnail = ({
   // ugly border around the image (when it's not loaded yet)
   const [thumbLoaded, setThumbLoaded] = useState(false)
 
-  const url = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
+  const url = projectName && `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
   const queryArgs = `?updatedAt=${entityUpdatedAt}`
   const isWrongEntity = ['product'].includes(entityType)
   const portalEl = document.getElementById(portalId)
@@ -125,7 +125,7 @@ const Thumbnail = ({
       {...props}
     >
       {(!isLoading || !thumbLoaded) && !disabled && <Icon icon={icon || 'image'} />}
-      {((entityType && !(isWrongEntity || !entityId)) || src) && (
+      {((entityType && projectName && !(isWrongEntity || !entityId)) || src) && (
         <ImageStyled
           alt={`Entity thumbnail ${entityId}`}
           src={src || `${url}${queryArgs}`}

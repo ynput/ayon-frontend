@@ -313,10 +313,20 @@ const UserDetail = ({
       )
       .flat()
 
+    // if user is admin, he has also a manager role
+    const isUserManager = user.isManager && !user.isAdmin
+    const isUserAdmin = user.isManager && user.isAdmin
+
+    // if user is admin or manager, clear other roles
+    function replaceAccessRoles(role) {
+      accessGroups.length = 0
+      accessGroups.push(role)
+    }
+
     // add admin, manager, service
-    if (user.isAdmin) accessGroups.push('admin')
-    else if (user.isService) accessGroups.push('service')
-    else if (user.isManager) accessGroups.push('manager')
+    if (isUserManager) replaceAccessRoles('manager')
+    if (isUserAdmin) replaceAccessRoles('admin')
+    if (user.isService) replaceAccessRoles('service')
 
     return [...new Set([...acc, ...accessGroups])]
   }, [])

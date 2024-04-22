@@ -1,28 +1,24 @@
 import { ayonApi } from './ayon'
 
 const apiSuffix = (projectName, siteId, variant, asVersion) => {
+  const params = new URLSearchParams()
   let suffix = ''
+
   if (projectName && projectName !== '_') {
     suffix += `/${projectName}`
     if (siteId && siteId !== '_') {
-      suffix += `?site=${siteId}`
+      params.append('site', siteId);
     }
   }
-  if (variant) {
-    if (siteId && siteId !== '_') {
-      suffix += `&variant=${variant}`
-    } else {
-      suffix += `?variant=${variant}`
-    }
-  }
-  if (asVersion) {
-    if (suffix.includes('?')) {
-      suffix += `&as=${asVersion}`
-    } else {
-      suffix += `?as=${asVersion}`
-    }
-  }
-  return suffix
+
+  if (variant)
+    params.append('variant', variant);
+
+  if (asVersion)
+    params.append('as', asVersion);
+
+  const qs = params.toString();
+  return qs ? `${suffix}?${qs}` : suffix 
 }
 
 const addonSettings = ayonApi.injectEndpoints({

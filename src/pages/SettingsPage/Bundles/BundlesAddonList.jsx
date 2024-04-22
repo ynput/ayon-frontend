@@ -3,9 +3,9 @@ import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { SocketContext } from '/src/context/websocketContext'
-import { rcompare } from 'semver'
+import { rcompare, coerce } from 'semver'
 import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
-import { FilePath } from './Bundles.styled'
+import { FilePath, LatestIcon } from './Bundles.styled'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { useNavigate } from 'react-router'
 
@@ -34,6 +34,16 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
       placeholder="NONE"
       onChange={(e) => setVersion(e[0])}
     />
+  )
+}
+
+const AddonItem = ({currentVersion, latestVersion }) => {
+  const isCurrentLatest = currentVersion === latestVersion
+  return (
+    <>
+      <span>{currentVersion}</span>
+      {!isCurrentLatest && <LatestIcon data-tooltip-delay={0} data-tooltip={latestVersion} icon="upgrade" />}
+    </>
   )
 }
 
@@ -154,8 +164,13 @@ const BundlesAddonList = React.forwardRef(
           style={{ maxWidth: 200 }}
           bodyStyle={{ padding: 8 }}
           body={(addon) => {
-            if (readOnly && addon.addonType === 'pipeline')
-              return formData?.addons?.[addon.name] || 'NONE'
+            const isPipeline =  addon.addonType === 'pipeline'
+            const currentVersion = addon.version
+            const allVersions = addon.versions
+            const sortedVersions = Object.keys(allVersions).sort((a,b) => rcompare(coerce(a), coerce(b)))
+            const latestVersion = sortedVersions[0]
+
+            if (readOnly && isPipeline) return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
             // get all selected versions
             return (
               <AddonListItem

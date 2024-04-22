@@ -1,4 +1,4 @@
-import { AssigneeSelect, Button, Toolbar } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Button, Toolbar, Icon } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 const platformColors = {
@@ -106,5 +106,13 @@ export const DevSelect = styled(AssigneeSelect)`
   .button {
     border: 1px solid var(--md-sys-color-outline-variant);
     height: 32px;
+  }
+`
+
+export const LatestIcon = styled(Icon)`
+  color: var(--md-sys-color-outline);
+  margin-left: 8px;
+  &:hover {
+    color: var(--md-sys-color-on-surface);
   }
 `

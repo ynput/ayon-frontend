@@ -132,7 +132,7 @@ const ProjectLatestRow = ({
               subTitle={entity.footer}
               className={entity.className}
               imageUrl={
-                !isLoadingData &&
+                !isLoadingData && projectName &&
                 `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${entity.thumbnailEntityId}/thumbnail?updatedAt=${entity.updatedAt}`
               }
               style={{
