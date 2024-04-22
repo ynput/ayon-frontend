@@ -104,7 +104,7 @@ const EntityDetailsPanel = ({
 }
 
 EntityDetailsPanel.propTypes = {
-  type: PropTypes.oneOf(['version', 'product', 'folder', 'task']),
+  type: PropTypes.oneOf(['version', 'product', 'folder', 'task', 'representation']),
   nodes: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
