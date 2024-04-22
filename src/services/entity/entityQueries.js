@@ -87,6 +87,31 @@ export const VERSION_QUERY = `
     }
 `
 
+export const REP_QUERY = `
+    query Representations($projectName: String!, $ids: [String!]!) {
+      project(name: $projectName) {
+        representations(ids: $ids) {
+          edges {
+            node {
+              id
+              versionId
+              name
+              status
+              tags
+              updatedAt
+              attrib {
+                #ATTRS#
+              }
+              version {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+`
+
 export const PRODUCT_QUERY = `
 query Product($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
     project(name: $projectName){
