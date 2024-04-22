@@ -5,6 +5,7 @@ fragment ActivityFragment on ActivityNode {
     activityData
     referenceType
     referenceId
+    entityId
     body
     createdAt
     author {
