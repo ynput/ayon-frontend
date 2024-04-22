@@ -8,6 +8,7 @@ import {
   FOLDER_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
+  REP_QUERY,
 } from './entityQueries'
 import ayonClient from '/src/ayon'
 
@@ -47,6 +48,9 @@ export const buildEntitiesQuery = (type, attribs) => {
       break
     case 'product':
       QUERY = PRODUCT_QUERY
+      break
+    case 'representation':
+      QUERY = REP_QUERY
       break
     default:
       break
