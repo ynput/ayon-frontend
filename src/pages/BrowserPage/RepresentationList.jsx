@@ -1,12 +1,14 @@
-import { useState, useMemo } from 'react'
-import { useDispatch } from 'react-redux'
+import { useMemo, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { setUri } from '/src/features/context'
+import { setExpandedReps, setFocusedRepresentations, setUri } from '/src/features/context'
 import groupResult from '/src/helpers/groupResult'
+import useCreateContext from '/src/hooks/useCreateContext'
+import EntityDetail from '/src/containers/entityDetail'
 
 const columns = [
   {
@@ -33,9 +35,11 @@ const columns = [
 ]
 
 const RepresentationList = ({ projectName, representations = [] }) => {
+  const [showDetail, setShowDetail] = useState(false)
+
   const dispatch = useDispatch()
-  const [selectedRepresentation, setSelectedRepresentation] = useState(null)
-  //const [focusedRepresentation, setFocusedRepresentation] = useState(null)
+  const focusedRepresentations = useSelector((state) => state.context.focused.representations)
+  const expandedRepresentations = useSelector((state) => state.context.expandedRepresentations)
 
   const data = useMemo(() => {
     return groupResult(representations, 'name')
@@ -48,22 +52,36 @@ const RepresentationList = ({ projectName, representations = [] }) => {
     uri += `&version=${e.node.data.versionName}`
     uri += `&representation=${e.node.data.name}`
     dispatch(setUri(uri))
-    if (e.originalEvent.detail === 2) {
-      //setFocusedRepresentation(e.node.data.id)
+
+    dispatch(setFocusedRepresentations([e.node.data.id]))
+  }
+
+  const ctxMenuItems = (id) => [
+    {
+      label: 'Representation detail',
+      command: () => setShowDetail(id),
+      icon: 'database',
+    },
+  ]
+
+  const [ctxMenuShow] = useCreateContext([])
+
+  const handleContextMenu = (e) => {
+    const id = e.node.data.id
+    if (id) {
+      // update focused representations
+      dispatch(setFocusedRepresentations([id]))
+      // open context menu
+      ctxMenuShow(e.originalEvent, ctxMenuItems(id))
     }
+  }
+
+  const handleToggle = (e) => {
+    dispatch(setExpandedReps(e.value))
   }
 
   return (
     <>
-      {/*focusedRepresentation && (
-        <SiteSyncDetail
-          projectName={projectName}
-          localSite={null}
-          remoteSite={null}
-          representationId={focusedRepresentation}
-          onHide={() => setFocusedRepresentation(null)}
-        />
-      )*/}
       <h4
         style={{
           margin: 0,
@@ -78,9 +96,11 @@ const RepresentationList = ({ projectName, representations = [] }) => {
           value={data}
           emptyMessage="No representation found"
           selectionMode="single"
-          selectionKeys={selectedRepresentation}
-          onSelectionChange={(e) => setSelectedRepresentation(e.value)}
+          selectionKeys={focusedRepresentations[0]}
           onRowClick={onRowClick}
+          expandedKeys={expandedRepresentations}
+          onToggle={handleToggle}
+          onContextMenu={handleContextMenu}
         >
           {columns.map((col) => {
             return (
@@ -95,6 +115,13 @@ const RepresentationList = ({ projectName, representations = [] }) => {
           })}
         </TreeTable>
       </TablePanel>
+      <EntityDetail
+        projectName={projectName}
+        entityType={'representation'}
+        entityIds={[showDetail]}
+        visible={!!showDetail}
+        onHide={() => setShowDetail(false)}
+      />
     </>
   )
 }
