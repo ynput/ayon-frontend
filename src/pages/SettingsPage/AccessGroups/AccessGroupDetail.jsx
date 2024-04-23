@@ -21,9 +21,7 @@ import {
 import confirmDelete from '/src/helpers/confirmDelete'
 
 
-const PROJECT_GROUP_MSG = "Delete project access group"
-
-const GLOBAL_GROUP_MSG = "Delete global access group"
+const PROJECT_GROUP_MSG = "Delete project group settings"
 
 const AccessGroupDetail = ({ projectName, accessGroup }) => {
   const [originalData, setOriginalData] = useState(null)
@@ -37,7 +35,6 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
     },
     { skip: !accessGroupName },
   )
-
   const { data: schema } = useGetAccessGroupSchemaQuery()
 
   useEffect(() => {
@@ -64,42 +61,36 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
         projectName: projectName || '_',
         data: formData,
       }).unwrap()
-      toast.success('Access group saved')
+      toast.success('Project access group settings saved')
     } catch (err) {
       console.error(err)
       toast.error('Unable to save access group')
     }
   }
 
-  const globalGroupPayload = {
-    label: 'Global access group',
-    accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName: '_' }).unwrap(),
-    message: <><p>Are you sure you want to delete this global access group ?</p><p>Group will be deleted for ALL projects.</p><p>This cannot be undone.</p> </>
-  }
-
-  const projectGroupPayload = {
+  const onDeleteProject = async () => confirmDelete({
     label: 'Project access group',
     accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
-    message: <p>Are you sure you want to delete project access group ? This cannot be undone.</p>
-  }
+    message: 'Are you sure you want to delete project access group settings ?'
+  })
 
-  const onDelete = async () => confirmDelete(isProjectLevel ? projectGroupPayload : globalGroupPayload)
 
   return (
     <Section>
       <Toolbar>
-        <Button
-          onClick={onDelete}
-          label={isProjectLevel ? PROJECT_GROUP_MSG : GLOBAL_GROUP_MSG}
-          disabled={!(projectName)}
-          icon="group_remove"
-        />
-        <Spacer />
-        <SaveButton
+      <SaveButton
           onClick={onSave}
-          label={`Save ${projectName ? 'project ' : ''}access group`}
+          label={`Save ${projectName ? 'project ' : ''}group settings`}
           active={isChanged}
           saving={saving}
+        />
+        <Spacer />
+        <Button
+          onClick={onDeleteProject}
+          label={PROJECT_GROUP_MSG}
+          disabled={!(projectName) || !isProjectLevel}
+          icon="group_remove"
+          variant='danger'
         />
       </Toolbar>
       <ScrollPanel

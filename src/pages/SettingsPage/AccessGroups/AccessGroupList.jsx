@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { Button, TablePanel, Section, Toolbar } from '@ynput/ayon-react-components'
+import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
+import { useDeleteAccessGroupMutation } from '/src/services/accessGroups/updateAccessGroups'
 import NewAccessGroup from './NewAccessGroup'
+import confirmDelete from '/src/helpers/confirmDelete'
 
 const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup }) => {
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)
@@ -12,6 +14,8 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
   const { data: accessGroupList = [], isLoading: loading } = useGetAccessGroupsQuery({
     projectName,
   })
+
+  const [deleteAccessGroup] = useDeleteAccessGroupMutation()
 
   // Selection
   const selection = useMemo(() => {
@@ -42,6 +46,14 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
 
   // Render
 
+  const globalGroupPayload = {
+    label: 'Global access group',
+    accept: async () => await deleteAccessGroup({ name: selection.name, projectName: '_' }).unwrap(),
+    message: <><p>Are you sure you want to delete this global access group ?</p><p>Group will be deleted for ALL projects.</p><p>This cannot be undone.</p> </>
+  }
+
+  const onDeleteGlobal = async () => confirmDelete(globalGroupPayload)
+
   return (
     <Section style={{ maxWidth: 400 }}>
       {showNewAccessGroup && (
@@ -53,6 +65,13 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
           label="New access group"
           onClick={() => setShowNewAccessGroup(true)}
           icon="group_add"
+        />
+        <Spacer />
+        <Button
+          label="Delete access group"
+          onClick={onDeleteGlobal}
+          icon="group_remove"
+          variant='danger'
         />
       </Toolbar>
 
