@@ -9,6 +9,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
+import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
 import { isEqual } from 'lodash'
 import {
   useGetAccessGroupQuery,
@@ -23,10 +24,9 @@ import confirmDelete from '/src/helpers/confirmDelete'
 
 const PROJECT_GROUP_MSG = "Delete project group settings"
 
-const AccessGroupDetail = ({ projectName, accessGroup }) => {
+const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const [originalData, setOriginalData] = useState(null)
   const [formData, setFormData] = useState(null)
-  const accessGroupName = accessGroup?.name
 
   const { data } = useGetAccessGroupQuery(
     {
@@ -37,6 +37,17 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
   )
   const { data: schema } = useGetAccessGroupSchemaQuery()
 
+  const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
+    projectName,
+  })
+
+  const isProjectLevel = useMemo(() => {
+    for (const accessGroup of accessGroupList) {
+      if (accessGroup?.name === accessGroupName) return accessGroup.isProjectLevel
+    }
+  }, [accessGroupName, accessGroupList])
+
+
   useEffect(() => {
     if (!data) return
     setFormData(data)
@@ -46,8 +57,6 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
   // mutations
   const [updateAccessGroup, { isLoading: saving }] = useUpdateAccessGroupMutation()
   const [deleteAccessGroup] = useDeleteAccessGroupMutation()
-
-  const isProjectLevel = accessGroup?.isProjectLevel
 
   const isChanged = useMemo(() => {
     if (!originalData || !formData) return false

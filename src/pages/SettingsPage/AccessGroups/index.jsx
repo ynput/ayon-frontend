@@ -12,7 +12,7 @@ const AccessGroups = () => {
 
   return (
     <main>
-      <ProjectList showNull="( default )" selection={projectName} onSelect={setProjectName} />
+      <ProjectList showNull="Global [All Projects]" selection={projectName} onSelect={setProjectName} />
 
       <AccessGroupList
         projectName={projectName}
@@ -23,8 +23,9 @@ const AccessGroups = () => {
 
       <AccessGroupDetail
         projectName={projectName}
-        accessGroup={selectedAccessGroup}
+        accessGroupName={selectedAccessGroup?.name}
         onChange={triggerReload}
+        onSelectAccessGroup={setSelectedAccessGroup}
       />
     </main>
   )
