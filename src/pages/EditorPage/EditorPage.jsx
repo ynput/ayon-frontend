@@ -452,6 +452,9 @@ const EditorPage = () => {
     return sortByKey(result, 'name')
   }, [parents, expandedFolders, rootData, projectName])
 
+  console.log(treeData,'treeData')
+  console.log(rootData,'rootData')
+
   let foundTasks = []
   const getFolderTaskList = (folders = [], parentId, d) => {
     let searchList = []
@@ -1492,7 +1495,7 @@ const EditorPage = () => {
     }
   }
 
-  const filterOptions = [{ name: 'name' }, { name: 'type' }, { name: 'assignees' }, ...columns].map(
+  const filterOptions = [{ name: 'name' }, { name: 'type' }, { name: 'status' }, { name: 'assignees' }, ...columns].map(
     ({ name }) => ({
       value: name,
       label: name,
@@ -1646,6 +1649,13 @@ const EditorPage = () => {
         body={(rowData) => formatType(rowData.data, changes)}
         style={{ width: columnsWidths['type'] || 140 }}
       />,
+      // <Column
+      //   field="status"
+      //   key="status"
+      //   header="Status"
+      //   body={(rowData) => formatAttribute(rowData?.data, changes, 'status')}
+      //   style={{ width: columnsWidths['status'] || 140 }}
+      // />,
       <Column
         field="assignees"
         key="assignees"
