@@ -77,12 +77,15 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
     }
   }
 
-  const onDeleteProject = async () => confirmDelete({
+  const onDeleteLocalGroupSettings = async () => confirmDelete({
     label: 'Project access group',
     accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
-    message: 'Are you sure you want to delete project access group settings ?'
+    message: 'Are you sure you want to delete group settings for this project ?'
   })
 
+  const isLocalProject = !!projectName
+  // This conditions checks if there are any local (NOT global) project settings for user group 
+  const noLocalSettings = projectName && !isProjectLevel
 
   return (
     <Section>
@@ -94,13 +97,15 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
           saving={saving}
         />
         <Spacer />
-        <Button
-          onClick={onDeleteProject}
-          label={PROJECT_GROUP_MSG}
-          disabled={!(projectName) || !isProjectLevel}
-          icon="group_remove"
-          variant='danger'
-        />
+        { isLocalProject &&
+          <Button
+            onClick={onDeleteLocalGroupSettings}
+            label={PROJECT_GROUP_MSG}
+            disabled={noLocalSettings}
+            icon="remove_selection"
+            variant='danger'
+          />
+        }
       </Toolbar>
       <ScrollPanel
         className="nopad transparent"
