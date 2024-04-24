@@ -12,7 +12,7 @@ const AccessGroups = () => {
 
   return (
     <main>
-      <ProjectList showNull="Global [All Projects]" selection={projectName} onSelect={setProjectName} />
+      <ProjectList showNull="Default (all projects)" selection={projectName} onSelect={setProjectName} />
 
       <AccessGroupList
         projectName={projectName}

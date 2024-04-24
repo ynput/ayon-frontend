@@ -22,7 +22,7 @@ import {
 import confirmDelete from '/src/helpers/confirmDelete'
 
 
-const PROJECT_GROUP_MSG = "Delete project group settings"
+const PROJECT_GROUP_MSG = "Clear project overrides"
 
 const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const [originalData, setOriginalData] = useState(null)
@@ -78,9 +78,9 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   }
 
   const onDeleteLocalGroupSettings = async () => confirmDelete({
-    label: 'Project access group',
+    label: 'Clear project overrides',
     accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
-    message: 'Are you sure you want to delete group settings for this project ?'
+    message: 'Are you sure you want to delete all project override settings for this access group?'
   })
 
   const isLocalProject = !!projectName
@@ -92,18 +92,16 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
       <Toolbar>
       <SaveButton
           onClick={onSave}
-          label={`Save ${projectName ? 'project ' : ''}group settings`}
+          label="Save access group"
           active={isChanged}
           saving={saving}
         />
-        <Spacer />
         { isLocalProject &&
           <Button
             onClick={onDeleteLocalGroupSettings}
             label={PROJECT_GROUP_MSG}
             disabled={noLocalSettings}
-            icon="remove_selection"
-            variant='danger'
+            icon="delete"
           />
         }
       </Toolbar>

@@ -47,9 +47,9 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
   // Render
 
   const globalGroupPayload = {
-    label: 'Global access group',
+    label: 'Access group',
     accept: async () => await deleteAccessGroup({ name: selection.name, projectName: '_' }).unwrap(),
-    message: <><p>Are you sure you want to delete this global access group ?</p><p>Group will be deleted for ALL projects.</p><p>This cannot be undone.</p> </>
+    message: 'Are you sure you want to delete this access group ?'
   }
 
   const onDeleteGlobal = async () => confirmDelete(globalGroupPayload)
@@ -70,7 +70,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
         <Button
           label="Delete access group"
           onClick={onDeleteGlobal}
-          icon="group_remove"
+          icon="delete"
           variant='danger'
         />
       </Toolbar>
