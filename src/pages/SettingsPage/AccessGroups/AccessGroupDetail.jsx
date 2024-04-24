@@ -80,6 +80,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const onDeleteLocalGroupSettings = async () => confirmDelete({
     header: 'Clear project overrides',
     deleteLabel: 'Clear',
+    label: 'Project overrides',
     accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
     message: 'Are you sure you want to delete all project override settings for this access group?'
   })
