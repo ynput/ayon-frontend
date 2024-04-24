@@ -78,7 +78,8 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   }
 
   const onDeleteLocalGroupSettings = async () => confirmDelete({
-    label: 'Clear project overrides',
+    header: 'Clear project overrides',
+    deleteLabel: 'Clear',
     accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
     message: 'Are you sure you want to delete all project override settings for this access group?'
   })
@@ -92,7 +93,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
       <Toolbar>
       <SaveButton
           onClick={onSave}
-          label="Save access group"
+          label="Save Changes"
           active={isChanged}
           saving={saving}
         />

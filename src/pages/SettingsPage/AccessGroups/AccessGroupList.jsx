@@ -71,7 +71,6 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
           label="Delete access group"
           onClick={onDeleteGlobal}
           icon="delete"
-          variant='danger'
         />
       </Toolbar>
 
