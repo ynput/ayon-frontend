@@ -452,9 +452,6 @@ const EditorPage = () => {
     return sortByKey(result, 'name')
   }, [parents, expandedFolders, rootData, projectName])
 
-  console.log(treeData,'treeData')
-  console.log(rootData,'rootData')
-
   let foundTasks = []
   const getFolderTaskList = (folders = [], parentId, d) => {
     let searchList = []
