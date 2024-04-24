@@ -74,6 +74,19 @@ const formatType = (node, changes, styled = true) => {
   )
 }
 
+const formatStatus = (node, changes) => {
+  const updatedStatus = changes[node.id] || {}
+  const originalStatusValue = node.status
+  const updatedStatusValue = updatedStatus._status
+  const statusValue = updatedStatusValue || originalStatusValue
+
+  return (
+    <span className="editor-field" style={{ color: updatedStatusValue && 'var(--color-changed)'}}>
+      {statusValue}
+    </span>
+  )
+}
+
 const formatAssignees = (node, changes, allUsers) => {
   // only show for tasks
   if (node.__entityType === 'folder') return null
@@ -115,4 +128,4 @@ const getColumns = () => {
   return cols
 }
 
-export { getColumns, formatType, formatAttribute, formatAssignees }
+export { getColumns, formatType, formatAttribute, formatAssignees, formatStatus }
