@@ -4,6 +4,7 @@ import {
   Button,
   Section,
   Toolbar,
+  Spacer,
   ScrollPanel,
   SaveButton,
 } from '@ynput/ayon-react-components'
@@ -93,12 +94,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   return (
     <Section style={{ flex: 2 }}>
       <Toolbar>
-      <SaveButton
-          onClick={onSave}
-          label="Save Changes"
-          active={isChanged}
-          saving={saving}
-        />
+        <Spacer />
         { isLocalProject &&
           <Button
             onClick={onDeleteLocalGroupSettings}
@@ -107,6 +103,12 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
             icon="delete"
           />
         }
+        <SaveButton
+          onClick={onSave}
+          label="Save Changes"
+          active={isChanged}
+          saving={saving}
+        />
       </Toolbar>
       <ScrollPanel
         className="nopad transparent"
