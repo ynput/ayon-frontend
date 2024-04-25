@@ -10,7 +10,7 @@ const updatedStyles = css`
   }
 `
 
-export const StyledIcon = styled.div`
+export const StyledStatus = styled.div`
     display: flex;
     color: ${({ $color }) => $color};
     > .icon {

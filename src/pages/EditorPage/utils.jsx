@@ -3,7 +3,7 @@ import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
 import { useSelector } from 'react-redux'
 import ToolsField from './fields/ToolsField'
-import StyledIcon from './utils.styled'
+import StyledStatus from './utils.styled'
 
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
@@ -78,20 +78,20 @@ const formatType = (node, changes, styled = true) => {
 
 const formatStatus = (node, changes) => {
   const updatedStatus = changes[node.id] || {}
-  const originalStatusValue = node.status
-  const updatedStatusValue = updatedStatus._status
-  const statusValue = updatedStatusValue || originalStatusValue
+  const originalStatusName = node.status
+  const updatedStatusName = updatedStatus._status
+  const statusName = updatedStatusName || originalStatusName
 
-  const statusesObject = useSelector((state) => state.project.statuses)
-  const selectedStatus = statusesObject[statusValue] ? statusesObject[statusValue] : {}
+  const allStatuses = useSelector((state) => state.project.statuses)
+  const selectedStatus = allStatuses[statusName] ? allStatuses[statusName] : {}
 
   const { name, icon, color } = selectedStatus
 
   return (
-    <StyledIcon className="editor-field" $isUpdated={!!updatedStatusValue} $color={color}>
+    <StyledStatus className="editor-field" $isUpdated={!!updatedStatusName} $color={color}>
       {icon && <Icon icon={icon} />}
       <span style={{marginLeft: 8}}>{name}</span>
-    </StyledIcon>
+    </StyledStatus>
   )
 }
 
