@@ -6,6 +6,7 @@ import {
   Divider,
   Dropdown,
   InputSwitch,
+  Button,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -39,9 +40,14 @@ const UserAttribForm = ({
     [[], []],
   )
 
+  console.log(builtin,'builtin')
+  console.log(formData,'formData')
+
   const buildForms = (attribs) =>
     attribs.map(({ name, data, input }) => {
       let widget = null
+
+   
 
       if (name.includes('password') && setPassword) {
         widget = (
@@ -56,6 +62,22 @@ const UserAttribForm = ({
             disabled={disabled}
             autoComplete="new-password"
           />
+        )
+      } else if (name === 'avatarUrl') {
+        widget = (
+         <span style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: 8}}>
+           <InputText style={{flex: 1}} value={formData[name] || ''} 
+            disabled={disabled}
+            onChange={(e) => {
+              const value = e.target.value
+              setFormData((fd) => {
+                return { ...fd, [name]: value }
+              })
+            }}
+            autoComplete="cc-csc"
+            {...input}/>
+           <Button icon="upload">Upload</Button>
+         </span>
         )
       } else if (data.enum) {
         widget = (
@@ -74,7 +96,7 @@ const UserAttribForm = ({
         )
       } else if (data.type === 'boolean') {
         if (name === 'developerMode') return null
-
+      
         widget = (
           <InputSwitch
             checked={formData[name]}
@@ -90,6 +112,7 @@ const UserAttribForm = ({
           />
         )
       } else {
+        console.log(formData,'formData')
         widget = (
           <InputText
             value={formData[name] || ''}
@@ -102,7 +125,7 @@ const UserAttribForm = ({
             }}
             autoComplete="cc-csc"
             {...input}
-          />
+            />
         )
       }
       return (
@@ -119,6 +142,7 @@ const UserAttribForm = ({
         {!!custom.length && (
           <>
             <DividerSmallStyled />
+ 
             {buildForms(custom)}
           </>
         )}
