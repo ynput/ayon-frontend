@@ -28,6 +28,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
   const [selectedAddons, setSelectedAddons] = useState([])
+  const [bundleCheckState, setBundleCheckState] = useState({})
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
@@ -127,11 +128,22 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
   }
 
 
-  const handleCheckBundle = () => {
+  useEffect(() => {
+    if (!formData) return
+
     axios
       .post('/api/bundles/check', formData)
-      .then((res) => { console.log(res) })
-  }
+      .then((res) => { 
+        setBundleCheckState(res.data)
+        console.log(res.data)
+      })
+      .catch((err) => {
+        setBundleCheckState({success: true}) // checks are not available
+      })
+
+  }, [formData])
+
+
 
 
   const [devChanges, setDevChanges] = useState(false)
@@ -238,14 +250,10 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
             </Button>
           </>
         )}
-        <Button
-          label={'Check bundle'}
-          onClick={handleCheckBundle}
-        />
         <SaveButton
           label={isDev ? 'Save dev bundle' : 'Create new bundle'}
           onClick={isDev ? handleUpdate : handleSave}
-          active={isDev ? !!formData?.name && devChanges : !!formData?.name}
+          active={isDev ? !!formData?.name && devChanges : (!!formData?.name && bundleCheckState?.success)}
           saving={isCreating || isUpdating}
         />
       </Toolbar>
@@ -257,6 +265,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
           setSelectedAddons,
           setFormData,
           installers,
+          issues: bundleCheckState?.issues,
         }}
         formData={formData}
         onAddonDevChange={handleAddonDevChange}
@@ -338,6 +347,9 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
           )}
         </Styled.AddonTools>
         {isDev && <BundleDeps bundle={formData} onChange={handleDepPackagesDevChange} />}
+        <pre>
+          {JSON.stringify(bundleCheckState?.issues, null, 2)}
+        </pre>
       </BundleForm>
     </>
   )
