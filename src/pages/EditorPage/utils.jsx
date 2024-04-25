@@ -1,7 +1,29 @@
 import ayonClient from '/src/ayon'
 import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
+import { useSelector } from 'react-redux'
 import ToolsField from './fields/ToolsField'
+import styled, {css} from 'styled-components'
+
+const updatedStyles = css`
+  background-color: var(--color-changed);
+  outline: 1px solid var(--color-changed);
+  color: var(--md-sys-color-on-primary);
+    border-radius: var(--border-radius-m);
+  > .icon {
+    color: var(--md-sys-color-on-primary);
+  }
+`
+
+const StyledIcon = styled.div`
+    display: flex;
+    color: ${({ $color }) => $color};
+    > .icon {
+      font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
+      color: ${({ $color }) => $color};
+    }
+  ${({ $isUpdated }) => ($isUpdated && css`${updatedStyles}`)}
+`
 
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
@@ -80,9 +102,17 @@ const formatStatus = (node, changes) => {
   const updatedStatusValue = updatedStatus._status
   const statusValue = updatedStatusValue || originalStatusValue
 
+  const statusesObject = useSelector((state) => state.project.statuses)
+  const selectedStatus = statusesObject[statusValue] ? statusesObject[statusValue] : {}
+
+  const { name, icon, color } = selectedStatus
+
   return (
-    <span className="editor-field" style={{ color: updatedStatusValue && 'var(--color-changed)'}}>
-      {statusValue}
+    <span >
+        <StyledIcon className="editor-field" $isUpdated={!!updatedStatusValue} $color={color}>
+          {icon && <Icon icon={icon} />}
+          <span style={{marginLeft: 8}}>{name}</span>
+        </StyledIcon>
     </span>
   )
 }
