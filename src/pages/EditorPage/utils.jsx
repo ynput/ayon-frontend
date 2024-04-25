@@ -3,7 +3,7 @@ import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
 import { useSelector } from 'react-redux'
 import ToolsField from './fields/ToolsField'
-import StyledStatus from './utils.styled'
+import { StyledStatus } from './utils.styled'
 
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
