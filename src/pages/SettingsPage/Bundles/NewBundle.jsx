@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
@@ -125,6 +126,14 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     }
   }
 
+
+  const handleCheckBundle = () => {
+    axios
+      .post('/api/bundles/check', formData)
+      .then((res) => { console.log(res) })
+  }
+
+
   const [devChanges, setDevChanges] = useState(false)
 
   useEffect(() => {
@@ -229,6 +238,10 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
             </Button>
           </>
         )}
+        <Button
+          label={'Check bundle'}
+          onClick={handleCheckBundle}
+        />
         <SaveButton
           label={isDev ? 'Save dev bundle' : 'Create new bundle'}
           onClick={isDev ? handleUpdate : handleSave}
