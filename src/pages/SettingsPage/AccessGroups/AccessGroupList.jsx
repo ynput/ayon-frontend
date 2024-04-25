@@ -73,7 +73,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
           header: 'Clear project overrides',
           deleteLabel: 'Clear',
           label: 'Project overrides',
-          accept: async () => await deleteAccessGroup({ name: eventData.name, projectName: null }).unwrap(),
+          accept: async () => await deleteAccessGroup({ name: eventData.name, projectName }).unwrap(),
           message: 'Are you sure you want to delete all project override settings for this access group?'
         }),
        },
