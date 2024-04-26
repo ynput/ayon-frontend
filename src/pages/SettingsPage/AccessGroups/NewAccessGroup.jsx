@@ -30,6 +30,16 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     error = 'This access group already exists'
   else if (!accessGroupName.match('^[a-zA-Z_]{2,20}$')) error = 'Invalid access group name'
 
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    const isEnter = e.key === 'Enter'
+    const isCtrMeta = e.ctrlKey || e.metaKey
+    if (isEnter && isCtrMeta) onSubmit(true)
+    if (isEnter && e.shiftKey) onSubmit(false)
+    if (e.key === 'Escape') onClose()
+  }
+
+
   const footer = useMemo(
     () => (
       <div
@@ -59,6 +69,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
       onHide={onClose}
       visible={true}
       bodyStyle={{ width: 400, overflow: 'hidden' }}
+      onKeyDown={handleKeyDown}
     >
       <FormLayout>
         <FormRow label="Access group name">
