@@ -76,7 +76,14 @@ const formatType = (node, changes, styled = true) => {
   )
 }
 
-const formatStatus = (node, changes) => {
+const formatStatus = (node, changes, width) => {
+
+  const resolveWidth = (statusWidth) => {
+    if (statusWidth < 70) return 'icon'
+    if (statusWidth < 140) return 'short'
+    return 'full'
+  }
+  const size = resolveWidth(width)
   const updatedStatus = changes[node.id] || {}
   const originalStatusName = node.status
   const updatedStatusName = updatedStatus._status
@@ -85,12 +92,12 @@ const formatStatus = (node, changes) => {
   const allStatuses = useSelector((state) => state.project.statuses)
   const selectedStatus = allStatuses[statusName] ? allStatuses[statusName] : {}
 
-  const { name, icon, color } = selectedStatus
+  const { name, icon, color, shortName } = selectedStatus
 
   return (
     <StyledStatus className="editor-field" $isUpdated={!!updatedStatusName} $color={color}>
       {icon && <Icon icon={icon} />}
-      <span style={{marginLeft: 8}}>{name}</span>
+      { size !== 'icon' && <span style={{marginLeft: 8}}>{size === 'full' ? name : shortName}</span>}
     </StyledStatus>
   )
 }

@@ -1650,7 +1650,7 @@ const EditorPage = () => {
          field="status"
          key="status"
          header="Status"
-         body={(rowData) => formatStatus(rowData.data, changes)}
+         body={(rowData) => formatStatus(rowData.data, changes, columnsWidths['status'] || 140)}
          style={{ width: columnsWidths['status'] || 140 }}
        />,
       <Column
@@ -1670,7 +1670,7 @@ const EditorPage = () => {
         />
       )),
     ],
-    [rootData],
+    [rootData, columnsWidths],
   )
 
   // sort columns if localstorage set
