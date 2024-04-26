@@ -97,7 +97,7 @@ const formatStatus = (node, changes, width) => {
   return (
     <StyledStatus className="editor-field" $isUpdated={!!updatedStatusName} $color={color}>
       {icon && <Icon icon={icon} />}
-      { size !== 'icon' && <span style={{marginLeft: 8}}>{size === 'full' ? name : shortName}</span>}
+      { size !== 'icon' && <span className='statusName'>{size === 'full' ? name : shortName}</span>}
     </StyledStatus>
   )
 }
