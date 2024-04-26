@@ -13,11 +13,11 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     [accessGroupList],
   )
 
-  const onSubmit = async () => {
+  const onSubmit = async (close) => {
     try {
       await createAccessGroup({ name: accessGroupName }).unwrap()
 
-      onClose(accessGroupName)
+      close && onClose(accessGroupName)
     } catch (error) {
       console.error(error)
 
@@ -34,8 +34,10 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     e?.stopPropagation()
     const isEnter = e.key === 'Enter'
     const isEsc = e.key === 'Escape'
-    const isCtrlMetaShift = e.ctrlKey || e.metaKey || e.shiftKey
-    if (isCtrlMetaShift && isEnter) onSubmit()
+    const isCtrlMeta = e.ctrlKey || e.metaKey
+    const isShift = e.shiftKey
+    if (isCtrlMeta && isEnter) onSubmit(true)
+    if (isShift && isEnter) onSubmit(false)
     if (isEsc) onClose()
   }
 
@@ -55,7 +57,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
           label="Create access group"
           icon="group_add"
           active={!error && accessGroupName}
-          onClick={onSubmit}
+          onClick={() => onSubmit(true)}
         />
       </div>
     ),
