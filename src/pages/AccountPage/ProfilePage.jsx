@@ -8,7 +8,7 @@ import {
   SaveButton,
   InputText,
 } from '@ynput/ayon-react-components'
-import { useUpdateUserMutation } from '../../services/user/updateUser'
+import { useUpdateUserMutation, useUpdateUserAvatarMutation } from '../../services/user/updateUser'
 import UserDetailsHeader from '../../components/User/UserDetailsHeader'
 import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
@@ -46,6 +46,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
   // UPDATE USER DATA
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation()
+  const [updateUserAvatar] = useUpdateUserAvatarMutation()
 
   // build initial form data
   const initialFormData = {}
@@ -124,6 +125,38 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
+  const onUpdateAvatar = async () => {
+    const attrib = {
+      ...user.attrib,
+      ...formData,
+      developerMode: !!user.attrib.developerMode,
+    }
+
+    try {
+      await updateUserAvatar({
+        name: user.name,
+        put: {
+          attrib,
+        },
+      }).unwrap()
+
+      toast.success('Profile updated')
+
+      // update redux state with new data
+      dispatch(onProfileUpdate(formData))
+      // reset form
+      setInitData(formData)
+      setChangesMade(false)
+    } catch (error) {
+      console.log(error)
+      toast.error('Unable to update profile')
+      toast.error(error.details)
+    }
+  }
+
+
+  console.log(attributes,'attributes')
+  console.log(formData,'setFormData')
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
@@ -141,7 +174,13 @@ const ProfilePage = ({ user = {}, isLoading }) => {
                 onEdit={() => setShowSetPassword(true)}
               />
             </FormRow>
-            <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} />
+            <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} onUpdateAvatar={onUpdateAvatar} />
+            {/* <FormRow label="Avatar URL" key="AvatarUrl" >
+              <span style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: 8}}>
+                <InputText value='' disabled />
+                <Button icon="upload">Upload</Button>
+              </span>
+            </FormRow> */}
             <SaveButton
               onClick={onSave}
               label="Save profile"

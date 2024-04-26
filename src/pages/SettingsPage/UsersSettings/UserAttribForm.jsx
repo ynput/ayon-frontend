@@ -1,12 +1,12 @@
 import {
   InputText,
+  FileUpload,
   FormLayout,
   FormRow,
   InputPassword,
   Divider,
   Dropdown,
   InputSwitch,
-  Button,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -23,6 +23,7 @@ const UserAttribForm = ({
   setPasswordConfirm,
   setPassword,
   disabled,
+  onUpdateAvatar,
 }) => {
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
@@ -66,7 +67,7 @@ const UserAttribForm = ({
       } else if (name === 'avatarUrl') {
         widget = (
          <span style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: 8}}>
-           <InputText style={{flex: 1}} value={formData[name] || ''} 
+           <FileUpload style={{flex: 1}} value={formData[name] || ''} 
             disabled={disabled}
             onChange={(e) => {
               const value = e.target.value
@@ -76,7 +77,6 @@ const UserAttribForm = ({
             }}
             autoComplete="cc-csc"
             {...input}/>
-           <Button icon="upload">Upload</Button>
          </span>
         )
       } else if (data.enum) {

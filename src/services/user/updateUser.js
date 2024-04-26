@@ -44,7 +44,6 @@ const updateUser = ayonApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { name }) => [
         { type: 'user', id: name },
-        { type: 'user', id: 'LIST' },
       ],
       transformErrorResponse: (res) => res.data,
     }),
@@ -88,6 +87,7 @@ export const {
   useUpdateUserMutation,
   useUpdateUserNameMutation,
   useUpdateUserPasswordMutation,
+  useUpdateUserAvatarMutation,
   useAddUserMutation,
   useDeleteUserMutation,
   useUpdateUserAPIKeyMutation,
