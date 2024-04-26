@@ -14,10 +14,8 @@ const baseQuery = fetchBaseQuery({
   prepareHeaders: (headers) => {
     const storedAccessToken = localStorage.getItem('accessToken')
     if (storedAccessToken) {
-      // headers.common['Authorization'] = `Bearer ${storedAccessToken}`
-      headers.set('Authorization', `Bearer ${storedAccessToken}`)
+      // headers.set('Authorization', `Bearer ${storedAccessToken}`)
     }
-    //   headers.common['X-Sender'] = short.generate()
     headers.set('X-Sender', window.senderId)
 
     return headers
