@@ -33,10 +33,10 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
   const handleKeyDown = (e) => {
     e?.stopPropagation()
     const isEnter = e.key === 'Enter'
-    const isCtrMeta = e.ctrlKey || e.metaKey
-    if (isEnter && isCtrMeta) onSubmit(true)
-    if (isEnter && e.shiftKey) onSubmit(false)
-    if (e.key === 'Escape') onClose()
+    const isEsc = e.key === 'Escape'
+    const isCtrlMetaShift = e.ctrlKey || e.metaKey || e.shiftKey
+    if (isCtrlMetaShift && isEnter) onSubmit()
+    if (isEsc) onClose()
   }
 
 
