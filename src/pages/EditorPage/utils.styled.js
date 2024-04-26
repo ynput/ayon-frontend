@@ -8,19 +8,23 @@ const updatedStyles = css`
   > .icon {
     color: var(--md-sys-color-on-primary);
   }
+
+`
+
+export const StyledStatus = styled.div`
+  display: flex;
+  width: fit-content;
+  color: ${({ $color }) => $color};
+  
   > .statusName {
     margin-left: 8px;
     padding-right: 8px;
   }
-`
 
-export const StyledStatus = styled.div`
-    display: flex;
-    width: fit-content;
+  > .icon {
+    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
     color: ${({ $color }) => $color};
-    > .icon {
-      font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
-      color: ${({ $color }) => $color};
-    }
+  }
+
   ${({ $isUpdated }) => ($isUpdated && css`${updatedStyles}`)}
 `
