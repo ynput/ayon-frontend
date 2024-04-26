@@ -18,7 +18,7 @@ import sortByKey from '/src/helpers/sortByKey'
 
 import { editorSelectionChanged, setUri, setExpandedFolders } from '/src/features/context'
 
-import { getColumns, formatType, formatAttribute, formatAssignees } from './utils'
+import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
@@ -1492,7 +1492,7 @@ const EditorPage = () => {
     }
   }
 
-  const filterOptions = [{ name: 'name' }, { name: 'type' }, { name: 'assignees' }, ...columns].map(
+  const filterOptions = [{ name: 'name' }, { name: 'type' }, { name: 'status' }, { name: 'assignees' }, ...columns].map(
     ({ name }) => ({
       value: name,
       label: name,
@@ -1646,6 +1646,13 @@ const EditorPage = () => {
         body={(rowData) => formatType(rowData.data, changes)}
         style={{ width: columnsWidths['type'] || 140 }}
       />,
+       <Column
+         field="status"
+         key="status"
+         header="Status"
+         body={(rowData) => formatStatus(rowData.data, changes, columnsWidths['status'] || 140)}
+         style={{ width: columnsWidths['status'] || 140 }}
+       />,
       <Column
         field="assignees"
         key="assignees"
@@ -1663,7 +1670,7 @@ const EditorPage = () => {
         />
       )),
     ],
-    [rootData],
+    [rootData, columnsWidths],
   )
 
   // sort columns if localstorage set

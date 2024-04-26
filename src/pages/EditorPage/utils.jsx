@@ -1,7 +1,9 @@
 import ayonClient from '/src/ayon'
 import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import { TimestampField } from '/src/containers/fieldFormat'
+import { useSelector } from 'react-redux'
 import ToolsField from './fields/ToolsField'
+import { StyledStatus } from './utils.styled'
 
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
@@ -74,6 +76,32 @@ const formatType = (node, changes, styled = true) => {
   )
 }
 
+const formatStatus = (node, changes, width) => {
+
+  const resolveWidth = (statusWidth) => {
+    if (statusWidth < 70) return 'icon'
+    if (statusWidth < 140) return 'short'
+    return 'full'
+  }
+  const size = resolveWidth(width)
+  const updatedStatus = changes[node.id] || {}
+  const originalStatusName = node.status
+  const updatedStatusName = updatedStatus._status
+  const statusName = updatedStatusName || originalStatusName
+
+  const allStatuses = useSelector((state) => state.project.statuses)
+  const selectedStatus = allStatuses[statusName] ? allStatuses[statusName] : {}
+
+  const { name, icon, color, shortName } = selectedStatus
+
+  return (
+    <StyledStatus className="editor-field" $isUpdated={!!updatedStatusName} $color={color}>
+      {icon && <Icon icon={icon} />}
+      { size !== 'icon' && <span className='statusName'>{size === 'full' ? name : shortName}</span>}
+    </StyledStatus>
+  )
+}
+
 const formatAssignees = (node, changes, allUsers) => {
   // only show for tasks
   if (node.__entityType === 'folder') return null
@@ -115,4 +143,4 @@ const getColumns = () => {
   return cols
 }
 
-export { getColumns, formatType, formatAttribute, formatAssignees }
+export { getColumns, formatType, formatAttribute, formatAssignees, formatStatus }
