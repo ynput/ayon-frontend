@@ -41,7 +41,7 @@ export const Comment = styled.li`
 
         .date {
           opacity: 0;
-          display: none;
+          visibility: hidden;
         }
       }
     }
