@@ -2,13 +2,14 @@ import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import {
   Button,
-  Spacer,
   Section,
   Toolbar,
+  Spacer,
   ScrollPanel,
   SaveButton,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '/src/containers/SettingsEditor'
+import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
 import { isEqual } from 'lodash'
 import {
   useGetAccessGroupQuery,
@@ -20,10 +21,12 @@ import {
 } from '/src/services/accessGroups/updateAccessGroups'
 import confirmDelete from '/src/helpers/confirmDelete'
 
-const AccessGroupDetail = ({ projectName, accessGroup }) => {
+
+const PROJECT_GROUP_MSG = "Clear project overrides"
+
+const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const [originalData, setOriginalData] = useState(null)
   const [formData, setFormData] = useState(null)
-  const accessGroupName = accessGroup?.name
 
   const { data } = useGetAccessGroupQuery(
     {
@@ -32,8 +35,18 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
     },
     { skip: !accessGroupName },
   )
-
   const { data: schema } = useGetAccessGroupSchemaQuery()
+
+  const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
+    projectName,
+  })
+
+  const isProjectLevel = useMemo(() => {
+    for (const accessGroup of accessGroupList) {
+      if (accessGroup?.name === accessGroupName) return accessGroup.isProjectLevel
+    }
+  }, [accessGroupName, accessGroupList])
+
 
   useEffect(() => {
     if (!data) return
@@ -44,8 +57,6 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
   // mutations
   const [updateAccessGroup, { isLoading: saving }] = useUpdateAccessGroupMutation()
   const [deleteAccessGroup] = useDeleteAccessGroupMutation()
-
-  const isProjectLevel = accessGroup?.isProjectLevel
 
   const isChanged = useMemo(() => {
     if (!originalData || !formData) return false
@@ -59,32 +70,42 @@ const AccessGroupDetail = ({ projectName, accessGroup }) => {
         projectName: projectName || '_',
         data: formData,
       }).unwrap()
-      toast.success('Access group saved')
+      toast.success('Project access group settings saved')
     } catch (err) {
       console.error(err)
       toast.error('Unable to save access group')
     }
   }
 
-  const onDelete = async () =>
-    confirmDelete({
-      label: 'Access group',
-      accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
-    })
+  const onDeleteLocalGroupSettings = async () => confirmDelete({
+    header: 'Clear project overrides',
+    deleteLabel: 'Clear',
+    label: 'Project overrides',
+    accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
+    message: 'Are you sure you want to delete all project override settings for this access group?'
+  })
+
+ 
+
+  const isLocalProject = !!projectName
+  // This conditions checks if there are any local (NOT global) project settings for user group 
+  const noLocalSettings = projectName && !isProjectLevel
 
   return (
-    <Section>
+    <Section style={{ flex: 2 }}>
       <Toolbar>
-        <Button
-          onClick={onDelete}
-          label="Delete project access group"
-          disabled={!(projectName && isProjectLevel)}
-          icon="group_remove"
-        />
         <Spacer />
+        { isLocalProject &&
+          <Button
+            onClick={onDeleteLocalGroupSettings}
+            label={PROJECT_GROUP_MSG}
+            disabled={noLocalSettings}
+            icon="delete"
+          />
+        }
         <SaveButton
           onClick={onSave}
-          label={`Save ${projectName ? 'project ' : ''}access group`}
+          label="Save Changes"
           active={isChanged}
           saving={saving}
         />
