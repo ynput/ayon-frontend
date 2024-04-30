@@ -182,7 +182,7 @@ const Feed = ({
                 activity={activity}
                 onCheckChange={handleCommentChecked}
                 onDelete={deleteComment}
-                onUpdate={(value) => updateComment(activity, value)}
+                onUpdate={(value, files) => updateComment(activity, value, files)}
                 projectInfo={projectInfo}
                 projectName={projectName}
                 entityType={entityType}

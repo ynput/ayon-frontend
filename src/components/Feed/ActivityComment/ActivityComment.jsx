@@ -8,6 +8,7 @@ import { classNames } from 'primereact/utils'
 import { useSelector } from 'react-redux'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import { aTag, inputTag } from './activityMarkdownComponents'
+import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
 
 const ActivityComment = ({
   activity = {},
@@ -31,6 +32,7 @@ const ActivityComment = ({
     activityId,
     author,
     isOwner,
+    files = [],
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName || 'Unknown'
@@ -48,9 +50,9 @@ const ActivityComment = ({
     setIsEditing(false)
   }
 
-  const handleSave = (value) => {
+  const handleSave = (value, files) => {
     setIsEditing(false)
-    onUpdate(value)
+    onUpdate(value, files)
   }
 
   return (
@@ -74,6 +76,7 @@ const ActivityComment = ({
           <CommentInput
             isOpen={true}
             initValue={body}
+            initFiles={files}
             isEditing
             onClose={handleEditCancel}
             onSubmit={handleSave}
@@ -81,20 +84,30 @@ const ActivityComment = ({
             {...editProps}
           />
         ) : (
-          <CommentWrapper>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              urlTransform={(url) => url}
-              components={{
-                // a links
-                a: (props) => aTag(props, { entityId, projectName, projectInfo, onReferenceClick }),
-                // checkbox inputs
-                input: (props) => inputTag(props, { activity, onCheckChange }),
-              }}
-            >
-              {body}
-            </ReactMarkdown>
-          </CommentWrapper>
+          <>
+            <CommentWrapper>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                urlTransform={(url) => url}
+                components={{
+                  // a links
+                  a: (props) =>
+                    aTag(props, { entityId, projectName, projectInfo, onReferenceClick }),
+                  // checkbox inputs
+                  input: (props) => inputTag(props, { activity, onCheckChange }),
+                }}
+              >
+                {body}
+              </ReactMarkdown>
+            </CommentWrapper>
+            {/* file uploads */}
+            <FilesGrid
+              files={files}
+              isCompact={files.length > 6}
+              projectName={projectName}
+              isDownloadable
+            />
+          </>
         )}
       </Styled.Body>
     </Styled.Comment>

@@ -24,12 +24,13 @@ const useCommentMutations = ({
 
   const submitComment = async (value, files) => {
     const newId = uuid1().replace(/-/g, '')
+    const fileIds = files.map((file) => file.id)
 
     const newComment = {
       body: value,
       activityType: 'comment',
       id: newId,
-      files: files,
+      files: fileIds,
     }
 
     // create a new patch for optimistic update
@@ -42,6 +43,7 @@ const useCommentMutations = ({
       authorFullName: fullName,
       createdAt: formatISO(new Date()),
       isOwner: true,
+      files: files,
     }
 
     // we only need these args to update the cache of the original query
@@ -62,14 +64,18 @@ const useCommentMutations = ({
     }
   }
 
-  const updateComment = async (activity, value) => {
+  const updateComment = async (activity, value, files) => {
+    const fileIds = files.map((file) => file.id)
+
     const updatedActivity = {
       body: value,
+      files: fileIds,
     }
 
     const patch = {
       ...activity,
       ...updatedActivity,
+      files,
     }
 
     // we only need these args to update the cache of the original query

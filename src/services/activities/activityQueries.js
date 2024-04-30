@@ -14,6 +14,12 @@ fragment ActivityFragment on ActivityNode {
         fullName
       }
     }
+    files {
+      id
+      name
+      size
+      mime
+    }
     origin {
       id
       name
