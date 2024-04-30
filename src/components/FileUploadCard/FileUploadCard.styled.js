@@ -71,10 +71,6 @@ export const File = styled.div`
       }
     }
 
-    .image-wrapper:hover {
-      background-color: var(--md-sys-color-surface-container-low-hover);
-    }
-
     &.isImage {
       &:hover {
         footer {
@@ -187,10 +183,6 @@ export const ImageWrapper = styled.div`
     max-width: 100%;
     object-fit: contain;
     background-color: var(--md-sys-color-surface-container-lowest);
-
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-lowest-hover);
-    }
   }
 
   .icon {
