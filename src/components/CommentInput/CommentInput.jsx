@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as Styled from './CommentInput.styled'
-import { Button, SaveButton } from '@ynput/ayon-react-components'
+import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 import 'react-quill/dist/quill.bubble.css'
 
 import ReactQuill from 'react-quill'
@@ -15,6 +15,7 @@ import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
 import {
   convertToMarkdown,
+  handleFileDrop,
   parseImages,
   quillFormats,
   quillModules,
@@ -23,10 +24,11 @@ import {
 import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
 import InputMarkdownConvert from './InputMarkdownConvert'
-import FileUploadCard from '../FileUploadCard/FileUploadCard'
+import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
 
 const CommentInput = ({
   initValue,
+  initFiles = [],
   onSubmit,
   isOpen,
   onClose,
@@ -42,8 +44,9 @@ const CommentInput = ({
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
   // file uploads
-  const [files, setFiles] = useState([])
+  const [files, setFiles] = useState(initFiles)
   const [filesUploading, setFilesUploading] = useState([])
+  const [isDropping, setIsDropping] = useState(false)
 
   // MENTION STATES
   const [mention, setMention] = useState(null)
@@ -340,10 +343,9 @@ const CommentInput = ({
 
       // remove img query params
       const markdownParsed = parseImages(markdown)
-      const fileIds = files.map((file) => file.id)
 
-      if (markdownParsed && onSubmit) {
-        onSubmit(markdownParsed, fileIds)
+      if ((markdownParsed || files.length) && onSubmit) {
+        onSubmit(markdownParsed, files)
         setEditorValue('')
         setFiles([])
       }
@@ -415,14 +417,9 @@ const CommentInput = ({
     const newFile = {
       id: data.id,
       name: file.name,
-      type: file.type,
+      mime: file.type,
+      size: file.size,
       order: files.length,
-    }
-
-    if (newFile.type.includes('image') && data.id) {
-      // create preview url image for file
-      const previewUrl = `/api/projects/${projectName}/files/${data.id}?preview=true`
-      newFile.url = previewUrl
     }
 
     setFiles((prev) => [...prev, newFile])
@@ -458,6 +455,19 @@ const CommentInput = ({
     }
   }
 
+  // when a file is not dropped onto the comment input
+  const handleDrop = (e) => {
+    setIsDropping(false)
+    // upload file
+    handleFileDrop(e, projectName, handleFileProgress, handleFileUpload)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDropping(true)
+  }
+
   let quillMinHeight = isOpen ? initHeight + 41 : 44
   if (isEditing) quillMinHeight = undefined
 
@@ -474,14 +484,25 @@ const CommentInput = ({
     [projectName, setFiles, setFilesUploading],
   )
 
-  const allFiles = [...files, ...filesUploading].sort((a, b) => a.order - b.order)
-  const compactGrid = allFiles.length > 9
+  const allFiles = [...(files || []), ...filesUploading].sort((a, b) => a.order - b.order)
+  const compactGrid = allFiles.length > 6
 
   return (
     <>
-      <Styled.AutoHeight className={classNames({ isOpen, isEditing })}>
+      <Styled.AutoHeight
+        className={classNames({ isOpen, isEditing })}
+        onDragOver={handleDragOver}
+        onDragLeave={() => setIsDropping(false)}
+        onDrop={handleDrop}
+        onClick={() => setIsDropping(false)}
+      >
         <Styled.Comment
-          className={classNames('block-shortcuts', { isOpen, isClosed: !isOpen, isEditing })}
+          className={classNames('block-shortcuts', {
+            isOpen,
+            isClosed: !isOpen,
+            isEditing,
+            isDropping,
+          })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
         >
@@ -491,21 +512,13 @@ const CommentInput = ({
           </Styled.Markdown>
 
           {/* file uploads */}
-          {!!allFiles.length && (
-            <Styled.Files className={classNames({ compact: compactGrid })}>
-              {allFiles.map((file, index) => (
-                <FileUploadCard
-                  key={index}
-                  name={file.name}
-                  type={file.type}
-                  src={file.url}
-                  progress={file.progress}
-                  onRemove={() => handleFileRemove(file.id, file.name)}
-                  isCompact={compactGrid}
-                />
-              ))}
-            </Styled.Files>
-          )}
+          <FilesGrid
+            files={allFiles}
+            isCompact={compactGrid}
+            onRemove={handleFileRemove}
+            style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
+            projectName={projectName}
+          />
           {/* QUILL is configured in helpers file */}
           <ReactQuill
             theme="snow"
@@ -560,6 +573,10 @@ const CommentInput = ({
               />
             </Styled.Buttons>
           </Styled.Footer>
+
+          <Styled.Dropzone className={classNames({ show: isDropping && isOpen })}>
+            <Icon icon="cloud_upload" />
+          </Styled.Dropzone>
         </Styled.Comment>
         <CommentMentionSelect
           mention={mention}

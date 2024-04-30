@@ -17,10 +17,8 @@ class ImageUploader {
       toolbar.addHandler('image', this.selectLocalImage.bind(this))
     }
 
-    this.handleDrop = this.handleDrop.bind(this)
     this.handlePaste = this.handlePaste.bind(this)
 
-    this.quill.root.addEventListener('drop', this.handleDrop, false)
     this.quill.root.addEventListener('paste', this.handlePaste, false)
   }
 
@@ -41,36 +39,6 @@ class ImageUploader {
     window.requestAnimationFrame(() => {
       document.body.removeChild(this.fileHolder)
     })
-  }
-
-  handleDrop(evt) {
-    if (evt.dataTransfer && evt.dataTransfer.files && evt.dataTransfer.files.length) {
-      evt.stopPropagation()
-      evt.preventDefault()
-      if (document.caretRangeFromPoint) {
-        const selection = document.getSelection()
-        const range = document.caretRangeFromPoint(evt.clientX, evt.clientY)
-        if (selection && range) {
-          selection.setBaseAndExtent(
-            range.startContainer,
-            range.startOffset,
-            range.startContainer,
-            range.startOffset,
-          )
-        }
-      } else {
-        const selection = document.getSelection()
-        const range = document.caretPositionFromPoint(evt.clientX, evt.clientY)
-        if (selection && range) {
-          selection.setBaseAndExtent(range.offsetNode, range.offset, range.offsetNode, range.offset)
-        }
-      }
-
-      let files = evt.dataTransfer.files
-      if (files?.length) {
-        this.readAndUploadFiles(files)
-      }
-    }
   }
 
   handlePaste(evt) {
@@ -102,8 +70,8 @@ class ImageUploader {
 
     for (const file of files) {
       uploadFile(file, this.options.projectName, this.options.onUploadProgress).then(
-        (imageUrl) => {
-          this.options.onUpload && this.options.onUpload(imageUrl)
+        (data) => {
+          this.options.onUpload && this.options.onUpload(data)
         },
         (error) => {
           this.options.onReject && this.options.onReject(error)

@@ -24,35 +24,96 @@ const fileIcons = {
 }
 
 const getIconForType = (type) => {
-  const icon = Object.entries(fileIcons).find(([key]) => type.includes(key))?.[1]
+  const icon = Object.entries(fileIcons).find(([key]) => type?.includes(key))?.[1]
   if (icon) return icon
   return 'draft'
 }
 
-const FileUploadCard = ({ name, type, src, progress, onRemove, isCompact }) => {
+const getFileSizeString = (bytes) => {
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  if (bytes === 0) return '0 Byte'
+  const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
+  return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(2))} ${sizes[i]}`
+}
+
+const FileUploadCard = ({
+  id,
+  name,
+  mime,
+  src,
+  size,
+  progress,
+  onRemove,
+  isCompact,
+  isDownloadable = false,
+  onExpand,
+}) => {
   const inProgress = progress && progress < 100
 
   const [imageError, setImageError] = useState(false)
 
-  return (
-    <Styled.File className={classNames({ compact: isCompact })}>
-      <Styled.ImageWrapper>
-        <Icon icon={getIconForType(type)} />
-        <img
-          src={src}
-          onError={() => setImageError(true)}
-          style={{
-            display: imageError ? 'none' : 'block',
-          }}
-        />
+  // split name and file extension
+  const nameParts = name.split('.')
+  const extension = nameParts.pop()
+  const fileName = nameParts.join('.')
+
+  const isImage = mime?.includes('image')
+
+  const downloadComponent = (
+    <>
+      <span className="size">{getFileSizeString(size)}</span>
+      <Icon icon="download" className="download-icon" />
+    </>
+  )
+
+  const handleImageClick = () => {
+    if (!isImage || !onExpand || imageError) return
+    onExpand({ name, mime, id, size })
+  }
+
+  const fileComponent = (
+    <Styled.File className={classNames({ compact: isCompact, isDownloadable, isImage })}>
+      <Styled.ImageWrapper className="image-wrapper" onClick={handleImageClick}>
+        <Icon icon={getIconForType(mime)} className="type-icon" />
+        <Icon icon="download" className="download-icon" />
+        {isImage && src && (
+          <img
+            src={src + '?preview=true'}
+            onError={() => setImageError(true)}
+            style={{
+              display: imageError ? 'none' : 'block',
+            }}
+          />
+        )}
       </Styled.ImageWrapper>
-      <footer className={classNames({ inProgress })}>
+      <Styled.Footer className={classNames({ inProgress })}>
         <span className="progress" style={{ right: `${100 - progress}%` }} />
-        <span className="name">{name}</span>
-      </footer>
+        <div className="name-wrapper">
+          <span className="name">{fileName}</span>
+        </div>
+        <span className="extension">.{extension}</span>
+        {isDownloadable &&
+          (isImage && !onRemove ? (
+            <a href={src} download className="download">
+              {downloadComponent}
+            </a>
+          ) : (
+            <div className="download">{downloadComponent}</div>
+          ))}
+      </Styled.Footer>
       {onRemove && <Button className="remove" onClick={onRemove} icon="close" />}
     </Styled.File>
   )
+
+  // if the file is an image, return the file component
+  if (isImage || onRemove) return fileComponent
+  // if it's not then we wrap with a direct link to download the file
+  else
+    return (
+      <a href={src} download>
+        {fileComponent}
+      </a>
+    )
 }
 
 export default FileUploadCard

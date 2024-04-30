@@ -31,6 +31,10 @@ export const Comment = styled.div`
 
   background-color: var(--md-sys-color-surface-container);
   border: 1px solid var(--md-sys-color-outline-variant);
+  &.isDropping.isOpen {
+    border-color: var(--md-sys-color-primary);
+  }
+
   border-radius: var(--border-radius-l);
   overflow: hidden;
 
@@ -254,23 +258,6 @@ export const Footer = styled.footer`
   }
 `
 
-export const Files = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: var(--base-gap-large);
-  padding: var(--padding-s);
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-
-  &.compact {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  }
-
-  max-height: calc(
-    301px + var(--padding-s) + var(--padding-s) + var(--base-gap-large)+ var(--base-gap-large)
-  );
-  overflow: auto;
-`
-
 export const Buttons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
@@ -279,4 +266,30 @@ export const Buttons = styled.div`
 export const Markdown = styled.div`
   position: fixed;
   visibility: hidden;
+`
+
+export const Dropzone = styled.div`
+  position: absolute;
+  inset: 0;
+  user-select: none;
+  pointer-events: none;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  &.show {
+    opacity: 1;
+  }
+
+  background-color: rgba(0, 0, 0, 0.5);
+
+  z-index: 300;
+
+  .icon {
+    font-size: 40px;
+  }
 `

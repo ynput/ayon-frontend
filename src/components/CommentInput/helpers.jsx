@@ -95,18 +95,14 @@ export const quillFormats = [
   'image',
 ]
 
-export const quillModules = ({ imageUploader: { projectName, onUpload, onUploadProgress } }) => {
+export const quillModules = ({ imageUploader }) => {
   return {
     toolbar: [
       [{ header: 2 }, 'bold', 'italic', 'underline', 'link'],
       [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
       ['image'],
     ],
-    imageUploader: {
-      projectName,
-      onUpload,
-      onUploadProgress,
-    },
+    imageUploader,
     magicUrl: true,
   }
 }
@@ -142,4 +138,24 @@ export const uploadFile = (file, projectName, onUploadProgress) => {
         toast.error('Upload failed: ' + error.response.data.detail)
       })
   })
+}
+
+export const handleFileDrop = (e, projectName, onProgress, onSuccess) => {
+  e.preventDefault()
+  e.stopPropagation()
+
+  let files = e.dataTransfer.files
+  if (files?.length) {
+    if (files.length === 0) return
+
+    for (const file of files) {
+      uploadFile(file, projectName, onProgress).then(
+        (data) => onSuccess(data),
+        (error) => {
+          toast.error('Upload failed: ' + error.response.data.detail)
+          console.warn(error)
+        },
+      )
+    }
+  }
 }

@@ -8,43 +8,10 @@ export const File = styled.div`
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
 
-  height: 100px;
+  height: 105px;
 
   &.compact {
-    height: 92px;
-  }
-
-  footer {
-    position: relative;
-    padding: 0 var(--padding-s);
-    overflow: hidden;
-  }
-
-  .name {
-    position: relative;
-    font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    z-index: 20;
-    display: inherit;
-  }
-
-  .progress {
-    position: absolute;
-    inset: 0;
-    background-color: var(--md-sys-color-primary-container);
-    z-index: 10;
-
-    transition: right 0.3s;
-
-    display: none;
-  }
-
-  .inProgress {
-    .progress {
-      display: block;
-    }
+    height: 75px;
   }
 
   .icon {
@@ -65,6 +32,139 @@ export const File = styled.div`
     .icon {
       font-size: 20px;
     }
+  }
+
+  /* set download default color outline when isImage */
+  &.isImage {
+    .download,
+    .download-icon {
+      color: var(--md-sys-color-outline);
+    }
+  }
+
+  &.isDownloadable {
+    cursor: pointer;
+
+    /* if it's downloadable show download bar on hover */
+    &:hover {
+      footer {
+        cursor: pointer;
+
+        /* highlight download bar on hovering the bar */
+        &:hover {
+          background-color: var(--md-sys-color-surface-container-low-hover);
+
+          .download,
+          .download-icon {
+            color: var(--md-sys-color-on-surface);
+          }
+        }
+      }
+
+      /* reveal size and download */
+      .download {
+        display: flex;
+      }
+      .name-wrapper,
+      .extension {
+        display: none;
+      }
+    }
+
+    &.isImage {
+      &:hover {
+        footer {
+          padding: var(--padding-s);
+        }
+      }
+    }
+
+    /* when not an image, hover both */
+    &:not(.isImage):hover {
+      .image-wrapper,
+      footer {
+        background-color: var(--md-sys-color-surface-container-low-hover);
+
+        .download-icon {
+          display: none;
+        }
+      }
+
+      .image-wrapper {
+        .type-icon {
+          display: none;
+        }
+
+        .download-icon {
+          display: block;
+        }
+      }
+    }
+  }
+`
+
+export const Footer = styled.footer`
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 0 var(--padding-s);
+  overflow: hidden;
+  color: var(--md-sys-color-on-surface);
+
+  transition: padding 0.2s ease;
+
+  span {
+    font-size: 12px;
+  }
+
+  .name-wrapper {
+    overflow: hidden;
+  }
+
+  .download {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    display: none;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .name {
+    position: relative;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    z-index: 20;
+    display: inherit;
+  }
+
+  .extension {
+    z-index: 20;
+    min-width: fit-content;
+    overflow: hidden;
+  }
+
+  .progress {
+    position: absolute;
+    inset: 0;
+    background-color: var(--md-sys-color-primary-container);
+    z-index: 10;
+
+    transition: right 0.3s;
+
+    display: none;
+  }
+
+  &.inProgress {
+    .progress {
+      display: block;
+    }
+  }
+
+  .download-icon {
+    font-size: 20px;
   }
 `
 
@@ -87,5 +187,9 @@ export const ImageWrapper = styled.div`
 
   .icon {
     user-select: none;
+  }
+
+  .download-icon {
+    display: none;
   }
 `
