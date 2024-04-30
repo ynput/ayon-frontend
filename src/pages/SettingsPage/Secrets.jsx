@@ -88,7 +88,6 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
         aria-label="Password"
         onChange={(e) => setValue(e.target.value)}
         placeholder="Secret value"
-        canRevealPassword
       />
 
       <SaveButton

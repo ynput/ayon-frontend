@@ -115,7 +115,6 @@ const ResetPage = ({ token }) => {
           name="password"
           aria-label="Password"
           value={password}
-          canRevealPassword
           onChange={(e) => setPassword(e.target.value)}
         />
 
@@ -124,7 +123,6 @@ const ResetPage = ({ token }) => {
           name="confirmPassword"
           aria-label="Confirm Password"
           value={confirmPassword}
-          canRevealPassword
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
         <Button

@@ -148,7 +148,6 @@ const LoginPage = ({ isFirstTime }) => {
                 name="password"
                 aria-label="Password"
                 value={password}
-                canRevealPassword
                 onChange={(e) => setPassword(e.target.value)}
               />
               <Button label={<strong>Login</strong>} type="submit" />
