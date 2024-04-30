@@ -30,14 +30,15 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     error = 'This access group already exists'
   else if (!accessGroupName.match('^[a-zA-Z_]{2,20}$')) error = 'Invalid access group name'
 
+  
   const handleKeyDown = (e) => {
     e?.stopPropagation()
     const isEnter = e.key === 'Enter'
     const isEsc = e.key === 'Escape'
     const isCtrlMeta = e.ctrlKey || e.metaKey
     const isShift = e.shiftKey
-    if (isCtrlMeta && isEnter) onSubmit(true)
-    if (isShift && isEnter) onSubmit(false)
+    if (isCtrlMeta && isEnter && !error) onSubmit(true)
+    if (isShift && isEnter && !error) onSubmit(false)
     if (isEsc) onClose()
   }
 
@@ -63,7 +64,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     ),
     [error, accessGroupName, onSubmit],
   )
-
+  console.log(error,'error_Component')
   return (
     <Dialog
       header="New access group"
