@@ -67,7 +67,8 @@ const FileUploadCard = ({
   )
 
   const handleImageClick = () => {
-    onExpand && onExpand({ name, mime, id, size })
+    if (!isImage || !onExpand || imageError) return
+    onExpand({ name, mime, id, size })
   }
 
   const fileComponent = (

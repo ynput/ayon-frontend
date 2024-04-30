@@ -12,7 +12,12 @@ const FileUploadPreview = () => {
   }
 
   return (
-    <Styled.DialogWrapper size="full" isOpen={id && projectName} onClose={handleClose}>
+    <Styled.DialogWrapper
+      size="full"
+      isOpen={id && projectName}
+      onClose={handleClose}
+      hideCancelButton
+    >
       <Styled.Image src={`/api/projects/${projectName}/files/${id}`} autoFocus />
     </Styled.DialogWrapper>
   )
