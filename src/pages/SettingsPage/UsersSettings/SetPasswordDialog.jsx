@@ -46,6 +46,7 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
           <InputPassword
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            canRevealPassword
             autoComplete="new-password"
             id="password"
           />
@@ -54,6 +55,7 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
           <InputPassword
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
+            canRevealPassword
             autoComplete="new-password"
             id="password"
             pattern={`^${password}$`}
