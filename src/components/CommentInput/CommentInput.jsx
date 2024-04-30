@@ -23,6 +23,7 @@ import {
 import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
 import InputMarkdownConvert from './InputMarkdownConvert'
+import FileUploadCard from '../FileUploadCard/FileUploadCard'
 
 const CommentInput = ({
   initValue,
@@ -40,6 +41,9 @@ const CommentInput = ({
 }) => {
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
+  // file uploads
+  const [files, setFiles] = useState([])
+  const [filesUploading, setFilesUploading] = useState([])
 
   // MENTION STATES
   const [mention, setMention] = useState(null)
@@ -336,10 +340,12 @@ const CommentInput = ({
 
       // remove img query params
       const markdownParsed = parseImages(markdown)
+      const fileIds = files.map((file) => file.id)
 
       if (markdownParsed && onSubmit) {
-        onSubmit(markdownParsed)
+        onSubmit(markdownParsed, fileIds)
         setEditorValue('')
+        setFiles([])
       }
     } catch (error) {
       console.error(error)
@@ -405,8 +411,71 @@ const CommentInput = ({
     }
   }
 
+  const handleFileUpload = ({ file, data }) => {
+    const newFile = {
+      id: data.id,
+      name: file.name,
+      type: file.type,
+      order: files.length,
+    }
+
+    if (newFile.type.includes('image') && data.id) {
+      // create preview url image for file
+      const previewUrl = `/api/projects/${projectName}/files/${data.id}?preview=true`
+      newFile.url = previewUrl
+    }
+
+    setFiles((prev) => [...prev, newFile])
+    // remove from uploading
+    setFilesUploading((prev) => prev.filter((uploading) => uploading.name !== file.name))
+  }
+
+  const handleFileRemove = (id, name) => {
+    // remove file from files
+    setFiles((prev) => prev.filter((file) => file.id !== id))
+    // remove from uploading
+    setFilesUploading((prev) => {
+      console.log(prev)
+      return prev.filter((file) => file.name !== name)
+    })
+  }
+
+  const handleFileProgress = (e, file) => {
+    const progress = Math.round((e.loaded * 100) / e.total)
+    if (progress !== 100) {
+      const uploadProgress = {
+        name: file.name,
+        progress,
+        type: file.type,
+        order: files.length + filesUploading.length,
+      }
+
+      setFilesUploading((prev) => {
+        // replace or add new progress
+        const newProgress = prev.filter((name) => name.name !== file.name)
+        return [...newProgress, uploadProgress]
+      })
+    }
+  }
+
   let quillMinHeight = isOpen ? initHeight + 41 : 44
   if (isEditing) quillMinHeight = undefined
+
+  // QUILL CONFIG
+  const modules = useMemo(
+    () =>
+      quillModules({
+        imageUploader: {
+          projectName,
+          onUpload: handleFileUpload,
+          onUploadProgress: handleFileProgress,
+        },
+      }),
+    [projectName, setFiles, setFilesUploading],
+  )
+
+  const allFiles = [...files, ...filesUploading].sort((a, b) => a.order - b.order)
+  const compactGrid = allFiles.length > 9
 
   return (
     <>
@@ -420,6 +489,23 @@ const CommentInput = ({
             {/* this is purely used to translate the markdown into html for Editor */}
             <InputMarkdownConvert typeOptions={typeOptions} initValue={initValue} />
           </Styled.Markdown>
+
+          {/* file uploads */}
+          {!!allFiles.length && (
+            <Styled.Files className={classNames({ compact: compactGrid })}>
+              {allFiles.map((file, index) => (
+                <FileUploadCard
+                  key={index}
+                  name={file.name}
+                  type={file.type}
+                  src={file.url}
+                  progress={file.progress}
+                  onRemove={() => handleFileRemove(file.id, file.name)}
+                  isCompact={compactGrid}
+                />
+              ))}
+            </Styled.Files>
+          )}
           {/* QUILL is configured in helpers file */}
           <ReactQuill
             theme="snow"
@@ -429,7 +515,7 @@ const CommentInput = ({
             onChange={handleChange}
             readOnly={!isOpen}
             placeholder={placeholder}
-            modules={quillModules}
+            modules={modules}
             formats={quillFormats}
           />
 
@@ -469,7 +555,7 @@ const CommentInput = ({
               <SaveButton
                 label={isEditing ? 'Save' : 'Comment'}
                 className="comment"
-                active={!!editorValue}
+                active={!!editorValue || !!files.length}
                 onClick={handleSubmit}
               />
             </Styled.Buttons>

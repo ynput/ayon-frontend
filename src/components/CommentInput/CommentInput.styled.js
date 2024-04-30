@@ -10,7 +10,7 @@ export const AutoHeight = styled.div`
   /* when closed default */
   translate: 0 50px;
   margin-top: -50px;
-
+  overflow: hidden;
   /* when open */
   &.isOpen {
     translate: 0 0;
@@ -30,7 +30,7 @@ export const Comment = styled.div`
   position: relative;
 
   background-color: var(--md-sys-color-surface-container);
-  outline: 1px solid var(--md-sys-color-outline-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--border-radius-l);
   overflow: hidden;
 
@@ -252,6 +252,23 @@ export const Footer = styled.footer`
       display: none;
     }
   }
+`
+
+export const Files = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--base-gap-large);
+  padding: var(--padding-s);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+
+  &.compact {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+
+  max-height: calc(
+    301px + var(--padding-s) + var(--padding-s) + var(--base-gap-large)+ var(--base-gap-large)
+  );
+  overflow: auto;
 `
 
 export const Buttons = styled.div`

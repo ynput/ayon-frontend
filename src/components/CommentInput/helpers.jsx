@@ -63,17 +63,11 @@ export async function typeWithDelay(quill, retain, type, delay = 1) {
   }
 }
 
-import axios from 'axios'
-// quillModules
-const abortController = new AbortController()
-const cancelToken = axios.CancelToken
-const cancelTokenSource = cancelToken.source()
-
-// QUILL CONFIG
-import Quill from 'quill'
-import ImageUploader from 'quill-image-uploader'
-import 'quill-image-uploader/dist/quill.imageUploader.min.css'
+import { Quill } from 'react-quill'
+import MagicUrl from 'quill-magic-url'
+import ImageUploader from './modules/ImageUploader'
 Quill.register('modules/imageUploader', ImageUploader)
+Quill.register('modules/magicUrl', MagicUrl)
 
 // override icons with material icons
 const getIcon = (icon) => '<span class="material-symbols-outlined icon">' + icon + '</span>'
@@ -87,7 +81,7 @@ icons['link'] = getIcon('link')
 icons['list']['ordered'] = getIcon('format_list_numbered')
 icons['list']['bullet'] = getIcon('format_list_bulleted')
 icons['list']['check'] = getIcon('checklist')
-icons['image'] = getIcon('image')
+icons['image'] = getIcon('attach_file')
 
 export const quillFormats = [
   'header',
@@ -101,40 +95,51 @@ export const quillFormats = [
   'image',
 ]
 
-export const quillModules = {
-  toolbar: [
-    [{ header: 2 }, 'bold', 'italic', 'underline', 'link'],
-    [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-    ['image'],
-  ],
-  imageUploader: {
-    upload: (file) => {
-      return new Promise((resolve, reject) => {
-        const formData = new FormData()
-        formData.append('image', file)
-
-        const opts = {
-          signal: abortController.signal,
-          cancelToken: cancelTokenSource.token,
-          headers: {
-            'Content-Type': file.type,
-          },
-        }
-
-        axios
-          .post('http://localhost:3000/api/projects/no_comment/thumbnails', file, opts)
-          .then((result) => {
-            const thumbnailId = result.data.id
-
-            const thumbnailUrl =
-              'http://localhost:3000/api/projects/no_comment/thumbnails/' + thumbnailId
-            resolve(thumbnailUrl)
-          })
-          .catch((error) => {
-            reject('Upload failed')
-            console.error('Error:', error)
-          })
-      })
+export const quillModules = ({ imageUploader: { projectName, onUpload, onUploadProgress } }) => {
+  return {
+    toolbar: [
+      [{ header: 2 }, 'bold', 'italic', 'underline', 'link'],
+      [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+      ['image'],
+    ],
+    imageUploader: {
+      projectName,
+      onUpload,
+      onUploadProgress,
     },
-  },
+    magicUrl: true,
+  }
+}
+
+import axios from 'axios'
+const abortController = new AbortController()
+const cancelToken = axios.CancelToken
+const cancelTokenSource = cancelToken.source()
+import { toast } from 'react-toastify'
+
+// used to upload files (quill ImageUploader module)
+export const uploadFile = (file, projectName, onUploadProgress) => {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData()
+    formData.append('image', file)
+    const opts = {
+      signal: abortController.signal,
+      cancelToken: cancelTokenSource.token,
+      onUploadProgress: (e) => onUploadProgress && onUploadProgress(e, file),
+      headers: {
+        'Content-Type': file.type,
+        'x-file-name': file.name,
+      },
+    }
+    axios
+      .post(`/api/projects/${projectName}/files`, file, opts)
+      .then((result) => {
+        resolve({ file: file, data: result.data })
+      })
+      .catch((error) => {
+        reject({ error: 'Upload failed' })
+        console.error('File upload:', error)
+        toast.error('Upload failed: ' + error.response.data.detail)
+      })
+  })
 }

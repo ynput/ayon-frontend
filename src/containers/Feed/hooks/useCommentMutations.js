@@ -22,13 +22,14 @@ const useCommentMutations = ({
   const [updateActivity] = useUpdateActivityMutation()
   const [deleteActivity] = useDeleteActivityMutation()
 
-  const submitComment = async (value) => {
+  const submitComment = async (value, files) => {
     const newId = uuid1().replace(/-/g, '')
 
     const newComment = {
       body: value,
       activityType: 'comment',
       id: newId,
+      files: files,
     }
 
     // create a new patch for optimistic update
