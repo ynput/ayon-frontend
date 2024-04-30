@@ -37,6 +37,7 @@ const getFileSizeString = (bytes) => {
 }
 
 const FileUploadCard = ({
+  id,
   name,
   mime,
   src,
@@ -45,6 +46,7 @@ const FileUploadCard = ({
   onRemove,
   isCompact,
   isDownloadable = false,
+  onExpand,
 }) => {
   const inProgress = progress && progress < 100
 
@@ -64,15 +66,13 @@ const FileUploadCard = ({
     </>
   )
 
+  const handleImageClick = () => {
+    onExpand && onExpand({ name, mime, id, size })
+  }
+
   const fileComponent = (
     <Styled.File className={classNames({ compact: isCompact, isDownloadable, isImage })}>
-      <Styled.ImageWrapper
-        className="image-wrapper"
-        as={isImage && src ? 'a' : 'div'}
-        href={isImage && src ? src : undefined}
-        target="_blank"
-        rel="noreferrer"
-      >
+      <Styled.ImageWrapper className="image-wrapper" onClick={handleImageClick}>
         <Icon icon={getIconForType(mime)} className="type-icon" />
         <Icon icon="download" className="download-icon" />
         {isImage && src && (

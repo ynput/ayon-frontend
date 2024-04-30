@@ -21,6 +21,7 @@ const ActivityComment = ({
   entityType,
   onReferenceClick,
   isSlideOut,
+  onFileExpand,
 }) => {
   let {
     body,
@@ -106,6 +107,7 @@ const ActivityComment = ({
               isCompact={files.length > 6}
               projectName={projectName}
               isDownloadable
+              onExpand={onFileExpand}
             />
           </>
         )}

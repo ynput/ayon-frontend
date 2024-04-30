@@ -11,6 +11,7 @@ import { onReferenceClick } from '/src/features/dashboard'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
+import { onCommentImageOpen } from '/src/features/context'
 
 const Feed = ({
   entities = [],
@@ -169,6 +170,11 @@ const Feed = ({
     dispatch(onReferenceClick({ entityId, entityType, projectName }))
   }
 
+  const handleFileExpand = (file) => {
+    console.log(file)
+    dispatch(onCommentImageOpen({ ...file, projectName }))
+  }
+
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
   return (
@@ -189,6 +195,7 @@ const Feed = ({
                 onReferenceClick={handleRefClick}
                 isSlideOut={isSlideOut}
                 createdAts={entities.map((e) => e.createdAt)}
+                onFileExpand={handleFileExpand}
                 editProps={{
                   activeUsers,
                   projectName,

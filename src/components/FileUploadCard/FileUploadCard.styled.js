@@ -172,7 +172,7 @@ export const Footer = styled.footer`
   }
 `
 
-export const ImageWrapper = styled.a`
+export const ImageWrapper = styled.div`
   position: relative;
   display: flex;
   justify-content: center;
