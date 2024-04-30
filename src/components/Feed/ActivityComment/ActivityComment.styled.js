@@ -41,7 +41,7 @@ export const Comment = styled.li`
 
         .date {
           opacity: 0;
-          display: none;
+          visibility: hidden;
         }
       }
     }
@@ -109,8 +109,8 @@ export const Body = styled.div`
   }
 
   &.isEditing {
-    border: 1px solid var(--md-sys-color-surface-container-hover);
     padding: 0;
+    border-radius: var(--border-radius-l);
   }
 `
 

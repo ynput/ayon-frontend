@@ -676,16 +676,6 @@ const EditorPage = () => {
         patch,
         depth: entity.depth,
       })
-
-      if (!parent?.data?.hasChildren && entity.__parentId !== 'root' && parent) {
-        const parentPatch = {
-          data: { ...parent.data, hasTasks: entityType === 'task', hasChildren: true },
-          leaf: false,
-        }
-
-        // push to array to be added all together later
-        parentPatches.push(parentPatch)
-      }
     } // CREATE NEW ENTITIES
   }
 
@@ -1492,12 +1482,16 @@ const EditorPage = () => {
     }
   }
 
-  const filterOptions = [{ name: 'name' }, { name: 'type' }, { name: 'status' }, { name: 'assignees' }, ...columns].map(
-    ({ name }) => ({
-      value: name,
-      label: name,
-    }),
-  )
+  const filterOptions = [
+    { name: 'name' },
+    { name: 'type' },
+    { name: 'status' },
+    { name: 'assignees' },
+    ...columns,
+  ].map(({ name }) => ({
+    value: name,
+    label: name,
+  }))
   const allColumnsNames = filterOptions.map(({ value }) => value)
 
   const [shownColumns, setShownColumns] = useLocalStorage(
@@ -1646,13 +1640,13 @@ const EditorPage = () => {
         body={(rowData) => formatType(rowData.data, changes)}
         style={{ width: columnsWidths['type'] || 140 }}
       />,
-       <Column
-         field="status"
-         key="status"
-         header="Status"
-         body={(rowData) => formatStatus(rowData.data, changes, columnsWidths['status'] || 140)}
-         style={{ width: columnsWidths['status'] || 140 }}
-       />,
+      <Column
+        field="status"
+        key="status"
+        header="Status"
+        body={(rowData) => formatStatus(rowData.data, changes, columnsWidths['status'] || 140)}
+        style={{ width: columnsWidths['status'] || 140 }}
+      />,
       <Column
         field="assignees"
         key="assignees"

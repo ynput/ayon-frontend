@@ -89,13 +89,8 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
   if (
     currentActivity &&
     currentActivity.activityData.oldValue !== currentActivity.activityData.newValue &&
-    !mergedActivities.includes(currentActivity)
+    !mergedActivities.some((activity) => activity.activityId === currentActivity.activityId)
   ) {
-    mergedActivities.push(currentActivity)
-  }
-
-  // If there's a sequence left after the loop, push it to the merged activities
-  if (currentActivity && !mergedActivities.includes(currentActivity)) {
     mergedActivities.push(currentActivity)
   }
 
@@ -144,7 +139,7 @@ const useTransformActivities = (activities = [], projectInfo = {}) => {
 
   // Use the useMemo hook to optimize performance by memoizing the groupedActivitiesData
   const groupedActivitiesData = useMemo(
-    () => groupMinorActivities(reversedActivitiesData, minorActivityTypes),
+    () => groupMinorActivities(mergedActivitiesData, minorActivityTypes),
     [mergedActivitiesData],
   )
 

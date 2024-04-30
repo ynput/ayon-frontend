@@ -22,6 +22,8 @@ const useInitialValue = ({
       if (filter === 'checklists') {
         console.log('checklists')
         setEditorValue(`<ul data-checked="false"><li> </li></ul>`)
+      } else {
+        setEditorValue('')
       }
     }
   }, [initValue, isOpen, markdownRef.current, filter])
