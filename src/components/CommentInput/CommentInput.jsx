@@ -19,13 +19,15 @@ import {
   parseImages,
   quillFormats,
   quillModules,
-  sortUsersByContext,
+  getUsersContext,
   typeWithDelay,
 } from './helpers'
 import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
 import InputMarkdownConvert from './InputMarkdownConvert'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
+import { useGetTeamsQuery } from '/src/services/team/getTeams'
+import { useSelector } from 'react-redux'
 
 const CommentInput = ({
   initValue,
@@ -42,6 +44,8 @@ const CommentInput = ({
   isEditing,
   filter,
 }) => {
+  const currentUser = useSelector((state) => state.user.name)
+
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
   // file uploads
@@ -71,6 +75,9 @@ const CommentInput = ({
       skip: !projectName || !folderIds.length,
     },
   )
+
+  // only load in teams when mention is started
+  const { data: teams = [] } = useGetTeamsQuery({ projectName }, { skip: !mention || !projectName })
 
   // filter out the tasks that are currently selected
   const siblingTasks = mentionTasks.filter(
@@ -107,8 +114,8 @@ const CommentInput = ({
 
   // sort users by author or in assignees (users array on entity)
   const sortedUsers = useMemo(
-    () => sortUsersByContext(activeUsers, entities),
-    [activeUsers, entities],
+    () => getUsersContext({ users: activeUsers, entities, teams, currentUser }),
+    [activeUsers, entities, currentUser, teams],
   )
 
   const mentionOptions = useMemo(
@@ -122,7 +129,7 @@ const CommentInput = ({
         },
         mention?.search,
       ),
-    [activeUsers, mention?.type, mention?.search],
+    [sortedUsers, mention?.type, mention?.search],
   )
 
   // show first 5 and filter itself out

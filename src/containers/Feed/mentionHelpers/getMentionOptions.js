@@ -2,11 +2,32 @@ import { matchSorter } from 'match-sorter'
 import { isBefore, isValid } from 'date-fns'
 
 const versionSorting = (a, b) => {
-  const dateA = new Date(a.value)
-  const dateB = new Date(b.value)
+  const itemA = a.item || a
+  const itemB = b.item || b
+  console.log(itemA)
+  const dateA = new Date(itemA.value)
+  const dateB = new Date(itemB.value)
   if (!isValid(dateA) || !isValid(dateB)) return 0
 
   return isBefore(dateB, dateA) ? -1 : 1
+}
+
+const userSorting = (a, b) => {
+  const itemA = a.item || a
+  const itemB = b.item || b
+  if (itemA.onEntities && !itemB.onEntities) {
+    return -1
+  } else if (!itemA.onEntities && itemB.onEntities) {
+    return 1
+  } else if (itemA.onSameTeam && !itemB.onSameTeam) {
+    return -1
+  } else if (!itemA.onSameTeam && itemB.onSameTeam) {
+    return 1
+  } else {
+    if (!itemA.label) console.log(a)
+    // If both users have the same onEntities and onSameTeam value, sort by fullName
+    return itemA.label?.localeCompare(itemB.label)
+  }
 }
 
 const getMentionOptions = (type, values = {}, search) => {
@@ -16,20 +37,14 @@ const getMentionOptions = (type, values = {}, search) => {
 
   const allOptions = values[type]() || []
 
-  // sort versions by version latest first
-  if (type === '@@') {
-    allOptions.sort(versionSorting)
-  }
-
-  if (!search) return allOptions
-
   let baseSort
-  // versions should sort by version latest first
-  if (type === '@@') baseSort = versionSorting
   // users should sort by assigned to task first
-  // if(type === '@')
+  if (type === '@') baseSort = userSorting
+  // versions should sort by version latest first
+  else if (type === '@@') baseSort = versionSorting
+  else baseSort = () => 0
 
-  console.log(allOptions)
+  if (!search) return allOptions.sort(baseSort)
 
   const filteredOptions = matchSorter(allOptions, search, {
     keys: ['label', 'context'],
