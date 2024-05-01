@@ -12,10 +12,11 @@ turndownService.addRule('taskListItems', {
     return node.parentNode.nodeName === 'UL' && node.parentNode.hasAttribute('data-checked')
   },
   replacement: function (content, node) {
+    console.log(content)
     return (
       (node.parentNode.getAttribute('data-checked') === 'true' ? '* [x]' : '* [ ]') +
       ' ' +
-      content +
+      content.replace(/(\r\n|\n|\r)/gm, '') +
       '\n\n'
     )
   },

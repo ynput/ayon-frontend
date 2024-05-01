@@ -64,7 +64,7 @@ const useCommentMutations = ({
     }
   }
 
-  const updateComment = async (activity, value, files) => {
+  const updateComment = async (activity, value, files = []) => {
     const fileIds = files.map((file) => file.id)
 
     const updatedActivity = {
