@@ -19,6 +19,7 @@ import {
   parseImages,
   quillFormats,
   quillModules,
+  sortUsersByContext,
   typeWithDelay,
 } from './helpers'
 import useInitialValue from './hooks/useInitialValue'
@@ -104,12 +105,18 @@ const CommentInput = ({
   }
   mentionTypes.sort((a, b) => b.length - a.length)
 
+  // sort users by author or in assignees (users array on entity)
+  const sortedUsers = useMemo(
+    () => sortUsersByContext(activeUsers, entities),
+    [activeUsers, entities],
+  )
+
   const mentionOptions = useMemo(
     () =>
       getMentionOptions(
         mention?.type,
         {
-          '@': () => getMentionUsers(activeUsers),
+          '@': () => getMentionUsers(sortedUsers),
           '@@': () => getMentionVersions(versions),
           '@@@': () => getMentionTasks(siblingTasks, projectInfo.task_types, projectName),
         },

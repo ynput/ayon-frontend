@@ -210,3 +210,18 @@ export const handleFileDrop = (e, projectName, onProgress, onSuccess) => {
     }
   }
 }
+
+export const sortUsersByContext = (users = [], entities = []) => {
+  return [...users].sort((a, b) => {
+    const aIsAssignee = entities.some((entity) => entity.users?.includes(a.name))
+    const bIsAssignee = entities.some((entity) => entity.users?.includes(b.name))
+
+    if (aIsAssignee && !bIsAssignee) {
+      return -1
+    } else if (!aIsAssignee && bIsAssignee) {
+      return 1
+    } else {
+      return 0
+    }
+  })
+}

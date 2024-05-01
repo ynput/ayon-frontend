@@ -23,8 +23,13 @@ const getMentionOptions = (type, values = {}, search) => {
 
   if (!search) return allOptions
 
+  let baseSort
   // versions should sort by version latest first
-  const baseSort = type === '@@' ? versionSorting : undefined
+  if (type === '@@') baseSort = versionSorting
+  // users should sort by assigned to task first
+  // if(type === '@')
+
+  console.log(allOptions)
 
   const filteredOptions = matchSorter(allOptions, search, {
     keys: ['label', 'context'],

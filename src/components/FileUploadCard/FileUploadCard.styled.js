@@ -7,6 +7,7 @@ export const File = styled.div`
   border-radius: var(--border-radius-m);
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
+  z-index: 0;
 
   height: 105px;
 
