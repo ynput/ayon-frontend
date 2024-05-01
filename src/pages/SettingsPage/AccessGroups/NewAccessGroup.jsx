@@ -12,11 +12,11 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     [accessGroupList],
   )
 
-  const onSubmit = async () => {
+  const onSubmit = async (close) => {
     try {
       await createAccessGroup({ name: accessGroupName }).unwrap()
 
-      onClose(accessGroupName)
+      close && onClose(accessGroupName)
     } catch (error) {
       console.error(error)
 
@@ -28,6 +28,18 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
   if (accessGroupNames.includes(accessGroupName.toLowerCase()))
     error = 'This access group already exists'
   else if (!accessGroupName.match('^[a-zA-Z_]{2,20}$')) error = 'Invalid access group name'
+
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    const isEnter = e.key === 'Enter'
+    const isEsc = e.key === 'Escape'
+    const isCtrlMeta = e.ctrlKey || e.metaKey
+    const isShift = e.shiftKey
+    if (isCtrlMeta && isEnter && !error) onSubmit(true)
+    if (isShift && isEnter && !error) onSubmit(false)
+    if (isEsc) onClose()
+  }
+
 
   const footer = useMemo(
     () => (
@@ -44,20 +56,20 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
           label="Create access group"
           icon="group_add"
           active={!error && accessGroupName}
-          onClick={onSubmit}
+          onClick={() => onSubmit(true)}
         />
       </div>
     ),
     [error, accessGroupName, onSubmit],
   )
-
   return (
     <Dialog
       header="New access group"
       footer={footer}
-      onClose={onClose}
-      isOpen={true}
-      style={{ width: 400, overflow: 'hidden' }}
+      onHide={onClose}
+      visible={true}
+      bodyStyle={{ width: 400, overflow: 'hidden' }}
+      onKeyDown={handleKeyDown}
       size="sm"
     >
       <FormLayout>
