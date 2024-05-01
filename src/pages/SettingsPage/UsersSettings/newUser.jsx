@@ -135,7 +135,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
   return (
     <Dialog
-      // onKeyDown={handleKeyDown}
+      onKeyDown={handleKeyDown}
       isOpen
       size="full"
       style={{

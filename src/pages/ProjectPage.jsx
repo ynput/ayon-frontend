@@ -151,7 +151,7 @@ const ProjectPage = () => {
   return (
     <>
       <Dialog
-        header="Project Contexts"
+        header="Project Context"
         isOpen={showContextDialog}
         onClose={() => setShowContextDialog(false)}
         size="lg"

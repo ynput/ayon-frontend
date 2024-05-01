@@ -151,7 +151,7 @@ const NewProjectDialog = ({ onHide }) => {
       footer={footer}
       isOpen={true}
       onClose={onHide}
-      size="full"
+      size="lg"
       style={{
         height: '80%',
       }}

@@ -43,15 +43,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
 
   const footer = useMemo(
     () => (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'flex-end',
-          marginLeft: 'auto',
-        }}
-      >
-        <Spacer />
+      <div>
         <SaveButton
           label="Create access group"
           icon="group_add"
@@ -66,11 +58,11 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     <Dialog
       header="New access group"
       footer={footer}
-      onHide={onClose}
-      visible={true}
-      bodyStyle={{ width: 400, overflow: 'hidden' }}
+      onClose={onClose}
+      isOpen
       onKeyDown={handleKeyDown}
-      size="sm"
+      size="md"
+      style={{ width: 400 }}
     >
       <FormLayout>
         <FormRow label="Access group name">

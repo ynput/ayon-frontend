@@ -35,14 +35,9 @@ const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) =
         header={dialogTitle}
         isOpen={showContext}
         onClose={() => setShowContext(false)}
-        size="lg"
+        size="sm"
       >
-        <pre
-          style={{
-            whiteSpace: 'pre-wrap',
-            maxWidth: '800px',
-          }}
-        >
+        <pre style={{ whiteSpace: 'pre-wrap', maxWidth: '800px' }}>
           {JSON.stringify(context, null, 2)}
         </pre>
       </Dialog>
