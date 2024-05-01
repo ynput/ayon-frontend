@@ -340,7 +340,6 @@ const CommentInput = ({
     try {
       // convert to markdown
       const markdown = convertToMarkdown(editorValue)
-
       // remove img query params
       const markdownParsed = parseImages(markdown)
 

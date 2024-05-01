@@ -7,8 +7,9 @@ import remarkGfm from 'remark-gfm'
 import { classNames } from 'primereact/utils'
 import { useSelector } from 'react-redux'
 import CommentInput from '/src/components/CommentInput/CommentInput'
-import { aTag, inputTag } from './activityMarkdownComponents'
+import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
+import rehypeRaw from 'rehype-raw'
 
 const ActivityComment = ({
   activity = {},
@@ -89,6 +90,7 @@ const ActivityComment = ({
             <CommentWrapper>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
                 urlTransform={(url) => url}
                 components={{
                   // a links
@@ -96,6 +98,8 @@ const ActivityComment = ({
                     aTag(props, { entityId, projectName, projectInfo, onReferenceClick }),
                   // checkbox inputs
                   input: (props) => inputTag(props, { activity, onCheckChange }),
+                  // code syntax highlighting
+                  code: (props) => codeTag(props),
                 }}
               >
                 {body}

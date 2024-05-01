@@ -168,3 +168,9 @@ export const Name = styled.span`
   overflow-wrap: break-word;
   color: var(--md-sys-color-outline);
 `
+
+export const InlineCode = styled.code`
+  padding: 0 var(--padding-s);
+  border-radius: var(--padding-s);
+  background-color: var(--md-sys-color-surface-container-lowest);
+`

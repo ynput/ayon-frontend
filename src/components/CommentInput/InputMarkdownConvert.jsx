@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 
 // transform url to mention (if it is a mention)
@@ -18,6 +19,7 @@ const InputMarkdownConvert = ({ typeOptions, initValue }) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
       urlTransform={(url) => url}
       components={{
         a: ({ children, href }) => {

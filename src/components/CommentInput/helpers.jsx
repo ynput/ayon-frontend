@@ -21,9 +21,47 @@ turndownService.addRule('taskListItems', {
   },
 })
 
+turndownService.addRule('taskListItems', {
+  filter: function (node) {
+    return node.nodeName === 'PRE'
+  },
+  replacement: function (content, node) {
+    if (node.id === 'ticks') {
+      return '```' + content + '```'
+    } else {
+      const language = node.querySelector('code')?.className.split('-')[1] || 'python'
+      return '```' + language + '\n' + content + '```'
+    }
+  },
+})
+
+// replace <p> with <br> for line breaks
+const replaceLineBreaks = (html) => {
+  return html.replaceAll('<p>', '').replaceAll('</p>', '\n').replaceAll('```', '')
+}
+
+// remove extra lines in ``` code blocks
+const parseCodeBlocks = (value) => {
+  // first get the code blocks
+  const regex = /```(.*?)```/g
+  const matches = value.match(regex)
+
+  // for each code block, wrap with <pre><code> tags
+  if (matches) {
+    matches.forEach((match) => {
+      const newMatch = `<pre id='ticks'><code>${replaceLineBreaks(match)}</code></pre>`
+      value = value.replace(match, newMatch)
+    })
+  }
+
+  return value
+}
+
 export const convertToMarkdown = (value) => {
+  const codeBlocksParsed = parseCodeBlocks(value)
+
   // convert to markdown
-  let markdown = turndownService.turndown(value)
+  let markdown = turndownService.turndown(codeBlocksParsed)
 
   let body = markdown
 
@@ -68,6 +106,7 @@ export async function typeWithDelay(quill, retain, type, delay = 1) {
   }
 }
 
+import hljs from 'highlight.js'
 import { Quill } from 'react-quill'
 import MagicUrl from 'quill-magic-url'
 import ImageUploader from './modules/ImageUploader'
@@ -87,6 +126,7 @@ icons['list']['ordered'] = getIcon('format_list_numbered')
 icons['list']['bullet'] = getIcon('format_list_bulleted')
 icons['list']['check'] = getIcon('checklist')
 icons['image'] = getIcon('attach_file')
+icons['code-block'] = getIcon('code')
 
 export const quillFormats = [
   'header',
@@ -98,17 +138,23 @@ export const quillFormats = [
   'bullet',
   'link',
   'image',
+  'code-block',
 ]
 
 export const quillModules = ({ imageUploader }) => {
   return {
     toolbar: [
-      [{ header: 2 }, 'bold', 'italic', 'underline', 'link'],
+      [{ header: 2 }, 'bold', 'italic', 'underline', 'link', 'code-block'],
       [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
       ['image'],
     ],
     imageUploader,
     magicUrl: true,
+    syntax: {
+      highlight: function (text) {
+        return hljs.highlightAuto(text).value
+      },
+    },
   }
 }
 
