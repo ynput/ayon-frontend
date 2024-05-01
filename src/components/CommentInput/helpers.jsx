@@ -1,6 +1,11 @@
 import TurndownService from 'turndown'
 
+// override the escaping of markdown characters
+// https://github.com/mixmark-io/turndown?tab=readme-ov-file#escaping-markdown-characters
+TurndownService.prototype.escape = (string) => string
+
 var turndownService = new TurndownService()
+
 // support lists with checkboxes
 turndownService.addRule('taskListItems', {
   filter: function (node) {
