@@ -10,7 +10,7 @@ export const AutoHeight = styled.div`
   /* when closed default */
   translate: 0 50px;
   margin-top: -50px;
-  overflow: hidden;
+
   /* when open */
   &.isOpen {
     translate: 0 0;
