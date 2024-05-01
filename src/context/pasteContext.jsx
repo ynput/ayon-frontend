@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
-import { Button, InputTextarea } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { Button, InputTextarea, Dialog } from '@ynput/ayon-react-components'
+
 
 const PasteContext = createContext()
 
@@ -68,8 +68,9 @@ const PasteModal = () => {
     <Dialog
       header="Paste Data"
       footer={footer}
-      visible
-      onHide={() => closeModal(null)}
+      isOpen
+      size="lg"
+      onClose={() => closeModal(null)}
       style={{ width: '600px', height: '600px' }}
     >
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
