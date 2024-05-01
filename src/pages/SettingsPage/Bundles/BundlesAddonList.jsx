@@ -42,7 +42,7 @@ const AddonItem = ({currentVersion, latestVersion }) => {
   return (
     <>
       <span>{currentVersion}</span>
-      {!isCurrentLatest && <LatestIcon data-tooltip-delay={0} data-tooltip={latestVersion} icon="upgrade" />}
+      {!isCurrentLatest && <LatestIcon data-tooltip-delay={0} data-tooltip={"Latest installed version: " + latestVersion} icon="info" />}
     </>
   )
 }
