@@ -58,6 +58,7 @@ export const Body = styled.div`
   border-radius: var(--border-radius-m);
   padding: 8px;
   position: relative;
+  overflow: hidden;
 
   /* remove first and last margins */
   & > *:first-child {
