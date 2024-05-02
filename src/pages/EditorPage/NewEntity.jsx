@@ -3,13 +3,12 @@ import PropTypes from 'prop-types'
 import { capitalize, isEmpty } from 'lodash'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Button, InputText, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { Button, InputText, SaveButton, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-components'
 import { useRef } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import checkName from '/src/helpers/checkName'
-import { Dialog } from 'primereact/dialog'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -197,12 +196,13 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   return (
     <Dialog
       header={title}
-      visible={visible}
-      onHide={onHide}
+      isOpen={visible}
+      onClose={onHide}
       onShow={handleShow}
       resizable={false}
       draggable={false}
       appendTo={document.getElementById('root')}
+      size='lg'
       footer={
         <Toolbar onFocus={() => setNameFocused(false)}>
           <Spacer />
@@ -234,6 +234,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
           ref={typeSelectRef}
           onFocus={handleTypeSelectFocus}
           onClick={() => setNameFocused(false)}
+          isPortal={false}
         />
         <InputText
           value={entityData.label}

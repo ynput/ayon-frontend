@@ -14,6 +14,7 @@ const TypeEditor = forwardRef(
       placeholder,
       isChanged,
       align,
+      isPortal,
       ...props
     },
     ref,
@@ -56,6 +57,7 @@ const TypeEditor = forwardRef(
         style={mainStyle}
         align={align}
         ref={ref}
+        isPortal={isPortal}
         {...props}
       />
     )

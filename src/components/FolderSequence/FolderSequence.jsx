@@ -54,6 +54,7 @@ const FolderSequence = ({
   prefixDisabled,
   typeSelectRef,
   onLastInputKeydown,
+  isPortal,
   ...props
 }) => {
   const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
@@ -206,6 +207,7 @@ const FolderSequence = ({
             onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
             options={tasks}
             style={{ width: 160 }}
+            isPortal={isPortal}
             align="right"
           />
 
@@ -273,6 +275,7 @@ const FolderSequence = ({
                 style={{ width: 160 }}
                 align="right"
                 ref={typeSelectRef}
+                isPortal={isPortal}
               />
             </Styled.InputColumn>
 

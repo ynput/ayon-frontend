@@ -1,8 +1,7 @@
 import React, { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { Toolbar, Spacer, SaveButton, Button, Dialog } from '@ynput/ayon-react-components'
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
 import { isEmpty } from 'lodash'
@@ -92,12 +91,10 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   return (
     <Dialog
       header={title}
-      visible={visible}
-      onHide={onHide}
+      isOpen={visible}
+      onClose={onHide}
       onShow={handleShow}
-      resizable={false}
-      draggable={false}
-      appendTo={document.getElementById('root')}
+      size='full'
       footer={
         <Toolbar>
           <Spacer />
@@ -126,6 +123,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         prefixDisabled={multipleSelection}
         typeSelectRef={typeSelectRef}
         onLastInputKeydown={(e) => handleKeyDown(e, true)}
+        isPortal={false}
       />
     </Dialog>
   )
