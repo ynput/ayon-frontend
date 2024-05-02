@@ -17,8 +17,6 @@ import {
   convertToMarkdown,
   handleFileDrop,
   parseImages,
-  quillFormats,
-  quillModules,
   getUsersContext,
   typeWithDelay,
 } from './helpers'
@@ -28,6 +26,7 @@ import InputMarkdownConvert from './InputMarkdownConvert'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
 import { useGetTeamsQuery } from '/src/services/team/getTeams'
 import { useSelector } from 'react-redux'
+import { getModules, quillFormats } from './modules'
 
 const CommentInput = ({
   initValue,
@@ -487,7 +486,7 @@ const CommentInput = ({
   // QUILL CONFIG
   const modules = useMemo(
     () =>
-      quillModules({
+      getModules({
         imageUploader: {
           projectName,
           onUpload: handleFileUpload,
