@@ -1,4 +1,3 @@
-import hljs from 'highlight.js'
 import { Quill } from 'react-quill'
 import MagicUrl from 'quill-magic-url'
 import ImageUploader from './ImageUploader'
@@ -42,10 +41,5 @@ export const getModules = ({ imageUploader }) => {
     ],
     imageUploader,
     magicUrl: true,
-    syntax: {
-      highlight: function (text) {
-        return hljs.highlightAuto(text).value
-      },
-    },
   }
 }

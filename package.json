@@ -20,7 +20,6 @@
     "axios": "^1.6.3",
     "chart.js": "^4.2.0",
     "date-fns": "^3.6.0",
-    "highlight.js": "^11.9.0",
     "html-to-image": "^1.11.11",
     "lodash": "^4.17.21",
     "luxon": "^2.4.0",
