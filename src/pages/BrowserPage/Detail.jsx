@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import { ayonApi } from '/src/services/ayon'
 import { toast } from 'react-toastify'
+import { patchProductsListWithVersions } from '/src/services/product/getProduct'
 
 const Detail = () => {
   const focused = useSelector((state) => state.context.focused)
@@ -93,23 +94,17 @@ const Detail = () => {
     // if the type is version and the is field is status or version, patch products list
     // because the version status/version is also shown in the product list
     if (isVersion && ['status', 'name'].includes(field)) {
-      // patching new products cache in redux
-      productsPatch = dispatch(
-        ayonApi.util.updateQueryData(
-          'getProductList',
-          { projectName, ids: focusedFolders },
-          (draft) => {
-            // find the product in the cache that match the ids
-            // and update the versionStatus
-            for (const id of ids) {
-              draft.forEach((p) => {
-                if (p.versionId === id) {
-                  p.versionStatus = value
-                }
-              })
-            }
-          },
-        ),
+      // update productsList cache with new status
+      productsPatch = patchProductsListWithVersions(
+        { folderIds: focusedFolders, projectName },
+        {
+          versions: patches.map((version) => ({
+            productId: version.product?.id,
+            versionId: version.id,
+            versionStatus: value,
+          })),
+        },
+        { dispatch },
       )
     }
 
@@ -128,11 +123,10 @@ const Detail = () => {
         throw new Error(payload?.operations?.map((o) => o?.detail).join(', ') || 'Failed to update')
 
       if (isVersion) {
-        // invalidate 'productsVersion' query (specific version query)
+        // invalidate 'version' query (specific version query)
         // we do this so that when we select this version again, it doesn't use stale version query
-        dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'productsVersion', id }))))
+        dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
       }
-
     } catch (error) {
       console.error(error)
 
