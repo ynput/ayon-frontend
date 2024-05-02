@@ -33,7 +33,7 @@ const patchActivities = async (
   try {
     await queryFulfilled
   } catch (error) {
-    const message = `Could not ${method} task`
+    const message = `Error: ${error?.error?.data?.detail || `Failed to ${method} activity`}`
     console.error(message, error)
     toast.error(message)
     patchResult.undo()
