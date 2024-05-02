@@ -51,9 +51,10 @@ const ActivityComment = ({
     setIsEditing(false)
   }
 
-  const handleSave = (value, files) => {
+  const handleSave = async (value, files) => {
+    await onUpdate(value, files)
+    // this won't run if the update fails
     setIsEditing(false)
-    onUpdate(value, files)
   }
 
   return (

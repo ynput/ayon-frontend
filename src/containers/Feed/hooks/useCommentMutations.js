@@ -49,19 +49,15 @@ const useCommentMutations = ({
     // we only need these args to update the cache of the original query
     const argsForCachingMatching = { entityIds, activityTypes }
 
-    try {
-      await createEntityActivity({
-        projectName,
-        entityType,
-        entityId,
-        data: newComment,
-        patch,
-        filter,
-        ...argsForCachingMatching,
-      }).unwrap()
-    } catch (error) {
-      console.error(error)
-    }
+    return await createEntityActivity({
+      projectName,
+      entityType,
+      entityId,
+      data: newComment,
+      patch,
+      filter,
+      ...argsForCachingMatching,
+    }).unwrap()
   }
 
   const updateComment = async (activity, value, files = []) => {
@@ -81,18 +77,14 @@ const useCommentMutations = ({
     // we only need these args to update the cache of the original query
     const argsForCachingMatching = { entityType, entityIds, activityTypes }
 
-    try {
-      await updateActivity({
-        projectName,
-        data: updatedActivity,
-        activityId: activity.activityId,
-        patch,
-        filter,
-        ...argsForCachingMatching,
-      }).unwrap()
-    } catch (error) {
-      // error is handled in the mutation
-    }
+    return await updateActivity({
+      projectName,
+      data: updatedActivity,
+      activityId: activity.activityId,
+      patch,
+      filter,
+      ...argsForCachingMatching,
+    }).unwrap()
   }
 
   const deleteComment = async (id) => {

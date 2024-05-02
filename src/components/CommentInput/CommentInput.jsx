@@ -349,7 +349,7 @@ const CommentInput = ({
     typeWithDelay(quill, retain, type)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
       // convert to markdown
       const markdown = convertToMarkdown(editorValue)
@@ -357,9 +357,15 @@ const CommentInput = ({
       const markdownParsed = parseImages(markdown)
 
       if ((markdownParsed || files.length) && onSubmit) {
-        onSubmit(markdownParsed, files)
-        setEditorValue('')
-        setFiles([])
+        try {
+          await onSubmit(markdownParsed, files)
+          // only clear if onSubmit is successful
+          setEditorValue('')
+          setFiles([])
+        } catch (error) {
+          // error is handled in rtk query mutation
+          return
+        }
       }
     } catch (error) {
       console.error(error)
