@@ -110,6 +110,8 @@ const Products = () => {
       )
 
       setLoadingProducts([])
+      // return so that the focus can update
+      return versions
     } catch (error) {
       console.error('Error while loading versions:', error)
       toast.error('Error while loading versions')
