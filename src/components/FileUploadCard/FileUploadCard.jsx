@@ -5,27 +5,54 @@ import { useState } from 'react'
 
 const fileIcons = {
   // special cases
-  doc: 'description',
-  zip: 'folder_zip',
-  json: 'code_blocks',
-  javascript: 'code_blocks',
-  html: 'code_blocks',
-  css: 'code_blocks',
-  pdf: 'picture_as_pdf',
+  description: ['doc'],
+  folder_zip: ['zip'],
+  code_blocks: [
+    'json',
+    'javascript',
+    'python',
+    'html',
+    'css',
+    '.py',
+    '.js',
+    '.html',
+    '.css',
+    '.json',
+    '.ts',
+  ],
+  brush: ['.psd', '.ai', '.xd', '.sketch'],
+  '3d_rotation': [
+    '.mb',
+    '.ma',
+    '.c4d',
+    '.blend',
+    '.max',
+    '.3ds',
+    '.lwo',
+    '.lws',
+    '.lxo',
+    '.hip',
+    '.hda',
+  ],
+  theaters: ['.aep', '.tpl', '.clip', '.nk', '.fusion', '.prproj', '.spsm', '.drp'],
+  picture_as_pdf: ['pdf', '.pdf'],
   // default
-  image: 'image',
-  video: 'videocam',
-  application: 'business_center',
-  audio: 'audio_file',
-  text: 'text_snippet',
-  sequence: 'filter_none',
-  font: 'font_download',
-  model: '3d_rotation',
+  image: ['image', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'],
+  videocam: ['video', '.mp4', '.mov', '.avi', '.mkv', '.webm'],
+  business_center: ['application'],
+  audio_file: ['audio'],
+  text_snippet: ['text'],
+  filter_none: ['sequence'],
+  font_download: ['font'],
+  deployed_code: ['model', '.obj', '.abc', '.stl', '.fbx', '.gltf', '.glb', '.usd'],
 }
 
 const getIconForType = (type) => {
-  const icon = Object.entries(fileIcons).find(([key]) => type?.includes(key))?.[1]
-  if (icon) return icon
+  for (const [icon, keywords] of Object.entries(fileIcons)) {
+    if (keywords.some((keyword) => type.includes(keyword))) {
+      return icon
+    }
+  }
   return 'draft'
 }
 
@@ -74,7 +101,7 @@ const FileUploadCard = ({
   const fileComponent = (
     <Styled.File className={classNames({ compact: isCompact, isDownloadable, isImage })}>
       <Styled.ImageWrapper className="image-wrapper" onClick={handleImageClick}>
-        <Icon icon={getIconForType(mime)} className="type-icon" />
+        <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
         <Icon icon="download" className="download-icon" />
         {isImage && src && (
           <img
