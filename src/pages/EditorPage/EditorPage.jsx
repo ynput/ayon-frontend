@@ -605,7 +605,7 @@ const EditorPage = () => {
   // Commit changes
   //
 
-  const commitNewNodes = (commitChanges, updates, parentPatches) => {
+  const commitNewNodes = (commitChanges, updates) => {
     // Create a map to store the newNodes parentIds.
     const newNodesParentIdsMap = new Map()
     for (const id in newNodes) {
