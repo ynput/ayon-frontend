@@ -199,6 +199,7 @@ const UserDashDetailsHeader = ({
             tags={tagsOptionsObject}
             editable
             onChange={(value) => handleUpdate('tags', value)}
+            align="right"
           />
         </Styled.ContentRow>
       </Styled.Section>
