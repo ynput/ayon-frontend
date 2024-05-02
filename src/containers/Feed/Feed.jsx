@@ -145,7 +145,7 @@ const Feed = ({
 
     if (!newBody) return
 
-    updateComment(activity, newBody)
+    updateComment(activity, newBody, activity.files)
   }
 
   // when we scroll to the top of the feed, fetch more activities
