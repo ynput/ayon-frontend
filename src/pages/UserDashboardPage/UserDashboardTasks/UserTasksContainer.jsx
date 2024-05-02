@@ -17,9 +17,12 @@ import UserDashboardSlideOut from './UserDashboardSlideOut/UserDashboardSlideOut
 export const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName) => {
   if (!projectName || (!thumbnailId && !taskId)) return null
 
+  // fallback on arbitrary thumbnailId if taskId is not available
+  // this should never happen, but just in case
+  // only admins and managers can see the second endpoint though
   return thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
-    : `/api/projects/${projectName}/tasks/${taskId}/thumbnail?updatedAt=${updatedAt}`
+    ? `/api/projects/${projectName}/tasks/${taskId}/thumbnail?updatedAt=${updatedAt}`
+    : `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
