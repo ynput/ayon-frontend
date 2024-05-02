@@ -64,6 +64,7 @@ export const VERSION_QUERY = `
                           #ATTRS#
                         }
                         product {
+                            id
                             name
                             productType
                             folder {

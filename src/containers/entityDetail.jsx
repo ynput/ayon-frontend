@@ -1,6 +1,5 @@
 import { toast } from 'react-toastify'
 import { useGetEntityQuery } from '../services/entity/getEntity'
-import PropTypes from 'prop-types'
 import { Dialog } from '@ynput/ayon-react-components'
 
 const EntityDetail = ({ projectName, entityType, entityIds, visible, onHide }) => {
@@ -36,14 +35,6 @@ const EntityDetail = ({ projectName, entityType, entityIds, visible, onHide }) =
       </pre>
     </Dialog>
   )
-}
-
-EntityDetail.propTypes = {
-  projectName: PropTypes.string,
-  entityType: PropTypes.string.isRequired,
-  entityIds: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  visible: PropTypes.bool.isRequired,
-  onHide: PropTypes.func.isRequired,
 }
 
 export default EntityDetail
