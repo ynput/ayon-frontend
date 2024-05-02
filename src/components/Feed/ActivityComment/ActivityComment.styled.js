@@ -175,7 +175,6 @@ export const InlineCode = styled.code`
   border-radius: var(--padding-s);
   background-color: var(--md-sys-color-surface-container-lowest);
 
-  text-wrap: pretty;
   line-break: anywhere;
   word-break: break-all;
 `
@@ -185,7 +184,6 @@ export const BlockCode = styled.pre`
   border-radius: var(--padding-s);
   background-color: var(--md-sys-color-surface-container-lowest);
 
-  text-wrap: pretty;
   line-break: anywhere;
   word-break: break-all;
 `
