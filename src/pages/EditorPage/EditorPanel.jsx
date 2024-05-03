@@ -429,7 +429,7 @@ const EditorPanel = ({
       const rowChanges = {
         id,
         ...currentChanges,
-        [changeKey]: value,
+        [changeKey]: value === '' ? null : value,
       }
 
       allChanges.push(rowChanges)
