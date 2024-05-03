@@ -39,10 +39,8 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   //   refs
   const typeSelectRef = useRef(null)
 
-  const handleShow = () => {
-    // open dropdown
-    typeSelectRef.current?.open()
-  }
+  // open dropdown - delay to wait for dialog opening
+  const handleShow = () => setTimeout(() => typeSelectRef.current?.open(), 180)
 
   const title = 'Add Folder Sequence'
 
@@ -102,10 +100,10 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       onClose={onHide}
       onShow={handleShow}
       size='full'
-      style={{ zIndex: 999 }}
       variant="dialog"
+      style={{ zIndex: 999 }}
       footer={
-        <Toolbar>
+        <Toolbar onFocus={false}>
           <Spacer />
           <Button
             label="Add"

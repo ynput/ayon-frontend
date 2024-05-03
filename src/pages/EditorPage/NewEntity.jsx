@@ -136,10 +136,8 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   const typeSelectRef = useRef(null)
   const labelRef = useRef(null)
 
-  const handleShow = () => {
-    // open dropdown
-    typeSelectRef.current?.open()
-  }
+  // open dropdown - delay to wait for dialog opening
+  const handleShow = () => setTimeout(() => typeSelectRef.current?.open(), 180)
 
   const handleSubmit = (hide = false) => {
     // first check name and type valid
