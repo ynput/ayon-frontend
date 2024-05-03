@@ -207,9 +207,6 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       isOpen={visible}
       onClose={onHide}
       onShow={handleShow}
-      resizable={false}
-      draggable={false}
-      appendTo={document.getElementById('root')}
       size='sm'
       variant='dialog'
       style={{zIndex: 999}}
