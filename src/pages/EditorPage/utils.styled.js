@@ -28,6 +28,7 @@ export const StyledStatus = styled.div`
   ${({ $isUpdated }) => ($isUpdated && css`${updatedStyles}`)}
 `
 
+
 export const ModalBackdrop = styled.div`
   position: fixed;
   top: 0;
@@ -37,5 +38,5 @@ export const ModalBackdrop = styled.div`
   background-color: rgba(0, 0, 0, 0.5);
   opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
   transition: opacity 0.3s ease-in-out;
-  z-index: 99; 
+  z-index: 99;
 `;

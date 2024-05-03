@@ -89,8 +89,8 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   const addDisabled = !createSeq.base || !createSeq.increment || !createSeq.length || !createSeq.type
 
   const handleBackdropClick = (event) => {
-    if (event.target !== event.currentTarget) return; 
-    onHide(); 
+    if (event.target !== event.currentTarget) return
+    onHide()
   };
 
   return (

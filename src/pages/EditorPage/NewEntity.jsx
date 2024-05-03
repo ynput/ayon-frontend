@@ -195,8 +195,8 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   const addDisabled = !entityData.label || !entityData.type
 
   const handleBackdropClick = (event) => {
-    if (event.target !== event.currentTarget) return; 
-    onHide(); 
+    if (event.target !== event.currentTarget) return
+    onHide()
   };
 
   return (
