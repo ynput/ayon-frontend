@@ -1,4 +1,4 @@
-import { Quill } from 'react-quill'
+import { Quill } from 'react-quill-ayon'
 import MagicUrl from 'quill-magic-url'
 import ImageUploader from './ImageUploader'
 Quill.register('modules/imageUploader', ImageUploader)

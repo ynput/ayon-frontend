@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as Styled from './CommentInput.styled'
 import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
-import 'react-quill/dist/quill.bubble.css'
+import 'react-quill-ayon/dist/quill.bubble.css'
 
-import ReactQuill from 'react-quill'
+import ReactQuill from 'react-quill-ayon'
 import { classNames } from 'primereact/utils'
 
 import { toast } from 'react-toastify'
