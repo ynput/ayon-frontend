@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import checkName from '/src/helpers/checkName'
+import { ModalBackdrop } from './utils.styled'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -193,7 +194,14 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   const addDisabled = !entityData.label || !entityData.type
 
+  const handleBackdropClick = (event) => {
+    if (event.target !== event.currentTarget) return; 
+    onHide(); 
+  };
+
   return (
+    <>
+    <ModalBackdrop isOpen={visible} onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       header={title}
       isOpen={visible}
@@ -202,7 +210,9 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       resizable={false}
       draggable={false}
       appendTo={document.getElementById('root')}
-      size='lg'
+      size='sm'
+      variant='dialog'
+      style={{zIndex: 999}}
       footer={
         <Toolbar onFocus={() => setNameFocused(false)}>
           <Spacer />
@@ -234,7 +244,6 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
           ref={typeSelectRef}
           onFocus={handleTypeSelectFocus}
           onClick={() => setNameFocused(false)}
-          isPortal={false}
         />
         <InputText
           value={entityData.label}
@@ -245,6 +254,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
         />
       </ContentStyled>
     </Dialog>
+    </>
   )
 }
 

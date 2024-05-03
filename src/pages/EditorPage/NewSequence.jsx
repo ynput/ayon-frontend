@@ -5,6 +5,7 @@ import { Toolbar, Spacer, SaveButton, Button, Dialog } from '@ynput/ayon-react-c
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
 import { isEmpty } from 'lodash'
+import { ModalBackdrop } from './utils.styled'
 
 const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   const isRoot = isEmpty(currentSelection)
@@ -85,16 +86,24 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     }
   }
 
-  const addDisabled =
-    !createSeq.base || !createSeq.increment || !createSeq.length || !createSeq.type
+  const addDisabled = !createSeq.base || !createSeq.increment || !createSeq.length || !createSeq.type
+
+  const handleBackdropClick = (event) => {
+    if (event.target !== event.currentTarget) return; 
+    onHide(); 
+  };
 
   return (
+    <>
+    <ModalBackdrop isOpen={visible} onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       header={title}
       isOpen={visible}
       onClose={onHide}
       onShow={handleShow}
       size='full'
+      style={{ zIndex: 999 }}
+      variant="dialog"
       footer={
         <Toolbar>
           <Spacer />
@@ -123,9 +132,9 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         prefixDisabled={multipleSelection}
         typeSelectRef={typeSelectRef}
         onLastInputKeydown={(e) => handleKeyDown(e, true)}
-        isPortal={false}
       />
     </Dialog>
+    </>
   )
 }
 
