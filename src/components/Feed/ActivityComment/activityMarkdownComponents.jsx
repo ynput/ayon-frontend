@@ -29,9 +29,13 @@ export const aTag = (
   const { url, type, id } = sanitizeURL(href)
 
   // return regular url
-  if (url) <a href={href}>{children}</a>
   // if no reference type, return regular link with no href
-  if (!type || !id) return <a>{children}</a>
+  if (url || !type || !id)
+    return (
+      <a href={url} target="_blank" rel="noreferrer">
+        {children}
+      </a>
+    )
 
   const label = children && children.replace('@', '')
   // is this ref the same as the current task id
