@@ -9,7 +9,7 @@ import {
   InputSwitch,
   LockedInput,
   Dropdown,
-  Dialog
+  Dialog,
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'
@@ -138,7 +138,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   return (
     <Dialog
-      header={formData?.data?.title || formData?.name}
+      header={formData?.data?.title || formData?.name || 'New attribute'}
       footer={footer}
       onClose={onHide}
       isOpen={true}
