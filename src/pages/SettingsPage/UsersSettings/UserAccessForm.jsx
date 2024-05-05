@@ -112,16 +112,6 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
           />
         </FormRowStyled>
 
-        <FormRowStyled label="Access level">
-          <SelectButton
-            unselectable={false}
-            value={formData?.userLevel}
-            onChange={(e) => updateFormData('userLevel', e.value)}
-            options={userLevels}
-            disabled={disabled}
-          />
-        </FormRowStyled>
-
         {(isUser || isManager) && (
           <FormRowStyled label="Guest">
             <InputSwitch
@@ -139,6 +129,16 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
           <InputSwitch
             checked={formData?.isDeveloper}
             onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
+          />
+        </FormRowStyled>
+
+        <FormRowStyled label="Access level">
+          <SelectButton
+            unselectable={false}
+            value={formData?.userLevel}
+            onChange={(e) => updateFormData('userLevel', e.value)}
+            options={userLevels}
+            disabled={disabled}
           />
         </FormRowStyled>
 
