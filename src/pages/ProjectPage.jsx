@@ -155,7 +155,7 @@ const ProjectPage = () => {
         isOpen={showContextDialog}
         onClose={() => setShowContextDialog(false)}
         size="lg"
-        style={{ overflow: 'hidden', width: 500}}
+        style={{ overflow: 'hidden', width: 500 }}
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>

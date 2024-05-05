@@ -3,7 +3,6 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import { usePaste } from '/src/context/pasteContext'
 
-import { Dialog } from '@ynput/ayon-react-components'
 import { InputText } from 'primereact/inputtext'
 
 import { toast } from 'react-toastify'
@@ -15,6 +14,7 @@ import {
   Toolbar,
   ScrollPanel,
   SaveButton,
+  Dialog,
 } from '@ynput/ayon-react-components'
 
 import { useGetAnatomyPresetsQuery } from '/src/services/anatomy/getAnatomy'
@@ -141,7 +141,6 @@ const AnatomyPresets = () => {
       })
   }
 
-
   useEffect(() => {
     // TODO
   }, [breadcrumbs])
@@ -174,7 +173,6 @@ const AnatomyPresets = () => {
           header="Preset name"
           isOpen={true}
           onClose={() => setShowNameDialog(false)}
-          style={{ minWidth: 300 }}
           size="sm"
           footer={
             <SaveButton
