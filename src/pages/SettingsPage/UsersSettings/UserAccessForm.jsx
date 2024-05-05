@@ -23,7 +23,7 @@ const NoteStyled = styled.span`
 `
 
 const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, selectedProjects }) => {
-  const isAdmin = useSelector((state) => state.user.data.isAdmin)
+  const isUserAdmin = useSelector((state) => state.user.data.isAdmin)
 
   const userLevels = [
     { label: 'User', value: 'user' },
@@ -31,7 +31,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
   ]
 
   // only admins can
-  if (isAdmin) {
+  if (isUserAdmin) {
     userLevels.push({ label: 'Admin', value: 'admin' })
     userLevels.push({ label: 'Service', value: 'service' })
   }
@@ -46,7 +46,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
   }
 
   const isUser = formData?.userLevel === 'user'
-  const isManager = formData?.userLevel === 'manager'
+  const isAdmin = formData?.userLevel === 'admin'
 
   const defaultAccessGroups = formData?.defaultAccessGroups
 
@@ -123,18 +123,16 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
           />
         </FormRowStyled>
 
-        {(isUser || isManager) && (
-          <FormRowStyled label="Guest">
-            <InputSwitch
-              checked={formData?.isGuest}
-              onChange={(e) => updateFormData('isGuest', e.target.checked)}
-              disabled={disabled}
-              style={{
-                opacity: disabled ? 0.5 : 1,
-              }}
-            />
-          </FormRowStyled>
-        )}
+        <FormRowStyled label="Guest" data-tooltip={isAdmin ? 'Admins cannot be guests' : null}>
+          <InputSwitch
+            checked={disabled || isAdmin ? false : formData?.isGuest}
+            onChange={(e) => updateFormData('isGuest', e.target.checked)}
+            disabled={disabled || isAdmin}
+            style={{
+              opacity: disabled ? 0.5 : 1,
+            }}
+          />
+        </FormRowStyled>
 
         <FormRowStyled label="Developer">
           <InputSwitch
