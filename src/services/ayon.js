@@ -80,7 +80,6 @@ export const ayonApi = createApi({
     'workfile',
     'kanBanTask',
     'detail',
-    'productsVersion',
     'marketAddon',
   ],
   endpoints: () => ({}),
