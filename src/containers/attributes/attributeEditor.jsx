@@ -13,6 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'
+import  { ModalBackdrop } from '/src/pages/EditorPage/utils.styled'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -136,14 +137,22 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     }
   }
 
+  const handleBackdropClick = (event) => {
+    if (event.target !== event.currentTarget) return
+    onHide()
+  };
+
   return (
+    <>
+    <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       header={formData?.data?.title || formData?.name || 'New attribute'}
       footer={footer}
       onClose={onHide}
       isOpen={true}
-      style={{ width: 600 }}
+      style={{ width: 600, position: 'fixed', zIndex: 999, top: 0, bottom: 0  }}
       size="lg"
+      variant='dialog'
     >
       {formData && (
         <FormLayout>
@@ -213,6 +222,8 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
         </FormLayout>
       )}
     </Dialog>
+    </>
+    
   )
 }
 
