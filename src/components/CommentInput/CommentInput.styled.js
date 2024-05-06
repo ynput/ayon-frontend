@@ -119,6 +119,15 @@ export const Comment = styled.div`
 
     /* link popup */
     .ql-tooltip {
+      &.ql-hidden {
+        display: none;
+      }
+
+      left: 1px !important;
+      top: -29px !important;
+
+      width: 100%;
+
       box-shadow: none;
       background-color: var(--md-sys-color-surface-container-lowest);
       border-color: var(--md-sys-color-surface-container-low);
@@ -126,8 +135,16 @@ export const Comment = styled.div`
       padding: 4px;
       overflow: hidden;
 
+      display: flex;
+      align-items: center;
+
+      .ql-preview {
+        flex: 1;
+        max-width: unset;
+      }
+
       input {
-        width: 250px;
+        flex: 1;
         border: none;
         background-color: var(--md-sys-color-surface-container-lowest);
 
@@ -149,6 +166,7 @@ export const Comment = styled.div`
 
       .ql-remove {
         color: var(--md-sys-color-on-surface-variant);
+        margin-right: 4px;
       }
     }
   }
