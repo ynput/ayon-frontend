@@ -32,7 +32,9 @@ function RestartProvider(props) {
       // icon: 'pi pi-exclamation-triangle',
       contentStyle: { display: 'none' },
       accept: () => {
-        if (callback) callback()
+        if (typeof callback === 'function') {
+          callback()
+        }
         restartServer()
         // remove snooze local storage
         localStorage.removeItem('restart-snooze')

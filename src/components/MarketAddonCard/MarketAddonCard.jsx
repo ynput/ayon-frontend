@@ -19,6 +19,7 @@ const MarketAddonCard = ({
   isPlaceholder,
   isWaiting, // waiting to be installed/updated by update all
   isInstalling,
+  isFailed,
   isFinished,
   onInstall,
   ...props
@@ -28,14 +29,17 @@ const MarketAddonCard = ({
   if (isInstalled && isOutdated) state = 'update'
   if (isWaiting) state = 'pending'
   if (isInstalling) state = isInstalled && isOutdated ? 'updating' : 'installing'
+  if (isFailed) state = 'failed'
   if (isFinished) state = 'finished'
 
   let stateIcon = null
   if (isInstalling) stateIcon = 'sync'
+  if (isFailed) stateIcon = 'error'
   if (isFinished) stateIcon = 'check_circle'
 
   let stateVariant = 'light'
   if (state === 'install') stateVariant = 'surface'
+  if (state === 'failed') stateVariant = 'danger'
   if (state === 'update') stateVariant = 'filled'
 
   const handleActionClick = () => {

@@ -36,6 +36,8 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
     isInstalled,
     isInstalling,
     isFinished,
+    isFailed,
+    error,
     isOutdated,
     isProductionOutdated,
     // versions = [],
@@ -135,6 +137,19 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
                 </span>
               </div>
             </Styled.Header>
+            {isFailed && (
+              <Styled.ErrorCard direction="row">
+                <Icon icon="error_outline" />
+                <span>{error || 'Download failed: check the events viewer or try again.'}</span>
+                <a
+                  href="https://github.com/ynput/ayon-frontend/issues/new?labels=bug&template=bug_report.md&title=Addon+failed+to+download"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <Button variant="danger">Report</Button>
+                </a>
+              </Styled.ErrorCard>
+            )}
             <Styled.Description className={classNames({ isPlaceholder: isLoading })}>
               {description}
             </Styled.Description>

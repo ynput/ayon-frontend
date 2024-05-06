@@ -170,6 +170,7 @@ const useTooltip = () => {
           opacity: hideTooltip ? 0 : 1,
           left: tooltip?.pos?.x || 0,
           top: tooltip?.pos?.y || 0,
+          pointerEvents: tooltip?.as !== 'markdown' && 'none',
         }}
         $targetPos={tooltip?.target}
       >
