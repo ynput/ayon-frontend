@@ -73,6 +73,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   }
 
   const handleKeyDown = (e, lastInput) => {
+    if (e.key === 'Escape') onHide()
     if (e.key === 'Enter') {
       if (lastInput && !e.shiftKey) {
         handleSeqSubmit(true)
