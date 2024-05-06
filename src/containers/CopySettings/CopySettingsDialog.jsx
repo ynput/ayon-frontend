@@ -8,6 +8,7 @@ import { ScrollPanel, Button, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-
 import BundleDropdown from '/src/containers/BundleDropdown'
 import ProjectDropdown from '/src/containers/ProjectDropdown'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
+import { ModalBackdrop } from '/src/pages/EditorPage/utils.styled.js'
 
 import CopySettingsNode from './CopySettingsNode'
 
@@ -142,15 +143,35 @@ const CopySettingsDialog = ({
     </Toolbar>
   )
 
+  const handleBackdropClick = (event) => {
+    if (event.target !== event.currentTarget) return
+    onClose()
+  };
+  
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    const enter = e.key === 'Enter'
+    const ctrlMeta = e.ctrlKey || e.metakey
+    const shift = e.shiftKey
+    const esc = e.key === 'Escape'
+
+    if (!somethingToCopy && enter && ctrlMeta) doTheMagic()
+    if (!somethingToCopy && enter && shift) doTheMagic()
+    if (esc) onClose()
+  }
+
   return (
+    <>
+    <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       isOpen
       onClose={onClose}
-      
+      variant='dialog'
       size='full'
-      style={{ width: '80vw', height: '80vh' }}
+      style={{ width: '80vw', height: '80vh', position: 'fixed', zIndex: 999, top: 0, bottom: 0 }}
       header={`Copy ${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
       footer={footer}
+      onKeyDown={handleKeyDown}
     >
       <div
         style={{
@@ -191,6 +212,7 @@ const CopySettingsDialog = ({
         </ScrollPanel>
       </div>
     </Dialog>
+    </>
   )
 }
 
