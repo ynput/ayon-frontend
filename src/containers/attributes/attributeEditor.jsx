@@ -142,6 +142,11 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     onHide()
   };
 
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    if ( e.key === 'Escape') onHide()
+  }
+
   return (
     <>
     <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
@@ -153,6 +158,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
       style={{ width: 600, position: 'fixed', zIndex: 999, top: 0, bottom: 0  }}
       size="lg"
       variant='dialog'
+      onKeyDown={handleKeyDown}
     >
       {formData && (
         <FormLayout>
