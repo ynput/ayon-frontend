@@ -155,8 +155,8 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
       footer={footer}
       onClose={onHide}
       isOpen={true}
-      style={{ width: 600, position: 'fixed', zIndex: 999, top: 0, bottom: 0  }}
-      size="lg"
+      style={{ width: 700, position: 'fixed', zIndex: 999, top: 0, bottom: 0  }}
+      size="full"
       variant='dialog'
       onKeyDown={handleKeyDown}
     >
