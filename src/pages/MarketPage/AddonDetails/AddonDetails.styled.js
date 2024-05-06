@@ -155,3 +155,14 @@ export const UseButton = styled(Button)`
   margin-left: auto;
   gap: var(--base-gap-small);
 `
+
+export const ErrorCard = styled(Panel)`
+  color: var(--md-sys-color-on-error-container);
+  background-color: var(--md-sys-color-error-container);
+  align-items: center;
+  max-width: 300px;
+
+  button {
+    border: var(--md-sys-color-on-error-container) 1px solid;
+  }
+`

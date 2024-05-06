@@ -59,10 +59,10 @@ const updateAddons = ayonApi.injectEndpoints({
           // add eventIds to array
           const eventIds = [...(addonsRes.data || [])]
 
-          return { data: eventIds }
+          return { data: eventIds, error: addonsRes.error }
         } catch (error) {
           console.error(error)
-          return { error: error?.response?.data?.detail || 'Upload error' }
+          return { error: error?.response?.data?.detail || 'Install addon errors' }
         }
       },
       invalidatesTags: [
