@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { rcompare } from 'semver'
 import { Dialog } from '@ynput/ayon-react-components'
-import { Dropdown } from 'primereact/dropdown'
+// import { Dropdown } from 'primereact/dropdown'
 import {
   FormLayout,
   FormRow,
@@ -14,6 +14,7 @@ import {
   SaveButton,
   Button,
   Toolbar,
+  Dropdown,
 } from '@ynput/ayon-react-components'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 
@@ -129,8 +130,9 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
       header="Spawn a new service"
       onClose={onHide}
       footer={footer}
-      style={{ width: 550 }}
-      size="md"
+      style={{ width: 550, height: 'fit-content', zIndex: 999 }}
+      variant='dialog'
+      size="lg"
     >
       <FormLayout>
         <FormRow label="Host">
@@ -138,6 +140,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
             options={hostOptions}
             value={selectedHost}
             onChange={(e) => setSelectedHost(e.value)}
+            isPortal={false}
           />
         </FormRow>
 

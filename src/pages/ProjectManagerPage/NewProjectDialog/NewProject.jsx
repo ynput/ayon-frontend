@@ -9,6 +9,7 @@ import {
   useGetAnatomyPresetQuery,
   useGetAnatomySchemaQuery,
 } from '../../../services/anatomy/getAnatomy'
+import  { ModalBackdrop } from '/src/pages/EditorPage/utils.styled'
 import { useCreateProjectMutation } from '/src/services/project/updateProject'
 
 // allow only alphanumeric and underscorer,
@@ -145,16 +146,38 @@ const NewProjectDialog = ({ onHide }) => {
     </Toolbar>
   )
 
+  const handleBackdropClick = (event) => {
+    if (event.target !== event.currentTarget) return
+    onHide()
+  };
+
+
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    const enter = e.key === 'Enter'
+    const ctrlMeta = e.ctrlKey || e.metakey
+    const shift = e.shiftKey
+    const esc = e.key === 'Escape'
+    const isSubmitEnabeld = !(nameValidationError || codeValidationError)
+
+    if (isSubmitEnabeld && enter && ctrlMeta) handleSubmit()
+    if (isSubmitEnabeld && enter && shift) handleSubmit()
+    if (esc) onHide()
+  }
+
+
   return (
+    <>
+    <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       header="Create a new project"
       footer={footer}
       isOpen={true}
       onClose={onHide}
       size="lg"
-      style={{
-        height: '80%',
-      }}
+      variant='dialog'
+      style={{ width: 600, height: '80%',  position: 'fixed', zIndex: 999, top: 0, bottom: 0  }}
+      onKeyDown={handleKeyDown}
     >
       <div
         style={{
@@ -195,6 +218,7 @@ const NewProjectDialog = ({ onHide }) => {
         )}
       </div>
     </Dialog>
+    </>
   )
 }
 
