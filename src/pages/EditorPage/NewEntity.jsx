@@ -197,6 +197,9 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     onHide()
   };
 
+  // navbars are pushing off vertical alignment of AddTask Dialog by 92px
+  const verticalCorrection = '-92px'
+
   return (
     <>
     <ModalBackdrop isOpen={visible} onClick={(e) => handleBackdropClick(e)} />
@@ -207,7 +210,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       onShow={handleShow}
       size='sm'
       variant='dialog'
-      style={{zIndex: 999}}
+      style={{zIndex: 999, top: verticalCorrection, bottom: 0, margin: 'auto',  }}
       footer={
         <Toolbar onFocus={() => setNameFocused(false)}>
           <Spacer />
