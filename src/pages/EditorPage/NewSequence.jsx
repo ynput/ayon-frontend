@@ -93,7 +93,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     onHide()
   }
 
-   // navbars are pushing off vertical alignment of AddTask Dialog by 92px
+   // navbars are pushing off vertical alignment of Dialog by 92px
    const verticalCorrection = '-92px'
 
 

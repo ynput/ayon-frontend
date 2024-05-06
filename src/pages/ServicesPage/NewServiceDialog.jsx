@@ -16,6 +16,7 @@ import {
   Toolbar,
 } from '@ynput/ayon-react-components'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
+import { ModalBackdrop } from '/src/pages/EditorPage/utils.styled.js'
 
 const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [addonData, setAddonData] = useState([])
@@ -123,15 +124,35 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
     </Toolbar>
   )
 
+  const handleBackdropClick = (event) => {
+    if (event.target !== event.currentTarget) return
+    onHide()
+  };
+
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    const enter = e.key === 'Enter'
+    const ctrlMeta = e.ctrlKey || e.metakey
+    const shift = e.shiftKey
+    const esc = e.key === 'Escape'
+
+    if (canSubmit && enter && ctrlMeta) submit()
+    if (canSubmit && enter && shift) submit()
+    if (esc) onHide()
+  }
+
   return (
+    <>
+    <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       isOpen={true}
       header="Spawn a new service"
       onClose={onHide}
       footer={footer}
-      style={{ width: 550, height: 'fit-content', zIndex: 999 }}
+      style={{ width: 550, maxHeight: '600px', zIndex: 999, top: -55, bottom: 0 }}
       variant='dialog'
       size="lg"
+      onKeyDown={handleKeyDown}
     >
       <FormLayout>
         <FormRow label="Host">
@@ -197,6 +218,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
         </FormRow>
       </FormLayout>
     </Dialog>
+    </>
   )
 }
 
