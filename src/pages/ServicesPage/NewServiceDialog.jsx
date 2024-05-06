@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { rcompare } from 'semver'
 import { Dialog } from '@ynput/ayon-react-components'
-// import { Dropdown } from 'primereact/dropdown'
+import { Dropdown } from 'primereact/dropdown'
 import {
   FormLayout,
   FormRow,
@@ -14,7 +14,6 @@ import {
   SaveButton,
   Button,
   Toolbar,
-  Dropdown,
 } from '@ynput/ayon-react-components'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 
