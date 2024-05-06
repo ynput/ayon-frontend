@@ -21,7 +21,12 @@ const useInstall = (onInstall) => {
 
       if (!data?.url) throw new Error('No install candidate found')
 
-      await installAddons({ addons: [{ url: data.url, name, version }] }).unwrap()
+      const { error: installError } = await installAddons({
+        addons: [{ url: data.url, name, version }],
+      }).unwrap()
+
+      if (installError) throw new Error(installError)
+
       onInstall(name)
     } catch (error) {
       console.error(error)

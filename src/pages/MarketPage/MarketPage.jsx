@@ -20,6 +20,7 @@ import styled from 'styled-components'
 import useInstall from './AddonDetails/useInstall'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '/src/context/restartContext'
+import { toast } from 'react-toastify'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -54,6 +55,7 @@ const MarketPage = () => {
   // keep track of which addons are being installed
   const [installingAddons, setInstallingAddons] = useState([])
   const [finishedInstalling, setFinishedInstalling] = useState([])
+  const [failedInstalling, setFailedInstalling] = useState([])
   // updating is the same as installing really, false, true, 'finished'
   const [isUpdatingAll, setIsUpdatingAll] = useState(false)
   const [isUpdatingAllFinished, setIsUpdatingAllFinished] = useState(false)
@@ -78,20 +80,34 @@ const MarketPage = () => {
 
     // check for any addons that are still installing
     const installing = installProgress
-      .filter((event) => event.status === 'in_progress')
+      .filter((e) => e.status === 'in_progress')
       .map((e) => e?.summary?.name)
     const finished = installProgress
-      .filter((event) => event.status === 'finished')
+      .filter((e) => e.status === 'finished')
       .map((e) => e?.summary?.name)
+
+    const failedEvents = installProgress.filter((e) => e.status === 'failed' && e?.summary?.name)
+    const failedMessages = failedEvents.map((e) => ({
+      name: e.summary?.name,
+      error: e?.description.replace('Failed to process event: ', ''),
+    }))
+    const failedAddons = failedEvents.map((e) => e?.summary?.name)
 
     setInstallingAddons((currentInstallingAddons) => {
       const newInstalling = [...new Set([...currentInstallingAddons, ...installing])]
         .filter((addon) => !finished.includes(addon))
+        .filter((addon) => !failedAddons.includes(addon))
         .filter((a) => a)
       return newInstalling
     })
 
     setFinishedInstalling((f) => [...new Set([...f, ...finished])] || [])
+
+    setFailedInstalling((f) => {
+      // check if for duplicates
+      const newFailed = failedMessages.filter((e) => !f.some((addon) => addon.name === e.name))
+      return [...f, ...newFailed]
+    })
   }, [installProgress, setInstallingAddons, setFinishedInstalling])
 
   const { restartRequired } = useRestart()
@@ -105,12 +121,16 @@ const MarketPage = () => {
   }
   // once finished installing has length, show restart banner
   useEffect(() => {
-    if (!finishedInstalling.length || installingAddons.length) return
-    // all addons have finished installing
-    setIsUpdatingAll(false)
-    if (isUpdatingAll) setIsUpdatingAllFinished(true)
+    if ((finishedInstalling.length || failedInstalling.length) && !installingAddons.length) {
+      // all addons have finished installing
+      setIsUpdatingAll(false)
+      // show all updated complete if none failed
+      if (isUpdatingAll && !failedInstalling.length) setIsUpdatingAllFinished(true)
 
-    restartRequired({ callback: () => handleRestarted })
+      if (finishedInstalling.length) {
+        restartRequired({ callback: () => handleRestarted })
+      }
+    }
   }, [finishedInstalling, installingAddons])
 
   // GET SELECTED ADDON
@@ -159,21 +179,28 @@ const MarketPage = () => {
   marketAddons = useMemo(() => {
     if (
       !marketAddons.length ||
-      (!installingAddons.length && !finishedInstalling.length && !isUpdatingAll)
-    )
+      (!installingAddons.length &&
+        !finishedInstalling.length &&
+        !failedInstalling.length &&
+        !isUpdatingAll)
+    ) {
       return marketAddons
+    }
     return marketAddons.map((addon) => {
       const isWaiting = addon.isOutdated && addon.isInstalled && isUpdatingAll
       const isInstalling = installingAddons.includes(addon.name)
       const isFinished = finishedInstalling.includes(addon.name)
+      const error = failedInstalling.find((f) => f.name === addon.name)?.error
       return {
         ...addon,
         isInstalling,
         isFinished,
         isWaiting,
+        isFailed: !!error,
+        error,
       }
     })
-  }, [marketAddons, installingAddons, finishedInstalling, isUpdatingAll])
+  }, [marketAddons, installingAddons, finishedInstalling, failedInstalling, isUpdatingAll])
 
   // merge selected addon with found addon in marketAddons
   const selectedAddon = useMemo(() => {
@@ -242,11 +269,26 @@ const MarketPage = () => {
   const handleUpdateAll = async () => {
     setIsUpdatingAll(true)
     // for each outdated addon, install it
-    marketAddons.forEach((addon) => {
+    const promises = marketAddons.map((addon) => {
       if (addon.isOutdated && addon.isInstalled) {
-        handleInstall(addon.name, addon.latestVersion)
+        const res = handleInstall(addon.name, addon.latestVersion)
+        return res
       }
     })
+
+    const responses = await Promise.all(promises).for
+
+    const errors = responses.filter((r) => r.error)
+    const success = responses.filter((r) => r.data)
+    if (errors.length) {
+      console.error(errors)
+      toast.error('Error updating addons')
+    }
+
+    if (!success.length) {
+      setIsUpdatingAll(false)
+      setIsUpdatingAllFinished(true)
+    }
   }
 
   if (isError)

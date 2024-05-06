@@ -1,5 +1,30 @@
 import { ayonApi } from '../ayon'
 
+export const patchProductsListWithVersions = (
+  { projectName, folderIds },
+  { versions },
+  { dispatch },
+) => {
+  // patch into productsList cache
+  return dispatch(
+    ayonApi.util.updateQueryData('getProductList', { projectName, folderIds }, (draft) => {
+      console.log('patching versions!:', versions)
+      versions.forEach((version) => {
+        // find product in product list
+        const productIndex = draft.findIndex((product) => product.id === version.productId)
+
+        if (productIndex === -1) return
+
+        // merge version data into product
+        draft[productIndex] = {
+          ...draft[productIndex],
+          ...version,
+        }
+      })
+    }),
+  )
+}
+
 const parseProductFps = (product) => {
   const folderFps = product.folder.attrib.fps || ''
   if (!product) return folderFps
@@ -90,15 +115,6 @@ const parseVersionsData = (data) =>
     }
   })
 
-const getProductVersionTags = (result) =>
-  result
-    ? [
-        ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
-        ...result.map(({ productId }) => ({ type: 'product', id: productId })), // all product tags with id
-        { type: 'productsVersion' },
-      ]
-    : ['version', 'product', 'productsVersion']
-
 const PRODUCT_VERSION_FRAGMENT = `
 fragment ProductVersionFragment on VersionNode {
   id
@@ -181,22 +197,19 @@ ${PRODUCT_VERSION_FRAGMENT}
 const getProduct = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getProductList: build.query({
-      query: ({ projectName, ids }) => ({
+      query: ({ projectName, folderIds }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: PRODUCTS_LIST_QUERY,
-          variables: { projectName, ids },
+          variables: { projectName, ids: folderIds },
         },
       }),
       transformResponse: (response) => parseProductData(response.data),
       providesTags: (result) =>
         result
-          ? [
-              ...result.map(({ id }) => ({ type: 'product', id })),
-              ...result.map(({ versionId }) => ({ type: 'version', id: versionId })),
-            ]
-          : ['product', 'version'],
+          ? [...result.map(({ id }) => ({ type: 'product', id })), { type: 'product', id: 'LIST' }]
+          : [{ type: 'product', id: 'LIST' }],
     }),
     getProductsVersions: build.query({
       query: ({ projectName, ids }) => ({
@@ -208,20 +221,13 @@ const getProduct = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (response) => parseVersionsData(response.data) || [],
-      providesTags: (result) => getProductVersionTags(result),
-    }),
-    getProductVersionsByFolder: build.query({
-      query: ({ projectName, ids }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: PRODUCT_VERSIONS_QUERY,
-          variables: { projectName, ids },
-        },
-      }),
-      transformResponse: (response) => parseVersionsData(response.data) || [],
-      providesTags: (result) => getProductVersionTags(result),
-      serializeQueryArgs: (args) => ({ folder: args.folderId, projectName: args.projectName }), // remove ids from query cache key
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
+              { type: 'version', id: 'LIST' }, // tag for all versions
+            ]
+          : [{ type: 'version', id: 'LIST' }],
     }),
   }),
 })
@@ -230,5 +236,4 @@ export const {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
   useGetProductsVersionsQuery,
-  useLazyGetProductVersionsByFolderQuery,
 } = getProduct
