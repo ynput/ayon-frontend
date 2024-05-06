@@ -93,6 +93,9 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     onHide()
   }
 
+   // navbars are pushing off vertical alignment of AddTask Dialog by 92px
+   const verticalCorrection = '-92px'
+
 
   return (
     <>
@@ -104,7 +107,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         onShow={handleShow}
         size="lg"
         variant="dialog"
-        style={{ zIndex: 999 }}
+        style={{ zIndex: 999, top: verticalCorrection, bottom: 0, margin: 'auto'}}
         footer={
           <Toolbar onFocus={false}>
             <Spacer />
