@@ -3,7 +3,7 @@
 import ayonClient from '/src/ayon'
 
 // the extra attribs are for the entity details panel only
-const TASK_FRAGMENT = (attribs = []) => `
+const TASK_FRAGMENT = () => `
   fragment TaskFragment on TaskNode {
     id
     name
@@ -16,9 +16,6 @@ const TASK_FRAGMENT = (attribs = []) => `
     createdAt
     folderId
     thumbnailId
-    attrib {
-      ${attribs.join('\n')}
-    }
     folder {
       name
       label
@@ -35,13 +32,16 @@ query KanBan($assignees: [String!], $projectName: String!) {
         tasks(assigneesAny: $assignees, last: 2000) {
           edges {
             node {
+              attrib {
+                ${attribs.join('\n')}
+              }
               ...TaskFragment
             }
           }
         }
       }
     }
-${TASK_FRAGMENT(attribs)}
+${TASK_FRAGMENT()}
 `
 
 export const KAN_BAN_TASK_QUERY = (attribs = []) => `
@@ -50,11 +50,14 @@ query KanBanTask($projectName: String!, $entityId: String!) {
     projectName
     code
     task(id: $entityId) {
+      attrib {
+        ${attribs.join('\n')}
+      }
       ...TaskFragment
     }
   }
 }
-${TASK_FRAGMENT(attribs)}
+${TASK_FRAGMENT()}
 `
 export const KAN_BAN_ASSIGNEES_QUERY = `
 query KanbanProjectAssignees($projectName: String) {
