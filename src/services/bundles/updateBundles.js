@@ -111,8 +111,6 @@ const updateBundles = ayonApi.injectEndpoints({
 })
 
 export const {
-  useGetBundleListQuery,
-  useLazyGetBundleListQuery,
   useDeleteBundleMutation,
   useCreateBundleMutation,
   useUpdateBundleMutation,
