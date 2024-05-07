@@ -1,15 +1,7 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 
-const getBundles = ayonApi.injectEndpoints({
+const updateBundles = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    getBundleList: build.query({
-      query: ({ archived }) => ({
-        url: `/api/bundles?archived=${archived || false}`,
-      }),
-      transformResponse: (res) => res.bundles,
-      providesTags: () => [{ type: 'bundleList' }],
-    }),
-
     deleteBundle: build.mutation({
       query: ({ name }) => ({
         url: `/api/bundles/${name}`,
@@ -125,4 +117,4 @@ export const {
   useCreateBundleMutation,
   useUpdateBundleMutation,
   usePromoteBundleMutation,
-} = getBundles
+} = updateBundles

@@ -12,7 +12,10 @@ import {
 } from '/src/services/onBoarding/onBoarding'
 import { useGetReleasesQuery } from '/src/services/getRelease'
 import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useCreateBundleMutation, useLazyGetBundleListQuery } from '/src/services/bundles'
+import {
+  useCreateBundleMutation,
+  useLazyGetBundleListQuery,
+} from '/src/services/bundles/getBundles'
 import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
 
 const userFormFields = [
