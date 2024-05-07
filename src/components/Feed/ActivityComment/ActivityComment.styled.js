@@ -78,7 +78,7 @@ export const Body = styled.div`
   }
 
   p {
-    word-break: break-all;
+    word-break: break-word;
     .reference {
       top: 5px;
     }
@@ -176,7 +176,7 @@ export const InlineCode = styled.code`
   background-color: var(--md-sys-color-surface-container-lowest);
 
   line-break: anywhere;
-  word-break: break-all;
+  word-break: break-word;
 `
 
 export const BlockCode = styled.pre`
@@ -185,5 +185,5 @@ export const BlockCode = styled.pre`
   background-color: var(--md-sys-color-surface-container-lowest);
 
   line-break: anywhere;
-  word-break: break-all;
+  word-break: break-word;
 `
