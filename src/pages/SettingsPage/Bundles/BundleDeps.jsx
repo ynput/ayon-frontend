@@ -1,7 +1,7 @@
 import { FormLayout } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import BundleDepPackage from './BundleDepPackage'
-import { useUpdateBundleMutation } from '/src/services/bundles'
+import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
 import { toast } from 'react-toastify'
 import { Dialog } from 'primereact/dialog'
 import { useGetDependencyPackageListQuery } from '/src/services/dependencyPackages'

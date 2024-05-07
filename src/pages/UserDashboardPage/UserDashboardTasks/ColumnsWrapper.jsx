@@ -22,6 +22,7 @@ const ColumnsWrapper = ({
   allUsers = [],
   disabledStatuses = [],
   onCollapsedColumnsChange,
+  projectsInfo,
 }) => {
   const { active } = useDndContext()
   const sectionRef = useRef(null)
@@ -149,6 +150,7 @@ const ColumnsWrapper = ({
               }}
               active={active}
               activeColumn={activeColumn}
+              projectsInfo={projectsInfo}
             />
           )
         })}

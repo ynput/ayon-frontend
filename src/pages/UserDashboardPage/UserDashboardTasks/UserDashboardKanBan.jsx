@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 
 import ColumnsWrapper from './ColumnsWrapper'
@@ -185,7 +185,7 @@ const UserDashboardKanBan = ({
   const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor)
 
   // UPDATE TASK MUTATION
-  const [updateTasks] = useUpdateTasksMutation()
+  const [updateEntities] = useUpdateEntitiesMutation()
 
   // keep track of which card is being dragged
   const [activeDraggingId, setActiveDraggingId] = useState(null)
@@ -241,7 +241,7 @@ const UserDashboardKanBan = ({
       }
     })
 
-    updateTasks({ operations })
+    updateEntities({ operations, entityType: 'task' })
   }
 
   return (
@@ -263,6 +263,7 @@ const UserDashboardKanBan = ({
               allUsers={allUsers}
               disabledStatuses={disabledStatuses}
               onCollapsedColumnsChange={handleCollapseToggle}
+              projectsInfo={projectsInfo}
             />
             <KanBanCardOverlay
               activeDraggingId={activeDraggingId}
@@ -282,6 +283,7 @@ const UserDashboardKanBan = ({
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             disabledProjectUsers={disabledProjectUsers}
+            projectsInfo={projectsInfo}
           />
         )}
       </Section>

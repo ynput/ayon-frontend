@@ -7,7 +7,7 @@ import BundleDeps from './BundleDeps'
 import { upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
-import { useUpdateBundleMutation } from '/src/services/bundles'
+import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
 
 const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus, addons }) => {
   const [selectedBundle, setSelectedBundle] = useState(null)

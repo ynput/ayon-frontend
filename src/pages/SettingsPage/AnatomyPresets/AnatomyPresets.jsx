@@ -141,7 +141,6 @@ const AnatomyPresets = () => {
       })
   }
 
-
   useEffect(() => {
     // TODO
   }, [breadcrumbs])

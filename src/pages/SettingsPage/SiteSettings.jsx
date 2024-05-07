@@ -9,7 +9,6 @@ import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '/src/ser
 import { useSetSiteSettingsMutation } from '/src/services/siteSettings'
 
 const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
-
   const [formData, setFormData] = useState(null)
 
   const { data: schema, isLoading: schemaLoading } = useGetSiteSettingsSchemaQuery({
@@ -32,19 +31,18 @@ const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
     onChange(formData)
   }, [formData])
 
-
   if (!(schema && originalData)) return 'Loading editor...'
   if (schemaLoading || settingsLoading) {
     return 'Loading...'
   }
 
-    return (
-      <SettingsEditor
-        schema={{ ...schema, title: `${schema.title} (${siteId})` }}
-        formData={formData}
-        onChange={setFormData}
-      />
-    )
+  return (
+    <SettingsEditor
+      schema={{ ...schema, title: `${schema.title} (${siteId})` }}
+      formData={formData}
+      onChange={setFormData}
+    />
+  )
 }
 
 const SiteSettings = () => {

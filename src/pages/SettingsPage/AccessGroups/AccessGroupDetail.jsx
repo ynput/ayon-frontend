@@ -21,8 +21,7 @@ import {
 } from '/src/services/accessGroups/updateAccessGroups'
 import confirmDelete from '/src/helpers/confirmDelete'
 
-
-const PROJECT_GROUP_MSG = "Clear project overrides"
+const PROJECT_GROUP_MSG = 'Clear project overrides'
 
 const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const [originalData, setOriginalData] = useState(null)
@@ -46,7 +45,6 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
       if (accessGroup?.name === accessGroupName) return accessGroup.isProjectLevel
     }
   }, [accessGroupName, accessGroupList])
-
 
   useEffect(() => {
     if (!data) return
@@ -77,38 +75,33 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
     }
   }
 
-  const onDeleteLocalGroupSettings = async () => confirmDelete({
-    header: 'Clear project overrides',
-    deleteLabel: 'Clear',
-    label: 'Project overrides',
-    accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
-    message: 'Are you sure you want to delete all project override settings for this access group?'
-  })
-
- 
+  const onDeleteLocalGroupSettings = async () =>
+    confirmDelete({
+      header: 'Clear project overrides',
+      deleteLabel: 'Clear',
+      label: 'Project overrides',
+      accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
+      message:
+        'Are you sure you want to delete all project override settings for this access group?',
+    })
 
   const isLocalProject = !!projectName
-  // This conditions checks if there are any local (NOT global) project settings for user group 
+  // This conditions checks if there are any local (NOT global) project settings for user group
   const noLocalSettings = projectName && !isProjectLevel
 
   return (
     <Section style={{ flex: 2 }}>
       <Toolbar>
         <Spacer />
-        { isLocalProject &&
+        {isLocalProject && (
           <Button
             onClick={onDeleteLocalGroupSettings}
             label={PROJECT_GROUP_MSG}
             disabled={noLocalSettings}
             icon="delete"
           />
-        }
-        <SaveButton
-          onClick={onSave}
-          label="Save Changes"
-          active={isChanged}
-          saving={saving}
-        />
+        )}
+        <SaveButton onClick={onSave} label="Save Changes" active={isChanged} saving={saving} />
       </Toolbar>
       <ScrollPanel
         className="nopad transparent"

@@ -154,6 +154,12 @@ export const Header = styled.header`
   }
 `
 
+export const GroupHeader = styled.span`
+  overflow: hidden;
+  word-break: break-all;
+  padding: 0 4px;
+`
+
 export const MenuButton = styled(Button)`
   padding: 4px;
   border-radius: var(--border-radius-xl);

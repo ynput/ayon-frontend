@@ -27,6 +27,13 @@ const initialState = {
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
+  previewFile: {
+    id: null,
+    name: null,
+    mime: null,
+    size: null,
+    projectName: null,
+  },
 }
 
 // all the keys that are stored in local storage
@@ -416,6 +423,14 @@ const contextSlice = createSlice({
       // else set payload
       else state.menuOpen = action.payload
     },
+    onCommentImageOpen: (state, action) => {
+      // set the preview file
+      state.previewFile = action.payload
+    },
+    onFilePreviewClose: (state) => {
+      // clear the preview file
+      state.previewFile = initialState.previewFile
+    },
   }, // reducers
 })
 
@@ -447,6 +462,8 @@ export const {
   setMenuOpen,
   toggleMenuOpen,
   onUriNavigate,
+  onCommentImageOpen,
+  onFilePreviewClose,
 } = contextSlice.actions
 
 export default contextSlice.reducer

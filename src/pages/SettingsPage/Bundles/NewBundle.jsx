@@ -2,7 +2,10 @@ import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
-import { useCreateBundleMutation, useUpdateBundleMutation } from '/src/services/bundles'
+import {
+  useCreateBundleMutation,
+  useUpdateBundleMutation,
+} from '/src/services/bundles/updateBundles'
 
 import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
@@ -127,24 +130,19 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     }
   }
 
-
   useEffect(() => {
     if (!formData) return
 
     axios
       .post('/api/bundles/check', formData)
-      .then((res) => { 
+      .then((res) => {
         setBundleCheckState(res.data)
         console.log(res.data)
       })
       .catch((err) => {
-        setBundleCheckState({success: true}) // checks are not available
+        setBundleCheckState({ success: true }) // checks are not available
       })
-
   }, [formData])
-
-
-
 
   const [devChanges, setDevChanges] = useState(false)
 
@@ -253,7 +251,9 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
         <SaveButton
           label={isDev ? 'Save dev bundle' : 'Create new bundle'}
           onClick={isDev ? handleUpdate : handleSave}
-          active={isDev ? !!formData?.name && devChanges : (!!formData?.name && bundleCheckState?.success)}
+          active={
+            isDev ? !!formData?.name && devChanges : !!formData?.name && bundleCheckState?.success
+          }
           saving={isCreating || isUpdating}
         />
       </Toolbar>
@@ -347,9 +347,8 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
           )}
         </Styled.AddonTools>
         {isDev && <BundleDeps bundle={formData} onChange={handleDepPackagesDevChange} />}
-        <pre>
-          {JSON.stringify(bundleCheckState?.issues, null, 2)}
-        </pre>
+
+        <pre>{JSON.stringify(bundleCheckState?.issues, null, 2)}</pre>
       </BundleForm>
     </>
   )
