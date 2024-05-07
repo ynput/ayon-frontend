@@ -61,7 +61,7 @@ const BundleChecks = ({ check = {}, isLoading = true, isCheckError = false, onIs
             <Styled.ErrorItem
               key={i}
               className={classNames(issue.severity)}
-              onClick={() => onIssueClick(issue.required)}
+              onClick={() => onIssueClick(issue.requiredAddon)}
             >
               <Icon icon={issue.severity} />
               {issue.addon}: {issue.message}
