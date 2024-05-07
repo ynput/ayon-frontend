@@ -127,7 +127,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   const handleBackdropClick = (event) => {
     if (event.target !== event.currentTarget) return
     onHide()
-  };
+  }
 
   const handleKeyDown = (e) => {
     e?.stopPropagation()
@@ -143,81 +143,80 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
 
   return (
     <>
-    <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
-    <Dialog
-      isOpen={true}
-      header="Spawn a new service"
-      onClose={onHide}
-      footer={footer}
-      style={{ width: 550, maxHeight: '600px', zIndex: 999, top: -55, bottom: 0 }}
-      variant='dialog'
-      size="lg"
-      onKeyDown={handleKeyDown}
-    >
-      <FormLayout>
-        <FormRow label="Host">
-          <Dropdown
-            options={hostOptions}
-            value={selectedHost}
-            onChange={(e) => setSelectedHost(e.value)}
-            isPortal={false}
-          />
-        </FormRow>
+      <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
+      <Dialog
+        isOpen={true}
+        header="Spawn a new service"
+        onClose={onHide}
+        footer={footer}
+        style={{ width: 550, maxHeight: '600px', zIndex: 999, top: -55, bottom: 0 }}
+        variant="dialog"
+        size="lg"
+        onKeyDown={handleKeyDown}
+      >
+        <FormLayout>
+          <FormRow label="Host">
+            <Dropdown
+              options={hostOptions}
+              value={selectedHost}
+              onChange={(e) => setSelectedHost(e.value)}
+            />
+          </FormRow>
 
-        <FormRow label="Addon name">
-          <Dropdown
-            options={addonOptions}
-            value={selectedAddon}
-            onChange={(e) => setSelectedAddon(e.value)}
-          />
-        </FormRow>
+          <FormRow label="Addon name">
+            <Dropdown
+              options={addonOptions}
+              value={selectedAddon}
+              onChange={(e) => setSelectedAddon(e.value)}
+            />
+          </FormRow>
 
-        <FormRow label="Addon version">
-          <Dropdown
-            options={versionOptions}
-            value={selectedVersion}
-            onChange={(e) => setSelectedVersion(e.value)}
-          />
-        </FormRow>
+          <FormRow label="Addon version">
+            <Dropdown
+              options={versionOptions}
+              value={selectedVersion}
+              onChange={(e) => setSelectedVersion(e.value)}
+            />
+          </FormRow>
 
-        <FormRow label="Service">
-          <Dropdown
-            options={serviceOptions}
-            value={selectedService}
-            onChange={(e) => {
-              setSelectedService(e.value)
-              setServiceName(e.value)
-            }}
-          />
-        </FormRow>
+          <FormRow label="Service">
+            <Dropdown
+              options={serviceOptions}
+              value={selectedService}
+              onChange={(e) => {
+                setSelectedService(e.value)
+                setServiceName(e.value)
+              }}
+            />
+          </FormRow>
 
-        <FormRow label="Service name">
-          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
-        </FormRow>
-      </FormLayout>
+          <FormRow label="Service name">
+            <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
+          </FormRow>
+        </FormLayout>
 
-      <Divider>Advanced settings</Divider>
+        <Divider>Advanced settings</Divider>
 
-      <FormLayout>
-        <FormRow label="Settings variant">
-          <VariantSelector
-            addonName={selectedAddon?.name}
-            addonVersion={selectedVersion}
-            variant={settingsVariant}
-            setVariant={setSettingsVariant}
-          />
-        </FormRow>
+        <FormLayout>
+          <FormRow label="Settings variant">
+            <VariantSelector
+              addonName={selectedAddon?.name}
+              addonVersion={selectedVersion}
+              variant={settingsVariant}
+              setVariant={setSettingsVariant}
+            />
+          </FormRow>
 
-        <FormRow label="Storages">
-          <InputTextarea
-            value={storages}
-            style={{ minHeight: 80 }}
-            onChange={(e) => setStorages(e.target.value)}
-            placeholder="/local/path:/container/path"
-          />
-        </FormRow>
-      </FormLayout>
-    </Dialog>
+          <FormRow label="Storages">
+            <InputTextarea
+              value={storages}
+              style={{ minHeight: 80 }}
+              onChange={(e) => setStorages(e.target.value)}
+              placeholder="/local/path:/container/path"
+            />
+          </FormRow>
+        </FormLayout>
+      </Dialog>
     </>
   )
 }
