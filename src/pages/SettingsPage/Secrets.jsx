@@ -5,7 +5,14 @@ import {
   useDeleteSecretMutation,
 } from '/src/services/secrets'
 import styled from 'styled-components'
-import { InputText, InputPassword, Button, ScrollPanel, Section, SaveButton } from '@ynput/ayon-react-components'
+import {
+  InputText,
+  InputPassword,
+  Button,
+  ScrollPanel,
+  Section,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import confirmDelete from '/src/helpers/confirmDelete'
 import copyToClipboard from '/src/helpers/copyToClipboard'

@@ -38,7 +38,6 @@ import { toast } from 'react-toastify'
 import { isEmpty } from 'lodash'
 import { productTypes } from '/src/features/project'
 
-
 const Products = () => {
   const dispatch = useDispatch()
 

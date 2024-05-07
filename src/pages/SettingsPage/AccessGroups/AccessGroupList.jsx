@@ -49,50 +49,51 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
 
   const globalGroupPayload = {
     label: 'Access group',
-    accept: async () => await deleteAccessGroup({ name: selection.name, projectName: '_' }).unwrap(),
-    message: 'Are you sure you want to delete this access group ?'
+    accept: async () =>
+      await deleteAccessGroup({ name: selection.name, projectName: '_' }).unwrap(),
+    message: 'Are you sure you want to delete this access group ?',
   }
 
   const onDeleteGlobal = async () => confirmDelete(globalGroupPayload)
-
 
   const onContextMenu = (event) => {
     const eventData = event?.data
     onSelectionChange(eventData)
     ctxMenuShow(event.originalEvent, ctxMenuItems(eventData))
   }
-  
-  const ctxMenuItems = ((eventData) => {
-    const menuItems = 
-    [
-       {
-         label: 'Clear Overrides',
-         icon: 'clear',
-         disabled: !eventData.isProjectLevel,
-         command: async () => confirmDelete({
-          header: 'Clear project overrides',
-          deleteLabel: 'Clear',
-          label: 'Project overrides',
-          accept: async () => await deleteAccessGroup({ name: eventData.name, projectName }).unwrap(),
-          message: 'Are you sure you want to delete all project override settings for this access group?'
-        }),
-       },
-       {
-         label: 'Delete',
-         icon: 'delete',
-         command: async () => confirmDelete(
-          {
+
+  const ctxMenuItems = (eventData) => {
+    const menuItems = [
+      {
+        label: 'Clear Overrides',
+        icon: 'clear',
+        disabled: !eventData.isProjectLevel,
+        command: async () =>
+          confirmDelete({
+            header: 'Clear project overrides',
+            deleteLabel: 'Clear',
+            label: 'Project overrides',
+            accept: async () =>
+              await deleteAccessGroup({ name: eventData.name, projectName }).unwrap(),
+            message:
+              'Are you sure you want to delete all project override settings for this access group?',
+          }),
+      },
+      {
+        label: 'Delete',
+        icon: 'delete',
+        command: async () =>
+          confirmDelete({
             label: 'Access group',
-            accept: async () => await deleteAccessGroup({ name: eventData.name, projectName: '_' }).unwrap(),
-            message: 'Are you sure you want to delete this access group ?'
-          }
-         ),
-         danger: true,
-       },
-     ]
-     return menuItems
+            accept: async () =>
+              await deleteAccessGroup({ name: eventData.name, projectName: '_' }).unwrap(),
+            message: 'Are you sure you want to delete this access group ?',
+          }),
+        danger: true,
+      },
+    ]
+    return menuItems
   }
-  )
 
   const [ctxMenuShow] = useCreateContext([])
 
@@ -109,11 +110,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
           icon="group_add"
         />
         <Spacer />
-        <Button
-          label="Delete access group"
-          onClick={onDeleteGlobal}
-          icon="delete"
-        />
+        <Button label="Delete access group" onClick={onDeleteGlobal} icon="delete" />
       </Toolbar>
 
       <TablePanel loading={loading}>
