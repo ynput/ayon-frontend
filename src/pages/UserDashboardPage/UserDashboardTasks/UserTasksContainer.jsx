@@ -12,13 +12,17 @@ import UserDashboardDetails from './UserDashboardDetails/UserDashboardDetails'
 import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '/src/features/context'
+import UserDashboardSlideOut from './UserDashboardSlideOut/UserDashboardSlideOut'
 
-const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName) => {
+export const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName) => {
   if (!projectName || (!thumbnailId && !taskId)) return null
 
+  // fallback on arbitrary thumbnailId if taskId is not available
+  // this should never happen, but just in case
+  // only admins and managers can see the second endpoint though
   return thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
-    : `/api/projects/${projectName}/tasks/${taskId}/thumbnail?updatedAt=${updatedAt}`
+    ? `/api/projects/${projectName}/tasks/${taskId}/thumbnail?updatedAt=${updatedAt}`
+    : `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
@@ -117,17 +121,23 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [projectsInfo, isLoadingInfo],
   )
 
+  const statusesIntersection = useMemo(
+    () => getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects),
+    [projectsInfo, selectedTasksProjects],
+  )
+
   const disabledStatuses = useMemo(
     () =>
       statusesOptions
-        .filter(
-          (s) =>
-            !getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects).some(
-              (s2) => s2.name === s.name,
-            ),
-        )
+        .filter((s) => !statusesIntersection.some((s2) => s2.name === s.name))
         .map((s) => s.name),
     [projectsInfo, selectedTasksProjects, statusesOptions],
+  )
+
+  // find the intersection of all the tags of the projects for the selected tasks
+  const tagsOptions = useMemo(
+    () => getIntersectionFields(projectsInfo, 'tags', selectedTasksProjects),
+    [projectsInfo, selectedTasksProjects],
   )
 
   const { data: projectUsers = [] } = useGetKanBanUsersQuery(
@@ -152,9 +162,12 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   }, [selectedTasksProjects, projectUsers])
 
   const isLoadingAll = isLoadingInfo || isLoadingTasks
-  const detailsMinWidth = 400
+  const detailsMinWidth = 533
   const detailsMaxWidth = '40vw'
   const detailsMaxMaxWidth = 700
+
+  const projectName = selectedTasksProjects[0]
+  const projectInfo = projectsInfo[projectName]
 
   if (isError)
     return (
@@ -207,14 +220,20 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           }}
         >
           <UserDashboardDetails
-            tasks={tasksWithIcons}
+            entities={selectedTasksData}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
+            tagsOptions={tagsOptions}
             projectUsers={projectUsers}
             activeProjectUsers={activeProjectUsers}
             disabledProjectUsers={disabledProjectUsers}
             selectedTasksProjects={selectedTasksProjects}
+            projectInfo={projectInfo}
+            projectName={projectName}
+            entityType="task"
+            style={{ zIndex: 400 }}
           />
+          <UserDashboardSlideOut projectsInfo={projectsInfo} />
         </SplitterPanel>
       ) : (
         <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
