@@ -135,7 +135,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     if (!developerMode) formData.isDev = false
 
     try {
-      await createBundle({ data: formData, archived: true }).unwrap()
+      await createBundle({ data: formData, force: formData.isDev }).unwrap()
       toast.success('Bundle created')
       onSave(formData.name)
     } catch (error) {

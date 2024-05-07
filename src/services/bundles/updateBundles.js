@@ -32,8 +32,8 @@ const updateBundles = ayonApi.injectEndpoints({
     }),
 
     promoteBundle: build.mutation({
-      query: ({ name }) => ({
-        url: `/api/bundles/${name}`,
+      query: ({ name, force = true }) => ({
+        url: `/api/bundles/${name}?force=${force}`,
         method: 'POST',
         body: { action: 'promote' },
       }),
@@ -49,8 +49,8 @@ const updateBundles = ayonApi.injectEndpoints({
     }),
 
     createBundle: build.mutation({
-      query: ({ data }) => ({
-        url: `/api/bundles`,
+      query: ({ data, force = false }) => ({
+        url: `/api/bundles?force=${force}`,
         method: 'POST',
         body: data,
       }),
