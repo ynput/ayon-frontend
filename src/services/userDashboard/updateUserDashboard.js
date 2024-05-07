@@ -15,7 +15,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
       ) {
         let patchResult
 
-        // if task,
+        // if task, patch the getProjectTasks query
         if (entityType === 'task') {
           patchResult = dispatch(
             ayonApi.util.updateQueryData('getProjectTasks', { projectName, assignees }, (draft) => {
@@ -28,15 +28,22 @@ const updateUserDashboard = ayonApi.injectEndpoints({
         }
 
         const entities = [{ projectName, id: taskId }]
-        // update any entity details panels in dashboard
+        // patch any entity details panels in dashboard
         let entityDetailsResult = dispatch(
           ayonApi.util.updateQueryData(
             'getDashboardEntitiesDetails',
             { entities, entityType },
             (draft) => {
+              // convert assignees to users
+              const patchData = { ...data }
+              if (patchData.assignees) {
+                patchData.users = patchData.assignees
+                delete patchData.assignees
+              }
               const entityIndex = draft.findIndex((entity) => entity.id === taskId)
+              console.log(entityIndex)
               if (entityIndex === -1) return
-              const newData = { ...draft[entityIndex], ...data }
+              const newData = { ...draft[entityIndex], ...patchData }
               draft[entityIndex] = newData
             },
           ),
