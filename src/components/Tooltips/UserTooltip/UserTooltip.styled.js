@@ -3,13 +3,11 @@ import styled, { keyframes } from 'styled-components'
 const popInAnimation = keyframes`
     from {
         opacity: 0.4;
-        scale: 0.8;
-        translate: 0 -10px;
+        scale: 0.9;
     }
     to {
         opacity: 1;
         scale: 1;
-        translate: 0 0;
     }
 `
 
@@ -24,7 +22,7 @@ export const Popup = styled.span`
   border-radius: var(--border-radius-m);
 
   position: fixed;
-  transform: translate(-50%, calc(-100% - 8px));
+  transform: translate(-50%, calc(-100% - 4px));
   box-shadow: 0 0px 4px rgba(0, 0, 0, 0.2);
 
   .thumbnail {
@@ -36,7 +34,7 @@ export const Popup = styled.span`
     }
   }
 
-  animation: ${popInAnimation} 0.05s;
+  animation: ${popInAnimation} 50ms ease-out;
   transform-origin: left bottom;
 `
 

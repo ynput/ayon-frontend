@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import FeedReferencePopup from '../FeedReferencePopup/FeedReferencePopup'
-import * as Styled from './FeedReference.styled'
+import ActivityReferenceTooltip from '../ActivityReferenceTooltip/ActivityReferenceTooltip'
+import * as Styled from './ActivityReference.styled'
 import { Icon } from '@ynput/ayon-react-components'
+import { classNames } from 'primereact/utils'
 
 const typeIcons = {
   user: 'alternate_email',
@@ -10,7 +11,19 @@ const typeIcons = {
 }
 // variants = filled, text
 
-const FeedReference = ({ id, type, variant = 'surface', label, ...props }) => {
+const ActivityReference = ({
+  id,
+  type,
+  variant = 'surface',
+  label,
+  name,
+  isEntity,
+  disabled,
+  projectName,
+  projectInfo,
+  onClick,
+  ...props
+}) => {
   const icon = typeIcons[type] || 'link'
   const [refHover, setRefHover] = useState(false)
   const [referenceCenterPos, setReferenceCenterPos] = useState(null)
@@ -21,8 +34,15 @@ const FeedReference = ({ id, type, variant = 'surface', label, ...props }) => {
   useEffect(() => {
     if (!ref.current) return
     const { x, y, width } = ref.current.getBoundingClientRect()
+
     setReferenceCenterPos({ left: x + width / 2, top: y })
   }, [ref.current, refHover])
+
+  const handleClick = () => {
+    onClick && onClick()
+    // close hover
+    setRefHover(false)
+  }
 
   return (
     <>
@@ -32,17 +52,22 @@ const FeedReference = ({ id, type, variant = 'surface', label, ...props }) => {
         icon={icon}
         $variant={variant}
         ref={ref}
-        onMouseEnter={() => setRefHover(true)}
+        onMouseEnter={() => !disabled && setRefHover(true)}
         onMouseLeave={() => setRefHover(false)}
+        onClick={handleClick}
+        className={classNames({ disabled, isEntity }, 'reference')}
       >
         <Icon icon={icon} />
         {props.children}
       </Styled.Reference>
       {refHover && (
-        <FeedReferencePopup type={type} id={id} pos={referenceCenterPos} label={label} />
+        <ActivityReferenceTooltip
+          pos={referenceCenterPos}
+          {...{ type, id, label, name, projectName, projectInfo }}
+        />
       )}
     </>
   )
 }
 
-export default FeedReference
+export default ActivityReference

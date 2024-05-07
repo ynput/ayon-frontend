@@ -59,20 +59,20 @@ const StatusStyled = styled.div`
 
   /* Styles for highlighting changed status */
   ${({ $isChanged }) =>
-  $isChanged &&
-  css`
-    background-color: var(--md-sys-color-primary);
+    $isChanged &&
+    css`
+      background-color: var(--md-sys-color-primary);
 
-    &,
-    span,
-    .icon {
-      color: var(--md-sys-color-on-primary);
-    }
+      &,
+      span,
+      .icon {
+        color: var(--md-sys-color-on-primary);
+      }
 
-    :hover {
-      background-color: var(--md-sys-color-primary-hover);
-    }
-  `}
+      :hover {
+        background-color: var(--md-sys-color-primary-hover);
+      }
+    `}
 
   /* selecting styles */
   ${({ $isSelecting }) =>
@@ -121,7 +121,7 @@ const StatusStyled = styled.div`
       :hover {
         ${invertHoverStyle}
       }
-      [icon="expand_more"] {
+      [icon='expand_more'] {
         transform: rotate(180deg);
         ${invertHoverStyle}
       }
@@ -192,9 +192,11 @@ const StatusField = ({
       placeholder={!value && placeholder ? placeholder : ''}
       className={className + ' status-field'}
     >
-      <div className='status-texticon'>
-        {icon && <Icon className='status-icon' icon={icon} />}
-        <span className='status-text'>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
+      <div className="status-texticon">
+        {icon && <Icon className="status-icon" icon={icon} />}
+        <span className="status-text">
+          {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
+        </span>
       </div>
       {showChevron && <Icon icon="expand_more" />}
     </StatusStyled>

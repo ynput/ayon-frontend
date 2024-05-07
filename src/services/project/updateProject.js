@@ -27,7 +27,7 @@ const updateProject = ayonApi.injectEndpoints({
           patchResult.undo()
         }
       },
-      invalidatesTags: () => ['projects'],
+      invalidatesTags: () => ['projects', 'kanBanTask'],
     }),
     deleteProject: build.mutation({
       query: ({ projectName }) => ({

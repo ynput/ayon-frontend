@@ -6,12 +6,12 @@ export const Reference = styled.span`
   border-radius: var(--border-radius-m);
   width: min-content;
   position: relative;
-
+  user-select: none;
   padding: 0;
   padding-right: 4px;
   white-space: nowrap;
   cursor: pointer;
-  user-select: none;
+
   align-items: center;
 
   &,
@@ -56,4 +56,9 @@ export const Reference = styled.span`
         background-color: var(--md-sys-color-primary-active);
       }
     `}
+
+    /* remove background colour and hover on disabled */
+    &.disabled {
+    background-color: unset;
+  }
 `

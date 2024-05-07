@@ -1,63 +1,100 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as Styled from './CommentInput.styled'
-import { Button, SaveButton } from '@ynput/ayon-react-components'
-import 'react-quill/dist/quill.bubble.css'
-import TurndownService from 'turndown'
-import ReactMarkdown from 'react-markdown'
-import ReactQuill from 'react-quill'
+import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
+import 'react-quill-ayon/dist/quill.bubble.css'
+
+import ReactQuill from 'react-quill-ayon'
+import { classNames } from 'primereact/utils'
+
 import { toast } from 'react-toastify'
-import { confirmDialog } from 'primereact/confirmdialog'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
 import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
-import { useGetMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
+import { useGetTaskMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
-import { v4 as uuid4 } from 'uuid'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
+import {
+  convertToMarkdown,
+  handleFileDrop,
+  parseImages,
+  getUsersContext,
+  typeWithDelay,
+} from './helpers'
+import useInitialValue from './hooks/useInitialValue'
+import useSetCursorEnd from './hooks/useSetCursorEnd'
+import InputMarkdownConvert from './InputMarkdownConvert'
+import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
+import { useGetTeamsQuery } from '/src/services/team/getTeams'
+import { useSelector } from 'react-redux'
+import { getModules, quillFormats } from './modules'
 
 const CommentInput = ({
   initValue,
+  initFiles = [],
   onSubmit,
   isOpen,
-  setIsOpen,
+  onClose,
+  onOpen,
   activeUsers,
-  selectedTasksProjects,
-  userName,
+  projectName,
+  entities = [],
   versions = [],
+  projectInfo,
+  isEditing,
+  filter,
 }) => {
+  const currentUser = useSelector((state) => state.user.name)
+
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
+  // file uploads
+  const [files, setFiles] = useState(initFiles)
+  const [filesUploading, setFilesUploading] = useState([])
+  const [isDropping, setIsDropping] = useState(false)
 
   // MENTION STATES
   const [mention, setMention] = useState(null)
+  const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
   // REFS
   const editorRef = useRef(null)
   const markdownRef = useRef(null)
 
-  // Set initial value
-  useEffect(() => {
-    if (markdownRef.current && initValue) {
-      // convert markdown to html
-      const html = markdownRef.current.innerHTML
-      setEditorValue(html)
-      // set html to editor
-      // get height of markdown
-      const height = markdownRef.current.offsetHeight
-      setInitHeight(height)
-    }
-  }, [initValue, markdownRef.current])
+  // if there is an initial value, set it so the editor is prefilled
+  useInitialValue({ markdownRef, initValue, setEditorValue, setInitHeight, isOpen, filter })
 
-  const { data: mentionTasks } = useGetMentionTasksQuery(
-    { projectName: selectedTasksProjects[0], assignee: userName },
+  // When editing, set selection to the end of the editor
+  useSetCursorEnd({ initHeight, editorRef, isEditing })
+
+  // for the task (entity), get all folderIds
+  const folderIds = entities.flatMap((entity) => entity.folderId || [])
+
+  const { data: mentionTasks = [] } = useGetTaskMentionTasksQuery(
+    { projectName, folderIds },
     {
-      skip: selectedTasksProjects?.length !== 1,
+      skip: !projectName || !folderIds.length,
     },
   )
 
-  // CONFIG
-  const placeholder = `Comment or tag with @user, @@version, @@@task...`
+  // only load in teams when mention is started
+  const { data: teams = [] } = useGetTeamsQuery({ projectName }, { skip: !mention || !projectName })
 
-  var turndownService = new TurndownService()
+  // filter out the tasks that are currently selected
+  const siblingTasks = mentionTasks.filter(
+    (task) => !entities.some((entity) => entity.id === task.id),
+  )
+  // CONFIG
+  const placeholder = isOpen
+    ? `Comment or mention with @user, @@version, @@@task...`
+    : 'Add a comment...'
+
+  // update placeholder on editor when isOpen
+  useEffect(() => {
+    const quill = editorRef.current.getEditor()
+    if (quill) {
+      const container = quill.container
+      container?.firstChild?.setAttribute('data-placeholder', placeholder)
+    }
+  }, [isOpen, editorRef])
 
   const mentionTypes = ['@', '@@', '@@@']
   const typeOptions = {
@@ -74,19 +111,28 @@ const CommentInput = ({
   }
   mentionTypes.sort((a, b) => b.length - a.length)
 
+  // sort users by author or in assignees (users array on entity)
+  const sortedUsers = useMemo(
+    () => getUsersContext({ users: activeUsers, entities, teams, currentUser }),
+    [activeUsers, entities, currentUser, teams],
+  )
+
   const mentionOptions = useMemo(
     () =>
       getMentionOptions(
         mention?.type,
         {
-          '@': () => getMentionUsers(activeUsers),
+          '@': () => getMentionUsers(sortedUsers),
           '@@': () => getMentionVersions(versions),
-          '@@@': () => getMentionTasks(mentionTasks),
+          '@@@': () => getMentionTasks(siblingTasks, projectInfo.task_types, projectName),
         },
         mention?.search,
       ),
-    [activeUsers, mention?.type, mention?.search],
+    [sortedUsers, mention?.type, mention?.search],
   )
+
+  // show first 5 and filter itself out
+  const shownMentionOptions = mentionOptions.slice(0, 5)
 
   // triggered when a mention is selected
   const [newSelection, setNewSelection] = useState()
@@ -100,22 +146,77 @@ const CommentInput = ({
     }
   }, [newSelection])
 
+  const findStartAndEndIndexes = (string) => {
+    const start = editorValue.indexOf(string)
+    if (start === -1) return []
+    const end = start + string.length
+    return { start, end }
+  }
+
   const handleSelectMention = (selectedOption, retain) => {
     // get option text
     const quill = editorRef.current.getEditor()
     // insert space instead of tab or enter
     const replace = mention.type + (mention.search || '')
     const mentionText = mention.type + selectedOption.label
-    const newString = `<a href="@${selectedOption.id}">${mentionText}</a>&nbsp;`
-    const newContent = editorValue.replace(replace, newString)
+    const type = typeOptions[mention.type]
+    const href = `${type?.id}:${selectedOption.id}`
 
-    const deltaContent = quill.clipboard.convert(newContent)
+    // find all previous mentions (a tags) in the editor
+    const previousMentions = quill.getContents().ops.filter((op) => op.attributes?.link)
+
+    // find the start and end index of all the found mentions
+    const previousMentionsIndexes = previousMentions.reduce((acc, op) => {
+      const indexes = []
+      if (op.attributes?.link) {
+        indexes.push(findStartAndEndIndexes(op.attributes.link))
+      }
+      if (op.insert) {
+        indexes.push(findStartAndEndIndexes(op.insert))
+      }
+      acc.push(...indexes)
+      return acc
+    }, [])
+
+    // find all indexes of replace in the editor
+    var replaceIndexes = []
+    for (var i = 0; i < editorValue.length; i++) {
+      if (editorValue.substring(i, i + replace.length) === replace) {
+        // check that the i is not between the start and end indexes of a found mentions
+        const isBetween = previousMentionsIndexes.some((index) => i >= index.start && i < index.end)
+        if (!isBetween) {
+          replaceIndexes.push(i)
+        }
+      }
+    }
+
+    if (replaceIndexes.length === 0) {
+      return toast.error('Could not find mention in editor. Please try again.')
+    }
+
+    const replaceStartIndex = replaceIndexes[0]
+    const replaceEndIndex = replaceStartIndex + replace.length
+
+    // remove the original search mention by deleting the text from start to finish
+    const editorValueWithoutMention =
+      editorValue.slice(0, replaceStartIndex) + editorValue.slice(replaceEndIndex)
+
+    const newString = `<a href="@${href}">${mentionText}</a>&nbsp;`
+
+    // now add the new mention in at the same index
+    const editorValueWithNewMention =
+      editorValueWithoutMention.slice(0, replaceStartIndex) +
+      newString +
+      editorValueWithoutMention.slice(replaceStartIndex)
+
+    const deltaContent = quill.clipboard.convert(editorValueWithNewMention)
 
     quill.setContents(deltaContent, 'silent')
 
     const newSelection = retain + (selectedOption.label.length - (mention.search?.length || 0)) + 1
     setNewSelection(newSelection)
     setMention(null)
+    setMentionSelectedIndex(0)
   }
 
   const handleSelectChange = (option) => {
@@ -132,7 +233,7 @@ const CommentInput = ({
 
     const tabOrEnter = currentCharacter === '\n' || currentCharacter === '\t'
     // find the first option
-    const selectedOption = mentionOptions[0]
+    const selectedOption = mentionOptions[mentionSelectedIndex]
 
     if (mention && tabOrEnter && selectedOption) {
       // get option text
@@ -196,18 +297,20 @@ const CommentInput = ({
         })
       } else {
         setMention(null)
+        setMentionSelectedIndex(0)
       }
     } else {
+      // get full string between mention and new delta
       // This is where SEARCH is handled
       if (mention) {
+        const retain = delta.ops[0].retain
         // if space is pressed, remove mention
-        if (currentCharacter === ' ') {
+        if (currentCharacter === ' ' || !retain) {
           setMention(null)
+          setMentionSelectedIndex(0)
           return
         }
 
-        // get full string between mention and new delta
-        const retain = delta.ops[0].retain
         let distanceMentionToRetain = retain - mention.retain
         if (!isDelete) distanceMentionToRetain++
         const mentionFull = editor.getText(mention.retain, distanceMentionToRetain)
@@ -215,6 +318,7 @@ const CommentInput = ({
         //  check for space in mentionFull
         if (mentionFull.includes(' ')) {
           setMention(null)
+          setMentionSelectedIndex(0)
         } else {
           setMention({
             ...mention,
@@ -225,50 +329,43 @@ const CommentInput = ({
     }
   }
 
-  const convertToMarkdown = () => {
-    const editor = editorRef.current.getEditor()
-    const unprivilegedEditor = editorRef.current.makeUnprivilegedEditor(editor)
-    const html = unprivilegedEditor.getHTML()
+  const addTextToEditor = (type) => {
+    // get editor retain
+    const quill = editorRef.current.getEditor()
 
-    // convert to markdown
-    let markdown = turndownService.turndown(html)
+    let retain = quill.getSelection()?.index || 0
 
-    // find any
-    const regex = /\[(.*?)\]\((.*?)\)/g
-    const mentions = []
-    let match
-    while ((match = regex.exec(markdown)) !== null) {
-      let link = match[2]
-      const label = match[1]
-      const type = mentionTypes.find((key) => label.startsWith(key))
-      const typeConfig = typeOptions[type]
-      if (link && link.startsWith('@') && typeConfig && label) {
-        const newId = uuid4()
-        const refId = link.substring(1)
+    // get character at retain
+    const currentCharacter = quill.getText(retain - 1, 1)
 
-        // replace the link with the new id
-        markdown = markdown.replace(new RegExp(link, 'g'), refId)
-
-        mentions.push({
-          label: label.replace(/@/g, ''),
-          refId: refId,
-          refType: typeConfig.id,
-          id: newId,
-        })
-      }
+    // if the current character is a character, increment retain
+    const addSpace = currentCharacter !== ' ' && currentCharacter
+    if (addSpace) {
+      quill.insertText(retain, ' ')
+      retain++
     }
 
-    return { body: markdown, references: mentions }
+    // This is hack AF, but it works
+    typeWithDelay(quill, retain, type)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
       // convert to markdown
-      const markdown = convertToMarkdown()
+      const markdown = convertToMarkdown(editorValue)
+      // remove img query params
+      const markdownParsed = parseImages(markdown)
 
-      if (markdown && onSubmit) {
-        onSubmit(markdown)
-        setEditorValue('')
+      if ((markdownParsed || files.length) && onSubmit) {
+        try {
+          await onSubmit(markdownParsed, files)
+          // only clear if onSubmit is successful
+          setEditorValue('')
+          setFiles([])
+        } catch (error) {
+          // error is handled in rtk query mutation
+          return
+        }
       }
     } catch (error) {
       console.error(error)
@@ -279,94 +376,235 @@ const CommentInput = ({
   const handleOpenClick = () => {
     if (isOpen) return
 
-    setIsOpen(true)
+    onOpen && onOpen()
     editorRef.current.getEditor().enable()
     editorRef.current.focus()
   }
 
+  const handleClose = () => {
+    // always close editor
+    onClose && onClose()
+    // get editor value
+    const editor = editorRef.current.getEditor()
+    const text = editor.getText()
+    if (text.length < 2 || isEditing) {
+      setEditorValue('')
+    }
+  }
+
   const handleKeyDown = (e) => {
+    if (mention) {
+      // close mention on escape
+      if (e.key === 'Escape') {
+        setMention(null)
+        setMentionSelectedIndex(0)
+        return
+      }
+
+      // add top search of mention
+      if (mention && e.key === 'Tab') {
+        // we handle this in the onChange
+      }
+
+      const arrowDirection = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0
+
+      if (arrowDirection) {
+        // navigate through mentions
+        e.preventDefault()
+        let newIndex = mentionSelectedIndex + arrowDirection
+        if (newIndex < 0) newIndex = shownMentionOptions.length - 1
+        if (newIndex >= shownMentionOptions.length) newIndex = 0
+        setMentionSelectedIndex(newIndex)
+      }
+
+      if (e.key === 'Enter') {
+        // we handle this in the onChange
+      }
+    }
+
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSubmit()
     }
 
-    if (mention && e.key === 'Tab') {
-      e.preventDefault()
-    }
-
     if (e.key === 'Escape') {
-      const markdown = editorValue && convertToMarkdown()
-
-      if (markdown) {
-        confirmDialog({
-          message: 'Are you sure you want to discard your changes?',
-          header: 'Confirmation',
-          icon: 'pi pi-exclamation-triangle',
-          accept: () => {
-            setIsOpen(false)
-            setEditorValue('')
-          },
-        })
-      } else {
-        setIsOpen(false)
-      }
+      handleClose()
     }
   }
+
+  const handleFileUpload = ({ file, data }) => {
+    const newFile = {
+      id: data.id,
+      name: file.name,
+      mime: file.type,
+      size: file.size,
+      order: files.length,
+    }
+
+    setFiles((prev) => [...prev, newFile])
+    // remove from uploading
+    setFilesUploading((prev) => prev.filter((uploading) => uploading.name !== file.name))
+  }
+
+  const handleFileRemove = (id, name) => {
+    // remove file from files
+    setFiles((prev) => prev.filter((file) => file.id !== id))
+    // remove from uploading
+    setFilesUploading((prev) => {
+      console.log(prev)
+      return prev.filter((file) => file.name !== name)
+    })
+  }
+
+  const handleFileProgress = (e, file) => {
+    const progress = Math.round((e.loaded * 100) / e.total)
+    if (progress !== 100) {
+      const uploadProgress = {
+        name: file.name,
+        progress,
+        type: file.type,
+        order: files.length + filesUploading.length,
+      }
+
+      setFilesUploading((prev) => {
+        // replace or add new progress
+        const newProgress = prev.filter((name) => name.name !== file.name)
+        return [...newProgress, uploadProgress]
+      })
+    }
+  }
+
+  // when a file is not dropped onto the comment input
+  const handleDrop = (e) => {
+    setIsDropping(false)
+    // upload file
+    handleFileDrop(e, projectName, handleFileProgress, handleFileUpload)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDropping(true)
+  }
+
+  let quillMinHeight = isOpen ? initHeight + 41 : 44
+  if (isEditing) quillMinHeight = undefined
+
+  // QUILL CONFIG
+  const modules = useMemo(
+    () =>
+      getModules({
+        imageUploader: {
+          projectName,
+          onUpload: handleFileUpload,
+          onUploadProgress: handleFileProgress,
+        },
+      }),
+    [projectName, setFiles, setFilesUploading],
+  )
+
+  const allFiles = [...(files || []), ...filesUploading].sort((a, b) => a.order - b.order)
+  const compactGrid = allFiles.length > 6
 
   return (
     <>
       <Styled.AutoHeight
-        style={{
-          translate: isOpen ? '0' : '0 50px',
-          marginTop: isOpen ? '0' : '-50px',
-        }}
+        className={classNames({ isOpen, isEditing })}
+        onDragOver={handleDragOver}
+        onDragLeave={() => setIsDropping(false)}
+        onDrop={handleDrop}
+        onClick={() => setIsDropping(false)}
       >
         <Styled.Comment
-          $isOpen={isOpen}
-          className="block-shortcuts"
+          className={classNames('block-shortcuts', {
+            isOpen,
+            isClosed: !isOpen,
+            isEditing,
+            isDropping,
+          })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
-            <ReactMarkdown>{initValue}</ReactMarkdown>
+            <InputMarkdownConvert typeOptions={typeOptions} initValue={initValue} />
           </Styled.Markdown>
+
+          {/* file uploads */}
+          <FilesGrid
+            files={allFiles}
+            isCompact={compactGrid}
+            onRemove={handleFileRemove}
+            style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
+            projectName={projectName}
+          />
+          {/* QUILL is configured in helpers file */}
           <ReactQuill
-            theme="bubble"
-            style={{ minHeight: isOpen ? initHeight : 44, maxHeight: 300 }}
+            theme="snow"
+            style={{ minHeight: quillMinHeight, maxHeight: 300 }}
             ref={editorRef}
             value={editorValue}
             onChange={handleChange}
             readOnly={!isOpen}
             placeholder={placeholder}
+            modules={modules}
+            formats={quillFormats}
           />
 
           <Styled.Footer>
-            <Styled.Commands>
+            <Styled.Buttons>
               {/* mention a user */}
-              <Button icon="alternate_email" />
+              <Button
+                icon="person"
+                variant="text"
+                onClick={() => addTextToEditor('@')}
+                data-tooltip={'Mention user'}
+                data-shortcut={'@'}
+              />
               {/* mention a version */}
-              <Button icon="layers" />
+              <Button
+                icon="layers"
+                variant="text"
+                onClick={() => addTextToEditor('@@')}
+                data-tooltip={'Mention version'}
+                data-shortcut={'@@'}
+              />
               {/* mention a task */}
-              <Button icon="check_circle" />
-              {/* attache a file */}
-              <Button icon="attach_file_add" />
-            </Styled.Commands>
-            <SaveButton
-              label="Comment"
-              className="comment"
-              active={!!editorValue}
-              onClick={handleSubmit}
-            />
+              <Button
+                icon="check_circle"
+                variant="text"
+                onClick={() => addTextToEditor('@@@')}
+                data-tooltip={'Mention task'}
+                data-shortcut={'@@@'}
+              />
+            </Styled.Buttons>
+            <Styled.Buttons>
+              {isEditing && (
+                <Button variant="text" onClick={handleClose}>
+                  Cancel
+                </Button>
+              )}
+              <SaveButton
+                label={isEditing ? 'Save' : 'Comment'}
+                className="comment"
+                active={!!editorValue || !!files.length}
+                onClick={handleSubmit}
+              />
+            </Styled.Buttons>
           </Styled.Footer>
+
+          <Styled.Dropzone className={classNames({ show: isDropping && isOpen })}>
+            <Icon icon="cloud_upload" />
+          </Styled.Dropzone>
         </Styled.Comment>
         <CommentMentionSelect
           mention={mention}
-          options={mentionOptions}
+          options={shownMentionOptions}
           onChange={handleSelectChange}
           types={mentionTypes}
           config={typeOptions[mention?.type]}
-          noneFound={!mentionOptions.length && mention?.search}
-          noneFoundAtAll={!mentionOptions.length && !mention?.search}
+          noneFound={!shownMentionOptions.length && mention?.search}
+          noneFoundAtAll={!shownMentionOptions.length && !mention?.search}
+          selectedIndex={mentionSelectedIndex}
         />
       </Styled.AutoHeight>
     </>

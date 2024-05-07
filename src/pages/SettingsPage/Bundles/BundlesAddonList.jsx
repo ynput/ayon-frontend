@@ -37,12 +37,18 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
   )
 }
 
-const AddonItem = ({currentVersion, latestVersion }) => {
+const AddonItem = ({ currentVersion, latestVersion }) => {
   const isCurrentLatest = currentVersion === latestVersion
   return (
     <>
       <span>{currentVersion}</span>
-      {!isCurrentLatest && <LatestIcon data-tooltip-delay={0} data-tooltip={"Latest installed version: " + latestVersion} icon="info" />}
+      {!isCurrentLatest && (
+        <LatestIcon
+          data-tooltip-delay={0}
+          data-tooltip={'Latest installed version: ' + latestVersion}
+          icon="info"
+        />
+      )}
     </>
   )
 }
@@ -164,13 +170,16 @@ const BundlesAddonList = React.forwardRef(
           style={{ maxWidth: 200 }}
           bodyStyle={{ padding: 8 }}
           body={(addon) => {
-            const isPipeline =  addon.addonType === 'pipeline'
+            const isPipeline = addon.addonType === 'pipeline'
             const currentVersion = addon.version
             const allVersions = addon.versions
-            const sortedVersions = Object.keys(allVersions).sort((a,b) => rcompare(coerce(a), coerce(b)))
+            const sortedVersions = Object.keys(allVersions).sort((a, b) =>
+              rcompare(coerce(a), coerce(b)),
+            )
             const latestVersion = sortedVersions[0]
 
-            if (readOnly && isPipeline) return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
+            if (readOnly && isPipeline)
+              return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
             // get all selected versions
             return (
               <AddonListItem
