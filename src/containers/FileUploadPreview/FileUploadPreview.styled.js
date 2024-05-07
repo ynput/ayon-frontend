@@ -34,6 +34,16 @@ export const DialogWrapper = styled(Dialog)`
   footer {
     display: none;
   }
+
+  /* remove focus outline */
+  &:focus {
+    outline: none;
+  }
+
+  /* remove focus outline */
+  &:focus-visible {
+    outline: none;
+  }
 `
 
 export const Image = styled.img`
