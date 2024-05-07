@@ -77,8 +77,8 @@ const updateBundles = ayonApi.injectEndpoints({
     }),
 
     updateBundle: build.mutation({
-      query: ({ name, data }) => ({
-        url: `/api/bundles/${name}`,
+      query: ({ name, data, force = true }) => ({
+        url: `/api/bundles/${name}?force=${force}`,
         method: 'PATCH',
         body: data,
       }),
