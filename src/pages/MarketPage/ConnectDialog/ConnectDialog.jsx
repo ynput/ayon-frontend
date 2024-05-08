@@ -1,13 +1,13 @@
-import { Dialog } from 'primereact/dialog'
 import React from 'react'
 import YnputConnector from '/src/components/YnputCloud/YnputConnector'
 import * as Styled from './ConnectDialog.styled'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, Dialog } from '@ynput/ayon-react-components'
 import Type from '/src/theme/typography.module.css'
 
 const ConnectDialog = ({ redirect, ...props }) => {
+  const { visible, onHide } = props
   return (
-    <Dialog header="Connect to Ynput Cloud" {...props}>
+    <Dialog header="Connect to Ynput Cloud" size="lg" style={{ width: 400 }} isOpen={visible} onClose={onHide } {...props}>
       <Styled.Body>
         <Styled.List>
           <Styled.ListItem>

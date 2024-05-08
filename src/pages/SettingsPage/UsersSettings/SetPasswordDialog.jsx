@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import PropTypes from 'prop-types'
-import { Dialog } from 'primereact/dialog'
+import { Dialog, SaveButton } from '@ynput/ayon-react-components'
 
-import { Button, InputPassword, FormLayout, FormRow } from '@ynput/ayon-react-components'
+import { InputPassword, FormLayout, FormRow } from '@ynput/ayon-react-components'
 
 import { useUpdateUserPasswordMutation } from '/src/services/user/updateUser'
 
@@ -40,7 +40,15 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
     }
   }
   return (
-    <Dialog header={`Set password for: ${name}`} visible={true} onHide={onHide}>
+    <Dialog
+      size="sm"
+      header={`Set password for: ${name}`}
+      isOpen={true}
+      onClose={onHide}
+      footer={
+        <SaveButton label="Set Password" onClick={onSubmit} active={password && passwordConfirm} />
+      }
+    >
       <FormLayout>
         <FormRow label="New Password">
           <InputPassword
@@ -58,9 +66,6 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
             id="password"
             pattern={`^${password}$`}
           />
-        </FormRow>
-        <FormRow>
-          <Button label="Set Password" onClick={onSubmit} />
         </FormRow>
       </FormLayout>
     </Dialog>

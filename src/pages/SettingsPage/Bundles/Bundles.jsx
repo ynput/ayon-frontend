@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 
-import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, Section, Dialog } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import {
@@ -15,7 +15,6 @@ import { useGetInstallerListQuery } from '/src/services/installers'
 import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
-import { Dialog } from 'primereact/dialog'
 import AddonUpload from '../AddonInstall/AddonUpload'
 import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
@@ -354,11 +353,11 @@ const Bundles = () => {
         deps={[selectedBundles, newBundleOpen, prodBundle, stageBundle]}
       />
       <Dialog
-        visible={uploadOpen}
+        isOpen={uploadOpen}
         style={{ width: 400, height: 400, overflow: 'hidden' }}
         header={uploadHeader}
-        onHide={handleAddonInstallFinish}
-        appendTo={document.getElementById('root')}
+        onClose={handleAddonInstallFinish}
+        size="md"
       >
         {uploadOpen && (
           <AddonUpload

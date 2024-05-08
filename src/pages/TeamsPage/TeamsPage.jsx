@@ -9,6 +9,7 @@ import {
   SaveButton,
   Section,
   Spacer,
+  Dialog
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
@@ -21,7 +22,6 @@ import CreateNewTeam from './CreateNewTeam'
 import styled from 'styled-components'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
-import { Dialog } from 'primereact/dialog'
 import confirmDelete from '/src/helpers/confirmDelete'
 
 const SectionStyled = styled(Section)`
@@ -418,10 +418,11 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   return (
     <>
       <Dialog
-        visible={duplicateTeamNameVisible}
-        onHide={onCancelDuplicate}
+        isOpen={duplicateTeamNameVisible}
+        onClose={onCancelDuplicate}
         header={<span>Duplicate Team - {selectedTeams[0]}</span>}
         style={{ minWidth: 300 }}
+        size="sm"
       >
         <form onSubmit={(e) => onDuplicate(e, duplicateTeamName)}>
           <InputText

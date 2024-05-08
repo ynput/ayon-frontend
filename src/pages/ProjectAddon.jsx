@@ -1,7 +1,6 @@
 import { useRef, useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Section, Button } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { Section, Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 import Hierarchy from '/src/containers/hierarchy'
@@ -44,7 +43,7 @@ const TaskPicker = ({ callback, multiple }) => {
   }, [errorMessage, focusedTasks])
 
   return (
-    <Dialog header="Select task" footer={footer} visible={true} onHide={() => callback(null)}>
+    <Dialog header="Select task" size="lg" footer={footer} isOpen={true} onClose={() => callback(null)}>
       <div style={{ display: 'flex', flexDirection: 'row', minHeight: 500, gap: 12 }}>
         <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
         <TaskList style={{ flex: 0.75, minWidth: 250, maxWidth: 500 }} />

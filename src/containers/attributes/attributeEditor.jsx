@@ -9,10 +9,10 @@ import {
   InputSwitch,
   LockedInput,
   Dropdown,
+  Dialog,
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'
-import { Dialog } from 'primereact/dialog'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -136,13 +136,17 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     }
   }
 
+
+
   return (
     <Dialog
-      header={formData?.data?.title || formData?.name}
+      header={formData?.data?.title || formData?.name || 'New attribute'}
       footer={footer}
-      onHide={onHide}
-      visible={true}
-      style={{ minWidth: 400 }}
+      onClose={onHide}
+      isOpen={true}
+      style={{ width: 700, zIndex: 999 }}
+      size="full"
+      variant='dialog'
     >
       {formData && (
         <FormLayout>
