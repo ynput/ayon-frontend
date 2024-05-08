@@ -87,9 +87,11 @@ const Feed = ({
   // save scroll position of a feed
   useSaveScrollPos({ entities, feedRef, filter })
 
+  // we don't use transformedActivitiesData here because we could get new data from the query
+  // but all the activities are merged so transformedActivitiesData doesn't change
   const { cursor, hasPreviousPage } = useMemo(
     () => getNextPage({ activities: activitiesToShow }),
-    [activitiesToShow],
+    [activitiesData],
   )
 
   // comment mutations here!
@@ -154,6 +156,7 @@ const Feed = ({
     if (!hasPreviousPage) return console.log('No more activities to load')
     if (!cursor) return console.log('No cursor found')
     console.log('fetching more activities...')
+
     // get more activities
     setCurrentCursors({ ...currentCursors, [filter]: cursor })
   }
