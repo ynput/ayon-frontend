@@ -88,43 +88,42 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
     !createSeq.base || !createSeq.increment || !createSeq.length || !createSeq.type
 
   return (
-      <Dialog
-        header={title}
-        isOpen={visible}
-        onClose={onHide}
-        onShow={handleShow}
-        size="lg"
-        variant="dialog"
-        style={{ zIndex: 999 }}
-        footer={
-          <Toolbar onFocus={false}>
-            <Spacer />
-            <Button
-              label="Add"
-              disabled={addDisabled}
-              onClick={() => handleSeqSubmit(false)}
-              data-shortcut="Shift+Enter"
-            />
-            <SaveButton
-              label={'Add and Close'}
-              onClick={() => handleSeqSubmit(true)}
-              active={!addDisabled}
-              data-shortcut="Ctrl/Cmd+Enter"
-            />
-          </Toolbar>
-        }
-      >
-        <FolderSequence
-          {...createSeq}
-          nesting={false}
-          onChange={handleSeqChange}
-          isRoot={isRoot}
-          prefixExample={createSeq.prefix ? examplePrefix : ''}
-          prefixDisabled={multipleSelection}
-          typeSelectRef={typeSelectRef}
-          onLastInputKeydown={(e) => handleKeyDown(e, true)}
-        />
-      </Dialog>
+    <Dialog
+      header={title}
+      isOpen={visible}
+      onClose={onHide}
+      onShow={handleShow}
+      size="lg"
+      style={{ zIndex: 999 }}
+      footer={
+        <Toolbar onFocus={false}>
+          <Spacer />
+          <Button
+            label="Add"
+            disabled={addDisabled}
+            onClick={() => handleSeqSubmit(false)}
+            data-shortcut="Shift+Enter"
+          />
+          <SaveButton
+            label={'Add and Close'}
+            onClick={() => handleSeqSubmit(true)}
+            active={!addDisabled}
+            data-shortcut="Ctrl/Cmd+Enter"
+          />
+        </Toolbar>
+      }
+    >
+      <FolderSequence
+        {...createSeq}
+        nesting={false}
+        onChange={handleSeqChange}
+        isRoot={isRoot}
+        prefixExample={createSeq.prefix ? examplePrefix : ''}
+        prefixDisabled={multipleSelection}
+        typeSelectRef={typeSelectRef}
+        onLastInputKeydown={(e) => handleKeyDown(e, true)}
+      />
+    </Dialog>
   )
 }
 
