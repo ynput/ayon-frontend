@@ -7,18 +7,16 @@ const apiSuffix = (projectName, siteId, variant, asVersion) => {
   if (projectName && projectName !== '_') {
     suffix += `/${projectName}`
     if (siteId && siteId !== '_') {
-      params.append('site', siteId);
+      params.append('site', siteId)
     }
   }
 
-  if (variant)
-    params.append('variant', variant);
+  if (variant) params.append('variant', variant)
 
-  if (asVersion)
-    params.append('as', asVersion);
+  if (asVersion) params.append('as', asVersion)
 
-  const qs = params.toString();
-  return qs ? `${suffix}?${qs}` : suffix 
+  const qs = params.toString()
+  return qs ? `${suffix}?${qs}` : suffix
 }
 
 const addonSettings = ayonApi.injectEndpoints({

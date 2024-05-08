@@ -9,6 +9,7 @@ import {
 } from '/src/features/dashboard'
 import MeOrUserSwitch from '/src/components/MeOrUserSwitch/MeOrUserSwitch'
 import * as Styled from './DashboardTasksToolbar.styled'
+import sortByOptions from './KanBanSortByOptions'
 
 const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView }) => {
   const dispatch = useDispatch()
@@ -22,13 +23,6 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
 
   const setAssignees = (payload) => dispatch(onAssigneesChanged(payload))
 
-  // SORT BY
-  const sortByOptions = [
-    { id: 'folderName', label: 'Folder', sortOrder: true },
-    { id: 'name', label: 'Task', sortOrder: true },
-    { id: 'status', label: 'Status', sortOrder: true },
-    { id: 'endDate', label: 'Due Date', sortOrder: true },
-  ]
   const sortByValue = useSelector((state) => state.dashboard.tasks.sortBy)
   const setSortByValue = (value) => dispatch(onTasksSortByChanged(value))
 

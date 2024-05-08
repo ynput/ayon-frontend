@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useGetBundleListQuery } from '/src/services/bundles'
+import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import { useGetInstallerListQuery } from '/src/services/installers'
 import { coerce, rcompare } from 'semver'
 import useLocalStorage from '/src/hooks/useLocalStorage'
@@ -132,9 +132,7 @@ const useGetInstallerDownload = () => {
     const serverSource = sources.find((source) => source.type === 'server')
     const urlSource = sources.find((source) => source.type === 'http')
     if (serverSource || urlSource) {
-      const url = serverSource
-        ? `/api/desktop/installers/${filename}`
-        : urlSource.url
+      const url = serverSource ? `/api/desktop/installers/${filename}` : urlSource.url
       // download the file
       downloadFromUrl(url, filename)
     } else {

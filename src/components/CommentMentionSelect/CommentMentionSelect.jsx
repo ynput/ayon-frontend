@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
 import * as Styled from './CommentMentionSelect.styled'
-import { UserImage } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
+import UserImage from '/src/components/UserImage'
+import { classNames } from 'primereact/utils'
 
 const CommentMentionSelect = ({
   mention,
   options = [],
+  selectedIndex,
   onChange,
   types = [],
   config = {},
@@ -13,25 +15,37 @@ const CommentMentionSelect = ({
 }) => {
   if (!mention || noneFound) return null
 
-  const [hasHovered, setHasHovered] = useState(false)
-
-  //  show only 5 options
-  const shownOptions = options.filter((_, i) => i < 5)
+  // check if any of the options have the same label
+  const labels = options.map((option) => option.label)
+  const hasSameLabel = new Set(labels).size < labels.length
+  let formattedOptions = [...options]
+  if (hasSameLabel) {
+    // add context value as a suffix to the label
+    formattedOptions = options.map((option) => {
+      return {
+        ...option,
+        label: option.label + (option.context ? ` (${option.context})` : ''),
+      }
+    })
+  }
 
   return (
-    <Styled.MentionSelect
-      tabIndex={0}
-      onMouseEnter={() => setHasHovered(true)}
-      $hasHovered={hasHovered}
-    >
+    <Styled.MentionSelect tabIndex={0}>
       {types.includes(mention.type) &&
-        shownOptions.map((option) => (
+        formattedOptions.map((option, i) => (
           <Styled.MentionItem
-            key={option.id}
+            key={option.id + '-' + i}
+            id={option.id}
             onClick={() => onChange(option)}
             $isCircle={config?.isCircle}
+            className={classNames({ selected: selectedIndex === i })}
           >
-            <UserImage size={20} src={option.image} name={option.label} className="image" />
+            {option.type === 'user' ? (
+              <UserImage size={20} name={option.id} className="image" />
+            ) : (
+              <Icon icon={option.icon} size={20} className="image" />
+            )}
+
             <Styled.MentionName>{option.label}</Styled.MentionName>
           </Styled.MentionItem>
         ))}

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
 import { getFakeTasks, usePrefetchTask, useTaskClick } from '../../util'
-import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '/src/helpers/getPreviousTagElement'
 import Shortcuts from '/src/containers/Shortcuts'
@@ -18,6 +18,7 @@ const UserDashboardList = ({
   statusesOptions,
   disabledStatuses,
   disabledProjectUsers,
+  projectsInfo,
 }) => {
   const containerRef = useRef(null)
 
@@ -100,7 +101,7 @@ const UserDashboardList = ({
 
   // PREFETCH TASK WHEN HOVERING
   // we keep track of the ids that have been pre-fetched to avoid fetching them again
-  const handlePrefetch = usePrefetchTask(dispatch)
+  const handlePrefetch = usePrefetchTask(dispatch, projectsInfo)
 
   // HANDLE TASK CLICK
   const taskClick = useTaskClick(dispatch)
@@ -243,7 +244,7 @@ const UserDashboardList = ({
     id && handleCollapseToggle(id)
   }
 
-  const [updateTasks] = useUpdateTasksMutation()
+  const [updateEntities] = useUpdateEntitiesMutation()
   const handleUpdate = async (field, value) => {
     try {
       // build tasks operations array
@@ -255,7 +256,7 @@ const UserDashboardList = ({
         },
       }))
 
-      await updateTasks({ operations: tasksOperations })
+      await updateEntities({ operations: tasksOperations, entityType: 'task' })
     } catch (error) {
       toast.error('Error updating task(s)')
     }

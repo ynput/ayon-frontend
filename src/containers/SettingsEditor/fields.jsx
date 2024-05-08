@@ -538,7 +538,6 @@ const ArrayFieldTemplate = (props) => {
   // not wraped in react fragment. I suspected it was the key, but it was not.
   // I have no idea why this works, but it does. Do not touch!
 
-
   return (
     <FormArrayField>
       {props.items.map((element, idx) => (

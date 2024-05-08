@@ -3,35 +3,68 @@ import { toast } from 'react-toastify'
 
 const updateUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    updateTask: build.mutation({
-      query: ({ projectName, taskId, data }) => ({
-        url: `/api/projects/${projectName}/tasks/${taskId}`,
+    updateEntity: build.mutation({
+      query: ({ projectName, taskId, data, entityType }) => ({
+        url: `/api/projects/${projectName}/${entityType}s/${taskId}`,
         method: 'PATCH',
         body: data,
       }),
-      async onQueryStarted({ projectName, taskId, data, assignees }, { dispatch, queryFulfilled }) {
-        const patchResult = dispatch(
-          ayonApi.util.updateQueryData('getProjectTasks', { projectName, assignees }, (draft) => {
-            const taskIndex = draft.findIndex((task) => task.id === taskId)
-            if (taskIndex === -1) return
-            const newData = { ...draft[taskIndex], ...data }
-            draft[taskIndex] = newData
-          }),
+      async onQueryStarted(
+        { projectName, taskId, data, assignees, entityType },
+        { dispatch, queryFulfilled },
+      ) {
+        let patchResult
+
+        // if task, patch the getProjectTasks query
+        if (entityType === 'task') {
+          patchResult = dispatch(
+            ayonApi.util.updateQueryData('getProjectTasks', { projectName, assignees }, (draft) => {
+              const taskIndex = draft.findIndex((task) => task.id === taskId)
+              if (taskIndex === -1) return
+              const newData = { ...draft[taskIndex], ...data }
+              draft[taskIndex] = newData
+            }),
+          )
+        }
+
+        const entities = [{ projectName, id: taskId }]
+        // patch any entity details panels in dashboard
+        let entityDetailsResult = dispatch(
+          ayonApi.util.updateQueryData(
+            'getDashboardEntitiesDetails',
+            { entities, entityType },
+            (draft) => {
+              // convert assignees to users
+              const patchData = { ...data }
+              if (patchData.assignees) {
+                patchData.users = patchData.assignees
+                delete patchData.assignees
+              }
+              const entityIndex = draft.findIndex((entity) => entity.id === taskId)
+              console.log(entityIndex)
+              if (entityIndex === -1) return
+              const newData = { ...draft[entityIndex], ...patchData }
+              draft[entityIndex] = newData
+            },
+          ),
         )
 
         try {
           await queryFulfilled
         } catch (error) {
-          console.error('error updating task', error)
+          console.error('error updating ' + entityType, error)
           toast.error(error?.error?.data?.detail || 'Failed to update task')
-          patchResult.undo()
+          patchResult?.undo()
+          entityDetailsResult?.undo()
         }
       },
-      // this triggers a refetch of getKanBan
-      invalidatesTags: (result, error, { taskId }) => [{ type: 'task', id: taskId }],
+      // this triggers a refetch of anything with the entity id tag
+      invalidatesTags: (result, error, { taskId, entityType }) => [
+        { type: entityType, id: taskId },
+      ],
     }),
-    updateTasks: build.mutation({
-      async queryFn({ operations = [] }, { dispatch, getState }) {
+    updateEntities: build.mutation({
+      async queryFn({ operations = [], entityType }, { dispatch, getState }) {
         let assignees = [...getState().dashboard.tasks.assignees]
         const assigneesIsMe = getState().dashboard.tasks.assigneesIsMe
 
@@ -44,11 +77,12 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           const promises = []
           for (const { projectName, data, id } of operations) {
             const promise = dispatch(
-              ayonApi.endpoints.updateTask.initiate({
+              ayonApi.endpoints.updateEntity.initiate({
                 projectName: projectName,
                 taskId: id,
                 data,
                 assignees,
+                entityType,
               }),
             )
             promises.push(promise)
@@ -56,9 +90,13 @@ const updateUserDashboard = ayonApi.injectEndpoints({
 
           // invalidate task to force refetch of getKanBan query
           // but because we just updated the tasks cache it should be instant
-          dispatch(
-            ayonApi.util.invalidateTags(operations.map((o) => ({ type: 'kanBanTask', id: o.id }))),
-          )
+          if (entityType === 'task') {
+            dispatch(
+              ayonApi.util.invalidateTags(
+                operations.map((o) => ({ type: 'kanBanTask', id: o.id })),
+              ),
+            )
+          }
 
           // check if any of the requests failed and invalidate the tasks cache again to refetch
           const results = await Promise.allSettled(promises)
@@ -68,6 +106,27 @@ const updateUserDashboard = ayonApi.injectEndpoints({
                 operations.map((o) => ({ type: 'kanBanTask', id: o.id })),
               ),
             )
+          }
+
+          const activityTags = []
+
+          // these are the fields that if changed will trigger a new activity
+          const fieldsWithNewActivity = ['status', 'assignees']
+
+          // invalidate the activity query of the entity activities
+          operations.forEach((operation) => {
+            // check if any of the fields in the operation data are in the fieldsWithNewActivity array
+            const hasAtLeastOneField = fieldsWithNewActivity.some(
+              (field) => field in (operation.data || {}),
+            )
+            if (hasAtLeastOneField) {
+              const getActivitiesTags = [{ type: 'entityActivities', id: operation.id }]
+              activityTags.push(...getActivitiesTags)
+            }
+          })
+
+          if (activityTags.length) {
+            dispatch(ayonApi.util.invalidateTags(activityTags))
           }
 
           return { data: operations }
@@ -80,4 +139,4 @@ const updateUserDashboard = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useUpdateTaskMutation, useUpdateTasksMutation } = updateUserDashboard
+export const { useUpdateEntitiesMutation } = updateUserDashboard

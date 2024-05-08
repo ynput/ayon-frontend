@@ -109,7 +109,7 @@ const StatusSelect = ({
             align={align}
             height={height}
             statuses={statusesObject}
-            showChevron={resolveChevronVisibility(isChevron,isActive)}
+            showChevron={resolveChevronVisibility(isChevron, isActive)}
           />
         )
       }

@@ -5,9 +5,17 @@ import {
   useDeleteSecretMutation,
 } from '/src/services/secrets'
 import styled from 'styled-components'
-import { InputText, Button, ScrollPanel, Section, SaveButton } from '@ynput/ayon-react-components'
+import {
+  InputText,
+  InputPassword,
+  Button,
+  ScrollPanel,
+  Section,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import confirmDelete from '/src/helpers/confirmDelete'
+import copyToClipboard from '/src/helpers/copyToClipboard'
 
 const SecretList = styled.div`
   display: flex;
@@ -82,11 +90,13 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
         pattern="^\S+$"
       />
 
-      <InputText
+      <InputPassword
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Secret value"
       />
+
+      {stored && <Button icon="content_copy" onClick={() => copyToClipboard(value)} />}
 
       <SaveButton
         active={stored || (name.length > 0 && value.length > 0)}

@@ -1,75 +1,86 @@
-import { AssigneeSelect, Button, Section, Spacer } from '@ynput/ayon-react-components'
+import { AssigneeSelect, TagsSelect } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
-import { useDispatch } from 'react-redux'
 import * as Styled from './UserDashDetailsHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
-
-import { union } from 'lodash'
-import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { classNames } from 'primereact/utils'
+import { isEqual, union } from 'lodash'
+import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
-import { onAttributesOpenChanged } from '/src/features/dashboard'
+import UserDashDetailsFilters from '../UserDashDetailsFilters/UserDashDetailsFilters'
 
 const UserDashDetailsHeader = ({
-  tasks = [],
-  disabledProjectUsers,
+  entityType,
+  entities = [],
+  disabledAssignees = [],
   users = [],
-  attributesOpen,
-  statusesOptions,
+  statusesOptions = [],
   disabledStatuses,
+  tagsOptions = [],
+  onClose,
+  isSlideOut,
 }) => {
-  const dispatch = useDispatch()
-  const setAttributesOpen = (value) => dispatch(onAttributesOpenChanged(value))
+  // for selected entities, get flat list of assignees
+  const selectedTasksAssignees = useMemo(
+    () => union(...entities.map((entity) => entity.users)),
+    [entities],
+  )
 
-  // for selected tasks, get flat list of assignees
-  const selectedTasksAssignees = useMemo(() => union(...tasks.map((t) => t.assignees)), [tasks])
-
-  const singleTask = tasks[0]
-  const projectName = tasks.length > 1 ? null : singleTask.projectName
+  const singleEntity = entities[0]
+  const projectName = entities.length > 1 ? null : singleEntity?.projectName
 
   const thumbnails = useMemo(
     () =>
-      tasks
-        .filter((t, i) => i <= 5)
-        .map((t) => ({
-          src: t.thumbnailUrl,
-          icon: t.taskIcon,
-          id: t.id,
-          type: 'task',
+      entities
+        .filter((entity, i) => i <= 5)
+        .map((entity) => ({
+          src: entity.thumbnailUrl,
+          icon: entity.icon,
+          id: entity.id,
+          type: entityType,
         })),
-    [tasks],
+    [entities],
   )
 
-  // we need to get the intersection of all the statuses of the projects for the selected tasks
-  // this means that if we have 2 tasks from 2 different projects, we need to get the intersection of the statuses of those 2 projects
-  //  and it prevents us from showing statuses that are not available for the selected tasks
-  const statusesValue = useMemo(() => tasks.map((t) => t.status), [tasks])
+  // we need to get the intersection of all the statuses of the projects for the selected entities
+  // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
+  //  and it prevents us from showing statuses that are not available for the selected entities
+  const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
+  const tagsValues = useMemo(() => entities.map((t) => t.tags), [entities])
+  const tagsOptionsObject = useMemo(
+    () =>
+      tagsOptions.reduce((acc, tag) => {
+        acc[tag.name] = tag
+        return acc
+      }, {}),
+    [tagsOptions],
+  )
 
-  const isMultiple = tasks.length > 1
+  const isMultiple = entities.length > 1
 
-  const [updateTasks] = useUpdateTasksMutation()
+  const [updateEntities] = useUpdateEntitiesMutation()
   const handleUpdate = async (field, value) => {
     if (value === null || value === undefined) return console.error('value is null or undefined')
 
     try {
-      // build tasks operations array
-      const tasksOperations = tasks.map((task) => ({
-        id: task.id,
-        projectName: task.projectName,
+      // build entities operations array
+      const operations = entities.map((entity) => ({
+        id: entity.id,
+        projectName: entity.projectName,
         data: {
           [field]: value,
         },
       }))
 
-      await updateTasks({ operations: tasksOperations })
+      await updateEntities({ operations, entityType })
     } catch (error) {
-      toast.error('Error updating task(s)')
+      toast.error('Error updating' + entityType)
     }
   }
 
-  if (!singleTask) return null
-  const fullPath = singleTask.path + '/' + singleTask.name
+  if (!singleEntity) return null
+  const fullPath = singleEntity.path || ''
   const pathArray = fullPath.split('/')
   const handleCopyPath = () => {
     copyToClipboard(fullPath)
@@ -103,32 +114,47 @@ const UserDashDetailsHeader = ({
     .filter((action) => {
       const actions = actionTaskTypes[action.pinned]
       if (!actions) return false
-      return actions.some((action) => action.toLowerCase() === singleTask.taskType.toLowerCase())
+      return actions.some(
+        (action) => action.toLowerCase() === singleEntity.entitySubType?.toLowerCase(),
+      )
     })
     .map((action) => action.id)
 
   const portalId = 'dashboard-details-header'
 
+  const hasUser =
+    ['task', 'version'].includes(entityType) &&
+    (selectedTasksAssignees.length > 0 || entityType === 'task')
+
+  const usersOptions = users.map((u) => u)
+  if (hasUser) {
+    // check if all users are in options, otherwise add them
+    const allUsers = users.map((u) => u.name)
+    const usersToAdd = selectedTasksAssignees.filter((u) => !allUsers.includes(u))
+    if (usersToAdd.length) {
+      usersOptions.push(...usersToAdd.map((u) => ({ name: u, fullName: u })))
+    }
+  }
+
   return (
-    <Section
-      style={{
-        padding: 8,
-        alignItems: 'flex-start',
-        gap: 8,
-        borderBottom: '1px solid var(--md-sys-color-outline-variant)',
-        flex: 'none',
-        overflow: 'hidden',
-      }}
-      id={portalId}
-    >
+    <Styled.SectionWrapper id={portalId}>
       <Styled.Path
         value={pathArray.join(' / ')}
         align="left"
         onClick={handleCopyPath}
         isCopy
         icon="content_copy"
-        style={{ zIndex: 100 }}
+        className={classNames({ onClose })}
       />
+      {onClose && (
+        <Styled.CloseButton
+          onClick={onClose}
+          icon="close"
+          variant="text"
+          data-shortcut="Esc"
+          data-tooltip-delay={0}
+        />
+      )}
       <Styled.Header>
         <StackedThumbnails
           thumbnails={thumbnails}
@@ -137,23 +163,11 @@ const UserDashDetailsHeader = ({
           onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
         />
         <Styled.Content>
-          <h2>
-            {!isMultiple
-              ? singleTask.folderLabel || singleTask.folderName
-              : `${tasks.length} tasks selected`}
-          </h2>
-          <h3>
-            {!isMultiple
-              ? singleTask.label || singleTask.name
-              : tasks.map((t) => t.name).join(', ')}
-          </h3>
+          <h2>{!isMultiple ? singleEntity.title : `${entities.length} ${entityType}s selected`}</h2>
+          <h3>{!isMultiple ? singleEntity.subTitle : entities.map((t) => t.name).join(', ')}</h3>
         </Styled.Content>
       </Styled.Header>
-      <Styled.StatusAssigned>
-        <Styled.ContentRow>
-          <label>Status</label>
-          <label>Assigned</label>
-        </Styled.ContentRow>
+      <Styled.Section>
         <Styled.ContentRow>
           <Styled.TaskStatusSelect
             value={statusesValue}
@@ -163,28 +177,34 @@ const UserDashDetailsHeader = ({
             style={{ maxWidth: 'unset' }}
             onChange={(value) => handleUpdate('status', value)}
           />
-          <AssigneeSelect
-            value={isMultiple ? selectedTasksAssignees : singleTask.assignees}
-            options={users}
-            disabledValues={disabledProjectUsers.map((u) => u.name)}
-            isMultiple={isMultiple && selectedTasksAssignees.length > 1}
-            editor
+          {hasUser && (
+            <AssigneeSelect
+              value={selectedTasksAssignees}
+              options={usersOptions}
+              disabledValues={disabledAssignees.map((u) => u.name)}
+              isMultiple={isMultiple && selectedTasksAssignees.length > 1}
+              editor={entityType === 'task'}
+              align="right"
+              onChange={(value) => handleUpdate('assignees', value)}
+            />
+          )}
+        </Styled.ContentRow>
+      </Styled.Section>
+      <Styled.Section>
+        <Styled.ContentRow>
+          <Actions options={actions} pinned={pinned} />
+          <TagsSelect
+            value={union(...tagsValues)}
+            isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
+            tags={tagsOptionsObject}
+            editable
+            onChange={(value) => handleUpdate('tags', value)}
             align="right"
-            onChange={(value) => handleUpdate('assignees', value)}
           />
         </Styled.ContentRow>
-      </Styled.StatusAssigned>
-      <Styled.Footer>
-        <Actions options={actions} pinned={pinned} />
-        <Spacer />
-        <Button
-          icon={attributesOpen ? 'forum' : 'segment'}
-          onClick={() => setAttributesOpen(!attributesOpen)}
-          label={attributesOpen ? 'Activity' : 'Details'}
-          iconProps={{ style: { transform: !attributesOpen ? 'scaleX(-1)' : '' } }}
-        />
-      </Styled.Footer>
-    </Section>
+      </Styled.Section>
+      <UserDashDetailsFilters isSlideOut={isSlideOut} />
+    </Styled.SectionWrapper>
   )
 }
 
@@ -203,7 +223,6 @@ export default UserDashDetailsHeader
 //   "folderId": "739a748e3da311eeac5d0242ac120004",
 //   "path": "assets/characters/00_kloecksiouys_mccrietsoiwn",
 //   "projectName": "demo_Commercial",
-//   "latestVersionId": "73c080f23da311eeac5d0242ac120004",
 //   "latestVersionThumbnailId": "08b9986c474811eea5d60242ac120004",
 //   "thumbnailUrl": "/api/projects/demo_Commercial/thumbnails/08b9986c474811eea5d60242ac120004?updatedAt=2023-08-30T15:14:45.427705+00:00&token=0848587a83cd065914bf9e6c0792bdd246910cbd2ea520115f802d6adbc9e396",
 //   "statusIcon": "play_arrow",

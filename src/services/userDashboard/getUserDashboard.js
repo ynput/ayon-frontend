@@ -1,14 +1,14 @@
 import { isEqual } from 'lodash'
 import { ayonApi } from '../ayon'
-import { taskProvideTags, transformTasksData } from './userDashboardHelpers'
+import { taskProvideTags, transformEntityData, transformTasksData } from './userDashboardHelpers'
 import {
   KAN_BAN_ASSIGNEES_QUERY,
-  KAN_BAN_TASK_MENTIONS_QUERY,
+  TASK_MENTION_TASKS,
   KAN_BAN_TASK_QUERY,
   PROJECT_TASKS_QUERY,
+  buildDetailsQuery,
 } from './userDashboardQueries'
 import PubSub from '/src/pubsub'
-import { buildEntitiesQuery } from '../entity/getEntity'
 
 const getUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -18,7 +18,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: PROJECT_TASKS_QUERY,
+          query: PROJECT_TASKS_QUERY(['endDate']),
           variables: { assignees, projectName },
         },
       }),
@@ -56,7 +56,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
             // then get the task data from the entity id
             const response = await dispatch(
               ayonApi.endpoints.getKanBanTask.initiate(
-                { projectName, taskId: entityId },
+                { projectName, entityId },
                 { forceRefetch: true },
               ),
             )
@@ -187,12 +187,12 @@ const getUserDashboard = ayonApi.injectEndpoints({
       },
     }),
     getKanBanTask: build.query({
-      query: ({ taskId, projectName }) => ({
+      query: ({ entityId, projectName }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: KAN_BAN_TASK_QUERY,
-          variables: { taskId, projectName },
+          query: KAN_BAN_TASK_QUERY(['endDate']),
+          variables: { entityId, projectName },
         },
       }),
       transformResponse: (response) =>
@@ -267,67 +267,92 @@ const getUserDashboard = ayonApi.injectEndpoints({
         }
       },
     }),
-    getTaskDetails: build.query({
-      query: ({ projectName, ids }) => ({
+    getDashboardEntityDetails: build.query({
+      query: ({ projectName, entityId, entityType }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: buildEntitiesQuery('task'),
-          variables: { projectName, ids },
+          query: buildDetailsQuery(entityType),
+          variables: { projectName, entityId },
         },
       }),
-      transformResponse: (res) => res?.data?.project?.tasks?.edges?.map((e) => e?.node || {}),
+      transformResponse: (response, meta, { entityType, projectName, projectInfo }) =>
+        transformEntityData({
+          projectName: projectName,
+          entity: response?.data?.project && response?.data?.project[entityType],
+          entityType,
+          projectInfo,
+        }),
+      serializeQueryArgs: ({ queryArgs: { projectName, entityId, entityType } }) => ({
+        projectName,
+        entityId,
+        entityType,
+      }),
+      providesTags: (res, error, { entityId, entityType }) =>
+        res
+          ? [
+              { type: entityType, id: entityId },
+              { type: entityType, id: 'LIST' },
+            ]
+          : [{ type: entityType, id: 'LIST' }],
     }),
-    getTasksDetails: build.query({
-      async queryFn({ tasks = [] }, { dispatch }) {
+    getDashboardEntitiesDetails: build.query({
+      async queryFn({ entities = [], entityType, projectInfo }, { dispatch }) {
         try {
-          const tasksDetails = []
-          for (const task of tasks) {
-            // find tasks that are not in this project
-            const taskIds = [task.id]
-            const projectName = task.projectName
-            if (taskIds.length === 0) continue
-
+          const entitiesDetails = []
+          for (const entity of entities) {
             const response = await dispatch(
-              ayonApi.endpoints.getTaskDetails.initiate(
-                { projectName, ids: taskIds },
+              ayonApi.endpoints.getDashboardEntityDetails.initiate(
+                {
+                  projectName: entity.projectName,
+                  entityId: entity.id,
+                  entityType,
+                  projectInfo,
+                },
                 { forceRefetch: false },
               ),
             )
 
             if (response.status === 'rejected') {
-              console.error('No tasks found', taskIds)
-              return { error: new Error('No tasks found', taskIds) }
+              console.error('No entity found')
+              continue
             }
 
-            response.data.forEach((taskData) => {
-              tasksDetails.push({ ...task, ...taskData })
-            })
+            entitiesDetails.push(response.data)
           }
 
-          return { data: tasksDetails }
+          return { data: entitiesDetails }
         } catch (error) {
           console.error(error)
           return error
         }
       },
+      serializeQueryArgs: ({ queryArgs: { entities, entityType } }) => ({
+        entities,
+        entityType,
+      }),
     }),
-    getMentionTasks: build.query({
-      query: ({ projectName, assignee }) => ({
+    getTaskMentionTasks: build.query({
+      query: ({ projectName, folderIds = [] }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: KAN_BAN_TASK_MENTIONS_QUERY,
-          variables: { projectName, assignees: [assignee] },
+          query: TASK_MENTION_TASKS,
+          variables: { projectName, folderIds },
         },
       }),
       transformResponse: (response) =>
-        transformTasksData({
-          projectName: response?.data?.project?.projectName,
-          tasks: response?.data?.project?.tasks?.edges?.map((edge) => edge.node),
-        }),
+        response?.data?.project?.folders?.edges?.flatMap(
+          (ef) =>
+            ef?.node?.tasks?.edges.map((et) => ({
+              ...et?.node,
+              label: et?.node?.label || et?.node?.name,
+              folderId: ef?.node?.id,
+              folderLabel: ef?.node?.label || ef?.node?.name,
+            })) || [],
+        ),
       providesTags: (res) =>
-        res.map(({ id }) => ({ type: 'kanBanTask', id }, { type: 'task', id })),
+        res && res.map(({ id }) => ({ type: 'kanBanTask', id }, { type: 'task', id })),
     }),
   }),
 })
@@ -338,7 +363,7 @@ export const {
   useGetKanBanQuery,
   useGetProjectsInfoQuery,
   useGetKanBanUsersQuery,
-  useGetTasksDetailsQuery,
-  useLazyGetTasksDetailsQuery,
-  useGetMentionTasksQuery,
+  useGetDashboardEntitiesDetailsQuery,
+  useLazyGetDashboardEntitiesDetailsQuery,
+  useGetTaskMentionTasksQuery,
 } = getUserDashboard

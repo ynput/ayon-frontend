@@ -18,7 +18,7 @@ import sortByKey from '/src/helpers/sortByKey'
 
 import { editorSelectionChanged, setUri, setExpandedFolders } from '/src/features/context'
 
-import { getColumns, formatType, formatAttribute, formatAssignees } from './utils'
+import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '/src/services/getHierarchy'
@@ -605,7 +605,7 @@ const EditorPage = () => {
   // Commit changes
   //
 
-  const commitNewNodes = (commitChanges, updates, parentPatches) => {
+  const commitNewNodes = (commitChanges, updates) => {
     // Create a map to store the newNodes parentIds.
     const newNodesParentIdsMap = new Map()
     for (const id in newNodes) {
@@ -676,16 +676,6 @@ const EditorPage = () => {
         patch,
         depth: entity.depth,
       })
-
-      if (!parent?.data?.hasChildren && entity.__parentId !== 'root' && parent) {
-        const parentPatch = {
-          data: { ...parent.data, hasTasks: entityType === 'task', hasChildren: true },
-          leaf: false,
-        }
-
-        // push to array to be added all together later
-        parentPatches.push(parentPatch)
-      }
     } // CREATE NEW ENTITIES
   }
 
@@ -1492,12 +1482,16 @@ const EditorPage = () => {
     }
   }
 
-  const filterOptions = [{ name: 'name' }, { name: 'type' }, { name: 'assignees' }, ...columns].map(
-    ({ name }) => ({
-      value: name,
-      label: name,
-    }),
-  )
+  const filterOptions = [
+    { name: 'name' },
+    { name: 'type' },
+    { name: 'status' },
+    { name: 'assignees' },
+    ...columns,
+  ].map(({ name }) => ({
+    value: name,
+    label: name,
+  }))
   const allColumnsNames = filterOptions.map(({ value }) => value)
 
   const [shownColumns, setShownColumns] = useLocalStorage(
@@ -1647,6 +1641,13 @@ const EditorPage = () => {
         style={{ width: columnsWidths['type'] || 140 }}
       />,
       <Column
+        field="status"
+        key="status"
+        header="Status"
+        body={(rowData) => formatStatus(rowData.data, changes, columnsWidths['status'] || 140)}
+        style={{ width: columnsWidths['status'] || 140 }}
+      />,
+      <Column
         field="assignees"
         key="assignees"
         header="Assignees"
@@ -1663,7 +1664,7 @@ const EditorPage = () => {
         />
       )),
     ],
-    [rootData],
+    [rootData, columnsWidths],
   )
 
   // sort columns if localstorage set
