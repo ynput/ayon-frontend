@@ -85,7 +85,7 @@ const Feed = ({
   useScrollOnInputOpen({ feedRef, isCommentInputOpen, height: 93 })
 
   // save scroll position of a feed
-  useSaveScrollPos({ entities, feedRef })
+  useSaveScrollPos({ entities, feedRef, filter })
 
   const { cursor, hasPreviousPage } = useMemo(
     () => getNextPage({ activities: activitiesToShow }),
