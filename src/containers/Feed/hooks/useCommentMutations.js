@@ -7,8 +7,9 @@ import {
 } from '/src/services/activities/updateActivities'
 import { useSelector } from 'react-redux'
 
-const useCommentMutations = ({ projectName, entityType, entityIds, activityTypes, filter }) => {
+const useCommentMutations = ({ projectName, entityType, entities = [], activityTypes, filter }) => {
   const { name, fullName } = useSelector((state) => state.user)
+  const entityIds = entities.map((entity) => entity.id)
 
   // used to create and update activities (comments)
   const [createEntityActivity] = useCreateEntityActivityMutation()
@@ -16,8 +17,8 @@ const useCommentMutations = ({ projectName, entityType, entityIds, activityTypes
   const [deleteActivity] = useDeleteActivityMutation()
 
   const submitComment = async (value, files) => {
-    // map over all the entityIds and create a new comment for each
-    const promises = entityIds.map((entityId) => {
+    // map over all the entities and create a new comment for each
+    const promises = entities.map(({ id: entityId, subTitle }) => {
       const newId = uuid1().replace(/-/g, '')
       const fileIds = files.map((file) => file.id)
 
@@ -43,6 +44,7 @@ const useCommentMutations = ({ projectName, entityType, entityIds, activityTypes
         origin: {
           id: '8090c2dafcc811eeaf820242c0a80002',
           type: entityType,
+          name: subTitle,
         },
       }
 

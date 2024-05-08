@@ -96,7 +96,7 @@ const Feed = ({
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
     projectName,
     entityType: entityType,
-    entityIds,
+    entities,
     activityTypes,
     filter,
   })
@@ -208,6 +208,7 @@ const Feed = ({
                 isSlideOut={isSlideOut}
                 createdAts={entities.map((e) => e.createdAt)}
                 onFileExpand={handleFileExpand}
+                showOrigin={entities.length > 1}
                 editProps={{
                   activeUsers,
                   projectName,
