@@ -11,7 +11,7 @@ const useSaveScrollPos = ({ entities = [], feedRef, filter }) => {
     const cacheKey = getCacheKey(entities, filter)
     if (!feedRef.current) return
     // get saved scroll position or scroll to the bottom
-    feedRef.current.scrollTop = scrollPositions.current[cacheKey] || feedRef.current.scrollHeight
+    feedRef.current.scrollTop = scrollPositions.current[cacheKey] || 0
   }, [entities, filter, feedRef.current])
 
   useEffect(() => {
