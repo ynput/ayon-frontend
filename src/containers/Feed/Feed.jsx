@@ -90,12 +90,10 @@ const Feed = ({
     [activitiesToShow],
   )
 
-  const entityId = entities[0]?.id
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
     projectName,
     entityType: entityType,
-    entityId,
     entityIds,
     activityTypes,
     filter,
