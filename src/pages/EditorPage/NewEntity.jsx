@@ -192,17 +192,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   const addDisabled = !entityData.label || !entityData.type
 
-  const handleBackdropClick = (event) => {
-    if (event.target !== event.currentTarget) return
-    onHide()
-  };
-
-  // navbars are pushing off vertical alignment of AddTask Dialog by 92px
-  const verticalCorrection = '-92px'
-
   return (
-    <>
-    <ModalBackdrop isOpen={visible} onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       header={title}
       isOpen={visible}
@@ -210,7 +200,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       onShow={handleShow}
       size='sm'
       variant='dialog'
-      style={{zIndex: 999, top: verticalCorrection, bottom: 0, margin: 'auto',  }}
+      style={{zIndex: 999, }}
       footer={
         <Toolbar onFocus={() => setNameFocused(false)}>
           <Spacer />
@@ -252,7 +242,6 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
         />
       </ContentStyled>
     </Dialog>
-    </>
   )
 }
 

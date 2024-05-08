@@ -88,18 +88,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   const addDisabled =
     !createSeq.base || !createSeq.increment || !createSeq.length || !createSeq.type
 
-  const handleBackdropClick = (event) => {
-    if (event.target !== event.currentTarget) return
-    onHide()
-  }
-
-   // navbars are pushing off vertical alignment of Dialog by 92px
-   const verticalCorrection = '-92px'
-
-
   return (
-    <>
-      <ModalBackdrop isOpen={visible} onClick={(e) => handleBackdropClick(e)} />
       <Dialog
         header={title}
         isOpen={visible}
@@ -107,7 +96,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         onShow={handleShow}
         size="lg"
         variant="dialog"
-        style={{ zIndex: 999, top: verticalCorrection, bottom: 0, margin: 'auto'}}
+        style={{ zIndex: 999 }}
         footer={
           <Toolbar onFocus={false}>
             <Spacer />
@@ -125,7 +114,6 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
             />
           </Toolbar>
         }
-        onKeyDown={handleKeyDown}
       >
         <FolderSequence
           {...createSeq}
@@ -138,7 +126,6 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
           onLastInputKeydown={(e) => handleKeyDown(e, true)}
         />
       </Dialog>
-    </>
   )
 }
 

@@ -167,8 +167,6 @@ const NewProjectDialog = ({ onHide }) => {
 
 
   return (
-    <>
-    <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       header="Create a new project"
       footer={footer}
@@ -176,7 +174,7 @@ const NewProjectDialog = ({ onHide }) => {
       onClose={onHide}
       size="lg"
       variant='dialog'
-      style={{ width: 600, height: '80%',  position: 'fixed', zIndex: 999, top: 0, bottom: 0  }}
+      style={{ height: '80%', width: '100%',  position: 'fixed', zIndex: 999 }}
       onKeyDown={handleKeyDown}
     >
       <div
@@ -218,7 +216,6 @@ const NewProjectDialog = ({ onHide }) => {
         )}
       </div>
     </Dialog>
-    </>
   )
 }
 

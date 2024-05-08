@@ -137,28 +137,17 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     }
   }
 
-  const handleBackdropClick = (event) => {
-    if (event.target !== event.currentTarget) return
-    onHide()
-  };
 
-  const handleKeyDown = (e) => {
-    e?.stopPropagation()
-    if ( e.key === 'Escape') onHide()
-  }
 
   return (
-    <>
-    <ModalBackdrop isOpen onClick={(e) => handleBackdropClick(e)} />
     <Dialog
       header={formData?.data?.title || formData?.name || 'New attribute'}
       footer={footer}
       onClose={onHide}
       isOpen={true}
-      style={{ width: 700, position: 'fixed', zIndex: 999, top: 0, bottom: 0  }}
+      style={{ width: 700, zIndex: 999 }}
       size="full"
       variant='dialog'
-      onKeyDown={handleKeyDown}
     >
       {formData && (
         <FormLayout>
@@ -228,8 +217,6 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
         </FormLayout>
       )}
     </Dialog>
-    </>
-    
   )
 }
 
