@@ -9,6 +9,7 @@ const ActivityVersions = ({ activity, projectInfo, projectName, entityType, onRe
     authorFullName,
     createdAt,
     updatedAt,
+    entityId,
     activityData = {},
     origin = {},
   } = activity
