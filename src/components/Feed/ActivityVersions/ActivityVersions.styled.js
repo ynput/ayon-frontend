@@ -51,6 +51,10 @@ export const Thumbnail = styled(ThumbnailSimple)`
   aspect-ratio: 1.7778;
   margin: unset;
 
+  .icon {
+    font-size: 24px;
+  }
+
   img {
     object-fit: cover;
   }

@@ -14,7 +14,7 @@ import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '/src/features/context'
 import UserDashboardSlideOut from './UserDashboardSlideOut/UserDashboardSlideOut'
 
-export const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName, type) => {
+export const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName) => {
   if (!projectName || (!thumbnailId && !taskId)) return null
 
   // fallback on arbitrary thumbnailId if taskId is not available

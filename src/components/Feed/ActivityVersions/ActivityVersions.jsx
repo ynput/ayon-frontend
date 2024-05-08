@@ -15,7 +15,7 @@ const ActivityVersions = ({ activity, projectInfo, projectName, entityType, onRe
   } = activity
 
   // v00x
-  const { name: versionName } = origin
+  const { name: versionName, id: versionId } = origin
   // get product name and type
   const { context = {} } = activityData
   const { productName, productType } = context
@@ -37,7 +37,9 @@ const ActivityVersions = ({ activity, projectInfo, projectName, entityType, onRe
         onReferenceClick={onReferenceClick}
       />
       <Styled.Card
-        onClick={() => onReferenceClick({ entityType: 'version', entityId, projectName })}
+        onClick={() =>
+          onReferenceClick({ entityType: 'version', entityId: versionId, projectName })
+        }
       >
         <Styled.Content>
           <Styled.Title>{productName}</Styled.Title>
