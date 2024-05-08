@@ -1,6 +1,27 @@
 import styled from 'styled-components'
 import StatusSelect from '/src/components/status/statusSelect'
-import { OverflowField } from '@ynput/ayon-react-components'
+import { Button, OverflowField, Section as SectionARC } from '@ynput/ayon-react-components'
+
+export const Container = styled.div`
+  position: relative;
+`
+
+export const SectionWrapper = styled(SectionARC)`
+  padding: 8px;
+  align-items: flex-start;
+  gap: 8px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex: none;
+  overflow: hidden;
+`
+
+export const CloseButton = styled(Button)`
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: fit-content;
+  z-index: 50;
+`
 
 export const Header = styled.header`
   display: flex;
@@ -14,6 +35,16 @@ export const Header = styled.header`
 `
 
 export const Path = styled(OverflowField)`
+  position: relative;
+
+  &:hover {
+    z-index: 100;
+  }
+
+  &.onClose {
+    padding-right: 40px;
+  }
+
   & > span {
     -webkit-transform: translate3d(0, 0, 0);
   }
@@ -41,7 +72,7 @@ export const Content = styled.div`
   }
 `
 
-export const StatusAssigned = styled.div`
+export const Section = styled.div`
   display: flex;
   flex-direction: column;
 `

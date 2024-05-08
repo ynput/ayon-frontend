@@ -4,11 +4,11 @@ import BundleDetail from './BundleDetail'
 
 import { Button, InputSwitch, Section, Dialog } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
+import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import {
   useDeleteBundleMutation,
-  useGetBundleListQuery,
   useUpdateBundleMutation,
-} from '/src/services/bundles'
+} from '/src/services/bundles/updateBundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 import { useGetInstallerListQuery } from '/src/services/installers'

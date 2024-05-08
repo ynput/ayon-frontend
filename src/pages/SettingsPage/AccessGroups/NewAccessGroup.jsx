@@ -40,7 +40,6 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     if (isEsc) onClose()
   }
 
-
   const footer = useMemo(
     () => (
       <div>

@@ -12,7 +12,7 @@ import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
-import { useGetBundleListQuery } from '/src/services/bundles'
+import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import { cloneDeep } from 'lodash'
 
 const CopySettingsDialog = ({
