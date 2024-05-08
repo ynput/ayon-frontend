@@ -108,8 +108,8 @@ const useTransformActivities = (activities = [], projectInfo = {}) => {
         const oldStatusName = newActivity.activityData?.oldValue
         const newStatusName = newActivity.activityData?.newValue
 
-        const oldStatus = projectInfo.statuses.find((status) => status.name === oldStatusName)
-        const newStatus = projectInfo.statuses.find((status) => status.name === newStatusName)
+        const oldStatus = projectInfo.statuses?.find((status) => status.name === oldStatusName)
+        const newStatus = projectInfo.statuses?.find((status) => status.name === newStatusName)
 
         newActivity.oldStatus = { ...oldStatus, name: oldStatusName }
         newActivity.newStatus = { ...newStatus, name: newStatusName }

@@ -12,6 +12,7 @@ import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
 import { onCommentImageOpen } from '/src/features/context'
+import { Icon } from '@ynput/ayon-react-components'
 
 const Feed = ({
   entities = [],
@@ -20,6 +21,7 @@ const Feed = ({
   projectName,
   entityType,
   isSlideOut,
+  isMultiProjects,
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
@@ -175,8 +177,20 @@ const Feed = ({
 
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
+  let warningMessage
+
+  // only viewing activities from one project
+  if (isMultiProjects)
+    warningMessage = `You are only viewing activities from one project: ${projectName}.`
+
   return (
     <Styled.FeedContainer>
+      {warningMessage && (
+        <Styled.Warning>
+          <Icon icon="info" />
+          {warningMessage}
+        </Styled.Warning>
+      )}
       <Styled.FeedContent ref={feedRef}>
         {isFetchingActivities && !currentData
           ? loadingPlaceholders
@@ -221,6 +235,7 @@ const Feed = ({
           entities={entities}
           projectInfo={projectInfo}
           filter={filter}
+          disabled={isMultiProjects}
         />
       )}
     </Styled.FeedContainer>

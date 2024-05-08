@@ -166,9 +166,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const detailsMaxWidth = '40vw'
   const detailsMaxMaxWidth = 700
 
-  const projectName = selectedTasksProjects[0]
-  const projectInfo = projectsInfo[projectName]
-
   if (isError)
     return (
       <Section style={{ textAlign: 'center' }}>
@@ -220,7 +217,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           }}
         >
           <UserDashboardDetails
-            entities={selectedTasksData}
+            entitiesData={selectedTasksData}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             tagsOptions={tagsOptions}
@@ -228,8 +225,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             activeProjectUsers={activeProjectUsers}
             disabledProjectUsers={disabledProjectUsers}
             selectedTasksProjects={selectedTasksProjects}
-            projectInfo={projectInfo}
-            projectName={projectName}
+            projectsInfo={projectsInfo}
+            projectNames={selectedTasksProjects}
             entityType="task"
             style={{ zIndex: 400 }}
           />

@@ -177,7 +177,7 @@ export const Comment = styled.div`
     .ql-editor > * {
       cursor: pointer !important;
     }
-    &:hover {
+    &:hover:not(.disabled) {
       background-color: var(--md-sys-color-surface-container-high);
     }
 
@@ -200,6 +200,14 @@ export const Comment = styled.div`
       pointer-events: none;
       overflow: hidden;
     }
+  }
+
+  &.disabled {
+    cursor: default;
+    pointer-events: none;
+    user-select: none;
+    border-color: var(--md-sys-color-surface-container-lowest);
+    background-color: var(--md-sys-color-surface-container-lowest);
   }
 
   /* toolbar styles */
