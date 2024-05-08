@@ -54,11 +54,12 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     ),
     [error, accessGroupName, onSubmit],
   )
+
   return (
     <Dialog
       header="New access group"
       footer={footer}
-      onClose={onClose}
+      onClose={() => onClose()}
       isOpen
       onKeyDown={handleKeyDown}
       size="md"
