@@ -10,9 +10,9 @@ import { transformEntityData } from '/src/services/userDashboard/userDashboardHe
 const UserDashboardDetails = ({
   entityType,
   // entities is data we already have from kanban
-  entities = [],
+  entitiesData = [],
   // entityIds are used to get the full details data for the entities
-  entityIds = [],
+  entities = [],
   statusesOptions = [],
   tagsOptions = [],
   disabledStatuses,
@@ -20,8 +20,8 @@ const UserDashboardDetails = ({
   disabledProjectUsers,
   activeProjectUsers,
   selectedTasksProjects,
-  projectInfo,
-  projectName,
+  projectsInfo = {},
+  projectNames = [],
   onClose,
   isSlideOut,
   style = {},
@@ -30,9 +30,9 @@ const UserDashboardDetails = ({
   const attributesOpen = useSelector((state) => state.dashboard[path].attributesOpen)
   // now we get the full details data for selected entities
 
-  const entitiesToQuery = entityIds.length
-    ? entityIds.map((id) => ({ id, projectName }))
-    : entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+  const entitiesToQuery = entities.length
+    ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+    : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
   const {
     data: detailsData = {},
@@ -40,19 +40,28 @@ const UserDashboardDetails = ({
     isSuccess,
     isError,
   } = useGetDashboardEntitiesDetailsQuery(
-    { entityType, entities: entitiesToQuery, projectInfo },
-    { skip: !entities.length && !entityIds.length },
+    { entityType, entities: entitiesToQuery, projectsInfo },
+    { skip: !entitiesData.length && !entities.length },
   )
 
   let entityDetailsData = []
   // merge current entities data with fresh details data
   if (!isSuccess || isError) {
-    if (entityIds.length) entityDetailsData = entityIds.map((id) => ({ id }))
+    if (entities.length) entityDetailsData = entities.map(({ id }) => ({ id }))
     else
       entityDetailsData = entities.map((entity) =>
-        transformEntityData({ entity, entityType, projectName, projectInfo }),
+        transformEntityData({
+          entity,
+          entityType,
+          projectName: entity.projectName,
+          projectInfo: projectsInfo[entity.projectName],
+        }),
       )
   } else entityDetailsData = detailsData
+
+  // get the first project name and info to be used in the feed.
+  const firstProject = projectNames[0]
+  const firstProjectInfo = projectsInfo[firstProject] || {}
 
   return (
     <>
@@ -89,8 +98,9 @@ const UserDashboardDetails = ({
             entities={entityDetailsData}
             activeUsers={activeProjectUsers}
             selectedTasksProjects={selectedTasksProjects}
-            projectInfo={projectInfo}
-            projectName={projectName}
+            projectInfo={firstProjectInfo}
+            projectName={firstProject}
+            isMultiProjects={projectNames.length > 1}
             isSlideOut={isSlideOut}
           />
         )}

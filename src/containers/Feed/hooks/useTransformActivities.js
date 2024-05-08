@@ -63,6 +63,8 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
         currentActivity[oldKey] = activity[oldKey]
         // also update newValue
         currentActivity.activityData.oldValue = activity.activityData.oldValue
+        currentActivity.hasPreviousPage = activity.hasPreviousPage
+        currentActivity.cursor = activity.cursor
       } else {
         // If the author is different, end the current sequence and start a new one
         if (currentActivity.activityData.oldValue !== currentActivity.activityData.newValue) {
@@ -108,8 +110,8 @@ const useTransformActivities = (activities = [], projectInfo = {}) => {
         const oldStatusName = newActivity.activityData?.oldValue
         const newStatusName = newActivity.activityData?.newValue
 
-        const oldStatus = projectInfo.statuses.find((status) => status.name === oldStatusName)
-        const newStatus = projectInfo.statuses.find((status) => status.name === newStatusName)
+        const oldStatus = projectInfo.statuses?.find((status) => status.name === oldStatusName)
+        const newStatus = projectInfo.statuses?.find((status) => status.name === newStatusName)
 
         newActivity.oldStatus = { ...oldStatus, name: oldStatusName }
         newActivity.newStatus = { ...newStatus, name: newStatusName }

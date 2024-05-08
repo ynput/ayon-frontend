@@ -20,9 +20,11 @@ export const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName, typ
   // fallback on arbitrary thumbnailId if taskId is not available
   // this should never happen, but just in case
   // only admins and managers can see the second endpoint though
-  return thumbnailId
-    ? `/api/projects/${projectName}/${type}/${taskId}/thumbnail?updatedAt=${updatedAt}`
-    : `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
+  const thumbnailUrl = thumbnailId
+    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
+    : `/api/projects/${projectName}/tasks/${taskId}/thumbnail?updatedAt=${updatedAt}`
+
+  return thumbnailUrl
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
@@ -166,9 +168,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const detailsMaxWidth = '40vw'
   const detailsMaxMaxWidth = 700
 
-  const projectName = selectedTasksProjects[0]
-  const projectInfo = projectsInfo[projectName]
-
   if (isError)
     return (
       <Section style={{ textAlign: 'center' }}>
@@ -220,7 +219,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           }}
         >
           <UserDashboardDetails
-            entities={selectedTasksData}
+            entitiesData={selectedTasksData}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             tagsOptions={tagsOptions}
@@ -228,8 +227,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             activeProjectUsers={activeProjectUsers}
             disabledProjectUsers={disabledProjectUsers}
             selectedTasksProjects={selectedTasksProjects}
-            projectInfo={projectInfo}
-            projectName={projectName}
+            projectsInfo={projectsInfo}
+            projectNames={selectedTasksProjects}
             entityType="task"
             style={{ zIndex: 400 }}
           />

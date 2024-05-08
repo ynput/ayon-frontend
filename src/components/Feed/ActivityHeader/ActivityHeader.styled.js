@@ -9,7 +9,8 @@ export const Header = styled.header`
   padding: 0 4px;
 
   h5 {
-    margin: 0 4px;
+    margin: 0;
+    margin-left: 4px;
     font-weight: 800;
   }
 `

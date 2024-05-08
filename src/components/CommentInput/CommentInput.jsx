@@ -42,6 +42,7 @@ const CommentInput = ({
   projectInfo,
   isEditing,
   filter,
+  disabled,
 }) => {
   const currentUser = useSelector((state) => state.user.name)
 
@@ -83,9 +84,11 @@ const CommentInput = ({
     (task) => !entities.some((entity) => entity.id === task.id),
   )
   // CONFIG
-  const placeholder = isOpen
+  let placeholder = isOpen
     ? `Comment or mention with @user, @@version, @@@task...`
     : 'Add a comment...'
+
+  if (disabled) placeholder = 'Commenting is disabled across multiple projects.'
 
   // update placeholder on editor when isOpen
   useEffect(() => {
@@ -94,7 +97,7 @@ const CommentInput = ({
       const container = quill.container
       container?.firstChild?.setAttribute('data-placeholder', placeholder)
     }
-  }, [isOpen, editorRef])
+  }, [isOpen, editorRef, disabled])
 
   const mentionTypes = ['@', '@@', '@@@']
   const typeOptions = {
@@ -374,7 +377,7 @@ const CommentInput = ({
   }
 
   const handleOpenClick = () => {
-    if (isOpen) return
+    if (isOpen || disabled) return
 
     onOpen && onOpen()
     editorRef.current.getEditor().enable()
@@ -517,9 +520,10 @@ const CommentInput = ({
         <Styled.Comment
           className={classNames('block-shortcuts', {
             isOpen,
-            isClosed: !isOpen,
+            isClosed: !isOpen || disabled,
             isEditing,
             isDropping,
+            disabled,
           })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
@@ -544,7 +548,7 @@ const CommentInput = ({
             ref={editorRef}
             value={editorValue}
             onChange={handleChange}
-            readOnly={!isOpen}
+            readOnly={!isOpen || disabled}
             placeholder={placeholder}
             modules={modules}
             formats={quillFormats}

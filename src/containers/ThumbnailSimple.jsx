@@ -10,7 +10,8 @@ const ThumbnailStyled = styled.div`
   border-radius: 3px;
   margin: auto;
   max-width: 250px;
-  background-color: hsl(220 20% 8%);
+  background-color: var(--md-sys-color-surface-container-lowest);
+
   /* icon */
   span {
     position: absolute;
@@ -34,7 +35,6 @@ const ImageStyled = styled.img`
   display: block;
   position: absolute;
   inset: 0;
-  background-color: var(--md-sys-color-surface-container-lowest);
 `
 
 const ThumbnailSimple = ({

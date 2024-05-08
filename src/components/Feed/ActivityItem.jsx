@@ -11,6 +11,7 @@ import ActivityVersions from './ActivityVersions/ActivityVersions'
 const FeedEnd = styled.div`
   padding: 0 10px;
   color: var(--md-sys-color-outline);
+  font-size: 12px;
 `
 
 const ActivityItem = ({
