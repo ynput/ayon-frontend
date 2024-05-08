@@ -8,7 +8,6 @@ import { ScrollPanel, Button, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-
 import BundleDropdown from '/src/containers/BundleDropdown'
 import ProjectDropdown from '/src/containers/ProjectDropdown'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
-import { ModalBackdrop } from '/src/pages/EditorPage/utils.styled.js'
 
 import CopySettingsNode from './CopySettingsNode'
 

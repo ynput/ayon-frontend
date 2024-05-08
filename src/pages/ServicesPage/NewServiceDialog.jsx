@@ -16,7 +16,6 @@ import {
   Toolbar,
 } from '@ynput/ayon-react-components'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
-import { ModalBackdrop } from '/src/pages/EditorPage/utils.styled.js'
 
 const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [addonData, setAddonData] = useState([])

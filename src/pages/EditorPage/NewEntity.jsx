@@ -9,7 +9,6 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import checkName from '/src/helpers/checkName'
-import { ModalBackdrop } from './utils.styled'
 
 const ContentStyled = styled.div`
   display: flex;

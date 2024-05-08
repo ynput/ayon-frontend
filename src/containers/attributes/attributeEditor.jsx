@@ -13,7 +13,6 @@ import {
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'
-import  { ModalBackdrop } from '/src/pages/EditorPage/utils.styled'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },

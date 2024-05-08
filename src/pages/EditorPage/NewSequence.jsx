@@ -5,7 +5,6 @@ import { Toolbar, Spacer, SaveButton, Button, Dialog } from '@ynput/ayon-react-c
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
 import { isEmpty } from 'lodash'
-import { ModalBackdrop } from './utils.styled'
 
 const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   const isRoot = isEmpty(currentSelection)

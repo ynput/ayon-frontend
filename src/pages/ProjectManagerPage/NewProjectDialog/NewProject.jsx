@@ -9,7 +9,6 @@ import {
   useGetAnatomyPresetQuery,
   useGetAnatomySchemaQuery,
 } from '../../../services/anatomy/getAnatomy'
-import  { ModalBackdrop } from '/src/pages/EditorPage/utils.styled'
 import { useCreateProjectMutation } from '/src/services/project/updateProject'
 
 // allow only alphanumeric and underscorer,
