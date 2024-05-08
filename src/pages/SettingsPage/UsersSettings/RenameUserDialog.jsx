@@ -32,13 +32,17 @@ const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
   }
 
   return (
-    <Dialog size="md" style={{ maxWidth: 400 }} header={`Set username for: ${name}`} isOpen={true} onClose={onHide}>
+    <Dialog
+      size="md"
+      style={{ maxWidth: 400 }}
+      header={`Set username for: ${name}`}
+      footer={<Button label="Rename" onClick={onSubmit} />}
+      isOpen={true}
+      onClose={onHide}
+    >
       <FormLayout>
         <FormRow label="New name">
           <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />
-        </FormRow>
-        <FormRow>
-          <Button label="Rename" onClick={onSubmit} />
         </FormRow>
       </FormLayout>
     </Dialog>
