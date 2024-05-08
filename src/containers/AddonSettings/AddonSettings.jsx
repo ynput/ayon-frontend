@@ -30,7 +30,7 @@ import {
   useModifyAddonOverrideMutation,
 } from '/src/services/addonSettings'
 
-import { usePromoteBundleMutation } from '/src/services/bundles'
+import { usePromoteBundleMutation } from '/src/services/bundles/updateBundles'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'

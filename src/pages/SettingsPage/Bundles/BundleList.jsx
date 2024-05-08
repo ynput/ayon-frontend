@@ -4,7 +4,7 @@ import { Column } from 'primereact/column'
 import { Badge, BadgeWrapper } from '/src/components/Badge'
 import { TablePanel } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
-import { useUpdateBundleMutation } from '/src/services/bundles'
+import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
 import { useMemo } from 'react'
 
 const BundleList = ({

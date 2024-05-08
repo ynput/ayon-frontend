@@ -7,7 +7,7 @@ import BundleDeps from './BundleDeps'
 import { upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
-import { useUpdateBundleMutation } from '/src/services/bundles'
+import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
 
 const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus, addons }) => {
   const [selectedBundle, setSelectedBundle] = useState(null)
@@ -49,8 +49,13 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
   }, [bundles, selectedBundle])
 
   const handleAddonAutoSave = async (addon, version) => {
-    await updateBundle({ name: bundle.name, data: { addons: { [addon]: version } } }).unwrap()
-    toast.success(`Bundle addon updated ${addon}: ${version}`)
+    try {
+      await updateBundle({ name: bundle.name, data: { addons: { [addon]: version } } }).unwrap()
+      toast.success(`Bundle addon updated ${addon}: ${version}`)
+    } catch (error) {
+      console.error(error)
+      toast.error(error.data?.detail || 'Failed to update bundle addon')
+    }
   }
 
   return (

@@ -1,15 +1,7 @@
-import { ayonApi } from './ayon'
+import { ayonApi } from '../ayon'
 
-const getBundles = ayonApi.injectEndpoints({
+const updateBundles = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    getBundleList: build.query({
-      query: ({ archived }) => ({
-        url: `/api/bundles?archived=${archived || false}`,
-      }),
-      transformResponse: (res) => res.bundles,
-      providesTags: () => [{ type: 'bundleList' }],
-    }),
-
     deleteBundle: build.mutation({
       query: ({ name }) => ({
         url: `/api/bundles/${name}`,
@@ -40,8 +32,8 @@ const getBundles = ayonApi.injectEndpoints({
     }),
 
     promoteBundle: build.mutation({
-      query: ({ name }) => ({
-        url: `/api/bundles/${name}`,
+      query: ({ name, force = true }) => ({
+        url: `/api/bundles/${name}?force=${force}`,
         method: 'POST',
         body: { action: 'promote' },
       }),
@@ -57,8 +49,8 @@ const getBundles = ayonApi.injectEndpoints({
     }),
 
     createBundle: build.mutation({
-      query: ({ data }) => ({
-        url: `/api/bundles`,
+      query: ({ data, force = false }) => ({
+        url: `/api/bundles?force=${force}`,
         method: 'POST',
         body: data,
       }),
@@ -85,8 +77,8 @@ const getBundles = ayonApi.injectEndpoints({
     }),
 
     updateBundle: build.mutation({
-      query: ({ name, data }) => ({
-        url: `/api/bundles/${name}`,
+      query: ({ name, data, force = true }) => ({
+        url: `/api/bundles/${name}?force=${force}`,
         method: 'PATCH',
         body: data,
       }),
@@ -119,10 +111,8 @@ const getBundles = ayonApi.injectEndpoints({
 })
 
 export const {
-  useGetBundleListQuery,
-  useLazyGetBundleListQuery,
   useDeleteBundleMutation,
   useCreateBundleMutation,
   useUpdateBundleMutation,
   usePromoteBundleMutation,
-} = getBundles
+} = updateBundles

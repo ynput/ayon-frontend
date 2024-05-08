@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useGetBundleListQuery } from '/src/services/bundles'
+import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import { useGetInstallerListQuery } from '/src/services/installers'
 import { coerce, rcompare } from 'semver'
 import useLocalStorage from '/src/hooks/useLocalStorage'
