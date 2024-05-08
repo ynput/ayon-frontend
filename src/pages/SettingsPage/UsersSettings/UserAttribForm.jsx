@@ -7,6 +7,7 @@ import {
   Divider,
   Dropdown,
   InputSwitch,
+  Button,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -67,17 +68,28 @@ const UserAttribForm = ({
       } else if (name === 'avatarUrl') {
         widget = (
          <span style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: 8}}>
-           <FileUpload style={{flex: 1}} value={formData[name] || ''} 
-            disabled={disabled}
-            onChange={(e) => {
-              const value = e.target.value
-              setFormData((fd) => {
-                return { ...fd, [name]: value }
-              })
-            }}
-            autoComplete="cc-csc"
-            {...input}/>
+            <FileUpload
+              style={{flex: 1}} value={formData[name] || ''} 
+              disabled={disabled}
+              onChange={e => setFormData({ ...formData, [name]: e.target.value })}
+              autoComplete="cc-csc"
+              placeholder="Drop avatar image"
+              {...input}
+            />
          </span>
+      //    <span style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: 8}}>
+      //    <InputText style={{flex: 1}} value={formData[name] || ''} 
+      //     disabled={disabled}
+      //     onChange={(e) => {
+      //       const value = e.target.value
+      //       setFormData((fd) => {
+      //         return { ...fd, [name]: value }
+      //       })
+      //     }}
+      //     autoComplete="cc-csc"
+      //     {...input}/>
+      //    <Button icon="upload">Upload</Button>
+      //  </span>
         )
       } else if (data.enum) {
         widget = (
@@ -112,7 +124,6 @@ const UserAttribForm = ({
           />
         )
       } else {
-        console.log(formData,'formData')
         widget = (
           <InputText
             value={formData[name] || ''}
