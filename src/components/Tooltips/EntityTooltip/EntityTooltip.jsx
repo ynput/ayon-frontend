@@ -21,7 +21,7 @@ const EntityTooltip = ({ type, id, pos: { left, top } = {}, projectName, project
 
   const taskIcon = task_types.find((type) => type.name === taskType)?.icon
   const status = statuses.find((status) => status.name === data.status)
-  const thumbnailUrl = getThumbnailUrl(id, thumbnailId, updatedAt, projectName)
+  const thumbnailUrl = getThumbnailUrl(id, thumbnailId, updatedAt, projectName, type)
   const productTypeData = productTypes[productType]
   const productIcon = productTypeData?.icon || 'layers'
 

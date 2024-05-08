@@ -47,6 +47,9 @@ const ThumbnailSimple = ({
   className,
   disabled,
   src,
+  onLoad,
+  onError,
+  iconOnly,
   ...props
 }) => {
   const url = projectName && `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
@@ -56,8 +59,13 @@ const ThumbnailSimple = ({
   return (
     <ThumbnailStyled className={className + ' thumbnail'} {...props}>
       {!isLoading && !disabled && <Icon icon={icon || 'image'} />}
-      {((entityType && !(isWrongEntity || !entityId)) || src) && (
-        <ImageStyled alt={`Entity thumbnail ${entityId}`} src={src || `${url}${queryArgs}`} />
+      {((entityType && !(isWrongEntity || !entityId)) || src) && !iconOnly && (
+        <ImageStyled
+          alt={`Entity thumbnail ${entityId}`}
+          src={src || `${url}${queryArgs}`}
+          onLoad={onLoad}
+          onError={onError}
+        />
       )}
     </ThumbnailStyled>
   )

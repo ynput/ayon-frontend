@@ -6,6 +6,7 @@ import ActivityGroup from './ActivityGroup/ActivityGroup'
 import styled from 'styled-components'
 import { format } from 'date-fns'
 import { isValid } from 'date-fns'
+import ActivityVersions from './ActivityVersions/ActivityVersions'
 
 const FeedEnd = styled.div`
   padding: 0 10px;
@@ -29,6 +30,8 @@ const ActivityItem = ({
       return <ActivityAssigneeChange activity={activity} {...props} isAdding />
     case 'assignee.remove':
       return <ActivityAssigneeChange activity={activity} {...props} />
+    case 'version.publish':
+      return <ActivityVersions {...{ activity, projectInfo }} {...props} />
     case 'group':
       // fromGroup prevents infinite recursion
       return !fromGroup && <ActivityGroup activities={activity.items} {...props} />

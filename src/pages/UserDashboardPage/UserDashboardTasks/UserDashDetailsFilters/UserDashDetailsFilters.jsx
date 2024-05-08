@@ -24,15 +24,15 @@ const UserDashDetailsFilters = ({ isSlideOut }) => {
       label: 'Comments',
       icon: 'chat',
     },
-    // {
-    //   id: 'versions',
-    //   label: 'Versions',
-    //   icon: 'layers',
-    // },
     {
       id: 'checklists',
       label: 'Checklists',
       icon: 'checklist',
+    },
+    {
+      id: 'publishes',
+      label: 'Published versions',
+      icon: 'layers',
     },
   ]
 
