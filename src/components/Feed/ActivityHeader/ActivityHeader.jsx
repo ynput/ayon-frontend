@@ -23,8 +23,15 @@ const ActivityHeader = ({
   entityType,
   onReferenceClick,
 }) => {
-  const { referenceType, origin = {}, isOwner } = activity
+  const { referenceType, origin = {}, isOwner, activityType, versions = [] } = activity
   const isMention = referenceType === 'mention'
+
+  const isPublish = activityType === 'version.publish'
+  const isMultipleVersions = versions.length > 1
+  const publishedString = isMultipleVersions ? 'published versions' : 'published a version'
+
+  const boldString = isMention ? `mentioned` : 'commented'
+  const entityTypeString = isMention ? `this ${entityType}` : 'on'
 
   // open menu
   const dispatch = useDispatch()
@@ -39,10 +46,10 @@ const ActivityHeader = ({
         {isRef && (
           <>
             <Styled.Text>
-              <strong>{isMention ? `mentioned` : 'commented'}</strong>
+              <strong>{boldString}</strong>
             </Styled.Text>
             <Styled.Text style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isMention ? `this ${entityType} in` : 'on'}
+              {entityTypeString}
             </Styled.Text>
             <ActivityReference
               id={origin?.id}
@@ -58,6 +65,7 @@ const ActivityHeader = ({
             </ActivityReference>
           </>
         )}
+        {isPublish && <Styled.Text>{publishedString}</Styled.Text>}
 
         {/* custom children, like status change */}
         {children}

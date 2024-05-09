@@ -39,6 +39,7 @@ const UserDashDetailsHeader = ({
           icon: entity.icon,
           id: entity.id,
           type: entityType,
+          updatedAt: entity.updatedAt,
         })),
     [entities],
   )
