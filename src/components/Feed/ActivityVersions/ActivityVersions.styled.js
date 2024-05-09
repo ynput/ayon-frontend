@@ -13,7 +13,6 @@ export const Container = styled.li`
 
   width: 100%;
   padding: 8px;
-  border-radius: var(--border-radius-m);
 `
 
 export const Card = styled.div`
@@ -21,7 +20,7 @@ export const Card = styled.div`
   gap: var(--base-gap-large);
   align-items: center;
   justify-content: space-between;
-  border-radius: var(--border-radius-l);
+  border-radius: var(--border-radius-m);
   padding: var(--padding-m);
 
   background-color: var(--md-sys-color-surface-container);

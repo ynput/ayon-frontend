@@ -9,7 +9,6 @@ const ActivityVersions = ({ activity, projectInfo, projectName, entityType, onRe
     authorFullName,
     createdAt,
     updatedAt,
-    entityId,
     activityData = {},
     origin = {},
   } = activity
@@ -46,7 +45,9 @@ const ActivityVersions = ({ activity, projectInfo, projectName, entityType, onRe
           <span className="version">{versionName}</span>
         </Styled.Content>
         <Styled.Thumbnail
-          {...{ projectName, entityId, entityType }}
+          {...{ projectName }}
+          entityId={versionId}
+          entityType="version"
           onError={() => setThumbnailError(true)}
           iconOnly={thumbnailError}
           entityUpdatedAt={updatedAt}
