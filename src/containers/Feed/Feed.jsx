@@ -70,7 +70,7 @@ const Feed = ({
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
-  const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo)
+  const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo, entityType)
 
   // TODO: merge in the versions data with the activities data
 

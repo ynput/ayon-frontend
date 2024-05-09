@@ -99,38 +99,56 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
   return mergedActivities
 }
 
-const useTransformActivities = (activities = [], projectInfo = {}) => {
-  const transformedActivitiesData = useMemo(() => {
-    return activities.map((activity) => {
-      const newActivity = { ...activity, origin: { ...activity.origin } }
+const getStatusActivityIcon = (activities = [], projectInfo = {}) => {
+  return activities.map((activity) => {
+    const newActivity = { ...activity, origin: { ...activity.origin } }
 
-      // find status icon and data for status change activities
-      if (newActivity.activityType === 'status.change') {
-        if (!projectInfo) return newActivity
-        const oldStatusName = newActivity.activityData?.oldValue
-        const newStatusName = newActivity.activityData?.newValue
+    // find status icon and data for status change activities
+    if (newActivity.activityType === 'status.change') {
+      if (!projectInfo) return newActivity
+      const oldStatusName = newActivity.activityData?.oldValue
+      const newStatusName = newActivity.activityData?.newValue
 
-        const oldStatus = projectInfo.statuses?.find((status) => status.name === oldStatusName)
-        const newStatus = projectInfo.statuses?.find((status) => status.name === newStatusName)
+      const oldStatus = projectInfo.statuses?.find((status) => status.name === oldStatusName)
+      const newStatus = projectInfo.statuses?.find((status) => status.name === newStatusName)
 
-        newActivity.oldStatus = { ...oldStatus, name: oldStatusName }
-        newActivity.newStatus = { ...newStatus, name: newStatusName }
-      }
+      newActivity.oldStatus = { ...oldStatus, name: oldStatusName }
+      newActivity.newStatus = { ...newStatus, name: newStatusName }
+    }
 
-      return newActivity
-    })
-  }, [activities])
+    return newActivity
+  })
+}
 
-  // sort createdAt oldest first (because we are using flex: column-reverse)
-  const reversedActivitiesData = useMemo(
-    () =>
-      transformedActivitiesData.sort((a, b) =>
-        compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
-      ),
-    [transformedActivitiesData],
+const filterOutRelations = (activities = [], entityTypes = [], entityType) => {
+  return !entityTypes.includes(entityType)
+    ? activities
+    : activities.filter((activity) => activity.referenceType !== 'relation')
+}
+
+const useTransformActivities = (activities = [], projectInfo = {}, entityType) => {
+  // 1. add status icons and data for status change activities
+  const activitiesWithIcons = useMemo(
+    () => getStatusActivityIcon(activities, projectInfo),
+    [activities],
   )
 
-  // for status change activities that are together, merge them into one activity
+  // 2. versions should not have relations shown (comments posted on parent task)
+  const activitiesWithoutRelations = useMemo(
+    () => filterOutRelations(activitiesWithIcons, ['version'], entityType),
+    [activitiesWithIcons, projectInfo],
+  )
+
+  // 3. sort createdAt oldest first (because we are using flex: column-reverse)
+  const reversedActivitiesData = useMemo(
+    () =>
+      activitiesWithoutRelations.sort((a, b) =>
+        compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
+      ),
+    [activitiesWithoutRelations],
+  )
+
+  // 4. for status change activities that are together, merge them into one activity
   const mergedActivitiesData = useMemo(
     () => mergeSimilarActivities(reversedActivitiesData, 'status.change', 'oldStatus'),
     [reversedActivitiesData],
@@ -139,7 +157,7 @@ const useTransformActivities = (activities = [], projectInfo = {}) => {
   // Define the types of activities that are considered minor
   const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove']
 
-  // Use the useMemo hook to optimize performance by memoizing the groupedActivitiesData
+  // 5. Use the useMemo hook to optimize performance by memoizing the groupedActivitiesData
   const groupedActivitiesData = useMemo(
     () => groupMinorActivities(mergedActivitiesData, minorActivityTypes),
     [mergedActivitiesData],
