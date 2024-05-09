@@ -1,9 +1,9 @@
-import * as Styled from './UserDashDetailsFilters.styled'
+import * as Styled from './FeedFilters.styled'
 import { useDispatch, useSelector } from 'react-redux'
 import { onAttribsOpenChange, onFeedFilterChange } from '/src/features/dashboard'
 import { Spacer } from '@ynput/ayon-react-components'
 
-const UserDashDetailsFilters = ({ isSlideOut }) => {
+const FeedFilters = ({ isSlideOut }) => {
   const dispatch = useDispatch()
   const setFeedFilter = (value) => dispatch(onFeedFilterChange({ value, isSlideOut }))
   const toggleAttribsOpen = () => dispatch(onAttribsOpenChange({ isSlideOut }))
@@ -61,4 +61,4 @@ const UserDashDetailsFilters = ({ isSlideOut }) => {
   )
 }
 
-export default UserDashDetailsFilters
+export default FeedFilters

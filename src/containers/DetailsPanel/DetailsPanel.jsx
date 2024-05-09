@@ -1,13 +1,13 @@
 import { Panel } from '@ynput/ayon-react-components'
 import React from 'react'
-import UserDashDetailsHeader from '../UserDashDetailsHeader/UserDashDetailsHeader'
+import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useSelector } from 'react-redux'
 import Feed from '/src/containers/Feed/Feed'
 import { useGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
-import TaskAttributes from '../TaskAttributes/TaskAttributes'
+import TaskAttributes from '../../pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '/src/services/userDashboard/userDashboardHelpers'
 
-const UserDashboardDetails = ({
+const DetailsPanel = ({
   entityType,
   // entities is data we already have from kanban
   entitiesData = [],
@@ -75,7 +75,7 @@ const UserDashboardDetails = ({
           ...style,
         }}
       >
-        <UserDashDetailsHeader
+        <DetailsPanelHeader
           entityType={entityType}
           entities={entityDetailsData}
           users={projectUsers}
@@ -109,4 +109,4 @@ const UserDashboardDetails = ({
   )
 }
 
-export default UserDashboardDetails
+export default DetailsPanel

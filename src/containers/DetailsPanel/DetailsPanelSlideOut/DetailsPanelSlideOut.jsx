@@ -1,13 +1,13 @@
-import * as Styled from './UserDashboardSlideOut.styled'
+import * as Styled from './DetailsPanelSlideOut.styled'
 import { useDispatch, useSelector } from 'react-redux'
 import { onSlideOutClose } from '/src/features/dashboard'
-import UserDashboardDetails from '../UserDashboardDetails/UserDashboardDetails'
+import DetailsPanel from '../DetailsPanel'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import Shortcuts from '/src/containers/Shortcuts'
 import { useEffect, useState } from 'react'
 import { classNames } from 'primereact/utils'
 
-const UserDashboardSlideOut = ({ projectsInfo }) => {
+const DetailsPanelSlideOut = ({ projectsInfo }) => {
   const dispatch = useDispatch()
   const slideOut = useSelector((state) => state.dashboard.slideOut)
   const { entityType, entityId, projectName } = slideOut
@@ -50,7 +50,7 @@ const UserDashboardSlideOut = ({ projectsInfo }) => {
 
   return (
     <Styled.SlideOut className={classNames({ slideOutShown })}>
-      <UserDashboardDetails
+      <DetailsPanel
         entityType={entityType}
         entities={[{ id: entityId, projectName }]}
         projectsInfo={{ [projectName]: projectInfo }}
@@ -67,4 +67,4 @@ const UserDashboardSlideOut = ({ projectsInfo }) => {
   )
 }
 
-export default UserDashboardSlideOut
+export default DetailsPanelSlideOut

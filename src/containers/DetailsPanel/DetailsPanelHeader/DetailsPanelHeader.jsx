@@ -1,6 +1,6 @@
 import { AssigneeSelect, TagsSelect } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
-import * as Styled from './UserDashDetailsHeader.styled'
+import * as Styled from './DetailsPanelHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
 import { classNames } from 'primereact/utils'
@@ -8,9 +8,9 @@ import { isEqual, union } from 'lodash'
 import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
-import UserDashDetailsFilters from '../UserDashDetailsFilters/UserDashDetailsFilters'
+import FeedFilters from '../FeedFilters/FeedFilters'
 
-const UserDashDetailsHeader = ({
+const DetailsPanelHeader = ({
   entityType,
   entities = [],
   disabledAssignees = [],
@@ -204,12 +204,12 @@ const UserDashDetailsHeader = ({
           />
         </Styled.ContentRow>
       </Styled.Section>
-      <UserDashDetailsFilters isSlideOut={isSlideOut} />
+      <FeedFilters isSlideOut={isSlideOut} />
     </Styled.SectionWrapper>
   )
 }
 
-export default UserDashDetailsHeader
+export default DetailsPanelHeader
 
 // {
 //   "id": "739af4b83da311eeac5d0242ac120004",
