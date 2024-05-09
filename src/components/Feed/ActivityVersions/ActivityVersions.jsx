@@ -4,22 +4,7 @@ import { productTypes } from '/src/features/project'
 import { useState } from 'react'
 
 const ActivityVersions = ({ activity, projectInfo, projectName, entityType, onReferenceClick }) => {
-  let {
-    authorName,
-    authorFullName,
-    createdAt,
-    updatedAt,
-    activityData = {},
-    origin = {},
-  } = activity
-
-  // v00x
-  const { name: versionName, id: versionId } = origin
-  // get product name and type
-  const { context = {} } = activityData
-  const { productName, productType } = context
-
-  const icon = productTypes[productType]?.icon || 'home_repair_service'
+  let { authorName, authorFullName, createdAt, versions = [] } = activity
 
   const [thumbnailError, setThumbnailError] = useState(false)
 
@@ -35,25 +20,26 @@ const ActivityVersions = ({ activity, projectInfo, projectName, entityType, onRe
         entityType={entityType}
         onReferenceClick={onReferenceClick}
       />
-      <Styled.Card
-        onClick={() =>
-          onReferenceClick({ entityType: 'version', entityId: versionId, projectName })
-        }
-      >
-        <Styled.Content>
-          <Styled.Title>{productName}</Styled.Title>
-          <span className="version">{versionName}</span>
-        </Styled.Content>
-        <Styled.Thumbnail
-          {...{ projectName }}
-          entityId={versionId}
-          entityType="version"
-          onError={() => setThumbnailError(true)}
-          iconOnly={thumbnailError}
-          entityUpdatedAt={updatedAt}
-          icon={icon}
-        />
-      </Styled.Card>
+      {versions.map(({ name, id, productName, productType, updatedAt }) => (
+        <Styled.Card
+          key={id}
+          onClick={() => onReferenceClick({ entityType: 'version', entityId: id, projectName })}
+        >
+          <Styled.Content>
+            <Styled.Title>{productName}</Styled.Title>
+            <span className="version">{name}</span>
+          </Styled.Content>
+          <Styled.Thumbnail
+            {...{ projectName }}
+            entityId={id}
+            entityType="version"
+            onError={() => setThumbnailError(true)}
+            iconOnly={thumbnailError}
+            entityUpdatedAt={updatedAt}
+            icon={productTypes[productType]?.icon || 'home_repair_service'}
+          />
+        </Styled.Card>
+      ))}
     </Styled.Container>
   )
 }
