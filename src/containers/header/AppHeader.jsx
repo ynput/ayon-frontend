@@ -13,6 +13,7 @@ import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
 import { HelpMenu, UserMenu } from '/src/components/Menu'
 import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
+import { useGetMeQuery } from '/src/services/user/getUsers'
 import { toast } from 'react-toastify'
 import { onProfileUpdate } from '/src/features/user'
 import styled from 'styled-components'
@@ -69,8 +70,8 @@ const Header = () => {
   const handleSetMenu = (menu) => dispatch(setMenuOpen(menu))
   const location = useLocation()
   const navigate = useNavigate()
-  // get user from redux store
-  const user = useSelector((state) => state.user)
+  // get user info from BE instead of redux to have up to date information
+  const { data: user } = useGetMeQuery()
 
   // restart server notification
   const { isSnoozing } = useRestart()
