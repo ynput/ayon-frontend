@@ -297,7 +297,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
           : [{ type: entityType, id: 'LIST' }],
     }),
     getDashboardEntitiesDetails: build.query({
-      async queryFn({ entities = [], entityType, projectInfo }, { dispatch }) {
+      async queryFn({ entities = [], entityType, projectsInfo = {} }, { dispatch }) {
         try {
           const entitiesDetails = []
           for (const entity of entities) {
@@ -307,7 +307,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
                   projectName: entity.projectName,
                   entityId: entity.id,
                   entityType,
-                  projectInfo,
+                  projectInfo: projectsInfo[entity.projectName],
                 },
                 { forceRefetch: false },
               ),

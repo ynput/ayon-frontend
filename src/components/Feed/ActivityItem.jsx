@@ -10,6 +10,7 @@ import { isValid } from 'date-fns'
 const FeedEnd = styled.div`
   padding: 0 10px;
   color: var(--md-sys-color-outline);
+  font-size: 12px;
 `
 
 const ActivityItem = ({

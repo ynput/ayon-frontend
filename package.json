@@ -16,7 +16,7 @@
     "@rjsf/core": "^4.2.0",
     "@rtk-query/graphql-request-base-query": "^2.2.0",
     "@uiw/react-textarea-code-editor": "^2.1.9",
-    "@ynput/ayon-react-components": "^1.0.6",
+    "@ynput/ayon-react-components": "^1.0.9",
     "axios": "^1.6.3",
     "chart.js": "^4.2.0",
     "date-fns": "^3.6.0",

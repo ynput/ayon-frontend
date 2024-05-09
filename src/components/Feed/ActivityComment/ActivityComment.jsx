@@ -22,6 +22,7 @@ const ActivityComment = ({
   onReferenceClick,
   isSlideOut,
   onFileExpand,
+  showOrigin,
 }) => {
   let {
     body,
@@ -64,7 +65,7 @@ const ActivityComment = ({
         name={authorName}
         fullName={authorFullName || authorName}
         date={createdAt}
-        isRef={referenceType !== 'origin'}
+        isRef={referenceType !== 'origin' || showOrigin}
         activity={activity}
         onDelete={() => onDelete && onDelete(activityId)}
         onEdit={handleEditComment}
