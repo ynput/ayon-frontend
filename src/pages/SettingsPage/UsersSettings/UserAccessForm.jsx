@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { InputSwitch, FormLayout, FormRow } from '@ynput/ayon-react-components'
+import { InputSwitch, FormLayout, FormRow, Icon } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import AccessGroupsDropdown from '/src/containers/AccessGroupsDropdown'
 import { isEqual } from 'lodash'
@@ -11,8 +11,19 @@ const FormRowStyled = styled(FormRow)`
   }
 `
 
+const NoteStyled = styled.span`
+  margin: var(--padding-m) 0;
+  padding: var(--padding-m);
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-secondary-container);
+
+  gap: var(--base-gap-small);
+  display: flex;
+  align-items: center;
+`
+
 const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, selectedProjects }) => {
-  const isAdmin = useSelector((state) => state.user.data.isAdmin)
+  const isUserAdmin = useSelector((state) => state.user.data.isAdmin)
 
   const userLevels = [
     { label: 'User', value: 'user' },
@@ -20,7 +31,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
   ]
 
   // only admins can
-  if (isAdmin) {
+  if (isUserAdmin) {
     userLevels.push({ label: 'Admin', value: 'admin' })
     userLevels.push({ label: 'Service', value: 'service' })
   }
@@ -35,7 +46,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
   }
 
   const isUser = formData?.userLevel === 'user'
-  const isManager = formData?.userLevel === 'manager'
+  const isAdmin = formData?.userLevel === 'admin'
 
   const defaultAccessGroups = formData?.defaultAccessGroups
 
@@ -112,6 +123,24 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
           />
         </FormRowStyled>
 
+        <FormRowStyled label="Guest" data-tooltip={isAdmin ? 'Admins cannot be guests' : null}>
+          <InputSwitch
+            checked={disabled || isAdmin ? false : formData?.isGuest}
+            onChange={(e) => updateFormData('isGuest', e.target.checked)}
+            disabled={disabled || isAdmin}
+            style={{
+              opacity: disabled ? 0.5 : 1,
+            }}
+          />
+        </FormRowStyled>
+
+        <FormRowStyled label="Developer">
+          <InputSwitch
+            checked={formData?.isDeveloper}
+            onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
+          />
+        </FormRowStyled>
+
         <FormRowStyled label="Access level">
           <SelectButton
             unselectable={false}
@@ -122,27 +151,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
           />
         </FormRowStyled>
 
-        {(isUser || isManager) && (
-          <FormRowStyled label="Guest">
-            <InputSwitch
-              checked={formData?.isGuest}
-              onChange={(e) => updateFormData('isGuest', e.target.checked)}
-              disabled={disabled}
-              style={{
-                opacity: disabled ? 0.5 : 1,
-              }}
-            />
-          </FormRowStyled>
-        )}
-
-        <FormRowStyled label="Developer">
-          <InputSwitch
-            checked={formData?.isDeveloper}
-            onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
-          />
-        </FormRowStyled>
-
-        {isUser && (
+        {isUser ? (
           <FormRowStyled
             label={'New projects access'}
             data-tooltip={
@@ -158,6 +167,11 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
               accessGroups={accessGroupsData}
             />
           </FormRowStyled>
+        ) : (
+          <NoteStyled>
+            <Icon icon="info" />
+            Admins, managers and services have full access to all projects.
+          </NoteStyled>
         )}
         {isUser && selectedProjects && (
           <FormRowStyled label={'Selected projects access'}>
