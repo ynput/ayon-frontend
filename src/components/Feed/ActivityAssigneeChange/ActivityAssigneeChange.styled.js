@@ -22,6 +22,7 @@ export const Body = styled.div`
   flex: 1;
   gap: var(--base-gap-small);
   padding: 0px 4px;
+  overflow: hidden;
 `
 
 export const Text = styled.span`

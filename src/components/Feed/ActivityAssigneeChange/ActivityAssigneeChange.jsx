@@ -13,8 +13,8 @@ const ActivityAssigneeChange = ({ activity = {}, isAdding }) => {
     <Styled.StatusChange>
       <Styled.Body>
         <Styled.Text>{fullText}</Styled.Text>
+        <ActivityDate date={createdAt} />
       </Styled.Body>
-      <ActivityDate date={createdAt} />
     </Styled.StatusChange>
   )
 }
