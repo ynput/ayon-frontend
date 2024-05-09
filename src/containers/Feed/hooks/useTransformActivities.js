@@ -156,13 +156,14 @@ const groupVersions = (activities = []) => {
   for (const activity of activities) {
     // if it's not a version.publish activity, push it to the groupedVersions
     if (activity.activityType !== 'version.publish') {
-      groupedVersions.push(activity)
-
-      // this also resets the currentVersion and adds it to the groupedVersions
+      // resets the currentVersion and adds it to the groupedVersions
       if (currentVersion) {
         groupedVersions.push(currentVersion)
         currentVersion = null
       }
+
+      // adds the activity to the groupedVersions
+      groupedVersions.push(activity)
 
       continue
     }
@@ -197,11 +198,6 @@ const groupVersions = (activities = []) => {
       currentVersion.versions = [activityToVersionItem(activity)]
       continue
     }
-  }
-
-  // if there's a currentVersion left, push it to the groupedVersions
-  if (currentVersion) {
-    groupedVersions.push(currentVersion)
   }
 
   return groupedVersions
