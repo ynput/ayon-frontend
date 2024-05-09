@@ -185,4 +185,5 @@ export const BlockCode = styled.pre`
 
   line-break: anywhere;
   word-break: break-word;
+  overflow: hidden;
 `
