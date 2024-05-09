@@ -27,6 +27,7 @@ export const Card = styled.div`
 
   cursor: pointer;
   &:hover {
+    color: var(--md-sys-color-on-surface);
     background-color: var(--md-sys-color-surface-container-hover);
   }
 `

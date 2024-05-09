@@ -212,6 +212,7 @@ const Feed = ({
                 createdAts={entities.map((e) => e.createdAt)}
                 onFileExpand={handleFileExpand}
                 showOrigin={entities.length > 1}
+                filter={filter}
                 editProps={{
                   activeUsers,
                   projectName,
