@@ -57,7 +57,7 @@ const CopySettingsDialog = ({
     for (const nodeKey in nodes) {
       const node = nodes[nodeKey]
       if (!(node.available && node.enabled)) continue
-      console.log('Migrating node', node.addonName, node.addonVersion)
+      //console.log('Migrating node', node.addonName, node.addonVersion)
 
       // Define the target addon
       const siteId = '_'

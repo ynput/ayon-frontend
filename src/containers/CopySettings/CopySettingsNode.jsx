@@ -164,12 +164,9 @@ const CopySettingsNode = ({
       asVersion: targetVersion,
     })
 
-    // TODO: we may use this to display whether there
-    // is an override or we are replacing with a default value
-
     // const targetOverrides = await triggerGetOverrides({
     //   addonName,
-    //   addonVersion: targetBundleData.addons[addonName],
+    //   addonVersion: targetVersion,
     //   variant: targetVariant,
     // })
 
@@ -195,7 +192,9 @@ const CopySettingsNode = ({
       const targetValue = getValueByPath(targetSettings.data, sourceOverride.path)
 
       // do not attempt to copy if the values are the same
-      if (isEqual(sourceValue, targetValue)) continue
+      // ... or rather do copy it. we want to force pinned overrides
+      // if (isEqual(sourceValue, targetValue))
+      //   continue
 
       //const compatible = sameKeysStructure(sourceValue, targetValue)
       const compatible = isCompatibleStructure(sourceValue, targetValue)
