@@ -122,22 +122,24 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
   }, [searchParams, formData])
 
   const handleSave = async () => {
-    if (!formData?.name) {
+    const data = { ...formData }
+
+    if (!data?.name) {
       toast.error('Name is required')
       return
     }
 
-    if (formData?.name.includes(' ')) {
+    if (data?.name.includes(' ')) {
       toast.error('Name cannot contain spaces')
       return
     }
 
-    if (!developerMode) formData.isDev = false
+    if (!developerMode) data.isDev = false
 
     try {
-      await createBundle({ data: formData, force: formData.isDev }).unwrap()
+      await createBundle({ data: data, force: data.isDev }).unwrap()
       toast.success('Bundle created')
-      onSave(formData.name)
+      onSave(data.name)
     } catch (error) {
       console.log(error)
       toast.error('Error: ' + error?.data?.detail)
