@@ -236,7 +236,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             projectsInfo={projectsInfo}
             projectNames={selectedTasksProjects}
             entityType="task"
-            style={{ zIndex: 400 }}
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo} />
         </SplitterPanel>
