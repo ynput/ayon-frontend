@@ -1108,11 +1108,6 @@ const EditorPage = () => {
         if (entityType === 'folder') {
           newNode['parentId'] = parentId
           newNode['folderType'] = parentData?.folderType
-          if (newNode.__parentId === 'root') {
-            // all attrib are it's own
-            // No. They are not! Root must inherit from project - martin
-            //newNode['ownAttrib'] = Object.keys(newNode.attrib)
-          }
           folderIds.push(newNode.id)
         } else if (entityType === 'task') {
           newNode['folderId'] = parentId
