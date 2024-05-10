@@ -73,7 +73,7 @@ export const Comment = styled.div`
           position: relative;
         }
 
-        /* cursor too height */
+        /* fix cursor too high */
         br {
           position: relative;
           top: 15px;
