@@ -36,7 +36,7 @@ const DetailsPanel = ({
 
   const {
     data: detailsData = {},
-    isFetching: isLoadingEntitiesDetails,
+    isFetching: isFetchingEntitiesDetails,
     isSuccess,
     isError,
   } = useGetDashboardEntitiesDetailsQuery(
@@ -71,7 +71,7 @@ const DetailsPanel = ({
           height: '100%',
           padding: 0,
           boxShadow: '-2px 0 6px #00000047',
-          zIndex: 80,
+          zIndex: 400,
           ...style,
         }}
       >
@@ -85,12 +85,13 @@ const DetailsPanel = ({
           tagsOptions={tagsOptions}
           onClose={onClose}
           isSlideOut={isSlideOut}
+          isFetching={isFetchingEntitiesDetails}
         />
         {attributesOpen ? (
           <TaskAttributes
             entityType={entityType}
             entities={entityDetailsData}
-            isLoading={isLoadingEntitiesDetails}
+            isLoading={isFetchingEntitiesDetails}
           />
         ) : (
           <Feed

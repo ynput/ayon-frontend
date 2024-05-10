@@ -4,7 +4,7 @@ import { taskProvideTags, transformEntityData, transformTasksData } from './user
 import {
   KAN_BAN_ASSIGNEES_QUERY,
   TASK_MENTION_TASKS,
-  KAN_BAN_TASK_QUERY,
+  TASK_DETAILS,
   PROJECT_TASKS_QUERY,
   buildDetailsQuery,
 } from './userDashboardQueries'
@@ -191,7 +191,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: KAN_BAN_TASK_QUERY(['endDate']),
+          query: TASK_DETAILS(['endDate']),
           variables: { entityId, projectName },
         },
       }),
@@ -267,6 +267,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
         }
       },
     }),
+    // TODO, move to separate file getEntityPanel
     getDashboardEntityDetails: build.query({
       query: ({ projectName, entityId, entityType }) => ({
         url: '/graphql',
@@ -299,9 +300,8 @@ const getUserDashboard = ayonApi.injectEndpoints({
     getDashboardEntitiesDetails: build.query({
       async queryFn({ entities = [], entityType, projectsInfo = {} }, { dispatch }) {
         try {
-          const entitiesDetails = []
-          for (const entity of entities) {
-            const response = await dispatch(
+          const promises = entities.map((entity) =>
+            dispatch(
               ayonApi.endpoints.getDashboardEntityDetails.initiate(
                 {
                   projectName: entity.projectName,
@@ -311,8 +311,13 @@ const getUserDashboard = ayonApi.injectEndpoints({
                 },
                 { forceRefetch: false },
               ),
-            )
+            ),
+          )
 
+          const res = await Promise.all(promises)
+
+          const entitiesDetails = []
+          for (const response of res) {
             if (response.status === 'rejected') {
               console.error('No entity found')
               continue
@@ -331,6 +336,8 @@ const getUserDashboard = ayonApi.injectEndpoints({
         entities,
         entityType,
       }),
+      providesTags: (res, error, { entities }) =>
+        entities.map(({ id }) => ({ id, type: 'entities' })),
     }),
     getTaskMentionTasks: build.query({
       query: ({ projectName, folderIds = [] }) => ({

@@ -59,6 +59,7 @@ export const ayonApi = createApi({
     'customRoots',
     'dependencyPackageList',
     'entity',
+    'entities',
     'folder',
     'hierarchy',
     'info',

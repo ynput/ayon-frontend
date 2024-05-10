@@ -9,6 +9,7 @@ import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUse
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
+import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -20,6 +21,7 @@ const DetailsPanelHeader = ({
   tagsOptions = [],
   onClose,
   isSlideOut,
+  isFetching,
 }) => {
   // for selected entities, get flat list of assignees
   const selectedTasksAssignees = useMemo(
@@ -27,8 +29,23 @@ const DetailsPanelHeader = ({
     [entities],
   )
 
-  const singleEntity = entities[0]
-  const projectName = entities.length > 1 ? null : singleEntity?.projectName
+  let firstEntity = entities[0]
+  // If there's no data return null
+  const isLoading = entities.length === 0 || !firstEntity || isFetching
+  // placeholder entity
+  if (!firstEntity) {
+    entities = [
+      {
+        id: 'placeholder',
+        entityType,
+        icon: 'sync',
+        title: 'loading...',
+        subTitle: 'loading...',
+      },
+    ]
+    firstEntity = entities[0]
+  }
+  const projectName = entities.length > 1 ? null : firstEntity?.projectName
 
   const thumbnails = useMemo(
     () =>
@@ -60,10 +77,36 @@ const DetailsPanelHeader = ({
 
   const isMultiple = entities.length > 1
 
+  const patchProductsListWithVersions = usePatchProductsListWithVersions({
+    projectName: firstEntity?.projectName,
+  })
+
+  const patchProductsVersions = (field, value) => {
+    // patches = entitiesData but with field and value set for all entities
+    let productsPatch
+    // if the type is version and the is field is status or version, patch products list
+    // because the version status/version is also shown in the product list
+    if (entityType === 'version' && ['status'].includes(field)) {
+      const versions = entities.map((version) => ({
+        productId: version.productId,
+        versionId: version.id,
+        versionStatus: value,
+      }))
+
+      // update productsList cache with new status
+      productsPatch = patchProductsListWithVersions(versions)
+    }
+
+    return productsPatch
+  }
+
   const [updateEntities] = useUpdateEntitiesMutation()
   const handleUpdate = async (field, value) => {
     if (value === null || value === undefined) return console.error('value is null or undefined')
 
+    // if the type is version and the is field is status or version, patch products list
+    // mainly used in the browser
+    const productsPatch = patchProductsVersions(field, value)
     try {
       // build entities operations array
       const operations = entities.map((entity) => ({
@@ -77,11 +120,11 @@ const DetailsPanelHeader = ({
       await updateEntities({ operations, entityType })
     } catch (error) {
       toast.error('Error updating' + entityType)
+      productsPatch?.undo()
     }
   }
 
-  if (!singleEntity) return null
-  const fullPath = singleEntity.path || ''
+  const fullPath = firstEntity?.path || ''
   const pathArray = fullPath.split('/')
   const handleCopyPath = () => {
     copyToClipboard(fullPath)
@@ -116,7 +159,7 @@ const DetailsPanelHeader = ({
       const actions = actionTaskTypes[action.pinned]
       if (!actions) return false
       return actions.some(
-        (action) => action.toLowerCase() === singleEntity.entitySubType?.toLowerCase(),
+        (action) => action.toLowerCase() === firstEntity?.entitySubType?.toLowerCase(),
       )
     })
     .map((action) => action.id)
@@ -138,14 +181,14 @@ const DetailsPanelHeader = ({
   }
 
   return (
-    <Styled.SectionWrapper id={portalId}>
+    <Styled.SectionWrapper id={portalId} className="details-panel-header">
       <Styled.Path
         value={pathArray.join(' / ')}
         align="left"
         onClick={handleCopyPath}
         isCopy
         icon="content_copy"
-        className={classNames({ onClose })}
+        className={classNames({ onClose, isLoading })}
       />
       {onClose && (
         <Styled.CloseButton
@@ -158,14 +201,17 @@ const DetailsPanelHeader = ({
       )}
       <Styled.Header>
         <StackedThumbnails
+          isLoading={isLoading}
+          shimmer={isLoading}
+          style={{ aspectRatio: '1/1' }}
           thumbnails={thumbnails}
           projectName={projectName}
           portalId={portalId}
           onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
         />
-        <Styled.Content>
-          <h2>{!isMultiple ? singleEntity.title : `${entities.length} ${entityType}s selected`}</h2>
-          <h3>{!isMultiple ? singleEntity.subTitle : entities.map((t) => t.name).join(', ')}</h3>
+        <Styled.Content className={classNames({ isLoading })}>
+          <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
+          <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
         </Styled.Content>
       </Styled.Header>
       <Styled.Section>
@@ -177,8 +223,9 @@ const DetailsPanelHeader = ({
             invert
             style={{ maxWidth: 'unset' }}
             onChange={(value) => handleUpdate('status', value)}
+            className={classNames({ isLoading })}
           />
-          {hasUser && (
+          {hasUser && !isLoading && (
             <AssigneeSelect
               value={selectedTasksAssignees}
               options={usersOptions}
@@ -193,7 +240,7 @@ const DetailsPanelHeader = ({
       </Styled.Section>
       <Styled.Section>
         <Styled.ContentRow>
-          <Actions options={actions} pinned={pinned} />
+          <Actions options={actions} pinned={pinned} isLoading={isLoading} />
           <TagsSelect
             value={union(...tagsValues)}
             isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
@@ -201,10 +248,11 @@ const DetailsPanelHeader = ({
             editable
             onChange={(value) => handleUpdate('tags', value)}
             align="right"
+            styleDropdown={{ display: isLoading && 'none' }}
           />
         </Styled.ContentRow>
       </Styled.Section>
-      <FeedFilters isSlideOut={isSlideOut} />
+      <FeedFilters isSlideOut={isSlideOut} isLoading={isLoading} />
     </Styled.SectionWrapper>
   )
 }

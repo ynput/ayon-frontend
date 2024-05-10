@@ -72,6 +72,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
       const path = `${projectName}${entity.product?.folder?.path}/${entity.product?.name}/${entity.name}`
       const entitySubType = entity.product?.productType
       const icon = productTypes[entitySubType]?.icon
+
       return {
         ...baseDetailsData,
         title: entity?.product?.name || 'Unknown Product',
@@ -79,7 +80,24 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         users: entity.author ? [entity.author] : [],
         path: path,
         folderId: entity.product?.folder?.id,
+        productId: entity.product?.id,
         icon: icon || 'layers',
+        entitySubType: entitySubType,
+      }
+    }
+    case 'folder': {
+      const path = `${projectName}${entity.path}`
+      const folders = projectInfo.folder_types || []
+      const entitySubType = entity.folderType
+      const icon = folders.find((folder) => folder.name === entitySubType)?.icon
+      return {
+        ...baseDetailsData,
+        title: entity.label || entity.name || 'Unknown Folder',
+        subTitle: path.split('/').slice(-2)[0],
+        users: [],
+        path: path,
+        folderId: entity.id,
+        icon: icon || 'folder',
         entitySubType: entitySubType,
       }
     }

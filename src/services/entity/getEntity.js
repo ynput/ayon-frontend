@@ -168,33 +168,6 @@ export const formatEntityTiles = (project, entities) => {
 
 const getEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    getEntitiesDetails: build.query({
-      query: ({
-        projectName,
-        ids,
-        type,
-        versionOverrides = ['00000000000000000000000000000000'],
-        attribs,
-      }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: buildEntitiesQuery(type, attribs),
-          variables: { projectName, ids, versionOverrides },
-        },
-      }),
-      transformResponse: (response, meta, { type }) => response.data.project[type + 's'].edges,
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
-      providesTags: (result, error, { type }) =>
-        result
-          ? [
-              ...result.flatMap(({ node }) => [
-                { type: type, id: node.id },
-                { type: 'detail', id: node.id },
-              ]),
-            ]
-          : [type],
-    }),
     getEventTile: build.query({
       query: ({ projectName, id, type }) => ({
         url: '/graphql',
@@ -228,7 +201,6 @@ const getEntity = ayonApi.injectEndpoints({
 })
 
 export const {
-  useGetEntitiesDetailsQuery,
   useGetEventTileQuery,
   useGetEntityTilesQuery,
   useGetEntityQuery,

@@ -4,13 +4,13 @@ import { toast } from 'react-toastify'
 const updateUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     updateEntity: build.mutation({
-      query: ({ projectName, taskId, data, entityType }) => ({
-        url: `/api/projects/${projectName}/${entityType}s/${taskId}`,
+      query: ({ projectName, entityId, data, entityType }) => ({
+        url: `/api/projects/${projectName}/${entityType}s/${entityId}`,
         method: 'PATCH',
         body: data,
       }),
       async onQueryStarted(
-        { projectName, taskId, data, assignees, entityType },
+        { projectName, entityId, data, assignees, entityType },
         { dispatch, queryFulfilled },
       ) {
         let patchResult
@@ -19,7 +19,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
         if (entityType === 'task') {
           patchResult = dispatch(
             ayonApi.util.updateQueryData('getProjectTasks', { projectName, assignees }, (draft) => {
-              const taskIndex = draft.findIndex((task) => task.id === taskId)
+              const taskIndex = draft.findIndex((task) => task.id === entityId)
               if (taskIndex === -1) return
               const newData = { ...draft[taskIndex], ...data }
               draft[taskIndex] = newData
@@ -27,12 +27,11 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           )
         }
 
-        const entities = [{ projectName, id: taskId }]
         // patch any entity details panels in dashboard
         let entityDetailsResult = dispatch(
           ayonApi.util.updateQueryData(
-            'getDashboardEntitiesDetails',
-            { entities, entityType },
+            'getDashboardEntityDetails',
+            { entityId, entityType, projectName },
             (draft) => {
               // convert assignees to users
               const patchData = { ...data }
@@ -40,11 +39,8 @@ const updateUserDashboard = ayonApi.injectEndpoints({
                 patchData.users = patchData.assignees
                 delete patchData.assignees
               }
-              const entityIndex = draft.findIndex((entity) => entity.id === taskId)
-              console.log(entityIndex)
-              if (entityIndex === -1) return
-              const newData = { ...draft[entityIndex], ...patchData }
-              draft[entityIndex] = newData
+              const newData = { ...draft, ...patchData }
+              Object.assign(draft, newData)
             },
           ),
         )
@@ -58,10 +54,6 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           entityDetailsResult?.undo()
         }
       },
-      // this triggers a refetch of anything with the entity id tag
-      invalidatesTags: (result, error, { taskId, entityType }) => [
-        { type: entityType, id: taskId },
-      ],
     }),
     updateEntities: build.mutation({
       async queryFn({ operations = [], entityType }, { dispatch, getState }) {
@@ -79,7 +71,7 @@ const updateUserDashboard = ayonApi.injectEndpoints({
             const promise = dispatch(
               ayonApi.endpoints.updateEntity.initiate({
                 projectName: projectName,
-                taskId: id,
+                entityId: id,
                 data,
                 assignees,
                 entityType,
@@ -97,6 +89,12 @@ const updateUserDashboard = ayonApi.injectEndpoints({
               ),
             )
           }
+
+          // invalidate any entities queries (multi entity selection) to force refetch
+          // but because we just updated the getEntityDetails cache it should be instant
+          dispatch(
+            ayonApi.util.invalidateTags(operations.map((o) => ({ type: 'entities', id: o.id }))),
+          )
 
           // check if any of the requests failed and invalidate the tasks cache again to refetch
           const results = await Promise.allSettled(promises)
@@ -135,6 +133,8 @@ const updateUserDashboard = ayonApi.injectEndpoints({
           return error
         }
       },
+      // invalidatesTags: (result, error, { operations, entityType }) =>
+      //   operations.map((o) => ({ id: o.id, type: 'entities' })),
     }),
   }),
 })

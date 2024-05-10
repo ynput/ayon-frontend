@@ -1,4 +1,4 @@
-import { Button, Dropdown } from '@ynput/ayon-react-components'
+import { Button, Dropdown, getShimmerStyles } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Actions = styled.div`
@@ -6,20 +6,18 @@ export const Actions = styled.div`
   gap: 4px;
   position: relative;
 
-  &::after {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: var(--border-radius);
-    font-weight: bold;
-    z-index: 10;
-  }
-  &:has(img) {
-    &::after {
-      content: 'Coming Soon';
+  &.isLoading {
+    .icon {
+      opacity: 0;
     }
+
+    button {
+      background-color: unset;
+    }
+    border-radius: var(--border-radius-m);
+    overflow: hidden;
+
+    ${getShimmerStyles()}
   }
 `
 

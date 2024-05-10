@@ -8,7 +8,7 @@ import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 
 import { CellWithIcon } from '/src/components/icons'
-import EntityDetail from '/src/containers/entityDetail'
+import EntityDetail from './DetailsDialog'
 
 import {
   setFocusedFolders,

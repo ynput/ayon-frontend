@@ -2,8 +2,9 @@ import * as Styled from './FeedFilters.styled'
 import { useDispatch, useSelector } from 'react-redux'
 import { onAttribsOpenChange, onFeedFilterChange } from '/src/features/dashboard'
 import { Spacer } from '@ynput/ayon-react-components'
+import { classNames } from 'primereact/utils'
 
-const FeedFilters = ({ isSlideOut }) => {
+const FeedFilters = ({ isSlideOut, isLoading }) => {
   const dispatch = useDispatch()
   const setFeedFilter = (value) => dispatch(onFeedFilterChange({ value, isSlideOut }))
   const toggleAttribsOpen = () => dispatch(onAttribsOpenChange({ isSlideOut }))
@@ -37,7 +38,7 @@ const FeedFilters = ({ isSlideOut }) => {
   ]
 
   return (
-    <Styled.FiltersToolbar>
+    <Styled.FiltersToolbar className={classNames({ isLoading })}>
       {filtersLeft.map((filter) => (
         <Styled.FilterButton
           key={filter.id}

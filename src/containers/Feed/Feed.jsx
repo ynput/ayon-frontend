@@ -13,6 +13,7 @@ import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
 import { onCommentImageOpen } from '/src/features/context'
 import { Icon } from '@ynput/ayon-react-components'
+import { classNames } from 'primereact/utils'
 
 const Feed = ({
   entities = [],
@@ -39,8 +40,9 @@ const Feed = ({
   )
   const entityIds = entitiesToQuery.map((entity) => entity.id)
 
+  const skip = !entities.length || !filter || !activityTypes || !projectName
   // QUERY MADE TO GET ACTIVITIES
-  const {
+  let {
     data: activitiesData = [],
     isFetching: isFetchingActivities,
     currentData,
@@ -55,8 +57,14 @@ const Feed = ({
       activityTypes: activityTypes,
       filter,
     },
-    { skip: !entities.length || !filter || !activityTypes || !projectName },
+    { skip: skip },
   )
+
+  if (skip) {
+    activitiesData = []
+    isFetchingActivities = true
+  }
+
   // QUERY MADE TO GET ACTIVITIES
 
   // get all versions for the entity
@@ -186,16 +194,18 @@ const Feed = ({
   if (isMultiProjects)
     warningMessage = `You are only viewing activities from one project: ${projectName}.`
 
+  const showLoading = isFetchingActivities && !currentData
+
   return (
-    <Styled.FeedContainer>
+    <Styled.FeedContainer className="feed">
       {warningMessage && (
         <Styled.Warning>
           <Icon icon="info" />
           {warningMessage}
         </Styled.Warning>
       )}
-      <Styled.FeedContent ref={feedRef}>
-        {isFetchingActivities && !currentData
+      <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: showLoading })}>
+        {showLoading
           ? loadingPlaceholders
           : activitiesToShow.map((activity) => (
               <ActivityItem
