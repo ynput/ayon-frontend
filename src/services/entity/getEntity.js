@@ -1,16 +1,10 @@
 import { ayonApi } from '../ayon'
 import {
-  FOLDER_QUERY,
-  PRODUCT_QUERY,
-  TASK_QUERY,
-  VERSION_QUERY,
   PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
-  REP_QUERY,
 } from './entityQueries'
-import ayonClient from '/src/ayon'
 
 const buildEventTileQuery = (type) => {
   return `
@@ -25,40 +19,6 @@ const buildEventTileQuery = (type) => {
     }
   }
   `
-}
-
-export const buildEntitiesQuery = (type, attribs) => {
-  let f_attribs = attribs || ''
-  if (!attribs) {
-    for (const attrib of ayonClient.settings.attributes) {
-      if (attrib.scope.includes(type)) f_attribs += `${attrib.name}\n`
-    }
-  }
-
-  let QUERY
-  switch (type) {
-    case 'task':
-      QUERY = TASK_QUERY
-      break
-    case 'folder':
-      QUERY = FOLDER_QUERY
-      break
-    case 'version':
-      QUERY = VERSION_QUERY
-      break
-    case 'product':
-      QUERY = PRODUCT_QUERY
-      break
-    case 'representation':
-      QUERY = REP_QUERY
-      break
-    default:
-      break
-  }
-
-  if (!QUERY) return null
-
-  return QUERY.replace('#ATTRS#', f_attribs)
 }
 
 const buildEntityTilesQuery = (entities) => {
