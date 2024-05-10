@@ -35,6 +35,16 @@ turndownService.addRule('taskListItems', {
   },
 })
 
+// if there is a double backslash followed by text, \\text, replace with \\\ so it resolves to \\text
+turndownService.addRule('doubleBackslash', {
+  filter: function (node) {
+    return node.innerText?.includes('\\\\')
+  },
+  replacement: function (content) {
+    return content.replaceAll('\\\\', '\\\\\\')
+  },
+})
+
 // replace <p> with <br> for line breaks
 const replaceLineBreaks = (html) => {
   return html.replaceAll('<p>', '').replaceAll('</p>', '\n').replaceAll('```', '')
