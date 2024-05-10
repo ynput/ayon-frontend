@@ -41,7 +41,7 @@ turndownService.addRule('doubleBackslash', {
     return node.innerText?.includes('\\\\')
   },
   replacement: function (content) {
-    return content.replaceAll('\\\\', '\\\\\\')
+    return content.replaceAll('\\\\', '\\\\\\\\')
   },
 })
 
