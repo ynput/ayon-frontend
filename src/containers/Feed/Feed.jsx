@@ -14,6 +14,7 @@ import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
 import { onCommentImageOpen } from '/src/features/context'
 import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
+import { useEffect } from 'react'
 
 const Feed = ({
   entities = [],
@@ -51,7 +52,7 @@ const Feed = ({
       entityIds: entityIds,
       projectName: projectName,
       cursor: currentCursors[filter],
-      last: 20,
+      last: 30,
       currentUser: userName,
       referenceTypes: ['origin', 'mention', 'relation'],
       activityTypes: activityTypes,
@@ -101,6 +102,21 @@ const Feed = ({
     () => getNextPage({ activities: activitiesToShow }),
     [activitiesData],
   )
+
+  // if there are more activities to fetch but the feed isn't scrollable, fetch more
+  useEffect(() => {
+    if (!feedRef.current) return
+    if (!hasPreviousPage) return
+
+    // check if the feed is scrollable
+    const isScrollable = feedRef.current.scrollHeight > feedRef.current.clientHeight
+    if (isScrollable) return
+
+    console.log('auto fetch more activities...')
+
+    // fetch more activities
+    setCurrentCursors({ ...currentCursors, [filter]: cursor })
+  }, [feedRef, hasPreviousPage, cursor, filter, currentCursors])
 
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
