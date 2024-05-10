@@ -1,3 +1,4 @@
+import { differenceInMinutes } from 'date-fns'
 import { compareAsc } from 'date-fns'
 import { cloneDeep } from 'lodash'
 import { useMemo } from 'react'
@@ -63,6 +64,8 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
         currentActivity[oldKey] = activity[oldKey]
         // also update newValue
         currentActivity.activityData.oldValue = activity.activityData.oldValue
+        currentActivity.hasPreviousPage = activity.hasPreviousPage
+        currentActivity.cursor = activity.cursor
       } else {
         // If the author is different, end the current sequence and start a new one
         if (currentActivity.activityData.oldValue !== currentActivity.activityData.newValue) {
@@ -97,53 +100,153 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
   return mergedActivities
 }
 
-const useTransformActivities = (activities = [], projectInfo = {}) => {
-  const transformedActivitiesData = useMemo(() => {
-    return activities.map((activity) => {
-      const newActivity = { ...activity, origin: { ...activity.origin } }
+const getStatusActivityIcon = (activities = [], projectInfo = {}) => {
+  return activities.map((activity) => {
+    const newActivity = { ...activity, origin: { ...activity.origin } }
 
-      // find status icon and data for status change activities
-      if (newActivity.activityType === 'status.change') {
-        if (!projectInfo) return newActivity
-        const oldStatusName = newActivity.activityData?.oldValue
-        const newStatusName = newActivity.activityData?.newValue
+    // find status icon and data for status change activities
+    if (newActivity.activityType === 'status.change') {
+      if (!projectInfo) return newActivity
+      const oldStatusName = newActivity.activityData?.oldValue
+      const newStatusName = newActivity.activityData?.newValue
 
-        const oldStatus = projectInfo.statuses.find((status) => status.name === oldStatusName)
-        const newStatus = projectInfo.statuses.find((status) => status.name === newStatusName)
+      const oldStatus = projectInfo.statuses?.find((status) => status.name === oldStatusName)
+      const newStatus = projectInfo.statuses?.find((status) => status.name === newStatusName)
 
-        newActivity.oldStatus = { ...oldStatus, name: oldStatusName }
-        newActivity.newStatus = { ...newStatus, name: newStatusName }
+      newActivity.oldStatus = { ...oldStatus, name: oldStatusName }
+      newActivity.newStatus = { ...newStatus, name: newStatusName }
+    }
+
+    return newActivity
+  })
+}
+
+const filterOutRelations = (activities = [], entityTypes = [], entityType) => {
+  return !entityTypes.includes(entityType)
+    ? activities
+    : activities.filter((activity) => activity.referenceType !== 'relation')
+}
+
+// transforms a full activity to a version item
+const activityToVersionItem = (activity = {}) => {
+  const {
+    updatedAt,
+    origin: { name, id } = {},
+    activityData: { context: { productName, productType } = {} } = {},
+  } = activity
+
+  return {
+    name,
+    id,
+    productName,
+    productType,
+    updatedAt,
+  }
+}
+
+// groups similar activities together
+// 1. version.publish
+// 2. neighboring index
+// 3. neighbor same author and same type
+// 4. neighbor createdAt is within 30 minutes
+const groupVersions = (activities = []) => {
+  const groupedVersions = []
+  let currentVersion = null
+
+  for (const activity of activities) {
+    // if it's not a version.publish activity, push it to the groupedVersions
+    if (activity.activityType !== 'version.publish') {
+      // resets the currentVersion and adds it to the groupedVersions
+      if (currentVersion) {
+        groupedVersions.push(currentVersion)
+        currentVersion = null
       }
 
-      return newActivity
-    })
-  }, [activities])
+      // adds the activity to the groupedVersions
+      groupedVersions.push(activity)
 
-  // sort createdAt oldest first (because we are using flex: column-reverse)
-  const reversedActivitiesData = useMemo(
-    () =>
-      transformedActivitiesData.sort((a, b) =>
-        compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
-      ),
-    [transformedActivitiesData],
+      continue
+    }
+
+    // if there's no currentVersion, set the first version
+    if (!currentVersion) {
+      currentVersion = cloneDeep(activity)
+
+      currentVersion.versions = [activityToVersionItem(activity)]
+      continue
+    }
+
+    // here we check if the currentVersion and the activity are similar enough to be grouped together
+    // is same author
+    const isSameAuthor = currentVersion.authorName === activity.authorName
+    // is within 30 minutes of currentVersion
+    const minsDiff = differenceInMinutes(
+      new Date(currentVersion.createdAt),
+      new Date(activity.createdAt),
+    )
+    const isWithin30Mins = minsDiff <= 30
+
+    if (isSameAuthor && isWithin30Mins) {
+      currentVersion.versions.push(activityToVersionItem(activity))
+      continue
+    } else {
+      // if not similar, push the currentVersion to the groupedVersions
+      groupedVersions.push(currentVersion)
+
+      // set the currentVersion to the current activity to start a new group
+      currentVersion = cloneDeep(activity)
+      currentVersion.versions = [activityToVersionItem(activity)]
+      continue
+    }
+  }
+
+  return groupedVersions
+}
+
+const useTransformActivities = (activities = [], projectInfo = {}, entityType) => {
+  // 1. add status icons and data for status change activities
+  const activitiesWithIcons = useMemo(
+    () => getStatusActivityIcon(activities, projectInfo),
+    [activities],
   )
 
-  // for status change activities that are together, merge them into one activity
+  // 2. versions should not have relations shown (comments posted on parent task)
+  const activitiesWithoutRelations = useMemo(
+    () => filterOutRelations(activitiesWithIcons, ['version'], entityType),
+    [activitiesWithIcons, projectInfo],
+  )
+
+  // 3. sort createdAt oldest first (because we are using flex: column-reverse)
+  const reversedActivitiesData = useMemo(
+    () =>
+      activitiesWithoutRelations.sort((a, b) =>
+        compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
+      ),
+    [activitiesWithoutRelations],
+  )
+
+  // 4. for status change activities that are together, merge them into one activity
   const mergedActivitiesData = useMemo(
     () => mergeSimilarActivities(reversedActivitiesData, 'status.change', 'oldStatus'),
     [reversedActivitiesData],
   )
 
   // Define the types of activities that are considered minor
-  const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove']
+  const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove', '']
 
-  // Use the useMemo hook to optimize performance by memoizing the groupedActivitiesData
+  // 5. group minor activities together
   const groupedActivitiesData = useMemo(
     () => groupMinorActivities(mergedActivitiesData, minorActivityTypes),
     [mergedActivitiesData],
   )
 
-  return groupedActivitiesData
+  // 6. group version activities together
+  const groupedVersionsData = useMemo(
+    () => groupVersions(groupedActivitiesData),
+    [groupedActivitiesData],
+  )
+
+  return groupedVersionsData
 }
 
 export default useTransformActivities

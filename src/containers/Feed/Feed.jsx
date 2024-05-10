@@ -12,6 +12,7 @@ import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
 import { onCommentImageOpen } from '/src/features/context'
+import { Icon } from '@ynput/ayon-react-components'
 
 const Feed = ({
   entities = [],
@@ -20,6 +21,7 @@ const Feed = ({
   projectName,
   entityType,
   isSlideOut,
+  isMultiProjects,
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
@@ -68,7 +70,7 @@ const Feed = ({
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
-  const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo)
+  const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo, entityType)
 
   // TODO: merge in the versions data with the activities data
 
@@ -83,20 +85,20 @@ const Feed = ({
   useScrollOnInputOpen({ feedRef, isCommentInputOpen, height: 93 })
 
   // save scroll position of a feed
-  useSaveScrollPos({ entities, feedRef })
+  useSaveScrollPos({ entities, feedRef, filter })
 
+  // we don't use transformedActivitiesData here because we could get new data from the query
+  // but all the activities are merged so transformedActivitiesData doesn't change
   const { cursor, hasPreviousPage } = useMemo(
     () => getNextPage({ activities: activitiesToShow }),
-    [activitiesToShow],
+    [activitiesData],
   )
 
-  const entityId = entities[0]?.id
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
     projectName,
     entityType: entityType,
-    entityId,
-    entityIds,
+    entities,
     activityTypes,
     filter,
   })
@@ -154,6 +156,7 @@ const Feed = ({
     if (!hasPreviousPage) return console.log('No more activities to load')
     if (!cursor) return console.log('No cursor found')
     console.log('fetching more activities...')
+
     // get more activities
     setCurrentCursors({ ...currentCursors, [filter]: cursor })
   }
@@ -177,8 +180,20 @@ const Feed = ({
 
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
+  let warningMessage
+
+  // only viewing activities from one project
+  if (isMultiProjects)
+    warningMessage = `You are only viewing activities from one project: ${projectName}.`
+
   return (
     <Styled.FeedContainer>
+      {warningMessage && (
+        <Styled.Warning>
+          <Icon icon="info" />
+          {warningMessage}
+        </Styled.Warning>
+      )}
       <Styled.FeedContent ref={feedRef}>
         {isFetchingActivities && !currentData
           ? loadingPlaceholders
@@ -196,6 +211,8 @@ const Feed = ({
                 isSlideOut={isSlideOut}
                 createdAts={entities.map((e) => e.createdAt)}
                 onFileExpand={handleFileExpand}
+                showOrigin={entities.length > 1}
+                filter={filter}
                 editProps={{
                   activeUsers,
                   projectName,
@@ -223,6 +240,7 @@ const Feed = ({
           entities={entities}
           projectInfo={projectInfo}
           filter={filter}
+          disabled={isMultiProjects}
         />
       )}
     </Styled.FeedContainer>

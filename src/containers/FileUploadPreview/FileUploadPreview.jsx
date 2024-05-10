@@ -11,6 +11,8 @@ const FileUploadPreview = () => {
     dispatch(onFilePreviewClose())
   }
 
+  if (!id || !projectName) return null
+
   return (
     <Styled.DialogWrapper
       size="full"

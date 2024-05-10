@@ -76,7 +76,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         ...baseDetailsData,
         title: entity?.product?.name || 'Unknown Product',
         subTitle: entity.name || entity.version,
-        users: [entity.author],
+        users: entity.author ? [entity.author] : [],
         path: path,
         folderId: entity.product?.folder?.id,
         icon: icon || 'layers',

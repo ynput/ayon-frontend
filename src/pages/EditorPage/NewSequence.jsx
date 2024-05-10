@@ -1,8 +1,7 @@
 import React, { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { Toolbar, Spacer, SaveButton, Button, Dialog } from '@ynput/ayon-react-components'
 import FolderSequence from '/src/components/FolderSequence/FolderSequence'
 import getSequence from '/src/helpers/getSequence'
 import { isEmpty } from 'lodash'
@@ -39,10 +38,8 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   //   refs
   const typeSelectRef = useRef(null)
 
-  const handleShow = () => {
-    // open dropdown
-    typeSelectRef.current?.open()
-  }
+  // open dropdown - delay to wait for dialog opening
+  const handleShow = () => setTimeout(() => typeSelectRef.current?.open(), 180)
 
   const title = 'Add Folder Sequence'
 
@@ -75,6 +72,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   }
 
   const handleKeyDown = (e, lastInput) => {
+    if (e.key === 'Escape') onHide()
     if (e.key === 'Enter') {
       if (lastInput && !e.shiftKey) {
         handleSeqSubmit(true)
@@ -92,14 +90,13 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   return (
     <Dialog
       header={title}
-      visible={visible}
-      onHide={onHide}
+      isOpen={visible}
+      onClose={onHide}
       onShow={handleShow}
-      resizable={false}
-      draggable={false}
-      appendTo={document.getElementById('root')}
+      size="lg"
+      style={{ zIndex: 999 }}
       footer={
-        <Toolbar>
+        <Toolbar onFocus={false}>
           <Spacer />
           <Button
             label="Add"
@@ -115,7 +112,6 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
           />
         </Toolbar>
       }
-      onKeyDown={handleKeyDown}
     >
       <FolderSequence
         {...createSeq}

@@ -114,7 +114,7 @@ const Attributes = () => {
     'attributes',
   )
 
-  const ctxMenuTableItems = useMemo(() => [
+  const getContextMenu = (selected) => [
     {
       label: 'Edit',
       icon: 'edit',
@@ -125,10 +125,17 @@ const Attributes = () => {
       icon: 'delete',
       command: () => onDelete(),
       danger: true,
+      disabled: selected?.builtin,
     },
-  ])
+  ]
 
-  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+  const [ctxMenuTableShow] = useCreateContext([])
+
+  const handleContextSelectionChange = (e) => {
+    setSelectedAttribute(e.value)
+    console.log(e.value)
+    ctxMenuTableShow(e.originalEvent, getContextMenu(e.value))
+  }
 
   return (
     <>
@@ -182,8 +189,7 @@ const Attributes = () => {
               selectionMode="single"
               selection={selectedAttribute}
               onSelectionChange={(e) => setSelectedAttribute(e.value)}
-              onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
-              onContextMenuSelectionChange={(e) => setSelectedAttribute(e.value)}
+              onContextMenuSelectionChange={handleContextSelectionChange}
               onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
               resizableColumns
             >

@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify'
 import { useGetEntityQuery } from '../services/entity/getEntity'
-import { Dialog } from 'primereact/dialog'
+import { Dialog } from '@ynput/ayon-react-components'
 
 const EntityDetail = ({ projectName, entityType, entityIds, visible, onHide }) => {
   const {
@@ -22,8 +22,9 @@ const EntityDetail = ({ projectName, entityType, entityIds, visible, onHide }) =
 
   return (
     <Dialog
-      visible={true}
-      onHide={onHide}
+      isOpen={true}
+      onClose={onHide}
+      size='lg'
       style={{ width: '50vw' }}
       header={`${entityType} detail`}
     >

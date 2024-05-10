@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Divider, SaveButton, Section } from '@ynput/ayon-react-components'
+import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
 import { useAddUserMutation } from '/src/services/user/updateUser'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
-import { Dialog } from 'primereact/dialog'
 import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 
 const DividerSmallStyled = styled(Divider)`
@@ -137,14 +136,14 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   return (
     <Dialog
       onKeyDown={handleKeyDown}
-      visible
+      isOpen
+      size="full"
       style={{
         width: '90vw',
         maxWidth: 700,
       }}
       header={'Create New User'}
-      onHide={handleClose}
-      appendTo={document.body.querySelector('#root')}
+      onClose={handleClose}
       footer={
         <FooterButtons>
           <Button

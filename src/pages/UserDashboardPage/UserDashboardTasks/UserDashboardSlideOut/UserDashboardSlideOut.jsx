@@ -52,9 +52,9 @@ const UserDashboardSlideOut = ({ projectsInfo }) => {
     <Styled.SlideOut className={classNames({ slideOutShown })}>
       <UserDashboardDetails
         entityType={entityType}
-        entityIds={[entityId]}
-        projectInfo={projectInfo}
-        projectName={projectName}
+        entities={[{ id: entityId, projectName }]}
+        projectsInfo={{ [projectName]: projectInfo }}
+        projectNames={[projectName]}
         onClose={handleClose}
         statusesOptions={statuses}
         tagsOptions={tags}

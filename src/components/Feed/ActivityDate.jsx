@@ -35,7 +35,7 @@ const getFuzzyDate = (date) => {
   return fuzzyDate
 }
 
-const ActivityDate = ({ date }) => {
+const ActivityDate = ({ date, ...props }) => {
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return null
 
@@ -56,7 +56,11 @@ const ActivityDate = ({ date }) => {
   // if less than a minute ago overwrite the date string
   if (sameMin) dateString = 'Just now'
 
-  return <DateStyled className={classNames(Typography.bodySmall, 'date')}>{dateString}</DateStyled>
+  return (
+    <DateStyled className={classNames(Typography.bodySmall, 'date')} {...props}>
+      {dateString}
+    </DateStyled>
+  )
 }
 
 export default ActivityDate

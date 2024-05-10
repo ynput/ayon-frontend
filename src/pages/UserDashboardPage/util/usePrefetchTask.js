@@ -8,6 +8,7 @@ export const usePrefetchTask = (dispatch, projectsInfo) => {
   const prefetchedIds = useSelector((state) => state.dashboard.prefetchedIds)
   const userName = useSelector((state) => state.user.name)
   const activityTypes = useSelector((state) => state.dashboard.details.activityTypes)
+  const filter = useSelector((state) => state.dashboard.details.filter)
 
   const setPrefetchedIds = (ids) => dispatch(onPrefetchIds(ids))
   const [getEntitiesDetails] = useLazyGetDashboardEntitiesDetailsQuery()
@@ -33,6 +34,7 @@ export const usePrefetchTask = (dispatch, projectsInfo) => {
       currentUser: userName,
       referenceTypes: ['origin', 'mention', 'relation'],
       activityTypes: activityTypes,
+      filter,
     })
   }
   return handlePrefetch

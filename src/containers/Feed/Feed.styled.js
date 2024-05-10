@@ -14,6 +14,27 @@ export const FeedContainer = styled.section`
   background-color: var(--md-sys-color-surface-container-low);
 `
 
+export const Warning = styled.div`
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 8px;
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  padding: var(--padding-m) var(--padding-s);
+  border-radius: var(--border-radius-m);
+
+  background-color: var(--md-sys-color-on-warning-container);
+  color: var(--md-sys-color-warning-container);
+
+  .icon {
+    color: inherit;
+  }
+`
+
 export const FeedContent = styled.div`
   gap: var(--base-gap-large);
   overflow-y: auto;

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
-import { Dialog } from 'primereact/dialog'
-import { Button, InputText, FormLayout, FormRow } from '@ynput/ayon-react-components'
+import { InputText, FormLayout, FormRow, Dialog, SaveButton } from '@ynput/ayon-react-components'
 import { useUpdateUserNameMutation } from '/src/services/user/updateUser'
 
 const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
@@ -31,14 +30,19 @@ const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
 
     onHide()
   }
+
   return (
-    <Dialog header={`Set username for: ${name}`} visible={true} onHide={onHide}>
+    <Dialog
+      size="md"
+      style={{ maxWidth: 400 }}
+      header={`Set username for: ${name}`}
+      footer={<SaveButton label="Rename" onClick={onSubmit} active={!!newName} />}
+      isOpen={true}
+      onClose={onHide}
+    >
       <FormLayout>
         <FormRow label="New name">
           <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />
-        </FormRow>
-        <FormRow>
-          <Button label="Rename" onClick={onSubmit} />
         </FormRow>
       </FormLayout>
     </Dialog>
