@@ -27,7 +27,7 @@ const DetailsPanel = ({
   style = {},
 }) => {
   const path = isSlideOut ? 'slideOut' : 'details'
-  const attributesOpen = useSelector((state) => state.dashboard[path].attributesOpen)
+  const selectedTab = useSelector((state) => state.dashboard[path].tab)
   // now we get the full details data for selected entities
 
   const entitiesToQuery = entities.length
@@ -87,13 +87,7 @@ const DetailsPanel = ({
           isSlideOut={isSlideOut}
           isFetching={isFetchingEntitiesDetails}
         />
-        {attributesOpen ? (
-          <TaskAttributes
-            entityType={entityType}
-            entities={entityDetailsData}
-            isLoading={isFetchingEntitiesDetails}
-          />
-        ) : (
+        {selectedTab === 'feed' && (
           <Feed
             entityType={entityType}
             entities={entityDetailsData}
@@ -103,6 +97,13 @@ const DetailsPanel = ({
             projectName={firstProject}
             isMultiProjects={projectNames.length > 1}
             isSlideOut={isSlideOut}
+          />
+        )}
+        {selectedTab === 'attribs' && (
+          <TaskAttributes
+            entityType={entityType}
+            entities={entityDetailsData}
+            isLoading={isFetchingEntitiesDetails}
           />
         )}
       </Panel>

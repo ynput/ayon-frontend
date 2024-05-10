@@ -27,7 +27,7 @@ const dashboardSlice = createSlice({
       activityTypes:
         filterActivityTypes[getInitialStateLocalStorage('dashboard-details-filter', 'activity')] ||
         [],
-      attributesOpen: false,
+      tab: 'feed', // feed | attribs | representations
     },
     slideOut: {
       entityType: '',
@@ -35,7 +35,7 @@ const dashboardSlice = createSlice({
       projectName: '',
       filter: 'activity',
       activityTypes: filterActivityTypes.activity,
-      attributesOpen: false,
+      tab: 'feed', // feed | attribs | representations
     },
   },
   reducers: {
@@ -58,18 +58,18 @@ const dashboardSlice = createSlice({
       state.tasks.assignees = assignees
       state.tasks.assigneesIsMe = assigneesIsMe
     },
-    onAttribsOpenChange: (state, { payload }) => {
+    onDetailsPanelTabChange: (state, { payload }) => {
       const location = payload.isSlideOut ? 'slideOut' : 'details'
       // toggle the details open
-      state[location].attributesOpen = !state[location].attributesOpen
+      state[location].tab = payload.tab
     },
     onFeedFilterChange: (state, { payload }) => {
       const location = payload.isSlideOut ? 'slideOut' : 'details'
       state[location].filter = payload.value
       state[location].activityTypes =
         filterActivityTypes[payload.value] || filterActivityTypes.activity
-      // hide attributes when changing feed
-      state[location].attributesOpen = false
+      // switch back to feed tab
+      state[location].tab = 'feed'
     },
     onCollapsedColumnsChanged: (state, { payload }) => {
       state.tasks.collapsedColumns = payload
@@ -110,7 +110,7 @@ export const {
   onTasksGroupByChanged,
   onTasksFilterChanged,
   onAssigneesChanged,
-  onAttribsOpenChange,
+  onDetailsPanelTabChange,
   onFeedFilterChange,
   onCollapsedColumnsChanged,
   onPrefetchIds,
