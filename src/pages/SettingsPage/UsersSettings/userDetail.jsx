@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
+import { useDispatch } from 'react-redux'
 import {
   Button,
   Section,
@@ -9,6 +10,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
+import { setUserData } from '/src/features/user'
 import styled from 'styled-components'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
@@ -188,6 +190,7 @@ const UserDetail = ({
   const toastId = useRef(null)
 
   const attributes = ayonClient.getAttribsByScope('user')
+  const dispatch = useDispatch()
 
   useEffect(() => {
     // have the selected users changed?
@@ -272,6 +275,8 @@ const UserDetail = ({
         data,
       }
 
+      console.log(data.isDeveloper,'data.isDeveloper')
+
       try {
         // Apply the patch
         await updateUser({
@@ -280,6 +285,7 @@ const UserDetail = ({
         }).unwrap()
 
         toast.update(toastId.current, { render: `Updated user: ${user.name} ` })
+        dispatch(setUserData({ isDeveloper: data.isDeveloper }))
         i += 1
       } catch (error) {
         toast.error(`Unable to update user ${user.name} `)
