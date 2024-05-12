@@ -275,8 +275,6 @@ const UserDetail = ({
         data,
       }
 
-      console.log(data.isDeveloper,'data.isDeveloper')
-
       try {
         // Apply the patch
         await updateUser({
