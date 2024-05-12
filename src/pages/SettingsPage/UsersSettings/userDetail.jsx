@@ -283,7 +283,7 @@ const UserDetail = ({
         }).unwrap()
 
         toast.update(toastId.current, { render: `Updated user: ${user.name} ` })
-        dispatch(setUserData({ isDeveloper: data.isDeveloper }))
+        dispatch(setUserData(data))
         i += 1
       } catch (error) {
         toast.error(`Unable to update user ${user.name} `)
