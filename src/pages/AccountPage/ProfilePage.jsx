@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 import {
   FormRow,
   Section,
@@ -125,22 +126,19 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
-  const onUpdateAvatar = async () => {
-    const attrib = {
-      ...user.attrib,
-      ...formData,
-      developerMode: !!user.attrib.developerMode,
-    }
+
+  const onUpdateAvatar = async (files) => {
 
     try {
-      await updateUserAvatar({
-        name: user.name,
-        put: {
-          attrib,
-        },
-      }).unwrap()
+
+      const user_name = user.name
+
+      const res = await axios.put(`/api/users/${user_name}/avatar`, files)
+
+      console.log(res,'res')
 
       toast.success('Profile updated')
+      
 
       // update redux state with new data
       dispatch(onProfileUpdate(formData))
@@ -149,10 +147,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       setChangesMade(false)
     } catch (error) {
       console.log(error)
-      toast.error('Unable to update profile')
+      toast.error('Unable to update avatar')
       toast.error(error.details)
     }
   }
+
+
 
 
   console.log(attributes,'attributes')
@@ -174,13 +174,11 @@ const ProfilePage = ({ user = {}, isLoading }) => {
                 onEdit={() => setShowSetPassword(true)}
               />
             </FormRow>
-            <UserAttribForm formData={formData} setFormData={setFormData} attributes={attributes} onUpdateAvatar={onUpdateAvatar} />
-            {/* <FormRow label="Avatar URL" key="AvatarUrl" >
-              <span style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: 8}}>
-                <InputText value='' disabled />
-                <Button icon="upload">Upload</Button>
-              </span>
-            </FormRow> */}
+            <UserAttribForm
+              formData={formData}
+              setFormData={setFormData}
+              attributes={attributes}
+              onUpdateAvatar={onUpdateAvatar} />
             <SaveButton
               onClick={onSave}
               label="Save profile"

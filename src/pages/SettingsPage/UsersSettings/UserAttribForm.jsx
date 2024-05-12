@@ -1,6 +1,6 @@
+import { useRef } from 'react'
 import {
   InputText,
-  FileUpload,
   FormLayout,
   FormRow,
   InputPassword,
@@ -8,6 +8,7 @@ import {
   Dropdown,
   InputSwitch,
   Button,
+  UserImage
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -24,7 +25,7 @@ const UserAttribForm = ({
   setPasswordConfirm,
   setPassword,
   disabled,
-  onUpdateAvatar,
+  onUpdateAvatar
 }) => {
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
@@ -44,6 +45,18 @@ const UserAttribForm = ({
 
   console.log(builtin,'builtin')
   console.log(formData,'formData')
+
+
+
+  const handleInputChange = (e) => {
+    e.preventDefault()
+    if (!e.target.files || !e.target.files[0]) return
+    const files = e.target.files[0]
+    console.log(files, 'files')
+    onUpdateAvatar(files)
+  }
+
+  const fileInput = useRef(null)
 
   const buildForms = (attribs) =>
     attribs.map(({ name, data, input }) => {
@@ -66,30 +79,23 @@ const UserAttribForm = ({
           />
         )
       } else if (name === 'avatarUrl') {
+        console.log(formData,'formData')
+        const { avatarUrl, fullName } = formData
         widget = (
-         <span style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: 8}}>
-            <FileUpload
-              style={{flex: 1}} value={formData[name] || ''} 
-              disabled={disabled}
-              onChange={e => setFormData({ ...formData, [name]: e.target.value })}
-              autoComplete="cc-csc"
-              placeholder="Drop avatar image"
-              {...input}
-            />
-         </span>
-      //    <span style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: 8}}>
-      //    <InputText style={{flex: 1}} value={formData[name] || ''} 
-      //     disabled={disabled}
-      //     onChange={(e) => {
-      //       const value = e.target.value
-      //       setFormData((fd) => {
-      //         return { ...fd, [name]: value }
-      //       })
-      //     }}
-      //     autoComplete="cc-csc"
-      //     {...input}/>
-      //    <Button icon="upload">Upload</Button>
-      //  </span>
+        <span style={{ display: 'flex', flexDirection: 'row', gap: 8}}>
+          <UserImage src={avatarUrl} fullName={fullName} />
+         <Button
+          icon="upload"
+          className="upload-button"
+          iconProps={{ className: 'edit' }}
+          data-tooltip={'Upload thumbnail from file'}
+          tooltip="Upload Avatar"
+          onClick={() => fileInput.current.click()}
+        >
+          Upload New Avatar
+        </Button>
+        <input type="file" ref={fileInput} style={{ display: 'none' }}  multiple={false} onChange={(e) => handleInputChange(e)} accept=".png, .jpeg, .jpg" />
+       </span>
         )
       } else if (data.enum) {
         widget = (
