@@ -45,6 +45,8 @@ const BrowserDetailsPanel = () => {
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
+  if (!entities.length) return null
+
   return (
     <>
       <DetailsPanel
