@@ -7,7 +7,7 @@ import { useGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard
 import TaskAttributes from '../../pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '/src/services/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
-import { updateDetailsPanelTab } from '/src/features/details'
+import { closeSlideOut, updateDetailsPanelTab } from '/src/features/details'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -49,6 +49,11 @@ const DetailsPanel = ({
       }
     }
   }, [entityType, selectedTab])
+
+  // when entities changes, close the slideOutPanel
+  useEffect(() => {
+    if (!isSlideOut) dispatch(closeSlideOut())
+  }, [entities])
 
   // now we get the full details data for selected entities
   const entitiesToQuery = entities.length
