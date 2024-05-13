@@ -230,7 +230,7 @@ export const Collapsed = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--base-gap-medium);
+  gap: var(--base-gap-large);
   position: relative;
 
   border-top: solid 1px ${({ $color }) => $color};
