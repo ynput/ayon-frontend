@@ -29,6 +29,7 @@ const DetailsPanel = ({
   onClose,
   isSlideOut,
   style = {},
+  scope,
 }) => {
   const path = isSlideOut ? 'slideOut' : 'pinned'
   let selectedTab = useSelector((state) => state.details[path].tab)
@@ -117,9 +118,12 @@ const DetailsPanel = ({
             projectName={firstProject}
             isMultiProjects={projectNames.length > 1}
             isSlideOut={isSlideOut}
+            scope={scope}
           />
         )}
-        {selectedTab === 'representations' && <RepresentationsList entities={entityDetailsData} />}
+        {selectedTab === 'representations' && (
+          <RepresentationsList entities={entityDetailsData} scope={scope} />
+        )}
         {selectedTab === 'attribs' && (
           <TaskAttributes
             entityType={entityType}

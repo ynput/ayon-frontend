@@ -7,9 +7,9 @@ import Shortcuts from '/src/containers/Shortcuts'
 import { useEffect, useState } from 'react'
 import { classNames } from 'primereact/utils'
 
-const DetailsPanelSlideOut = ({ projectsInfo }) => {
+const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
   const dispatch = useDispatch()
-  const slideOut = useSelector((state) => state.details.slideOut)
+  const slideOut = useSelector((state) => state.details.slideOut[scope])
   const { entityType, entityId, projectName } = slideOut
   const isSlideOutOpen = entityType && entityId && projectName
 
@@ -61,6 +61,7 @@ const DetailsPanelSlideOut = ({ projectsInfo }) => {
         projectUsers={users}
         activeProjectUsers={users}
         isSlideOut
+        scope={scope}
       />
       <Shortcuts shortcuts={[{ key: 'Escape', action: handleClose }]} deps={[]} />
     </Styled.SlideOut>

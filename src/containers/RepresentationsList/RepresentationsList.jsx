@@ -36,7 +36,7 @@ const columns = [
   },
 ]
 
-const RepresentationList = ({ entities = [] }) => {
+const RepresentationList = ({ entities = [], scope }) => {
   // merge all entities data into one array of entities
   const representations = useMemo(() => versionsToRepresentations(entities) || [], [entities])
 
@@ -55,7 +55,9 @@ const RepresentationList = ({ entities = [] }) => {
     // set focused state
     dispatch(setFocusedRepresentations([entityId]))
     // open slide out panel
-    dispatch(openSlideOut({ entityId, entityType: 'representation', projectName, tab: 'attribs' }))
+    dispatch(
+      openSlideOut({ entityId, entityType: 'representation', projectName, tab: 'attribs', scope }),
+    )
   }
 
   const onRowClick = (e) => {

@@ -64,8 +64,9 @@ const BrowserPage = () => {
                   projectUsers={users}
                   activeProjectUsers={users}
                   style={{ boxShadow: 'none' }}
+                  scope="project"
                 />
-                <DetailsPanelSlideOut projectsInfo={projectsInfo} />
+                <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="project" />
               </SplitterPanel>
             ) : (
               <SplitterPanel style={{ maxWidth: 0 }} />

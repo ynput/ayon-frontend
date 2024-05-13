@@ -8,6 +8,14 @@ export const filterActivityTypes = {
   checklists: ['checklist'],
 }
 
+const initialStateSlideOut = {
+  entityType: '',
+  entityId: '',
+  projectName: '',
+}
+
+const scopes = ['dashboard', 'project']
+
 const detailsSlice = createSlice({
   name: 'details',
   initialState: {
@@ -18,13 +26,11 @@ const detailsSlice = createSlice({
       tab: 'feed', // feed | attribs | representations
     },
     slideOut: {
-      entityType: '',
-      entityId: '',
-      projectName: '',
+      dashboard: initialStateSlideOut,
+      project: initialStateSlideOut,
       filter: 'activity',
       activityTypes: filterActivityTypes.activity,
       tab: 'feed', // feed | attribs | representations
-      scope: 'dashboard', // dashboard | project
     },
   },
   reducers: {
@@ -43,22 +49,25 @@ const detailsSlice = createSlice({
       state[location].tab = 'feed'
     },
     openSlideOut: (state, { payload }) => {
+      const scope = payload.scope
+      if (!scope && scopes.includes(scope)) return
       // open slide out
-      state.slideOut.entityType = payload.entityType
-      state.slideOut.entityId = payload.entityId
-      state.slideOut.projectName = payload.projectName
-
-      //   reset if tab = representation and entityType is not version
-      if (payload.tab === 'representations' && payload.entityType !== 'version') {
-        payload.tab = 'attribs'
+      state.slideOut[scope].entityType = payload.entityType
+      state.slideOut[scope].entityId = payload.entityId
+      state.slideOut[scope].projectName = payload.projectName
+      // close all other scopes
+      for (const s of scopes) {
+        if (s !== scope) {
+          state.slideOut[s] = initialStateSlideOut
+        }
       }
 
       state.slideOut.tab = payload.tab || state.slideOut.tab
     },
     closeSlideOut: (state) => {
-      state.slideOut.entityType = ''
-      state.slideOut.entityId = ''
-      state.slideOut.projectName = ''
+      for (const scope of scopes) {
+        state.slideOut[scope] = initialStateSlideOut
+      }
     },
   },
 })

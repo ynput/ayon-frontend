@@ -64,8 +64,6 @@ const UserDashboardPage = () => {
     return projectsInfoWithProjects
   }, [projectsInfo, isLoadingInfo])
 
-  console.log(projectsInfoWithProjects)
-
   // UPDATE/DELETE PROJECT
   const [updateProject] = useUpdateProjectMutation()
   const [deleteProject] = useDeleteProjectMutation()

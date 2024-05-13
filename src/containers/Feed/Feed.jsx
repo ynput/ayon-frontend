@@ -24,6 +24,7 @@ const Feed = ({
   entityType,
   isSlideOut,
   isMultiProjects,
+  scope,
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
@@ -196,7 +197,7 @@ const Feed = ({
     if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
 
     // open slide out panel
-    dispatch(openSlideOut({ entityId, entityType, projectName }))
+    dispatch(openSlideOut({ entityId, entityType, projectName, scope }))
   }
 
   const handleFileExpand = (file) => {
