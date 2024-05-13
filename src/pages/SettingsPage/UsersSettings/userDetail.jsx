@@ -10,7 +10,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
-import { updateUserData } from '/src/features/user'
+import { updateUserData, updateUserAttribs } from '/src/features/user'
 import styled from 'styled-components'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
@@ -275,6 +275,8 @@ const UserDetail = ({
         data,
       }
 
+      console.log(attrib,'attribXXX')
+
       try {
         // Apply the patch
         await updateUser({
@@ -283,7 +285,7 @@ const UserDetail = ({
         }).unwrap()
 
         toast.update(toastId.current, { render: `Updated user: ${user.name} ` })
-        user.self && dispatch(updateUserData(data))
+        user.self && dispatch(updateUserData(data)) && dispatch(updateUserAttribs(data)) 
         i += 1
       } catch (error) {
         toast.error(`Unable to update user ${user.name} `)
