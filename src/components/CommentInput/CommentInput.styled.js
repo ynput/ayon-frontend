@@ -319,3 +319,10 @@ export const Dropzone = styled.div`
     font-size: 40px;
   }
 `
+
+export const Placeholder = styled.span`
+  padding: 12px 15px;
+  /* italic */
+  font-style: italic;
+  opacity: 0.4;
+`

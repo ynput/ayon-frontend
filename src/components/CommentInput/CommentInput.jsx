@@ -83,21 +83,14 @@ const CommentInput = ({
   const siblingTasks = mentionTasks.filter(
     (task) => !entities.some((entity) => entity.id === task.id),
   )
-  // CONFIG
-  let placeholder = isOpen
-    ? `Comment or mention with @user, @@version, @@@task...`
-    : 'Add a comment...'
-
-  if (disabled) placeholder = 'Commenting is disabled across multiple projects.'
 
   // update placeholder on editor when isOpen
   useEffect(() => {
-    const quill = editorRef.current.getEditor()
-    if (quill) {
-      const container = quill.container
-      container?.firstChild?.setAttribute('data-placeholder', placeholder)
+    if (isOpen) {
+      editorRef.current?.getEditor()?.enable()
+      editorRef.current?.focus()
     }
-  }, [isOpen, editorRef, disabled])
+  }, [isOpen, editorRef])
 
   const mentionTypes = ['@', '@@', '@@@']
   const typeOptions = {
@@ -380,19 +373,18 @@ const CommentInput = ({
     if (isOpen || disabled) return
 
     onOpen && onOpen()
-    editorRef.current.getEditor().enable()
-    editorRef.current.focus()
   }
 
   const handleClose = () => {
-    // always close editor
-    onClose && onClose()
     // get editor value
     const editor = editorRef.current.getEditor()
     const text = editor.getText()
     if (text.length < 2 || isEditing) {
       setEditorValue('')
     }
+
+    // always close editor
+    onClose && onClose()
   }
 
   const handleKeyDown = (e) => {
@@ -541,18 +533,23 @@ const CommentInput = ({
             style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
             projectName={projectName}
           />
-          {/* QUILL is configured in helpers file */}
-          <ReactQuill
-            theme="snow"
-            style={{ minHeight: quillMinHeight, maxHeight: 300 }}
-            ref={editorRef}
-            value={editorValue}
-            onChange={handleChange}
-            readOnly={!isOpen || disabled}
-            placeholder={placeholder}
-            modules={modules}
-            formats={quillFormats}
-          />
+          {isOpen && !disabled ? (
+            <ReactQuill
+              theme="snow"
+              style={{ minHeight: quillMinHeight, maxHeight: 300 }}
+              ref={editorRef}
+              value={editorValue}
+              onChange={handleChange}
+              readOnly={!isOpen}
+              placeholder={'Comment or mention with @user, @@version, @@@task...'}
+              modules={modules}
+              formats={quillFormats}
+            />
+          ) : (
+            <Styled.Placeholder>
+              {disabled ? 'Commenting is disabled across multiple projects.' : 'Add a comment...'}
+            </Styled.Placeholder>
+          )}
 
           <Styled.Footer>
             <Styled.Buttons>
