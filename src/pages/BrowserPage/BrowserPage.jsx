@@ -8,6 +8,7 @@ import Products from './Products'
 import DetailsPanel from '/src/containers/DetailsPanel/DetailsPanel'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import DetailsPanelSlideOut from '/src/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import { isEqual } from 'lodash'
 
 const BrowserPage = () => {
   const projectName = useSelector((state) => state.project.name)
@@ -24,7 +25,20 @@ const BrowserPage = () => {
       projectNames: [{ id: projectName, name: projectName }],
     },
   }
-  const focused = useSelector((state) => state.context.focused)
+
+  const subscribedStateFields = ['versions', 'products', 'folders', 'tasks']
+
+  const focused = useSelector(
+    (state) => state.context.focused,
+    (a, b) => {
+      // compare subscribed states and if any are different, return false
+      for (const field of subscribedStateFields) {
+        if (!isEqual(a[field], b[field])) return false
+      }
+
+      return true
+    },
+  )
 
   let { type: entityType } = focused
   // if entityType is representation, entityType stays as versions because we use a slide out

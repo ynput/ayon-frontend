@@ -27,7 +27,7 @@ const DetailsPanel = ({
   projectsInfo = {},
   projectNames = [],
   onClose,
-  isSlideOut,
+  isSlideOut = false,
   style = {},
   scope,
 }) => {
@@ -50,15 +50,15 @@ const DetailsPanel = ({
     }
   }, [entityType, selectedTab])
 
-  // when entities changes, close the slideOutPanel
-  useEffect(() => {
-    if (!isSlideOut) dispatch(closeSlideOut())
-  }, [entities])
-
   // now we get the full details data for selected entities
   const entitiesToQuery = entities.length
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+
+  // when entities changes, close the slideOutPanel
+  useEffect(() => {
+    if (!isSlideOut) dispatch(closeSlideOut())
+  }, [entitiesToQuery, isSlideOut])
 
   const {
     data: detailsData = {},

@@ -54,6 +54,7 @@ const RepresentationList = ({ entities = [], scope }) => {
   const onRepSelectionChange = (entityId, projectName) => {
     // set focused state
     dispatch(setFocusedRepresentations([entityId]))
+
     // open slide out panel
     dispatch(
       openSlideOut({ entityId, entityType: 'representation', projectName, tab: 'attribs', scope }),
