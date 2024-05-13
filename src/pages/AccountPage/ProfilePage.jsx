@@ -124,8 +124,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
-  console.log(user, 'USERZZZ')
-
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
