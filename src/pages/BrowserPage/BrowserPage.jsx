@@ -26,7 +26,9 @@ const BrowserPage = () => {
   }
   const focused = useSelector((state) => state.context.focused)
 
-  const { type: entityType } = focused
+  let { type: entityType } = focused
+  // if entityType is representation, entityType stays as versions because we use a slide out
+  if (entityType === 'representation') entityType = 'version'
   const entityIds = focused[entityType + 's'] || []
   const entities = entityIds.map((id) => ({ id, projectName }))
 
@@ -51,7 +53,7 @@ const BrowserPage = () => {
               <Products />
             </SplitterPanel>
             {entities?.length ? (
-              <SplitterPanel style={{ minWidth: 250, maxWidth: 480 }}>
+              <SplitterPanel style={{ minWidth: 250, maxWidth: 480, zIndex: 100 }}>
                 <DetailsPanel
                   entityType={entityType}
                   entities={entities}

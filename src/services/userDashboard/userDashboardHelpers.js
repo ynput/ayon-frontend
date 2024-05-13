@@ -59,6 +59,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
       const icon = tasks.find((task) => task.name === entitySubType)?.icon
       return {
         ...baseDetailsData,
+        name: entity.name,
         title: entity?.folder?.label || entity?.folder?.name || 'Unknown Folder',
         subTitle: entity.label || entity.name,
         users: entity.assignees,
@@ -75,6 +76,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
 
       return {
         ...baseDetailsData,
+        name: entity.name,
         title: entity?.product?.name || 'Unknown Product',
         subTitle: entity.name || entity.version,
         users: entity.author ? [entity.author] : [],
@@ -83,6 +85,9 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         productId: entity.product?.id,
         icon: icon || 'layers',
         entitySubType: entitySubType,
+        representations: entity.representations?.edges?.map((edge) => edge.node) || [],
+        folder: entity.product?.folder,
+        product: entity.product,
       }
     }
     case 'folder': {
@@ -92,6 +97,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
       const icon = folders.find((folder) => folder.name === entitySubType)?.icon
       return {
         ...baseDetailsData,
+        name: entity.name,
         title: entity.label || entity.name || 'Unknown Folder',
         subTitle: path.split('/').slice(-2)[0],
         users: [],
@@ -99,6 +105,34 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         folderId: entity.id,
         icon: icon || 'folder',
         entitySubType: entitySubType,
+      }
+    }
+    case 'representation': {
+      let context = {}
+
+      try {
+        context = JSON.parse(entity.context)
+      } catch (error) {
+        console.error(error)
+      }
+
+      const { path: folderPath, product = {} } = context
+
+      const path = `${projectName}/${folderPath}/${product.name}/${entity.version?.name}/${entity.name}`
+
+      return {
+        ...baseDetailsData,
+        name: entity.name,
+        title: entity.version?.name || 'Unknown Version',
+        subTitle: entity.name || 'Unknown Representation',
+        users: entity.version?.author ? [entity.version?.author] : [],
+        path: path,
+        folderId: entity.product?.folder?.id,
+        productId: entity.product?.id,
+        icon: 'database',
+        entitySubType: 'representation',
+        folder: entity.product?.folder,
+        product: entity.product,
       }
     }
     default:

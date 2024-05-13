@@ -30,6 +30,7 @@ const Feed = ({
   const path = isSlideOut ? 'slideOut' : 'details'
   const activityTypes = useSelector((state) => state.dashboard[path].activityTypes)
   const filter = useSelector((state) => state.dashboard[path].filter)
+
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
   const [currentCursors, setCurrentCursors] = useState({})
@@ -107,6 +108,7 @@ const Feed = ({
   useEffect(() => {
     if (!feedRef.current) return
     if (!hasPreviousPage) return
+    if (isFetchingActivities) return
 
     // check if the feed is scrollable
     const isScrollable = feedRef.current.scrollHeight > feedRef.current.clientHeight
@@ -116,7 +118,7 @@ const Feed = ({
 
     // fetch more activities
     setCurrentCursors({ ...currentCursors, [filter]: cursor })
-  }, [feedRef, hasPreviousPage, cursor, filter, currentCursors])
+  }, [feedRef, hasPreviousPage, cursor, filter, currentCursors, isFetchingActivities])
 
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({

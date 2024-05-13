@@ -24,7 +24,7 @@ const DetailsPanelHeader = ({
   isFetching,
 }) => {
   // for selected entities, get flat list of assignees
-  const selectedTasksAssignees = useMemo(
+  const entityAssignees = useMemo(
     () => union(...entities.map((entity) => entity.users)),
     [entities],
   )
@@ -49,15 +49,17 @@ const DetailsPanelHeader = ({
 
   const thumbnails = useMemo(
     () =>
-      entities
-        .filter((entity, i) => i <= 5)
-        .map((entity) => ({
-          src: entity.thumbnailUrl,
-          icon: entity.icon,
-          id: entity.id,
-          type: entityType,
-          updatedAt: entity.updatedAt,
-        })),
+      entityType !== 'representation'
+        ? entities
+            .filter((entity, i) => i <= 5)
+            .map((entity) => ({
+              src: entity.thumbnailUrl,
+              icon: entity.icon,
+              id: entity.id,
+              type: entityType,
+              updatedAt: entity.updatedAt,
+            }))
+        : [{ icon: 'view_in_ar' }],
     [entities],
   )
 
@@ -167,14 +169,14 @@ const DetailsPanelHeader = ({
   const portalId = 'dashboard-details-header'
 
   const hasUser =
-    ['task', 'version'].includes(entityType) &&
-    (selectedTasksAssignees.length > 0 || entityType === 'task')
+    ['task', 'version', 'representation'].includes(entityType) &&
+    (entityAssignees.length > 0 || entityType === 'task')
 
   const usersOptions = users.map((u) => u)
   if (hasUser) {
     // check if all users are in options, otherwise add them
     const allUsers = users.map((u) => u.name)
-    const usersToAdd = selectedTasksAssignees.filter((u) => !allUsers.includes(u))
+    const usersToAdd = entityAssignees.filter((u) => !allUsers.includes(u))
     if (usersToAdd.length) {
       usersOptions.push(...usersToAdd.map((u) => ({ name: u, fullName: u })))
     }
@@ -227,10 +229,10 @@ const DetailsPanelHeader = ({
           />
           {hasUser && !isLoading && (
             <AssigneeSelect
-              value={selectedTasksAssignees}
+              value={entityAssignees}
               options={usersOptions}
               disabledValues={disabledAssignees.map((u) => u.name)}
-              isMultiple={isMultiple && selectedTasksAssignees.length > 1}
+              isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
               editor={entityType === 'task'}
               align="right"
               onChange={(value) => handleUpdate('assignees', value)}
@@ -252,7 +254,7 @@ const DetailsPanelHeader = ({
           />
         </Styled.ContentRow>
       </Styled.Section>
-      <FeedFilters isSlideOut={isSlideOut} isLoading={isLoading} />
+      <FeedFilters isSlideOut={isSlideOut} isLoading={isLoading} entityType={entityType} />
     </Styled.SectionWrapper>
   )
 }

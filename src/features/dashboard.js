@@ -94,6 +94,7 @@ const dashboardSlice = createSlice({
       state.slideOut.entityType = payload.entityType
       state.slideOut.entityId = payload.entityId
       state.slideOut.projectName = payload.projectName
+      state.slideOut.tab = payload.tab || state.slideOut.tab
     },
     onSlideOutClose: (state) => {
       state.slideOut.entityType = ''

@@ -6,6 +6,9 @@ import Feed from '/src/containers/Feed/Feed'
 import { useGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import TaskAttributes from '../../pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '/src/services/userDashboard/userDashboardHelpers'
+import RepresentationsList from '../RepresentationsList/RepresentationsList'
+
+export const entitiesWithoutFeed = ['product', 'representation']
 
 const DetailsPanel = ({
   entityType,
@@ -27,9 +30,12 @@ const DetailsPanel = ({
   style = {},
 }) => {
   const path = isSlideOut ? 'slideOut' : 'details'
-  const selectedTab = useSelector((state) => state.dashboard[path].tab)
-  // now we get the full details data for selected entities
+  let selectedTab = useSelector((state) => state.dashboard[path].tab)
 
+  // if the entity type is product or representation, we show the attribs tab only
+  if (entitiesWithoutFeed.includes(entityType)) selectedTab = 'attribs'
+
+  // now we get the full details data for selected entities
   const entitiesToQuery = entities.length
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
@@ -87,7 +93,7 @@ const DetailsPanel = ({
           isSlideOut={isSlideOut}
           isFetching={isFetchingEntitiesDetails}
         />
-        {selectedTab === 'feed' && (
+        {selectedTab === 'feed' && !isError && (
           <Feed
             entityType={entityType}
             entities={entityDetailsData}
@@ -99,6 +105,7 @@ const DetailsPanel = ({
             isSlideOut={isSlideOut}
           />
         )}
+        {selectedTab === 'representations' && <RepresentationsList entities={entityDetailsData} />}
         {selectedTab === 'attribs' && (
           <TaskAttributes
             entityType={entityType}

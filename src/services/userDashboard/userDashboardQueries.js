@@ -131,11 +131,22 @@ export const VERSION_DETAILS_QUERY = (attribs = []) => `
                   folder {
                     id
                     path
+                    name
+                    parents
                   }
                 }
                 attrib {
                   ${attribs.join('\n')}
                 }
+                representations{
+                  edges {
+                      node {
+                          id
+                          name
+                          fileCount
+                      }
+                  }
+              }
             }
         }
     }
@@ -164,6 +175,29 @@ query FolderDetails($projectName: String!, $entityId: String!) {
   }
 }`
 
+export const REP_QUERY = (attribs) => `
+    query RepresentationDetails($projectName: String!, $entityId: String!) {
+      project(name: $projectName) {
+        representation(id: $entityId) {
+          id
+          versionId
+          name
+          status
+          tags
+          updatedAt
+          attrib {
+            ${attribs.join('\n')}
+          }
+          context
+          version {
+            name
+            author
+          }
+        }
+      }
+    }
+`
+
 // this is used for getting the correct query for the details panel
 export const buildDetailsQuery = (entityType) => {
   // first get all attribs for the entity
@@ -180,6 +214,8 @@ export const buildDetailsQuery = (entityType) => {
       return VERSION_DETAILS_QUERY(attribs)
     case 'folder':
       return FOLDER_DETAILS_QUERY(attribs)
+    case 'representation':
+      return REP_QUERY(attribs)
     default:
       break
   }
