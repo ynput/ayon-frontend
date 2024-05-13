@@ -22,7 +22,7 @@ const HeaderStyled = styled.div`
 
 const ProgressStyled = styled(TileStyled)`
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   overflow: hidden;
   position: relative;
 

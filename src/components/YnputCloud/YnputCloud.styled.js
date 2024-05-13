@@ -119,7 +119,7 @@ export const Dropdown = styled.div`
   padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-items: flex-start;
   min-height: 0;
   transform: translateY(0);

@@ -62,7 +62,7 @@ export const ProjectItem = styled.div`
   justify-content: space-between;
   padding: 4px 8px;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   border-radius: var(--border-radius-m);
   cursor: pointer;

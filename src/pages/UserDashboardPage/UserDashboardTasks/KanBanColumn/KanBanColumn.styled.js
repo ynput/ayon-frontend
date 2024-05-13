@@ -176,7 +176,7 @@ export const Items = styled(PerfectScrollbar)`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   width: 100%;
 
   padding-bottom: ${({ $isScrolling }) => ($isScrolling ? '30px' : '16px')};

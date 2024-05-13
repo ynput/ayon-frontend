@@ -15,11 +15,11 @@ import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLa
 const HeaderGridStyled = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  gap: var(--base-gap-large);
 `
 
 const PanelsContainerStyled = styled.div`
-  gap: 8px;
+  gap: var(--base-gap-large);
   display: flex;
   flex-direction: column;
   align-self: baseline;

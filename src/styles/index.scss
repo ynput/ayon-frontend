@@ -70,7 +70,7 @@ body {
     flex-grow: 1;
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: var(--base-gap-large);
     padding: 8px;
     position: relative;
 
@@ -751,7 +751,7 @@ a {
 // confirm dialog buttons
 .p-dialog.p-confirm-dialog {
   .p-dialog-footer {
-    gap: 8px;
+    gap: var(--base-gap-large);
     display: flex;
     width: 100%;
     justify-content: flex-end;

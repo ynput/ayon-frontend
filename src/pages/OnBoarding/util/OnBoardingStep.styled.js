@@ -95,7 +95,7 @@ export const PresetsContainer = styled.ul`
   max-width: 470px;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding: 0;
   margin: 0;
   flex: 1;
@@ -116,7 +116,7 @@ export const AddonsContainer = styled.div`
 
 export const Footer = styled.footer`
   display: flex;
-  gap: 8px;
+  gap: var(--base-gap-large);
   width: 100%;
   justify-content: flex-end;
   margin-top: auto;

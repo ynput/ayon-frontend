@@ -12,7 +12,7 @@ const NodePanelHeader = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   background-color: var(--color-grey-02);
   min-height: 40px;
   max-height: 40px;

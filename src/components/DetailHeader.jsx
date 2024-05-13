@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { Panel, Button, Dialog } from '@ynput/ayon-react-components'
 
 const HeaderStyled = styled(Panel)`
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
@@ -19,7 +19,7 @@ const HeaderStyled = styled(Panel)`
 
   & > div {
     display: flex;
-    gap: 8px;
+    gap: var(--base-gap-large);
     align-items: center;
     flex: 1;
     overflow-x: clip;

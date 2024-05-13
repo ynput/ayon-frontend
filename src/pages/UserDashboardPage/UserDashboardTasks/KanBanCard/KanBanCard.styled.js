@@ -34,7 +34,7 @@ export const CardDragOverlay = styled(DragOverlay)`
   display: flex;
   flex-direction: column;
 
-  gap: 8px;
+  gap: var(--base-gap-large);
 
   rotate: 5deg;
   /* box shadow */

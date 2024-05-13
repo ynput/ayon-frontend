@@ -26,7 +26,7 @@ export const MentionItem = styled.li`
   border-radius: var(--border-radius-m);
 
   display: flex;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-items: center;
   user-select: none;
   cursor: pointer;

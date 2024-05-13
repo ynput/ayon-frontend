@@ -26,13 +26,13 @@ export const ProjectSidebar = styled(Sidebar)`
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--base-gap-large);
 
     section {
       background-color: var(--md-sys-color-surface-container-high);
       color: var(--md-sys-color-on-surface);
       border-radius: var(--border-radius-l);
-      gap: 8px;
+      gap: var(--base-gap-large);
       padding: 8px;
       overflow: hidden;
 

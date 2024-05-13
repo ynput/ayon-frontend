@@ -18,7 +18,7 @@ export const Header = styled.header`
   padding: 8px 8px 0px 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
 `
 
