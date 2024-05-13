@@ -84,7 +84,7 @@ const CommentInput = ({
     (task) => !entities.some((entity) => entity.id === task.id),
   )
 
-  // update placeholder on editor when isOpen
+  // focus on editor when opened
   useEffect(() => {
     if (isOpen) {
       editorRef.current?.getEditor()?.enable()
