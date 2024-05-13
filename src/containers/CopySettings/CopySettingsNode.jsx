@@ -125,7 +125,6 @@ const CopySettingsNode = ({
 
   useEffect(() => {
     if (forcedSourceProjectName && forcedSourceProjectName !== sourceProjectName) {
-      console.log('forcedSourceProjectName', forcedSourceProjectName)
       setSourceProjectName(forcedSourceProjectName)
     } else if (forcedSourceProjectName === null && sourceProjectName === null) {
       setSourceProjectName(null)

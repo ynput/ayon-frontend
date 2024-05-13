@@ -2,7 +2,7 @@ import { useGetAllProjectsQuery } from '/src/services/project/getProject'
 import { useMemo } from 'react'
 import { Dropdown } from '@ynput/ayon-react-components'
 
-const ProjectDropdown = ({ projectName, setProjectName, disabled }) => {
+const ProjectDropdown = ({ projectName, setProjectName, disabled, style }) => {
   const { data, isLoading, isError } = useGetAllProjectsQuery({ showInactive: false })
 
   const projectOptions = useMemo(() => {
@@ -10,13 +10,17 @@ const ProjectDropdown = ({ projectName, setProjectName, disabled }) => {
     return data.map((i) => ({ value: i.name }))
   }, [data])
 
+  let dropwdownStyle = {}
+  if (style) dropwdownStyle = style
+  else dropwdownStyle.flexGrow = 1
+
   return (
     <Dropdown
       value={projectName ? [projectName] : null}
       options={projectOptions}
       onChange={(e) => setProjectName(e[0])}
       placeholder="Select a project"
-      style={{ flexGrow: 1 }}
+      style={dropwdownStyle}
       disabled={disabled}
     />
   )

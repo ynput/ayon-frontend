@@ -1,6 +1,7 @@
 /* eslint-disable */
 
 import { useState, useMemo } from 'react'
+import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
 import { ScrollPanel, Button, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-components'
@@ -32,17 +33,20 @@ const CopySettingsDialog = ({
 
   const [sourceBundle, setSourceBundle] = useState(null)
   const [sourceVariant, setSourceVariant] = useState(null)
-  const [sourceProjectName, setSourceProjectName] = useState(null)
+  const [sourceProjectName, setSourceProjectName] = useState(projectName)
 
   const {
     data: bundlesData,
     isLoading: bundlesLoading,
     isError: bundlesError,
-  } = useGetBundleListQuery({}, { skip: !pickByBundle })
+  } = useGetBundleListQuery({})
 
   const sourceVersions = useMemo(() => {
-    if (bundlesLoading || bundlesError) return {}
     if (!sourceBundle) return {}
+
+    if (bundlesLoading || bundlesError) return {}
+
+    if (!bundlesData) return {}
 
     const sb = bundlesData.find((i) => i.name === sourceBundle)
     return sb?.addons || {}
@@ -126,29 +130,50 @@ const CopySettingsDialog = ({
     </div>
   )
 
-  const toolbar = pickByBundle && (
+  const dropSize = 270
+  const dropStyle = { maxWidth: dropSize, minWidth: dropSize, marginRight: 8 }
+
+  const toolbar = (
     <Toolbar>
-      Copy settings from
-      <BundleDropdown
-        style={{ flexGrow: 1 }}
-        bundleName={sourceBundle}
-        setBundleName={setSourceBundle}
-      />
-      <VariantSelector variant={sourceVariant} setVariant={setSourceVariant} />
-      {projectName && (
-        <ProjectDropdown projectName={sourceProjectName} setProjectName={setSourceProjectName} />
+      {pickByBundle && (
+        <>
+          Source bundle:
+          <BundleDropdown
+            style={dropStyle}
+            bundleName={sourceBundle}
+            setBundleName={setSourceBundle}
+            setVariant={setSourceVariant}
+          />
+        </>
       )}
+      Source variant:
+      <VariantSelector
+        variant={sourceVariant}
+        style={dropStyle}
+        setVariant={(val) => {
+          setSourceVariant(val)
+        }}
+      />
       <Spacer />
+      {projectName && (
+        <>
+          Source project:
+          <ProjectDropdown
+            projectName={sourceProjectName}
+            setProjectName={setSourceProjectName}
+            style={{ ...dropStyle, marginRight: 0 }}
+          />
+        </>
+      )}
     </Toolbar>
   )
-
 
   return (
     <Dialog
       isOpen
       onClose={onClose}
-      variant='dialog'
-      size='full'
+      variant="dialog"
+      size="full"
       style={{ width: '80vw', height: '80vh', zIndex: 999 }}
       header={`Copy ${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
       footer={footer}
@@ -185,7 +210,7 @@ const CopySettingsDialog = ({
                   }}
                   forcedSourceVariant={sourceVariant}
                   forcedSourceVersion={pickByBundle ? sourceVersions[addon.name] : null}
-                  forcedSourceProjectName={pickByBundle ? sourceProjectName : null}
+                  forcedSourceProjectName={sourceProjectName || null}
                 />
               ))}
           </div>

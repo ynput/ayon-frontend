@@ -165,7 +165,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
       const payloadData = {
         ...localData[key],
-        "__pinned_fields__": changedKeys[key]
+        __pinned_fields__: changedKeys[key],
       }
 
       try {
