@@ -39,7 +39,7 @@ const DialogOpenAnimation = keyframes`
 export const DialogContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
 
   /* position */
   position: absolute;
@@ -103,13 +103,13 @@ export const Menu = styled.menu`
 
   /* custom */
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding: 8px;
 
   /* shrink the padding when compact */
   &.compact {
     padding: 4px;
-    gap: 4px;
+    gap: var(--base-gap-small);
   }
 
   /* colors */
@@ -130,7 +130,7 @@ export const Item = styled.li`
   padding: 6px 16px 6px 12px;
   justify-content: flex-start;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   border-radius: 4px;
   cursor: pointer;

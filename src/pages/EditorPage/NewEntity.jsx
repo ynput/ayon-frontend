@@ -3,7 +3,14 @@ import PropTypes from 'prop-types'
 import { capitalize, isEmpty } from 'lodash'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Button, InputText, SaveButton, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-components'
+import {
+  Button,
+  InputText,
+  SaveButton,
+  Spacer,
+  Toolbar,
+  Dialog,
+} from '@ynput/ayon-react-components'
 import { useRef } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
@@ -13,7 +20,7 @@ import checkName from '/src/helpers/checkName'
 const ContentStyled = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   form {
     input:first-child {
       margin-right: 8px;
@@ -197,9 +204,9 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
       isOpen={visible}
       onClose={onHide}
       onShow={handleShow}
-      size='sm'
-      variant='dialog'
-      style={{zIndex: 999, }}
+      size="sm"
+      variant="dialog"
+      style={{ zIndex: 999 }}
       footer={
         <Toolbar onFocus={() => setNameFocused(false)}>
           <Spacer />

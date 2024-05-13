@@ -5,7 +5,7 @@ export const Header = styled.header`
   padding: 4px;
   align-items: center;
   position: relative;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   width: 100%;
   z-index: 20;

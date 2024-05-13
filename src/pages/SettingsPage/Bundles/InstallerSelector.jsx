@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components'
 
 const DefaultItemStyled = styled.span`
   display: flex;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-items: center;
   height: 30px;
   padding: 0 8px;
