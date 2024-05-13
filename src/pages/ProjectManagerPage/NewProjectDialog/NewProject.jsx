@@ -145,11 +145,6 @@ const NewProjectDialog = ({ onHide }) => {
     </Toolbar>
   )
 
-  const handleBackdropClick = (event) => {
-    if (event.target !== event.currentTarget) return
-    onHide()
-  }
-
   const handleKeyDown = (e) => {
     e?.stopPropagation()
     const enter = e.key === 'Enter'
