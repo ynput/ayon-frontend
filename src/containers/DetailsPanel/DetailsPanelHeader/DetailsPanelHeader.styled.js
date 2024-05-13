@@ -57,7 +57,7 @@ export const Path = styled(OverflowField)`
   &.isLoading {
     overflow: hidden;
     border-radius: var(--border-radius-m);
-    .icon {
+    span {
       opacity: 0;
     }
     ${getShimmerStyles()}
