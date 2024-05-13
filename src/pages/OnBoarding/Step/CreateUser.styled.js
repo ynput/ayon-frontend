@@ -14,7 +14,7 @@ export const Form = styled.form`
   flex-direction: column;
   align-items: center;
   width: 300px;
-  gap: 8px;
+  gap: var(--base-gap-large);
 
   h1 {
     font-size: 24px;

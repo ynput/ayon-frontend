@@ -19,7 +19,7 @@ export const List = styled.ul`
 export const ListItem = styled.li`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding: 8px;
   border-radius: 8px;
 

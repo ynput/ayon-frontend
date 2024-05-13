@@ -11,7 +11,7 @@ import useCreateContext from '/src/hooks/useCreateContext'
 const StyledProfileRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   overflow: hidden;
 `
 

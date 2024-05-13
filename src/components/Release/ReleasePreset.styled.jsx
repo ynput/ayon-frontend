@@ -7,7 +7,7 @@ export const Preset = styled.li`
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   user-select: none;
   cursor: pointer;

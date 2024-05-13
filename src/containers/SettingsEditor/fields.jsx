@@ -13,14 +13,14 @@ const FormArrayField = styled.div`
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
 `
 
 const FormArrayFieldItem = styled.div`
   flex-grow: 1;
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: var(--base-gap-large);
 
   margin-right: 4px;
 

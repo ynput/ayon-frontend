@@ -22,7 +22,7 @@ import { classNames } from 'primereact/utils'
 const DeveloperSwitch = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
   border-radius: var(--border-radius-l);
   padding: 4px 4px 4px 8px;
   cursor: pointer;
