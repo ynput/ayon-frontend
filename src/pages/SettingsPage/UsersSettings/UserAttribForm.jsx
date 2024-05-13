@@ -94,7 +94,7 @@ const UserAttribForm = ({
         >
           Upload New Avatar
         </Button>
-        <input type="file" ref={fileInput} style={{ display: 'none' }}  multiple={false} onChange={(e) => handleInputChange(e)} accept=".png, .jpeg, .jpg" />
+        <input type="file" ref={fileInput} style={{ display: 'none' }}  multiple={false} onChange={handleInputChange} accept=".png, .jpeg, .jpg" />
        </span>
         )
       } else if (data.enum) {

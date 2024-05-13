@@ -127,19 +127,27 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   }
 
 
-  const onUpdateAvatar = async (files) => {
+  const onUpdateAvatar = async (file) => {
+
+    const abortController = new AbortController()
+    const cancelToken = axios.CancelToken
+    const cancelTokenSource = cancelToken.source()
 
     try {
 
       const user_name = user.name
+      const opts = {
+        signal: abortController.signal,
+        cancelToken: cancelTokenSource.token,
+        headers: {
+          'Content-Type': file.type,
+        },
+      }
 
-      const res = await axios.put(`/api/users/${user_name}/avatar`, files)
-
-      console.log(res,'res')
+      const res = await axios.put(`/api/users/${user_name}/avatar`, file, opts)
+      console.log(res)
 
       toast.success('Profile updated')
-      
-
       // update redux state with new data
       dispatch(onProfileUpdate(formData))
       // reset form
