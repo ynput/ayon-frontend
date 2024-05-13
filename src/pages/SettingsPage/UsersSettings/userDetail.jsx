@@ -275,8 +275,6 @@ const UserDetail = ({
         data,
       }
 
-      console.log(attrib,'attribXXX')
-
       try {
         // Apply the patch
         await updateUser({
@@ -285,7 +283,7 @@ const UserDetail = ({
         }).unwrap()
 
         toast.update(toastId.current, { render: `Updated user: ${user.name} ` })
-        user.self && dispatch(updateUserData(data)) && dispatch(updateUserAttribs(data)) 
+        user.self && dispatch(updateUserData(data)) && dispatch(updateUserAttribs(data))
         i += 1
       } catch (error) {
         toast.error(`Unable to update user ${user.name} `)
