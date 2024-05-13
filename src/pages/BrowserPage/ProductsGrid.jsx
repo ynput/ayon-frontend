@@ -38,7 +38,7 @@ const StyledGroup = styled.div`
 const StyledGroupHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding: var(--padding-s);
   user-select: none;
 
@@ -51,7 +51,7 @@ const StyledGroupHeader = styled.div`
   .content {
     display: flex;
     align-items: flex-end;
-    gap: 8px;
+    gap: var(--base-gap-large);
 
     .count {
       color: var(--md-sys-color-outline);

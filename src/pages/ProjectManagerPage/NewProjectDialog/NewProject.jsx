@@ -145,12 +145,6 @@ const NewProjectDialog = ({ onHide }) => {
     </Toolbar>
   )
 
-  const handleBackdropClick = (event) => {
-    if (event.target !== event.currentTarget) return
-    onHide()
-  };
-
-
   const handleKeyDown = (e) => {
     e?.stopPropagation()
     const enter = e.key === 'Enter'
@@ -164,16 +158,14 @@ const NewProjectDialog = ({ onHide }) => {
     if (esc) onHide()
   }
 
-
   return (
     <Dialog
       header="Create a new project"
       footer={footer}
       isOpen={true}
       onClose={onHide}
-      size="lg"
-      variant='dialog'
-      style={{ height: '80%', width: '100%',  position: 'fixed', zIndex: 999 }}
+      size="full"
+      style={{ height: '80%', maxHeight: 1000, zIndex: 999, maxWidth: 2000 }}
       onKeyDown={handleKeyDown}
     >
       <div

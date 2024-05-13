@@ -26,7 +26,7 @@ const PanelStyled = styled(Panel)`
   align-items: center;
   background-color: var(--md-sys-color-surface-container-high);
   padding: 8px;
-  gap: 8px;
+  gap: var(--base-gap-large);
 
   /* if not disable hover */
   ${({ disableHover }) =>

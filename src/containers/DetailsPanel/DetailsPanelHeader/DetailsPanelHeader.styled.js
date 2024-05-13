@@ -14,7 +14,7 @@ export const Container = styled.div`
 export const SectionWrapper = styled(SectionARC)`
   padding: 8px;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--base-gap-large);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex: none;
   overflow: hidden;
@@ -31,7 +31,7 @@ export const CloseButton = styled(Button)`
 export const Header = styled.header`
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--base-gap-large);
   z-index: 50;
 
   .thumbnail {
@@ -141,6 +141,6 @@ export const TaskStatusSelect = styled(StatusSelect)`
 export const Footer = styled.footer`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
   justify-content: space-between;
 `

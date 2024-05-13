@@ -13,12 +13,12 @@ const StyledFooter = styled.div`
   flex-direction: column;
   width: 100%;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--base-gap-large);
 
   div {
     display: flex;
     width: 100%;
-    gap: 4px;
+    gap: var(--base-gap-small);
 
     & > * {
       flex: 1;

@@ -3,7 +3,7 @@ import { Toolbar, Button, getShimmerStyles } from '@ynput/ayon-react-components'
 
 export const FiltersToolbar = styled(Toolbar)`
   border-radius: 0 0 8px 8px;
-  gap: 4px;
+  gap: var(--base-gap-small);
   position: relative;
 
   z-index: 100;

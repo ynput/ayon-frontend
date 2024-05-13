@@ -28,12 +28,20 @@ const userSlice = createSlice({
       state = {}
       return state
     },
-    onProfileUpdate: (state, action) => {
+    updateUserAttribs: (state, action) => {
       if (!state.attrib) return
       state.attrib = { ...state.attrib, ...action.payload }
+    },
+    updateUserData: (state, action) => {
+      if (!state.data) return
+      state.data = { ...state.data, ...action.payload }
+    },
+    toggleDevMode: (state, action) => {
+      if (!state.attrib) return
+      state.attrib.developerMode = action.payload
     },
   },
 })
 
-export const { login, logout, onProfileUpdate } = userSlice.actions
+export const { login, logout, updateUserAttribs, updateUserData, toggleDevMode } = userSlice.actions
 export default userSlice.reducer

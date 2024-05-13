@@ -12,7 +12,7 @@ import { productTypes } from '/src/features/project'
 
 const ToolsStyled = styled.div`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   justify-content: end;
 
   flex: 1;

@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 export const Actions = styled.div`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   position: relative;
 
   &.isLoading {

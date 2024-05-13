@@ -14,7 +14,7 @@ const GridStyled = styled.div`
   grid-template-rows: auto;
   grid-auto-rows: 0;
   overflow-y: clip;
-  column-gap: 8px;
+  column-gap: var(--base-gap-large);
 
   /* span error message */
   & > span {

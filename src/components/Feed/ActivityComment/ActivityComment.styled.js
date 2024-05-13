@@ -12,7 +12,7 @@ export const Comment = styled.li`
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   width: 100%;
   padding: 8px;
@@ -87,7 +87,7 @@ export const Body = styled.div`
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--base-gap-large);
     padding-left: 8px;
     margin: 8px 0;
 
@@ -117,7 +117,7 @@ export const Body = styled.div`
 export const Attachments = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--base-gap-large);
 `
 
 const attachmentBase = css`
