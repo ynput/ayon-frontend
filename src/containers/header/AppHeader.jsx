@@ -60,6 +60,7 @@ const StyledSwitch = styled(InputSwitch)`
       }
     }
   }
+  pointer-events: none;
 `
 
 const Header = () => {
