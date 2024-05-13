@@ -7,7 +7,7 @@ import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
-import { onReferenceClick } from '/src/features/dashboard'
+import { openSlideOut } from '/src/features/details'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
@@ -27,9 +27,9 @@ const Feed = ({
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
-  const path = isSlideOut ? 'slideOut' : 'details'
-  const activityTypes = useSelector((state) => state.dashboard[path].activityTypes)
-  const filter = useSelector((state) => state.dashboard[path].filter)
+  const path = isSlideOut ? 'slideOut' : 'pinned'
+  const activityTypes = useSelector((state) => state.details[path].activityTypes)
+  const filter = useSelector((state) => state.details[path].filter)
 
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
@@ -196,7 +196,7 @@ const Feed = ({
     if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
 
     // open slide out panel
-    dispatch(onReferenceClick({ entityId, entityType, projectName }))
+    dispatch(openSlideOut({ entityId, entityType, projectName }))
   }
 
   const handleFileExpand = (file) => {

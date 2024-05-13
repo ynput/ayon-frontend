@@ -1,19 +1,19 @@
 import * as Styled from './FeedFilters.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { onDetailsPanelTabChange, onFeedFilterChange } from '/src/features/dashboard'
+import { updateDetailsPanelTab, updateFeedFilter } from '/src/features/details'
 import { Spacer } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 import { entitiesWithoutFeed } from '../DetailsPanel'
 
 const FeedFilters = ({ isSlideOut, isLoading, entityType }) => {
   const dispatch = useDispatch()
-  const setFeedFilter = (value) => dispatch(onFeedFilterChange({ value, isSlideOut }))
-  const setTab = (tab) => dispatch(onDetailsPanelTabChange({ isSlideOut, tab }))
+  const setFeedFilter = (value) => dispatch(updateFeedFilter({ value, isSlideOut }))
+  const setTab = (tab) => dispatch(updateDetailsPanelTab({ isSlideOut, tab }))
 
-  const filtersStateLocation = isSlideOut ? 'slideOut' : 'details'
+  const filtersStateLocation = isSlideOut ? 'slideOut' : 'pinned'
 
-  const selectedFilter = useSelector((state) => state.dashboard[filtersStateLocation].filter)
-  const selectedTab = useSelector((state) => state.dashboard[filtersStateLocation].tab)
+  const selectedFilter = useSelector((state) => state.details[filtersStateLocation].filter)
+  const selectedTab = useSelector((state) => state.details[filtersStateLocation].tab)
 
   const filtersLeft = [
     {

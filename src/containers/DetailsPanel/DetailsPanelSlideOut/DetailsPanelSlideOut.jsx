@@ -1,6 +1,6 @@
 import * as Styled from './DetailsPanelSlideOut.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { onSlideOutClose } from '/src/features/dashboard'
+import { closeSlideOut } from '/src/features/details'
 import DetailsPanel from '../DetailsPanel'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import Shortcuts from '/src/containers/Shortcuts'
@@ -9,7 +9,7 @@ import { classNames } from 'primereact/utils'
 
 const DetailsPanelSlideOut = ({ projectsInfo }) => {
   const dispatch = useDispatch()
-  const slideOut = useSelector((state) => state.dashboard.slideOut)
+  const slideOut = useSelector((state) => state.details.slideOut)
   const { entityType, entityId, projectName } = slideOut
   const isSlideOutOpen = entityType && entityId && projectName
 
@@ -45,7 +45,7 @@ const DetailsPanelSlideOut = ({ projectsInfo }) => {
   if (!isSlideOutOpen) return null
 
   const handleClose = () => {
-    dispatch(onSlideOutClose())
+    dispatch(closeSlideOut())
   }
 
   return (

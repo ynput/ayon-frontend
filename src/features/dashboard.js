@@ -22,21 +22,6 @@ const dashboardSlice = createSlice({
       assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
     },
-    details: {
-      filter: getInitialStateLocalStorage('dashboard-details-filter', 'activity'),
-      activityTypes:
-        filterActivityTypes[getInitialStateLocalStorage('dashboard-details-filter', 'activity')] ||
-        [],
-      tab: 'feed', // feed | attribs | representations
-    },
-    slideOut: {
-      entityType: '',
-      entityId: '',
-      projectName: '',
-      filter: 'activity',
-      activityTypes: filterActivityTypes.activity,
-      tab: 'feed', // feed | attribs | representations
-    },
   },
   reducers: {
     onProjectSelected: (state, { payload = [] }) => {
@@ -58,19 +43,6 @@ const dashboardSlice = createSlice({
       state.tasks.assignees = assignees
       state.tasks.assigneesIsMe = assigneesIsMe
     },
-    onDetailsPanelTabChange: (state, { payload }) => {
-      const location = payload.isSlideOut ? 'slideOut' : 'details'
-      // toggle the details open
-      state[location].tab = payload.tab
-    },
-    onFeedFilterChange: (state, { payload }) => {
-      const location = payload.isSlideOut ? 'slideOut' : 'details'
-      state[location].filter = payload.value
-      state[location].activityTypes =
-        filterActivityTypes[payload.value] || filterActivityTypes.activity
-      // switch back to feed tab
-      state[location].tab = 'feed'
-    },
     onCollapsedColumnsChanged: (state, { payload }) => {
       state.tasks.collapsedColumns = payload
     },
@@ -89,18 +61,6 @@ const dashboardSlice = createSlice({
       state.details.filter = 'activity'
       state.tasks.collapsedColumns = []
     },
-    onReferenceClick: (state, { payload }) => {
-      // open slide out
-      state.slideOut.entityType = payload.entityType
-      state.slideOut.entityId = payload.entityId
-      state.slideOut.projectName = payload.projectName
-      state.slideOut.tab = payload.tab || state.slideOut.tab
-    },
-    onSlideOutClose: (state) => {
-      state.slideOut.entityType = ''
-      state.slideOut.entityId = ''
-      state.slideOut.projectName = ''
-    },
   },
 })
 
@@ -111,13 +71,9 @@ export const {
   onTasksGroupByChanged,
   onTasksFilterChanged,
   onAssigneesChanged,
-  onDetailsPanelTabChange,
-  onFeedFilterChange,
   onCollapsedColumnsChanged,
   onPrefetchIds,
   onClearDashboard,
-  onReferenceClick,
-  onSlideOutClose,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer
 
@@ -133,6 +89,5 @@ export const dashboardLocalItems = {
     { key: 'dashboard-tasks-assigneesIsMe', payload: 'assigneesIsMe' },
   ],
   'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
-  'dashboard/onFeedFilterChange': [{ key: 'dashboard-details-filter' }],
   'dashboard/onCollapsedColumnsChanged': [{ key: 'dashboard-tasks-collapsedColumns' }],
 }

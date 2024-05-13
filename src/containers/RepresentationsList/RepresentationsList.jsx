@@ -10,7 +10,7 @@ import groupResult from '/src/helpers/groupResult'
 import useCreateContext from '/src/hooks/useCreateContext'
 import DetailsDialog from '../DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
-import { onReferenceClick } from '/src/features/dashboard'
+import { openSlideOut } from '/src/features/details'
 
 const columns = [
   {
@@ -55,9 +55,7 @@ const RepresentationList = ({ entities = [] }) => {
     // set focused state
     dispatch(setFocusedRepresentations([entityId]))
     // open slide out panel
-    dispatch(
-      onReferenceClick({ entityId, entityType: 'representation', projectName, tab: 'attribs' }),
-    )
+    dispatch(openSlideOut({ entityId, entityType: 'representation', projectName, tab: 'attribs' }))
   }
 
   const onRowClick = (e) => {

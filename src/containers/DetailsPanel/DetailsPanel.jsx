@@ -1,12 +1,13 @@
 import { Panel } from '@ynput/ayon-react-components'
-import React from 'react'
+import React, { useEffect } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import Feed from '/src/containers/Feed/Feed'
 import { useGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import TaskAttributes from '../../pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '/src/services/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
+import { updateDetailsPanelTab } from '/src/features/details'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -29,11 +30,24 @@ const DetailsPanel = ({
   isSlideOut,
   style = {},
 }) => {
-  const path = isSlideOut ? 'slideOut' : 'details'
-  let selectedTab = useSelector((state) => state.dashboard[path].tab)
+  const path = isSlideOut ? 'slideOut' : 'pinned'
+  let selectedTab = useSelector((state) => state.details[path].tab)
+  const dispatch = useDispatch()
 
   // if the entity type is product or representation, we show the attribs tab only
   if (entitiesWithoutFeed.includes(entityType)) selectedTab = 'attribs'
+
+  // check if tab needs to be updated when entity type changes
+  // for example when switching from version to task, task doesn't have reps tab
+  // if reps tab was selected, set default to feed
+  useEffect(() => {
+    if (selectedTab === 'representations') {
+      // check entity type is still version
+      if (entityType !== 'version') {
+        dispatch(updateDetailsPanelTab({ isSlideOut, tab: 'feed' }))
+      }
+    }
+  }, [entityType, selectedTab])
 
   // now we get the full details data for selected entities
   const entitiesToQuery = entities.length
