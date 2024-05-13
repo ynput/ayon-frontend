@@ -48,7 +48,7 @@ export const AccessGroupItem = styled.div`
 export const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   overflow: auto;
 `

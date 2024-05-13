@@ -63,7 +63,7 @@ export const All = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   menu {
     flex: 1;

@@ -10,7 +10,7 @@ const HeaderStyled = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 4px;
+  gap: var(--base-gap-small);
   h3 {
     flex: 1;
   }

@@ -4,7 +4,7 @@ const BadgeWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
   padding: 0 4px;
   margin-left: 12px;
 `

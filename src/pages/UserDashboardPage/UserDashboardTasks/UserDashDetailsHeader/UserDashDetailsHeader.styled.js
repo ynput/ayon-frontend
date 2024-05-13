@@ -107,6 +107,6 @@ export const TaskStatusSelect = styled(StatusSelect)`
 export const Footer = styled.footer`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
   justify-content: space-between;
 `

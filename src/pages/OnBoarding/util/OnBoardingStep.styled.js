@@ -106,7 +106,7 @@ export const AddonsContainer = styled.div`
   /* 3 column grid */
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: var(--base-gap-small);
   width: 470px;
   max-width: 470px;
   max-height: 422px;
@@ -150,7 +150,7 @@ export const Connect = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   button {
     width: unset;

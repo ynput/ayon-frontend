@@ -122,7 +122,7 @@ export const Header = styled.header`
     inset: 0;
     justify-content: flex-end;
     padding: 0 6px;
-    gap: 4px;
+    gap: var(--base-gap-small);
 
     button {
       /* toolbar is only revealed on hover */

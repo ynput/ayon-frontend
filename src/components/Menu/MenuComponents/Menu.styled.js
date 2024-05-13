@@ -109,7 +109,7 @@ export const Menu = styled.menu`
   /* shrink the padding when compact */
   &.compact {
     padding: 4px;
-    gap: 4px;
+    gap: var(--base-gap-small);
   }
 
   /* colors */

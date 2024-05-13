@@ -91,7 +91,7 @@ nav.primary {
   flex-direction: row;
   align-items: center;
   position: relative;
-  gap: 4px;
+  gap: var(--base-gap-small);
 }
 
 .section-header {

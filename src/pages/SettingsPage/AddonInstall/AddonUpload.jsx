@@ -18,7 +18,7 @@ const StyledFooter = styled.div`
   div {
     display: flex;
     width: 100%;
-    gap: 4px;
+    gap: var(--base-gap-small);
 
     & > * {
       flex: 1;
