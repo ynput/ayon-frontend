@@ -114,18 +114,23 @@ const Header = () => {
   const [updateUser] = useUpdateUserMutation()
   const handleDeveloperMode = async () => {
     try {
+      const newDeveloperMode = !developerMode
+      // optimistic update the switch
+      dispatch(toggleDevMode(newDeveloperMode))
+
       await updateUser({
         name: user.name,
         patch: {
-          attrib: { developerMode: !developerMode },
+          attrib: { developerMode: newDeveloperMode },
         },
       }).unwrap()
 
-      // update redux state with new data
-      dispatch(toggleDevMode(!developerMode))
+      // if the request fails, revert the switch
     } catch (error) {
       console.error(error)
       toast.error('Unable to update developer mode: ' + error.details)
+      // reset switch on error
+      dispatch(toggleDevMode(developerMode))
     }
   }
 
