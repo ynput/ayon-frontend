@@ -28,7 +28,7 @@ const userSlice = createSlice({
       state = {}
       return state
     },
-    onProfileUpdate: (state, action) => {
+    updateUserAttribs: (state, action) => {
       if (!state.attrib) return
       state.attrib = { ...state.attrib, ...action.payload }
     },
@@ -39,5 +39,5 @@ const userSlice = createSlice({
   },
 })
 
-export const { login, logout, onProfileUpdate, updateUserData } = userSlice.actions
+export const { login, logout, updateUserAttribs, updateUserData } = userSlice.actions
 export default userSlice.reducer

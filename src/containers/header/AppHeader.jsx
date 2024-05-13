@@ -14,7 +14,7 @@ import { HelpMenu, UserMenu } from '/src/components/Menu'
 import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
 import { toast } from 'react-toastify'
-import { onProfileUpdate } from '/src/features/user'
+import { updateUserAttribs } from '/src/features/user'
 import styled from 'styled-components'
 import { useRestart } from '/src/context/restartContext'
 import { classNames } from 'primereact/utils'
@@ -122,7 +122,7 @@ const Header = () => {
       }).unwrap()
 
       // update redux state with new data
-      dispatch(onProfileUpdate({ developerMode: !developerMode }))
+      dispatch(updateUserAttribs({ developerMode: !developerMode }))
     } catch (error) {
       console.error(error)
       toast.error('Unable to update developer mode: ' + error.details)
