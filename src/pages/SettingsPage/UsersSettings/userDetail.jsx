@@ -10,7 +10,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import { useUpdateUserMutation } from '/src/services/user/updateUser'
-import { setUserData } from '/src/features/user'
+import { updateUserData } from '/src/features/user'
 import styled from 'styled-components'
 import ayonClient from '/src/ayon'
 import UserAttribForm from './UserAttribForm'
@@ -283,7 +283,7 @@ const UserDetail = ({
         }).unwrap()
 
         toast.update(toastId.current, { render: `Updated user: ${user.name} ` })
-        dispatch(setUserData(data))
+        user.self && dispatch(updateUserData(data))
         i += 1
       } catch (error) {
         toast.error(`Unable to update user ${user.name} `)
