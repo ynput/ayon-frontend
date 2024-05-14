@@ -11,6 +11,8 @@ fragment ActivityFragment on ActivityNode {
     updatedAt
     author {
       name
+      deleted
+      active
       attrib {
         fullName
       }

@@ -39,11 +39,12 @@ const ActivityHeader = ({
   const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
   const moreRef = useRef()
 
+  const noUser = activity.author?.deleted || !activity.author?.active
   return (
     <Styled.Header>
       <Styled.Body>
-        {name && <UserImage name={name} size={22} />}
-        {!fullName && <Icon icon="no_accounts" />}
+        {name && !noUser && <UserImage name={name} size={22} />}
+        {noUser && <Icon icon="no_accounts" />}
         <h5>{fullName || activity.activityData?.author || 'Unknown'}</h5>
         {isRef && (
           <>
