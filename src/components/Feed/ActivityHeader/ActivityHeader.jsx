@@ -31,7 +31,7 @@ const ActivityHeader = ({
   const publishedString = isMultipleVersions ? 'published versions' : 'published a version'
 
   const boldString = isMention ? `mentioned` : 'commented'
-  const entityTypeString = isMention ? `this ${entityType}` : 'on'
+  const entityTypeString = isMention ? ` ${entityType} on` : 'on'
 
   // open menu
   const dispatch = useDispatch()
