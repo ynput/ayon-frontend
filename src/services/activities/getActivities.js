@@ -10,6 +10,9 @@ import {
 import { ACTIVITIES, ENTITY_TOOLTIP, ENTITY_VERSIONS } from './activityQueries'
 import { compareAsc } from 'date-fns'
 
+// check type is either task or product
+export const allowedVersionsQueryTypes = ['task', 'product']
+
 const getActivities = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     // get multiple entities activities
@@ -88,7 +91,20 @@ const getActivities = ayonApi.injectEndpoints({
           const allVersions = []
           for (const entity of entities) {
             const { id: entityId, projectName, entityType } = entity
-            if (!entityId) continue
+            if (!entityId) {
+              console.error('No id found', entity)
+              continue
+            }
+
+            if (!allowedVersionsQueryTypes.includes(entityType)) {
+              console.error(
+                'Cannot fetch versions for entity type',
+                entityType,
+                'Allowed types:',
+                allowedVersionsQueryTypes,
+              )
+              continue
+            }
 
             // fetch activities for each entity
             const response = await dispatch(

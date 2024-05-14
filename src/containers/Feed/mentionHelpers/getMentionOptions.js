@@ -4,7 +4,6 @@ import { isBefore, isValid } from 'date-fns'
 const versionSorting = (a, b) => {
   const itemA = a.item || a
   const itemB = b.item || b
-  console.log(itemA)
   const dateA = new Date(itemA.value)
   const dateB = new Date(itemB.value)
   if (!isValid(dateA) || !isValid(dateB)) return 0

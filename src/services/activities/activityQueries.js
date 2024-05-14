@@ -65,7 +65,8 @@ fragment VersionFragment on VersionNode {
 }
 `
 
-export const ENTITY_VERSIONS = (type) => `
+// type can be task or product
+export const ENTITY_VERSIONS = (type = 'task') => `
 query getTaskVersions($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     versions(${type}Ids: [$entityId]) {

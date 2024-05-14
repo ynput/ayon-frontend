@@ -2,7 +2,11 @@ import React, { useMemo, useRef, useState } from 'react'
 import ActivityItem from '../../components/Feed/ActivityItem'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import { useGetActivitiesQuery, useGetVersionsQuery } from '/src/services/activities/getActivities'
+import {
+  allowedVersionsQueryTypes,
+  useGetActivitiesQuery,
+  useGetVersionsQuery,
+} from '/src/services/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
@@ -68,11 +72,28 @@ const Feed = ({
     isFetchingActivities = true
   }
 
-  // QUERY MADE TO GET ACTIVITIES
+  let tasksOrProductsToQuery = []
+
+  if (allowedVersionsQueryTypes.includes(entityType)) {
+    // great, we can just use entitiesToQuery already
+    tasksOrProductsToQuery = entitiesToQuery
+  } else {
+    // we need to either use the productId
+    tasksOrProductsToQuery = entities.flatMap((entity) =>
+      entity.productId
+        ? {
+            projectName: entity.projectName,
+            id: entity.productId,
+            entityType: 'product',
+          }
+        : [],
+    )
+  }
 
   // get all versions for the entity
+  // used for version mentions (@@)
   const { data: versionsData = [] } = useGetVersionsQuery({
-    entities: entitiesToQuery,
+    entities: tasksOrProductsToQuery,
   })
 
   // TODO: transform versions data into activity data
