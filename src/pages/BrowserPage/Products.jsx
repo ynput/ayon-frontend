@@ -27,7 +27,7 @@ import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWit
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
-import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
 import { ayonApi } from '/src/services/ayon'
 import useCreateContext from '/src/hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'

@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
 import { toast } from 'react-toastify'
 
 import ColumnsWrapper from './ColumnsWrapper'
