@@ -10,7 +10,7 @@ import {
   InputText,
 } from '@ynput/ayon-react-components'
 import { useUpdateUserMutation, useUpdateUserAvatarMutation } from '../../services/user/updateUser'
-import UserDetailsHeader from '../../components/User/UserDetailsHeader'
+import Avatar from '../../components/Avatar/Avatar'
 import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
@@ -129,23 +129,18 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
   const onUpdateAvatar = async (file) => {
 
-    const abortController = new AbortController()
-    const cancelToken = axios.CancelToken
-    const cancelTokenSource = cancelToken.source()
 
     try {
 
       const user_name = user.name
       const opts = {
-        signal: abortController.signal,
-        cancelToken: cancelTokenSource.token,
         headers: {
           'Content-Type': file.type,
         },
       }
 
       const res = await axios.put(`/api/users/${user_name}/avatar`, file, opts)
-      console.log(res)
+      console.log(res,'res')
 
       toast.success('Profile updated')
       // update redux state with new data
@@ -160,20 +155,28 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
-
-
-
   console.log(attributes,'attributes')
   console.log(formData,'setFormData')
+  console.log(user,'setuser')
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
-        <UserDetailsHeader users={[user]} style={{ maxWidth: 600 }} />
+        {/* <UserDetailsHeader users={[user]} style={{ maxWidth: 600 }} /> */}
+        <Avatar user={user} />
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+
+          <h2>{user?.attrib?.fullName}</h2>
+        </div>
         <FormsStyled>
           <Panel>
             <FormRow label="Username" key="Username">
               <InputText value={name} disabled />
             </FormRow>
+            <UserAttribForm
+              formData={formData}
+              setFormData={setFormData}
+              attributes={attributes}
+              onUpdateAvatar={onUpdateAvatar} />
             <FormRow label="Password" key="Password">
               <LockedInput
                 label="Password"
@@ -182,11 +185,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
                 onEdit={() => setShowSetPassword(true)}
               />
             </FormRow>
-            <UserAttribForm
-              formData={formData}
-              setFormData={setFormData}
-              attributes={attributes}
-              onUpdateAvatar={onUpdateAvatar} />
             <SaveButton
               onClick={onSave}
               label="Save profile"
