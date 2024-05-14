@@ -500,6 +500,14 @@ const CommentInput = ({
   const allFiles = [...(files || []), ...filesUploading].sort((a, b) => a.order - b.order)
   const compactGrid = allFiles.length > 6
 
+  // disable version mentions for folders
+  let mentionsError = null
+  if (entities.length && entities[0].entityType === 'folder') {
+    if (mention?.type === '@@') {
+      mentionsError = 'Version mentions are disabled for folders'
+    }
+  }
+
   return (
     <>
       <Styled.AutoHeight
@@ -606,6 +614,7 @@ const CommentInput = ({
           noneFound={!shownMentionOptions.length && mention?.search}
           noneFoundAtAll={!shownMentionOptions.length && !mention?.search}
           selectedIndex={mentionSelectedIndex}
+          error={mentionsError}
         />
       </Styled.AutoHeight>
     </>
