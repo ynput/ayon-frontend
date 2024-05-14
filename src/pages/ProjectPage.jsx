@@ -24,12 +24,12 @@ const ProjectContextInfo = () => {
   const context = useSelector((state) => state.context)
   const project = useSelector((state) => state.project)
   return (
-    <TabView>
-      <TabPanel header="context">
-        <pre>{JSON.stringify({ context }, null, 2)}</pre>
+    <TabView panelContainerStyle={{ justifyContent: 'flex-start' }}>
+      <TabPanel header="context" style={{ overflow: 'hidden' }}>
+        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ context }, null, 2)}</pre>
       </TabPanel>
-      <TabPanel header="project">
-        <pre>{JSON.stringify({ project }, null, 2)}</pre>
+      <TabPanel header="project" style={{ overflow: 'hidden' }}>
+        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ project }, null, 2)}</pre>
       </TabPanel>
     </TabView>
   )
@@ -155,7 +155,7 @@ const ProjectPage = () => {
         isOpen={showContextDialog}
         onClose={() => setShowContextDialog(false)}
         size="lg"
-        style={{ overflow: 'hidden', width: 500 }}
+        style={{ overflow: 'hidden', width: 800 }}
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
