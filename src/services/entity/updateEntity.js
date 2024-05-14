@@ -20,9 +20,27 @@ const updateEntity = ayonApi.injectEndpoints({
           patchResult = dispatch(
             ayonApi.util.updateQueryData('getProjectTasks', { projectName, assignees }, (draft) => {
               const taskIndex = draft.findIndex((task) => task.id === entityId)
-              if (taskIndex === -1) return
-              const newData = { ...draft[taskIndex], ...data }
-              draft[taskIndex] = newData
+              if (taskIndex === -1) {
+                // check if the task has any of the assignees that are selected in kanBan
+                if (assignees.some((assignee) => data.assignees?.includes(assignee))) {
+                  // task should appear in kanBan
+                  // invalidate the kanBan and getProjectTasks query to force refetch
+                  dispatch(
+                    ayonApi.util.invalidateTags([
+                      { type: 'kanBanTask', id: 'TASKS' },
+                      { type: 'kanBanTask', id: 'TASKS' },
+                    ]),
+                  )
+                } else {
+                  // do nothing, the task should not appear in the kanBan
+                  return
+                }
+                // add the task to the cache
+              } else {
+                // task found: update the task in the cache
+                const newData = { ...draft[taskIndex], ...data }
+                draft[taskIndex] = newData
+              }
             }),
           )
         }

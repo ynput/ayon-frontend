@@ -30,7 +30,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
               code: response?.data?.project.code,
               tasks: response?.data?.project?.tasks?.edges?.map((edge) => edge.node),
             }),
-      providesTags: taskProvideTags,
+      providesTags: (res) => taskProvideTags(res, 'task', 'task'),
       async onCacheEntryAdded(
         { assignees = [], projectName },
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getState },
