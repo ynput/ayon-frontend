@@ -37,7 +37,7 @@ const ActivityComment = ({
     files = [],
   } = activity
   if (!authorName) authorName = author?.name || ''
-  if (!authorFullName) authorFullName = author?.fullName || authorName || 'Unknown'
+  if (!authorFullName) authorFullName = author?.fullName || authorName
   let menuId = 'comment-' + activity.activityId
   if (isSlideOut) menuId += '-slideout'
   const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
@@ -63,7 +63,7 @@ const ActivityComment = ({
       <ActivityHeader
         id={menuId}
         name={authorName}
-        fullName={authorFullName || authorName}
+        fullName={authorFullName}
         date={createdAt}
         isRef={referenceType !== 'origin' || showOrigin}
         activity={activity}

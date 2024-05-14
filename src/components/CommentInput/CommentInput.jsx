@@ -83,21 +83,14 @@ const CommentInput = ({
   const siblingTasks = mentionTasks.filter(
     (task) => !entities.some((entity) => entity.id === task.id),
   )
-  // CONFIG
-  let placeholder = isOpen
-    ? `Comment or mention with @user, @@version, @@@task...`
-    : 'Add a comment...'
 
-  if (disabled) placeholder = 'Commenting is disabled across multiple projects.'
-
-  // update placeholder on editor when isOpen
+  // focus on editor when opened
   useEffect(() => {
-    const quill = editorRef.current.getEditor()
-    if (quill) {
-      const container = quill.container
-      container?.firstChild?.setAttribute('data-placeholder', placeholder)
+    if (isOpen) {
+      editorRef.current?.getEditor()?.enable()
+      editorRef.current?.focus()
     }
-  }, [isOpen, editorRef, disabled])
+  }, [isOpen, editorRef])
 
   const mentionTypes = ['@', '@@', '@@@']
   const typeOptions = {
@@ -149,85 +142,44 @@ const CommentInput = ({
     }
   }, [newSelection])
 
-  const findStartAndEndIndexes = (string) => {
-    const start = editorValue.indexOf(string)
-    if (start === -1) return []
-    const end = start + string.length
-    return { start, end }
-  }
-
-  const handleSelectMention = (selectedOption, retain) => {
+  const handleSelectMention = (selectedOption) => {
     // get option text
     const quill = editorRef.current.getEditor()
-    // insert space instead of tab or enter
-    const replace = mention.type + (mention.search || '')
-    const mentionText = mention.type + selectedOption.label
-    const type = typeOptions[mention.type]
-    const href = `${type?.id}:${selectedOption.id}`
 
-    // find all previous mentions (a tags) in the editor
-    const previousMentions = quill.getContents().ops.filter((op) => op.attributes?.link)
+    const typePrefix = mention.type // the type of mention: @, @@, @@@
+    const search = typePrefix + (mention.search || '') // the full search string: @Tim
+    const mentionLabel = typePrefix + selectedOption.label // the label of the mention: @Tim Bailey
+    const type = typeOptions[typePrefix] // the type of mention: user, version, task
+    const href = `${type?.id}:${selectedOption.id}` // the href of the mention: user:user.123
 
-    // find the start and end index of all the found mentions
-    const previousMentionsIndexes = previousMentions.reduce((acc, op) => {
-      const indexes = []
-      if (op.attributes?.link) {
-        indexes.push(findStartAndEndIndexes(op.attributes.link))
-      }
-      if (op.insert) {
-        indexes.push(findStartAndEndIndexes(op.insert))
-      }
-      acc.push(...indexes)
-      return acc
-    }, [])
+    // get selection delta
+    const selection = quill.getSelection(true)
+    const selectionIndex = selection?.index || 0
+    const startIndex = selectionIndex - search.length // the start index of the search
 
-    // find all indexes of replace in the editor
-    var replaceIndexes = []
-    for (var i = 0; i < editorValue.length; i++) {
-      if (editorValue.substring(i, i + replace.length) === replace) {
-        // check that the i is not between the start and end indexes of a found mentions
-        const isBetween = previousMentionsIndexes.some((index) => i >= index.start && i < index.end)
-        if (!isBetween) {
-          replaceIndexes.push(i)
-        }
-      }
-    }
+    // first delete the search string
+    quill.deleteText(startIndex, search.length)
 
-    if (replaceIndexes.length === 0) {
-      return toast.error('Could not find mention in editor. Please try again.')
-    }
+    //  insert embed link
+    quill.insertText(startIndex, mentionLabel, 'link', href)
 
-    const replaceStartIndex = replaceIndexes[0]
-    const replaceEndIndex = replaceStartIndex + replace.length
+    const endIndex = startIndex + mentionLabel.length
+    // insert a space after the mention
+    quill.insertText(endIndex, ' ')
 
-    // remove the original search mention by deleting the text from start to finish
-    const editorValueWithoutMention =
-      editorValue.slice(0, replaceStartIndex) + editorValue.slice(replaceEndIndex)
+    // remove underline format of space
+    quill.removeFormat(endIndex, 1)
 
-    const newString = `<a href="@${href}">${mentionText}</a>&nbsp;`
+    // set selection to the end of the mention + 1
+    setNewSelection(endIndex + 1)
 
-    // now add the new mention in at the same index
-    const editorValueWithNewMention =
-      editorValueWithoutMention.slice(0, replaceStartIndex) +
-      newString +
-      editorValueWithoutMention.slice(replaceStartIndex)
-
-    const deltaContent = quill.clipboard.convert(editorValueWithNewMention)
-
-    quill.setContents(deltaContent, 'silent')
-
-    const newSelection = retain + (selectedOption.label.length - (mention.search?.length || 0)) + 1
-    setNewSelection(newSelection)
+    // reset mention state
     setMention(null)
     setMentionSelectedIndex(0)
   }
 
   const handleSelectChange = (option) => {
-    // get current selection position
-    const quill = editorRef.current.getEditor()
-    const selection = quill.getSelection()
-
-    handleSelectMention(option, selection.index)
+    handleSelectMention(option)
   }
 
   const handleChange = (content, delta, _, editor) => {
@@ -380,19 +332,18 @@ const CommentInput = ({
     if (isOpen || disabled) return
 
     onOpen && onOpen()
-    editorRef.current.getEditor().enable()
-    editorRef.current.focus()
   }
 
   const handleClose = () => {
-    // always close editor
-    onClose && onClose()
     // get editor value
     const editor = editorRef.current.getEditor()
     const text = editor.getText()
     if (text.length < 2 || isEditing) {
       setEditorValue('')
     }
+
+    // always close editor
+    onClose && onClose()
   }
 
   const handleKeyDown = (e) => {
@@ -508,6 +459,14 @@ const CommentInput = ({
   const allFiles = [...(files || []), ...filesUploading].sort((a, b) => a.order - b.order)
   const compactGrid = allFiles.length > 6
 
+  // disable version mentions for folders
+  let mentionsError = null
+  if (entities.length && entities[0].entityType === 'folder') {
+    if (mention?.type === '@@') {
+      mentionsError = 'Version mentions are disabled for folders'
+    }
+  }
+
   return (
     <>
       <Styled.AutoHeight
@@ -541,18 +500,23 @@ const CommentInput = ({
             style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
             projectName={projectName}
           />
-          {/* QUILL is configured in helpers file */}
-          <ReactQuill
-            theme="snow"
-            style={{ minHeight: quillMinHeight, maxHeight: 300 }}
-            ref={editorRef}
-            value={editorValue}
-            onChange={handleChange}
-            readOnly={!isOpen || disabled}
-            placeholder={placeholder}
-            modules={modules}
-            formats={quillFormats}
-          />
+          {isOpen && !disabled ? (
+            <ReactQuill
+              theme="snow"
+              style={{ minHeight: quillMinHeight, maxHeight: 300 }}
+              ref={editorRef}
+              value={editorValue}
+              onChange={handleChange}
+              readOnly={!isOpen}
+              placeholder={'Comment or mention with @user, @@version, @@@task...'}
+              modules={modules}
+              formats={quillFormats}
+            />
+          ) : (
+            <Styled.Placeholder>
+              {disabled ? 'Commenting is disabled across multiple projects.' : 'Add a comment...'}
+            </Styled.Placeholder>
+          )}
 
           <Styled.Footer>
             <Styled.Buttons>
@@ -609,6 +573,7 @@ const CommentInput = ({
           noneFound={!shownMentionOptions.length && mention?.search}
           noneFoundAtAll={!shownMentionOptions.length && !mention?.search}
           selectedIndex={mentionSelectedIndex}
+          error={mentionsError}
         />
       </Styled.AutoHeight>
     </>

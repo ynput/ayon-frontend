@@ -7,6 +7,7 @@ import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
 import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
 import { toggleMenuOpen } from '/src/features/context'
 import { useDispatch } from 'react-redux'
+import { Icon } from '@ynput/ayon-react-components'
 
 const ActivityHeader = ({
   name,
@@ -31,18 +32,20 @@ const ActivityHeader = ({
   const publishedString = isMultipleVersions ? 'published versions' : 'published a version'
 
   const boldString = isMention ? `mentioned` : 'commented'
-  const entityTypeString = isMention ? `this ${entityType}` : 'on'
+  const entityTypeString = isMention ? ` ${entityType} on` : 'on'
 
   // open menu
   const dispatch = useDispatch()
   const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
   const moreRef = useRef()
 
+  const noUser = activity.author?.deleted || !activity.author?.active
   return (
     <Styled.Header>
       <Styled.Body>
-        {name && <UserImage name={name} size={22} />}
-        <h5>{fullName}</h5>
+        {name && !noUser && <UserImage name={name} size={22} />}
+        {noUser && <Icon icon="no_accounts" />}
+        <h5>{fullName || activity.activityData?.author || 'Unknown'}</h5>
         {isRef && (
           <>
             <Styled.Text>

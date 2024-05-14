@@ -44,7 +44,7 @@ query KanBan($assignees: [String!], $projectName: String!) {
 ${TASK_FRAGMENT()}
 `
 
-export const KAN_BAN_TASK_QUERY = (attribs = []) => `
+export const TASK_DETAILS = (attribs = []) => `
 query KanBanTask($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     projectName
@@ -109,8 +109,8 @@ query FoldersTasksForMentions($projectName: String!, $folderIds: [String!]!) {
 }
 `
 
-export const VERSION_DETAILS = (attribs = []) => `
-    query Versions($projectName: String!, $entityId: String!) {
+export const VERSION_DETAILS_QUERY = (attribs = []) => `
+    query VersionsDetails($projectName: String!, $entityId: String!) {
         project(name: $projectName) {
             projectName
             code
@@ -125,18 +125,76 @@ export const VERSION_DETAILS = (attribs = []) => `
                 createdAt
                 thumbnailId
                 product {
+                  id
                   name
                   productType
                   folder {
                     id
                     path
+                    name
+                    parents
                   }
                 }
                 attrib {
                   ${attribs.join('\n')}
                 }
+                representations{
+                  edges {
+                      node {
+                          id
+                          name
+                          fileCount
+                      }
+                  }
+              }
             }
         }
+    }
+`
+
+export const FOLDER_DETAILS_QUERY = (attribs = []) => `
+query FolderDetails($projectName: String!, $entityId: String!) {
+  project(name: $projectName) {
+      projectName
+      code
+      folder(id: $entityId) {
+          id
+          name
+          label
+          status
+          tags
+          updatedAt
+          createdAt
+          thumbnailId
+          folderType
+          path
+          attrib {
+            ${attribs.join('\n')}
+          }
+      }
+  }
+}`
+
+export const REP_QUERY = (attribs) => `
+    query RepresentationDetails($projectName: String!, $entityId: String!) {
+      project(name: $projectName) {
+        representation(id: $entityId) {
+          id
+          versionId
+          name
+          status
+          tags
+          updatedAt
+          attrib {
+            ${attribs.join('\n')}
+          }
+          context
+          version {
+            name
+            author
+          }
+        }
+      }
     }
 `
 
@@ -151,9 +209,13 @@ export const buildDetailsQuery = (entityType) => {
   // select correct query for the entity type
   switch (entityType) {
     case 'task':
-      return KAN_BAN_TASK_QUERY(attribs)
+      return TASK_DETAILS(attribs)
     case 'version':
-      return VERSION_DETAILS(attribs)
+      return VERSION_DETAILS_QUERY(attribs)
+    case 'folder':
+      return FOLDER_DETAILS_QUERY(attribs)
+    case 'representation':
+      return REP_QUERY(attribs)
     default:
       break
   }

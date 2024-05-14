@@ -8,11 +8,11 @@ import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
 import { onAssigneesChanged } from '/src/features/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import UserDashboardDetails from './UserDashboardDetails/UserDashboardDetails'
+import DetailsPanel from '../../../containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '/src/features/context'
-import UserDashboardSlideOut from './UserDashboardSlideOut/UserDashboardSlideOut'
+import DetailsPanelSlideOut from '../../../containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
   if (!projectName || (!thumbnailId && !entityId)) return null
@@ -224,7 +224,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             minWidth: detailsMinWidth,
           }}
         >
-          <UserDashboardDetails
+          <DetailsPanel
             entitiesData={selectedTasksData}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
@@ -236,9 +236,9 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             projectsInfo={projectsInfo}
             projectNames={selectedTasksProjects}
             entityType="task"
-            style={{ zIndex: 400 }}
+            scope="dashboard"
           />
-          <UserDashboardSlideOut projectsInfo={projectsInfo} />
+          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
         </SplitterPanel>
       ) : (
         <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

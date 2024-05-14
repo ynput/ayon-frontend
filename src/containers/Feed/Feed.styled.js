@@ -44,6 +44,10 @@ export const FeedContent = styled.div`
   flex-direction: column;
 
   flex-direction: column-reverse;
+
+  &.isLoading {
+    overflow: hidden;
+  }
 `
 
 export const LoadMore = styled.span`

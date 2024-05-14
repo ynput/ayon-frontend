@@ -12,6 +12,7 @@ const CommentMentionSelect = ({
   config = {},
   noneFound,
   noneFoundAtAll,
+  error,
 }) => {
   if (!mention || noneFound) return null
 
@@ -28,6 +29,9 @@ const CommentMentionSelect = ({
       }
     })
   }
+
+  let noOptionsString = `No ${config.id}s found`
+  if (error) noOptionsString = error
 
   return (
     <Styled.MentionSelect tabIndex={0}>
@@ -49,7 +53,7 @@ const CommentMentionSelect = ({
             <Styled.MentionName>{option.label}</Styled.MentionName>
           </Styled.MentionItem>
         ))}
-      {noneFoundAtAll && <Styled.MentionItem>No {config.id}s found</Styled.MentionItem>}
+      {(noneFoundAtAll || error) && <Styled.MentionItem>{noOptionsString}</Styled.MentionItem>}
     </Styled.MentionSelect>
   )
 }

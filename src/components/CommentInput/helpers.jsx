@@ -9,11 +9,11 @@ var turndownService = new TurndownService()
 // support lists with checkboxes
 turndownService.addRule('taskListItems', {
   filter: function (node) {
-    return node.parentNode.nodeName === 'UL' && node.parentNode.hasAttribute('data-checked')
+    return ['checked', 'unchecked'].includes(node.getAttribute('data-list'))
   },
   replacement: function (content, node) {
     return (
-      (node.parentNode.getAttribute('data-checked') === 'true' ? '* [x]' : '* [ ]') +
+      (node.getAttribute('data-list') === 'checked' ? '* [x]' : '* [ ]') +
       ' ' +
       content.replace(/(\r\n|\n|\r)/gm, '') +
       '\n\n'
@@ -21,7 +21,7 @@ turndownService.addRule('taskListItems', {
   },
 })
 
-turndownService.addRule('taskListItems', {
+turndownService.addRule('codeblock', {
   filter: function (node) {
     return node.nodeName === 'PRE'
   },
@@ -42,6 +42,16 @@ turndownService.addRule('doubleBackslash', {
   },
   replacement: function (content) {
     return content.replaceAll('\\\\', '\\\\\\\\')
+  },
+})
+
+// ordered list for both ul and ol
+turndownService.addRule('unOrderedList', {
+  filter: function (node) {
+    return node.nodeName === 'LI' && node.getAttribute('data-list') === 'bullet'
+  },
+  replacement: function (content) {
+    return '- ' + content + '\n'
   },
 })
 

@@ -7,8 +7,8 @@ export const usePrefetchTask = (dispatch, projectsInfo) => {
   // keep track of the ids that have been pre-fetched to avoid fetching them again
   const prefetchedIds = useSelector((state) => state.dashboard.prefetchedIds)
   const userName = useSelector((state) => state.user.name)
-  const activityTypes = useSelector((state) => state.dashboard.details.activityTypes)
-  const filter = useSelector((state) => state.dashboard.details.filter)
+  const activityTypes = useSelector((state) => state.details.pinned.activityTypes)
+  const filter = useSelector((state) => state.details.pinned.filter)
 
   const setPrefetchedIds = (ids) => dispatch(onPrefetchIds(ids))
   const [getEntitiesDetails] = useLazyGetDashboardEntitiesDetailsQuery()

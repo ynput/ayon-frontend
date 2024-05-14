@@ -1,14 +1,12 @@
-const transformVersionsData = (versions) => {
-  let rArr = []
+const versionsToRepresentations = (versions = []) => {
+  let representations = []
 
-  for (const versionEdge of versions) {
-    const version = versionEdge.node
+  for (const version of versions) {
     const product = version.product
-    const folder = product?.folder
+    const folder = product?.folder || {}
 
-    for (const representationEdge of version.representations?.edges || []) {
-      const representation = representationEdge.node
-      rArr.push({
+    for (const representation of version.representations || []) {
+      representations.push({
         id: representation.id,
         name: representation.name,
         folderName: folder.name,
@@ -18,11 +16,12 @@ const transformVersionsData = (versions) => {
         // for breadcrumbs
         versionName: version.name,
         folderParents: folder.parents,
+        projectName: version.projectName,
       })
     }
   }
 
-  return rArr
+  return representations
 }
 
-export default transformVersionsData
+export default versionsToRepresentations
