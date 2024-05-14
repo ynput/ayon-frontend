@@ -26,7 +26,6 @@ export const quillFormats = [
   'underline',
   'strike',
   'list',
-  'bullet',
   'link',
   'image',
   'code-block',

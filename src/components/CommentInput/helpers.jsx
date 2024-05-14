@@ -45,6 +45,17 @@ turndownService.addRule('doubleBackslash', {
   },
 })
 
+// ordered list for both ul and ol
+turndownService.addRule('orderedList', {
+  filter: function (node) {
+    console.log(node, node.getAttribute('data-list'))
+    return node.nodeName === 'LI' && node.getAttribute('data-list') === 'bullet'
+  },
+  replacement: function (content) {
+    return '- ' + content + '\n'
+  },
+})
+
 // replace <p> with <br> for line breaks
 const replaceLineBreaks = (html) => {
   return html.replaceAll('<p>', '').replaceAll('</p>', '\n').replaceAll('```', '')

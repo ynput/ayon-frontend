@@ -128,6 +128,12 @@ export const Comment = styled.div`
         color: var(--md-sys-color-primary);
       }
 
+      [data-list='bullet'] {
+        ::before {
+          display: none;
+        }
+      }
+
       strong {
         em,
         u {
