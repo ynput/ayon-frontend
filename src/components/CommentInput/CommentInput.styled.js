@@ -127,6 +127,13 @@ export const Comment = styled.div`
         text-decoration: none;
         color: var(--md-sys-color-primary);
       }
+
+      strong {
+        em,
+        u {
+          font-weight: 800;
+        }
+      }
     }
 
     /* link popup */
