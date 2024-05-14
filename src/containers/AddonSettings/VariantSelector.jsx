@@ -22,7 +22,7 @@ const DropdownBadge = styled.span`
   margin-left: 8px;
 `
 
-const DevModeSelector = ({ variant, setVariant, disabled }) => {
+const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
   const { data } = useGetBundleListQuery({})
   const userName = useSelector((state) => state.user.name)
 
@@ -41,6 +41,8 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
       active: b.activeUser === userName,
     }))
   }, [bundleList])
+
+  const dropdownStyle = style || { flexGrow: 1 }
 
   const formatValue = (value) => {
     if (!bundleOptions.length) return ''
@@ -79,7 +81,7 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
       value={[variant]}
       onChange={(e) => setVariant(e[0])}
       disabled={disabled}
-      style={{ flexGrow: 1 }}
+      style={dropdownStyle}
       valueTemplate={formatValue}
       itemTemplate={(option) => (
         <BundleDropdownItem>
@@ -103,7 +105,7 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
   )
 }
 
-const VariantSelector = ({ variant, setVariant, disabled }) => {
+const VariantSelector = ({ variant, setVariant, disabled, style }) => {
   const user = useSelector((state) => state.user)
 
   useEffect(() => {
@@ -113,7 +115,7 @@ const VariantSelector = ({ variant, setVariant, disabled }) => {
   }, [user.attrib.developerMode])
 
   if (user.attrib.developerMode) {
-    return <DevModeSelector variant={variant} setVariant={setVariant} disabled={disabled} />
+    return <DevModeSelector variant={variant} setVariant={setVariant} disabled={disabled} style={style} />
   }
 
   const styleHlProd = {
