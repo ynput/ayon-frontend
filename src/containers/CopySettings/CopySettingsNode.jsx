@@ -93,6 +93,7 @@ const CopySettingsNode = ({
 
   nodeData,
   setNodeData,
+  setNodeState,
 
   forcedSourceVersion,
   forcedSourceVariant,
@@ -135,6 +136,7 @@ const CopySettingsNode = ({
     if (!sourceVersion || !sourceVariant) return
     if (targetProjectName && !sourceProjectName) return
     setLoading(true)
+    setNodeState('loading')
 
     if (
       sourceVersion === targetVersion &&
@@ -143,6 +145,7 @@ const CopySettingsNode = ({
     ) {
       setNodeData({ message: 'cannot copy from itself' })
       setLoading(false)
+      setNodeState('empty')
       return
     }
 
@@ -213,6 +216,7 @@ const CopySettingsNode = ({
     if (!changes.length) {
       setNodeData({ message: 'no overrides to copy', enabled: false })
       setLoading(false)
+      setNodeState('empty')
       return
     }
 
@@ -228,6 +232,7 @@ const CopySettingsNode = ({
     })
 
     setLoading(false)
+    setNodeState('loaded')
   } //loadNodeData
 
   useEffect(() => {

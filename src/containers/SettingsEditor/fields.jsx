@@ -189,7 +189,7 @@ function ObjectFieldTemplate(props) {
       const rmPath = override?.inGroup || path || ['root']
       if (props.formContext.onPinOverride)
         model.push({
-          label: `Pin current ${rmPath[rmPath.length - 1]} value as ${
+          label: `Add current ${rmPath[rmPath.length - 1]} value as ${
             props.formContext.level
           } override`,
           command: () => props.formContext.onPinOverride(rmPath),
@@ -349,7 +349,7 @@ function FieldTemplate(props) {
 
     if (props.formContext.onPinOverride)
       model.push({
-        label: `Pin current ${rmPath[rmPath.length - 1]} value as ${
+        label: `Add current ${rmPath[rmPath.length - 1]} value as ${
           props.formContext.level
         } override`,
         command: () => props.formContext.onPinOverride(rmPath),

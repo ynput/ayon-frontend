@@ -1,8 +1,8 @@
 /* eslint-disable */
 
 import { useState, useMemo } from 'react'
-import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import styled from 'styled-components'
 
 import { ScrollPanel, Button, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-components'
 
@@ -15,6 +15,23 @@ import CopySettingsNode from './CopySettingsNode'
 import { setValueByPath } from '../AddonSettings/utils'
 import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import { cloneDeep } from 'lodash'
+
+
+const StateShade = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #252a31;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #666;
+`
+
 
 const CopySettingsDialog = ({
   selectedAddons,
@@ -34,6 +51,7 @@ const CopySettingsDialog = ({
   const [sourceBundle, setSourceBundle] = useState(null)
   const [sourceVariant, setSourceVariant] = useState(null)
   const [sourceProjectName, setSourceProjectName] = useState(projectName)
+  const [nodeState, setNodeState] = useState({})
 
   const {
     data: bundlesData,
@@ -113,6 +131,18 @@ const CopySettingsDialog = ({
     return false
   }, [nodes])
 
+
+  const overalState = useMemo(() => {
+    // get all values from nodeState and return 'loading' if any of them is 'loading'
+    let somethingLoaded = false
+    for (const key in nodeState) {
+      if (nodeState[key] === 'loading') return 'loading'
+      if (nodeState[key] === 'loaded') somethingLoaded = true
+    }
+
+    return somethingLoaded ? 'loaded' : 'empty'
+  }, [nodeState])
+
   //
   // RENDER
   //
@@ -134,7 +164,7 @@ const CopySettingsDialog = ({
   const dropStyle = { maxWidth: dropSize, minWidth: dropSize, marginRight: 8 }
 
   const toolbar = (
-    <Toolbar>
+    <Toolbar style={{marginBottom: 15}}>
       {pickByBundle && (
         <>
           Source bundle:
@@ -190,7 +220,12 @@ const CopySettingsDialog = ({
         {toolbar}
         <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
           <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}
+            style={{ 
+              display: (overalState==='loading') ? 'none' : 'flex',
+              flexDirection: 'column', 
+              gap: '8px', 
+              marginBottom: '8px' 
+            }}
           >
             {selectedAddons
               .filter((addon) => !pickByBundle || sourceVersions[addon.name])
@@ -208,13 +243,22 @@ const CopySettingsDialog = ({
                       [addon.name]: data,
                     }))
                   }}
+                  setNodeState={(state) => {setNodeState(o => ({...o, [addon.name]: state}))}}
                   forcedSourceVariant={sourceVariant}
                   forcedSourceVersion={pickByBundle ? sourceVersions[addon.name] : null}
                   forcedSourceProjectName={sourceProjectName || null}
                 />
               ))}
           </div>
+
+        {overalState === 'loading' && (
+          <StateShade>
+            LOADING...
+          </StateShade>
+        )}
+
         </ScrollPanel>
+
       </div>
     </Dialog>
   )
