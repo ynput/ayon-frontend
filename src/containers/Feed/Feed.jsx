@@ -222,7 +222,6 @@ const Feed = ({
   }
 
   const handleFileExpand = (file) => {
-    console.log(file)
     dispatch(onCommentImageOpen({ ...file, projectName }))
   }
 
