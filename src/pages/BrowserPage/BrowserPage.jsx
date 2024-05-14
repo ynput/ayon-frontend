@@ -6,6 +6,10 @@ import TaskList from '/src/containers/taskList'
 import Products from './Products'
 import BrowserDetailsPanel from './BrowserDetailsPanel'
 
+const detailsMinWidth = 533
+const detailsMaxWidth = '40vw'
+const detailsMaxMaxWidth = 700
+
 const BrowserPage = () => {
   return (
     <main style={{ overflow: 'hidden' }}>
@@ -25,7 +29,13 @@ const BrowserPage = () => {
             <SplitterPanel style={{ minWidth: 500 }}>
               <Products />
             </SplitterPanel>
-            <SplitterPanel style={{ minWidth: 250, maxWidth: 480, zIndex: 100 }}>
+            <SplitterPanel
+              style={{
+                maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+                minWidth: detailsMinWidth,
+                zIndex: 100,
+              }}
+            >
               <BrowserDetailsPanel />
             </SplitterPanel>
           </Splitter>
