@@ -222,9 +222,18 @@ const Bundles = () => {
       newName = getVersionedName(newName)
     }
 
+    const duplicatedAddons = { ...bundle.addons }
+    const installedAddonNames = new Set(addons.map((a) => a.name))
+    // ensure that all addons are installed and delete the ones that are not
+    for (const addonName in duplicatedAddons) {
+      if (!installedAddonNames.has(addonName)) {
+        delete duplicatedAddons[addonName]
+      }
+    }
+
     setNewBundleOpen({
       name: newName,
-      addons: bundle.addons,
+      addons: duplicatedAddons,
       installerVersion: bundle.installerVersion,
       dependencyPackages: bundle.dependencyPackages,
       isArchived: false,
