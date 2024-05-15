@@ -507,15 +507,37 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           {!isUser && (
             <SectionStyled>
               {createTeamOpen ? (
-                <CreateNewTeam
-                  rolesList={rolesList}
-                  createTeamOpen={createTeamOpen}
-                  onClose={setCreateTeamOpen}
-                  selectedUsers={selectedUsers}
-                  setSelectedUsers={setSelectedUsers}
-                  allUsers={userList}
-                  onCreate={handleNewTeam}
-                />
+                <Dialog onClose={() => setCreateTeamOpen(false)} style={{ height: '500px'}} isOpen header={'Create New Team'} size="lg">
+                  <div style={{ display: 'flex', height: '100%'}} >
+                    <div style={{ width: '50%'}} >
+                    <UserListTeams
+                      selectedProjects={[projectName]}
+                      selectedUsers={selectedUsers}
+                      onSelectUsers={(users) => setSelectedUsers(users)}
+                      userList={filteredUserList}
+                      isLoading={isLoading}
+                      selectedTeams={selectedTeams}
+                      onShowAllUsers={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
+                      showAllUsers={showTeamUsersOnly}
+                      teams={teams}
+                      onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                      isFullSize={false}
+                    />
+
+                    </div>
+                    <div style={{ width: '50%'}} >
+                      <CreateNewTeam
+                        rolesList={rolesList}
+                        createTeamOpen={createTeamOpen}
+                        onClose={setCreateTeamOpen}
+                        selectedUsers={selectedUsers}
+                        setSelectedUsers={setSelectedUsers}
+                        allUsers={userList}
+                        onCreate={handleNewTeam}
+                      />
+                    </div>
+                  </div>
+                </Dialog>
               ) : (
                 <>
                   <TeamUsersDetails

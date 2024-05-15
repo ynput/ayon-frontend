@@ -8,7 +8,6 @@ import {
   FormRow,
   InputText,
   SaveButton,
-  Dialog,
 } from '@ynput/ayon-react-components'
 import checkName from '/src/helpers/checkName'
 
@@ -17,7 +16,6 @@ const CreateNewTeam = ({
   selectedUsers,
   allUsers,
   setSelectedUsers,
-  onClose,
   onCreate,
   createTeamOpen,
 }) => {
@@ -111,35 +109,8 @@ const CreateNewTeam = ({
     setRolesForm([])
   }
 
-  const FooterTeam =  () => 
-    <div style={{display: 'flex', gap: 4, width: '100%' }}>
-      <Button
-        onClick={handleClear}
-        label="Clear"
-        icon="clear"
-        style={{ flex: 1 }}
-        disabled={!nameForm}
-      />
-      <SaveButton
-        onClick={handleSubmit}
-        label="Create New Team"
-        style={{ flex: 1 }}
-        active={!!nameForm}
-      />
-    </div>
-
-    const positionToRight = {
-      right: 0,
-      top: 0,
-      bottom: 0,
-      margin: 'auto',
-      left: 'auto',
-      translate: 'none',
-      width: '33%'
-    }
-
   return (
-    <Dialog style={positionToRight} onClose={() => onClose(false)} isOpen header={title} size="md" footer={<FooterTeam />}>
+    <div style={{paddingLeft: '32px'}}>
         <span>{subTitle}</span>
         <FormLayout>
           <FormRow label="Team Name">
@@ -179,7 +150,22 @@ const CreateNewTeam = ({
             />
           </FormRow>
         </FormLayout>
-    </Dialog>
+        <div style={{ display: 'flex', gap: 8 , paddingTop: 16 }}>
+          <Button
+            onClick={handleClear}
+            label="Clear"
+            icon="clear"
+            style={{ flex: 1 }}
+            disabled={!nameForm}
+          />
+          <SaveButton
+            onClick={handleSubmit}
+            label="Create New Team"
+            style={{ flex: 1 }}
+            active={!!nameForm}
+          />
+      </div>
+    </div>
   )
 }
 

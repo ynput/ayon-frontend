@@ -43,6 +43,35 @@ const ProfileRow = ({ rowData }) => {
   )
 }
 
+const FullnameImage = ({ rowData }) => {
+  const { name, self, isMissing } = rowData
+  const { fullName } = rowData.attrib
+  return (
+    <StyledProfileRow>
+      <UserImage
+        name={name}
+        size={25}
+        style={{
+          margin: 'auto',
+          transform: 'scale(0.8)',
+          minHeight: 25,
+          minWidth: 25,
+          maxHeight: 25,
+          maxWidth: 25,
+        }}
+        highlight={self}
+      />
+      <span
+        style={{
+          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
+        }}
+      >
+        {fullName || name}
+      </span>
+    </StyledProfileRow>
+  )
+}
+
 const UserListTeams = ({
   selectedProjects,
   selectedUsers = [],
@@ -54,6 +83,7 @@ const UserListTeams = ({
   onShowAllUsers,
   teams = [],
   onUpdateTeams,
+  isFullSize = true
 }) => {
   // Selection
   const selection = useMemo(
@@ -180,8 +210,6 @@ const UserListTeams = ({
     )
   }
 
-  // Render
-
   return (
     <Section
       style={{
@@ -213,87 +241,97 @@ const UserListTeams = ({
             return <div>{data.group}</div>
           }}
         >
-          <Column
-            field="name"
-            header="Username"
-            body={(rowData) => ProfileRow({ rowData })}
-            style={{
-              width: '20%',
-            }}
-          />
-          <Column
-            field="attrib.fullName"
-            header="Full Name"
-            style={{
-              width: '20%',
-            }}
-          />
-          <Column
-            header="Teams"
-            body={(rowData) => {
-              if (!rowData.teams) return null
-              // sort teams by leader and sort teams by if they are selected
-              const teamNames = Object.keys(rowData.teams)
-              teamNames.sort((a, b) => {
-                if (selectedTeams.includes(a) && !selectedTeams.includes(b)) return -1
-                if (!selectedTeams.includes(a) && selectedTeams.includes(b)) return 1
-                if (rowData.teams[a].leader) return -1
-                if (rowData.teams[b].leader) return 1
-                return 0
-              })
+        { isFullSize &&
+           <Column
+              field="name"
+              header="Username"
+              body={(rowData) => ProfileRow({ rowData })}
+              style={{
+                width: '20%',
+              }}
+            />
+          }
+            <Column
+              field="attrib.fullName"
+              header="Full Name"
+              style={{
+                width: '20%',
+              }}
+              body={(rowData) => FullnameImage({ rowData })}
+            />
+            { isFullSize &&
+             <Column
+               header="Teams"
+               body={(rowData) => {
+                 if (!rowData.teams) return null
+                 // sort teams by leader and sort teams by if they are selected
+                 const teamNames = Object.keys(rowData.teams)
+                 teamNames.sort((a, b) => {
+                   if (selectedTeams.includes(a) && !selectedTeams.includes(b)) return -1
+                   if (!selectedTeams.includes(a) && selectedTeams.includes(b)) return 1
+                   if (rowData.teams[a].leader) return -1
+                   if (rowData.teams[b].leader) return 1
+                   return 0
+                 })
 
-              return (
-                <span>
-                  {teamNames.map((team, i, arr) => (
-                    <span
-                      key={team}
-                      style={{
-                        color: rowData.teams[team].leader
-                          ? 'var(--md-sys-color-tertiary)'
-                          : 'inherit',
-                        opacity: selectedTeams.includes(team) ? 1 : 0.5,
-                        marginLeft: i === 0 ? 0 : 4,
-                      }}
-                    >{`${team}${i < arr.length - 1 ? ',' : ''}`}</span>
-                  ))}
-                </span>
-              )
-            }}
-            sortField="teamsList"
-          />
-          <Column
-            header="Roles"
-            body={(rowData) => {
-              const allRoles = []
-              const selectedRoles = []
+                 return (
+                   <span>
+                     {teamNames.map((team, i, arr) => (
+                       <span
+                         key={team}
+                         style={{
+                           color: rowData.teams[team].leader
+                             ? 'var(--md-sys-color-tertiary)'
+                             : 'inherit',
+                           opacity: selectedTeams.includes(team) ? 1 : 0.5,
+                           marginLeft: i === 0 ? 0 : 4,
+                         }}
+                       >{`${team}${i < arr.length - 1 ? ',' : ''}`}</span>
+                     ))}
+                   </span>
+                 )
+               }}
+               sortField="teamsList"
+             />
+            }
+            { isFullSize &&
 
-              for (const team in rowData.teams) {
-                for (const role of rowData.teams[team].roles) {
-                  if (!allRoles.includes(role)) allRoles.push(role)
-                  if (selectedTeams.includes(team) && !selectedRoles.includes(role))
-                    selectedRoles.push(role)
-                }
-              }
+             <Column
+               header="Roles"
+               body={(rowData) => {
+                 const allRoles = []
+                 const selectedRoles = []
 
-              return (
-                <span>
-                  {allRoles.map((role, i, arr) => (
-                    <span
-                      key={role}
-                      style={{
-                        opacity: selectedRoles.includes(role) ? 1 : 0.5,
-                        marginLeft: i === 0 ? 0 : 4,
-                      }}
-                    >{`${role}${i < arr.length - 1 ? ',' : ''}`}</span>
-                  ))}
-                </span>
-              )
-            }}
-            sortField="rolesList"
-          />
+                 for (const team in rowData.teams) {
+                   for (const role of rowData.teams[team].roles) {
+                     if (!allRoles.includes(role)) allRoles.push(role)
+                     if (selectedTeams.includes(team) && !selectedRoles.includes(role))
+                       selectedRoles.push(role)
+                   }
+                 }
+
+                 return (
+                   <span>
+                     {allRoles.map((role, i, arr) => (
+                       <span
+                         key={role}
+                         style={{
+                           opacity: selectedRoles.includes(role) ? 1 : 0.5,
+                           marginLeft: i === 0 ? 0 : 4,
+                         }}
+                       >{`${role}${i < arr.length - 1 ? ',' : ''}`}</span>
+                     ))}
+                   </span>
+                 )
+               }}
+               sortField="rolesList"
+             />
+            }
+            
         </DataTable>
       </TablePanel>
     </Section>
+  // Render
   )
 }
 
