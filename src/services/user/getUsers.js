@@ -206,5 +206,6 @@ export const {
   useLazyGetUserQuery,
   useGetUsersAssigneeQuery,
   useGetMeQuery,
+  useGetUserAvatarQuery,
   useGetUserSessionsQuery,
 } = getUsers

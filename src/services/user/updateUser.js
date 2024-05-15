@@ -36,17 +36,6 @@ const updateUser = ayonApi.injectEndpoints({
       invalidatesTags: () => ['user'],
       transformErrorResponse: (res) => res.data,
     }),
-    updateUserAvatar: build.mutation({
-      query: ({ name, avatarUrl }) => ({
-        url: `/api/users/${name}/avatar`,
-        method: 'PUT',
-        body: { avatarUrl },
-      }),
-      transformErrorResponse: (res) => res.data,
-      invalidatesTags: (result, error, { name }) => [
-        { type: 'user', id: name },
-      ],
-    }),
     addUser: build.mutation({
       query: ({ name, user }) => ({
         url: `/api/users/${name}`,
@@ -87,7 +76,6 @@ export const {
   useUpdateUserMutation,
   useUpdateUserNameMutation,
   useUpdateUserPasswordMutation,
-  useUpdateUserAvatarMutation,
   useAddUserMutation,
   useDeleteUserMutation,
   useUpdateUserAPIKeyMutation,
