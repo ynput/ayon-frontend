@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 
 export const Avatar = styled.div`
     display: flex;
@@ -12,7 +12,7 @@ export const Avatar = styled.div`
         border: none;
     }
 `
-export const AvatarIcon = styled(Icon)`
+export const AvatarIcon = styled(Button)`
     position: absolute;
     top: 75%;
     right: 5%;
@@ -20,12 +20,9 @@ export const AvatarIcon = styled(Icon)`
     display: inline-block;
     border-radius: 15px;
     padding: 0.3em;
+    width: 30px;
+    height: 30px;
     background: var(--md-sys-color-surface-container-high);
-    :hover {
-        cursor: pointer;
-        color: var(--md-sys-color-on-surface);
-        box-shadow: 0 0 2px var(--md-sys-color-on-surface);
-    }
 `
 export const Username = styled.span`
     padding: 16px;
