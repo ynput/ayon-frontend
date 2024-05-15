@@ -60,6 +60,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const [initData, setInitData] = useState(initialFormData)
   const [formData, setFormData] = useState(initialFormData)
   const [changesMade, setChangesMade] = useState(false)
+  const [imageKey, setImageKey] = useState(null)
 
   // once user data is loaded, set form data
   useEffect(() => {
@@ -130,6 +131,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const onUpdateAvatar = async (file) => {
     try {
       const user_name = user.name
+      const imageKey = `?${Math.random().toString(36).substring(2, 15)}-${Date.now()}`
       const opts = {
         headers: {
           'Content-Type': file.type,
@@ -141,6 +143,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       dispatch(updateUserAttribs(formData))
       // reset form
       setInitData(formData)
+      setImageKey(imageKey)
       setChangesMade(false)
     } catch (error) {
       console.log(error)
@@ -153,7 +156,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     <main>
       <Section style={{ paddingTop: 16 }}>
         <FormsStyled>
-        <Avatar user={user} onUpdateAvatar={onUpdateAvatar} />
+        <Avatar user={user} onUpdateAvatar={onUpdateAvatar} imageKey={imageKey} />
           <Panel style={{ background: 'none'}}>
             <FormRow label="Username" key="Username">
               <InputText value={name} disabled />
