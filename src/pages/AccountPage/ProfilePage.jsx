@@ -16,6 +16,7 @@ import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../../ayon'
 import { onProfileUpdate } from '../../features/user'
+import Type from '/src/theme/typography.module.css'
 import { useDispatch } from 'react-redux'
 
 const FormsStyled = styled.section`
@@ -44,6 +45,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const dispatch = useDispatch()
   const attributes = ayonClient.getAttribsByScope('user')
   const [showSetPassword, setShowSetPassword] = useState(false)
+  const [userImage, setUserImage] = useState(false)
 
   // UPDATE USER DATA
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation()
@@ -155,19 +157,50 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
-  console.log(attributes,'attributes')
-  console.log(formData,'setFormData')
-  console.log(user,'setuser')
+  const loadImage = () => {
+    axios.get(`/api/users/${user.name}/avatar`).then((response) => {
+      setUserImage(response)
+    })
+  }
+
+  function convertRawToBase64(rawData) {
+    const buffer = new TextEncoder().encode(rawData);
+     return btoa(String.fromCharCode(...buffer))
+    
+  }
+
+  function createDataUri(base64Data, mimeType) {
+    return `data:${mimeType};base64,${base64Data}`;
+  }
+
+  const base64Data = convertRawToBase64(userImage);
+  const dataUri = createDataUri(base64Data, "image/png");
+
+  console.log(userImage,'userImage')
+  console.log(base64Data,'base64Data')
+  console.log(dataUri,'dataUri')
+
+  // const encodedString = "your_base64_string_here";
+  // const decodedBytes = Uint8Array.from(atob(encodedString), c => c.charCodeAt(0));
+  // const blob = new Blob([decodedBytes], { type: "image/jpeg" });
+  // const url = URL.createObjectURL(blob);
+
+
+
+  // const fileInput = useRef(null)
+
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
         {/* <UserDetailsHeader users={[user]} style={{ maxWidth: 600 }} /> */}
-        <Avatar user={user} />
+        <FormsStyled>
+        <Avatar user={user} onUpdateAvatar={onUpdateAvatar} />
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
 
-          <h2>{user?.attrib?.fullName}</h2>
+          <span style={{ padding: 16 }} className={Type.headlineMedium}>{user?.attrib?.fullName}</span>
+          <button onClick={loadImage}>load image</button>
+          {dataUri && <img src={dataUri || ''} alt="Image from Server" />}
         </div>
-        <FormsStyled>
           <Panel>
             <FormRow label="Username" key="Username">
               <InputText value={name} disabled />

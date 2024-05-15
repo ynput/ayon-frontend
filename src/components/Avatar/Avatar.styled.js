@@ -5,6 +5,9 @@ export const Avatar = styled.div`
     position: relative;
     display: flex;
     width: auto;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
     
 `
 export const AvatarIcon = styled(Icon)`

@@ -78,25 +78,25 @@ const UserAttribForm = ({
             autoComplete="new-password"
           />
         )
-      } else if (name === 'avatarUrl') {
-        console.log(formData,'formData')
-        const { avatarUrl, fullName } = formData
-        widget = (
-        <span style={{ display: 'flex', flexDirection: 'row', gap: 8}}>
-          <UserImage src={avatarUrl} fullName={fullName} />
-         <Button
-          icon="upload"
-          className="upload-button"
-          iconProps={{ className: 'edit' }}
-          data-tooltip={'Upload thumbnail from file'}
-          tooltip="Upload Avatar"
-          onClick={() => fileInput.current.click()}
-        >
-          Upload New Avatar
-        </Button>
-        <input type="file" ref={fileInput} style={{ display: 'none' }}  multiple={false} onChange={handleInputChange} accept=".png, .jpeg, .jpg" />
-       </span>
-        )
+      // } else if (name === 'avatarUrl') {
+      //   console.log(formData,'formData')
+      //   const { avatarUrl, fullName } = formData
+      //   widget = (
+      //   <span style={{ display: 'flex', flexDirection: 'row', gap: 8}}>
+      //     <UserImage src={avatarUrl} fullName={fullName} />
+      //    <Button
+      //     icon="upload"
+      //     className="upload-button"
+      //     iconProps={{ className: 'edit' }}
+      //     data-tooltip={'Upload thumbnail from file'}
+      //     tooltip="Upload Avatar"
+      //     onClick={() => fileInput.current.click()}
+      //   >
+      //     Upload New Avatar
+      //   </Button>
+      //   <input type="file" ref={fileInput} style={{ display: 'none' }}  multiple={false} onChange={handleInputChange} accept=".png, .jpeg, .jpg" />
+      //  </span>
+      //   )
       } else if (data.enum) {
         widget = (
           <Dropdown
