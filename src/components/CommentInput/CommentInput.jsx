@@ -197,9 +197,6 @@ const CommentInput = ({
       return
     }
 
-    const quill = editorRef.current.getEditor()
-    console.log(quill.getContents())
-
     setEditorValue(content)
 
     const isDelete = delta.ops.length === 2 && delta.ops[1].delete
