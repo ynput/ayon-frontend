@@ -118,8 +118,11 @@ export const Comment = styled.div`
     .ql-editor {
       padding-bottom: 0;
 
-      pre {
+      /* code block */
+      .ql-code-block-container {
         background-color: var(--md-sys-color-surface-container-lowest);
+        padding: var(--padding-m);
+        border-radius: var(--border-radius-m);
       }
 
       a {
@@ -252,6 +255,8 @@ export const Comment = styled.div`
       margin-right: 8px;
       padding-right: 8px;
       border-right: 1px solid var(--md-sys-color-surface-container-hover);
+      display: flex;
+      gap: 2px;
 
       /* remove border for last child */
       &:last-child {
@@ -265,6 +270,14 @@ export const Comment = styled.div`
       border-radius: var(--border-radius-m);
       height: 32px;
       width: 32px;
+
+      /* highlight when action */
+      &.ql-active {
+        background-color: var(--md-sys-color-secondary-container);
+        .icon {
+          color: var(--md-sys-color-on-secondary-container);
+        }
+      }
     }
 
     button:hover {
