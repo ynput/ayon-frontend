@@ -35,6 +35,10 @@ body {
   }
 }
 
+strong {
+  font-weight: 800;
+}
+
 :root {
   // developer colors
   --color-hl-developer-container: hsl(272, 23%, 22%);
