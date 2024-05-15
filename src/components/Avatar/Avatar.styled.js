@@ -8,6 +8,9 @@ export const Avatar = styled.div`
     align-items: center;
     justify-content: center;
     align-self: center;
+    .user-image {
+        border: none;
+    }
     
 `
 export const AvatarIcon = styled(Icon)`
