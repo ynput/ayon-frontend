@@ -74,6 +74,8 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       setFormData(newFormData)
       // used to reset form
       setInitData(newFormData)
+
+      // // set name
       setName(user.name)
     }
 

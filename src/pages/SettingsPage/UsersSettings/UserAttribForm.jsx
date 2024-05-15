@@ -48,7 +48,6 @@ const UserAttribForm = ({
     attribs.map(({ name, data, input }) => {
       let widget = null
 
-   
       if (name === 'avatarUrl' && !showAvatarUrl) return null
       if (name.includes('password') && setPassword) {
         widget = (
@@ -81,6 +80,7 @@ const UserAttribForm = ({
         )
       } else if (data.type === 'boolean') {
         if (name === 'developerMode') return null
+
         widget = (
           <InputSwitch
             checked={formData[name]}
