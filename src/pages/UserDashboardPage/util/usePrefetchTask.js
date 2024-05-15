@@ -16,7 +16,6 @@ export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
   const [getEntitiesActivities] = useLazyGetActivitiesQuery()
 
   const handlePrefetch = (task) => {
-    console.log('prefetching task details and feed')
     if (prefetchedIds.includes(task.id)) return
 
     setPrefetchedIds([...prefetchedIds, task.id])
