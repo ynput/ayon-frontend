@@ -118,8 +118,11 @@ export const Comment = styled.div`
     .ql-editor {
       padding-bottom: 0;
 
-      pre {
+      /* code block */
+      .ql-code-block-container {
         background-color: var(--md-sys-color-surface-container-lowest);
+        padding: var(--padding-m);
+        border-radius: var(--border-radius-m);
       }
 
       a {

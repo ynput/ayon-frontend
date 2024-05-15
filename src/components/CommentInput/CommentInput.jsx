@@ -13,13 +13,8 @@ import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers
 import { useGetTaskMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
-import {
-  convertToMarkdown,
-  handleFileDrop,
-  parseImages,
-  getUsersContext,
-  typeWithDelay,
-} from './helpers'
+import { convertToMarkdown } from './quillToMarkdown'
+import { handleFileDrop, parseImages, getUsersContext, typeWithDelay } from './helpers'
 import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
 import InputMarkdownConvert from './InputMarkdownConvert'

@@ -169,15 +169,6 @@ export const Name = styled.span`
   color: var(--md-sys-color-outline);
 `
 
-export const InlineCode = styled.code`
-  padding: 0 var(--padding-s);
-  border-radius: var(--padding-s);
-  background-color: var(--md-sys-color-surface-container-lowest);
-
-  line-break: anywhere;
-  word-break: break-word;
-`
-
 export const BlockCode = styled.pre`
   padding: var(--padding-m);
   border-radius: var(--padding-s);

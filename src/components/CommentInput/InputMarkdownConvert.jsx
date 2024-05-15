@@ -46,6 +46,11 @@ const InputMarkdownConvert = ({ typeOptions, initValue }) => {
             )
           }
         },
+        code: ({ children, ...props }) => {
+          console.log(props)
+
+          return <pre>{children}</pre>
+        },
       }}
     >
       {initValue}
