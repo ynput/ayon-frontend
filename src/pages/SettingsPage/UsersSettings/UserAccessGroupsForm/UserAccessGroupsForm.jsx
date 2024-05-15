@@ -12,7 +12,7 @@ import {
 
 const ContainerStyled = styled.div`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   overflow: hidden;
   min-height: 300px;
 

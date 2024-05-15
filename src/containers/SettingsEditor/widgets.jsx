@@ -15,7 +15,8 @@ import { isEqual } from 'lodash'
 const updateChangedKeys = (props, changed, path) => {
   if (!props.formContext) return // WARN! (but shouldn't happen)
   if (!path?.length) return // WARN!
-  props.formContext.onSetChangedKeys([{ path, isChanged: changed }])
+  if (!changed) return
+  props.formContext.onSetChangedKeys([{ path, isChanged: true }])
 }
 
 const equiv = (a, b) => {

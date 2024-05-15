@@ -4,7 +4,7 @@ import { Button } from '@ynput/ayon-react-components'
 export const Header = styled.header`
   display: flex;
   align-items: flex-end;
-  gap: 4px;
+  gap: var(--base-gap-small);
   position: relative;
   padding: 0 4px;
 
@@ -17,14 +17,14 @@ export const Header = styled.header`
 
 export const Body = styled.div`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   align-items: center;
   flex-wrap: wrap;
 `
 
 export const Tools = styled.div`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   position: absolute;
   right: 0;
   bottom: 0;

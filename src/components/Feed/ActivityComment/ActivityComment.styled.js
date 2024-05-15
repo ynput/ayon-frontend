@@ -12,10 +12,10 @@ export const Comment = styled.li`
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   width: 100%;
-  padding: 8px;
+  padding: var(--padding-m);
   border-radius: var(--border-radius-m);
 
   /* hide date and show tools */
@@ -56,7 +56,8 @@ export const Comment = styled.li`
 export const Body = styled.div`
   background-color: var(--md-sys-color-surface-container);
   border-radius: var(--border-radius-m);
-  padding: 8px;
+  padding: var(--padding-m);
+  padding-bottom: 12px;
   position: relative;
 
   /* remove first and last margins */
@@ -83,16 +84,22 @@ export const Body = styled.div`
     }
   }
 
+  ul,
+  ol {
+    .reference {
+      top: 6px;
+    }
+  }
+
   .contains-task-list {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--base-gap-large);
     padding-left: 8px;
     margin: 8px 0;
 
     li {
-      display: flex;
       align-items: center;
     }
 
@@ -100,11 +107,11 @@ export const Body = styled.div`
       margin: 0;
       display: flex;
       align-items: flex-start;
-    }
 
-    .reference {
-      top: 0;
-      margin-left: 4px;
+      .reference {
+        top: 0px;
+        margin-left: 4px;
+      }
     }
   }
 
@@ -117,7 +124,7 @@ export const Body = styled.div`
 export const Attachments = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--base-gap-large);
 `
 
 const attachmentBase = css`
@@ -169,15 +176,6 @@ export const Name = styled.span`
   color: var(--md-sys-color-outline);
 `
 
-export const InlineCode = styled.code`
-  padding: 0 var(--padding-s);
-  border-radius: var(--padding-s);
-  background-color: var(--md-sys-color-surface-container-lowest);
-
-  line-break: anywhere;
-  word-break: break-word;
-`
-
 export const BlockCode = styled.pre`
   padding: var(--padding-m);
   border-radius: var(--padding-s);
@@ -185,4 +183,5 @@ export const BlockCode = styled.pre`
 
   line-break: anywhere;
   word-break: break-word;
+  overflow: hidden;
 `

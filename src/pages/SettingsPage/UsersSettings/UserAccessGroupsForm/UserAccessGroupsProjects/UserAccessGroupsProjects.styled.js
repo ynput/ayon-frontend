@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 export const Header = styled.header`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   padding: 4px 0px 4px 8px;
   justify-content: space-between;
   align-items: center;
@@ -46,7 +46,7 @@ export const CloseIcon = styled(Icon)`
 export const Buttons = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   padding: 1px;
   margin: -1px;
@@ -62,7 +62,7 @@ export const ProjectItem = styled.div`
   justify-content: space-between;
   padding: 4px 8px;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   border-radius: var(--border-radius-m);
   cursor: pointer;
@@ -133,7 +133,7 @@ export const ProjectItem = styled.div`
 export const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   overflow: auto;
 `

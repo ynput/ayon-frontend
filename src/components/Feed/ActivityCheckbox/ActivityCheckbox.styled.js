@@ -2,9 +2,10 @@ import styled from 'styled-components'
 
 export const Checkbox = styled.label`
   cursor: pointer;
-  height: 24px;
-  margin-right: 4px;
+  height: 14px;
+  width: 28px;
   position: relative;
+  display: inline-block;
 
   input {
     opacity: 0;
@@ -17,7 +18,8 @@ export const Checkbox = styled.label`
     user-select: none;
     font-size: 24px;
     position: relative;
-    top: -1px;
+    top: -3px;
+    position: absolute;
   }
 
   &.checked {

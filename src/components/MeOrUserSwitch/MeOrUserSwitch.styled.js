@@ -6,7 +6,7 @@ export const MeOrUserSwitchContainer = styled.div`
 
   .me {
     height: 32px;
-    gap: 4px;
+    gap: var(--base-gap-small);
     padding-right: 8px;
     border-radius: var(--border-radius) 0 0 var(--border-radius);
 

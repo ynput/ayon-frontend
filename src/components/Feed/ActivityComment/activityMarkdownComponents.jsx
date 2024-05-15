@@ -69,14 +69,8 @@ export const inputTag = ({ type, checked, ...props }, { activity, onCheckChange 
   }
 }
 
-import { BlockCode, InlineCode } from './ActivityComment.styled'
+import { BlockCode } from './ActivityComment.styled'
 // eslint-disable-next-line
-export const codeTag = ({ node, inline, className, children, ...props }) => {
-  return !inline ? (
-    <BlockCode>{children}</BlockCode>
-  ) : (
-    <InlineCode className={className} {...props}>
-      {children}
-    </InlineCode>
-  )
+export const codeTag = ({ node, className, children }) => {
+  return <BlockCode>{children}</BlockCode>
 }

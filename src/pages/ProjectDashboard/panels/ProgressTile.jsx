@@ -10,7 +10,7 @@ const HeaderStyled = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 4px;
+  gap: var(--base-gap-small);
   h3 {
     flex: 1;
   }
@@ -22,7 +22,7 @@ const HeaderStyled = styled.div`
 
 const ProgressStyled = styled(TileStyled)`
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   overflow: hidden;
   position: relative;
 

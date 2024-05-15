@@ -3,7 +3,7 @@ import styled from 'styled-components'
 export const FormContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   overflow: auto;
   padding: 1px;
@@ -12,7 +12,7 @@ export const FormContainer = styled.div`
 export const Row = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 4px;
+  gap: var(--base-gap-small);
   position: relative;
   padding: 1px;
 

@@ -14,14 +14,14 @@ import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../../ayon'
-import { onProfileUpdate } from '../../features/user'
+import { updateUserAttribs } from '../../features/user'
 import { useDispatch } from 'react-redux'
 
 const FormsStyled = styled.section`
   flex: 1;
   overflow-x: clip;
   overflow-y: auto;
-  gap: 4px;
+  gap: var(--base-gap-small);
   display: flex;
   flex-direction: column;
   max-width: 600px;
@@ -113,7 +113,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       toast.success('Profile updated')
 
       // update redux state with new data
-      dispatch(onProfileUpdate(formData))
+      dispatch(updateUserAttribs(formData))
       // reset form
       setInitData(formData)
       setChangesMade(false)

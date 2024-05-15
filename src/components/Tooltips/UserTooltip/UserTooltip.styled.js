@@ -14,7 +14,7 @@ const popInAnimation = keyframes`
 export const Popup = styled.span`
   display: flex;
   padding: 8px;
-  gap: 8px;
+  gap: var(--base-gap-large);
   z-index: 100;
   align-items: center;
 

@@ -5,7 +5,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import EntityDetail from '/src/containers/entityDetail'
+import EntityDetail from './DetailsDialog'
 import { CellWithIcon } from '/src/components/icons'
 import { setFocusedTasks, setPairing, setUri } from '/src/features/context'
 import { toast } from 'react-toastify'

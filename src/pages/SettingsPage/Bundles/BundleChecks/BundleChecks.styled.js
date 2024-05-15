@@ -58,7 +58,7 @@ export const Status = styled.div`
 export const Checks = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--base-gap-medium);
+  gap: var(--base-gap-large);
   margin-top: 20px;
   flex: 1;
 

@@ -79,7 +79,7 @@ export const HeaderButton = styled(ayonButton)`
 export const Status = styled.div`
   display: flex;
   width: 100%;
-  gap: 4px;
+  gap: var(--base-gap-small);
   align-items: center;
 `
 
@@ -119,7 +119,7 @@ export const Dropdown = styled.div`
   padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-items: flex-start;
   min-height: 0;
   transform: translateY(0);
@@ -131,7 +131,7 @@ export const Dropdown = styled.div`
 
 export const Footer = styled.footer`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   width: 100%;
 `
 

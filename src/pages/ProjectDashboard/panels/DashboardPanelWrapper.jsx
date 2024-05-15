@@ -51,7 +51,7 @@ const PanelStyled = styled(Panel)`
 const ContentStyled = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   width: 100%;
   padding: 8px;
   padding-top: 0;

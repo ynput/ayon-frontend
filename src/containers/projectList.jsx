@@ -60,7 +60,7 @@ const StyledAddButton = styled(Button)`
 
   .content {
     display: flex;
-    gap: 4px;
+    gap: var(--base-gap-small);
     position: relative;
 
     transition: transform 0.15s;

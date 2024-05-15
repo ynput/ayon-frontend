@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,700;1,6..12,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400..800;1,6..12,400..800&display=swap');
 
 input {
   color: var(--md-sys-color-on-surface);
@@ -33,6 +33,10 @@ body {
       width: 8px !important;
     }
   }
+}
+
+strong {
+  font-weight: 800;
 }
 
 :root {
@@ -70,7 +74,7 @@ body {
     flex-grow: 1;
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: var(--base-gap-large);
     padding: 8px;
     position: relative;
 
@@ -91,7 +95,7 @@ nav.primary {
   flex-direction: row;
   align-items: center;
   position: relative;
-  gap: 4px;
+  gap: var(--base-gap-small);
 }
 
 .section-header {
@@ -751,7 +755,7 @@ a {
 // confirm dialog buttons
 .p-dialog.p-confirm-dialog {
   .p-dialog-footer {
-    gap: 8px;
+    gap: var(--base-gap-large);
     display: flex;
     width: 100%;
     justify-content: flex-end;

@@ -61,7 +61,7 @@ export const LoginForm = styled.div`
     flex-direction: column;
     align-items: center;
     width: 100%;
-    gap: 8px;
+    gap: var(--base-gap-large);
 
     & > * {
       width: 100%;

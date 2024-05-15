@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
-import EntityDetail from '/src/containers/entityDetail'
+import EntityDetail from '../../containers/DetailsDialog'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
 import usePubSub from '/src/hooks/usePubSub'
@@ -20,14 +20,14 @@ import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
 
 import {
-  patchProductsListWithVersions,
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
 } from '../../services/product/getProduct'
+import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
-import { useUpdateEntitiesDetailsMutation } from '/src/services/entity/updateEntity'
+import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
 import { ayonApi } from '/src/services/ayon'
 import useCreateContext from '/src/hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
@@ -35,7 +35,6 @@ import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
-import { isEmpty } from 'lodash'
 import { productTypes } from '/src/features/project'
 
 const Products = () => {
@@ -85,6 +84,8 @@ const Products = () => {
   // merge products and versions data
   const listData = productsData
 
+  const patchProductsListWithVersions = usePatchProductsListWithVersions({ projectName })
+
   // get new versions data and patch into cache and update versions local state
   const handleVersionChange = async (productVersionPairs = [[]]) => {
     // productVersionPairs is an array of arrays
@@ -101,11 +102,7 @@ const Products = () => {
     try {
       const versions = await getProductsVersions({ ids: versionIds, projectName }, true).unwrap()
 
-      patchProductsListWithVersions(
-        { folderIds: focusedFolders, projectName },
-        { versions },
-        { dispatch },
-      )
+      patchProductsListWithVersions(versions)
 
       setLoadingProducts([])
       // return so that the focus can update
@@ -125,7 +122,26 @@ const Products = () => {
     listData.map(({ id }) => id),
   )
 
-  const [updateEntity] = useUpdateEntitiesDetailsMutation()
+  const [updateEntities] = useUpdateEntitiesMutation()
+
+  const handleUpdate = async (field, value, ids = []) => {
+    if (value === null || value === undefined) return console.error('value is null or undefined')
+
+    try {
+      // build entities operations array
+      const operations = ids.map((id) => ({
+        id: id,
+        projectName: projectName,
+        data: {
+          [field]: value,
+        },
+      }))
+
+      return await updateEntities({ operations, entityType: 'version' })
+    } catch (error) {
+      toast.error('Error updating' + 'version ')
+    }
+  }
 
   // update product status
   const handleStatusChange = async (value, selectedId) => {
@@ -135,41 +151,24 @@ const Products = () => {
     // get version ids from selected products
     const ids = products.map(({ versionId }) => versionId)
 
+    const versions = products.map((product) => ({
+      productId: product.id,
+      versionId: product.versionId,
+      versionStatus: value,
+    }))
+
     // update productsList cache with new status
-    patchProductsListWithVersions(
-      { folderIds: focusedFolders, projectName },
-      {
-        versions: products.map((product) => ({
-          productId: product.id,
-          versionId: product.versionId,
-          versionStatus: value,
-        })),
-      },
-      { dispatch },
-    )
+    patchProductsListWithVersions(versions)
 
     try {
-      // update version status
-      const payload = await updateEntity({
-        projectName,
-        type: 'version',
-        ids: ids,
-        data: { ['status']: value },
-        disabledInvalidation: true,
-      }).unwrap()
-
-      // check the success of the update, otherwise throw error
-      if (payload?.success === false)
-        throw new Error(payload?.operations?.map((o) => o?.detail).join(', ') || 'Failed to update')
+      await handleUpdate('status', value, ids)
 
       // invalidate 'version' query (specific version query)
       // we do this so that when we select this version again, it doesn't use stale version query
       dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
 
       // invalidate 'detail' query (details panel)
-      dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
-
-      console.log('fulfilled', payload)
+      // dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
     } catch (error) {
       console.error(error)
 

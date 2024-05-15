@@ -41,7 +41,7 @@ const PanelHeader = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: var(--base-gap-small);
 
     .new-object {
       font-style: italic;

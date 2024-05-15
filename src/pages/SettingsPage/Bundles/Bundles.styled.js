@@ -82,7 +82,7 @@ export const AddonTools = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding-top: 1px;
   padding-right: 1px;
 

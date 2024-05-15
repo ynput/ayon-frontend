@@ -30,34 +30,24 @@ const InputMarkdownConvert = ({ typeOptions, initValue }) => {
             </a>
           )
         },
-        // transform ul checklist into multiple uls
-        ul: (props) => {
-          if (!props.className?.includes('contains-task-list')) return <ul {...props} />
+        // convert li into check list items
+        li: ({ children, ...props }) => {
+          if (!props.className?.includes('task-list-item')) return <li {...props}>{children}</li>
+          else {
+            const p = children.find((item) => item.type === 'p')
+            const input = p?.props?.children?.find((item) => item.type === 'input')
+            const isChecked = input?.props?.checked
 
-          // split each li item into its own ul
-          const items = props.node?.children?.filter((item) => item.tagName === 'li')
-          const elements = props?.children?.filter((item) => item.type === 'li')
-          const uls = items.map((liItem, index) => {
-            const element = elements[index]
-
-            let checked = false
-            // get checked prop
-            liItem.children
-              .filter((item) => item.type === 'element')
-              .forEach((el) =>
-                el?.children?.forEach((child) => {
-                  if (child.tagName === 'input') {
-                    checked = child.properties.checked
-                  }
-                }),
-              )
+            const checked = isChecked ? 'checked' : 'unchecked'
             return (
-              <ul key={index} data-checked={checked}>
-                <li>{element}</li>
-              </ul>
+              <li data-list={checked} {...props}>
+                {children}
+              </li>
             )
-          })
-          return uls
+          }
+        },
+        code: ({ children, ...props }) => {
+          return <pre {...props}>{children}</pre>
         },
       }}
     >

@@ -20,7 +20,7 @@ export const Item = styled.li`
   display: flex;
   padding: 5px 8px 5px 8px;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   cursor: pointer;
   user-select: none;

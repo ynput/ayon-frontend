@@ -7,7 +7,7 @@ import { Icon } from '@ynput/ayon-react-components'
 export const TileStyled = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
   background-color: var(--md-sys-color-surface-container-high);
   padding: 12px 8px;
   border-radius: var(--base-input-border-radius);

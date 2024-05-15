@@ -1,16 +1,10 @@
 import { ayonApi } from '../ayon'
 import {
-  FOLDER_QUERY,
-  PRODUCT_QUERY,
-  TASK_QUERY,
-  VERSION_QUERY,
   PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
-  REP_QUERY,
 } from './entityQueries'
-import ayonClient from '/src/ayon'
 
 const buildEventTileQuery = (type) => {
   return `
@@ -25,40 +19,6 @@ const buildEventTileQuery = (type) => {
     }
   }
   `
-}
-
-export const buildEntitiesQuery = (type, attribs) => {
-  let f_attribs = attribs || ''
-  if (!attribs) {
-    for (const attrib of ayonClient.settings.attributes) {
-      if (attrib.scope.includes(type)) f_attribs += `${attrib.name}\n`
-    }
-  }
-
-  let QUERY
-  switch (type) {
-    case 'task':
-      QUERY = TASK_QUERY
-      break
-    case 'folder':
-      QUERY = FOLDER_QUERY
-      break
-    case 'version':
-      QUERY = VERSION_QUERY
-      break
-    case 'product':
-      QUERY = PRODUCT_QUERY
-      break
-    case 'representation':
-      QUERY = REP_QUERY
-      break
-    default:
-      break
-  }
-
-  if (!QUERY) return null
-
-  return QUERY.replace('#ATTRS#', f_attribs)
 }
 
 const buildEntityTilesQuery = (entities) => {
@@ -168,33 +128,6 @@ export const formatEntityTiles = (project, entities) => {
 
 const getEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
-    getEntitiesDetails: build.query({
-      query: ({
-        projectName,
-        ids,
-        type,
-        versionOverrides = ['00000000000000000000000000000000'],
-        attribs,
-      }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: buildEntitiesQuery(type, attribs),
-          variables: { projectName, ids, versionOverrides },
-        },
-      }),
-      transformResponse: (response, meta, { type }) => response.data.project[type + 's'].edges,
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
-      providesTags: (result, error, { type }) =>
-        result
-          ? [
-              ...result.flatMap(({ node }) => [
-                { type: type, id: node.id },
-                { type: 'detail', id: node.id },
-              ]),
-            ]
-          : [type],
-    }),
     getEventTile: build.query({
       query: ({ projectName, id, type }) => ({
         url: '/graphql',
@@ -228,7 +161,6 @@ const getEntity = ayonApi.injectEndpoints({
 })
 
 export const {
-  useGetEntitiesDetailsQuery,
   useGetEventTileQuery,
   useGetEntityTilesQuery,
   useGetEntityQuery,
