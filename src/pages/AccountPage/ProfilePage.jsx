@@ -150,7 +150,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
-        {/* <UserDetailsHeader users={[user]} style={{ maxWidth: 600 }} /> */}
         <FormsStyled>
         <Avatar user={user} onUpdateAvatar={onUpdateAvatar} />
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
@@ -164,7 +163,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               formData={formData}
               setFormData={setFormData}
               attributes={attributes}
-              onUpdateAvatar={onUpdateAvatar} />
+            />
             <FormRow label="Password" key="Password">
               <LockedInput
                 label="Password"
