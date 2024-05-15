@@ -45,7 +45,7 @@ const ProfileRow = ({ rowData }) => {
 
 const FullnameImage = ({ rowData }) => {
   const { name, self, isMissing } = rowData
-  const { fullName } = rowData.attrib
+  const { fullName } = rowData.attrib || false
   return (
     <StyledProfileRow>
       <UserImage
@@ -210,6 +210,44 @@ const UserListTeams = ({
     )
   }
 
+  if (!isFullSize) return (
+  <Section style={{ height: '100%', flex: 1.5 }}>
+      <TablePanel onContextMenu={handleContext}>
+        <DataTable
+          value={userList}
+          scrollable="true"
+          scrollHeight="flex"
+          dataKey="name"
+          selectionMode="multiple"
+          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
+          onSelectionChange={onSelectionChange}
+          onContextMenuSelectionChange={onContextSelectionChange}
+          onContextMenu={handleContext}
+          selection={selection}
+          resizableColumns
+          responsive="true"
+          autoLayout="true"
+          tableStyle={{
+            width: '100%',
+          }}
+          groupRowsBy={'group'}
+          rowGroupMode="subheader"
+          rowGroupHeaderTemplate={(data) => {
+            return <div>{data.group}</div>
+          }}
+        >
+           <Column
+              field="attrib.fullName"
+              header="Full Name"
+              style={{
+                width: '20%',
+              }}
+              body={(rowData) => FullnameImage({ rowData })}
+              />
+        </DataTable>
+          </TablePanel>
+      </Section>
+  )
   return (
     <Section
       style={{
@@ -241,8 +279,7 @@ const UserListTeams = ({
             return <div>{data.group}</div>
           }}
         >
-        { isFullSize &&
-           <Column
+            <Column
               field="name"
               header="Username"
               body={(rowData) => ProfileRow({ rowData })}
@@ -250,7 +287,6 @@ const UserListTeams = ({
                 width: '20%',
               }}
             />
-          }
             <Column
               field="attrib.fullName"
               header="Full Name"
@@ -259,7 +295,6 @@ const UserListTeams = ({
               }}
               body={(rowData) => FullnameImage({ rowData })}
             />
-            { isFullSize &&
              <Column
                header="Teams"
                body={(rowData) => {
@@ -293,9 +328,6 @@ const UserListTeams = ({
                }}
                sortField="teamsList"
              />
-            }
-            { isFullSize &&
-
              <Column
                header="Roles"
                body={(rowData) => {
@@ -326,12 +358,11 @@ const UserListTeams = ({
                }}
                sortField="rolesList"
              />
-            }
-            
+        
+           
         </DataTable>
       </TablePanel>
     </Section>
-  // Render
   )
 }
 
