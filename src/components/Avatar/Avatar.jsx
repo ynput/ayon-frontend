@@ -7,8 +7,6 @@ const Avatar = ({ user, onUpdateAvatar }) => {
   
   const fileInput = useRef(null)
 
-  console.log(fileInput,'fileInput')
-
   const handleInputChange = (e) => {
     e.preventDefault()
     if (!e.target.files || !e.target.files[0]) return
@@ -17,11 +15,17 @@ const Avatar = ({ user, onUpdateAvatar }) => {
     onUpdateAvatar(files)
   }
 
+
   return (
     <Styled.Avatar>
         <input type="file" ref={fileInput} style={{ display: 'none' }}  multiple={false} onChange={handleInputChange} accept=".png, .jpeg, .jpg" />
-        <Styled.AvatarIcon onClick={() => fileInput.current.click()} icon='edit' />
-        <UserImage size={100} name={user.name} />
+        <Styled.ImageIcon>
+          <Styled.AvatarIcon onClick={() => fileInput.current.click()} icon='edit' />
+          <UserImage size={100} name={user.name}/>
+        </Styled.ImageIcon>
+        <Styled.Username>
+          {user?.attrib?.fullName}
+        </Styled.Username>
     </Styled.Avatar>
   )
 }

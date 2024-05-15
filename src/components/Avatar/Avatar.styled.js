@@ -2,16 +2,15 @@ import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
 
 export const Avatar = styled.div`
-    position: relative;
     display: flex;
     width: auto;
     align-items: center;
     justify-content: center;
     align-self: center;
+    flex-direction: column;
     .user-image {
         border: none;
     }
-    
 `
 export const AvatarIcon = styled(Icon)`
     position: absolute;
@@ -27,5 +26,12 @@ export const AvatarIcon = styled(Icon)`
         color: var(--md-sys-color-on-surface);
         box-shadow: 0 0 2px var(--md-sys-color-on-surface);
     }
+`
+export const Username = styled.span`
+    padding: 16px;
+    font-size: var(--md-sys-typescale-headline-medium-font-size);
+`
+export const ImageIcon = styled.span`
+    position: relative;
 `
 

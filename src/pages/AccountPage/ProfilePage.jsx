@@ -154,9 +154,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       <Section style={{ paddingTop: 16 }}>
         <FormsStyled>
         <Avatar user={user} onUpdateAvatar={onUpdateAvatar} />
-        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
-            <span style={{ padding: 16 }} className={Type.headlineMedium}>{user?.attrib?.fullName}</span>
-        </div>
           <Panel style={{ background: 'none'}}>
             <FormRow label="Username" key="Username">
               <InputText value={name} disabled />
