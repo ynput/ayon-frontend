@@ -3,7 +3,8 @@ import * as Styled from './CommentInput.styled'
 import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 import 'react-quill-ayon/dist/quill.bubble.css'
 
-import ReactQuill from 'react-quill-ayon'
+import ReactQuill, { Quill } from 'react-quill-ayon'
+var Delta = Quill.import('delta')
 import { classNames } from 'primereact/utils'
 
 import { toast } from 'react-toastify'
@@ -159,11 +160,12 @@ const CommentInput = ({
     quill.insertText(startIndex, mentionLabel, 'link', href)
 
     const endIndex = startIndex + mentionLabel.length
-    // insert a space after the mention
-    quill.insertText(endIndex, ' ')
 
-    // remove underline format of space
-    quill.removeFormat(endIndex, 1)
+    // insert a space after the mention
+    quill.updateContents(new Delta().retain(endIndex).insert(' '))
+
+    // remove single \n after mention
+    quill.updateContents(new Delta().retain(endIndex + 1).delete(1))
 
     // set selection to the end of the mention + 1
     setNewSelection(endIndex + 1)
@@ -188,9 +190,15 @@ const CommentInput = ({
     if (mention && tabOrEnter && selectedOption) {
       // get option text
       const retain = (delta.ops[0] && delta.ops[0].retain) || 0
+      // prevent default
 
-      return handleSelectMention(selectedOption, retain)
+      handleSelectMention(selectedOption, retain)
+
+      return
     }
+
+    const quill = editorRef.current.getEditor()
+    console.log(quill.getContents())
 
     setEditorValue(content)
 
