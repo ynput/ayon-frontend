@@ -106,7 +106,7 @@ const DetailsPanelHeader = ({
   const handleUpdate = async (field, value) => {
     if (value === null || value === undefined) return console.error('value is null or undefined')
 
-    // if the type is version and the is field is status or version, patch products list
+    // if the type is version and the field is status or version, patch products list
     // mainly used in the browser
     const productsPatch = patchProductsVersions(field, value)
     try {

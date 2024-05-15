@@ -127,19 +127,20 @@ const updateEntity = ayonApi.injectEndpoints({
           const activityTags = []
 
           // these are the fields that if changed will trigger a new activity
-          const fieldsWithNewActivity = ['status', 'assignees']
+          // const fieldsWithNewActivity = ['status', 'assignees']
 
           // invalidate the activity query of the entity activities
-          operations.forEach((operation) => {
-            // check if any of the fields in the operation data are in the fieldsWithNewActivity array
-            const hasAtLeastOneField = fieldsWithNewActivity.some(
-              (field) => field in (operation.data || {}),
-            )
-            if (hasAtLeastOneField) {
-              const getActivitiesTags = [{ type: 'entityActivities', id: operation.id }]
-              activityTags.push(...getActivitiesTags)
-            }
-          })
+
+          // operations.forEach((operation) => {
+          //   // check if any of the fields in the operation data are in the fieldsWithNewActivity array
+          //   const hasAtLeastOneField = fieldsWithNewActivity.some(
+          //     (field) => field in (operation.data || {}),
+          //   )
+          //   if (hasAtLeastOneField) {
+          //     const getActivitiesTags = [{ type: 'entityActivities', id: operation.id }]
+          //     activityTags.push(...getActivitiesTags)
+          //   }
+          // })
 
           if (activityTags.length) {
             dispatch(ayonApi.util.invalidateTags(activityTags))
