@@ -44,7 +44,6 @@ const UserAttribForm = ({
     [[], []],
   )
 
-
   const buildForms = (attribs) =>
     attribs.map(({ name, data, input }) => {
       let widget = null
@@ -82,7 +81,6 @@ const UserAttribForm = ({
         )
       } else if (data.type === 'boolean') {
         if (name === 'developerMode') return null
-      
         widget = (
           <InputSwitch
             checked={formData[name]}
@@ -110,7 +108,7 @@ const UserAttribForm = ({
             }}
             autoComplete="cc-csc"
             {...input}
-            />
+          />
         )
       }
       return (
@@ -127,7 +125,6 @@ const UserAttribForm = ({
         {!!custom.length && (
           <>
             <DividerSmallStyled />
- 
             {buildForms(custom)}
           </>
         )}
