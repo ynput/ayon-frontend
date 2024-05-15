@@ -21,12 +21,5 @@ export const SlideOut = styled.div`
 
   z-index: 200;
 
-  transition: translate 300ms ease;
-  translate: 0 0;
-
-  &.slideOutShown {
-    translate: calc(-100% - 8px) 0;
-  }
-
-  /* animation: ${slideOutFromRight} 0.3s forwards; */
+  animation: ${slideOutFromRight} 0.3s forwards;
 `
