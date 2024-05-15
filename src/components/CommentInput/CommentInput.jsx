@@ -39,6 +39,7 @@ const CommentInput = ({
   isEditing,
   filter,
   disabled,
+  isLoading,
 }) => {
   const currentUser = useSelector((state) => state.user.name)
 
@@ -483,6 +484,7 @@ const CommentInput = ({
             isEditing,
             isDropping,
             disabled,
+            isLoading,
           })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}

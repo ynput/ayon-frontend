@@ -57,7 +57,7 @@ export const LoadMore = styled.span`
 `
 
 export const Placeholder = styled.div`
-  height: 100px;
+  height: 50px;
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: 8px;
   overflow: hidden;

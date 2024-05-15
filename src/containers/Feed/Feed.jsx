@@ -19,6 +19,7 @@ import { onCommentImageOpen } from '/src/features/context'
 import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 import { useEffect } from 'react'
+import { isEqual, union } from 'lodash'
 
 const Feed = ({
   entities = [],
@@ -66,6 +67,18 @@ const Feed = ({
     },
     { skip: skip },
   )
+
+  // check if currentData matches all the entityIds
+  // if not, this means we are loading new entity
+  const isLoadingNew = useMemo(() => {
+    if (!isFetchingActivities) return false
+
+    const currentEntityIds = union(
+      currentData?.flatMap((activity) => (activity.entityId ? activity.entityId : [])),
+    )
+
+    return !isEqual(currentEntityIds, entityIds)
+  }, [currentData, entityIds, isFetchingActivities])
 
   if (skip) {
     activitiesData = []
@@ -233,8 +246,6 @@ const Feed = ({
   if (isMultiProjects)
     warningMessage = `You are only viewing activities from one project: ${projectName}.`
 
-  const showLoading = isFetchingActivities && !currentData
-
   return (
     <Styled.FeedContainer className="feed">
       {warningMessage && (
@@ -243,8 +254,8 @@ const Feed = ({
           {warningMessage}
         </Styled.Warning>
       )}
-      <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: showLoading })}>
-        {showLoading
+      <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: isLoadingNew })}>
+        {isLoadingNew
           ? loadingPlaceholders
           : activitiesToShow.map((activity) => (
               <ActivityItem
@@ -276,22 +287,21 @@ const Feed = ({
           </Styled.LoadMore>
         </InView>
       </Styled.FeedContent>
-      {!!entities.length && (
-        <CommentInput
-          initValue={null}
-          onSubmit={submitComment}
-          isOpen={isCommentInputOpen}
-          onClose={() => setIsCommentInputOpen(false)}
-          onOpen={() => setIsCommentInputOpen(true)}
-          activeUsers={activeUsers}
-          projectName={projectName}
-          versions={versionsData}
-          entities={entities}
-          projectInfo={projectInfo}
-          filter={filter}
-          disabled={isMultiProjects}
-        />
-      )}
+      <CommentInput
+        initValue={null}
+        onSubmit={submitComment}
+        isOpen={isCommentInputOpen}
+        onClose={() => setIsCommentInputOpen(false)}
+        onOpen={() => setIsCommentInputOpen(true)}
+        activeUsers={activeUsers}
+        projectName={projectName}
+        versions={versionsData}
+        entities={entities}
+        projectInfo={projectInfo}
+        filter={filter}
+        disabled={isMultiProjects}
+        isLoading={isLoadingNew || !entities.length}
+      />
     </Styled.FeedContainer>
   )
 }
