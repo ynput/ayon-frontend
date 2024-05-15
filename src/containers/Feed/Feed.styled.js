@@ -39,6 +39,7 @@ export const FeedContent = styled.div`
   gap: var(--base-gap-large);
   overflow-y: auto;
   padding-bottom: 40px;
+  scrollbar-gutter: stable;
 
   display: flex;
   flex-direction: column;
