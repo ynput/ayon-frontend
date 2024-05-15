@@ -78,8 +78,8 @@ export const Comment = styled.div`
           margin-right: 12px;
           :before {
             font-size: unset;
-            top: -2px;
-            left: -8px;
+            top: -3px;
+            left: -4px;
             position: relative;
           }
         }

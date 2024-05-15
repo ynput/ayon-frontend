@@ -92,7 +92,6 @@ export const Body = styled.div`
     margin: 8px 0;
 
     li {
-      display: flex;
       align-items: center;
     }
 
