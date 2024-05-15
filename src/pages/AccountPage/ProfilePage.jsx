@@ -135,7 +135,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       await axios.put(`/api/users/${user_name}/avatar`, file, opts)
       toast.success('Profile updated')
       // update redux state with new data
-      dispatch(onProfileUpdate(formData))
+      dispatch(updateUserAttribs(formData))
       // reset form
       setInitData(formData)
       setChangesMade(false)
