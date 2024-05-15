@@ -15,7 +15,7 @@ export const Comment = styled.li`
   gap: var(--base-gap-small);
 
   width: 100%;
-  padding: 8px;
+  padding: var(--padding-m);
   border-radius: var(--border-radius-m);
 
   /* hide date and show tools */
@@ -56,7 +56,8 @@ export const Comment = styled.li`
 export const Body = styled.div`
   background-color: var(--md-sys-color-surface-container);
   border-radius: var(--border-radius-m);
-  padding: 8px;
+  padding: var(--padding-m);
+  padding-bottom: 12px;
   position: relative;
 
   /* remove first and last margins */
