@@ -9,7 +9,7 @@ import {
   SaveButton,
   InputText,
 } from '@ynput/ayon-react-components'
-import { useUpdateUserMutation, useUpdateUserAvatarMutation } from '../../services/user/updateUser'
+import { useUpdateUserMutation } from '../../services/user/updateUser'
 import Avatar from '../../components/Avatar/Avatar'
 import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
@@ -45,11 +45,9 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const dispatch = useDispatch()
   const attributes = ayonClient.getAttribsByScope('user')
   const [showSetPassword, setShowSetPassword] = useState(false)
-  const [userImage, setUserImage] = useState(false)
 
   // UPDATE USER DATA
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation()
-  const [updateUserAvatar] = useUpdateUserAvatarMutation()
 
   // build initial form data
   const initialFormData = {}
@@ -76,8 +74,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       setFormData(newFormData)
       // used to reset form
       setInitData(newFormData)
-
-      // // set name
       setName(user.name)
     }
 
@@ -130,20 +126,14 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
 
   const onUpdateAvatar = async (file) => {
-
-
     try {
-
       const user_name = user.name
       const opts = {
         headers: {
           'Content-Type': file.type,
         },
       }
-
-      const res = await axios.put(`/api/users/${user_name}/avatar`, file, opts)
-      console.log(res,'res')
-
+      await axios.put(`/api/users/${user_name}/avatar`, file, opts)
       toast.success('Profile updated')
       // update redux state with new data
       dispatch(onProfileUpdate(formData))
@@ -157,51 +147,16 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
-  const loadImage = () => {
-    axios.get(`/api/users/${user.name}/avatar`).then((response) => {
-      setUserImage(response)
-    })
-  }
-
-  function convertRawToBase64(rawData) {
-    const buffer = new TextEncoder().encode(rawData);
-     return btoa(String.fromCharCode(...buffer))
-    
-  }
-
-  function createDataUri(base64Data, mimeType) {
-    return `data:${mimeType};base64,${base64Data}`;
-  }
-
-  const base64Data = convertRawToBase64(userImage);
-  const dataUri = createDataUri(base64Data, "image/png");
-
-  console.log(userImage,'userImage')
-  console.log(base64Data,'base64Data')
-  console.log(dataUri,'dataUri')
-
-  // const encodedString = "your_base64_string_here";
-  // const decodedBytes = Uint8Array.from(atob(encodedString), c => c.charCodeAt(0));
-  // const blob = new Blob([decodedBytes], { type: "image/jpeg" });
-  // const url = URL.createObjectURL(blob);
-
-
-
-  // const fileInput = useRef(null)
-
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
         {/* <UserDetailsHeader users={[user]} style={{ maxWidth: 600 }} /> */}
         <FormsStyled>
         <Avatar user={user} onUpdateAvatar={onUpdateAvatar} />
-        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-
-          <span style={{ padding: 16 }} className={Type.headlineMedium}>{user?.attrib?.fullName}</span>
-          <button onClick={loadImage}>load image</button>
-          {dataUri && <img src={dataUri || ''} alt="Image from Server" />}
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
+            <span style={{ padding: 16 }} className={Type.headlineMedium}>{user?.attrib?.fullName}</span>
         </div>
-          <Panel>
+          <Panel style={{ background: 'none'}}>
             <FormRow label="Username" key="Username">
               <InputText value={name} disabled />
             </FormRow>

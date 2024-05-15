@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { UserImage } from '@ynput/ayon-react-components'
+import UserImage from '/src/components/UserImage'
 import * as Styled from './Avatar.styled'
 
 const Avatar = ({ user, onUpdateAvatar }) => {
@@ -19,11 +19,9 @@ const Avatar = ({ user, onUpdateAvatar }) => {
 
   return (
     <Styled.Avatar>
-
         <input type="file" ref={fileInput} style={{ display: 'none' }}  multiple={false} onChange={handleInputChange} accept=".png, .jpeg, .jpg" />
         <Styled.AvatarIcon onClick={() => fileInput.current.click()} icon='edit' />
-        
-        <UserImage  {...user} size={100} src={user?.attrib?.avatarUrl} />
+        <UserImage size={100} name={user.name} />
     </Styled.Avatar>
   )
 }
