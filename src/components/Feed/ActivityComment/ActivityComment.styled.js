@@ -83,6 +83,13 @@ export const Body = styled.div`
     }
   }
 
+  ul,
+  ol {
+    .reference {
+      top: 6px;
+    }
+  }
+
   .contains-task-list {
     list-style: none;
     display: flex;
@@ -99,11 +106,11 @@ export const Body = styled.div`
       margin: 0;
       display: flex;
       align-items: flex-start;
-    }
 
-    .reference {
-      top: 0;
-      margin-left: 4px;
+      .reference {
+        top: 0px;
+        margin-left: 4px;
+      }
     }
   }
 
