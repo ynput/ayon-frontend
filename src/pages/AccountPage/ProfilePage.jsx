@@ -15,6 +15,7 @@ import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../../ayon'
+import Type from '/src/theme/typography.module.css'
 import { updateUserAttribs } from '../../features/user'
 import { useDispatch } from 'react-redux'
 
@@ -162,6 +163,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               formData={formData}
               setFormData={setFormData}
               attributes={attributes}
+              showAvatarUrl={false}
             />
             <FormRow label="Password" key="Password">
               <LockedInput
