@@ -5,7 +5,7 @@ changelog:
         - feature
         - epic
 
-    - title: "❤️  Improvements"
+    - title: "❤️ Improvements"
       labels:
         - enhancement
 
