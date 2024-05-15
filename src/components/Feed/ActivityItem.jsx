@@ -6,6 +6,7 @@ import ActivityGroup from './ActivityGroup/ActivityGroup'
 import styled from 'styled-components'
 import ActivityVersions from './ActivityVersions/ActivityVersions'
 import ActivityDate from './ActivityDate'
+import { upperFirst } from 'lodash'
 
 const FeedEnd = styled.div`
   padding: 0 10px;
@@ -43,7 +44,7 @@ const ActivityItem = ({
       return (
         <FeedEnd>
           <>
-            {`Task${createdAts.length > 1 ? 's' : ''} created:`}
+            {`${upperFirst(props.entityType)}${createdAts.length > 1 ? 's' : ''} created:`}
             {createdAts.map((c, i) => (
               <ActivityDate date={c} key={i} style={{ margin: 0 }} />
             ))}

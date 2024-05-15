@@ -12,7 +12,7 @@ export const AccessGroupItem = styled.div`
   justify-content: space-between;
   padding: 4px 8px;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   border-radius: var(--border-radius-m);
   cursor: pointer;
@@ -48,7 +48,7 @@ export const AccessGroupItem = styled.div`
 export const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   overflow: auto;
 `

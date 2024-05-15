@@ -1,16 +1,17 @@
 import { AssigneeSelect, TagsSelect } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
-import * as Styled from './UserDashDetailsHeader.styled'
+import * as Styled from './DetailsPanelHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
 import { classNames } from 'primereact/utils'
 import { isEqual, union } from 'lodash'
-import { useUpdateEntitiesMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
-import UserDashDetailsFilters from '../UserDashDetailsFilters/UserDashDetailsFilters'
+import FeedFilters from '../FeedFilters/FeedFilters'
+import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
 
-const UserDashDetailsHeader = ({
+const DetailsPanelHeader = ({
   entityType,
   entities = [],
   disabledAssignees = [],
@@ -20,27 +21,45 @@ const UserDashDetailsHeader = ({
   tagsOptions = [],
   onClose,
   isSlideOut,
+  isFetching,
 }) => {
   // for selected entities, get flat list of assignees
-  const selectedTasksAssignees = useMemo(
+  const entityAssignees = useMemo(
     () => union(...entities.map((entity) => entity.users)),
     [entities],
   )
 
-  const singleEntity = entities[0]
-  const projectName = entities.length > 1 ? null : singleEntity?.projectName
+  let firstEntity = entities[0]
+  // If there's no data return null
+  const isLoading = entities.length === 0 || !firstEntity || isFetching
+  // placeholder entity
+  if (!firstEntity) {
+    entities = [
+      {
+        id: 'placeholder',
+        entityType,
+        icon: 'sync',
+        title: 'loading...',
+        subTitle: 'loading...',
+      },
+    ]
+    firstEntity = entities[0]
+  }
+  const projectName = entities.length > 1 ? null : firstEntity?.projectName
 
   const thumbnails = useMemo(
     () =>
-      entities
-        .filter((entity, i) => i <= 5)
-        .map((entity) => ({
-          src: entity.thumbnailUrl,
-          icon: entity.icon,
-          id: entity.id,
-          type: entityType,
-          updatedAt: entity.updatedAt,
-        })),
+      entityType !== 'representation'
+        ? entities
+            .filter((entity, i) => i <= 5)
+            .map((entity) => ({
+              src: entity.thumbnailUrl,
+              icon: entity.icon,
+              id: entity.id,
+              type: entityType,
+              updatedAt: entity.updatedAt,
+            }))
+        : [{ icon: 'view_in_ar' }],
     [entities],
   )
 
@@ -60,10 +79,36 @@ const UserDashDetailsHeader = ({
 
   const isMultiple = entities.length > 1
 
+  const patchProductsListWithVersions = usePatchProductsListWithVersions({
+    projectName: firstEntity?.projectName,
+  })
+
+  const patchProductsVersions = (field, value) => {
+    // patches = entitiesData but with field and value set for all entities
+    let productsPatch
+    // if the type is version and the is field is status or version, patch products list
+    // because the version status/version is also shown in the product list
+    if (entityType === 'version' && ['status'].includes(field)) {
+      const versions = entities.map((version) => ({
+        productId: version.productId,
+        versionId: version.id,
+        versionStatus: value,
+      }))
+
+      // update productsList cache with new status
+      productsPatch = patchProductsListWithVersions(versions)
+    }
+
+    return productsPatch
+  }
+
   const [updateEntities] = useUpdateEntitiesMutation()
   const handleUpdate = async (field, value) => {
     if (value === null || value === undefined) return console.error('value is null or undefined')
 
+    // if the type is version and the field is status or version, patch products list
+    // mainly used in the browser
+    const productsPatch = patchProductsVersions(field, value)
     try {
       // build entities operations array
       const operations = entities.map((entity) => ({
@@ -77,11 +122,11 @@ const UserDashDetailsHeader = ({
       await updateEntities({ operations, entityType })
     } catch (error) {
       toast.error('Error updating' + entityType)
+      productsPatch?.undo()
     }
   }
 
-  if (!singleEntity) return null
-  const fullPath = singleEntity.path || ''
+  const fullPath = firstEntity?.path || ''
   const pathArray = fullPath.split('/')
   const handleCopyPath = () => {
     copyToClipboard(fullPath)
@@ -116,7 +161,7 @@ const UserDashDetailsHeader = ({
       const actions = actionTaskTypes[action.pinned]
       if (!actions) return false
       return actions.some(
-        (action) => action.toLowerCase() === singleEntity.entitySubType?.toLowerCase(),
+        (action) => action.toLowerCase() === firstEntity?.entitySubType?.toLowerCase(),
       )
     })
     .map((action) => action.id)
@@ -124,28 +169,28 @@ const UserDashDetailsHeader = ({
   const portalId = 'dashboard-details-header'
 
   const hasUser =
-    ['task', 'version'].includes(entityType) &&
-    (selectedTasksAssignees.length > 0 || entityType === 'task')
+    ['task', 'version', 'representation'].includes(entityType) &&
+    (entityAssignees.length > 0 || entityType === 'task')
 
   const usersOptions = users.map((u) => u)
   if (hasUser) {
     // check if all users are in options, otherwise add them
     const allUsers = users.map((u) => u.name)
-    const usersToAdd = selectedTasksAssignees.filter((u) => !allUsers.includes(u))
+    const usersToAdd = entityAssignees.filter((u) => !allUsers.includes(u))
     if (usersToAdd.length) {
       usersOptions.push(...usersToAdd.map((u) => ({ name: u, fullName: u })))
     }
   }
 
   return (
-    <Styled.SectionWrapper id={portalId}>
+    <Styled.SectionWrapper id={portalId} className="details-panel-header">
       <Styled.Path
         value={pathArray.join(' / ')}
         align="left"
         onClick={handleCopyPath}
         isCopy
         icon="content_copy"
-        className={classNames({ onClose })}
+        className={classNames({ onClose, isLoading })}
       />
       {onClose && (
         <Styled.CloseButton
@@ -158,14 +203,17 @@ const UserDashDetailsHeader = ({
       )}
       <Styled.Header>
         <StackedThumbnails
+          isLoading={isLoading}
+          shimmer={isLoading}
+          style={{ aspectRatio: '1/1' }}
           thumbnails={thumbnails}
           projectName={projectName}
           portalId={portalId}
           onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
         />
-        <Styled.Content>
-          <h2>{!isMultiple ? singleEntity.title : `${entities.length} ${entityType}s selected`}</h2>
-          <h3>{!isMultiple ? singleEntity.subTitle : entities.map((t) => t.name).join(', ')}</h3>
+        <Styled.Content className={classNames({ isLoading })}>
+          <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
+          <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
         </Styled.Content>
       </Styled.Header>
       <Styled.Section>
@@ -177,13 +225,14 @@ const UserDashDetailsHeader = ({
             invert
             style={{ maxWidth: 'unset' }}
             onChange={(value) => handleUpdate('status', value)}
+            className={classNames({ isLoading })}
           />
-          {hasUser && (
+          {hasUser && !isLoading && (
             <AssigneeSelect
-              value={selectedTasksAssignees}
+              value={entityAssignees}
               options={usersOptions}
               disabledValues={disabledAssignees.map((u) => u.name)}
-              isMultiple={isMultiple && selectedTasksAssignees.length > 1}
+              isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
               editor={entityType === 'task'}
               align="right"
               onChange={(value) => handleUpdate('assignees', value)}
@@ -193,7 +242,7 @@ const UserDashDetailsHeader = ({
       </Styled.Section>
       <Styled.Section>
         <Styled.ContentRow>
-          <Actions options={actions} pinned={pinned} />
+          <Actions options={actions} pinned={pinned} isLoading={isLoading} />
           <TagsSelect
             value={union(...tagsValues)}
             isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
@@ -201,15 +250,16 @@ const UserDashDetailsHeader = ({
             editable
             onChange={(value) => handleUpdate('tags', value)}
             align="right"
+            styleDropdown={{ display: isLoading && 'none' }}
           />
         </Styled.ContentRow>
       </Styled.Section>
-      <UserDashDetailsFilters isSlideOut={isSlideOut} />
+      <FeedFilters isSlideOut={isSlideOut} isLoading={isLoading} entityType={entityType} />
     </Styled.SectionWrapper>
   )
 }
 
-export default UserDashDetailsHeader
+export default DetailsPanelHeader
 
 // {
 //   "id": "739af4b83da311eeac5d0242ac120004",

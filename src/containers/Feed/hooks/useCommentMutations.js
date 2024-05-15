@@ -46,6 +46,10 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
           type: entityType,
           name: subTitle,
         },
+        author: {
+          active: true,
+          deleted: false,
+        },
       }
 
       // we only need these args to update the cache of the original query

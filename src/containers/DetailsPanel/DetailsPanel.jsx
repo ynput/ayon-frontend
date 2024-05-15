@@ -1,13 +1,17 @@
 import { Panel } from '@ynput/ayon-react-components'
-import React from 'react'
-import UserDashDetailsHeader from '../UserDashDetailsHeader/UserDashDetailsHeader'
-import { useSelector } from 'react-redux'
+import React, { useEffect } from 'react'
+import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
+import { useDispatch, useSelector } from 'react-redux'
 import Feed from '/src/containers/Feed/Feed'
 import { useGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
-import TaskAttributes from '../TaskAttributes/TaskAttributes'
+import TaskAttributes from '../../pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '/src/services/userDashboard/userDashboardHelpers'
+import RepresentationsList from '../RepresentationsList/RepresentationsList'
+import { closeSlideOut, updateDetailsPanelTab } from '/src/features/details'
 
-const UserDashboardDetails = ({
+export const entitiesWithoutFeed = ['product', 'representation']
+
+const DetailsPanel = ({
   entityType,
   // entities is data we already have from kanban
   entitiesData = [],
@@ -23,20 +27,42 @@ const UserDashboardDetails = ({
   projectsInfo = {},
   projectNames = [],
   onClose,
-  isSlideOut,
+  isSlideOut = false,
   style = {},
+  scope,
 }) => {
-  const path = isSlideOut ? 'slideOut' : 'details'
-  const attributesOpen = useSelector((state) => state.dashboard[path].attributesOpen)
-  // now we get the full details data for selected entities
+  const path = isSlideOut ? 'slideOut' : 'pinned'
+  let selectedTab = useSelector((state) => state.details[path].tab)
+  const dispatch = useDispatch()
 
+  // if the entity type is product or representation, we show the attribs tab only
+  if (entitiesWithoutFeed.includes(entityType)) selectedTab = 'attribs'
+
+  // check if tab needs to be updated when entity type changes
+  // for example when switching from version to task, task doesn't have reps tab
+  // if reps tab was selected, set default to feed
+  useEffect(() => {
+    if (selectedTab === 'representations') {
+      // check entity type is still version
+      if (entityType !== 'version') {
+        dispatch(updateDetailsPanelTab({ isSlideOut, tab: 'feed' }))
+      }
+    }
+  }, [entityType, selectedTab])
+
+  // now we get the full details data for selected entities
   const entitiesToQuery = entities.length
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
+  // when entities changes, close the slideOutPanel
+  useEffect(() => {
+    if (!isSlideOut) dispatch(closeSlideOut())
+  }, [entitiesToQuery, isSlideOut])
+
   const {
     data: detailsData = {},
-    isFetching: isLoadingEntitiesDetails,
+    isFetching: isFetchingEntitiesDetails,
     isSuccess,
     isError,
   } = useGetDashboardEntitiesDetailsQuery(
@@ -71,11 +97,11 @@ const UserDashboardDetails = ({
           height: '100%',
           padding: 0,
           boxShadow: '-2px 0 6px #00000047',
-          zIndex: 80,
+          zIndex: 400,
           ...style,
         }}
       >
-        <UserDashDetailsHeader
+        <DetailsPanelHeader
           entityType={entityType}
           entities={entityDetailsData}
           users={projectUsers}
@@ -85,14 +111,9 @@ const UserDashboardDetails = ({
           tagsOptions={tagsOptions}
           onClose={onClose}
           isSlideOut={isSlideOut}
+          isFetching={isFetchingEntitiesDetails}
         />
-        {attributesOpen ? (
-          <TaskAttributes
-            entityType={entityType}
-            entities={entityDetailsData}
-            isLoading={isLoadingEntitiesDetails}
-          />
-        ) : (
+        {selectedTab === 'feed' && !isError && (
           <Feed
             entityType={entityType}
             entities={entityDetailsData}
@@ -102,6 +123,17 @@ const UserDashboardDetails = ({
             projectName={firstProject}
             isMultiProjects={projectNames.length > 1}
             isSlideOut={isSlideOut}
+            scope={scope}
+          />
+        )}
+        {selectedTab === 'representations' && (
+          <RepresentationsList entities={entityDetailsData} scope={scope} />
+        )}
+        {selectedTab === 'attribs' && (
+          <TaskAttributes
+            entityType={entityType}
+            entities={entityDetailsData}
+            isLoading={isFetchingEntitiesDetails}
           />
         )}
       </Panel>
@@ -109,4 +141,4 @@ const UserDashboardDetails = ({
   )
 }
 
-export default UserDashboardDetails
+export default DetailsPanel

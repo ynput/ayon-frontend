@@ -8,7 +8,9 @@ import { Column } from 'primereact/column'
 import { setExpandedReps, setFocusedRepresentations, setUri } from '/src/features/context'
 import groupResult from '/src/helpers/groupResult'
 import useCreateContext from '/src/hooks/useCreateContext'
-import EntityDetail from '/src/containers/entityDetail'
+import DetailsDialog from '../DetailsDialog'
+import versionsToRepresentations from './versionsToRepresentations'
+import { openSlideOut } from '/src/features/details'
 
 const columns = [
   {
@@ -34,8 +36,12 @@ const columns = [
   },
 ]
 
-const RepresentationList = ({ projectName, representations = [] }) => {
+const RepresentationList = ({ entities = [], scope }) => {
+  // merge all entities data into one array of entities
+  const representations = useMemo(() => versionsToRepresentations(entities) || [], [entities])
+
   const [showDetail, setShowDetail] = useState(false)
+  const showDetailProjectName = representations.find((rep) => rep.id === showDetail)?.projectName
 
   const dispatch = useDispatch()
   const focusedRepresentations = useSelector((state) => state.context.focused.representations)
@@ -45,7 +51,19 @@ const RepresentationList = ({ projectName, representations = [] }) => {
     return groupResult(representations, 'name')
   }, [representations])
 
+  const onRepSelectionChange = (entityId, projectName) => {
+    // set focused state
+    dispatch(setFocusedRepresentations([entityId]))
+
+    // open slide out panel
+    dispatch(
+      openSlideOut({ entityId, entityType: 'representation', projectName, tab: 'attribs', scope }),
+    )
+  }
+
   const onRowClick = (e) => {
+    const projectName = e.node.data.projectName
+
     let uri = `ayon+entity://${projectName}/`
     uri += `${e.node.data.folderParents.join('/')}/${e.node.data.folderName}`
     uri += `?product=${e.node.data.productName}`
@@ -53,7 +71,7 @@ const RepresentationList = ({ projectName, representations = [] }) => {
     uri += `&representation=${e.node.data.name}`
     dispatch(setUri(uri))
 
-    dispatch(setFocusedRepresentations([e.node.data.id]))
+    onRepSelectionChange(e.node.data.id, projectName)
   }
 
   const ctxMenuItems = (id) => [
@@ -68,11 +86,13 @@ const RepresentationList = ({ projectName, representations = [] }) => {
 
   const handleContextMenu = (e) => {
     const id = e.node.data.id
+    const projectName = e.node.data.projectName
+
     if (id) {
       // update focused representations
-      dispatch(setFocusedRepresentations([id]))
+      onRepSelectionChange(id)
       // open context menu
-      ctxMenuShow(e.originalEvent, ctxMenuItems(id))
+      ctxMenuShow(e.originalEvent, ctxMenuItems(id, projectName))
     }
   }
 
@@ -82,13 +102,6 @@ const RepresentationList = ({ projectName, representations = [] }) => {
 
   return (
     <>
-      <h4
-        style={{
-          margin: 0,
-        }}
-      >
-        Representations
-      </h4>
       <TablePanel>
         <TreeTable
           scrollable="true"
@@ -115,8 +128,8 @@ const RepresentationList = ({ projectName, representations = [] }) => {
           })}
         </TreeTable>
       </TablePanel>
-      <EntityDetail
-        projectName={projectName}
+      <DetailsDialog
+        projectName={showDetailProjectName}
         entityType={'representation'}
         entityIds={[showDetail]}
         visible={!!showDetail}

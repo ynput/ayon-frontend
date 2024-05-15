@@ -31,7 +31,7 @@ const StyledSecretItem = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   width: 600px;
 
   input:nth-child(2) {

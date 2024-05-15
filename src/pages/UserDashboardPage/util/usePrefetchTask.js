@@ -2,13 +2,14 @@ import { useSelector } from 'react-redux'
 import { onPrefetchIds } from '/src/features/dashboard'
 import { useLazyGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import { useLazyGetActivitiesQuery } from '/src/services/activities/getActivities'
+import { throttle } from 'lodash'
 
-export const usePrefetchTask = (dispatch, projectsInfo) => {
+export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
   // keep track of the ids that have been pre-fetched to avoid fetching them again
   const prefetchedIds = useSelector((state) => state.dashboard.prefetchedIds)
   const userName = useSelector((state) => state.user.name)
-  const activityTypes = useSelector((state) => state.dashboard.details.activityTypes)
-  const filter = useSelector((state) => state.dashboard.details.filter)
+  const activityTypes = useSelector((state) => state.details.pinned.activityTypes)
+  const filter = useSelector((state) => state.details.pinned.filter)
 
   const setPrefetchedIds = (ids) => dispatch(onPrefetchIds(ids))
   const [getEntitiesDetails] = useLazyGetDashboardEntitiesDetailsQuery()
@@ -37,7 +38,12 @@ export const usePrefetchTask = (dispatch, projectsInfo) => {
       filter,
     })
   }
-  return handlePrefetch
+
+  const throttledPrefetchTask = throttleTime
+    ? throttle(handlePrefetch, throttleTime, { leading: false })
+    : handlePrefetch
+
+  return throttledPrefetchTask
 }
 
 export default usePrefetchTask

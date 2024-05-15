@@ -2,17 +2,23 @@ import React, { useMemo, useRef, useState } from 'react'
 import ActivityItem from '../../components/Feed/ActivityItem'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import { useGetActivitiesQuery, useGetVersionsQuery } from '/src/services/activities/getActivities'
+import {
+  allowedVersionsQueryTypes,
+  useGetActivitiesQuery,
+  useGetVersionsQuery,
+} from '/src/services/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
-import { onReferenceClick } from '/src/features/dashboard'
+import { openSlideOut } from '/src/features/details'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
 import { onCommentImageOpen } from '/src/features/context'
 import { Icon } from '@ynput/ayon-react-components'
+import { classNames } from 'primereact/utils'
+import { useEffect } from 'react'
 
 const Feed = ({
   entities = [],
@@ -22,12 +28,14 @@ const Feed = ({
   entityType,
   isSlideOut,
   isMultiProjects,
+  scope,
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
-  const path = isSlideOut ? 'slideOut' : 'details'
-  const activityTypes = useSelector((state) => state.dashboard[path].activityTypes)
-  const filter = useSelector((state) => state.dashboard[path].filter)
+  const path = isSlideOut ? 'slideOut' : 'pinned'
+  const activityTypes = useSelector((state) => state.details[path].activityTypes)
+  const filter = useSelector((state) => state.details[path].filter)
+
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
   const [currentCursors, setCurrentCursors] = useState({})
@@ -39,8 +47,9 @@ const Feed = ({
   )
   const entityIds = entitiesToQuery.map((entity) => entity.id)
 
+  const skip = !entities.length || !filter || !activityTypes || !projectName
   // QUERY MADE TO GET ACTIVITIES
-  const {
+  let {
     data: activitiesData = [],
     isFetching: isFetchingActivities,
     currentData,
@@ -49,19 +58,42 @@ const Feed = ({
       entityIds: entityIds,
       projectName: projectName,
       cursor: currentCursors[filter],
-      last: 20,
+      last: 30,
       currentUser: userName,
       referenceTypes: ['origin', 'mention', 'relation'],
       activityTypes: activityTypes,
       filter,
     },
-    { skip: !entities.length || !filter || !activityTypes || !projectName },
+    { skip: skip },
   )
-  // QUERY MADE TO GET ACTIVITIES
+
+  if (skip) {
+    activitiesData = []
+    isFetchingActivities = true
+  }
+
+  let tasksOrProductsToQuery = []
+
+  if (allowedVersionsQueryTypes.includes(entityType)) {
+    // great, we can just use entitiesToQuery already
+    tasksOrProductsToQuery = entitiesToQuery
+  } else {
+    // we need to either use the productId
+    tasksOrProductsToQuery = entities.flatMap((entity) =>
+      entity.productId
+        ? {
+            projectName: entity.projectName,
+            id: entity.productId,
+            entityType: 'product',
+          }
+        : [],
+    )
+  }
 
   // get all versions for the entity
+  // used for version mentions (@@)
   const { data: versionsData = [] } = useGetVersionsQuery({
-    entities: entitiesToQuery,
+    entities: tasksOrProductsToQuery,
   })
 
   // TODO: transform versions data into activity data
@@ -93,6 +125,22 @@ const Feed = ({
     () => getNextPage({ activities: activitiesToShow }),
     [activitiesData],
   )
+
+  // if there are more activities to fetch but the feed isn't scrollable, fetch more
+  useEffect(() => {
+    if (!feedRef.current) return
+    if (!hasPreviousPage) return
+    if (isFetchingActivities) return
+
+    // check if the feed is scrollable
+    const isScrollable = feedRef.current.scrollHeight > feedRef.current.clientHeight
+    if (isScrollable) return
+
+    console.log('auto fetch more activities...')
+
+    // fetch more activities
+    setCurrentCursors({ ...currentCursors, [filter]: cursor })
+  }, [feedRef, hasPreviousPage, cursor, filter, currentCursors, isFetchingActivities])
 
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
@@ -170,11 +218,10 @@ const Feed = ({
     if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
 
     // open slide out panel
-    dispatch(onReferenceClick({ entityId, entityType, projectName }))
+    dispatch(openSlideOut({ entityId, entityType, projectName, scope }))
   }
 
   const handleFileExpand = (file) => {
-    console.log(file)
     dispatch(onCommentImageOpen({ ...file, projectName }))
   }
 
@@ -186,16 +233,18 @@ const Feed = ({
   if (isMultiProjects)
     warningMessage = `You are only viewing activities from one project: ${projectName}.`
 
+  const showLoading = isFetchingActivities && !currentData
+
   return (
-    <Styled.FeedContainer>
+    <Styled.FeedContainer className="feed">
       {warningMessage && (
         <Styled.Warning>
           <Icon icon="info" />
           {warningMessage}
         </Styled.Warning>
       )}
-      <Styled.FeedContent ref={feedRef}>
-        {isFetchingActivities && !currentData
+      <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: showLoading })}>
+        {showLoading
           ? loadingPlaceholders
           : activitiesToShow.map((activity) => (
               <ActivityItem

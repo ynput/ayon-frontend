@@ -31,11 +31,15 @@ const UserAttribForm = ({
   const [builtin, custom] = attributes.reduce(
     (acc, cur) => {
       if (!cur.builtin && cur.builtin !== undefined) {
-        // add to custo,
-        acc[1].push(cur)
+        // add to custom if not already present
+        if (!acc[1].some((item) => item.name === cur.name)) {
+          acc[1].push(cur)
+        }
       } else {
-        // builtin
-        acc[0].push(cur)
+        // add to builtin if not already present
+        if (!acc[0].some((item) => item.name === cur.name)) {
+          acc[0].push(cur)
+        }
       }
 
       return acc

@@ -24,7 +24,7 @@ const subTitle = (members, leaders) => {
 const StyledTeam = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding: 8px;
   padding-top: 4px;
   border-radius: var(--border-radius);
