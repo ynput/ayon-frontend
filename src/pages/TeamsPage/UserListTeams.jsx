@@ -295,44 +295,44 @@ const UserListTeams = ({
               }}
               body={(rowData) => FullnameImage({ rowData })}
             />
-             <Column
-               header="Teams"
-               body={(rowData) => {
-                 if (!rowData.teams) return null
-                 // sort teams by leader and sort teams by if they are selected
-                 const teamNames = Object.keys(rowData.teams)
-                 teamNames.sort((a, b) => {
-                   if (selectedTeams.includes(a) && !selectedTeams.includes(b)) return -1
-                   if (!selectedTeams.includes(a) && selectedTeams.includes(b)) return 1
-                   if (rowData.teams[a].leader) return -1
-                   if (rowData.teams[b].leader) return 1
-                   return 0
-                 })
-
-                return (
-                  <span>
-                    {teamNames.map((team, i, arr) => (
-                      <span
-                        key={team}
-                        style={{
-                          color: rowData.teams[team].leader
-                            ? 'var(--md-sys-color-tertiary)'
-                            : 'inherit',
-                          opacity: selectedTeams.includes(team) ? 1 : 0.5,
-                          marginLeft: i === 0 ? 0 : 4,
-                        }}
-                      >{`${team}${i < arr.length - 1 ? ',' : ''}`}</span>
-                    ))}
-                  </span>
-                )
-              }}
-              sortField="teamsList"
-            />
             <Column
-              header="Roles"
+              header="Teams"
               body={(rowData) => {
-                const allRoles = []
-                const selectedRoles = []
+                if (!rowData.teams) return null
+                // sort teams by leader and sort teams by if they are selected
+                const teamNames = Object.keys(rowData.teams)
+                teamNames.sort((a, b) => {
+                  if (selectedTeams.includes(a) && !selectedTeams.includes(b)) return -1
+                  if (!selectedTeams.includes(a) && selectedTeams.includes(b)) return 1
+                  if (rowData.teams[a].leader) return -1
+                  if (rowData.teams[b].leader) return 1
+                  return 0
+                })
+
+              return (
+                <span>
+                  {teamNames.map((team, i, arr) => (
+                    <span
+                      key={team}
+                      style={{
+                        color: rowData.teams[team].leader
+                          ? 'var(--md-sys-color-tertiary)'
+                          : 'inherit',
+                        opacity: selectedTeams.includes(team) ? 1 : 0.5,
+                        marginLeft: i === 0 ? 0 : 4,
+                      }}
+                    >{`${team}${i < arr.length - 1 ? ',' : ''}`}</span>
+                  ))}
+                </span>
+              )
+            }}
+            sortField="teamsList"
+          />
+          <Column
+            header="Roles"
+            body={(rowData) => {
+              const allRoles = []
+              const selectedRoles = []
 
                 for (const team in rowData.teams) {
                   for (const role of rowData.teams[team].roles) {
