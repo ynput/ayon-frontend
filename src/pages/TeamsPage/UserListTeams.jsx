@@ -304,7 +304,6 @@ const UserListTeams = ({
               teamNames.sort((a, b) => {
                 if (selectedTeams.includes(a) && !selectedTeams.includes(b)) return -1
                 if (!selectedTeams.includes(a) && selectedTeams.includes(b)) return 1
-
                 if (rowData.teams[a].leader) return -1
                 if (rowData.teams[b].leader) return 1
                 return 0
@@ -343,24 +342,24 @@ const UserListTeams = ({
                 }
               }
 
-                return (
-                  <span>
-                    {allRoles.map((role, i, arr) => (
-                      <span
-                        key={role}
-                        style={{
-                          opacity: selectedRoles.includes(role) ? 1 : 0.5,
-                          marginLeft: i === 0 ? 0 : 4,
-                        }}
-                      >{`${role}${i < arr.length - 1 ? ',' : ''}`}</span>
-                    ))}
-                  </span>
-                )
-              }}
-              sortField="rolesList"
-            />
-      
-          
+              return (
+                <span>
+                  {allRoles.map((role, i, arr) => (
+                    <span
+                      key={role}
+                      style={{
+                        opacity: selectedRoles.includes(role) ? 1 : 0.5,
+                        marginLeft: i === 0 ? 0 : 4,
+                      }}
+                    >{`${role}${i < arr.length - 1 ? ',' : ''}`}</span>
+                  ))}
+                </span>
+              )
+            }}
+            sortField="rolesList"
+          />
+    
+        
         </DataTable>
       </TablePanel>
     </Section>
