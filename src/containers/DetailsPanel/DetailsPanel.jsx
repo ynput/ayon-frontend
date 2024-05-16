@@ -116,7 +116,7 @@ const DetailsPanel = ({
         {selectedTab === 'feed' && !isError && (
           <Feed
             entityType={entityType}
-            entities={entityDetailsData}
+            entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
             activeUsers={activeProjectUsers}
             selectedTasksProjects={selectedTasksProjects}
             projectInfo={firstProjectInfo}
