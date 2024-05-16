@@ -7,6 +7,7 @@ import { useMemo } from 'react'
 import styled from 'styled-components'
 import addRemoveMembers from './addRemoveMembers'
 import useCreateContext from '/src/hooks/useCreateContext'
+import UsersListTeamsSmall from './UsersListTeamsSmall'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -38,35 +39,6 @@ const ProfileRow = ({ rowData }) => {
         }}
       >
         {name}
-      </span>
-    </StyledProfileRow>
-  )
-}
-
-const FullnameImage = ({ rowData }) => {
-  const { name, self, isMissing } = rowData
-  const { fullName } = rowData.attrib || false
-  return (
-    <StyledProfileRow>
-      <UserImage
-        name={name}
-        size={25}
-        style={{
-          margin: 'auto',
-          transform: 'scale(0.8)',
-          minHeight: 25,
-          minWidth: 25,
-          maxHeight: 25,
-          maxWidth: 25,
-        }}
-        highlight={self}
-      />
-      <span
-        style={{
-          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
-        }}
-      >
-        {fullName || name}
       </span>
     </StyledProfileRow>
   )
@@ -209,44 +181,16 @@ const UserListTeams = ({
       ),
     )
   }
-
+  
   if (!isFullSize) return (
-  <Section style={{ height: '85%', flex: 1.5 }}>
-      <TablePanel onContextMenu={handleContext}>
-        <DataTable
-          value={userList}
-          scrollable="true"
-          scrollHeight="flex"
-          dataKey="name"
-          selectionMode="multiple"
-          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
-          onSelectionChange={onSelectionChange}
-          onContextMenuSelectionChange={onContextSelectionChange}
-          onContextMenu={handleContext}
-          selection={selection}
-          resizableColumns
-          responsive="true"
-          autoLayout="true"
-          tableStyle={{
-            width: '100%',
-          }}
-          groupRowsBy={'group'}
-          rowGroupMode="subheader"
-          rowGroupHeaderTemplate={(data) => {
-            return <div>{data.group}</div>
-          }}
-        >
-           <Column
-              field="attrib.fullName"
-              header="Full Name"
-              style={{
-                width: '20%',
-              }}
-              body={(rowData) => FullnameImage({ rowData })}
-              />
-        </DataTable>
-          </TablePanel>
-      </Section>
+    <UsersListTeamsSmall
+      handleContext={handleContext}
+      userList={userList}
+      isLoading={isLoading}
+      onSelectionChange={onSelectionChange}
+      onContextSelectionChange={onContextSelectionChange}
+      selection={selection}
+    />
   )
   return (
     <Section
@@ -293,7 +237,6 @@ const UserListTeams = ({
             style={{
               width: '20%',
             }}
-            body={(rowData) => FullnameImage({ rowData })}
           />
           <Column
             header="Teams"
