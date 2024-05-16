@@ -26,7 +26,6 @@ export const quillFormats = [
   'header',
   'bold',
   'italic',
-  'underline',
   'strike',
   'list',
   'link',
@@ -37,7 +36,7 @@ export const quillFormats = [
 export const getModules = ({ imageUploader }) => {
   return {
     toolbar: [
-      [{ header: 2 }, 'bold', 'italic', 'underline', 'link', 'code-block'],
+      [{ header: 2 }, 'bold', 'italic', 'link', 'code-block'],
       [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
       ['image'],
     ],
