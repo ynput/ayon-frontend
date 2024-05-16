@@ -508,16 +508,18 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           {!isUser && (
             <SectionStyled>
               {createTeamOpen ? (
-                <Dialog showCloseButton onClose={() => setCreateTeamOpen(false)} style={{ height: '700px'}} isOpen header={'Create New Team'} size="full" >
+                <Dialog  onClose={() => setCreateTeamOpen(false)} style={{ height: '700px'}} isOpen header={'Create New Team'} size="lg" >
                   <div style={{ display: 'flex', height: '100%'}} >
                     <div style={{ width: '50%', overflow: 'hidden'}} >
-                    <InputText
-                      style={{ width: '100%', marginBottom: '8px' }}
-                      placeholder="Filter users..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      autocomplete="off"
-                    />
+                      <div style={{padding: '1px', marginBottom: '8px', }}>
+                        <InputText
+                          style={{ width: '100%'}}
+                          placeholder="Filter users..."
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          autocomplete="off"
+                        />
+                      </div>
                     <UserListTeams
                       selectedProjects={[projectName]}
                       selectedUsers={selectedUsers}

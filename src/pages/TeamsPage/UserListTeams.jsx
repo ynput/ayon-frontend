@@ -211,7 +211,7 @@ const UserListTeams = ({
   }
 
   if (!isFullSize) return (
-  <Section style={{ height: '100%', flex: 1.5 }}>
+  <Section style={{ height: '85%', flex: 1.5 }}>
       <TablePanel onContextMenu={handleContext}>
         <DataTable
           value={userList}
