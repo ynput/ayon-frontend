@@ -8,7 +8,7 @@ import {
   Spacer,
   Dropdown,
 } from '@ynput/ayon-react-components'
-import EntityDetail from '../../containers/DetailsDialog'
+import EntityDetail from '/src/containers/DetailsDialog'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
 import usePubSub from '/src/hooks/usePubSub'
@@ -30,7 +30,7 @@ import StatusSelect from '/src/components/status/statusSelect'
 import {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
-} from '../../services/product/getProduct'
+} from '/src/services/product/getProduct'
 import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
 import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter, { filterByFieldsAndValues } from '/src/hooks/useSearchFilter'

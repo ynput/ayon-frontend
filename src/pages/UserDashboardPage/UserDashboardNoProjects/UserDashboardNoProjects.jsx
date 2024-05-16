@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import * as Styled from './UserDashboardNoProjects.styled'
-import NoProducts from '../../BrowserPage/NoProducts'
+import NoProducts from '../../BrowserPage/Products/NoProducts'
 import { Button } from '@ynput/ayon-react-components'
 import NewProjectDialog from '../../ProjectManagerPage/NewProjectDialog'
 import { useNavigate } from 'react-router'
