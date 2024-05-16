@@ -76,7 +76,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const [initData, setInitData] = useState(initialFormData)
   const [formData, setFormData] = useState(initialFormData)
   const [changesMade, setChangesMade] = useState(false)
-  const userFullName = user?.attrib?.fullName
+  const userName = user?.attrib?.fullName || user?.name
 
   // once user data is loaded, set form data
   useEffect(() => {
@@ -149,9 +149,9 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       <Section style={{ paddingTop: 16 }}>
         <FormsStyled>
         <Avatar user={user} />
-        <AvatarName $hasData={userFullName && !isLoading} >
+        <AvatarName $hasData={!!userName} >
           <span className={Type.headlineMedium}>
-            {(userFullName && !isLoading) ? userFullName : 'User FullName'}
+            {userName ? userName : 'User FullName'}
           </span>
         </AvatarName>
           <Panel style={{ background: 'none'}}>
