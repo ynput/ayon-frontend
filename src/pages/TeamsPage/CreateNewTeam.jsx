@@ -110,7 +110,7 @@ const CreateNewTeam = ({
   }
 
   return (
-    <div style={{paddingLeft: '32px', display: 'flex', justifyContent: 'space-between', flexDirection: 'column', height: '100%'}}>
+    <div style={{display: 'flex', justifyContent: 'space-between', flexDirection: 'column', height: '100%'}}>
         {subTitle && <span>{subTitle}</span>}
         <FormLayout>
           <FormRow label="Team Name">

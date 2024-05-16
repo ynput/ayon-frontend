@@ -301,8 +301,6 @@ const UserListTeams = ({
             }}
             sortField="rolesList"
           />
-    
-        
         </DataTable>
       </TablePanel>
     </Section>

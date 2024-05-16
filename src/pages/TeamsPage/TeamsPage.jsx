@@ -415,7 +415,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
 
-
   return (
     <>
       <Dialog
@@ -509,7 +508,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             <SectionStyled>
               {createTeamOpen ? (
                 <Dialog  onClose={() => setCreateTeamOpen(false)} style={{ height: '700px'}} isOpen header={'Create New Team'} size="full" >
-                  <div style={{ display: 'flex', height: '100%'}} >
+                  <div style={{ display: 'flex', height: '100%', gap: '32px'}} >
                     <div style={{ width: '50%', overflow: 'hidden'}} >
                       <div style={{padding: '1px', marginBottom: '8px', }}>
                         <InputText
