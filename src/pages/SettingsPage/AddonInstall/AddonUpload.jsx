@@ -53,7 +53,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
   const [uploadPackages] = useUploadDependencyPackagesMutation()
 
   let endPoint = 'installers'
-  if (type === 'package') endPoint = 'dependency_packages'
+  if (type === 'package') endPoint = 'dependencyPackages'
   const typeLabel =
     type === 'package' ? 'Dependency Package' : type === 'addon' ? 'Addon' : 'Installer'
 

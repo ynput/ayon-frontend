@@ -5,14 +5,14 @@ const getDependencyPackages = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getDependencyPackageList: build.query({
       query: () => ({
-        url: `/api/desktop/dependency_packages`,
+        url: `/api/desktop/dependencyPackages`,
       }),
       transformResponse: (res) => res.packages,
       providesTags: () => [{ type: 'dependencyPackageList' }],
     }),
     uploadDependencyPackages: build.mutation({
       queryFn: (arg, api) =>
-        queryUpload(arg, api, { endpoint: '/api/desktop/dependency_packages' }),
+        queryUpload(arg, api, { endpoint: '/api/desktop/dependencyPackages' }),
     }),
   }), // endpoints
 })
