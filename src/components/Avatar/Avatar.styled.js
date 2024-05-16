@@ -14,8 +14,8 @@ export const Avatar = styled.div`
 `
 export const AvatarIcon = styled(Button)`
     position: absolute;
-    top: 75%;
-    right: 5%;
+    bottom: 0;
+    right: 0;
     z-index: 999;
     display: inline-block;
     border-radius: 15px;
@@ -23,10 +23,6 @@ export const AvatarIcon = styled(Button)`
     width: 30px;
     height: 30px;
     background: var(--md-sys-color-surface-container-high);
-`
-export const Username = styled.span`
-    padding: 16px;
-    font-size: var(--md-sys-typescale-headline-medium-font-size);
 `
 export const ImageIcon = styled.span`
     position: relative;

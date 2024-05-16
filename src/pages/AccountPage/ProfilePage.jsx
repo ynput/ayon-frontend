@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import axios from 'axios'
 import {
   FormRow,
   Section,
@@ -40,6 +39,13 @@ export const PanelButtonsStyled = styled(Panel)`
     flex: 1;
   }
 `
+export const AvatarName = styled.span`
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 16px 8px 16px;
+`
 
 const ProfilePage = ({ user = {}, isLoading }) => {
   const dispatch = useDispatch()
@@ -60,7 +66,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const [initData, setInitData] = useState(initialFormData)
   const [formData, setFormData] = useState(initialFormData)
   const [changesMade, setChangesMade] = useState(false)
-  const [imageKey, setImageKey] = useState(null)
 
   // once user data is loaded, set form data
   useEffect(() => {
@@ -127,36 +132,14 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
-
-  const onUpdateAvatar = async (file) => {
-    try {
-      const user_name = user.name
-      const imageKey = `?${Math.random().toString(36).substring(2, 15)}-${Date.now()}`
-      const opts = {
-        headers: {
-          'Content-Type': file.type,
-        },
-      }
-      await axios.put(`/api/users/${user_name}/avatar`, file, opts)
-      toast.success('Profile updated')
-      // update redux state with new data
-      dispatch(updateUserAttribs(formData))
-      // reset form
-      setInitData(formData)
-      setImageKey(imageKey)
-      setChangesMade(false)
-    } catch (error) {
-      console.log(error)
-      toast.error('Unable to update avatar')
-      toast.error(error.details)
-    }
-  }
-
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
         <FormsStyled>
-        <Avatar user={user} onUpdateAvatar={onUpdateAvatar} imageKey={imageKey} />
+        <Avatar user={user} />
+        <AvatarName className={Type.headlineMedium}>
+          {user?.attrib?.fullName}
+        </AvatarName>
           <Panel style={{ background: 'none'}}>
             <FormRow label="Username" key="Username">
               <InputText value={name} disabled />
