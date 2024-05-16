@@ -2,7 +2,7 @@ import { UserImage as UserImageArc, getShimmerStyles } from '@ynput/ayon-react-c
 import styled from 'styled-components'
 
 const UserImageArcPlaceholder = styled(UserImageArc)`
-    color: transparent;
+    background: transparent;
     border-radius: medium;
     ${getShimmerStyles()}
     > span {
