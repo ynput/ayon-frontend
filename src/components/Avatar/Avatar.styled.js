@@ -16,7 +16,7 @@ export const AvatarIcon = styled(Button)`
     position: absolute;
     bottom: 0;
     right: 0;
-    z-index: 999;
+    z-index: 1;
     display: inline-block;
     border-radius: 15px;
     padding: 0.3em;
