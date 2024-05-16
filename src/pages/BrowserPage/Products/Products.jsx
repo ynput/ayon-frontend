@@ -1,13 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import {
-  InputText,
-  TablePanel,
-  Section,
-  Toolbar,
-  Spacer,
-  Dropdown,
-} from '@ynput/ayon-react-components'
+import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import EntityDetail from '/src/containers/DetailsDialog'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
@@ -44,6 +37,7 @@ import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { productTypes } from '/src/features/project'
+import * as Styled from './Products.styled'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -583,11 +577,12 @@ const Products = () => {
           onChange={(e) => setSearch(e.target.value)}
           autocomplete="off"
         />
-        <Dropdown
+        <Styled.TaskFilterDropdown
           value={selectedTaskTypes}
           options={taskOptions}
           onChange={handleTaskTypeChange}
           onClear={!!selectedTaskTypes.length && handleTaskTypeChange}
+          clearTooltip="Clear task types"
           placeholder="Task types..."
           multiSelect
         />
