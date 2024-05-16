@@ -7,10 +7,11 @@ import {
   LockedInput,
   SaveButton,
   InputText,
+  getShimmerStyles
 } from '@ynput/ayon-react-components'
 import { useUpdateUserMutation } from '../../services/user/updateUser'
 import Avatar from '../../components/Avatar/Avatar'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../../ayon'
@@ -45,6 +46,15 @@ export const AvatarName = styled.span`
     justify-content: center;
     align-items: center;
     padding: 16px 16px 8px 16px;
+    > span {
+      position: relative;
+      ${({ $hasFullName }) =>!$hasFullName &&
+      css`
+          color: transparent;
+          border-radius: medium;
+          ${getShimmerStyles()}
+      `}
+    }
 `
 
 const ProfilePage = ({ user = {}, isLoading }) => {
@@ -132,13 +142,17 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
+  const userFullName = user?.attrib?.fullName
+
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
         <FormsStyled>
         <Avatar user={user} />
-        <AvatarName className={Type.headlineMedium}>
-          {user?.attrib?.fullName}
+        <AvatarName $hasFullName={!!userFullName} >
+          <span className={Type.headlineMedium}>
+            {userFullName ? userFullName : 'User FullName'}
+          </span>
         </AvatarName>
           <Panel style={{ background: 'none'}}>
             <FormRow label="Username" key="Username">
