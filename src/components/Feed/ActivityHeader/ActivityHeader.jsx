@@ -72,20 +72,21 @@ const ActivityHeader = ({
 
         {/* custom children, like status change */}
         {children}
-
-        <Styled.Tools className={'tools'} ref={moreRef}>
-          {isOwner && onEdit && (
-            <Styled.ToolButton icon="edit_square" variant="text" onClick={onEdit} />
-          )}
-          {isOwner && (
-            <Styled.ToolButton
-              icon="more_horiz"
-              variant="text"
-              className="more"
-              onClick={() => handleToggleMenu(id)}
-            />
-          )}
-        </Styled.Tools>
+        {!isPublish && (
+          <Styled.Tools className={'tools'} ref={moreRef}>
+            {isOwner && onEdit && (
+              <Styled.ToolButton icon="edit_square" variant="text" onClick={onEdit} />
+            )}
+            {isOwner && (
+              <Styled.ToolButton
+                icon="more_horiz"
+                variant="text"
+                className="more"
+                onClick={() => handleToggleMenu(id)}
+              />
+            )}
+          </Styled.Tools>
+        )}
 
         <MenuContainer id={id} target={moreRef.current}>
           <ActivityCommentMenu onDelete={() => isOwner && onDelete()} />
