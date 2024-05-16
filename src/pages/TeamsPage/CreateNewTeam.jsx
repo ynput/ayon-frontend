@@ -25,7 +25,6 @@ const CreateNewTeam = ({
 
   // get data from open state or defaults
   const {
-    title = 'Create New Team',
     duplicate = null,
     subTitle = '',
     roles = [],
@@ -111,8 +110,8 @@ const CreateNewTeam = ({
 
   return (
     <div style={{display: 'flex', justifyContent: 'space-between', flexDirection: 'column', height: '100%'}}>
-        {subTitle && <span>{subTitle}</span>}
         <FormLayout>
+          {subTitle && <h3>{subTitle}</h3>} 
           <FormRow label="Team Name">
             <InputText value={nameForm} onChange={(e) => setNameForm(e.target.value)} autoFocus />
           </FormRow>
