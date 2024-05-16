@@ -1,6 +1,13 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
+import {
+  InputText,
+  TablePanel,
+  Section,
+  Toolbar,
+  Spacer,
+  Dropdown,
+} from '@ynput/ayon-react-components'
 import EntityDetail from '../../containers/DetailsDialog'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
@@ -15,6 +22,7 @@ import {
   setUri,
   productSelected,
   onFocusChanged,
+  updateBrowserFilters,
 } from '/src/features/context'
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
@@ -25,7 +33,7 @@ import {
 } from '../../services/product/getProduct'
 import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
 import { MultiSelect } from 'primereact/multiselect'
-import useSearchFilter from '/src/hooks/useSearchFilter'
+import useSearchFilter, { filterByFieldsAndValues } from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
 import { ayonApi } from '/src/services/ayon'
@@ -42,7 +50,12 @@ const Products = () => {
 
   // context
   // project redux
-  const { name: projectName, statuses: statusesObject } = useSelector((state) => state.project)
+  const {
+    name: projectName,
+    statuses: statusesObject,
+    tasksOrder = [],
+    tasks = {},
+  } = useSelector((state) => state.project)
   // focused redux
   const {
     versions: focusedVersions,
@@ -53,6 +66,23 @@ const Products = () => {
   // context redux
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
   const pairing = useSelector((state) => state.context.pairing)
+
+  const selectedTaskTypes = useSelector((state) => state.context.filters.browser.productTaskTypes)
+  // create an array of options for the tasks dropdown using tasksOrder and tasks
+  const taskOptions = useMemo(() => {
+    return tasksOrder.map((taskId) => {
+      const task = tasks[taskId]
+      return {
+        label: task.name,
+        value: taskId,
+        icon: task.icon,
+      }
+    })
+  }, [tasks, tasksOrder])
+
+  const handleTaskTypeChange = (value) => {
+    dispatch(updateBrowserFilters({ productTaskTypes: value }))
+  }
 
   const [showDetail, setShowDetail] = useState(false) // false or 'product' or 'version'
   // grid/list/grouped
@@ -392,19 +422,34 @@ const Products = () => {
     return groupResult(listData, 'name')
   }, [listData])
 
+  // filter by task types
+  const filteredByFieldsData = selectedTaskTypes.length
+    ? filterByFieldsAndValues({
+        filters: selectedTaskTypes,
+        data: tableData,
+        fields: ['data.taskType'],
+      })
+    : tableData
+
   const searchableFields = [
-    'data.author',
+    'data.versionAuthor',
     'data.productType',
     'data.folder',
     'data.fps',
     'data.frames',
     'data.name',
     'data.resolution',
-    'data.status',
+    'data.versionStatus',
     'data.versionName',
+    'data.taskType',
+    'data.taskName',
   ]
 
-  let [search, setSearch, filteredData] = useSearchFilter(searchableFields, tableData, 'products')
+  let [search, setSearch, filteredBySearchData] = useSearchFilter(
+    searchableFields,
+    filteredByFieldsData,
+    'products',
+  )
 
   //
   // Handlers
@@ -526,7 +571,7 @@ const Products = () => {
       : `${getOutOfString(shownColumnsSingleFocused, filterOptions)} (Single)`
   }`
 
-  const isNone = filteredData.length === 0
+  const isNone = filteredBySearchData.length === 0
 
   return (
     <Section wrap>
@@ -537,6 +582,14 @@ const Products = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           autocomplete="off"
+        />
+        <Dropdown
+          value={selectedTaskTypes}
+          options={taskOptions}
+          onChange={handleTaskTypeChange}
+          onClear={!!selectedTaskTypes.length && handleTaskTypeChange}
+          placeholder="Task types..."
+          multiSelect
         />
         <MultiSelect
           options={filterOptions}
@@ -565,7 +618,7 @@ const Products = () => {
         {viewMode !== 'list' && (
           <ProductsGrid
             isLoading={isLoading || isFetching}
-            data={filteredData}
+            data={filteredBySearchData}
             onItemClick={onRowClick}
             onSelectionChange={onSelectionChange}
             onContext={ctxMenuShow}
@@ -581,7 +634,7 @@ const Products = () => {
         )}
         {viewMode === 'list' && (
           <ProductsList
-            data={filteredData}
+            data={filteredBySearchData}
             selectedRows={selectedRows}
             onSelectionChange={onSelectionChange}
             onRowClick={onRowClick}

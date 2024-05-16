@@ -6,6 +6,11 @@ const initialState = {
   expandedFolders: {},
   expandedProducts: {},
   expandedRepresentations: {},
+  filters: {
+    browser: {
+      productTaskTypes: [],
+    },
+  },
   focused: {
     type: null,
     folders: [],
@@ -52,6 +57,7 @@ const localStorageKeys = [
   'focused.editor',
   'selectedVersions',
   'uri',
+  'filters.browser.productTaskTypes',
 ]
 
 const initialStateWithLocalStorage = cloneDeep(initialState)
@@ -278,6 +284,11 @@ const reducers = {
       payload: 'type',
     },
   },
+  updateBrowserFilters: {
+    'filters.browser.productTaskTypes': {
+      payload: 'productTaskTypes',
+    },
+  },
 }
 
 // we use this function to update the state with the reducer values
@@ -373,6 +384,9 @@ const contextSlice = createSlice({
     onUriNavigate: (state, action) => {
       updateStateWithReducer(reducers.onUriNavigate, state, action)
     },
+    updateBrowserFilters: (state, action) => {
+      updateStateWithReducer(reducers.updateBrowserFilters, state, action)
+    },
     onFocusChanged: (state, action) => {
       state.focused.lastFocused = action.payload
     },
@@ -462,6 +476,7 @@ export const {
   setMenuOpen,
   toggleMenuOpen,
   onUriNavigate,
+  updateBrowserFilters,
   onCommentImageOpen,
   onFilePreviewClose,
 } = contextSlice.actions
@@ -507,7 +522,5 @@ Object.entries(reducers).forEach(([reducerKey, reducerStates]) => {
   // add the middleware to the local storage items
   Object.assign(contextLocalItems, middleware)
 })
-
-console.log(contextLocalItems)
 
 export { contextLocalItems }

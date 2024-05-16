@@ -64,6 +64,7 @@ const parseProductData = (data) => {
       versionAuthor: vers ? vers.author : null,
       taskId: vers && vers.taskId ? vers.taskId : null,
       taskName: vers && vers.task ? vers.task.name : null,
+      taskType: vers && vers.task ? vers.task.taskType : null,
       frames: parseProductFrames(product),
       createdAt: vers ? vers.createdAt : product.createdAt,
     }
@@ -102,6 +103,7 @@ fragment ProductVersionFragment on VersionNode {
   taskId
   task {
     name
+    taskType
   }
   status
   attrib {
