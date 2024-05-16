@@ -48,7 +48,7 @@ export const AvatarName = styled.span`
     padding: 16px 16px 8px 16px;
     > span {
       position: relative;
-      ${({ $hasFullName }) =>!$hasFullName &&
+      ${({ $hasData }) =>!$hasData &&
       css`
           color: transparent;
           border-radius: medium;
@@ -76,6 +76,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const [initData, setInitData] = useState(initialFormData)
   const [formData, setFormData] = useState(initialFormData)
   const [changesMade, setChangesMade] = useState(false)
+  const userFullName = user?.attrib?.fullName
 
   // once user data is loaded, set form data
   useEffect(() => {
@@ -142,16 +143,15 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     }
   }
 
-  const userFullName = user?.attrib?.fullName
 
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
         <FormsStyled>
         <Avatar user={user} />
-        <AvatarName $hasFullName={!!userFullName} >
+        <AvatarName $hasData={userFullName && !isLoading} >
           <span className={Type.headlineMedium}>
-            {userFullName ? userFullName : 'User FullName'}
+            {(userFullName && !isLoading) ? userFullName : 'User FullName'}
           </span>
         </AvatarName>
           <Panel style={{ background: 'none'}}>

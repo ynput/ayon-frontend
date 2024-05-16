@@ -6,7 +6,7 @@ const UserImageArcPlaceholder = styled(UserImageArc)`
     border-radius: medium;
     ${getShimmerStyles()}
     > span {
-    display: none;
+      display: none;
     }
 `
 // wraps the ARC UserImage component to use new user image api
