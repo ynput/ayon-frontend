@@ -304,7 +304,7 @@ const UserListTeams = ({
               teamNames.sort((a, b) => {
                 if (selectedTeams.includes(a) && !selectedTeams.includes(b)) return -1
                 if (!selectedTeams.includes(a) && selectedTeams.includes(b)) return 1
-                
+
                 if (rowData.teams[a].leader) return -1
                 if (rowData.teams[b].leader) return 1
                 return 0
@@ -335,32 +335,32 @@ const UserListTeams = ({
               const allRoles = []
               const selectedRoles = []
 
-                for (const team in rowData.teams) {
-                  for (const role of rowData.teams[team].roles) {
-                    if (!allRoles.includes(role)) allRoles.push(role)
-                    if (selectedTeams.includes(team) && !selectedRoles.includes(role))
-                      selectedRoles.push(role)
-                  }
+              for (const team in rowData.teams) {
+                for (const role of rowData.teams[team].roles) {
+                  if (!allRoles.includes(role)) allRoles.push(role)
+                  if (selectedTeams.includes(team) && !selectedRoles.includes(role))
+                    selectedRoles.push(role)
                 }
+              }
 
-                 return (
-                   <span>
-                     {allRoles.map((role, i, arr) => (
-                       <span
-                         key={role}
-                         style={{
-                           opacity: selectedRoles.includes(role) ? 1 : 0.5,
-                           marginLeft: i === 0 ? 0 : 4,
-                         }}
-                       >{`${role}${i < arr.length - 1 ? ',' : ''}`}</span>
-                     ))}
-                   </span>
-                 )
-               }}
-               sortField="rolesList"
-             />
-        
-           
+                return (
+                  <span>
+                    {allRoles.map((role, i, arr) => (
+                      <span
+                        key={role}
+                        style={{
+                          opacity: selectedRoles.includes(role) ? 1 : 0.5,
+                          marginLeft: i === 0 ? 0 : 4,
+                        }}
+                      >{`${role}${i < arr.length - 1 ? ',' : ''}`}</span>
+                    ))}
+                  </span>
+                )
+              }}
+              sortField="rolesList"
+            />
+      
+          
         </DataTable>
       </TablePanel>
     </Section>
