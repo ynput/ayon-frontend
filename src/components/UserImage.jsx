@@ -1,21 +1,17 @@
 import { UserImage as UserImageArc, getShimmerStyles } from '@ynput/ayon-react-components'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 
 const UserImageArcPlaceholder = styled(UserImageArc)`
-     position: relative;
-     > span {
-      display: none;
-     }
-     ${({ $name }) => $name &&
-      css`
-          color: transparent;
-          border-radius: medium;
-          ${getShimmerStyles()}
-      `}
+    color: transparent;
+    border-radius: medium;
+    ${getShimmerStyles()}
+    > span {
+    display: none;
+    }
 `
 // wraps the ARC UserImage component to use new user image api
 const UserImage = ({ name, imageKey, ...props }) => {
-  if (name) return  <UserImageArcPlaceholder $name={name} {...props} />
+  if (!name) return  <UserImageArcPlaceholder {...props} />
   return <UserImageArc name={name} src={`/api/users/${name}/avatar${imageKey || ''}`} {...props} />
 }
 
