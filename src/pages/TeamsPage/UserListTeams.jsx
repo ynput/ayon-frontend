@@ -279,35 +279,36 @@ const UserListTeams = ({
             return <div>{data.group}</div>
           }}
         >
-            <Column
-              field="name"
-              header="Username"
-              body={(rowData) => ProfileRow({ rowData })}
-              style={{
-                width: '20%',
-              }}
-            />
-            <Column
-              field="attrib.fullName"
-              header="Full Name"
-              style={{
-                width: '20%',
-              }}
-              body={(rowData) => FullnameImage({ rowData })}
-            />
-            <Column
-              header="Teams"
-              body={(rowData) => {
-                if (!rowData.teams) return null
-                // sort teams by leader and sort teams by if they are selected
-                const teamNames = Object.keys(rowData.teams)
-                teamNames.sort((a, b) => {
-                  if (selectedTeams.includes(a) && !selectedTeams.includes(b)) return -1
-                  if (!selectedTeams.includes(a) && selectedTeams.includes(b)) return 1
-                  if (rowData.teams[a].leader) return -1
-                  if (rowData.teams[b].leader) return 1
-                  return 0
-                })
+          <Column
+            field="name"
+            header="Username"
+            body={(rowData) => ProfileRow({ rowData })}
+            style={{
+              width: '20%',
+            }}
+          />
+          <Column
+            field="attrib.fullName"
+            header="Full Name"
+            style={{
+              width: '20%',
+            }}
+            body={(rowData) => FullnameImage({ rowData })}
+          />
+          <Column
+            header="Teams"
+            body={(rowData) => {
+              if (!rowData.teams) return null
+              // sort teams by leader and sort teams by if they are selected
+              const teamNames = Object.keys(rowData.teams)
+              teamNames.sort((a, b) => {
+                if (selectedTeams.includes(a) && !selectedTeams.includes(b)) return -1
+                if (!selectedTeams.includes(a) && selectedTeams.includes(b)) return 1
+                
+                if (rowData.teams[a].leader) return -1
+                if (rowData.teams[b].leader) return 1
+                return 0
+              })
 
               return (
                 <span>
