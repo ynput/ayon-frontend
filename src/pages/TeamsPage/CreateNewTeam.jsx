@@ -110,8 +110,8 @@ const CreateNewTeam = ({
   }
 
   return (
-    <div style={{paddingLeft: '32px'}}>
-        <span>{subTitle}</span>
+    <div style={{paddingLeft: '32px', display: 'flex', justifyContent: 'space-between', flexDirection: 'column', height: '100%'}}>
+        {subTitle && <span>{subTitle}</span>}
         <FormLayout>
           <FormRow label="Team Name">
             <InputText value={nameForm} onChange={(e) => setNameForm(e.target.value)} autoFocus />

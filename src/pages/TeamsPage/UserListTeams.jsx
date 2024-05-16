@@ -309,38 +309,38 @@ const UserListTeams = ({
                    return 0
                  })
 
-                 return (
-                   <span>
-                     {teamNames.map((team, i, arr) => (
-                       <span
-                         key={team}
-                         style={{
-                           color: rowData.teams[team].leader
-                             ? 'var(--md-sys-color-tertiary)'
-                             : 'inherit',
-                           opacity: selectedTeams.includes(team) ? 1 : 0.5,
-                           marginLeft: i === 0 ? 0 : 4,
-                         }}
-                       >{`${team}${i < arr.length - 1 ? ',' : ''}`}</span>
-                     ))}
-                   </span>
-                 )
-               }}
-               sortField="teamsList"
-             />
-             <Column
-               header="Roles"
-               body={(rowData) => {
-                 const allRoles = []
-                 const selectedRoles = []
+                return (
+                  <span>
+                    {teamNames.map((team, i, arr) => (
+                      <span
+                        key={team}
+                        style={{
+                          color: rowData.teams[team].leader
+                            ? 'var(--md-sys-color-tertiary)'
+                            : 'inherit',
+                          opacity: selectedTeams.includes(team) ? 1 : 0.5,
+                          marginLeft: i === 0 ? 0 : 4,
+                        }}
+                      >{`${team}${i < arr.length - 1 ? ',' : ''}`}</span>
+                    ))}
+                  </span>
+                )
+              }}
+              sortField="teamsList"
+            />
+            <Column
+              header="Roles"
+              body={(rowData) => {
+                const allRoles = []
+                const selectedRoles = []
 
-                 for (const team in rowData.teams) {
-                   for (const role of rowData.teams[team].roles) {
-                     if (!allRoles.includes(role)) allRoles.push(role)
-                     if (selectedTeams.includes(team) && !selectedRoles.includes(role))
-                       selectedRoles.push(role)
-                   }
-                 }
+                for (const team in rowData.teams) {
+                  for (const role of rowData.teams[team].roles) {
+                    if (!allRoles.includes(role)) allRoles.push(role)
+                    if (selectedTeams.includes(team) && !selectedRoles.includes(role))
+                      selectedRoles.push(role)
+                  }
+                }
 
                  return (
                    <span>

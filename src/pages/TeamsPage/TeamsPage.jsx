@@ -415,6 +415,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
 
+
   return (
     <>
       <Dialog
@@ -507,9 +508,16 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           {!isUser && (
             <SectionStyled>
               {createTeamOpen ? (
-                <Dialog onClose={() => setCreateTeamOpen(false)} style={{ height: '500px'}} isOpen header={'Create New Team'} size="lg">
+                <Dialog showCloseButton onClose={() => setCreateTeamOpen(false)} style={{ height: '700px'}} isOpen header={'Create New Team'} size="full" >
                   <div style={{ display: 'flex', height: '100%'}} >
-                    <div style={{ width: '50%'}} >
+                    <div style={{ width: '50%', overflow: 'hidden'}} >
+                    <InputText
+                      style={{ width: '100%', marginBottom: '8px' }}
+                      placeholder="Filter users..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      autocomplete="off"
+                    />
                     <UserListTeams
                       selectedProjects={[projectName]}
                       selectedUsers={selectedUsers}
@@ -523,7 +531,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                       onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
                       isFullSize={false}
                     />
-
                     </div>
                     <div style={{ width: '50%'}} >
                       <CreateNewTeam
