@@ -2,6 +2,7 @@
 // gets addonsList
 // get server info
 import React, { createContext, useEffect, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
 import { useGetYnputConnectionsQuery } from '/src/services/ynputConnect'
 import {
   useAbortOnBoardingMutation,
@@ -228,14 +229,14 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         // first create the bundle from the release
         const bundle = createBundleFromRelease(release, selectedAddons, bundleList)
 
-        await createBundle({ data: bundle }).unwrap()
+        await createBundle({ data: bundle, force: true }).unwrap()
       }
       await abortOnboarding().unwrap()
-
-      onFinish(restart)
     } catch (error) {
       console.error(error)
+      toast.error('Please create your production bundle manually after restarting the server.')
     }
+    onFinish(restart)
   }
 
   const contextValue = {
