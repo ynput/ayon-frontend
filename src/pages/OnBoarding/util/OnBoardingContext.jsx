@@ -232,13 +232,11 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         await createBundle({ data: bundle, force: true }).unwrap()
       }
       await abortOnboarding().unwrap()
-
-      onFinish(restart)
     } catch (error) {
       console.error(error)
       toast.error('Please create your production bundle manually after restarting the server.')
-      onFinish(restart)
     }
+    onFinish(restart)
   }
 
   const contextValue = {
