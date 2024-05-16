@@ -4,38 +4,12 @@ import { closeSlideOut } from '/src/features/details'
 import DetailsPanel from '../DetailsPanel'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 import Shortcuts from '/src/containers/Shortcuts'
-import { useEffect, useState } from 'react'
-import { classNames } from 'primereact/utils'
 
 const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
   const dispatch = useDispatch()
   const slideOut = useSelector((state) => state.details.slideOut[scope])
   const { entityType, entityId, projectName } = slideOut
   const isSlideOutOpen = entityType && entityId && projectName
-
-  const [previouslyOpen, setPreviouslyOpen] = useState(false)
-  const [slideOutShown, setSlideOutShown] = useState(false)
-
-  useEffect(() => {
-    let slideTimeOut
-    if (isSlideOutOpen) {
-      if (!previouslyOpen) {
-        // show slide out when opening new one
-        setPreviouslyOpen(true)
-        setSlideOutShown(true)
-      } else {
-        // hide slide out when loading new one
-        setSlideOutShown(false)
-        // then show slide out when new one is loaded
-        slideTimeOut = setTimeout(() => setSlideOutShown(true), 500)
-      }
-    }
-
-    return () => {
-      slideTimeOut && clearTimeout(slideTimeOut)
-      setSlideOutShown(false)
-    }
-  }, [isSlideOutOpen, entityId])
 
   const { data: users } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
@@ -49,7 +23,7 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
   }
 
   return (
-    <Styled.SlideOut className={classNames({ slideOutShown })}>
+    <Styled.SlideOut>
       <DetailsPanel
         entityType={entityType}
         entities={[{ id: entityId, projectName }]}

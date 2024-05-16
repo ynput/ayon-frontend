@@ -39,6 +39,7 @@ export const FeedContent = styled.div`
   gap: var(--base-gap-large);
   overflow-y: auto;
   padding-bottom: 40px;
+  scrollbar-gutter: stable;
 
   display: flex;
   flex-direction: column;
@@ -57,7 +58,7 @@ export const LoadMore = styled.span`
 `
 
 export const Placeholder = styled.div`
-  height: 100px;
+  height: 50px;
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: 8px;
   overflow: hidden;

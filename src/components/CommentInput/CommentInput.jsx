@@ -39,6 +39,7 @@ const CommentInput = ({
   isEditing,
   filter,
   disabled,
+  isLoading,
 }) => {
   const currentUser = useSelector((state) => state.user.name)
 
@@ -196,9 +197,6 @@ const CommentInput = ({
 
       return
     }
-
-    const quill = editorRef.current.getEditor()
-    console.log(quill.getContents())
 
     setEditorValue(content)
 
@@ -486,6 +484,7 @@ const CommentInput = ({
             isEditing,
             isDropping,
             disabled,
+            isLoading,
           })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
