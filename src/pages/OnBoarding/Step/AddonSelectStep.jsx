@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
+import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 
 export const AddonSelectStep = ({
   Header,
@@ -48,19 +49,30 @@ export const AddonSelectStep = ({
     }
   }
 
+
+  const { data: allAddons = [] } = useGetAddonListQuery()
+  const addonsWithVersions = sortedAddons.map((addonName) => {
+    const matchingAddon = allAddons.find((addon) => addon.name === addonName);
+    return matchingAddon ? { ...matchingAddon } : { name: addonName };
+  });
+  console.log(addonsWithVersions,'addonsWithVersions')
+  console.log(sortedAddons,'sortedAddons')
+  console.log(selectedAddons,'selectedAddons')
+
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
-        {sortedAddons.map(
+        {addonsWithVersions.map(
           (addon) =>
-            !mandatory.includes(addon) && (
+            !mandatory.includes(addon.name) && (
               <AddonCard
-                key={addon}
-                name={addon}
-                icon={selectedAddons.includes(addon) ? 'check_circle' : 'circle'}
-                isSelected={selectedAddons.includes(addon)}
-                onClick={() => handleAddonClick(addon)}
+                key={addon.name}
+                name={addon.name}
+                version={addon.productionVersion}
+                icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
+                isSelected={selectedAddons.includes(addon.name)}
+                onClick={() => handleAddonClick(addon.name)}
               />
             ),
         )}
