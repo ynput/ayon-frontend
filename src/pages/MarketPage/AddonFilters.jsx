@@ -67,9 +67,9 @@ const AddonFilters = ({ onSelect, onConnection }) => {
 
     {
       id: 'uninstalled',
-      name: 'Not Downloaded',
+      name: 'Downloads Available',
       filter: [{ isInstalled: false }],
-      tooltip: 'Addons available to install',
+      tooltip: 'Addons available to download',
     },
   ]
 
