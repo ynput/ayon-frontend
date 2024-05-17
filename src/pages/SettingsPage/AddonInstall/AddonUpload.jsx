@@ -86,7 +86,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
       console.log('finished: created ' + type)
       return true
     } catch (error) {
-      setErrorMessage(error?.response?.data?.detail)
+      setErrorMessage(error?.data?.detail)
       console.error(error)
       return false
     }
@@ -230,6 +230,8 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
   useEffect(() => {
     if (files.length && dropOnly) handleSubmit()
   }, [files])
+
+  console.log(errorMessage,'errorMessage')
 
   let message = ''
   // complete message
