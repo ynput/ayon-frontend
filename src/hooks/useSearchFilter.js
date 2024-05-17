@@ -1,10 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
 const useSearchFilter = (fields = [], data = [], id) => {
   let key = 'search'
   id && (key += '-' + id)
   const [search, setSearch] = useQueryParam(key, withDefault(StringParam, ''))
+  const [searchLocal, setSearchLocal] = useState('')
+  const searchString = id ? search : searchLocal
 
   // create keywords that are used for searching
   const dataWithKeywords = useMemo(
@@ -32,7 +34,7 @@ const useSearchFilter = (fields = [], data = [], id) => {
 
   let filteredData = useMemo(() => {
     // separate into array by ,
-    const searchArray = search?.split(',').reduce((acc, cur) => {
+    const searchArray = searchString?.split(',').reduce((acc, cur) => {
       if (cur.trim() === '') return acc
       else {
         acc.push(cur.trim().toLowerCase())
@@ -67,13 +69,15 @@ const useSearchFilter = (fields = [], data = [], id) => {
         return matchingKeys.length >= searchArray.length
       })
     } else return null
-  }, [dataWithKeywords, search, data])
+  }, [dataWithKeywords, searchString, data])
 
   if (!filteredData) {
     filteredData = data
   }
 
-  return [search, setSearch, filteredData]
+  const onSearchChange = (v) => (id ? setSearch(v) : setSearchLocal(v))
+
+  return [searchString, onSearchChange, filteredData]
 }
 
 export default useSearchFilter
