@@ -106,7 +106,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
     actionButton = (
       <Button
         variant="filled"
-        icon={'download_for_offline'}
+        icon={'download'}
         onClick={handleInstall}
       >{`Download v${latestVersion}`}</Button>
     )
