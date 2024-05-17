@@ -9,7 +9,7 @@ import {
   SaveButton,
   Section,
   Spacer,
-  Dialog
+  Dialog,
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
@@ -18,7 +18,7 @@ import TeamUsersDetails from './TeamUsersDetails'
 import TeamDetails from './TeamDetails'
 import { useDeleteTeamMutation, useUpdateTeamsMutation } from '/src/services/team/updateTeams'
 import { toast } from 'react-toastify'
-import CreateNewTeam from './CreateNewTeam'
+import CreateNewTeam from './CreateNewTeam/CreateNewTeam'
 import styled from 'styled-components'
 import useSearchFilter from '/src/hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
@@ -99,7 +99,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   // delete team
   const [deleteTeam] = useDeleteTeamMutation()
   // update multiple teams
-  const [updateTeams] = useUpdateTeamsMutation()
+  const [updateTeams, { isLoading: isUpdatingTeams }] = useUpdateTeamsMutation()
 
   const [selectedTeams = [], setSelectedTeams] = useQueryParam(['teams'], ArrayParam)
 
@@ -231,7 +231,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     filteredUserList,
     'users',
   )
-  filteredUserList = useMemo(() => searchedUsers, [searchedUsers])
 
   // find all roles on all teams
   const rolesList = useMemo(() => {
@@ -496,7 +495,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             selectedProjects={[projectName]}
             selectedUsers={selectedUsers}
             onSelectUsers={(users) => setSelectedUsers(users)}
-            userList={filteredUserList}
+            userList={searchedUsers}
             isLoading={isLoading}
             selectedTeams={selectedTeams}
             onShowAllUsers={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
@@ -506,36 +505,31 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           />
           {!isUser && (
             <SectionStyled>
-              {createTeamOpen ? (
-                <CreateNewTeam
-                  rolesList={rolesList}
-                  createTeamOpen={createTeamOpen}
-                  onClose={setCreateTeamOpen}
-                  selectedUsers={selectedUsers}
-                  setSelectedUsers={setSelectedUsers}
-                  allUsers={userList}
-                  onCreate={handleNewTeam}
-                />
-              ) : (
-                <>
-                  <TeamUsersDetails
-                    users={selectedUsersArray}
-                    teams={teams}
-                    selectedTeams={selectedTeams}
-                    rolesList={rolesList}
-                    onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
-                    isFetching={isUpdating || isLoading}
-                  />
-                  <TeamDetails
-                    teams={teams}
-                    selectedTeams={selectedTeams}
-                    onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
-                    roles={selectedTeamsRoles}
-                    onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
-                  />
-                </>
-              )}
+              <TeamUsersDetails
+                users={selectedUsersArray}
+                teams={teams}
+                selectedTeams={selectedTeams}
+                rolesList={rolesList}
+                onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                isFetching={isUpdating || isLoading}
+              />
+              <TeamDetails
+                teams={teams}
+                selectedTeams={selectedTeams}
+                onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                roles={selectedTeamsRoles}
+                onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
+              />
             </SectionStyled>
+          )}
+          {createTeamOpen && (
+            <CreateNewTeam
+              onClose={() => setCreateTeamOpen(false)}
+              users={filteredUserList}
+              {...{ projectName, selectedTeams, isLoading, rolesList }}
+              onCreate={handleNewTeam}
+              isUpdating={isUpdatingTeams}
+            />
           )}
         </Section>
       </ProjectManagerPageLayout>
