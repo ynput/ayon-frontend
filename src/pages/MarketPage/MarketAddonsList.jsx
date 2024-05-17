@@ -130,7 +130,6 @@ const MarketAddonsList = ({
               onInstall={onInstall}
               name={name}
               {...props}
-              x
             />
           )
         })}
