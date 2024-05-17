@@ -14,6 +14,7 @@ export const StyledDialog = styled(Dialog)`
     /* outline cut off hack */
     margin: -1px 0;
   }
+  max-width: 1000px;
 `
 
 export const Container = styled(Section)`
