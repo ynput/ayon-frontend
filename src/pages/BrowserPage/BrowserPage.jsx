@@ -3,7 +3,7 @@ import { Section } from '@ynput/ayon-react-components'
 import Hierarchy from '/src/containers/hierarchy'
 import TaskList from '/src/containers/taskList'
 
-import Products from './Products'
+import Products from './Products/Products'
 import BrowserDetailsPanel from './BrowserDetailsPanel'
 
 const detailsMinWidth = 533
