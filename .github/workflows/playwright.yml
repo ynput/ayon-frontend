@@ -1,0 +1,32 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+    types:
+    - ready_for_review
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    - name: Run Playwright tests
+    env:
+        TESTER_USER_NAME: ${{ secrets.TESTER_USER_NAME }}
+        TESTER_PASSWORD: ${{ secrets.TESTER_PASSWORD }}
+      run: USER_NAME=TESTER_USER_NAME PASSWORD=TESTER_PASSWORD npx playwright test
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
