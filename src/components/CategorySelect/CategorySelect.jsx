@@ -17,7 +17,6 @@ const IconsTemplate = ({ value, selected, isOpen, options, ...props }) => {
 }
 
 const CategorySelect = ({ truncateAt = 3, ...props }) => {
-  console.log(props)
   return (
     <Dropdown
       {...props}
