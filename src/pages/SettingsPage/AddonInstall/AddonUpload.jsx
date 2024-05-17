@@ -231,8 +231,6 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
     if (files.length && dropOnly) handleSubmit()
   }, [files])
 
-  console.log(errorMessage,'errorMessage')
-
   let message = ''
   // complete message
   if (isComplete && !isUploading) {
