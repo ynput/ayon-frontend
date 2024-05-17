@@ -91,7 +91,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
   } else if (isFinished) {
     actionButton = (
       <Button disabled icon={'check_circle'}>
-        Installed!
+        Downloaded !
       </Button>
     )
   } else if (isUpdatingAll) {
@@ -106,14 +106,14 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
     actionButton = (
       <Button
         variant="filled"
-        icon={'upgrade'}
+        icon={'download_for_offline'}
         onClick={handleInstall}
-      >{`Update to v${latestVersion}`}</Button>
+      >{`Download v${latestVersion}`}</Button>
     )
   } else if (latestVersion) {
     actionButton = (
       <Button variant="filled" icon={'download_for_offline'} onClick={handleInstall}>
-        {`Install v${latestVersion}`}
+        {`Download v${latestVersion}`}
       </Button>
     )
   }
@@ -158,10 +158,10 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
           <Styled.Right className={classNames(Type.bodyMedium, { isLoading })}>
             {actionButton}
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
-              <MetaPanelRow label="Installed Versions">
+              <MetaPanelRow label="Downloaded Versions">
                 {versionsToShow.length
                   ? versionsToShow.map((version) => <span key={version}>{version}</span>)
-                  : 'Not installed'}
+                  : 'Not downloaded'}
                 {!!nOfMoreVersions && (
                   <span className="more" onClick={() => setShowAllVersions(true)}>
                     +{nOfMoreVersions} more

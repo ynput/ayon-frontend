@@ -110,7 +110,7 @@ const MarketAddonsList = ({
           <Tag
             icon={isUpdatingAll ? 'sync' : isUpdatingAllFinished ? 'check_circle' : 'upgrade'}
             onClick={onUpdateAll}
-            className={isUpdatingAll ? 'installing' : ''}
+            className={isUpdatingAll ? 'downloading' : ''}
             disabled={isUpdatingAll || isUpdatingAllFinished}
           >
             {isUpdatingAll ? 'Updating...' : isUpdatingAllFinished ? 'All Updated' : 'Update All'}

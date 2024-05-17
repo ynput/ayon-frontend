@@ -24,11 +24,11 @@ const MarketAddonCard = ({
   onInstall,
   ...props
 }) => {
-  let state = 'install'
-  if (isInstalled && !isOutdated) state = 'installed'
+  let state = 'download'
+  if (isInstalled && !isOutdated) state = 'downloaded'
   if (isInstalled && isOutdated) state = 'update'
   if (isWaiting) state = 'pending'
-  if (isInstalling) state = isInstalled && isOutdated ? 'updating' : 'installing'
+  if (isInstalling) state = isInstalled && isOutdated ? 'updating' : 'downloading'
   if (isFailed) state = 'failed'
   if (isFinished) state = 'finished'
 
