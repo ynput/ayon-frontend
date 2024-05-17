@@ -83,8 +83,8 @@ export const Tag = styled(Button)`
 
   gap: var(--base-gap-small);
 
-  &.installed,
-  &.installing,
+  &.downloaded,
+  &.downloading,
   &.pending,
   &.updating,
   &.finished {
@@ -92,12 +92,12 @@ export const Tag = styled(Button)`
     user-select: none;
   }
 
-  &.installed {
+  &.downloaded {
     opacity: 0.5;
     font-style: italic;
   }
 
-  &.installing,
+  &.downloading,
   &.updating {
     .icon {
       user-select: none;
