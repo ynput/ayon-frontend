@@ -43,7 +43,7 @@ const MarketAddonCard = ({
   if (state === 'update') stateVariant = 'filled'
 
   const handleActionClick = () => {
-    if (['install', 'update'].includes(state)) {
+    if (['download', 'update'].includes(state)) {
       onInstall(name, latestVersion)
     }
   }
