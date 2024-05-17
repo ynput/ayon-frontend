@@ -85,7 +85,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
   if (isInstalling) {
     actionButton = (
       <SaveButton active saving disabled>
-        {isOutdated ? 'Updating' : 'Downloading'}...
+        Downloading...
       </SaveButton>
     )
   } else if (isFinished) {
