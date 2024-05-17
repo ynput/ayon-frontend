@@ -16,11 +16,6 @@ const StyledUserImage = styled(UserImage)`
   transform: scale(0.8);
 `
 
-const StyledSection = styled(Section)`
-  height: 85%;
-  flex: 1.5;
-`
-
 const FullnameImage = ({ rowData }) => {
   const { name, self, isMissing } = rowData
   const { fullName } = rowData.attrib || false
@@ -36,7 +31,7 @@ const FullnameImage = ({ rowData }) => {
 
 const UsersListTeamsSmall = ({ handleContext, userList, isLoading, onSelectionChange, onContextSelectionChange, selection }) => {
   return (
-    <StyledSection>
+    <Section>
       <TablePanel onContextMenu={handleContext}>
         <DataTable
           value={userList}
@@ -69,7 +64,7 @@ const UsersListTeamsSmall = ({ handleContext, userList, isLoading, onSelectionCh
           />
         </DataTable>
       </TablePanel>
-    </StyledSection>
+    </Section>
   )
 }
 
