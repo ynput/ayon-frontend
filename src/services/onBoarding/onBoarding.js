@@ -77,7 +77,7 @@ const onBoarding = ayonApi.injectEndpoints({
 
           // then, upload all dep packages
           const depPackagesPromise = queryUpload({ files: depPackages }, api, {
-            endpoint: '/api/desktop/dependency_packages',
+            endpoint: '/api/desktop/dependencyPackages',
             method: 'post',
             fromUrl: true,
             overwrite: true,

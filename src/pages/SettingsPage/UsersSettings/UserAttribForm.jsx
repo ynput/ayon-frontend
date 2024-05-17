@@ -22,6 +22,7 @@ const UserAttribForm = ({
   setPasswordConfirm,
   setPassword,
   disabled,
+  showAvatarUrl = true,
 }) => {
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
@@ -47,6 +48,7 @@ const UserAttribForm = ({
     attribs.map(({ name, data, input }) => {
       let widget = null
 
+      if (name === 'avatarUrl' && !showAvatarUrl) return null
       if (name.includes('password') && setPassword) {
         widget = (
           <InputPassword

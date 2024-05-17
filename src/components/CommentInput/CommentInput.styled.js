@@ -240,6 +240,12 @@ export const Comment = styled.div`
     background-color: var(--md-sys-color-surface-container-lowest);
   }
 
+  &.isLoading {
+    cursor: default;
+    pointer-events: none;
+    user-select: none;
+  }
+
   /* toolbar styles */
   .ql-toolbar.ql-snow {
     border: none;

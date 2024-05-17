@@ -8,7 +8,7 @@ import {
 import { useSelector } from 'react-redux'
 
 const useCommentMutations = ({ projectName, entityType, entities = [], activityTypes, filter }) => {
-  const { name, fullName } = useSelector((state) => state.user)
+  const { name, attrib = {} } = useSelector((state) => state.user)
   const entityIds = entities.map((entity) => entity.id)
 
   // used to create and update activities (comments)
@@ -37,7 +37,7 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
         entityId: entityId,
         referenceType: 'origin',
         authorName: name,
-        authorFullName: fullName,
+        authorFullName: attrib.fullName,
         createdAt: formatISO(new Date()),
         isOwner: true,
         files: files,
