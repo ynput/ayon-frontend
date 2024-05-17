@@ -85,7 +85,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
   if (isInstalling) {
     actionButton = (
       <SaveButton active saving disabled>
-        {isOutdated ? 'Updating' : 'Installing'}...
+        {isOutdated ? 'Updating' : 'Downloading'}...
       </SaveButton>
     )
   } else if (isFinished) {
@@ -106,13 +106,13 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
     actionButton = (
       <Button
         variant="filled"
-        icon={'download'}
+        icon={'download_for_offline'}
         onClick={handleInstall}
       >{`Download v${latestVersion}`}</Button>
     )
   } else if (latestVersion) {
     actionButton = (
-      <Button variant="filled" icon={'download_for_offline'} onClick={handleInstall}>
+      <Button variant="filled" icon={'download'} onClick={handleInstall}>
         {`Download v${latestVersion}`}
       </Button>
     )
