@@ -3,6 +3,7 @@ const { test, expect } = require('@playwright/test')
 
 const getProjectName = (browser) => 'test_' + browser
 
+// This test suite is for creating and deleting projects
 test.describe.serial('project_create_delete', () => {
   // creates a new project
   test('new-project', async ({ page }, { project }) => {
