@@ -138,7 +138,7 @@ const NewProjectDialog = ({ onHide }) => {
       <SaveButton
         label="Create Project"
         onClick={handleSubmit}
-        active={name && code}
+        active={name && code && !isOriginalAnatomyLoading && !isSchemaLoading}
         saving={isLoading}
         disabled={!!(nameValidationError || codeValidationError)}
       />

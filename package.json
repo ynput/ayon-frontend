@@ -12,7 +12,8 @@
     "test": "npx playwright test",
     "test-ui": "npx playwright test --ui",
     "test-auth": "npx playwright test auth.setup.js",
-    "test-report": "yarn playwright show-report"
+    "test-report": "yarn playwright show-report",
+    "test-codegen": "npx playwright codegen http://127.0.0.1:3000 --load-storage=playwright/.auth/user.json"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.0.8",
