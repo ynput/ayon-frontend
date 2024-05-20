@@ -164,6 +164,7 @@ const Thumbnail = ({
                   }, 800)
                 }}
                 onUploading={() => setIsUploading(true)}
+                onCancel={() => setShowPortal(false)}
               />,
               portalEl,
             )}

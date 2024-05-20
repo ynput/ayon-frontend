@@ -12,6 +12,7 @@ const ThumbnailUploader = ({
   onUpload,
   onUploading,
   isPortal,
+  onCancel,
   entities,
   isButton,
 }) => {
@@ -124,7 +125,9 @@ const ThumbnailUploader = ({
 
   const handleInputChange = (e) => {
     e.preventDefault()
-    if (!e.target.files || !e.target.files[0]) return
+    if (!e.target.files || !e.target.files[0]) {
+      return
+    }
 
     handleFileUpload(e.target.files)
   }
@@ -132,7 +135,10 @@ const ThumbnailUploader = ({
   const handleInputDrop = (e) => {
     e.preventDefault()
     setDragHover(false)
-    if (!e.dataTransfer.files || !e.dataTransfer.files[0]) return console.log('no files dropped')
+    if (!e.dataTransfer.files || !e.dataTransfer.files[0]) {
+      onCancel && onCancel()
+      return
+    }
 
     handleFileUpload(e.dataTransfer.files)
   }
