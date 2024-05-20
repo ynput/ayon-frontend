@@ -109,18 +109,10 @@ const Feed = ({
     entities: tasksOrProductsToQuery,
   })
 
-  // TODO: transform versions data into activity data
-  const versionActivities = []
-
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
   const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo, entityType)
-
-  // TODO: merge in the versions data with the activities data
-
-  // if filter is versions, show only version activities
-  const activitiesToShow = filter === 'versions' ? versionActivities : transformedActivitiesData
 
   // REFS
   const feedRef = useRef(null)
@@ -135,7 +127,7 @@ const Feed = ({
   // we don't use transformedActivitiesData here because we could get new data from the query
   // but all the activities are merged so transformedActivitiesData doesn't change
   const { cursor, hasPreviousPage } = useMemo(
-    () => getNextPage({ activities: activitiesToShow }),
+    () => getNextPage({ activities: transformedActivitiesData }),
     [activitiesData],
   )
 
@@ -257,7 +249,7 @@ const Feed = ({
       <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: isLoadingNew })}>
         {isLoadingNew
           ? loadingPlaceholders
-          : activitiesToShow.map((activity) => (
+          : transformedActivitiesData.map((activity) => (
               <ActivityItem
                 key={activity.activityId}
                 activity={activity}

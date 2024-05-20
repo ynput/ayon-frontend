@@ -168,5 +168,4 @@ export const {
   useLazyGetActivitiesQuery,
   useGetVersionsQuery,
   useGetEntityTooltipQuery,
-  u,
 } = getActivities

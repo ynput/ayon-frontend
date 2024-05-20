@@ -1,14 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
-
-import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, Section, Dialog } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
-import {
-  useDeleteBundleMutation,
-  useUpdateBundleMutation,
-} from '/src/services/bundles/updateBundles'
+import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 import { useGetInstallerListQuery } from '/src/services/installers'
@@ -21,8 +17,6 @@ import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
 import { useDispatch, useSelector } from 'react-redux'
 import useLocalStorage from '/src/hooks/useLocalStorage'
-
-import confirmDelete from '/src/helpers/confirmDelete'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '/src/containers/Shortcuts'
@@ -120,7 +114,6 @@ const Bundles = () => {
   }, [searchParams, isLoading, bundleList])
 
   // REDUX MUTATIONS
-  const [deleteBundle] = useDeleteBundleMutation()
   const [updateBundle] = useUpdateBundleMutation()
 
   // get latest core version
@@ -281,17 +274,12 @@ const Bundles = () => {
     }
   }
 
-  const handleDeleteBundle = async () =>
-    confirmDelete({
-      label: `${selectedBundles.length} bundles`,
-      accept: async () => {
-        setSelectedBundles([])
-        for (const name of selectedBundles) {
-          await deleteBundle({ name }).unwrap()
-        }
-      },
-    })
-
+  const handleAddonInstallFinish = () => {
+    setUploadOpen(false)
+    if (restartRequired) {
+      setRestartRequired(false)
+    }
+  }
 
   let uploadHeader = ''
   switch (uploadOpen) {
@@ -408,7 +396,6 @@ const Bundles = () => {
                 bundleList={bundleList}
                 isLoading={isLoading}
                 onDuplicate={handleDuplicateBundle}
-                onDelete={handleDeleteBundle}
                 toggleBundleStatus={toggleBundleStatus}
                 errorMessage={!isFetching && isError && error?.data?.traceback}
                 developerMode={developerMode}
