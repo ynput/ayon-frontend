@@ -1,5 +1,5 @@
 import { Button } from '@ynput/ayon-react-components'
-import styled, { css, keyframes } from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
 export const ThumbnailUploaderWrapper = styled.div`
   position: absolute;
@@ -9,6 +9,7 @@ export const ThumbnailUploaderWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 
   .bg {
     position: absolute;
@@ -29,81 +30,66 @@ export const ThumbnailUploaderWrapper = styled.div`
     transition: scale 0.2s, opacity 0.1s;
   }
 
-  ${({ $isPortal }) =>
-    $isPortal
-      ? css`
-          .bg {
-            opacity: ${({ $existingImage }) => ($existingImage ? 0.95 : 1)};
-          }
-          .icon.upload {
-            scale: 1;
-            opacity: 1;
-            font-size: 4rem;
-          }
-        `
-      : css`
-          &:hover {
-            .bg {
-              opacity: ${({ $existingImage }) => ($existingImage ? 0.95 : 1)};
-            }
-            .icon.upload {
-              scale: 1;
-              opacity: 0;
-            }
-          }
-        `}
-
-  ${({ $dragHover }) =>
-    $dragHover &&
-    css`
+  &:not(.isPortal) {
+    &:hover {
+      .icon.upload {
+        scale: 1;
+        opacity: 0;
+      }
       .bg {
         opacity: ${({ $existingImage }) => ($existingImage ? 0.95 : 1)};
       }
-      .icon.upload {
-        scale: 1;
-        /* opacity: 0; */
-      }
-    `}
+    }
+  }
 
-  ${({ $uploading }) =>
-    $uploading &&
-    css`
-      .bg {
+  &.isPortal {
+    .icon.upload {
+      scale: 1;
+      opacity: 1;
+      font-size: 4rem;
+    }
+    .bg {
+      opacity: ${({ $existingImage }) => ($existingImage ? 0.95 : 1)};
+    }
+  }
+
+  &.isDragging {
+    .icon.upload {
+      scale: 1;
+    }
+  }
+
+  &.isUploading {
+    .bg {
+      opacity: 1;
+    }
+    .icon.upload {
+      display: none;
+    }
+  }
+
+  &.isSuccess {
+    .bg {
+      opacity: 0;
+    }
+    .icon.upload {
+      display: none;
+    }
+    &:hover {
+      opacity: 0;
+    }
+  }
+
+  &.isButton {
+    align-items: flex-start;
+    justify-content: flex-end;
+
+    &:hover {
+      .upload-button {
         opacity: 1;
       }
-      .icon.upload {
-        display: none;
-      }
-    `}
-
-  ${({ $success }) =>
-    $success &&
-    css`
-      .bg {
-        opacity: 1;
-        border: none;
-      }
-      .icon.upload {
-        display: none;
-      }
-
-      &:hover {
-        opacity: 0;
-      }
-    `}
-
-    ${({ $isButton }) =>
-    $isButton &&
-    css`
-      align-items: flex-start;
-      justify-content: flex-end;
-
-      &:hover {
-        .upload-button {
-          opacity: 1;
-        }
-      }
-    `}
+    }
+  }
 `
 
 export const ThumbnailInput = styled.input`
@@ -150,19 +136,17 @@ export const ThumbnailUploading = styled.div`
   position: absolute;
   inset: 0;
 
-  ${({ $success }) =>
-    $success &&
-    css`
-      .preview {
-        scale: 1;
-        opacity: 1;
-        animation ${FinishAnimation} 0.2s ease forwards;
-      }
+  &.isSuccess {
+    .preview {
+      scale: 1;
+      opacity: 1;
+      animation: ${FinishAnimation} 0.2s ease forwards;
+    }
 
-      .progress {
-        opacity: 0;
-      }
-    `}
+    .progress {
+      opacity: 0;
+    }
+  }
 `
 
 const PopInAnimation = keyframes`
