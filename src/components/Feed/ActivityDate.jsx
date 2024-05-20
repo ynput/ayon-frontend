@@ -35,7 +35,7 @@ const getFuzzyDate = (date) => {
   return fuzzyDate
 }
 
-const ActivityDate = ({ date, ...props }) => {
+const ActivityDate = ({ date, isExact, ...props }) => {
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return null
 
@@ -49,7 +49,8 @@ const ActivityDate = ({ date, ...props }) => {
   const dateFormat = yesterday ? '' : sameYear ? (sameWeek ? 'E' : 'MMM d') : 'MMM d yyyy'
   const timeFormat = 'h:mm a'
 
-  let dateString = today ? getFuzzyDate(dateObj) : format(dateObj, `${dateFormat}, ${timeFormat}`)
+  let dateString =
+    today && !isExact ? getFuzzyDate(dateObj) : format(dateObj, `${dateFormat}, ${timeFormat}`)
 
   if (yesterday) dateString = `Yesterday${dateString}`
 

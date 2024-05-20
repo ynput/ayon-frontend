@@ -5,6 +5,7 @@ import { cloneDeep } from 'lodash'
 const activityToVersionItem = (activity = {}) => {
   const {
     updatedAt,
+    createdAt,
     origin: { name, id } = {},
     activityData: { context: { productName, productType } = {} } = {},
   } = activity
@@ -15,6 +16,7 @@ const activityToVersionItem = (activity = {}) => {
     productName,
     productType,
     updatedAt,
+    createdAt,
   }
 }
 
@@ -22,7 +24,9 @@ const activityToVersionItem = (activity = {}) => {
 // 1. version.publish
 // 2. neighboring index
 // 3. neighbor same author and same type
-// 4. neighbor createdAt is within 30 minutes
+// 4. neighbor createdAt is within x minutes
+const minDifference = 5
+
 const groupActivityVersions = (activities = []) => {
   const groupedVersions = []
   let currentVersion = null
@@ -58,9 +62,10 @@ const groupActivityVersions = (activities = []) => {
       new Date(currentVersion.createdAt),
       new Date(activity.createdAt),
     )
-    const isWithin30Mins = minsDiff <= 30
 
-    if (isSameAuthor && isWithin30Mins) {
+    const isWithinMin = minsDiff <= minDifference
+
+    if (isSameAuthor && isWithinMin) {
       currentVersion.versions.push(activityToVersionItem(activity))
       continue
     } else {
