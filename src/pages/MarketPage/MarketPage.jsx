@@ -7,17 +7,17 @@ import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import {
   useGetMarketAddonQuery,
   useGetMarketAddonsQuery,
-  useGetMarketInstallEventsQuery,
+  useGetMarketDownloadEventsQuery,
   useLazyGetMarketAddonQuery,
 } from '/src/services/market/getMarket'
 import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './AddonDetails/AddonDetails'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
-import { mergeAddonWithInstalled } from './mergeAddonsData'
+import { mergeAddonWithDownloaded } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import styled from 'styled-components'
-import useInstall from './AddonDetails/useInstall'
+import useDownload from './AddonDetails/useDownload'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '/src/context/restartContext'
 import { toast } from 'react-toastify'
@@ -49,14 +49,14 @@ const MarketPage = () => {
     isLoading: isLoadingMarket,
     isError,
   } = useGetMarketAddonsQuery()
-  // GET ALL INSTALLED ADDONS for addon details
-  const { data: installedAddons = [], isLoading: isLoadingInstalled } = useGetAddonListQuery()
+  // GET ALL DOWNLOADED ADDONS for addon details
+  const { data: downloadedAddons = [], isLoading: isLoadingDownloaded } = useGetAddonListQuery()
 
-  // keep track of which addons are being installed
-  const [installingAddons, setInstallingAddons] = useState([])
-  const [finishedInstalling, setFinishedInstalling] = useState([])
-  const [failedInstalling, setFailedInstalling] = useState([])
-  // updating is the same as installing really, false, true, 'finished'
+  // keep track of which addons are being downloaded
+  const [downloadingAddons, setDownloadingAddons] = useState([])
+  const [finishedDownloading, setFinishedDownloading] = useState([])
+  const [failedDownloading, setFailedDownloading] = useState([])
+  // updating is the same as downloading really, false, true, 'finished'
   const [isUpdatingAll, setIsUpdatingAll] = useState(false)
   const [isUpdatingAllFinished, setIsUpdatingAllFinished] = useState(false)
 
@@ -64,8 +64,8 @@ const MarketPage = () => {
   // if the user hasn't connected to ynput cloud yet
   const [showConnectDialog, setShowConnectDialog] = useState(false)
 
-  // subscribe to install events
-  const { data: installProgress = [] } = useGetMarketInstallEventsQuery()
+  // subscribe to download events
+  const { data: downloadProgress = [] } = useGetMarketDownloadEventsQuery()
 
   // QUERY PARAMS STATE
   const [selectedAddonId, setSelectedAddonId] = useQueryParam(
@@ -73,65 +73,65 @@ const MarketPage = () => {
     withDefault(StringParam, null),
   )
 
-  // keep track of install events and update installing addons
+  // keep track of download events and update downloading addons
   // this is used to show loading and done states on addons
   useEffect(() => {
-    if (!installProgress.length) return
+    if (!downloadProgress.length) return
 
-    // check for any addons that are still installing
-    const installing = installProgress
+    // check for any addons that are still downloading
+    const downloading = downloadProgress
       .filter((e) => e.status === 'in_progress')
       .map((e) => e?.summary?.name)
-    const finished = installProgress
+    const finished = downloadProgress
       .filter((e) => e.status === 'finished')
       .map((e) => e?.summary?.name)
 
-    const failedEvents = installProgress.filter((e) => e.status === 'failed' && e?.summary?.name)
+    const failedEvents = downloadProgress.filter((e) => e.status === 'failed' && e?.summary?.name)
     const failedMessages = failedEvents.map((e) => ({
       name: e.summary?.name,
       error: e?.description.replace('Failed to process event: ', ''),
     }))
     const failedAddons = failedEvents.map((e) => e?.summary?.name)
 
-    setInstallingAddons((currentInstallingAddons) => {
-      const newInstalling = [...new Set([...currentInstallingAddons, ...installing])]
+    setDownloadingAddons((currentDownloadingAddons) => {
+      const newDownloading = [...new Set([...currentDownloadingAddons, ...downloading])]
         .filter((addon) => !finished.includes(addon))
         .filter((addon) => !failedAddons.includes(addon))
         .filter((a) => a)
-      return newInstalling
+      return newDownloading
     })
 
-    setFinishedInstalling((f) => [...new Set([...f, ...finished])] || [])
+    setFinishedDownloading((f) => [...new Set([...f, ...finished])] || [])
 
-    setFailedInstalling((f) => {
+    setFailedDownloading((f) => {
       // check if for duplicates
       const newFailed = failedMessages.filter((e) => !f.some((addon) => addon.name === e.name))
       return [...f, ...newFailed]
     })
-  }, [installProgress, setInstallingAddons, setFinishedInstalling])
+  }, [downloadProgress, setDownloadingAddons, setFinishedDownloading])
 
   const { restartRequired } = useRestart()
   // callback when restart is requested
   const handleRestarted = () => {
-    // reset installing addons
-    setInstallingAddons([])
-    setFinishedInstalling([])
+    // reset downloading addons
+    setDownloadingAddons([])
+    setFinishedDownloading([])
     setIsUpdatingAll(false)
     setIsUpdatingAllFinished(false)
   }
-  // once finished installing has length, show restart banner
+  // once finished downloading has length, show restart banner
   useEffect(() => {
-    if ((finishedInstalling.length || failedInstalling.length) && !installingAddons.length) {
-      // all addons have finished installing
+    if ((finishedDownloading.length || failedDownloading.length) && !downloadingAddons.length) {
+      // all addons have finished downloading
       setIsUpdatingAll(false)
       // show all updated complete if none failed
-      if (isUpdatingAll && !failedInstalling.length) setIsUpdatingAllFinished(true)
+      if (isUpdatingAll && !failedDownloading.length) setIsUpdatingAllFinished(true)
 
-      if (finishedInstalling.length) {
+      if (finishedDownloading.length) {
         restartRequired({ callback: () => handleRestarted })
       }
     }
-  }, [finishedInstalling, installingAddons])
+  }, [finishedDownloading, downloadingAddons])
 
   // GET SELECTED ADDON
   const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useGetMarketAddonQuery(
@@ -143,20 +143,20 @@ const MarketPage = () => {
 
   // FILTER ADDONS BY FIELDS
   // [{isOutdated: true}]
-  // [{isInstalled: false}]
+  // [{isDownloaded: false}]
   const [filter, setFilter] = useState([])
 
-  // // merge installed with market addons
+  // // merge downloaded with market addons
   // let marketAddons = useMemo(() => {
-  //   return mergeAddonsData(marketAddonsData, installedAddons)
-  // }, [marketAddonsData, installedAddons])
+  //   return mergeAddonsData(marketAddonsData, downloadedAddons)
+  // }, [marketAddonsData, downloadedAddons])
 
   let marketAddons = useMemo(() => {
     const sortedData = [...marketAddonsData]
-    // sort by isInstalled, isOutdated, isOfficial, name
+    // sort by isDownloaded, isOutdated, isOfficial, name
     sortedData?.sort(
       (a, b) =>
-        b.isInstalled - a.isInstalled ||
+        b.isDownloaded - a.isDownloaded ||
         !!b.isOutdated - !!a.isOutdated ||
         b.isOfficial - a.isOfficial ||
         a.name.localeCompare(b.name),
@@ -175,32 +175,32 @@ const MarketPage = () => {
     return sortedData
   }, [marketAddonsData, filter])
 
-  // update addon if installingAddons or finishedInstalling changes
+  // update addon if downloadingAddons or finishedDownloading changes
   marketAddons = useMemo(() => {
     if (
       !marketAddons.length ||
-      (!installingAddons.length &&
-        !finishedInstalling.length &&
-        !failedInstalling.length &&
+      (!downloadingAddons.length &&
+        !finishedDownloading.length &&
+        !failedDownloading.length &&
         !isUpdatingAll)
     ) {
       return marketAddons
     }
     return marketAddons.map((addon) => {
-      const isWaiting = addon.isOutdated && addon.isInstalled && isUpdatingAll
-      const isInstalling = installingAddons.includes(addon.name)
-      const isFinished = finishedInstalling.includes(addon.name)
-      const error = failedInstalling.find((f) => f.name === addon.name)?.error
+      const isWaiting = addon.isOutdated && addon.isDownloaded && isUpdatingAll
+      const isDownloading = downloadingAddons.includes(addon.name)
+      const isFinished = finishedDownloading.includes(addon.name)
+      const error = failedDownloading.find((f) => f.name === addon.name)?.error
       return {
         ...addon,
-        isInstalling,
+        isDownloading,
         isFinished,
         isWaiting,
         isFailed: !!error,
         error,
       }
     })
-  }, [marketAddons, installingAddons, finishedInstalling, failedInstalling, isUpdatingAll])
+  }, [marketAddons, downloadingAddons, finishedDownloading, failedDownloading, isUpdatingAll])
 
   // merge selected addon with found addon in marketAddons
   const selectedAddon = useMemo(() => {
@@ -208,12 +208,12 @@ const MarketPage = () => {
     const found = marketAddons.find((addon) => addon.name === selectedAddonId) || {}
 
     const merge =
-      mergeAddonWithInstalled(
+      mergeAddonWithDownloaded(
         {
           ...found,
           ...selectedAddonData,
         },
-        installedAddons,
+        downloadedAddons,
       ) || []
 
     return merge
@@ -255,12 +255,12 @@ const MarketPage = () => {
     }
   }, [selectedAddonId, isLoadingMarket, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
 
-  const { installAddon } = useInstall((name) => setInstallingAddons((a) => [...a, name]))
+  const { downloadAddon } = useDownload((name) => setDownloadingAddons((a) => [...a, name]))
 
-  // INSTALL/UPDATE ADDON
-  const handleInstall = (name, version) => {
+  // DOWNLOAD/UPDATE ADDON
+  const handleDownload = (name, version) => {
     if (isCloudConnected) {
-      return installAddon(name, version)
+      return downloadAddon(name, version)
     } else {
       return setShowConnectDialog(true)
     }
@@ -268,10 +268,10 @@ const MarketPage = () => {
 
   const handleUpdateAll = async () => {
     setIsUpdatingAll(true)
-    // for each outdated addon, install it
+    // for each outdated addon, download it
     const promises = marketAddons.map((addon) => {
-      if (addon.isOutdated && addon.isInstalled) {
-        const res = handleInstall(addon.name, addon.latestVersion)
+      if (addon.isOutdated && addon.isDownloaded) {
+        const res = handleDownload(addon.name, addon.latestVersion)
         return res
       }
     })
@@ -324,7 +324,7 @@ const MarketPage = () => {
             selected={selectedAddonId}
             onSelect={setSelectedAddonId}
             onHover={handleHover}
-            onInstall={handleInstall}
+            onDownload={handleDownload}
             isLoading={isLoadingMarket}
             onUpdateAll={marketAddons.some((addon) => addon.isOutdated) && handleUpdateAll}
             isUpdatingAll={isUpdatingAll}
@@ -332,9 +332,9 @@ const MarketPage = () => {
           />
           <AddonDetails
             addon={selectedAddon}
-            isLoading={isLoadingInstalled || isFetchingAddon}
-            setInstallingAddons={setInstallingAddons}
-            onInstall={handleInstall}
+            isLoading={isLoadingDownloaded || isFetchingAddon}
+            setDownloadingAddons={setDownloadingAddons}
+            onDownload={handleDownload}
             isUpdatingAll={isUpdatingAll}
           />
         </Section>

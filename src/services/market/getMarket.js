@@ -3,7 +3,7 @@ import PubSub from '/src/pubsub'
 // import { lt } from 'semver'
 
 const EVENTS_QUERY = `
-query InstallEvents {
+query DownloadEvents {
   events(last: 100) {
     edges {
       node {
@@ -35,7 +35,7 @@ const getMarket = ayonApi.injectEndpoints({
         ] || [],
       transformResponse: (response) =>
         (response?.addons || []).map((addon) => {
-          const isInstalled = !!addon.currentLatestVersion
+          const isDownloaded = !!addon.currentLatestVersion
           const isOfficial = addon.orgName === 'ynput-official'
           // NOTE: isOutdated is now provided directly from the server
           // const isOutdated =
@@ -47,7 +47,7 @@ const getMarket = ayonApi.injectEndpoints({
           return {
             ...addon,
             isOfficial,
-            isInstalled,
+            isDownloaded,
             //isOutdated,
             isProductionOutdated,
             isVerified: false,
@@ -76,7 +76,7 @@ const getMarket = ayonApi.injectEndpoints({
         { type: 'marketAddon', id: 'LIST' },
       ],
     }),
-    getMarketInstallEvents: build.query({
+    getMarketDownloadEvents: build.query({
       query: () => ({
         url: '/graphql',
         method: 'POST',
@@ -132,5 +132,5 @@ export const {
   useLazyGetMarketAddonQuery,
   useLazyGetMarketAddonVersionQuery,
   useGetMarketAddonVersionQuery,
-  useGetMarketInstallEventsQuery,
+  useGetMarketDownloadEventsQuery,
 } = getMarket

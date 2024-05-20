@@ -25,23 +25,23 @@ const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) 
   </Styled.MetaPanelRow>
 )
 
-const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
+const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
   // latestVersion: is the latest version of the addon
-  // versions: is an array of all versions INSTALLED of the addon
+  // versions: is an array of all versions DOWNLOADED of the addon
   const {
     name,
     title,
     description,
     icon,
-    isInstalled,
-    isInstalling,
+    isDownloaded,
+    isDownloading,
     isFinished,
     isFailed,
     error,
     isOutdated,
     isProductionOutdated,
     // versions = [],
-    installedVersions = {},
+    downloadedVersions = {},
     latestVersion,
     currentLatestVersion,
     currentProductionVersion,
@@ -53,7 +53,7 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
 
   const [showAllVersions, setShowAllVersions] = useState(false)
 
-  const versionKeys = isEmpty(installedVersions) ? [] : Object.keys(installedVersions)
+  const versionKeys = isEmpty(downloadedVersions) ? [] : Object.keys(downloadedVersions)
   const versionKeysSorted = versionKeys.sort((a, b) => rcompare(a, b))
   const versionsToShow = versionKeysSorted.length
     ? showAllVersions
@@ -73,16 +73,16 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
   // sets selected addon and redirects to addons
   const { onUninstall } = useUninstall(name)
 
-  // All the install logic is handled in the parent component (MarketPage.jsx)
-  // Okay it's actually handled in the hook useInstall.js
-  const handleInstall = () => {
-    onInstall && onInstall(name, latestVersion)
+  // All the download logic is handled in the parent component (MarketPage.jsx)
+  // Okay it's actually handled in the hook useDownload.js
+  const handleDownload = () => {
+    onDownload && onDownload(name, latestVersion)
   }
 
   let actionButton = null
 
-  // Install button (top right)
-  if (isInstalling) {
+  // Download button (top right)
+  if (isDownloading) {
     actionButton = (
       <SaveButton active saving disabled>
         Downloading...
@@ -100,19 +100,19 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
         Pending...
       </Button>
     )
-  } else if (isInstalled && !isOutdated) {
+  } else if (isDownloaded && !isOutdated) {
     actionButton = <Button onClick={onUninstall}>Uninstall</Button>
-  } else if (isInstalled && isOutdated && latestVersion) {
+  } else if (isDownloaded && isOutdated && latestVersion) {
     actionButton = (
       <Button
         variant="filled"
         icon={'download'}
-        onClick={handleInstall}
+        onClick={handleDownload}
       >{`Download v${latestVersion}`}</Button>
     )
   } else if (latestVersion) {
     actionButton = (
-      <Button variant="filled" icon={'download'} onClick={handleInstall}>
+      <Button variant="filled" icon={'download'} onClick={handleDownload}>
         {`Download v${latestVersion}`}
       </Button>
     )

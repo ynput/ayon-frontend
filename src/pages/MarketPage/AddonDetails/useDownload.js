@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { useInstallAddonsMutation } from '/src/services/addons/updateAddons'
+import { useDownloadAddonsMutation } from '/src/services/addons/updateAddons'
 import { useLazyGetMarketAddonVersionQuery } from '/src/services/market/getMarket'
 import { toast } from 'react-toastify'
 
-const useInstall = (onInstall) => {
+const useDownload = (onDownload) => {
   const [error, setError] = useState(null)
 
-  const [installAddons] = useInstallAddonsMutation()
+  const [downloadAddons] = useDownloadAddonsMutation()
   const [getAddonVersion] = useLazyGetMarketAddonVersionQuery()
 
-  const installAddon = async (name, version) => {
+  const downloadAddon = async (name, version) => {
     try {
       if (!version) return new Error('No version found')
       if (!name) return new Error('No name found')
@@ -19,28 +19,28 @@ const useInstall = (onInstall) => {
 
       if (error) throw new Error(error.message)
 
-      if (!data?.url) throw new Error('No install candidate found')
+      if (!data?.url) throw new Error('No download candidate found')
 
-      const { error: installError } = await installAddons({
+      const { error: downloadError } = await downloadAddons({
         addons: [{ url: data.url, name, version }],
       }).unwrap()
 
-      if (installError) throw new Error(installError)
+      if (downloadError) throw new Error(downloadError)
 
-      onInstall(name)
+      onDownload(name)
     } catch (error) {
       console.error(error)
 
-      setError(error?.message || 'Error installing addon')
+      setError(error?.message || 'Error downloading addon')
 
-      toast.error(error?.message || 'Error installing addon')
+      toast.error(error?.message || 'Error downloading addon')
     }
   }
 
   return {
-    installAddon,
+    downloadAddon,
     error,
   }
 }
 
-export default useInstall
+export default useDownload

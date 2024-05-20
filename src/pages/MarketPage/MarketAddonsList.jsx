@@ -58,7 +58,7 @@ const MarketAddonsList = ({
   selected,
   onSelect,
   onHover,
-  onInstall,
+  onDownload,
   isLoading,
   onUpdateAll,
   isUpdatingAll,
@@ -127,7 +127,7 @@ const MarketAddonsList = ({
               onClick={() => onSelect(name)}
               isSelected={selected === name}
               onMouseOver={() => onHover(name)}
-              onInstall={onInstall}
+              onDownload={onDownload}
               name={name}
               {...props}
             />
