@@ -1,6 +1,6 @@
-const { test, expect } = require('@playwright/test')
+import { test, expect } from '@playwright/test'
 
-const getUserName = (browser) => 'test_' + browser
+const getUserName = (browser) => 'test_user_' + browser
 
 // This test suite is for creating and deleting users
 test.describe.serial('user_create_delete', () => {

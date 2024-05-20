@@ -1,6 +1,6 @@
-const { test, expect } = require('@playwright/test')
+import { test, expect } from '@playwright/test'
 
-const getBundleName = (browser) => 'test_' + browser
+const getBundleName = (browser) => 'test_bundle_' + browser
 
 // This test suite is for creating and deleting users
 test.describe.serial('bundle_create_delete', () => {

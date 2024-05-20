@@ -1,7 +1,7 @@
 // @ts-check
-const { test, expect } = require('@playwright/test')
+import { test, expect } from '@playwright/test'
 
-const getProjectName = (browser) => 'test_' + browser
+const getProjectName = (browser) => 'test_project_' + browser
 
 // This test suite is for creating and deleting projects
 test.describe.serial('project_create_delete', () => {
