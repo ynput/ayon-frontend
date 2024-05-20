@@ -274,17 +274,10 @@ const Bundles = () => {
     }
   }
 
-  const handleAddonInstallFinish = () => {
-    setUploadOpen(false)
-    if (restartRequired) {
-      setRestartRequired(false)
-    }
-  }
-
   let uploadHeader = ''
   switch (uploadOpen) {
     case 'addon':
-      uploadHeader = 'Install Addons'
+      uploadHeader = 'Upload Addons'
       break
     case 'installer':
       uploadHeader = 'Upload Launcher'
@@ -355,12 +348,12 @@ const Bundles = () => {
                   <span>Add Bundle</span>
                 </Button>
                 <Button
-                  icon="input_circle"
+                  icon="upload"
                   onClick={() => setUploadOpen('addon')}
-                  data-tooltip="Install addon zip files"
+                  data-tooltip="Upload addon zip files"
                   data-shortcut="A"
                 >
-                  <span className="large">Install addons</span>
+                  <span className="large">Upload addons</span>
                   <span className="small">Addons</span>
                 </Button>
                 <Button
