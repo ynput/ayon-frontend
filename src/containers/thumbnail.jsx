@@ -101,6 +101,10 @@ const Thumbnail = ({
     const handleDragOver = (e) => {
       e.preventDefault()
       e.stopPropagation()
+
+      // check if the drag has files
+      if (!e.dataTransfer?.files?.length) return
+
       setShowPortal(true)
     }
     const handleDragLeave = (e) => {
