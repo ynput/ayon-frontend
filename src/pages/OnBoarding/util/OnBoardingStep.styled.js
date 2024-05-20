@@ -188,3 +188,13 @@ export const NextButton = styled(SaveButton)`
       }
     `}
 `
+
+export const Spinner = styled.div`
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  animation: ${spin} 0.8s linear infinite;
+`
