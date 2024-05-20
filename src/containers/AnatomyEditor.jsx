@@ -87,15 +87,20 @@ const AnatomyEditor = ({
       toast.error('Invalid JSON')
       return
     }
-    const oldValue = getValueByPath(formData, path)
+    const oldValue = path.length === 0 ? formData : getValueByPath(formData, path)
+    if (oldValue === undefined) {
+      toast.error('No data to paste')
+      return
+    }
     if (!sameKeysStructure(oldValue, value)) {
-      toast.error('Icompatible data structure')
+      toast.error('Incompatible data structure')
+      console.log('oldValue', oldValue)
+      console.log('value', value)
       return
     }
 
     let newData = cloneDeep(formData)
-    newData = setValueByPath(formData, path, value)
-
+    newData = setValueByPath(newData, path, value)
     setFormData(newData)
   }
 
