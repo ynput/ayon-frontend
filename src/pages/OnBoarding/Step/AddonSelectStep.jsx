@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
-import { useGetReleaseQuery } from '/src/services/onBoarding/onBoarding'
 
 export const AddonSelectStep = ({
   Header,
@@ -9,26 +8,22 @@ export const AddonSelectStep = ({
   selectedAddons = [],
   selectedPreset,
   releases = [],
+  release = {},
   setSelectedAddons,
   onSubmit,
   isLoadingRelease,
+  isLoadingAddons,
 }) => {
-  // FIX: get release by name from /api/onboarding/release/:name
-  // for now import release.230807.json
 
   const [sortedAddons, setSortedAddons] = useState([])
 
-  const { data: currentRelease = {} } = useGetReleaseQuery(
-    { name: selectedPreset },
-    { skip: !selectedPreset },
-  )
 
-  const release = useMemo(
-    () => releases.find((release) => release.name === selectedPreset),
-    [selectedPreset, releases],
-  )
-  const addons = useMemo(() => currentRelease?.addons || [], [currentRelease])
-  const mandatory = useMemo(() => release?.mandatoryAddons || [], [release])
+   const currentRelease = useMemo(
+     () => releases.find((release) => release.name === selectedPreset),
+     [selectedPreset, releases],
+   )
+  const addons = useMemo(() => release?.addons || [], [release])
+  const mandatory = useMemo(() => currentRelease?.mandatoryAddons || [], [currentRelease])
 
   useEffect(() => {
     const sortedAddons = [...addons]
@@ -38,12 +33,10 @@ export const AddonSelectStep = ({
       const bSelected = selectedAddons.includes(b.name)
       if (aSelected && !bSelected) return -1
       if (!aSelected && bSelected) return 1
-      if (mandatory.includes(a.name) && !mandatory.includes(b.name)) return -1
-      if (!mandatory.includes(a.name) && mandatory.includes(b.name)) return 1
       return 0
     })
     setSortedAddons(sortedAddons)
-  }, [releases, currentRelease])
+  }, [releases, release])
 
   const handleAddonClick = (name) => {
     // if it's already selected, remove it
@@ -57,19 +50,20 @@ export const AddonSelectStep = ({
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
+      {isLoadingAddons && <Styled.Spinner />}
       <Styled.AddonsContainer>
-         {sortedAddons.map((addon) => 
-            !mandatory.includes(addon.name) && (
-              <AddonCard
-                key={addon.name}
-                title={addon.title}
-                name={addon.name}
-                version={addon.version}
-                icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
-                isSelected={selectedAddons.includes(addon.name)}
-                onClick={() => handleAddonClick(addon.name)}
-              />
-            ),
+        {sortedAddons.map((addon) => 
+          !mandatory.includes(addon.name) && (
+            <AddonCard
+              key={addon.name}
+              title={addon.title}
+              name={addon.name}
+              version={addon.version}
+              icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
+              isSelected={selectedAddons.includes(addon.name)}
+              onClick={() => handleAddonClick(addon.name)}
+            />
+          ),
         )}
       </Styled.AddonsContainer>
       <Footer
