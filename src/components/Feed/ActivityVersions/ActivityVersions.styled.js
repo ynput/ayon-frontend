@@ -29,6 +29,11 @@ export const Card = styled.div`
   &:hover {
     color: var(--md-sys-color-on-surface);
     background-color: var(--md-sys-color-surface-container-hover);
+
+    /* show date */
+    .date {
+      display: inline;
+    }
   }
 `
 
@@ -42,7 +47,13 @@ export const Content = styled.div`
 
 export const Title = styled.div`
   display: flex;
+  align-items: center;
   gap: var(--base-gap-small);
+
+  .date {
+    /* by default hide */
+    display: none;
+  }
 `
 
 export const Thumbnail = styled(ThumbnailSimple)`

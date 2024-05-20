@@ -13,6 +13,7 @@ import editorReducer from './features/editor'
 import dashboardReducer, { dashboardLocalItems } from './features/dashboard'
 import detailsReducer, { detailsLocalItems } from './features/details'
 import addonsManagerReducer from './features/addonsManager'
+import previewReducer from './features/preview'
 
 import App from './app'
 
@@ -40,6 +41,7 @@ const store = configureStore({
     dashboard: dashboardReducer,
     details: detailsReducer,
     addonsManager: addonsManagerReducer,
+    preview: previewReducer,
     [ayonApi.reducerPath]: ayonApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>

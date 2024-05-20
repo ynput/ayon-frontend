@@ -39,6 +39,7 @@ import MarketPage from './pages/MarketPage'
 import { RestartProvider } from './context/restartContext'
 import { PasteProvider, PasteModal } from './context/pasteContext'
 import FileUploadPreview from './containers/FileUploadPreview/FileUploadPreview'
+import PreviewDialog from './containers/Preview/PreviewDialog'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -143,6 +144,7 @@ const App = () => {
                     >
                       <Header />
                       <ShareDialog />
+                      <PreviewDialog />
                       <ConfirmDialog />
                       <FileUploadPreview />
                       <Routes>
