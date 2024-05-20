@@ -401,7 +401,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     }
 
     if (!sameKeysStructure(oldValue, value)) {
-      toast.error('Icompatible data structure')
+      toast.error('Incompatible data structure')
       console.log('Old value', oldValue)
       console.log('New value', value)
       return
