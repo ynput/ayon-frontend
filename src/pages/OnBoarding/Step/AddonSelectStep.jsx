@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
-import { useGetAddonListQuery } from '/src/services/addons/getAddons'
+import { useGetReleaseQuery } from '/src/services/onBoarding/onBoarding'
 
 export const AddonSelectStep = ({
   Header,
@@ -18,27 +18,32 @@ export const AddonSelectStep = ({
 
   const [sortedAddons, setSortedAddons] = useState([])
 
+  const { data: currentRelease = {} } = useGetReleaseQuery(
+    { name: selectedPreset },
+    { skip: !selectedPreset },
+  )
+
   const release = useMemo(
     () => releases.find((release) => release.name === selectedPreset),
     [selectedPreset, releases],
   )
-  const addons = useMemo(() => release?.addons || [], [release])
+  const addons = useMemo(() => currentRelease?.addons || [], [currentRelease])
   const mandatory = useMemo(() => release?.mandatoryAddons || [], [release])
 
   useEffect(() => {
     const sortedAddons = [...addons]
     // order addons by selected and then by addon.mandatory
     sortedAddons.sort((a, b) => {
-      const aSelected = selectedAddons.includes(a)
-      const bSelected = selectedAddons.includes(b)
+      const aSelected = selectedAddons.includes(a.name)
+      const bSelected = selectedAddons.includes(b.name)
       if (aSelected && !bSelected) return -1
       if (!aSelected && bSelected) return 1
-      if (mandatory.includes(a) && !mandatory.includes(b)) return -1
-      if (!mandatory.includes(a) && mandatory.includes(b)) return 1
+      if (mandatory.includes(a.name) && !mandatory.includes(b.name)) return -1
+      if (!mandatory.includes(a.name) && mandatory.includes(b.name)) return 1
       return 0
     })
     setSortedAddons(sortedAddons)
-  }, [releases])
+  }, [releases, currentRelease])
 
   const handleAddonClick = (name) => {
     // if it's already selected, remove it
@@ -49,26 +54,17 @@ export const AddonSelectStep = ({
     }
   }
 
-
-  const { data: allAddons = [] } = useGetAddonListQuery()
-  const addonsWithVersions = sortedAddons.map((addonName) => {
-    const matchingAddon = allAddons.find((addon) => addon.name === addonName)
-    return matchingAddon ? { ...matchingAddon } : { name: addonName }
-  });
-  console.log(addonsWithVersions,'addonsWithVersions')
-  console.log(sortedAddons,'sortedAddons')
-  console.log(selectedAddons,'selectedAddons')
-
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
-        {addonsWithVersions.map((addon) => 
+         {sortedAddons.map((addon) => 
             !mandatory.includes(addon.name) && (
               <AddonCard
                 key={addon.name}
+                title={addon.title}
                 name={addon.name}
-                version={addon.productionVersion}
+                version={addon.version}
                 icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
                 isSelected={selectedAddons.includes(addon.name)}
                 onClick={() => handleAddonClick(addon.name)}
