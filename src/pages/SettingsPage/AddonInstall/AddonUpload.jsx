@@ -39,6 +39,7 @@ const StyledProgressBar = styled.hr`
 `
 
 const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props }) => {
+  console.log(onInstall(),'onInstall')
   const dispatch = useDispatch()
   const [files, setFiles] = useState([])
   const [isUploading, setIsUploading] = useState(false)

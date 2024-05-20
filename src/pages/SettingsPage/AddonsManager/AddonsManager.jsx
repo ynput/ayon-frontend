@@ -3,7 +3,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '/src/services/addons/getAddons'
 import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
 import useGetTableData from './useGetTableData'
@@ -18,13 +18,16 @@ import { useNavigate } from 'react-router'
 import { useDeleteAddonVersionsMutation } from '/src/services/addons/updateAddons'
 import { useRestart } from '/src/context/restartContext'
 import { Link } from 'react-router-dom'
-// import AddonUpload from '../AddonInstall/AddonUpload'
+import AddonDialog from '../../../components/AddonDialog/AddonDialog'
 
 const AddonsManager = () => {
   const navigate = useNavigate()
   // QUERIES
   const { data: addons = [] } = useGetAddonListQuery()
   const { data: bundles = [] } = useGetBundleListQuery({ archived: false })
+
+  // addon install dialog
+  const [ uploadOpen, setUploadOpen] = useState('')
 
   // addonsVersionsBundles = Map<addon, Map<version, Map<bundle, bundle>>>
   const addonsVersionsBundles = useMemo(
@@ -139,6 +142,7 @@ const AddonsManager = () => {
     <Section style={{ overflow: 'hidden' }}>
       <Splitter style={{ height: '100%', padding: 8 }}>
         <SplitterPanel>
+          <AddonDialog uploadOpen={uploadOpen} setUploadOpen={setUploadOpen} />
           {/* ADDONS TABLE */}
           <AddonsManagerTable
             title="Addons"
@@ -147,9 +151,12 @@ const AddonsManager = () => {
             onChange={handleAddonsSelect}
             field={'name'}
             header={
-              <Link to="/market">
-                <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
-              </Link>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <Link to="/market" style={{ width: '100%' }}>
+                  <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
+                </Link>
+                <Button onClick={()=>setUploadOpen('addon')} label="Upload Addons" icon="upload" style={{ width: '100%' }} />
+              </div>
             }
             extraContext={viewInMarket}
           />
