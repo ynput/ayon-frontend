@@ -5,8 +5,6 @@ import AddonUpload  from '../../pages/SettingsPage/AddonInstall/AddonUpload'
 
 const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
 
-  console.log(uploadOpen,'uploadOpen')
-
   // keep track is an addon was installed
   const [restartRequired, setRestartRequired] = useState(false)
 
