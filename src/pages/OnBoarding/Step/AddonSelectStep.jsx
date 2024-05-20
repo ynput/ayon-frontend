@@ -52,8 +52,8 @@ export const AddonSelectStep = ({
 
   const { data: allAddons = [] } = useGetAddonListQuery()
   const addonsWithVersions = sortedAddons.map((addonName) => {
-    const matchingAddon = allAddons.find((addon) => addon.name === addonName);
-    return matchingAddon ? { ...matchingAddon } : { name: addonName };
+    const matchingAddon = allAddons.find((addon) => addon.name === addonName)
+    return matchingAddon ? { ...matchingAddon } : { name: addonName }
   });
   console.log(addonsWithVersions,'addonsWithVersions')
   console.log(sortedAddons,'sortedAddons')
@@ -63,8 +63,7 @@ export const AddonSelectStep = ({
     <Styled.Section>
       <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
-        {addonsWithVersions.map(
-          (addon) =>
+        {addonsWithVersions.map((addon) => 
             !mandatory.includes(addon.name) && (
               <AddonCard
                 key={addon.name}
