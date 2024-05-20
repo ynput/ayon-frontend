@@ -10,7 +10,7 @@ const AddonCard = React.forwardRef(
         <Icon icon={icon} />
         <span className={Type.titleSmall}>{title || name}</span>
         {error && <span className="error">{error}</span>}
-        {version && <span>{version}</span>}
+        {version && <span className="version">{version}</span>}
       </Styled.AddonCard>
     )
   },
