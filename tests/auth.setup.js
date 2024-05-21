@@ -5,7 +5,6 @@ const authFile = 'playwright/.auth/user.json'
 setup('authenticate', async ({ page }) => {
   console.log('USERNAME:', process.env.USER_NAME)
   // Perform authentication steps. Replace these actions with your own.
-  await page.goto('/login')
   await page.getByLabel('Username').fill(process.env.USER_NAME)
   await page.getByLabel('Password').fill(process.env.PASSWORD)
   await page.getByRole('button', { name: 'Login', exact: true }).click()
