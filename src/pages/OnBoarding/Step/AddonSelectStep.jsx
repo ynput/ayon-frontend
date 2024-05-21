@@ -14,12 +14,18 @@ export const AddonSelectStep = ({
   isLoadingRelease,
   isLoadingAddons,
 }) => {
-  const currentRelease = useMemo(
-    () => releases.find((release) => release.name === selectedPreset),
-    [selectedPreset, releases],
-  )
-  const { mandatoryAddons: mandatory = [] } = currentRelease || {}
   const { addons = [] } = release || {}
+  // filter out mandatory addons
+  const notMandatoryAddons = addons.filter((addon) => !addon.mandatory)
+
+  // get placeholders for loading
+  const placeholders = useMemo(() => {
+    const currentRelease = releases.find((release) => release.name === selectedPreset)
+    const notMandatorAddons = currentRelease?.addons.filter(
+      (addon) => !currentRelease?.mandatoryAddons?.includes(addon),
+    )
+    return notMandatorAddons || [...Array(20)].map((_, i) => `Addon ${i}`)
+  }, [selectedPreset, releases])
 
   const handleAddonClick = (name) => {
     // if it's already selected, remove it
@@ -30,9 +36,6 @@ export const AddonSelectStep = ({
     }
   }
 
-  // selected release has addons length, so use that as placeholders
-  const placeholders = currentRelease?.addons || [...Array(20)].map((_, i) => `Addon ${i}`)
-
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
@@ -41,20 +44,17 @@ export const AddonSelectStep = ({
           ? placeholders.map((placeholder) => (
               <Styled.PlaceholderCard key={placeholder} icon={''} />
             ))
-          : addons.map(
-              (addon) =>
-                !mandatory.includes(addon.name) && (
-                  <AddonCard
-                    key={addon.name}
-                    title={addon.title}
-                    name={addon.name}
-                    version={addon.version}
-                    icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
-                    isSelected={selectedAddons.includes(addon.name)}
-                    onClick={() => handleAddonClick(addon.name)}
-                  />
-                ),
-            )}
+          : notMandatoryAddons.map((addon) => (
+              <AddonCard
+                key={addon.name}
+                title={addon.title}
+                name={addon.name}
+                version={addon.version}
+                icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
+                isSelected={selectedAddons.includes(addon.name)}
+                onClick={() => handleAddonClick(addon.name)}
+              />
+            ))}
       </Styled.AddonsContainer>
       <Footer
         next="Confirm"
