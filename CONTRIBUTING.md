@@ -83,3 +83,27 @@ Your contributions are invaluable to us.
 Following these guidelines helps us manage the project effectively and ensures that your contributions are integrated smoothly.
 
 Thank you for collaborating with us!
+
+# In Depth Information
+
+## Versioning
+
+Frontend does not have a strict versioning scheme, releases are tagged with the date of the release.
+
+Notes
+
+- Keep the version at `0.0.0-dev` in `package.json`.
+- Semantic-release is not enabled, new releases are created automatically with the server CI
+- Semantic commit messages are not used but are encouraged.
+
+## General UI Rules
+
+# Loading state
+
+- Avoid spinners
+- Avoid layout shifts when the data loads in.
+- Use skeleton shimmer placeholders.
+- Use `${getShimmerStyles}` in styled components.
+
+Example loading shimmer
+![Image](https://github.com/ynput/ayon-frontend/assets/49156310/f589ca02-37a3-41e4-a64a-3e2062083407)
