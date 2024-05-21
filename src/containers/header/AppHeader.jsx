@@ -176,19 +176,24 @@ const Header = () => {
         ref={helpButtonRef}
         onClick={() => handleToggleMenu('help')}
         className={classNames({ active: menuOpen === 'help' })}
-        variant="text"
+        variant="nav"
       />
       <MenuContainer id="help" target={helpButtonRef.current}>
         <HelpMenu user={user} />
       </MenuContainer>
       {/* help icon and menu ^^^ */}
 
+      {/* Inbox icon */}
+      <Link to="/inbox/important">
+        <HeaderButton icon="inbox" variant="nav" />
+      </Link>
+
       {/* App icon and menu vvv */}
       <HeaderButton
         icon="apps"
         onClick={() => handleToggleMenu('app')}
         ref={appButtonRef}
-        variant="text"
+        variant="nav"
         className={classNames({ active: menuOpen === 'app', notification: isSnoozing })}
       />
       <MenuContainer id="app" target={appButtonRef.current}>
@@ -201,7 +206,7 @@ const Header = () => {
         className={classNames({ active: menuOpen === 'user' })}
         onClick={() => handleToggleMenu('user')}
         ref={userButtonRef}
-        variant="text"
+        variant="nav"
         style={{ padding: 6 }}
       >
         <UserImage size={26} name={user?.name} />
