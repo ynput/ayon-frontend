@@ -21,6 +21,7 @@ const DetailsPanelHeader = ({
   onClose,
   isSlideOut,
   isFetching,
+  isCompact = false,
 }) => {
   // for selected entities, get flat list of assignees
   const entityAssignees = useMemo(
@@ -182,7 +183,7 @@ const DetailsPanelHeader = ({
   }
 
   return (
-    <Styled.Grid id={portalId} className="details-panel-header">
+    <Styled.Grid id={portalId} className={classNames('details-panel-header', { isCompact })}>
       {onClose && (
         <Styled.CloseButton
           onClick={onClose}
@@ -200,7 +201,7 @@ const DetailsPanelHeader = ({
         icon="content_copy"
         className={classNames('path', { onClose, isLoading })}
       />
-      <Styled.Header className="titles">
+      <Styled.Header className={classNames('titles', { isCompact })}>
         <StackedThumbnails
           isLoading={isLoading}
           shimmer={isLoading}
@@ -223,8 +224,9 @@ const DetailsPanelHeader = ({
         style={{ maxWidth: 'unset' }}
         onChange={(value) => handleUpdate('status', value)}
         className={classNames('status-select', { isLoading })}
+        align={isCompact ? 'right' : 'left'}
       />
-      {hasUser && !isLoading && (
+      {hasUser && !isLoading && !isCompact && (
         <Styled.AssigneeSelect
           value={entityAssignees}
           options={usersOptions}

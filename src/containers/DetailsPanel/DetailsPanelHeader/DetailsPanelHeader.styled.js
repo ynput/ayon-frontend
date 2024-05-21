@@ -29,6 +29,20 @@ export const Grid = styled.div`
   .filters {
     grid-column: span 2;
   }
+
+  &.isCompact {
+    /* hide fields when compact */
+    .assignee-select,
+    .tags-select,
+    .actions,
+    .filters {
+      display: none;
+    }
+    /* right column auto size */
+    grid-template-columns: 1fr auto;
+    /* align center */
+    align-items: center;
+  }
 `
 
 export const CloseButton = styled(Button)`
@@ -47,6 +61,11 @@ export const Header = styled.header`
 
   .thumbnail {
     width: 48px;
+  }
+
+  &.isCompact {
+    /* only take up one column */
+    grid-column: span 1;
   }
 `
 
@@ -125,6 +144,7 @@ export const LabelWrapper = styled.div`
 `
 
 export const StatusSelect = styled(StatusSelectComponent)`
+  width: fit-content;
   .status-field.value {
     position: relative;
     left: 1px;
@@ -142,8 +162,6 @@ export const StatusSelect = styled(StatusSelectComponent)`
       opacity: 0;
     }
   }
-
-  width: fit-content;
 `
 
 export const AssigneeSelect = styled(AssigneeSelectComponent)`
