@@ -16,7 +16,13 @@ const Preview = ({ selected = [], entityType, onClose }) => {
     { id: 3, name: 'v003' },
     { id: 4, name: 'v004', hero: true },
     { id: 5, name: 'v005', status: 'approved' },
+    { id: 5, name: 'v005', status: 'selected' },
   ]
+
+  // const selected = 3
+  // const latest = 5
+  // const approved = 4
+  // const hero = 1
 
   return (
     <Styled.Container>
