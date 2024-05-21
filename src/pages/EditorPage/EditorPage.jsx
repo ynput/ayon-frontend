@@ -36,6 +36,7 @@ import {
   onForceChange,
   onNewChanges,
   onRevert,
+  updateNodes,
 } from '/src/features/editor'
 import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -1549,16 +1550,11 @@ const EditorPage = () => {
 
     if (!id || !type) return
 
-    // refetch data for that entity
-    if (type === 'folder') {
-      loadNewBranches([id], true)
-    } else {
-      // it's a task so we need to find it in data and then refetch it's parent
-      const parent = rootData[id]?.data?.folderId
-      if (parent) {
-        loadNewBranches([parent], true)
-      }
-    }
+    // patch new updatedAt value to node
+    const newDate = new Date().toISOString()
+    const newData = { id, updatedAt: newDate }
+
+    dispatch(updateNodes({ updated: [newData] }))
   }
 
   const tableRef = useRef(null)
