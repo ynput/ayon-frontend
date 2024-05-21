@@ -118,7 +118,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const [selectedAddons, setSelectedAddons] = useState([])
 
   // get selected release data
-  const { data: release = {}, isLoading: isLoadingAddons } = useGetReleaseQuery(
+  const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseQuery(
     { name: selectedPreset },
     { skip: !selectedPreset || stepIndex < 5 },
   )
