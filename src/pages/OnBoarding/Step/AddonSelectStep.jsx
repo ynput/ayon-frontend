@@ -30,13 +30,16 @@ export const AddonSelectStep = ({
     }
   }
 
+  // selected release has addons length, so use that as placeholders
+  const placeholders = currentRelease?.addons || [...Array(20)].map((_, i) => `Addon ${i}`)
+
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
         {isLoadingAddons
-          ? releases.map((placeholder) => (
-              <Styled.PlaceholderCard key={placeholder.name} icon={''} />
+          ? placeholders.map((placeholder) => (
+              <Styled.PlaceholderCard key={placeholder} icon={''} />
             ))
           : addons.map(
               (addon) =>
