@@ -30,6 +30,7 @@ const DetailsPanel = ({
   isSlideOut = false,
   style = {},
   scope,
+  isCompact = false,
 }) => {
   const path = isSlideOut ? 'slideOut' : 'pinned'
   let selectedTab = useSelector((state) => state.details[path].tab)
@@ -112,6 +113,7 @@ const DetailsPanel = ({
           onClose={onClose}
           isSlideOut={isSlideOut}
           isFetching={isFetchingEntitiesDetails}
+          isCompact={isCompact}
         />
         {selectedTab === 'feed' && !isError && (
           <Feed
