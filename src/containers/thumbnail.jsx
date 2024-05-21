@@ -101,6 +101,7 @@ const Thumbnail = ({
     const handleDragOver = (e) => {
       e.preventDefault()
       e.stopPropagation()
+
       setShowPortal(true)
     }
     const handleDragLeave = (e) => {
@@ -164,6 +165,7 @@ const Thumbnail = ({
                   }, 800)
                 }}
                 onUploading={() => setIsUploading(true)}
+                onCancel={() => setShowPortal(false)}
               />,
               portalEl,
             )}

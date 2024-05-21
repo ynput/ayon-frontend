@@ -38,6 +38,7 @@ const editorSlice = createSlice({
       for (const node of updated) {
         if (state.nodes[node?.id]) {
           for (const key in node) {
+            if (key === 'id') continue
             state.nodes[node?.id].data[key] = node[key]
           }
         }
