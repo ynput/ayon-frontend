@@ -53,7 +53,7 @@ export const AddonSelectStep = ({
     <Styled.Section>
       <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
-        {!isLoadingAddons
+        {isLoadingAddons
         ? 
           placeholders.map((placeholder) => (
               <Styled.PlaceholderCard
