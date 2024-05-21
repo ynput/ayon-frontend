@@ -1,22 +1,9 @@
-import { useMemo } from 'react'
 import { useParams } from 'react-router'
 import AppNavLinks from '/src/containers/header/AppNavLinks'
+import Inbox from './Inbox/Inbox'
 
 const InboxPage = () => {
   const { module } = useParams()
-
-  const moduleComponent = useMemo(() => {
-    switch (module) {
-      case 'important':
-        return 'Important'
-      case 'other':
-        return 'Other'
-      case 'cleared':
-        return 'Cleared'
-      default:
-        return 'Important'
-    }
-  }, [module])
 
   let links = [
     {
@@ -39,7 +26,7 @@ const InboxPage = () => {
   return (
     <>
       <AppNavLinks links={links} />
-      {moduleComponent}
+      <Inbox filter={module} />
     </>
   )
 }
