@@ -1,5 +1,4 @@
-import { AssigneeSelect, TagsSelect } from '@ynput/ayon-react-components'
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
@@ -183,15 +182,7 @@ const DetailsPanelHeader = ({
   }
 
   return (
-    <Styled.SectionWrapper id={portalId} className="details-panel-header">
-      <Styled.Path
-        value={pathArray.join(' / ')}
-        align="left"
-        onClick={handleCopyPath}
-        isCopy
-        icon="content_copy"
-        className={classNames({ onClose, isLoading })}
-      />
+    <Styled.Grid id={portalId} className="details-panel-header">
       {onClose && (
         <Styled.CloseButton
           onClick={onClose}
@@ -201,7 +192,15 @@ const DetailsPanelHeader = ({
           data-tooltip-delay={0}
         />
       )}
-      <Styled.Header>
+      <Styled.Path
+        value={pathArray.join(' / ')}
+        align="left"
+        onClick={handleCopyPath}
+        isCopy
+        icon="content_copy"
+        className={classNames('path', { onClose, isLoading })}
+      />
+      <Styled.Header className="titles">
         <StackedThumbnails
           isLoading={isLoading}
           shimmer={isLoading}
@@ -216,46 +215,45 @@ const DetailsPanelHeader = ({
           <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
         </Styled.Content>
       </Styled.Header>
-      <Styled.Section>
-        <Styled.ContentRow>
-          <Styled.TaskStatusSelect
-            value={statusesValue}
-            options={statusesOptions}
-            disabledValues={disabledStatuses}
-            invert
-            style={{ maxWidth: 'unset' }}
-            onChange={(value) => handleUpdate('status', value)}
-            className={classNames({ isLoading })}
-          />
-          {hasUser && !isLoading && (
-            <AssigneeSelect
-              value={entityAssignees}
-              options={usersOptions}
-              disabledValues={disabledAssignees.map((u) => u.name)}
-              isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
-              editor={entityType === 'task'}
-              align="right"
-              onChange={(value) => handleUpdate('assignees', value)}
-            />
-          )}
-        </Styled.ContentRow>
-      </Styled.Section>
-      <Styled.Section>
-        <Styled.ContentRow>
-          <Actions options={actions} pinned={pinned} isLoading={isLoading} />
-          <TagsSelect
-            value={union(...tagsValues)}
-            isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
-            tags={tagsOptionsObject}
-            editable
-            onChange={(value) => handleUpdate('tags', value)}
-            align="right"
-            styleDropdown={{ display: isLoading && 'none' }}
-          />
-        </Styled.ContentRow>
-      </Styled.Section>
-      <FeedFilters isSlideOut={isSlideOut} isLoading={isLoading} entityType={entityType} />
-    </Styled.SectionWrapper>
+      <Styled.StatusSelect
+        value={statusesValue}
+        options={statusesOptions}
+        disabledValues={disabledStatuses}
+        invert
+        style={{ maxWidth: 'unset' }}
+        onChange={(value) => handleUpdate('status', value)}
+        className={classNames('status-select', { isLoading })}
+      />
+      {hasUser && !isLoading && (
+        <Styled.AssigneeSelect
+          value={entityAssignees}
+          options={usersOptions}
+          disabledValues={disabledAssignees.map((u) => u.name)}
+          isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
+          editor={entityType === 'task'}
+          align="right"
+          onChange={(value) => handleUpdate('assignees', value)}
+          className="assignee-select"
+        />
+      )}
+      <Actions options={actions} pinned={pinned} isLoading={isLoading} />
+      <Styled.TagsSelect
+        value={union(...tagsValues)}
+        isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
+        tags={tagsOptionsObject}
+        editable
+        onChange={(value) => handleUpdate('tags', value)}
+        align="right"
+        styleDropdown={{ display: isLoading && 'none' }}
+        className="tags-select"
+      />
+      <FeedFilters
+        isSlideOut={isSlideOut}
+        isLoading={isLoading}
+        entityType={entityType}
+        className="filters"
+      />
+    </Styled.Grid>
   )
 }
 

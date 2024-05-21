@@ -11,7 +11,7 @@ const Actions = ({ options = [], pinned = [], isLoading }) => {
   // return empty placeholder until finished
   if (showPlaceholder)
     return (
-      <Styled.Actions className={classNames({ isLoading })}>
+      <Styled.Actions className={classNames('actions', { isLoading })}>
         {showPlaceholder ? (
           <Button icon="manufacturing" disabled data-tooltip="Actions coming soon" />
         ) : (

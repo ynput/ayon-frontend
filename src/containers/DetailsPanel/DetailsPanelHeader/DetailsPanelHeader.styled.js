@@ -1,23 +1,34 @@
 import styled from 'styled-components'
-import StatusSelect from '/src/components/status/statusSelect'
+import StatusSelectComponent from '/src/components/status/statusSelect'
 import {
   Button,
   OverflowField,
-  Section as SectionARC,
   getShimmerStyles,
+  AssigneeSelect as AssigneeSelectComponent,
+  TagsSelect as TagsSelectComponent,
 } from '@ynput/ayon-react-components'
 
 export const Container = styled.div`
   position: relative;
 `
 
-export const SectionWrapper = styled(SectionARC)`
+export const Grid = styled.div`
   padding: 8px;
-  align-items: flex-start;
-  gap: var(--base-gap-large);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex: none;
   overflow: hidden;
+
+  display: grid;
+  /* two columns */
+  grid-template-columns: 1fr 1fr;
+  gap: var(--base-gap-large);
+
+  /* set full widths for different elements */
+  .path,
+  .titles,
+  .filters {
+    grid-column: span 2;
+  }
 `
 
 export const CloseButton = styled(Button)`
@@ -51,7 +62,7 @@ export const Path = styled(OverflowField)`
   }
 
   & > span {
-    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
 
   &.isLoading {
@@ -97,11 +108,6 @@ export const Content = styled.div`
   }
 `
 
-export const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-`
-
 export const ContentRow = styled.div`
   display: flex;
   justify-content: space-between;
@@ -118,7 +124,7 @@ export const LabelWrapper = styled.div`
   flex-direction: column;
 `
 
-export const TaskStatusSelect = styled(StatusSelect)`
+export const StatusSelect = styled(StatusSelectComponent)`
   .status-field.value {
     position: relative;
     left: 1px;
@@ -136,6 +142,17 @@ export const TaskStatusSelect = styled(StatusSelect)`
       opacity: 0;
     }
   }
+
+  width: fit-content;
+`
+
+export const AssigneeSelect = styled(AssigneeSelectComponent)`
+  width: fit-content;
+  justify-self: end;
+`
+export const TagsSelect = styled(TagsSelectComponent)`
+  width: fit-content;
+  justify-self: end;
 `
 
 export const Footer = styled.footer`
