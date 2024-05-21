@@ -1,5 +1,6 @@
-import { Panel, SaveButton, Section as SectionComp } from '@ynput/ayon-react-components'
+import { Panel, SaveButton, getShimmerStyles, Section as SectionComp } from '@ynput/ayon-react-components'
 import styled, { css, keyframes } from 'styled-components'
+import AddonCard from '/src/components/AddonCard/AddonCard'
 
 export const Logo = styled.img`
   width: 100px;
@@ -105,7 +106,7 @@ export const PresetsContainer = styled.ul`
 export const AddonsContainer = styled.div`
   /* 3 column grid */
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--base-gap-small);
   width: 470px;
   max-width: 470px;
@@ -187,4 +188,13 @@ export const NextButton = styled(SaveButton)`
         animation: ${spin} 1s linear infinite;
       }
     `}
+`
+
+export const PlaceholderCard = styled(AddonCard)`
+  background: transparent;
+  cursor: default;
+  ${getShimmerStyles()}
+  &:hover {
+    background: transparent;
+  }
 `
