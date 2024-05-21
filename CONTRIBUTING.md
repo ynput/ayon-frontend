@@ -98,7 +98,7 @@ Notes
 
 ## General UI Rules
 
-# Loading state
+#### Loading state
 
 - Avoid spinners
 - Avoid layout shifts when the data loads in.
