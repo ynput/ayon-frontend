@@ -18,21 +18,8 @@ export const AddonSelectStep = ({
     () => releases.find((release) => release.name === selectedPreset),
     [selectedPreset, releases],
   )
-  const addons = useMemo(() => release?.addons || [], [release])
-  const mandatory = useMemo(() => currentRelease?.mandatoryAddons || [], [currentRelease])
-
-  const sortedAddons = useMemo(() => {
-    const sortedAddons = [...addons]
-    // order addons by selected
-    sortedAddons.sort((a, b) => {
-      const aSelected = selectedAddons.includes(a.name)
-      const bSelected = selectedAddons.includes(b.name)
-      if (aSelected && !bSelected) return -1
-      if (!aSelected && bSelected) return 1
-      return 0
-    })
-    return sortedAddons
-  }, [releases, release])
+  const { mandatoryAddons: mandatory = [] } = currentRelease || {}
+  const { addons = [] } = release || {}
 
   const handleAddonClick = (name) => {
     // if it's already selected, remove it
@@ -43,17 +30,15 @@ export const AddonSelectStep = ({
     }
   }
 
-  const placeholders = [...Array(20)].map((_, i) => ({ name: `Addon ${i}` }))
-
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
         {isLoadingAddons
-          ? placeholders.map((placeholder) => (
+          ? releases.map((placeholder) => (
               <Styled.PlaceholderCard key={placeholder.name} icon={''} />
             ))
-          : sortedAddons.map(
+          : addons.map(
               (addon) =>
                 !mandatory.includes(addon.name) && (
                   <AddonCard
