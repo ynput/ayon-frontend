@@ -12,7 +12,7 @@ Please follow these guidelines to help maintain consistency and streamline the d
 5. **Semantic Commits**: Adhere to the semantic commit format for clear and descriptive commits.
 6. **Issue-less Branches**: You may use branches without associated issues for small tasks and fixes but try to avoid it.
 
-## New Issues
+## New Issues
 
 #### Required
 
