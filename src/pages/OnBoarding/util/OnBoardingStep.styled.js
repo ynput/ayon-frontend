@@ -1,5 +1,6 @@
-import { Panel, SaveButton, Section as SectionComp } from '@ynput/ayon-react-components'
+import { Panel, SaveButton, getShimmerStyles, Section as SectionComp } from '@ynput/ayon-react-components'
 import styled, { css, keyframes } from 'styled-components'
+import AddonCard from '/src/components/AddonCard/AddonCard'
 
 export const Logo = styled.img`
   width: 100px;
@@ -189,12 +190,11 @@ export const NextButton = styled(SaveButton)`
     `}
 `
 
-export const Spinner = styled.div`
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
-  animation: ${spin} 0.8s linear infinite;
+export const PlaceholderCard = styled(AddonCard)`
+  background: transparent;
+  cursor: default;
+  ${getShimmerStyles()}
+  &:hover {
+    background: transparent;
+  }
 `

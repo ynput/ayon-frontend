@@ -47,12 +47,22 @@ export const AddonSelectStep = ({
     }
   }
 
+  const placeholders = [...Array(20)].map((_, i) => ({name: `Addon ${i}`}))
+
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
-      {isLoadingAddons && <Styled.Spinner />}
       <Styled.AddonsContainer>
-        {sortedAddons.map((addon) => 
+        {!isLoadingAddons
+        ? 
+          placeholders.map((placeholder) => (
+              <Styled.PlaceholderCard
+                key={placeholder.name}
+                icon={''}
+            />
+          ))
+        :
+          sortedAddons.map((addon) => 
           !mandatory.includes(addon.name) && (
             <AddonCard
               key={addon.name}
@@ -63,8 +73,8 @@ export const AddonSelectStep = ({
               isSelected={selectedAddons.includes(addon.name)}
               onClick={() => handleAddonClick(addon.name)}
             />
-          ),
-        )}
+          ))
+        }
       </Styled.AddonsContainer>
       <Footer
         next="Confirm"
