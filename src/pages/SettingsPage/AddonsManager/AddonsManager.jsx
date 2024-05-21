@@ -26,7 +26,7 @@ const AddonsManager = () => {
   const { data: addons = [] } = useGetAddonListQuery()
   const { data: bundles = [] } = useGetBundleListQuery({ archived: false })
 
-  // addon install dialog
+  // addon upload dialog
   const [ uploadOpen, setUploadOpen] = useState('')
 
   // addonsVersionsBundles = Map<addon, Map<version, Map<bundle, bundle>>>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
-import { Button, InputSwitch, Section, Dialog } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
@@ -25,7 +25,7 @@ const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
   const dispatch = useDispatch()
-  // addon install dialog
+  // addon upload dialog
   const [uploadOpen, setUploadOpen] = useState(false)
 
   // table selection
