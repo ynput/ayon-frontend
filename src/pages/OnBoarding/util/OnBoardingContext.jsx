@@ -120,7 +120,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   // get selected release data
   const { data: release = {}, isLoading: isLoadingAddons } = useGetReleaseQuery(
     { name: selectedPreset },
-    { skip: !selectedPreset || stepIndex < 6 },
+    { skip: !selectedPreset || stepIndex < 5 },
   )
 
   // // once releases are loaded, set selectedPreset to the first one and pre-cache each release
