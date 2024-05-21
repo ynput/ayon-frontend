@@ -226,18 +226,21 @@ const DetailsPanelHeader = ({
         className={classNames('status-select', { isLoading })}
         align={isCompact ? 'right' : 'left'}
       />
-      {hasUser && !isLoading && !isCompact && (
-        <Styled.AssigneeSelect
-          value={entityAssignees}
-          options={usersOptions}
-          disabledValues={disabledAssignees.map((u) => u.name)}
-          isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
-          editor={entityType === 'task'}
-          align="right"
-          onChange={(value) => handleUpdate('assignees', value)}
-          className="assignee-select"
-        />
-      )}
+      {!isCompact &&
+        (!hasUser || isLoading ? (
+          <div></div>
+        ) : (
+          <Styled.AssigneeSelect
+            value={entityAssignees}
+            options={usersOptions}
+            disabledValues={disabledAssignees.map((u) => u.name)}
+            isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
+            editor={entityType === 'task'}
+            align="right"
+            onChange={(value) => handleUpdate('assignees', value)}
+            className="assignee-select"
+          />
+        ))}
       <Actions options={actions} pinned={pinned} isLoading={isLoading} />
       <Styled.TagsSelect
         value={union(...tagsValues)}
