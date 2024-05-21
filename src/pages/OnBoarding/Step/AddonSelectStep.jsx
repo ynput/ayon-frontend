@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '/src/components/AddonCard/AddonCard'
 
@@ -14,20 +14,16 @@ export const AddonSelectStep = ({
   isLoadingRelease,
   isLoadingAddons,
 }) => {
-
-  const [sortedAddons, setSortedAddons] = useState([])
-
-
-   const currentRelease = useMemo(
-     () => releases.find((release) => release.name === selectedPreset),
-     [selectedPreset, releases],
-   )
+  const currentRelease = useMemo(
+    () => releases.find((release) => release.name === selectedPreset),
+    [selectedPreset, releases],
+  )
   const addons = useMemo(() => release?.addons || [], [release])
   const mandatory = useMemo(() => currentRelease?.mandatoryAddons || [], [currentRelease])
 
-  useEffect(() => {
+  const sortedAddons = useMemo(() => {
     const sortedAddons = [...addons]
-    // order addons by selected and then by addon.mandatory
+    // order addons by selected
     sortedAddons.sort((a, b) => {
       const aSelected = selectedAddons.includes(a.name)
       const bSelected = selectedAddons.includes(b.name)
@@ -35,7 +31,7 @@ export const AddonSelectStep = ({
       if (!aSelected && bSelected) return 1
       return 0
     })
-    setSortedAddons(sortedAddons)
+    return sortedAddons
   }, [releases, release])
 
   const handleAddonClick = (name) => {
@@ -47,34 +43,30 @@ export const AddonSelectStep = ({
     }
   }
 
-  const placeholders = [...Array(20)].map((_, i) => ({name: `Addon ${i}`}))
+  const placeholders = [...Array(20)].map((_, i) => ({ name: `Addon ${i}` }))
 
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
       <Styled.AddonsContainer>
         {isLoadingAddons
-        ? 
-          placeholders.map((placeholder) => (
-              <Styled.PlaceholderCard
-                key={placeholder.name}
-                icon={''}
-            />
-          ))
-        :
-          sortedAddons.map((addon) => 
-          !mandatory.includes(addon.name) && (
-            <AddonCard
-              key={addon.name}
-              title={addon.title}
-              name={addon.name}
-              version={addon.version}
-              icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
-              isSelected={selectedAddons.includes(addon.name)}
-              onClick={() => handleAddonClick(addon.name)}
-            />
-          ))
-        }
+          ? placeholders.map((placeholder) => (
+              <Styled.PlaceholderCard key={placeholder.name} icon={''} />
+            ))
+          : sortedAddons.map(
+              (addon) =>
+                !mandatory.includes(addon.name) && (
+                  <AddonCard
+                    key={addon.name}
+                    title={addon.title}
+                    name={addon.name}
+                    version={addon.version}
+                    icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
+                    isSelected={selectedAddons.includes(addon.name)}
+                    onClick={() => handleAddonClick(addon.name)}
+                  />
+                ),
+            )}
       </Styled.AddonsContainer>
       <Footer
         next="Confirm"
