@@ -1,20 +1,23 @@
-import {  Dropdown, VersionSelect } from '@ynput/ayon-react-components'
+import {  Dropdown } from '@ynput/ayon-react-components'
 import * as Styled from './VersionSelectorTool.styled'
 
 
 
 
-const VersionSelectorTool = ({ versions, selected= [], latest, approved, hero, onChange }) => {
+const VersionSelectorTool = ({ versions, selected = [], latest, approved, hero, onChange }) => {
   console.log(versions,'SEL_versions')
   console.log(selected,'SEL_selected')
   console.log(latest,'SEL_latest')
   console.log(approved,'SEL_approved')
   const totalLength = versions?.length
   console.log(totalLength,'totalLength')
+
   const heroVersion = versions.find((version) => version.name === 'HERO')
   const approvedVersion = versions.find((version) => version.status === 'approved')
   const latestVersion = versions.find((version) => version.status === 'latest')
-  const selectedVersion = versions.find((version) => version.id === selected)
+
+  const selectedVersion = versions.find((version) => version.id === selected[0])
+
   const previousVersionIndex = versions.findIndex((version) => version.id === selectedVersion?.id) - 1
   const previousVersion = previousVersionIndex >= 0 ? versions[previousVersionIndex] : null
   const nextVersionIndex = versions.findIndex((version) => version.id === selectedVersion?.id) + 1
@@ -33,23 +36,8 @@ const VersionSelectorTool = ({ versions, selected= [], latest, approved, hero, o
       )
   })
 
-  const handleKeyDown = (e) => {
-    e?.stopPropagation()
-    console.log(e,'ekey')
-    const enter = e.key === 'Enter'
-    const ctrlMeta = e.ctrlKey || e.metakey
-    const shift = e.shiftKey
-
-    if (ctrlMeta) console.log('bla')
-
-  }
-
-
-
-
-  console.log(selected,'selectedXX')
   return (
-  <Styled.Tools onKeyDown={handleKeyDown}>
+  <Styled.Tools>
     <Styled.VersionButton
       icon="chevron_left"
       onClick={() => onChange(previousVersion.id)}
@@ -65,14 +53,6 @@ const VersionSelectorTool = ({ versions, selected= [], latest, approved, hero, o
     >
      {selectedVersion?.name || 'None'}
     </Styled.VersionButton>
-
-
-    {/* <VersionSelect
-      version={selectedVersion.name}
-      value={[selectedVersion.name]}
-      versions={[...versionNames]}
-    >
-  </VersionSelect> */}
     <Dropdown
       value={selected} // always array
       options={options}
@@ -81,8 +61,6 @@ const VersionSelectorTool = ({ versions, selected= [], latest, approved, hero, o
       // onChange={handleChange}
     >
     </Dropdown>
-
-
     <Styled.VersionButton
       icon="chevron_right"
       onClick={() => onChange(nextVersion.id)}

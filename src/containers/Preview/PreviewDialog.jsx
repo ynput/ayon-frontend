@@ -32,10 +32,10 @@ const PreviewDialog = () => {
     // check if dialog is already open with same ids
     if (isEqual(selected, selectedIds)) return
     // open the dialog
-    dispatch(openPreview({ selected: selectedIds, entityType: selectedType }))
+    dispatch(openPreview({ selected: selected || selectedIds, entityType: selectedType }))
   }, [selectedIds, selectedType])
 
-  if (!selected.length) return null
+  if (!selected?.length) return null
 
   const handleClose = () => {
     // remove query params preview_id and preview_type from url
@@ -45,6 +45,8 @@ const PreviewDialog = () => {
     // close the dialog
     dispatch(closePreview())
   }
+
+  console.log(selected,'selectedXXX')
 
   return (
     <StyledDialog isOpen hideCancelButton size="full">

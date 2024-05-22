@@ -1,5 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
-import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateSelection } from '/src/features/preview'
 import * as Styled from './Preview.styled'
 import VersionSelectorTool from '/src/components/VersionSelectorTool/VersionSelectorTool'
 
@@ -22,12 +23,21 @@ const Preview = ({ selected=[], entityType, onClose }) => {
     // { id: 7, name: 'HERO' },
   ]
 
+  const allData = useSelector((state) => state.preview)
+  const dispatch = useDispatch()
+  console.log(allData, 'allDaTA')
 
+
+  const onChange = (selectedId) => {
+    const selectedIds = [selectedId]
+    console.log(selectedIds,'selectedIds')
+    dispatch(updateSelection({selected: selectedIds}))
+  }
 
   return (
     <Styled.Container>
       <Styled.Header>
-        <VersionSelectorTool versions={allVersionsDummyData} selected={selected}  />
+        <VersionSelectorTool versions={allVersionsDummyData} selected={selected} onChange={onChange}  />
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
