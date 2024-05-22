@@ -1,6 +1,5 @@
 import * as Styled from './InboxMessage.styled'
 import { classNames } from 'primereact/utils'
-import Typography from '/src/theme/typography.module.css'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { isValid } from 'date-fns'
 import { isToday } from 'date-fns'
@@ -28,11 +27,8 @@ const getDateString = (date) => {
 }
 
 const InboxMessage = ({
-  id,
-  img,
   title,
   subTitle,
-  projectName,
   userName,
   type,
   body,
@@ -46,19 +42,19 @@ const InboxMessage = ({
   const typeIcon = activityTypeIcons[type] || 'notifications'
 
   return (
-    <Styled.Message {...props} tabIndex={0} className={classNames({ isSelected })}>
+    <Styled.Message {...props} tabIndex={0} className={classNames({ isSelected, isRead })}>
       <Styled.Left>
         <Styled.Thumbnail src={thumbnailUrl} icon={thumbnailIcon} />
-        <span className={classNames('title', Typography.titleSmall)}>{title}</span>
-        <Styled.SubTitle className="sub-title">-</Styled.SubTitle>
-        <Styled.SubTitle className="sub-title">{subTitle}</Styled.SubTitle>
+        <span className={classNames('title')}>{title}</span>
+        <span className="sub-title">-</span>
+        <span className="sub-title">{subTitle}</span>
       </Styled.Left>
       <Styled.Middle>
-        <Icon icon={typeIcon} />
+        <Icon icon={typeIcon} className="type" />
         <Styled.Body className="body">{body}</Styled.Body>
       </Styled.Middle>
       <Styled.Right>
-        <Button icon="check" className="clear" onClick={onClear && onClear}>
+        <Button icon="check" className="clear" variant="filled" onClick={onClear && onClear}>
           Clear (c)
         </Button>
         <UserImage name={userName} size={20} />

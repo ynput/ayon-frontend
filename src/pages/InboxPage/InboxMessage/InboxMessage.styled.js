@@ -48,17 +48,31 @@ export const Message = styled.li`
     }
   }
 
-  /* when hovering reveal clear button and hide user-image and date */
+  /* when hovering or selected reveal clear button and hide user-image and date */
   .clear {
     display: none;
   }
-  &:hover {
+  &:hover,
+  &.isSelected {
     .clear {
       display: flex;
     }
     .user-image,
     .date {
       display: none;
+    }
+  }
+
+  /* make all text grey when read */
+  /* but not when selected */
+  &.isRead:not(.isSelected) {
+    span:not(.icon) {
+      color: var(--md-sys-color-outline);
+    }
+
+    .icon.type {
+      color: var(--md-sys-color-outline);
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
   }
 `
@@ -84,10 +98,6 @@ export const Thumbnail = styled(ThumbnailSimple)`
   margin-right: var(--padding-);
 `
 
-export const SubTitle = styled.span`
-  color: var(--md-sys-color-outline);
-`
-
 export const Middle = styled.div`
   display: flex;
   gap: var(--base-gap-large);
@@ -96,10 +106,12 @@ export const Middle = styled.div`
 
   .icon {
     font-size: 18px;
+
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   }
 `
 
-export const Body = styled.div`
+export const Body = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

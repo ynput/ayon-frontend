@@ -70,10 +70,11 @@ const Inbox = ({ filter }) => {
 
   const transformedMessages = useMemo(
     () =>
-      messages.map((m) => ({
+      messages.map((m, i) => ({
         ...m,
         folderName: getRandomFolderName(),
         thumbnail: { icon: 'folder' },
+        isRead: i > 5,
       })),
     [messages],
   )
@@ -81,6 +82,16 @@ const Inbox = ({ filter }) => {
   // single select only allow but multi select is possible
   // it always seems to become multi select so i'll just support it from the start
   const [selected, setSelected] = useState([])
+
+  const handleMessageSelect = (id) => {
+    // if the message is already selected, deselect it
+    if (selected.includes(id)) {
+      setSelected(selected.filter((s) => s !== id))
+      return
+    } else {
+      setSelected([id])
+    }
+  }
 
   const handClearMessage = (id) => {
     console.log('clearing message', id)
@@ -100,7 +111,8 @@ const Inbox = ({ filter }) => {
             body={message.body}
             createdAt={message.createdAt}
             userName={message.authorName}
-            onClick={() => setSelected([message.activityId])}
+            isRead={message.isRead}
+            onClick={() => handleMessageSelect(message.activityId)}
             isSelected={selected.includes(message.activityId)}
             onClear={() => handClearMessage(message.activityId)}
           />
