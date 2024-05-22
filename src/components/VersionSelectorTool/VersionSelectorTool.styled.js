@@ -11,4 +11,5 @@ export const Tools = styled.div`
 export const VersionButton = styled(Button)`
   padding: 8px 8px;
   min-width: 120px;
+  ${({ $isSelected }) => $isSelected && `background: var(--md-sys-color-primary-container);`}
 `

@@ -4,7 +4,7 @@ import * as Styled from './VersionSelectorTool.styled'
 
 
 
-const VersionSelectorTool = ({ versions, selected, latest, approved, hero, onChange }) => {
+const VersionSelectorTool = ({ versions, selected= [], latest, approved, hero, onChange }) => {
   console.log(versions,'SEL_versions')
   console.log(selected,'SEL_selected')
   console.log(latest,'SEL_latest')
@@ -20,26 +20,50 @@ const VersionSelectorTool = ({ versions, selected, latest, approved, hero, onCha
   const nextVersionIndex = versions.findIndex((version) => version.id === selectedVersion?.id) + 1
   const nextVersion = nextVersionIndex >= totalLength ?  null : versions[nextVersionIndex]
 
-  const isHeroSelected = selectedVersion.id === heroVersion.id
+  const isHeroSelected = selectedVersion?.id === heroVersion?.id
+  const isLatestSelected = selectedVersion?.id === latestVersion?.id
+  const isApprovedSelected = selectedVersion?.id === approvedVersion?.id
+
+  const options = versions.map((version) => {
+      return (
+        {
+          label: version.name,
+          value: version.id
+        }
+      )
+  })
+
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    console.log(e,'ekey')
+    const enter = e.key === 'Enter'
+    const ctrlMeta = e.ctrlKey || e.metakey
+    const shift = e.shiftKey
+
+    if (ctrlMeta) console.log('bla')
+
+  }
+
 
 
 
   console.log(selected,'selectedXX')
   return (
-  <Styled.Tools>
+  <Styled.Tools onKeyDown={handleKeyDown}>
     <Styled.VersionButton
       icon="chevron_left"
       onClick={() => onChange(previousVersion.id)}
       data-tooltip="Previous version"
+      disabled={!previousVersion}
       // data-shortcut="A"
     >
-     {previousVersion?.name}
+     {previousVersion?.name || 'None'}
     </Styled.VersionButton>
     <Styled.VersionButton
       onClick={() => console.log('addon')}
       data-tooltip="Selected version"
     >
-     {selectedVersion?.name || 'none'}
+     {selectedVersion?.name || 'None'}
     </Styled.VersionButton>
 
 
@@ -49,40 +73,45 @@ const VersionSelectorTool = ({ versions, selected, latest, approved, hero, onCha
       versions={[...versionNames]}
     >
   </VersionSelect> */}
-    {/* <Dropdown
-      value={selectedVersion.name}
-      options={versions}
-      onChange={handleChange}
+    <Dropdown
+      value={selected} // always array
+      options={options}
+      // dataKey={'id'}
+      // labelKey={'name'}
+      // onChange={handleChange}
     >
-    </Dropdown> */}
+    </Dropdown>
 
 
     <Styled.VersionButton
       icon="chevron_right"
       onClick={() => onChange(nextVersion.id)}
       data-tooltip="Next version"
+      disabled={!nextVersion}
     >
-     {nextVersion?.name}
+     {nextVersion?.name || 'None'}
     </Styled.VersionButton>
     <Styled.VersionButton
+      $isSelected={!!isLatestSelected}
       data-tooltip="Latest version"
       onClick={()=>onChange(latestVersion.id)}
     > 
-     latest {latestVersion.name || 'none'}
+     latest {latestVersion.name || 'None'}
     </Styled.VersionButton>
     <Styled.VersionButton
+      $isSelected={!!isApprovedSelected}
       data-tooltip="Approved version"
       onClick={()=>onChange(approvedVersion.id)}
     > 
-     approved {approvedVersion.name || 'none'}
+     approved {approvedVersion.name || 'None'}
     </Styled.VersionButton>
     <Styled.VersionButton
-      style={{  background:  isHeroSelected ? 'blue' : null}}
+      $isSelected={!!isHeroSelected}
       disabled={!heroVersion}
       data-tooltip="Hero version"
       onClick={()=>onChange(heroVersion.id)}
     >
-     hero {heroVersion.name || 'none'}
+     hero {heroVersion?.name || 'None'}
     </Styled.VersionButton>
 
   </Styled.Tools>
