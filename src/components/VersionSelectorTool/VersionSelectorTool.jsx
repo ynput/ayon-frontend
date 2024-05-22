@@ -1,4 +1,4 @@
-import {  Dropdown } from '@ynput/ayon-react-components'
+import {  Dropdown, VersionSelect } from '@ynput/ayon-react-components'
 import * as Styled from './VersionSelectorTool.styled'
 
 
@@ -15,7 +15,7 @@ const VersionSelectorTool = ({ versions, selected = [], latest, approved, hero, 
   const heroVersion = versions.find((version) => version.name === 'HERO')
   const approvedVersion = versions.find((version) => version.status === 'approved')
   const latestVersion = versions.find((version) => version.status === 'latest')
-
+  
   const selectedVersion = versions.find((version) => version.id === selected[0])
 
   const previousVersionIndex = versions.findIndex((version) => version.id === selectedVersion?.id) - 1
@@ -26,15 +26,6 @@ const VersionSelectorTool = ({ versions, selected = [], latest, approved, hero, 
   const isHeroSelected = selectedVersion?.id === heroVersion?.id
   const isLatestSelected = selectedVersion?.id === latestVersion?.id
   const isApprovedSelected = selectedVersion?.id === approvedVersion?.id
-
-  const options = versions.map((version) => {
-      return (
-        {
-          label: version.name,
-          value: version.id
-        }
-      )
-  })
 
   return (
   <Styled.Tools>
@@ -47,18 +38,18 @@ const VersionSelectorTool = ({ versions, selected = [], latest, approved, hero, 
     >
      {previousVersion?.name || 'None'}
     </Styled.VersionButton>
-    <Styled.VersionButton
-      onClick={() => console.log('addon')}
-      data-tooltip="Selected version"
-    >
-     {selectedVersion?.name || 'None'}
-    </Styled.VersionButton>
     <Dropdown
+      style={{ height: '36px'}}
       value={selected} // always array
-      options={options}
-      // dataKey={'id'}
-      // labelKey={'name'}
-      // onChange={handleChange}
+      options={versions}
+      dataKey={'id'}
+      labelKey={'name'}
+      onChange={(val) => onChange(val[0])}
+      valueTemplate={() => (
+        <Styled.VersionButton>
+            {selectedVersion?.name || 'None'}
+        </Styled.VersionButton>
+      )}
     >
     </Dropdown>
     <Styled.VersionButton
