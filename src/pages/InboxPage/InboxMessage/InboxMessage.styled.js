@@ -1,8 +1,19 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import ThumbnailSimple from '/src/containers/ThumbnailSimple'
+import { Button, getShimmerStyles } from '@ynput/ayon-react-components'
+
+const showClearButton = css`
+  .clear {
+    display: flex;
+  }
+  .user-image,
+  .date {
+    display: none;
+  }
+`
 
 export const Message = styled.li`
-  padding: 0 var(--padding-m);
+  padding: 0 var(--padding-s);
   min-height: 40px;
   display: flex;
   align-items: center;
@@ -15,14 +26,21 @@ export const Message = styled.li`
 
   background-color: var(--md-sys-color-surface-container-low);
 
-  &:hover {
+  &:hover:not(.disableHover):not(.isPlaceholder) {
     background-color: var(--md-sys-color-surface-container-low-hover);
+
+    ${showClearButton}
+  }
+
+  /* use border instead of outline for focus */
+  &:focus-visible {
+    outline: none;
   }
 
   border: 1px solid transparent;
   border-top-color: var(--md-sys-color-outline-variant);
 
-  &.isSelected {
+  &.isSelected:not(.isPlaceholder) {
     border-radius: var(--border-radius-m);
     background-color: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
@@ -46,21 +64,13 @@ export const Message = styled.li`
     & + * {
       border-top-color: transparent;
     }
+
+    ${showClearButton}
   }
 
   /* when hovering or selected reveal clear button and hide user-image and date */
   .clear {
     display: none;
-  }
-  &:hover,
-  &.isSelected {
-    .clear {
-      display: flex;
-    }
-    .user-image,
-    .date {
-      display: none;
-    }
   }
 
   /* make all text grey when read */
@@ -75,6 +85,42 @@ export const Message = styled.li`
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
   }
+
+  /* loading placeholder shimmer state */
+
+  &.isPlaceholder {
+    cursor: default;
+    .left,
+    .middle,
+    .right {
+      position: relative;
+      border-radius: var(--border-radius-m);
+      overflow: hidden;
+      min-height: 30px;
+
+      ${getShimmerStyles()}
+
+      &::after {
+        border-radius: var(--border-radius-m);
+      }
+
+      /* hide all children */
+      * {
+        display: none;
+      }
+    }
+
+    .left {
+      &::after {
+        max-width: 80%;
+      }
+    }
+    .middle {
+      &::after {
+        max-width: 60%;
+      }
+    }
+  }
 `
 
 export const Left = styled.div`
@@ -86,16 +132,15 @@ export const Left = styled.div`
 `
 
 export const Thumbnail = styled(ThumbnailSimple)`
-  width: 39px;
-  min-width: 39px;
-  height: 22px;
+  width: 50px;
+  height: 30px;
   margin: 0;
   border-radius: var(--border-radius-m);
+  margin-right: 4px;
 
   .icon {
     font-size: 15px;
   }
-  margin-right: var(--padding-);
 `
 
 export const Middle = styled.div`
@@ -129,4 +174,8 @@ export const Right = styled.div`
 export const Date = styled.span`
   min-width: 50px;
   max-width: 50px;
+`
+
+export const ClearButton = styled(Button)`
+  height: 30px;
 `

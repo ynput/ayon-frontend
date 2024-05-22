@@ -19,4 +19,13 @@ export const MessagesList = styled.ul`
   padding: 0;
 
   border-radius: var(--border-radius-m);
+
+  /* remove focus outline */
+  &:focus-visible {
+    outline: none;
+  }
+
+  &.isLoading {
+    overflow: hidden;
+  }
 `

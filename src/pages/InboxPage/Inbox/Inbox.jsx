@@ -2,7 +2,9 @@ import { useGetActivitiesQuery } from '/src/services/activities/getActivities'
 import { filterActivityTypes } from '/src/features/dashboard'
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import useKeydown from '../hooks/useKeydown'
+import { classNames } from 'primereact/utils'
 
 // return a random folder name
 // different types, epi: ep{number}sq{number}sh{number}, shot: sh{number}, feat: sh{0000number}, asset: {asset_name}
@@ -50,7 +52,6 @@ const getRandomFolderName = () => {
       return ''
   }
 }
-
 const Inbox = ({ filter }) => {
   // TODO: get inbox endpoint instead of activities
   const projectName = 'demo_Commercial'
@@ -59,31 +60,52 @@ const Inbox = ({ filter }) => {
     versionId = '7dcdf1eefcc811eeaf820242c0a80002'
   const entityIds = [folderId, taskId, versionId]
   const activityTypes = filterActivityTypes.activity
-  const { data: messages = [] } = useGetActivitiesQuery({
+  const { data: messages = [], isFetching } = useGetActivitiesQuery({
     projectName,
     entityIds,
     activityTypes,
     referenceTypes: ['origin', 'mention', 'relation'],
     last: 30,
     cursor: null,
+    filter,
   })
 
-  const transformedMessages = useMemo(
-    () =>
-      messages.map((m, i) => ({
-        ...m,
-        folderName: getRandomFolderName(),
+  const transformedMessages = useMemo(() => {
+    if (isFetching) {
+      return Array.from({ length: 30 }, (_, i) => ({
+        activityId: `placeholder-${i}`,
+        folderName: 'Loading...',
         thumbnail: { icon: 'folder' },
-        isRead: i > 5,
-      })),
-    [messages],
-  )
+        isRead: false,
+        isPlaceholder: true,
+      }))
+    }
+
+    return messages.map((m, i) => ({
+      ...m,
+      folderName: getRandomFolderName(),
+      thumbnail: { icon: 'folder' },
+      isRead: i > 5,
+    }))
+  }, [isFetching, messages])
 
   // single select only allow but multi select is possible
   // it always seems to become multi select so i'll just support it from the start
   const [selected, setSelected] = useState([])
 
+  const listRef = useRef(null)
+
+  // when tab changes, focus the first message and clear selected
+  // we do this so that keyboard navigation works right away
+  useEffect(() => {
+    setSelected([])
+    if (!listRef.current || isFetching) return
+
+    listRef.current?.firstElementChild?.focus()
+  }, [listRef, isFetching, filter])
+
   const handleMessageSelect = (id) => {
+    if (id.includes('placeholder')) return
     // if the message is already selected, deselect it
     if (selected.includes(id)) {
       setSelected(selected.filter((s) => s !== id))
@@ -99,9 +121,21 @@ const Inbox = ({ filter }) => {
     setSelected(selected.filter((s) => s !== id))
   }
 
+  const [handleKeyDown, [usingKeyboard, setUsingKeyboard]] = useKeydown({
+    messages: transformedMessages,
+    onChange: handleMessageSelect,
+    selected,
+    listRef,
+  })
+
   return (
     <Styled.InboxSection direction="row">
-      <Styled.MessagesList>
+      <Styled.MessagesList
+        ref={listRef}
+        onMouseMove={() => setUsingKeyboard(false)}
+        onKeyDown={handleKeyDown}
+        className={classNames({ isLoading: isFetching })}
+      >
         {transformedMessages.map((message) => (
           <InboxMessage
             key={message.activityId}
@@ -114,7 +148,10 @@ const Inbox = ({ filter }) => {
             isRead={message.isRead}
             onClick={() => handleMessageSelect(message.activityId)}
             isSelected={selected.includes(message.activityId)}
+            disableHover={usingKeyboard}
             onClear={() => handClearMessage(message.activityId)}
+            id={message.activityId}
+            isPlaceholder={message.isPlaceholder}
           />
         ))}
       </Styled.MessagesList>
