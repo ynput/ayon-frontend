@@ -495,13 +495,15 @@ const CommentInput = ({
           </Styled.Markdown>
 
           {/* file uploads */}
-          <FilesGrid
-            files={allFiles}
-            isCompact={compactGrid}
-            onRemove={handleFileRemove}
-            style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
-            projectName={projectName}
-          />
+          {isOpen && (
+            <FilesGrid
+              files={allFiles}
+              isCompact={compactGrid}
+              onRemove={handleFileRemove}
+              style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
+              projectName={projectName}
+            />
+          )}
           {isOpen && !disabled ? (
             <ReactQuill
               theme="snow"
