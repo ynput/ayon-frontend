@@ -5,6 +5,7 @@ import * as Styled from './Inbox.styled'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
+import InboxDetailsPanel from '../InboxDetailsPanel'
 
 // return a random folder name
 // different types, epi: ep{number}sq{number}sh{number}, shot: sh{number}, feat: sh{0000number}, asset: {asset_name}
@@ -77,7 +78,6 @@ const Inbox = ({ filter }) => {
         folderName: 'Loading...',
         thumbnail: { icon: 'folder' },
         isRead: false,
-        isPlaceholder: true,
       }))
     }
 
@@ -86,6 +86,7 @@ const Inbox = ({ filter }) => {
       folderName: getRandomFolderName(),
       thumbnail: { icon: 'folder' },
       isRead: i > 5,
+      projectName,
     }))
   }, [isFetching, messages])
 
@@ -155,7 +156,7 @@ const Inbox = ({ filter }) => {
           />
         ))}
       </Styled.MessagesList>
-      {/* <div>Panel</div> */}
+      <InboxDetailsPanel messages={transformedMessages} selected={selected} />
     </Styled.InboxSection>
   )
 }

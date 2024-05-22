@@ -184,9 +184,9 @@ const Header = () => {
       {/* help icon and menu ^^^ */}
 
       {/* Inbox icon */}
-      {/* <Link to="/inbox/important">
+      <Link to="/inbox/important">
         <HeaderButton icon="inbox" variant="nav" />
-      </Link> */}
+      </Link>
 
       {/* App icon and menu vvv */}
       <HeaderButton

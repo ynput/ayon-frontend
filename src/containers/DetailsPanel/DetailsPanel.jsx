@@ -101,6 +101,7 @@ const DetailsPanel = ({
           zIndex: 400,
           ...style,
         }}
+        className="details-panel"
       >
         <DetailsPanelHeader
           entityType={entityType}

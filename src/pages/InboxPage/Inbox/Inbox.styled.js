@@ -5,6 +5,15 @@ export const InboxSection = styled(Section)`
   padding: var(--padding-l);
   overflow: hidden;
   align-items: flex-start;
+
+  & > * {
+    width: unset;
+  }
+
+  .details-panel {
+    max-width: 533px;
+    min-width: 533px;
+  }
 `
 
 export const MessagesList = styled.ul`
