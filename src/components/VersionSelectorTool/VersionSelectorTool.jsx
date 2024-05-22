@@ -9,50 +9,80 @@ const VersionSelectorTool = ({ versions, selected, latest, approved, hero, onCha
   console.log(selected,'SEL_selected')
   console.log(latest,'SEL_latest')
   console.log(approved,'SEL_approved')
-  const heroVersion = versions.find((version) => version.hero)
+  const totalLength = versions?.length
+  console.log(totalLength,'totalLength')
+  const heroVersion = versions.find((version) => version.name === 'HERO')
   const approvedVersion = versions.find((version) => version.status === 'approved')
-  const selectedVersion = versions.find((version) => version.status === 'selected')
-  // const handleChange = () => console.log('test')
+  const latestVersion = versions.find((version) => version.status === 'latest')
+  const selectedVersion = versions.find((version) => version.id === selected)
+  const previousVersionIndex = versions.findIndex((version) => version.id === selectedVersion?.id) - 1
+  const previousVersion = previousVersionIndex >= 0 ? versions[previousVersionIndex] : null
+  const nextVersionIndex = versions.findIndex((version) => version.id === selectedVersion?.id) + 1
+  const nextVersion = nextVersionIndex >= totalLength ?  null : versions[nextVersionIndex]
 
-  const versionNames = versions.map((version) => version.name)
+  const isHeroSelected = selectedVersion.id === heroVersion.id
 
-  console.log(versionNames,'versionNames')
+
+
+  console.log(selected,'selectedXX')
   return (
   <Styled.Tools>
     <Styled.VersionButton
       icon="chevron_left"
-      onClick={() => console.log('addon')}
+      onClick={() => onChange(previousVersion.id)}
       data-tooltip="Previous version"
       // data-shortcut="A"
     >
-      <span className="large">Previous</span>
+     {previousVersion?.name}
     </Styled.VersionButton>
-    <VersionSelect
+    <Styled.VersionButton
+      onClick={() => console.log('addon')}
+      data-tooltip="Selected version"
+    >
+     {selectedVersion?.name || 'none'}
+    </Styled.VersionButton>
+
+
+    {/* <VersionSelect
       version={selectedVersion.name}
       value={[selectedVersion.name]}
       versions={[...versionNames]}
-      // onChange={handleChange}
     >
-      <span className="large">Previous</span>
-    </VersionSelect>
+  </VersionSelect> */}
+    {/* <Dropdown
+      value={selectedVersion.name}
+      options={versions}
+      onChange={handleChange}
+    >
+    </Dropdown> */}
+
+
     <Styled.VersionButton
       icon="chevron_right"
-      onClick={() => console.log('addon')}
-      data-tooltip="Install addon zip files"
-      data-shortcut="A"
+      onClick={() => onChange(nextVersion.id)}
+      data-tooltip="Next version"
     >
-      <span className="large">Next</span>
+     {nextVersion?.name}
+    </Styled.VersionButton>
+    <Styled.VersionButton
+      data-tooltip="Latest version"
+      onClick={()=>onChange(latestVersion.id)}
+    > 
+     latest {latestVersion.name || 'none'}
     </Styled.VersionButton>
     <Styled.VersionButton
       data-tooltip="Approved version"
-    >
-      <span className="large">approved: {approvedVersion.name || 'none'}</span>
+      onClick={()=>onChange(approvedVersion.id)}
+    > 
+     approved {approvedVersion.name || 'none'}
     </Styled.VersionButton>
     <Styled.VersionButton
+      style={{  background:  isHeroSelected ? 'blue' : null}}
       disabled={!heroVersion}
       data-tooltip="Hero version"
+      onClick={()=>onChange(heroVersion.id)}
     >
-      <span className="large">{heroVersion.name || 'Hero none'}</span>
+     hero {heroVersion.name || 'none'}
     </Styled.VersionButton>
 
   </Styled.Tools>
