@@ -1,8 +1,10 @@
 import { Button } from '@ynput/ayon-react-components'
+import { useState } from 'react'
 import * as Styled from './Preview.styled'
 import VersionSelectorTool from '/src/components/VersionSelectorTool/VersionSelectorTool'
 
-const Preview = ({ selected = [], entityType, onClose }) => {
+// const Preview = ({ selected = [], entityType, onClose }) => {
+const Preview = ({ entityType, onClose }) => {
   // TODO @LudoHolbik: a new services file src/services/preview/getPreview.js should be created for these queries below
 
   // TODO @Innders: get selected entity data from selected and entityType
@@ -14,24 +16,23 @@ const Preview = ({ selected = [], entityType, onClose }) => {
     { id: 1, name: 'v001' },
     { id: 2, name: 'v002' },
     { id: 3, name: 'v003' },
-    { id: 4, name: 'v004', hero: true },
-    { id: 5, name: 'v005', status: 'approved' },
+    { id: 4, name: 'v004', status: 'approved' },
     { id: 5, name: 'v005', status: 'selected' },
+    { id: 6, name: 'v006', status: 'latest' },
+    { id: 7, name: 'HERO' },
   ]
 
-  // const selected = 3
-  // const latest = 5
-  // const approved = 4
-  // const hero = 1
+  const [version, setVersion ] = useState(false)
+  console.log(version,'versionXXX')
 
   return (
     <Styled.Container>
       <Styled.Header>
-        <VersionSelectorTool versions={allVersionsDummyData} selected={selected} />
+        <VersionSelectorTool versions={allVersionsDummyData} selected={version} onChange={setVersion} />
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
-        <h2>Selected Version: {selected.join(', ')}</h2>
+        {/* <h2>Selected Version: {selected.join(', ')}</h2> */}
       </Styled.Content>
     </Styled.Container>
   )
