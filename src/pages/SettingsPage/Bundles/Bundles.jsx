@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
-import { Button, InputSwitch, Section, Dialog } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
 import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
@@ -11,7 +11,7 @@ import { useGetInstallerListQuery } from '/src/services/installers'
 import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
-import AddonUpload from '../AddonInstall/AddonUpload'
+import AddonDialog from '../../../components/AddonDialog/AddonDialog'
 import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
 import { ayonApi } from '/src/services/ayon'
@@ -25,11 +25,8 @@ const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
   const dispatch = useDispatch()
-  // addon install dialog
+  // addon upload dialog
   const [uploadOpen, setUploadOpen] = useState(false)
-
-  // keep track is an addon was installed
-  const [restartRequired, setRestartRequired] = useState(false)
 
   // table selection
   const [selectedBundles, setSelectedBundles] = useState([])
@@ -277,17 +274,10 @@ const Bundles = () => {
     }
   }
 
-  const handleAddonInstallFinish = () => {
-    setUploadOpen(false)
-    if (restartRequired) {
-      setRestartRequired(false)
-    }
-  }
-
   let uploadHeader = ''
   switch (uploadOpen) {
     case 'addon':
-      uploadHeader = 'Install Addons'
+      uploadHeader = 'Upload Addons'
       break
     case 'installer':
       uploadHeader = 'Upload Launcher'
@@ -343,21 +333,7 @@ const Bundles = () => {
         shortcuts={shortcuts}
         deps={[selectedBundles, newBundleOpen, prodBundle, stageBundle]}
       />
-      <Dialog
-        isOpen={uploadOpen}
-        style={{ width: 400, height: 400, overflow: 'hidden' }}
-        header={uploadHeader}
-        onClose={handleAddonInstallFinish}
-        size="md"
-      >
-        {uploadOpen && (
-          <AddonUpload
-            onClose={handleAddonInstallFinish}
-            type={uploadOpen}
-            onInstall={(t) => t === 'addon' && setRestartRequired(true)}
-          />
-        )}
-      </Dialog>
+      <AddonDialog uploadOpen={uploadOpen} setUploadOpen={setUploadOpen} uploadHeader={uploadHeader} />
       <main style={{ overflow: 'hidden' }}>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
@@ -372,12 +348,12 @@ const Bundles = () => {
                   <span>Add Bundle</span>
                 </Button>
                 <Button
-                  icon="input_circle"
+                  icon="upload"
                   onClick={() => setUploadOpen('addon')}
-                  data-tooltip="Install addon zip files"
+                  data-tooltip="Upload addon zip files"
                   data-shortcut="A"
                 >
-                  <span className="large">Install addons</span>
+                  <span className="large">Upload addons</span>
                   <span className="small">Addons</span>
                 </Button>
                 <Button
