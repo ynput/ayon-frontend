@@ -24,7 +24,7 @@ const ActivityHeader = ({
   entityType,
   onReferenceClick,
 }) => {
-  const { referenceType, origin = {}, isOwner, activityType, versions = [] } = activity
+  const { referenceType, origin = {}, isOwner, activityType, versions = [], activityId } = activity
   const isMention = referenceType === 'mention'
 
   const isPublish = activityType === 'version.publish'
@@ -61,7 +61,12 @@ const ActivityHeader = ({
               variant="text"
               projectInfo={projectInfo}
               onClick={() =>
-                onReferenceClick({ entityId: origin?.id, entityType: origin?.type, projectName })
+                onReferenceClick({
+                  entityId: origin?.id,
+                  entityType: origin?.type,
+                  projectName,
+                  activityId,
+                })
               }
             >
               {origin?.label || origin?.name}

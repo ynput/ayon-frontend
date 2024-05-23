@@ -10,6 +10,7 @@ import { useGetInboxQuery } from '/src/services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import { ayonApi } from '/src/services/ayon'
 import Shortcuts from '/src/containers/Shortcuts'
+import { highlightActivity } from '/src/features/details'
 
 const placeholderMessages = Array.from({ length: 30 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -28,7 +29,7 @@ const activityTypesFilters = {
 const Inbox = ({ filter }) => {
   const dispatch = useDispatch()
 
-  const last = 10
+  const last = 30
 
   let activityTypes = []
   if ('important' === filter) {
@@ -71,12 +72,20 @@ const Inbox = ({ filter }) => {
   const handleMessageSelect = (id) => {
     if (id.includes('placeholder')) return
     // if the message is already selected, deselect it
+    let newSelection = []
     if (selected.includes(id)) {
-      setSelected(selected.filter((s) => s !== id))
+      newSelection = selected.filter((s) => s !== id)
+      setSelected(newSelection)
       return
     } else {
-      setSelected([id])
+      newSelection = [id]
     }
+
+    // select the message
+    setSelected(newSelection)
+
+    // highlight the activity in the feed
+    dispatch(highlightActivity({ isSlideOut: false, activityIds: [id] }))
 
     // get messages and check if it has been read
     const message = messages.find((m) => m.activityId === id)

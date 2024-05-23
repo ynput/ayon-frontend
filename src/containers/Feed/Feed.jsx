@@ -20,6 +20,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 import { useEffect } from 'react'
 import { isEqual, union } from 'lodash'
+import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -39,6 +40,7 @@ const Feed = ({
   const path = isSlideOut ? 'slideOut' : 'pinned'
   const activityTypes = useSelector((state) => state.details[path].activityTypes)
   const filter = useSelector((state) => state.details[path].filter)
+  const highlighted = useSelector((state) => state.details[path].highlighted)
 
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
@@ -125,7 +127,10 @@ const Feed = ({
   useScrollOnInputOpen({ feedRef, isCommentInputOpen, height: 93 })
 
   // save scroll position of a feed
-  useSaveScrollPos({ entities, feedRef, filter })
+  useSaveScrollPos({ entities, feedRef, filter, disabled: highlighted.length })
+
+  // try and scroll to highlighted activity
+  useScrollToHighlighted({ feedRef, highlighted, isLoading: isLoadingNew })
 
   // we don't use transformedActivitiesData here because we could get new data from the query
   // but all the activities are merged so transformedActivitiesData doesn't change
@@ -218,7 +223,7 @@ const Feed = ({
   }
 
   const handleRefClick = (ref = {}) => {
-    const { entityId, entityType, projectName } = ref
+    const { entityId, entityType, projectName, activityId } = ref
     const supportedTypes = ['version', 'task']
 
     if (!supportedTypes.includes(entityType)) return console.log('Entity type not supported yet')
@@ -226,7 +231,7 @@ const Feed = ({
     if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
 
     // open slide out panel
-    dispatch(openSlideOut({ entityId, entityType, projectName, scope }))
+    dispatch(openSlideOut({ entityId, entityType, projectName, scope, activityId }))
   }
 
   const handleFileExpand = (file) => {
@@ -274,6 +279,7 @@ const Feed = ({
                   entities: entities,
                   versions: versionsData,
                 }}
+                isHighlighted={highlighted.includes(activity.activityId)}
               />
             ))}
         <InView onChange={(inView) => inView && handleGetMoreActivities()} threshold={1}>

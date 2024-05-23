@@ -101,7 +101,7 @@ export const transformInboxMessages = (projectEdges = [], isCleared) => {
 
   //   now sort the messages by createdAt using the compare function
   const messagesSortedByDate = filteredMessages.sort((a, b) =>
-    compareAsc(new Date(a.createdAt), new Date(b.createdAt)),
+    compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
   )
 
   //  for the first 5 messages, isRead = false

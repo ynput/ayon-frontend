@@ -23,6 +23,7 @@ const ActivityComment = ({
   isSlideOut,
   onFileExpand,
   showOrigin,
+  isHighlighted,
 }) => {
   let {
     body,
@@ -41,6 +42,7 @@ const ActivityComment = ({
   let menuId = 'comment-' + activity.activityId
   if (isSlideOut) menuId += '-slideout'
   const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
+
   // EDITING
   const [isEditing, setIsEditing] = useState(false)
 
@@ -59,7 +61,9 @@ const ActivityComment = ({
   }
 
   return (
-    <Styled.Comment className={classNames('comment', { isOwner, isMenuOpen, isEditing })}>
+    <Styled.Comment
+      className={classNames('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
+    >
       <ActivityHeader
         id={menuId}
         name={authorName}
@@ -95,7 +99,13 @@ const ActivityComment = ({
                 components={{
                   // a links
                   a: (props) =>
-                    aTag(props, { entityId, projectName, projectInfo, onReferenceClick }),
+                    aTag(props, {
+                      entityId,
+                      projectName,
+                      projectInfo,
+                      onReferenceClick,
+                      activityId,
+                    }),
                   // checkbox inputs
                   input: (props) => inputTag(props, { activity, onCheckChange }),
                   // code syntax highlighting
