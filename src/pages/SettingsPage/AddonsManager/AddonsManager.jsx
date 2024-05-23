@@ -19,6 +19,7 @@ import { useDeleteAddonVersionsMutation } from '/src/services/addons/updateAddon
 import { useRestart } from '/src/context/restartContext'
 import { Link } from 'react-router-dom'
 import AddonDialog from '../../../components/AddonDialog/AddonDialog'
+import Shortcuts from '/src/containers/Shortcuts'
 
 const AddonsManager = () => {
   const navigate = useNavigate()
@@ -138,8 +139,17 @@ const AddonsManager = () => {
     },
   ]
 
+  const shortcuts = [
+    {
+      key: 'a',
+      action: () => setUploadOpen('addon'),
+    },
+  ]
+
+
   return (
     <Section style={{ overflow: 'hidden' }}>
+      <Shortcuts shortcuts={shortcuts} />
       <Splitter style={{ height: '100%', padding: 8 }}>
         <SplitterPanel>
           <AddonDialog uploadOpen={uploadOpen} setUploadOpen={setUploadOpen} />
@@ -152,10 +162,10 @@ const AddonsManager = () => {
             field={'name'}
             header={
               <div style={{ display: 'flex', gap: '4px' }}>
+                <Button onClick={()=>setUploadOpen('addon')} data-shortcut="A" data-tooltip="Upload addon zip files" label="Upload Addons" icon="upload" style={{ width: '100%' }} />
                 <Link to="/market" style={{ width: '100%' }}>
                   <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
                 </Link>
-                <Button onClick={()=>setUploadOpen('addon')} label="Upload Addons" icon="upload" style={{ width: '100%' }} />
               </div>
             }
             extraContext={viewInMarket}
