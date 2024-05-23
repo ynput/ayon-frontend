@@ -3,17 +3,17 @@
 import { useMemo } from 'react'
 import DetailsPanel from '/src/containers/DetailsPanel/DetailsPanel'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import { useGetProjectQuery } from '/src/services/project/getProject'
 
-const InboxDetailsPanel = ({ messages = [], selected = [] }) => {
+const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) => {
   const selectedMessage = useMemo(() => {
     return messages.find((m) => m.activityId === selected[0]) || {}
   }, [messages, selected])
 
-  const { projectName, origin: { type: entityType, id: entityId } = {} } = selectedMessage
+  const { projectName, entityType, entityId } = selectedMessage
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
-  const { data: projectInfo = {} } = useGetProjectQuery({ projectName }, { skip: !projectName })
+
+  const projectInfo = projectsInfo[projectName] || {}
 
   if (!selected.length) return null
 
@@ -25,7 +25,7 @@ const InboxDetailsPanel = ({ messages = [], selected = [] }) => {
       projectUsers={users}
       activeProjectUsers={users}
       disabledProjectUsers={[]}
-      projectsInfo={{ [projectName]: projectInfo }}
+      projectsInfo={projectsInfo}
       projectNames={[projectName]}
       entityType={entityType}
       scope="dashboard"

@@ -6,6 +6,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
+import { usePrefetchEntity } from '../../UserDashboardPage/util'
+import { useDispatch } from 'react-redux'
+import { useGetProjectQuery } from '/src/services/project/getProject'
 
 // return a random folder name
 // different types, epi: ep{number}sq{number}sh{number}, shot: sh{number}, feat: sh{0000number}, asset: {asset_name}
@@ -54,6 +57,7 @@ const getRandomFolderName = () => {
   }
 }
 const Inbox = ({ filter }) => {
+  const dispatch = useDispatch()
   // TODO: get inbox endpoint instead of activities
   const projectName = 'demo_Commercial'
   const folderId = '7dcc7f6cfcc811eeaf820242c0a80002',
@@ -87,8 +91,13 @@ const Inbox = ({ filter }) => {
       thumbnail: { icon: 'folder' },
       isRead: i > 5,
       projectName,
+      entityId: m.origin?.id,
+      entityType: m.origin?.type,
     }))
   }, [isFetching, messages])
+
+  const { data: projectInfo = {} } = useGetProjectQuery({ projectName }, { skip: !projectName })
+  const projectsInfo = useMemo(() => ({ [projectName]: projectInfo }), [projectInfo, projectName])
 
   // single select only allow but multi select is possible
   // it always seems to become multi select so i'll just support it from the start
@@ -129,6 +138,16 @@ const Inbox = ({ filter }) => {
     listRef,
   })
 
+  // we keep track of the ids that have been pre-fetched to avoid fetching them again
+  const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 300)
+
+  const handleHover = (message) => {
+    const { entityId, projectName, entityType } = message
+    console.log(entityId)
+    if (!entityId || !projectName) return
+    handlePrefetch({ id: entityId, projectName, entityType })
+  }
+
   return (
     <Styled.InboxSection direction="row">
       <Styled.MessagesList
@@ -153,10 +172,15 @@ const Inbox = ({ filter }) => {
             onClear={() => handClearMessage(message.activityId)}
             id={message.activityId}
             isPlaceholder={message.isPlaceholder}
+            onMouseOver={() => handleHover(message)}
           />
         ))}
       </Styled.MessagesList>
-      <InboxDetailsPanel messages={transformedMessages} selected={selected} />
+      <InboxDetailsPanel
+        messages={transformedMessages}
+        selected={selected}
+        projectsInfo={projectsInfo}
+      />
     </Styled.InboxSection>
   )
 }
