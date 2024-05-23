@@ -3,6 +3,7 @@ import { onPrefetchIds } from '/src/features/dashboard'
 import { useLazyGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import { useLazyGetActivitiesQuery } from '/src/services/activities/getActivities'
 import { throttle } from 'lodash'
+import { activitiesLast } from '/src/containers/Feed/Feed'
 
 export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
   // keep track of the ids that have been pre-fetched to avoid fetching them again
@@ -31,7 +32,7 @@ export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
       entityIds: entityIds,
       projectName: task.projectName,
       cursor: null,
-      last: 20,
+      last: activitiesLast,
       currentUser: userName,
       referenceTypes: ['origin', 'mention', 'relation'],
       activityTypes: activityTypes,

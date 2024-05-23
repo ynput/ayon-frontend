@@ -21,6 +21,9 @@ import { classNames } from 'primereact/utils'
 import { useEffect } from 'react'
 import { isEqual, union } from 'lodash'
 
+// number of activities to get
+export const activitiesLast = 30
+
 const Feed = ({
   entities = [],
   activeUsers,
@@ -59,7 +62,7 @@ const Feed = ({
       entityIds: entityIds,
       projectName: projectName,
       cursor: currentCursors[filter],
-      last: 30,
+      last: activitiesLast,
       currentUser: userName,
       referenceTypes: ['origin', 'mention', 'relation'],
       activityTypes: activityTypes,
