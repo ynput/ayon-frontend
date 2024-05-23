@@ -3,8 +3,9 @@
 import { useMemo } from 'react'
 import DetailsPanel from '/src/containers/DetailsPanel/DetailsPanel'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
+import DetailsPanelSlideOut from '/src/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 
-const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, onClose }) => {
+const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) => {
   const selectedMessage = useMemo(() => {
     return messages.find((m) => m.activityId === selected[0]) || {}
   }, [messages, selected])
@@ -18,20 +19,22 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, on
   if (!selected.length) return null
 
   return (
-    <DetailsPanel
-      entities={[{ id: entityId, projectName, entityType: entityType }]}
-      statusesOptions={projectInfo.statuses || []}
-      tagsOptions={projectInfo.tags || []}
-      projectUsers={users}
-      activeProjectUsers={users}
-      disabledProjectUsers={[]}
-      projectsInfo={projectsInfo}
-      projectNames={[projectName]}
-      entityType={entityType}
-      scope="dashboard"
-      style={{ boxShadow: 'none' }}
-      onClose={onClose}
-    />
+    <div className="inbox-details-panel">
+      <DetailsPanel
+        entities={[{ id: entityId, projectName, entityType: entityType }]}
+        statusesOptions={projectInfo.statuses || []}
+        tagsOptions={projectInfo.tags || []}
+        projectUsers={users}
+        activeProjectUsers={users}
+        disabledProjectUsers={[]}
+        projectsInfo={projectsInfo}
+        projectNames={[projectName]}
+        entityType={entityType}
+        scope="inbox"
+        style={{ boxShadow: 'none' }}
+      />
+      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="inbox" />
+    </div>
   )
 }
 

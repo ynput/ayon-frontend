@@ -14,7 +14,7 @@ const initialStateSlideOut = {
   projectName: '',
 }
 
-const scopes = ['dashboard', 'project']
+const scopes = ['dashboard', 'project', 'inbox']
 
 const detailsSlice = createSlice({
   name: 'details',

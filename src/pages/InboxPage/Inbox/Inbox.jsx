@@ -175,10 +175,6 @@ const Inbox = ({ filter }) => {
         action: handleClearShortcut,
         closest: '.isClearable',
       },
-      {
-        key: 'Escape',
-        action: () => setSelected([]),
-      },
     ],
     [messagesData, selected],
   )
@@ -224,7 +220,6 @@ const Inbox = ({ filter }) => {
           messages={messagesData}
           selected={selected}
           projectsInfo={projectsInfo}
-          onClose={() => setSelected([])}
         />
       </Styled.InboxSection>
     </>

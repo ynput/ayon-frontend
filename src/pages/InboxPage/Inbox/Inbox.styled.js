@@ -10,9 +10,11 @@ export const InboxSection = styled(Section)`
     width: unset;
   }
 
-  .details-panel {
+  .inbox-details-panel {
     max-width: 600px;
     min-width: 600px;
+    position: relative;
+    height: 100%;
   }
 `
 
