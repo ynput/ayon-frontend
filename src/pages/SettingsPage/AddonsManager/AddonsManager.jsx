@@ -145,6 +145,7 @@ const AddonsManager = () => {
       action: () => setUploadOpen('addon'),
     },
   ]
+  
   return (
     <Section style={{ overflow: 'hidden' }}>
       <Shortcuts shortcuts={shortcuts} />
