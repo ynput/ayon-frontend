@@ -17,21 +17,21 @@ export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
   const [getEntitiesDetails] = useLazyGetDashboardEntitiesDetailsQuery()
   const [getEntitiesActivities] = useLazyGetActivitiesQuery()
 
-  const handlePrefetch = (entity) => {
-    if (prefetchedIds.includes(entity.id)) return
+  const handlePrefetch = ({ id, projectName, entityType = 'task' }) => {
+    if (prefetchedIds.includes(id)) return
 
-    setPrefetchedIds([...prefetchedIds, entity.id])
+    setPrefetchedIds([...prefetchedIds, id])
 
-    const entities = [{ id: entity.id, projectName: entity.projectName }]
-    const entityIds = [entity.id]
-    const projectInfo = projectsInfo[entity.projectName]
+    const entities = [{ id: id, projectName: projectName }]
+    const entityIds = [id]
+    const projectInfo = projectsInfo[projectName]
 
     // pre-fetch the entity details
-    getEntitiesDetails({ entities: entities, entityType: 'entity', projectInfo })
+    getEntitiesDetails({ entities: entities, entityType, projectInfo })
     // pre-fetch the activities based on current filter
     getEntitiesActivities({
       entityIds: entityIds,
-      projectName: entity.projectName,
+      projectName: projectName,
       cursor: null,
       last: activitiesLast,
       currentUser: userName,
