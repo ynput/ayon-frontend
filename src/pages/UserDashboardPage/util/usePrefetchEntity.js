@@ -17,21 +17,21 @@ export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
   const [getEntitiesDetails] = useLazyGetDashboardEntitiesDetailsQuery()
   const [getEntitiesActivities] = useLazyGetActivitiesQuery()
 
-  const handlePrefetch = (task) => {
-    if (prefetchedIds.includes(task.id)) return
+  const handlePrefetch = (entity) => {
+    if (prefetchedIds.includes(entity.id)) return
 
-    setPrefetchedIds([...prefetchedIds, task.id])
+    setPrefetchedIds([...prefetchedIds, entity.id])
 
-    const entities = [{ id: task.id, projectName: task.projectName }]
-    const entityIds = [task.id]
-    const projectInfo = projectsInfo[task.projectName]
+    const entities = [{ id: entity.id, projectName: entity.projectName }]
+    const entityIds = [entity.id]
+    const projectInfo = projectsInfo[entity.projectName]
 
-    // pre-fetch the task details
-    getEntitiesDetails({ entities: entities, entityType: 'task', projectInfo })
+    // pre-fetch the entity details
+    getEntitiesDetails({ entities: entities, entityType: 'entity', projectInfo })
     // pre-fetch the activities based on current filter
     getEntitiesActivities({
       entityIds: entityIds,
-      projectName: task.projectName,
+      projectName: entity.projectName,
       cursor: null,
       last: activitiesLast,
       currentUser: userName,
@@ -41,11 +41,11 @@ export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
     })
   }
 
-  const throttledPrefetchTask = throttleTime
+  const throttledPrefetchEntity = throttleTime
     ? throttle(handlePrefetch, throttleTime, { leading: false })
     : handlePrefetch
 
-  return throttledPrefetchTask
+  return throttledPrefetchEntity
 }
 
 export default usePrefetchEntity
