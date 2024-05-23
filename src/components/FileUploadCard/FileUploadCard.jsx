@@ -100,20 +100,23 @@ const FileUploadCard = ({
 
   const fileComponent = (
     <Styled.File className={classNames({ compact: isCompact, isDownloadable, isImage })}>
-      <Styled.ImageWrapper className="image-wrapper" onClick={handleImageClick}>
+      <Styled.ContentWrapper className="image-wrapper" onClick={handleImageClick}>
         <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
         <Icon icon="download" className="download-icon" />
         {isImage && src && (
-          <img
-            src={src + '?preview=true'}
-            onError={() => setImageError(true)}
-            style={{
-              display: imageError ? 'none' : 'block',
-            }}
-          />
+          <Styled.ImageWrapper className={classNames({ isDownloadable })}>
+            <img
+              src={src + '?preview=true'}
+              onError={() => setImageError(true)}
+              style={{
+                display: imageError ? 'none' : 'block',
+              }}
+            />
+            <Icon icon="open_in_full" />
+          </Styled.ImageWrapper>
         )}
-      </Styled.ImageWrapper>
-      <Styled.Footer className={classNames({ inProgress })}>
+      </Styled.ContentWrapper>
+      <Styled.Footer className={classNames({ inProgress, isImage, isDownloadable })}>
         <span className="progress" style={{ right: `${100 - progress}%` }} />
         <div className="name-wrapper">
           <span className="name">{fileName}</span>

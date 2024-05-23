@@ -46,22 +46,8 @@ export const File = styled.div`
   &.isDownloadable {
     cursor: pointer;
 
-    /* if it's downloadable show download bar on hover */
-    &:hover {
-      footer {
-        cursor: pointer;
-
-        /* highlight download bar on hovering the bar */
-        &:hover {
-          background-color: var(--md-sys-color-surface-container-low-hover);
-
-          .download,
-          .download-icon {
-            color: var(--md-sys-color-on-surface);
-          }
-        }
-      }
-
+    /* when not an image, hover both */
+    &:not(.isImage):hover {
       /* reveal size and download */
       .download {
         display: flex;
@@ -70,18 +56,6 @@ export const File = styled.div`
       .extension {
         display: none;
       }
-    }
-
-    &.isImage {
-      &:hover {
-        footer {
-          padding: var(--padding-s);
-        }
-      }
-    }
-
-    /* when not an image, hover both */
-    &:not(.isImage):hover {
       .image-wrapper,
       footer {
         background-color: var(--md-sys-color-surface-container-low-hover);
@@ -105,6 +79,7 @@ export const File = styled.div`
 `
 
 export const Footer = styled.footer`
+  background-color: var(--md-sys-color-surface-container-low);
   display: flex;
   align-items: center;
   position: relative;
@@ -167,9 +142,42 @@ export const Footer = styled.footer`
   .download-icon {
     font-size: 20px;
   }
+
+  &.isImage {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  &.isDownloadable {
+    &:hover {
+      cursor: pointer;
+
+      &.isImage {
+        padding: var(--padding-m) var(--padding-s);
+      }
+
+      background-color: var(--md-sys-color-surface-container-low-hover);
+
+      .download,
+      .download-icon {
+        color: var(--md-sys-color-on-surface);
+      }
+
+      /* reveal size and download */
+      .download {
+        display: flex;
+      }
+      .name-wrapper,
+      .extension {
+        display: none;
+      }
+    }
+  }
 `
 
-export const ImageWrapper = styled.div`
+export const ContentWrapper = styled.div`
   position: relative;
   display: flex;
   justify-content: center;
@@ -178,19 +186,59 @@ export const ImageWrapper = styled.div`
 
   flex: 1;
 
-  img {
-    position: absolute;
-    max-height: 100%;
-    max-width: 100%;
-    object-fit: contain;
-    background-color: var(--md-sys-color-surface-container-lowest);
-  }
-
   .icon {
     user-select: none;
   }
 
   .download-icon {
     display: none;
+  }
+`
+
+export const ImageWrapper = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  img {
+    position: absolute;
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    height: calc(100% - 20px);
+
+    transition: scale 0.2s ease;
+  }
+
+  .icon {
+    position: absolute;
+    /* center */
+    left: 50%;
+    bottom: calc(50% - 20px);
+    transform: translate(-50%, -50%);
+
+    display: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    opacity: 0;
+    transition: opacity 0.1s ease;
+  }
+
+  &.isDownloadable {
+    &:hover {
+      &::after {
+        opacity: 0.8;
+      }
+
+      .icon {
+        display: block;
+        z-index: 10;
+      }
+    }
   }
 `
