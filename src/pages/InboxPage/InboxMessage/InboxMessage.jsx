@@ -5,6 +5,7 @@ import { isValid } from 'date-fns'
 import { isToday } from 'date-fns'
 import { format } from 'date-fns'
 import UserImage from '/src/components/UserImage'
+import removeMd from 'remove-markdown'
 
 const activityTypeIcons = {
   comment: 'chat',
@@ -80,7 +81,7 @@ const InboxMessage = ({
       </Styled.Left>
       <Styled.Middle className="middle">
         <Icon icon={typeIcon} className="type" />
-        <Styled.Body className="body">{body}</Styled.Body>
+        <Styled.Body className="body">{removeMd(body)}</Styled.Body>
       </Styled.Middle>
       <Styled.Right className="right">
         {onClear && (
