@@ -3,12 +3,14 @@ import ThumbnailSimple from '/src/containers/ThumbnailSimple'
 import { Button, getShimmerStyles } from '@ynput/ayon-react-components'
 
 const showClearButton = css`
-  .clear {
-    display: flex;
-  }
-  .user-image,
-  .date {
-    display: none;
+  &.isClearable {
+    .clear {
+      display: flex;
+    }
+    .user-image,
+    .date {
+      display: none;
+    }
   }
 `
 
@@ -86,7 +88,6 @@ export const Message = styled.li`
   }
 
   /* loading placeholder shimmer state */
-
   &.isPlaceholder {
     cursor: default;
     .left,

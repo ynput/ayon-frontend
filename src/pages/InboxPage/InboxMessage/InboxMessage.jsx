@@ -40,16 +40,37 @@ const InboxMessage = ({
   isSelected,
   disableHover, // remove all hover effects
   isPlaceholder, // shimmer effects
+  onSelect,
   ...props
 }) => {
   const typeIcon = activityTypeIcons[type] || 'notifications'
+
+  const handleOnClick = (e) => {
+    // call the parent onClick if it exists
+    props.onClick && props.onClick(e)
+
+    if (onSelect) {
+      // check we are not clicking the clear button
+      // use closest to check if the clear button is clicked
+      if (!e.target.closest('.clear')) {
+        onSelect(id)
+      }
+    }
+  }
 
   return (
     <Styled.Message
       {...props}
       tabIndex={0}
-      className={classNames({ isSelected, isRead, disableHover, isPlaceholder })}
+      className={classNames({
+        isSelected,
+        isRead,
+        disableHover,
+        isPlaceholder,
+        isClearable: !!onClear,
+      })}
       id={'message-' + id}
+      onClick={handleOnClick}
     >
       <Styled.Left className="left">
         <Styled.Thumbnail src={thumbnailUrl} icon={thumbnailIcon} />
@@ -62,14 +83,17 @@ const InboxMessage = ({
         <Styled.Body className="body">{body}</Styled.Body>
       </Styled.Middle>
       <Styled.Right className="right">
-        <Styled.ClearButton
-          icon="check"
-          className="clear"
-          variant="filled"
-          onClick={onClear && onClear}
-        >
-          Clear (c)
-        </Styled.ClearButton>
+        {onClear && (
+          <Styled.ClearButton
+            id={'clear-' + id}
+            icon="check"
+            className="clear"
+            variant="filled"
+            onClick={onClear && onClear}
+          >
+            Clear (c)
+          </Styled.ClearButton>
+        )}
         <UserImage name={userName} size={20} />
         <Styled.Date className="date">{getDateString(createdAt)}</Styled.Date>
       </Styled.Right>
