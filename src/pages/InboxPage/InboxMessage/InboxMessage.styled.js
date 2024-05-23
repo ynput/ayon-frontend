@@ -85,6 +85,11 @@ export const Message = styled.li`
       color: var(--md-sys-color-outline);
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
+
+    /* fade status icons */
+    .icon.status {
+      opacity: 0.6;
+    }
   }
 
   /* loading placeholder shimmer state */
@@ -148,8 +153,9 @@ export const Middle = styled.div`
   gap: var(--base-gap-large);
   overflow: hidden;
   flex-grow: 1;
+  align-items: center;
 
-  .icon {
+  .icon.type {
     font-size: 18px;
 
     font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;

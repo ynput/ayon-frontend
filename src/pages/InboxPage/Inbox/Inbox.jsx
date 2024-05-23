@@ -48,7 +48,7 @@ const Inbox = ({ filter }) => {
       isCleared: isCleared,
     })
 
-  const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
+  const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery(
     { projects: projectNames },
     { skip: isFetchingInbox || !projectNames?.length },
   )
@@ -148,7 +148,7 @@ const Inbox = ({ filter }) => {
     handlePrefetch({ id: entityId, projectName, entityType })
   }
 
-  const messagesData = isFetchingInbox ? placeholderMessages : messages
+  const messagesData = isFetchingInbox || isFetchingInfo ? placeholderMessages : messages
 
   const handleClearShortcut = (e) => {
     // get the message list item
@@ -200,6 +200,8 @@ const Inbox = ({ filter }) => {
               subTitle={message.origin?.label || message.origin?.name}
               type={message.activityType}
               body={message.body}
+              projectName={message.projectName}
+              activityData={message.activityData}
               createdAt={message.createdAt}
               userName={message.author?.name}
               isRead={message.isRead || message.isCleared}
@@ -214,6 +216,7 @@ const Inbox = ({ filter }) => {
               id={message.activityId}
               isPlaceholder={message.isPlaceholder}
               onMouseOver={() => handleHover(message)}
+              projectsInfo={projectsInfo}
             />
           ))}
         </Styled.MessagesList>

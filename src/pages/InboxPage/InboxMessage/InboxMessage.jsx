@@ -6,6 +6,7 @@ import { isToday } from 'date-fns'
 import { format } from 'date-fns'
 import UserImage from '/src/components/UserImage'
 import removeMd from 'remove-markdown'
+import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
 
 const activityTypeIcons = {
   comment: 'chat',
@@ -37,11 +38,14 @@ const InboxMessage = ({
   createdAt,
   onClear,
   isRead,
+  projectName,
   thumbnail: { icon: thumbnailIcon, url: thumbnailUrl } = {},
   isSelected,
   disableHover, // remove all hover effects
   isPlaceholder, // shimmer effects
   onSelect,
+  projectsInfo,
+  activityData,
   ...props
 }) => {
   const typeIcon = activityTypeIcons[type] || 'notifications'
@@ -56,6 +60,17 @@ const InboxMessage = ({
       if (!e.target.closest('.clear')) {
         onSelect(id)
       }
+    }
+  }
+
+  let fromStatus, toStatus
+  const isStatusChange = type === 'status.change'
+  if (isStatusChange) {
+    const projectInfo = projectsInfo[projectName]
+    if (projectInfo) {
+      const statuses = projectInfo.statuses || []
+      fromStatus = statuses.find((status) => status.name === activityData.oldValue)
+      toStatus = statuses.find((status) => status.name === activityData.newValue)
     }
   }
 
@@ -80,8 +95,12 @@ const InboxMessage = ({
         <span className="sub-title">{subTitle}</span>
       </Styled.Left>
       <Styled.Middle className="middle">
-        <Icon icon={typeIcon} className="type" />
-        <Styled.Body className="body">{removeMd(body)}</Styled.Body>
+        {!isStatusChange && <Icon icon={typeIcon} className="type" />}
+        {isStatusChange ? (
+          <InboxMessageStatus {...{ fromStatus, toStatus }} />
+        ) : (
+          <Styled.Body className="body">{removeMd(body)}</Styled.Body>
+        )}
       </Styled.Middle>
       <Styled.Right className="right">
         {onClear && (
