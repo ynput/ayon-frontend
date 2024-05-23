@@ -74,8 +74,7 @@ export const Message = styled.li`
   }
 
   /* make all text grey when read */
-  /* but not when selected */
-  &.isRead:not(.isSelected) {
+  &.isRead {
     span:not(.icon) {
       color: var(--md-sys-color-outline);
     }

@@ -1,103 +1,56 @@
-import { useGetActivitiesQuery } from '/src/services/activities/getActivities'
-import { filterActivityTypes } from '/src/features/dashboard'
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { usePrefetchEntity } from '../../UserDashboardPage/util'
 import { useDispatch } from 'react-redux'
-import { useGetProjectQuery } from '/src/services/project/getProject'
+import { useGetInboxQuery } from '/src/services/inbox/getInbox'
+import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
+import { ayonApi } from '/src/services/ayon'
 
-// return a random folder name
-// different types, epi: ep{number}sq{number}sh{number}, shot: sh{number}, feat: sh{0000number}, asset: {asset_name}
-const assetsNames = [
-  'car',
-  'house',
-  'tree',
-  'dog',
-  'cat',
-  'bird',
-  'fish',
-  'flower',
-  'rock',
-  'mountain',
-  'river',
-  'lake',
-  'ocean',
-  'sky',
-  'cloud',
-  'sun',
-  'moon',
-  'star',
-  'planet',
-  'galaxy',
-  'universe',
-]
-const types = ['epi', 'shot', 'feat', 'asset']
+const placeholderMessages = Array.from({ length: 30 }, (_, i) => ({
+  activityId: `placeholder-${i}`,
+  folderName: 'Loading...',
+  thumbnail: { icon: 'folder' },
+  isRead: false,
+  isPlaceholder: true,
+}))
 
-const getRandomNumber = (interval = 10, max = 100) =>
-  Math.floor(Math.random() * (max / interval) + 1) * interval
-
-const getRandomFolderName = () => {
-  const type = types[Math.floor(Math.random() * types.length)]
-
-  switch (type) {
-    case 'epi':
-      return `ep${getRandomNumber(10, 200)}sq${getRandomNumber()}sh${getRandomNumber()}`
-    case 'shot':
-      return `sh${getRandomNumber()}`
-    case 'feat':
-      return `sh000${getRandomNumber()}`
-    case 'asset':
-      return assetsNames[Math.floor(Math.random() * assetsNames.length)]
-    default:
-      return ''
-  }
-}
 const Inbox = ({ filter }) => {
   const dispatch = useDispatch()
-  // TODO: get inbox endpoint instead of activities
-  const projectName = 'demo_Commercial'
-  const folderId = '7dcc7f6cfcc811eeaf820242c0a80002',
-    taskId = '7dceece8fcc811eeaf820242c0a80002',
-    versionId = '7dcdf1eefcc811eeaf820242c0a80002'
-  const entityIds = [folderId, taskId, versionId]
-  const activityTypes = filterActivityTypes.activity
-  const { data: messages = [], isFetching } = useGetActivitiesQuery({
-    projectName,
-    entityIds,
-    activityTypes,
-    referenceTypes: ['origin', 'mention', 'relation'],
-    last: 30,
-    cursor: null,
-    filter,
-  })
 
-  const transformedMessages = useMemo(() => {
-    if (isFetching) {
-      return Array.from({ length: 30 }, (_, i) => ({
-        activityId: `placeholder-${i}`,
-        folderName: 'Loading...',
-        thumbnail: { icon: 'folder' },
-        isRead: false,
-      }))
-    }
+  const last = 10
 
-    return messages.map((m, i) => ({
-      ...m,
-      folderName: getRandomFolderName(),
-      thumbnail: { icon: 'folder' },
-      isRead: i > 5,
-      projectName,
-      entityId: m.origin?.id,
-      entityType: m.origin?.type,
-    }))
-  }, [isFetching, messages])
+  let activityTypes = []
+  if ('important' === filter) {
+    activityTypes = ['comment', 'version.publish', 'status.change']
+  } else if (filter === 'other') {
+    activityTypes = ['assignee.add', 'assignee.remove']
+  } else if (filter === 'cleared') {
+    activityTypes = [
+      'comment',
+      'version.publish',
+      'status.change',
+      'assignee.add',
+      'assignee.remove',
+    ]
+  }
 
-  const { data: projectInfo = {} } = useGetProjectQuery({ projectName }, { skip: !projectName })
-  const projectsInfo = useMemo(() => ({ [projectName]: projectInfo }), [projectInfo, projectName])
+  const isCleared = filter === 'cleared'
+
+  const { data: { messages = [], projectNames = [] } = {}, isFetching: isFetchingInbox } =
+    useGetInboxQuery({
+      last: last,
+      activityTypes: activityTypes,
+      isCleared: isCleared,
+    })
+
+  const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
+    { projects: projectNames },
+    { skip: isFetchingInbox || !projectNames?.length },
+  )
 
   // single select only allow but multi select is possible
   // it always seems to become multi select so i'll just support it from the start
@@ -109,10 +62,10 @@ const Inbox = ({ filter }) => {
   // we do this so that keyboard navigation works right away
   useEffect(() => {
     setSelected([])
-    if (!listRef.current || isFetching) return
+    if (!listRef.current || isFetchingInbox) return
 
     listRef.current?.firstElementChild?.focus()
-  }, [listRef, isFetching, filter])
+  }, [listRef, isFetchingInbox, filter])
 
   const handleMessageSelect = (id) => {
     if (id.includes('placeholder')) return
@@ -123,6 +76,20 @@ const Inbox = ({ filter }) => {
     } else {
       setSelected([id])
     }
+
+    // get messages and check if it has been read
+    const message = messages.find((m) => m.activityId === id)
+    if (message && !message.isRead) {
+      // TODO: update the message in the backend to mark it as read
+      // but for now just patch getInbox cache
+      dispatch(
+        ayonApi.util.updateQueryData('getInbox', { last, isCleared, activityTypes }, (draft) => {
+          const messageIndex = draft.messages.findIndex((m) => m.activityId === id)
+          if (messageIndex === -1) return
+          draft.messages[messageIndex] = { ...draft.messages[messageIndex], isRead: true }
+        }),
+      )
+    }
   }
 
   const handClearMessage = (id) => {
@@ -132,7 +99,7 @@ const Inbox = ({ filter }) => {
   }
 
   const [handleKeyDown, [usingKeyboard, setUsingKeyboard]] = useKeydown({
-    messages: transformedMessages,
+    messages: messages,
     onChange: handleMessageSelect,
     selected,
     listRef,
@@ -143,10 +110,11 @@ const Inbox = ({ filter }) => {
 
   const handleHover = (message) => {
     const { entityId, projectName, entityType } = message
-    console.log(entityId)
     if (!entityId || !projectName) return
     handlePrefetch({ id: entityId, projectName, entityType })
   }
+
+  const messagesData = isFetchingInbox ? placeholderMessages : messages
 
   return (
     <Styled.InboxSection direction="row">
@@ -154,9 +122,9 @@ const Inbox = ({ filter }) => {
         ref={listRef}
         onMouseMove={() => setUsingKeyboard(false)}
         onKeyDown={handleKeyDown}
-        className={classNames({ isLoading: isFetching })}
+        className={classNames({ isLoading: isFetchingInbox })}
       >
-        {transformedMessages.map((message) => (
+        {messagesData.map((message) => (
           <InboxMessage
             key={message.activityId}
             title={message.folderName}
@@ -164,8 +132,8 @@ const Inbox = ({ filter }) => {
             type={message.activityType}
             body={message.body}
             createdAt={message.createdAt}
-            userName={message.authorName}
-            isRead={message.isRead}
+            userName={message.author?.name}
+            isRead={message.isRead || message.isCleared}
             onClick={() => handleMessageSelect(message.activityId)}
             isSelected={selected.includes(message.activityId)}
             disableHover={usingKeyboard}
@@ -177,9 +145,10 @@ const Inbox = ({ filter }) => {
         ))}
       </Styled.MessagesList>
       <InboxDetailsPanel
-        messages={transformedMessages}
+        messages={messagesData}
         selected={selected}
         projectsInfo={projectsInfo}
+        // onClose={() => setSelected([])}
       />
     </Styled.InboxSection>
   )

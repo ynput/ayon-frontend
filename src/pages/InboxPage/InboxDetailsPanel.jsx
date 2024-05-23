@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import DetailsPanel from '/src/containers/DetailsPanel/DetailsPanel'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
 
-const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) => {
+const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, onClose }) => {
   const selectedMessage = useMemo(() => {
     return messages.find((m) => m.activityId === selected[0]) || {}
   }, [messages, selected])
@@ -29,6 +29,8 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) 
       projectNames={[projectName]}
       entityType={entityType}
       scope="dashboard"
+      style={{ boxShadow: 'none' }}
+      onClose={onClose}
     />
   )
 }
