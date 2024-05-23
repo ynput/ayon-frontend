@@ -11,8 +11,8 @@ export const InboxSection = styled(Section)`
   }
 
   .details-panel {
-    max-width: 533px;
-    min-width: 533px;
+    max-width: 600px;
+    min-width: 600px;
   }
 `
 
