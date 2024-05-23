@@ -71,4 +71,8 @@ export const AddonCard = styled.button`
     background-color: unset;
     color: var(--md-sys-color-on-error-container);
   }
+
+  .version {
+    margin-left: auto;
+  }
 `

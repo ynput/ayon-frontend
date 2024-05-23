@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
     "lint:fix": "eslint --fix 'src/**/*.{jsx,ts,tsx}'",
-    "format": "prettier --write src/**/*.{js,jsx} --config ./.prettierrc"
+    "format": "prettier --write src/**/*.{js,jsx} --config ./.prettierrc",
+    "upgrade-arc": "yarn upgrade @ynput/ayon-react-components@latest"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.0.8",
@@ -16,7 +17,7 @@
     "@rjsf/core": "^4.2.0",
     "@rtk-query/graphql-request-base-query": "^2.2.0",
     "@uiw/react-textarea-code-editor": "^2.1.9",
-    "@ynput/ayon-react-components": "^1.0.13",
+    "@ynput/ayon-react-components": "^1.0.14",
     "axios": "^1.6.3",
     "chart.js": "^4.2.0",
     "date-fns": "^3.6.0",

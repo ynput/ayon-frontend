@@ -5,7 +5,6 @@ import EntityDetail from '/src/containers/DetailsDialog'
 import { CellWithIcon } from '/src/components/icons'
 import { TimestampField } from '/src/containers/fieldFormat'
 import usePubSub from '/src/hooks/usePubSub'
-
 import groupResult from '/src/helpers/groupResult'
 import useLocalStorage from '/src/hooks/useLocalStorage'
 import {
@@ -19,13 +18,11 @@ import {
 } from '/src/features/context'
 import VersionList from './VersionList'
 import StatusSelect from '/src/components/status/statusSelect'
-
 import {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
 } from '/src/services/product/getProduct'
 import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
-import { MultiSelect } from 'primereact/multiselect'
 import useSearchFilter, { filterByFieldsAndValues } from '/src/hooks/useSearchFilter'
 import useColumnResize from '/src/hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
@@ -358,16 +355,9 @@ const Products = () => {
     allColumnsNames,
   )
 
-  const handleColumnsFilter = (e) => {
-    e.preventDefault()
-    const newArray = e.target.value || []
-
-    if (newArray.length) {
-      // make sure there's always at least one column
-      isMultiSelected
-        ? setShownColumnsMultiFocused(newArray)
-        : setShownColumnsSingleFocused(newArray)
-    }
+  const handleColumnsFilter = (value = []) => {
+    // if multiple folders are selected, we need to save the columns in a different local storage
+    isMultiSelected ? setShownColumnsMultiFocused(value) : setShownColumnsSingleFocused(value)
   }
 
   // sort columns if localstorage set
@@ -385,8 +375,8 @@ const Products = () => {
 
   const shownColumns = isMultiSelected ? shownColumnsMultiFocused : shownColumnsSingleFocused
 
-  // only filter columns if required
-  if (shownColumns.length < columns.length) {
+  // only filter if above zero otherwise show all columns
+  if (shownColumns.length) {
     columns = columns.filter(({ field }) => shownColumns.includes(field))
   }
 
@@ -553,17 +543,6 @@ const Products = () => {
   //
   // Render
   //
-  const getOutOfString = (value, total) => {
-    if (value.length === total.length) return ''
-
-    return `${value.length}/${total.length}`
-  }
-
-  const placeholder = `Show Columns  ${
-    isMultiSelected
-      ? `${getOutOfString(shownColumnsMultiFocused, filterOptions)} (Multiple)`
-      : `${getOutOfString(shownColumnsSingleFocused, filterOptions)} (Single)`
-  }`
 
   const isNone = filteredBySearchData.length === 0
 
@@ -586,12 +565,12 @@ const Products = () => {
           placeholder="Task types..."
           multiSelect
         />
-        <MultiSelect
+        <Styled.ColumnsFilterSelect
           options={filterOptions}
           value={shownColumns}
           onChange={handleColumnsFilter}
-          placeholder={placeholder}
-          fixedPlaceholder
+          onClear={!!shownColumns.length && handleColumnsFilter}
+          multiSelect
         />
         <Spacer />
         <ViewModeToggle

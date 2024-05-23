@@ -22,16 +22,7 @@ icons['list']['check'] = getIcon('checklist')
 icons['image'] = getIcon('attach_file')
 icons['code-block'] = getIcon('code')
 
-export const quillFormats = [
-  'header',
-  'bold',
-  'italic',
-  'strike',
-  'list',
-  'link',
-  'image',
-  'code-block',
-]
+export const quillFormats = ['header', 'bold', 'italic', 'strike', 'list', 'link', 'code-block']
 
 export const getModules = ({ imageUploader }) => {
   return {

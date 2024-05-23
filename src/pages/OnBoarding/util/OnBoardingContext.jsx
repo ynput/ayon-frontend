@@ -118,9 +118,9 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const [selectedAddons, setSelectedAddons] = useState([])
 
   // get selected release data
-  const { data: release = {} } = useGetReleaseQuery(
+  const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseQuery(
     { name: selectedPreset },
-    { skip: !selectedPreset || stepIndex !== 7 },
+    { skip: !selectedPreset || stepIndex < 5 },
   )
 
   // // once releases are loaded, set selectedPreset to the first one and pre-cache each release
@@ -265,6 +265,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     setIsConnecting,
     isConnecting,
     isLoadingRelease,
+    isLoadingAddons,
   }
 
   return <OnBoardingContext.Provider value={contextValue}>{children}</OnBoardingContext.Provider>
