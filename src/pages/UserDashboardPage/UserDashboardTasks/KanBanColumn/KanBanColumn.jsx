@@ -1,6 +1,6 @@
 import * as Styled from './KanBanColumn.styled'
 import React, { Fragment, forwardRef, useEffect, useMemo, useRef, useState } from 'react'
-import { getFakeTasks, getGroupedTasks, usePrefetchTask, useTaskClick } from '../../util'
+import { getFakeTasks, getGroupedTasks, usePrefetchEntity, useTaskClick } from '../../util'
 import { useDispatch, useSelector } from 'react-redux'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import KanBanCard from '../KanBanCard/KanBanCard'
@@ -70,7 +70,7 @@ const KanBanColumn = forwardRef(
 
     // PREFETCH TASK WHEN HOVERING
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
-    const handlePrefetch = usePrefetchTask(dispatch, projectsInfo, 500)
+    const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500)
 
     // CONTEXT MENU
     const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)

@@ -5,7 +5,8 @@ import { useLazyGetActivitiesQuery } from '/src/services/activities/getActivitie
 import { throttle } from 'lodash'
 import { activitiesLast } from '/src/containers/Feed/Feed'
 
-export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
+// prefetch the entity details and activities
+export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
   // keep track of the ids that have been pre-fetched to avoid fetching them again
   const prefetchedIds = useSelector((state) => state.dashboard.prefetchedIds)
   const userName = useSelector((state) => state.user.name)
@@ -47,4 +48,4 @@ export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
   return throttledPrefetchTask
 }
 
-export default usePrefetchTask
+export default usePrefetchEntity
