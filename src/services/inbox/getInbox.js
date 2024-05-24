@@ -14,8 +14,10 @@ const getInbox = ayonApi.injectEndpoints({
           variables: { last, activityTypes },
         },
       }),
-      transformResponse: (res, err, { isCleared }) =>
-        transformInboxMessages(res?.data?.projects?.edges, isCleared),
+      transformResponse: (res, err, { isCleared, userName }) =>
+        transformInboxMessages(res?.data?.projects?.edges, isCleared, userName),
+      // only use activityTypes and isCleared as cache keys
+      serializeQueryArgs: ({ queryArgs: { last, activityTypes } }) => ({ last, activityTypes }),
     }),
   }),
 })

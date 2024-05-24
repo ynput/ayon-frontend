@@ -51,7 +51,7 @@ const getRandomFolderName = () => {
 // get random true or false where there's a 1 in 5 chance of getting true
 const getRandomBoolean = () => Math.random() < 0.7
 
-export const transformInboxMessages = (projectEdges = [], isCleared) => {
+export const transformInboxMessages = (projectEdges = [], isCleared, userName) => {
   const messages = []
   const projectNames = []
 
@@ -64,19 +64,24 @@ export const transformInboxMessages = (projectEdges = [], isCleared) => {
     for (const messageEdge of messageEdges) {
       const message = messageEdge.node
 
+      // HACK: remove this when proper inbox comes in
+      // skip messages from self
+      if (message.author?.name === userName) continue
+
       //   check if the entityId is already in the messages array
       const matchingEntity = messages.find((m) => m.entityId === message.origin?.id)
       const folderName = matchingEntity?.folderName || getRandomFolderName()
 
       if (!message) continue
+
       const transformedMessage = {
         ...message,
         folderName: folderName,
         thumbnail: { icon: 'folder' },
         entityId: message.origin?.id,
         entityType: message.origin?.type,
-        isRead: true,
-        isCleared: getRandomBoolean(),
+        isRead: true, //HACK
+        isCleared: getRandomBoolean(), //HACK
       }
 
       // parse fields that are JSON strings
@@ -104,10 +109,12 @@ export const transformInboxMessages = (projectEdges = [], isCleared) => {
     compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
   )
 
-  //  for the first 5 messages, isRead = false
-  for (let i = 0; i < 5; i++) {
-    if (messagesSortedByDate[i]) {
-      messagesSortedByDate[i].isRead = false
+  //  HACK: for the first 5 messages, isRead = false
+  if (!isCleared) {
+    for (let i = 0; i < 5; i++) {
+      if (messagesSortedByDate[i]) {
+        messagesSortedByDate[i].isRead = false
+      }
     }
   }
 

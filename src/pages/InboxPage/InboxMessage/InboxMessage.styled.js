@@ -42,6 +42,11 @@ export const Message = styled.li`
   border: 1px solid transparent;
   border-top-color: var(--md-sys-color-outline-variant);
 
+  /* last child margin */
+  &:last-child {
+    margin-bottom: 32px;
+  }
+
   &.isSelected:not(.isPlaceholder) {
     border-radius: var(--border-radius-m);
     background-color: var(--md-sys-color-primary-container);

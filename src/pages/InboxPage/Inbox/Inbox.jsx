@@ -5,13 +5,14 @@ import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { usePrefetchEntity } from '../../UserDashboardPage/util'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useGetInboxQuery } from '/src/services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import { ayonApi } from '/src/services/ayon'
 import Shortcuts from '/src/containers/Shortcuts'
 import { highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
+import { Button, InputText, Spacer } from '@ynput/ayon-react-components'
 
 const placeholderMessages = Array.from({ length: 30 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -29,6 +30,7 @@ const activityTypesFilters = {
 
 const Inbox = ({ filter }) => {
   const dispatch = useDispatch()
+  const userName = useSelector((state) => state.user.name)
 
   const last = 30
 
@@ -43,12 +45,16 @@ const Inbox = ({ filter }) => {
 
   const isCleared = filter === 'cleared'
 
-  const { data: { messages = [], projectNames = [] } = {}, isFetching: isFetchingInbox } =
-    useGetInboxQuery({
-      last: last,
-      activityTypes: activityTypes,
-      isCleared: isCleared,
-    })
+  const {
+    data: { messages = [], projectNames = [] } = {},
+    isFetching: isFetchingInbox,
+    refetch,
+  } = useGetInboxQuery({
+    last: last,
+    activityTypes: activityTypes,
+    isCleared: isCleared,
+    userName: userName,
+  })
 
   const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery(
     { projects: projectNames },
@@ -96,8 +102,10 @@ const Inbox = ({ filter }) => {
 
     const idsToHighlight = idsToMarkAsRead.length > 0 ? idsToMarkAsRead : ids
 
-    // highlight the activity in the feed
-    dispatch(highlightActivity({ isSlideOut: false, activityIds: idsToHighlight }))
+    if (message.activityType === 'comment') {
+      // highlight the activity in the feed
+      dispatch(highlightActivity({ isSlideOut: false, activityIds: idsToHighlight }))
+    }
 
     if (idsToMarkAsRead.length > 0) {
       // TODO: update the messages in the backend to mark them as read
@@ -202,12 +210,21 @@ const Inbox = ({ filter }) => {
     }
   }
 
+  const handleRefresh = () => {
+    console.log('refetching inbox...')
+    refetch()
+  }
+
   const shortcuts = useMemo(
     () => [
       {
         key: 'c',
         action: handleClearShortcut,
         closest: '.isClearable',
+      },
+      {
+        key: 'r',
+        action: handleRefresh,
       },
     ],
     [messagesData, selected],
@@ -216,6 +233,11 @@ const Inbox = ({ filter }) => {
   return (
     <>
       <Shortcuts shortcuts={shortcuts} deps={[messagesData, selected]} />
+      <Styled.Tools>
+        {/* <InputText placeholder="Search..." /> */}
+        <Spacer />
+        <Button label="Refresh (r)" icon="refresh" onClick={handleRefresh} />
+      </Styled.Tools>
       <Styled.InboxSection direction="row">
         <Styled.MessagesList
           ref={listRef}

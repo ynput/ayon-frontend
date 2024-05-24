@@ -31,7 +31,7 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) 
         projectNames={[projectName]}
         entityType={entityType}
         scope="inbox"
-        style={{ boxShadow: 'none' }}
+        style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="inbox" />
     </div>
