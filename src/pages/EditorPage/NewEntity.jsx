@@ -43,7 +43,9 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   //   type selector
   const tasks = useSelector((state) => state.project.tasks)
+  const tasksOrder = useSelector((state) => state.project.tasksOrder)
   const folders = useSelector((state) => state.project.folders)
+  const foldersOrder = useSelector((state) => state.project.foldersOrder)
   const typeOptions = type === 'folder' ? folders : tasks
 
   // set entity type
@@ -51,36 +53,27 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     if (type !== entityType && type) {
       setEntityType(type)
       let task = {}
-      if ('Generic' in typeOptions)
+      const firstTask = tasksOrder[0]
+
+      if (firstTask in tasks) {
         task = {
-          name: 'generic',
-          label: 'generic',
-          type: 'Generic',
-        }
-
-      let folder = ''
-      if ('Folder' in typeOptions)
-        folder = {
-          name: 'folder',
-          label: 'folder',
-          type: 'Folder',
-        }
-
-      // fallback to first option
-      if (isEmpty(task) && !isEmpty(typeOptions)) {
-        const firstType = Object.values(typeOptions)[0]
-        if (firstType) {
-          const name = firstType.shortName || firstType.name?.toLowerCase()
-
-          folder = {
-            type: firstType.name,
-            name: name,
-            label: name,
-          }
-
-          task = folder
+          name: tasks[firstTask].name,
+          label: tasks[firstTask].name,
+          type: firstTask,
         }
       }
+
+      let folder = {}
+      const firstFolder = foldersOrder[0]
+      if (firstFolder in folders) {
+        folder = {
+          name: folders[firstFolder].name,
+          label: folders[firstFolder].name,
+          type: firstFolder,
+        }
+      }
+
+      console.log(folder)
 
       // set defaults
       if (type === 'task') setEntityData(task)
@@ -198,6 +191,8 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   const addDisabled = !entityData.label || !entityData.type
 
+  console.log(entityType)
+
   return (
     <Dialog
       header={title}
@@ -238,6 +233,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
           ref={typeSelectRef}
           onFocus={handleTypeSelectFocus}
           onClick={() => setNameFocused(false)}
+          type={entityType}
         />
         <InputText
           value={entityData.label}
