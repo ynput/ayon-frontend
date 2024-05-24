@@ -22,4 +22,4 @@ const getInbox = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useGetInboxQuery } = getInbox
+export const { useGetInboxQuery, useLazyGetInboxQuery } = getInbox

@@ -13,6 +13,7 @@ import Shortcuts from '/src/containers/Shortcuts'
 import { highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
 import { Button, InputText, Spacer } from '@ynput/ayon-react-components'
+import usePrefetchFilters from '../hooks/usePrefetchFilters'
 
 const placeholderMessages = Array.from({ length: 30 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -55,6 +56,9 @@ const Inbox = ({ filter }) => {
     isCleared: isCleared,
     userName: userName,
   })
+
+  // prefetch all the other filters in the background
+  usePrefetchFilters({ filter, filters: activityTypesFilters, userName, isCleared, last })
 
   const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery(
     { projects: projectNames },
