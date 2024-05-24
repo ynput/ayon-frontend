@@ -5,15 +5,39 @@ import { isValid } from 'date-fns'
 import { isToday } from 'date-fns'
 import { format } from 'date-fns'
 import UserImage from '/src/components/UserImage'
-import removeMd from 'remove-markdown'
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
+import { getFuzzyDate } from '/src/components/Feed/ActivityDate'
+import { useMemo } from 'react'
+import RemoveMarkdown from 'remove-markdown'
+
+const getMessageBody = (messages = []) => {
+  const unreadMessages = messages.filter((m) => !m.isRead)
+  const messagesToShow = unreadMessages.length > 0 ? unreadMessages : messages
+
+  return messagesToShow
+    .slice()
+    .reverse()
+    .map((m) => {
+      const authorName = m.author?.attrib?.fullName || m.author?.name
+      const parsedBody = RemoveMarkdown(m.body)
+      const messageBody =
+        m.isMultiple && m.activityType === 'comment' ? parsedBody.substring(0, 50) : parsedBody
+      return `${authorName}: ${messageBody}`
+    })
+    .join(' > ')
+}
 
 const activityTypeIcons = {
   comment: 'chat',
   'version.publish': 'layers',
-  'status.change': 'arrow_circle_right',
-  'assignee.add': 'person_check',
+  'assignee.add': 'person_add',
   'assignee.remove': 'person_remove',
+}
+const activityTypeIconsMultiple = {
+  comment: 'forum',
+  'version.publish': activityTypeIcons['version.publish'],
+  'assignee.add': 'group_add',
+  'assignee.remove': 'group_remove',
 }
 
 const getDateString = (date) => {
@@ -21,7 +45,7 @@ const getDateString = (date) => {
   if (!isValid(dateObj)) return ''
 
   const today = isToday(dateObj)
-  if (today) return 'Today'
+  if (today) return getFuzzyDate(dateObj)
 
   const dateFormat = 'MMM d'
 
@@ -29,13 +53,15 @@ const getDateString = (date) => {
 }
 
 const InboxMessage = ({
-  id,
+  id, // first activity id
+  ids = [], // group ids
+  messages, // group of messages
   title,
   subTitle,
   userName,
   type,
-  body,
-  createdAt,
+  date,
+  changes,
   onClear,
   isRead,
   projectName,
@@ -45,10 +71,11 @@ const InboxMessage = ({
   isPlaceholder, // shimmer effects
   onSelect,
   projectsInfo,
-  activityData,
+  isMultiple, // are there multiple messages in this group
   ...props
 }) => {
-  const typeIcon = activityTypeIcons[type] || 'notifications'
+  const typeIcon =
+    (isMultiple ? activityTypeIconsMultiple[type] : activityTypeIcons[type]) || 'notifications'
 
   const handleOnClick = (e) => {
     // call the parent onClick if it exists
@@ -58,19 +85,22 @@ const InboxMessage = ({
       // check we are not clicking the clear button
       // use closest to check if the clear button is clicked
       if (!e.target.closest('.clear')) {
-        onSelect(id)
+        onSelect(id, ids)
       }
     }
   }
 
-  let fromStatus, toStatus
+  const body = useMemo(() => getMessageBody(messages), [])
+
+  let statusChanges = []
   const isStatusChange = type === 'status.change'
   if (isStatusChange) {
     const projectInfo = projectsInfo[projectName]
     if (projectInfo) {
       const statuses = projectInfo.statuses || []
-      fromStatus = statuses.find((status) => status.name === activityData.oldValue)
-      toStatus = statuses.find((status) => status.name === activityData.newValue)
+      statusChanges = changes?.map(
+        (change) => statuses.find((status) => status.name === change) || {},
+      )
     }
   }
 
@@ -97,9 +127,9 @@ const InboxMessage = ({
       <Styled.Middle className="middle">
         {!isStatusChange && <Icon icon={typeIcon} className="type" />}
         {isStatusChange ? (
-          <InboxMessageStatus {...{ fromStatus, toStatus }} />
+          <InboxMessageStatus statuses={statusChanges} />
         ) : (
-          <Styled.Body className="body">{removeMd(body)}</Styled.Body>
+          <Styled.Body className="body">{body}</Styled.Body>
         )}
       </Styled.Middle>
       <Styled.Right className="right">
@@ -115,7 +145,7 @@ const InboxMessage = ({
           </Styled.ClearButton>
         )}
         <UserImage name={userName} size={20} />
-        <Styled.Date className="date">{getDateString(createdAt)}</Styled.Date>
+        <Styled.Date className="date">{getDateString(date)}</Styled.Date>
       </Styled.Right>
     </Styled.Message>
   )

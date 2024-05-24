@@ -180,6 +180,7 @@ export const Right = styled.div`
 export const Date = styled.span`
   min-width: 50px;
   max-width: 50px;
+  white-space: nowrap;
 `
 
 export const ClearButton = styled(Button)`

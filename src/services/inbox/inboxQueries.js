@@ -11,6 +11,9 @@ fragment ActivityFragment on ActivityNode {
     createdAt
     author {
       name
+      attrib {
+        fullName
+      }
     }
     origin {
       id

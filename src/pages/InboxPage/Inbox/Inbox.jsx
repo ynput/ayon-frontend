@@ -11,6 +11,7 @@ import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDash
 import { ayonApi } from '/src/services/ayon'
 import Shortcuts from '/src/containers/Shortcuts'
 import { highlightActivity } from '/src/features/details'
+import useGroupMessages from '../hooks/useGroupMessages'
 
 const placeholderMessages = Array.from({ length: 30 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -54,6 +55,9 @@ const Inbox = ({ filter }) => {
     { skip: isFetchingInbox || !projectNames?.length },
   )
 
+  // group messages of same entity and type together
+  const groupedMessages = useGroupMessages({ messages })
+
   // single select only allow but multi select is possible
   // it always seems to become multi select so i'll just support it from the start
   const [selected, setSelected] = useState([])
@@ -69,7 +73,7 @@ const Inbox = ({ filter }) => {
     listRef.current?.firstElementChild?.focus()
   }, [listRef, isFetchingInbox, filter])
 
-  const handleMessageSelect = (id) => {
+  const handleMessageSelect = (id, ids = []) => {
     if (id.includes('placeholder')) return
     // if the message is already selected, deselect it
     let newSelection = []
@@ -84,65 +88,82 @@ const Inbox = ({ filter }) => {
     // select the message
     setSelected(newSelection)
 
-    // highlight the activity in the feed
-    dispatch(highlightActivity({ isSlideOut: false, activityIds: [id] }))
-
     // get messages and check if it has been read
-    const message = messages.find((m) => m.activityId === id)
-    if (message && !message.isRead) {
-      // TODO: update the message in the backend to mark it as read
+    const message = groupedMessages.find((m) => m.activityId === id)
+    const group = message?.messages || []
+    const unReadMessages = group.filter((m) => !m.isRead)
+    const idsToMarkAsRead = unReadMessages.map((m) => m.activityId)
+
+    const idsToHighlight = idsToMarkAsRead.length > 0 ? idsToMarkAsRead : ids
+
+    // highlight the activity in the feed
+    dispatch(highlightActivity({ isSlideOut: false, activityIds: idsToHighlight }))
+
+    if (idsToMarkAsRead.length > 0) {
+      // TODO: update the messages in the backend to mark them as read
       // but for now just patch getInbox cache
       dispatch(
         ayonApi.util.updateQueryData('getInbox', { last, isCleared, activityTypes }, (draft) => {
-          const messageIndex = draft.messages.findIndex((m) => m.activityId === id)
-          if (messageIndex === -1) return
-          draft.messages[messageIndex] = { ...draft.messages[messageIndex], isRead: true }
+          for (const id of idsToMarkAsRead) {
+            const messageIndex = draft.messages.findIndex((m) => m.activityId === id)
+            if (messageIndex !== -1) {
+              draft.messages[messageIndex] = { ...draft.messages[messageIndex], isRead: true }
+            }
+          }
         }),
       )
     }
   }
 
-  const handClearMessage = (id) => {
-    console.log('clearing message', id)
-    // get messages and check if it has been cleared already
-    const messageToClear = messages.find((m) => m.activityId === id)
-    if (!messageToClear) return console.error('messageToClear not found')
+  const clearMessages = (id, messagesToClear = []) => {
+    const idsToClear = messagesToClear.map((m) => m.activityId)
 
     if (selected.length) {
       // select next message in the list
-      const messageIndex = messages.findIndex((m) => m.activityId === id)
-      const nextMessage = messages[messageIndex + 1]
+      const selectedMessageIndex = messages.findIndex((m) => m.activityId === id)
+      const nextMessage = messages[selectedMessageIndex + 1]
       if (nextMessage) handleMessageSelect(nextMessage.activityId)
       else setSelected([])
     } else setSelected([])
 
-    if (messageToClear && !messageToClear.isCleared) {
-      // TODO: update the message in the backend to mark it as cleared
-      // but for now just patch the caches
-      // we need to move the messages from 'important' or 'other' to 'cleared' cache
-      dispatch(
-        ayonApi.util.updateQueryData('getInbox', { last, isCleared, activityTypes }, (draft) => {
-          const messageIndex = draft.messages.findIndex((m) => m.activityId === id)
-          if (messageIndex === -1) return
-          // delete message
-          draft.messages.splice(messageIndex, 1)
-        }),
-      )
-      // add to cleared cache
-      dispatch(
-        ayonApi.util.updateQueryData(
-          'getInbox',
-          { last, isCleared: true, activityTypes: activityTypesFilters.cleared },
-          (draft) => {
-            draft.messages.unshift({ ...messageToClear, isCleared: true })
-          },
-        ),
-      )
-    }
+    // update the messages in the backend to mark them as cleared
+    // but for now just patch the caches
+    // we need to move the messages from 'important' or 'other' to 'cleared' cache
+    dispatch(
+      ayonApi.util.updateQueryData('getInbox', { last, isCleared, activityTypes }, (draft) => {
+        // filter out the messages to clear
+        draft.messages = draft.messages.filter((m) => !idsToClear.includes(m.activityId))
+      }),
+    )
+
+    // add to cleared cache
+    dispatch(
+      ayonApi.util.updateQueryData(
+        'getInbox',
+        { last, isCleared: true, activityTypes: activityTypesFilters.cleared },
+        (draft) => {
+          // add the cleared messages to the start of the messages array
+          const clearedMessages = messagesToClear.map((m) => ({
+            ...m,
+            isCleared: true,
+            isRead: true,
+          }))
+          draft.messages = clearedMessages.concat(draft.messages)
+        },
+      ),
+    )
+  }
+
+  const handleClearMessage = (id) => {
+    // find the group message with id
+    const group = groupedMessages.find((g) => g.activityId === id)
+    if (!group) return
+
+    clearMessages(id, group.messages)
   }
 
   const [handleKeyDown, [usingKeyboard, setUsingKeyboard]] = useKeydown({
-    messages: messages,
+    messages: groupedMessages,
     onChange: handleMessageSelect,
     selected,
     listRef,
@@ -157,7 +178,7 @@ const Inbox = ({ filter }) => {
     handlePrefetch({ id: entityId, projectName, entityType })
   }
 
-  const messagesData = isFetchingInbox || isFetchingInfo ? placeholderMessages : messages
+  const messagesData = isFetchingInbox || isFetchingInfo ? placeholderMessages : groupedMessages
 
   const handleClearShortcut = (e) => {
     // get the message list item
@@ -170,10 +191,10 @@ const Inbox = ({ filter }) => {
     // if something is selected, check if the selected message is the same as the target
     // if it is, clear it
     if (selected.length) {
-      if (selected.includes(id)) handClearMessage(id)
+      if (selected.includes(id)) handleClearMessage(id)
     } else {
       // if nothing is selected, clear the target
-      handClearMessage(id)
+      handleClearMessage(id)
     }
   }
 
@@ -198,30 +219,32 @@ const Inbox = ({ filter }) => {
           onKeyDown={handleKeyDown}
           className={classNames({ isLoading: isFetchingInbox })}
         >
-          {messagesData.map((message) => (
+          {messagesData.map((group) => (
             <InboxMessage
-              key={message.activityId}
-              title={message.folderName}
-              subTitle={message.origin?.label || message.origin?.name}
-              type={message.activityType}
-              body={message.body}
-              projectName={message.projectName}
-              activityData={message.activityData}
-              createdAt={message.createdAt}
-              userName={message.author?.name}
-              isRead={message.isRead || message.isCleared}
-              onSelect={() => handleMessageSelect(message.activityId)}
-              isSelected={selected.includes(message.activityId)}
+              key={group.activityId}
+              title={group.title}
+              subTitle={group.subTitle}
+              type={group.activityType}
+              projectName={group.projectName}
+              date={group.date}
+              userName={group.userName}
+              isRead={group.isRead || group.isCleared}
+              onSelect={handleMessageSelect}
+              isSelected={selected.includes(group.activityId)}
               disableHover={usingKeyboard}
               onClear={
-                (!selected.length || selected.includes(message.activityId)) && !message.isCleared
-                  ? () => handClearMessage(message.activityId)
+                (!selected.length || selected.includes(group.activityId)) && !group.isCleared
+                  ? () => handleClearMessage(group.activityId)
                   : undefined
               }
-              id={message.activityId}
-              isPlaceholder={message.isPlaceholder}
-              onMouseOver={() => handleHover(message)}
+              id={group.activityId}
+              ids={group.groupIds}
+              messages={group.messages}
+              changes={group.changes}
+              isPlaceholder={group.isPlaceholder}
+              onMouseOver={() => handleHover(group)}
               projectsInfo={projectsInfo}
+              isMultiple={group.isMultiple}
             />
           ))}
         </Styled.MessagesList>
