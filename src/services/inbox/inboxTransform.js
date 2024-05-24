@@ -76,7 +76,7 @@ export const transformInboxMessages = (projectEdges = [], isCleared) => {
         entityId: message.origin?.id,
         entityType: message.origin?.type,
         isRead: true,
-        isCleared: false,
+        isCleared: getRandomBoolean(),
       }
 
       // parse fields that are JSON strings
