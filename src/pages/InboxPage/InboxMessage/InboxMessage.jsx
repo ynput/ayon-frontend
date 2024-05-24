@@ -63,6 +63,7 @@ const InboxMessage = ({
   date,
   changes,
   onClear,
+  clearLabel = 'Clear',
   isRead,
   projectName,
   thumbnail: { icon: thumbnailIcon, url: thumbnailUrl } = {},
@@ -141,7 +142,7 @@ const InboxMessage = ({
             variant="filled"
             onClick={onClear && onClear}
           >
-            Clear (c)
+            {clearLabel} (c)
           </Styled.ClearButton>
         )}
         <UserImage name={userName} size={20} />

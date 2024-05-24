@@ -126,9 +126,9 @@ const Inbox = ({ filter }) => {
       else setSelected([])
     } else setSelected([])
 
-    // update the messages in the backend to mark them as cleared
+    // update the messages in the backend to toggle isCleared
     // but for now just patch the caches
-    // we need to move the messages from 'important' or 'other' to 'cleared' cache
+    // we need to move the messages from 'important' or 'other' to 'cleared' cache (or the other way around)
     dispatch(
       ayonApi.util.updateQueryData('getInbox', { last, isCleared, activityTypes }, (draft) => {
         // filter out the messages to clear
@@ -136,11 +136,15 @@ const Inbox = ({ filter }) => {
       }),
     )
 
-    // add to cleared cache
+    // add to cleared cache or add back to important
+    const addingToActivityTypes = isCleared
+      ? activityTypesFilters.important
+      : activityTypesFilters.cleared
+
     dispatch(
       ayonApi.util.updateQueryData(
         'getInbox',
-        { last, isCleared: true, activityTypes: activityTypesFilters.cleared },
+        { last, isCleared: !isCleared, activityTypes: addingToActivityTypes },
         (draft) => {
           // add the cleared messages to the start of the messages array
           const clearedMessages = messagesToClear.map((m) => ({
@@ -233,10 +237,11 @@ const Inbox = ({ filter }) => {
               isSelected={selected.includes(group.activityId)}
               disableHover={usingKeyboard}
               onClear={
-                (!selected.length || selected.includes(group.activityId)) && !group.isCleared
+                !selected.length || selected.includes(group.activityId)
                   ? () => handleClearMessage(group.activityId)
                   : undefined
               }
+              clearLabel={isCleared ? 'Unclear' : 'Clear'}
               id={group.activityId}
               ids={group.groupIds}
               messages={group.messages}

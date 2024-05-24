@@ -181,6 +181,7 @@ export const Date = styled.span`
   min-width: 50px;
   max-width: 50px;
   white-space: nowrap;
+  margin-right: var(--padding-m);
 `
 
 export const ClearButton = styled(Button)`
