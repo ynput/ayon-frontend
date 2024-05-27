@@ -199,6 +199,7 @@ export const ImageWrapper = styled.div`
   position: absolute;
   inset: 0;
   display: flex;
+  justify-content: center;
   background-color: var(--md-sys-color-surface-container-lowest);
   img {
     position: absolute;
