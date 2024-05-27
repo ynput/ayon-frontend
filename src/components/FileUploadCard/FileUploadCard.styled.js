@@ -35,46 +35,26 @@ export const File = styled.div`
     }
   }
 
-  /* set download default color outline when isPreviewable */
-  &.isPreviewable {
-    .download,
-    .download-icon {
-      color: var(--md-sys-color-outline);
-    }
+  /* move icon up slightly to center it */
+  .type-icon {
+    margin-top: -20px;
   }
 
-  &.isDownloadable {
-    cursor: pointer;
+  /* set download default color outline */
+  .download,
+  .download-icon {
+    color: var(--md-sys-color-outline);
+  }
 
-    /* when not an image, hover both */
-    &:not(.isPreviewable):hover {
-      /* reveal size and download */
-      .download {
-        display: flex;
-      }
-      .name-wrapper,
-      .extension {
-        display: none;
-      }
-      .image-wrapper,
-      footer {
-        background-color: var(--md-sys-color-surface-container-low-hover);
+  .expand-icon {
+    pointer-events: none;
+    position: absolute;
+    /* center */
+    left: 50%;
+    bottom: calc(50% - 20px);
+    transform: translate(-50%, -50%);
 
-        .download-icon {
-          display: none;
-        }
-      }
-
-      .image-wrapper {
-        .type-icon {
-          display: none;
-        }
-
-        .download-icon {
-          display: block;
-        }
-      }
-    }
+    display: none;
   }
 `
 
@@ -86,6 +66,11 @@ export const Footer = styled.footer`
   padding: 0 var(--padding-s);
   overflow: hidden;
   color: var(--md-sys-color-on-surface);
+
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
 
   transition: padding 0.2s ease;
 
@@ -143,20 +128,11 @@ export const Footer = styled.footer`
     font-size: 20px;
   }
 
-  &.isPreviewable {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-  }
-
   &.isDownloadable {
     &:hover {
       cursor: pointer;
 
-      &.isPreviewable {
-        padding: var(--padding-m) var(--padding-s);
-      }
+      padding: var(--padding-m) var(--padding-s);
 
       background-color: var(--md-sys-color-surface-container-low-hover);
 
@@ -193,6 +169,21 @@ export const ContentWrapper = styled.div`
   .download-icon {
     display: none;
   }
+
+  /* previewable styles (it can be expanded) */
+  /* on hover it shows the expand icon */
+  &.isPreviewable {
+    cursor: pointer;
+
+    &:hover {
+      .expand-icon {
+        display: block;
+      }
+      .type-icon {
+        display: none;
+      }
+    }
+  }
 `
 
 export const ImageWrapper = styled.div`
@@ -209,16 +200,6 @@ export const ImageWrapper = styled.div`
     height: calc(100% - 20px);
 
     transition: scale 0.2s ease;
-  }
-
-  .icon {
-    position: absolute;
-    /* center */
-    left: 50%;
-    bottom: calc(50% - 20px);
-    transform: translate(-50%, -50%);
-
-    display: none;
   }
 
   &::after {

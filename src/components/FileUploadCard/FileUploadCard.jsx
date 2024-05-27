@@ -86,6 +86,7 @@ const FileUploadCard = ({
   const fileName = nameParts.join('.')
 
   const isPreviewable = isFilePreviewable(mime)
+  const isImage = mime?.includes('image/')
 
   const downloadComponent = (
     <>
@@ -99,12 +100,14 @@ const FileUploadCard = ({
     onExpand({ name, mime, id, size })
   }
 
-  const fileComponent = (
+  return (
     <Styled.File className={classNames({ compact: isCompact, isDownloadable, isPreviewable })}>
-      <Styled.ContentWrapper className="image-wrapper" onClick={handleImageClick}>
+      <Styled.ContentWrapper
+        className={classNames('content-wrapper', { isPreviewable })}
+        onClick={handleImageClick}
+      >
         <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
-        <Icon icon="download" className="download-icon" />
-        {isPreviewable && src && (
+        {isImage && src && (
           <Styled.ImageWrapper className={classNames({ isDownloadable })}>
             <img
               src={src + '?preview=true'}
@@ -113,9 +116,9 @@ const FileUploadCard = ({
                 display: imageError ? 'none' : 'block',
               }}
             />
-            <Icon icon="open_in_full" />
           </Styled.ImageWrapper>
         )}
+        {isPreviewable && <Icon icon="open_in_full" className="expand-icon" />}
       </Styled.ContentWrapper>
       <Styled.Footer className={classNames({ inProgress, isPreviewable, isDownloadable })}>
         <span className="progress" style={{ right: `${100 - progress}%` }} />
@@ -124,7 +127,7 @@ const FileUploadCard = ({
         </div>
         <span className="extension">.{extension}</span>
         {isDownloadable &&
-          (isPreviewable && !onRemove ? (
+          (!onRemove ? (
             <a href={src} download className="download">
               {downloadComponent}
             </a>
@@ -135,16 +138,6 @@ const FileUploadCard = ({
       {onRemove && <Button className="remove" onClick={onRemove} icon="close" />}
     </Styled.File>
   )
-
-  // if the file is an image, return the file component
-  if (isPreviewable || onRemove) return fileComponent
-  // if it's not then we wrap with a direct link to download the file
-  else
-    return (
-      <a href={src} download>
-        {fileComponent}
-      </a>
-    )
 }
 
 export default FileUploadCard
