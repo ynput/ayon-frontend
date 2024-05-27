@@ -6,18 +6,22 @@ const getInbox = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     // get multiple entities activities
     getInbox: build.query({
-      query: ({ last, activityTypes }) => ({
+      query: ({ last = 50, active = null, important = null }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: INBOX_ACTIVITIES,
-          variables: { last, activityTypes },
+          variables: { last, active, important },
         },
       }),
-      transformResponse: (res, err, { isCleared, userName }) =>
-        transformInboxMessages(res?.data?.projects?.edges, isCleared, userName),
-      // only use activityTypes and isCleared as cache keys
-      serializeQueryArgs: ({ queryArgs: { last, activityTypes } }) => ({ last, activityTypes }),
+      transformResponse: (res, meta, { important }) =>
+        transformInboxMessages(res?.data?.inbox?.edges, important),
+      // only use active and isActive as cache keys
+      serializeQueryArgs: ({ queryArgs: { last, active, important } }) => ({
+        last,
+        active,
+        important,
+      }),
     }),
   }),
 })

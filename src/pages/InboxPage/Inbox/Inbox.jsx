@@ -5,46 +5,37 @@ import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { usePrefetchEntity } from '../../UserDashboardPage/util'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { useGetInboxQuery } from '/src/services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
-import { ayonApi } from '/src/services/ayon'
 import Shortcuts from '/src/containers/Shortcuts'
 import { highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
-import { Button, InputText, Spacer } from '@ynput/ayon-react-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 import usePrefetchFilters from '../hooks/usePrefetchFilters'
+import { useUpdateInboxMessageMutation } from '/src/services/inbox/updateInbox'
 
 const placeholderMessages = Array.from({ length: 30 }, (_, i) => ({
   activityId: `placeholder-${i}`,
   folderName: 'Loading...',
   thumbnail: { icon: 'folder' },
-  isRead: false,
+  read: false,
   isPlaceholder: true,
 }))
 
-const activityTypesFilters = {
-  important: ['comment', 'version.publish', 'status.change'],
-  other: ['assignee.add', 'assignee.remove'],
-  cleared: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
+const filters = {
+  important: { active: true, important: true },
+  other: { active: true, important: false },
+  cleared: { active: false, important: null },
 }
 
 const Inbox = ({ filter }) => {
   const dispatch = useDispatch()
-  const userName = useSelector((state) => state.user.name)
 
-  const last = 30
-
-  let activityTypes = []
-  if ('important' === filter) {
-    activityTypes = activityTypesFilters.important
-  } else if (filter === 'other') {
-    activityTypes = activityTypesFilters.other
-  } else if (filter === 'cleared') {
-    activityTypes = activityTypesFilters.cleared
-  }
-
-  const isCleared = filter === 'cleared'
+  const last = 100
+  const filterArgs = filters[filter] || {}
+  const isActive = filterArgs.active
+  const isImportant = filterArgs.important
 
   const {
     data: { messages = [], projectNames = [] } = {},
@@ -52,13 +43,15 @@ const Inbox = ({ filter }) => {
     refetch,
   } = useGetInboxQuery({
     last: last,
-    activityTypes: activityTypes,
-    isCleared: isCleared,
-    userName: userName,
+    active: isActive,
+    important: isImportant,
   })
 
+  // update inbox message
+  const [updateMessages] = useUpdateInboxMessageMutation()
+
   // prefetch all the other filters in the background
-  usePrefetchFilters({ filter, filters: activityTypesFilters, userName, isCleared, last })
+  usePrefetchFilters({ active: isActive, last, filter, filters })
 
   const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery(
     { projects: projectNames },
@@ -83,7 +76,22 @@ const Inbox = ({ filter }) => {
     listRef.current?.firstElementChild?.focus()
   }, [listRef, isFetchingInbox, filter])
 
-  const handleMessageSelect = (id, ids = []) => {
+  const handleUpdateMessages = (ids, status, projectName, isActiveChange = false) => {
+    if (ids.length > 0) {
+      // cacheKeyArgs are not used in the patch but are used to match the cache key to a query (for optimistic updates)
+      const cacheKeyArgs = { last, active: isActive, important: isImportant, isActiveChange }
+      // update the messages in the backend to toggle read status
+      // we use optimistic updates inside updateMessages query
+      updateMessages({
+        status: status,
+        projectName: projectName,
+        ids: ids,
+        ...cacheKeyArgs,
+      })
+    }
+  }
+
+  const handleMessageSelect = async (id, ids = []) => {
     if (id.includes('placeholder')) return
     // if the message is already selected, deselect it
     let newSelection = []
@@ -101,81 +109,42 @@ const Inbox = ({ filter }) => {
     // get messages and check if it has been read
     const message = groupedMessages.find((m) => m.activityId === id)
     const group = message?.messages || []
-    const unReadMessages = group.filter((m) => !m.isRead)
-    const idsToMarkAsRead = unReadMessages.map((m) => m.activityId)
+    const unReadMessages = group.filter((m) => !m.read)
+    const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
 
-    const idsToHighlight = idsToMarkAsRead.length > 0 ? idsToMarkAsRead : ids
+    const activityIds = unReadMessages.map((m) => m.activityId)
+    const idsToHighlight = activityIds.length > 0 ? activityIds : ids
 
-    if (message.activityType === 'comment') {
+    if (message?.activityType === 'comment') {
       // highlight the activity in the feed
       dispatch(highlightActivity({ isSlideOut: false, activityIds: idsToHighlight }))
     }
 
-    if (idsToMarkAsRead.length > 0) {
-      // TODO: update the messages in the backend to mark them as read
-      // but for now just patch getInbox cache
-      dispatch(
-        ayonApi.util.updateQueryData('getInbox', { last, isCleared, activityTypes }, (draft) => {
-          for (const id of idsToMarkAsRead) {
-            const messageIndex = draft.messages.findIndex((m) => m.activityId === id)
-            if (messageIndex !== -1) {
-              draft.messages[messageIndex] = { ...draft.messages[messageIndex], isRead: true }
-            }
-          }
-        }),
-      )
-    }
+    handleUpdateMessages(idsToMarkAsRead, 'read', message.projectName)
   }
 
-  const clearMessages = (id, messagesToClear = []) => {
-    const idsToClear = messagesToClear.map((m) => m.activityId)
-
+  const clearMessages = async (id, messagesToClear = [], projectName) => {
     if (selected.length) {
       // select next message in the list
-      const selectedMessageIndex = messages.findIndex((m) => m.activityId === id)
-      const nextMessage = messages[selectedMessageIndex + 1]
+      const selectedMessageIndex = groupedMessages.findIndex((m) => m.activityId === id)
+      const nextMessage = groupedMessages[selectedMessageIndex + 1]
       if (nextMessage) handleMessageSelect(nextMessage.activityId)
       else setSelected([])
     } else setSelected([])
 
-    // update the messages in the backend to toggle isCleared
-    // but for now just patch the caches
-    // we need to move the messages from 'important' or 'other' to 'cleared' cache (or the other way around)
-    dispatch(
-      ayonApi.util.updateQueryData('getInbox', { last, isCleared, activityTypes }, (draft) => {
-        // filter out the messages to clear
-        draft.messages = draft.messages.filter((m) => !idsToClear.includes(m.activityId))
-      }),
-    )
+    const idsToClear = messagesToClear.map((m) => m.referenceId)
+    const status = isActive ? 'inactive' : 'unread'
 
-    // add to cleared cache or add back to important
-    const addingToActivityTypes = isCleared
-      ? activityTypesFilters.important
-      : activityTypesFilters.cleared
-
-    dispatch(
-      ayonApi.util.updateQueryData(
-        'getInbox',
-        { last, isCleared: !isCleared, activityTypes: addingToActivityTypes },
-        (draft) => {
-          // add the cleared messages to the start of the messages array
-          const clearedMessages = messagesToClear.map((m) => ({
-            ...m,
-            isCleared: true,
-            isRead: true,
-          }))
-          draft.messages = clearedMessages.concat(draft.messages)
-        },
-      ),
-    )
+    handleUpdateMessages(idsToClear, status, projectName, true)
   }
 
   const handleClearMessage = (id) => {
     // find the group message with id
     const group = groupedMessages.find((g) => g.activityId === id)
+    const projectName = group?.projectName
     if (!group) return
 
-    clearMessages(id, group.messages)
+    clearMessages(id, group.messages, projectName)
   }
 
   const [handleKeyDown, [usingKeyboard, setUsingKeyboard]] = useKeydown({
@@ -258,7 +227,7 @@ const Inbox = ({ filter }) => {
               projectName={group.projectName}
               date={group.date}
               userName={group.userName}
-              isRead={group.isRead || group.isCleared}
+              isRead={group.read || group.active}
               onSelect={handleMessageSelect}
               isSelected={selected.includes(group.activityId)}
               disableHover={usingKeyboard}
@@ -267,7 +236,7 @@ const Inbox = ({ filter }) => {
                   ? () => handleClearMessage(group.activityId)
                   : undefined
               }
-              clearLabel={isCleared ? 'Unclear' : 'Clear'}
+              clearLabel={isActive ? 'Clear' : 'Unclear'}
               id={group.activityId}
               ids={group.groupIds}
               messages={group.messages}

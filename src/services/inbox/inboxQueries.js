@@ -9,6 +9,8 @@ fragment ActivityFragment on ActivityNode {
     entityId
     body
     createdAt
+    active
+    read
     author {
       name
       attrib {
@@ -25,19 +27,12 @@ fragment ActivityFragment on ActivityNode {
 `
 
 export const INBOX_ACTIVITIES = `
-query getInboxMessages($last: Int, $activityTypes: [String!]!) {
-  projects{
+query getInboxMessages($last: Int, $active: Boolean, $important: Boolean) {
+  inbox(last: $last, showActiveMessages: $active, showImportantMessages: $important){
     edges {
+      cursor
       node {
-        projectName
-        activities(referenceTypes: ["origin"], activityTypes: $activityTypes, last: $last) {
-          edges {
-            cursor
-            node {
-              ...ActivityFragment
-            }
-          }
-        }
+        ...ActivityFragment
       }
     }
   }

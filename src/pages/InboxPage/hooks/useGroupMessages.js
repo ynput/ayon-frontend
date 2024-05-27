@@ -85,7 +85,7 @@ const transformGroups = (groups = []) => {
     const img = firstMessage.thumbnail.icon
     const date = firstMessage.createdAt
     // if every message in the group is read, then the group is read
-    const isRead = group.every((m) => m.isRead)
+    const read = group.every((m) => m.read)
 
     const {
       activityId,
@@ -105,7 +105,7 @@ const transformGroups = (groups = []) => {
       entityType: entityType,
       userName: author?.name,
       changes: getChangedValues(group),
-      isRead: isRead,
+      read: read,
       date,
       title,
       subTitle,
