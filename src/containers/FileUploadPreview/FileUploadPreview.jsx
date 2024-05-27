@@ -2,8 +2,22 @@ import { useDispatch, useSelector } from 'react-redux'
 import * as Styled from './FileUploadPreview.styled'
 import { onFilePreviewClose } from '/src/features/context'
 import { useEffect, useRef } from 'react'
+import ImageMime from './mimes/ImageMime'
 
-const fullPreviews = ['png', 'jpg', 'jpeg', 'gif', 'svg']
+export const expandableMimeTypes = {
+  image: {
+    component: ImageMime,
+    mimeTypes: ['image/'],
+    fullPreviews: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'],
+  },
+}
+
+export const isFilePreviewable = (mime) =>
+  Object.values(expandableMimeTypes).some(({ mimeTypes }) =>
+    mimeTypes.some((type) => mime.includes(type)),
+  )
+
+export const getFileURL = (id, projectName) => `/api/projects/${projectName}/files/${id}`
 
 const FileUploadPreview = () => {
   const dispatch = useDispatch()
@@ -25,10 +39,12 @@ const FileUploadPreview = () => {
 
   if (!id || !projectName) return null
 
-  let imgURL = `/api/projects/${projectName}/files/${id}`
-  const useFullPreview = fullPreviews.some((ext) => mime.includes(ext))
-  // if the file is NOT png, jpg, jpeg, gif, or svg, we use preview image
-  if (!useFullPreview) imgURL += '?preview=true'
+  // get the correct mime type component based on mimeTypes match
+  const { component: MimeComponent } = Object.values(expandableMimeTypes).find(({ mimeTypes }) =>
+    mimeTypes.some((type) => mime.includes(type)),
+  )
+
+  if (!MimeComponent) return null
 
   return (
     <Styled.DialogWrapper
@@ -38,7 +54,7 @@ const FileUploadPreview = () => {
       hideCancelButton
       ref={dialogRef}
     >
-      <Styled.Image src={imgURL} autoFocus />
+      <MimeComponent file={file} />
     </Styled.DialogWrapper>
   )
 }

@@ -2,6 +2,7 @@ import { Button, Icon } from '@ynput/ayon-react-components'
 import * as Styled from './FileUploadCard.styled'
 import { classNames } from 'primereact/utils'
 import { useState } from 'react'
+import { isFilePreviewable } from '/src/containers/FileUploadPreview/FileUploadPreview'
 
 const fileIcons = {
   // special cases
@@ -84,7 +85,7 @@ const FileUploadCard = ({
   const extension = nameParts.pop()
   const fileName = nameParts.join('.')
 
-  const isImage = mime?.includes('image')
+  const isPreviewable = isFilePreviewable(mime)
 
   const downloadComponent = (
     <>
@@ -94,16 +95,16 @@ const FileUploadCard = ({
   )
 
   const handleImageClick = () => {
-    if (!isImage || !onExpand || imageError) return
+    if (!isPreviewable || !onExpand || imageError) return
     onExpand({ name, mime, id, size })
   }
 
   const fileComponent = (
-    <Styled.File className={classNames({ compact: isCompact, isDownloadable, isImage })}>
+    <Styled.File className={classNames({ compact: isCompact, isDownloadable, isPreviewable })}>
       <Styled.ContentWrapper className="image-wrapper" onClick={handleImageClick}>
         <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
         <Icon icon="download" className="download-icon" />
-        {isImage && src && (
+        {isPreviewable && src && (
           <Styled.ImageWrapper className={classNames({ isDownloadable })}>
             <img
               src={src + '?preview=true'}
@@ -116,14 +117,14 @@ const FileUploadCard = ({
           </Styled.ImageWrapper>
         )}
       </Styled.ContentWrapper>
-      <Styled.Footer className={classNames({ inProgress, isImage, isDownloadable })}>
+      <Styled.Footer className={classNames({ inProgress, isPreviewable, isDownloadable })}>
         <span className="progress" style={{ right: `${100 - progress}%` }} />
         <div className="name-wrapper">
           <span className="name">{fileName}</span>
         </div>
         <span className="extension">.{extension}</span>
         {isDownloadable &&
-          (isImage && !onRemove ? (
+          (isPreviewable && !onRemove ? (
             <a href={src} download className="download">
               {downloadComponent}
             </a>
@@ -136,7 +137,7 @@ const FileUploadCard = ({
   )
 
   // if the file is an image, return the file component
-  if (isImage || onRemove) return fileComponent
+  if (isPreviewable || onRemove) return fileComponent
   // if it's not then we wrap with a direct link to download the file
   else
     return (

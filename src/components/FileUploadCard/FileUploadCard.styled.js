@@ -35,8 +35,8 @@ export const File = styled.div`
     }
   }
 
-  /* set download default color outline when isImage */
-  &.isImage {
+  /* set download default color outline when isPreviewable */
+  &.isPreviewable {
     .download,
     .download-icon {
       color: var(--md-sys-color-outline);
@@ -47,7 +47,7 @@ export const File = styled.div`
     cursor: pointer;
 
     /* when not an image, hover both */
-    &:not(.isImage):hover {
+    &:not(.isPreviewable):hover {
       /* reveal size and download */
       .download {
         display: flex;
@@ -143,7 +143,7 @@ export const Footer = styled.footer`
     font-size: 20px;
   }
 
-  &.isImage {
+  &.isPreviewable {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -154,7 +154,7 @@ export const Footer = styled.footer`
     &:hover {
       cursor: pointer;
 
-      &.isImage {
+      &.isPreviewable {
         padding: var(--padding-m) var(--padding-s);
       }
 
