@@ -2,6 +2,9 @@ import { Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const DialogWrapper = styled(Dialog)`
+  min-height: 90vh;
+  max-height: 90vh;
+  max-width: 1000px;
   /* custom image styles */
   &.isImage {
     background-color: unset;
