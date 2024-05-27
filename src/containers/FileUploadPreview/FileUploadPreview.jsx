@@ -37,7 +37,7 @@ export const getFileURL = (id, projectName) => `/api/projects/${projectName}/fil
 const FileUploadPreview = () => {
   const dispatch = useDispatch()
   const file = useSelector((state) => state.context.previewFile)
-  const { id, projectName, mime, extension } = file || {}
+  const { id, projectName, mime, extension, name } = file || {}
 
   // when dialog open, focus on the dialog
   // we do this so that the user can navigate with the keyboard (esc works)
@@ -80,6 +80,7 @@ const FileUploadPreview = () => {
       hideCancelButton={isImage}
       ref={dialogRef}
       className={classNames({ isImage })}
+      header={isImage ? null : name}
     >
       <MimeComponent file={file} />
     </Styled.DialogWrapper>

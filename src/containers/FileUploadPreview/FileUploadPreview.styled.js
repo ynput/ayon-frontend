@@ -5,6 +5,11 @@ export const DialogWrapper = styled(Dialog)`
   min-height: 90vh;
   max-height: 90vh;
   max-width: 1000px;
+
+  .body {
+    padding-top: 0;
+  }
+
   /* custom image styles */
   &.isImage {
     background-color: unset;
