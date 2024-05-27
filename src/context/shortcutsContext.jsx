@@ -47,6 +47,8 @@ function ShortcutsProvider(props) {
       { key: 'u+u', action: () => navigate('/settings/users') },
       // events page
       { key: 'e+e', action: () => navigate('/events') },
+      // services page
+      { key: 'v+v', action: () => navigate('/services') },
     ],
     [navigate, searchParams],
   )
