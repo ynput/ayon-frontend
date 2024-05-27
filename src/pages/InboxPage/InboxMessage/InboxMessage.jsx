@@ -64,6 +64,7 @@ const InboxMessage = ({
   changes,
   onClear,
   clearLabel = 'Clear',
+  clearIcon = 'check',
   isRead,
   projectName,
   thumbnail: { icon: thumbnailIcon, url: thumbnailUrl } = {},
@@ -137,7 +138,7 @@ const InboxMessage = ({
         {onClear && (
           <Styled.ClearButton
             id={'clear-' + id}
-            icon="check"
+            icon={clearIcon}
             className="clear"
             variant="filled"
             onClick={onClear && onClear}

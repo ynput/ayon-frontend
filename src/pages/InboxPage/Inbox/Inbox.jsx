@@ -14,6 +14,7 @@ import useGroupMessages from '../hooks/useGroupMessages'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import usePrefetchFilters from '../hooks/usePrefetchFilters'
 import { useUpdateInboxMessageMutation } from '/src/services/inbox/updateInbox'
+import useCreateContext from '/src/hooks/useCreateContext'
 
 const placeholderMessages = Array.from({ length: 30 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -188,6 +189,47 @@ const Inbox = ({ filter }) => {
     refetch()
   }
 
+  const contextMenu = (id) => {
+    // find the group message with id
+    const group = groupedMessages.find((g) => g.activityId === id)
+
+    if (!group) return [{ label: 'No message selected', disabled: true }]
+    const referenceIds = group.messages.map((m) => m.referenceId)
+    const isRead = group.read
+
+    return [
+      {
+        id: 'clear',
+        label: isActive ? 'Clear' : 'Unclear',
+        icon: isActive ? 'done' : 'replay',
+        command: () => clearMessages(id, group.messages, group.projectName),
+      },
+      {
+        id: isRead ? 'unread' : 'read',
+        label: isRead ? 'Mark as unread' : 'Mark as read',
+        icon: isRead ? 'mark_email_unread' : 'drafts',
+        command: () =>
+          handleUpdateMessages(referenceIds, isRead ? 'unread' : 'read', group.projectName),
+      },
+    ]
+  }
+
+  const [ctxMenuShow] = useCreateContext([])
+
+  const handleContextMenu = (e) => {
+    // get id from the target
+    const target = e.target.closest('li')
+    const id = target?.id.split('-')[1]
+
+    if (!id) return
+
+    // update selection
+    setSelected([id])
+
+    // open context menu
+    ctxMenuShow(e, contextMenu(id))
+  }
+
   const shortcuts = useMemo(
     () => [
       {
@@ -237,6 +279,7 @@ const Inbox = ({ filter }) => {
                   : undefined
               }
               clearLabel={isActive ? 'Clear' : 'Unclear'}
+              clearIcon={isActive ? 'done' : 'replay'}
               id={group.activityId}
               ids={group.groupIds}
               messages={group.messages}
@@ -245,6 +288,7 @@ const Inbox = ({ filter }) => {
               onMouseOver={() => handleHover(group)}
               projectsInfo={projectsInfo}
               isMultiple={group.isMultiple}
+              onContextMenu={handleContextMenu}
             />
           ))}
         </Styled.MessagesList>
