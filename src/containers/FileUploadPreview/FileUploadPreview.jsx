@@ -19,6 +19,12 @@ export const expandableMimeTypes = {
     mimeTypes: ['text/', 'application/json', 'scss', 'jsx'],
     id: 'text',
   },
+  pdf: {
+    component: null,
+    mimeTypes: ['pdf'],
+    id: 'pdf',
+    callback: (file) => window.open(getFileURL(file.id, file.projectName), '_blank'),
+  },
 }
 
 export const isFilePreviewable = (mime = '', ext = '') =>
@@ -53,7 +59,14 @@ const FileUploadPreview = () => {
     mimeTypes.some((type) => (mime || extension)?.includes(type)),
   )
 
-  const { component: MimeComponent, id: typeId } = previewable || {}
+  const { component: MimeComponent, id: typeId, callback } = previewable || {}
+
+  // if there is a callback, run it and return null
+  // mainly for pdfs
+  if (callback) {
+    callback(file)
+    return null
+  }
 
   const isImage = typeId === 'image'
 
