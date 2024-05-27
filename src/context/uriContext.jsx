@@ -1,13 +1,17 @@
-import { useCallback } from 'react'
-import axios from 'axios'
-import { useDispatch } from 'react-redux'
-import { onUriNavigate, setUri, setUriChanged } from '/src/features/context'
-import { useNavigate } from 'react-router'
+import { createContext, useCallback, useContext, useEffect } from 'react'
 import { toast } from 'react-toastify'
+import { onUriNavigate, setUri, setUriChanged } from '../features/context'
+import axios from 'axios'
+import { useLocation, useNavigate } from 'react-router'
+import { useDispatch } from 'react-redux'
 
-const useUriNavigate = () => {
+const URIContext = createContext()
+
+function URIProvider({ children }) {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const location = useLocation()
+  const pathname = location.pathname
 
   const focusEntities = (entities) => {
     const focused = {
@@ -132,7 +136,19 @@ const useUriNavigate = () => {
     [dispatch],
   )
 
-  return navigateToUri
+  //   when the scope is outside settings and project, set uri to null
+  const scopes = ['projects', 'settings', 'dashboard/tasks']
+  useEffect(() => {
+    const matchingScope = scopes.some((scope) => pathname.startsWith(`/${scope}`))
+
+    if (!matchingScope) {
+      dispatch(setUri(null))
+    }
+  }, [pathname])
+
+  return <URIContext.Provider value={{ navigate: navigateToUri }}>{children}</URIContext.Provider>
 }
 
-export default useUriNavigate
+const useURIContext = () => useContext(URIContext)
+
+export { URIProvider, useURIContext }
