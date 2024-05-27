@@ -3,10 +3,12 @@ import * as Styled from './FileUploadPreview.styled'
 import { onFilePreviewClose } from '/src/features/context'
 import { useEffect, useRef } from 'react'
 
+const fullPreviews = ['png', 'jpg', 'jpeg', 'gif', 'svg']
+
 const FileUploadPreview = () => {
   const dispatch = useDispatch()
   const file = useSelector((state) => state.context.previewFile)
-  const { id, projectName } = file || {}
+  const { id, projectName, mime } = file || {}
 
   // when dialog open, focus on the dialog
   // we do this so that the user can navigate with the keyboard (esc works)
@@ -23,6 +25,11 @@ const FileUploadPreview = () => {
 
   if (!id || !projectName) return null
 
+  let imgURL = `/api/projects/${projectName}/files/${id}`
+  const useFullPreview = fullPreviews.some((ext) => mime.includes(ext))
+  // if the file is NOT png, jpg, jpeg, gif, or svg, we use preview image
+  if (!useFullPreview) imgURL += '?preview=true'
+
   return (
     <Styled.DialogWrapper
       size="full"
@@ -31,7 +38,7 @@ const FileUploadPreview = () => {
       hideCancelButton
       ref={dialogRef}
     >
-      <Styled.Image src={`/api/projects/${projectName}/files/${id}`} autoFocus />
+      <Styled.Image src={imgURL} autoFocus />
     </Styled.DialogWrapper>
   )
 }
