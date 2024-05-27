@@ -1,7 +1,7 @@
 // return a random folder name
 import { compareAsc } from 'date-fns'
 
-export const transformInboxMessages = (messageEdges = [], important = false) => {
+export const transformInboxMessages = (messageEdges = [], { important = false, active = true }) => {
   const messages = []
   const projectNames = []
 
@@ -40,9 +40,11 @@ export const transformInboxMessages = (messageEdges = [], important = false) => 
     }
   }
 
+  const sortByField = active ? 'createdAt' : 'updatedAt'
+
   //   now sort the messages by createdAt using the compare function
   const messagesSortedByDate = messages.sort((a, b) =>
-    compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
+    compareAsc(new Date(b[sortByField]), new Date(a[sortByField])),
   )
 
   return { projectNames, messages: messagesSortedByDate }

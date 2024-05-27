@@ -14,8 +14,8 @@ const getInbox = ayonApi.injectEndpoints({
           variables: { last, active, important },
         },
       }),
-      transformResponse: (res, meta, { important }) =>
-        transformInboxMessages(res?.data?.inbox?.edges, important),
+      transformResponse: (res, meta, { important, active }) =>
+        transformInboxMessages(res?.data?.inbox?.edges, { important, active }),
       // only use active and isActive as cache keys
       serializeQueryArgs: ({ queryArgs: { last, active, important } }) => ({
         last,

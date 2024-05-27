@@ -9,6 +9,7 @@ fragment ActivityFragment on ActivityNode {
     entityId
     body
     createdAt
+    updatedAt
     active
     read
     author {
