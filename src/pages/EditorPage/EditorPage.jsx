@@ -813,6 +813,14 @@ const EditorPage = () => {
           delete parentAttrib[key]
         }
 
+        // add attribsNotInherited to patchAttrib (if not already in patch)
+        for (const key of attribsNotInherited) {
+          const nodeAttribs = rootData[entityId]?.data?.attrib || {}
+          if (!patchAttrib[key] && nodeAttribs[key]) {
+            patchAttrib[key] = nodeAttribs[key]
+          }
+        }
+
         // patch is original data with updated data
         const patch = {
           data: {
