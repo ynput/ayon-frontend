@@ -85,7 +85,7 @@ const FileUploadCard = ({
   const extension = nameParts.pop()
   const fileName = nameParts.join('.')
 
-  const isPreviewable = isFilePreviewable(mime)
+  const isPreviewable = isFilePreviewable(mime || '.' + extension)
   const isImage = mime?.includes('image/')
 
   const downloadComponent = (
@@ -97,7 +97,7 @@ const FileUploadCard = ({
 
   const handleImageClick = () => {
     if (!isPreviewable || !onExpand || imageError) return
-    onExpand({ name, mime, id, size })
+    onExpand({ name, mime, id, size, extension })
   }
 
   return (
