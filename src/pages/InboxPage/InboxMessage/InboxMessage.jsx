@@ -110,7 +110,7 @@ const InboxMessage = ({
     <Styled.Message
       {...props}
       tabIndex={0}
-      className={classNames({
+      className={classNames('inbox-message', {
         isSelected,
         isRead,
         disableHover,

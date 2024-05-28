@@ -92,6 +92,20 @@ const Inbox = ({ filter }) => {
     }
   }
 
+  const handleToggleReadMessage = (id) => {
+    // get all the messages in the group
+    const group = groupedMessages.find((m) => m.activityId === id)
+    // if no group is found, return
+    if (!group) return
+    // are all the messages in the group read?
+    const allRead = group.messages.every((m) => m.read)
+    // get all the reference ids of the messages
+    const referenceIds = group.messages.map((m) => m.referenceId)
+
+    // update the messages
+    handleUpdateMessages(referenceIds, allRead ? 'unread' : 'read', group.projectName)
+  }
+
   const handleMessageSelect = async (id, ids = []) => {
     if (id.includes('placeholder')) return
     // if the message is already selected, deselect it
@@ -111,8 +125,6 @@ const Inbox = ({ filter }) => {
     const message = groupedMessages.find((m) => m.activityId === id)
     const group = message?.messages || []
     const unReadMessages = group.filter((m) => !m.read)
-    const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
-
     const activityIds = unReadMessages.map((m) => m.activityId)
     const idsToHighlight = activityIds.length > 0 ? activityIds : ids
 
@@ -121,6 +133,7 @@ const Inbox = ({ filter }) => {
       dispatch(highlightActivity({ isSlideOut: false, activityIds: idsToHighlight }))
     }
 
+    const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
     handleUpdateMessages(idsToMarkAsRead, 'read', message.projectName)
   }
 
@@ -166,13 +179,29 @@ const Inbox = ({ filter }) => {
 
   const messagesData = isFetchingInbox || isFetchingInfo ? placeholderMessages : groupedMessages
 
-  const handleClearShortcut = (e) => {
+  const getHoveredMessageId = (e, closest = '') => {
     // get the message list item
-    const target = e.target.closest('.isClearable')
+    const target = e.target.closest('.inbox-message' + closest)
     if (!target) return
     // check target has id 'message-{id}` and extract the id
     const [type, id] = target.id.split('-')
-    if (type !== 'message' || !id) return
+    if (type !== 'message' || !id) return null
+
+    return id
+  }
+
+  const handleReadShortcut = (e) => {
+    const id = getHoveredMessageId(e)
+    if (!id) return
+
+    console.log(id)
+
+    handleToggleReadMessage(id)
+  }
+
+  const handleClearShortcut = (e) => {
+    const id = getHoveredMessageId(e, '.isClearable')
+    if (!id) return
 
     // if something is selected, check if the selected message is the same as the target
     // if it is, clear it
@@ -202,12 +231,15 @@ const Inbox = ({ filter }) => {
         id: 'clear',
         label: isActive ? 'Clear' : 'Unclear',
         icon: isActive ? 'done' : 'replay',
+        shortcut: 'c',
         command: () => clearMessages(id, group.messages, group.projectName),
       },
       {
         id: isRead ? 'unread' : 'read',
         label: isRead ? 'Mark as unread' : 'Mark as read',
         icon: isRead ? 'mark_email_unread' : 'drafts',
+        disabled: !isActive,
+        shortcut: 'x',
         command: () =>
           handleUpdateMessages(referenceIds, isRead ? 'unread' : 'read', group.projectName),
       },
@@ -235,7 +267,13 @@ const Inbox = ({ filter }) => {
       {
         key: 'c',
         action: handleClearShortcut,
-        closest: '.isClearable',
+        closest: '.inbox-message',
+      },
+      {
+        key: 'x',
+        action: handleReadShortcut,
+        closest: '.inbox-message',
+        disabled: !isActive,
       },
       {
         key: 'r',
