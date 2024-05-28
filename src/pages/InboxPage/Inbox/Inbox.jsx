@@ -12,7 +12,6 @@ import Shortcuts from '/src/containers/Shortcuts'
 import { highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
 import { Button, Spacer } from '@ynput/ayon-react-components'
-import usePrefetchFilters from '../hooks/usePrefetchFilters'
 import { useUpdateInboxMessageMutation } from '/src/services/inbox/updateInbox'
 import useCreateContext from '/src/hooks/useCreateContext'
 
@@ -50,9 +49,6 @@ const Inbox = ({ filter }) => {
 
   // update inbox message
   const [updateMessages] = useUpdateInboxMessageMutation()
-
-  // prefetch all the other filters in the background
-  usePrefetchFilters({ active: isActive, last, filter, filters })
 
   const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery(
     { projects: projectNames },
