@@ -4,6 +4,7 @@ import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
+import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
 
 const MenuItem = forwardRef(
   (
@@ -45,7 +46,7 @@ const MenuItem = forwardRef(
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
         ))}
-        {shortcut && <Styled.Shortcut>{shortcut}</Styled.Shortcut>}
+        {shortcut && <ShortcutWidget align={'right'}>{shortcut}</ShortcutWidget>}
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>
     )
