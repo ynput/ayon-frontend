@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
-import { usePrefetchEntity } from '../../UserDashboardPage/util'
 import { useDispatch } from 'react-redux'
 import { useGetInboxQuery } from '/src/services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
@@ -164,15 +163,6 @@ const Inbox = ({ filter }) => {
     listRef,
   })
 
-  // we keep track of the ids that have been pre-fetched to avoid fetching them again
-  const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 300)
-
-  const handleHover = (message) => {
-    const { entityId, projectName, entityType } = message
-    if (!entityId || !projectName) return
-    handlePrefetch({ id: entityId, projectName, entityType })
-  }
-
   const messagesData = isFetchingInbox || isFetchingInfo ? placeholderMessages : groupedMessages
 
   const getHoveredMessageId = (e, closest = '') => {
@@ -319,7 +309,6 @@ const Inbox = ({ filter }) => {
               messages={group.messages}
               changes={group.changes}
               isPlaceholder={group.isPlaceholder}
-              onMouseOver={() => handleHover(group)}
               projectsInfo={projectsInfo}
               isMultiple={group.isMultiple}
               onContextMenu={handleContextMenu}
