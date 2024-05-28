@@ -110,6 +110,7 @@ const updateInbox = ayonApi.injectEndpoints({
       },
       invalidatesTags: (result, error, { important }) => [
         { type: 'inbox', id: `count-${important}` },
+        { type: 'inbox', id: 'hasUnread' },
       ],
     }),
   }),

@@ -22,6 +22,7 @@ const getInbox = ayonApi.injectEndpoints({
         active,
         important,
       }),
+      keepUnusedDataFor: 30,
     }),
     getInboxHasUnread: build.query({
       query: () => ({
@@ -32,6 +33,7 @@ const getInbox = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (res) => !!res?.data?.inbox?.edges.length,
+      providesTags: () => [{ type: 'inbox', id: 'hasUnread' }],
     }),
     getInboxUnreadCount: build.query({
       query: ({ important }) => ({

@@ -275,7 +275,7 @@ const Inbox = ({ filter }) => {
       <Styled.Tools>
         {/* <InputText placeholder="Search..." /> */}
         <Spacer />
-        <Button label="Refresh (r)" icon="refresh" onClick={handleRefresh} />
+        <Button label="Refresh (R)" icon="refresh" onClick={handleRefresh} />
       </Styled.Tools>
       <Styled.InboxSection direction="row">
         <Styled.MessagesList

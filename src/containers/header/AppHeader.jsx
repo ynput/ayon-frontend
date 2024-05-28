@@ -18,6 +18,7 @@ import { toggleDevMode } from '/src/features/user'
 import styled from 'styled-components'
 import { useRestart } from '/src/context/restartContext'
 import { classNames } from 'primereact/utils'
+import { useGetInboxHasUnreadQuery } from '/src/services/inbox/getInbox'
 
 const DeveloperSwitch = styled.div`
   display: flex;
@@ -106,6 +107,23 @@ const Header = () => {
     }
   }, [location.pathname, localStorage])
 
+  const { data: isNewMessages, refetch } = useGetInboxHasUnreadQuery()
+
+  useEffect(() => {
+    refetch() // Check messages immediately on location change
+
+    const interval = setInterval(refetch, 600000) // Check messages every 10 minutes
+
+    const timeout = setTimeout(() => {
+      refetch() // Check messages after 10 minutes, even if the location hasn't changed
+    }, 600000)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeout)
+    }
+  }, [location.pathname])
+
   const handleNavClick = (e) => {
     // if target us nav, then close menu
     if (e.target.tagName === 'NAV') handleSetMenu(false)
@@ -185,7 +203,11 @@ const Header = () => {
 
       {/* Inbox icon */}
       <Link to="/inbox/important">
-        <HeaderButton icon="inbox" variant="nav" className={classNames({ notification: true })} />
+        <HeaderButton
+          icon="inbox"
+          variant="nav"
+          className={classNames({ notification: isNewMessages })}
+        />
       </Link>
 
       {/* App icon and menu vvv */}
