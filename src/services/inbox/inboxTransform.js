@@ -40,11 +40,9 @@ export const transformInboxMessages = (messageEdges = [], { important = false, a
     }
   }
 
-  const sortByField = active ? 'createdAt' : 'updatedAt'
-
   //   now sort the messages by createdAt using the compare function
   const messagesSortedByDate = messages.sort((a, b) =>
-    compareAsc(new Date(b[sortByField]), new Date(a[sortByField])),
+    active ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : messages,
   )
 
   return { projectNames, messages: messagesSortedByDate }
