@@ -16,6 +16,11 @@
   }
 }
 
+.p-menuitem-shortcut {
+  margin-left: auto;
+  padding-left: 32px;
+}
+
 .p-contextmenu .p-menuitem-link:not(.p-disabled):hover {
   .p-menuitem-icon,
   .p-menuitem-text {
