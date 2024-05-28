@@ -6,7 +6,6 @@ fragment ActivityFragment on ActivityNode {
     activityData
     referenceType
     referenceId
-    entityId
     body
     createdAt
     updatedAt
@@ -39,4 +38,30 @@ query getInboxMessages($last: Int, $active: Boolean, $important: Boolean) {
   }
 }
 ${ACTIVITY_FRAGMENT}
+`
+
+export const INBOX_HAS_UNREAD = `
+query getInboxHasUnread {
+  inbox(last: 1, showActiveMessages: true, showImportantMessages: true, showUnreadMessages: true){
+    edges {
+      node {
+        referenceId
+        read
+      }
+    }
+  }
+} 
+`
+
+export const INBOX_UNREAD_COUNT = `
+query getInboxHasUnread($important: Boolean) {
+  inbox(last: 500, showActiveMessages: true, showImportantMessages: $important, showUnreadMessages: true){
+    edges {
+      node {
+        referenceId
+        read
+      }
+    }
+  }
+} 
 `

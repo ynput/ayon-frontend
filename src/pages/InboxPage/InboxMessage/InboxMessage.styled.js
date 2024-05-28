@@ -192,3 +192,10 @@ export const Date = styled.span`
 export const ClearButton = styled(Button)`
   height: 30px;
 `
+
+export const Unread = styled.span`
+  width: 18px;
+  &.hide {
+    opacity: 0;
+  }
+`

@@ -9,6 +9,7 @@ import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
 import { getFuzzyDate } from '/src/components/Feed/ActivityDate'
 import { useMemo } from 'react'
 import RemoveMarkdown from 'remove-markdown'
+import Typography from '/src/theme/typography.module.css'
 
 const getMessageBody = (messages = []) => {
   const unreadMessages = messages.filter((m) => !m.isRead)
@@ -66,6 +67,7 @@ const InboxMessage = ({
   clearLabel = 'Clear',
   clearIcon = 'check',
   isRead,
+  unReadCount,
   projectName,
   thumbnail: { icon: thumbnailIcon, url: thumbnailUrl } = {},
   isSelected,
@@ -127,6 +129,9 @@ const InboxMessage = ({
         <span className="sub-title">{subTitle}</span>
       </Styled.Left>
       <Styled.Middle className="middle">
+        <Styled.Unread className={classNames(Typography.bodySmall, { hide: unReadCount < 2 })}>
+          {unReadCount}
+        </Styled.Unread>
         {!isStatusChange && <Icon icon={typeIcon} className="type" />}
         {isStatusChange ? (
           <InboxMessageStatus statuses={statusChanges} />

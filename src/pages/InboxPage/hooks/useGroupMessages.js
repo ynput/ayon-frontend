@@ -86,6 +86,7 @@ const transformGroups = (groups = []) => {
     const date = firstMessage.createdAt
     // if every message in the group is read, then the group is read
     const read = group.every((m) => m.read)
+    const unReadCount = group.filter((m) => !m.read).length
 
     const {
       activityId,
@@ -106,6 +107,7 @@ const transformGroups = (groups = []) => {
       userName: author?.name,
       changes: getChangedValues(group),
       read: read,
+      unRead: unReadCount,
       date,
       title,
       subTitle,

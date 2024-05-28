@@ -294,6 +294,7 @@ const Inbox = ({ filter }) => {
               date={group.date}
               userName={group.userName}
               isRead={group.read || group.active}
+              unReadCount={group.unRead}
               onSelect={handleMessageSelect}
               isSelected={selected.includes(group.activityId)}
               disableHover={usingKeyboard}

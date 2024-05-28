@@ -1,20 +1,33 @@
 import { useParams } from 'react-router'
 import AppNavLinks from '/src/containers/header/AppNavLinks'
 import Inbox from './Inbox/Inbox'
+import { useGetInboxUnreadCountQuery } from '/src/services/inbox/getInbox'
+import { UnreadCount } from './Inbox/Inbox.styled'
 
 const InboxPage = () => {
   const { module } = useParams()
+
+  const { data: importantUnreadCount } = useGetInboxUnreadCountQuery({ important: true })
+  const { data: otherUnreadCount } = useGetInboxUnreadCountQuery({ important: false })
 
   let links = [
     {
       name: 'Important',
       path: '/inbox/important',
       module: 'important',
+      endContent: !!importantUnreadCount && (
+        <UnreadCount className={'important'}>
+          {importantUnreadCount > 99 ? '99+' : importantUnreadCount}
+        </UnreadCount>
+      ),
     },
     {
       name: 'Other',
       path: '/inbox/other',
       module: 'other',
+      endContent: !!otherUnreadCount && (
+        <UnreadCount>{otherUnreadCount > 99 ? '99+' : otherUnreadCount}</UnreadCount>
+      ),
     },
     {
       name: 'Cleared',

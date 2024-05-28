@@ -47,3 +47,15 @@ export const MessagesList = styled.ul`
     overflow: hidden;
   }
 `
+
+export const UnreadCount = styled.div`
+  padding: 0 var(--padding-s);
+  border-radius: var(--border-radius-m);
+  margin-right: -8px;
+  background-color: var(--md-sys-color-surface-container-high);
+
+  &.important {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+  }
+`

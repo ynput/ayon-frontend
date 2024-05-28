@@ -1,5 +1,5 @@
 import { ayonApi } from '../ayon'
-import { INBOX_ACTIVITIES } from './inboxQueries'
+import { INBOX_ACTIVITIES, INBOX_HAS_UNREAD, INBOX_UNREAD_COUNT } from './inboxQueries'
 import { transformInboxMessages } from './inboxTransform'
 
 const getInbox = ayonApi.injectEndpoints({
@@ -23,7 +23,34 @@ const getInbox = ayonApi.injectEndpoints({
         important,
       }),
     }),
+    getInboxHasUnread: build.query({
+      query: () => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: INBOX_HAS_UNREAD,
+        },
+      }),
+      transformResponse: (res) => !!res?.data?.inbox?.edges.length,
+    }),
+    getInboxUnreadCount: build.query({
+      query: ({ important }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: INBOX_UNREAD_COUNT,
+          variables: { important },
+        },
+      }),
+      transformResponse: (res) => res?.data?.inbox?.edges.length,
+      providesTags: (result, error, { important }) => [{ type: 'inbox', id: `count-${important}` }],
+    }),
   }),
 })
 
-export const { useGetInboxQuery, useLazyGetInboxQuery } = getInbox
+export const {
+  useGetInboxQuery,
+  useLazyGetInboxQuery,
+  useGetInboxHasUnreadQuery,
+  useGetInboxUnreadCountQuery,
+} = getInbox

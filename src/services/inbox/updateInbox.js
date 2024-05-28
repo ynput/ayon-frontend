@@ -108,6 +108,9 @@ const updateInbox = ayonApi.injectEndpoints({
           patchResult.undo()
         }
       },
+      invalidatesTags: (result, error, { important }) => [
+        { type: 'inbox', id: `count-${important}` },
+      ],
     }),
   }),
 })
