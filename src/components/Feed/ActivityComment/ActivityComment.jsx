@@ -4,6 +4,7 @@ import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
 import CommentWrapper from './CommentWrapper'
 import remarkGfm from 'remark-gfm'
+import emoji from 'remark-emoji'
 import { classNames } from 'primereact/utils'
 import { useSelector } from 'react-redux'
 import CommentInput from '/src/components/CommentInput/CommentInput'
@@ -94,7 +95,7 @@ const ActivityComment = ({
           <>
             <CommentWrapper>
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, emoji]}
                 urlTransform={(url) => url}
                 components={{
                   // a links

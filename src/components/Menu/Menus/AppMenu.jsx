@@ -51,6 +51,7 @@ export const AppMenu = ({ user, ...props }) => {
       link: '/market',
       label: 'Addon Market',
       icon: 'store',
+      shortcut: 'M+M',
     },
     {
       id: 'events',
@@ -64,6 +65,7 @@ export const AppMenu = ({ user, ...props }) => {
       link: '/services',
       label: 'Services',
       icon: 'home_repair_service',
+      shortcut: 'V+V',
     },
   ]
 

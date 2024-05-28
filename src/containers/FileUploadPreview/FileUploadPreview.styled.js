@@ -2,44 +2,54 @@ import { Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const DialogWrapper = styled(Dialog)`
-  background-color: unset;
-  overflow: hidden;
-  border-radius: 0;
-
-  width: 0;
-  min-width: fit-content;
-
-  .cancelButton {
-    top: 1px;
-    right: 1px;
-    background-color: var(--md-sys-color-surface-container-highest);
-  }
-
-  /* Backdrop property affects inactive area around modal */
-  &::backdrop {
-    background-color: rgba(0, 0, 0, 0.7);
-  }
-
-  .header {
-    display: none;
-  }
+  min-height: 90vh;
+  max-height: 90vh;
+  max-width: 1000px;
 
   .body {
-    padding: 0;
-    align-items: center;
-    user-select: none;
+    padding-top: 0;
+  }
+
+  /* custom image styles */
+  &.isImage {
+    background-color: unset;
     overflow: hidden;
-  }
+    border-radius: 0;
 
-  footer {
-    display: none;
-  }
+    width: 0;
+    min-width: fit-content;
 
-  /* remove focus outline */
-  &:focus {
-    outline: none;
-  }
+    .cancelButton {
+      top: 1px;
+      right: 1px;
+      background-color: var(--md-sys-color-surface-container-highest);
+    }
 
+    /* Backdrop property affects inactive area around modal */
+    &::backdrop {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .header {
+      display: none;
+    }
+
+    .body {
+      padding: 0;
+      align-items: center;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    footer {
+      display: none;
+    }
+
+    /* remove focus outline */
+    &:focus {
+      outline: none;
+    }
+  }
   /* remove focus outline */
   &:focus-visible {
     outline: none;

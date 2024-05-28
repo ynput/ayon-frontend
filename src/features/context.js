@@ -38,6 +38,7 @@ const initialState = {
     mime: null,
     size: null,
     projectName: null,
+    extension: null,
   },
 }
 

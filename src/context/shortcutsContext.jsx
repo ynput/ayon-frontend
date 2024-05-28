@@ -42,11 +42,15 @@ function ShortcutsProvider(props) {
       // bundles settings
       { key: 'b+b', action: () => navigate('/settings/bundles') },
       // dashboard
-      { key: 'd+d', action: () => navigate('/dashboard') },
+      { key: 'h+h', action: () => navigate('/dashboard') },
       // user settings
       { key: 'u+u', action: () => navigate('/settings/users') },
       // events page
       { key: 'e+e', action: () => navigate('/events') },
+      // services page
+      { key: 'v+v', action: () => navigate('/services') },
+      // market page
+      { key: 'm+m', action: () => navigate('/market') },
       // inbox page
       { key: 'i+i', action: () => navigate('/inbox/important') },
     ],

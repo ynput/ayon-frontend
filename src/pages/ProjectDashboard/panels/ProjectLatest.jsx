@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProjectLatestRow from './ProjectLatestRow'
 import { useGetProjectQuery } from '/src/services/project/getProject'
-import useUriNavigate from '/src/hooks/useUriNavigate'
+import { useURIContext } from '/src/context/uriContext'
 
 const ProjectLatest = ({ projectName }) => {
   // project
@@ -68,7 +68,7 @@ const ProjectLatest = ({ projectName }) => {
     },
   ]
 
-  const navigateToUri = useUriNavigate()
+  const { navigate: navigateToUri } = useURIContext()
 
   const handleEntityClick = (entity = {}) => {
     const path = entity.type === 'folder' ? `${entity.path}/${entity.name}` : entity.path
