@@ -125,6 +125,12 @@ export const Content = styled.div`
       opacity: 0;
     }
   }
+
+  .sub-title {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-medium);
+  }
 `
 
 export const ContentRow = styled.div`
