@@ -77,3 +77,25 @@ export const LoadMore = styled.li`
     background-color: var(--md-sys-color-surface-container-low-hover);
   }
 `
+
+export const NoMessages = styled.div`
+  position: absolute;
+  /* center */
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  user-select: none;
+
+  .icon {
+    font-size: 64px;
+    padding: 8px;
+    background-color: var(--md-sys-color-secondary-container);
+    border-radius: 100%;
+    color: var(--md-sys-color-on-secondary-container);
+  }
+`

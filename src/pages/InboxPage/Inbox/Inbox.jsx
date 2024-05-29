@@ -10,7 +10,7 @@ import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDash
 import Shortcuts from '/src/containers/Shortcuts'
 import { clearHighlights, highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
-import { Button, Spacer } from '@ynput/ayon-react-components'
+import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { InView } from 'react-intersection-observer'
@@ -18,6 +18,7 @@ import useInboxRefresh from '../hooks/useInboxRefresh'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
+import Typography from '/src/theme/typography.module.css'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -321,7 +322,12 @@ const Inbox = ({ filter }) => {
         {/* <InputText placeholder="Search..." /> */}
         <Spacer />
         {isActive && (
-          <Button label="Clear all" icon="done_all" onClick={handleClearAll}>
+          <Button
+            label="Clear all"
+            icon="done_all"
+            onClick={handleClearAll}
+            disabled={!messages.length}
+          >
             <ShortcutWidget>Shift+C</ShortcutWidget>
           </Button>
         )}
@@ -385,6 +391,12 @@ const Inbox = ({ filter }) => {
           selected={selected}
           projectsInfo={projectsInfo}
         />
+        {!messagesData.length && !isLoadingInbox && (
+          <Styled.NoMessages>
+            <Icon icon="done_all" />
+            <h3 className={Typography.titleLarge}>All caught up! No messages to show.</h3>
+          </Styled.NoMessages>
+        )}
       </Styled.InboxSection>
     </>
   )
