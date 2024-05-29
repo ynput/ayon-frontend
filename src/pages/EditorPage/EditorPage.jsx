@@ -1262,11 +1262,13 @@ const EditorPage = () => {
       {
         label: 'Add Folders',
         icon: 'create_new_folder',
+        shortcut: 'N',
         command: () => setNewEntity('folder'),
       },
       {
         label: 'Add Tasks',
         icon: 'add_task',
+        shortcut: 'T',
         command: () => setNewEntity('task'),
       },
       {

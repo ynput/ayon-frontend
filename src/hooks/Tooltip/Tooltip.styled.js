@@ -38,10 +38,3 @@ export const TooltipInner = styled.div`
   box-shadow: 0 0 10px 0px rgba(0, 0, 0, 0.4);
   z-index: 1200;
 `
-
-export const Shortcut = styled.span`
-  background-color: var(--md-sys-color-surface-container-high);
-  padding: 2px 4px;
-  border-radius: var(--border-radius-m);
-  font-size: 110%;
-`
