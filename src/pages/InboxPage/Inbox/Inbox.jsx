@@ -269,6 +269,8 @@ const Inbox = ({ filter }) => {
     [messagesData, selected],
   )
 
+  console.log(messagesData)
+
   return (
     <>
       <Shortcuts shortcuts={shortcuts} deps={[messagesData, selected]} />
@@ -287,8 +289,7 @@ const Inbox = ({ filter }) => {
           {messagesData.map((group) => (
             <InboxMessage
               key={group.activityId}
-              title={group.title}
-              subTitle={group.subTitle}
+              path={group.path}
               type={group.activityType}
               projectName={group.projectName}
               date={group.date}

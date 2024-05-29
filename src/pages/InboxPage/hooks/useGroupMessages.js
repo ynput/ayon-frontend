@@ -80,8 +80,6 @@ const transformGroups = (groups = []) => {
   return groups.map((group) => {
     const firstMessage = group[0] || {}
     const isMultiple = group.length > 1
-    const title = firstMessage.folderName
-    const subTitle = firstMessage.origin?.label || firstMessage.origin?.name
     const img = firstMessage.thumbnail.icon
     const date = firstMessage.createdAt
     // if every message in the group is read, then the group is read
@@ -108,9 +106,9 @@ const transformGroups = (groups = []) => {
       changes: getChangedValues(group),
       read: read,
       unRead: unReadCount,
+      path: firstMessage.path,
       date,
-      title,
-      subTitle,
+
       img,
       isMultiple,
       messages: group,

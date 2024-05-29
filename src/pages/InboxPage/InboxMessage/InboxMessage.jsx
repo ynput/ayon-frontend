@@ -57,8 +57,7 @@ const InboxMessage = ({
   id, // first activity id
   ids = [], // group ids
   messages, // group of messages
-  title,
-  subTitle,
+  path = [],
   userName,
   type,
   date,
@@ -124,9 +123,7 @@ const InboxMessage = ({
     >
       <Styled.Left className="left">
         <Styled.Thumbnail src={thumbnailUrl} icon={thumbnailIcon} />
-        <span className={classNames('title')}>{title}</span>
-        <span className="sub-title">-</span>
-        <span className="sub-title">{subTitle}</span>
+        <span className={'title'}>{path.join(' - ')}</span>
       </Styled.Left>
       <Styled.Middle className="middle">
         <Styled.Unread className={classNames(Typography.bodySmall, { hide: unReadCount < 2 })}>
