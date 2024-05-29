@@ -23,6 +23,11 @@ fragment ActivityFragment on ActivityNode {
       label
       type
     }
+    parents {
+      type
+      name
+      label
+    }
   }
 `
 
@@ -31,6 +36,8 @@ query getInboxMessages($last: Int, $active: Boolean, $important: Boolean, $curso
   inbox(last: $last, showActiveMessages: $active, showImportantMessages: $important, before: $cursor){
     pageInfo {
       hasPreviousPage
+      startCursor
+      endCursor
     }
     edges {
       cursor

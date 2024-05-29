@@ -1,41 +1,8 @@
-// return a random folder name
-import { compareAsc } from 'date-fns'
-
-const paths = {
-  // folders
-  folders: [
-    'sh020',
-    'sh030',
-    'sh040',
-    'sh050',
-    'sh060',
-    'chair',
-    'bin',
-    'robot',
-    'ep101sq001sh010',
-    'ep101sq001sh070',
-    'ep104sq001sh070',
-  ],
-  // products
-  products: [
-    'animationChar1',
-    'cameraMain',
-    'renderFxFire',
-    'renderFxSmoke',
-    'renderLightingBG',
-    'renderLightingBG_crypto',
-    'renderLightingBG_crypto',
-    'reviewFxFire',
-    'vdbcacheFire',
-  ],
-}
-
-export const transformInboxMessages = (inbox = {}, { important = false, active = true }) => {
+export const transformInboxMessages = (inbox = {}, { important = false }) => {
   const messages = []
   const projectNames = []
   const messageEdges = inbox.edges || []
 
-  let lastCursor = messageEdges.length ? messageEdges[messageEdges.length - 1].cursor : null
   for (const messageEdge of messageEdges) {
     const message = messageEdge.node
 
@@ -43,17 +10,9 @@ export const transformInboxMessages = (inbox = {}, { important = false, active =
 
     const entityType = message.origin?.type
 
-    const randomFolder = paths.folders[Math.floor(Math.random() * paths.folders.length)]
-    const randomProduct = paths.products[Math.floor(Math.random() * paths.products.length)]
-
-    let path = [message.origin?.name]
-    if (entityType === 'task') {
-      // add a random folder name to the start
-      path = [randomFolder, ...path]
-    } else if (entityType === 'version') {
-      // add a random product and folder name to the start
-      path = [randomProduct, randomProduct, ...path]
-    }
+    const path = [...(message.parents || []), message.origin]
+      .map((p) => p?.label || p?.name || 'Unknown')
+      .filter(Boolean)
 
     const transformedMessage = {
       ...message,
@@ -62,7 +21,7 @@ export const transformInboxMessages = (inbox = {}, { important = false, active =
       entityId: message.origin?.id,
       entityType: entityType,
       important: important,
-      path: path, //HACK: path will be provided by the backend
+      path: path,
     }
 
     // parse fields that are JSON strings
@@ -86,12 +45,5 @@ export const transformInboxMessages = (inbox = {}, { important = false, active =
     }
   }
 
-  //   now sort the messages by createdAt using the compare function
-  const messagesSortedByDate = messages.sort((a, b) =>
-    active ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : messages,
-  )
-
-  const hasPreviousPage = inbox.pageInfo?.hasPreviousPage || false
-
-  return { projectNames, messages: messagesSortedByDate, hasPreviousPage, lastCursor }
+  return { projectNames, messages, pageInfo: inbox.pageInfo }
 }

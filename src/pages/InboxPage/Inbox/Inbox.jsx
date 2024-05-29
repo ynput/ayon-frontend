@@ -11,9 +11,12 @@ import Shortcuts from '/src/containers/Shortcuts'
 import { highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
 import { Button, Spacer } from '@ynput/ayon-react-components'
-import { useUpdateInboxMessageMutation } from '/src/services/inbox/updateInbox'
+import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { InView } from 'react-intersection-observer'
+import useInboxRefresh from '../hooks/useInboxRefresh'
+import { toast } from 'react-toastify'
+import { compareAsc } from 'date-fns'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -38,7 +41,7 @@ const Inbox = ({ filter }) => {
   const isImportant = filterArgs.important
 
   const {
-    data: { messages = [], projectNames = [], hasPreviousPage, lastCursor } = {},
+    data: { messages = [], projectNames = [], pageInfo } = {},
     isLoading: isLoadingInbox,
     isFetching: isFetchingInbox,
     refetch,
@@ -48,6 +51,8 @@ const Inbox = ({ filter }) => {
     important: isImportant,
   })
 
+  const { hasPreviousPage, endCursor: lastCursor } = pageInfo || {}
+
   const [getInboxMessages] = useLazyGetInboxQuery()
   // load more messages
   const handleLoadMore = () => {
@@ -56,16 +61,28 @@ const Inbox = ({ filter }) => {
     getInboxMessages({ last, active: isActive, important: isImportant, cursor: lastCursor })
   }
 
-  // update inbox message
-  const [updateMessages] = useUpdateInboxMessageMutation()
-
-  const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery(
+  const { data: projectsInfo = {}, isLoading: isLoadingInfo } = useGetProjectsInfoQuery(
     { projects: projectNames },
     { skip: isLoadingInbox || !projectNames?.length },
   )
 
+  const handleUpdateMessages = useUpdateInboxMessage({
+    last,
+    isActive,
+    isImportant,
+  })
+
+  //   now sort the messages by createdAt using the compare function
+  const messagesSortedByDate = useMemo(
+    () =>
+      [...messages].sort((a, b) =>
+        isActive ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : messages,
+      ),
+    [messages, isActive],
+  )
+
   // group messages of same entity and type together
-  const groupedMessages = useGroupMessages({ messages })
+  const groupedMessages = useGroupMessages({ messages: messagesSortedByDate })
 
   // single select only allow but multi select is possible
   // it always seems to become multi select so i'll just support it from the start
@@ -81,21 +98,6 @@ const Inbox = ({ filter }) => {
 
     listRef.current?.firstElementChild?.focus()
   }, [listRef, isLoadingInbox, filter])
-
-  const handleUpdateMessages = (ids, status, projectName, isActiveChange = false) => {
-    if (ids.length > 0) {
-      // cacheKeyArgs are not used in the patch but are used to match the cache key to a query (for optimistic updates)
-      const cacheKeyArgs = { last, active: isActive, important: isImportant, isActiveChange }
-      // update the messages in the backend to toggle read status
-      // we use optimistic updates inside updateMessages query
-      updateMessages({
-        status: status,
-        projectName: projectName,
-        ids: ids,
-        ...cacheKeyArgs,
-      })
-    }
-  }
 
   const handleToggleReadMessage = (id) => {
     // get all the messages in the group
@@ -142,6 +144,15 @@ const Inbox = ({ filter }) => {
     handleUpdateMessages(idsToMarkAsRead, 'read', message.projectName)
   }
 
+  const [refreshInbox, { isRefreshing }] = useInboxRefresh({ isFetching: isFetchingInbox, refetch })
+
+  const [handleKeyDown, [usingKeyboard, setUsingKeyboard]] = useKeydown({
+    messages: groupedMessages,
+    onChange: handleMessageSelect,
+    selected,
+    listRef,
+  })
+
   const clearMessages = async (id, messagesToClear = [], projectName) => {
     if (selected.length) {
       // select next message in the list
@@ -166,14 +177,35 @@ const Inbox = ({ filter }) => {
     clearMessages(id, group.messages, projectName)
   }
 
-  const [handleKeyDown, [usingKeyboard, setUsingKeyboard]] = useKeydown({
-    messages: groupedMessages,
-    onChange: handleMessageSelect,
-    selected,
-    listRef,
-  })
+  const handleClearAll = async () => {
+    // first group messages by projectName
+    const groupedByProject = messages.reduce((acc, message) => {
+      if (!acc[message.projectName]) acc[message.projectName] = []
+      acc[message.projectName].push(message)
+      return acc
+    }, {})
 
-  const messagesData = isLoadingInbox || isFetchingInfo ? placeholderMessages : groupedMessages
+    let promises = []
+    // for each project, clear all messages
+    for (const [projectName, messages] of Object.entries(groupedByProject)) {
+      const promise = clearMessages(null, messages, projectName)
+      promises.push(promise)
+    }
+
+    try {
+      await Promise.all(promises)
+      toast.success('All messages cleared')
+      console.log(hasPreviousPage)
+
+      // refresh the inbox to get any new messages
+      if (hasPreviousPage) handleLoadMore()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const messagesData =
+    isLoadingInbox || isLoadingInfo || isRefreshing ? placeholderMessages : groupedMessages
 
   const getHoveredMessageId = (e, closest = '') => {
     // get the message list item
@@ -207,11 +239,6 @@ const Inbox = ({ filter }) => {
       // if nothing is selected, clear the target
       handleClearMessage(id)
     }
-  }
-
-  const handleRefresh = () => {
-    console.log('refetching inbox...')
-    refetch()
   }
 
   const contextMenu = (id) => {
@@ -266,6 +293,10 @@ const Inbox = ({ filter }) => {
         closest: '.inbox-message',
       },
       {
+        key: 'C',
+        action: handleClearAll,
+      },
+      {
         key: 'x',
         action: handleReadShortcut,
         closest: '.inbox-message',
@@ -273,7 +304,7 @@ const Inbox = ({ filter }) => {
       },
       {
         key: 'r',
-        action: handleRefresh,
+        action: refreshInbox,
       },
     ],
     [messagesData, selected],
@@ -285,7 +316,10 @@ const Inbox = ({ filter }) => {
       <Styled.Tools>
         {/* <InputText placeholder="Search..." /> */}
         <Spacer />
-        <Button label="Refresh (R)" icon="refresh" onClick={handleRefresh} />
+        {isActive && (
+          <Button label="Clear all (Shift+C)" icon="done_all" onClick={handleClearAll} />
+        )}
+        <Button label="Refresh (R)" icon="refresh" onClick={refreshInbox} />
       </Styled.Tools>
       <Styled.InboxSection direction="row">
         <Styled.MessagesList
