@@ -13,7 +13,8 @@ import Typography from '/src/theme/typography.module.css'
 
 const getMessageBody = (messages = []) => {
   const unreadMessages = messages.filter((m) => !m.isRead)
-  const messagesToShow = unreadMessages.length > 0 ? unreadMessages : messages
+  // const messagesToShow = unreadMessages.length > 0 ? unreadMessages : messages
+  const messagesToShow = unreadMessages.slice(0, 1)
 
   return messagesToShow
     .slice()
@@ -22,7 +23,9 @@ const getMessageBody = (messages = []) => {
       const authorName = m.author?.attrib?.fullName || m.author?.name
       const parsedBody = RemoveMarkdown(m.body)
       const messageBody =
-        m.isMultiple && m.activityType === 'comment' ? parsedBody.substring(0, 50) : parsedBody
+        m.activityType === 'comment' && parsedBody.length > 75
+          ? parsedBody.substring(0, 75) + '...'
+          : parsedBody
       return `${authorName}: ${messageBody}`
     })
     .join(' > ')
