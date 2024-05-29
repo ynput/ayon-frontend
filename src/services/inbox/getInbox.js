@@ -26,7 +26,7 @@ const getInbox = ayonApi.injectEndpoints({
       // when we get new data, merge it with the existing cache
       // (pagination)
       merge: (currentCache, newCache) => {
-        const { messages = [], projectNames = [], hasPreviousPage, lastCursor } = newCache
+        const { messages = [], projectNames = [], pageInfo } = newCache
         const { messages: lastMessages = [], projectNames: lastProjectNames = [] } = currentCache
 
         const newMessages = [
@@ -41,8 +41,7 @@ const getInbox = ayonApi.injectEndpoints({
         return {
           messages: newMessages,
           projectNames: newProjectNames,
-          hasPreviousPage,
-          lastCursor,
+          pageInfo,
         }
       },
       keepUnusedDataFor: 30,
