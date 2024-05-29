@@ -17,6 +17,7 @@ import { InView } from 'react-intersection-observer'
 import useInboxRefresh from '../hooks/useInboxRefresh'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
+import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -317,9 +318,13 @@ const Inbox = ({ filter }) => {
         {/* <InputText placeholder="Search..." /> */}
         <Spacer />
         {isActive && (
-          <Button label="Clear all (Shift+C)" icon="done_all" onClick={handleClearAll} />
+          <Button label="Clear all" icon="done_all" onClick={handleClearAll}>
+            <ShortcutWidget>Shift+C</ShortcutWidget>
+          </Button>
         )}
-        <Button label="Refresh (R)" icon="refresh" onClick={refreshInbox} />
+        <Button label="Refresh" icon="refresh" onClick={refreshInbox}>
+          <ShortcutWidget>R</ShortcutWidget>
+        </Button>
       </Styled.Tools>
       <Styled.InboxSection direction="row">
         <Styled.MessagesList
