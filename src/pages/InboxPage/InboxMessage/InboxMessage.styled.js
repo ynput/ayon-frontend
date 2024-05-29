@@ -156,7 +156,7 @@ export const Thumbnail = styled(ThumbnailSimple)`
   margin-right: 4px;
 
   .icon {
-    font-size: 15px;
+    font-size: 18px;
   }
 `
 

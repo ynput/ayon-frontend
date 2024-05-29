@@ -1,5 +1,5 @@
-export const ACTIVITY_FRAGMENT = `
-fragment ActivityFragment on ActivityNode {
+export const MESSAGE_FRAGMENT = `
+fragment MessageFragment on ActivityNode {
     projectName
     activityId
     activityType
@@ -42,12 +42,12 @@ query getInboxMessages($last: Int, $active: Boolean, $important: Boolean, $curso
     edges {
       cursor
       node {
-        ...ActivityFragment
+        ...MessageFragment
       }
     }
   }
 }
-${ACTIVITY_FRAGMENT}
+${MESSAGE_FRAGMENT}
 `
 
 export const INBOX_HAS_UNREAD = `

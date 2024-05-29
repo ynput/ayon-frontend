@@ -108,7 +108,6 @@ const transformGroups = (groups = []) => {
       unRead: unReadCount,
       path: firstMessage.path,
       date,
-
       img,
       isMultiple,
       messages: group,

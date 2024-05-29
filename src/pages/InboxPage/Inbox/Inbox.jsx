@@ -338,6 +338,8 @@ const Inbox = ({ filter }) => {
               key={group.activityId}
               path={group.path}
               type={group.activityType}
+              entityType={group.entityType}
+              entityId={group.entityId}
               projectName={group.projectName}
               date={group.date}
               userName={group.userName}

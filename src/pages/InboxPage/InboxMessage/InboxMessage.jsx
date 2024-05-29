@@ -10,6 +10,7 @@ import { getFuzzyDate } from '/src/components/Feed/ActivityDate'
 import { useMemo } from 'react'
 import RemoveMarkdown from 'remove-markdown'
 import Typography from '/src/theme/typography.module.css'
+import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
 
 const getMessageBody = (messages = []) => {
   const unreadMessages = messages.filter((m) => !m.isRead)
@@ -63,6 +64,8 @@ const InboxMessage = ({
   path = [],
   userName,
   type,
+  entityType,
+  entityId,
   date,
   changes,
   onClear,
@@ -71,7 +74,6 @@ const InboxMessage = ({
   isRead,
   unReadCount,
   projectName,
-  thumbnail: { icon: thumbnailIcon, url: thumbnailUrl } = {},
   isSelected,
   disableHover, // remove all hover effects
   isPlaceholder, // shimmer effects
@@ -125,7 +127,12 @@ const InboxMessage = ({
       onClick={handleOnClick}
     >
       <Styled.Left className="left">
-        <Styled.Thumbnail src={thumbnailUrl} icon={thumbnailIcon} />
+        <Styled.Thumbnail
+          projectName={projectName}
+          entityType={entityType}
+          entityId={entityId}
+          icon={getEntityTypeIcon(entityType)}
+        />
         <span className={'title'}>{path.join(' - ')}</span>
       </Styled.Left>
       <Styled.Middle className="middle">
