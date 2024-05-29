@@ -43,8 +43,6 @@ const uri2crumbs = (uri = '', pathname) => {
     )
   }
 
-  console.log(crumbs)
-
   const qp = {}
 
   if (query) {
