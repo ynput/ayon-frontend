@@ -45,6 +45,10 @@ const getInbox = ayonApi.injectEndpoints({
         }
       },
       keepUnusedDataFor: 30,
+      providesTags: (res, error, { active, important }) => [
+        { type: 'inbox', id: 'LIST' },
+        { type: 'inbox', id: `active=${active}/important=${important}` },
+      ],
     }),
     getInboxHasUnread: build.query({
       query: () => ({
@@ -67,7 +71,10 @@ const getInbox = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (res) => res?.data?.inbox?.edges.length,
-      providesTags: (result, error, { important }) => [{ type: 'inbox', id: `count-${important}` }],
+      providesTags: (result, error, { important }) => [
+        { type: 'inbox', id: 'unreadCount' },
+        { type: 'inbox', id: `count-${important}` },
+      ],
     }),
   }),
 })
