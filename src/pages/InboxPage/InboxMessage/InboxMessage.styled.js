@@ -137,8 +137,8 @@ export const Left = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-medium);
-  min-width: 350px;
-  max-width: 350px;
+  min-width: clamp(350px, 30vw, 500px);
+  max-width: clamp(350px, 30vw, 500px);
 `
 
 export const Thumbnail = styled(ThumbnailSimple)`
@@ -178,7 +178,7 @@ export const Right = styled.div`
   display: flex;
   gap: 16px;
   align-items: center;
-  min-width: 150px;
+  min-width: 200px;
   justify-content: flex-end;
 `
 
