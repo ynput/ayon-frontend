@@ -59,3 +59,21 @@ export const UnreadCount = styled.div`
     color: var(--md-sys-color-on-primary);
   }
 `
+export const LoadMore = styled.li`
+  background-color: var(--md-sys-color-surface-container-low);
+  padding: 0 var(--padding-l);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+
+  border-radius: 0 0 var(--border-radius-m) var(--border-radius-m);
+  overflow: hidden;
+
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-low-hover);
+  }
+`

@@ -5,7 +5,7 @@ import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
-import { useGetInboxQuery } from '/src/services/inbox/getInbox'
+import { useGetInboxQuery, useLazyGetInboxQuery } from '/src/services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import Shortcuts from '/src/containers/Shortcuts'
 import { highlightActivity } from '/src/features/details'
@@ -13,8 +13,9 @@ import useGroupMessages from '../hooks/useGroupMessages'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import { useUpdateInboxMessageMutation } from '/src/services/inbox/updateInbox'
 import useCreateContext from '/src/hooks/useCreateContext'
+import { InView } from 'react-intersection-observer'
 
-const placeholderMessages = Array.from({ length: 30 }, (_, i) => ({
+const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
   folderName: 'Loading...',
   thumbnail: { icon: 'folder' },
@@ -37,7 +38,8 @@ const Inbox = ({ filter }) => {
   const isImportant = filterArgs.important
 
   const {
-    data: { messages = [], projectNames = [] } = {},
+    data: { messages = [], projectNames = [], hasPreviousPage, lastCursor } = {},
+    isLoading: isLoadingInbox,
     isFetching: isFetchingInbox,
     refetch,
   } = useGetInboxQuery({
@@ -46,12 +48,20 @@ const Inbox = ({ filter }) => {
     important: isImportant,
   })
 
+  const [getInboxMessages] = useLazyGetInboxQuery()
+  // load more messages
+  const handleLoadMore = () => {
+    if (!hasPreviousPage || isFetchingInbox) return
+
+    getInboxMessages({ last, active: isActive, important: isImportant, cursor: lastCursor })
+  }
+
   // update inbox message
   const [updateMessages] = useUpdateInboxMessageMutation()
 
   const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery(
     { projects: projectNames },
-    { skip: isFetchingInbox || !projectNames?.length },
+    { skip: isLoadingInbox || !projectNames?.length },
   )
 
   // group messages of same entity and type together
@@ -67,10 +77,10 @@ const Inbox = ({ filter }) => {
   // we do this so that keyboard navigation works right away
   useEffect(() => {
     setSelected([])
-    if (!listRef.current || isFetchingInbox) return
+    if (!listRef.current || isLoadingInbox) return
 
     listRef.current?.firstElementChild?.focus()
-  }, [listRef, isFetchingInbox, filter])
+  }, [listRef, isLoadingInbox, filter])
 
   const handleUpdateMessages = (ids, status, projectName, isActiveChange = false) => {
     if (ids.length > 0) {
@@ -163,7 +173,7 @@ const Inbox = ({ filter }) => {
     listRef,
   })
 
-  const messagesData = isFetchingInbox || isFetchingInfo ? placeholderMessages : groupedMessages
+  const messagesData = isLoadingInbox || isFetchingInfo ? placeholderMessages : groupedMessages
 
   const getHoveredMessageId = (e, closest = '') => {
     // get the message list item
@@ -269,8 +279,6 @@ const Inbox = ({ filter }) => {
     [messagesData, selected],
   )
 
-  console.log(messagesData)
-
   return (
     <>
       <Shortcuts shortcuts={shortcuts} deps={[messagesData, selected]} />
@@ -284,7 +292,7 @@ const Inbox = ({ filter }) => {
           ref={listRef}
           onMouseMove={() => setUsingKeyboard(false)}
           onKeyDown={handleKeyDown}
-          className={classNames({ isLoading: isFetchingInbox })}
+          className={classNames({ isLoading: isLoadingInbox })}
         >
           {messagesData.map((group) => (
             <InboxMessage
@@ -316,6 +324,17 @@ const Inbox = ({ filter }) => {
               onContextMenu={handleContextMenu}
             />
           ))}
+          {hasPreviousPage && !isLoadingInbox && (
+            <InView
+              onChange={(inView) => inView && handleLoadMore()}
+              rootMargin={'0px 0px 500px 0px'}
+              root={listRef.current}
+            >
+              <Styled.LoadMore onClick={handleLoadMore}>
+                {isFetchingInbox ? 'Loading more...' : 'Load more'}
+              </Styled.LoadMore>
+            </InView>
+          )}
         </Styled.MessagesList>
         <InboxDetailsPanel
           messages={messagesData}

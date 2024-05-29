@@ -139,10 +139,17 @@ export const Left = styled.div`
   gap: var(--base-gap-medium);
   min-width: clamp(350px, 30vw, 500px);
   max-width: clamp(350px, 30vw, 500px);
+
+  .title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 `
 
 export const Thumbnail = styled(ThumbnailSimple)`
   width: 50px;
+  min-width: 50px;
   height: 30px;
   margin: 0;
   border-radius: var(--border-radius-m);

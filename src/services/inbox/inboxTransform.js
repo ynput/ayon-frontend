@@ -30,10 +30,12 @@ const paths = {
   ],
 }
 
-export const transformInboxMessages = (messageEdges = [], { important = false, active = true }) => {
+export const transformInboxMessages = (inbox = {}, { important = false, active = true }) => {
   const messages = []
   const projectNames = []
+  const messageEdges = inbox.edges || []
 
+  let lastCursor = messageEdges.length ? messageEdges[messageEdges.length - 1].cursor : null
   for (const messageEdge of messageEdges) {
     const message = messageEdge.node
 
@@ -89,5 +91,7 @@ export const transformInboxMessages = (messageEdges = [], { important = false, a
     active ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : messages,
   )
 
-  return { projectNames, messages: messagesSortedByDate }
+  const hasPreviousPage = inbox.pageInfo?.hasPreviousPage || false
+
+  return { projectNames, messages: messagesSortedByDate, hasPreviousPage, lastCursor }
 }

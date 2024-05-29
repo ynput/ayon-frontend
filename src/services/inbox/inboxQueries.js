@@ -27,8 +27,11 @@ fragment ActivityFragment on ActivityNode {
 `
 
 export const INBOX_ACTIVITIES = `
-query getInboxMessages($last: Int, $active: Boolean, $important: Boolean) {
-  inbox(last: $last, showActiveMessages: $active, showImportantMessages: $important){
+query getInboxMessages($last: Int, $active: Boolean, $important: Boolean, $cursor: String) {
+  inbox(last: $last, showActiveMessages: $active, showImportantMessages: $important, before: $cursor){
+    pageInfo {
+      hasPreviousPage
+    }
     edges {
       cursor
       node {
