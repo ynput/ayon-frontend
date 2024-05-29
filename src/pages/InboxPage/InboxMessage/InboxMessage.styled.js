@@ -201,7 +201,8 @@ export const ClearButton = styled(Button)`
 `
 
 export const Unread = styled.span`
-  width: 18px;
+  min-width: 18px;
+  max-width: 18px;
   &.hide {
     opacity: 0;
   }
