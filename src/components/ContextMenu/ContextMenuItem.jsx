@@ -1,10 +1,13 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Icon } from '@ynput/ayon-react-components'
+import './ContextMenu.scss'
+import ShortcutWidget from '../ShortcutWidget/ShortcutWidget'
 
 const ContextMenuItem = ({
   icon,
   label,
+  shortcut,
   command,
   children,
   contextMenuRef,
@@ -23,6 +26,7 @@ const ContextMenuItem = ({
       item: {
         label: label,
         command: command,
+        shortcut: shortcut,
       },
     })
   }
@@ -54,15 +58,20 @@ const ContextMenuItem = ({
         </span>
       )}
       {children}
-
-      <Icon
-        icon="chevron_right"
-        style={{
-          marginLeft: 'auto',
-          fontSize: '1.5rem',
-          opacity: items ? 1 : 0,
-        }}
-      />
+      {shortcut && (
+        <div className="p-menuitem-shortcut">
+          <ShortcutWidget>{shortcut}</ShortcutWidget>
+        </div>
+      )}
+      {!!items?.length && (
+        <Icon
+          icon="chevron_right"
+          style={{
+            marginLeft: 'auto',
+            fontSize: '1.5rem',
+          }}
+        />
+      )}
     </a>
   )
 }
@@ -70,6 +79,7 @@ const ContextMenuItem = ({
 ContextMenuItem.propTypes = {
   icon: PropTypes.string,
   label: PropTypes.string,
+  shortcut: PropTypes.string,
   children: PropTypes.node,
   command: PropTypes.func,
   contextMenuRef: PropTypes.object.isRequired,
