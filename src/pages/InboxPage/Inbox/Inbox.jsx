@@ -8,7 +8,7 @@ import { useDispatch } from 'react-redux'
 import { useGetInboxQuery, useLazyGetInboxQuery } from '/src/services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import Shortcuts from '/src/containers/Shortcuts'
-import { highlightActivity } from '/src/features/details'
+import { clearHighlights, highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
@@ -133,12 +133,15 @@ const Inbox = ({ filter }) => {
     const message = groupedMessages.find((m) => m.activityId === id)
     const group = message?.messages || []
     const unReadMessages = group.filter((m) => !m.read)
-    const activityIds = unReadMessages.map((m) => m.activityId)
+    const activityIds = group.map((m) => m.activityId)
     const idsToHighlight = activityIds.length > 0 ? activityIds : ids
 
-    if (message?.activityType === 'comment') {
+    if (message?.activityType === 'comment' && idsToHighlight.length > 0) {
+      console.log('highlighting...', idsToHighlight)
       // highlight the activity in the feed
       dispatch(highlightActivity({ isSlideOut: false, activityIds: idsToHighlight }))
+    } else {
+      dispatch(clearHighlights, { isSlideOut: false })
     }
 
     const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
