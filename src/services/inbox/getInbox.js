@@ -13,11 +13,14 @@ const getInbox = ayonApi.injectEndpoints({
           query: INBOX_ACTIVITIES,
           variables: { last, active, important, cursor },
         },
+        validateStatus: (response, result) => response.status === 200 && !result?.errors?.length,
       }),
       transformResponse: (res, meta, { important }) =>
         transformInboxMessages(res?.data?.inbox, {
           important,
         }),
+      transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
+
       // only use active and isActive as cache keys
       serializeQueryArgs: ({ queryArgs: { active, important } }) => ({
         active,

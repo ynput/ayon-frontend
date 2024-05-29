@@ -98,4 +98,20 @@ export const NoMessages = styled.div`
     border-radius: 100%;
     color: var(--md-sys-color-on-secondary-container);
   }
+
+  &.isError {
+    .icon {
+      color: var(--md-sys-color-error-on-container);
+      background-color: var(--md-sys-color-error-container);
+    }
+
+    .error-message {
+      color: var(--md-sys-color-error-container);
+      background-color: var(--md-sys-color-on-error-container);
+      padding: var(--padding-m) var(--padding-m);
+      border-radius: var(--border-radius-m);
+      user-select: text;
+      margin-top: -16px;
+    }
+  }
 `

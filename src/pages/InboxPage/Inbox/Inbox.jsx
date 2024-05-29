@@ -46,6 +46,7 @@ const Inbox = ({ filter }) => {
     data: { messages = [], projectNames = [], pageInfo } = {},
     isLoading: isLoadingInbox,
     isFetching: isFetchingInbox,
+    error: errorInbox,
     refetch,
   } = useGetInboxQuery({
     last: last,
@@ -138,7 +139,6 @@ const Inbox = ({ filter }) => {
     const idsToHighlight = activityIds.length > 0 ? activityIds : ids
 
     if (message?.activityType === 'comment' && idsToHighlight.length > 0) {
-      console.log('highlighting...', idsToHighlight)
       // highlight the activity in the feed
       dispatch(highlightActivity({ isSlideOut: false, activityIds: idsToHighlight }))
     } else {
@@ -200,7 +200,6 @@ const Inbox = ({ filter }) => {
     try {
       await Promise.all(promises)
       toast.success('All messages cleared')
-      console.log(hasPreviousPage)
 
       // refresh the inbox to get any new messages
       if (hasPreviousPage) handleLoadMore()
@@ -209,8 +208,9 @@ const Inbox = ({ filter }) => {
     }
   }
 
-  const messagesData =
-    isLoadingInbox || isLoadingInfo || isRefreshing ? placeholderMessages : groupedMessages
+  const isLoadingAny = isLoadingInbox || isLoadingInfo || isRefreshing
+
+  const messagesData = isLoadingAny ? placeholderMessages : groupedMessages
 
   const getHoveredMessageId = (e, closest = '') => {
     // get the message list item
@@ -226,8 +226,6 @@ const Inbox = ({ filter }) => {
   const handleReadShortcut = (e) => {
     const id = getHoveredMessageId(e)
     if (!id) return
-
-    console.log(id)
 
     handleToggleReadMessage(id)
   }
@@ -391,10 +389,17 @@ const Inbox = ({ filter }) => {
           selected={selected}
           projectsInfo={projectsInfo}
         />
-        {!messagesData.length && !isLoadingInbox && (
+        {!messagesData.length && !isLoadingAny && !errorInbox && (
           <Styled.NoMessages>
             <Icon icon="done_all" />
             <h3 className={Typography.titleLarge}>All caught up! No messages to show.</h3>
+          </Styled.NoMessages>
+        )}
+        {errorInbox && !isLoadingAny && (
+          <Styled.NoMessages className={'isError'}>
+            <Icon icon="error" />
+            <h3 className={Typography.titleLarge}>Something went wrong getting the inbox.</h3>
+            <span className="error-message">{errorInbox}</span>
           </Styled.NoMessages>
         )}
       </Styled.InboxSection>
