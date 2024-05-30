@@ -18,29 +18,29 @@ const StyledDialog = styled(Dialog)`
 const PreviewDialog = () => {
   const dispatch = useDispatch()
   // check if dialog is open or not
-  const { selected, entityType } = useSelector((state) => state.preview)
+  const { selected, projectName } = useSelector((state) => state.preview)
 
   const [searchParams, setUrlSearchParams] = useSearchParams()
   //   usually just one id is passed, but multiple ids can be passed
-  const selectedIds = searchParams.getAll('preview_id') || []
-  //   passing undefined to openPreview will default to 'version'
-  const selectedType = searchParams.get('preview_type') || undefined
+  const queryIds = searchParams.getAll('preview_id') || []
+  //   we need a project name
+  const queryProjectName = searchParams.get('project_name') || undefined
   // when url has preview_id and preview_type, open the dialog if not already open
 
   useEffect(() => {
-    if (!selectedIds.length) return
+    if (!queryIds.length || !queryProjectName) return
     // check if dialog is already open with same ids
-    if (isEqual(selected, selectedIds)) return
+    if (isEqual(selected, queryIds)) return
     // open the dialog
-    dispatch(openPreview({ selected: selectedIds, entityType: selectedType }))
-  }, [selectedIds, selectedType])
+    dispatch(openPreview({ selected: queryIds, projectName: queryProjectName }))
+  }, [queryIds, queryProjectName])
 
   if (!selected.length) return null
 
   const handleClose = () => {
     // remove query params preview_id and preview_type from url
     searchParams.delete('preview_id')
-    searchParams.delete('preview_type')
+    searchParams.delete('project_name')
     setUrlSearchParams(searchParams)
     // close the dialog
     dispatch(closePreview())
@@ -48,7 +48,7 @@ const PreviewDialog = () => {
 
   return (
     <StyledDialog isOpen hideCancelButton size="full">
-      <Preview {...{ selected, entityType }} onClose={handleClose} />
+      <Preview {...{ selected, projectName }} onClose={handleClose} />
     </StyledDialog>
   )
 }

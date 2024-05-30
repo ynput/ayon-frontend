@@ -1,27 +1,28 @@
 import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Preview.styled'
 import VersionSelectorTool from '/src/components/VersionSelectorTool/VersionSelectorTool'
+import { useGetPreviewQuery, useGetPreviewVersionsQuery } from '/src/services/preview/getPreview'
 
-const Preview = ({ selected = [], entityType, onClose }) => {
-  // TODO @LudoHolbik: a new services file src/services/preview/getPreview.js should be created for these queries below
+const Preview = ({ selected = [], projectName, onClose }) => {
+  // get version preview data
+  const { data: selectedVersionsData = [] } = useGetPreviewQuery(
+    { projectName, versionIds: selected },
+    { skip: !selected.length || !projectName },
+  )
 
-  // TODO @Innders: get selected entity data from selected and entityType
+  // get all versions for the product ids of the selected versions
+  const selectedProductIds = selectedVersionsData?.map(({ productId }) => productId)
+  const { data: allVersionsData = [] } = useGetPreviewVersionsQuery(
+    { productIds: selectedProductIds, projectName },
+    { skip: !selectedProductIds.length },
+  )
 
-  // TODO @LudoHolbik: get selected versions data from selected and entityType
-  // some entity types won't support this
-  // look at getActivities.js getEntityVersions [line 64] and getVersions [line 86] for reference
-  const allVersionsDummyData = [
-    { id: 1, name: 'v001' },
-    { id: 2, name: 'v002' },
-    { id: 3, name: 'v003' },
-    { id: 4, name: 'v004', hero: true },
-    { id: 5, name: 'v005', status: 'approved' },
-  ]
+  console.log(allVersionsData)
 
   return (
     <Styled.Container>
       <Styled.Header>
-        <VersionSelectorTool versions={allVersionsDummyData} selected={selected} />
+        <VersionSelectorTool versions={[]} selected={selected} />
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
