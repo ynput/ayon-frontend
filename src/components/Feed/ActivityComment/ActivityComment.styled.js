@@ -51,6 +51,10 @@ export const Comment = styled.li`
       background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
+
+  &.isHighlighted {
+    background-color: var(--md-sys-color-secondary-container);
+  }
 `
 
 export const Body = styled.div`

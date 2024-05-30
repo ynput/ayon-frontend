@@ -3,12 +3,8 @@ import ActivityReferenceTooltip from '../ActivityReferenceTooltip/ActivityRefere
 import * as Styled from './ActivityReference.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
+import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
 
-const typeIcons = {
-  user: 'alternate_email',
-  version: 'layers',
-  task: 'check_circle',
-}
 // variants = filled, text
 
 const ActivityReference = ({
@@ -24,7 +20,7 @@ const ActivityReference = ({
   onClick,
   ...props
 }) => {
-  const icon = typeIcons[type] || 'link'
+  const icon = type === 'user' ? 'alternate_email' : getEntityTypeIcon(type, 'link')
   const [refHover, setRefHover] = useState(false)
   const [referenceCenterPos, setReferenceCenterPos] = useState(null)
 

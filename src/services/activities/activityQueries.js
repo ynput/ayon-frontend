@@ -39,6 +39,8 @@ query getEntitiesActivities($projectName: String!, $entityIds: [String!]!, $curs
     activities(entityIds: $entityIds, last: $last, before: $cursor, referenceTypes: $referenceTypes, activityTypes: $activityTypes) {
       pageInfo {
         hasPreviousPage
+        startCursor
+        endCursor
       }
       edges {
         cursor

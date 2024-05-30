@@ -24,7 +24,7 @@ const sanitizeURL = (url = '') => {
 
 export const aTag = (
   { children, href },
-  { entityId, projectName, projectInfo, onReferenceClick },
+  { entityId, projectName, projectInfo, onReferenceClick, activityId },
 ) => {
   const { url, type, id } = sanitizeURL(href)
 
@@ -48,7 +48,8 @@ export const aTag = (
       {...{ type, id, label, projectName, projectInfo }}
       variant={isEntity ? 'filled' : 'primary'}
       onClick={() =>
-        type !== 'user' && onReferenceClick({ entityId: id, entityType: type, projectName })
+        type !== 'user' &&
+        onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
       }
     >
       {label}

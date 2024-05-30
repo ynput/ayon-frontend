@@ -18,6 +18,7 @@ import { toggleDevMode } from '/src/features/user'
 import styled from 'styled-components'
 import { useRestart } from '/src/context/restartContext'
 import { classNames } from 'primereact/utils'
+import { useGetInboxHasUnreadQuery } from '/src/services/inbox/getInbox'
 
 const DeveloperSwitch = styled.div`
   display: flex;
@@ -106,6 +107,23 @@ const Header = () => {
     }
   }, [location.pathname, localStorage])
 
+  const { data: isNewMessages, refetch } = useGetInboxHasUnreadQuery()
+
+  useEffect(() => {
+    refetch() // Check messages immediately on location change
+
+    const interval = setInterval(refetch, 600000) // Check messages every 10 minutes
+
+    const timeout = setTimeout(() => {
+      refetch() // Check messages after 10 minutes, even if the location hasn't changed
+    }, 600000)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeout)
+    }
+  }, [location.pathname])
+
   const handleNavClick = (e) => {
     // if target us nav, then close menu
     if (e.target.tagName === 'NAV') handleSetMenu(false)
@@ -176,19 +194,28 @@ const Header = () => {
         ref={helpButtonRef}
         onClick={() => handleToggleMenu('help')}
         className={classNames({ active: menuOpen === 'help' })}
-        variant="text"
+        variant="nav"
       />
       <MenuContainer id="help" target={helpButtonRef.current}>
         <HelpMenu user={user} />
       </MenuContainer>
       {/* help icon and menu ^^^ */}
 
+      {/* Inbox icon */}
+      <Link to="/inbox/important">
+        <HeaderButton
+          icon="inbox"
+          variant="nav"
+          className={classNames({ notification: isNewMessages })}
+        />
+      </Link>
+
       {/* App icon and menu vvv */}
       <HeaderButton
         icon="apps"
         onClick={() => handleToggleMenu('app')}
         ref={appButtonRef}
-        variant="text"
+        variant="nav"
         className={classNames({ active: menuOpen === 'app', notification: isSnoozing })}
       />
       <MenuContainer id="app" target={appButtonRef.current}>
@@ -201,7 +228,7 @@ const Header = () => {
         className={classNames({ active: menuOpen === 'user' })}
         onClick={() => handleToggleMenu('user')}
         ref={userButtonRef}
-        variant="text"
+        variant="nav"
         style={{ padding: 6 }}
       >
         <UserImage size={26} name={user?.name} />

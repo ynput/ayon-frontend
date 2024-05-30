@@ -24,6 +24,7 @@ export const Popup = styled.span`
   position: fixed;
   transform: translate(-50%, calc(-100% - 4px));
   box-shadow: 0 0px 4px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
 
   .thumbnail {
     width: 40px;

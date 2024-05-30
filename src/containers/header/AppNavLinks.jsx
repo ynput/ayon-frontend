@@ -53,10 +53,17 @@ const AppNavLinks = ({ links = [] }) => {
           }
 
           return (
-            <Styled.NavItem key={idx} data-shortcut={item.shortcut}>
+            <Styled.NavItem
+              key={idx}
+              data-shortcut={item.shortcut}
+              data-tooltip={item.tooltip}
+              {...item}
+            >
               <NavLink to={item.path}>
                 <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
+                  {item.startContent && item.startContent}
                   {item.name}
+                  {item.endContent && item.endContent}
                 </Button>
               </NavLink>
             </Styled.NavItem>

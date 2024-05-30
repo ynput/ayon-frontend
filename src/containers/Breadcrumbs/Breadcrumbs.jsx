@@ -35,7 +35,12 @@ const uri2crumbs = (uri = '', pathname) => {
     if (pageTitle.includes('settings')) pageTitle = 'Studio Settings'
     else if (pageTitle.includes('manageProjects')) pageTitle = 'Projects Manager'
     // just a regular url (use last part of pathname)
-    crumbs.unshift(upperFirst(pathname.split('/').pop()))
+    crumbs.unshift(
+      ...pathname
+        .slice(1)
+        .split('/')
+        .map((p) => upperFirst(p)),
+    )
   }
 
   const qp = {}

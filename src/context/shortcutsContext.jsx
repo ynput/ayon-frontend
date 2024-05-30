@@ -51,6 +51,8 @@ function ShortcutsProvider(props) {
       { key: 'v+v', action: () => navigate('/services') },
       // market page
       { key: 'm+m', action: () => navigate('/market') },
+      // inbox page
+      { key: 'i+i', action: () => navigate('/inbox/important') },
     ],
     [navigate, searchParams],
   )

@@ -8,7 +8,7 @@ export const Dialog = styled.dialog`
   top: 42px;
   width: auto;
   height: auto;
-  z-index: 100;
+  z-index: 600;
   border: none;
   background-color: unset;
   padding: 0;

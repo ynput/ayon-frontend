@@ -40,6 +40,7 @@ import { RestartProvider } from './context/restartContext'
 import { PasteProvider, PasteModal } from './context/pasteContext'
 import FileUploadPreview from './containers/FileUploadPreview/FileUploadPreview'
 import PreviewDialog from './containers/Preview/PreviewDialog'
+import InboxPage from './pages/InboxPage'
 import { URIProvider } from './context/uriContext'
 
 const App = () => {
@@ -203,6 +204,10 @@ const App = () => {
                               </ProtectedRoute>
                             }
                           />
+
+                          <Route path="/inbox/:module" exact element={<InboxPage />} />
+                          <Route path="/inbox" exact element={<Navigate to="/inbox/important" />} />
+
                           <Route path="/explorer" element={<ExplorerPage />} />
                           <Route path="/doc/api" element={<APIDocsPage />} />
                           <Route

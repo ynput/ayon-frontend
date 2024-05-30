@@ -2,17 +2,17 @@ import { ayonApi } from '../ayon'
 import { toast } from 'react-toastify'
 import { filterActivityTypes } from '/src/features/dashboard'
 
-const updateCache = (draft, patch = {}, isDelete) => {
+const updateCache = (activitiesDraft, patch = {}, isDelete) => {
   // find the index of the activity to update
-  const index = draft.findIndex((a) => a.activityId === patch.activityId)
+  const index = activitiesDraft.findIndex((a) => a.activityId === patch.activityId)
   if (index === -1) {
     // add to the end of the list
-    draft.unshift(patch)
+    activitiesDraft.unshift(patch)
   } else if (isDelete) {
-    draft.splice(index, 1)
+    activitiesDraft.splice(index, 1)
   } else {
     // update the activity
-    draft[index] = { ...draft[index], ...patch }
+    activitiesDraft[index] = { ...activitiesDraft[index], ...patch }
   }
 }
 
@@ -26,7 +26,7 @@ const patchActivities = async (
     ayonApi.util.updateQueryData(
       'getActivities',
       { projectName, entityIds, activityTypes, filter },
-      (draft) => updateCache(draft, patch, method === 'delete'),
+      (draft) => updateCache(draft.activities, patch, method === 'delete'),
     ),
   )
 

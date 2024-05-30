@@ -98,9 +98,10 @@ const DetailsPanel = ({
           height: '100%',
           padding: 0,
           boxShadow: '-2px 0 6px #00000047',
-          zIndex: 400,
+          zIndex: 300,
           ...style,
         }}
+        className="details-panel"
       >
         <DetailsPanelHeader
           entityType={entityType}

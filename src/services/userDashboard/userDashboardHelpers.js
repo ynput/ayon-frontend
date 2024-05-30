@@ -2,6 +2,7 @@
 
 import { upperCase, upperFirst } from 'lodash'
 import { productTypes } from '/src/features/project'
+import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
 
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
@@ -65,7 +66,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         users: entity.assignees,
         path: path,
         folderId: entity.folderId,
-        icon: icon,
+        icon: icon || getEntityTypeIcon('task'),
         entitySubType: entitySubType,
       }
     }
@@ -83,7 +84,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         path: path,
         folderId: entity.product?.folder?.id,
         productId: entity.product?.id,
-        icon: icon || 'layers',
+        icon: icon || getEntityTypeIcon('version'),
         entitySubType: entitySubType,
         representations: entity.representations?.edges?.map((edge) => edge.node) || [],
         folder: entity.product?.folder,
@@ -103,7 +104,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         users: [],
         path: path,
         folderId: entity.id,
-        icon: icon || 'folder',
+        icon: icon || getEntityTypeIcon('folder'),
         entitySubType: entitySubType,
       }
     }
@@ -129,7 +130,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         path: path,
         folderId: entity.product?.folder?.id,
         productId: entity.product?.id,
-        icon: 'database',
+        icon: getEntityTypeIcon('representation'),
         entitySubType: 'representation',
         folder: entity.product?.folder,
         product: entity.product,

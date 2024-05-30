@@ -3,7 +3,7 @@ import * as Styled from './DetailsPanelHeader.styled'
 import copyToClipboard from '/src/helpers/copyToClipboard'
 import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
 import { classNames } from 'primereact/utils'
-import { isEqual, union } from 'lodash'
+import { isEqual, union, upperFirst } from 'lodash'
 import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
 import { toast } from 'react-toastify'
 import Actions from '/src/components/Actions/Actions'
@@ -205,7 +205,7 @@ const DetailsPanelHeader = ({
         <StackedThumbnails
           isLoading={isLoading}
           shimmer={isLoading}
-          style={{ aspectRatio: '1/1' }}
+          style={{ aspectRatio: '1' }}
           thumbnails={thumbnails}
           projectName={projectName}
           portalId={portalId}
@@ -213,7 +213,10 @@ const DetailsPanelHeader = ({
         />
         <Styled.Content className={classNames({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
-          <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
+          <div className="sub-title">
+            <span>{upperFirst(entityType)} - </span>
+            <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
+          </div>
         </Styled.Content>
       </Styled.Header>
       <Styled.StatusSelect

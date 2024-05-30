@@ -121,9 +121,15 @@ export const Content = styled.div`
     width: 70%;
     ${getShimmerStyles()}
 
-    h2, h3 {
+    h2, h3, .sub-title {
       opacity: 0;
     }
+  }
+
+  .sub-title {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-medium);
   }
 `
 

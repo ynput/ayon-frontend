@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
+import getInitialStateQueryParam from './middleware/getInitialStateQueryParam'
 
 export const filterActivityTypes = {
   activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
@@ -14,7 +15,7 @@ const initialStateSlideOut = {
   projectName: '',
 }
 
-const scopes = ['dashboard', 'project']
+const scopes = ['dashboard', 'project', 'inbox']
 
 const detailsSlice = createSlice({
   name: 'details',
@@ -23,14 +24,16 @@ const detailsSlice = createSlice({
       filter: getInitialStateLocalStorage('details/filter', 'activity'),
       activityTypes:
         filterActivityTypes[getInitialStateLocalStorage('details/filter', 'activity')] || [],
-      tab: 'feed', // feed | attribs | representations
+      tab: 'feed', // feed | attribs | representations,
+      highlighted: getInitialStateQueryParam('highlighted', []),
     },
     slideOut: {
       dashboard: initialStateSlideOut,
       project: initialStateSlideOut,
       filter: 'activity',
       activityTypes: filterActivityTypes.activity,
-      tab: 'feed', // feed | attribs | representations
+      tab: 'feed', // feed | attribs | representations,
+      highlighted: [],
     },
   },
   reducers: {
@@ -63,17 +66,36 @@ const detailsSlice = createSlice({
       }
 
       state.slideOut.tab = payload.tab || state.slideOut.tab
+
+      if (payload.activityId) {
+        // set highlighted activity
+        state.slideOut.highlighted = [payload.activityId]
+      }
     },
     closeSlideOut: (state) => {
       for (const scope of scopes) {
         state.slideOut[scope] = initialStateSlideOut
       }
     },
+    highlightActivity: (state, { payload: { isSlideOut = false, activityIds } = {} }) => {
+      const location = isSlideOut ? 'slideOut' : 'pinned'
+      state[location].highlighted = activityIds
+    },
+    clearHighlights: (state, { payload: { isSlideOut = false } = {} }) => {
+      const location = isSlideOut ? 'slideOut' : 'pinned'
+      state[location].highlighted = []
+    },
   },
 })
 
-export const { updateDetailsPanelTab, updateFeedFilter, openSlideOut, closeSlideOut } =
-  detailsSlice.actions
+export const {
+  updateDetailsPanelTab,
+  updateFeedFilter,
+  openSlideOut,
+  closeSlideOut,
+  highlightActivity,
+  clearHighlights,
+} = detailsSlice.actions
 export default detailsSlice.reducer
 
 // topics that need to set localStorage. If there is no explicit value, it will be the payload value

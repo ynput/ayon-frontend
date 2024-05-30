@@ -21,7 +21,7 @@ const DateStyled = styled.span`
   align-items: center;
 `
 
-const getFuzzyDate = (date) => {
+export const getFuzzyDate = (date) => {
   let fuzzyDate = formatDistanceToNow(new Date(date), { addSuffix: true })
 
   // remove 'about' from the string

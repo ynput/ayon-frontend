@@ -3,8 +3,10 @@ import { onPrefetchIds } from '/src/features/dashboard'
 import { useLazyGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
 import { useLazyGetActivitiesQuery } from '/src/services/activities/getActivities'
 import { throttle } from 'lodash'
+import { activitiesLast } from '/src/containers/Feed/Feed'
 
-export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
+// prefetch the entity details and activities
+export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
   // keep track of the ids that have been pre-fetched to avoid fetching them again
   const prefetchedIds = useSelector((state) => state.dashboard.prefetchedIds)
   const userName = useSelector((state) => state.user.name)
@@ -15,23 +17,23 @@ export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
   const [getEntitiesDetails] = useLazyGetDashboardEntitiesDetailsQuery()
   const [getEntitiesActivities] = useLazyGetActivitiesQuery()
 
-  const handlePrefetch = (task) => {
-    if (prefetchedIds.includes(task.id)) return
+  const handlePrefetch = ({ id, projectName, entityType = 'task' }) => {
+    if (prefetchedIds.includes(id)) return
 
-    setPrefetchedIds([...prefetchedIds, task.id])
+    setPrefetchedIds([...prefetchedIds, id])
 
-    const entities = [{ id: task.id, projectName: task.projectName }]
-    const entityIds = [task.id]
-    const projectInfo = projectsInfo[task.projectName]
+    const entities = [{ id: id, projectName: projectName }]
+    const entityIds = [id]
+    const projectInfo = projectsInfo[projectName]
 
-    // pre-fetch the task details
-    getEntitiesDetails({ entities: entities, entityType: 'task', projectInfo })
+    // pre-fetch the entity details
+    getEntitiesDetails({ entities: entities, entityType, projectInfo })
     // pre-fetch the activities based on current filter
     getEntitiesActivities({
       entityIds: entityIds,
-      projectName: task.projectName,
+      projectName: projectName,
       cursor: null,
-      last: 20,
+      last: activitiesLast,
       currentUser: userName,
       referenceTypes: ['origin', 'mention', 'relation'],
       activityTypes: activityTypes,
@@ -39,11 +41,11 @@ export const usePrefetchTask = (dispatch, projectsInfo, throttleTime) => {
     })
   }
 
-  const throttledPrefetchTask = throttleTime
+  const throttledPrefetchEntity = throttleTime
     ? throttle(handlePrefetch, throttleTime, { leading: false })
     : handlePrefetch
 
-  return throttledPrefetchTask
+  return throttledPrefetchEntity
 }
 
-export default usePrefetchTask
+export default usePrefetchEntity
