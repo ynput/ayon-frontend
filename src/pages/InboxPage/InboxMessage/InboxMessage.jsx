@@ -109,6 +109,8 @@ const InboxMessage = ({
       statusChanges = changes?.map(
         (change) => statuses.find((status) => status.name === change) || {},
       )
+      // only first and last status
+      statusChanges = [statusChanges[0], statusChanges[statusChanges.length - 1]]
     }
   }
 
