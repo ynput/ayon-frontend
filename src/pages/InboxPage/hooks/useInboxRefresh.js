@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { ayonApi } from '/src/services/ayon'
 
-const useInboxRefresh = ({ isFetching, refetch }) => {
+const useInboxRefresh = ({ isFetching, refetch, dispatch }) => {
   const [isRefreshing, setIsRefreshing] = useState(false)
   useEffect(() => {
     if (isRefreshing && !isFetching) {
@@ -13,6 +14,8 @@ const useInboxRefresh = ({ isFetching, refetch }) => {
     console.log('refetching inbox...')
     setIsRefreshing(true)
     refetch()
+    // also invalidate the unread count
+    dispatch(ayonApi.util.invalidateTags([{ type: 'inbox', id: 'unreadCount' }]))
   }
 
   return [handleRefresh, { isRefreshing }]

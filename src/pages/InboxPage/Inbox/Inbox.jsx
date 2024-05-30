@@ -149,7 +149,12 @@ const Inbox = ({ filter }) => {
     handleUpdateMessages(idsToMarkAsRead, 'read', message.projectName)
   }
 
-  const [refreshInbox, { isRefreshing }] = useInboxRefresh({ isFetching: isFetchingInbox, refetch })
+  // REFRESH INBOX
+  const [refreshInbox, { isRefreshing }] = useInboxRefresh({
+    isFetching: isFetchingInbox,
+    refetch,
+    dispatch,
+  })
 
   const [handleKeyDown, [usingKeyboard, setUsingKeyboard]] = useKeydown({
     messages: groupedMessages,

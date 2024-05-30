@@ -2,6 +2,15 @@ import { toast } from 'react-toastify'
 import { ayonApi } from '../ayon'
 import { current } from '@reduxjs/toolkit'
 
+// When reading a message, we need to update the unread count
+const patchUnreadCount = (dispatch, count, important) => {
+  dispatch(
+    ayonApi.util.updateQueryData('getInboxUnreadCount', { important }, (draft) => {
+      return draft + count
+    }),
+  )
+}
+
 const updateInbox = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     updateInboxMessage: build.mutation({
@@ -51,56 +60,38 @@ const updateInbox = ayonApi.injectEndpoints({
             }),
           )
 
-          //   for each message to clear/un-clear it
-          // we do it in a loop because not all message will have the same important status
-          messages.forEach((message = {}) => {
-            if (active) {
-              const messagePatch = { ...message, active: !active }
-              // important will always be null when clearing a message
-              // cleared inbox query uses important=null
-              // clearing the message
-              // read the message as well
-              messagePatch.read = true
+          //  now where do we add the cleared message
+          if (active) {
+            // when clearing a message
+            // it will always go to the cleared tab (active=false) (important=null)
+            const messagesPatch = messages.map((m) => ({ ...m, active: false, read: true }))
 
-              //   the cache to add to (cleared/important/other tab)
-              dispatch(
-                ayonApi.util.updateQueryData(
-                  'getInbox',
-                  { last, important: null, active: !active },
-                  (draft) => {
-                    // adding message to the new cache
-                    console.log('adding message to new cache location')
-                    draft.messages.unshift(messagePatch)
-                  },
-                ),
-              )
-
-              //  update the unread count for each message
-              // if active=true then we remove 1 from the count
-              dispatch(
-                ayonApi.util.updateQueryData(
-                  'getInboxUnreadCount',
-                  { important: message.important },
-                  (draft) => {
-                    const newCount = Math.max(draft - (active ? 1 : -1), 0)
-                    return newCount
-                  },
-                ),
-              )
-            } else {
-              console.log('un-clearing message...')
-              // we don't know if the message will go to important or other tab
-              // so just invalidate all the tabs and unread counts
-              dispatch(
-                ayonApi.util.invalidateTags([
-                  { type: 'inbox', id: `active=true/important=false` },
-                  { type: 'inbox', id: `active=true/important=true` },
-                  { type: 'inbox', id: 'unreadCount' }, //the counters
-                ]),
-              )
-            }
-          })
+            //   the cache to add to (cleared/important/other tab)
+            dispatch(
+              ayonApi.util.updateQueryData(
+                'getInbox',
+                { last, important: null, active: !active },
+                (draft) => {
+                  // adding message to the new cache
+                  console.log('adding message to new cache location')
+                  draft.messages.unshift(...messagesPatch)
+                },
+              ),
+            )
+          } else {
+            // un-clearing a message
+            // we don't know if the message will go to important or other tab
+            // so just invalidate all the tabs and unread counts
+            dispatch(
+              ayonApi.util.invalidateTags([
+                { type: 'inbox', id: `active=true/important=false` },
+                { type: 'inbox', id: `active=true/important=true` },
+                { type: 'inbox', id: 'unreadCount' }, //the counters
+              ]),
+            )
+          }
         } else {
+          // only updating the read status of the message
           // patch new data into the cache
           patchResult = dispatch(
             ayonApi.util.updateQueryData('getInbox', { last, active, important }, (draft) => {
@@ -117,6 +108,16 @@ const updateInbox = ayonApi.injectEndpoints({
               }
             }),
           )
+        }
+
+        const positiveCount = ids.length
+        // we need to update the unread count
+        if (status === 'unread' && !isActiveChange) {
+          // a message being marked as unread (in other or important)
+          patchUnreadCount(dispatch, positiveCount, important)
+        } else if (status === 'read' || status === 'inactive') {
+          // a message being marked as read or being cleared (and then marked as read)
+          patchUnreadCount(dispatch, -positiveCount, important)
         }
 
         try {
