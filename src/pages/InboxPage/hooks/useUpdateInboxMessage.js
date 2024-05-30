@@ -4,7 +4,13 @@ const useUpdateInboxMessage = ({ last, isActive, isImportant }) => {
   // update inbox message
   const [updateMessages] = useUpdateInboxMessageMutation()
 
-  const handleUpdateMessages = async (ids, status, projectName, isActiveChange = false) => {
+  const handleUpdateMessages = async (
+    ids,
+    status,
+    projectName,
+    isActiveChange = false,
+    isRead = false,
+  ) => {
     if (ids.length > 0) {
       // cacheKeyArgs are not used in the patch but are used to match the cache key to a query (for optimistic updates)
       const cacheKeyArgs = { last, active: isActive, important: isImportant, isActiveChange }
@@ -15,6 +21,7 @@ const useUpdateInboxMessage = ({ last, isActive, isImportant }) => {
           status: status,
           projectName: projectName,
           ids: ids,
+          isRead,
           ...cacheKeyArgs,
         }).unwrap()
       } catch (error) {

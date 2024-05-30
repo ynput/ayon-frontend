@@ -113,7 +113,13 @@ const Inbox = ({ filter }) => {
     const referenceIds = group.messages.map((m) => m.referenceId)
 
     // update the messages
-    handleUpdateMessages(referenceIds, allRead ? 'unread' : 'read', group.projectName)
+    handleUpdateMessages(
+      referenceIds,
+      allRead ? 'unread' : 'read',
+      group.projectName,
+      false,
+      allRead,
+    )
   }
 
   const handleMessageSelect = async (id, ids = []) => {
@@ -146,7 +152,9 @@ const Inbox = ({ filter }) => {
     }
 
     const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
-    handleUpdateMessages(idsToMarkAsRead, 'read', message.projectName)
+    if (idsToMarkAsRead.length > 0) {
+      handleUpdateMessages(idsToMarkAsRead, 'read', message.projectName, false, false)
+    }
   }
 
   // REFRESH INBOX
@@ -173,9 +181,10 @@ const Inbox = ({ filter }) => {
     } else setSelected([])
 
     const idsToClear = messagesToClear.map((m) => m.referenceId)
+    const isRead = messagesToClear.every((m) => m.read)
     const status = isActive ? 'inactive' : 'unread'
 
-    handleUpdateMessages(idsToClear, status, projectName, true)
+    handleUpdateMessages(idsToClear, status, projectName, true, isRead)
   }
 
   const handleClearMessage = (id) => {
@@ -272,7 +281,13 @@ const Inbox = ({ filter }) => {
         disabled: !isActive,
         shortcut: 'x',
         command: () =>
-          handleUpdateMessages(referenceIds, isRead ? 'unread' : 'read', group.projectName),
+          handleUpdateMessages(
+            referenceIds,
+            isRead ? 'unread' : 'read',
+            group.projectName,
+            false,
+            isRead,
+          ),
       },
     ]
   }

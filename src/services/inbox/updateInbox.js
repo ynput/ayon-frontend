@@ -6,7 +6,8 @@ import { current } from '@reduxjs/toolkit'
 const patchUnreadCount = (dispatch, count, important) => {
   dispatch(
     ayonApi.util.updateQueryData('getInboxUnreadCount', { important }, (draft) => {
-      return draft + count
+      console.log('updating unread count: ', draft - count, count)
+      return Math.max(0, draft - count)
     }),
   )
 }
@@ -20,7 +21,7 @@ const updateInbox = ayonApi.injectEndpoints({
         body: { status, projectName, ids },
       }),
       async onQueryStarted(
-        { ids, status, active, important, last, isActiveChange },
+        { ids, status, active, important, last, isActiveChange, isRead },
         { dispatch, queryFulfilled },
       ) {
         let newRead, newActive
@@ -42,11 +43,10 @@ const updateInbox = ayonApi.injectEndpoints({
 
         let patchResult
 
+        let messages = []
         if (isActiveChange) {
           // this means we are changing the active (cleared) status of the message
           // if will be moving from one cache to another
-
-          let messages = []
 
           //   the cache to remove from (current tab)
           dispatch(
@@ -110,14 +110,14 @@ const updateInbox = ayonApi.injectEndpoints({
           )
         }
 
-        const positiveCount = ids.length
         // we need to update the unread count
         if (status === 'unread' && !isActiveChange) {
           // a message being marked as unread (in other or important)
-          patchUnreadCount(dispatch, positiveCount, important)
-        } else if (status === 'read' || status === 'inactive') {
-          // a message being marked as read or being cleared (and then marked as read)
-          patchUnreadCount(dispatch, -positiveCount, important)
+          // so increase the unread count
+          patchUnreadCount(dispatch, -ids.length, important)
+        } else if ((status === 'read' || status === 'inactive') && !isRead) {
+          // invalidating the unread count
+          patchUnreadCount(dispatch, ids.length, important)
         }
 
         try {
