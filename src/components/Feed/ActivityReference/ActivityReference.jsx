@@ -20,7 +20,7 @@ const ActivityReference = ({
   onClick,
   ...props
 }) => {
-  const icon = getEntityTypeIcon(type, 'link')
+  const icon = type === 'user' ? 'alternate_email' : getEntityTypeIcon(type, 'link')
   const [refHover, setRefHover] = useState(false)
   const [referenceCenterPos, setReferenceCenterPos] = useState(null)
 
