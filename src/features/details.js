@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
+import getInitialStateQueryParam from './middleware/getInitialStateQueryParam'
 
 export const filterActivityTypes = {
   activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
@@ -24,7 +25,7 @@ const detailsSlice = createSlice({
       activityTypes:
         filterActivityTypes[getInitialStateLocalStorage('details/filter', 'activity')] || [],
       tab: 'feed', // feed | attribs | representations,
-      highlighted: [],
+      highlighted: getInitialStateQueryParam('highlighted', []),
     },
     slideOut: {
       dashboard: initialStateSlideOut,
