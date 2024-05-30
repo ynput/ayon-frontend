@@ -20,6 +20,8 @@ const InboxPage = () => {
           {importantUnreadCount > 99 ? '99+' : importantUnreadCount}
         </UnreadCount>
       ),
+      tooltip: 'Activities where you are directly mentioned',
+      shortcut: 'I+I',
     },
     {
       name: 'Other',
@@ -28,6 +30,7 @@ const InboxPage = () => {
       endContent: !!otherUnreadCount && (
         <UnreadCount>{otherUnreadCount > 99 ? '99+' : otherUnreadCount}</UnreadCount>
       ),
+      tooltip: 'Changes to tasks assigned to you or authored by you',
     },
     {
       name: 'Cleared',
