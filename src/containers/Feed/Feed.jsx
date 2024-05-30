@@ -24,7 +24,7 @@ import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
 
 // number of activities to get
-export const activitiesLast = 10
+export const activitiesLast = 30
 
 const Feed = ({
   entities = [],

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 const useScrollToHighlighted = ({ feedRef, highlighted = [], isLoading, loadMore, pageInfo }) => {
-  const scrollComplete = useRef(false)
+  const scrollComplete = useRef([])
 
   const getHighlightedElement = async (newPageInfo, reloadCount = 0) => {
     // find the first li element with classes containing isHighlighted
@@ -30,7 +30,7 @@ const useScrollToHighlighted = ({ feedRef, highlighted = [], isLoading, loadMore
     // even if some other dependency changes
     const highlightedElement = await getHighlightedElement(pageInfo)
 
-    scrollComplete.current = true
+    scrollComplete.current = highlighted
 
     if (!highlightedElement) {
       console.error('No highlighted element found')
@@ -55,7 +55,10 @@ const useScrollToHighlighted = ({ feedRef, highlighted = [], isLoading, loadMore
   }
 
   useEffect(() => {
-    if (!highlighted.length || !feedRef.current || isLoading || scrollComplete.current) return
+    if (!highlighted.length || !feedRef.current || isLoading) return
+
+    // if highlighted is the same as scrollComplete array, don't scroll
+    if (highlighted.every((id) => scrollComplete.current?.includes(id))) return
 
     console.log('trying to scroll to highlighted...')
     highlightItems()
