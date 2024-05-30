@@ -5,24 +5,28 @@ import { useGetPreviewQuery, useGetPreviewVersionsQuery } from '/src/services/pr
 
 const Preview = ({ selected = [], projectName, onClose }) => {
   // get version preview data
-  const { data: selectedVersionsData = [] } = useGetPreviewQuery(
+  const { data: selectedVersionsData = [], isFetching: isFetchingPreview } = useGetPreviewQuery(
     { projectName, versionIds: selected },
     { skip: !selected.length || !projectName },
   )
 
   // get all versions for the product ids of the selected versions
   const selectedProductIds = selectedVersionsData?.map(({ productId }) => productId)
-  const { data: allVersionsData = [] } = useGetPreviewVersionsQuery(
+  const { data: allVersionsData = [], isFetching: isFetchingVersions } = useGetPreviewVersionsQuery(
     { productIds: selectedProductIds, projectName },
     { skip: !selectedProductIds.length },
   )
 
-  console.log(allVersionsData)
+  const isLoadingAll = isFetchingPreview || isFetchingVersions
 
   return (
     <Styled.Container>
       <Styled.Header>
-        <VersionSelectorTool versions={[]} selected={selected} />
+        <VersionSelectorTool
+          versions={allVersionsData}
+          selected={selected[0]}
+          isLoading={isLoadingAll}
+        />
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>

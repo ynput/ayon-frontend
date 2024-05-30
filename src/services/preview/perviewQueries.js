@@ -4,9 +4,11 @@ query getPreview($projectName: String!, $versionIds: [String!]) {
       versions(ids: $versionIds) {
         edges {
           node {
+            id
             name
             version
             productId
+            status
           }
         }
       }
@@ -20,9 +22,11 @@ query getPreviewAllVersions($projectName: String!, $productIds: [String!]) {
     versions(productIds: $productIds) {
       edges {
         node {
+          id
           name
           version
           productId
+          status
         }
       }
     }
