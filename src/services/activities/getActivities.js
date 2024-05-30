@@ -30,7 +30,7 @@ const getActivities = ayonApi.injectEndpoints({
       providesTags: (result, error, { entityIds, activityTypes = [], filter }) =>
         result
           ? [
-              ...result.map((a) => ({ type: 'activity', id: a.activityId })),
+              ...result.activities.map((a) => ({ type: 'activity', id: a.activityId })),
               { type: 'activity', id: 'LIST' },
               ...entityIds.map((id) => ({ type: 'entityActivities', id: id })),
               { type: 'entityActivities', id: 'LIST' },
@@ -47,13 +47,21 @@ const getActivities = ayonApi.injectEndpoints({
         filter,
       }),
       // Always merge incoming data to the cache entry
-      merge: (currentCache, newItems) => {
-        const uniqueNewItems = newItems.filter(
-          (newItem) =>
-            !currentCache.some((cachedItem) => cachedItem.activityId === newItem.activityId),
-        )
+      merge: (currentCache, newCache) => {
+        const { activities = [], pageInfo } = newCache
+        const { activities: lastActivities = [] } = currentCache
 
-        currentCache.push(...uniqueNewItems)
+        const newMessages = [
+          ...lastActivities,
+          ...activities.filter(
+            (m) => !lastActivities.some((lm) => lm.referenceId === m.referenceId),
+          ),
+        ]
+
+        return {
+          activities: newMessages,
+          pageInfo,
+        }
       },
       // Refetch when the page arg changes
       forceRefetch({ currentArg, previousArg }) {

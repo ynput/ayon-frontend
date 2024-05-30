@@ -6,6 +6,7 @@ import {
   allowedVersionsQueryTypes,
   useGetActivitiesQuery,
   useGetVersionsQuery,
+  useLazyGetActivitiesQuery,
 } from '/src/services/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
@@ -14,16 +15,16 @@ import { useDispatch, useSelector } from 'react-redux'
 import { openSlideOut } from '/src/features/details'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
-import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
+import { getLoadingPlaceholders } from './feedHelpers'
 import { onCommentImageOpen } from '/src/features/context'
 import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
-import { useEffect } from 'react'
 import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
+import { toast } from 'react-toastify'
 
 // number of activities to get
-export const activitiesLast = 30
+export const activitiesLast = 10
 
 const Feed = ({
   entities = [],
@@ -44,7 +45,6 @@ const Feed = ({
 
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
-  const [currentCursors, setCurrentCursors] = useState({})
 
   const entitiesToQuery = useMemo(
     () =>
@@ -55,23 +55,41 @@ const Feed = ({
 
   const skip = !entities.length || !filter || !activityTypes || !projectName
   // QUERY MADE TO GET ACTIVITIES
+
+  const queryArgs = {
+    entityIds: entityIds,
+    projectName: projectName,
+    last: activitiesLast,
+    currentUser: userName,
+    referenceTypes: ['origin', 'mention', 'relation'],
+    activityTypes: activityTypes,
+    filter,
+    cursor: null,
+  }
+
   let {
-    data: activitiesData = [],
+    data: { activities: activitiesData = [], pageInfo = {} } = {},
     isFetching: isFetchingActivities,
     currentData,
-  } = useGetActivitiesQuery(
-    {
-      entityIds: entityIds,
-      projectName: projectName,
-      cursor: currentCursors[filter],
-      last: activitiesLast,
-      currentUser: userName,
-      referenceTypes: ['origin', 'mention', 'relation'],
-      activityTypes: activityTypes,
-      filter,
-    },
-    { skip: skip },
-  )
+  } = useGetActivitiesQuery(queryArgs, { skip: skip })
+
+  const [getActivitiesData, { isFetching: isFetchingMore }] = useLazyGetActivitiesQuery()
+
+  const { hasPreviousPage, endCursor } = pageInfo
+  // when we scroll to the top of the feed, fetch more activities
+  const handleLoadMore = async () => {
+    // get cursor of last activity and if there is a next page
+    if (!hasPreviousPage) return console.log('No more activities to load')
+    if (!endCursor) return console.log('No cursor found')
+    console.log('fetching more activities...')
+
+    try {
+      const res = await getActivitiesData({ ...queryArgs, cursor: endCursor }).unwrap()
+      return res
+    } catch (error) {
+      toast.error('Failed to load more activities')
+    }
+  }
 
   // check if currentData matches all the entityIds
   // if not, this means we are loading new entity
@@ -79,7 +97,7 @@ const Feed = ({
     if (!isFetchingActivities) return false
 
     const currentEntityIds = union(
-      currentData?.flatMap((activity) => (activity.entityId ? activity.entityId : [])),
+      currentData?.activities?.flatMap((activity) => (activity.entityId ? activity.entityId : [])),
     )
 
     return !isEqual(currentEntityIds, entityIds)
@@ -130,30 +148,11 @@ const Feed = ({
   useSaveScrollPos({ entities, feedRef, filter, disabled: highlighted.length })
 
   // try and scroll to highlighted activity
-  useScrollToHighlighted({ feedRef, highlighted, isLoading: isLoadingNew })
-
-  // we don't use transformedActivitiesData here because we could get new data from the query
-  // but all the activities are merged so transformedActivitiesData doesn't change
-  const { cursor, hasPreviousPage } = useMemo(
-    () => getNextPage({ activities: transformedActivitiesData }),
-    [activitiesData],
-  )
-
-  // if there are more activities to fetch but the feed isn't scrollable, fetch more
-  useEffect(() => {
-    if (!feedRef.current) return
-    if (!hasPreviousPage) return
-    if (isFetchingActivities) return
-
-    // check if the feed is scrollable
-    const isScrollable = feedRef.current.scrollHeight > feedRef.current.clientHeight
-    if (isScrollable) return
-
-    console.log('auto fetch more activities...')
-
-    // fetch more activities
-    setCurrentCursors({ ...currentCursors, [filter]: cursor })
-  }, [feedRef, hasPreviousPage, cursor, filter, currentCursors, isFetchingActivities])
+  useScrollToHighlighted({
+    feedRef,
+    highlighted,
+    isLoading: isLoadingNew,
+  })
 
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
@@ -209,17 +208,6 @@ const Feed = ({
     if (!newBody) return
 
     updateComment(activity, newBody, activity.files)
-  }
-
-  // when we scroll to the top of the feed, fetch more activities
-  const handleGetMoreActivities = () => {
-    // get cursor of last activity and if there is a next page
-    if (!hasPreviousPage) return console.log('No more activities to load')
-    if (!cursor) return console.log('No cursor found')
-    console.log('fetching more activities...')
-
-    // get more activities
-    setCurrentCursors({ ...currentCursors, [filter]: cursor })
   }
 
   const handleRefClick = (ref = {}) => {
@@ -282,11 +270,17 @@ const Feed = ({
                 isHighlighted={highlighted.includes(activity.activityId)}
               />
             ))}
-        <InView onChange={(inView) => inView && handleGetMoreActivities()} threshold={1}>
-          <Styled.LoadMore style={{ height: 0 }}>
-            {hasPreviousPage ? 'Loading more...' : ''}
-          </Styled.LoadMore>
-        </InView>
+        {hasPreviousPage && (
+          <InView
+            root={feedRef.current}
+            onChange={(inView) => inView && handleLoadMore()}
+            rootMargin={'400px 0px 0px 0px'}
+          >
+            <Styled.LoadMore style={{ height: 0 }} onClick={handleLoadMore}>
+              {isFetchingMore ? 'Loading more...' : 'Click to load more'}
+            </Styled.LoadMore>
+          </InView>
+        )}
       </Styled.FeedContent>
       <CommentInput
         initValue={null}
