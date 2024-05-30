@@ -77,16 +77,24 @@ const Feed = ({
 
   const { hasPreviousPage, endCursor } = pageInfo
   // when we scroll to the top of the feed, fetch more activities
-  const handleLoadMore = async () => {
+  const handleLoadMore = async (info) => {
+    const endCursorValue = info?.endCursor || endCursor
+    const hasPreviousPageValue = info ? info.hasPreviousPage : hasPreviousPage
+
     // get cursor of last activity and if there is a next page
-    if (!hasPreviousPage) return console.log('No more activities to load')
-    if (!endCursor) return console.log('No cursor found')
-    console.log('fetching more activities...')
+    if (!hasPreviousPageValue) return console.log('No more activities to load')
+    if (!endCursorValue) return console.log('No cursor found')
+    console.log('fetching more activities...', endCursorValue)
 
     try {
-      const res = await getActivitiesData({ ...queryArgs, cursor: endCursor }).unwrap()
-      return res
+      const res = await getActivitiesData({
+        ...queryArgs,
+        cursor: endCursorValue,
+      }).unwrap()
+      // return if there is next page to get
+      return res?.pageInfo
     } catch (error) {
+      console.error(error)
       toast.error('Failed to load more activities')
     }
   }
@@ -152,6 +160,8 @@ const Feed = ({
     feedRef,
     highlighted,
     isLoading: isLoadingNew,
+    loadMore: handleLoadMore,
+    pageInfo,
   })
 
   // comment mutations here!
