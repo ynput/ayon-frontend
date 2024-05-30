@@ -6,8 +6,7 @@ export const Tools = styled(Toolbar)`
 `
 
 export const InboxSection = styled(Section)`
-  padding: var(--padding-m);
-  padding-top: 0;
+  padding: 0 var(--padding-m);
 
   overflow: hidden;
   align-items: flex-start;
@@ -21,6 +20,7 @@ export const InboxSection = styled(Section)`
     min-width: clamp(550px, 33vw, 800px);
     position: relative;
     height: 100%;
+    padding-bottom: var(--padding-m);
   }
 `
 
