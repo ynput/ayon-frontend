@@ -12,6 +12,10 @@ export const DialogWrapper = styled(Dialog)`
 
   /* custom image styles */
   &.isImage {
+    /* remove min/max height */
+    min-height: unset;
+    max-height: unset;
+
     background-color: unset;
     overflow: hidden;
     border-radius: 0;
@@ -64,5 +68,6 @@ export const Image = styled.img`
   height: max-content;
   max-height: 80vh;
   max-width: 90vw;
+  min-width: 300px;
   background-color: var(--md-sys-color-surface-container-lowest);
 `
