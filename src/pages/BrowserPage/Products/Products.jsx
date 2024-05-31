@@ -88,6 +88,7 @@ const Products = () => {
     isLoading,
     refetch,
     isFetching,
+    error,
   } = useGetProductListQuery(
     {
       folderIds: focusedFolders,
@@ -622,7 +623,7 @@ const Products = () => {
             loadingProducts={loadingProducts}
           />
         )}
-        {isNone && !isLoading && !isFetching && <NoProducts />}
+        {isNone && !isLoading && !isFetching && <NoProducts error={error} />}
       </TablePanel>
     </Section>
   )
