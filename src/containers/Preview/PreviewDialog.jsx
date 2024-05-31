@@ -58,9 +58,16 @@ const PreviewDialog = () => {
     dispatch(closePreview())
   }
 
+  const handleShortcutClose = (hovered, isMeta, e) => {
+    // check className quill isn't is closest parent
+    if (e.target.closest('.quill')) return
+
+    handleClose()
+  }
+
   return (
     <>
-      <Shortcuts shortcuts={[{ key: 'Escape', action: handleClose }]} />
+      <Shortcuts shortcuts={[{ key: 'Escape', action: handleShortcutClose }]} />
       <StyledDialog isOpen={selected.length && projectName} hideCancelButton size="full">
         <Preview {...{ selected, projectName }} onClose={handleClose} />
       </StyledDialog>
