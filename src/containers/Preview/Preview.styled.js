@@ -5,7 +5,6 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
 `
 
 export const Header = styled(Toolbar)``

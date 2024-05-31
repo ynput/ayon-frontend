@@ -4,19 +4,19 @@ const previewSlice = createSlice({
   name: 'preview',
   initialState: {
     selected: [],
-    entityType: null,
+    projectName: null,
   },
   reducers: {
-    openPreview: (state, { payload: { selected, entityType = 'version' } = {} } = {}) => {
+    openPreview: (state, { payload: { selected, projectName } = {} } = {}) => {
       state.selected = selected
-      state.entityType = entityType
+      state.projectName = projectName
     },
     updateSelection: (state, { payload: { selected } }) => {
       state.selected = selected
     },
     closePreview: (state) => {
       state.selected = []
-      state.entityType = null
+      state.projectName = null
     },
   },
 })
