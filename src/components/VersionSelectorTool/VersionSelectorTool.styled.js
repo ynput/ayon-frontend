@@ -8,23 +8,25 @@ export const Tools = styled.div`
   flex: 1;
 
   gap: var(--base-gap-small);
+
+  .shortcut {
+    padding: 0px 4px;
+  }
 `
 
 export const NavButton = styled(Button)`
   &.previous {
     padding-left: 4px;
+    width: 110px;
   }
   &.next {
     padding-right: 4px;
+    width: 110px;
   }
 
   transition: background-color 0.1s;
   /* when triggered using the shortcut */
   &.highlight {
     background-color: var(--md-sys-color-secondary-container);
-  }
-
-  .shortcut {
-    padding: 0px 4px;
   }
 `

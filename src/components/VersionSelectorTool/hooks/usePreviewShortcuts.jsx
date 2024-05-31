@@ -3,7 +3,7 @@ import Shortcuts from '/src/containers/Shortcuts'
 const usePreviewShortcuts = ({ allVersions = {}, onChange, toolsRef }) => {
   const handleShortcut = (action) => {
     const version = allVersions[action]
-    if (version) onChange(version.id)
+    if (version?.id) onChange(version.id)
 
     // highlight button briefly
     const buttonEl = toolsRef.current.querySelector(`#${action}-${version.id}`)
