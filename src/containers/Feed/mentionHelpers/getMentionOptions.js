@@ -4,11 +4,11 @@ import { isBefore, isValid } from 'date-fns'
 const versionSorting = (a, b) => {
   const itemA = a.item || a
   const itemB = b.item || b
-  const dateA = new Date(itemA.value)
-  const dateB = new Date(itemB.value)
+  const dateA = new Date(itemA.createdAt)
+  const dateB = new Date(itemB.createdAt)
   if (!isValid(dateA) || !isValid(dateB)) return 0
 
-  return isBefore(dateB, dateA) ? -1 : 1
+  return isBefore(dateB, dateA) ? -1 : 15
 }
 
 const userSorting = (a, b) => {

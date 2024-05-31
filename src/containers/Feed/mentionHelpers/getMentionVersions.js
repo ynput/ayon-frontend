@@ -1,3 +1,5 @@
+import { getFuzzyDate } from '/src/components/Feed/ActivityDate'
+
 const getMentionVersions = (versions) =>
   versions.map((v) => ({
     type: 'version',
@@ -8,6 +10,7 @@ const getMentionVersions = (versions) =>
     createdAt: v.createdAt,
     context: v.product?.name,
     keywords: [v.name, v.product?.name],
+    suffix: getFuzzyDate(v.createdAt),
   }))
 
 export default getMentionVersions

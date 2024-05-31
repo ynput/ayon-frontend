@@ -45,3 +45,12 @@ export const MentionItem = styled.li`
 export const MentionName = styled.span`
   font-weight: 500;
 `
+
+export const MentionPrefix = styled.span`
+  margin-right: -4px;
+`
+
+export const MentionSuffix = styled.span`
+  color: var(--md-sys-color-outline);
+  margin-left: auto;
+`
