@@ -6,8 +6,20 @@ import { useEffect } from 'react'
 import Preview from './Preview'
 import { isEqual } from 'lodash'
 import styled from 'styled-components'
+import Shortcuts from '../Shortcuts'
 
 const StyledDialog = styled(Dialog)`
+  width: calc(100% - 64px);
+  height: calc(100% - 64px);
+  max-height: 1300px;
+  max-width: 2000px;
+
+  .body {
+    overflow: hidden;
+  }
+  &:focus-visible {
+    outline: none;
+  }
   /* hide header and footer */
   .header,
   .footer {
@@ -33,7 +45,7 @@ const PreviewDialog = () => {
     if (isEqual(selected, queryIds)) return
     // open the dialog
     dispatch(openPreview({ selected: queryIds, projectName: queryProjectName }))
-  }, [queryIds, queryProjectName])
+  }, [queryProjectName])
 
   if (!selected.length) return null
 
@@ -47,9 +59,12 @@ const PreviewDialog = () => {
   }
 
   return (
-    <StyledDialog isOpen hideCancelButton size="full">
-      <Preview {...{ selected, projectName }} onClose={handleClose} />
-    </StyledDialog>
+    <>
+      <Shortcuts shortcuts={[{ key: 'Escape', action: handleClose }]} />
+      <StyledDialog isOpen={selected.length && projectName} hideCancelButton size="full">
+        <Preview {...{ selected, projectName }} onClose={handleClose} />
+      </StyledDialog>
+    </>
   )
 }
 

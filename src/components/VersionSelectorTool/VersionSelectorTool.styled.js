@@ -17,4 +17,14 @@ export const NavButton = styled(Button)`
   &.next {
     padding-right: 4px;
   }
+
+  transition: background-color 0.1s;
+  /* when triggered using the shortcut */
+  &.highlight {
+    background-color: var(--md-sys-color-secondary-container);
+  }
+
+  .shortcut {
+    padding: 0px 4px;
+  }
 `

@@ -2,8 +2,11 @@ import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Preview.styled'
 import VersionSelectorTool from '/src/components/VersionSelectorTool/VersionSelectorTool'
 import { useGetPreviewQuery, useGetPreviewVersionsQuery } from '/src/services/preview/getPreview'
+import { useDispatch } from 'react-redux'
+import { updateSelection } from '/src/features/preview'
 
 const Preview = ({ selected = [], projectName, onClose }) => {
+  const dispatch = useDispatch()
   // get version preview data
   const { data: selectedVersionsData = [], isFetching: isFetchingPreview } = useGetPreviewQuery(
     { projectName, versionIds: selected },
@@ -17,6 +20,10 @@ const Preview = ({ selected = [], projectName, onClose }) => {
     { skip: !selectedProductIds.length },
   )
 
+  const handleVersionChange = (id) => {
+    dispatch(updateSelection({ selected: [id] }))
+  }
+
   const isLoadingAll = isFetchingPreview || isFetchingVersions
 
   return (
@@ -26,6 +33,7 @@ const Preview = ({ selected = [], projectName, onClose }) => {
           versions={allVersionsData}
           selected={selected[0]}
           isLoading={isLoadingAll}
+          onChange={handleVersionChange}
         />
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
