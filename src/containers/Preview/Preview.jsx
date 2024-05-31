@@ -4,6 +4,8 @@ import VersionSelectorTool from '/src/components/VersionSelectorTool/VersionSele
 import { useGetPreviewQuery, useGetPreviewVersionsQuery } from '/src/services/preview/getPreview'
 import { useDispatch } from 'react-redux'
 import { updateSelection } from '/src/features/preview'
+import PreviewDetailsPanel from './PreviewDetailsPanel'
+import PreviewPlayer from './PreviewPlayer'
 
 const Preview = ({ selected = [], projectName, onClose }) => {
   const dispatch = useDispatch()
@@ -38,7 +40,9 @@ const Preview = ({ selected = [], projectName, onClose }) => {
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
-        <h2>Selected Version: {selected.join(', ')}</h2>
+        <PreviewPlayer selected={selected} />
+
+        <PreviewDetailsPanel selected={selected} projectName={projectName} />
       </Styled.Content>
     </Styled.Container>
   )

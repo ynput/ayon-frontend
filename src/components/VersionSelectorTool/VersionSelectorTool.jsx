@@ -14,8 +14,10 @@ const NavButton = ({
   onClick,
   disabled,
   shortcut,
+  ...props
 }) => (
   <Styled.NavButton
+    {...props}
     disabled={disabled}
     className={className}
     id={`${className}-${id}`}
@@ -68,7 +70,6 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         <NavButton
           version={allVersions.previous}
           className="previous"
-          icon="chevron_left"
           onClick={onChange}
           disabled={!previousVersion}
           beforeContent={<Icon icon="chevron_left" />}
@@ -79,7 +80,6 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         <NavButton
           version={allVersions.next}
           className="next"
-          icon="chevron_right"
           onClick={onChange}
           disabled={!nextVersion}
           afterContent={<Icon icon="chevron_right" />}
@@ -93,6 +93,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
           disabled={!latestVersion}
           beforeContent={'Latest - '}
           shortcut={'V'}
+          selected={selected === latestVersion?.id}
           // afterContent={<ShortcutWidget>V</ShortcutWidget>}
         />
         <NavButton
@@ -102,6 +103,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
           disabled={!approvedVersion}
           beforeContent={'Approved - '}
           shortcut={'B'}
+          selected={selected === approvedVersion?.id}
           // afterContent={approvedVersion && <ShortcutWidget>B</ShortcutWidget>}
         />
         {heroVersion && (
@@ -111,6 +113,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
             onClick={onChange}
             beforeContent={'Hero'}
             shortcut={'N'}
+            selected={selected === heroVersion?.id}
             // afterContent={approvedVersion && <ShortcutWidget>N</ShortcutWidget>}
           />
         )}
