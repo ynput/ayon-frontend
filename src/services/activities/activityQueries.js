@@ -65,6 +65,7 @@ fragment VersionFragment on VersionNode {
   version
   product {
     name
+    productType
   }
 }
 `
