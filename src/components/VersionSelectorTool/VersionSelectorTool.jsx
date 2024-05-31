@@ -43,6 +43,8 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
     .slice()
     .reverse()
     .find(({ status }) => statuses[status] && statuses[status].state === 'done')
+  // get any hero version if there is one
+  const heroVersion = versions.find(({ name }) => name === 'HERO')
 
   const allVersions = {
     previous: previousVersion || selectedVersion,
@@ -50,6 +52,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
     next: nextVersion || selectedVersion,
     latest: latestVersion,
     approved: approvedVersion,
+    hero: heroVersion,
   }
 
   const toolsRef = useRef(null)
@@ -101,6 +104,16 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
           shortcut={'B'}
           // afterContent={approvedVersion && <ShortcutWidget>B</ShortcutWidget>}
         />
+        {heroVersion && (
+          <NavButton
+            version={allVersions.hero}
+            className="hero"
+            onClick={onChange}
+            beforeContent={'Hero'}
+            shortcut={'N'}
+            // afterContent={approvedVersion && <ShortcutWidget>N</ShortcutWidget>}
+          />
+        )}
       </Styled.Tools>
     </>
   )

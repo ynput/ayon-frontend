@@ -33,6 +33,10 @@ const usePreviewShortcuts = ({ allVersions = {}, onChange, toolsRef }) => {
       key: 'b', //select approved version
       action: () => handleShortcut('approved'),
     },
+    {
+      key: 'n', //select approved version
+      action: () => handleShortcut('hero'),
+    },
   ]
 
   return <Shortcuts shortcuts={shortcuts} deps={[allVersions.selected]} />
