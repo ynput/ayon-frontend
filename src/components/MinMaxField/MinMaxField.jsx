@@ -16,8 +16,8 @@ const Field = styled.div`
 
 const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
   const { le, lt, ge, gt } = value
-  const min = ge === undefined ? gt : ge
-  const max = le === undefined ? lt : le
+  const min = ge ?? gt
+  const max = le ?? lt
   const inputRef = useRef()
 
   const fieldValue = isMin ? min : max
@@ -25,7 +25,7 @@ const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
   const equalsKey = fieldKey + 'e'
   const moreThanKey = fieldKey + 't'
 
-  const [isEqual, setIsEqual] = useState(value[equalsKey] !== undefined || !isFloat)
+  const [isEqual, setIsEqual] = useState(value[equalsKey] != undefined || !isFloat)
 
   //   when changing from float to integer
   //   ensure all values are equals: ge or le
