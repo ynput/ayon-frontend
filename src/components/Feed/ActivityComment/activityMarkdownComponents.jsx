@@ -24,7 +24,7 @@ const sanitizeURL = (url = '') => {
 
 export const aTag = (
   { children, href },
-  { entityId, projectName, projectInfo, onReferenceClick, activityId },
+  { entityId, projectName, onReferenceClick, activityId, onReferenceTooltip },
 ) => {
   const { url, type, id } = sanitizeURL(href)
 
@@ -44,13 +44,14 @@ export const aTag = (
 
   return (
     <ActivityReference
-      name={id}
-      {...{ type, id, label, projectName, projectInfo }}
+      {...{ type }}
       variant={isEntity ? 'filled' : 'primary'}
       onClick={() =>
         type !== 'user' &&
         onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
       }
+      onMouseEnter={(e, pos) => onReferenceTooltip({ type, id, label, name: id, pos })}
+      onMouseLeave={() => onReferenceTooltip(null)}
     >
       {label}
     </ActivityReference>

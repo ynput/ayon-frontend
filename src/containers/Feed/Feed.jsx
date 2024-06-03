@@ -278,6 +278,7 @@ const Feed = ({
                   versions: versionsData,
                 }}
                 isHighlighted={highlighted.includes(activity.activityId)}
+                dispatch={dispatch}
               />
             ))}
         {hasPreviousPage && (
