@@ -21,6 +21,13 @@ const TASK_FRAGMENT = () => `
       label
       path
     }
+    versions {
+      edges {
+        node {
+          thumbnailId
+        }
+      }
+  }
   }
 `
 
