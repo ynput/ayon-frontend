@@ -1,8 +1,15 @@
 import { useEffect, useCallback, useRef } from 'react'
 
 import { Button } from '@ynput/ayon-react-components'
+import Timecode from './Timecode'
 
-const VideoPlayerControls = ({ videoRef, isPlaying }) => {
+const VideoPlayerControls = ({ 
+  videoRef, 
+  isPlaying,
+  currentTime,
+  duration,
+  frameRate,
+}) => {
 
   const frameLength = 0.04 // TODO
 
@@ -108,6 +115,11 @@ const VideoPlayerControls = ({ videoRef, isPlaying }) => {
 
   return (
     <>
+
+      <Timecode value={currentTime} frameRate={frameRate} />
+
+      <div style={{ flex: 1 }} />
+   
       <Button
         icon="skip_previous"
         tooltip="Go to Start"
@@ -145,6 +157,10 @@ const VideoPlayerControls = ({ videoRef, isPlaying }) => {
       />
 
       <Button icon="skip_next" tooltip="Go to End" onClick={handleGoToEnd} />
+
+      <div style={{ flex: 1 }} />
+
+      <Timecode value={duration} frameRate={frameRate} />
 
     </>
 

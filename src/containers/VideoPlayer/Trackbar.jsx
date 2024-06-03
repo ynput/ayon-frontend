@@ -26,7 +26,7 @@ const Trackbar = ({
     ctx.clearRect(0, 0, width, height)
 
     // Draw the background of the slider
-    ctx.fillStyle = '#19161f'
+    ctx.fillStyle = '#1C2026'
     ctx.fillRect(0, 0, width, height)
 
     // Draw the buffered ranges
@@ -124,7 +124,12 @@ const Trackbar = ({
   return (
     <Canvas
       ref={canvasRef}
-      style={{ minHeight: 42, maxHeight: 42, cursor: 'pointer', flexGrow: 1}}
+      style={{ 
+        minHeight: 42, 
+        maxHeight: 42, 
+        cursor: 'pointer', 
+        flexGrow: 1,
+      }}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
       onDraw={drawSlider}

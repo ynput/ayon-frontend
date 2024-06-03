@@ -49,6 +49,7 @@ const VideoOverlay = ({ videoWidth, videoHeight, showOverlay }) => {
       width={videoWidth}
       height={videoHeight}
       style={{
+        outline: showOverlay ? '1px solid #cccccc' : 'none',
         position: 'absolute',
         top: 0,
         left: 0,
