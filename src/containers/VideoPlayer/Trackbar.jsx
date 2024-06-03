@@ -8,6 +8,7 @@ const Trackbar = ({
   markIn,
   markOut,
   bufferedRanges,
+  frameRate
 }) => {
   const canvasRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -86,7 +87,9 @@ const Trackbar = ({
     if (!isDragging) return
     const rect = canvasRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
-    const newTime = (x / rect.width) * duration
+    let newTime = (x / rect.width) * duration
+    if (newTime < 0) newTime = 0
+    if (newTime >= duration) newTime = duration - (1 / frameRate)
     onScrub(newTime)
   }
 

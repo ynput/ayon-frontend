@@ -226,6 +226,7 @@ const VideoPlayer = ({src, frameRate, aspectRatio}) => {
           duration={duration}
           bufferedRanges={bufferedRanges}
           onScrub={handleScrub}
+          frameRate={frameRate}
         />
       </div>
 
