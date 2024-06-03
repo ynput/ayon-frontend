@@ -333,10 +333,8 @@ const CommentInput = ({
       const { type, retain, search = '' } = mention
 
       const quill = editorRef.current.getEditor()
-      const selection = quill.getSelection()
       const length = type.length + search.length
       const start = retain - type.length + 1
-      console.log(start, length)
       // delete the mention
       quill.deleteText(start, length)
     }
