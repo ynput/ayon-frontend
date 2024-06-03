@@ -327,6 +327,23 @@ const CommentInput = ({
     typeWithDelay(quill, retain, type)
   }
 
+  const handleMentionButton = (type) => {
+    // first check if mention is already open
+    if (mention) {
+      const { type, retain, search = '' } = mention
+
+      const quill = editorRef.current.getEditor()
+      const selection = quill.getSelection()
+      const length = type.length + search.length
+      const start = retain - type.length + 1
+      console.log(start, length)
+      // delete the mention
+      quill.deleteText(start, length)
+    }
+
+    addTextToEditor(type)
+  }
+
   const handleSubmit = async () => {
     try {
       // convert to markdown
@@ -550,7 +567,7 @@ const CommentInput = ({
               <Button
                 icon="person"
                 variant="text"
-                onClick={() => addTextToEditor('@')}
+                onClick={() => handleMentionButton('@')}
                 data-tooltip={'Mention user'}
                 data-shortcut={'@'}
               />
@@ -558,7 +575,7 @@ const CommentInput = ({
               <Button
                 icon="layers"
                 variant="text"
-                onClick={() => addTextToEditor('@@')}
+                onClick={() => handleMentionButton('@@')}
                 data-tooltip={'Mention version'}
                 data-shortcut={'@@'}
               />
@@ -566,7 +583,7 @@ const CommentInput = ({
               <Button
                 icon="check_circle"
                 variant="text"
-                onClick={() => addTextToEditor('@@@')}
+                onClick={() => handleMentionButton('@@@')}
                 data-tooltip={'Mention task'}
                 data-shortcut={'@@@'}
               />
