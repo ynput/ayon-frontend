@@ -1,44 +1,8 @@
 import { Quill } from 'react-quill-ayon'
 import MagicUrl from 'quill-magic-url'
 import ImageUploader from './ImageUploader'
-import { mentionTypeOptions } from '../CommentInput'
 Quill.register('modules/imageUploader', ImageUploader)
 Quill.register('modules/magicUrl', MagicUrl)
-
-// custom links
-const Inline = Quill.import('blots/inline')
-
-// special link for mentions
-class MentionLink extends Inline {
-  static blotName = 'mention'
-  static tagName = 'A'
-  static create(value) {
-    const node = super.create(value)
-    // check if this is a mention url
-    const mentionIds = Object.values(mentionTypeOptions).map((option) => option.id)
-    const valueMentionId = value.split(':').shift()
-
-    if (mentionIds.includes(valueMentionId)) {
-      node.classList.add('mention')
-      node.classList.add(valueMentionId)
-
-      // add data-value attribute
-      node.setAttribute('data-value', value)
-      // set href value
-      node.setAttribute('href', value)
-
-      // add on click event
-      node.addEventListener('click', (e) => {
-        e.preventDefault()
-        console.log(e)
-      })
-    }
-
-    return node
-  }
-}
-MentionLink.sanitize = (url) => url
-Quill.register(MentionLink, true)
 
 // override icons with material icons
 const getIcon = (icon) => '<span class="material-symbols-outlined icon">' + icon + '</span>'
@@ -75,6 +39,5 @@ export const getModules = ({ imageUploader }) => {
     ],
     imageUploader,
     magicUrl: true,
-    mentionSelect: {},
   }
 }

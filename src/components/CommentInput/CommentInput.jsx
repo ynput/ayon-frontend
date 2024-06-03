@@ -23,6 +23,7 @@ import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
 import { useGetTeamsQuery } from '/src/services/team/getTeams'
 import { useSelector } from 'react-redux'
 import { getModules, quillFormats } from './modules'
+import useMentionLink from './hooks/useMentionLink'
 
 const mentionTypes = ['@', '@@', '@@@']
 export const mentionTypeOptions = {
@@ -54,6 +55,7 @@ const CommentInput = ({
   filter,
   disabled,
   isLoading,
+  scope,
 }) => {
   const currentUser = useSelector((state) => state.user.name)
 
@@ -76,6 +78,9 @@ const CommentInput = ({
 
   // When editing, set selection to the end of the editor
   useSetCursorEnd({ initHeight, editorRef, isEditing })
+
+  // create a new quill format for mentions and registers it
+  useMentionLink({ projectName, projectInfo, scope })
 
   // for the task (entity), get all folderIds
   const folderIds = entities.flatMap((entity) => entity.folderId || [])

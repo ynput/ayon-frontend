@@ -10,7 +10,7 @@ const useReferenceTooltip = ({ dispatch }) => {
       dispatch(showRefTooltip(ref))
     }
 
-    if (!ref && refTooltip.id) {
+    if (!ref) {
       // close
       dispatch(hideRefTooltip())
     }
