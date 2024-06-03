@@ -208,6 +208,30 @@ const Products = () => {
     }
   }
 
+  const onSelectVersion = async (
+    { versionId, productId, folderId, versionName, currentSelected },
+    data,
+  ) => {
+    // load data here and patch into cache
+    const res = await handleVersionChange([[versionId, productId]])
+    if (res) {
+      // copy current selection
+      let newSelection = { ...currentSelected }
+      // update selection
+      newSelection[productId] = { versionId, folderId }
+
+      dispatch(setSelectedVersions(newSelection))
+      // set selected product
+      dispatch(productSelected({ products: [productId], versions: [versionId] }))
+      // update breadcrumbs
+      let uri = `ayon+entity://${projectName}/`
+      uri += `${data.parents.join('/')}/${data.folder}`
+      uri += `?product=${data.name}`
+      uri += `&version=${versionName}`
+      dispatch(setUri(uri))
+    }
+  }
+
   let columns = useMemo(
     () => [
       {
@@ -285,31 +309,13 @@ const Products = () => {
         field: 'versionList',
         header: 'Version',
         width: 70,
-        body: (node) =>
-          VersionList(
-            { ...node.data },
-            async ({ versionId, productId, folderId, versionName, currentSelected }) => {
-              // load data here and patch into cache
-              const res = await handleVersionChange([[versionId, productId]])
-              if (res) {
-                // copy current selection
-                let newSelection = { ...currentSelected }
-                // update selection
-                newSelection[productId] = { versionId, folderId }
-
-                dispatch(setSelectedVersions(newSelection))
-                // set selected product
-                dispatch(productSelected({ products: [productId], versions: [versionId] }))
-                // update breadcrumbs
-                let uri = `ayon+entity://${projectName}/`
-                uri += `${node.data.parents.join('/')}/${node.data.folder}`
-                uri += `?product=${node.data.name}`
-                uri += `&version=${versionName}`
-                dispatch(setUri(uri))
-              }
-            },
-            selectedVersions,
-          ), // end VersionList
+        body: (node) => (
+          <VersionList
+            row={node.data}
+            selectedVersions={selectedVersions}
+            onSelectVersion={(version) => onSelectVersion(version, node.data)}
+          />
+        ),
       },
       {
         field: 'createdAt',
