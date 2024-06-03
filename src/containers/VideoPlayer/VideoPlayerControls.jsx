@@ -116,7 +116,14 @@ const VideoPlayerControls = ({
   return (
     <>
 
-      <Timecode value={currentTime} frameRate={frameRate} />
+      <Timecode 
+        value={currentTime} 
+        frameRate={frameRate}
+        maximum={duration}
+        onChange={(value) => {
+          videoRef.current.currentTime = value
+        }}
+      />
 
       <div style={{ flex: 1 }} />
    
