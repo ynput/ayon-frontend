@@ -193,7 +193,7 @@ const VideoPlayer = ({src, frameRate, aspectRatio}) => {
   return (
     <VideoPlayerContainer>
       <div className="controls-row" style={{justifyContent: "flex-start"}}>
-        <Button selected={showOverlay} onClick={() => setShowOverlay(!showOverlay)} icon="pageless"/>
+        <Button selected={showOverlay} onClick={() => setShowOverlay(!showOverlay)} icon="grid_guides"/>
         <Button selected={loop} onClick={() => setLoop(!loop)} icon="repeat" />
       </div>
 
