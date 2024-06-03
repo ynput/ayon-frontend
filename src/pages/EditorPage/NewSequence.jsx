@@ -122,7 +122,6 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         onChange={handleSeqChange}
         isRoot={isRoot}
         prefixExample={createSeq.prefix ? examplePrefix : ''}
-        prefixDisabled={multipleSelection}
         typeSelectRef={typeSelectRef}
         onLastInputKeydown={(e) => handleKeyDown(e, true)}
       />
