@@ -21,25 +21,11 @@ const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
   const inputRef = useRef()
 
   const fieldValue = isMin ? min : max
-  const otherValue = isMin ? max : min
-  const otherValueIsEqual = isMin ? value['le'] !== undefined : value['ge'] !== undefined
   const fieldKey = isMin ? 'g' : 'l'
   const equalsKey = fieldKey + 'e'
   const moreThanKey = fieldKey + 't'
 
   const [isEqual, setIsEqual] = useState(value[equalsKey] !== undefined || !isFloat)
-
-  const checkNotSameValue = (v) => {
-    // ensure that the values don't match
-    if (otherValue === v && !otherValueIsEqual && isFloat) {
-      // oh no! two matching values with  < and > make any value impossible
-      // make input invalid
-      inputRef.current.setCustomValidity('Values must be different')
-    } else {
-      // clear custom validity
-      inputRef.current.setCustomValidity('')
-    }
-  }
 
   //   when changing from float to integer
   //   ensure all values are equals: ge or le
@@ -51,8 +37,6 @@ const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
     } else {
       setIsEqual(true)
     }
-
-    checkNotSameValue(fieldValue)
   }, [isFloat])
 
   const handleOnChange = (e) => {
@@ -67,8 +51,6 @@ const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
       onChange({ [equalsKey]: value, [moreThanKey]: undefined })
     }
 
-    checkNotSameValue(value)
-
     // clear custom validity
     inputRef.current.setCustomValidity('')
   }
@@ -81,8 +63,6 @@ const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
     } else {
       onChange({ [moreThanKey]: fieldValue, [equalsKey]: undefined })
     }
-
-    checkNotSameValue(fieldValue)
   }
 
   const greaterOrLess = isMin ? 'greater' : 'less'
