@@ -74,41 +74,6 @@ query KanbanProjectAssignees($projectName: String) {
 }
 }`
 
-export const TASK_MENTION_TASKS = `
-query FoldersTasksForMentions($projectName: String!, $folderIds: [String!]!) {
-  project(name: $projectName) {
-    folders(ids: $folderIds) {
-      edges {
-        node {
-          id
-          name
-          label
-          tasks {
-            edges {
-              node {
-                id
-                name
-                label
-                taskType
-                thumbnailId
-                versions(latestOnly: true) {
-                  edges {
-                    node {
-                      id
-                      thumbnailId
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-`
-
 export const VERSION_DETAILS_QUERY = (attribs = []) => `
     query VersionsDetails($projectName: String!, $entityId: String!) {
         project(name: $projectName) {

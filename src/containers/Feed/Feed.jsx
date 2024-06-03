@@ -3,9 +3,7 @@ import ActivityItem from '../../components/Feed/ActivityItem'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
 import {
-  allowedVersionsQueryTypes,
   useGetActivitiesQuery,
-  useGetVersionsQuery,
   useLazyGetActivitiesQuery,
 } from '/src/services/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
@@ -22,6 +20,7 @@ import { classNames } from 'primereact/utils'
 import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
+import { useGetMentionVersionsQuery } from '/src/services/mentions/getMentions'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -116,28 +115,22 @@ const Feed = ({
     isFetchingActivities = true
   }
 
-  let tasksOrProductsToQuery = []
+  let mentionVersionsArgs = { entityType: entityType, entityIds: entityIds }
 
-  if (allowedVersionsQueryTypes.includes(entityType)) {
-    // great, we can just use entitiesToQuery already
-    tasksOrProductsToQuery = entitiesToQuery
-  } else {
-    // we need to either use the productId
-    tasksOrProductsToQuery = entities.flatMap((entity) =>
-      entity.productId
-        ? {
-            projectName: entity.projectName,
-            id: entity.productId,
-            entityType: 'product',
-          }
-        : [],
-    )
+  const allowedVersionsQueryTypes = ['task', 'product']
+  if (!allowedVersionsQueryTypes.includes(entityType)) {
+    // we need to either use the productIds as we can't get sibling versions from a version
+    mentionVersionsArgs = {
+      entityType: 'product',
+      entityIds: entities.flatMap((entity) => (entity.productId ? entity.productId : [])),
+    }
   }
 
-  // get all versions for the entity
-  // used for version mentions (@@)
-  const { data: versionsData = [] } = useGetVersionsQuery({
-    entities: tasksOrProductsToQuery,
+  // get all versions that can be mentioned
+  const { data: mentionVersions = [] } = useGetMentionVersionsQuery({
+    entityIds: mentionVersionsArgs.entityIds,
+    entityType: mentionVersionsArgs.entityType,
+    projectName,
   })
 
   // do any transformation on activities data
@@ -275,7 +268,7 @@ const Feed = ({
                   activeUsers,
                   projectName,
                   entities: entities,
-                  versions: versionsData,
+                  versions: mentionVersions,
                 }}
                 isHighlighted={highlighted.includes(activity.activityId)}
               />
@@ -300,7 +293,7 @@ const Feed = ({
         onOpen={() => setIsCommentInputOpen(true)}
         activeUsers={activeUsers}
         projectName={projectName}
-        versions={versionsData}
+        versions={mentionVersions}
         entities={entities}
         projectInfo={projectInfo}
         filter={filter}

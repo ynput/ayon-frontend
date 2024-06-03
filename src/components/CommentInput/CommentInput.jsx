@@ -11,7 +11,7 @@ import { toast } from 'react-toastify'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
 import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
-import { useGetTaskMentionTasksQuery } from '/src/services/userDashboard/getUserDashboard'
+import { useGetMentionTasksQuery } from '/src/services/mentions/getMentions'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
 import { convertToMarkdown } from './quillToMarkdown'
@@ -65,8 +65,8 @@ const CommentInput = ({
 
   // for the task (entity), get all folderIds
   const folderIds = entities.flatMap((entity) => entity.folderId || [])
-
-  const { data: mentionTasks = [] } = useGetTaskMentionTasksQuery(
+  // get all tasks that can be mentioned
+  const { data: mentionTasks = [] } = useGetMentionTasksQuery(
     { projectName, folderIds },
     {
       skip: !projectName || !folderIds.length,
