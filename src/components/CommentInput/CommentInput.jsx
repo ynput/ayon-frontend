@@ -24,6 +24,20 @@ import { useGetTeamsQuery } from '/src/services/team/getTeams'
 import { useSelector } from 'react-redux'
 import { getModules, quillFormats } from './modules'
 
+const mentionTypes = ['@', '@@', '@@@']
+export const mentionTypeOptions = {
+  '@@@': {
+    id: 'task',
+  },
+  '@@': {
+    id: 'version',
+  },
+  '@': {
+    id: 'user',
+    isCircle: true,
+  },
+}
+
 const CommentInput = ({
   initValue,
   initFiles = [],
@@ -89,19 +103,6 @@ const CommentInput = ({
     }
   }, [isOpen, editorRef])
 
-  const mentionTypes = ['@', '@@', '@@@']
-  const typeOptions = {
-    '@@@': {
-      id: 'task',
-    },
-    '@@': {
-      id: 'version',
-    },
-    '@': {
-      id: 'user',
-      isCircle: true,
-    },
-  }
   mentionTypes.sort((a, b) => b.length - a.length)
 
   // sort users by author or in assignees (users array on entity)
@@ -146,7 +147,7 @@ const CommentInput = ({
     const typePrefix = mention.type // the type of mention: @, @@, @@@
     const search = typePrefix + (mention.search || '') // the full search string: @Tim
     const mentionLabel = typePrefix + selectedOption.label // the label of the mention: @Tim Bailey
-    const type = typeOptions[typePrefix] // the type of mention: user, version, task
+    const type = mentionTypeOptions[typePrefix] // the type of mention: user, version, task
     const href = `${type?.id}:${selectedOption.id}` // the href of the mention: user:user.123
 
     // get selection delta
@@ -158,7 +159,7 @@ const CommentInput = ({
     quill.deleteText(startIndex, search.length)
 
     //  insert embed link
-    quill.insertText(startIndex, mentionLabel, 'link', href)
+    quill.insertText(startIndex, mentionLabel, 'mention', href)
 
     const endIndex = startIndex + mentionLabel.length
 
@@ -200,7 +201,7 @@ const CommentInput = ({
 
     setEditorValue(content)
 
-    const isDelete = delta.ops.length === 2 && delta.ops[1].delete
+    const isDelete = delta.ops.length === 2 && !!delta.ops[1].delete
 
     if (!currentCharacter && isDelete) {
       currentCharacter = editor.getText(delta.ops[0].retain - 1, 1)
@@ -280,6 +281,22 @@ const CommentInput = ({
             ...mention,
             search: mentionSearch?.toLowerCase(),
           })
+        }
+      } else {
+        // just deleting any text
+        const quill = editorRef.current.getEditor()
+        const currentSelection = quill.getSelection(false)
+        const currentFormat = quill.getFormat(currentSelection.index, currentSelection.length)
+        if (currentFormat.mention) {
+          // if format is mention, delete the whole mention
+          const [lineBlock] = quill.getLine(currentSelection.index - 1) || []
+          const ops = lineBlock?.cache?.delta?.ops || []
+          // get last op with attributes mention: true
+          const lastMentionOp = ops.reverse().find((op) => op.attributes?.mention)
+          if (lastMentionOp) {
+            const mentionLength = lastMentionOp.insert.length
+            quill.deleteText(currentSelection.index - mentionLength, mentionLength)
+          }
         }
       }
     }
@@ -491,7 +508,7 @@ const CommentInput = ({
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
-            <InputMarkdownConvert typeOptions={typeOptions} initValue={initValue} />
+            <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={initValue} />
           </Styled.Markdown>
 
           {/* file uploads */}
@@ -573,7 +590,7 @@ const CommentInput = ({
           options={shownMentionOptions}
           onChange={handleSelectChange}
           types={mentionTypes}
-          config={typeOptions[mention?.type]}
+          config={mentionTypeOptions[mention?.type]}
           noneFound={!shownMentionOptions.length && mention?.search}
           noneFoundAtAll={!shownMentionOptions.length && !mention?.search}
           selectedIndex={mentionSelectedIndex}
