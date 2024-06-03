@@ -40,8 +40,7 @@ const Preview = ({ selected = [], projectName, onClose }) => {
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
-        <PreviewPlayer selected={selected} />
-
+        <PreviewPlayer selected={selected} projectName={projectName} />
         <PreviewDetailsPanel selected={selected} projectName={projectName} />
       </Styled.Content>
     </Styled.Container>
