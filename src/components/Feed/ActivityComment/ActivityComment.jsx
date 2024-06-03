@@ -11,7 +11,7 @@ import CommentInput from '/src/components/CommentInput/CommentInput'
 import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
 import ActivityReferenceTooltip from '../ActivityReferenceTooltip/ActivityReferenceTooltip'
-import { hideRefTooltip, showRefTooltip } from '/src/features/details'
+import useReferenceTooltip from '/src/containers/Feed/hooks/useReferenceTooltip'
 
 const ActivityComment = ({
   activity = {},
@@ -46,7 +46,6 @@ const ActivityComment = ({
   let menuId = 'comment-' + activity.activityId
   if (isSlideOut) menuId += '-slideout'
   const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
-  const tooltip = useSelector((state) => state.details.refTooltip)
 
   // EDITING
   const [isEditing, setIsEditing] = useState(false)
@@ -65,17 +64,7 @@ const ActivityComment = ({
     setIsEditing(false)
   }
 
-  const handleRefHover = (refData) => {
-    if (refData && refData.id !== tooltip.id) {
-      // open
-      dispatch(showRefTooltip(refData))
-    }
-
-    if (!refData && tooltip.id) {
-      // close
-      dispatch(hideRefTooltip())
-    }
-  }
+  const [refTooltip, setRefTooltip] = useReferenceTooltip({ dispatch })
 
   return (
     <>
@@ -95,7 +84,7 @@ const ActivityComment = ({
           projectName={projectName}
           entityType={entityType}
           onReferenceClick={onReferenceClick}
-          onReferenceTooltip={handleRefHover}
+          onReferenceTooltip={setRefTooltip}
         />
         <Styled.Body className={classNames('comment-body', { isEditing })}>
           {isEditing ? (
@@ -123,7 +112,7 @@ const ActivityComment = ({
                         projectName,
                         projectInfo,
                         onReferenceClick,
-                        onReferenceTooltip: handleRefHover,
+                        onReferenceTooltip: setRefTooltip,
                         activityId,
                       }),
                     // checkbox inputs
@@ -147,11 +136,11 @@ const ActivityComment = ({
           )}
         </Styled.Body>
       </Styled.Comment>
-      {tooltip.id && (
+      {refTooltip.id && (
         <ActivityReferenceTooltip
-          pos={tooltip.pos}
+          pos={refTooltip.pos}
           {...{ projectName, projectInfo }}
-          {...tooltip}
+          {...refTooltip}
         />
       )}
     </>
