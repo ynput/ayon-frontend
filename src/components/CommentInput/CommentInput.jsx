@@ -291,7 +291,7 @@ const CommentInput = ({
         // just deleting any text
         const quill = editorRef.current.getEditor()
         const currentSelection = quill.getSelection(false)
-        const currentFormat = quill.getFormat(currentSelection.index, currentSelection.length)
+        const currentFormat = quill.getFormat(currentSelection?.index, currentSelection?.length)
         if (currentFormat.mention) {
           // if format is mention, delete the whole mention
           const [lineBlock] = quill.getLine(currentSelection.index - 1) || []
@@ -311,7 +311,7 @@ const CommentInput = ({
     // get editor retain
     const quill = editorRef.current.getEditor()
 
-    let retain = quill.getSelection()?.index || 0
+    let retain = quill.getSelection(true)?.index || 0
 
     // get character at retain
     const currentCharacter = quill.getText(retain - 1, 1)
