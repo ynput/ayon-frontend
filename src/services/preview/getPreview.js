@@ -1,5 +1,5 @@
 import { ayonApi } from '../ayon'
-import { PREVIEW_VERSIONS_QUERY, PREVIEW_QUERY } from './perviewQueries'
+import { PREVIEW_VERSIONS_QUERY, PREVIEW_QUERY } from './previewQueries'
 
 const getInbox = ayonApi.injectEndpoints({
   endpoints: (build) => ({
