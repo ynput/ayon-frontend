@@ -3,10 +3,8 @@ const getMentionUsers = (users = []) =>
     type: 'user',
     id: user.name,
     label: user.fullName || user.name,
-    image: user.avatarUrl,
     keywords: [user.name, user.fullName],
-    onEntities: user.onEntities,
-    onSameTeam: user.onSameTeam,
+    relevance: user.relevance,
   }))
 
 export default getMentionUsers

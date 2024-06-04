@@ -77,14 +77,3 @@ export const handleFileDrop = (e, projectName, onProgress, onSuccess) => {
     }
   }
 }
-
-export const getUsersContext = ({ users = [], entities = [], teams = [], currentUser }) => {
-  const myTeams = teams.filter((team) => team.members.some((member) => member.name === currentUser))
-  return [...users].map((user) => ({
-    ...user,
-    // is the user assigned or an author of any of the entities?
-    onEntities: entities.some((entity) => entity.users?.includes(user.name)),
-    // is the user on the same team as currently logged in user?
-    onSameTeam: myTeams.some((team) => team.members.some((member) => member.name === user.name)),
-  }))
-}

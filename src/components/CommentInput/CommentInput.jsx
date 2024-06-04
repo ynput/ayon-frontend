@@ -11,18 +11,16 @@ import { toast } from 'react-toastify'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
 import getMentionOptions from '/src/containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '/src/containers/Feed/mentionHelpers/getMentionUsers'
-import { useGetMentionTasksQuery } from '/src/services/mentions/getMentions'
 import getMentionTasks from '/src/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '/src/containers/Feed/mentionHelpers/getMentionVersions'
 import { convertToMarkdown } from './quillToMarkdown'
-import { handleFileDrop, parseImages, getUsersContext, typeWithDelay } from './helpers'
+import { handleFileDrop, parseImages, typeWithDelay } from './helpers'
 import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
 import InputMarkdownConvert from './InputMarkdownConvert'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
-import { useGetTeamsQuery } from '/src/services/team/getTeams'
-import { useSelector } from 'react-redux'
 import { getModules, quillFormats } from './modules'
+import { useGetMentionSuggestionsQuery } from '/src/services/mentions/getMentions'
 
 const CommentInput = ({
   initValue,
@@ -31,18 +29,15 @@ const CommentInput = ({
   isOpen,
   onClose,
   onOpen,
-  activeUsers,
   projectName,
   entities = [],
-  versions = [],
+  entityType,
   projectInfo,
   isEditing,
   filter,
   disabled,
   isLoading,
 }) => {
-  const currentUser = useSelector((state) => state.user.name)
-
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
   // file uploads
@@ -62,24 +57,6 @@ const CommentInput = ({
 
   // When editing, set selection to the end of the editor
   useSetCursorEnd({ initHeight, editorRef, isEditing })
-
-  // for the task (entity), get all folderIds
-  const folderIds = entities.flatMap((entity) => entity.folderId || [])
-  // get all tasks that can be mentioned
-  const { data: mentionTasks = [] } = useGetMentionTasksQuery(
-    { projectName, folderIds },
-    {
-      skip: !projectName || !folderIds.length,
-    },
-  )
-
-  // only load in teams when mention is started
-  const { data: teams = [] } = useGetTeamsQuery({ projectName }, { skip: !mention || !projectName })
-
-  // filter out the tasks that are currently selected
-  const siblingTasks = mentionTasks.filter(
-    (task) => !entities.some((entity) => entity.id === task.id),
-  )
 
   // focus on editor when opened
   useEffect(() => {
@@ -104,10 +81,20 @@ const CommentInput = ({
   }
   mentionTypes.sort((a, b) => b.length - a.length)
 
-  // sort users by author or in assignees (users array on entity)
-  const sortedUsers = useMemo(
-    () => getUsersContext({ users: activeUsers, entities, teams, currentUser }),
-    [activeUsers, entities, currentUser, teams],
+  // get all versions that can be mentioned
+  const {
+    data: {
+      versions: mentionVersions = [],
+      users: mentionUsers = [],
+      tasks: mentionTasks = [],
+    } = {},
+  } = useGetMentionSuggestionsQuery(
+    {
+      entityIds: entities.map((entity) => entity.id),
+      entityType: entityType,
+      projectName,
+    },
+    { skip: !isOpen },
   )
 
   const mentionOptions = useMemo(
@@ -115,13 +102,13 @@ const CommentInput = ({
       getMentionOptions(
         mention?.type,
         {
-          '@': () => getMentionUsers(sortedUsers),
-          '@@': () => getMentionVersions(versions),
-          '@@@': () => getMentionTasks(siblingTasks, projectInfo.task_types, projectName),
+          '@': () => getMentionUsers(mentionUsers),
+          '@@': () => getMentionVersions(mentionVersions),
+          '@@@': () => getMentionTasks(mentionTasks, projectInfo.task_types),
         },
         mention?.search,
       ),
-    [sortedUsers, mention?.type, mention?.search],
+    [mentionTasks, mentionVersions, mentionUsers, mention?.type, mention?.search],
   )
 
   // show first 5 and filter itself out

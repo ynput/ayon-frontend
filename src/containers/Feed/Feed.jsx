@@ -20,7 +20,6 @@ import { classNames } from 'primereact/utils'
 import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
-import { useGetMentionVersionsQuery } from '/src/services/mentions/getMentions'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -114,24 +113,6 @@ const Feed = ({
     activitiesData = []
     isFetchingActivities = true
   }
-
-  let mentionVersionsArgs = { entityType: entityType, entityIds: entityIds }
-
-  const allowedVersionsQueryTypes = ['task', 'product']
-  if (!allowedVersionsQueryTypes.includes(entityType)) {
-    // we need to either use the productIds as we can't get sibling versions from a version
-    mentionVersionsArgs = {
-      entityType: 'product',
-      entityIds: entities.flatMap((entity) => (entity.productId ? entity.productId : [])),
-    }
-  }
-
-  // get all versions that can be mentioned
-  const { data: mentionVersions = [] } = useGetMentionVersionsQuery({
-    entityIds: mentionVersionsArgs.entityIds,
-    entityType: mentionVersionsArgs.entityType,
-    projectName,
-  })
 
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
@@ -268,7 +249,6 @@ const Feed = ({
                   activeUsers,
                   projectName,
                   entities: entities,
-                  versions: mentionVersions,
                 }}
                 isHighlighted={highlighted.includes(activity.activityId)}
               />
@@ -291,10 +271,9 @@ const Feed = ({
         isOpen={isCommentInputOpen}
         onClose={() => setIsCommentInputOpen(false)}
         onOpen={() => setIsCommentInputOpen(true)}
-        activeUsers={activeUsers}
         projectName={projectName}
-        versions={mentionVersions}
         entities={entities}
+        entityType={entityType}
         projectInfo={projectInfo}
         filter={filter}
         disabled={isMultiProjects}
