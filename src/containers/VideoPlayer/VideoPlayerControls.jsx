@@ -1,16 +1,19 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect } from 'react'
 
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 import Timecode from './Timecode'
 
-const VideoPlayerControls = ({ 
-  videoRef, 
+const VideoPlayerControls = ({
+  videoRef,
   isPlaying,
   currentTime,
   duration,
   frameRate,
+  showOverlay,
+  setShowOverlay,
+  loop,
+  setLoop,
 }) => {
-
   const frameLength = 0.04 // TODO
 
   const handlePlayPause = () => {
@@ -115,9 +118,8 @@ const VideoPlayerControls = ({
 
   return (
     <>
-
-      <Timecode 
-        value={currentTime} 
+      <Timecode
+        value={currentTime}
         frameRate={frameRate}
         maximum={duration}
         onChange={(value) => {
@@ -125,25 +127,17 @@ const VideoPlayerControls = ({
         }}
       />
 
-      <div style={{ flex: 1 }} />
-   
-      <Button
-        icon="skip_previous"
-        tooltip="Go to Start"
-        onClick={handleGoToStart}
-      />
-   
+      <Spacer />
+
+      <Button icon="skip_previous" tooltip="Go to Start" onClick={handleGoToStart} />
+
       <Button
         icon="keyboard_double_arrow_left"
         tooltip="Go back 5 frames"
         onClick={handleGoBack5}
       />
 
-      <Button
-        icon="chevron_left"
-        tooltip="Go back 1 frame"
-        onClick={handleGoBack1}
-      />
+      <Button icon="chevron_left" tooltip="Go back 1 frame" onClick={handleGoBack1} />
 
       <Button
         icon={isPlaying ? 'pause' : 'play_arrow'}
@@ -151,11 +145,7 @@ const VideoPlayerControls = ({
         onClick={handlePlayPause}
       />
 
-      <Button
-        icon="chevron_right"
-        tooltip="Go forward 1 frame"
-        onClick={handleGoForward1}
-      />
+      <Button icon="chevron_right" tooltip="Go forward 1 frame" onClick={handleGoForward1} />
 
       <Button
         icon="keyboard_double_arrow_right"
@@ -165,12 +155,16 @@ const VideoPlayerControls = ({
 
       <Button icon="skip_next" tooltip="Go to End" onClick={handleGoToEnd} />
 
-      <div style={{ flex: 1 }} />
+      <Spacer />
+      <Button
+        selected={showOverlay}
+        onClick={() => setShowOverlay(!showOverlay)}
+        icon="grid_guides"
+      />
+      <Button selected={loop} onClick={() => setLoop(!loop)} icon="repeat" />
 
       <Timecode value={duration} frameRate={frameRate} />
-
     </>
-
   )
 }
 

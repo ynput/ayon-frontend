@@ -1,15 +1,13 @@
-import {useState, useEffect, useRef} from 'react';
-import styled from 'styled-components';
+import { useState, useEffect, useRef } from 'react'
+import styled from 'styled-components'
 
-import VideoOverlay from './VideoOverlay';
-import Trackbar from './Trackbar';
-import VideoPlayerControls from './VideoPlayerControls';
-import { Button, InputSwitch } from '@ynput/ayon-react-components'
-
+import VideoOverlay from './VideoOverlay'
+import Trackbar from './Trackbar'
+import VideoPlayerControls from './VideoPlayerControls'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
-  top: 0; 
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -22,7 +20,6 @@ const VideoPlayerContainer = styled.div`
     padding-left: 4px;
     padding-right: 4px;
   }
-
 
   video {
     object-fit: fill !important;
@@ -56,32 +53,29 @@ const VideoPlayerContainer = styled.div`
   }
 `
 
-const VideoPlayer = ({src, frameRate, aspectRatio}) => {
+const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
+  const videoRef = useRef(null)
+  const videoRowRef = useRef(null)
 
-  const videoRef = useRef(null);
-  const videoRowRef = useRef(null);
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [bufferedRanges, setBufferedRanges] = useState([])
 
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [bufferedRanges, setBufferedRanges] = useState([]);
-
-  const [showOverlay, setShowOverlay] = useState(true);
-  const [loop, setLoop] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false)
+  const [loop, setLoop] = useState(true)
 
   const [videoDimensions, setVideoDimensions] = useState({
     width: 600,
     height: 400,
   })
 
-
   useEffect(() => {
     if (!videoRowRef.current) return
 
-
     const updateVideoDimensions = () => {
-      const clientWidth = videoRowRef.current.clientWidth * .95
-      const clientHeight = videoRowRef.current.clientHeight * .95
+      const clientWidth = videoRowRef.current.clientWidth * 0.95
+      const clientHeight = videoRowRef.current.clientHeight * 0.95
 
       if (clientWidth / clientHeight > aspectRatio) {
         const width = clientHeight * aspectRatio
@@ -92,7 +86,6 @@ const VideoPlayer = ({src, frameRate, aspectRatio}) => {
         const height = clientWidth / aspectRatio
         setVideoDimensions({ width, height })
       }
-
     }
 
     const resizeObserver = new ResizeObserver(updateVideoDimensions)
@@ -103,13 +96,11 @@ const VideoPlayer = ({src, frameRate, aspectRatio}) => {
     }
   }, [videoRowRef])
 
-
   useEffect(() => {
     console.log('src changed', src)
     if (!videoRef.current) return
     videoRef.current.load()
   }, [src, videoRef])
-
 
   useEffect(() => {
     if (!videoRef.current) return
@@ -120,10 +111,7 @@ const VideoPlayer = ({src, frameRate, aspectRatio}) => {
       if (actualDuration !== duration) {
         setDuration(actualDuration)
       }
-      const actualTime = Math.min(
-        videoRef.current?.currentTime || 0,
-        actualDuration - frameLength
-      )
+      const actualTime = Math.min(videoRef.current?.currentTime || 0, actualDuration - frameLength)
       if (isPlaying) {
         setCurrentTime(actualTime)
         setTimeout(() => requestAnimationFrame(updateTime), 40)
@@ -168,35 +156,29 @@ const VideoPlayer = ({src, frameRate, aspectRatio}) => {
     videoRef.current.currentTime = newTime
     setCurrentTime(newTime)
   }
-  
+
   const handlePause = () => {
     setTimeout(() => {
       if (videoRef.current.paused) {
-        console.log("Paused")
+        console.log('Paused')
         setIsPlaying(false)
       }
-      }, 100)
+    }, 100)
   }
 
   const handleEnded = () => {
     if (loop && isPlaying) {
-      console.log("Ended, looping")
+      console.log('Ended, looping')
       videoRef.current.currentTime = 0
       videoRef.current.play()
     } else {
-      console.log("Ended, not looping")
+      console.log('Ended, not looping')
       setIsPlaying(false)
     }
   }
 
-
   return (
     <VideoPlayerContainer>
-      <div className="controls-row" style={{justifyContent: "flex-start"}}>
-        <Button selected={showOverlay} onClick={() => setShowOverlay(!showOverlay)} icon="grid_guides"/>
-        <Button selected={loop} onClick={() => setLoop(!loop)} icon="repeat" />
-      </div>
-
       <div className="video-row" ref={videoRowRef}>
         <div className="video-wrapper">
           <video
@@ -219,7 +201,6 @@ const VideoPlayer = ({src, frameRate, aspectRatio}) => {
         </div>
       </div>
 
-
       <div className="trackbar-row">
         <Trackbar
           currentTime={currentTime}
@@ -230,20 +211,18 @@ const VideoPlayer = ({src, frameRate, aspectRatio}) => {
         />
       </div>
 
-
       <div className="controls-row">
-        <VideoPlayerControls 
-          videoRef={videoRef} 
+        <VideoPlayerControls
+          videoRef={videoRef}
           isPlaying={isPlaying}
           currentTime={currentTime}
           duration={duration}
           frameRate={frameRate}
+          {...{ showOverlay, setShowOverlay, loop, setLoop }}
         />
       </div>
-
-
     </VideoPlayerContainer>
   )
 }
 
-export default VideoPlayer;
+export default VideoPlayer
