@@ -16,6 +16,8 @@ export const Content = styled.div`
   justify-content: center;
   align-items: center;
   overflow: hidden;
+
+  gap: var(--base-gap-large);
 `
 
 export const PreviewPlayerWrapper = styled.div`

@@ -16,11 +16,6 @@ const VideoPlayerContainer = styled.div`
 
   gap: 6px;
 
-  > div {
-    padding-left: 4px;
-    padding-right: 4px;
-  }
-
   video {
     object-fit: fill !important;
   }
@@ -31,15 +26,11 @@ const VideoPlayerContainer = styled.div`
     justify-content: center;
     align-items: center;
     flex-grow: 1;
+    background-color: black;
 
     .video-wrapper {
       position: relative;
     }
-  }
-
-  .trackbar-row {
-    padding-left: 3px;
-    padding-right: 3px;
   }
 
   .controls-row {
@@ -74,8 +65,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     if (!videoRowRef.current) return
 
     const updateVideoDimensions = () => {
-      const clientWidth = videoRowRef.current.clientWidth * 0.95
-      const clientHeight = videoRowRef.current.clientHeight * 0.95
+      const clientWidth = videoRowRef.current.clientWidth
+      const clientHeight = videoRowRef.current.clientHeight
 
       if (clientWidth / clientHeight > aspectRatio) {
         const width = clientHeight * aspectRatio
@@ -179,7 +170,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
 
   return (
     <VideoPlayerContainer>
-      <div className="video-row" ref={videoRowRef}>
+      <div className="video-row video-container" ref={videoRowRef}>
         <div className="video-wrapper">
           <video
             ref={videoRef}
