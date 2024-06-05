@@ -9,7 +9,7 @@ import {
   LockedInput,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { useUpdateUserMutation } from '/src/services/user/updateUser'
+import { useUpdateUsersMutation } from '/src/services/user/updateUser'
 import { updateUserData, updateUserAttribs } from '/src/features/user'
 import styled from 'styled-components'
 import ayonClient from '/src/ayon'
@@ -242,15 +242,16 @@ const UserDetail = ({
   // check if any users have the userLevel of service
   const hasServiceUser = formUsers.some((user) => user.isService)
 
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation()
+  const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation()
 
   //
   // API
   //
 
   const onSave = async () => {
-    toastId.current = toast.info('Updating user(s)...')
-    let i = 0
+    const usersString = `user${formUsers.length > 1 ? 's' : ''}`
+    toastId.current = toast.info(`Updating ${usersString}...`)
+    const updates = []
     for (const user of formUsers) {
       const data = {
         accessGroups: formData.accessGroups[user.name],
@@ -275,25 +276,33 @@ const UserDetail = ({
         data,
       }
 
-      try {
-        // Apply the patch
-        await updateUser({
-          name: user.name,
-          patch,
-        }).unwrap()
+      const update = {
+        name: user.name,
+        patch,
+      }
 
-        toast.update(toastId.current, { render: `Updated user: ${user.name} ` })
-        if (user.self) {
-          dispatch(updateUserData(data))
-          dispatch(updateUserAttribs(attrib))
-        }
-        i += 1
-      } catch (error) {
-        toast.error(`Unable to update user ${user.name} `)
-        console.error(error)
+      updates.push(update)
+
+      if (user.self) {
+        dispatch(updateUserData(data))
+        dispatch(updateUserAttribs(attrib))
       }
     } // for user
-    toast.update(toastId.current, { render: `Updated ${i} user(s) `, type: toast.TYPE.SUCCESS })
+
+    try {
+      await updateUsers(updates).unwrap()
+
+      toast.update(toastId.current, {
+        render: `Updated ${usersString} successfully`,
+        type: toast.TYPE.SUCCESS,
+      })
+    } catch (error) {
+      console.error(error)
+      toast.update(toastId.current, {
+        render: `Error updating ${usersString}.`,
+        type: toast.TYPE.ERROR,
+      })
+    }
   }
 
   const onCancel = () => {
@@ -411,6 +420,7 @@ const UserDetail = ({
           label="Save selected users"
           active={changesMade}
           saving={isUpdating}
+          disabled={isUpdating}
         />
       </PanelButtonsStyled>
     </Section>

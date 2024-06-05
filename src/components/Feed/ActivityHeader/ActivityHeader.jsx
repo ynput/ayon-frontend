@@ -19,10 +19,10 @@ const ActivityHeader = ({
   onEdit,
   children,
   id,
-  projectInfo,
   projectName,
   entityType,
   onReferenceClick,
+  onReferenceTooltip,
 }) => {
   const { referenceType, origin = {}, isOwner, activityType, versions = [], activityId } = activity
   const isMention = referenceType === 'mention'
@@ -57,15 +57,22 @@ const ActivityHeader = ({
             <ActivityReference
               id={origin?.id}
               type={origin?.type}
-              projectName={projectName}
               variant="text"
-              projectInfo={projectInfo}
               onClick={() =>
                 onReferenceClick({
                   entityId: origin?.id,
                   entityType: origin?.type,
                   projectName,
                   activityId,
+                })
+              }
+              onMouseEnter={(e, pos) =>
+                onReferenceTooltip({
+                  type: origin?.type,
+                  id: origin?.id,
+                  label: origin?.label,
+                  name: origin?.id,
+                  pos,
                 })
               }
             >

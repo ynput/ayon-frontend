@@ -123,22 +123,42 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
           />
         </FormRowStyled>
 
-        <FormRowStyled label="Guest" data-tooltip={isAdmin ? 'Admins cannot be guests' : null}>
-          <InputSwitch
-            checked={disabled || isAdmin ? false : formData?.isGuest}
-            onChange={(e) => updateFormData('isGuest', e.target.checked)}
-            disabled={disabled || isAdmin}
-            style={{
-              opacity: disabled ? 0.5 : 1,
-            }}
-          />
+        <FormRowStyled label="Guest">
+          <div
+            data-tooltip={isAdmin ? 'Admins cannot be guests' : undefined}
+            data-tooltip-delay={0}
+            style={{ width: 'fit-content' }}
+          >
+            <InputSwitch
+              checked={disabled || isAdmin ? false : formData?.isGuest}
+              onChange={(e) => updateFormData('isGuest', e.target.checked)}
+              disabled={disabled || isAdmin}
+              style={{
+                opacity: disabled ? 0.5 : 1,
+              }}
+            />
+          </div>
         </FormRowStyled>
 
         <FormRowStyled label="Developer">
-          <InputSwitch
-            checked={formData?.isDeveloper}
-            onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
-          />
+          <div
+            data-tooltip={
+              isUser
+                ? 'Users cannot be developers'
+                : 'Developers have access to enhanced tools and features.'
+            }
+            data-tooltip-delay={0}
+            style={{ width: 'fit-content' }}
+          >
+            <InputSwitch
+              checked={formData?.isDeveloper}
+              onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
+              disabled={isUser}
+              style={{
+                opacity: disabled ? 0.5 : 1,
+              }}
+            />
+          </div>
         </FormRowStyled>
 
         <FormRowStyled label="Access level">

@@ -32,6 +32,9 @@ export const getFuzzyDate = (date) => {
   // remove the word ' ago'
   fuzzyDate = fuzzyDate.replace(' ago', '')
 
+  // if date is less than a minute ago, return 'Just now'
+  if (isSameMinute(new Date(date), new Date())) fuzzyDate = 'Just now'
+
   return fuzzyDate
 }
 

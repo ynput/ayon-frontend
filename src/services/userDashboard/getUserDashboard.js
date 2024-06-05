@@ -3,7 +3,6 @@ import { ayonApi } from '../ayon'
 import { taskProvideTags, transformEntityData, transformTasksData } from './userDashboardHelpers'
 import {
   KAN_BAN_ASSIGNEES_QUERY,
-  TASK_MENTION_TASKS,
   TASK_DETAILS,
   PROJECT_TASKS_QUERY,
   buildDetailsQuery,
@@ -339,28 +338,6 @@ const getUserDashboard = ayonApi.injectEndpoints({
       providesTags: (res, error, { entities }) =>
         entities.map(({ id }) => ({ id, type: 'entities' })),
     }),
-    getTaskMentionTasks: build.query({
-      query: ({ projectName, folderIds = [] }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: TASK_MENTION_TASKS,
-          variables: { projectName, folderIds },
-        },
-      }),
-      transformResponse: (response) =>
-        response?.data?.project?.folders?.edges?.flatMap(
-          (ef) =>
-            ef?.node?.tasks?.edges.map((et) => ({
-              ...et?.node,
-              label: et?.node?.label || et?.node?.name,
-              folderId: ef?.node?.id,
-              folderLabel: ef?.node?.label || ef?.node?.name,
-            })) || [],
-        ),
-      providesTags: (res) =>
-        res && res.map(({ id }) => ({ type: 'kanBanTask', id }, { type: 'task', id })),
-    }),
   }),
 })
 
@@ -372,5 +349,4 @@ export const {
   useGetKanBanUsersQuery,
   useGetDashboardEntitiesDetailsQuery,
   useLazyGetDashboardEntitiesDetailsQuery,
-  useGetTaskMentionTasksQuery,
 } = getUserDashboard

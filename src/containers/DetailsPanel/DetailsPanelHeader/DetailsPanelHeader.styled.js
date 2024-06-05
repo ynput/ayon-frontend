@@ -123,6 +123,7 @@ export const Content = styled.div`
 
     h2, h3, .sub-title {
       opacity: 0;
+      white-space: nowrap;
     }
   }
 
@@ -173,10 +174,12 @@ export const StatusSelect = styled(StatusSelectComponent)`
 export const AssigneeSelect = styled(AssigneeSelectComponent)`
   width: fit-content;
   justify-self: end;
+  max-width: 100%;
 `
 export const TagsSelect = styled(TagsSelectComponent)`
   width: fit-content;
   justify-self: end;
+  max-width: 100%;
 `
 
 export const Footer = styled.footer`

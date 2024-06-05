@@ -181,7 +181,9 @@ const getProduct = ayonApi.injectEndpoints({
           query: PRODUCTS_LIST_QUERY,
           variables: { projectName, ids: folderIds },
         },
+        validateStatus: (response, result) => response.status === 200 && !result?.errors?.length,
       }),
+      transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) => parseProductData(response.data),
       providesTags: (result) =>
         result

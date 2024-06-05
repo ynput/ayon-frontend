@@ -6,10 +6,13 @@ import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
 
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
-    const latestVersion = task.versions?.edges[0]?.node
+    const versions = task.versions?.edges?.map((edge) => edge.node) || []
+    const latestVersionWithThumbnail = [...versions]
+      .reverse()
+      .find((version) => version.thumbnailId)
 
     // use task thumbnail if it exists, otherwise use latest version thumbnail
-    const thumbnailId = task?.thumbnailId || latestVersion?.thumbnailId
+    const thumbnailId = task?.thumbnailId || latestVersionWithThumbnail?.thumbnailId
 
     // create a short path [code][.../][end of path by depth joined by /][taskName]
     const depth = 2

@@ -58,6 +58,36 @@ export const Comment = styled.div`
     }
   }
 
+  /* custom mention styles */
+  .ql-editor {
+    .mention {
+      border-radius: var(--border-radius-m);
+      user-select: none;
+      padding: 0 4px;
+      /* remove underline */
+      text-decoration: none;
+
+      white-space: nowrap;
+      cursor: pointer;
+
+      color: var(--md-sys-color-primary);
+      background-color: var(--md-sys-color-surface-container-high);
+
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-high-hover);
+      }
+      &:active {
+        background-color: var(--md-sys-color-surface-container-high-active);
+      }
+
+      /* the ::before is where the text is held */
+      &::before {
+        content: 'test';
+        display: inline;
+      }
+    }
+  }
+
   /* list and check box styles */
   .ql-editor ol {
     li {

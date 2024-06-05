@@ -6,22 +6,13 @@ import { useSelector } from 'react-redux'
 import DetailsPanel from '/src/containers/DetailsPanel/DetailsPanel'
 import DetailsPanelSlideOut from '/src/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
+import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 
 const BrowserDetailsPanel = () => {
   const projectName = useSelector((state) => state.project.name)
-  const projectInfo = useSelector((state) => state.project)
-  const { statuses = {}, statusesOrder = [], tags = {}, tagsOrder } = projectInfo
-  const statusesOptions = statusesOrder.map((status) => statuses[status] && { ...statuses[status] })
-  const tagsOptions = tagsOrder.map((tag) => tags[tag] && { ...tags[tag] })
 
-  const projectsInfo = {
-    [projectName]: {
-      ...projectInfo,
-      statuses: statusesOptions,
-      tags: tagsOptions,
-      projectNames: [{ id: projectName, name: projectName }],
-    },
-  }
+  const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
+  const projectInfo = projectsInfo[projectName] || {}
 
   const subscribedStateFields = ['versions', 'products', 'folders', 'tasks']
 
@@ -54,8 +45,8 @@ const BrowserDetailsPanel = () => {
         entities={entities}
         projectsInfo={projectsInfo}
         projectNames={[projectName]}
-        statusesOptions={statusesOptions}
-        tagsOptions={tagsOptions}
+        statusesOptions={projectInfo.statuses || []}
+        tagsOptions={projectInfo.tags || []}
         projectUsers={users}
         activeProjectUsers={users}
         style={{ boxShadow: 'none' }}
