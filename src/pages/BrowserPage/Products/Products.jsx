@@ -537,8 +537,6 @@ const Products = () => {
     // find the version id of the product
     const versionId = listData.find((s) => s.id === productId).versionId
 
-    console.log(versionId)
-
     if (!versionId) return toast.error('No version found for this product')
 
     dispatch(openPreview({ selected: [versionId], projectName }))
