@@ -5,7 +5,11 @@ import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
-import { useGetInboxQuery, useLazyGetInboxQuery } from '/src/services/inbox/getInbox'
+import {
+  useGetInboxHasUnreadQuery,
+  useGetInboxQuery,
+  useLazyGetInboxQuery,
+} from '/src/services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import Shortcuts from '/src/containers/Shortcuts'
 import { clearHighlights, highlightActivity } from '/src/features/details'
@@ -37,6 +41,7 @@ const filters = {
 
 const Inbox = ({ filter }) => {
   const dispatch = useDispatch()
+  const { data: [, importantUnreadLastId] = [] } = useGetInboxHasUnreadQuery()
 
   const last = 100
   const filterArgs = filters[filter] || {}
@@ -53,6 +58,7 @@ const Inbox = ({ filter }) => {
     last: last,
     active: isActive,
     important: isImportant,
+    key: filter === 'important' ? importantUnreadLastId : null, // forces a refetch when a new important message is received
   })
 
   const { hasPreviousPage, endCursor: lastCursor } = pageInfo || {}

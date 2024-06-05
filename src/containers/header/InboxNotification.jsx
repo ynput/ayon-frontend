@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import useNotification from '/src/hooks/useNotification'
 
 const InboxNotificationIcon = () => {
-  const { data: isNewMessages, refetch } = useGetInboxHasUnreadQuery()
+  const { data: [hasUnread] = [], refetch } = useGetInboxHasUnreadQuery()
 
   const sendNotification = useNotification()
 
@@ -25,7 +25,7 @@ const InboxNotificationIcon = () => {
   useEffect(() => {
     refetch() // Check messages immediately on location change
 
-    const interval = setInterval(refetch, 3000) // Check messages every 10 minutes
+    const interval = setInterval(refetch, 60000) // Check messages every 10 minutes
 
     return () => {
       clearInterval(interval)
@@ -37,7 +37,7 @@ const InboxNotificationIcon = () => {
       <HeaderButton
         icon="inbox"
         variant="nav"
-        className={classNames({ notification: isNewMessages })}
+        className={classNames({ notification: hasUnread })}
       />
     </Link>
   )

@@ -22,9 +22,10 @@ const getInbox = ayonApi.injectEndpoints({
       transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
 
       // only use active and isActive as cache keys
-      serializeQueryArgs: ({ queryArgs: { active, important } }) => ({
+      serializeQueryArgs: ({ queryArgs: { active, important, key } }) => ({
         active,
         important,
+        key,
       }),
       // when we get new data, merge it with the existing cache
       // (pagination)
@@ -61,7 +62,10 @@ const getInbox = ayonApi.injectEndpoints({
           query: INBOX_HAS_UNREAD,
         },
       }),
-      transformResponse: (res) => !!res?.data?.inbox?.edges.length,
+      transformResponse: (res) => [
+        !!res?.data?.inbox?.edges.length,
+        res?.data?.inbox?.edges[0] && res?.data?.inbox?.edges[0].node?.referenceId,
+      ],
       providesTags: () => [{ type: 'inbox', id: 'hasUnread' }],
     }),
     getInboxUnreadCount: build.query({
