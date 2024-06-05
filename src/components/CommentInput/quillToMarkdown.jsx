@@ -78,6 +78,32 @@ const parseCodeBlocks = (value) => {
   return value
 }
 
+export const getTextRefs = (text = '') => {
+  // inside the markdown, find characters inside ()
+  const regex2 = /\((.*?)\)/g
+  const links = text.match(regex2) || []
+  const entities = links.flatMap((link) => {
+    // if https, then it is a link and not an entity
+    if (link.includes('http')) {
+      return []
+    } else {
+      // remove the ()
+      const match = link.match(/\(([^)]+)\)/)
+      let parts = []
+      if (match) {
+        // split by :
+        parts = match[1].split(':')
+      }
+      return {
+        type: parts[0],
+        id: parts[1],
+      }
+    }
+  })
+
+  return entities
+}
+
 export const convertToMarkdown = (value) => {
   const codeBlocksParsed = parseCodeBlocks(value)
 
@@ -86,16 +112,17 @@ export const convertToMarkdown = (value) => {
 
   let body = markdown
 
-  // inside the markdown, find characters inside () or [] and replace @ with nothing
-  const regex = /\((.*?)\)|\[(.*?)\]/g
-  const matches = markdown.match(regex)
-  if (matches) {
-    matches.forEach((match) => {
-      if (match.includes('http')) return
+  // inside the markdown, find characters inside [] and replace @ with nothing
+  const regex = /\[(.*?)\]/g
+  const labels = markdown.match(regex)
+  if (labels) {
+    labels.forEach((match) => {
       const newMatch = match.replaceAll('@', '')
       body = body.replace(match, newMatch)
     })
   }
 
-  return body
+  const entities = getTextRefs(markdown)
+
+  return [body, entities]
 }

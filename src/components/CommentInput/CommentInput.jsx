@@ -331,13 +331,14 @@ const CommentInput = ({
   const handleSubmit = async () => {
     try {
       // convert to markdown
-      const markdown = convertToMarkdown(editorValue)
+      const [markdown, refs] = convertToMarkdown(editorValue)
+
       // remove img query params
       const markdownParsed = parseImages(markdown)
 
       if ((markdownParsed || files.length) && onSubmit) {
         try {
-          await onSubmit(markdownParsed, files)
+          await onSubmit(markdownParsed, files, refs)
           // only clear if onSubmit is successful
           setEditorValue('')
           setFiles([])

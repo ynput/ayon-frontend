@@ -11,6 +11,7 @@ import CommentInput from '/src/components/CommentInput/CommentInput'
 import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
 import useReferenceTooltip from '/src/containers/Feed/hooks/useReferenceTooltip'
+import { getTextRefs } from '../../CommentInput/quillToMarkdown'
 
 const ActivityComment = ({
   activity = {},
@@ -63,6 +64,12 @@ const ActivityComment = ({
     setIsEditing(false)
   }
 
+  const handleDelete = () => {
+    const refs = getTextRefs(body)
+
+    onDelete && onDelete(activityId, entityId, refs)
+  }
+
   const [, setRefTooltip] = useReferenceTooltip({ dispatch })
 
   return (
@@ -77,7 +84,7 @@ const ActivityComment = ({
           date={createdAt}
           isRef={referenceType !== 'origin' || showOrigin}
           activity={activity}
-          onDelete={() => onDelete && onDelete(activityId)}
+          onDelete={handleDelete}
           onEdit={handleEditComment}
           projectInfo={projectInfo}
           projectName={projectName}
