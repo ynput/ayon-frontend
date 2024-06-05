@@ -4,19 +4,24 @@ import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
 
 const getMentionVersions = (versions) => {
   return versions.map((v) => {
-    const productType = productTypes[v?.product?.productType]
+    const productType = productTypes[v?.parent?.productType]
     const icon = productType?.icon || getEntityTypeIcon('version')
+    const context = v.parent?.name
+    const label = v.name || v.version
+    const suffix = getFuzzyDate(v.createdAt)
+    const fullSearchString = `${context} ${label} ${suffix}`
+    const keywords = [v.name, v.version, v.parent?.name, fullSearchString]
 
     return {
       type: 'version',
-      label: v.name,
-      image: v.thumbnailId,
-      icon: icon,
       id: v.id,
       createdAt: v.createdAt,
-      context: v.product?.name,
-      keywords: [v.name, v.product?.name],
-      suffix: getFuzzyDate(v.createdAt),
+      label,
+      icon,
+      context,
+      suffix,
+      keywords,
+      relevance: v.relevance,
     }
   })
 }

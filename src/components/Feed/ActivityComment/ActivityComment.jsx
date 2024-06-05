@@ -10,7 +10,6 @@ import { useSelector } from 'react-redux'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
-import ActivityReferenceTooltip from '../ActivityReferenceTooltip/ActivityReferenceTooltip'
 import useReferenceTooltip from '/src/containers/Feed/hooks/useReferenceTooltip'
 
 const ActivityComment = ({
@@ -64,7 +63,7 @@ const ActivityComment = ({
     setIsEditing(false)
   }
 
-  const [refTooltip, setRefTooltip] = useReferenceTooltip({ dispatch })
+  const [, setRefTooltip] = useReferenceTooltip({ dispatch })
 
   return (
     <>
@@ -136,13 +135,6 @@ const ActivityComment = ({
           )}
         </Styled.Body>
       </Styled.Comment>
-      {refTooltip.id && (
-        <ActivityReferenceTooltip
-          pos={refTooltip.pos}
-          {...{ projectName, projectInfo }}
-          {...refTooltip}
-        />
-      )}
     </>
   )
 }
