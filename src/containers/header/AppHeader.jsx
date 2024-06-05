@@ -18,7 +18,7 @@ import { toggleDevMode } from '/src/features/user'
 import styled from 'styled-components'
 import { useRestart } from '/src/context/restartContext'
 import { classNames } from 'primereact/utils'
-import InboxNotificationIcon from './InboxNotificationIcon'
+import InboxNotificationIcon from './InboxNotification'
 
 const DeveloperSwitch = styled.div`
   display: flex;
