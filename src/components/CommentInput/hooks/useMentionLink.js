@@ -23,6 +23,8 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
 
       node.classList.add('mention')
       node.classList.add(valueMentionType)
+      // add id=id-ref
+      node.setAttribute('id', `${valueMentionId}-ref`)
       //   set as not editable
       node.setAttribute('contenteditable', 'false')
 
@@ -62,12 +64,6 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
           projectName,
           projectInfo,
         })
-      })
-
-      //   on mouse leave
-      node.addEventListener('mouseleave', () => {
-        // Your code here
-        setRefTooltip(null)
       })
 
       return node || ''

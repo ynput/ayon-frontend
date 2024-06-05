@@ -44,14 +44,13 @@ export const aTag = (
 
   return (
     <ActivityReference
-      {...{ type }}
+      {...{ type, id }}
       variant={isEntity ? 'filled' : 'primary'}
       onClick={() =>
         type !== 'user' &&
         onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
       }
       onMouseEnter={(e, pos) => onReferenceTooltip({ type, id, label, name: id, pos })}
-      onMouseLeave={() => onReferenceTooltip(null)}
     >
       {label}
     </ActivityReference>

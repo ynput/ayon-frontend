@@ -7,6 +7,7 @@ import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
 // variants = filled, text
 
 const ActivityReference = ({
+  id,
   type,
   variant = 'surface',
   isEntity,
@@ -35,6 +36,7 @@ const ActivityReference = ({
       ref={ref}
       onMouseEnter={handleMouseEnter}
       className={classNames({ disabled, isEntity }, 'reference')}
+      id={`${id}-ref`}
     >
       <Icon icon={icon} />
       {props.children}

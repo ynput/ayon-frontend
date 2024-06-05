@@ -75,7 +75,6 @@ const ActivityHeader = ({
                   pos,
                 })
               }
-              onMouseLeave={() => onReferenceTooltip(null)}
             >
               {origin?.label || origin?.name}
             </ActivityReference>
