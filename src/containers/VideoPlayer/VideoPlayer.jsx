@@ -69,8 +69,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
 
     const updateVideoDimensions = () => {
       // DO NOT TOUCH THAT *0.95 ! IT'S AN IMPORTANT MAGIC!
-      const clientWidth = videoRowRef.current.clientWidth * 0.95
-      const clientHeight = videoRowRef.current.clientHeight * 0.95
+      // Screw you, magic numbers! I'm changing it to 0.999
+      const clientWidth = videoRowRef.current.clientWidth * 0.999
+      const clientHeight = videoRowRef.current.clientHeight * 0.999
 
       if (clientWidth / clientHeight > aspectRatio) {
         const width = clientHeight * aspectRatio
@@ -210,26 +211,28 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   return (
     <VideoPlayerContainer>
       <div className="video-row video-container" ref={videoRowRef}>
-        <div className="video-wrapper">
-          <video
-            ref={videoRef}
-            width={videoDimensions.width}
-            height={videoDimensions.height}
-            src={src}
-            onLoadedMetadata={handleLoadedMetadata}
-            onProgress={handleProgress}
-            onEnded={handleEnded}
-            onPlay={() => setIsPlaying(true)}
-            onPause={handlePause}
-            onLoadedData={handleLoad}
-            onCanPlay={handleCanPlay}
-            onError={handleLoadError}
-          />
-          <VideoOverlay
-            videoWidth={videoDimensions.width}
-            videoHeight={videoDimensions.height}
-            showOverlay={showOverlay}
-          />
+        <div style={{ margin: '0 -10px' }}>
+          <div className="video-wrapper">
+            <video
+              ref={videoRef}
+              width={videoDimensions.width}
+              height={videoDimensions.height}
+              src={src}
+              onLoadedMetadata={handleLoadedMetadata}
+              onProgress={handleProgress}
+              onEnded={handleEnded}
+              onPlay={() => setIsPlaying(true)}
+              onPause={handlePause}
+              onLoadedData={handleLoad}
+              onCanPlay={handleCanPlay}
+              onError={handleLoadError}
+            />
+            <VideoOverlay
+              videoWidth={videoDimensions.width}
+              videoHeight={videoDimensions.height}
+              showOverlay={showOverlay}
+            />
+          </div>
         </div>
       </div>
 
