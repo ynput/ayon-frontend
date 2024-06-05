@@ -65,8 +65,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     if (!videoRowRef.current) return
 
     const updateVideoDimensions = () => {
-      const clientWidth = videoRowRef.current.clientWidth
-      const clientHeight = videoRowRef.current.clientHeight
+      // DO NOT TOUCH THAT *0.95 ! IT'S AN IMPORTANT MAGIC!
+      const clientWidth = videoRowRef.current.clientWidth * 0.95
+      const clientHeight = videoRowRef.current.clientHeight * 0.95
 
       if (clientWidth / clientHeight > aspectRatio) {
         const width = clientHeight * aspectRatio
