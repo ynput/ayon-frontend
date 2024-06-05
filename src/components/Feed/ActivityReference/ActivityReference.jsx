@@ -36,7 +36,7 @@ const ActivityReference = ({
       ref={ref}
       onMouseEnter={handleMouseEnter}
       className={classNames({ disabled, isEntity }, 'reference')}
-      id={`${id}-ref`}
+      id={`ref-${id}`}
     >
       <Icon icon={icon} />
       {props.children}

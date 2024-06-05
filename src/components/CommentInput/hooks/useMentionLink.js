@@ -24,7 +24,7 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
       node.classList.add('mention')
       node.classList.add(valueMentionType)
       // add id=id-ref
-      node.setAttribute('id', `${valueMentionId}-ref`)
+      node.setAttribute('id', `ref-${valueMentionId}`)
       //   set as not editable
       node.setAttribute('contenteditable', 'false')
 
