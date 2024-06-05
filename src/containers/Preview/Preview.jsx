@@ -15,6 +15,8 @@ const Preview = ({ selected = [], projectName, onClose }) => {
     { skip: !selected.length || !projectName },
   )
 
+  console.log(selectedVersionsData)
+
   // get all versions for the product ids of the selected versions
   const selectedProductIds = selectedVersionsData?.map(({ productId }) => productId)
   const { data: allVersionsData = [], isFetching: isFetchingVersions } = useGetPreviewVersionsQuery(
