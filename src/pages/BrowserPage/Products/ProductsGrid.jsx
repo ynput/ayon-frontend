@@ -84,7 +84,7 @@ const ProductsGrid = ({
 
   const handleContext = (e, id) => {
     onContextMenuSelectionChange({ value: id })
-    onContext(e)
+    onContext(e, id)
   }
 
   data = useMemo(() => {

@@ -35,6 +35,7 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { productTypes } from '/src/features/project'
 import * as Styled from './Products.styled'
+import { openPreview } from '/src/features/preview'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -532,7 +533,23 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const ctxMenuItems = [
+  const handleOpenPreview = (productId) => {
+    // find the version id of the product
+    const versionId = listData.find((s) => s.id === productId).versionId
+
+    console.log(versionId)
+
+    if (!versionId) return toast.error('No version found for this product')
+
+    dispatch(openPreview({ selected: [versionId], projectName }))
+  }
+
+  const ctxMenuItems = (id) => [
+    {
+      label: 'Preview version',
+      command: () => handleOpenPreview(id),
+      icon: 'play_circle',
+    },
     {
       label: 'Product detail',
       command: () => setShowDetail('product'),
@@ -545,7 +562,11 @@ const Products = () => {
     },
   ]
 
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+  const [ctxMenuShow] = useCreateContext([])
+
+  const handleContextMenu = (e, id) => {
+    ctxMenuShow(e, ctxMenuItems(id))
+  }
 
   //
   // Render
@@ -603,7 +624,7 @@ const Products = () => {
             data={filteredBySearchData}
             onItemClick={onRowClick}
             onSelectionChange={onSelectionChange}
-            onContext={ctxMenuShow}
+            onContext={handleContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             selection={selectedRows}
             productTypes={productTypes}
@@ -620,7 +641,7 @@ const Products = () => {
             selectedRows={selectedRows}
             onSelectionChange={onSelectionChange}
             onRowClick={onRowClick}
-            ctxMenuShow={ctxMenuShow}
+            ctxMenuShow={handleContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             setColumnWidths={setColumnWidths}
             columns={columns}
