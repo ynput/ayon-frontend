@@ -29,7 +29,7 @@ export const AppMenu = ({ user, ...props }) => {
   const items = [
     {
       id: 'projectsManager',
-      link: '/manageProjects/anatomy',
+      link: '/manageProjects/projectSettings',
       label: 'Projects Settings',
       icon: 'settings_applications',
       shortcut: 'P+P',
@@ -39,7 +39,7 @@ export const AppMenu = ({ user, ...props }) => {
   if (!isUser)
     items.unshift({
       id: 'settings',
-      link: '/settings/bundles',
+      link: '/settings/studio',
       label: 'Studio Settings',
       icon: 'settings',
       shortcut: 'S+S',
