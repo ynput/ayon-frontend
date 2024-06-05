@@ -10,7 +10,7 @@ import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDash
 import Shortcuts from '/src/containers/Shortcuts'
 import { clearHighlights, highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
-import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { InView } from 'react-intersection-observer'
@@ -18,7 +18,7 @@ import useInboxRefresh from '../hooks/useInboxRefresh'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
-import Typography from '/src/theme/typography.module.css'
+import EmptyPlaceholder from '/src/components/EmptyPlaceholder/EmptyPlaceholder'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -409,18 +409,12 @@ const Inbox = ({ filter }) => {
           selected={selected}
           projectsInfo={projectsInfo}
         />
-        {!messagesData.length && !isLoadingAny && !errorInbox && (
-          <Styled.NoMessages>
-            <Icon icon="done_all" />
-            <h3 className={Typography.titleLarge}>All caught up! No messages to show.</h3>
-          </Styled.NoMessages>
-        )}
-        {errorInbox && !isLoadingAny && (
-          <Styled.NoMessages className={'isError'}>
-            <Icon icon="error" />
-            <h3 className={Typography.titleLarge}>Something went wrong getting the inbox.</h3>
-            <span className="error-message">{errorInbox}</span>
-          </Styled.NoMessages>
+        {!isLoadingAny && (errorInbox || !messagesData.length) && (
+          <EmptyPlaceholder
+            icon="done_all"
+            message="All caught up! No messages to show."
+            error={errorInbox}
+          />
         )}
       </Styled.InboxSection>
     </>

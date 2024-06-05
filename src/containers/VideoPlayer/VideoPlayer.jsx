@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import VideoOverlay from './VideoOverlay'
 import Trackbar from './Trackbar'
 import VideoPlayerControls from './VideoPlayerControls'
+import EmptyPlaceholder from '/src/components/EmptyPlaceholder/EmptyPlaceholder'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -53,6 +54,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [bufferedRanges, setBufferedRanges] = useState([])
+  const [loadError, setLoadError] = useState(null)
 
   const [showOverlay, setShowOverlay] = useState(false)
   const [loop, setLoop] = useState(true)
@@ -137,9 +139,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     videoRef.current.currentTime = preferredInitialPosition
   }
 
-
-
-  const handleLoadedMetadata = (e) => {
+  const handleLoadedMetadata = () => {
     setDuration(videoRef.current.duration)
     const width = videoRef.current.clientWidth
     const height = videoRef.current.clientHeight
@@ -187,7 +187,25 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     }
   }
 
+  const handleLoadError = (e) => {
+    // check if the video is 404
+    const code = e.target.error.code
+    if (code === 4) {
+      setLoadError({ code, message: 'No preview for this version' })
+    } else {
+      setLoadError({ code, message: 'Error loading video' })
+    }
+  }
 
+  if (loadError) {
+    return (
+      <EmptyPlaceholder
+        icon="hide_image"
+        message={'This version has no previewable content.'}
+        error={loadError.code !== 4 && loadError.message}
+      />
+    )
+  }
 
   return (
     <VideoPlayerContainer>
@@ -205,6 +223,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
             onPause={handlePause}
             onLoadedData={handleLoad}
             onCanPlay={handleCanPlay}
+            onError={handleLoadError}
           />
           <VideoOverlay
             videoWidth={videoDimensions.width}

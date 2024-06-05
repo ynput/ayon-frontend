@@ -30,7 +30,7 @@ export const PreviewDetailsPanelWrapper = styled.div`
   height: 100%;
   max-height: 100%;
   overflow: hidden;
-  max-width: clamp(460px, 50vw, 600px);
-  min-width: clamp(460px, 50vw, 600px);
+  max-width: clamp(460px, 28vw, 600px);
+  min-width: clamp(460px, 28vw, 600px);
   position: relative;
 `
