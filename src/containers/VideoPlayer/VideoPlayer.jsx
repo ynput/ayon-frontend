@@ -48,6 +48,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   const videoRef = useRef(null)
   const videoRowRef = useRef(null)
 
+  const [preferredInitialPosition, setPreferredInitialPosition] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -106,9 +107,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
       const actualTime = Math.min(videoRef.current?.currentTime || 0, actualDuration - frameLength)
       if (isPlaying) {
         setCurrentTime(actualTime)
+        setPreferredInitialPosition(actualTime)
         setTimeout(() => requestAnimationFrame(updateTime), 40)
       } else {
         setCurrentTime(actualTime)
+        setPreferredInitialPosition(actualTime)
       }
     }
     updateTime()
@@ -121,8 +124,22 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     setBufferedRanges([])
   }
 
+  const handleCanPlay = () => {
+    // Sets the current time of the video to a preferred initial position.
+    // When the video is loaded, it will start playing from this position.
+    if (preferredInitialPosition >= videoRef.current.duration) return
+    if (isNaN(preferredInitialPosition)) return
+    if (videoRef.current.currentTime > 0 || preferredInitialPosition === 0) return
+    if (videoRef.current.currentTime === preferredInitialPosition) return
+
+    if (isNaN(preferredInitialPosition)) return
+    setCurrentTime(preferredInitialPosition)
+    videoRef.current.currentTime = preferredInitialPosition
+  }
+
+
+
   const handleLoadedMetadata = (e) => {
-    console.log('loaded metadata', e)
     setDuration(videoRef.current.duration)
     const width = videoRef.current.clientWidth
     const height = videoRef.current.clientHeight
@@ -147,6 +164,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     videoRef.current.pause()
     videoRef.current.currentTime = newTime
     setCurrentTime(newTime)
+    setPreferredInitialPosition(newTime)
   }
 
   const handlePause = () => {
@@ -169,6 +187,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     }
   }
 
+
+
   return (
     <VideoPlayerContainer>
       <div className="video-row video-container" ref={videoRowRef}>
@@ -184,6 +204,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
             onPlay={() => setIsPlaying(true)}
             onPause={handlePause}
             onLoadedData={handleLoad}
+            onCanPlay={handleCanPlay}
           />
           <VideoOverlay
             videoWidth={videoDimensions.width}
