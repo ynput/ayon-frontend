@@ -4,9 +4,6 @@ import ImageUploader from './ImageUploader'
 Quill.register('modules/imageUploader', ImageUploader)
 Quill.register('modules/magicUrl', MagicUrl)
 
-const Link = Quill.import('formats/link')
-Link.sanitize = (url) => url
-
 // override icons with material icons
 const getIcon = (icon) => '<span class="material-symbols-outlined icon">' + icon + '</span>'
 
@@ -22,7 +19,16 @@ icons['list']['check'] = getIcon('checklist')
 icons['image'] = getIcon('attach_file')
 icons['code-block'] = getIcon('code')
 
-export const quillFormats = ['header', 'bold', 'italic', 'strike', 'list', 'link', 'code-block']
+export const quillFormats = [
+  'header',
+  'bold',
+  'italic',
+  'strike',
+  'list',
+  'link',
+  'code-block',
+  'mention',
+]
 
 export const getModules = ({ imageUploader }) => {
   return {

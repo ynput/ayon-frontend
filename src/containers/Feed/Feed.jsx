@@ -221,7 +221,7 @@ const Feed = ({
   }
 
   const handleRefClick = (ref = {}) => {
-    const { entityId, entityType, projectName, activityId } = ref
+    const { entityId, entityType, activityId } = ref
     const supportedTypes = ['version', 'task']
 
     if (!supportedTypes.includes(entityType)) return console.log('Entity type not supported yet')
@@ -278,6 +278,7 @@ const Feed = ({
                   versions: versionsData,
                 }}
                 isHighlighted={highlighted.includes(activity.activityId)}
+                dispatch={dispatch}
               />
             ))}
         {hasPreviousPage && (
@@ -306,6 +307,7 @@ const Feed = ({
         filter={filter}
         disabled={isMultiProjects}
         isLoading={isLoadingNew || !entities.length}
+        scope={scope}
       />
     </Styled.FeedContainer>
   )

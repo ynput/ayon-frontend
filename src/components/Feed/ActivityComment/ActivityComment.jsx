@@ -10,6 +10,8 @@ import { useSelector } from 'react-redux'
 import CommentInput from '/src/components/CommentInput/CommentInput'
 import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
+import ActivityReferenceTooltip from '../ActivityReferenceTooltip/ActivityReferenceTooltip'
+import useReferenceTooltip from '/src/containers/Feed/hooks/useReferenceTooltip'
 
 const ActivityComment = ({
   activity = {},
@@ -25,6 +27,7 @@ const ActivityComment = ({
   onFileExpand,
   showOrigin,
   isHighlighted,
+  dispatch,
 }) => {
   let {
     body,
@@ -61,73 +64,86 @@ const ActivityComment = ({
     setIsEditing(false)
   }
 
+  const [refTooltip, setRefTooltip] = useReferenceTooltip({ dispatch })
+
   return (
-    <Styled.Comment
-      className={classNames('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
-    >
-      <ActivityHeader
-        id={menuId}
-        name={authorName}
-        fullName={authorFullName}
-        date={createdAt}
-        isRef={referenceType !== 'origin' || showOrigin}
-        activity={activity}
-        onDelete={() => onDelete && onDelete(activityId)}
-        onEdit={handleEditComment}
-        projectInfo={projectInfo}
-        projectName={projectName}
-        entityType={entityType}
-        onReferenceClick={onReferenceClick}
-      />
-      <Styled.Body className={classNames('comment-body', { isEditing })}>
-        {isEditing ? (
-          <CommentInput
-            isOpen={true}
-            initValue={body}
-            initFiles={files}
-            isEditing
-            onClose={handleEditCancel}
-            onSubmit={handleSave}
-            projectInfo={projectInfo}
-            {...editProps}
-          />
-        ) : (
-          <>
-            <CommentWrapper>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, emoji]}
-                urlTransform={(url) => url}
-                components={{
-                  // a links
-                  a: (props) =>
-                    aTag(props, {
-                      entityId,
-                      projectName,
-                      projectInfo,
-                      onReferenceClick,
-                      activityId,
-                    }),
-                  // checkbox inputs
-                  input: (props) => inputTag(props, { activity, onCheckChange }),
-                  // code syntax highlighting
-                  code: (props) => codeTag(props),
-                }}
-              >
-                {body}
-              </ReactMarkdown>
-            </CommentWrapper>
-            {/* file uploads */}
-            <FilesGrid
-              files={files}
-              isCompact={files.length > 6}
-              projectName={projectName}
-              isDownloadable
-              onExpand={onFileExpand}
+    <>
+      <Styled.Comment
+        className={classNames('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
+      >
+        <ActivityHeader
+          id={menuId}
+          name={authorName}
+          fullName={authorFullName}
+          date={createdAt}
+          isRef={referenceType !== 'origin' || showOrigin}
+          activity={activity}
+          onDelete={() => onDelete && onDelete(activityId)}
+          onEdit={handleEditComment}
+          projectInfo={projectInfo}
+          projectName={projectName}
+          entityType={entityType}
+          onReferenceClick={onReferenceClick}
+          onReferenceTooltip={setRefTooltip}
+        />
+        <Styled.Body className={classNames('comment-body', { isEditing })}>
+          {isEditing ? (
+            <CommentInput
+              isOpen={true}
+              initValue={body}
+              initFiles={files}
+              isEditing
+              onClose={handleEditCancel}
+              onSubmit={handleSave}
+              projectInfo={projectInfo}
+              {...editProps}
             />
-          </>
-        )}
-      </Styled.Body>
-    </Styled.Comment>
+          ) : (
+            <>
+              <CommentWrapper>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, emoji]}
+                  urlTransform={(url) => url}
+                  components={{
+                    // a links
+                    a: (props) =>
+                      aTag(props, {
+                        entityId,
+                        projectName,
+                        projectInfo,
+                        onReferenceClick,
+                        onReferenceTooltip: setRefTooltip,
+                        activityId,
+                      }),
+                    // checkbox inputs
+                    input: (props) => inputTag(props, { activity, onCheckChange }),
+                    // code syntax highlighting
+                    code: (props) => codeTag(props),
+                  }}
+                >
+                  {body}
+                </ReactMarkdown>
+              </CommentWrapper>
+              {/* file uploads */}
+              <FilesGrid
+                files={files}
+                isCompact={files.length > 6}
+                projectName={projectName}
+                isDownloadable
+                onExpand={onFileExpand}
+              />
+            </>
+          )}
+        </Styled.Body>
+      </Styled.Comment>
+      {refTooltip.id && (
+        <ActivityReferenceTooltip
+          pos={refTooltip.pos}
+          {...{ projectName, projectInfo }}
+          {...refTooltip}
+        />
+      )}
+    </>
   )
 }
 
