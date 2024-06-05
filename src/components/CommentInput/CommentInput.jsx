@@ -21,6 +21,21 @@ import InputMarkdownConvert from './InputMarkdownConvert'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
 import { getModules, quillFormats } from './modules'
 import { useGetMentionSuggestionsQuery } from '/src/services/mentions/getMentions'
+import useMentionLink from './hooks/useMentionLink'
+
+const mentionTypes = ['@', '@@', '@@@']
+export const mentionTypeOptions = {
+  '@@@': {
+    id: 'task',
+  },
+  '@@': {
+    id: 'version',
+  },
+  '@': {
+    id: 'user',
+    isCircle: true,
+  },
+}
 
 const CommentInput = ({
   initValue,
@@ -37,6 +52,7 @@ const CommentInput = ({
   filter,
   disabled,
   isLoading,
+  scope,
 }) => {
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
@@ -57,6 +73,8 @@ const CommentInput = ({
 
   // When editing, set selection to the end of the editor
   useSetCursorEnd({ initHeight, editorRef, isEditing })
+  // create a new quill format for mentions and registers it
+  useMentionLink({ projectName, projectInfo, scope })
 
   // focus on editor when opened
   useEffect(() => {
@@ -66,19 +84,6 @@ const CommentInput = ({
     }
   }, [isOpen, editorRef])
 
-  const mentionTypes = ['@', '@@', '@@@']
-  const typeOptions = {
-    '@@@': {
-      id: 'task',
-    },
-    '@@': {
-      id: 'version',
-    },
-    '@': {
-      id: 'user',
-      isCircle: true,
-    },
-  }
   mentionTypes.sort((a, b) => b.length - a.length)
 
   // get all versions that can be mentioned
@@ -133,7 +138,7 @@ const CommentInput = ({
     const typePrefix = mention.type // the type of mention: @, @@, @@@
     const search = typePrefix + (mention.search || '') // the full search string: @Tim
     const mentionLabel = typePrefix + selectedOption.label // the label of the mention: @Tim Bailey
-    const type = typeOptions[typePrefix] // the type of mention: user, version, task
+    const type = mentionTypeOptions[typePrefix] // the type of mention: user, version, task
     const href = `${type?.id}:${selectedOption.id}` // the href of the mention: user:user.123
 
     // get selection delta
@@ -145,7 +150,7 @@ const CommentInput = ({
     quill.deleteText(startIndex, search.length)
 
     //  insert embed link
-    quill.insertText(startIndex, mentionLabel, 'link', href)
+    quill.insertText(startIndex, mentionLabel, 'mention', href)
 
     const endIndex = startIndex + mentionLabel.length
 
@@ -187,7 +192,7 @@ const CommentInput = ({
 
     setEditorValue(content)
 
-    const isDelete = delta.ops.length === 2 && delta.ops[1].delete
+    const isDelete = delta.ops.length === 2 && !!delta.ops[1].delete
 
     if (!currentCharacter && isDelete) {
       currentCharacter = editor.getText(delta.ops[0].retain - 1, 1)
@@ -268,6 +273,22 @@ const CommentInput = ({
             search: mentionSearch?.toLowerCase(),
           })
         }
+      } else {
+        // just deleting any text
+        const quill = editorRef.current.getEditor()
+        const currentSelection = quill.getSelection(false)
+        const currentFormat = quill.getFormat(currentSelection?.index, currentSelection?.length)
+        if (currentFormat.mention) {
+          // if format is mention, delete the whole mention
+          const [lineBlock] = quill.getLine(currentSelection.index - 1) || []
+          const ops = lineBlock?.cache?.delta?.ops || []
+          // get last op with attributes mention: true
+          const lastMentionOp = ops.reverse().find((op) => op.attributes?.mention)
+          if (lastMentionOp) {
+            const mentionLength = lastMentionOp.insert.length
+            quill.deleteText(currentSelection.index - mentionLength, mentionLength)
+          }
+        }
       }
     }
   }
@@ -276,7 +297,7 @@ const CommentInput = ({
     // get editor retain
     const quill = editorRef.current.getEditor()
 
-    let retain = quill.getSelection()?.index || 0
+    let retain = quill.getSelection(true)?.index || 0
 
     // get character at retain
     const currentCharacter = quill.getText(retain - 1, 1)
@@ -290,6 +311,21 @@ const CommentInput = ({
 
     // This is hack AF, but it works
     typeWithDelay(quill, retain, type)
+  }
+
+  const handleMentionButton = (type) => {
+    // first check if mention is already open
+    if (mention) {
+      const { type, retain, search = '' } = mention
+
+      const quill = editorRef.current.getEditor()
+      const length = type.length + search.length
+      const start = retain - type.length + 1
+      // delete the mention
+      quill.deleteText(start, length)
+    }
+
+    addTextToEditor(type)
   }
 
   const handleSubmit = async () => {
@@ -478,7 +514,7 @@ const CommentInput = ({
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
-            <InputMarkdownConvert typeOptions={typeOptions} initValue={initValue} />
+            <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={initValue} />
           </Styled.Markdown>
 
           {/* file uploads */}
@@ -515,7 +551,7 @@ const CommentInput = ({
               <Button
                 icon="person"
                 variant="text"
-                onClick={() => addTextToEditor('@')}
+                onClick={() => handleMentionButton('@')}
                 data-tooltip={'Mention user'}
                 data-shortcut={'@'}
               />
@@ -523,7 +559,7 @@ const CommentInput = ({
               <Button
                 icon="layers"
                 variant="text"
-                onClick={() => addTextToEditor('@@')}
+                onClick={() => handleMentionButton('@@')}
                 data-tooltip={'Mention version'}
                 data-shortcut={'@@'}
               />
@@ -531,7 +567,7 @@ const CommentInput = ({
               <Button
                 icon="check_circle"
                 variant="text"
-                onClick={() => addTextToEditor('@@@')}
+                onClick={() => handleMentionButton('@@@')}
                 data-tooltip={'Mention task'}
                 data-shortcut={'@@@'}
               />
@@ -560,7 +596,7 @@ const CommentInput = ({
           options={shownMentionOptions}
           onChange={handleSelectChange}
           types={mentionTypes}
-          config={typeOptions[mention?.type]}
+          config={mentionTypeOptions[mention?.type]}
           noneFound={!shownMentionOptions.length && mention?.search}
           noneFoundAtAll={!shownMentionOptions.length && !mention?.search}
           selectedIndex={mentionSelectedIndex}

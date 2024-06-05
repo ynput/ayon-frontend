@@ -27,5 +27,5 @@ export const TooltipEntityCard = styled(EntityCard)`
   }
 
   /* shadow */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
 `

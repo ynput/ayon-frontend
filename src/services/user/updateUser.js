@@ -15,6 +15,18 @@ const updateUser = ayonApi.injectEndpoints({
         ['info'],
       ],
     }),
+    // update multiple users at once
+    updateUsers: build.mutation({
+      queryFn: async (updates, { dispatch }) => {
+        const results = await Promise.all(
+          updates.map(({ name, patch }) => {
+            return dispatch(ayonApi.endpoints.updateUser.initiate({ name, patch }))
+          }),
+        )
+        console.log(results)
+        return results
+      },
+    }),
     updateUserName: build.mutation({
       query: ({ name, newName }) => ({
         url: `/api/users/${name}/rename`,
@@ -74,6 +86,7 @@ const updateUser = ayonApi.injectEndpoints({
 
 export const {
   useUpdateUserMutation,
+  useUpdateUsersMutation,
   useUpdateUserNameMutation,
   useUpdateUserPasswordMutation,
   useAddUserMutation,

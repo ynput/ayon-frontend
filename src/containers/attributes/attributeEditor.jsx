@@ -13,6 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase } from 'lodash'
+import MinMaxField from '/src/components/MinMaxField/MinMaxField'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -136,8 +137,6 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     }
   }
 
-
-
   return (
     <Dialog
       header={formData?.data?.title || formData?.name || 'New attribute'}
@@ -146,7 +145,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
       isOpen={true}
       style={{ width: 700, zIndex: 999 }}
       size="full"
-      variant='dialog'
+      variant="dialog"
     >
       {formData && (
         <FormLayout>
@@ -191,6 +190,25 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               fieldComp = customFields['booleanDefault'](formData?.data[field], (value) =>
                 setData(field, value),
               )
+            } else if (['ge', 'gt', 'le', 'lt'].includes(field)) {
+              // ignore gt and lt
+              if (['gt', 'lt'].includes(field)) return null
+              fieldComp = (
+                <MinMaxField
+                  value={formData?.data}
+                  isMin={field === 'ge'}
+                  isFloat={formData?.data?.type === 'float'}
+                  onChange={(v) =>
+                    setFormData((d) => {
+                      const dt = { ...d.data, ...v }
+                      return { ...d, data: dt }
+                    })
+                  }
+                />
+              )
+
+              // rewrite field to min or max
+              field = field === 'ge' ? 'min' : 'max'
             } else {
               fieldComp = (
                 <InputText
