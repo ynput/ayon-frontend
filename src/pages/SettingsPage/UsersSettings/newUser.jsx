@@ -13,11 +13,6 @@ const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
 `
 
-const FooterButtons = styled.div`
-  display: flex;
-  justify-content: flex-end;
-`
-
 const SubTitleStyled = styled.span`
   margin-top: 16px;
   margin-bottom: 0;
@@ -145,7 +140,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       header={'Create New User'}
       onClose={handleClose}
       footer={
-        <FooterButtons>
+        <>
           <Button
             label="Create user"
             onClick={() => handleSubmit(false)}
@@ -159,7 +154,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
             saving={isCreatingUser}
             data-shortcut="Ctrl/Cmd+Enter"
           />
-        </FooterButtons>
+        </>
       }
     >
       <Section>
@@ -184,18 +179,20 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
           onChange={(key, value) => setFormData({ ...formData, [key]: value })}
           accessGroupsData={accessGroupsData}
         />
-        <SubTitleStyled>
-          Give this new user access to projects by adding access groups per project
-        </SubTitleStyled>
         {formData?.userLevel === 'user' && (
-          <UserAccessGroupsForm
-            // value expects multiple users, so we need to pass an object with the username "_" as the key
-            value={{ _: formData.accessGroups }}
-            options={accessGroupsData}
-            // onChange provides all "users", in this case just the one "_" user
-            onChange={(value) => setFormData({ ...formData, accessGroups: value['_'] })}
-            disableNewGroup
-          />
+          <>
+            <SubTitleStyled>
+              Give this new user access to projects by adding access groups per project
+            </SubTitleStyled>
+            <UserAccessGroupsForm
+              // value expects multiple users, so we need to pass an object with the username "_" as the key
+              value={{ _: formData.accessGroups }}
+              options={accessGroupsData}
+              // onChange provides all "users", in this case just the one "_" user
+              onChange={(value) => setFormData({ ...formData, accessGroups: value['_'] })}
+              disableNewGroup
+            />
+          </>
         )}
       </Section>
     </Dialog>
