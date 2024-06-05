@@ -7,23 +7,29 @@ import { useEffect } from 'react'
 const ActivityReferenceTooltip = ({ dispatch, ...props }) => {
   const [refTooltip = {}, setRefTooltip] = useReferenceTooltip({ dispatch })
   const { type, label, name, pos, id } = refTooltip
+  const feedList = document.querySelector('.feed ul')
 
   useEffect(() => {
     if (id) {
       const handleMouseOver = (event) => {
-        const hoveredElement = document.elementFromPoint(event.clientX, event.clientY)
-        const closestRef = hoveredElement.closest(`#${id}-ref`)
+        const target = event.target
+        const closestRef = target?.closest(`#ref-${id}`)
         if (!closestRef) {
           // close
           setRefTooltip(null)
           document.removeEventListener('mouseover', handleMouseOver)
+          if (feedList) feedList.removeEventListener('scroll', handleMouseOver)
         }
       }
 
       document.addEventListener('mouseover', handleMouseOver)
+      // scroll event
+      if (feedList) feedList.addEventListener('scroll', handleMouseOver)
 
+      // cleanup
       return () => {
         document.removeEventListener('mouseover', handleMouseOver)
+        if (feedList) feedList.removeEventListener('scroll', handleMouseOver)
       }
     }
   }, [id, dispatch])
