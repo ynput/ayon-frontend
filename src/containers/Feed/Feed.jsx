@@ -20,6 +20,7 @@ import { classNames } from 'primereact/utils'
 import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
+import ActivityReferenceTooltip from '/src/components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -219,69 +220,72 @@ const Feed = ({
     warningMessage = `You are only viewing activities from one project: ${projectName}.`
 
   return (
-    <Styled.FeedContainer className="feed">
-      {warningMessage && (
-        <Styled.Warning>
-          <Icon icon="info" />
-          {warningMessage}
-        </Styled.Warning>
-      )}
-      <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: isLoadingNew })}>
-        {isLoadingNew
-          ? loadingPlaceholders
-          : transformedActivitiesData.map((activity) => (
-              <ActivityItem
-                key={activity.activityId}
-                activity={activity}
-                onCheckChange={handleCommentChecked}
-                onDelete={deleteComment}
-                onUpdate={(value, files) => updateComment(activity, value, files)}
-                projectInfo={projectInfo}
-                projectName={projectName}
-                entityType={entityType}
-                onReferenceClick={handleRefClick}
-                isSlideOut={isSlideOut}
-                createdAts={entities.map((e) => e.createdAt)}
-                onFileExpand={handleFileExpand}
-                showOrigin={entities.length > 1}
-                filter={filter}
-                editProps={{
-                  activeUsers,
-                  projectName,
-                  entities: entities,
-                }}
-                isHighlighted={highlighted.includes(activity.activityId)}
-                dispatch={dispatch}
-              />
-            ))}
-        {hasPreviousPage && (
-          <InView
-            root={feedRef.current}
-            onChange={(inView) => inView && handleLoadMore()}
-            rootMargin={'400px 0px 0px 0px'}
-          >
-            <Styled.LoadMore style={{ height: 0 }} onClick={handleLoadMore}>
-              {isFetchingMore ? 'Loading more...' : 'Click to load more'}
-            </Styled.LoadMore>
-          </InView>
+    <>
+      <Styled.FeedContainer className="feed">
+        {warningMessage && (
+          <Styled.Warning>
+            <Icon icon="info" />
+            {warningMessage}
+          </Styled.Warning>
         )}
-      </Styled.FeedContent>
-      <CommentInput
-        initValue={null}
-        onSubmit={submitComment}
-        isOpen={isCommentInputOpen}
-        onClose={() => setIsCommentInputOpen(false)}
-        onOpen={() => setIsCommentInputOpen(true)}
-        projectName={projectName}
-        entities={entities}
-        entityType={entityType}
-        projectInfo={projectInfo}
-        filter={filter}
-        disabled={isMultiProjects}
-        isLoading={isLoadingNew || !entities.length}
-        scope={scope}
-      />
-    </Styled.FeedContainer>
+        <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: isLoadingNew })}>
+          {isLoadingNew
+            ? loadingPlaceholders
+            : transformedActivitiesData.map((activity) => (
+                <ActivityItem
+                  key={activity.activityId}
+                  activity={activity}
+                  onCheckChange={handleCommentChecked}
+                  onDelete={deleteComment}
+                  onUpdate={(value, files) => updateComment(activity, value, files)}
+                  projectInfo={projectInfo}
+                  projectName={projectName}
+                  entityType={entityType}
+                  onReferenceClick={handleRefClick}
+                  isSlideOut={isSlideOut}
+                  createdAts={entities.map((e) => e.createdAt)}
+                  onFileExpand={handleFileExpand}
+                  showOrigin={entities.length > 1}
+                  filter={filter}
+                  editProps={{
+                    activeUsers,
+                    projectName,
+                    entities: entities,
+                  }}
+                  isHighlighted={highlighted.includes(activity.activityId)}
+                  dispatch={dispatch}
+                />
+              ))}
+          {hasPreviousPage && (
+            <InView
+              root={feedRef.current}
+              onChange={(inView) => inView && handleLoadMore()}
+              rootMargin={'400px 0px 0px 0px'}
+            >
+              <Styled.LoadMore style={{ height: 0 }} onClick={handleLoadMore}>
+                {isFetchingMore ? 'Loading more...' : 'Click to load more'}
+              </Styled.LoadMore>
+            </InView>
+          )}
+        </Styled.FeedContent>
+        <CommentInput
+          initValue={null}
+          onSubmit={submitComment}
+          isOpen={isCommentInputOpen}
+          onClose={() => setIsCommentInputOpen(false)}
+          onOpen={() => setIsCommentInputOpen(true)}
+          projectName={projectName}
+          entities={entities}
+          entityType={entityType}
+          projectInfo={projectInfo}
+          filter={filter}
+          disabled={isMultiProjects}
+          isLoading={isLoadingNew || !entities.length}
+          scope={scope}
+        />
+      </Styled.FeedContainer>
+      <ActivityReferenceTooltip {...{ dispatch, projectName, projectInfo }} />
+    </>
   )
 }
 
