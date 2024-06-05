@@ -21,9 +21,6 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
       const valueMentionType = value.split(':').shift()
       const valueMentionId = value.split(':').pop()
 
-      //   get label from innerText and removing @ symbols
-      const label = node.innerText.replace('@', '')
-
       node.classList.add('mention')
       node.classList.add(valueMentionType)
       //   set as not editable
@@ -51,6 +48,7 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
       // add on mouse enter
       node.addEventListener('mouseenter', (e) => {
         const target = e.target || {}
+        const label = target.innerText.replace('@', '')
         // get the center of the reference
         const { x, y, width } = target.getBoundingClientRect()
         const pos = { left: x + width / 2, top: y }
@@ -69,11 +67,10 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
       //   on mouse leave
       node.addEventListener('mouseleave', () => {
         // Your code here
-        console.log('Mouse left!')
         setRefTooltip(null)
       })
 
-      return node
+      return node || ''
     }
   }
 
