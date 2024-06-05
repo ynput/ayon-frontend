@@ -28,6 +28,7 @@ import { setupListeners } from '@reduxjs/toolkit/dist/query'
 import short from 'short-uuid'
 import { SocketProvider } from './context/websocketContext'
 import localStorageMiddleware from './features/middleware/localStorageMiddleware'
+import Favicon from './components/Favicon/Favicon'
 
 // generate unique session id
 window.senderId = short.generate()
@@ -79,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
   root.render(
     <React.StrictMode>
       <ReduxProvider store={store}>
+        <Favicon />
         <SocketProvider>
           <App />
           <ToastContainer
