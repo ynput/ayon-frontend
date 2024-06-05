@@ -8,7 +8,7 @@ const PreviewPlayer = ({ selected, projectName }) => {
   const frameRate = 25
   const aspectRatio = 1.7777777777777777
 
-  const videoSrc = `/api/projects/${projectName}/versions/${selected.join(',')}/review/fake.mp4`
+  const videoSrc = `/api/projects/${projectName}/versions/${selected.join(',')}/review/main.mp4`
 
   return (
     <PreviewPlayerWrapper>
