@@ -2,11 +2,12 @@ import { Link } from 'react-router-dom'
 import HeaderButton from './HeaderButton'
 import { classNames } from 'primereact/utils'
 import { useGetInboxHasUnreadQuery } from '/src/services/inbox/getInbox'
-import { useEffect } from 'react'
 import useNotification from '/src/hooks/useNotification'
+import { useSelector } from 'react-redux'
 
 const InboxNotificationIcon = () => {
-  const { data: [hasUnread] = [], refetch } = useGetInboxHasUnreadQuery()
+  const user = useSelector((state) => state.user)
+  const { data: hasUnread } = useGetInboxHasUnreadQuery({ skip: !user })
 
   const sendNotification = useNotification()
 
@@ -21,16 +22,6 @@ const InboxNotificationIcon = () => {
       '/inbox/important',
     )
   }
-
-  useEffect(() => {
-    refetch() // Check messages immediately on location change
-
-    const interval = setInterval(refetch, 60000) // Check messages every 10 minutes
-
-    return () => {
-      clearInterval(interval)
-    }
-  }, [location.pathname])
 
   return (
     <Link to="/inbox/important">

@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 
 const Favicon = () => {
   const user = useSelector((state) => state.user)
-  const { data: [hasUnread] = [] } = useGetInboxHasUnreadQuery({ skip: !user })
+  const { data: hasUnread } = useGetInboxHasUnreadQuery({ skip: !user })
 
   return (
     <Helmet defer={false}>
