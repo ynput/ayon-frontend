@@ -134,7 +134,7 @@ const ProjectLatestRow = ({
               imageUrl={
                 !isLoadingData &&
                 projectName &&
-                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${entity.thumbnailEntityId}/thumbnail?updatedAt=${entity.updatedAt}`
+                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${entity.thumbnailEntityId}/thumbnail?updatedAt=${entity.updatedAt}&placeholder=none`
               }
               style={{
                 minWidth: 'unset',

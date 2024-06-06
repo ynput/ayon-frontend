@@ -21,8 +21,8 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
   // this should never happen, but just in case
   // only admins and managers can see the second endpoint though
   const thumbnailUrl = thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
-    : `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}`
+    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}&placeholder=none`
+    : `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}&placeholder=none`
 
   return thumbnailUrl
 }

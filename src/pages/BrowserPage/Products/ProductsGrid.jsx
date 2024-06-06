@@ -262,7 +262,7 @@ const ProductsGrid = ({
             </div>
           )}
           {!collapsedGroups.includes(groupName) && (
-            <GridLayout ratio={1.777777} minWidth={200} key={index}>
+            <GridLayout ratio={1.777777} minWidth={190} key={index}>
               {isLoading
                 ? Array.from({ length: 20 }).map((_, index) => (
                     <EntityCard
@@ -273,34 +273,33 @@ const ProductsGrid = ({
                       }}
                     />
                   ))
-                : groupData.map(
-                    ({ data: product }, index) =>
-                      product && (
-                        <EntityCard
-                          style={{
-                            minWidth: 'unset',
-                          }}
-                          key={index}
-                          title={product.name}
-                          titleIcon={productTypes[product.productType]?.icon || 'inventory_2'}
-                          icon={statuses[product.versionStatus]?.icon || ''}
-                          iconColor={statuses[product.versionStatus]?.color || ''}
-                          imageUrl={
-                            projectName &&
-                            `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}`
-                          }
-                          subTitle={`${product.versionName}${
-                            multipleFoldersSelected && product.folder ? ' - ' + product.folder : ''
-                          }`}
-                          onClick={(e) => handleSelection(e, product)}
-                          isActive={product.id in selection}
-                          onContextMenu={(e) => handleContext(e, product.id)}
-                          projectName={projectName}
-                          isFullHighlight
-                          // isActiveAnimate
-                        />
-                      ),
-                  )}
+                : groupData.map(({ data: product }, index) => {
+                    if (!product) return null
+                    const thumbnailUrl = `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}&placeholder=none`
+
+                    return (
+                      <EntityCard
+                        style={{
+                          minWidth: 'unset',
+                        }}
+                        key={index}
+                        title={product.name}
+                        titleIcon={productTypes[product.productType]?.icon || 'inventory_2'}
+                        icon={statuses[product.versionStatus]?.icon || ''}
+                        iconColor={statuses[product.versionStatus]?.color || ''}
+                        imageUrl={projectName && thumbnailUrl}
+                        subTitle={`${product.versionName}${
+                          multipleFoldersSelected && product.folder ? ' - ' + product.folder : ''
+                        }`}
+                        onClick={(e) => handleSelection(e, product)}
+                        isActive={product.id in selection}
+                        onContextMenu={(e) => handleContext(e, product.id)}
+                        projectName={projectName}
+                        isFullHighlight
+                        // isActiveAnimate
+                      />
+                    )
+                  })}
             </GridLayout>
           )}
         </StyledGroup>
