@@ -25,11 +25,13 @@ const useCommentMutations = ({
   const [updateActivity] = useUpdateActivityMutation()
   const [deleteActivity] = useDeleteActivityMutation()
 
-  // type:"entityActivities"
-  // id:"80528aac1dab11ef95ad0242ac180005"
+  const invalidateRefs = (refs = []) => {
+    const entityIds = refs.filter((v) => v.type !== 'user').map((v) => v.id)
+    const uniqueEntityIds = [...new Set(entityIds)]
+    const tags = uniqueEntityIds.map((id) => ({ type: 'entityActivities', id }))
 
-  // id: "80528aac1dab11ef95ad0242ac180005"
-  // type: "entityActivities"
+    dispatch(ayonApi.util.invalidateTags(tags))
+  }
 
   const createPatch = ({ entityId, newId, subTitle, value, files = [] }) => {
     const patch = {
@@ -178,6 +180,9 @@ const useCommentMutations = ({
       // try and patch any ref caches
       patchAllRefs({ value, refs, files, id: activity.activityId })
 
+      // try invalidating any refs as a backup
+      invalidateRefs(refs)
+
       return res
     } catch (error) {
       console.error(error)
@@ -203,6 +208,9 @@ const useCommentMutations = ({
 
       // try and patch any ref caches
       patchAllRefs({ refs, isDelete: true, value: body })
+
+      // try invalidating any refs as a backup
+      invalidateRefs(refs)
     } catch (error) {
       // error is handled in the mutation
     }
