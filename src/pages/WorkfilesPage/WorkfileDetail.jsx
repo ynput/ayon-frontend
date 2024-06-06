@@ -28,7 +28,10 @@ const replaceRoot = (inputStr, replacements) => {
     //TODO: fix eslint error
     //eslint-disable-next-line
     if (replacements.hasOwnProperty(p1)) {
-      return replacements[p1]
+      let value = replacements[p1]
+      // strip forward and back slashes from the end of the value
+      value = value.replace(/\/$/, '')
+      return value
     }
     return match
   })

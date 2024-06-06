@@ -43,15 +43,19 @@ const getActivities = ayonApi.injectEndpoints({
         const { activities = [], pageInfo } = newCache
         const { activities: lastActivities = [] } = currentCache
 
-        const newMessages = [
-          ...lastActivities,
-          ...activities.filter(
-            (m) => !lastActivities.some((lm) => lm.referenceId === m.referenceId),
-          ),
-        ]
+        const messagesMap = new Map()
+
+        ;[lastActivities, activities].forEach((arr) =>
+          arr.forEach((m) => messagesMap.set(m.referenceId, m)),
+        )
+
+        const uniqueMessages = Array.from(messagesMap.values())
+
+        // sort the messages by date with the newest first
+        uniqueMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
 
         return {
-          activities: newMessages,
+          activities: uniqueMessages,
           pageInfo,
         }
       },

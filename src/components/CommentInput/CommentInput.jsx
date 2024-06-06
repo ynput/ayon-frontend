@@ -69,7 +69,15 @@ const CommentInput = ({
   const markdownRef = useRef(null)
 
   // if there is an initial value, set it so the editor is prefilled
-  useInitialValue({ markdownRef, initValue, setEditorValue, setInitHeight, isOpen, filter })
+  useInitialValue({
+    markdownRef,
+    editorRef,
+    initValue,
+    setEditorValue,
+    setInitHeight,
+    isOpen,
+    filter,
+  })
 
   // When editing, set selection to the end of the editor
   useSetCursorEnd({ initHeight, editorRef, isEditing })
@@ -331,13 +339,14 @@ const CommentInput = ({
   const handleSubmit = async () => {
     try {
       // convert to markdown
-      const markdown = convertToMarkdown(editorValue)
+      const [markdown, refs] = convertToMarkdown(editorValue)
+
       // remove img query params
       const markdownParsed = parseImages(markdown)
 
       if ((markdownParsed || files.length) && onSubmit) {
         try {
-          await onSubmit(markdownParsed, files)
+          await onSubmit(markdownParsed, files, refs)
           // only clear if onSubmit is successful
           setEditorValue('')
           setFiles([])

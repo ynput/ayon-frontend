@@ -146,6 +146,7 @@ const Feed = ({
     entities,
     activityTypes,
     filter,
+    dispatch,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
@@ -237,7 +238,7 @@ const Feed = ({
                   activity={activity}
                   onCheckChange={handleCommentChecked}
                   onDelete={deleteComment}
-                  onUpdate={(value, files) => updateComment(activity, value, files)}
+                  onUpdate={(value, files, refs) => updateComment(activity, value, files, refs)}
                   projectInfo={projectInfo}
                   projectName={projectName}
                   entityType={entityType}
@@ -251,6 +252,7 @@ const Feed = ({
                     activeUsers,
                     projectName,
                     entities: entities,
+                    entityType,
                   }}
                   isHighlighted={highlighted.includes(activity.activityId)}
                   dispatch={dispatch}

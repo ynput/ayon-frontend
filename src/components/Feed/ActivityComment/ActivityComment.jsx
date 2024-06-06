@@ -11,6 +11,7 @@ import CommentInput from '/src/components/CommentInput/CommentInput'
 import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
 import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
 import useReferenceTooltip from '/src/containers/Feed/hooks/useReferenceTooltip'
+import { getTextRefs } from '../../CommentInput/quillToMarkdown'
 
 const ActivityComment = ({
   activity = {},
@@ -39,6 +40,7 @@ const ActivityComment = ({
     author,
     isOwner,
     files = [],
+    origin,
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
@@ -63,6 +65,22 @@ const ActivityComment = ({
     setIsEditing(false)
   }
 
+  const isRef = referenceType !== 'origin' || showOrigin
+
+  const handleDelete = () => {
+    const refs = getTextRefs(body)
+
+    // if the comment is a reference, (it's origin is not the entity)
+    // we need to delete the reference from the origin as well
+    // add it to the refs to delete
+    if (isRef && origin) {
+      refs.push({ id: origin.id, type: origin.type })
+    }
+
+    // note: body is used to match other refs to delete
+    onDelete && onDelete(activityId, entityId, refs, body)
+  }
+
   const [, setRefTooltip] = useReferenceTooltip({ dispatch })
 
   return (
@@ -75,9 +93,9 @@ const ActivityComment = ({
           name={authorName}
           fullName={authorFullName}
           date={createdAt}
-          isRef={referenceType !== 'origin' || showOrigin}
+          isRef={isRef}
           activity={activity}
-          onDelete={() => onDelete && onDelete(activityId)}
+          onDelete={handleDelete}
           onEdit={handleEditComment}
           projectInfo={projectInfo}
           projectName={projectName}
