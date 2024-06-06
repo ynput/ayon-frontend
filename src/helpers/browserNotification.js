@@ -27,4 +27,27 @@ const getNotificationPermission = async (onGranted) => {
   }
 }
 
-export default getNotificationPermission
+const sendNotification = ({ title, body, options = {}, link }, callback) => {
+  if (!('Notification' in window)) return
+  if (Notification.permission === 'granted') {
+    const icon = '/favicon-32x32.png'
+    const notification = new Notification(title, { icon, body, ...options })
+    notification.onclick = () => {
+      window.focus()
+      notification.close()
+      if (link) window.location.pathname = link
+
+      callback && callback()
+    }
+  } else {
+    getNotificationPermission(() =>
+      sendNotification({
+        title: 'Hi from AYON! 👋',
+        body: 'Disable notifications in account settings.',
+        link: '/account/profile',
+      }),
+    )
+  }
+}
+
+export default sendNotification

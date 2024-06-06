@@ -19,7 +19,7 @@ import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
 import Typography from '/src/theme/typography.module.css'
-// import EnableNotifications from '/src/components/EnableNotifications'
+import EnableNotifications from '/src/components/EnableNotifications'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -340,7 +340,7 @@ const Inbox = ({ filter }) => {
       <Styled.Tools>
         {/* <InputText placeholder="Search..." /> */}
         <Spacer />
-        {/* <EnableNotifications /> */}
+        <EnableNotifications />
         {isActive && (
           <Styled.ShortcutButton
             label="Clear all"
