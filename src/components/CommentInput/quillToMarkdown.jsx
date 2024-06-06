@@ -56,6 +56,16 @@ turndownService.addRule('unOrderedList', {
   },
 })
 
+// convert mention tags to links
+turndownService.addRule('mention', {
+  filter: function (node) {
+    return node.classList.contains('mention') && node.getAttribute('data-value')
+  },
+  replacement: function (content, node) {
+    return `[${content}](${node.getAttribute('data-value')})`
+  },
+})
+
 // replace <p> with <br> for line breaks
 const replaceLineBreaks = (html) => {
   return html.replaceAll('<p>', '').replaceAll('</p>', '\n').replaceAll('```', '')
@@ -112,15 +122,20 @@ export const convertToMarkdown = (value) => {
 
   let body = markdown
 
-  // inside the markdown, find characters inside [] and replace @ with nothing
-  const regex = /\[(.*?)\]/g
-  const labels = markdown.match(regex)
-  if (labels) {
-    labels.forEach((match) => {
+  console.log(body)
+
+  // inside the markdown, find characters inside () or [] and replace @ with nothing
+  const regex = /\((.*?)\)|\[(.*?)\]/g
+  const matches = markdown.match(regex)
+  if (matches) {
+    matches.forEach((match) => {
+      if (match.includes('http')) return
       const newMatch = match.replaceAll('@', '')
       body = body.replace(match, newMatch)
     })
   }
+
+  console.log(body)
 
   const entities = getTextRefs(markdown)
 

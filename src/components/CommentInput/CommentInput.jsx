@@ -69,7 +69,15 @@ const CommentInput = ({
   const markdownRef = useRef(null)
 
   // if there is an initial value, set it so the editor is prefilled
-  useInitialValue({ markdownRef, initValue, setEditorValue, setInitHeight, isOpen, filter })
+  useInitialValue({
+    markdownRef,
+    editorRef,
+    initValue,
+    setEditorValue,
+    setInitHeight,
+    isOpen,
+    filter,
+  })
 
   // When editing, set selection to the end of the editor
   useSetCursorEnd({ initHeight, editorRef, isEditing })

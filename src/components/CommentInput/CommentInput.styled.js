@@ -79,12 +79,6 @@ export const Comment = styled.div`
       &:active {
         background-color: var(--md-sys-color-surface-container-high-active);
       }
-
-      /* the ::before is where the text is held */
-      &::before {
-        content: 'test';
-        display: inline;
-      }
     }
   }
 
