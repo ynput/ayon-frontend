@@ -1,14 +1,22 @@
+import { useEffect, useState } from 'react'
 import { PreviewPlayerWrapper } from './Preview.styled'
 import VideoPlayer from '/src/containers/VideoPlayer'
 
-const PreviewPlayer = ({ selected, projectName }) => {
+const PreviewPlayer = ({ versionId, projectName, attrib }) => {
 
-  // TODO: framerate and aspect ratio should be fetched from the server
-  // for now, hardcoding them. They are super important for the player to work correctly
-  const frameRate = 25
-  const aspectRatio = 1.7777777777777777
+  const [frameRate, setFrameRate] = useState(25)
+  const [aspectRatio, setAspectRatio] = useState(1.7777777777777777)
 
-  const videoSrc = `/api/projects/${projectName}/versions/${selected.join(',')}/review/main.mp4`
+
+
+  useEffect(() => {
+    if (!attrib?.length) return
+    const { fps, resolutionWidth, resolutionHeight } = attrib
+    setFrameRate(fps)
+    setAspectRatio(resolutionWidth / resolutionHeight)
+  }, [attrib])
+  
+  const videoSrc = `/api/projects/${projectName}/versions/${versionId}/review/main.mp4`
 
   return (
     <PreviewPlayerWrapper>

@@ -9,6 +9,12 @@ query getPreview($projectName: String!, $versionIds: [String!]) {
             version
             productId
             status
+            attrib{
+              fps
+              pixelAspect
+              resolutionWidth
+              resolutionHeight
+            }
           }
         }
       }
