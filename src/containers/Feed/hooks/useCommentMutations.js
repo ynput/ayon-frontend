@@ -65,7 +65,7 @@ const useCommentMutations = ({
     return body.includes('* [ ]') || body.includes('* [x]')
   }
 
-  const patchAllRefs = ({ refs = [], value = '', files = [], isDelete = false }) => {
+  const patchAllRefs = ({ refs = [], value = '', files = [], isDelete = false, id }) => {
     const hasChecklist = bodyHasChecklist(value)
     // We need to try and update the cache for all the refs
     refs.forEach((ref) => {
@@ -73,7 +73,7 @@ const useCommentMutations = ({
       const patch = !isDelete
         ? createPatch({
             entityId: ref.id,
-            newId: getActivityId(),
+            newId: id,
             subTitle: '',
             value,
             files,
@@ -105,8 +105,10 @@ const useCommentMutations = ({
 
   const submitComment = async (value, files = [], refs = []) => {
     // map over all the entities and create a new comment for each
+    let patchId = null
     const promises = entities.map(({ id: entityId, subTitle }) => {
       const newId = getActivityId()
+      if (!patchId) patchId = newId
       const fileIds = files.map((file) => file.id)
 
       const newComment = {
@@ -137,7 +139,7 @@ const useCommentMutations = ({
       const results = await Promise.all(promises)
 
       // try and patch any ref caches
-      patchAllRefs({ value, refs, files })
+      patchAllRefs({ value, refs, files, id: patchId })
 
       return results
     } catch (error) {
@@ -174,7 +176,7 @@ const useCommentMutations = ({
       }).unwrap()
 
       // try and patch any ref caches
-      patchAllRefs({ value, refs, files })
+      patchAllRefs({ value, refs, files, id: activity.activityId })
 
       return res
     } catch (error) {
