@@ -12,9 +12,9 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
   // special link for mentions
   class MentionLink extends Inline {
     static blotName = 'mention'
-    static tagName = 'A'
+    static tagName = 'MENTION'
     static create(value) {
-      if (!value || typeof value !== 'string') return
+      if (!value || typeof value !== 'string') return document.createElement(MentionLink.tagName)
 
       const node = super.create(value)
       // check if this is a mention url
@@ -30,8 +30,6 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
 
       // add data-value attribute
       node.setAttribute('data-value', value)
-      // set href value
-      node.setAttribute('href', value)
 
       //   on mouse click open reference
       node.addEventListener('click', (e) => {
@@ -67,6 +65,11 @@ const useMentionLink = ({ projectName, projectInfo, scope }) => {
       })
 
       return node || ''
+    }
+
+    // Added value method to retrieve the value from the DOM node
+    static value(node) {
+      return node.getAttribute('data-value')
     }
   }
 
