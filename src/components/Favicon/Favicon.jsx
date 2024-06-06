@@ -1,8 +1,10 @@
 import { Helmet } from 'react-helmet'
 import { useGetInboxHasUnreadQuery } from '/src/services/inbox/getInbox'
+import { useSelector } from 'react-redux'
 
 const Favicon = () => {
-  const { data: [hasUnread] = [] } = useGetInboxHasUnreadQuery()
+  const user = useSelector((state) => state.user)
+  const { data: [hasUnread] = [] } = useGetInboxHasUnreadQuery({ skip: !user })
 
   return (
     <Helmet defer={false}>

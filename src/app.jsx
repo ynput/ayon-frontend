@@ -42,6 +42,7 @@ import FileUploadPreview from './containers/FileUploadPreview/FileUploadPreview'
 import PreviewDialog from './containers/Preview/PreviewDialog'
 import InboxPage from './pages/InboxPage'
 import { URIProvider } from './context/uriContext'
+import Favicon from './components/Favicon/Favicon'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -130,6 +131,7 @@ const App = () => {
   const mainComponent = useMemo(
     () => (
       <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Favicon />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
             <ContextMenuProvider>
