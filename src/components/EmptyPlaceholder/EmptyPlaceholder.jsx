@@ -16,6 +16,10 @@ export const Placeholder = styled.div`
   gap: 24px;
   user-select: none;
 
+  h3 {
+    text-align: center;
+  }
+
   .icon {
     font-size: 64px;
     padding: 8px;

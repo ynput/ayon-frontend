@@ -5,6 +5,7 @@ import VideoOverlay from './VideoOverlay'
 import Trackbar from './Trackbar'
 import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '/src/components/EmptyPlaceholder/EmptyPlaceholder'
+import { classNames } from 'primereact/utils'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -30,6 +31,9 @@ const VideoPlayerContainer = styled.div`
     align-items: center;
     flex-grow: 1;
     background-color: black;
+    &.no-content {
+      background-color: unset;
+    }
     padding: 0;
     overflow: hidden;
 
@@ -134,6 +138,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     setIsPlaying(false)
     setCurrentTime(0)
     setBufferedRanges([])
+    setLoadError(null)
     // after a short delay, hide the still image
     setTimeout(() => setShowStill(false), 100)
   }
@@ -207,43 +212,41 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     } else {
       setLoadError({ code, message: 'Error loading video' })
     }
-  }
 
-  if (loadError) {
-    return (
-      <EmptyPlaceholder
-        icon="hide_image"
-        message={'This version has no previewable content.'}
-        error={loadError.code !== 4 && loadError.message}
-      />
-    )
+    setShowStill(false)
   }
 
   return (
     <VideoPlayerContainer>
-      <div className="video-row video-container" ref={videoRowRef}>
-          <div className="video-wrapper" style={{width: videoDimensions.width, height: videoDimensions.height}}>
-            <video
-              ref={videoRef}
-              width={videoDimensions.width}
-              height={videoDimensions.height}
-              src={actualSource}
-              onLoadedMetadata={handleLoadedMetadata}
-              onProgress={handleProgress}
-              onEnded={handleEnded}
-              onPlay={() => setIsPlaying(true)}
-              onPause={handlePause}
-              onLoadedData={handleLoad}
-              onCanPlay={handleCanPlay}
-              onError={handleLoadError}
-            />
-            <VideoOverlay
-              videoWidth={videoDimensions.width}
-              videoHeight={videoDimensions.height}
-              showOverlay={showOverlay}
-              showStill={showStill}
-              videoRef={videoRef}
-            />
+      <div
+        className={classNames('video-row video-container', { 'no-content': loadError })}
+        ref={videoRowRef}
+      >
+        <div
+          className="video-wrapper"
+          style={{ width: videoDimensions.width, height: videoDimensions.height }}
+        >
+          <video
+            ref={videoRef}
+            width={videoDimensions.width}
+            height={videoDimensions.height}
+            src={actualSource}
+            onLoadedMetadata={handleLoadedMetadata}
+            onProgress={handleProgress}
+            onEnded={handleEnded}
+            onPlay={() => setIsPlaying(true)}
+            onPause={handlePause}
+            onLoadedData={handleLoad}
+            onCanPlay={handleCanPlay}
+            onError={handleLoadError}
+          />
+          <VideoOverlay
+            videoWidth={videoDimensions.width}
+            videoHeight={videoDimensions.height}
+            showOverlay={showOverlay}
+            showStill={showStill}
+            videoRef={videoRef}
+          />
         </div>
       </div>
 
@@ -267,6 +270,13 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
           {...{ showOverlay, setShowOverlay, loop, setLoop }}
         />
       </div>
+      {loadError && (
+        <EmptyPlaceholder
+          icon="hide_image"
+          message={'This version has no previewable content.'}
+          error={loadError?.code !== 4 && loadError?.message}
+        />
+      )}
     </VideoPlayerContainer>
   )
 }
