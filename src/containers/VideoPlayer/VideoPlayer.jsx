@@ -113,8 +113,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
 
   useEffect(() => {
     if (!videoRef.current) return
-    // TODO:
-    const frameLength = 0.04
+    const frameLength = frameRate ? 1 / frameRate : 0.04
     const updateTime = () => {
       const actualDuration = videoRef.current.duration
       if (actualDuration !== duration) {
@@ -131,11 +130,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     updateTime()
   }, [videoRef, isPlaying, duration])
 
-  const handleLoad = (e) => {
-    console.log('loaded', e)
+  const handleLoad = () => {
     setIsPlaying(false)
     setCurrentTime(0)
     setBufferedRanges([])
+    // after a short delay, hide the still image
     setTimeout(() => setShowStill(false), 100)
   }
 
@@ -147,7 +146,6 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     if (videoRef.current.currentTime > 0 || preferredInitialPosition === 0) return
     if (videoRef.current.currentTime === preferredInitialPosition) return
 
-    if (isNaN(preferredInitialPosition)) return
     setCurrentTime(preferredInitialPosition)
     videoRef.current.currentTime = preferredInitialPosition
   }
