@@ -123,11 +123,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
       const actualTime = Math.min(videoRef.current?.currentTime || 0, actualDuration - frameLength)
       if (isPlaying) {
         setCurrentTime(actualTime)
-        setPreferredInitialPosition(actualTime)
         setTimeout(() => requestAnimationFrame(updateTime), 40)
       } else {
         setCurrentTime(actualTime)
-        setPreferredInitialPosition(actualTime)
       }
     }
     updateTime()
@@ -183,6 +181,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   }
 
   const handlePause = () => {
+    setPreferredInitialPosition(videoRef.current.currentTime)
     setTimeout(() => {
       if (videoRef.current.paused) {
         console.log('Paused')
