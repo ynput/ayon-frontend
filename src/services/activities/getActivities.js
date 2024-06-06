@@ -51,6 +51,9 @@ const getActivities = ayonApi.injectEndpoints({
 
         const uniqueMessages = Array.from(messagesMap.values())
 
+        // sort the messages by date with the newest first
+        uniqueMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
         return {
           activities: uniqueMessages,
           pageInfo,

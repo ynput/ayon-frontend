@@ -7,6 +7,7 @@ import {
 } from '/src/services/activities/updateActivities'
 import { useSelector } from 'react-redux'
 import { ayonApi } from '/src/services/ayon'
+import { filterActivityTypes } from '/src/features/details'
 
 const useCommentMutations = ({
   projectName,
@@ -24,24 +25,88 @@ const useCommentMutations = ({
   const [updateActivity] = useUpdateActivityMutation()
   const [deleteActivity] = useDeleteActivityMutation()
 
-  const invalidateRefs = (refs = []) => {
-    const entityIds = refs.filter((v) => v.type !== 'user').map((v) => v.id)
-    const uniqueEntityIds = [...new Set(entityIds)]
-    const tags = uniqueEntityIds.map((id) => ({ type: 'entityActivities', id }))
-
-    dispatch(ayonApi.util.invalidateTags(tags))
-  }
-
   // type:"entityActivities"
   // id:"80528aac1dab11ef95ad0242ac180005"
 
   // id: "80528aac1dab11ef95ad0242ac180005"
   // type: "entityActivities"
 
+  const createPatch = ({ entityId, newId, subTitle, value, files = [] }) => {
+    const patch = {
+      body: value,
+      activityType: 'comment',
+      activityId: newId,
+      entityId: entityId,
+      referenceType: 'origin',
+      authorName: name,
+      authorFullName: attrib.fullName,
+      createdAt: formatISO(new Date()),
+      isOwner: true,
+      files: files,
+      origin: {
+        id: '8090c2dafcc811eeaf820242c0a80002',
+        type: entityType,
+        name: subTitle,
+      },
+      author: {
+        active: true,
+        deleted: false,
+      },
+    }
+
+    return patch
+  }
+
+  const getActivityId = () => uuid1().replace(/-/g, '')
+
+  // does the body have a checklist anywhere in it
+  // * [ ] or * [x]
+  const bodyHasChecklist = (body) => {
+    return body.includes('* [ ]') || body.includes('* [x]')
+  }
+
+  const patchAllRefs = ({ refs = [], value = '', files = [], isDelete = false }) => {
+    const hasChecklist = bodyHasChecklist(value)
+    // We need to try and update the cache for all the refs
+    refs.forEach((ref) => {
+      // create a new patch for optimistic update of refs
+      const patch = !isDelete
+        ? createPatch({
+            entityId: ref.id,
+            newId: getActivityId(),
+            subTitle: '',
+            value,
+            files,
+          })
+        : {}
+      //  we don't know which filters the refs are using, so we need to update all of them
+      Object.entries(filterActivityTypes).forEach(([filter, activityTypes]) => {
+        // a comment never shows up in publishes
+        if (filter === 'publishes') return
+
+        // only add to checklist if the comment has a checklist
+        if (filter === 'checklists' && !hasChecklist) return
+
+        const argsForCachingMatching = { entityIds: [ref.id], activityTypes, projectName, filter }
+        dispatch(
+          ayonApi.util.updateQueryData('getActivities', argsForCachingMatching, (draft) => {
+            if (isDelete) {
+              // delete the comment from the list
+              draft.activities = draft.activities.filter((activity) => activity.body !== value)
+            } else {
+              // add the new comment to the top of the list
+              draft.activities = [patch, ...draft.activities]
+            }
+          }),
+        )
+      })
+    })
+  }
+
   const submitComment = async (value, files = [], refs = []) => {
     // map over all the entities and create a new comment for each
     const promises = entities.map(({ id: entityId, subTitle }) => {
-      const newId = uuid1().replace(/-/g, '')
+      const newId = getActivityId()
       const fileIds = files.map((file) => file.id)
 
       const newComment = {
@@ -52,27 +117,7 @@ const useCommentMutations = ({
       }
 
       // create a new patch for optimistic update
-      const patch = {
-        body: value,
-        activityType: 'comment',
-        activityId: newId,
-        entityId: entityId,
-        referenceType: 'origin',
-        authorName: name,
-        authorFullName: attrib.fullName,
-        createdAt: formatISO(new Date()),
-        isOwner: true,
-        files: files,
-        origin: {
-          id: '8090c2dafcc811eeaf820242c0a80002',
-          type: entityType,
-          name: subTitle,
-        },
-        author: {
-          active: true,
-          deleted: false,
-        },
-      }
+      const patch = createPatch({ entityId, newId, subTitle, value, files })
 
       // we only need these args to update the cache of the original query
       const argsForCachingMatching = { entityIds, activityTypes }
@@ -91,7 +136,8 @@ const useCommentMutations = ({
     try {
       const results = await Promise.all(promises)
 
-      invalidateRefs(refs)
+      // try and patch any ref caches
+      patchAllRefs({ value, refs, files })
 
       return results
     } catch (error) {
@@ -127,7 +173,8 @@ const useCommentMutations = ({
         ...argsForCachingMatching,
       }).unwrap()
 
-      invalidateRefs(refs)
+      // try and patch any ref caches
+      patchAllRefs({ value, refs, files })
 
       return res
     } catch (error) {
@@ -136,7 +183,7 @@ const useCommentMutations = ({
     }
   }
 
-  const deleteComment = async (id, entityId, refs = []) => {
+  const deleteComment = async (id, entityId, refs = [], body) => {
     // we only need these args to update the cache of the original query
     const argsForCachingMatching = { entityType, entityIds, activityTypes }
 
@@ -152,7 +199,8 @@ const useCommentMutations = ({
         ...argsForCachingMatching,
       }).unwrap()
 
-      invalidateRefs(refs)
+      // try and patch any ref caches
+      patchAllRefs({ refs, isDelete: true, value: body })
     } catch (error) {
       // error is handled in the mutation
     }

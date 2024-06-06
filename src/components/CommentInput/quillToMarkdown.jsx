@@ -122,8 +122,6 @@ export const convertToMarkdown = (value) => {
 
   let body = markdown
 
-  console.log(body)
-
   // inside the markdown, find characters inside () or [] and replace @ with nothing
   const regex = /\((.*?)\)|\[(.*?)\]/g
   const matches = markdown.match(regex)
@@ -135,9 +133,9 @@ export const convertToMarkdown = (value) => {
     })
   }
 
-  console.log(body)
-
   const entities = getTextRefs(markdown)
 
   return [body, entities]
 }
+
+// "8061b1801dab11ef95ad0242ac180005"
