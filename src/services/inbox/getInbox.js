@@ -1,9 +1,7 @@
 import { ayonApi } from '../ayon'
 import { INBOX_ACTIVITIES, INBOX_HAS_UNREAD, INBOX_UNREAD_COUNT } from './inboxQueries'
 import { transformInboxMessages } from './inboxTransform'
-import sendNotification from '/src/helpers/browserNotification'
 import PubSub from '/src/pubsub'
-import RemoveMarkdown from 'remove-markdown'
 
 const getInbox = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -85,17 +83,6 @@ const getInbox = ayonApi.injectEndpoints({
             if (isImportant) {
               // set unread to true
               updateCachedData(() => true)
-
-              // send a desktop notification to the user
-              // check if the user has granted permission to send notifications
-              if (Notification.permission === 'granted') {
-                const parsedBody = RemoveMarkdown(message?.description)
-                sendNotification({
-                  title: 'New AYON message',
-                  body: parsedBody,
-                  link: '/inbox/important',
-                })
-              }
             }
 
             // invalidate the getInbox cache
