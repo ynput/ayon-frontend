@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 
-const VideoOverlay = ({ videoWidth, videoHeight, showOverlay }) => {
+const VideoOverlay = ({ videoWidth, videoHeight, showOverlay, showStill, videoRef }) => {
   const canvasRef = useRef(null)
 
   useEffect(() => {
@@ -13,6 +13,14 @@ const VideoOverlay = ({ videoWidth, videoHeight, showOverlay }) => {
 
       // Clear the canvas
       ctx.clearRect(0, 0, width, height)
+
+      if (showStill) {
+        // Draw still frame
+        ctx.drawImage(videoRef.current, 0, 0, width, height)
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
+        ctx.fillRect(20, 20, 100, 100)
+        
+      }
 
       if (!showOverlay) return
 
@@ -41,7 +49,7 @@ const VideoOverlay = ({ videoWidth, videoHeight, showOverlay }) => {
     }
 
     drawOverlay()
-  }, [videoWidth, videoHeight, showOverlay])
+  }, [videoWidth, videoHeight, showOverlay, showStill])
 
   return (
     <canvas

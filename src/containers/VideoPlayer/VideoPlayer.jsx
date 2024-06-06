@@ -19,6 +19,8 @@ const VideoPlayerContainer = styled.div`
 
   video {
     object-fit: fill !important;
+    padding: 0;
+    margin: 0;
   }
 
   .video-row {
@@ -28,9 +30,13 @@ const VideoPlayerContainer = styled.div`
     align-items: center;
     flex-grow: 1;
     background-color: black;
+    padding: 0;
+    overflow: hidden;
 
     .video-wrapper {
       position: relative;
+      padding: 0;
+      margin: 0;
     }
   }
 
@@ -55,6 +61,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [bufferedRanges, setBufferedRanges] = useState([])
   const [loadError, setLoadError] = useState(null)
+  const [actualSource, setActualSource] = useState(src)
+
+  const [showStill, setShowStill] = useState(false)
 
   const [showOverlay, setShowOverlay] = useState(false)
   const [loop, setLoop] = useState(true)
@@ -70,8 +79,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     const updateVideoDimensions = () => {
       // DO NOT TOUCH THAT *0.95 ! IT'S AN IMPORTANT MAGIC!
       // Screw you, magic numbers! I'm changing it to 0.999
-      const clientWidth = videoRowRef.current.clientWidth * 0.999
-      const clientHeight = videoRowRef.current.clientHeight * 0.999
+      //
+      // For some reason, this seems to be the sweetspot
+      // Going under 2 px behaves weird
+      const clientWidth = videoRowRef.current.clientWidth - 2
+      const clientHeight = videoRowRef.current.clientHeight - 2
 
       if (clientWidth / clientHeight > aspectRatio) {
         const width = clientHeight * aspectRatio
@@ -95,7 +107,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   useEffect(() => {
     console.log('src changed', src)
     if (!videoRef.current) return
-    videoRef.current.load()
+    setShowStill(true)
+    setTimeout(() => setActualSource(src), 20)
   }, [src, videoRef])
 
   useEffect(() => {
@@ -125,6 +138,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     setIsPlaying(false)
     setCurrentTime(0)
     setBufferedRanges([])
+    setTimeout(() => setShowStill(false), 100)
   }
 
   const handleCanPlay = () => {
@@ -211,13 +225,12 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   return (
     <VideoPlayerContainer>
       <div className="video-row video-container" ref={videoRowRef}>
-        <div style={{ margin: '0 -10px' }}>
-          <div className="video-wrapper">
+          <div className="video-wrapper" style={{width: videoDimensions.width, height: videoDimensions.height}}>
             <video
               ref={videoRef}
               width={videoDimensions.width}
               height={videoDimensions.height}
-              src={src}
+              src={actualSource}
               onLoadedMetadata={handleLoadedMetadata}
               onProgress={handleProgress}
               onEnded={handleEnded}
@@ -231,8 +244,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
               videoWidth={videoDimensions.width}
               videoHeight={videoDimensions.height}
               showOverlay={showOverlay}
+              showStill={showStill}
+              videoRef={videoRef}
             />
-          </div>
         </div>
       </div>
 
