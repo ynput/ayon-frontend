@@ -25,6 +25,7 @@ const TASK_FRAGMENT = () => `
       edges {
         node {
           thumbnailId
+          name
         }
       }
   }
