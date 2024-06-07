@@ -86,7 +86,10 @@ const ListItem = forwardRef(
         ) : (
           <Styled.SimpleStatus icon={task.statusIcon} style={{ color: task.statusColor }} />
         )}
-        <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
+        <Styled.ItemThumbnail
+          src={task.thumbnailUrl?.replace('&placeholder=none', '')}
+          icon={task.taskIcon}
+        />
 
         {/* FOLDER LABEL */}
         <Styled.Folder className="folder" style={{ minWidth: minWidths.folder }}>
