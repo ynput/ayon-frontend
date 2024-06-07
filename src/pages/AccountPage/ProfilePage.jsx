@@ -167,6 +167,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
       const newPreferencesData = {
         notifications: data.frontendPreferences?.notifications,
+        notificationSound: data.frontendPreferences?.notificationSound,
       }
 
       setPreferencesData(newPreferencesData)
