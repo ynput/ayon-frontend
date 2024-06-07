@@ -32,6 +32,11 @@ const getInbox = ayonApi.injectEndpoints({
       transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) =>
         response?.data?.project?.versions?.edges?.map(({ node }) => node),
+      providesTags: (result = []) => [
+        { type: 'preview', id: 'LIST' },
+        ...result.map(({ id }) => ({ type: 'preview', id })),
+        ...result.map(({ id }) => ({ type: 'entity', id })),
+      ],
     }),
   }),
 })
