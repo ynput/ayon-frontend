@@ -7,10 +7,14 @@ import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
     const versions = task.versions?.edges?.map((edge) => edge.node) || []
-    const latestVersionWithThumbnail = [...versions]
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .reverse()
-      .find((version) => version.thumbnailId)
+    // get latest version with thumbnail
+    // if there is a version named 'HERO' with a thumbnail, use that always
+    const latestVersionWithThumbnail =
+      versions.find((version) => version.name === 'HERO' && version.thumbnailId) ||
+      [...versions]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .reverse()
+        .find((version) => version.thumbnailId)
 
     // use task thumbnail if it exists, otherwise use latest version thumbnail
     const thumbnailId = task?.thumbnailId || latestVersionWithThumbnail?.thumbnailId
