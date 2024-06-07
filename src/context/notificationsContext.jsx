@@ -11,7 +11,7 @@ const NotificationsContext = createContext()
 function NotificationsProvider(props) {
   const navigate = useNavigate()
   const {
-    data: { frontendPreferences: { notifications = false, newMessageSound = false } = {} } = {},
+    data: { frontendPreferences: { notifications = false, notificationSound = false } = {} } = {},
   } = useSelector((state) => state.user) || {}
 
   const getNotificationPermission = async (onGranted) => {
@@ -64,49 +64,61 @@ function NotificationsProvider(props) {
     }
   }
 
+  const soundRef = useRef(null)
   const toastId = useRef(null)
 
   //   subscribe to inbox.message topic
-  usePubSub('inbox.message', (topic, message) => {
-    // only show notifications for important messages
-    if (!message.summary?.isImportant) return
+  usePubSub(
+    'inbox.message',
+    (topic, message) => {
+      // only show notifications for important messages
+      if (!message.summary?.isImportant) return
 
-    // user has disabled notifications
-    if (!notifications) return
-
-    // remove markdown from the message description
-    const body = RemoveMarkdown(message?.description)
-    const title = 'New AYON message'
-
-    // check if window is already focused
-    // show a toast instead of a desktop notification
-    if (document.hasFocus()) {
-      const toastConfig = {
-        onClick: () => navigate('/inbox/important'),
-        icon: <Icon icon={'mark_email_unread'} />,
+      if (notificationSound && !document.hasFocus()) {
+        // play a notification sound
+        soundRef.current?.play()
       }
 
-      if (!toast.isActive(toastId.current)) {
-        toastId.current = toast.info(body, toastConfig)
+      // user has disabled notifications
+      if (!notifications) return
+
+      // remove markdown from the message description
+      const body = RemoveMarkdown(message?.description)
+      const title = 'New AYON message'
+
+      // check if window is already focused
+      // show a toast instead of a desktop notification
+      if (document.hasFocus()) {
+        const toastConfig = {
+          onClick: () => navigate('/inbox/important'),
+          icon: <Icon icon={'mark_email_unread'} />,
+        }
+
+        if (!toast.isActive(toastId.current)) {
+          toastId.current = toast.info(body, toastConfig)
+        } else {
+          // update the toast message instead
+          toast.update(toastId.current, toastConfig)
+        }
       } else {
-        // update the toast message instead
-        toast.update(toastId.current, toastConfig)
+        // check if the user has granted permission to send notifications
+        if (Notification.permission !== 'granted') return
+
+        // send a desktop notification to the user
+        sendNotification({
+          title: title,
+          body: body,
+          link: '/inbox/important',
+        })
       }
-    }
-
-    // check if the user has granted permission to send notifications
-    if (Notification.permission !== 'granted') return
-
-    // send a desktop notification to the user
-    sendNotification({
-      title: title,
-      body: body,
-      link: '/inbox/important',
-    })
-  })
+    },
+    null,
+    { deps: [notifications, notificationSound, soundRef.current] },
+  )
 
   return (
     <NotificationsContext.Provider value={{ sendNotification }}>
+      {notificationSound && <audio src="/ayon-notification.mp3" ref={soundRef} />}
       {props.children}
     </NotificationsContext.Provider>
   )

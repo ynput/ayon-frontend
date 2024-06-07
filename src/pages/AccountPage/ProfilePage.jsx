@@ -155,7 +155,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const [updatePreferences, { isLoading: isUpdatingPreferences }] =
     useUpdateUserPreferencesMutation()
 
-  const initPreferences = { notifications: false }
+  const initPreferences = { notifications: false, notificationSound: false }
   const [initPreferencesData, setInitPreferencesData] = useState(initPreferences)
   const [preferencesData, setPreferencesData] = useState(initPreferences)
   const [preferenceChanges, setPreferenceChanges] = useState(false)
@@ -261,10 +261,27 @@ const ProfilePage = ({ user = {}, isLoading }) => {
             </FormRow>
 
             <FormRow label="Desktop Notifications" key="notifications">
-              <div data-tooltip="Get notifications on your device" style={{ width: 'fit-content' }}>
+              <div
+                data-tooltip="Keep an 'AYON' important notifications on your device"
+                style={{ width: 'fit-content' }}
+              >
                 <InputSwitch
                   checked={preferencesData.notifications}
                   id={'notifications'}
+                  onChange={handleChangePreferences}
+                  disabled={isUpdatingPreferences || isLoading}
+                />
+              </div>
+            </FormRow>
+
+            <FormRow label="Notification Sound" key="notificationSound">
+              <div
+                data-tooltip="Get a little chime sound on new important notifications"
+                style={{ width: 'fit-content' }}
+              >
+                <InputSwitch
+                  checked={preferencesData.notificationSound}
+                  id={'notificationSound'}
                   onChange={handleChangePreferences}
                   disabled={isUpdatingPreferences || isLoading}
                 />
