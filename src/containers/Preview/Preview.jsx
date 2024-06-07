@@ -40,10 +40,10 @@ const Preview = ({ selected = [], projectName, onClose }) => {
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
-        <PreviewPlayer 
-          versionId={selected[0]} 
-          projectName={projectName} 
-          attrib={selectedVersionsData[0]?.attrib} 
+        <PreviewPlayer
+          versionId={selected[0]}
+          projectName={projectName}
+          attrib={selectedVersionsData[0]?.attrib}
         />
         <PreviewDetailsPanel selected={selected} projectName={projectName} />
       </Styled.Content>

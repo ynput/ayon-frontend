@@ -6,7 +6,6 @@ import { useEffect } from 'react'
 import Preview from './Preview'
 import { isEqual } from 'lodash'
 import styled from 'styled-components'
-import Shortcuts from '../Shortcuts'
 
 const StyledDialog = styled(Dialog)`
   width: calc(100% - 64px);
@@ -47,8 +46,6 @@ const PreviewDialog = () => {
     dispatch(openPreview({ selected: queryIds, projectName: queryProjectName }))
   }, [queryProjectName])
 
-  if (!selected.length) return null
-
   const handleClose = () => {
     // remove query params preview_id and preview_type from url
     searchParams.delete('preview_id')
@@ -58,16 +55,27 @@ const PreviewDialog = () => {
     dispatch(closePreview())
   }
 
-  const handleShortcutClose = (hovered, isMeta, e) => {
-    // check className quill isn't is closest parent
-    if (e.target.closest('.quill')) return
+  // when pressing escape key, close the dialog
+  useEffect(() => {
+    const handleEscape = (e) => {
+      // check shortcut isn't inside an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
 
-    handleClose()
-  }
+      // check shortcut isn't inside a contenteditable element
+      if (e.target.isContentEditable) return
+
+      if (e.key === 'Escape') {
+        handleClose()
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [selected])
+
+  if (!selected.length) return null
 
   return (
     <>
-      <Shortcuts shortcuts={[{ key: 'Escape', action: handleShortcutClose }]} />
       <StyledDialog isOpen={selected.length && projectName} hideCancelButton size="full">
         <Preview {...{ selected, projectName }} onClose={handleClose} />
       </StyledDialog>

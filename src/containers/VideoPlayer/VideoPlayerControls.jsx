@@ -26,10 +26,14 @@ const VideoPlayerControls = ({
   }
 
   const handleGoToStart = () => {
-    videoRef.current.currentTime = 0
+    const newFrame = 0
+    videoRef.current.currentTime = newFrame
+    onFrameChange(newFrame)
   }
   const handleGoToEnd = () => {
-    videoRef.current.currentTime = videoRef.current.duration
+    const newFrame = videoRef.current.duration
+    videoRef.current.currentTime = newFrame
+    onFrameChange(newFrame)
   }
 
   const handleGoBack1 = () => {
@@ -74,12 +78,12 @@ const VideoPlayerControls = ({
 
       const keyHandlers = [
         { keys: [' ', 'k'], action: handlePlayPause },
-        { keys: ['ArrowLeft'], action: handleGoBack1 },
-        { keys: ['ArrowRight'], action: handleGoForward1 },
+        { keys: ['ArrowLeft', '3'], action: handleGoBack1 },
+        { keys: ['ArrowRight', '4'], action: handleGoForward1 },
         { keys: ['a'], action: handleGoToStart },
         { keys: ['s'], action: handleGoToEnd },
-        { keys: ['j'], shiftKeys: ['ArrowLeft'], action: handleGoBack5 },
-        { keys: ['l'], shiftKeys: ['ArrowRight'], action: handleGoForward5 },
+        { keys: ['j', '1'], shiftKeys: ['ArrowLeft'], action: handleGoBack5 },
+        { keys: ['l', '2'], shiftKeys: ['ArrowRight'], action: handleGoForward5 },
       ]
 
       const keyHandler = keyHandlers.find((handler) => {
@@ -93,6 +97,7 @@ const VideoPlayerControls = ({
       if (keyHandler) {
         keyHandler.action()
         e.preventDefault()
+        e.stopPropagation()
       }
     }
 
