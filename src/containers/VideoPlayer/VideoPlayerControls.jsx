@@ -68,6 +68,12 @@ const VideoPlayerControls = ({
       // abort when shift key is pressed
       if (e.shiftKey) return
 
+      // check shortcut isn't inside an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+
+      // check shortcut isn't inside a contenteditable element
+      if (e.target.isContentEditable) return
+
       switch (e.key) {
         // Idiomatically play/pause with space
         case ' ':
