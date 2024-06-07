@@ -18,6 +18,15 @@ export default ({ mode }) => {
         '/api': {
           target: SERVER_URL,
           changeOrigin: true,
+          timeout: 60000, // Increase timeout to 60 seconds
+          proxyTimeout: 60000, // Increase proxy timeout to 60 seconds
+          // handle the errors properly
+          onError(err, req, res) {
+            res.writeHead(500, {
+              'Content-Type': 'text/plain',
+            })
+            res.end('Something went wrong with the proxy server.')
+          },
         },
         '/ws': {
           target: SERVER_URL,
