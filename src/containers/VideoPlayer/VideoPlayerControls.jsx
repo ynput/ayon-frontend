@@ -74,56 +74,21 @@ const VideoPlayerControls = ({
       // check shortcut isn't inside a contenteditable element
       if (e.target.isContentEditable) return
 
-      switch (e.key) {
-        // Idiomatically play/pause with space
-        case ' ':
-          handlePlayPause()
-          e.preventDefault()
-          break
-        case 'ArrowLeft':
-          handleGoBack1()
-          e.preventDefault()
-          break
-        case 'ArrowRight':
-          handleGoForward1()
-          e.preventDefault()
-          break
+      const keyHandlers = [
+        { keys: [' ', 'k'], action: handlePlayPause },
+        { keys: ['ArrowLeft', '3'], action: handleGoBack1 },
+        { keys: ['ArrowRight', '4'], action: handleGoForward1 },
+        { keys: ['a'], action: handleGoToStart },
+        { keys: ['s'], action: handleGoToEnd },
+        { keys: ['j', '1'], action: handleGoBack5 },
+        { keys: ['l', '2'], action: handleGoForward5 },
+      ]
 
-        // Go to start/end
-        case 'a':
-          handleGoToStart()
-          break
-        case 's':
-          handleGoToEnd()
-          break
+      const keyHandler = keyHandlers.find((handler) => handler.keys.includes(e.key))
 
-        // Fast seek
-        case 'j':
-          handleGoBack5()
-          break
-        case 'k':
-          handlePlayPause()
-          break
-        case 'l':
-          handleGoForward5()
-          break
-
-        // Avid-style seeking
-        case '1':
-          handleGoBack5()
-          break
-        case '2':
-          handleGoForward5()
-          break
-        case '3':
-          handleGoBack1()
-          break
-        case '4':
-          handleGoForward1()
-          break
-
-        default:
-          break
+      if (keyHandler) {
+        keyHandler.action()
+        e.preventDefault()
       }
     }
 
