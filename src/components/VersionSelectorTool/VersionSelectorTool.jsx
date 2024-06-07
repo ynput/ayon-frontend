@@ -72,8 +72,8 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!previousVersion}
         beforeContent={<Icon icon="chevron_left" />}
-        afterContent={<ShortcutWidget>A</ShortcutWidget>}
-        shortcut={'A'}
+        afterContent={<ShortcutWidget>Z</ShortcutWidget>}
+        shortcut={'Z'}
       />
       <PreviewVersionDropdown
         versions={versions}
@@ -87,8 +87,8 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!nextVersion}
         afterContent={<Icon icon="chevron_right" />}
-        beforeContent={<ShortcutWidget>D</ShortcutWidget>}
-        shortcut={'D'}
+        beforeContent={<ShortcutWidget>C</ShortcutWidget>}
+        shortcut={'C'}
       />
       <NavButton
         version={allVersions.latest}
@@ -96,9 +96,9 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!latestVersion}
         beforeContent={'Latest - '}
-        shortcut={'Shift+D'}
+        shortcut={'Shift+C'}
         selected={selected === latestVersion?.id}
-        afterContent={latestVersion && <ShortcutWidget>Shift+D</ShortcutWidget>}
+        afterContent={latestVersion && <ShortcutWidget>Shift+C</ShortcutWidget>}
       />
       <NavButton
         version={allVersions.approved}
@@ -106,9 +106,9 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!approvedVersion}
         beforeContent={'Approved - '}
-        shortcut={'Shift+S'}
+        shortcut={'Shift+X'}
         selected={selected === approvedVersion?.id}
-        afterContent={approvedVersion && <ShortcutWidget>Shift+S</ShortcutWidget>}
+        afterContent={approvedVersion && <ShortcutWidget>Shift+X</ShortcutWidget>}
       />
       {heroVersion && (
         <NavButton

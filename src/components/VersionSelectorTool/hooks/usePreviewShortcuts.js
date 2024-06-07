@@ -32,23 +32,23 @@ const usePreviewShortcuts = ({ allVersions = {}, onChange, toolsRef, selectRef }
 
   const shortcuts = [
     {
-      key: 'a', //select previous version
+      key: 'z', //select previous version
       action: () => handleShortcut('previous'),
     },
     {
-      key: 's', //select any version (dropdown)
+      key: 'x', //select any version (dropdown)
       action: () => openSelectDropdown(),
     },
     {
-      key: 'd', //select next version
+      key: 'c', //select next version
       action: () => handleShortcut('next'),
     },
     {
-      key: 'D', //select latest version
+      key: 'C', //select latest version
       action: () => handleShortcut('latest'),
     },
     {
-      key: 'S', //select approved version
+      key: 'X', //select approved version
       action: () => handleShortcut('approved'),
     },
     {
