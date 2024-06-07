@@ -8,6 +8,7 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
     const versions = task.versions?.edges?.map((edge) => edge.node) || []
     const latestVersionWithThumbnail = [...versions]
+      .sort((a, b) => a.name.localeCompare(b.name))
       .reverse()
       .find((version) => version.thumbnailId)
 
