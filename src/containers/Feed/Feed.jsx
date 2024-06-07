@@ -198,7 +198,7 @@ const Feed = ({
 
   const handleRefClick = (ref = {}) => {
     const { entityId, entityType, activityId } = ref
-    const supportedTypes = ['version', 'task']
+    const supportedTypes = ['version', 'task', 'folder']
 
     if (!supportedTypes.includes(entityType)) return console.log('Entity type not supported yet')
 

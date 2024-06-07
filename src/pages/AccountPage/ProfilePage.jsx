@@ -8,16 +8,21 @@ import {
   SaveButton,
   InputText,
   getShimmerStyles,
+  InputSwitch,
 } from '@ynput/ayon-react-components'
-import { useUpdateUserMutation } from '../../services/user/updateUser'
+import {
+  useUpdateUserMutation,
+  useUpdateUserPreferencesMutation,
+} from '../../services/user/updateUser'
 import Avatar from '../../components/Avatar/Avatar'
 import styled, { css } from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../../ayon'
 import Type from '/src/theme/typography.module.css'
-import { updateUserAttribs } from '../../features/user'
+import { updateUserAttribs, updateUserPreferences } from '../../features/user'
 import { useDispatch } from 'react-redux'
+import { useNotifications } from '/src/context/notificationsContext'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -30,6 +35,10 @@ const FormsStyled = styled.section`
 
   & > *:last-child {
     /* flex: 1; */
+  }
+
+  .label {
+    min-width: 170px;
   }
 `
 
@@ -130,8 +139,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
         },
       }).unwrap()
 
-      toast.success('Profile updated')
-
       // update redux state with new data
       dispatch(updateUserAttribs(formData))
       // reset form
@@ -142,6 +149,89 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       toast.error('Unable to update profile')
       toast.error(error.details)
     }
+  }
+
+  // USER PREFERENCES
+  const [updatePreferences, { isLoading: isUpdatingPreferences }] =
+    useUpdateUserPreferencesMutation()
+
+  const initPreferences = { notifications: false, notificationSound: false }
+  const [initPreferencesData, setInitPreferencesData] = useState(initPreferences)
+  const [preferencesData, setPreferencesData] = useState(initPreferences)
+  const [preferenceChanges, setPreferenceChanges] = useState(false)
+
+  // once user data is loaded, set form data
+  useEffect(() => {
+    if (user && !isLoading) {
+      const { data = {} } = user
+
+      const newPreferencesData = {
+        notifications: data.frontendPreferences?.notifications,
+        notificationSound: data.frontendPreferences?.notificationSound,
+      }
+
+      setPreferencesData(newPreferencesData)
+      // used to reset form and detect changes
+      setInitPreferencesData(newPreferencesData)
+    }
+
+    return () => {
+      // reset forms
+      setInitPreferencesData(initPreferences)
+      setPreferencesData(initPreferences)
+    }
+  }, [isLoading, user])
+
+  // look for changes when preferencesData changes
+  useEffect(() => {
+    const isDiff = JSON.stringify(preferencesData) !== JSON.stringify(initPreferencesData)
+
+    if (isDiff) {
+      if (!preferenceChanges) setPreferenceChanges(true)
+    } else {
+      setPreferenceChanges(false)
+    }
+  }, [preferencesData, initPreferencesData])
+
+  const { sendNotification } = useNotifications()
+
+  const onSavePreferences = async () => {
+    setPreferenceChanges(false)
+    try {
+      await updatePreferences({
+        name: user.name,
+        preferences: preferencesData,
+      }).unwrap()
+
+      dispatch(updateUserPreferences(preferencesData))
+      // reset form
+      setInitPreferencesData(preferencesData)
+
+      // if the user has enabled notifications for the first time, ask for permission
+      if (preferencesData.notifications && Notification.permission !== 'granted') {
+        sendNotification({ title: 'Notifications already enabled 💪', link: '/account/profile' })
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to update preferences')
+    }
+  }
+
+  const handleChangePreferences = (e) => {
+    const { id, checked } = e.target
+
+    setPreferencesData({
+      ...preferencesData,
+      [id]: checked,
+    })
+  }
+
+  const handleSaveAll = async () => {
+    if (changesMade) await onSave()
+    if (preferenceChanges) await onSavePreferences()
+
+    // success toast
+    toast.success('Profile updated')
   }
 
   return (
@@ -170,11 +260,40 @@ const ProfilePage = ({ user = {}, isLoading }) => {
                 onEdit={() => setShowSetPassword(true)}
               />
             </FormRow>
+
+            <FormRow label="Desktop Notifications" key="notifications">
+              <div
+                data-tooltip="Keep an 'AYON' important notifications on your device"
+                style={{ width: 'fit-content' }}
+              >
+                <InputSwitch
+                  checked={preferencesData.notifications}
+                  id={'notifications'}
+                  onChange={handleChangePreferences}
+                  disabled={isUpdatingPreferences || isLoading}
+                />
+              </div>
+            </FormRow>
+
+            <FormRow label="Notification Sound" key="notificationSound">
+              <div
+                data-tooltip="Get a little chime sound on new important notifications"
+                style={{ width: 'fit-content' }}
+              >
+                <InputSwitch
+                  checked={preferencesData.notificationSound}
+                  id={'notificationSound'}
+                  onChange={handleChangePreferences}
+                  disabled={isUpdatingPreferences || isLoading}
+                />
+              </div>
+            </FormRow>
+
             <SaveButton
-              onClick={onSave}
+              onClick={handleSaveAll}
               label="Save profile"
-              active={changesMade}
-              saving={isUpdatingUser}
+              active={changesMade || preferenceChanges}
+              saving={isUpdatingUser || isUpdatingPreferences}
               style={{ padding: '6px 18px', marginLeft: 'auto' }}
             />
           </Panel>

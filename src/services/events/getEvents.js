@@ -134,7 +134,7 @@ const getEvents = ayonApi.injectEndpoints({
           await cacheDataLoaded
 
           const handlePubSub = (topic, message) => {
-            if (topic === 'client.connected') {
+            if (topic === 'client.connected' || topic === 'inbox.message') {
               return
             }
 

@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import PubSub from '/src/pubsub'
 
 const usePubSub = (topic, callback, ids, config = {}) => {
-  const { acceptNew = false, disableDebounce = false } = config
+  const { acceptNew = false, disableDebounce = false, deps = [] } = config
   const handlePubSub = (topicName, message) => {
     if (ids && !ids.includes(message?.summary?.entityId) && !acceptNew) return
     console.log('WS Version Refetch', topicName)
@@ -19,7 +19,7 @@ const usePubSub = (topic, callback, ids, config = {}) => {
   useEffect(() => {
     const token = PubSub.subscribe(topic, disableDebounce ? handlePubSub : handlePubSubDebounce)
     return () => PubSub.unsubscribe(token)
-  }, [ids])
+  }, [ids, ...deps])
 }
 
 export default usePubSub
