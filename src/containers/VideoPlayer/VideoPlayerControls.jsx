@@ -76,12 +76,12 @@ const VideoPlayerControls = ({
 
       const keyHandlers = [
         { keys: [' ', 'k'], action: handlePlayPause },
-        { keys: ['ArrowLeft', '3'], action: handleGoBack1 },
-        { keys: ['ArrowRight', '4'], action: handleGoForward1 },
+        { keys: ['ArrowLeft'], action: handleGoBack1 },
+        { keys: ['ArrowRight'], action: handleGoForward1 },
         { keys: ['a'], action: handleGoToStart },
         { keys: ['s'], action: handleGoToEnd },
-        { keys: ['j', '1'], action: handleGoBack5 },
-        { keys: ['l', '2'], action: handleGoForward5 },
+        { keys: ['j'], action: handleGoBack5 },
+        { keys: ['l'], action: handleGoForward5 },
       ]
 
       const keyHandler = keyHandlers.find((handler) => handler.keys.includes(e.key))
