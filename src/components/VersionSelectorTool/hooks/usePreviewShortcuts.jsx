@@ -1,9 +1,12 @@
-import Shortcuts from '/src/containers/Shortcuts'
+import { useEffect } from 'react'
 
-const usePreviewShortcuts = ({ allVersions = {}, onChange, toolsRef }) => {
+const usePreviewShortcuts = ({ allVersions = {}, onChange, toolsRef, selectRef }) => {
   const handleShortcut = (action) => {
     const version = allVersions[action]
-    if (version?.id) onChange(version.id)
+
+    if (!version) return
+
+    if (version.id) onChange(version.id)
 
     // highlight button briefly
     const buttonEl = toolsRef.current.querySelector(`#${action}-${version.id}`)
@@ -16,30 +19,68 @@ const usePreviewShortcuts = ({ allVersions = {}, onChange, toolsRef }) => {
     }, 150)
   }
 
+  const openSelectDropdown = () => {
+    const options = selectRef.current.getOptions()
+    if (!options) selectRef.current?.open()
+    else selectRef.current?.close()
+
+    // focus on the dropdown
+    const el = selectRef.current?.getElement()
+    const buttonEl = el?.querySelector('button')
+    if (buttonEl) buttonEl.focus()
+  }
+
   const shortcuts = [
     {
-      key: 'z', //select previous version
+      key: 'a', //select previous version
       action: () => handleShortcut('previous'),
     },
     {
-      key: 'c', //select next version
+      key: 's', //select any version (dropdown)
+      action: () => openSelectDropdown(),
+    },
+    {
+      key: 'd', //select next version
       action: () => handleShortcut('next'),
     },
     {
-      key: 'v', //select latest version
+      key: 'D', //select latest version
       action: () => handleShortcut('latest'),
     },
     {
-      key: 'b', //select approved version
+      key: 'S', //select approved version
       action: () => handleShortcut('approved'),
     },
     {
-      key: 'n', //select approved version
+      key: 'H', //select hero version
       action: () => handleShortcut('hero'),
     },
   ]
 
-  return <Shortcuts shortcuts={shortcuts} deps={[allVersions.selected]} />
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // abort if modifier keys are pressed
+      if (e.ctrlKey || e.altKey || e.metaKey) return
+
+      // check shortcut isn't inside an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+
+      // check shortcut isn't inside a contenteditable element
+      if (e.target.isContentEditable) return
+
+      const shortcut = shortcuts.find((s) => s.key === e.key)
+      if (shortcut) {
+        shortcut.action()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    // Cleanup function to remove the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [shortcuts])
 }
 
 export default usePreviewShortcuts

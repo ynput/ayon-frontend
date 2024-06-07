@@ -56,69 +56,72 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
     approved: approvedVersion,
     hero: heroVersion,
   }
+  const selectRef = useRef(null)
 
   const toolsRef = useRef(null)
 
-  const shortcuts = usePreviewShortcuts({ allVersions, onChange, toolsRef })
+  usePreviewShortcuts({ allVersions, onChange, toolsRef, selectRef })
 
   if (selectedIndex === -1) return
 
   return (
-    <>
-      {shortcuts}
-      <Styled.Tools ref={toolsRef}>
+    <Styled.Tools ref={toolsRef}>
+      <NavButton
+        version={allVersions.previous}
+        className="previous"
+        onClick={onChange}
+        disabled={!previousVersion}
+        beforeContent={<Icon icon="chevron_left" />}
+        afterContent={<ShortcutWidget>A</ShortcutWidget>}
+        shortcut={'A'}
+      />
+      <PreviewVersionDropdown
+        versions={versions}
+        selected={selected}
+        onChange={onChange}
+        selectRef={selectRef}
+      />
+      <NavButton
+        version={allVersions.next}
+        className="next"
+        onClick={onChange}
+        disabled={!nextVersion}
+        afterContent={<Icon icon="chevron_right" />}
+        beforeContent={<ShortcutWidget>D</ShortcutWidget>}
+        shortcut={'D'}
+      />
+      <NavButton
+        version={allVersions.latest}
+        className="latest"
+        onClick={onChange}
+        disabled={!latestVersion}
+        beforeContent={'Latest - '}
+        shortcut={'Shift+D'}
+        selected={selected === latestVersion?.id}
+        afterContent={latestVersion && <ShortcutWidget>Shift+D</ShortcutWidget>}
+      />
+      <NavButton
+        version={allVersions.approved}
+        className="approved"
+        onClick={onChange}
+        disabled={!approvedVersion}
+        beforeContent={'Approved - '}
+        shortcut={'Shift+S'}
+        selected={selected === approvedVersion?.id}
+        afterContent={approvedVersion && <ShortcutWidget>Shift+S</ShortcutWidget>}
+      />
+      {heroVersion && (
         <NavButton
-          version={allVersions.previous}
-          className="previous"
+          version={allVersions.hero}
+          className="hero"
           onClick={onChange}
-          disabled={!previousVersion}
-          beforeContent={<Icon icon="chevron_left" />}
-          afterContent={<ShortcutWidget>Z</ShortcutWidget>}
-          shortcut={'Z'}
+          beforeContent={'Hero'}
+          shortcut={'SHift+H'}
+          selected={selected === heroVersion?.id}
+          afterContent={heroVersion && <ShortcutWidget>Shift+H</ShortcutWidget>}
         />
-        <PreviewVersionDropdown versions={versions} selected={selected} onChange={onChange} />
-        <NavButton
-          version={allVersions.next}
-          className="next"
-          onClick={onChange}
-          disabled={!nextVersion}
-          afterContent={<Icon icon="chevron_right" />}
-          beforeContent={<ShortcutWidget>C</ShortcutWidget>}
-          shortcut={'C'}
-        />
-        <NavButton
-          version={allVersions.latest}
-          className="latest"
-          onClick={onChange}
-          disabled={!latestVersion}
-          beforeContent={'Latest - '}
-          shortcut={'V'}
-          selected={selected === latestVersion?.id}
-          // afterContent={<ShortcutWidget>V</ShortcutWidget>}
-        />
-        <NavButton
-          version={allVersions.approved}
-          className="approved"
-          onClick={onChange}
-          disabled={!approvedVersion}
-          beforeContent={'Approved - '}
-          shortcut={'B'}
-          selected={selected === approvedVersion?.id}
-          // afterContent={approvedVersion && <ShortcutWidget>B</ShortcutWidget>}
-        />
-        {heroVersion && (
-          <NavButton
-            version={allVersions.hero}
-            className="hero"
-            onClick={onChange}
-            beforeContent={'Hero'}
-            shortcut={'N'}
-            selected={selected === heroVersion?.id}
-            // afterContent={approvedVersion && <ShortcutWidget>N</ShortcutWidget>}
-          />
-        )}
-      </Styled.Tools>
-    </>
+      )}
+    </Styled.Tools>
   )
 }
 
