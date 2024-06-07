@@ -266,23 +266,3 @@ const DetailsPanelHeader = ({
 }
 
 export default DetailsPanelHeader
-
-// {
-//   "id": "739af4b83da311eeac5d0242ac120004",
-//   "name": "modeling",
-//   "status": "In progress",
-//   "taskType": "Modeling",
-//   "assignees": [
-//       "userName"
-//   ],
-//   "updatedAt": "2023-08-30T15:14:45.427705+00:00",
-//   "folderName": "00_kloecksiouys_mccrietsoiwn",
-//   "folderId": "739a748e3da311eeac5d0242ac120004",
-//   "path": "assets/characters/00_kloecksiouys_mccrietsoiwn",
-//   "projectName": "demo_Commercial",
-//   "latestVersionThumbnailId": "08b9986c474811eea5d60242ac120004",
-//   "thumbnailUrl": "/api/projects/demo_Commercial/thumbnails/08b9986c474811eea5d60242ac120004?updatedAt=2023-08-30T15:14:45.427705+00:00&token=0848587a83cd065914bf9e6c0792bdd246910cbd2ea520115f802d6adbc9e396",
-//   "statusIcon": "play_arrow",
-//   "statusColor": "#3498db",
-//   "taskIcon": "language"
-// }
