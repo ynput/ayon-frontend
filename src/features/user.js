@@ -3,7 +3,18 @@ import axios from 'axios'
 
 const userSlice = createSlice({
   name: 'user',
-  initialState: {},
+  initialState: {
+    name: '',
+    data: {
+      frontendPreferences: {},
+    },
+    attrib: {
+      fullName: '',
+      email: '',
+      avatarUrl: '',
+      developerMode: false,
+    },
+  },
   reducers: {
     login: (state, action) => {
       if (action.payload.accessToken) {
@@ -40,8 +51,22 @@ const userSlice = createSlice({
       if (!state.attrib) return
       state.attrib.developerMode = action.payload
     },
+    updateUserPreferences: (state, action) => {
+      if (!state.data) return
+      state.data.frontendPreferences = {
+        ...(state.data?.frontendPreferences || {}),
+        ...action.payload,
+      }
+    },
   },
 })
 
-export const { login, logout, updateUserAttribs, updateUserData, toggleDevMode } = userSlice.actions
+export const {
+  login,
+  logout,
+  updateUserAttribs,
+  updateUserData,
+  updateUserPreferences,
+  toggleDevMode,
+} = userSlice.actions
 export default userSlice.reducer

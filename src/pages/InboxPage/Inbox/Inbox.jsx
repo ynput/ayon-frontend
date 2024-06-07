@@ -10,7 +10,7 @@ import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDash
 import Shortcuts from '/src/containers/Shortcuts'
 import { clearHighlights, highlightActivity } from '/src/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
-import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
+import { Icon, Spacer } from '@ynput/ayon-react-components'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useCreateContext from '/src/hooks/useCreateContext'
 import { InView } from 'react-intersection-observer'
@@ -19,6 +19,7 @@ import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
 import Typography from '/src/theme/typography.module.css'
+import EnableNotifications from '/src/components/EnableNotifications'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -339,19 +340,20 @@ const Inbox = ({ filter }) => {
       <Styled.Tools>
         {/* <InputText placeholder="Search..." /> */}
         <Spacer />
+        <EnableNotifications />
         {isActive && (
-          <Button
+          <Styled.ShortcutButton
             label="Clear all"
             icon="done_all"
             onClick={handleClearAll}
             disabled={!messages.length}
           >
             <ShortcutWidget>Shift+C</ShortcutWidget>
-          </Button>
+          </Styled.ShortcutButton>
         )}
-        <Button label="Refresh" icon="refresh" onClick={refreshInbox}>
+        <Styled.ShortcutButton label="Refresh" icon="refresh" onClick={refreshInbox}>
           <ShortcutWidget>R</ShortcutWidget>
-        </Button>
+        </Styled.ShortcutButton>
       </Styled.Tools>
       <Styled.InboxSection direction="row">
         <Styled.MessagesList
