@@ -6,6 +6,7 @@ import Timecode from './Timecode'
 const VideoPlayerControls = ({
   videoRef,
   isPlaying,
+  onFrameChange,
   currentTime,
   duration,
   frameRate,
@@ -32,17 +33,28 @@ const VideoPlayerControls = ({
   }
 
   const handleGoBack1 = () => {
-    videoRef.current.currentTime -= frameLength
+    const newFrame = Math.max(0, videoRef.current.currentTime - frameLength)
+    videoRef.current.currentTime = newFrame
+    onFrameChange(newFrame)
   }
   const handleGoForward1 = () => {
-    videoRef.current.currentTime += frameLength
+    const newFrame = Math.min(videoRef.current.duration, videoRef.current.currentTime + frameLength)
+    videoRef.current.currentTime = newFrame
+    onFrameChange(newFrame)
   }
 
   const handleGoBack5 = () => {
-    videoRef.current.currentTime -= 5 * frameLength
+    const newFrame = Math.max(0, videoRef.current.currentTime - 5 * frameLength)
+    videoRef.current.currentTime = newFrame
+    onFrameChange(newFrame)
   }
   const handleGoForward5 = () => {
-    videoRef.current.currentTime += 5 * frameLength
+    const newFrame = Math.min(
+      videoRef.current.duration,
+      videoRef.current.currentTime + 5 * frameLength,
+    )
+    videoRef.current.currentTime = newFrame
+    onFrameChange(newFrame)
   }
 
   //
@@ -64,7 +76,7 @@ const VideoPlayerControls = ({
           break
         case 'ArrowLeft':
           handleGoBack1()
-          e.preventDevault()
+          e.preventDefault()
           break
         case 'ArrowRight':
           handleGoForward1()

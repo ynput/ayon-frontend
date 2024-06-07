@@ -264,6 +264,10 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
         <VideoPlayerControls
           videoRef={videoRef}
           isPlaying={isPlaying}
+          onFrameChange={(newFrame) => {
+            setCurrentTime(newFrame)
+            setPreferredInitialPosition(newFrame)
+          }}
           currentTime={currentTime}
           duration={duration}
           frameRate={frameRate}
