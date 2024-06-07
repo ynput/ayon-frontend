@@ -115,7 +115,6 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
           version={allVersions.hero}
           className="hero"
           onClick={onChange}
-          beforeContent={'Hero'}
           shortcut={'SHift+H'}
           selected={selected === heroVersion?.id}
           afterContent={heroVersion && <ShortcutWidget>Shift+H</ShortcutWidget>}
