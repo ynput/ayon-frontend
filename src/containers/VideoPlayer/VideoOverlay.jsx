@@ -17,9 +17,6 @@ const VideoOverlay = ({ videoWidth, videoHeight, showOverlay, showStill, videoRe
       if (showStill) {
         // Draw still frame
         ctx.drawImage(videoRef.current, 0, 0, width, height)
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
-        ctx.fillRect(20, 20, 100, 100)
-        
       }
 
       if (!showOverlay) return
@@ -33,7 +30,7 @@ const VideoOverlay = ({ videoWidth, videoHeight, showOverlay, showStill, videoRe
         width * safeMargin,
         height * safeMargin,
         width * (1 - 2 * safeMargin),
-        height * (1 - 2 * safeMargin)
+        height * (1 - 2 * safeMargin),
       )
 
       // Draw center cross
@@ -67,4 +64,3 @@ const VideoOverlay = ({ videoWidth, videoHeight, showOverlay, showStill, videoRe
 }
 
 export default VideoOverlay
-
