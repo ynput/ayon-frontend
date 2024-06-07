@@ -65,8 +65,6 @@ const VideoPlayerControls = ({
     const handleKeyDown = (e) => {
       // abort if modifier keys are pressed
       if (e.ctrlKey || e.altKey || e.metaKey) return
-      // abort when shift key is pressed
-      if (e.shiftKey) return
 
       // check shortcut isn't inside an input field
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
@@ -80,11 +78,17 @@ const VideoPlayerControls = ({
         { keys: ['ArrowRight'], action: handleGoForward1 },
         { keys: ['a'], action: handleGoToStart },
         { keys: ['s'], action: handleGoToEnd },
-        { keys: ['j'], action: handleGoBack5 },
-        { keys: ['l'], action: handleGoForward5 },
+        { keys: ['j'], shiftKeys: ['ArrowLeft'], action: handleGoBack5 },
+        { keys: ['l'], shiftKeys: ['ArrowRight'], action: handleGoForward5 },
       ]
 
-      const keyHandler = keyHandlers.find((handler) => handler.keys.includes(e.key))
+      const keyHandler = keyHandlers.find((handler) => {
+        if (e.shiftKey) {
+          return handler.shiftKeys?.includes(e.key)
+        } else {
+          return handler.keys.includes(e.key)
+        }
+      })
 
       if (keyHandler) {
         keyHandler.action()
