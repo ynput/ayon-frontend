@@ -21,8 +21,8 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
   // this should never happen, but just in case
   // only admins and managers can see the second endpoint though
   const thumbnailUrl = thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}&placeholder=none`
-    : `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}&placeholder=none`
+    ? `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}&placeholder=none`
+    : `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}&placeholder=none`
 
   return thumbnailUrl
 }
@@ -81,16 +81,11 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
   // add icons to tasks and also add thumbnailUrl
   const tasksWithIcons = tasks.map((task) => {
-    const thumbnailId = task?.thumbnailId ? task?.thumbnailId : task.latestVersionThumbnailId
-    const updatedAt = task?.thumbnailId
-      ? task.updatedAt
-      : task.latestVersionUpdatedAt ?? task.updatedAt
-
     const thumbnailUrl = getThumbnailUrl({
-      entityId: task.id,
-      entityType: 'task',
-      thumbnailId,
-      updatedAt,
+      entityId: task.thumbnailEntityId,
+      entityType: task.thumbnailEntityType,
+      thumbnailId: task.thumbnailId,
+      updatedAt: task.thumbnailUpdatedAt,
       projectName: task.projectName,
     })
 

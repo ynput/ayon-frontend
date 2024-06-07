@@ -18,6 +18,13 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
 
     // use task thumbnail if it exists, otherwise use latest version thumbnail
     const thumbnailId = task?.thumbnailId || latestVersionWithThumbnail?.thumbnailId
+    // we prefer using the entity id and entity type for the thumbnail endpoint
+    // normal users can not see thumbnails from thumbnailId
+    const thumbnailEntityId = task?.thumbnailId ? task.id : latestVersionWithThumbnail?.id
+    const thumbnailEntityType = task?.thumbnailId ? 'task' : 'version'
+    const thumbnailUpdatedAt = task?.thumbnailId
+      ? task.updatedAt
+      : latestVersionWithThumbnail?.updatedAt
 
     // create a short path [code][.../][end of path by depth joined by /][taskName]
     const depth = 2
@@ -41,6 +48,9 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       path: `${projectName}${task.folder?.path}`,
       shortPath,
       thumbnailId,
+      thumbnailEntityId,
+      thumbnailEntityType,
+      thumbnailUpdatedAt,
       projectName: projectName,
       projectCode: code,
       folder: task.folder,
