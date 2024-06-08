@@ -155,7 +155,14 @@ const BundleForm = ({
           </section>
         </section>
         <Section
-          style={{ overflow: 'hidden', alignItems: 'flex-start', flex: '0 1 auto', height: '100%' }}
+          style={{
+            overflow: 'hidden',
+            alignItems: 'flex-start',
+            minWidth: 'clamp(300px, 25vw, 400px)',
+            maxWidth: 'clamp(300px, 25vw, 400px)',
+            height: '100%',
+            flexGrow: 'unset',
+          }}
         >
           {children}
         </Section>
