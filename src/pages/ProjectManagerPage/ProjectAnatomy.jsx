@@ -22,7 +22,14 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
         toast.info(`Anatomy saved`)
       })
       .catch((err) => {
-        toast.error(err.message)
+        console.log(err)
+        toast.error((
+          <>
+          <strong>Failed to save anatomy</strong>
+          <br />
+          {err.data.detail}
+          </>
+        ))
       })
   }
 
