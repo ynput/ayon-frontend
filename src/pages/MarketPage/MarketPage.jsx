@@ -21,6 +21,7 @@ import useInstall from './AddonDetails/useInstall'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '/src/context/restartContext'
 import { toast } from 'react-toastify'
+import EmptyPlaceholder from '/src/components/EmptyPlaceholder/EmptyPlaceholder'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -47,7 +48,7 @@ const MarketPage = () => {
   const {
     data: marketAddonsData = [],
     isLoading: isLoadingMarket,
-    isError,
+    error,
   } = useGetMarketAddonsQuery()
   // GET ALL INSTALLED ADDONS for addon details
   const { data: installedAddons = [], isLoading: isLoadingInstalled } = useGetAddonListQuery()
@@ -291,7 +292,7 @@ const MarketPage = () => {
     }
   }
 
-  if (isError)
+  if (error)
     return (
       <Section
         style={{
@@ -302,7 +303,7 @@ const MarketPage = () => {
           textAlign: 'center',
         }}
       >
-        <span>Error loading addons...</span>
+        <EmptyPlaceholder error={JSON.stringify(error)} />
       </Section>
     )
 

@@ -35,6 +35,7 @@ export const Placeholder = styled.div`
     }
 
     .error-message {
+      max-width: 700px;
       color: var(--md-sys-color-error-on-container);
       background-color: var(--md-sys-color-error-container);
 
