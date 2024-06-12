@@ -8,14 +8,14 @@ export const Shortcut = styled.span`
   margin-left: auto;
 `
 
-const ShortcutWidget = ({ children, align, style, ...props }) => {
+const ShortcutWidget = ({ children, align, style, className = '', ...props }) => {
   const alignStyle = {
     marginLeft: align === 'right' ? 'auto' : '0',
     marginRight: align === 'left' ? 'auto' : '0',
   }
 
   return (
-    <Shortcut style={{ ...alignStyle, ...style }} {...props}>
+    <Shortcut style={{ ...alignStyle, ...style }} className={`shortcut ${className}`} {...props}>
       {children}
     </Shortcut>
   )
