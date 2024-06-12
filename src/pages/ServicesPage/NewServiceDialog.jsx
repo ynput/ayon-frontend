@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { rcompare } from 'semver'
-import { Dialog } from '@ynput/ayon-react-components'
-import { Dropdown } from 'primereact/dropdown'
+import { Dialog, Dropdown } from '@ynput/ayon-react-components'
 import {
   FormLayout,
   FormRow,
@@ -133,35 +132,45 @@ const NewServiceDialog = ({ onHide }) => {
         <FormRow label="Host">
           <Dropdown
             options={hostOptions}
-            value={selectedHost}
-            onChange={(e) => setSelectedHost(e.value)}
+            value={[selectedHost]}
+            onChange={(e) => setSelectedHost(e[0])}
+            placeholder="Select a host..."
           />
         </FormRow>
 
         <FormRow label="Addon name">
           <Dropdown
             options={addonOptions}
-            value={selectedAddon}
-            onChange={(e) => setSelectedAddon(e.value)}
+            value={[selectedAddon]}
+            onChange={(e) => {
+              setSelectedAddon(e[0])
+              setSelectedVersion(null)
+              setSelectedService(null)
+              setServiceName('')
+            }}
+            placeholder="Select an addon..."
           />
         </FormRow>
 
         <FormRow label="Addon version">
           <Dropdown
             options={versionOptions}
-            value={selectedVersion}
-            onChange={(e) => setSelectedVersion(e.value)}
+            value={[selectedVersion]}
+            onChange={(e) => setSelectedVersion(e[0])}
+            placeholder="Select a version..."
           />
         </FormRow>
 
         <FormRow label="Service">
           <Dropdown
             options={serviceOptions}
-            value={selectedService}
+            value={[selectedService]}
             onChange={(e) => {
-              setSelectedService(e.value)
-              setServiceName(e.value)
+              setSelectedService(e[0])
+              setServiceName(e[0])
             }}
+            disabled={!selectedVersion}
+            placeholder="Select a service..."
           />
         </FormRow>
 
