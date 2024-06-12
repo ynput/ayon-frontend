@@ -625,7 +625,6 @@ const EditorPanel = ({
                       emptyMessage={'None Assigned'}
                       emptyIcon={false}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
-                      editor
                       buttonStyle={{
                         border: '1px solid var(--md-sys-color-outline-variant)',
                         overflow: 'hidden',

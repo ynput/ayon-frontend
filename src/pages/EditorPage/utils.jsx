@@ -121,6 +121,8 @@ const formatAssignees = (node, changes, allUsers) => {
           border: '1px solid var(--md-sys-color-outline-variant)',
           overflow: 'hidden',
         }}
+        readOnly
+        align="left"
       />
     </div>
   )

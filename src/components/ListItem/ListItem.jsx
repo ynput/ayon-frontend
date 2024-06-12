@@ -111,7 +111,6 @@ const ListItem = forwardRef(
           <Styled.ItemAssignees
             options={allUsers}
             value={task.assignees}
-            editor
             align="right"
             size={18}
             onChange={(v) => onUpdate('assignees', v)}

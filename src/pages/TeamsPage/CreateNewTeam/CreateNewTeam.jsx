@@ -204,7 +204,6 @@ const CreateNewTeam = ({
                 search
                 searchFields={['name']}
                 multiSelect
-                editor
                 emptyIcon={false}
                 emptyMessage="Add Team Members..."
               />
