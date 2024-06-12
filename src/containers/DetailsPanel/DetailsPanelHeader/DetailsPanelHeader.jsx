@@ -238,10 +238,14 @@ const DetailsPanelHeader = ({
             options={usersOptions}
             disabledValues={disabledAssignees.map((u) => u.name)}
             isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
-            editor={entityType === 'task'}
+            readOnly={entityType !== 'task'}
+            emptyMessage={entityType === 'task' ? 'Assign user' : ''}
             align="right"
             onChange={(value) => handleUpdate('assignees', value)}
             className="assignee-select"
+            data-tooltip={
+              entityAssignees.length ? (entityType === 'task' ? 'Assigned users' : 'Author') : ''
+            }
           />
         ))}
       <Actions options={actions} pinned={pinned} isLoading={isLoading} />

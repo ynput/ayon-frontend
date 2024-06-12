@@ -622,10 +622,9 @@ const EditorPanel = ({
                       multipleValues={!!multipleValues}
                       placeholder={placeholder}
                       disabled={disabled}
-                      emptyMessage={'None Assigned'}
+                      emptyMessage={'None assigned'}
                       emptyIcon={false}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
-                      editor
                       buttonStyle={{
                         border: '1px solid var(--md-sys-color-outline-variant)',
                         overflow: 'hidden',
