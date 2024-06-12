@@ -234,6 +234,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     toast.success('Profile updated')
   }
 
+  const notificationsDisabled =
+    window.location.protocol !== 'https' && window.location.hostname !== 'localhost' // disable if not on HTTPS or localhost
+  const notificationsTooltip = notificationsDisabled
+    ? 'Browser notifications only work over HTTPS'
+    : 'Get notifications on your device'
+
   return (
     <main>
       <Section style={{ paddingTop: 16 }}>
@@ -262,15 +268,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
             </FormRow>
 
             <FormRow label="Desktop Notifications" key="notifications">
-              <div
-                data-tooltip="Keep an 'AYON' important notifications on your device"
-                style={{ width: 'fit-content' }}
-              >
+              <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
                 <InputSwitch
                   checked={preferencesData.notifications}
                   id={'notifications'}
                   onChange={handleChangePreferences}
-                  disabled={isUpdatingPreferences || isLoading}
+                  disabled={isUpdatingPreferences || isLoading || notificationsDisabled}
                 />
               </div>
             </FormRow>
