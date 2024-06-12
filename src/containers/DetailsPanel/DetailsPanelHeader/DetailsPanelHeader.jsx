@@ -243,6 +243,7 @@ const DetailsPanelHeader = ({
             align="right"
             onChange={(value) => handleUpdate('assignees', value)}
             className="assignee-select"
+            data-tooltip={entityType === 'task' ? 'Assigned users' : 'Author'}
           />
         ))}
       <Actions options={actions} pinned={pinned} isLoading={isLoading} />
