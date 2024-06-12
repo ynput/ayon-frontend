@@ -1,5 +1,4 @@
-import axios from 'axios'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { rcompare } from 'semver'
 import { Dialog } from '@ynput/ayon-react-components'
@@ -16,10 +15,13 @@ import {
   Toolbar,
 } from '@ynput/ayon-react-components'
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
+import { useCreateServiceMutation } from '/src/services/services/updateServices'
+import {
+  useGetServiceAddonsQuery,
+  useGetServiceHostsQuery,
+} from '/src/services/services/getServices'
 
-const NewServiceDialog = ({ onHide, onSpawn }) => {
-  const [addonData, setAddonData] = useState([])
-  const [hostData, setHostData] = useState([])
+const NewServiceDialog = ({ onHide }) => {
   const [serviceName, setServiceName] = useState('')
   const [selectedAddon, setSelectedAddon] = useState(null)
   const [selectedVersion, setSelectedVersion] = useState(null)
@@ -28,18 +30,8 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
   const [settingsVariant, setSettingsVariant] = useState('production')
   const [storages, setStorages] = useState('')
 
-  useEffect(() => {
-    axios.get('/api/addons?details=1').then((response) => {
-      const addons = response.data.addons
-      const addonsWithServices = addons.filter((a) => {
-        return Object.keys(a.versions).some((v) => {
-          return Object.keys(a.versions[v].services || []).length
-        })
-      })
-      setAddonData(addonsWithServices)
-    })
-    axios.get('/api/hosts').then((response) => setHostData(response.data.hosts))
-  }, [])
+  const { data: addonData = [] } = useGetServiceAddonsQuery()
+  const { data: hostData = [] } = useGetServiceHostsQuery()
 
   const hostOptions = useMemo(() => {
     return hostData.map((h) => {
@@ -71,7 +63,9 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
     })
   }, [selectedVersion, selectedAddon?.name])
 
-  const submit = () => {
+  const [createService, { isLoading }] = useCreateServiceMutation()
+
+  const submit = async () => {
     /*
     volumes: list[str] | None = Field(None, title="Volumes", example=["/tmp:/tmp"])
     ports: list[str] | None = Field(None, title="Ports", example=["8080:8080"])
@@ -95,21 +89,24 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
       serviceConfig.volumes = storages.split('\n').map((s) => s.trim())
     }
 
-    axios
-      .put(`/api/services/${serviceName}`, {
-        addonName: selectedAddon.name,
-        addonVersion: selectedVersion,
-        service: selectedService,
-        hostname: selectedHost,
-        config: serviceConfig,
-      })
-      .then(() => {
-        toast.success(`Service spawned`)
-        onSpawn()
-      })
-      .catch((err) => {
-        toast.error(`Unable to spawn service ${err.message}`)
-      })
+    const serviceData = {
+      addonName: selectedAddon.name,
+      addonVersion: selectedVersion,
+      service: selectedService,
+      hostname: selectedHost,
+      config: serviceConfig,
+    }
+
+    try {
+      await createService({ serviceName, data: serviceData }).unwrap()
+
+      onHide()
+
+      toast.success(`Service spawned`)
+    } catch (error) {
+      console.log(error)
+      toast.error(`Unable to spawn service: ${error.detail}`)
+    }
   }
 
   const canSubmit =
@@ -119,7 +116,7 @@ const NewServiceDialog = ({ onHide, onSpawn }) => {
     <Toolbar>
       <Spacer />
       <Button label="Cancel" onClick={onHide} variant="text" />
-      <SaveButton label="Spawn" icon="settings_slow_motion" active={canSubmit} onClick={submit} />
+      <SaveButton label="Spawn" active={canSubmit} saving={isLoading} onClick={submit} />
     </Toolbar>
   )
 
