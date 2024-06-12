@@ -65,7 +65,9 @@ const ServicesPage = () => {
   const [showNewService, setShowNewService] = useState(false)
   const [selectedServices, setSelectedServices] = useState([])
 
-  const { data: services = [] } = useGetServicesQuery()
+  const { data: services = [] } = useGetServicesQuery(undefined, {
+    pollingInterval: 2000,
+  })
 
   const [deleteService] = useDeleteServiceMutation()
 
