@@ -57,10 +57,8 @@ const editorSlice = createSlice({
       state.projectName = action.payload
     },
     onNewChanges: (state, { payload = [] }) => {
-      for (const node of payload) {
-        const id = node.id
-        delete node.id
-        state.changes[id] = node
+      for (const { id, ...node } of payload) {
+        state.changes[id] = { ...(state.changes[id] || {}), ...node }
       }
     },
     onForceChange: (state, { payload = {} }) => {
