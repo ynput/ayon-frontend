@@ -239,6 +239,7 @@ const DetailsPanelHeader = ({
             disabledValues={disabledAssignees.map((u) => u.name)}
             isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
             readOnly={entityType !== 'task'}
+            emptyMessage={entityType === 'task' ? 'Assign user' : ''}
             align="right"
             onChange={(value) => handleUpdate('assignees', value)}
             className="assignee-select"
