@@ -24,13 +24,19 @@ const EnableNotifications = () => {
     }
   }
 
+  const disabled = window.location.protocol !== 'https' && window.location.hostname !== 'localhost' // disable if not on HTTPS or localhost
+  const tooltip = disabled
+    ? 'Browser notifications only work over HTTPS'
+    : 'Get notifications on your device'
+
   return (
     Notification.permission !== 'granted' && (
       <Button
         icon={'notifications'}
-        data-tooltip="Get notifications on your device"
+        data-tooltip={tooltip}
         onClick={handleEnable}
         variant="filled"
+        disabled={disabled}
       >
         Enable notifications
       </Button>
