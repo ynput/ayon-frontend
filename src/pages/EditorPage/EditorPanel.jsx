@@ -422,13 +422,11 @@ const EditorPanel = ({
     let allChanges = []
     for (const id in nodes) {
       const node = nodes[id]
-      const currentChanges = changes[id] || {
-        __entityType: node.data.__entityType,
-        __parentId: node.data.__parentId,
-      }
+
       const rowChanges = {
         id,
-        ...currentChanges,
+        __entityType: node.data.__entityType,
+        __parentId: node.data.__parentId,
         [changeKey]: value === '' ? null : value,
       }
 
