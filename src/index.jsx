@@ -23,7 +23,7 @@ import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
 
 import './styles/index.scss'
-import { ayonApi } from './services/ayon'
+import { ayonApi, ayonAPI } from './services/ayon'
 import { setupListeners } from '@reduxjs/toolkit/dist/query'
 import short from 'short-uuid'
 import { SocketProvider } from './context/websocketContext'
@@ -43,10 +43,14 @@ const store = configureStore({
     addonsManager: addonsManagerReducer,
     preview: previewReducer,
     [ayonApi.reducerPath]: ayonApi.reducer,
+    [ayonAPI.RestAPI.reducerPath]: ayonAPI.RestAPI.reducer,
+    [ayonAPI.GraphQL.reducerPath]: ayonAPI.GraphQL.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(ayonApi.middleware)
+      .concat(ayonAPI.RestAPI.middleware)
+      .concat(ayonAPI.GraphQL.middleware)
       .concat(
         localStorageMiddleware({
           ...dashboardLocalItems,

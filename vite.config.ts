@@ -48,6 +48,10 @@ export default ({ mode }) => {
           target: SERVER_URL,
           changeOrigin: true,
         },
+        '/openapi': {
+          target: SERVER_URL,
+          changeOrigin: true,
+        },
       },
     },
     plugins: [react()],
