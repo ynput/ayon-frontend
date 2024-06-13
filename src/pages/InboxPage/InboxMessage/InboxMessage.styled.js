@@ -198,6 +198,12 @@ export const Date = styled.span`
 
 export const ClearButton = styled(Button)`
   height: 30px;
+
+  .shortcut {
+    background-color: var(--md-sys-color-primary-container);
+
+    color: var(--md-sys-color-on-primary-container) !important;
+  }
 `
 
 export const Unread = styled.span`

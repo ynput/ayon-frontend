@@ -203,6 +203,7 @@ export const ItemAssignees = styled(AssigneeSelect)`
     & > div {
       padding: 2px;
       height: unset;
+      min-width: unset;
     }
 
     background-color: unset;

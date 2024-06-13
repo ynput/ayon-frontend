@@ -173,9 +173,13 @@ const BundlesAddonList = React.forwardRef(
             const isPipeline = addon.addonType === 'pipeline'
             const currentVersion = addon.version
             const allVersions = addon.versions
-            const sortedVersions = Object.keys(allVersions).sort((a, b) =>
-              rcompare(coerce(a), coerce(b)),
-            )
+            const sortedVersions = Object.keys(allVersions).sort((a, b) => {
+              const comparison = rcompare(coerce(a), coerce(b))
+              if (comparison === 0) {
+                return b.localeCompare(a)
+              }
+              return comparison
+            })
             const latestVersion = sortedVersions[0]
 
             if (readOnly && isPipeline)

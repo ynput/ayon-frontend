@@ -87,6 +87,7 @@ export const ayonApi = createApi({
     'marketAddon',
     'inbox',
     'preview',
+    'service',
   ],
   endpoints: () => ({}),
 })

@@ -12,7 +12,7 @@ import {
   Dialog,
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
-import { camelCase } from 'lodash'
+import { camelCase, upperFirst } from 'lodash'
 import MinMaxField from '/src/components/MinMaxField/MinMaxField'
 
 const SCOPE_OPTIONS = [
@@ -149,10 +149,10 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     >
       {formData && (
         <FormLayout>
-          <FormRow label={'title'} key={'title'}>
+          <FormRow label={'Title'} key={'title'}>
             <InputText value={formData?.data['title']} onChange={handleTitleChange} />
           </FormRow>
-          <FormRow label={'name'} key={'name'}>
+          <FormRow label={'Name'} key={'name'}>
             <LockedInput
               value={formData.name}
               disabled={!isNew}
@@ -160,7 +160,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               label="name"
             />
           </FormRow>
-          <FormRow label="scope">
+          <FormRow label="Scope">
             <Dropdown
               options={SCOPE_OPTIONS}
               disabled={formData.builtin}
@@ -170,7 +170,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               widthExpand
             />
           </FormRow>
-          <FormRow label="type">
+          <FormRow label="Type">
             <Dropdown
               value={[formData?.data?.type]}
               disabled={formData.builtin}
@@ -220,7 +220,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
             return (
               <FormRow
-                label={field}
+                label={upperFirst(field)}
                 key={field}
                 style={{
                   alignItems: 'flex-start',

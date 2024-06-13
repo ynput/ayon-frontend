@@ -15,16 +15,21 @@ import { setUri } from '/src/features/context'
 import DetailsPanelSlideOut from '../../../containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
-  if (!projectName || (!thumbnailId && !entityId)) return null
+  // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
+  if (!projectName || (!thumbnailId && (!entityId || !entityType))) return null
 
-  // fallback on arbitrary thumbnailId if entityId is not available
-  // this should never happen, but just in case
-  // only admins and managers can see the second endpoint though
-  const thumbnailUrl = thumbnailId
-    ? `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}&placeholder=none`
-    : `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}&placeholder=none`
+  // Construct the updatedAt query parameter if updatedAt is provided
+  const updatedAtQueryParam = updatedAt ? `?updatedAt=${updatedAt}` : ''
 
-  return thumbnailUrl
+  // If entityId and entityType are provided, construct the URL using them
+  if (entityId && entityType) {
+    const entityUrl = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
+    return `${entityUrl}${updatedAtQueryParam}&placeholder=none`
+  }
+
+  // If entityId and entityType are not provided, fallback on thumbnailId
+  const thumbnailUrl = `/api/projects/${projectName}/thumbnails/${thumbnailId}`
+  return `${thumbnailUrl}${updatedAtQueryParam}&placeholder=none`
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {

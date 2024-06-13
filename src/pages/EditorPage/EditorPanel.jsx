@@ -422,13 +422,11 @@ const EditorPanel = ({
     let allChanges = []
     for (const id in nodes) {
       const node = nodes[id]
-      const currentChanges = changes[id] || {
-        __entityType: node.data.__entityType,
-        __parentId: node.data.__parentId,
-      }
+
       const rowChanges = {
         id,
-        ...currentChanges,
+        __entityType: node.data.__entityType,
+        __parentId: node.data.__parentId,
         [changeKey]: value === '' ? null : value,
       }
 
@@ -622,10 +620,9 @@ const EditorPanel = ({
                       multipleValues={!!multipleValues}
                       placeholder={placeholder}
                       disabled={disabled}
-                      emptyMessage={'None Assigned'}
+                      emptyMessage={'None assigned'}
                       emptyIcon={false}
                       onChange={(v) => handleLocalChange(v, changeKey, field)}
-                      editor
                       buttonStyle={{
                         border: '1px solid var(--md-sys-color-outline-variant)',
                         overflow: 'hidden',

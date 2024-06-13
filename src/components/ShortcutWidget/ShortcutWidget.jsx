@@ -15,7 +15,7 @@ const ShortcutWidget = ({ children, align, style, className = '', ...props }) =>
   }
 
   return (
-    <Shortcut style={{ ...alignStyle, ...style }} className={'shortcut ' + className} {...props}>
+    <Shortcut style={{ ...alignStyle, ...style }} className={`shortcut ${className}`} {...props}>
       {children}
     </Shortcut>
   )
