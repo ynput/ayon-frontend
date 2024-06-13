@@ -227,11 +227,27 @@ const EditorPage = () => {
             const currentAttrib = childData?.attrib || {}
 
             const childSkipAttribs = []
-            const parentData = update?.patch?.data
+            const parentData = parent || update?.patch?.data
+            const childChanges = changes[id]
+            let newChildData = { ...childData }
+
             // Loop through each attribute in the update
             for (const key in parentData.attrib) {
               // If the attribute is not inheritable, skip it
               if (!inheritableAttribs.includes(key)) continue
+
+              // check that child doesn't have it's own changes for this attrib
+              // if it does, then we don't need to update it
+              if (childChanges && childChanges[key]) {
+                // now any children of this child should use this value
+                newChildData = {
+                  ...childData,
+                  ownAttrib: [...childData.ownAttrib, key],
+                  attrib: { ...childData.attrib, [key]: childChanges[key] },
+                }
+
+                continue
+              }
 
               // If the child doesn't have its own value for the attribute and the attribute has changed
               if (
@@ -239,7 +255,6 @@ const EditorPage = () => {
                 currentAttrib[key] !== parentData.attrib[key]
               ) {
                 if (parent) {
-                  console.log('checking if direct parent has attrib', parent.ownAttrib)
                   // check if parent of this (not parent we just edited) has the same attribute in ownAttrib
                   if (parent?.ownAttrib?.includes(key) || skipAttribs.includes(key)) {
                     // it's parent has the attrib, so we don't need to update this child
@@ -255,14 +270,12 @@ const EditorPage = () => {
               }
             }
 
-            let newChildData = { ...childData }
-
             // If there are new attributes
-            if (!isEmpty(newAttrib)) {
+            if (!isEmpty(newAttrib) || !isEmpty(childChanges || {})) {
               // Update the child's attributes
               newChildData = {
-                ...childData,
-                attrib: { ...currentAttrib, ...newAttrib },
+                ...newChildData,
+                attrib: { ...newChildData.attrib, ...(newAttrib || {}) },
               }
 
               // Add the updated child to the list of updated children
@@ -271,6 +284,8 @@ const EditorPage = () => {
                 data: newChildData,
               })
             }
+
+            console.log(newChildData)
 
             // Recursively update the attributes of the child's children
             updateChildren(id, newChildData, childSkipAttribs)
