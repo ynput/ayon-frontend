@@ -6,7 +6,10 @@ const Timecode = ({ value, frameRate, onChange, maximum}) => {
   const inputRef = useRef()
 
   useEffect(() => {
-    setFrames(Math.floor(value * frameRate))
+    const val = Math.floor(value * frameRate)
+    if (val === frames) return
+    if (isNaN(val)) return
+    setFrames(val)
   }, [value, frameRate])
 
   const submit = () => {

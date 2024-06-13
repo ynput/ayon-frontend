@@ -134,25 +134,36 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     updateTime()
   }, [videoRef, isPlaying, duration])
 
-  const handleLoad = () => {
-    setIsPlaying(false)
-    setCurrentTime(0)
-    setBufferedRanges([])
-    setLoadError(null)
-    // after a short delay, hide the still image
-    setTimeout(() => setShowStill(false), 100)
-  }
 
-  const handleCanPlay = () => {
-    // Sets the current time of the video to a preferred initial position.
-    // When the video is loaded, it will start playing from this position.
+  const goToPreferredInitialPosition = () => {
     if (preferredInitialPosition >= videoRef.current.duration) return
     if (isNaN(preferredInitialPosition)) return
     if (videoRef.current.currentTime > 0 || preferredInitialPosition === 0) return
     if (videoRef.current.currentTime === preferredInitialPosition) return
 
+    console.log('Setting initial position', preferredInitialPosition, "from", videoRef.current.currentTime)
+
     setCurrentTime(preferredInitialPosition)
     videoRef.current.currentTime = preferredInitialPosition
+  }
+
+
+  const handleLoad = () => {
+    setIsPlaying(false)
+    setCurrentTime(0)
+    setBufferedRanges([])
+    setLoadError(null)
+
+    // Sets the current time of the video to a preferred initial position.
+    // When the video is loaded, it will start playing from this position.
+    goToPreferredInitialPosition()
+
+    // after a short delay, hide the still image
+    setTimeout(() => setShowStill(false), 100)
+  }
+
+  const handleCanPlay = (e) => {
+    // it's called every frame or so
   }
 
   const handleLoadedMetadata = () => {
