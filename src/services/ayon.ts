@@ -2,6 +2,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { graphqlRequestBaseQuery } from '@rtk-query/graphql-request-base-query'
 import type { FetchArgs } from '@reduxjs/toolkit/query'
+import { GraphQLClient } from 'graphql-request'
 
 // Util function
 export const buildOperations = (ids: string[], type: string, data: any) =>
@@ -111,19 +112,23 @@ export const RestAPI = createApi({
   tagTypes,
 })
 
+export const client = new GraphQLClient('/graphql')
+
 // Define the GraphQL API
 export const GraphQL = createApi({
   reducerPath: 'graphqlApi',
   baseQuery: graphqlRequestBaseQuery({
     prepareHeaders: prepareHeaders,
     url: '/graphql',
+    // @ts-ignore
+    client: client,
   }),
   endpoints: () => ({}),
   tagTypes,
 })
 
 // export api object
-export const ayonAPI = {
+export default {
   RestAPI,
   GraphQL,
 }

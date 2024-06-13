@@ -1,7 +1,6 @@
 import React from 'react'
 import axios from 'axios'
 import { createRoot } from 'react-dom/client'
-
 import { configureStore } from '@reduxjs/toolkit'
 import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
@@ -23,7 +22,7 @@ import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
 
 import './styles/index.scss'
-import { ayonApi, ayonAPI } from './services/ayon'
+import AyonAPI, { ayonApi } from '/src/services/ayon'
 import { setupListeners } from '@reduxjs/toolkit/dist/query'
 import short from 'short-uuid'
 import { SocketProvider } from './context/websocketContext'
@@ -43,14 +42,14 @@ const store = configureStore({
     addonsManager: addonsManagerReducer,
     preview: previewReducer,
     [ayonApi.reducerPath]: ayonApi.reducer,
-    [ayonAPI.RestAPI.reducerPath]: ayonAPI.RestAPI.reducer,
-    [ayonAPI.GraphQL.reducerPath]: ayonAPI.GraphQL.reducer,
+    [AyonAPI.RestAPI.reducerPath]: AyonAPI.RestAPI.reducer,
+    [AyonAPI.GraphQL.reducerPath]: AyonAPI.GraphQL.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(ayonApi.middleware)
-      .concat(ayonAPI.RestAPI.middleware)
-      .concat(ayonAPI.GraphQL.middleware)
+      .concat(AyonAPI.RestAPI.middleware)
+      .concat(AyonAPI.GraphQL.middleware)
       .concat(
         localStorageMiddleware({
           ...dashboardLocalItems,
