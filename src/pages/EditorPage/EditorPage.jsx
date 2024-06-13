@@ -285,8 +285,6 @@ const EditorPage = () => {
               })
             }
 
-            console.log(newChildData)
-
             // Recursively update the attributes of the child's children
             updateChildren(id, newChildData, childSkipAttribs)
           }
