@@ -209,7 +209,7 @@ const EditorPage = () => {
       }
 
       // Function to update the attributes of the children
-      const updateChildren = (updateId) => {
+      const updateChildren = (updateId, parent, skipAttribs = []) => {
         // Get the children of the entity being updated from the lookup table
         const children = childrenLookup[updateId]
 
@@ -226,35 +226,54 @@ const EditorPage = () => {
             // Get the current attributes of the child
             const currentAttrib = childData?.attrib || {}
 
+            const childSkipAttribs = []
+            const parentData = update?.patch?.data
             // Loop through each attribute in the update
-            for (const key in update?.patch?.data?.attrib) {
+            for (const key in parentData.attrib) {
               // If the attribute is not inheritable, skip it
               if (!inheritableAttribs.includes(key)) continue
 
               // If the child doesn't have its own value for the attribute and the attribute has changed
               if (
                 !childData?.ownAttrib?.includes(key) &&
-                currentAttrib[key] !== update?.patch?.data?.attrib[key]
+                currentAttrib[key] !== parentData.attrib[key]
               ) {
+                if (parent) {
+                  console.log('checking if direct parent has attrib', parent.ownAttrib)
+                  // check if parent of this (not parent we just edited) has the same attribute in ownAttrib
+                  if (parent?.ownAttrib?.includes(key) || skipAttribs.includes(key)) {
+                    // it's parent has the attrib, so we don't need to update this child
+                    // we can also skip this child's children
+                    childSkipAttribs.push(key)
+
+                    // break out of the loop so that we don't update the attribute
+                    continue
+                  }
+                }
                 // Add the new attribute value to the new attributes object
-                newAttrib[key] = update?.patch?.data?.attrib[key]
+                newAttrib[key] = parentData?.attrib[key]
               }
             }
 
+            let newChildData = { ...childData }
+
             // If there are new attributes
             if (!isEmpty(newAttrib)) {
+              // Update the child's attributes
+              newChildData = {
+                ...childData,
+                attrib: { ...currentAttrib, ...newAttrib },
+              }
+
               // Add the updated child to the list of updated children
               childrenUpdated.push({
                 ...rootData[id],
-                data: {
-                  ...childData,
-                  attrib: { ...currentAttrib, ...newAttrib },
-                },
+                data: newChildData,
               })
             }
 
             // Recursively update the attributes of the child's children
-            updateChildren(id)
+            updateChildren(id, newChildData, childSkipAttribs)
           }
         }
       }
