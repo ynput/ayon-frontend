@@ -4763,7 +4763,8 @@ export type GetCurrentUserApiArg = {
   authorization?: string
   accessToken?: string
 }
-export type GetUserApiResponse = /** status 200 Successful Response */
+export type GetUserApiResponse =
+  /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
