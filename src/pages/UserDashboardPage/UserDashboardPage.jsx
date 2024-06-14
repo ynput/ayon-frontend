@@ -7,7 +7,7 @@ import ProjectList from '/src/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { onProjectSelected } from '/src/features/dashboard'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
-import { useGetAllProjectsQuery } from '/src/services/project/getProject'
+import { useListProjectsQuery } from '/src/services/project/getProject'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
@@ -51,9 +51,7 @@ const UserDashboardPage = () => {
   )
 
   // get projects list
-  const { data: projects = [], isLoading: isLoadingProjects } = useGetAllProjectsQuery({
-    showInactive: true,
-  })
+  const { data: projects = [], isLoading: isLoadingProjects } = useListProjectsQuery({})
   // attach projects: ['project_name'] to each projectInfo
   const projectsInfoWithProjects = useMemo(() => {
     const projectsInfoWithProjects = {}

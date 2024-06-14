@@ -107,7 +107,7 @@ export const ayonApi = createApi({
 // Define the REST API
 export const RestAPI = createApi({
   reducerPath: 'restApi',
-  baseQuery: wrappedBaseQuery('/api'),
+  baseQuery: wrappedBaseQuery(''),
   endpoints: () => ({}),
   tagTypes,
 })
@@ -126,9 +126,3 @@ export const GraphQL = createApi({
   endpoints: () => ({}),
   tagTypes,
 })
-
-// export api object
-export default {
-  RestAPI,
-  GraphQL,
-}

@@ -4,7 +4,7 @@ import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { useGetAllProjectsQuery } from '../services/project/getProject'
+import { useListProjectsQuery } from '../services/project/getProject'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import useCreateContext from '../hooks/useCreateContext'
@@ -115,11 +115,15 @@ const ProjectList = ({
   const tableRef = useRef(null)
   const user = useSelector((state) => state.user)
 
-  // const user = useSelector((state) => state.user)
-  // QUERY HOOK
-  // ( default ) gets added in transformResponse
+  // by default only show active projects
+  const params = { active: true }
 
-  const showInactive = isProjectManager && (user?.data?.isAdmin || user?.data?.isManager)
+  const showInactiveAsWell = isProjectManager && (user?.data?.isAdmin || user?.data?.isManager)
+  if (showInactiveAsWell) {
+    // remove active from params
+    delete params.active
+  }
+
   const {
     data = [],
     isLoading,
@@ -127,7 +131,7 @@ const ProjectList = ({
     isError,
     error,
     isSuccess,
-  } = useGetAllProjectsQuery({ showInactive })
+  } = useListProjectsQuery({ ...params })
   if (isError) {
     console.error(error)
   }

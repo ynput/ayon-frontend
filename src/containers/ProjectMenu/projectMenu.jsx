@@ -6,7 +6,7 @@ import { selectProject as selectProjectContext, setUri } from '/src/features/con
 import { onProjectChange } from '/src/features/editor'
 import { ayonApi } from '/src/services/ayon'
 import MenuList from '/src/components/Menu/MenuComponents/MenuList'
-import { useGetAllProjectsQuery } from '/src/services/project/getProject'
+import { useListProjectsQuery } from '/src/services/project/getProject'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '/src/hooks/useCreateContext'
@@ -52,7 +52,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const user = useSelector((state) => state.user)
   const isUser = user?.data?.isUser
 
-  const { data: projects = [] } = useGetAllProjectsQuery({ showInactive: false })
+  const { data: projects = [] } = useListProjectsQuery({ active: true })
 
   const [showContext] = useCreateContext([])
 

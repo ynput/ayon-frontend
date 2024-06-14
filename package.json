@@ -11,7 +11,7 @@
     "format": "prettier --write src/**/*.{js,jsx} --config ./.prettierrc",
     "upgrade-arc": "yarn upgrade @ynput/ayon-react-components@latest",
     "generate-token": "node --env-file=.env.local ./gen/getAuth.js",
-    "generate-rest": "npx @rtk-query/codegen-openapi openapi-config.ts",
+    "generate-rest": "npx @rtk-query/codegen-openapi ./gen/openapi-config.ts",
     "generate-gql": "cd gen && graphql-codegen --require dotenv/config"
   },
   "dependencies": {
