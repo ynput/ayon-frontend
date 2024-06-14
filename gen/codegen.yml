@@ -1,0 +1,14 @@
+schema:
+  - http://localhost:3000/graphql:
+      headers:
+        Authorization: Bearer ${TOKEN}
+documents: '../src/**/*.graphql'
+generates:
+  ../src/types/graphqlTypes.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-rtk-query:
+          importBaseApiFrom: '../services/ayon'
+          importBaseApiAlternateName: 'GraphQL'
+          exportHooks: true

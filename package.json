@@ -10,8 +10,9 @@
     "lint:fix": "eslint --fix 'src/**/*.{jsx,ts,tsx}'",
     "format": "prettier --write src/**/*.{js,jsx} --config ./.prettierrc",
     "upgrade-arc": "yarn upgrade @ynput/ayon-react-components@latest",
+    "generate-token": "node --env-file=.env.local ./gen/getAuth.js",
     "generate-rest": "npx @rtk-query/codegen-openapi openapi-config.ts",
-    "generate-gql": "graphql-codegen"
+    "generate-gql": "cd gen && graphql-codegen --require dotenv/config"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.0.8",
@@ -24,6 +25,7 @@
     "axios": "^1.6.3",
     "chart.js": "^4.2.0",
     "date-fns": "^3.6.0",
+    "dotenv": "^16.4.5",
     "graphql": "^16.8.2",
     "graphql-request": "^7.0.1",
     "html-to-image": "^1.11.11",
