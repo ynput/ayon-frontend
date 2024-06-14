@@ -27,32 +27,38 @@ const VideoPlayerControls = ({
 
   const handleGoToStart = () => {
     const newFrame = 0
+    console.debug('VideoPlayerControls: Go to start')
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
   const handleGoToEnd = () => {
+    console.debug('VideoPlayerControls: Go to end')
     const newFrame = videoRef.current.duration
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
 
   const handleGoBack1 = () => {
+    console.debug('VideoPlayerControls: Go back 1')
     const newFrame = Math.max(0, videoRef.current.currentTime - frameLength)
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
   const handleGoForward1 = () => {
+    console.debug('VideoPlayerControls: Go forward 1')
     const newFrame = Math.min(videoRef.current.duration, videoRef.current.currentTime + frameLength)
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
 
   const handleGoBack5 = () => {
+    console.debug('VideoPlayerControls: Go back 5')
     const newFrame = Math.max(0, videoRef.current.currentTime - 5 * frameLength)
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
   const handleGoForward5 = () => {
+    console.debug('VideoPlayerControls: Go forward 5')
     const newFrame = Math.min(
       videoRef.current.duration,
       videoRef.current.currentTime + 5 * frameLength,
@@ -115,6 +121,7 @@ const VideoPlayerControls = ({
         frameRate={frameRate}
         maximum={duration}
         onChange={(value) => {
+          console.debug('VideoPlayerControls: TC Input Change time to', value)
           videoRef.current.currentTime = value
         }}
       />
