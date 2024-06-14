@@ -1246,9 +1246,59 @@ export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetInboxHasUnreadQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', edges: Array<{ __typename?: 'InboxEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
 
+export type GetInboxMessagesQueryVariables = Exact<{
+  last?: InputMaybe<Scalars['Int']['input']>;
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+  important?: InputMaybe<Scalars['Boolean']['input']>;
+  cursor?: InputMaybe<Scalars['String']['input']>;
+}>;
 
+
+export type GetInboxMessagesQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'InboxEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> } }> } };
+
+export type MessageFragmentFragment = { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> };
+
+export type GetInboxHasUnreadCountQueryVariables = Exact<{
+  important?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetInboxHasUnreadCountQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', edges: Array<{ __typename?: 'InboxEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
+
+export const MessageFragmentFragmentDoc = `
+    fragment MessageFragment on ActivityNode {
+  projectName
+  activityId
+  activityType
+  activityData
+  referenceType
+  referenceId
+  body
+  createdAt
+  updatedAt
+  active
+  read
+  author {
+    name
+    attrib {
+      fullName
+    }
+  }
+  origin {
+    id
+    name
+    label
+    type
+  }
+  parents {
+    type
+    name
+    label
+  }
+}
+    `;
 export const GetInboxHasUnreadDocument = `
-    query GetInboxHasUnread {
+    query getInboxHasUnread {
   inbox(
     last: 1
     showActiveMessages: true
@@ -1264,15 +1314,60 @@ export const GetInboxHasUnreadDocument = `
   }
 }
     `;
+export const GetInboxMessagesDocument = `
+    query getInboxMessages($last: Int, $active: Boolean, $important: Boolean, $cursor: String) {
+  inbox(
+    last: $last
+    showActiveMessages: $active
+    showImportantMessages: $important
+    before: $cursor
+  ) {
+    pageInfo {
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        ...MessageFragment
+      }
+    }
+  }
+}
+    ${MessageFragmentFragmentDoc}`;
+export const GetInboxHasUnreadCountDocument = `
+    query getInboxHasUnreadCount($important: Boolean) {
+  inbox(
+    last: 500
+    showActiveMessages: true
+    showImportantMessages: $important
+    showUnreadMessages: true
+  ) {
+    edges {
+      node {
+        referenceId
+        read
+      }
+    }
+  }
+}
+    `;
 
 const injectedRtkApi = GraphQL.injectEndpoints({
   endpoints: (build) => ({
-    GetInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
+    getInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
       query: (variables) => ({ document: GetInboxHasUnreadDocument, variables })
+    }),
+    getInboxMessages: build.query<GetInboxMessagesQuery, GetInboxMessagesQueryVariables | void>({
+      query: (variables) => ({ document: GetInboxMessagesDocument, variables })
+    }),
+    getInboxHasUnreadCount: build.query<GetInboxHasUnreadCountQuery, GetInboxHasUnreadCountQueryVariables | void>({
+      query: (variables) => ({ document: GetInboxHasUnreadCountDocument, variables })
     }),
   }),
 });
 
 export { injectedRtkApi as api };
-export const { useGetInboxHasUnreadQuery, useLazyGetInboxHasUnreadQuery } = injectedRtkApi;
+
 
