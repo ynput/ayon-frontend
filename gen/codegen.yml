@@ -11,4 +11,6 @@ generates:
       - typescript-rtk-query:
           importBaseApiFrom: '../services/ayon'
           importBaseApiAlternateName: 'GraphQL'
-          exportHooks: true
+  ./graphql.schema.json:
+    plugins:
+      - 'introspection'
