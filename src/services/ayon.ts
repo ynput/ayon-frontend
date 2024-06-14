@@ -112,7 +112,7 @@ export const RestAPI = createApi({
   tagTypes,
 })
 
-export const client = new GraphQLClient('/graphql')
+export const client = new GraphQLClient(`http://localhost:3000/graphql`)
 
 // Define the GraphQL API
 export const GraphQL = createApi({

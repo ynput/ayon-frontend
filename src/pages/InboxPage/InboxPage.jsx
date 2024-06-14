@@ -1,7 +1,7 @@
 import { useParams } from 'react-router'
 import AppNavLinks from '/src/containers/header/AppNavLinks'
 import Inbox from './Inbox/Inbox'
-import { useGetInboxUnreadCountQuery } from '/src/services/inbox/getInbox'
+import { useGetInboxUnreadCountQuery } from '../../services/inbox/getInbox'
 import { UnreadCount } from './Inbox/Inbox.styled'
 
 const InboxPage = () => {

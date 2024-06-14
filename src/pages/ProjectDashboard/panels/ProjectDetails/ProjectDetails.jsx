@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useGetProjectQuery } from '/src/services/project/getProject'
+import { useGetProjectQuery } from '../../../../services/project/getProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
 import Thumbnail from '/src/containers/thumbnail'
 import AttributeTable from '/src/containers/attributeTable'
@@ -17,7 +17,7 @@ const ProjectDetails = ({ projectName }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
 
   // GET DATA
-  const { data = {}, isFetching, isError } = useGetProjectQuery({ projectName })
+  const { data, isFetching, isError } = useGetProjectQuery({ projectName })
   const { data: schema } = useGetAnatomySchemaQuery()
   const fields = schema?.definitions?.ProjectAttribModel?.properties
 

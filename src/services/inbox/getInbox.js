@@ -125,9 +125,20 @@ const getInbox = ayonApi.injectEndpoints({
   }),
 })
 
-export const {
-  useGetInboxQuery,
-  useLazyGetInboxQuery,
-  useGetInboxHasUnreadQuery,
-  useGetInboxUnreadCountQuery,
-} = getInbox
+import API from '../../types'
+
+const enhancedGraphql = API.graphql.enhanceEndpoints({
+  endpoints: {
+    GetInboxUnreadCount: {
+      transformResponse: (res) => res?.inbox?.edges.length,
+      providesTags: (result, error, { important }) => [
+        { type: 'inbox', id: 'unreadCount' },
+        { type: 'inbox', id: `count-${important}` },
+      ],
+    },
+  },
+})
+
+export const { useGetInboxUnreadCountQuery } = enhancedGraphql
+
+export const { useGetInboxQuery, useLazyGetInboxQuery, useGetInboxHasUnreadQuery } = getInbox
