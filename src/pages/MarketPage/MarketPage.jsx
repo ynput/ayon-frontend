@@ -102,7 +102,7 @@ const MarketPage = () => {
       return newInstalling
     })
 
-    setFinishedInstalling((f) => [...new Set([...f, ...finished])] || [])
+    setFinishedInstalling((f) => [...new Set([...f, ...finished])])
 
     setFailedInstalling((f) => {
       // check if for duplicates
