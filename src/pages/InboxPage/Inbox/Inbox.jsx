@@ -8,7 +8,7 @@ import { useDispatch } from 'react-redux'
 import {
   useGetInboxMessagesQuery,
   useLazyGetInboxMessagesQuery,
-} from '/src/services/inbox/getInbox'
+} from '../../../services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import Shortcuts from '/src/containers/Shortcuts'
 import { clearHighlights, highlightActivity } from '/src/features/details'
