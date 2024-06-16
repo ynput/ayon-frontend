@@ -1,28 +1,42 @@
 import { toast } from 'react-toastify'
-import { ayonApi } from '../ayon'
+import API, { $Any } from '../../types'
+import { ManageInboxItemApiArg } from '../../types/restTypes'
 import { current } from '@reduxjs/toolkit'
-import API from '../../types'
+import { TransformedInboxMessages } from './inboxTransform'
+
+// add some extra types for the patching
+export interface Arg extends ManageInboxItemApiArg {
+  active: boolean
+  important: boolean
+  last: number
+  isActiveChange: boolean
+  isRead: boolean
+}
 
 // When reading a message, we need to update the unread count
-const patchUnreadCount = (dispatch, count, important) => {
+const patchUnreadCount = (dispatch: $Any, count: number, important: boolean) => {
   dispatch(
+    // @ts-ignore
     API.graphql.util.updateQueryData('GetInboxUnreadCount', { important }, (draft) => {
+      const newDraft = draft as unknown as number
       // console.log('updating unread count: ', draft - count, count)
-      return Math.max(0, draft - count)
+      return Math.max(0, newDraft - count)
     }),
   )
 }
 
-const updateInbox = ayonApi.injectEndpoints({
-  endpoints: (build) => ({
-    updateInboxMessage: build.mutation({
-      query: ({ status, projectName, ids = [] }) => ({
-        url: `/api/inbox`,
-        method: 'POST',
-        body: { status, projectName, ids },
-      }),
+const enhancedRest = API.rest.enhanceEndpoints({
+  endpoints: {
+    manageInboxItem: {
       async onQueryStarted(
-        { ids, status, active, important, last, isActiveChange, isRead },
+        {
+          active,
+          important,
+          last,
+          isActiveChange,
+          isRead,
+          manageInboxItemRequest: { ids = [], status },
+        }: Arg,
         { dispatch, queryFulfilled },
       ) {
         let newRead, newActive
@@ -44,7 +58,7 @@ const updateInbox = ayonApi.injectEndpoints({
 
         let patchResult
 
-        let messages = []
+        let messages: $Any[] = []
 
         let tagsToInvalidate = [{ type: 'inbox', id: 'hasUnread' }]
 
@@ -57,13 +71,14 @@ const updateInbox = ayonApi.injectEndpoints({
             API.graphql.util.updateQueryData(
               'GetInboxMessages',
               { last, important, active },
-              (draft) => {
+              (draft: $Any) => {
+                const newDraft = draft as TransformedInboxMessages
                 // find the messages to clear
-                messages = draft.messages
+                messages = newDraft.messages
                   .filter((m) => ids.includes(m.referenceId))
                   .map((m) => current(m))
                 // filter out the messages to clear
-                draft.messages = draft.messages.filter((m) => !ids.includes(m.referenceId))
+                newDraft.messages = newDraft.messages.filter((m) => !ids.includes(m.referenceId))
               },
             ),
           )
@@ -79,10 +94,11 @@ const updateInbox = ayonApi.injectEndpoints({
               API.graphql.util.updateQueryData(
                 'GetInboxMessages',
                 { last, important: null, active: !active },
-                (draft) => {
+                (draft: $Any) => {
+                  const newDraft = draft as TransformedInboxMessages
                   // adding message to the new cache
                   console.log('adding message to new cache location')
-                  draft.messages.unshift(...messagesPatch)
+                  newDraft.messages.unshift(...messagesPatch)
                 },
               ),
             )
@@ -105,12 +121,13 @@ const updateInbox = ayonApi.injectEndpoints({
             API.graphql.util.updateQueryData(
               'GetInboxMessages',
               { last, active, important },
-              (draft) => {
+              (draft: $Any) => {
+                const newDraft = draft as TransformedInboxMessages
                 for (const id of ids) {
-                  const messageIndex = draft.messages.findIndex((m) => m.referenceId === id)
+                  const messageIndex = newDraft.messages.findIndex((m) => m.referenceId === id)
                   if (messageIndex !== -1) {
-                    draft.messages[messageIndex] = {
-                      ...draft.messages[messageIndex],
+                    newDraft.messages[messageIndex] = {
+                      ...newDraft.messages[messageIndex],
                       read: newRead,
                       active: newActive,
                     }
@@ -139,15 +156,15 @@ const updateInbox = ayonApi.injectEndpoints({
             dispatch(API.graphql.util.invalidateTags(tagsToInvalidate))
             dispatch(API.rest.util.invalidateTags(tagsToInvalidate))
           }
-        } catch (error) {
+        } catch (error: $Any) {
           const message = `Error: ${error?.error?.data?.detail}`
           console.error(message, error)
           toast.error(message)
-          patchResult.undo()
+          patchResult?.undo()
         }
       },
-    }),
-  }),
+    },
+  },
 })
 
-export const { useUpdateInboxMessageMutation } = updateInbox
+export const { useManageInboxItemMutation } = enhancedRest
