@@ -1449,7 +1449,6 @@ const injectedRtkApi = GraphQL.injectEndpoints({
       GetInboxUnreadCountQueryVariables | void
     >({
       query: (variables) => ({ document: GetInboxUnreadCountDocument, variables }),
-      transformResponse: (result: GetInboxUnreadCountQuery) => result.inbox?.edges.length,
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables }),

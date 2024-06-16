@@ -5,7 +5,10 @@ import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
-import { useGetInboxQuery, useLazyGetInboxQuery } from '/src/services/inbox/getInbox'
+import {
+  useGetInboxMessagesQuery,
+  useLazyGetInboxMessagesQuery,
+} from '/src/services/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import Shortcuts from '/src/containers/Shortcuts'
 import { clearHighlights, highlightActivity } from '/src/features/details'
@@ -49,7 +52,7 @@ const Inbox = ({ filter }) => {
     isFetching: isFetchingInbox,
     error: errorInbox,
     refetch,
-  } = useGetInboxQuery({
+  } = useGetInboxMessagesQuery({
     last: last,
     active: isActive,
     important: isImportant,
@@ -57,7 +60,7 @@ const Inbox = ({ filter }) => {
 
   const { hasPreviousPage, endCursor: lastCursor } = pageInfo || {}
 
-  const [getInboxMessages] = useLazyGetInboxQuery()
+  const [getInboxMessages] = useLazyGetInboxMessagesQuery()
   // load more messages
   const handleLoadMore = () => {
     if (!hasPreviousPage || isFetchingInbox) return

@@ -1,12 +1,13 @@
 import { toast } from 'react-toastify'
 import { ayonApi } from '../ayon'
 import { current } from '@reduxjs/toolkit'
+import API from '../../types'
 
 // When reading a message, we need to update the unread count
 const patchUnreadCount = (dispatch, count, important) => {
   dispatch(
-    ayonApi.util.updateQueryData('getInboxUnreadCount', { important }, (draft) => {
-      console.log('updating unread count: ', draft - count, count)
+    API.graphql.util.updateQueryData('GetInboxUnreadCount', { important }, (draft) => {
+      // console.log('updating unread count: ', draft - count, count)
       return Math.max(0, draft - count)
     }),
   )
@@ -44,20 +45,27 @@ const updateInbox = ayonApi.injectEndpoints({
         let patchResult
 
         let messages = []
+
+        let tagsToInvalidate = [{ type: 'inbox', id: 'hasUnread' }]
+
         if (isActiveChange) {
           // this means we are changing the active (cleared) status of the message
           // if will be moving from one cache to another
 
           //   the cache to remove from (current tab)
           dispatch(
-            ayonApi.util.updateQueryData('getInbox', { last, important, active }, (draft) => {
-              // find the messages to clear
-              messages = draft.messages
-                .filter((m) => ids.includes(m.referenceId))
-                .map((m) => current(m))
-              // filter out the messages to clear
-              draft.messages = draft.messages.filter((m) => !ids.includes(m.referenceId))
-            }),
+            API.graphql.util.updateQueryData(
+              'GetInboxMessages',
+              { last, important, active },
+              (draft) => {
+                // find the messages to clear
+                messages = draft.messages
+                  .filter((m) => ids.includes(m.referenceId))
+                  .map((m) => current(m))
+                // filter out the messages to clear
+                draft.messages = draft.messages.filter((m) => !ids.includes(m.referenceId))
+              },
+            ),
           )
 
           //  now where do we add the cleared message
@@ -68,8 +76,8 @@ const updateInbox = ayonApi.injectEndpoints({
 
             //   the cache to add to (cleared/important/other tab)
             dispatch(
-              ayonApi.util.updateQueryData(
-                'getInbox',
+              API.graphql.util.updateQueryData(
+                'GetInboxMessages',
                 { last, important: null, active: !active },
                 (draft) => {
                   // adding message to the new cache
@@ -82,31 +90,34 @@ const updateInbox = ayonApi.injectEndpoints({
             // un-clearing a message
             // we don't know if the message will go to important or other tab
             // so just invalidate all the tabs and unread counts
-            dispatch(
-              ayonApi.util.invalidateTags([
+            tagsToInvalidate.push(
+              ...[
                 { type: 'inbox', id: `active=true/important=false` },
                 { type: 'inbox', id: `active=true/important=true` },
                 { type: 'inbox', id: 'unreadCount' }, //the counters
-              ]),
+              ],
             )
           }
         } else {
           // only updating the read status of the message
           // patch new data into the cache
           patchResult = dispatch(
-            ayonApi.util.updateQueryData('getInbox', { last, active, important }, (draft) => {
-              for (const id of ids) {
-                const messageIndex = draft.messages.findIndex((m) => m.referenceId === id)
-                if (messageIndex !== -1) {
-                  console.log('updating message')
-                  draft.messages[messageIndex] = {
-                    ...draft.messages[messageIndex],
-                    read: newRead,
-                    active: newActive,
+            API.graphql.util.updateQueryData(
+              'GetInboxMessages',
+              { last, active, important },
+              (draft) => {
+                for (const id of ids) {
+                  const messageIndex = draft.messages.findIndex((m) => m.referenceId === id)
+                  if (messageIndex !== -1) {
+                    draft.messages[messageIndex] = {
+                      ...draft.messages[messageIndex],
+                      read: newRead,
+                      active: newActive,
+                    }
                   }
                 }
-              }
-            }),
+              },
+            ),
           )
         }
 
@@ -122,6 +133,12 @@ const updateInbox = ayonApi.injectEndpoints({
 
         try {
           await queryFulfilled
+
+          // invalidate tags AFTER the query is fulfilled and for ALL apis
+          if (tagsToInvalidate.length) {
+            dispatch(API.graphql.util.invalidateTags(tagsToInvalidate))
+            dispatch(API.rest.util.invalidateTags(tagsToInvalidate))
+          }
         } catch (error) {
           const message = `Error: ${error?.error?.data?.detail}`
           console.error(message, error)
@@ -129,7 +146,6 @@ const updateInbox = ayonApi.injectEndpoints({
           patchResult.undo()
         }
       },
-      invalidatesTags: () => [{ type: 'inbox', id: 'hasUnread' }],
     }),
   }),
 })
