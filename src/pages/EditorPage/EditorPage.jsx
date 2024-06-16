@@ -75,7 +75,8 @@ const EditorPage = () => {
   const editorProjectName = useSelector((state) => state.editor.projectName)
 
   // get attrib fields
-  let { data: attribsData = [] } = useGetAttributesQuery()
+  // pass editor: true so that it uses different cache.
+  let { data: attribsData = [] } = useGetAttributesQuery({}, { refetchOnMountOrArgChange: true })
 
   // get project attribs values (for root inherited attribs)
   const { data: projectAnatomyData } = useGetProjectAnatomyQuery(
@@ -1542,17 +1543,17 @@ const EditorPage = () => {
     }
   }
 
-  const filterOptions = [
-    { name: 'name' },
-    { name: 'type' },
-    { name: 'status' },
-    { name: 'assignees' },
+  const columnFilterOptions = [
+    { name: 'name', title: 'Name' },
+    { name: 'type', title: 'Type' },
+    { name: 'status', title: 'Status' },
+    { name: 'assignees', title: 'Assignees' },
     ...columns,
-  ].map(({ name }) => ({
+  ].map(({ name, title }) => ({
     value: name,
-    label: name,
+    label: title || name,
   }))
-  const allColumnsNames = filterOptions.map(({ value }) => value)
+  const allColumnsNames = columnFilterOptions.map(({ value }) => value)
 
   const [shownColumns, setShownColumns] = useLocalStorage(
     'editor-columns-filter-single',
@@ -1869,11 +1870,11 @@ const EditorPage = () => {
           />
           <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect
-            options={filterOptions}
+            options={columnFilterOptions}
             value={shownColumns}
             onChange={handleColumnsFilter}
             placeholder={`Show Columns`}
-            fixedPlaceholder={shownColumns.length >= filterOptions.length}
+            fixedPlaceholder={shownColumns.length >= columnFilterOptions.length}
             style={{ maxWidth: 200 }}
           />
           <SearchDropdown
