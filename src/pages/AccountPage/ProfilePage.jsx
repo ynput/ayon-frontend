@@ -10,10 +10,7 @@ import {
   getShimmerStyles,
   InputSwitch,
 } from '@ynput/ayon-react-components'
-import {
-  useUpdateUserMutation,
-  useUpdateUserPreferencesMutation,
-} from '../../services/user/updateUser'
+import { useUpdateUserMutation, useUpdateUserPreferencesMutation } from '@queries/user/updateUser'
 import Avatar from '@components/Avatar/Avatar'
 import styled, { css } from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'

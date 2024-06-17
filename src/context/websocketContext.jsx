@@ -5,7 +5,7 @@ import PubSub from '@/pubsub'
 import arrayEquals from '../helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
-import { ayonApi } from '../services/ayon'
+import { ayonApi } from '@queries/ayon'
 import RefreshToast from '@components/RefreshToast'
 
 export const SocketContext = createContext()

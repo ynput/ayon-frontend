@@ -1,6 +1,6 @@
 import { useMemo, useEffect, lazy } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { useGetSettingsAddonsQuery } from '../../services/addons/getAddons'
+import { useGetSettingsAddonsQuery } from '@queries/addons/getAddons'
 
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'

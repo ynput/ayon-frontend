@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo } from 'react'
-import { useGetAddonListQuery } from '../../../services/addons/getAddons'
+import { useGetAddonListQuery } from '@queries/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { SocketContext } from '@context/websocketContext'

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useGetProjectQuery } from '../../../../services/project/getProject'
+import { useGetProjectQuery } from '@queries/project/getProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
 import Thumbnail from '@containers/thumbnail'
 import AttributeTable from '@containers/attributeTable'

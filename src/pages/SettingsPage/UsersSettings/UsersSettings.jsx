@@ -7,7 +7,7 @@ import RenameUserDialog from './RenameUserDialog'
 // utils
 import './users.scss'
 import useSearchFilter from '@hooks/useSearchFilter'
-import { useGetUsersQuery } from '../../../services/user/getUsers'
+import { useGetUsersQuery } from '@queries/user/getUsers'
 import ProjectList from '@containers/projectList'
 import UserDetail from './userDetail'
 import UserList from './UserList'

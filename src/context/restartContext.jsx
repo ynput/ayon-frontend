@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
-import { useGetRestartQuery, useRestartServerMutation } from '../services/restartServer'
+import { useGetRestartQuery, useRestartServerMutation } from '@queries/restartServer'
 import RestartBanner from '@components/RestartBanner/RestartBanner'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServerRestartingPage from '@components/ServerRestartingPage'

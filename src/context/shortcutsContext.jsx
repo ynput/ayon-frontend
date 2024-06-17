@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { toggleMenuOpen } from '../features/context'
-import { useLogOutMutation } from '../services/auth/getAuth'
+import { useLogOutMutation } from '@queries/auth/getAuth'
 import { useSearchParams } from 'react-router-dom'
 
 const ShortcutsContext = createContext()

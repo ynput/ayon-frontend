@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useGetTeamsQuery } from '../../services/team/getTeams'
+import { useGetTeamsQuery } from '@queries/team/getTeams'
 import TeamList from '@containers/TeamList'
 import { ArrayParam, useQueryParam } from 'use-query-params'
 import {

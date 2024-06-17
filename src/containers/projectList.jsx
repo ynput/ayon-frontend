@@ -4,7 +4,7 @@ import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { useListProjectsQuery } from '../services/project/getProject'
+import { useListProjectsQuery } from '@queries/project/getProject'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import useCreateContext from '@hooks/useCreateContext'

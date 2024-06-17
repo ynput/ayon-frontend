@@ -5,10 +5,7 @@ import { toast } from 'react-toastify'
 import { Spacer, InputText, Toolbar, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
 import SettingsEditor from '@containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
-import {
-  useGetAnatomyPresetQuery,
-  useGetAnatomySchemaQuery,
-} from '../../../services/anatomy/getAnatomy'
+import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { useCreateProjectMutation } from '@queries/project/updateProject'
 
 // allow only alphanumeric and underscorer,
