@@ -7,6 +7,10 @@ const NodePanelWrapper = styled.div`
   border-radius: 4px;
 `
 
+const NodeMessage = styled.span`
+  white-space: nowrap;
+`
+
 const NodePanelHeader = styled.div`
   padding: 4px 8px;
   display: flex;
@@ -115,6 +119,7 @@ export {
   NodePanelHeader,
   NodePanelBody,
   NodePanelDirectionSelector,
+  NodeMessage,
   ChangeValue,
   ChangesTable,
 }

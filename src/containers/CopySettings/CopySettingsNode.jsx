@@ -1,5 +1,5 @@
-/* eslint-disable */
 import { useState, useEffect, useMemo } from 'react'
+import isEqual from 'lodash'
 
 import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 
@@ -10,7 +10,6 @@ import {
 
 // TODO: move this to a common location
 import { getValueByPath } from '../AddonSettings/utils'
-import { isEqual } from 'lodash'
 
 import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
 import ProjectDropdown from '/src/containers/ProjectDropdown'
@@ -20,6 +19,7 @@ import {
   NodePanelWrapper,
   NodePanelHeader,
   NodePanelBody,
+  NodeMessage,
   NodePanelDirectionSelector,
   ChangeValue,
   ChangesTable,
@@ -158,6 +158,14 @@ const CopySettingsNode = ({
       asVersion: targetVersion,
     })
 
+    const targetOverrides = await triggerGetOverrides({
+      addonName,
+      addonVersion: targetVersion,
+      variant: targetVariant,
+      projectName: targetProjectName,
+      asVersion: targetVersion,
+    })
+
     const sourceSettings = await triggerGetSettings({
       addonName,
       addonVersion: sourceVersion,
@@ -166,12 +174,6 @@ const CopySettingsNode = ({
       asVersion: targetVersion,
     })
 
-    // const targetOverrides = await triggerGetOverrides({
-    //   addonName,
-    //   addonVersion: targetVersion,
-    //   variant: targetVariant,
-    // })
-
     const targetSettings = await triggerGetSettings({
       addonName,
       addonVersion: targetVersion,
@@ -179,23 +181,38 @@ const CopySettingsNode = ({
       projectName: targetProjectName,
     })
 
-    for (const id in sourceOverrides.data) {
+    const allIds = [...new Set([...Object.keys(sourceOverrides.data), ...Object.keys(targetOverrides.data)])]
+
+    for (const id of allIds) {
       const sourceOverride = sourceOverrides.data[id]
-      //const targetOverride = targetOverrides.data[id]
+      const targetOverride = targetOverrides.data[id]
+      const path = sourceOverride?.path || targetOverride?.path
+      console.log('path', path)
+      if (!path) {
+        console.log(sourceOverride, targetOverride)
+      }
 
       // Remove noise
-      if (sourceOverride.inGroup || sourceOverride.type === 'branch') continue
+      if (sourceOverride?.inGroup || sourceOverride?.type === 'branch') {
+        console.log('Skipping override', path, 'because it is in a group')
+        continue
+      }
 
       // do not attempt to copy overrides from default or studio
       // to project level
-      if (targetProjectName && ['default', 'studio'].includes(sourceOverride.level)) continue
+      if (targetProjectName && ['default', 'studio'].includes(sourceOverride?.level)) continue
 
-      const sourceValue = getValueByPath(sourceSettings.data, sourceOverride.path)
-      const targetValue = getValueByPath(targetSettings.data, sourceOverride.path)
+      const sourceValue = getValueByPath(sourceSettings.data, path)
+      const targetValue = getValueByPath(targetSettings.data, path)
 
       // do not attempt to copy if the values are the same
       // ... or rather do copy it. we want to force pinned overrides
-      // if (isEqual(sourceValue, targetValue))
+      if (isEqual(sourceValue, targetValue)){
+        if (sourceOverride?.level === targetOverride?.level) {
+          console.log("Skipping override", path, "because it's the same", sourceValue, targetValue)
+          continue
+        }
+      }
       //   continue
 
       //const compatible = sameKeysStructure(sourceValue, targetValue)
@@ -203,7 +220,7 @@ const CopySettingsNode = ({
 
       const item = {
         key: id,
-        path: sourceOverride.path,
+        path: path,
         sourceValue,
         targetValue,
         enabled: !!compatible,
@@ -282,7 +299,7 @@ const CopySettingsNode = ({
         {nodeData?.available ? (
           <Icon icon="trending_flat" />
         ) : (
-          <span className="message">{nodeData?.message || 'Nothing to copy'}</span>
+          <NodeMessage>{nodeData?.message || 'Nothing to copy'}</NodeMessage>
         )}
       </NodePanelDirectionSelector>
       <AddonDropdown
