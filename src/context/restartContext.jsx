@@ -4,7 +4,7 @@ import RestartBanner from '@components/RestartBanner/RestartBanner'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServerRestartingPage from '@components/ServerRestartingPage'
 import { useSelector } from 'react-redux'
-import useLocalStorage from '../hooks/useLocalStorage'
+import useLocalStorage from '@hooks/useLocalStorage'
 
 const RestartContext = createContext()
 

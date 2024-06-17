@@ -9,7 +9,7 @@ import { CellWithIcon } from '@components/icons'
 import EntityDetail from './DetailsDialog'
 import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
 import { useGetHierarchyQuery } from '@queries/getHierarchy'
-import useCreateContext from '../hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 
 const filterHierarchy = (text, folder, folders) => {

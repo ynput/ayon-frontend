@@ -2,7 +2,7 @@ import React, { createContext, useContext, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'react-toastify'
 import RemoveMarkdown from 'remove-markdown'
-import usePubSub from '../hooks/usePubSub'
+import usePubSub from '@hooks/usePubSub'
 import { Icon } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
 

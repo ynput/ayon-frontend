@@ -10,7 +10,7 @@ import { CellWithIcon } from '@components/icons'
 import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@state/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '@queries/getTasks'
-import useCreateContext from '../hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import NoEntityFound from '@components/NoEntityFound'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
