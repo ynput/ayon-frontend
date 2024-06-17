@@ -6,7 +6,7 @@ import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-
 import { useGetAccessGroupsQuery } from '@/services/accessGroups/getAccessGroups'
 import { useDeleteAccessGroupMutation } from '@/services/accessGroups/updateAccessGroups'
 import NewAccessGroup from './NewAccessGroup'
-import confirmDelete from '@/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 
 const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup }) => {
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)

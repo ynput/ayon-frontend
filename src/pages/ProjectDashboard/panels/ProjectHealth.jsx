@@ -3,7 +3,7 @@ import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProgressTile from './ProgressTile'
 import { useGetProjectAnatomyQuery } from '@/services/project/getProject'
 import { useGetProjectDashboardQuery } from '@/services/getProjectDashboard'
-import copyToClipboard from '@/helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
 import { useSelector } from 'react-redux'
 
 // format complete data

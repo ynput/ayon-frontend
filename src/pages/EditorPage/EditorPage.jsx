@@ -14,7 +14,7 @@ import {
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import sortByKey from '@/helpers/sortByKey'
+import sortByKey from '@helpers/sortByKey'
 
 import { editorSelectionChanged, setUri, setExpandedFolders } from '@/features/context'
 
@@ -43,14 +43,14 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '@/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
-import checkName from '@/helpers/checkName'
+import checkName from '@helpers/checkName'
 import useCreateContext from '@/hooks/useCreateContext'
 import { ayonApi } from '@/services/ayon'
 import { confirmDialog } from 'primereact/confirmdialog'
 import BuildHierarchyButton from '@/containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
 import { useGetUsersAssigneeQuery } from '@/services/user/getUsers'
-import confirmDelete from '@/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 import { useGetProjectAnatomyQuery } from '@/services/project/getProject'
 import Shortcuts from '@/containers/Shortcuts'
 

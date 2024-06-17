@@ -34,7 +34,7 @@ import { usePromoteBundleMutation } from '@/services/bundles/updateBundles'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
-import arrayEquals from '@/helpers/arrayEquals'
+import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
 import { usePaste } from '@/context/pasteContext'
 

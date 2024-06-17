@@ -7,7 +7,7 @@ import useCreateContext from '@/hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
 import { Badge, BadgeWrapper } from '@components/Badge'
-import copyToClipboard from '@/helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 const FormArrayField = styled.div`
   flex-grow: 1;

@@ -6,7 +6,7 @@ import { onCollapsedColumnsChanged, onTaskSelected } from '@/features/dashboard'
 import { getFakeTasks, usePrefetchEntity, useTaskClick } from '../../util'
 import { useUpdateEntitiesMutation } from '@/services/entity/updateEntity'
 import { toast } from 'react-toastify'
-import getPreviousTagElement from '@/helpers/getPreviousTagElement'
+import getPreviousTagElement from '@helpers/getPreviousTagElement'
 import Shortcuts from '@/containers/Shortcuts'
 
 const UserDashboardList = ({

@@ -18,7 +18,7 @@ import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AppNavLinks from '@/containers/header/AppNavLinks'
-import confirmDelete from '@/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (

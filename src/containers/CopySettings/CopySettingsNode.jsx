@@ -31,7 +31,7 @@ import {
   isListOfSimple,
   isListOfNamedDicts,
   isCompatibleStructure,
-} from '@/helpers/objectComparison'
+} from '@helpers/objectComparison'
 
 const FormattedPath = ({ value }) => {
   return <div className="path">{value.join(' / ')}</div>

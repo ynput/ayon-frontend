@@ -6,7 +6,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import { setExpandedReps, setFocusedRepresentations, setUri } from '@/features/context'
-import groupResult from '@/helpers/groupResult'
+import groupResult from '@helpers/groupResult'
 import useCreateContext from '@/hooks/useCreateContext'
 import DetailsDialog from '../DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'

@@ -2,7 +2,7 @@
 
 import { upperCase, upperFirst } from 'lodash'
 import { productTypes } from '@/features/project'
-import getEntityTypeIcon from '@/helpers/getEntityTypeIcon'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {

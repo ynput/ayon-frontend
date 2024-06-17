@@ -15,7 +15,7 @@ import {
   useDeleteProjectMutation,
   useUpdateProjectMutation,
 } from '@/services/project/updateProject'
-import confirmDelete from '@/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 
 const UserDashboardPage = () => {
   let { module } = useParams()

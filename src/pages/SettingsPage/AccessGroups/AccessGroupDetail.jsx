@@ -19,7 +19,7 @@ import {
   useDeleteAccessGroupMutation,
   useUpdateAccessGroupMutation,
 } from '@/services/accessGroups/updateAccessGroups'
-import confirmDelete from '@/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 
 const PROJECT_GROUP_MSG = 'Clear project overrides'
 

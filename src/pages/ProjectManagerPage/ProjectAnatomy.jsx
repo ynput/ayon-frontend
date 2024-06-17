@@ -5,7 +5,7 @@ import { useUpdateProjectAnatomyMutation } from '@/services/project/updateProjec
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '@/containers/AnatomyEditor'
 
-import copyToClipboard from '@/helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@/context/pasteContext'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {

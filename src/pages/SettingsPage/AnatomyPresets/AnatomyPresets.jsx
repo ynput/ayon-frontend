@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 
-import copyToClipboard from '@/helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@/context/pasteContext'
 
 import { InputText } from 'primereact/inputtext'
@@ -26,7 +26,7 @@ import {
   useUpdatePrimaryPresetMutation,
   useUnsetPrimaryPresetMutation,
 } from '@/services/anatomy/updateAnatomy'
-import confirmDelete from '@/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 
 const AnatomyPresets = () => {
   const [formData, setFormData] = useState(null)

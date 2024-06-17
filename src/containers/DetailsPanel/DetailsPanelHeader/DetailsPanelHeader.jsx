@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
-import copyToClipboard from '@/helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
 import StackedThumbnails from '@/pages/EditorPage/StackedThumbnails'
 import { classNames } from 'primereact/utils'
 import { isEqual, union, upperFirst } from 'lodash'

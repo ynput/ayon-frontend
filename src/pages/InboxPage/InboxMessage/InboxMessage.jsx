@@ -10,7 +10,7 @@ import { getFuzzyDate } from '@components/Feed/ActivityDate'
 import { useMemo } from 'react'
 import RemoveMarkdown from 'remove-markdown'
 import Typography from '@/theme/typography.module.css'
-import getEntityTypeIcon from '@/helpers/getEntityTypeIcon'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 import ShortcutWidget from '@components/ShortcutWidget/ShortcutWidget'
 
 const getMessageBody = (messages = []) => {

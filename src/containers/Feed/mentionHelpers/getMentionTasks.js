@@ -1,4 +1,4 @@
-import getEntityTypeIcon from '@/helpers/getEntityTypeIcon'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 const getMentionTasks = (tasks = [], taskTypes = []) =>
   tasks.map((task) => {

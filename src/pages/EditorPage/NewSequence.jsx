@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import { Toolbar, Spacer, SaveButton, Button, Dialog } from '@ynput/ayon-react-components'
 import FolderSequence from '@components/FolderSequence/FolderSequence'
-import getSequence from '@/helpers/getSequence'
+import getSequence from '@helpers/getSequence'
 import { isEmpty } from 'lodash'
 import { useSelector } from 'react-redux'
 

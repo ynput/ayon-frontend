@@ -5,7 +5,7 @@ import { Column } from 'primereact/column'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './NewServiceDialog'
 import useCreateContext from '@/hooks/useCreateContext'
-import confirmDelete from '@/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 import styled from 'styled-components'
 import { useGetServicesQuery } from '@/services/services/getServices'
 import {

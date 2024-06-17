@@ -14,8 +14,8 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
-import confirmDelete from '@/helpers/confirmDelete'
-import copyToClipboard from '@/helpers/copyToClipboard'
+import confirmDelete from '@helpers/confirmDelete'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 const SecretList = styled.div`
   display: flex;

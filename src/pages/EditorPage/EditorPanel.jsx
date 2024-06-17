@@ -17,7 +17,7 @@ import {
 import { useSelector } from 'react-redux'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import getFieldInObject from '@/helpers/getFieldInObject'
+import getFieldInObject from '@helpers/getFieldInObject'
 import { isEmpty, isEqual, union } from 'lodash'
 import StatusSelect from '@components/status/statusSelect'
 import TypeEditor from './TypeEditor'
