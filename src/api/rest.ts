@@ -5,27 +5,11 @@ const injectedRtkApi = api.injectEndpoints({
       query: () => ({ url: `/api/accessGroups/_schema` }),
     }),
     getAccessGroups: build.query<GetAccessGroupsApiResponse, GetAccessGroupsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/accessGroups/${queryArg.projectName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/accessGroups/${queryArg.projectName}` }),
     }),
     getAccessGroup: build.query<GetAccessGroupApiResponse, GetAccessGroupApiArg>({
       query: (queryArg) => ({
         url: `/api/accessGroups/${queryArg.accessGroupName}/${queryArg.projectName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     saveAccessGroup: build.mutation<SaveAccessGroupApiResponse, SaveAccessGroupApiArg>({
@@ -33,26 +17,12 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/accessGroups/${queryArg.accessGroupName}/${queryArg.projectName}`,
         method: 'PUT',
         body: queryArg.data,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteAccessGroup: build.mutation<DeleteAccessGroupApiResponse, DeleteAccessGroupApiArg>({
       query: (queryArg) => ({
         url: `/api/accessGroups/${queryArg.accessGroupName}/${queryArg.projectName}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     postProjectActivity: build.mutation<PostProjectActivityApiResponse, PostProjectActivityApiArg>({
@@ -60,13 +30,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/activities`,
         method: 'POST',
         body: queryArg.projectActivityPostModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteProjectActivity: build.mutation<
@@ -76,13 +39,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     patchProjectActivity: build.mutation<
@@ -93,13 +49,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'PATCH',
         body: queryArg.activityPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     suggestEntityMention: build.mutation<
@@ -110,71 +59,36 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/suggest`,
         method: 'POST',
         body: queryArg.suggestRequest,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteAddon: build.mutation<DeleteAddonApiResponse, DeleteAddonApiArg>({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { purge: queryArg.purge, token: queryArg.token },
+        params: { purge: queryArg.purge },
       }),
     }),
     deleteAddonVersion: build.mutation<DeleteAddonVersionApiResponse, DeleteAddonVersionApiArg>({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { purge: queryArg.purge, token: queryArg.token },
+        params: { purge: queryArg.purge },
       }),
     }),
     getInstalledAddonsList: build.query<
       GetInstalledAddonsListApiResponse,
       GetInstalledAddonsListApiArg
     >({
-      query: (queryArg) => ({
-        url: `/api/addons/install`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/addons/install` }),
     }),
     uploadAddonZipFile: build.mutation<UploadAddonZipFileApiResponse, UploadAddonZipFileApiArg>({
       query: (queryArg) => ({
         url: `/api/addons/install`,
         method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
         params: {
           url: queryArg.url,
           addonName: queryArg.addonName,
           addonVersion: queryArg.addonVersion,
-          token: queryArg.token,
         },
       }),
     }),
@@ -184,13 +98,7 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/schema/${queryArg.projectName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token, site_id: queryArg.siteId },
+        params: { variant: queryArg.variant, site_id: queryArg.siteId },
       }),
     }),
     getAddonProjectSettings: build.query<
@@ -199,18 +107,7 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/settings/${queryArg.projectName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: {
-          variant: queryArg.variant,
-          as: queryArg['as'],
-          token: queryArg.token,
-          site_id: queryArg.siteId,
-        },
+        params: { variant: queryArg.variant, as: queryArg['as'], site_id: queryArg.siteId },
       }),
     }),
     setAddonProjectSettings: build.mutation<
@@ -221,13 +118,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/settings/${queryArg.projectName}`,
         method: 'POST',
         body: queryArg.payload,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token, site_id: queryArg.siteId },
+        params: { variant: queryArg.variant, site_id: queryArg.siteId },
       }),
     }),
     getAddonProjectOverrides: build.query<
@@ -236,18 +127,7 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/overrides/${queryArg.projectName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: {
-          variant: queryArg.variant,
-          as: queryArg['as'],
-          token: queryArg.token,
-          site_id: queryArg.siteId,
-        },
+        params: { variant: queryArg.variant, as: queryArg['as'], site_id: queryArg.siteId },
       }),
     }),
     modifyProjectOverrides: build.mutation<
@@ -258,13 +138,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/overrides/${queryArg.projectName}`,
         method: 'POST',
         body: queryArg.modifyOverridesRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token, site_id: queryArg.siteId },
+        params: { variant: queryArg.variant, site_id: queryArg.siteId },
       }),
     }),
     deleteAddonProjectOverrides: build.mutation<
@@ -274,13 +148,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/overrides/${queryArg.projectName}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token, site_id: queryArg.siteId },
+        params: { variant: queryArg.variant, site_id: queryArg.siteId },
       }),
     }),
     getRawAddonProjectOverrides: build.query<
@@ -289,13 +157,7 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/rawOverrides/${queryArg.projectName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token, site_id: queryArg.siteId },
+        params: { variant: queryArg.variant, site_id: queryArg.siteId },
       }),
     }),
     setRawAddonProjectOverrides: build.mutation<
@@ -306,13 +168,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/rawOverrides/${queryArg.projectName}`,
         method: 'PUT',
         body: queryArg.payload,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token, site_id: queryArg.siteId },
+        params: { variant: queryArg.variant, site_id: queryArg.siteId },
       }),
     }),
     getAddonSiteSettingsSchema: build.query<
@@ -321,25 +177,12 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/siteSettings/schema`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getAddonSiteSettings: build.query<GetAddonSiteSettingsApiResponse, GetAddonSiteSettingsApiArg>({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/siteSettings`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token, site_id: queryArg.siteId },
+        params: { site_id: queryArg.siteId },
       }),
     }),
     setAddonSiteSettings: build.mutation<
@@ -350,13 +193,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/siteSettings`,
         method: 'PUT',
         body: queryArg.payload,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token, site_id: queryArg.siteId },
+        params: { site_id: queryArg.siteId },
       }),
     }),
     getAddonSettingsSchema: build.query<
@@ -365,13 +202,7 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/schema`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token },
+        params: { variant: queryArg.variant },
       }),
     }),
     getAddonStudioSettings: build.query<
@@ -380,13 +211,7 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/settings`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, as: queryArg['as'], token: queryArg.token },
+        params: { variant: queryArg.variant, as: queryArg['as'] },
       }),
     }),
     setAddonStudioSettings: build.mutation<
@@ -397,13 +222,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/settings`,
         method: 'POST',
         body: queryArg.payload,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token },
+        params: { variant: queryArg.variant },
       }),
     }),
     getAddonStudioOverrides: build.query<
@@ -412,13 +231,7 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/overrides`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, as: queryArg['as'], token: queryArg.token },
+        params: { variant: queryArg.variant, as: queryArg['as'] },
       }),
     }),
     modifyStudioOverrides: build.mutation<
@@ -429,13 +242,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/overrides`,
         method: 'POST',
         body: queryArg.modifyOverridesRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token },
+        params: { variant: queryArg.variant },
       }),
     }),
     deleteAddonStudioOverrides: build.mutation<
@@ -445,13 +252,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/overrides`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token },
+        params: { variant: queryArg.variant },
       }),
     }),
     getRawAddonStudioOverrides: build.query<
@@ -460,13 +261,7 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/rawOverrides`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token },
+        params: { variant: queryArg.variant },
       }),
     }),
     setRawAddonStudioOverrides: build.mutation<
@@ -477,194 +272,75 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/rawOverrides`,
         method: 'PUT',
         body: queryArg.payload,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, token: queryArg.token },
+        params: { variant: queryArg.variant },
       }),
     }),
     listAddons: build.query<ListAddonsApiResponse, ListAddonsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { details: queryArg.details, token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/addons`, params: { details: queryArg.details } }),
     }),
     configureAddons: build.mutation<ConfigureAddonsApiResponse, ConfigureAddonsApiArg>({
       query: (queryArg) => ({
         url: `/api/addons`,
         method: 'POST',
         body: queryArg.addonConfigRequest,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getAnatomySchema: build.query<GetAnatomySchemaApiResponse, GetAnatomySchemaApiArg>({
-      query: (queryArg) => ({
-        url: `/api/anatomy/schema`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/anatomy/schema` }),
     }),
     getAnatomyPresets: build.query<GetAnatomyPresetsApiResponse, GetAnatomyPresetsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/anatomy/presets`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/anatomy/presets` }),
     }),
     getAnatomyPreset: build.query<GetAnatomyPresetApiResponse, GetAnatomyPresetApiArg>({
-      query: (queryArg) => ({
-        url: `/api/anatomy/presets/${queryArg.presetName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/anatomy/presets/${queryArg.presetName}` }),
     }),
     updateAnatomyPreset: build.mutation<UpdateAnatomyPresetApiResponse, UpdateAnatomyPresetApiArg>({
       query: (queryArg) => ({
         url: `/api/anatomy/presets/${queryArg.presetName}`,
         method: 'PUT',
         body: queryArg.anatomy,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteAnatomyPreset: build.mutation<DeleteAnatomyPresetApiResponse, DeleteAnatomyPresetApiArg>({
       query: (queryArg) => ({
         url: `/api/anatomy/presets/${queryArg.presetName}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     setPrimaryPreset: build.mutation<SetPrimaryPresetApiResponse, SetPrimaryPresetApiArg>({
       query: (queryArg) => ({
         url: `/api/anatomy/presets/${queryArg.presetName}/primary`,
         method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     unsetPrimaryPreset: build.mutation<UnsetPrimaryPresetApiResponse, UnsetPrimaryPresetApiArg>({
       query: (queryArg) => ({
         url: `/api/anatomy/presets/${queryArg.presetName}/primary`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getAttributeList: build.query<GetAttributeListApiResponse, GetAttributeListApiArg>({
-      query: (queryArg) => ({
-        url: `/api/attributes`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/attributes` }),
     }),
     setAttributeList: build.mutation<SetAttributeListApiResponse, SetAttributeListApiArg>({
       query: (queryArg) => ({
         url: `/api/attributes`,
         method: 'PUT',
         body: queryArg.setAttributeListModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getAttributeConfig: build.query<GetAttributeConfigApiResponse, GetAttributeConfigApiArg>({
-      query: (queryArg) => ({
-        url: `/api/attributes/${queryArg.attributeName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}` }),
     }),
     setAttributeConfig: build.mutation<SetAttributeConfigApiResponse, SetAttributeConfigApiArg>({
       query: (queryArg) => ({
         url: `/api/attributes/${queryArg.attributeName}`,
         method: 'PUT',
         body: queryArg.attributePutModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteAttribute: build.mutation<DeleteAttributeApiResponse, DeleteAttributeApiArg>({
-      query: (queryArg) => ({
-        url: `/api/attributes/${queryArg.attributeName}`,
-        method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}`, method: 'DELETE' }),
     }),
     login: build.mutation<LoginApiResponse, LoginApiArg>({
       query: (queryArg) => ({
@@ -674,51 +350,21 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     logout: build.mutation<LogoutApiResponse, LogoutApiArg>({
-      query: (queryArg) => ({
-        url: `/api/auth/logout`,
-        method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: { authorization: queryArg.authorization },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/auth/logout`, method: 'POST' }),
     }),
     listActiveSessions: build.query<ListActiveSessionsApiResponse, ListActiveSessionsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/auth/sessions`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/auth/sessions` }),
     }),
     listBundles: build.query<ListBundlesApiResponse, ListBundlesApiArg>({
-      query: (queryArg) => ({
-        url: `/api/bundles`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { archived: queryArg.archived, token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/bundles`, params: { archived: queryArg.archived } }),
     }),
     createNewBundle: build.mutation<CreateNewBundleApiResponse, CreateNewBundleApiArg>({
       query: (queryArg) => ({
         url: `/api/bundles`,
         method: 'POST',
         body: queryArg.bundleModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { force: queryArg.force, token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
+        params: { force: queryArg.force },
       }),
     }),
     checkBundleCompatibility: build.mutation<
@@ -729,13 +375,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/bundles/check`,
         method: 'POST',
         body: queryArg.bundleModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     bundleActions: build.mutation<BundleActionsApiResponse, BundleActionsApiArg>({
@@ -743,84 +382,35 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/bundles/${queryArg.bundleName}`,
         method: 'POST',
         body: queryArg.bundleActionModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteExistingBundle: build.mutation<
       DeleteExistingBundleApiResponse,
       DeleteExistingBundleApiArg
     >({
-      query: (queryArg) => ({
-        url: `/api/bundles/${queryArg.bundleName}`,
-        method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/bundles/${queryArg.bundleName}`, method: 'DELETE' }),
     }),
     updateBundle: build.mutation<UpdateBundleApiResponse, UpdateBundleApiArg>({
       query: (queryArg) => ({
         url: `/api/bundles/${queryArg.bundleName}`,
         method: 'PATCH',
         body: queryArg.bundlePatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { build: queryArg.build, force: queryArg.force, token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
+        params: { build: queryArg.build, force: queryArg.force },
       }),
     }),
     getYnputCloudInfo: build.query<GetYnputCloudInfoApiResponse, GetYnputCloudInfoApiArg>({
-      query: (queryArg) => ({
-        url: `/api/connect`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/connect` }),
     }),
     setYnputCloudKey: build.mutation<SetYnputCloudKeyApiResponse, SetYnputCloudKeyApiArg>({
       query: (queryArg) => ({
         url: `/api/connect`,
         method: 'POST',
         body: queryArg.ynputConnectRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteYnputCloudKey: build.mutation<DeleteYnputCloudKeyApiResponse, DeleteYnputCloudKeyApiArg>({
-      query: (queryArg) => ({
-        url: `/api/connect`,
-        method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/connect`, method: 'DELETE' }),
     }),
     connectToYnputCloud: build.query<ConnectToYnputCloudApiResponse, ConnectToYnputCloudApiArg>({
       query: (queryArg) => ({
@@ -832,16 +422,7 @@ const injectedRtkApi = api.injectEndpoints({
       ListDependencyPackagesApiResponse,
       ListDependencyPackagesApiArg
     >({
-      query: (queryArg) => ({
-        url: `/api/desktop/dependencyPackages`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/desktop/dependencyPackages` }),
     }),
     createDependencyPackage: build.mutation<
       CreateDependencyPackageApiResponse,
@@ -851,34 +432,14 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/desktop/dependencyPackages`,
         method: 'POST',
         body: queryArg.dependencyPackage,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: {
-          url: queryArg.url,
-          overwrite: queryArg.overwrite,
-          force: queryArg.force,
-          token: queryArg.token,
-        },
+        params: { url: queryArg.url, overwrite: queryArg.overwrite, force: queryArg.force },
       }),
     }),
     downloadDependencyPackage: build.query<
       DownloadDependencyPackageApiResponse,
       DownloadDependencyPackageApiArg
     >({
-      query: (queryArg) => ({
-        url: `/api/desktop/dependencyPackages/${queryArg.filename}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/desktop/dependencyPackages/${queryArg.filename}` }),
     }),
     uploadDependencyPackage: build.mutation<
       UploadDependencyPackageApiResponse,
@@ -887,13 +448,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/desktop/dependencyPackages/${queryArg.filename}`,
         method: 'PUT',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteDependencyPackage: build.mutation<
@@ -903,13 +457,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/desktop/dependencyPackages/${queryArg.filename}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     updateDependencyPackage: build.mutation<
@@ -920,29 +467,15 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/desktop/dependencyPackages/${queryArg.filename}`,
         method: 'PATCH',
         body: queryArg.sourcesPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     listInstallers: build.query<ListInstallersApiResponse, ListInstallersApiArg>({
       query: (queryArg) => ({
         url: `/api/desktop/installers`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
         params: {
           version: queryArg.version,
           platform: queryArg.platform,
           variant: queryArg.variant,
-          token: queryArg.token,
         },
       }),
     }),
@@ -951,59 +484,22 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/desktop/installers`,
         method: 'POST',
         body: queryArg.installer,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: {
-          url: queryArg.url,
-          overwrite: queryArg.overwrite,
-          force: queryArg.force,
-          token: queryArg.token,
-        },
+        params: { url: queryArg.url, overwrite: queryArg.overwrite, force: queryArg.force },
       }),
     }),
     downloadInstallerFile: build.query<
       DownloadInstallerFileApiResponse,
       DownloadInstallerFileApiArg
     >({
-      query: (queryArg) => ({
-        url: `/api/desktop/installers/${queryArg.filename}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/desktop/installers/${queryArg.filename}` }),
     }),
     uploadInstallerFile: build.mutation<UploadInstallerFileApiResponse, UploadInstallerFileApiArg>({
-      query: (queryArg) => ({
-        url: `/api/desktop/installers/${queryArg.filename}`,
-        method: 'PUT',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/desktop/installers/${queryArg.filename}`, method: 'PUT' }),
     }),
     deleteInstallerFile: build.mutation<DeleteInstallerFileApiResponse, DeleteInstallerFileApiArg>({
       query: (queryArg) => ({
         url: `/api/desktop/installers/${queryArg.filename}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     patchInstaller: build.mutation<PatchInstallerApiResponse, PatchInstallerApiArg>({
@@ -1011,13 +507,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/desktop/installers/${queryArg.filename}`,
         method: 'PATCH',
         body: queryArg.sourcesPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     enroll: build.mutation<EnrollApiResponse, EnrollApiArg>({
@@ -1025,13 +514,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/enroll`,
         method: 'POST',
         body: queryArg.enrollRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     postEvent: build.mutation<PostEventApiResponse, PostEventApiArg>({
@@ -1039,120 +521,59 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/events`,
         method: 'POST',
         body: queryArg.dispatchEventRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getEvent: build.query<GetEventApiResponse, GetEventApiArg>({
-      query: (queryArg) => ({
-        url: `/api/events/${queryArg.eventId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/events/${queryArg.eventId}` }),
     }),
     updateExistingEvent: build.mutation<UpdateExistingEventApiResponse, UpdateExistingEventApiArg>({
       query: (queryArg) => ({
         url: `/api/events/${queryArg.eventId}`,
         method: 'PATCH',
         body: queryArg.updateEventRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     uploadProjectFile: build.mutation<UploadProjectFileApiResponse, UploadProjectFileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files`,
         method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
         headers: {
           'x-file-id': queryArg['x-file-id'],
           'x-file-name': queryArg['x-file-name'],
           'x-activity-id': queryArg['x-activity-id'],
           'content-type': queryArg['content-type'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
         },
-        params: { token: queryArg.token },
       }),
     }),
     downloadProjectFile: build.query<DownloadProjectFileApiResponse, DownloadProjectFileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { preview: queryArg.preview, token: queryArg.token },
+        params: { preview: queryArg.preview },
       }),
     }),
     deleteProjectFile: build.mutation<DeleteProjectFileApiResponse, DeleteProjectFileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getProjectFileHead: build.mutation<GetProjectFileHeadApiResponse, GetProjectFileHeadApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
         method: 'HEAD',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getFolder: build.query<GetFolderApiResponse, GetFolderApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteFolder: build.mutation<DeleteFolderApiResponse, DeleteFolderApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { force: queryArg.force, token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
+        params: { force: queryArg.force },
       }),
     }),
     updateFolder: build.mutation<UpdateFolderApiResponse, UpdateFolderApiArg>({
@@ -1160,26 +581,13 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
         method: 'PATCH',
         body: queryArg.folderPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     getFolderList: build.query<GetFolderListApiResponse, GetFolderListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { attrib: queryArg.attrib, token: queryArg.token },
+        params: { attrib: queryArg.attrib },
       }),
     }),
     createFolder: build.mutation<CreateFolderApiResponse, CreateFolderApiArg>({
@@ -1187,26 +595,13 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/folders`,
         method: 'POST',
         body: queryArg.folderPostModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     getFolderHierarchy: build.query<GetFolderHierarchyApiResponse, GetFolderHierarchyApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/hierarchy`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { search: queryArg.search, types: queryArg.types, token: queryArg.token },
+        params: { search: queryArg.search, types: queryArg.types },
       }),
     }),
     manageInboxItem: build.mutation<ManageInboxItemApiResponse, ManageInboxItemApiArg>({
@@ -1214,52 +609,22 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/inbox`,
         method: 'POST',
         body: queryArg.manageInboxItemRequest,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     listLinkTypes: build.query<ListLinkTypesApiResponse, ListLinkTypesApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/links/types`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/links/types` }),
     }),
     saveLinkType: build.mutation<SaveLinkTypeApiResponse, SaveLinkTypeApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/links/types/${queryArg.linkType}`,
         method: 'PUT',
         body: queryArg.createLinkTypeRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteLinkType: build.mutation<DeleteLinkTypeApiResponse, DeleteLinkTypeApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/links/types/${queryArg.linkType}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     createEntityLink: build.mutation<CreateEntityLinkApiResponse, CreateEntityLinkApiArg>({
@@ -1267,51 +632,19 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/links`,
         method: 'POST',
         body: queryArg.createLinkRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteEntityLink: build.mutation<DeleteEntityLinkApiResponse, DeleteEntityLinkApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/links/${queryArg.linkId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     marketAddonList: build.query<MarketAddonListApiResponse, MarketAddonListApiArg>({
-      query: (queryArg) => ({
-        url: `/api/market/addons`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/market/addons` }),
     }),
     marketAddonDetail: build.query<MarketAddonDetailApiResponse, MarketAddonDetailApiArg>({
-      query: (queryArg) => ({
-        url: `/api/market/addons/${queryArg.addonName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/market/addons/${queryArg.addonName}` }),
     }),
     marketAddonVersionDetail: build.query<
       MarketAddonVersionDetailApiResponse,
@@ -1319,13 +652,6 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/market/addons/${queryArg.addonName}/${queryArg.addonVersion}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     createFirstAdmin: build.mutation<CreateFirstAdminApiResponse, CreateFirstAdminApiArg>({
@@ -1336,30 +662,10 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     abortOnboarding: build.mutation<AbortOnboardingApiResponse, AbortOnboardingApiArg>({
-      query: (queryArg) => ({
-        url: `/api/onboarding/abort`,
-        method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/onboarding/abort`, method: 'POST' }),
     }),
     restartOnboarding: build.mutation<RestartOnboardingApiResponse, RestartOnboardingApiArg>({
-      query: (queryArg) => ({
-        url: `/api/onboarding/restart`,
-        method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/onboarding/restart`, method: 'POST' }),
     }),
     getReleases: build.query<GetReleasesApiResponse, GetReleasesApiArg>({
       query: () => ({ url: `/api/onboarding/releases` }),
@@ -1372,40 +678,19 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/operations`,
         method: 'POST',
         body: queryArg.operationsRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     getProduct: build.query<GetProductApiResponse, GetProductApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteProduct: build.mutation<DeleteProductApiResponse, DeleteProductApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     updateProduct: build.mutation<UpdateProductApiResponse, UpdateProductApiArg>({
@@ -1413,14 +698,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}`,
         method: 'PATCH',
         body: queryArg.productPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     createProduct: build.mutation<CreateProductApiResponse, CreateProductApiArg>({
@@ -1428,103 +706,41 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/products`,
         method: 'POST',
         body: queryArg.productPostModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     getProjectEntityCounts: build.query<
       GetProjectEntityCountsApiResponse,
       GetProjectEntityCountsApiArg
     >({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/dashboard/entities`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/dashboard/entities` }),
     }),
     getProjectHealth: build.query<GetProjectHealthApiResponse, GetProjectHealthApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/dashboard/health`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/dashboard/health` }),
     }),
     getProjectActivity: build.query<GetProjectActivityApiResponse, GetProjectActivityApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/dashboard/activity`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { days: queryArg.days, token: queryArg.token },
+        params: { days: queryArg.days },
       }),
     }),
     getProjectUsers: build.query<GetProjectUsersApiResponse, GetProjectUsersApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/dashboard/users`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/dashboard/users` }),
     }),
     getProjectAnatomy: build.query<GetProjectAnatomyApiResponse, GetProjectAnatomyApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/anatomy`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/anatomy` }),
     }),
     setProjectAnatomy: build.mutation<SetProjectAnatomyApiResponse, SetProjectAnatomyApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/anatomy`,
         method: 'POST',
         body: queryArg.anatomy,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     listProjects: build.query<ListProjectsApiResponse, ListProjectsApiArg>({
       query: (queryArg) => ({
         url: `/api/projects`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
         params: {
           page: queryArg.page,
           length: queryArg.length,
@@ -1533,7 +749,6 @@ const injectedRtkApi = api.injectEndpoints({
           order: queryArg.order,
           desc: queryArg.desc,
           name: queryArg.name,
-          token: queryArg.token,
         },
       }),
     }),
@@ -1542,95 +757,37 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects`,
         method: 'POST',
         body: queryArg.deployProjectRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getProject: build.query<GetProjectApiResponse, GetProjectApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}` }),
     }),
     createProject: build.mutation<CreateProjectApiResponse, CreateProjectApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}`,
         method: 'PUT',
         body: queryArg.projectPostModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteProject: build.mutation<DeleteProjectApiResponse, DeleteProjectApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}`,
-        method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}`, method: 'DELETE' }),
     }),
     updateProject: build.mutation<UpdateProjectApiResponse, UpdateProjectApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}`,
         method: 'PATCH',
         body: queryArg.projectPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     getProjectStats: build.query<GetProjectStatsApiResponse, GetProjectStatsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/stats`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/stats` }),
     }),
     getProjectRootsOverrides: build.query<
       GetProjectRootsOverridesApiResponse,
       GetProjectRootsOverridesApiArg
     >({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/roots`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/roots` }),
     }),
     setProjectRootsOverrides: build.mutation<
       SetProjectRootsOverridesApiResponse,
@@ -1640,26 +797,13 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/roots/${queryArg.siteId}`,
         method: 'PUT',
         body: queryArg.payload,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getProjectSiteRoots: build.query<GetProjectSiteRootsApiResponse, GetProjectSiteRootsApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/siteRoots`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-          'x-ayon-site-id': queryArg['x-ayon-site-id'],
-        },
-        params: { platform: queryArg.platform, token: queryArg.token },
+        headers: { 'x-ayon-site-id': queryArg['x-ayon-site-id'] },
+        params: { platform: queryArg.platform },
       }),
     }),
     query: build.mutation<QueryApiResponse, QueryApiArg>({
@@ -1667,13 +811,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/query`,
         method: 'POST',
         body: queryArg.queryRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     representationContextFilter: build.mutation<
@@ -1684,25 +821,11 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/repreContextFilter`,
         method: 'POST',
         body: queryArg.lookupRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getRepresentation: build.query<GetRepresentationApiResponse, GetRepresentationApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteRepresentation: build.mutation<
@@ -1712,14 +835,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     updateRepresentation: build.mutation<
@@ -1730,14 +846,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
         method: 'PATCH',
         body: queryArg.representationPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     createRepresentation: build.mutation<
@@ -1748,14 +857,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/representations`,
         method: 'POST',
         body: queryArg.representationPostModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     resolveUris: build.mutation<ResolveUrisApiResponse, ResolveUrisApiArg>({
@@ -1763,179 +865,60 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/resolve`,
         method: 'POST',
         body: queryArg.resolveRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-ayon-site-id': queryArg['x-ayon-site-id'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { pathOnly: queryArg.pathOnly, token: queryArg.token },
-      }),
-    }),
-    listVersionReviewables: build.query<
-      ListVersionReviewablesApiResponse,
-      ListVersionReviewablesApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/review`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    getReviewable: build.query<GetReviewableApiResponse, GetReviewableApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/review/${queryArg.reviewableId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    headReviewable: build.mutation<HeadReviewableApiResponse, HeadReviewableApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/review/${queryArg.reviewableId}`,
-        method: 'HEAD',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-ayon-site-id': queryArg['x-ayon-site-id'] },
+        params: { pathOnly: queryArg.pathOnly },
       }),
     }),
     listServices: build.query<ListServicesApiResponse, ListServicesApiArg>({
-      query: (queryArg) => ({
-        url: `/api/services`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/services` }),
     }),
     spawnService: build.mutation<SpawnServiceApiResponse, SpawnServiceApiArg>({
       query: (queryArg) => ({
         url: `/api/services/${queryArg.name}`,
         method: 'PUT',
         body: queryArg.spawnServiceRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteService: build.mutation<DeleteServiceApiResponse, DeleteServiceApiArg>({
-      query: (queryArg) => ({
-        url: `/api/services/${queryArg.name}`,
-        method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/services/${queryArg.name}`, method: 'DELETE' }),
     }),
     patchService: build.mutation<PatchServiceApiResponse, PatchServiceApiArg>({
       query: (queryArg) => ({
         url: `/api/services/${queryArg.serviceName}`,
         method: 'PATCH',
         body: queryArg.patchServiceRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     listHosts: build.query<ListHostsApiResponse, ListHostsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/hosts`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/hosts` }),
     }),
     hostHeartbeat: build.mutation<HostHeartbeatApiResponse, HostHeartbeatApiArg>({
       query: (queryArg) => ({
         url: `/api/hosts/heartbeat`,
         method: 'POST',
         body: queryArg.heartbeatRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getAllAddonsSettings: build.query<GetAllAddonsSettingsApiResponse, GetAllAddonsSettingsApiArg>({
       query: (queryArg) => ({
         url: `/api/settings/addons`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: {
-          variant: queryArg.variant,
-          project: queryArg.project,
-          site: queryArg.site,
-          token: queryArg.token,
-        },
+        params: { variant: queryArg.variant, project: queryArg.project, site: queryArg.site },
       }),
     }),
     getAllSiteSettings: build.query<GetAllSiteSettingsApiResponse, GetAllSiteSettingsApiArg>({
       query: (queryArg) => ({
         url: `/api/settings/addons/siteSettings`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { variant: queryArg.variant, site: queryArg.site, token: queryArg.token },
+        params: { variant: queryArg.variant, site: queryArg.site },
       }),
     }),
     getAllSettings: build.query<GetAllSettingsApiResponse, GetAllSettingsApiArg>({
       query: (queryArg) => ({
         url: `/api/settings`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
         params: {
           bundle_name: queryArg.bundleName,
           project_name: queryArg.projectName,
           variant: queryArg.variant,
           summary: queryArg.summary,
-          token: queryArg.token,
           site_id: queryArg.siteId,
         },
       }),
@@ -1943,117 +926,39 @@ const injectedRtkApi = api.injectEndpoints({
     getSites: build.query<GetSitesApiResponse, GetSitesApiArg>({
       query: (queryArg) => ({
         url: `/api/system/sites`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { platform: queryArg.platform, hostname: queryArg.hostname, token: queryArg.token },
+        params: { platform: queryArg.platform, hostname: queryArg.hostname },
       }),
     }),
     getSiteInfo: build.query<GetSiteInfoApiResponse, GetSiteInfoApiArg>({
-      query: (queryArg) => ({
-        url: `/api/info`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/info` }),
     }),
     getProductionMetrics: build.query<GetProductionMetricsApiResponse, GetProductionMetricsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/metrics`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { saturated: queryArg.saturated, token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/metrics`, params: { saturated: queryArg.saturated } }),
     }),
     getSystemMetrics: build.query<GetSystemMetricsApiResponse, GetSystemMetricsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/metrics/system`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/metrics/system` }),
     }),
     getListOfSecrets: build.query<GetListOfSecretsApiResponse, GetListOfSecretsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/secrets`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/secrets` }),
     }),
     getSecret: build.query<GetSecretApiResponse, GetSecretApiArg>({
-      query: (queryArg) => ({
-        url: `/api/secrets/${queryArg.secretName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/secrets/${queryArg.secretName}` }),
     }),
     saveSecret: build.mutation<SaveSecretApiResponse, SaveSecretApiArg>({
       query: (queryArg) => ({
         url: `/api/secrets/${queryArg.secretName}`,
         method: 'PUT',
         body: queryArg.secret,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteSecret: build.mutation<DeleteSecretApiResponse, DeleteSecretApiArg>({
-      query: (queryArg) => ({
-        url: `/api/secrets/${queryArg.secretName}`,
-        method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/secrets/${queryArg.secretName}`, method: 'DELETE' }),
     }),
     requestServerRestart: build.mutation<
       RequestServerRestartApiResponse,
       RequestServerRestartApiArg
     >({
-      query: (queryArg) => ({
-        url: `/api/system/restart`,
-        method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/system/restart`, method: 'POST' }),
     }),
     getRestartRequired: build.query<GetRestartRequiredApiResponse, GetRestartRequiredApiArg>({
       query: () => ({ url: `/api/system/restartRequired` }),
@@ -2063,39 +968,18 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/system/restartRequired`,
         method: 'POST',
         body: queryArg.restartRequiredModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getTask: build.query<GetTaskApiResponse, GetTaskApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteTask: build.mutation<DeleteTaskApiResponse, DeleteTaskApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     updateTask: build.mutation<UpdateTaskApiResponse, UpdateTaskApiArg>({
@@ -2103,14 +987,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
         method: 'PATCH',
         body: queryArg.taskPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     createTask: build.mutation<CreateTaskApiResponse, CreateTaskApiArg>({
@@ -2118,14 +995,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/tasks`,
         method: 'POST',
         body: queryArg.taskPostModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     assignUsersToTask: build.mutation<AssignUsersToTaskApiResponse, AssignUsersToTaskApiArg>({
@@ -2133,25 +1003,12 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/assign`,
         method: 'POST',
         body: queryArg.assignUsersRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getTeams: build.query<GetTeamsApiResponse, GetTeamsApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/teams`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { show_members: queryArg.showMembers, token: queryArg.token },
+        params: { show_members: queryArg.showMembers },
       }),
     }),
     updateTeams: build.mutation<UpdateTeamsApiResponse, UpdateTeamsApiArg>({
@@ -2159,13 +1016,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/teams`,
         method: 'PATCH',
         body: queryArg.payload,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     saveTeam: build.mutation<SaveTeamApiResponse, SaveTeamApiArg>({
@@ -2173,26 +1023,12 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/teams/${queryArg.teamName}`,
         method: 'PUT',
         body: queryArg.teamPutModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteTeam: build.mutation<DeleteTeamApiResponse, DeleteTeamApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/teams/${queryArg.teamName}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     saveTeamMember: build.mutation<SaveTeamMemberApiResponse, SaveTeamMemberApiArg>({
@@ -2200,78 +1036,38 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/teams/${queryArg.teamName}/members/${queryArg.memberName}`,
         method: 'PUT',
         body: queryArg.teamMemberModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteTeamMember: build.mutation<DeleteTeamMemberApiResponse, DeleteTeamMemberApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/teams/${queryArg.teamName}/members/${queryArg.memberName}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     createThumbnail: build.mutation<CreateThumbnailApiResponse, CreateThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/thumbnails`,
         method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-          'content-type': queryArg['content-type'],
-        },
-        params: { token: queryArg.token },
+        headers: { 'content-type': queryArg['content-type'] },
       }),
     }),
     getThumbnail: build.query<GetThumbnailApiResponse, GetThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/thumbnails/${queryArg.thumbnailId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { placeholder: queryArg.placeholder, token: queryArg.token },
+        params: { placeholder: queryArg.placeholder },
       }),
     }),
     updateThumbnail: build.mutation<UpdateThumbnailApiResponse, UpdateThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/thumbnails/${queryArg.thumbnailId}`,
         method: 'PUT',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-          'content-type': queryArg['content-type'],
-        },
-        params: { token: queryArg.token },
+        headers: { 'content-type': queryArg['content-type'] },
       }),
     }),
     getFolderThumbnail: build.query<GetFolderThumbnailApiResponse, GetFolderThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/thumbnail`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { placeholder: queryArg.placeholder, token: queryArg.token },
+        params: { placeholder: queryArg.placeholder },
       }),
     }),
     createFolderThumbnail: build.mutation<
@@ -2281,26 +1077,13 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/thumbnail`,
         method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-          'content-type': queryArg['content-type'],
-        },
-        params: { token: queryArg.token },
+        headers: { 'content-type': queryArg['content-type'] },
       }),
     }),
     getVersionThumbnail: build.query<GetVersionThumbnailApiResponse, GetVersionThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/thumbnail`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { placeholder: queryArg.placeholder, token: queryArg.token },
+        params: { placeholder: queryArg.placeholder },
       }),
     }),
     createVersionThumbnail: build.mutation<
@@ -2310,26 +1093,13 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/thumbnail`,
         method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-          'content-type': queryArg['content-type'],
-        },
-        params: { token: queryArg.token },
+        headers: { 'content-type': queryArg['content-type'] },
       }),
     }),
     getWorkfileThumbnail: build.query<GetWorkfileThumbnailApiResponse, GetWorkfileThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}/thumbnail`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { placeholder: queryArg.placeholder, token: queryArg.token },
+        params: { placeholder: queryArg.placeholder },
       }),
     }),
     createWorkfileThumbnail: build.mutation<
@@ -2339,79 +1109,40 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}/thumbnail`,
         method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-          'content-type': queryArg['content-type'],
-        },
-        params: { token: queryArg.token },
+        headers: { 'content-type': queryArg['content-type'] },
       }),
     }),
     getTaskThumbnail: build.query<GetTaskThumbnailApiResponse, GetTaskThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/thumbnail`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { placeholder: queryArg.placeholder, token: queryArg.token },
+        params: { placeholder: queryArg.placeholder },
       }),
     }),
     createTaskThumbnail: build.mutation<CreateTaskThumbnailApiResponse, CreateTaskThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/thumbnail`,
         method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-          'content-type': queryArg['content-type'],
-        },
-        params: { token: queryArg.token },
+        headers: { 'content-type': queryArg['content-type'] },
+      }),
+    }),
+    getProjectEntityUris: build.mutation<
+      GetProjectEntityUrisApiResponse,
+      GetProjectEntityUrisApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/uris`,
+        method: 'POST',
+        body: queryArg.getUrisRequest,
       }),
     }),
     getAvatar: build.query<GetAvatarApiResponse, GetAvatarApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}/avatar`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}/avatar` }),
     }),
     uploadAvatar: build.mutation<UploadAvatarApiResponse, UploadAvatarApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}/avatar`,
-        method: 'PUT',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}/avatar`, method: 'PUT' }),
     }),
     deleteAvatar: build.mutation<DeleteAvatarApiResponse, DeleteAvatarApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}/avatar`,
-        method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}/avatar`, method: 'DELETE' }),
     }),
     passwordResetRequest: build.mutation<
       PasswordResetRequestApiResponse,
@@ -2431,68 +1162,26 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     getCurrentUser: build.query<GetCurrentUserApiResponse, GetCurrentUserApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/me`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: () => ({ url: `/api/users/me` }),
     }),
     getUser: build.query<GetUserApiResponse, GetUserApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}` }),
     }),
     createUser: build.mutation<CreateUserApiResponse, CreateUserApiArg>({
       query: (queryArg) => ({
         url: `/api/users/${queryArg.userName}`,
         method: 'PUT',
         body: queryArg.newUserModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteUser: build.mutation<DeleteUserApiResponse, DeleteUserApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}`,
-        method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}`, method: 'DELETE' }),
     }),
     patchUser: build.mutation<PatchUserApiResponse, PatchUserApiArg>({
       query: (queryArg) => ({
         url: `/api/users/${queryArg.userName}`,
         method: 'PATCH',
         body: queryArg.userPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     changePassword: build.mutation<ChangePasswordApiResponse, ChangePasswordApiArg>({
@@ -2500,13 +1189,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}/password`,
         method: 'PATCH',
         body: queryArg.changePasswordRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     checkPassword: build.mutation<CheckPasswordApiResponse, CheckPasswordApiArg>({
@@ -2514,13 +1196,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}/checkPassword`,
         method: 'POST',
         body: queryArg.checkPasswordRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     changeUserName: build.mutation<ChangeUserNameApiResponse, ChangeUserNameApiArg>({
@@ -2528,38 +1203,15 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}/rename`,
         method: 'PATCH',
         body: queryArg.changeUserNameRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getUserSessions: build.query<GetUserSessionsApiResponse, GetUserSessionsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}/sessions`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
+      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}/sessions` }),
     }),
     deleteUserSession: build.mutation<DeleteUserSessionApiResponse, DeleteUserSessionApiArg>({
       query: (queryArg) => ({
         url: `/api/users/${queryArg.userName}/sessions/${queryArg.sessionId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     assignAccessGroups: build.mutation<AssignAccessGroupsApiResponse, AssignAccessGroupsApiArg>({
@@ -2567,13 +1219,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}/accessGroups`,
         method: 'PATCH',
         body: queryArg.assignAccessGroupsRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     setFrontendPreferences: build.mutation<
@@ -2584,39 +1229,18 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}/frontendPreferences`,
         method: 'PATCH',
         body: queryArg.patchData,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     getVersion: build.query<GetVersionApiResponse, GetVersionApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteVersion: build.mutation<DeleteVersionApiResponse, DeleteVersionApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     updateVersion: build.mutation<UpdateVersionApiResponse, UpdateVersionApiArg>({
@@ -2624,14 +1248,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
         method: 'PATCH',
         body: queryArg.versionPatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     createVersion: build.mutation<CreateVersionApiResponse, CreateVersionApiArg>({
@@ -2639,40 +1256,19 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions`,
         method: 'POST',
         body: queryArg.versionPostModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     getWorkfile: build.query<GetWorkfileApiResponse, GetWorkfileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
       }),
     }),
     deleteWorkfile: build.mutation<DeleteWorkfileApiResponse, DeleteWorkfileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
         method: 'DELETE',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     updateWorkfile: build.mutation<UpdateWorkfileApiResponse, UpdateWorkfileApiArg>({
@@ -2680,14 +1276,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
         method: 'PATCH',
         body: queryArg.workfilePatchModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     createWorkfile: build.mutation<CreateWorkfileApiResponse, CreateWorkfileApiArg>({
@@ -2695,269 +1284,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/workfiles`,
         method: 'POST',
         body: queryArg.workfilePostModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu101ListPairings: build.query<Kitsu101ListPairingsApiResponse, Kitsu101ListPairingsApiArg>({
-      query: () => ({ url: `/api/addons/kitsu/1.0.1/pairing` }),
-    }),
-    kitsu101InitPairing: build.mutation<Kitsu101InitPairingApiResponse, Kitsu101InitPairingApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.0.1/pairing`,
-        method: 'POST',
-        body: queryArg.kitsu101KitsuInitPairingInitPairingRequest,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu101Sync: build.mutation<Kitsu101SyncApiResponse, Kitsu101SyncApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.0.1/sync/${queryArg.projectName}`,
-        method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu101Push: build.mutation<Kitsu101PushApiResponse, Kitsu101PushApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.0.1/push`,
-        method: 'POST',
-        body: queryArg.kitsu101KitsuPushPushEntitiesRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu110ListPairings: build.query<Kitsu110ListPairingsApiResponse, Kitsu110ListPairingsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.1.0/pairing`,
-        params: { mock: queryArg.mock },
-      }),
-    }),
-    kitsu110InitPairing: build.mutation<Kitsu110InitPairingApiResponse, Kitsu110InitPairingApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.1.0/pairing`,
-        method: 'POST',
-        body: queryArg.kitsu110KitsuInitPairingInitPairingRequest,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu110Sync: build.mutation<Kitsu110SyncApiResponse, Kitsu110SyncApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.1.0/sync/${queryArg.projectName}`,
-        method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu110Push: build.mutation<Kitsu110PushApiResponse, Kitsu110PushApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.1.0/push`,
-        method: 'POST',
-        body: queryArg.kitsu110KitsuPushPushEntitiesRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu110Remove: build.mutation<Kitsu110RemoveApiResponse, Kitsu110RemoveApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.1.0/remove`,
-        method: 'POST',
-        body: queryArg.kitsu110KitsuPushRemoveEntitiesRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu121ListPairings: build.query<Kitsu121ListPairingsApiResponse, Kitsu121ListPairingsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.2.1/pairing`,
-        params: { mock: queryArg.mock },
-      }),
-    }),
-    kitsu121InitPairing: build.mutation<Kitsu121InitPairingApiResponse, Kitsu121InitPairingApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.2.1/pairing`,
-        method: 'POST',
-        body: queryArg.kitsu121KitsuInitPairingInitPairingRequest,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu121Sync: build.mutation<Kitsu121SyncApiResponse, Kitsu121SyncApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.2.1/sync/${queryArg.projectName}`,
-        method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu121Push: build.mutation<Kitsu121PushApiResponse, Kitsu121PushApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.2.1/push`,
-        method: 'POST',
-        body: queryArg.kitsu121KitsuPushPushEntitiesRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu121Remove: build.mutation<Kitsu121RemoveApiResponse, Kitsu121RemoveApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.2.1/remove`,
-        method: 'POST',
-        body: queryArg.kitsu121KitsuPushRemoveEntitiesRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu100ListPairings: build.query<Kitsu100ListPairingsApiResponse, Kitsu100ListPairingsApiArg>({
-      query: () => ({ url: `/api/addons/kitsu/1.0.0/pairing` }),
-    }),
-    kitsu100InitPairing: build.mutation<Kitsu100InitPairingApiResponse, Kitsu100InitPairingApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.0.0/pairing`,
-        method: 'POST',
-        body: queryArg.kitsu100KitsuInitPairingInitPairingRequest,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu100Sync: build.mutation<Kitsu100SyncApiResponse, Kitsu100SyncApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.0.0/sync/${queryArg.projectName}`,
-        method: 'POST',
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    kitsu100Push: build.mutation<Kitsu100PushApiResponse, Kitsu100PushApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons/kitsu/1.0.0/push`,
-        method: 'POST',
-        body: queryArg.kitsu100KitsuPushPushEntitiesRequestModel,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    ayonThirdParty111FilesInfo: build.query<
-      AyonThirdParty111FilesInfoApiResponse,
-      AyonThirdParty111FilesInfoApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/addons/ayon_third_party/1.1.1/files_info`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    ayonThirdParty100FilesInfo: build.query<
-      AyonThirdParty100FilesInfoApiResponse,
-      AyonThirdParty100FilesInfoApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/addons/ayon_third_party/1.0.0/files_info`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
-      }),
-    }),
-    example201GetRandomFolder: build.query<
-      Example201GetRandomFolderApiResponse,
-      Example201GetRandomFolderApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/addons/example/2.0.1/get-random-folder/${queryArg.projectName}`,
-        cookies: { accessToken: queryArg.accessToken },
-        headers: {
-          'x-as-user': queryArg['x-as-user'],
-          'x-api-key': queryArg['x-api-key'],
-          authorization: queryArg.authorization,
-        },
-        params: { token: queryArg.token },
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
   }),
@@ -2969,42 +1296,22 @@ export type GetAccessGroupSchemaApiArg = void
 export type GetAccessGroupsApiResponse = /** status 200 Successful Response */ object[]
 export type GetAccessGroupsApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetAccessGroupApiResponse = /** status 200 Successful Response */ Permissions
 export type GetAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SaveAccessGroupApiResponse = /** status 204 Successful Response */ void
 export type SaveAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   data: Permissions
 }
 export type DeleteAccessGroupApiResponse = /** status 204 Successful Response */ void
 export type DeleteAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type PostProjectActivityApiResponse =
   /** status 201 Successful Response */ CreateActivityResponseModel
@@ -3012,85 +1319,44 @@ export type PostProjectActivityApiArg = {
   projectName: string
   entityType: string
   entityId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   projectActivityPostModel: ProjectActivityPostModel
 }
 export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectActivityApiArg = {
   activityId: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type PatchProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type PatchProjectActivityApiArg = {
   activityId: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   activityPatchModel: ActivityPatchModel
 }
 export type SuggestEntityMentionApiResponse = /** status 200 Successful Response */ SuggestResponse
 export type SuggestEntityMentionApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   suggestRequest: SuggestRequest
 }
 export type DeleteAddonApiResponse = /** status 200 Successful Response */ any
 export type DeleteAddonApiArg = {
   addonName: string
   purge?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteAddonVersionApiResponse = /** status 200 Successful Response */ any
 export type DeleteAddonVersionApiArg = {
   addonName: string
   addonVersion: string
   purge?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetInstalledAddonsListApiResponse =
   /** status 200 Successful Response */ AddonInstallListResponseModel
-export type GetInstalledAddonsListApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetInstalledAddonsListApiArg = void
 export type UploadAddonZipFileApiResponse =
   /** status 200 Successful Response */ InstallAddonResponseModel
 export type UploadAddonZipFileApiArg = {
   url?: string
   addonName?: string
   addonVersion?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetAddonProjectSettingsSchemaApiResponse = /** status 200 Successful Response */ object
 export type GetAddonProjectSettingsSchemaApiArg = {
@@ -3098,13 +1364,8 @@ export type GetAddonProjectSettingsSchemaApiArg = {
   version: string
   projectName: string
   variant?: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetAddonProjectSettingsApiResponse = /** status 200 Successful Response */ object
 export type GetAddonProjectSettingsApiArg = {
@@ -3113,13 +1374,8 @@ export type GetAddonProjectSettingsApiArg = {
   projectName: string
   variant?: string
   as?: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetAddonProjectSettingsApiResponse = /** status 204 Successful Response */ void
 export type SetAddonProjectSettingsApiArg = {
@@ -3127,13 +1383,8 @@ export type SetAddonProjectSettingsApiArg = {
   version: string
   projectName: string
   variant?: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   payload: object
 }
 export type GetAddonProjectOverridesApiResponse = /** status 200 Successful Response */ any
@@ -3143,13 +1394,8 @@ export type GetAddonProjectOverridesApiArg = {
   projectName: string
   variant?: string
   as?: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type ModifyProjectOverridesApiResponse = /** status 204 Successful Response */ void
 export type ModifyProjectOverridesApiArg = {
@@ -3157,13 +1403,8 @@ export type ModifyProjectOverridesApiArg = {
   version: string
   projectName: string
   variant?: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   modifyOverridesRequestModel: ModifyOverridesRequestModel
 }
 export type DeleteAddonProjectOverridesApiResponse = /** status 204 Successful Response */ void
@@ -3172,13 +1413,8 @@ export type DeleteAddonProjectOverridesApiArg = {
   version: string
   projectName: string
   variant?: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetRawAddonProjectOverridesApiResponse = /** status 200 Successful Response */ object
 export type GetRawAddonProjectOverridesApiArg = {
@@ -3186,13 +1422,8 @@ export type GetRawAddonProjectOverridesApiArg = {
   addonVersion: string
   projectName: string
   variant?: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetRawAddonProjectOverridesApiResponse = /** status 204 Successful Response */ void
 export type SetRawAddonProjectOverridesApiArg = {
@@ -3200,48 +1431,28 @@ export type SetRawAddonProjectOverridesApiArg = {
   addonVersion: string
   projectName: string
   variant?: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   payload: object
 }
 export type GetAddonSiteSettingsSchemaApiResponse = /** status 200 Successful Response */ object
 export type GetAddonSiteSettingsSchemaApiArg = {
   addonName: string
   version: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetAddonSiteSettingsApiResponse = /** status 200 Successful Response */ object
 export type GetAddonSiteSettingsApiArg = {
   addonName: string
   version: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetAddonSiteSettingsApiResponse = /** status 204 Successful Response */ void
 export type SetAddonSiteSettingsApiArg = {
   addonName: string
   version: string
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   payload: object
 }
 export type GetAddonSettingsSchemaApiResponse = /** status 200 Successful Response */ object
@@ -3249,11 +1460,6 @@ export type GetAddonSettingsSchemaApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetAddonStudioSettingsApiResponse = /** status 200 Successful Response */ object
 export type GetAddonStudioSettingsApiArg = {
@@ -3261,22 +1467,12 @@ export type GetAddonStudioSettingsApiArg = {
   addonVersion: string
   variant?: string
   as?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetAddonStudioSettingsApiResponse = /** status 204 Successful Response */ void
 export type SetAddonStudioSettingsApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   payload: object
 }
 export type GetAddonStudioOverridesApiResponse = /** status 200 Successful Response */ any
@@ -3285,22 +1481,12 @@ export type GetAddonStudioOverridesApiArg = {
   addonVersion: string
   variant?: string
   as?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type ModifyStudioOverridesApiResponse = /** status 204 Successful Response */ void
 export type ModifyStudioOverridesApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   modifyOverridesRequestModel: ModifyOverridesRequestModel
 }
 export type DeleteAddonStudioOverridesApiResponse = /** status 204 Successful Response */ void
@@ -3308,230 +1494,107 @@ export type DeleteAddonStudioOverridesApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetRawAddonStudioOverridesApiResponse = /** status 200 Successful Response */ object
 export type GetRawAddonStudioOverridesApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetRawAddonStudioOverridesApiResponse = /** status 204 Successful Response */ void
 export type SetRawAddonStudioOverridesApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   payload: object
 }
 export type ListAddonsApiResponse = /** status 200 Successful Response */ AddonList
 export type ListAddonsApiArg = {
   details?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type ConfigureAddonsApiResponse = /** status 200 Successful Response */ any
 export type ConfigureAddonsApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   addonConfigRequest: AddonConfigRequest
 }
 export type GetAnatomySchemaApiResponse = /** status 200 Successful Response */ object
-export type GetAnatomySchemaApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetAnatomySchemaApiArg = void
 export type GetAnatomyPresetsApiResponse =
   /** status 200 Successful Response */ AnatomyPresetListModel
-export type GetAnatomyPresetsApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetAnatomyPresetsApiArg = void
 export type GetAnatomyPresetApiResponse = /** status 200 Successful Response */ ProjectAnatomy
 export type GetAnatomyPresetApiArg = {
   presetName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateAnatomyPresetApiResponse = /** status 204 Successful Response */ void
 export type UpdateAnatomyPresetApiArg = {
   presetName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   anatomy: ProjectAnatomy
 }
 export type DeleteAnatomyPresetApiResponse = /** status 204 Successful Response */ void
 export type DeleteAnatomyPresetApiArg = {
   presetName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetPrimaryPresetApiResponse = /** status 204 Successful Response */ void
 export type SetPrimaryPresetApiArg = {
   presetName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UnsetPrimaryPresetApiResponse = /** status 204 Successful Response */ void
 export type UnsetPrimaryPresetApiArg = {
   presetName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetAttributeListApiResponse =
   /** status 200 Successful Response */ GetAttributeListModel
-export type GetAttributeListApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetAttributeListApiArg = void
 export type SetAttributeListApiResponse = /** status 204 Successful Response */ void
 export type SetAttributeListApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   setAttributeListModel: SetAttributeListModel
 }
 export type GetAttributeConfigApiResponse = /** status 200 Successful Response */ AttributeModel
 export type GetAttributeConfigApiArg = {
   attributeName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetAttributeConfigApiResponse = /** status 204 Successful Response */ void
 export type SetAttributeConfigApiArg = {
   attributeName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   attributePutModel: AttributePutModel
 }
 export type DeleteAttributeApiResponse = /** status 204 Successful Response */ void
 export type DeleteAttributeApiArg = {
   attributeName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type LoginApiResponse = /** status 200 Successful Response */ LoginResponseModel
 export type LoginApiArg = {
   loginRequestModel: LoginRequestModel
 }
 export type LogoutApiResponse = /** status 200 Successful Response */ LogoutResponseModel
-export type LogoutApiArg = {
-  token?: string
-  authorization?: string
-  accessToken?: string
-}
+export type LogoutApiArg = void
 export type ListActiveSessionsApiResponse = /** status 200 Successful Response */ SessionModel[]
-export type ListActiveSessionsApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type ListActiveSessionsApiArg = void
 export type ListBundlesApiResponse = /** status 200 Successful Response */ ListBundleModel
 export type ListBundlesApiArg = {
   /** Include archived bundles */
   archived?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateNewBundleApiResponse = /** status 201 Successful Response */ any
 export type CreateNewBundleApiArg = {
   /** Force creation of bundle */
   force?: boolean
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   bundleModel: BundleModel
 }
 export type CheckBundleCompatibilityApiResponse =
   /** status 200 Successful Response */ CheckBundleResponseModel
 export type CheckBundleCompatibilityApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   bundleModel: BundleModel
 }
 export type BundleActionsApiResponse = /** status 201 Successful Response */ any
 export type BundleActionsApiArg = {
   bundleName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   bundleActionModel: BundleActionModel
 }
 export type DeleteExistingBundleApiResponse = /** status 204 Successful Response */ void
 export type DeleteExistingBundleApiArg = {
   bundleName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateBundleApiResponse = /** status 204 Successful Response */ void
 export type UpdateBundleApiArg = {
@@ -3540,54 +1603,26 @@ export type UpdateBundleApiArg = {
   build?: ('windows' | 'linux' | 'darwin')[]
   /** Force creation of bundle */
   force?: boolean
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   bundlePatchModel: BundlePatchModel
 }
 export type GetYnputCloudInfoApiResponse =
   /** status 200 Successful Response */ YnputConnectResponseModel
-export type GetYnputCloudInfoApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetYnputCloudInfoApiArg = void
 export type SetYnputCloudKeyApiResponse =
   /** status 200 Successful Response */ YnputConnectResponseModel
 export type SetYnputCloudKeyApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   ynputConnectRequestModel: YnputConnectRequestModel
 }
 export type DeleteYnputCloudKeyApiResponse = /** status 200 Successful Response */ any
-export type DeleteYnputCloudKeyApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type DeleteYnputCloudKeyApiArg = void
 export type ConnectToYnputCloudApiResponse = /** status 200 Successful Response */ any
 export type ConnectToYnputCloudApiArg = {
   originUrl: string
 }
 export type ListDependencyPackagesApiResponse =
   /** status 200 Successful Response */ DependencyPackageList
-export type ListDependencyPackagesApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type ListDependencyPackagesApiArg = void
 export type CreateDependencyPackageApiResponse =
   /** status 201 Successful Response */ InstallResponseModel
 export type CreateDependencyPackageApiArg = {
@@ -3597,48 +1632,23 @@ export type CreateDependencyPackageApiArg = {
   overwrite?: boolean
   /** Force install the package if it already exists */
   force?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   dependencyPackage: DependencyPackage
 }
 export type DownloadDependencyPackageApiResponse = /** status 200 Successful Response */ any
 export type DownloadDependencyPackageApiArg = {
   filename: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UploadDependencyPackageApiResponse = /** status 204 Successful Response */ void
 export type UploadDependencyPackageApiArg = {
   filename: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteDependencyPackageApiResponse = /** status 204 Successful Response */ void
 export type DeleteDependencyPackageApiArg = {
   filename: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateDependencyPackageApiResponse = /** status 204 Successful Response */ void
 export type UpdateDependencyPackageApiArg = {
   filename: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   sourcesPatchModel: SourcesPatchModel
 }
 export type ListInstallersApiResponse = /** status 200 Successful Response */ InstallerListModel
@@ -3648,11 +1658,6 @@ export type ListInstallersApiArg = {
   /** Platform of the package */
   platform?: 'windows' | 'linux' | 'darwin'
   variant?: 'production' | 'staging'
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateInstallerApiResponse = /** status 201 Successful Response */ InstallResponseModel
 export type CreateInstallerApiArg = {
@@ -3662,100 +1667,50 @@ export type CreateInstallerApiArg = {
   overwrite?: boolean
   /** Overwrite existing installer */
   force?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   installer: Installer
 }
 export type DownloadInstallerFileApiResponse = /** status 200 Successful Response */ any
 export type DownloadInstallerFileApiArg = {
   filename: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UploadInstallerFileApiResponse = /** status 204 Successful Response */ void
 export type UploadInstallerFileApiArg = {
   filename: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteInstallerFileApiResponse = /** status 204 Successful Response */ void
 export type DeleteInstallerFileApiArg = {
   filename: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type PatchInstallerApiResponse = /** status 204 Successful Response */ void
 export type PatchInstallerApiArg = {
   filename: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   sourcesPatchModel: SourcesPatchModel
 }
 export type EnrollApiResponse = /** status 200 Successful Response */ EnrollResponseModel
 export type EnrollApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   enrollRequestModel: EnrollRequestModel
 }
 export type PostEventApiResponse = /** status 200 Successful Response */ DispatchEventResponseModel
 export type PostEventApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   dispatchEventRequestModel: DispatchEventRequestModel
 }
 export type GetEventApiResponse = /** status 200 Successful Response */ EventModel
 export type GetEventApiArg = {
   eventId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateExistingEventApiResponse = /** status 204 Successful Response */ void
 export type UpdateExistingEventApiArg = {
   eventId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   updateEventRequestModel: UpdateEventRequestModel
 }
 export type UploadProjectFileApiResponse =
   /** status 201 Successful Response */ CreateFileResponseModel
 export type UploadProjectFileApiArg = {
   projectName: string
-  token?: string
   'x-file-id'?: string
   'x-file-name': string
   'x-activity-id'?: string
   'content-type': string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DownloadProjectFileApiResponse = /** status 200 Successful Response */ any
 export type DownloadProjectFileApiArg = {
@@ -3763,41 +1718,21 @@ export type DownloadProjectFileApiArg = {
   projectName: string
   /** Preview mode */
   preview?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteProjectFileApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectFileApiArg = {
   fileId: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetProjectFileHeadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileHeadApiArg = {
   fileId: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetFolderApiResponse = /** status 200 Successful Response */ FolderModel
 export type GetFolderApiArg = {
   projectName: string
   folderId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteFolderApiResponse = /** status 204 Successful Response */ void
 export type DeleteFolderApiArg = {
@@ -3805,44 +1740,24 @@ export type DeleteFolderApiArg = {
   folderId: string
   /** Allow recursive deletion */
   force?: boolean
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateFolderApiResponse = /** status 204 Successful Response */ void
 export type UpdateFolderApiArg = {
   projectName: string
   folderId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   folderPatchModel: FolderPatchModel
 }
 export type GetFolderListApiResponse = /** status 200 Successful Response */ FolderListModel
 export type GetFolderListApiArg = {
   projectName: string
   attrib?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateFolderApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateFolderApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   folderPostModel: FolderPostModel
 }
 export type GetFolderHierarchyApiResponse =
@@ -3853,118 +1768,55 @@ export type GetFolderHierarchyApiArg = {
   search?: string
   /** Comma separated list of folder_types to show */
   types?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type ManageInboxItemApiResponse = /** status 200 Successful Response */ any
 export type ManageInboxItemApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   manageInboxItemRequest: ManageInboxItemRequest
 }
 export type ListLinkTypesApiResponse = /** status 200 Successful Response */ LinkTypeListResponse
 export type ListLinkTypesApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SaveLinkTypeApiResponse = /** status 204 Successful Response */ void
 export type SaveLinkTypeApiArg = {
   projectName: string
   linkType: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   createLinkTypeRequestModel: CreateLinkTypeRequestModel
 }
 export type DeleteLinkTypeApiResponse = /** status 204 Successful Response */ void
 export type DeleteLinkTypeApiArg = {
   projectName: string
   linkType: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateEntityLinkApiResponse = /** status 200 Successful Response */ EntityIdResponse
 export type CreateEntityLinkApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   createLinkRequestModel: CreateLinkRequestModel
 }
 export type DeleteEntityLinkApiResponse = /** status 204 Successful Response */ void
 export type DeleteEntityLinkApiArg = {
   projectName: string
   linkId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type MarketAddonListApiResponse = /** status 200 Successful Response */ any
-export type MarketAddonListApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type MarketAddonListApiArg = void
 export type MarketAddonDetailApiResponse = /** status 200 Successful Response */ any
 export type MarketAddonDetailApiArg = {
   addonName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type MarketAddonVersionDetailApiResponse = /** status 200 Successful Response */ any
 export type MarketAddonVersionDetailApiArg = {
   addonName: string
   addonVersion: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateFirstAdminApiResponse = /** status 200 Successful Response */ LoginResponseModel
 export type CreateFirstAdminApiArg = {
   initializeRequestModel: InitializeRequestModel
 }
 export type AbortOnboardingApiResponse = /** status 200 Successful Response */ any
-export type AbortOnboardingApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type AbortOnboardingApiArg = void
 export type RestartOnboardingApiResponse = /** status 200 Successful Response */ any
-export type RestartOnboardingApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type RestartOnboardingApiArg = void
 export type GetReleasesApiResponse = /** status 200 Successful Response */ ReleaseListModel
 export type GetReleasesApiArg = void
 export type GetReleaseInfoApiResponse = /** status 200 Successful Response */ ReleaseInfoModel
@@ -3974,75 +1826,40 @@ export type GetReleaseInfoApiArg = {
 export type OperationsApiResponse = /** status 200 Successful Response */ OperationsResponseModel
 export type OperationsApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   operationsRequestModel: OperationsRequestModel
 }
 export type GetProductApiResponse = /** status 200 Successful Response */ ProductModel
 export type GetProductApiArg = {
   projectName: string
   productId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteProductApiResponse = /** status 204 Successful Response */ void
 export type DeleteProductApiArg = {
   projectName: string
   productId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateProductApiResponse = /** status 204 Successful Response */ void
 export type UpdateProductApiArg = {
   projectName: string
   productId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   productPatchModel: ProductPatchModel
 }
 export type CreateProductApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateProductApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   productPostModel: ProductPostModel
 }
 export type GetProjectEntityCountsApiResponse = /** status 200 Successful Response */ EntityCounts
 export type GetProjectEntityCountsApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetProjectHealthApiResponse = /** status 200 Successful Response */ Health
 export type GetProjectHealthApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetProjectActivityApiResponse =
   /** status 200 Successful Response */ ActivityResponseModel
@@ -4050,39 +1867,19 @@ export type GetProjectActivityApiArg = {
   projectName: string
   /** Number of days to retrieve activity for */
   days?: number
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetProjectUsersApiResponse = /** status 200 Successful Response */ UsersResponseModel
 export type GetProjectUsersApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */ ProjectAnatomy
 export type GetProjectAnatomyApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetProjectAnatomyApiResponse = /** status 204 Successful Response */ void
 export type SetProjectAnatomyApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   anatomy: ProjectAnatomy
 }
 export type ListProjectsApiResponse =
@@ -4100,68 +1897,33 @@ export type ListProjectsApiArg = {
   /** Limit the result to project with the matching name,
             or its part. % character may be used as a wildcard */
   name?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeployProjectApiResponse = /** status 201 Successful Response */ any
 export type DeployProjectApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   deployProjectRequestModel: DeployProjectRequestModel
 }
 export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectModel
 export type GetProjectApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateProjectApiResponse = /** status 201 Successful Response */ any
 export type CreateProjectApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   projectPostModel: ProjectPostModel
 }
 export type DeleteProjectApiResponse = /** status 204 Successful Response */ void
 export type DeleteProjectApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateProjectApiResponse = /** status 204 Successful Response */ void
 export type UpdateProjectApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   projectPatchModel: ProjectPatchModel
 }
 export type GetProjectStatsApiResponse = /** status 200 Successful Response */ any
 export type GetProjectStatsApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetProjectRootsOverridesApiResponse = /** status 200 Successful Response */ {
   [key: string]: {
@@ -4170,21 +1932,11 @@ export type GetProjectRootsOverridesApiResponse = /** status 200 Successful Resp
 }
 export type GetProjectRootsOverridesApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SetProjectRootsOverridesApiResponse = /** status 200 Successful Response */ any
 export type SetProjectRootsOverridesApiArg = {
   siteId: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   payload: {
     [key: string]: string
   }
@@ -4195,176 +1947,71 @@ export type GetProjectSiteRootsApiResponse = /** status 200 Successful Response 
 export type GetProjectSiteRootsApiArg = {
   projectName: string
   platform?: 'windows' | 'linux' | 'darwin'
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
   /** Site ID may be specified either as a query parameter (`site_id` or `site`) or in a header. */
   'x-ayon-site-id'?: string
-  accessToken?: string
 }
 export type QueryApiResponse = /** status 200 Successful Response */ object[]
 export type QueryApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   queryRequestModel: QueryRequestModel
 }
 export type RepresentationContextFilterApiResponse =
   /** status 200 Successful Response */ LookupResponseModel
 export type RepresentationContextFilterApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   lookupRequestModel: LookupRequestModel
 }
 export type GetRepresentationApiResponse = /** status 200 Successful Response */ RepresentationModel
 export type GetRepresentationApiArg = {
   projectName: string
   representationId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteRepresentationApiResponse = /** status 204 Successful Response */ void
 export type DeleteRepresentationApiArg = {
   projectName: string
   representationId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateRepresentationApiResponse = /** status 204 Successful Response */ void
 export type UpdateRepresentationApiArg = {
   projectName: string
   representationId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   representationPatchModel: RepresentationPatchModel
 }
 export type CreateRepresentationApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateRepresentationApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   representationPostModel: RepresentationPostModel
 }
 export type ResolveUrisApiResponse = /** status 200 Successful Response */ ResolvedUriModel[]
 export type ResolveUrisApiArg = {
   /** Return only file paths */
   pathOnly?: boolean
-  token?: string
   /** Site ID may be specified either as a query parameter (`site_id` or `site`) or in a header. */
   'x-ayon-site-id'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   resolveRequestModel: ResolveRequestModel
 }
-export type ListVersionReviewablesApiResponse =
-  /** status 200 Successful Response */ ReviewableListModel
-export type ListVersionReviewablesApiArg = {
-  projectName: string
-  versionId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
-export type GetReviewableApiResponse = /** status 200 Successful Response */ any
-export type GetReviewableApiArg = {
-  reviewableId: string
-  projectName: string
-  versionId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
-export type HeadReviewableApiResponse = /** status 200 Successful Response */ any
-export type HeadReviewableApiArg = {
-  reviewableId: string
-  projectName: string
-  versionId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
 export type ListServicesApiResponse = /** status 200 Successful Response */ ServiceListModel
-export type ListServicesApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type ListServicesApiArg = void
 export type SpawnServiceApiResponse = /** status 204 Successful Response */ void
 export type SpawnServiceApiArg = {
   name: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   spawnServiceRequestModel: SpawnServiceRequestModel
 }
 export type DeleteServiceApiResponse = /** status 204 Successful Response */ void
 export type DeleteServiceApiArg = {
   name: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type PatchServiceApiResponse = /** status 204 Successful Response */ void
 export type PatchServiceApiArg = {
   serviceName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   patchServiceRequestModel: PatchServiceRequestModel
 }
 export type ListHostsApiResponse = /** status 200 Successful Response */ HostListResponseModel
-export type ListHostsApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type ListHostsApiArg = void
 export type HostHeartbeatApiResponse = /** status 200 Successful Response */ HeartbeatResponseModel
 export type HostHeartbeatApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   heartbeatRequestModel: HeartbeatRequestModel
 }
 export type GetAllAddonsSettingsApiResponse =
@@ -4373,22 +2020,12 @@ export type GetAllAddonsSettingsApiArg = {
   variant?: 'production' | 'staging'
   project?: string
   site?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetAllSiteSettingsApiResponse =
   /** status 200 Successful Response */ AddonSettingsResponse
 export type GetAllSiteSettingsApiArg = {
   variant?: 'production' | 'staging'
   site?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetAllSettingsApiResponse =
   /** status 200 Successful Response */ AllSettingsResponseModel
@@ -4400,212 +2037,103 @@ export type GetAllSettingsApiArg = {
   variant?: string
   /** Summary mode */
   summary?: boolean
-  token?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetSitesApiResponse = /** status 200 Successful Response */ SiteInfo[]
 export type GetSitesApiArg = {
   platform?: 'windows' | 'linux' | 'darwin'
   hostname?: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetSiteInfoApiResponse = /** status 200 Successful Response */ InfoResponseModel
-export type GetSiteInfoApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetSiteInfoApiArg = void
 export type GetProductionMetricsApiResponse = /** status 200 Successful Response */ Metrics
 export type GetProductionMetricsApiArg = {
   /** Collect saturated (more granular) metrics */
   saturated?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type GetSystemMetricsApiResponse = /** status 200 Successful Response */ any
-export type GetSystemMetricsApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetSystemMetricsApiArg = void
 export type GetListOfSecretsApiResponse = /** status 200 Successful Response */ Secret[]
-export type GetListOfSecretsApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetListOfSecretsApiArg = void
 export type GetSecretApiResponse = /** status 200 Successful Response */ Secret
 export type GetSecretApiArg = {
   secretName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SaveSecretApiResponse = /** status 204 Successful Response */ void
 export type SaveSecretApiArg = {
   secretName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   secret: Secret
 }
 export type DeleteSecretApiResponse = /** status 204 Successful Response */ void
 export type DeleteSecretApiArg = {
   secretName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type RequestServerRestartApiResponse = /** status 200 Successful Response */ void
-export type RequestServerRestartApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type RequestServerRestartApiArg = void
 export type GetRestartRequiredApiResponse =
   /** status 200 Successful Response */ RestartRequiredModel
 export type GetRestartRequiredApiArg = void
 export type SetRestartRequiredApiResponse = /** status 200 Successful Response */ any
 export type SetRestartRequiredApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   restartRequiredModel: RestartRequiredModel
 }
 export type GetTaskApiResponse = /** status 200 Successful Response */ TaskModel
 export type GetTaskApiArg = {
   projectName: string
   taskId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteTaskApiResponse = /** status 204 Successful Response */ void
 export type DeleteTaskApiArg = {
   projectName: string
   taskId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateTaskApiResponse = /** status 204 Successful Response */ void
 export type UpdateTaskApiArg = {
   projectName: string
   taskId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   taskPatchModel: TaskPatchModel
 }
 export type CreateTaskApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateTaskApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   taskPostModel: TaskPostModel
 }
 export type AssignUsersToTaskApiResponse = /** status 204 Successful Response */ void
 export type AssignUsersToTaskApiArg = {
   projectName: string
   taskId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   assignUsersRequestModel: AssignUsersRequestModel
 }
 export type GetTeamsApiResponse = /** status 200 Successful Response */ TeamListItemModel[]
 export type GetTeamsApiArg = {
   projectName: string
   showMembers?: boolean
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateTeamsApiResponse = /** status 204 Successful Response */ void
 export type UpdateTeamsApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   payload: TeamModel[]
 }
 export type SaveTeamApiResponse = /** status 204 Successful Response */ void
 export type SaveTeamApiArg = {
   teamName: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   teamPutModel: TeamPutModel
 }
 export type DeleteTeamApiResponse = /** status 204 Successful Response */ void
 export type DeleteTeamApiArg = {
   teamName: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type SaveTeamMemberApiResponse = /** status 204 Successful Response */ void
 export type SaveTeamMemberApiArg = {
   teamName: string
   memberName: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   teamMemberModel: TeamMemberModel
 }
 export type DeleteTeamMemberApiResponse = /** status 204 Successful Response */ void
@@ -4613,163 +2141,93 @@ export type DeleteTeamMemberApiArg = {
   teamName: string
   memberName: string
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateThumbnailApiResponse =
   /** status 200 Successful Response */ CreateThumbnailResponseModel
 export type CreateThumbnailApiArg = {
   projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
   'content-type'?: string
-  accessToken?: string
 }
 export type GetThumbnailApiResponse = /** status 200 Successful Response */ void
 export type GetThumbnailApiArg = {
   projectName: string
   thumbnailId: string
   placeholder?: 'empty' | 'none'
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateThumbnailApiResponse = /** status 204 Successful Response */ void
 export type UpdateThumbnailApiArg = {
   projectName: string
   thumbnailId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
   'content-type'?: string
-  accessToken?: string
 }
 export type GetFolderThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetFolderThumbnailApiArg = {
   projectName: string
   folderId: string
   placeholder?: 'empty' | 'none'
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateFolderThumbnailApiResponse =
   /** status 201 Successful Response */ CreateThumbnailResponseModel
 export type CreateFolderThumbnailApiArg = {
   projectName: string
   folderId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
   'content-type'?: string
-  accessToken?: string
 }
 export type GetVersionThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetVersionThumbnailApiArg = {
   projectName: string
   versionId: string
   placeholder?: 'empty' | 'none'
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateVersionThumbnailApiResponse =
   /** status 201 Successful Response */ CreateThumbnailResponseModel
 export type CreateVersionThumbnailApiArg = {
   projectName: string
   versionId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
   'content-type'?: string
-  accessToken?: string
 }
 export type GetWorkfileThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetWorkfileThumbnailApiArg = {
   projectName: string
   workfileId: string
   placeholder?: 'empty' | 'none'
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateWorkfileThumbnailApiResponse =
   /** status 201 Successful Response */ CreateThumbnailResponseModel
 export type CreateWorkfileThumbnailApiArg = {
   projectName: string
   workfileId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
   'content-type'?: string
-  accessToken?: string
 }
 export type GetTaskThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetTaskThumbnailApiArg = {
   projectName: string
   taskId: string
   placeholder?: 'empty' | 'none'
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateTaskThumbnailApiResponse =
   /** status 201 Successful Response */ CreateThumbnailResponseModel
 export type CreateTaskThumbnailApiArg = {
   projectName: string
   taskId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
   'content-type'?: string
-  accessToken?: string
+}
+export type GetProjectEntityUrisApiResponse = /** status 200 Successful Response */ GetUrisResponse
+export type GetProjectEntityUrisApiArg = {
+  projectName: string
+  getUrisRequest: GetUrisRequest
 }
 export type GetAvatarApiResponse = /** status 200 Successful Response */ any
 export type GetAvatarApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UploadAvatarApiResponse = /** status 200 Successful Response */ any
 export type UploadAvatarApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteAvatarApiResponse = /** status 200 Successful Response */ any
 export type DeleteAvatarApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type PasswordResetRequestApiResponse = /** status 200 Successful Response */ any
 export type PasswordResetRequestApiArg = {
@@ -4780,13 +2238,7 @@ export type PasswordResetApiArg = {
   passwordResetModel: PasswordResetModel
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
-export type GetCurrentUserApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
+export type GetCurrentUserApiArg = void
 export type GetUserApiResponse = /** status 200 Successful Response */
   | UserModel
   | {
@@ -4794,369 +2246,103 @@ export type GetUserApiResponse = /** status 200 Successful Response */
     }
 export type GetUserApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type CreateUserApiResponse = /** status 200 Successful Response */ any
 export type CreateUserApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   newUserModel: NewUserModel
 }
 export type DeleteUserApiResponse = /** status 200 Successful Response */ any
 export type DeleteUserApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type PatchUserApiResponse = /** status 200 Successful Response */ any
 export type PatchUserApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   userPatchModel: UserPatchModel
 }
 export type ChangePasswordApiResponse = /** status 200 Successful Response */ any
 export type ChangePasswordApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   changePasswordRequestModel: ChangePasswordRequestModel
 }
 export type CheckPasswordApiResponse = /** status 200 Successful Response */ any
 export type CheckPasswordApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   checkPasswordRequestModel: CheckPasswordRequestModel
 }
 export type ChangeUserNameApiResponse = /** status 200 Successful Response */ any
 export type ChangeUserNameApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   changeUserNameRequestModel: ChangeUserNameRequestModel
 }
 export type GetUserSessionsApiResponse =
   /** status 200 Successful Response */ UserSessionsResponseModel
 export type GetUserSessionsApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteUserSessionApiResponse = /** status 200 Successful Response */ any
 export type DeleteUserSessionApiArg = {
   sessionId: string
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type AssignAccessGroupsApiResponse = /** status 200 Successful Response */ any
 export type AssignAccessGroupsApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   assignAccessGroupsRequestModel: AssignAccessGroupsRequestModel
 }
 export type SetFrontendPreferencesApiResponse = /** status 200 Successful Response */ any
 export type SetFrontendPreferencesApiArg = {
   userName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   patchData: object
 }
 export type GetVersionApiResponse = /** status 200 Successful Response */ VersionModel
 export type GetVersionApiArg = {
   projectName: string
   versionId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteVersionApiResponse = /** status 204 Successful Response */ void
 export type DeleteVersionApiArg = {
   projectName: string
   versionId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateVersionApiResponse = /** status 204 Successful Response */ void
 export type UpdateVersionApiArg = {
   projectName: string
   versionId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   versionPatchModel: VersionPatchModel
 }
 export type CreateVersionApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateVersionApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   versionPostModel: VersionPostModel
 }
 export type GetWorkfileApiResponse = /** status 200 Successful Response */ WorkfileModel
 export type GetWorkfileApiArg = {
   projectName: string
   workfileId: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type DeleteWorkfileApiResponse = /** status 204 Successful Response */ void
 export type DeleteWorkfileApiArg = {
   projectName: string
   workfileId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type UpdateWorkfileApiResponse = /** status 204 Successful Response */ void
 export type UpdateWorkfileApiArg = {
   projectName: string
   workfileId: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   workfilePatchModel: WorkfilePatchModel
 }
 export type CreateWorkfileApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateWorkfileApiArg = {
   projectName: string
-  token?: string
   'x-sender'?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
   workfilePostModel: WorkfilePostModel
-}
-export type Kitsu101ListPairingsApiResponse =
-  /** status 200 Successful Response */ PairingItemModel[]
-export type Kitsu101ListPairingsApiArg = void
-export type Kitsu101InitPairingApiResponse = /** status 200 Successful Response */ any
-export type Kitsu101InitPairingApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu101KitsuInitPairingInitPairingRequest: InitPairingRequest
-}
-export type Kitsu101SyncApiResponse = /** status 200 Successful Response */ any
-export type Kitsu101SyncApiArg = {
-  projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
-export type Kitsu101PushApiResponse = /** status 200 Successful Response */ any
-export type Kitsu101PushApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu101KitsuPushPushEntitiesRequestModel: PushEntitiesRequestModel
-}
-export type Kitsu110ListPairingsApiResponse =
-  /** status 200 Successful Response */ PairingItemModel2[]
-export type Kitsu110ListPairingsApiArg = {
-  mock?: boolean
-}
-export type Kitsu110InitPairingApiResponse = /** status 200 Successful Response */ any
-export type Kitsu110InitPairingApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu110KitsuInitPairingInitPairingRequest: InitPairingRequest2
-}
-export type Kitsu110SyncApiResponse = /** status 200 Successful Response */ any
-export type Kitsu110SyncApiArg = {
-  projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
-export type Kitsu110PushApiResponse = /** status 200 Successful Response */ any
-export type Kitsu110PushApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu110KitsuPushPushEntitiesRequestModel: PushEntitiesRequestModel2
-}
-export type Kitsu110RemoveApiResponse = /** status 200 Successful Response */ any
-export type Kitsu110RemoveApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu110KitsuPushRemoveEntitiesRequestModel: RemoveEntitiesRequestModel
-}
-export type Kitsu121ListPairingsApiResponse =
-  /** status 200 Successful Response */ PairingItemModel3[]
-export type Kitsu121ListPairingsApiArg = {
-  mock?: boolean
-}
-export type Kitsu121InitPairingApiResponse = /** status 200 Successful Response */ any
-export type Kitsu121InitPairingApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu121KitsuInitPairingInitPairingRequest: InitPairingRequest3
-}
-export type Kitsu121SyncApiResponse = /** status 200 Successful Response */ any
-export type Kitsu121SyncApiArg = {
-  projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
-export type Kitsu121PushApiResponse = /** status 200 Successful Response */ any
-export type Kitsu121PushApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu121KitsuPushPushEntitiesRequestModel: PushEntitiesRequestModel3
-}
-export type Kitsu121RemoveApiResponse = /** status 200 Successful Response */ any
-export type Kitsu121RemoveApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu121KitsuPushRemoveEntitiesRequestModel: RemoveEntitiesRequestModel2
-}
-export type Kitsu100ListPairingsApiResponse =
-  /** status 200 Successful Response */ PairingItemModel4[]
-export type Kitsu100ListPairingsApiArg = void
-export type Kitsu100InitPairingApiResponse = /** status 200 Successful Response */ any
-export type Kitsu100InitPairingApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu100KitsuInitPairingInitPairingRequest: InitPairingRequest4
-}
-export type Kitsu100SyncApiResponse = /** status 200 Successful Response */ any
-export type Kitsu100SyncApiArg = {
-  projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
-export type Kitsu100PushApiResponse = /** status 200 Successful Response */ any
-export type Kitsu100PushApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-  kitsu100KitsuPushPushEntitiesRequestModel: PushEntitiesRequestModel4
-}
-export type AyonThirdParty111FilesInfoApiResponse = /** status 200 Successful Response */ {
-  [key: string]: string
-}[]
-export type AyonThirdParty111FilesInfoApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
-export type AyonThirdParty100FilesInfoApiResponse = /** status 200 Successful Response */ {
-  [key: string]: string
-}[]
-export type AyonThirdParty100FilesInfoApiArg = {
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
-}
-export type Example201GetRandomFolderApiResponse = /** status 200 Successful Response */ any
-export type Example201GetRandomFolderApiArg = {
-  projectName: string
-  token?: string
-  'x-as-user'?: string
-  'x-api-key'?: string
-  authorization?: string
-  accessToken?: string
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -5447,18 +2633,16 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
   ftrackId?: string
   ftrackPath?: string
+  applications?: string[]
+  tools?: string[]
   /** The Shotgrid ID of this entity. */
   shotgridId?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
+  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
   shotgridPush?: boolean
-  sokoId?: string
-  sokoPath?: string
 }
 export type FolderType = {
   name: string
@@ -5934,20 +3118,14 @@ export type FolderAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  tools?: string[]
   ftrackId?: string
   ftrackPath?: string
+  tools?: string[]
   /** The Shotgrid ID of this entity. */
   shotgridId?: string
+  car?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
-  hairColor?: string
-  sokoId?: string
-  sokoPath?: string
-  goldCoins?: number
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: number
-  testy?: string
 }
 export type FolderModel = {
   /** Unique identifier of the {entity_name} */
@@ -6390,18 +3568,16 @@ export type ProjectAttribModel2 = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
   ftrackId?: string
   ftrackPath?: string
+  applications?: string[]
+  tools?: string[]
   /** The Shotgrid ID of this entity. */
   shotgridId?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
+  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
   shotgridPush?: boolean
-  sokoId?: string
-  sokoPath?: string
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -6598,14 +3774,6 @@ export type ResolveRequestModel = {
   resolveRoots?: boolean
   /** List of uris to resolve */
   uris: string[]
-}
-export type ReviewableModel = {
-  id?: string
-  name: string
-  type: 'image' | 'video'
-}
-export type ReviewableListModel = {
-  reviewables: ReviewableModel[]
 }
 export type ServiceDataModel = {
   volumes?: string[]
@@ -6884,20 +4052,14 @@ export type TaskAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  tools?: string[]
   ftrackId?: string
   ftrackPath?: string
+  tools?: string[]
   /** The Shotgrid ID of this entity. */
   shotgridId?: string
+  car?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
-  hairColor?: string
-  sokoId?: string
-  sokoPath?: string
-  goldCoins?: number
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: number
-  testy?: string
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */
@@ -6995,6 +4157,17 @@ export type TeamPutModel = {
 export type CreateThumbnailResponseModel = {
   id: string
 }
+export type UriResponseItem = {
+  id: string
+  uri: string
+}
+export type GetUrisResponse = {
+  uris?: UriResponseItem[]
+}
+export type GetUrisRequest = {
+  entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  ids?: string[]
+}
 export type PasswordResetRequestModel = {
   email: string
   url: string
@@ -7073,9 +4246,6 @@ export type VersionAttribModel = {
   /** Textual description of the entity */
   description?: string
   ftrackId?: string
-  sokoId?: string
-  /** The version that is currently the one to use. */
-  blessed?: boolean
 }
 export type VersionModel = {
   /** Unique identifier of the {entity_name} */
@@ -7201,72 +4371,4 @@ export type WorkfilePostModel = {
   data?: object
   /** Whether the workfile is active */
   active?: boolean
-}
-export type PairingItemModel = {
-  kitsuProjectId: string
-  kitsuProjectName: string
-  kitsuProjectCode?: string
-  ayonProjectName: string
-}
-export type InitPairingRequest = {
-  kitsuProjectId: string
-  ayonProjectName?: string
-  ayonProjectCode: string
-}
-export type PushEntitiesRequestModel = {
-  projectName: string
-  entities: object[]
-}
-export type PairingItemModel2 = {
-  kitsuProjectId: string
-  kitsuProjectName: string
-  kitsuProjectCode?: string
-  ayonProjectName: string
-}
-export type InitPairingRequest2 = {
-  kitsuProjectId: string
-  ayonProjectName?: string
-  ayonProjectCode: string
-}
-export type PushEntitiesRequestModel2 = {
-  projectName: string
-  entities: object[]
-}
-export type RemoveEntitiesRequestModel = {
-  projectName: string
-  entities: object[]
-}
-export type PairingItemModel3 = {
-  kitsuProjectId: string
-  kitsuProjectName: string
-  kitsuProjectCode?: string
-  ayonProjectName: string
-}
-export type InitPairingRequest3 = {
-  kitsuProjectId: string
-  ayonProjectName?: string
-  ayonProjectCode: string
-}
-export type PushEntitiesRequestModel3 = {
-  projectName: string
-  entities: object[]
-}
-export type RemoveEntitiesRequestModel2 = {
-  projectName: string
-  entities: object[]
-}
-export type PairingItemModel4 = {
-  kitsuProjectId: string
-  kitsuProjectName: string
-  kitsuProjectCode?: string
-  ayonProjectName: string
-}
-export type InitPairingRequest4 = {
-  kitsuProjectId: string
-  ayonProjectName?: string
-  ayonProjectCode: string
-}
-export type PushEntitiesRequestModel4 = {
-  projectName: string
-  entities: object[]
 }

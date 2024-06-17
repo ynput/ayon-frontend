@@ -6,7 +6,6 @@ const config: ConfigFile = {
   exportName: 'restApi',
   apiImport: 'RestAPI',
   outputFile: '../src/api/rest.ts',
-  filterEndpoints: [/^(?!.*sitesync).*$/i], // sitesync has a negative value that causes an error
 }
 
 export default config
