@@ -27,6 +27,11 @@ const dashboardSlice = createSlice({
     onProjectSelected: (state, { payload = [] }) => {
       state.selectedProjects = payload
     },
+    onProjectOpened: (state, { payload }) => {
+      // check if project is already selected
+      if (state.selectedProjects.includes(payload)) return
+      state.selectedProjects = [payload]
+    },
     onTaskSelected: (state, { payload = [] }) => {
       state.tasks.selected = payload
     },
@@ -66,6 +71,7 @@ const dashboardSlice = createSlice({
 
 export const {
   onProjectSelected,
+  onProjectOpened,
   onTaskSelected,
   onTasksSortByChanged,
   onTasksGroupByChanged,

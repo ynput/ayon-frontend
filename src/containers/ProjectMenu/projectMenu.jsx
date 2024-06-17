@@ -15,6 +15,7 @@ import ProjectButton from '/src/components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '/src/context/shortcutsContext'
 import { classNames } from 'primereact/utils'
+import { onProjectOpened } from '/src/features/dashboard'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
@@ -177,6 +178,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
     // reset uri
     dispatch(setUri(`ayon+entity://${projectName}`))
+    // set dashboard projects
+    dispatch(onProjectOpened(projectName))
 
     // close search if it was open
     setSearchOpen(false)
