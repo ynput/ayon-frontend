@@ -5,14 +5,14 @@ import { configureStore } from '@reduxjs/toolkit'
 import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
 
-import userReducer from './features/user'
-import contextReducer, { contextLocalItems } from './features/context'
-import projectReducer from './features/project'
-import editorReducer from './features/editor'
-import dashboardReducer, { dashboardLocalItems } from './features/dashboard'
-import detailsReducer, { detailsLocalItems } from './features/details'
-import addonsManagerReducer from './features/addonsManager'
-import previewReducer from './features/preview'
+import userReducer from '@state/user'
+import contextReducer, { contextLocalItems } from '@state/context'
+import projectReducer from '@state/project'
+import editorReducer from '@state/editor'
+import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
+import detailsReducer, { detailsLocalItems } from '@state/details'
+import addonsManagerReducer from '@state/addonsManager'
+import previewReducer from '@state/preview'
 
 import App from './app'
 
@@ -26,7 +26,7 @@ import { ayonApi, GraphQL, RestAPI } from '@queries/ayon'
 import { setupListeners } from '@reduxjs/toolkit/query'
 import short from 'short-uuid'
 import { SocketProvider } from '@context/websocketContext'
-import localStorageMiddleware from './features/middleware/localStorageMiddleware'
+import localStorageMiddleware from '@state/middleware/localStorageMiddleware'
 
 // generate unique session id
 window.senderId = short.generate()
