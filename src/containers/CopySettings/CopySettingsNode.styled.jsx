@@ -72,11 +72,21 @@ const ChangeValue = styled.span`
   background-color: var(--color-grey-04);
   color: #dddddd;
   cursor: pointer;
+  margin: 2px;
+  font-size: 0.8rem;
 
   &.dim {
     font-style: italic;
     color: #949494;
   }
+
+  ${props => props.$level === 'studio' && `
+    outline: 1px solid var(--color-hl-studio);
+  `}
+
+  ${props => props.$level === 'project' && `
+    outline: 1px solid var(--color-hl-project);
+  `}
 `
 
 const ChangesTable = styled.table`
@@ -84,7 +94,7 @@ const ChangesTable = styled.table`
   border-collapse: collapse;
 
   tr {
-    height: 24px;
+    height: 26px;
     border-bottom: 1px solid var(--color-grey-02);
 
     &:hover {
