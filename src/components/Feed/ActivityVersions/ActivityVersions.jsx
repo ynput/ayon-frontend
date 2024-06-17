@@ -5,6 +5,7 @@ import { productTypes } from '/src/features/project'
 import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
+import { Link } from 'react-router-dom'
 
 const ActivityVersions = ({
   activity,
@@ -36,27 +37,29 @@ const ActivityVersions = ({
       {versions.flatMap(
         ({ name, id, productName, productType, updatedAt, createdAt }, index) =>
           (index < limit || showAll) && (
-            <Styled.Card
+            <Link
               key={id}
-              onClick={() => onReferenceClick({ entityType: 'version', entityId: id, projectName })}
+              to={`${window.location.pathname}?preview_id=${id}&project_name=${projectName}`}
             >
-              <Styled.Content>
-                <Styled.Title>
-                  <span>{productName}</span>
-                  <ActivityDate date={createdAt} isExact />
-                </Styled.Title>
-                <span className="version">{name}</span>
-              </Styled.Content>
-              <Styled.Thumbnail
-                {...{ projectName }}
-                entityId={id}
-                entityType="version"
-                onError={() => setThumbnailError(true)}
-                iconOnly={thumbnailError}
-                entityUpdatedAt={updatedAt}
-                icon={productTypes[productType]?.icon || 'home_repair_service'}
-              />
-            </Styled.Card>
+              <Styled.Card>
+                <Styled.Content>
+                  <Styled.Title>
+                    <span>{productName}</span>
+                    <ActivityDate date={createdAt} isExact />
+                  </Styled.Title>
+                  <span className="version">{name}</span>
+                </Styled.Content>
+                <Styled.Thumbnail
+                  {...{ projectName }}
+                  entityId={id}
+                  entityType="version"
+                  onError={() => setThumbnailError(true)}
+                  iconOnly={thumbnailError}
+                  entityUpdatedAt={updatedAt}
+                  icon={productTypes[productType]?.icon || 'home_repair_service'}
+                />
+              </Styled.Card>
+            </Link>
           ),
       )}
       {filter !== 'publishes' && versions.length > limit && (

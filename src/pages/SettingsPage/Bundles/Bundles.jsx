@@ -333,7 +333,11 @@ const Bundles = () => {
         shortcuts={shortcuts}
         deps={[selectedBundles, newBundleOpen, prodBundle, stageBundle]}
       />
-      <AddonDialog uploadOpen={uploadOpen} setUploadOpen={setUploadOpen} uploadHeader={uploadHeader} />
+      <AddonDialog
+        uploadOpen={uploadOpen}
+        setUploadOpen={setUploadOpen}
+        uploadHeader={uploadHeader}
+      />
       <main style={{ overflow: 'hidden' }}>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
@@ -353,7 +357,7 @@ const Bundles = () => {
                   data-tooltip="Upload addon zip files"
                   data-shortcut="A"
                 >
-                  <span className="large">Upload addons</span>
+                  <span className="large">Upload Addons</span>
                   <span className="small">Addons</span>
                 </Button>
                 <Button

@@ -5,18 +5,32 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
+  gap: var(--base-gap-large);
 `
 
 export const Header = styled(Toolbar)``
 export const Content = styled.div`
   flex: 1;
-  min-height: 80vh;
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 
-  h2 {
-    font-size: 2rem;
-  }
+  gap: var(--base-gap-large);
+`
+
+export const PreviewPlayerWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`
+
+export const PreviewDetailsPanelWrapper = styled.div`
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  max-width: clamp(460px, 28vw, 600px);
+  min-width: clamp(460px, 28vw, 600px);
+  position: relative;
 `
