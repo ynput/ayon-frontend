@@ -7,7 +7,7 @@ import { Column } from 'primereact/column'
 
 import { setExpandedReps, setFocusedRepresentations, setUri } from '@state/context'
 import groupResult from '@helpers/groupResult'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import DetailsDialog from '../DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
 import { openSlideOut } from '@state/details'

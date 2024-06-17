@@ -4,9 +4,9 @@ import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-rea
 import EntityDetail from '@/containers/DetailsDialog'
 import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@/containers/fieldFormat'
-import usePubSub from '@/hooks/usePubSub'
+import usePubSub from '@hooks/usePubSub'
 import groupResult from '@helpers/groupResult'
-import useLocalStorage from '@/hooks/useLocalStorage'
+import useLocalStorage from '@hooks/useLocalStorage'
 import {
   setFocusedVersions,
   setFocusedProducts,
@@ -22,12 +22,12 @@ import {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
 } from '@/services/product/getProduct'
-import usePatchProductsListWithVersions from '@/hooks/usePatchProductsListWithVersions'
-import useSearchFilter, { filterByFieldsAndValues } from '@/hooks/useSearchFilter'
-import useColumnResize from '@/hooks/useColumnResize'
+import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
+import useColumnResize from '@hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '@/services/entity/updateEntity'
 import { ayonApi } from '@/services/ayon'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'

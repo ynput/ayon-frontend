@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'

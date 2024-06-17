@@ -20,7 +20,7 @@ import { useDeleteTeamMutation, useUpdateTeamsMutation } from '@/services/team/u
 import { toast } from 'react-toastify'
 import CreateNewTeam from './CreateNewTeam/CreateNewTeam'
 import styled from 'styled-components'
-import useSearchFilter from '@/hooks/useSearchFilter'
+import useSearchFilter from '@hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
 import confirmDelete from '@helpers/confirmDelete'
 

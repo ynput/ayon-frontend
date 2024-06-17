@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 
 import {
   Button,

@@ -4,7 +4,7 @@ import { Column } from 'primereact/column'
 
 import { TablePanel } from '@ynput/ayon-react-components'
 
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 
 const PresetList = ({
   selectedPreset,

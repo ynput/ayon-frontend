@@ -2,7 +2,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import BundleStatus from './BundleStatus/BundleStatus'
 import { Button, Section, TablePanel } from '@ynput/ayon-react-components'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import confirmDelete from '@helpers/confirmDelete'
 
 const AddonsManagerTable = ({

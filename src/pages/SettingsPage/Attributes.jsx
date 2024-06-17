@@ -14,8 +14,8 @@ import {
 import AttributeEditor from '../../containers/attributes/attributeEditor'
 import { useGetAttributesQuery } from '@/services/attributes/getAttributes'
 import { useUpdateAttributesMutation } from '@/services/attributes/updateAttributes'
-import useSearchFilter from '@/hooks/useSearchFilter'
-import useCreateContext from '@/hooks/useCreateContext'
+import useSearchFilter from '@hooks/useSearchFilter'
+import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'
 
 const Attributes = () => {

@@ -11,7 +11,7 @@ import {
 } from '@ynput/ayon-react-components'
 import checkName from '@helpers/checkName'
 import UserListTeams from '../UserListTeams'
-import useSearchFilter from '@/hooks/useSearchFilter'
+import useSearchFilter from '@hooks/useSearchFilter'
 import * as Styled from './CreateNewTeam.styled'
 
 const CreateNewTeam = ({

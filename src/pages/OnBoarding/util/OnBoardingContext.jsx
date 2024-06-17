@@ -12,7 +12,7 @@ import {
   useLazyGetReleaseQuery,
 } from '@/services/onBoarding/onBoarding'
 import { useGetReleasesQuery } from '@/services/getRelease'
-import useLocalStorage from '@/hooks/useLocalStorage'
+import useLocalStorage from '@hooks/useLocalStorage'
 import { useLazyGetBundleListQuery } from '@/services/bundles/getBundles'
 import { useCreateBundleMutation } from '@/services/bundles/updateBundles'
 import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'

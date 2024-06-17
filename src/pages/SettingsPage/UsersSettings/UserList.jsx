@@ -7,7 +7,7 @@ import './users.scss'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 
 const StyledProfileRow = styled.div`
   display: flex;

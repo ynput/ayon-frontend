@@ -1,4 +1,4 @@
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'

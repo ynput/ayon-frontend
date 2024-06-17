@@ -3,7 +3,7 @@ import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './SettingsPanel'
 import styled from 'styled-components'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
 import { Badge, BadgeWrapper } from '@components/Badge'

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import { Badge, BadgeWrapper } from '@components/Badge'
 
 const SettingsChangesTable = ({ changes, onRevert }) => {

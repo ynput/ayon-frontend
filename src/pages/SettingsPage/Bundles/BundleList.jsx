@@ -3,7 +3,7 @@ import { Column } from 'primereact/column'
 
 import { Badge, BadgeWrapper } from '@components/Badge'
 import { TablePanel } from '@ynput/ayon-react-components'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import { useDeleteBundleMutation, useUpdateBundleMutation } from '@/services/bundles/updateBundles'
 import { useMemo } from 'react'
 import confirmDelete from '@helpers/confirmDelete'

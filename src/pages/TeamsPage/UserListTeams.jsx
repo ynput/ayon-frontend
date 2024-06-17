@@ -6,7 +6,7 @@ import UserImage from '@components/UserImage'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 import addRemoveMembers from './addRemoveMembers'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import UsersListTeamsSmall from './UsersListTeamsSmall'
 
 const StyledProfileRow = styled.div`

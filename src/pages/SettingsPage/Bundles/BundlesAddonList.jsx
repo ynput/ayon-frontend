@@ -6,7 +6,7 @@ import { SocketContext } from '@/context/websocketContext'
 import { rcompare, coerce } from 'semver'
 import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import { useNavigate } from 'react-router'
 
 const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
