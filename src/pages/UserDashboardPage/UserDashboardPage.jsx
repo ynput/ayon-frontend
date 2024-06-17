@@ -6,15 +6,12 @@ import { Section } from '@ynput/ayon-react-components'
 import ProjectList from '@/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
-import { useGetProjectsInfoQuery } from '@/services/userDashboard/getUserDashboard'
-import { useListProjectsQuery } from '@/services/project/getProject'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import { useListProjectsQuery } from '@queries/project/getProject'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
-import {
-  useDeleteProjectMutation,
-  useUpdateProjectMutation,
-} from '@/services/project/updateProject'
+import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
 import confirmDelete from '@helpers/confirmDelete'
 
 const UserDashboardPage = () => {

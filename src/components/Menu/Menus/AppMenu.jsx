@@ -1,6 +1,6 @@
 import Menu from '../MenuComponents/Menu'
 import YnputConnector from '@components/YnputCloud/YnputConnector'
-import { useRestartOnBoardingMutation } from '@/services/onBoarding/onBoarding'
+import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import ayonClient from '@/ayon'
 import { useRestart } from '@/context/restartContext'

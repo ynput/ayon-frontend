@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Button, FileUpload, SaveButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { ayonApi } from '@/services/ayon'
+import { ayonApi } from '@queries/ayon'
 import { useDispatch, useSelector } from 'react-redux'
-import { useCreateInstallerMutation, useUploadInstallersMutation } from '@/services/installers'
-import { useUploadDependencyPackagesMutation } from '@/services/dependencyPackages'
+import { useCreateInstallerMutation, useUploadInstallersMutation } from '@queries/installers'
+import { useUploadDependencyPackagesMutation } from '@queries/dependencyPackages'
 import { onUploadFinished, onUploadProgress } from '@state/context'
 import axios from 'axios'
 

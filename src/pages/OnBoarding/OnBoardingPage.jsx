@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { useGetInfoQuery } from '@/services/auth/getAuth'
+import { useGetInfoQuery } from '@queries/auth/getAuth'
 import * as Styled from './util/OnBoardingStep.styled'
 import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'
 import { Navigate, useLocation } from 'react-router'
 import StepWrapper from './util/StepWrapper'
-import { useRestartServerMutation } from '@/services/restartServer'
+import { useRestartServerMutation } from '@queries/restartServer'
 import { SocketContext } from '@/context/websocketContext'
 import ServerRestartingPage from '@components/ServerRestartingPage'
 

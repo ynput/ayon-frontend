@@ -1,11 +1,11 @@
 import { InputText } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import * as Styled from './CreateUser.styled'
-import { useInitializeUserMutation } from '@/services/onBoarding/onBoarding'
+import { useInitializeUserMutation } from '@queries/onBoarding/onBoarding'
 import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { login } from '@state/user'
-import { ayonApi } from '@/services/ayon'
+import { ayonApi } from '@queries/ayon'
 import { upperFirst } from 'lodash'
 import Type from '@/theme/typography.module.css'
 

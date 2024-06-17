@@ -9,7 +9,7 @@ import styled from 'styled-components'
 import {
   useSetRawAddonSettingsOverridesMutation,
   useLazyGetRawAddonSettingsOverridesQuery,
-} from '@/services/addonSettings'
+} from '@queries/addonSettings'
 import copyToClipboard from '@helpers/copyToClipboard'
 
 const EditorWrapper = styled.div`

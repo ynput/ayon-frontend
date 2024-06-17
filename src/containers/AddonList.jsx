@@ -5,7 +5,7 @@ import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { useGetAddonSettingsListQuery } from '@/services/addonSettings'
+import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 
 const AddonList = ({
   selectedAddons,

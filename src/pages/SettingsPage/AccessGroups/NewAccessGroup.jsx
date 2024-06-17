@@ -7,7 +7,7 @@ import {
   Dialog,
 } from '@ynput/ayon-react-components'
 import { useMemo, useState } from 'react'
-import { useCreateAccessGroupMutation } from '@/services/accessGroups/updateAccessGroups'
+import { useCreateAccessGroupMutation } from '@queries/accessGroups/updateAccessGroups'
 import { toast } from 'react-toastify'
 
 const NewAccessGroup = ({ onClose, accessGroupList }) => {

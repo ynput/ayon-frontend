@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useDispatch } from 'react-redux'
 import { login } from '@state/user'
-import { ayonApi } from '@/services/ayon'
+import { ayonApi } from '@queries/ayon'
 import { toast } from 'react-toastify'
 import { useState, useMemo, useEffect } from 'react'
 import * as Styled from '@/pages/LoginPage/LoginPage.styled'

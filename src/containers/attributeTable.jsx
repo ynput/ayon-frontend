@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { TableRow } from '@ynput/ayon-react-components'
-import { useGetAttributesQuery } from '@/services/attributes/getAttributes'
+import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
 import copyToClipboard from '../helpers/copyToClipboard'
 import getShimmerStyles from '../styles/getShimmerStyles'
 import { format } from 'date-fns'

@@ -5,7 +5,7 @@ import {
   useGetAddonSettingsSchemaQuery,
   useGetAddonSettingsQuery,
   useGetAddonSettingsOverridesQuery,
-} from '@/services/addonSettings'
+} from '@queries/addonSettings'
 
 import { setUri } from '@state/context'
 import SettingsEditor from '@/containers/SettingsEditor'

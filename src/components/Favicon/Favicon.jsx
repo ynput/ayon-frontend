@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet'
-import { useGetInboxHasUnreadQuery } from '@/services/inbox/getInbox'
+import { useGetInboxHasUnreadQuery } from '@queries/inbox/getInbox'
 import { useSelector } from 'react-redux'
 
 const Favicon = () => {

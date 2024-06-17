@@ -1,5 +1,5 @@
 import React from 'react'
-import { useGetUsersAssigneeQuery } from '@/services/user/getUsers'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { UserImagesStacked } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 

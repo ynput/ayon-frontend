@@ -1,7 +1,7 @@
 import * as Styled from './EntityTooltip.styled'
 import { productTypes } from '@state/project'
 import { getThumbnailUrl } from '@/pages/UserDashboardPage/UserDashboardTasks/UserTasksContainer'
-import { useGetEntityTooltipQuery } from '@/services/activities/getActivities'
+import { useGetEntityTooltipQuery } from '@queries/activities/getActivities'
 
 const EntityTooltip = ({ type, id, pos: { left, top } = {}, projectName, projectInfo = {} }) => {
   const skip = !projectName || !type || !id

@@ -4,8 +4,8 @@ import Thumbnail from '@/containers/thumbnail'
 import AttributeTable from '@/containers/attributeTable'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
-import { useGetWorkfileByIdQuery } from '@/services/getWorkfiles'
-import { useGetSiteRootsQuery } from '@/services/customRoots'
+import { useGetWorkfileByIdQuery } from '@queries/getWorkfiles'
+import { useGetSiteRootsQuery } from '@queries/customRoots'
 import SiteDropdown from '@/containers/SiteDropdown'
 
 const getCurrentPlatform = () => {

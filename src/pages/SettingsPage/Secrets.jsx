@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  useGetSecretsQuery,
-  useSetSecretMutation,
-  useDeleteSecretMutation,
-} from '@/services/secrets'
+import { useGetSecretsQuery, useSetSecretMutation, useDeleteSecretMutation } from '@queries/secrets'
 import styled from 'styled-components'
 import {
   InputText,

@@ -9,7 +9,7 @@ import {
   useGetAnatomyPresetQuery,
   useGetAnatomySchemaQuery,
 } from '../../../services/anatomy/getAnatomy'
-import { useCreateProjectMutation } from '@/services/project/updateProject'
+import { useCreateProjectMutation } from '@queries/project/updateProject'
 
 // allow only alphanumeric and underscorer,
 // while underscore cannot be the first or last character

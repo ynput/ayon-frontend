@@ -2,7 +2,7 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import UserAccessGroups from './UserAccessGroups/UserAccessGroups'
 import UserAccessGroupsProjects from './UserAccessGroupsProjects/UserAccessGroupsProjects'
-import { useListProjectsQuery } from '@/services/project/getProject'
+import { useListProjectsQuery } from '@queries/project/getProject'
 import {
   getMixedValuesByProject,
   getProjectsListForSelection,

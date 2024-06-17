@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify'
 import { useState } from 'react'
 import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
-import { useUpdateProjectAnatomyMutation } from '@/services/project/updateProject'
+import { useUpdateProjectAnatomyMutation } from '@queries/project/updateProject'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '@/containers/AnatomyEditor'
 

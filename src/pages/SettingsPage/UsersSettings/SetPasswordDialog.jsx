@@ -5,7 +5,7 @@ import { Dialog, SaveButton } from '@ynput/ayon-react-components'
 
 import { InputPassword, FormLayout, FormRow } from '@ynput/ayon-react-components'
 
-import { useUpdateUserPasswordMutation } from '@/services/user/updateUser'
+import { useUpdateUserPasswordMutation } from '@queries/user/updateUser'
 
 const SetPasswordDialog = ({ onHide, selectedUsers }) => {
   const [password, setPassword] = useState('')

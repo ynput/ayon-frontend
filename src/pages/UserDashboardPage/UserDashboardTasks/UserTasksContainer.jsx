@@ -1,8 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  useGetKanBanQuery,
-  useGetKanBanUsersQuery,
-} from '@/services/userDashboard/getUserDashboard'
+import { useGetKanBanQuery, useGetKanBanUsersQuery } from '@queries/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'

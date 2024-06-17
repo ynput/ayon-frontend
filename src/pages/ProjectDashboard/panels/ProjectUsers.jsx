@@ -1,6 +1,6 @@
 import React from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectDashboardQuery } from '@/services/getProjectDashboard'
+import { useGetProjectDashboardQuery } from '@queries/getProjectDashboard'
 import styled from 'styled-components'
 import getShimmerStyles from '@/styles/getShimmerStyles'
 

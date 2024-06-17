@@ -1,11 +1,8 @@
 import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
-import {
-  useGetEventsWithLogsQuery,
-  useLazyGetEventsWithLogsQuery,
-} from '@/services/events/getEvents'
+import { useGetEventsWithLogsQuery, useLazyGetEventsWithLogsQuery } from '@queries/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
-import { ayonApi } from '@/services/ayon'
+import { ayonApi } from '@queries/ayon'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import EventList from './EventList'
 import useSearchFilter from '@hooks/useSearchFilter'

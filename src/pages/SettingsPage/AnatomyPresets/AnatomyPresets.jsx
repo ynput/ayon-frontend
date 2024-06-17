@@ -17,7 +17,7 @@ import {
   Dialog,
 } from '@ynput/ayon-react-components'
 
-import { useGetAnatomyPresetsQuery } from '@/services/anatomy/getAnatomy'
+import { useGetAnatomyPresetsQuery } from '@queries/anatomy/getAnatomy'
 import PresetList from './PresetList'
 import AnatomyEditor from '@/containers/AnatomyEditor'
 import {
@@ -25,7 +25,7 @@ import {
   useUpdatePresetMutation,
   useUpdatePrimaryPresetMutation,
   useUnsetPrimaryPresetMutation,
-} from '@/services/anatomy/updateAnatomy'
+} from '@queries/anatomy/updateAnatomy'
 import confirmDelete from '@helpers/confirmDelete'
 
 const AnatomyPresets = () => {

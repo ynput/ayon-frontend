@@ -1,9 +1,9 @@
 import { FormLayout, Dialog } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import BundleDepPackage from './BundleDepPackage'
-import { useUpdateBundleMutation } from '@/services/bundles/updateBundles'
+import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { toast } from 'react-toastify'
-import { useGetDependencyPackageListQuery } from '@/services/dependencyPackages'
+import { useGetDependencyPackageListQuery } from '@queries/dependencyPackages'
 import BundleDepsPicker from './BundleDepsPicker'
 
 const BundleDeps = ({ bundle, onChange }) => {

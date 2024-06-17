@@ -6,7 +6,7 @@ import {
   useConnectYnputMutation,
   useDiscountYnputMutation,
   useGetYnputConnectionsQuery,
-} from '@/services/ynputConnect'
+} from '@queries/ynputConnect'
 import LoadingPage from '@/pages/LoadingPage'
 import * as Styled from './YnputCloud.styled'
 import { useLocation } from 'react-router'

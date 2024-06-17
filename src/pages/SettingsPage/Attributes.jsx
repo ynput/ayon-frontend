@@ -12,8 +12,8 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import AttributeEditor from '../../containers/attributes/attributeEditor'
-import { useGetAttributesQuery } from '@/services/attributes/getAttributes'
-import { useUpdateAttributesMutation } from '@/services/attributes/updateAttributes'
+import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
+import { useUpdateAttributesMutation } from '@queries/attributes/updateAttributes'
 import useSearchFilter from '@hooks/useSearchFilter'
 import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import HeaderButton from './HeaderButton'
 import { classNames } from 'primereact/utils'
-import { useGetInboxHasUnreadQuery } from '@/services/inbox/getInbox'
+import { useGetInboxHasUnreadQuery } from '@queries/inbox/getInbox'
 
 const InboxNotificationIcon = () => {
   const { data: hasUnread } = useGetInboxHasUnreadQuery()

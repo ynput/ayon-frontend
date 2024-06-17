@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useInstallAddonsMutation } from '@/services/addons/updateAddons'
-import { useLazyGetMarketAddonVersionQuery } from '@/services/market/getMarket'
+import { useInstallAddonsMutation } from '@queries/addons/updateAddons'
+import { useLazyGetMarketAddonVersionQuery } from '@queries/market/getMarket'
 import { toast } from 'react-toastify'
 
 const useInstall = (onInstall) => {

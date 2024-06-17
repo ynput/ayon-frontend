@@ -28,9 +28,9 @@ import {
   useSetAddonSettingsMutation,
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
-} from '@/services/addonSettings'
+} from '@queries/addonSettings'
 
-import { usePromoteBundleMutation } from '@/services/bundles/updateBundles'
+import { usePromoteBundleMutation } from '@queries/bundles/updateBundles'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'

@@ -14,8 +14,8 @@ import {
   Toolbar,
 } from '@ynput/ayon-react-components'
 import VariantSelector from '@/containers/AddonSettings/VariantSelector'
-import { useCreateServiceMutation } from '@/services/services/updateServices'
-import { useGetServiceAddonsQuery, useGetServiceHostsQuery } from '@/services/services/getServices'
+import { useCreateServiceMutation } from '@queries/services/updateServices'
+import { useGetServiceAddonsQuery, useGetServiceHostsQuery } from '@queries/services/getServices'
 
 const NewServiceDialog = ({ onHide }) => {
   const [serviceName, setServiceName] = useState('')

@@ -11,9 +11,9 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@/services/anatomy/getAnatomy'
+import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 
-import { useGetProjectAnatomyQuery } from '@/services/project/getProject'
+import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
 import { isEqual } from 'lodash'
 
 import { setUri } from '@state/context'

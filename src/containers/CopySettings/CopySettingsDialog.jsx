@@ -13,7 +13,7 @@ import VariantSelector from '@/containers/AddonSettings/VariantSelector'
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
-import { useGetBundleListQuery } from '@/services/bundles/getBundles'
+import { useGetBundleListQuery } from '@queries/bundles/getBundles'
 import { cloneDeep } from 'lodash'
 
 const StateShade = styled.div`

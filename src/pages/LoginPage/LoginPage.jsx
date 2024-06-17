@@ -6,7 +6,7 @@ import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-compo
 import { login } from '@state/user'
 import { ayonApi } from '../../services/ayon'
 import AuthLink from './AuthLink'
-import { useGetInfoQuery } from '@/services/auth/getAuth'
+import { useGetInfoQuery } from '@queries/auth/getAuth'
 import ReactMarkdown from 'react-markdown'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'

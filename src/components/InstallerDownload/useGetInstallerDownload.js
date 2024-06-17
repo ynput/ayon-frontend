@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { useGetBundleListQuery } from '@/services/bundles/getBundles'
-import { useGetInstallerListQuery } from '@/services/installers'
+import { useGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useGetInstallerListQuery } from '@queries/installers'
 import { coerce, rcompare } from 'semver'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { toast } from 'react-toastify'

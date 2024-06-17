@@ -21,12 +21,12 @@ import StatusSelect from '@components/status/statusSelect'
 import {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
-} from '@/services/product/getProduct'
+} from '@queries/product/getProduct'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
 import useColumnResize from '@hooks/useColumnResize'
-import { useUpdateEntitiesMutation } from '@/services/entity/updateEntity'
-import { ayonApi } from '@/services/ayon'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
+import { ayonApi } from '@queries/ayon'
 import useCreateContext from '@hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'

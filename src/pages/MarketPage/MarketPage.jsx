@@ -9,11 +9,11 @@ import {
   useGetMarketAddonsQuery,
   useGetMarketInstallEventsQuery,
   useLazyGetMarketAddonQuery,
-} from '@/services/market/getMarket'
+} from '@queries/market/getMarket'
 import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './AddonDetails/AddonDetails'
-import { useGetAddonListQuery } from '@/services/addons/getAddons'
+import { useGetAddonListQuery } from '@queries/addons/getAddons'
 import { mergeAddonWithInstalled } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import styled from 'styled-components'

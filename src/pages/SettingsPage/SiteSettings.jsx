@@ -5,8 +5,8 @@ import SettingsEditor from '@/containers/SettingsEditor'
 import AddonList from '@/containers/AddonList'
 import SiteList from '@/containers/SiteList'
 
-import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '@/services/siteSettings'
-import { useSetSiteSettingsMutation } from '@/services/siteSettings'
+import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '@queries/siteSettings'
+import { useSetSiteSettingsMutation } from '@queries/siteSettings'
 
 const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
   const [formData, setFormData] = useState(null)

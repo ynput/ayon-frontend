@@ -6,7 +6,7 @@ import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 import {
   useLazyGetAddonSettingsQuery,
   useLazyGetAddonSettingsOverridesQuery,
-} from '@/services/addonSettings'
+} from '@queries/addonSettings'
 
 // TODO: move this to a common location
 import { getValueByPath } from '../AddonSettings/utils'

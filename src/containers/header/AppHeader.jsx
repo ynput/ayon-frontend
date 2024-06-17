@@ -12,7 +12,7 @@ import InstallerDownloadPrompt from '../../components/InstallerDownload/Installe
 import { toggleMenuOpen, setMenuOpen } from '@state/context'
 import { HelpMenu, UserMenu } from '@components/Menu'
 import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
-import { useUpdateUserMutation } from '@/services/user/updateUser'
+import { useUpdateUserMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
 import { toggleDevMode } from '@state/user'
 import styled from 'styled-components'

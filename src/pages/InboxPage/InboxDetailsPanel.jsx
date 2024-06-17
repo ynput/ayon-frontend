@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import DetailsPanel from '@/containers/DetailsPanel/DetailsPanel'
-import { useGetUsersAssigneeQuery } from '@/services/user/getUsers'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import DetailsPanelSlideOut from '@/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 
 const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) => {

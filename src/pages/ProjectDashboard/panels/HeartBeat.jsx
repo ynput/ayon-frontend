@@ -2,7 +2,7 @@ import React from 'react'
 import { Chart } from 'primereact/chart'
 import styled from 'styled-components'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectDashboardQuery } from '@/services/getProjectDashboard'
+import { useGetProjectDashboardQuery } from '@queries/getProjectDashboard'
 import getShimmerStyles from '@/styles/getShimmerStyles'
 
 const ChartStyled = styled(Chart)`

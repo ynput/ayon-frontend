@@ -7,11 +7,11 @@ import NewServiceDialog from './NewServiceDialog'
 import useCreateContext from '@hooks/useCreateContext'
 import confirmDelete from '@helpers/confirmDelete'
 import styled from 'styled-components'
-import { useGetServicesQuery } from '@/services/services/getServices'
+import { useGetServicesQuery } from '@queries/services/getServices'
 import {
   useDeleteServiceMutation,
   useUpdateServiceMutation,
-} from '@/services/services/updateServices'
+} from '@queries/services/updateServices'
 
 const StatusBadge = styled.span`
   display: inline-block;

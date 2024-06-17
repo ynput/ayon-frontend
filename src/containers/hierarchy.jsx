@@ -8,7 +8,7 @@ import { MultiSelect } from 'primereact/multiselect'
 import { CellWithIcon } from '@components/icons'
 import EntityDetail from './DetailsDialog'
 import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
-import { useGetHierarchyQuery } from '@/services/getHierarchy'
+import { useGetHierarchyQuery } from '@queries/getHierarchy'
 import useCreateContext from '../hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 

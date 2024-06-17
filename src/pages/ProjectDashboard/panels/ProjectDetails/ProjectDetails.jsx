@@ -7,10 +7,10 @@ import { format } from 'date-fns'
 import { Button, SaveButton, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './ProjectDetails.styled'
 import AttribForm from '@components/AttribForm/AttribForm'
-import { useGetAnatomySchemaQuery } from '@/services/anatomy/getAnatomy'
+import { useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import { useUpdateProjectMutation } from '@/services/project/updateProject'
+import { useUpdateProjectMutation } from '@queries/project/updateProject'
 import { toast } from 'react-toastify'
 
 const ProjectDetails = ({ projectName }) => {

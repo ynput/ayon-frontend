@@ -20,7 +20,7 @@ import useSetCursorEnd from './hooks/useSetCursorEnd'
 import InputMarkdownConvert from './InputMarkdownConvert'
 import FilesGrid from '@/containers/FilesGrid/FilesGrid'
 import { getModules, quillFormats } from './modules'
-import { useGetMentionSuggestionsQuery } from '@/services/mentions/getMentions'
+import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
 import useMentionLink from './hooks/useMentionLink'
 
 const mentionTypes = ['@', '@@', '@@@']

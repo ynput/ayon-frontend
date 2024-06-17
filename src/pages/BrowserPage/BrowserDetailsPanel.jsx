@@ -5,8 +5,8 @@ import { isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
 import DetailsPanel from '@/containers/DetailsPanel/DetailsPanel'
 import DetailsPanelSlideOut from '@/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import { useGetUsersAssigneeQuery } from '@/services/user/getUsers'
-import { useGetProjectsInfoQuery } from '@/services/userDashboard/getUserDashboard'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 
 const BrowserDetailsPanel = () => {
   const projectName = useSelector((state) => state.project.name)
