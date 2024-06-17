@@ -1,9 +1,10 @@
 import { ayonApi } from '@queries/ayon'
+// @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
 
 // TODO: use graphql api and write custom types
 // We will need to inject the endpoint as it cannot be generated
-const createProjectQuery = (attribs, fields) => {
+const createProjectQuery = (attribs: $Any, fields: $Any) => {
   const attribFragment = `
   fragment AttribFragment on ProjectAttribType {
     ${attribs.join(' ')}
@@ -44,19 +45,21 @@ const getProject = ayonApi.injectEndpoints({
           variables: { projectName },
         },
       }),
-      transformResponse: (res) => res.data?.project,
-      providesTags: (res, error, { projectName }) => [{ type: 'project', id: projectName }],
+      transformResponse: (res: any) => res.data?.project,
+      providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     }),
   }),
 })
 
 import API from '@api'
+import { $Any } from '@/types'
 
+// TODO: sort out the types
 const enhancedRest = API.rest.enhanceEndpoints({
   endpoints: {
     getProject: {
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      providesTags: (res, error, { projectName }) => [{ type: 'project', id: projectName }],
+      transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
+      providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
       async onCacheEntryAdded(arg, { cacheDataLoaded, getCacheEntry, dispatch }) {
         try {
           // set redux project state name
@@ -64,18 +67,26 @@ const enhancedRest = API.rest.enhanceEndpoints({
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
           // get redux project state
-          const project = getCacheEntry().data
+          const project = getCacheEntry().data as $Any
           // an array of strings for the order of each list type
-          const order = {
+          const order: {
+            tasks: string[]
+            folders: string[]
+            statuses: string[]
+            tags: string[]
+          } = {
             tasks: [],
             folders: [],
             statuses: [],
             tags: [],
           }
+
+          type OrderType = keyof typeof order
+
           // function: transforms and array into an object with the array item's name as the key using for loop
-          const transformArrayToObject = (array, type) => {
+          const transformArrayToObject = (array: $Any[], type: OrderType) => {
             const initialValue = {}
-            return array.reduce((obj, item) => {
+            return array.reduce((obj, item: $Any) => {
               order[type].push(item.name)
               return {
                 ...obj,
@@ -83,10 +94,11 @@ const enhancedRest = API.rest.enhanceEndpoints({
               }
             }, initialValue)
           }
-          const tasks = transformArrayToObject(project.taskTypes, 'tasks')
-          const folders = transformArrayToObject(project.folderTypes, 'folders')
-          const statuses = transformArrayToObject(project.statuses, 'statuses')
-          const tags = transformArrayToObject(project.tags, 'tags')
+
+          const tasks = transformArrayToObject(project?.taskTypes, 'tasks')
+          const folders = transformArrayToObject(project?.folderTypes, 'folders')
+          const statuses = transformArrayToObject(project?.statuses, 'statuses')
+          const tags = transformArrayToObject(project?.tags, 'tags')
           const attrib = project?.attrib || {}
           // set project state
           dispatch(setProjectData({ tasks, folders, statuses, tags, order, attrib }))
@@ -98,15 +110,16 @@ const enhancedRest = API.rest.enhanceEndpoints({
       },
     },
     listProjects: {
-      transformResponse: (res) => res.projects,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      providesTags: (res, error, { active }) => [
+      transformResponse: (res: $Any) => res.projects,
+      transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
+      // @ts-ignore
+      providesTags: (_res, _error, { active }) => [
         { type: 'project' },
         { type: 'projects', id: active },
       ],
     },
     getProjectAnatomy: {
-      providesTags: (res, error, { projectName }) => [{ type: 'project', id: projectName }],
+      providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     },
   },
 })
