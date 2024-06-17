@@ -175,19 +175,20 @@ export type FolderAttribType = {
   description?: Maybe<Scalars['String']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  enum?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  goldCoins?: Maybe<Scalars['Int']['output']>;
-  hairColor?: Maybe<Scalars['String']['output']>;
+  /** hair */
+  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -200,7 +201,7 @@ export type FolderAttribType = {
   sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  testy?: Maybe<Scalars['String']['output']>;
+  test?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -485,6 +486,8 @@ export type ProjectAttribType = {
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -895,19 +898,20 @@ export type TaskAttribType = {
   description?: Maybe<Scalars['String']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  enum?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  goldCoins?: Maybe<Scalars['Int']['output']>;
-  hairColor?: Maybe<Scalars['String']['output']>;
+  /** hair */
+  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -920,7 +924,7 @@ export type TaskAttribType = {
   sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  testy?: Maybe<Scalars['String']['output']>;
+  test?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1079,8 +1083,6 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
-  /** The version that is currently the one to use. */
-  blessed?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1098,6 +1100,7 @@ export type VersionAttribType = {
   intent?: Maybe<Scalars['String']['output']>;
   machine?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  productTypes?: Maybe<Array<Scalars['String']['output']>>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -1278,6 +1281,11 @@ export type GetInboxUnreadCountQueryVariables = Exact<{
 
 export type GetInboxUnreadCountQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', edges: Array<{ __typename?: 'InboxEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
 
+export type GetMarketInstallEventsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMarketInstallEventsQuery = { __typename?: 'Query', events: { __typename?: 'EventsConnection', edges: Array<{ __typename?: 'EventEdge', node: { __typename?: 'EventNode', id: string, status: string, description: string, summary: string } }> } };
+
 export type GetProjectLatestQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
 }>;
@@ -1373,6 +1381,20 @@ export const GetInboxUnreadCountDocument = `
   }
 }
     `;
+export const GetMarketInstallEventsDocument = `
+    query GetMarketInstallEvents {
+  events(last: 100, topics: ["addon.install_from_url"]) {
+    edges {
+      node {
+        id
+        status
+        description
+        summary
+      }
+    }
+  }
+}
+    `;
 export const GetProjectLatestDocument = `
     query GetProjectLatest($projectName: String!) {
   project(name: $projectName) {
@@ -1391,6 +1413,9 @@ const injectedRtkApi = GraphQL.injectEndpoints({
     }),
     GetInboxUnreadCount: build.query<GetInboxUnreadCountQuery, GetInboxUnreadCountQueryVariables | void>({
       query: (variables) => ({ document: GetInboxUnreadCountDocument, variables })
+    }),
+    GetMarketInstallEvents: build.query<GetMarketInstallEventsQuery, GetMarketInstallEventsQueryVariables | void>({
+      query: (variables) => ({ document: GetMarketInstallEventsDocument, variables })
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })

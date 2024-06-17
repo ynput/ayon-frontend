@@ -5,10 +5,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
 import {
-  useGetMarketAddonQuery,
-  useGetMarketAddonsQuery,
+  useMarketAddonListQuery,
+  useMarketAddonDetailQuery,
   useGetMarketInstallEventsQuery,
-  useLazyGetMarketAddonQuery,
+  useLazyMarketAddonDetailQuery,
 } from '@queries/market/getMarket'
 import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
@@ -49,7 +49,7 @@ const MarketPage = () => {
     data: marketAddonsData = [],
     isLoading: isLoadingMarket,
     error,
-  } = useGetMarketAddonsQuery()
+  } = useMarketAddonListQuery()
   // GET ALL INSTALLED ADDONS for addon details
   const { data: installedAddons = [], isLoading: isLoadingInstalled } = useGetAddonListQuery()
 
@@ -135,8 +135,8 @@ const MarketPage = () => {
   }, [finishedInstalling, installingAddons])
 
   // GET SELECTED ADDON
-  const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useGetMarketAddonQuery(
-    selectedAddonId,
+  const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useMarketAddonDetailQuery(
+    { addonName: selectedAddonId },
     {
       skip: !selectedAddonId,
     },
@@ -221,7 +221,7 @@ const MarketPage = () => {
   }, [selectedAddonData, marketAddons])
 
   // GET SELECTED ADDON LAZY for performance (fetches on addon hover)
-  const [fetchAddonData] = useLazyGetMarketAddonQuery()
+  const [fetchAddonData] = useLazyMarketAddonDetailQuery()
 
   const [cachedIds, setCachedIds] = useState([])
   // prefetch addon
@@ -229,7 +229,7 @@ const MarketPage = () => {
     if (isLoadingMarket) return
     if (cachedIds.includes(id)) return
     setCachedIds([...cachedIds, id])
-    await fetchAddonData(id, true)
+    await fetchAddonData({ addonName: id }, true)
   }, 1000)
 
   // once addons are loaded, prefetch the first 3 addons
@@ -238,7 +238,7 @@ const MarketPage = () => {
     const firstThree = marketAddons.slice(0, 3)
     firstThree.forEach((addon) => {
       setCachedIds([...cachedIds, addon.name])
-      fetchAddonData(addon.name, true)
+      fetchAddonData({ addonName: addon.name }, true)
     })
   }, [marketAddons, isLoadingMarket, setCachedIds])
 
@@ -251,7 +251,7 @@ const MarketPage = () => {
       const nextAddon = marketAddons[i]
       if (nextAddon && !cachedIds.includes(nextAddon.name)) {
         setCachedIds([...cachedIds, nextAddon.name])
-        fetchAddonData(nextAddon.name, true)
+        fetchAddonData({ addonName: nextAddon.name }, true)
       }
     }
   }, [selectedAddonId, isLoadingMarket, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
