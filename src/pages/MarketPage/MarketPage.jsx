@@ -19,7 +19,7 @@ import { throttle } from 'lodash'
 import styled from 'styled-components'
 import useInstall from './AddonDetails/useInstall'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
-import { useRestart } from '@/context/restartContext'
+import { useRestart } from '@context/restartContext'
 import { toast } from 'react-toastify'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 

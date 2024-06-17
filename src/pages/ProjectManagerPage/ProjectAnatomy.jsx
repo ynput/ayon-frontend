@@ -6,7 +6,7 @@ import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '@containers/AnatomyEditor'
 
 import copyToClipboard from '@helpers/copyToClipboard'
-import { usePaste } from '@/context/pasteContext'
+import { usePaste } from '@context/pasteContext'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
   const [formData, setFormData] = useState(null)

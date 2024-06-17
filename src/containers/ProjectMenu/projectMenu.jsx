@@ -13,7 +13,7 @@ import useCreateContext from '@hooks/useCreateContext'
 import useLocalStorage from '@hooks/useLocalStorage'
 import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
-import { useShortcutsContext } from '@/context/shortcutsContext'
+import { useShortcutsContext } from '@context/shortcutsContext'
 import { classNames } from 'primereact/utils'
 
 const ProjectMenu = ({ isOpen, onHide }) => {

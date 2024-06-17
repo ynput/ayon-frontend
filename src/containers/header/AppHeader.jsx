@@ -16,7 +16,7 @@ import { useUpdateUserMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
 import { toggleDevMode } from '@state/user'
 import styled from 'styled-components'
-import { useRestart } from '@/context/restartContext'
+import { useRestart } from '@context/restartContext'
 import { classNames } from 'primereact/utils'
 import InboxNotificationIcon from './InboxNotification'
 

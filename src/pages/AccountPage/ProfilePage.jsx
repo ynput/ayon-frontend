@@ -22,7 +22,7 @@ import ayonClient from '../../ayon'
 import Type from '@/theme/typography.module.css'
 import { updateUserAttribs, updateUserPreferences } from '../../features/user'
 import { useDispatch } from 'react-redux'
-import { useNotifications } from '@/context/notificationsContext'
+import { useNotifications } from '@context/notificationsContext'
 
 const FormsStyled = styled.section`
   flex: 1;
