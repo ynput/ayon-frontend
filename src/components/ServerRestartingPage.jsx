@@ -1,4 +1,4 @@
-import LoadingPage from '../pages/LoadingPage'
+import LoadingPage from '@pages/LoadingPage'
 import { useContext } from 'react'
 import { SocketContext } from '../context/websocketContext'
 
