@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useDispatch } from 'react-redux'
-import { login } from '@/features/user'
+import { login } from '@state/user'
 import { ayonApi } from '@/services/ayon'
 import { toast } from 'react-toastify'
 import { useState, useMemo, useEffect } from 'react'

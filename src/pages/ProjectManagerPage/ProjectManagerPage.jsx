@@ -9,7 +9,7 @@ import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 
-import { selectProject } from '@/features/context'
+import { selectProject } from '@state/context'
 import {
   useDeleteProjectMutation,
   useUpdateProjectMutation,

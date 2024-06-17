@@ -1,6 +1,6 @@
 import * as Styled from './DetailsPanelSlideOut.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { closeSlideOut } from '@/features/details'
+import { closeSlideOut } from '@state/details'
 import DetailsPanel from '../DetailsPanel'
 import { useGetUsersAssigneeQuery } from '@/services/user/getUsers'
 import Shortcuts from '@/containers/Shortcuts'

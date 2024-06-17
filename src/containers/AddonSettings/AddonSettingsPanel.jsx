@@ -7,7 +7,7 @@ import {
   useGetAddonSettingsOverridesQuery,
 } from '@/services/addonSettings'
 
-import { setUri } from '@/features/context'
+import { setUri } from '@state/context'
 import SettingsEditor from '@/containers/SettingsEditor'
 
 const AddonSettingsPanel = ({

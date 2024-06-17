@@ -5,7 +5,7 @@ import ActivityReference from '../ActivityReference/ActivityReference'
 import ActivityDate from '../ActivityDate'
 import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
 import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
-import { toggleMenuOpen } from '@/features/context'
+import { toggleMenuOpen } from '@state/context'
 import { useDispatch } from 'react-redux'
 import { Icon } from '@ynput/ayon-react-components'
 

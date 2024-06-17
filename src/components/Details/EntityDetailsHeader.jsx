@@ -8,7 +8,7 @@ import styled from 'styled-components'
 import { OverflowField } from '@ynput/ayon-react-components'
 import copyToClipboard from '@helpers/copyToClipboard'
 import getShimmerStyles from '@/styles/getShimmerStyles'
-import { productTypes } from '@/features/project'
+import { productTypes } from '@state/project'
 
 const ToolsStyled = styled.div`
   display: flex;

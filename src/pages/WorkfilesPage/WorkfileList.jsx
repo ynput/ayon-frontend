@@ -5,7 +5,7 @@ import { CellWithIcon } from '@components/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import { useGetWorkfileListQuery } from '../../services/getWorkfiles'
 import NoEntityFound from '@components/NoEntityFound'
-import { setFocusedWorkfiles } from '@/features/context'
+import { setFocusedWorkfiles } from '@state/context'
 
 const WorkfileList = ({ style }) => {
   const dispatch = useDispatch()

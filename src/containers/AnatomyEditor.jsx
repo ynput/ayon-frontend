@@ -16,7 +16,7 @@ import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@/services/a
 import { useGetProjectAnatomyQuery } from '@/services/project/getProject'
 import { isEqual } from 'lodash'
 
-import { setUri } from '@/features/context'
+import { setUri } from '@state/context'
 import SettingsEditor from '@/containers/SettingsEditor'
 import { getValueByPath, setValueByPath, sameKeysStructure } from '@/containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'

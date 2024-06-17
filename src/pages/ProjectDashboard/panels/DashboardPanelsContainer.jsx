@@ -1,7 +1,7 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
-import { onShare } from '@/features/context'
+import { onShare } from '@state/context'
 import { toPng } from 'html-to-image'
 import { useRef } from 'react'
 

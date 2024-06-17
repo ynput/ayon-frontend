@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { onPrefetchIds } from '@/features/dashboard'
+import { onPrefetchIds } from '@state/dashboard'
 import { useLazyGetDashboardEntitiesDetailsQuery } from '@/services/userDashboard/getUserDashboard'
 import { useLazyGetActivitiesQuery } from '@/services/activities/getActivities'
 import { throttle } from 'lodash'

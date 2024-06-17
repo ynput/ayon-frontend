@@ -7,7 +7,7 @@ import { useGetDashboardEntitiesDetailsQuery } from '@/services/userDashboard/ge
 import TaskAttributes from '../../pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '@/services/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
-import { closeSlideOut, updateDetailsPanelTab } from '@/features/details'
+import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 

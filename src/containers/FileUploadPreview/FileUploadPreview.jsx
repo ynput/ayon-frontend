@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux'
 import * as Styled from './FileUploadPreview.styled'
-import { onFilePreviewClose } from '@/features/context'
+import { onFilePreviewClose } from '@state/context'
 import { useEffect, useRef } from 'react'
 import ImageMime from './mimes/ImageMime'
 import TextMime from './mimes/TextMime'

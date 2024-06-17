@@ -15,7 +15,7 @@ import {
   productSelected,
   onFocusChanged,
   updateBrowserFilters,
-} from '@/features/context'
+} from '@state/context'
 import VersionList from './VersionList'
 import StatusSelect from '@components/status/statusSelect'
 import {
@@ -33,7 +33,7 @@ import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
-import { productTypes } from '@/features/project'
+import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
 
 const Products = () => {

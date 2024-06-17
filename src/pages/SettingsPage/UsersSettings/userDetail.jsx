@@ -10,7 +10,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import { useUpdateUsersMutation } from '@/services/user/updateUser'
-import { updateUserData, updateUserAttribs } from '@/features/user'
+import { updateUserData, updateUserAttribs } from '@state/user'
 import styled from 'styled-components'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'

@@ -1,5 +1,5 @@
 import * as Styled from './EntityTooltip.styled'
-import { productTypes } from '@/features/project'
+import { productTypes } from '@state/project'
 import { getThumbnailUrl } from '@/pages/UserDashboardPage/UserDashboardTasks/UserTasksContainer'
 import { useGetEntityTooltipQuery } from '@/services/activities/getActivities'
 

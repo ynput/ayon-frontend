@@ -5,7 +5,7 @@ import { ayonApi } from '@/services/ayon'
 import { useDispatch, useSelector } from 'react-redux'
 import { useCreateInstallerMutation, useUploadInstallersMutation } from '@/services/installers'
 import { useUploadDependencyPackagesMutation } from '@/services/dependencyPackages'
-import { onUploadFinished, onUploadProgress } from '@/features/context'
+import { onUploadFinished, onUploadProgress } from '@state/context'
 import axios from 'axios'
 
 const StyledFooter = styled.div`

@@ -7,12 +7,7 @@ import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 import { CellWithIcon } from '@components/icons'
 import EntityDetail from './DetailsDialog'
-import {
-  setFocusedFolders,
-  setUri,
-  setExpandedFolders,
-  setSelectedVersions,
-} from '@/features/context'
+import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
 import { useGetHierarchyQuery } from '@/services/getHierarchy'
 import useCreateContext from '../hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'

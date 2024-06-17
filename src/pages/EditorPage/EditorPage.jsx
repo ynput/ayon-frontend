@@ -16,7 +16,7 @@ import { Column } from 'primereact/column'
 
 import sortByKey from '@helpers/sortByKey'
 
-import { editorSelectionChanged, setUri, setExpandedFolders } from '@/features/context'
+import { editorSelectionChanged, setUri, setExpandedFolders } from '@state/context'
 
 import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
@@ -37,7 +37,7 @@ import {
   onNewChanges,
   onRevert,
   updateNodes,
-} from '@/features/editor'
+} from '@state/editor'
 import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'

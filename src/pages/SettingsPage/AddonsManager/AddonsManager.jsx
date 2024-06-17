@@ -13,7 +13,7 @@ import {
   onSelectedAddons,
   onSelectedBundles,
   onSelectedVersions,
-} from '@/features/addonsManager'
+} from '@state/addonsManager'
 import { useNavigate } from 'react-router'
 import { useDeleteAddonVersionsMutation } from '@/services/addons/updateAddons'
 import { useRestart } from '@/context/restartContext'

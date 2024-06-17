@@ -7,7 +7,7 @@ import {
 } from '@/services/activities/updateActivities'
 import { useSelector } from 'react-redux'
 import { ayonApi } from '@/services/ayon'
-import { filterActivityTypes } from '@/features/details'
+import { filterActivityTypes } from '@state/details'
 
 const useCommentMutations = ({
   projectName,

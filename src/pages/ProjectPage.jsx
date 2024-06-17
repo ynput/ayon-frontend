@@ -10,7 +10,7 @@ import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
 
 import usePubSub from '@/hooks/usePubSub'
-import { selectProject } from '@/features/project'
+import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
