@@ -6,7 +6,7 @@ import arrayEquals from '../helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
 import { ayonApi } from '../services/ayon'
-import RefreshToast from '../components/RefreshToast'
+import RefreshToast from '@components/RefreshToast'
 
 export const SocketContext = createContext()
 

@@ -11,7 +11,7 @@ import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@stat
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '@queries/getTasks'
 import useCreateContext from '../hooks/useCreateContext'
-import NoEntityFound from '../components/NoEntityFound'
+import NoEntityFound from '@components/NoEntityFound'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)

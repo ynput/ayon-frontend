@@ -14,7 +14,7 @@ import {
   useUpdateUserMutation,
   useUpdateUserPreferencesMutation,
 } from '../../services/user/updateUser'
-import Avatar from '../../components/Avatar/Avatar'
+import Avatar from '@components/Avatar/Avatar'
 import styled, { css } from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'

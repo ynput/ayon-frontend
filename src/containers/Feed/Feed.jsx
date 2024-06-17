@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react'
-import ActivityItem from '../../components/Feed/ActivityItem'
+import ActivityItem from '@components/Feed/ActivityItem'
 import CommentInput from '@components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
 import { useGetActivitiesQuery, useLazyGetActivitiesQuery } from '@queries/activities/getActivities'

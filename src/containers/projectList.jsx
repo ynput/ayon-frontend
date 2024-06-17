@@ -9,7 +9,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import useCreateContext from '../hooks/useCreateContext'
 import useLocalStorage from '../hooks/useLocalStorage'
-import CollapseButton from '../components/CollapseButton'
+import CollapseButton from '@components/CollapseButton'
 import styled, { css } from 'styled-components'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
