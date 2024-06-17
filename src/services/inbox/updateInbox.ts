@@ -3,7 +3,7 @@ import API from '@api'
 import { $Any } from '@types'
 import { ManageInboxItemApiArg } from '@api/rest'
 import { current } from '@reduxjs/toolkit'
-import { TransformedInboxMessages } from './inboxTransform'
+import { enhancedInboxGraphql } from './getInbox'
 
 // add some extra types for the patching
 export interface Arg extends ManageInboxItemApiArg {
@@ -17,11 +17,9 @@ export interface Arg extends ManageInboxItemApiArg {
 // When reading a message, we need to update the unread count
 const patchUnreadCount = (dispatch: $Any, count: number, important: boolean) => {
   dispatch(
-    // @ts-ignore
-    API.graphql.util.updateQueryData('GetInboxUnreadCount', { important }, (draft) => {
-      const newDraft = draft as unknown as number
+    enhancedInboxGraphql.util.updateQueryData('GetInboxUnreadCount', { important }, (draft) => {
       // console.log('updating unread count: ', draft - count, count)
-      return Math.max(0, newDraft - count)
+      return Math.max(0, draft - count)
     }),
   )
 }
@@ -69,17 +67,16 @@ const enhancedRest = API.rest.enhanceEndpoints({
 
           //   the cache to remove from (current tab)
           dispatch(
-            API.graphql.util.updateQueryData(
+            enhancedInboxGraphql.util.updateQueryData(
               'GetInboxMessages',
               { last, important, active },
-              (draft: $Any) => {
-                const newDraft = draft as TransformedInboxMessages
+              (draft) => {
                 // find the messages to clear
-                messages = newDraft.messages
+                messages = draft.messages
                   .filter((m) => ids.includes(m.referenceId))
                   .map((m) => current(m))
                 // filter out the messages to clear
-                newDraft.messages = newDraft.messages.filter((m) => !ids.includes(m.referenceId))
+                draft.messages = draft.messages.filter((m) => !ids.includes(m.referenceId))
               },
             ),
           )
@@ -92,14 +89,13 @@ const enhancedRest = API.rest.enhanceEndpoints({
 
             //   the cache to add to (cleared/important/other tab)
             dispatch(
-              API.graphql.util.updateQueryData(
+              enhancedInboxGraphql.util.updateQueryData(
                 'GetInboxMessages',
                 { last, important: null, active: !active },
-                (draft: $Any) => {
-                  const newDraft = draft as TransformedInboxMessages
+                (draft) => {
                   // adding message to the new cache
                   console.log('adding message to new cache location')
-                  newDraft.messages.unshift(...messagesPatch)
+                  draft.messages.unshift(...messagesPatch)
                 },
               ),
             )
@@ -119,16 +115,15 @@ const enhancedRest = API.rest.enhanceEndpoints({
           // only updating the read status of the message
           // patch new data into the cache
           patchResult = dispatch(
-            API.graphql.util.updateQueryData(
+            enhancedInboxGraphql.util.updateQueryData(
               'GetInboxMessages',
               { last, active, important },
-              (draft: $Any) => {
-                const newDraft = draft as TransformedInboxMessages
+              (draft) => {
                 for (const id of ids) {
-                  const messageIndex = newDraft.messages.findIndex((m) => m.referenceId === id)
+                  const messageIndex = draft.messages.findIndex((m) => m.referenceId === id)
                   if (messageIndex !== -1) {
-                    newDraft.messages[messageIndex] = {
-                      ...newDraft.messages[messageIndex],
+                    draft.messages[messageIndex] = {
+                      ...draft.messages[messageIndex],
                       read: newRead,
                       active: newActive,
                     }

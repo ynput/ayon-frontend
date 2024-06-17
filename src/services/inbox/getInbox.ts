@@ -23,7 +23,7 @@ type UpdatedDefinitions = Omit<
   GetInboxHasUnread: OverrideResultType<Definitions['GetInboxHasUnread'], boolean>
 }
 
-const enhancedGraphql = API.graphql.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+export const enhancedInboxGraphql = API.graphql.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetInboxMessages: {
       transformResponse: (res: GetInboxMessagesQuery, _meta, args) =>
@@ -131,4 +131,4 @@ export const {
   useGetInboxHasUnreadQuery,
   useGetInboxMessagesQuery,
   useLazyGetInboxMessagesQuery,
-} = enhancedGraphql
+} = enhancedInboxGraphql
