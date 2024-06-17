@@ -6,8 +6,8 @@ import { Panel, LockedInput, Icon } from '@ynput/ayon-react-components'
 import { useUpdateUserAPIKeyMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import confirmDelete from '../helpers/confirmDelete'
-import copyToClipboard from '../helpers/copyToClipboard'
+import confirmDelete from '@helpers/confirmDelete'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 const PanelStyled = styled(Panel)`
   flex-direction: row;
