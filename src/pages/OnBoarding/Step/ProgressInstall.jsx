@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import AddonCardProgress from '@/components/AddonCard/AddonCardProgress'
+import AddonCardProgress from '@components/AddonCard/AddonCardProgress'
 
 const findLastEvent = (events = []) => {
   // sort by status, null, pending, in_progress, finished, failed

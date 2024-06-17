@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react'
 import ActivityItem from '../../components/Feed/ActivityItem'
-import CommentInput from '@/components/CommentInput/CommentInput'
+import CommentInput from '@components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
 import {
   useGetActivitiesQuery,
@@ -20,7 +20,7 @@ import { classNames } from 'primereact/utils'
 import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
-import ActivityReferenceTooltip from '@/components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
+import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
 
 // number of activities to get
 export const activitiesLast = 30

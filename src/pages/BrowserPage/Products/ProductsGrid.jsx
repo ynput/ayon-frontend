@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
-import GridLayout from '@/components/GridLayout'
+import GridLayout from '@components/GridLayout'
 import { Button, EntityCard, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'

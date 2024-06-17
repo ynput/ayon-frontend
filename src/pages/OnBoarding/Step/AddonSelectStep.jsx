@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import AddonCard from '@/components/AddonCard/AddonCard'
+import AddonCard from '@components/AddonCard/AddonCard'
 
 export const AddonSelectStep = ({
   Header,

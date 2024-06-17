@@ -1,4 +1,4 @@
-import { getFuzzyDate } from '@/components/Feed/ActivityDate'
+import { getFuzzyDate } from '@components/Feed/ActivityDate'
 import { productTypes } from '@/features/project'
 import getEntityTypeIcon from '@/helpers/getEntityTypeIcon'
 

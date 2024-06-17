@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
-import UserImage from '@/components/UserImage'
+import UserImage from '@components/UserImage'
 
 import styled, { css } from 'styled-components'
 import { useGetUserByNameQuery } from '@/services/user/getUsers'

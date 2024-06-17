@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import StatusSelectComponent from '@/components/status/statusSelect'
+import StatusSelectComponent from '@components/status/statusSelect'
 import {
   Button,
   OverflowField,

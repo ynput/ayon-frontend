@@ -4,7 +4,7 @@ import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
-import ShortcutWidget from '@/components/ShortcutWidget/ShortcutWidget'
+import ShortcutWidget from '@components/ShortcutWidget/ShortcutWidget'
 
 const MenuItem = forwardRef(
   (

@@ -21,7 +21,7 @@ import NewUser from './newUser'
 import confirmDelete from '@/helpers/confirmDelete'
 import { useGetAccessGroupsQuery } from '@/services/accessGroups/getAccessGroups'
 import Shortcuts from '@/containers/Shortcuts'
-import SwitchButton from '@/components/SwitchButton/SwitchButton'
+import SwitchButton from '@components/SwitchButton/SwitchButton'
 
 // what to show in the access column
 const formatAccessGroups = (rowData, selectedProjects) => {

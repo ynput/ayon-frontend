@@ -1,6 +1,6 @@
 import * as Styled from './CommentMentionSelect.styled'
 import { Icon } from '@ynput/ayon-react-components'
-import UserImage from '@/components/UserImage'
+import UserImage from '@components/UserImage'
 import { classNames } from 'primereact/utils'
 import { upperFirst } from 'lodash'
 

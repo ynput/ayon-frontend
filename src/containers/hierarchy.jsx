@@ -5,7 +5,7 @@ import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-compo
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
-import { CellWithIcon } from '@/components/icons'
+import { CellWithIcon } from '@components/icons'
 import EntityDetail from './DetailsDialog'
 import {
   setFocusedFolders,

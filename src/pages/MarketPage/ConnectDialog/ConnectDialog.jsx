@@ -1,5 +1,5 @@
 import React from 'react'
-import YnputConnector from '@/components/YnputCloud/YnputConnector'
+import YnputConnector from '@components/YnputCloud/YnputConnector'
 import * as Styled from './ConnectDialog.styled'
 import { Icon, Dialog } from '@ynput/ayon-react-components'
 import Type from '@/theme/typography.module.css'

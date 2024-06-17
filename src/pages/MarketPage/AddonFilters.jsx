@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import Type from '@/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
-import YnputConnector from '@/components/YnputCloud/YnputConnector'
+import YnputConnector from '@components/YnputCloud/YnputConnector'
 
 const StyledSection = styled(Section)`
   height: 100%;

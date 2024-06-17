@@ -1,7 +1,7 @@
 import React from 'react'
 
 import PropTypes from 'prop-types'
-import OAuth2ProviderIcon from '@/components/oauthIcons'
+import OAuth2ProviderIcon from '@components/oauthIcons'
 import { upperFirst } from 'lodash'
 import { Button } from '@ynput/ayon-react-components'
 

@@ -16,7 +16,7 @@ import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
-import UserDetailsHeader from '@/components/User/UserDetailsHeader'
+import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
 import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 

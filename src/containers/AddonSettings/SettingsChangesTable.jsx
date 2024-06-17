@@ -4,7 +4,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 import useCreateContext from '@/hooks/useCreateContext'
-import { Badge, BadgeWrapper } from '@/components/Badge'
+import { Badge, BadgeWrapper } from '@components/Badge'
 
 const SettingsChangesTable = ({ changes, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})

@@ -1,7 +1,7 @@
-import useGetInstallerDownload from '@/components/InstallerDownload/useGetInstallerDownload'
+import useGetInstallerDownload from '@components/InstallerDownload/useGetInstallerDownload'
 import * as Styled from './DownloadsPage.styled'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
-import InstallerProdCard from '@/components/InstallerDownload/InstallerProdCard/InstallerProdCard'
+import InstallerProdCard from '@components/InstallerDownload/InstallerProdCard/InstallerProdCard'
 
 import WindowsLogo from '@/svg/WindowsLogo'
 import AppleLogo from '@/svg/AppleLogo'

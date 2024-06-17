@@ -20,9 +20,9 @@ import { InView } from 'react-intersection-observer'
 import useInboxRefresh from '../hooks/useInboxRefresh'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
-import ShortcutWidget from '@/components/ShortcutWidget/ShortcutWidget'
+import ShortcutWidget from '@components/ShortcutWidget/ShortcutWidget'
 import Typography from '@/theme/typography.module.css'
-import EnableNotifications from '@/components/EnableNotifications'
+import EnableNotifications from '@components/EnableNotifications'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,

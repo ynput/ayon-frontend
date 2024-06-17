@@ -6,7 +6,7 @@ import { classNames } from 'primereact/utils'
 import { isEqual, union, upperFirst } from 'lodash'
 import { useUpdateEntitiesMutation } from '@/services/entity/updateEntity'
 import { toast } from 'react-toastify'
-import Actions from '@/components/Actions/Actions'
+import Actions from '@components/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import usePatchProductsListWithVersions from '@/hooks/usePatchProductsListWithVersions'
 

@@ -22,7 +22,7 @@ import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus 
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '@/hooks/useLocalStorage'
 import { useGetHierarchyQuery } from '@/services/getHierarchy'
-import SearchDropdown from '@/components/SearchDropdown'
+import SearchDropdown from '@components/SearchDropdown'
 import useColumnResize from '@/hooks/useColumnResize'
 import { capitalize, debounce, isEmpty } from 'lodash'
 import { useLazyGetExpandedBranchQuery } from '@/services/editor/getEditor'

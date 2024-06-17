@@ -13,7 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 import EnumEditor from './enumEditor'
 import { camelCase, upperFirst } from 'lodash'
-import MinMaxField from '@/components/MinMaxField/MinMaxField'
+import MinMaxField from '@components/MinMaxField/MinMaxField'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },

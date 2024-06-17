@@ -1,10 +1,10 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
-import { CellWithIcon } from '@/components/icons'
+import { CellWithIcon } from '@components/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import { useGetWorkfileListQuery } from '../../services/getWorkfiles'
-import NoEntityFound from '@/components/NoEntityFound'
+import NoEntityFound from '@components/NoEntityFound'
 import { setFocusedWorkfiles } from '@/features/context'
 
 const WorkfileList = ({ style }) => {

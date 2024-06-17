@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import EntityDetail from '@/containers/DetailsDialog'
-import { CellWithIcon } from '@/components/icons'
+import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@/containers/fieldFormat'
 import usePubSub from '@/hooks/usePubSub'
 import groupResult from '@/helpers/groupResult'
@@ -17,7 +17,7 @@ import {
   updateBrowserFilters,
 } from '@/features/context'
 import VersionList from './VersionList'
-import StatusSelect from '@/components/status/statusSelect'
+import StatusSelect from '@components/status/statusSelect'
 import {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,

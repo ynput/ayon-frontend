@@ -5,7 +5,7 @@ import {
   Section as SectionComp,
 } from '@ynput/ayon-react-components'
 import styled, { css, keyframes } from 'styled-components'
-import AddonCard from '@/components/AddonCard/AddonCard'
+import AddonCard from '@components/AddonCard/AddonCard'
 
 export const Logo = styled.img`
   width: 100px;

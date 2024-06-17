@@ -1,7 +1,7 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '@/components/UserImage'
+import UserImage from '@components/UserImage'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'

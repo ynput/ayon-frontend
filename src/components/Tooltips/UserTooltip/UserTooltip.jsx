@@ -1,5 +1,5 @@
 import * as Styled from './UserTooltip.styled'
-import UserImage from '@/components/UserImage'
+import UserImage from '@components/UserImage'
 
 const UserTooltip = ({ name, label, pos }) => {
   return (

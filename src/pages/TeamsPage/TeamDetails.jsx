@@ -8,7 +8,7 @@ import {
   LockedInput,
   Panel,
 } from '@ynput/ayon-react-components'
-import DetailHeader from '@/components/DetailHeader'
+import DetailHeader from '@components/DetailHeader'
 
 const TeamDetails = ({
   teams = [],

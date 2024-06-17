@@ -21,7 +21,7 @@ import useInstall from './AddonDetails/useInstall'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '@/context/restartContext'
 import { toast } from 'react-toastify'
-import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
