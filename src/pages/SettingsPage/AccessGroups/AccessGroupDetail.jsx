@@ -8,7 +8,7 @@ import {
   ScrollPanel,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import SettingsEditor from '@/containers/SettingsEditor'
+import SettingsEditor from '@containers/SettingsEditor'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { isEqual } from 'lodash'
 import {

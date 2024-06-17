@@ -9,8 +9,8 @@ import { classNames } from 'primereact/utils'
 import { useSelector } from 'react-redux'
 import CommentInput from '@components/CommentInput/CommentInput'
 import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
-import FilesGrid from '@/containers/FilesGrid/FilesGrid'
-import useReferenceTooltip from '@/containers/Feed/hooks/useReferenceTooltip'
+import FilesGrid from '@containers/FilesGrid/FilesGrid'
+import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import { getTextRefs } from '../../CommentInput/quillToMarkdown'
 
 const ActivityComment = ({

@@ -6,9 +6,9 @@ import styled from 'styled-components'
 
 import { ScrollPanel, Button, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-components'
 
-import BundleDropdown from '@/containers/BundleDropdown'
-import ProjectDropdown from '@/containers/ProjectDropdown'
-import VariantSelector from '@/containers/AddonSettings/VariantSelector'
+import BundleDropdown from '@containers/BundleDropdown'
+import ProjectDropdown from '@containers/ProjectDropdown'
+import VariantSelector from '@containers/AddonSettings/VariantSelector'
 
 import CopySettingsNode from './CopySettingsNode'
 

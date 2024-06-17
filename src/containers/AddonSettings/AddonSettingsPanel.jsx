@@ -8,7 +8,7 @@ import {
 } from '@queries/addonSettings'
 
 import { setUri } from '@state/context'
-import SettingsEditor from '@/containers/SettingsEditor'
+import SettingsEditor from '@containers/SettingsEditor'
 
 const AddonSettingsPanel = ({
   addon,

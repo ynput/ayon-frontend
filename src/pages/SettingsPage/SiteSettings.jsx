@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
-import SettingsEditor from '@/containers/SettingsEditor'
-import AddonList from '@/containers/AddonList'
-import SiteList from '@/containers/SiteList'
+import SettingsEditor from '@containers/SettingsEditor'
+import AddonList from '@containers/AddonList'
+import SiteList from '@containers/SiteList'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '@queries/siteSettings'
 import { useSetSiteSettingsMutation } from '@queries/siteSettings'

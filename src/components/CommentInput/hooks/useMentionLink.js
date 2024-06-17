@@ -1,5 +1,5 @@
 import { Quill } from 'react-quill-ayon'
-import useReferenceTooltip from '@/containers/Feed/hooks/useReferenceTooltip'
+import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import { useDispatch } from 'react-redux'
 import { openSlideOut } from '@state/details'
 const Inline = Quill.import('blots/inline')

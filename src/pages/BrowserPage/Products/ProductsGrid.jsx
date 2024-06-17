@@ -6,7 +6,7 @@ import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import { classNames } from 'primereact/utils'
-import Shortcuts from '@/containers/Shortcuts'
+import Shortcuts from '@containers/Shortcuts'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
   padding: 4px 12px;

@@ -1,12 +1,12 @@
 import { Section, Panel } from '@ynput/ayon-react-components'
-import { PathField } from '@/containers/fieldFormat'
-import Thumbnail from '@/containers/thumbnail'
-import AttributeTable from '@/containers/attributeTable'
+import { PathField } from '@containers/fieldFormat'
+import Thumbnail from '@containers/thumbnail'
+import AttributeTable from '@containers/attributeTable'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useGetWorkfileByIdQuery } from '@queries/getWorkfiles'
 import { useGetSiteRootsQuery } from '@queries/customRoots'
-import SiteDropdown from '@/containers/SiteDropdown'
+import SiteDropdown from '@containers/SiteDropdown'
 
 const getCurrentPlatform = () => {
   const platform = window.navigator.userAgent.toLowerCase()

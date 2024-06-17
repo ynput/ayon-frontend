@@ -3,8 +3,8 @@ import { useSelector } from 'react-redux'
 import { Section, Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
-import Hierarchy from '@/containers/hierarchy'
-import TaskList from '@/containers/taskList'
+import Hierarchy from '@containers/hierarchy'
+import TaskList from '@containers/taskList'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;

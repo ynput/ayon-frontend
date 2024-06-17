@@ -15,14 +15,14 @@ import {
 } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-import AddonList from '@/containers/AddonList'
-import SiteList from '@/containers/SiteList'
+import AddonList from '@containers/AddonList'
+import SiteList from '@containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
 import VariantSelector from './VariantSelector'
-import CopySettingsDialog from '@/containers/CopySettings/CopySettingsDialog'
-import RawSettingsDialog from '@/containers/RawSettingsDialog'
+import CopySettingsDialog from '@containers/CopySettings/CopySettingsDialog'
+import RawSettingsDialog from '@containers/RawSettingsDialog'
 
 import {
   useSetAddonSettingsMutation,

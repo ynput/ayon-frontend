@@ -17,8 +17,8 @@ import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
 import { isEqual } from 'lodash'
 
 import { setUri } from '@state/context'
-import SettingsEditor from '@/containers/SettingsEditor'
-import { getValueByPath, setValueByPath, sameKeysStructure } from '@/containers/AddonSettings/utils'
+import SettingsEditor from '@containers/SettingsEditor'
+import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'
 import { usePaste } from '@/context/pasteContext'
 

@@ -19,7 +19,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSearchParams } from 'react-router-dom'
-import Shortcuts from '@/containers/Shortcuts'
+import Shortcuts from '@containers/Shortcuts'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)

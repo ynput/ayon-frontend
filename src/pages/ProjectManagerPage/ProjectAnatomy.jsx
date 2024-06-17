@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
 import { useUpdateProjectAnatomyMutation } from '@queries/project/updateProject'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
-import AnatomyEditor from '@/containers/AnatomyEditor'
+import AnatomyEditor from '@containers/AnatomyEditor'
 
 import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@/context/pasteContext'

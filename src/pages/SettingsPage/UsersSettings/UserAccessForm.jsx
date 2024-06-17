@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux'
 import { InputSwitch, FormLayout, FormRow, Icon } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
-import AccessGroupsDropdown from '@/containers/AccessGroupsDropdown'
+import AccessGroupsDropdown from '@containers/AccessGroupsDropdown'
 import { isEqual } from 'lodash'
 import styled from 'styled-components'
 

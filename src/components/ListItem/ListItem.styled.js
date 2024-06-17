@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import ThumbnailSimple from '@/containers/ThumbnailSimple'
+import ThumbnailSimple from '@containers/ThumbnailSimple'
 import StatusSelect from '../status/statusSelect'
 import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import getShimmerStyles from '@/styles/getShimmerStyles'

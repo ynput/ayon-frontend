@@ -19,7 +19,7 @@ import { useDeleteAddonVersionsMutation } from '@queries/addons/updateAddons'
 import { useRestart } from '@/context/restartContext'
 import { Link } from 'react-router-dom'
 import AddonDialog from '../../../components/AddonDialog/AddonDialog'
-import Shortcuts from '@/containers/Shortcuts'
+import Shortcuts from '@containers/Shortcuts'
 
 const AddonsManager = () => {
   const navigate = useNavigate()

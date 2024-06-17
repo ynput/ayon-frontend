@@ -1,5 +1,5 @@
-import Hierarchy from '@/containers/hierarchy'
-import TaskList from '@/containers/taskList'
+import Hierarchy from '@containers/hierarchy'
+import TaskList from '@containers/taskList'
 import WorkfileList from './WorkfileList'
 import WorkfileDetail from './WorkfileDetail'
 

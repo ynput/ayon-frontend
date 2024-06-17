@@ -12,9 +12,9 @@ import {
 import { getValueByPath } from '../AddonSettings/utils'
 import { isEqual } from 'lodash'
 
-import VariantSelector from '@/containers/AddonSettings/VariantSelector'
-import ProjectDropdown from '@/containers/ProjectDropdown'
-import AddonDropdown from '@/containers/CopySettings/AddonDropdown'
+import VariantSelector from '@containers/AddonSettings/VariantSelector'
+import ProjectDropdown from '@containers/ProjectDropdown'
+import AddonDropdown from '@containers/CopySettings/AddonDropdown'
 
 import {
   NodePanelWrapper,
@@ -23,7 +23,7 @@ import {
   NodePanelDirectionSelector,
   ChangeValue,
   ChangesTable,
-} from '@/containers/CopySettings/CopySettingsNode.styled'
+} from '@containers/CopySettings/CopySettingsNode.styled'
 
 import {
   isSimple,

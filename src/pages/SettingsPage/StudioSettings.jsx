@@ -1,4 +1,4 @@
-import AddonSettings from '@/containers/AddonSettings'
+import AddonSettings from '@containers/AddonSettings'
 
 const StudioSettings = () => {
   return (

@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import EntityTooltip from '../../Tooltips/EntityTooltip/EntityTooltip'
 import UserTooltip from '../../Tooltips/UserTooltip/UserTooltip'
-import useReferenceTooltip from '@/containers/Feed/hooks/useReferenceTooltip'
+import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import { useEffect } from 'react'
 
 const ActivityReferenceTooltip = ({ dispatch, ...props }) => {

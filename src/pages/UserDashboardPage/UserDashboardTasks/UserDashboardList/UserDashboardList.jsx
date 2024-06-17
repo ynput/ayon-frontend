@@ -7,7 +7,7 @@ import { getFakeTasks, usePrefetchEntity, useTaskClick } from '../../util'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '@helpers/getPreviousTagElement'
-import Shortcuts from '@/containers/Shortcuts'
+import Shortcuts from '@containers/Shortcuts'
 
 const UserDashboardList = ({
   groupedTasks = {},

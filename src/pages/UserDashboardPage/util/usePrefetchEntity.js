@@ -3,7 +3,7 @@ import { onPrefetchIds } from '@state/dashboard'
 import { useLazyGetDashboardEntitiesDetailsQuery } from '@queries/userDashboard/getUserDashboard'
 import { useLazyGetActivitiesQuery } from '@queries/activities/getActivities'
 import { throttle } from 'lodash'
-import { activitiesLast } from '@/containers/Feed/Feed'
+import { activitiesLast } from '@containers/Feed/Feed'
 
 // prefetch the entity details and activities
 export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {

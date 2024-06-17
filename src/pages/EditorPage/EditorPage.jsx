@@ -47,12 +47,12 @@ import checkName from '@helpers/checkName'
 import useCreateContext from '@hooks/useCreateContext'
 import { ayonApi } from '@queries/ayon'
 import { confirmDialog } from 'primereact/confirmdialog'
-import BuildHierarchyButton from '@/containers/HierarchyBuilder'
+import BuildHierarchyButton from '@containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import confirmDelete from '@helpers/confirmDelete'
 import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
-import Shortcuts from '@/containers/Shortcuts'
+import Shortcuts from '@containers/Shortcuts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)

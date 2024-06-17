@@ -13,7 +13,7 @@ import {
   Button,
   Toolbar,
 } from '@ynput/ayon-react-components'
-import VariantSelector from '@/containers/AddonSettings/VariantSelector'
+import VariantSelector from '@containers/AddonSettings/VariantSelector'
 import { useCreateServiceMutation } from '@queries/services/updateServices'
 import { useGetServiceAddonsQuery, useGetServiceHostsQuery } from '@queries/services/getServices'
 

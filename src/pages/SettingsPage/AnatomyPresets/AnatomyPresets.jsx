@@ -19,7 +19,7 @@ import {
 
 import { useGetAnatomyPresetsQuery } from '@queries/anatomy/getAnatomy'
 import PresetList from './PresetList'
-import AnatomyEditor from '@/containers/AnatomyEditor'
+import AnatomyEditor from '@containers/AnatomyEditor'
 import {
   useDeletePresetMutation,
   useUpdatePresetMutation,

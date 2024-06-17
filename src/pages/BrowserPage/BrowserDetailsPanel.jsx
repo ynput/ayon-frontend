@@ -3,8 +3,8 @@
 
 import { isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import DetailsPanel from '@/containers/DetailsPanel/DetailsPanel'
-import DetailsPanelSlideOut from '@/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
+import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 
