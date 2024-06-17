@@ -73,8 +73,6 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
         }
       }
 
-      console.log(folder)
-
       // set defaults
       if (type === 'task') setEntityData(task)
       if (type === 'folder') setEntityData(folder)
@@ -190,8 +188,6 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   if (!entityType) return null
 
   const addDisabled = !entityData.label || !entityData.type
-
-  console.log(entityType)
 
   return (
     <Dialog
