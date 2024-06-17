@@ -5,11 +5,11 @@ import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
 import { onAssigneesChanged } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import DetailsPanel from '../../../containers/DetailsPanel/DetailsPanel'
+import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '@state/context'
-import DetailsPanelSlideOut from '../../../containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
   // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null

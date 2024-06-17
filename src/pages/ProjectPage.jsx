@@ -14,7 +14,7 @@ import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '../services/project/getProject'
 import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
-import AppNavLinks from '../containers/header/AppNavLinks'
+import AppNavLinks from '@containers/header/AppNavLinks'
 
 const ProjectContextInfo = () => {
   /**
