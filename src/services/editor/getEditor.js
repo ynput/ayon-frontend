@@ -1,6 +1,6 @@
 import { ayonApi } from '../ayon'
 import { branchesLoaded } from '@state/editor'
-import { buildQuery } from '@/pages/EditorPage/queries'
+import { buildQuery } from '@pages/EditorPage/queries'
 
 const transformEditorData = (project) => {
   const nodes = {}

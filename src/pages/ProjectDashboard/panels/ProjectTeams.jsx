@@ -1,7 +1,7 @@
 import React from 'react'
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
-import UserTile from '@/pages/SettingsPage/UsersSettings/UserTile'
+import UserTile from '@pages/SettingsPage/UsersSettings/UserTile'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetTeamsQuery } from '../../../services/team/getTeams'
 import { Button } from '@ynput/ayon-react-components'

@@ -7,7 +7,7 @@ import {
   useDiscountYnputMutation,
   useGetYnputConnectionsQuery,
 } from '@queries/ynputConnect'
-import LoadingPage from '@/pages/LoadingPage'
+import LoadingPage from '@pages/LoadingPage'
 import * as Styled from './YnputCloud.styled'
 import { useLocation } from 'react-router'
 import { useSelector } from 'react-redux'

@@ -1,6 +1,6 @@
 import * as Styled from './EntityTooltip.styled'
 import { productTypes } from '@state/project'
-import { getThumbnailUrl } from '@/pages/UserDashboardPage/UserDashboardTasks/UserTasksContainer'
+import { getThumbnailUrl } from '@pages/UserDashboardPage/UserDashboardTasks/UserTasksContainer'
 import { useGetEntityTooltipQuery } from '@queries/activities/getActivities'
 
 const EntityTooltip = ({ type, id, pos: { left, top } = {}, projectName, projectInfo = {} }) => {

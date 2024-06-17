@@ -3,7 +3,7 @@ import { Section, Panel } from '@ynput/ayon-react-components'
 import {
   TotalsStyledPanel,
   TotalStyledButton,
-} from '@/pages/SettingsPage/UsersSettings/UsersOverview'
+} from '@pages/SettingsPage/UsersSettings/UsersOverview'
 import EventTile from './EventTile'
 
 const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setShowLogs }) => {
