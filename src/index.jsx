@@ -25,7 +25,7 @@ import './styles/index.scss'
 import { ayonApi, GraphQL, RestAPI } from '@queries/ayon'
 import { setupListeners } from '@reduxjs/toolkit/query'
 import short from 'short-uuid'
-import { SocketProvider } from './context/websocketContext'
+import { SocketProvider } from '@context/websocketContext'
 import localStorageMiddleware from './features/middleware/localStorageMiddleware'
 
 // generate unique session id
