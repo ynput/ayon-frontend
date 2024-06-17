@@ -7,14 +7,17 @@ import {
   GetInboxMessagesQuery,
   GetInboxUnreadCountQuery,
 } from '@api/graphql'
-import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'
 import { TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { TransformedInboxMessages, transformInboxMessages } from './inboxTransform'
+import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'
 
 type Definitions = DefinitionsFromApi<typeof API.graphql>
 type TagTypes = TagTypesFromApi<typeof API.graphql>
 
-type UpdatedDefinitions = Omit<Definitions, 'GetInboxUnreadCount'> & {
+type UpdatedDefinitions = Omit<
+  Definitions,
+  'GetInboxMessages' | 'GetInboxUnreadCount' | 'GetInboxHasUnread'
+> & {
   GetInboxMessages: OverrideResultType<Definitions['GetInboxMessages'], TransformedInboxMessages>
   GetInboxUnreadCount: OverrideResultType<Definitions['GetInboxUnreadCount'], number>
   GetInboxHasUnread: OverrideResultType<Definitions['GetInboxHasUnread'], boolean>
