@@ -215,6 +215,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return newOverrides
     })
 
+    setUnpinnedKeys({})
+
     reloadAddons(updatedKeys)
 
     if (allOk) {
@@ -225,6 +227,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onRevertAllChanges = () => {
     const keys = Object.keys(changedKeys)
     setChangedKeys({})
+    setUnpinnedKeys({})
     reloadAddons(keys)
   } // end of onDismissChanges
 
@@ -260,6 +263,26 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
           return { ...changedKeys, [addonKey]: addonChanges }
         }) // setChangedKeys
+
+        setUnpinnedKeys((unpinnedKeys) => {
+          const addonChanges = unpinnedKeys[addonKey] || []
+          // delete the path from the list of changed keys
+          // also delete all children of this path
+
+          for (const index in addonChanges) {
+            if (isChildPath(addonChanges[index], path)) {
+              addonChanges.splice(index, 1)
+            }
+          }
+
+          if (!addonChanges.length) {
+            delete unpinnedKeys[addonKey]
+            return { ...unpinnedKeys }
+          }
+
+          return { ...unpinnedKeys, [addonKey]: addonChanges }
+        })  // setUnpinnedKeys
+
       }
     }
   }
