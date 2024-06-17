@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash'
-import { ayonApi } from '../ayon'
+import { ayonApi } from '@queries/ayon'
 import { taskProvideTags, transformEntityData, transformTasksData } from './userDashboardHelpers'
 import {
   KAN_BAN_ASSIGNEES_QUERY,
@@ -7,8 +7,8 @@ import {
   PROJECT_TASKS_QUERY,
   buildDetailsQuery,
 } from './userDashboardQueries'
-import PubSub from '/src/pubsub'
-import API from '../../types'
+import PubSub from '@/pubsub'
+import API from '@api'
 
 const getUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({

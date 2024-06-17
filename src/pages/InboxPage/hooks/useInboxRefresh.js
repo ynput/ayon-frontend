@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import API from '/src/types'
+import API from '@api'
 
 const useInboxRefresh = ({ isFetching, refetch, dispatch }) => {
   const [isRefreshing, setIsRefreshing] = useState(false)

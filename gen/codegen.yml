@@ -5,7 +5,7 @@ schema:
         Authorization: Bearer ${TOKEN}
 documents: '../src/**/*.graphql'
 generates:
-  ../src/types/graphqlTypes.ts:
+  ../src/api/graphql.ts:
     plugins:
       - typescript
       - add:
@@ -23,7 +23,7 @@ generates:
              */
       - typescript-operations
       - typescript-rtk-query:
-          importBaseApiFrom: '../services/ayon'
+          importBaseApiFrom: '@queries/ayon'
           importBaseApiAlternateName: 'GraphQL'
   ./graphql.schema.json:
     plugins:

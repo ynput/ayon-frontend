@@ -1,11 +1,12 @@
 // @ts-ignore
-import PubSub from '/src/pubsub'
-import API, { $Any } from '../../types'
+import PubSub from '@/pubsub'
+import API from '@api'
+import { $Any } from '@types'
 import {
   GetInboxHasUnreadQuery,
   GetInboxMessagesQuery,
   GetInboxUnreadCountQuery,
-} from '../../types/graphqlTypes'
+} from '@api/graphql'
 import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'
 import { TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { TransformedInboxMessages, transformInboxMessages } from './inboxTransform'

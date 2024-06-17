@@ -1,5 +1,5 @@
-import { ayonApi } from '../ayon'
-import { selectProject, setProjectData } from '/src/features/project'
+import { ayonApi } from '@queries/ayon'
+import { selectProject, setProjectData } from '@state/project'
 
 // TODO: use graphql api and write custom types
 // We will need to inject the endpoint as it cannot be generated
@@ -50,7 +50,7 @@ const getProject = ayonApi.injectEndpoints({
   }),
 })
 
-import API from '../../types'
+import API from '@api'
 
 const enhancedRest = API.rest.enhanceEndpoints({
   endpoints: {

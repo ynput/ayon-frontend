@@ -1,5 +1,5 @@
-import { useManageInboxItemMutation } from '../../../services/inbox/updateInbox'
-import { ManageInboxItemRequest } from '../../../types/restTypes'
+import { useManageInboxItemMutation } from '@queries/inbox/updateInbox'
+import { ManageInboxItemRequest } from '@api/rest'
 
 type Config = {
   last: number

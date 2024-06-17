@@ -1800,6 +1800,19 @@ const injectedRtkApi = api.injectEndpoints({
         params: { token: queryArg.token },
       }),
     }),
+    headReviewable: build.mutation<HeadReviewableApiResponse, HeadReviewableApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/review/${queryArg.reviewableId}`,
+        method: 'HEAD',
+        cookies: { accessToken: queryArg.accessToken },
+        headers: {
+          'x-as-user': queryArg['x-as-user'],
+          'x-api-key': queryArg['x-api-key'],
+          authorization: queryArg.authorization,
+        },
+        params: { token: queryArg.token },
+      }),
+    }),
     listServices: build.query<ListServicesApiResponse, ListServicesApiArg>({
       query: (queryArg) => ({
         url: `/api/services`,
@@ -4289,6 +4302,17 @@ export type GetReviewableApiArg = {
   authorization?: string
   accessToken?: string
 }
+export type HeadReviewableApiResponse = /** status 200 Successful Response */ any
+export type HeadReviewableApiArg = {
+  reviewableId: string
+  projectName: string
+  versionId: string
+  token?: string
+  'x-as-user'?: string
+  'x-api-key'?: string
+  authorization?: string
+  accessToken?: string
+}
 export type ListServicesApiResponse = /** status 200 Successful Response */ ServiceListModel
 export type ListServicesApiArg = {
   token?: string
@@ -4763,8 +4787,7 @@ export type GetCurrentUserApiArg = {
   authorization?: string
   accessToken?: string
 }
-export type GetUserApiResponse =
-  /** status 200 Successful Response */
+export type GetUserApiResponse = /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
@@ -5280,9 +5303,9 @@ export type ModifyOverridesRequestModel = {
   path: string[]
 }
 export type PathDefinition = {
-  windows: string
-  linux: string
-  darwin: string
+  windows?: string
+  linux?: string
+  darwin?: string
 }
 export type FilesystemSourceInfo = {
   type?: 'filesystem'
@@ -5924,6 +5947,7 @@ export type FolderAttribModel = {
   goldCoins?: number
   /** How much of the pizza do I get to have? */
   pizzaShare?: number
+  testy?: string
 }
 export type FolderModel = {
   /** Unique identifier of the {entity_name} */
@@ -6340,7 +6364,7 @@ export type DeployProjectRequestModel = {
   /** Project name */
   name: string
   /** Project code */
-  code?: string
+  code: string
   /** Project anatomy */
   anatomy: ProjectAnatomy
   /** Library project */
@@ -6873,6 +6897,7 @@ export type TaskAttribModel = {
   goldCoins?: number
   /** How much of the pizza do I get to have? */
   pizzaShare?: number
+  testy?: string
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */

@@ -1,6 +1,7 @@
 import { toast } from 'react-toastify'
-import API, { $Any } from '../../types'
-import { ManageInboxItemApiArg } from '../../types/restTypes'
+import API from '@api'
+import { $Any } from '@types'
+import { ManageInboxItemApiArg } from '@api/rest'
 import { current } from '@reduxjs/toolkit'
 import { TransformedInboxMessages } from './inboxTransform'
 
