@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { ayonApi } from '/src/services/ayon'
+import { ayonApi } from '@/services/ayon'
 
 const usePatchProductsListWithVersions = ({ projectName }) => {
   const dispatch = useDispatch()

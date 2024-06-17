@@ -5,12 +5,12 @@ import { TablePanel } from '@ynput/ayon-react-components'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { setExpandedReps, setFocusedRepresentations, setUri } from '/src/features/context'
-import groupResult from '/src/helpers/groupResult'
-import useCreateContext from '/src/hooks/useCreateContext'
+import { setExpandedReps, setFocusedRepresentations, setUri } from '@/features/context'
+import groupResult from '@/helpers/groupResult'
+import useCreateContext from '@/hooks/useCreateContext'
 import DetailsDialog from '../DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
-import { openSlideOut } from '/src/features/details'
+import { openSlideOut } from '@/features/details'
 
 const columns = [
   {

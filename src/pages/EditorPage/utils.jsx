@@ -1,6 +1,6 @@
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
-import { TimestampField } from '/src/containers/fieldFormat'
+import { TimestampField } from '@/containers/fieldFormat'
 import { useSelector } from 'react-redux'
 import ToolsField from './fields/ToolsField'
 import { StyledStatus } from './utils.styled'

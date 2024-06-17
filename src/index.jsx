@@ -22,7 +22,7 @@ import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
 
 import './styles/index.scss'
-import { ayonApi, GraphQL, RestAPI } from '/src/services/ayon'
+import { ayonApi, GraphQL, RestAPI } from '@/services/ayon'
 import { setupListeners } from '@reduxjs/toolkit/query'
 import short from 'short-uuid'
 import { SocketProvider } from './context/websocketContext'

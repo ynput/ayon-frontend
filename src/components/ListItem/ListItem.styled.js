@@ -1,8 +1,8 @@
 import styled from 'styled-components'
-import ThumbnailSimple from '/src/containers/ThumbnailSimple'
+import ThumbnailSimple from '@/containers/ThumbnailSimple'
 import StatusSelect from '../status/statusSelect'
 import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 
 export const Item = styled.li`
   /* reset defaults */

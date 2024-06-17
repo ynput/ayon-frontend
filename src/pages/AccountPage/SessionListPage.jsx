@@ -2,7 +2,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
-import { TimestampField } from '/src/containers/fieldFormat'
+import { TimestampField } from '@/containers/fieldFormat'
 import { useGetUserSessionsQuery } from '../../services/user/getUsers'
 import { useInvalidateUserSessionMutation } from '../../services/user/updateUser'
 

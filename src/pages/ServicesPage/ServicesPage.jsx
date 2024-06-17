@@ -4,14 +4,14 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './NewServiceDialog'
-import useCreateContext from '/src/hooks/useCreateContext'
-import confirmDelete from '/src/helpers/confirmDelete'
+import useCreateContext from '@/hooks/useCreateContext'
+import confirmDelete from '@/helpers/confirmDelete'
 import styled from 'styled-components'
-import { useGetServicesQuery } from '/src/services/services/getServices'
+import { useGetServicesQuery } from '@/services/services/getServices'
 import {
   useDeleteServiceMutation,
   useUpdateServiceMutation,
-} from '/src/services/services/updateServices'
+} from '@/services/services/updateServices'
 
 const StatusBadge = styled.span`
   display: inline-block;

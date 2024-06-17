@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
-import EntityDetail from '/src/containers/DetailsDialog'
-import { CellWithIcon } from '/src/components/icons'
-import { TimestampField } from '/src/containers/fieldFormat'
-import usePubSub from '/src/hooks/usePubSub'
-import groupResult from '/src/helpers/groupResult'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import EntityDetail from '@/containers/DetailsDialog'
+import { CellWithIcon } from '@/components/icons'
+import { TimestampField } from '@/containers/fieldFormat'
+import usePubSub from '@/hooks/usePubSub'
+import groupResult from '@/helpers/groupResult'
+import useLocalStorage from '@/hooks/useLocalStorage'
 import {
   setFocusedVersions,
   setFocusedProducts,
@@ -15,25 +15,25 @@ import {
   productSelected,
   onFocusChanged,
   updateBrowserFilters,
-} from '/src/features/context'
+} from '@/features/context'
 import VersionList from './VersionList'
-import StatusSelect from '/src/components/status/statusSelect'
+import StatusSelect from '@/components/status/statusSelect'
 import {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
-} from '/src/services/product/getProduct'
-import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
-import useSearchFilter, { filterByFieldsAndValues } from '/src/hooks/useSearchFilter'
-import useColumnResize from '/src/hooks/useColumnResize'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
-import { ayonApi } from '/src/services/ayon'
-import useCreateContext from '/src/hooks/useCreateContext'
+} from '@/services/product/getProduct'
+import usePatchProductsListWithVersions from '@/hooks/usePatchProductsListWithVersions'
+import useSearchFilter, { filterByFieldsAndValues } from '@/hooks/useSearchFilter'
+import useColumnResize from '@/hooks/useColumnResize'
+import { useUpdateEntitiesMutation } from '@/services/entity/updateEntity'
+import { ayonApi } from '@/services/ayon'
+import useCreateContext from '@/hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
-import { productTypes } from '/src/features/project'
+import { productTypes } from '@/features/project'
 import * as Styled from './Products.styled'
 
 const Products = () => {

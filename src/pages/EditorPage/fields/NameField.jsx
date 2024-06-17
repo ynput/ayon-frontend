@@ -1,6 +1,6 @@
 import React from 'react'
-import { CellWithIcon } from '/src/components/icons'
-import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
+import { CellWithIcon } from '@/components/icons'
+import getEntityTypeIcon from '@/helpers/getEntityTypeIcon'
 
 const NameField = ({
   node,

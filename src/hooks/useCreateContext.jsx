@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import ContextMenuItem from '/src/components/ContextMenu/ContextMenuItem'
+import ContextMenuItem from '@/components/ContextMenu/ContextMenuItem'
 import { useContextMenu } from '../context/contextMenuContext'
 
 // This is used to create submenus

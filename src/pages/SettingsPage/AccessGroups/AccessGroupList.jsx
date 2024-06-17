@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react'
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@/hooks/useCreateContext'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
-import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
-import { useDeleteAccessGroupMutation } from '/src/services/accessGroups/updateAccessGroups'
+import { useGetAccessGroupsQuery } from '@/services/accessGroups/getAccessGroups'
+import { useDeleteAccessGroupMutation } from '@/services/accessGroups/updateAccessGroups'
 import NewAccessGroup from './NewAccessGroup'
-import confirmDelete from '/src/helpers/confirmDelete'
+import confirmDelete from '@/helpers/confirmDelete'
 
 const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup }) => {
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)

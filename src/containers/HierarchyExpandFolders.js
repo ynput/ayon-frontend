@@ -5,7 +5,7 @@
 
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setExpandedFolders } from '/src/features/context'
+import { setExpandedFolders } from '@/features/context'
 
 const HierarchyExpandFolders = ({ parents = [], isSuccess, focusedFolders, expandedFolders }) => {
   const uri = useSelector((state) => state.context.uri)

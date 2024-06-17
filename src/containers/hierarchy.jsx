@@ -5,15 +5,15 @@ import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-compo
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
-import { CellWithIcon } from '/src/components/icons'
+import { CellWithIcon } from '@/components/icons'
 import EntityDetail from './DetailsDialog'
 import {
   setFocusedFolders,
   setUri,
   setExpandedFolders,
   setSelectedVersions,
-} from '/src/features/context'
-import { useGetHierarchyQuery } from '/src/services/getHierarchy'
+} from '@/features/context'
+import { useGetHierarchyQuery } from '@/services/getHierarchy'
 import useCreateContext from '../hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 

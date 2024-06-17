@@ -1,5 +1,5 @@
 import { Section } from '@ynput/ayon-react-components'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 import AddonFilters from './AddonFilters'
 import { useEffect, useMemo, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
@@ -9,19 +9,19 @@ import {
   useGetMarketAddonsQuery,
   useGetMarketInstallEventsQuery,
   useLazyGetMarketAddonQuery,
-} from '/src/services/market/getMarket'
+} from '@/services/market/getMarket'
 import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './AddonDetails/AddonDetails'
-import { useGetAddonListQuery } from '/src/services/addons/getAddons'
+import { useGetAddonListQuery } from '@/services/addons/getAddons'
 import { mergeAddonWithInstalled } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import styled from 'styled-components'
 import useInstall from './AddonDetails/useInstall'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
-import { useRestart } from '/src/context/restartContext'
+import { useRestart } from '@/context/restartContext'
 import { toast } from 'react-toastify'
-import EmptyPlaceholder from '/src/components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,

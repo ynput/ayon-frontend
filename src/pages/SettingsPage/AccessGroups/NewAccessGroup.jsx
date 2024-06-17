@@ -1,6 +1,13 @@
-import { FormLayout, FormRow, InputText, SaveButton, Spacer, Dialog } from '@ynput/ayon-react-components'
+import {
+  FormLayout,
+  FormRow,
+  InputText,
+  SaveButton,
+  Spacer,
+  Dialog,
+} from '@ynput/ayon-react-components'
 import { useMemo, useState } from 'react'
-import { useCreateAccessGroupMutation } from '/src/services/accessGroups/updateAccessGroups'
+import { useCreateAccessGroupMutation } from '@/services/accessGroups/updateAccessGroups'
 import { toast } from 'react-toastify'
 
 const NewAccessGroup = ({ onClose, accessGroupList }) => {

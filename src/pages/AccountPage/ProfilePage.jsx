@@ -19,10 +19,10 @@ import styled, { css } from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../../ayon'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 import { updateUserAttribs, updateUserPreferences } from '../../features/user'
 import { useDispatch } from 'react-redux'
-import { useNotifications } from '/src/context/notificationsContext'
+import { useNotifications } from '@/context/notificationsContext'
 
 const FormsStyled = styled.section`
   flex: 1;

@@ -3,23 +3,23 @@ import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
-import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
-import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
+import { useGetBundleListQuery } from '@/services/bundles/getBundles'
+import { useUpdateBundleMutation } from '@/services/bundles/updateBundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
-import { useGetInstallerListQuery } from '/src/services/installers'
+import { useGetInstallerListQuery } from '@/services/installers'
 import { useGetAddonListQuery } from '../../../services/addons/getAddons'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import AddonDialog from '../../../components/AddonDialog/AddonDialog'
-import { useGetAddonSettingsQuery } from '/src/services/addonSettings'
+import { useGetAddonSettingsQuery } from '@/services/addonSettings'
 import getLatestSemver from './getLatestSemver'
-import { ayonApi } from '/src/services/ayon'
+import { ayonApi } from '@/services/ayon'
 import { useDispatch, useSelector } from 'react-redux'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import useLocalStorage from '@/hooks/useLocalStorage'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSearchParams } from 'react-router-dom'
-import Shortcuts from '/src/containers/Shortcuts'
+import Shortcuts from '@/containers/Shortcuts'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -333,7 +333,11 @@ const Bundles = () => {
         shortcuts={shortcuts}
         deps={[selectedBundles, newBundleOpen, prodBundle, stageBundle]}
       />
-      <AddonDialog uploadOpen={uploadOpen} setUploadOpen={setUploadOpen} uploadHeader={uploadHeader} />
+      <AddonDialog
+        uploadOpen={uploadOpen}
+        setUploadOpen={setUploadOpen}
+        uploadHeader={uploadHeader}
+      />
       <main style={{ overflow: 'hidden' }}>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>

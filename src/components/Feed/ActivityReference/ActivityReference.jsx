@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import * as Styled from './ActivityReference.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
-import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
+import getEntityTypeIcon from '@/helpers/getEntityTypeIcon'
 
 // variants = filled, text
 

@@ -6,15 +6,15 @@ import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 import {
   useLazyGetAddonSettingsQuery,
   useLazyGetAddonSettingsOverridesQuery,
-} from '/src/services/addonSettings'
+} from '@/services/addonSettings'
 
 // TODO: move this to a common location
 import { getValueByPath } from '../AddonSettings/utils'
 import { isEqual } from 'lodash'
 
-import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
-import ProjectDropdown from '/src/containers/ProjectDropdown'
-import AddonDropdown from '/src/containers/CopySettings/AddonDropdown'
+import VariantSelector from '@/containers/AddonSettings/VariantSelector'
+import ProjectDropdown from '@/containers/ProjectDropdown'
+import AddonDropdown from '@/containers/CopySettings/AddonDropdown'
 
 import {
   NodePanelWrapper,
@@ -23,7 +23,7 @@ import {
   NodePanelDirectionSelector,
   ChangeValue,
   ChangesTable,
-} from '/src/containers/CopySettings/CopySettingsNode.styled'
+} from '@/containers/CopySettings/CopySettingsNode.styled'
 
 import {
   isSimple,
@@ -31,7 +31,7 @@ import {
   isListOfSimple,
   isListOfNamedDicts,
   isCompatibleStructure,
-} from '/src/helpers/objectComparison'
+} from '@/helpers/objectComparison'
 
 const FormattedPath = ({ value }) => {
   return <div className="path">{value.join(' / ')}</div>

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { TileStyled } from './ListStatsTile'
 import styled from 'styled-components'
 import ProgressBar from './ProgressBar'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 import { Icon } from '@ynput/ayon-react-components'
 
 const HeaderStyled = styled.div`

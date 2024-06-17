@@ -1,6 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Preview.styled'
-import VersionSelectorTool from '/src/components/VersionSelectorTool/VersionSelectorTool'
+import VersionSelectorTool from '@/components/VersionSelectorTool/VersionSelectorTool'
 
 const Preview = ({ selected = [], entityType, onClose }) => {
   // TODO @LudoHolbik: a new services file src/services/preview/getPreview.js should be created for these queries below

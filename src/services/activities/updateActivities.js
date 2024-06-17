@@ -1,6 +1,6 @@
 import { ayonApi } from '../ayon'
 import { toast } from 'react-toastify'
-import { filterActivityTypes } from '/src/features/dashboard'
+import { filterActivityTypes } from '@/features/dashboard'
 
 const updateCache = (activitiesDraft, patch = {}, isDelete) => {
   // find the index of the activity to update

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setMenuOpen } from '/src/features/context'
+import { setMenuOpen } from '@/features/context'
 import * as Styled from './Menu.styled'
 import { useNavigate } from 'react-router'
 import { createPortal } from 'react-dom'

@@ -1,9 +1,9 @@
 import Menu from '../MenuComponents/Menu'
-import YnputConnector from '/src/components/YnputCloud/YnputConnector'
-import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
+import YnputConnector from '@/components/YnputCloud/YnputConnector'
+import { useRestartOnBoardingMutation } from '@/services/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
-import ayonClient from '/src/ayon'
-import { useRestart } from '/src/context/restartContext'
+import ayonClient from '@/ayon'
+import { useRestart } from '@/context/restartContext'
 
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Button, FileUpload, SaveButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { ayonApi } from '/src/services/ayon'
+import { ayonApi } from '@/services/ayon'
 import { useDispatch, useSelector } from 'react-redux'
-import { useCreateInstallerMutation, useUploadInstallersMutation } from '/src/services/installers'
-import { useUploadDependencyPackagesMutation } from '/src/services/dependencyPackages'
-import { onUploadFinished, onUploadProgress } from '/src/features/context'
+import { useCreateInstallerMutation, useUploadInstallersMutation } from '@/services/installers'
+import { useUploadDependencyPackagesMutation } from '@/services/dependencyPackages'
+import { onUploadFinished, onUploadProgress } from '@/features/context'
 import axios from 'axios'
 
 const StyledFooter = styled.div`

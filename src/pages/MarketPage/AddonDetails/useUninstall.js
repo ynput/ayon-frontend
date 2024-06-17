@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux'
-import { onSelectedAddons } from '/src/features/addonsManager'
+import { onSelectedAddons } from '@/features/addonsManager'
 import { useNavigate } from 'react-router'
 
 const useUninstall = (name) => {

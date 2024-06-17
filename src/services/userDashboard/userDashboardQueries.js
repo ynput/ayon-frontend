@@ -1,6 +1,6 @@
 // data for entity kanban card and details panel
 
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 
 // the extra attribs are for the entity details panel only
 const TASK_FRAGMENT = () => `

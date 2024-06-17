@@ -1,9 +1,9 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { useGetProjectDashboardActivityQuery } from '/src/services/getProjectDashboard'
+import { useGetProjectDashboardActivityQuery } from '@/services/getProjectDashboard'
 import { EntityCard } from '@ynput/ayon-react-components'
-import { productTypes } from '/src/features/project'
+import { productTypes } from '@/features/project'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */

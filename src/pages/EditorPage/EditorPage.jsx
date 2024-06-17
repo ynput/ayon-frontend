@@ -14,21 +14,21 @@ import {
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import sortByKey from '/src/helpers/sortByKey'
+import sortByKey from '@/helpers/sortByKey'
 
-import { editorSelectionChanged, setUri, setExpandedFolders } from '/src/features/context'
+import { editorSelectionChanged, setUri, setExpandedFolders } from '@/features/context'
 
 import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
-import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useGetHierarchyQuery } from '/src/services/getHierarchy'
-import SearchDropdown from '/src/components/SearchDropdown'
-import useColumnResize from '/src/hooks/useColumnResize'
+import useLocalStorage from '@/hooks/useLocalStorage'
+import { useGetHierarchyQuery } from '@/services/getHierarchy'
+import SearchDropdown from '@/components/SearchDropdown'
+import useColumnResize from '@/hooks/useColumnResize'
 import { capitalize, debounce, isEmpty } from 'lodash'
-import { useLazyGetExpandedBranchQuery } from '/src/services/editor/getEditor'
-import { useUpdateEditorMutation } from '/src/services/editor/updateEditor'
-import usePubSub from '/src/hooks/usePubSub'
-import { useLazyGetEntityQuery } from '/src/services/entity/getEntity'
+import { useLazyGetExpandedBranchQuery } from '@/services/editor/getEditor'
+import { useUpdateEditorMutation } from '@/services/editor/updateEditor'
+import usePubSub from '@/hooks/usePubSub'
+import { useLazyGetEntityQuery } from '@/services/entity/getEntity'
 import {
   newNodesAdded,
   newProject,
@@ -37,22 +37,22 @@ import {
   onNewChanges,
   onRevert,
   updateNodes,
-} from '/src/features/editor'
+} from '@/features/editor'
 import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
-import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
+import { useGetAttributesQuery } from '@/services/attributes/getAttributes'
 import NewEntity from './NewEntity'
-import checkName from '/src/helpers/checkName'
-import useCreateContext from '/src/hooks/useCreateContext'
-import { ayonApi } from '/src/services/ayon'
+import checkName from '@/helpers/checkName'
+import useCreateContext from '@/hooks/useCreateContext'
+import { ayonApi } from '@/services/ayon'
 import { confirmDialog } from 'primereact/confirmdialog'
-import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
+import BuildHierarchyButton from '@/containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
-import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import confirmDelete from '/src/helpers/confirmDelete'
-import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
-import Shortcuts from '/src/containers/Shortcuts'
+import { useGetUsersAssigneeQuery } from '@/services/user/getUsers'
+import confirmDelete from '@/helpers/confirmDelete'
+import { useGetProjectAnatomyQuery } from '@/services/project/getProject'
+import Shortcuts from '@/containers/Shortcuts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)

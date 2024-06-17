@@ -2,12 +2,12 @@ import { Panel } from '@ynput/ayon-react-components'
 import React, { useEffect } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useDispatch, useSelector } from 'react-redux'
-import Feed from '/src/containers/Feed/Feed'
-import { useGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
+import Feed from '@/containers/Feed/Feed'
+import { useGetDashboardEntitiesDetailsQuery } from '@/services/userDashboard/getUserDashboard'
 import TaskAttributes from '../../pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
-import { transformEntityData } from '/src/services/userDashboard/userDashboardHelpers'
+import { transformEntityData } from '@/services/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
-import { closeSlideOut, updateDetailsPanelTab } from '/src/features/details'
+import { closeSlideOut, updateDetailsPanelTab } from '@/features/details'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 

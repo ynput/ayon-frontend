@@ -3,7 +3,7 @@ import { Navigate, useParams } from 'react-router-dom'
 import { useGetSettingsAddonsQuery } from '../../services/addons/getAddons'
 
 import SettingsAddon from './SettingsAddon'
-import AppNavLinks from '/src/containers/header/AppNavLinks'
+import AppNavLinks from '@/containers/header/AppNavLinks'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))

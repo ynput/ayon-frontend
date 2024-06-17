@@ -1,7 +1,7 @@
 import * as Styled from './EntityTooltip.styled'
-import { productTypes } from '/src/features/project'
-import { getThumbnailUrl } from '/src/pages/UserDashboardPage/UserDashboardTasks/UserTasksContainer'
-import { useGetEntityTooltipQuery } from '/src/services/activities/getActivities'
+import { productTypes } from '@/features/project'
+import { getThumbnailUrl } from '@/pages/UserDashboardPage/UserDashboardTasks/UserTasksContainer'
+import { useGetEntityTooltipQuery } from '@/services/activities/getActivities'
 
 const EntityTooltip = ({ type, id, pos: { left, top } = {}, projectName, projectInfo = {} }) => {
   const skip = !projectName || !type || !id

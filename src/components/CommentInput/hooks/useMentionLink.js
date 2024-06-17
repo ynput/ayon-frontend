@@ -1,7 +1,7 @@
 import { Quill } from 'react-quill-ayon'
-import useReferenceTooltip from '/src/containers/Feed/hooks/useReferenceTooltip'
+import useReferenceTooltip from '@/containers/Feed/hooks/useReferenceTooltip'
 import { useDispatch } from 'react-redux'
-import { openSlideOut } from '/src/features/details'
+import { openSlideOut } from '@/features/details'
 const Inline = Quill.import('blots/inline')
 
 // custom mention links

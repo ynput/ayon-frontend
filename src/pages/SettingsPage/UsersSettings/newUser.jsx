@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
-import { useAddUserMutation } from '/src/services/user/updateUser'
-import ayonClient from '/src/ayon'
+import { useAddUserMutation } from '@/services/user/updateUser'
+import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 

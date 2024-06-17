@@ -1,7 +1,7 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@/components/UserImage'
 import styled from 'styled-components'
 
 const StyledProfileRow = styled.div`
@@ -21,15 +21,22 @@ const FullnameImage = ({ rowData }) => {
   const { fullName } = rowData.attrib || false
   return (
     <StyledProfileRow>
-      <StyledUserImage $isMissing={isMissing} name={name} size={25} highlight={self}/>
+      <StyledUserImage $isMissing={isMissing} name={name} size={25} highlight={self} />
       <span style={{ color: isMissing ? 'var(--color-hl-error)' : 'inherit' }}>
         {fullName || name}
       </span>
     </StyledProfileRow>
   )
-  }
+}
 
-const UsersListTeamsSmall = ({ handleContext, userList, isLoading, onSelectionChange, onContextSelectionChange, selection }) => {
+const UsersListTeamsSmall = ({
+  handleContext,
+  userList,
+  isLoading,
+  onSelectionChange,
+  onContextSelectionChange,
+  selection,
+}) => {
   return (
     <Section>
       <TablePanel onContextMenu={handleContext}>
@@ -48,13 +55,13 @@ const UsersListTeamsSmall = ({ handleContext, userList, isLoading, onSelectionCh
           responsive="true"
           autoLayout="true"
           tableStyle={{
-              width: '100%',
+            width: '100%',
           }}
           groupRowsBy={'group'}
           rowGroupMode="subheader"
           rowGroupHeaderTemplate={(data) => {
-              return <div>{data.group}</div>
-        }}
+            return <div>{data.group}</div>
+          }}
         >
           <Column
             field="attrib.fullName"

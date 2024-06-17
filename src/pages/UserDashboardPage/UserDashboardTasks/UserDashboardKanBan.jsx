@@ -11,13 +11,13 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
+import { useUpdateEntitiesMutation } from '@/services/entity/updateEntity'
 import { toast } from 'react-toastify'
 
 import ColumnsWrapper from './ColumnsWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar/DashboardTasksToolbar'
-import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
-import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
+import { useGetKanBanUsersQuery } from '@/services/userDashboard/getUserDashboard'
+import { onCollapsedColumnsChanged, onTaskSelected } from '@/features/dashboard'
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import UserDashboardList from './UserDashboardList/UserDashboardList'

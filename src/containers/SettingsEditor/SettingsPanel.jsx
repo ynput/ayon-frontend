@@ -1,5 +1,5 @@
 //import { Panel } from 'primereact/panel'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import useLocalStorage from '@/hooks/useLocalStorage'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 

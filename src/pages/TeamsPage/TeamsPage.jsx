@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetTeamsQuery } from '../../services/team/getTeams'
-import TeamList from '/src/containers/TeamList'
+import TeamList from '@/containers/TeamList'
 import { ArrayParam, useQueryParam } from 'use-query-params'
 import {
   Button,
@@ -13,16 +13,16 @@ import {
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
-import { useGetUsersQuery } from '/src/services/user/getUsers'
+import { useGetUsersQuery } from '@/services/user/getUsers'
 import TeamUsersDetails from './TeamUsersDetails'
 import TeamDetails from './TeamDetails'
-import { useDeleteTeamMutation, useUpdateTeamsMutation } from '/src/services/team/updateTeams'
+import { useDeleteTeamMutation, useUpdateTeamsMutation } from '@/services/team/updateTeams'
 import { toast } from 'react-toastify'
 import CreateNewTeam from './CreateNewTeam/CreateNewTeam'
 import styled from 'styled-components'
-import useSearchFilter from '/src/hooks/useSearchFilter'
+import useSearchFilter from '@/hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
-import confirmDelete from '/src/helpers/confirmDelete'
+import confirmDelete from '@/helpers/confirmDelete'
 
 const SectionStyled = styled(Section)`
   align-items: start;

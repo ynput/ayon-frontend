@@ -1,4 +1,4 @@
-import Menu from '/src/components/Menu/MenuComponents/Menu'
+import Menu from '@/components/Menu/MenuComponents/Menu'
 
 const ActivityCommentMenu = ({ onDelete }) => {
   const items = []

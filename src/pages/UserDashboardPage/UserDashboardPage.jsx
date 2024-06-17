@@ -1,21 +1,21 @@
 import React, { useMemo, useState } from 'react'
-import AppNavLinks from '/src/containers/header/AppNavLinks'
+import AppNavLinks from '@/containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
-import ProjectList from '/src/containers/projectList'
+import ProjectList from '@/containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
-import { onProjectSelected } from '/src/features/dashboard'
-import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
-import { useListProjectsQuery } from '/src/services/project/getProject'
+import { onProjectSelected } from '@/features/dashboard'
+import { useGetProjectsInfoQuery } from '@/services/userDashboard/getUserDashboard'
+import { useListProjectsQuery } from '@/services/project/getProject'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 import {
   useDeleteProjectMutation,
   useUpdateProjectMutation,
-} from '/src/services/project/updateProject'
-import confirmDelete from '/src/helpers/confirmDelete'
+} from '@/services/project/updateProject'
+import confirmDelete from '@/helpers/confirmDelete'
 
 const UserDashboardPage = () => {
   let { module } = useParams()

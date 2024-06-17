@@ -2,8 +2,8 @@ import React from 'react'
 import { Chart } from 'primereact/chart'
 import styled from 'styled-components'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import { useGetProjectDashboardQuery } from '@/services/getProjectDashboard'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 
 const ChartStyled = styled(Chart)`
   width: 100%;

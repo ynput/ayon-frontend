@@ -6,8 +6,8 @@ import {
   onTasksFilterChanged,
   onTasksGroupByChanged,
   onTasksSortByChanged,
-} from '/src/features/dashboard'
-import MeOrUserSwitch from '/src/components/MeOrUserSwitch/MeOrUserSwitch'
+} from '@/features/dashboard'
+import MeOrUserSwitch from '@/components/MeOrUserSwitch/MeOrUserSwitch'
 import * as Styled from './DashboardTasksToolbar.styled'
 import sortByOptions from './KanBanSortByOptions'
 

@@ -5,8 +5,8 @@ import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import { useURIContext } from '/src/context/uriContext'
+import copyToClipboard from '@/helpers/copyToClipboard'
+import { useURIContext } from '@/context/uriContext'
 
 const uri2crumbs = (uri = '', pathname) => {
   // parse uri to path and query params

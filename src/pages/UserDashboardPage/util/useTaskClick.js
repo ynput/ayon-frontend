@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { onTaskSelected } from '/src/features/dashboard'
+import { onTaskSelected } from '@/features/dashboard'
 
 export const useTaskClick = (dispatch) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)

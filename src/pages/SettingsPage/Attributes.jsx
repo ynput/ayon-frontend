@@ -12,10 +12,10 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import AttributeEditor from '../../containers/attributes/attributeEditor'
-import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
-import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttributes'
-import useSearchFilter from '/src/hooks/useSearchFilter'
-import useCreateContext from '/src/hooks/useCreateContext'
+import { useGetAttributesQuery } from '@/services/attributes/getAttributes'
+import { useUpdateAttributesMutation } from '@/services/attributes/updateAttributes'
+import useSearchFilter from '@/hooks/useSearchFilter'
+import useCreateContext from '@/hooks/useCreateContext'
 import { isEqual } from 'lodash'
 
 const Attributes = () => {

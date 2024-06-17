@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { hideRefTooltip, showRefTooltip } from '/src/features/details'
+import { hideRefTooltip, showRefTooltip } from '@/features/details'
 
 const useReferenceTooltip = ({ dispatch }) => {
   const refTooltip = useSelector((state) => state.details.refTooltip)

@@ -8,7 +8,7 @@ import {
   isSameWeek,
   isSameMinute,
 } from 'date-fns'
-import Typography from '/src/theme/typography.module.css'
+import Typography from '@/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
 import styled from 'styled-components'
 

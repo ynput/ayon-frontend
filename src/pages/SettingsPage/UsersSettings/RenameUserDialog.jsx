@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { InputText, FormLayout, FormRow, Dialog, SaveButton } from '@ynput/ayon-react-components'
-import { useUpdateUserNameMutation } from '/src/services/user/updateUser'
+import { useUpdateUserNameMutation } from '@/services/user/updateUser'
 
 const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
   const [newName, setNewName] = useState('')

@@ -1,6 +1,6 @@
 import { ayonApi } from '../ayon'
 import queryUpload from '../queryUpload'
-import PubSub from '/src/pubsub'
+import PubSub from '@/pubsub'
 
 const EVENTS_QUERY = `
 query InstallEvents($ids: [String!]!) {

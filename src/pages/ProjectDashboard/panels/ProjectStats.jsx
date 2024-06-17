@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ListStatsTile from './ListStatsTile'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
-import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
+import copyToClipboard from '@/helpers/copyToClipboard'
+import { useGetProjectDashboardQuery } from '@/services/getProjectDashboard'
+import getEntityTypeIcon from '@/helpers/getEntityTypeIcon'
 
 const ProjectStats = ({ projectName, share, position }) => {
   const {

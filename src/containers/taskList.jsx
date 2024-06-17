@@ -6,10 +6,10 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import EntityDetail from './DetailsDialog'
-import { CellWithIcon } from '/src/components/icons'
-import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '/src/features/context'
+import { CellWithIcon } from '@/components/icons'
+import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@/features/context'
 import { toast } from 'react-toastify'
-import { useGetTasksQuery } from '/src/services/getTasks'
+import { useGetTasksQuery } from '@/services/getTasks'
 import useCreateContext from '../hooks/useCreateContext'
 import NoEntityFound from '../components/NoEntityFound'
 

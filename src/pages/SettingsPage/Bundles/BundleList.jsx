@@ -1,15 +1,12 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { Badge, BadgeWrapper } from '/src/components/Badge'
+import { Badge, BadgeWrapper } from '@/components/Badge'
 import { TablePanel } from '@ynput/ayon-react-components'
-import useCreateContext from '/src/hooks/useCreateContext'
-import {
-  useDeleteBundleMutation,
-  useUpdateBundleMutation,
-} from '/src/services/bundles/updateBundles'
+import useCreateContext from '@/hooks/useCreateContext'
+import { useDeleteBundleMutation, useUpdateBundleMutation } from '@/services/bundles/updateBundles'
 import { useMemo } from 'react'
-import confirmDelete from '/src/helpers/confirmDelete'
+import confirmDelete from '@/helpers/confirmDelete'
 import { toast } from 'react-toastify'
 
 const BundleList = ({

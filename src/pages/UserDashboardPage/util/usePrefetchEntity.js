@@ -1,9 +1,9 @@
 import { useSelector } from 'react-redux'
-import { onPrefetchIds } from '/src/features/dashboard'
-import { useLazyGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
-import { useLazyGetActivitiesQuery } from '/src/services/activities/getActivities'
+import { onPrefetchIds } from '@/features/dashboard'
+import { useLazyGetDashboardEntitiesDetailsQuery } from '@/services/userDashboard/getUserDashboard'
+import { useLazyGetActivitiesQuery } from '@/services/activities/getActivities'
 import { throttle } from 'lodash'
-import { activitiesLast } from '/src/containers/Feed/Feed'
+import { activitiesLast } from '@/containers/Feed/Feed'
 
 // prefetch the entity details and activities
 export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {

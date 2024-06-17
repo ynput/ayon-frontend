@@ -1,5 +1,5 @@
 import { ayonApi } from '../ayon'
-import PubSub from '/src/pubsub'
+import PubSub from '@/pubsub'
 // import { lt } from 'semver'
 
 const EVENTS_QUERY = `

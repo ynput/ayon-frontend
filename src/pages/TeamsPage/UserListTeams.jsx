@@ -1,12 +1,12 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@/components/UserImage'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
 import addRemoveMembers from './addRemoveMembers'
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@/hooks/useCreateContext'
 import UsersListTeamsSmall from './UsersListTeamsSmall'
 
 const StyledProfileRow = styled.div`
@@ -55,7 +55,7 @@ const UserListTeams = ({
   onShowAllUsers,
   teams = [],
   onUpdateTeams,
-  isFullSize = true
+  isFullSize = true,
 }) => {
   // Selection
   const selection = useMemo(
@@ -181,17 +181,18 @@ const UserListTeams = ({
       ),
     )
   }
-  
-  if (!isFullSize) return (
-    <UsersListTeamsSmall
-      handleContext={handleContext}
-      userList={userList}
-      isLoading={isLoading}
-      onSelectionChange={onSelectionChange}
-      onContextSelectionChange={onContextSelectionChange}
-      selection={selection}
-    />
-  )
+
+  if (!isFullSize)
+    return (
+      <UsersListTeamsSmall
+        handleContext={handleContext}
+        userList={userList}
+        isLoading={isLoading}
+        onSelectionChange={onSelectionChange}
+        onContextSelectionChange={onContextSelectionChange}
+        selection={selection}
+      />
+    )
   return (
     <Section
       style={{

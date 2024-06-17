@@ -2,12 +2,12 @@ import * as Styled from './UserDashboardList.styled'
 import ListGroup from '../ListGroup/ListGroup'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
+import { onCollapsedColumnsChanged, onTaskSelected } from '@/features/dashboard'
 import { getFakeTasks, usePrefetchEntity, useTaskClick } from '../../util'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
+import { useUpdateEntitiesMutation } from '@/services/entity/updateEntity'
 import { toast } from 'react-toastify'
-import getPreviousTagElement from '/src/helpers/getPreviousTagElement'
-import Shortcuts from '/src/containers/Shortcuts'
+import getPreviousTagElement from '@/helpers/getPreviousTagElement'
+import Shortcuts from '@/containers/Shortcuts'
 
 const UserDashboardList = ({
   groupedTasks = {},

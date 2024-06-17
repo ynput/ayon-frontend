@@ -1,5 +1,5 @@
 import React from 'react'
-import Typography from '/src/theme/typography.module.css'
+import Typography from '@/theme/typography.module.css'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 

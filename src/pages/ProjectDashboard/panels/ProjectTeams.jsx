@@ -1,13 +1,13 @@
 import React from 'react'
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
-import UserTile from '/src/pages/SettingsPage/UsersSettings/UserTile'
+import UserTile from '@/pages/SettingsPage/UsersSettings/UserTile'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetTeamsQuery } from '../../../services/team/getTeams'
 import { Button } from '@ynput/ayon-react-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 import styled, { css } from 'styled-components'
-import TeamMembersStacked from '/src/components/TeamMembersStacked/TeamMembersStacked'
+import TeamMembersStacked from '@/components/TeamMembersStacked/TeamMembersStacked'
 
 const subTitle = (members, leaders) => {
   let mt = ''

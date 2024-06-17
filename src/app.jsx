@@ -1,4 +1,4 @@
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useEffect, useState, Suspense, lazy, useMemo } from 'react'

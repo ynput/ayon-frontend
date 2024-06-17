@@ -1,6 +1,6 @@
 import React from 'react'
 import styled, { css } from 'styled-components'
-import Thumbnail from '/src/containers/thumbnail'
+import Thumbnail from '@/containers/thumbnail'
 import { useSelector } from 'react-redux'
 
 const StackedStyled = styled.div`

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { useDispatch, useSelector } from 'react-redux'
-import { setExpandedProducts } from '/src/features/context'
+import { setExpandedProducts } from '@/features/context'
 
 const ProductsList = ({
   data,

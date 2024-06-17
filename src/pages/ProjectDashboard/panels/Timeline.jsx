@@ -2,11 +2,11 @@ import React from 'react'
 import { format, differenceInDays } from 'date-fns'
 
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectAttribsQuery } from '/src/services/project/getProject'
+import { useGetProjectAttribsQuery } from '@/services/project/getProject'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
 import ProgressBar from './ProgressBar'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 
 const TailsStyled = styled.div`
   border-radius: var(--panel-border-radius);

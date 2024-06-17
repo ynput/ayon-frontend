@@ -2,15 +2,15 @@ import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-comp
 import {
   useGetEventsWithLogsQuery,
   useLazyGetEventsWithLogsQuery,
-} from '/src/services/events/getEvents'
+} from '@/services/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
-import { ayonApi } from '/src/services/ayon'
+import { ayonApi } from '@/services/ayon'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import EventList from './EventList'
-import useSearchFilter from '/src/hooks/useSearchFilter'
+import useSearchFilter from '@/hooks/useSearchFilter'
 import { toast } from 'react-toastify'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import useLocalStorage from '@/hooks/useLocalStorage'
 import EventOverview from './EventOverview'
 import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'

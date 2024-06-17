@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import { usePaste } from '/src/context/pasteContext'
+import copyToClipboard from '@/helpers/copyToClipboard'
+import { usePaste } from '@/context/pasteContext'
 
 import { InputText } from 'primereact/inputtext'
 
@@ -17,16 +17,16 @@ import {
   Dialog,
 } from '@ynput/ayon-react-components'
 
-import { useGetAnatomyPresetsQuery } from '/src/services/anatomy/getAnatomy'
+import { useGetAnatomyPresetsQuery } from '@/services/anatomy/getAnatomy'
 import PresetList from './PresetList'
-import AnatomyEditor from '/src/containers/AnatomyEditor'
+import AnatomyEditor from '@/containers/AnatomyEditor'
 import {
   useDeletePresetMutation,
   useUpdatePresetMutation,
   useUpdatePrimaryPresetMutation,
   useUnsetPrimaryPresetMutation,
-} from '/src/services/anatomy/updateAnatomy'
-import confirmDelete from '/src/helpers/confirmDelete'
+} from '@/services/anatomy/updateAnatomy'
+import confirmDelete from '@/helpers/confirmDelete'
 
 const AnatomyPresets = () => {
   const [formData, setFormData] = useState(null)

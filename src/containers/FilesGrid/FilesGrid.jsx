@@ -1,6 +1,6 @@
 import * as Styled from './FilesGrid.styled'
 import { classNames } from 'primereact/utils'
-import FileUploadCard from '/src/components/FileUploadCard/FileUploadCard'
+import FileUploadCard from '@/components/FileUploadCard/FileUploadCard'
 
 const FilesGrid = ({
   files = [],

@@ -9,20 +9,20 @@ import {
   useGetInboxMessagesQuery,
   useLazyGetInboxMessagesQuery,
 } from '../../../services/inbox/getInbox'
-import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
-import Shortcuts from '/src/containers/Shortcuts'
-import { clearHighlights, highlightActivity } from '/src/features/details'
+import { useGetProjectsInfoQuery } from '@/services/userDashboard/getUserDashboard'
+import Shortcuts from '@/containers/Shortcuts'
+import { clearHighlights, highlightActivity } from '@/features/details'
 import useGroupMessages from '../hooks/useGroupMessages'
 import { Icon, Spacer } from '@ynput/ayon-react-components'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@/hooks/useCreateContext'
 import { InView } from 'react-intersection-observer'
 import useInboxRefresh from '../hooks/useInboxRefresh'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
-import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
-import Typography from '/src/theme/typography.module.css'
-import EnableNotifications from '/src/components/EnableNotifications'
+import ShortcutWidget from '@/components/ShortcutWidget/ShortcutWidget'
+import Typography from '@/theme/typography.module.css'
+import EnableNotifications from '@/components/EnableNotifications'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import AttributeTable from '/src/containers/attributeTable'
+import AttributeTable from '@/containers/attributeTable'
 import formatAttributesData from './formatAttributesData'
 import { Section } from '@ynput/ayon-react-components'
 

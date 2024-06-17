@@ -3,8 +3,8 @@ import { useSelector } from 'react-redux'
 import { Section, Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
-import Hierarchy from '/src/containers/hierarchy'
-import TaskList from '/src/containers/taskList'
+import Hierarchy from '@/containers/hierarchy'
+import TaskList from '@/containers/taskList'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -43,7 +43,13 @@ const TaskPicker = ({ callback, multiple }) => {
   }, [errorMessage, focusedTasks])
 
   return (
-    <Dialog header="Select task" size="lg" footer={footer} isOpen={true} onClose={() => callback(null)}>
+    <Dialog
+      header="Select task"
+      size="lg"
+      footer={footer}
+      isOpen={true}
+      onClose={() => callback(null)}
+    >
       <div style={{ display: 'flex', flexDirection: 'row', minHeight: 500, gap: 12 }}>
         <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
         <TaskList style={{ flex: 0.75, minWidth: 250, maxWidth: 500 }} />

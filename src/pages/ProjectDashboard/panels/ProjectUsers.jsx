@@ -1,8 +1,8 @@
 import React from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
+import { useGetProjectDashboardQuery } from '@/services/getProjectDashboard'
 import styled from 'styled-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 
 const RowStyled = styled.div`
   padding-top: 8px;

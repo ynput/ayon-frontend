@@ -3,13 +3,13 @@ import { Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 
 import { Spacer, InputText, Toolbar, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
-import SettingsEditor from '/src/containers/SettingsEditor'
+import SettingsEditor from '@/containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import {
   useGetAnatomyPresetQuery,
   useGetAnatomySchemaQuery,
 } from '../../../services/anatomy/getAnatomy'
-import { useCreateProjectMutation } from '/src/services/project/updateProject'
+import { useCreateProjectMutation } from '@/services/project/updateProject'
 
 // allow only alphanumeric and underscorer,
 // while underscore cannot be the first or last character

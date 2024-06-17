@@ -1,11 +1,10 @@
 import { useRef, useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@/components/UserImage'
 import * as Styled from './Avatar.styled'
 
 const Avatar = ({ user }) => {
-
   const fileInput = useRef(null)
   const [imageKey, setImageKey] = useState(null)
 
@@ -36,11 +35,18 @@ const Avatar = ({ user }) => {
 
   return (
     <Styled.Avatar>
-        <input type="file" ref={fileInput} style={{ display: 'none' }}  multiple={false} onChange={handleInputChange} accept=".png, .jpeg, .jpg" />
-        <Styled.ImageIcon>
-          <Styled.AvatarIcon onClick={() => fileInput.current.click()} icon='edit' />
-          <UserImage size={100} name={user.name} imageKey={imageKey} />
-        </Styled.ImageIcon>
+      <input
+        type="file"
+        ref={fileInput}
+        style={{ display: 'none' }}
+        multiple={false}
+        onChange={handleInputChange}
+        accept=".png, .jpeg, .jpg"
+      />
+      <Styled.ImageIcon>
+        <Styled.AvatarIcon onClick={() => fileInput.current.click()} icon="edit" />
+        <UserImage size={100} name={user.name} imageKey={imageKey} />
+      </Styled.ImageIcon>
     </Styled.Avatar>
   )
 }

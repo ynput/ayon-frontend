@@ -7,10 +7,10 @@ import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
 import { classNames } from 'primereact/utils'
 import { useSelector } from 'react-redux'
-import CommentInput from '/src/components/CommentInput/CommentInput'
+import CommentInput from '@/components/CommentInput/CommentInput'
 import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
-import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
-import useReferenceTooltip from '/src/containers/Feed/hooks/useReferenceTooltip'
+import FilesGrid from '@/containers/FilesGrid/FilesGrid'
+import useReferenceTooltip from '@/containers/Feed/hooks/useReferenceTooltip'
 import { getTextRefs } from '../../CommentInput/quillToMarkdown'
 
 const ActivityComment = ({

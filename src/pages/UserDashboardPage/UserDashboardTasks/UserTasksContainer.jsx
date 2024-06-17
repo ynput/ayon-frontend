@@ -2,16 +2,16 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   useGetKanBanQuery,
   useGetKanBanUsersQuery,
-} from '/src/services/userDashboard/getUserDashboard'
+} from '@/services/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '/src/features/dashboard'
+import { onAssigneesChanged } from '@/features/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanel from '../../../containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
 import { Section } from '@ynput/ayon-react-components'
-import { setUri } from '/src/features/context'
+import { setUri } from '@/features/context'
 import DetailsPanelSlideOut from '../../../containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {

@@ -1,14 +1,14 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import DetailHeader from '../DetailHeader'
-import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
-import NameField from '/src/pages/EditorPage/fields/NameField'
+import StackedThumbnails from '@/pages/EditorPage/StackedThumbnails'
+import NameField from '@/pages/EditorPage/fields/NameField'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { OverflowField } from '@ynput/ayon-react-components'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
-import { productTypes } from '/src/features/project'
+import copyToClipboard from '@/helpers/copyToClipboard'
+import getShimmerStyles from '@/styles/getShimmerStyles'
+import { productTypes } from '@/features/project'
 
 const ToolsStyled = styled.div`
   display: flex;

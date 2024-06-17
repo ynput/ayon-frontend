@@ -1,6 +1,6 @@
 import { Dialog } from '@ynput/ayon-react-components'
 import { useDispatch, useSelector } from 'react-redux'
-import { closePreview, openPreview } from '/src/features/preview'
+import { closePreview, openPreview } from '@/features/preview'
 import { useSearchParams } from 'react-router-dom'
 import { useEffect } from 'react'
 import Preview from './Preview'

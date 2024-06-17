@@ -2,7 +2,7 @@ import { isEqual } from 'lodash'
 import { ayonApi } from '../ayon'
 import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
 import { transformActivityData, transformTooltipData } from './activitiesHelpers'
-// import PubSub from '/src/pubsub'
+// import PubSub from '@/pubsub'
 import { ACTIVITIES, ENTITY_TOOLTIP } from './activityQueries'
 
 const getActivities = ayonApi.injectEndpoints({
