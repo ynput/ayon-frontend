@@ -58,6 +58,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [originalData, setOriginalData] = useState({})
   const [localData, setLocalData] = useState({})
   const [changedKeys, setChangedKeys] = useState({})
+  const [unpinnedKeys, setUnpinnedKeys] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
   const [variant, setVariant] = useState('production')
@@ -166,6 +167,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       const payloadData = {
         ...localData[key],
         __pinned_fields__: changedKeys[key],
+        __unpinned_fields__: unpinnedKeys[key] || [],
       }
 
       try {
@@ -269,6 +271,34 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onRemoveOverride = async (addon, siteId, path) => {
     // Remove a single override for this addon (within current project and variant)
     // path is an array of strings
+    
+    // TODO: Use this to staged unpin. 
+    // It is not used now because we don't have an information about the original value
+    //
+    // const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`
+    //
+    // setChangedKeys((changedKeys) => {
+    //   const keyData = changedKeys[key] || []
+    //   
+    //   const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, path))
+    //   if (index === -1) {
+    //     keyData.push(path)
+    //   }
+    //   return { ...changedKeys, [key]: keyData }
+    // })
+    //
+    // setUnpinnedKeys((unpinnedKeys) => {
+    //   const keyData = unpinnedKeys[key] || []
+    //
+    //   const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, path))
+    //   if (index === -1) {
+    //     keyData.push(path)
+    //   }
+    //
+    //   return { ...unpinnedKeys, [key]: keyData }
+    // })
+    //
+
     const message = (
       <>
         <p>This action will instanlty remove the selected override.</p>
@@ -507,8 +537,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         disabled={canCommit}
         localData={localData}
         changedKeys={changedKeys}
+        unpinnedKeys={unpinnedKeys}
         setLocalData={setLocalData}
         setChangedKeys={setChangedKeys}
+        setUnpinnedKeys={setUnpinnedKeys}
         setSelectedAddons={setSelectedAddons}
         originalData={originalData}
         setOriginalData={setOriginalData}
@@ -598,7 +630,9 @@ const AddonSettings = ({ projectName, showSites = false }) => {
               localData={localData}
               setLocalData={setLocalData}
               changedKeys={changedKeys}
+              unpinnedKeys={unpinnedKeys}
               setChangedKeys={setChangedKeys}
+              setUnpinnedKeys={setUnpinnedKeys}
               projectName={projectName}
               onClose={() => setShowCopySettings(false)}
             />
@@ -702,7 +736,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel size={20}>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable changes={changedKeys} onRevert={onRevertChange} />
+          <SettingsChangesTable changes={changedKeys} unpins={unpinnedKeys} onRevert={onRevertChange} />
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
             <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>
