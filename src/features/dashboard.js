@@ -45,9 +45,9 @@ const dashboardSlice = createSlice({
     onTasksFilterChanged: (state, { payload = '' }) => {
       state.tasks.filter = payload
     },
-    onAssigneesChanged: (state, { payload: { assignees = [], assigneesIsMe = false, filter } }) => {
+    onAssigneesChanged: (state, { payload: { assignees = [], filter } }) => {
       state.tasks.assignees = assignees
-      state.tasks.assigneesIsMe = assigneesIsMe
+      state.tasks.assigneesIsMe = filter === 'me'
       state.tasks.assigneesFilter = filter
     },
     onCollapsedColumnsChanged: (state, { payload }) => {
@@ -65,7 +65,7 @@ const dashboardSlice = createSlice({
       state.tasks.filter = ''
       state.tasks.assignees = []
       state.tasks.assigneesIsMe = true
-      state.tasks.filter = 'me'
+      state.tasks.assigneesFilter = 'me'
       state.details.filter = 'activity'
       state.tasks.collapsedColumns = []
     },
@@ -96,7 +96,7 @@ export const dashboardLocalItems = {
   'dashboard/onAssigneesChanged': [
     { key: 'dashboard-tasks-assignees', payload: 'assignees' },
     { key: 'dashboard-tasks-assigneesIsMe', payload: 'assigneesIsMe' },
-    { key: 'dashboard-tasks-filter', payload: 'filter' },
+    { key: 'dashboard-tasks-assigneesFilter', payload: 'filter' },
   ],
   'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
   'dashboard/onCollapsedColumnsChanged': [{ key: 'dashboard-tasks-collapsedColumns' }],

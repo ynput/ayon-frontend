@@ -1,13 +1,12 @@
 import * as Styled from './MeOrUserSwitch.styled'
 import { AssigneeSelect, Button } from '@ynput/ayon-react-components'
-import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
 
-const MeOrUserSwitch = ({ value = [], onChange, options = [], isMe, isAll, ...props }) => {
+const MeOrUserSwitch = ({ value = [], onChange, options = [], filter, ...props }) => {
   // this is so that the first click on the dropdown will set isMe false but not open the dropdown
   // a second click will open the dropdown
   // or if the there are no assignees selected already
   const handleDropdownClick = () => {
-    onChange('users', value)
+    onChange('users')
   }
 
   return (
@@ -15,30 +14,30 @@ const MeOrUserSwitch = ({ value = [], onChange, options = [], isMe, isAll, ...pr
       <Button
         label="Me"
         icon="person"
-        className="button me"
+        className="switch-button me"
         variant="surface"
-        selected={isMe}
-        onClick={onChange('me')}
+        selected={filter === 'me'}
+        onClick={() => onChange('me')}
         data-tooltip="View my tasks"
       />
 
-      <Button
+      {/* <Button
         label="All"
-        className="button all"
-        icon={getEntityTypeIcon('task')}
+        className="switch-button all"
+        icon={'checklist'}
         data-tooltip="View all tasks"
-        selected={isAll}
+        selected={filter === 'all'}
         onClick={() => onChange('all')} // empty array means all users
-      />
+      /> */}
 
       <AssigneeSelect
         value={value}
         onChange={(v) => onChange('users', v)}
         options={[{ name: 'all', fullName: 'All users' }, ...options]}
         {...props}
-        className={!isMe && !isAll && 'selected'}
+        className={filter === 'users' && 'selected'}
         onClick={handleDropdownClick}
-        disableOpen={isMe && !!value.length}
+        disableOpen={filter !== 'users' && !!value.length}
         emptyIcon="groups"
         emptyMessage="Assignees"
         style={{ zIndex: 'none' }}
