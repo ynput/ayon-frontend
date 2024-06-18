@@ -457,7 +457,7 @@ const EditorPage = () => {
   // Build hierarchical data for the TreeTable component
   // Trigger the rebuild when parents are updated (which are
   // updated after rootData update. Both rootData and parents
-  // are needed for the hierarchy, so thi cascading makes
+  // are needed for the hierarchy, so this cascading makes
   // it possible)
 
   let treeData = useMemo(() => {

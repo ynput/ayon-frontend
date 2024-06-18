@@ -130,7 +130,7 @@ const FolderSequence = ({
       // split value into prefix (letter) and suffix (number)
       const prefix = value.replace(/[^a-zA-Z]/g, '')
       const suffix = value.replace(/[^0-9]/g, '')
-      // get interger value of suffix and padding
+      // get integer value of suffix and padding
       const suffixInt = parseInt(suffix, 10)
       const suffixPad = suffix.length
 

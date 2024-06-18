@@ -40,7 +40,7 @@ const UserList = ({
     onSelectUsers(result)
   }
 
-  // IDEA: Can these go into the details panel aswell?
+  // IDEA: Can these go into the details panel as well?
   const ctxMenuTableItems = useMemo(
     () => [
       {

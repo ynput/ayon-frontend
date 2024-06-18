@@ -88,7 +88,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     formData,
   ])
 
-  // if there's a a version param of {[addonName]: version}, select that addon
+  // if there's a version param of {[addonName]: version}, select that addon
   const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
