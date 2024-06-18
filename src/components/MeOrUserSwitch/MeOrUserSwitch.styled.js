@@ -42,6 +42,7 @@ export const MeOrUserSwitchContainer = styled.div`
     }
     &.selected button {
       background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
       & > div > span {
         color: var(--md-sys-color-on-primary);
       }

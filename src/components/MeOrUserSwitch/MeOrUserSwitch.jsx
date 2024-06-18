@@ -42,6 +42,7 @@ const MeOrUserSwitch = ({ value = [], onChange, options = [], filter, ...props }
         emptyMessage="Assignees"
         style={{ zIndex: 'none' }}
         data-tooltip="View other users tasks"
+        onSelectAll
       />
     </Styled.MeOrUserSwitchContainer>
   )
