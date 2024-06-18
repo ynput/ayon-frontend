@@ -51,7 +51,9 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
     if (!selectedBundle) return ''
     return (
       <BundleDropdownItem>
-        {selectedBundle.label || selectedBundle.name}
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {selectedBundle.label || selectedBundle.name}
+        </span>
         <span>
           {selectedBundle.active && <DropdownBadge>A</DropdownBadge>}
           {selectedBundle.value === 'staging' && (
