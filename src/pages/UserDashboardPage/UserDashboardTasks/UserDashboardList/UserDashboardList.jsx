@@ -318,6 +318,7 @@ const UserDashboardList = ({
                     isCollapsed={collapsedGroups.includes(id)}
                     onCollapseChange={handleCollapseToggle}
                     minWidths={minWidths}
+                    containerRef={containerRef}
                   />
                 )
               })}
