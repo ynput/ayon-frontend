@@ -20,6 +20,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+  const assigneesIsAll = useSelector((state) => state.dashboard.tasks.assigneesIsAll)
 
   const setAssignees = (payload) => dispatch(onAssigneesChanged(payload))
 
@@ -60,9 +61,9 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
 
       return
     } else if (!newAssignees.length) {
-      // assignees cleared so set back to me
+      // setting to all
       const payload = {
-        assigneesIsMe: true,
+        assigneesIsMe: false,
         assignees: [],
       }
 
@@ -107,9 +108,9 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
       {isManager && !isLoadingAllUsers && (
         <MeOrUserSwitch
           value={assignees}
-          onAssignee={(a) => handleAssigneesChange(false, a)}
+          onChange={(state, v) => handleAssigneesChange(state, v)}
           isMe={assigneesIsMe}
-          onMe={() => handleAssigneesChange(true)}
+          isAll={assigneesIsAll}
           options={allUsers}
           align={'right'}
           placeholder="Assignees"
