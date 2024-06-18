@@ -19,7 +19,7 @@ import AppNavLinks from '../containers/header/AppNavLinks'
 const ProjectContextInfo = () => {
   /**
    * Show a project context in a dialog
-   * this is for develompent only
+   * this is for development only
    */
   const context = useSelector((state) => state.context)
   const project = useSelector((state) => state.project)
