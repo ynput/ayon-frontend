@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import AccessGroupList from './AccessGroupList'
 import AccessGroupDetail from './AccessGroupDetail'
-import ProjectList from '/src/containers/projectList'
+import ProjectList from '@containers/projectList'
 
 const AccessGroups = () => {
   const [projectName, setProjectName] = useState(null)

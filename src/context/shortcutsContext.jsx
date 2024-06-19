@@ -1,8 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
-import { toggleMenuOpen } from '../features/context'
-import { useLogOutMutation } from '../services/auth/getAuth'
+import { toggleMenuOpen } from '@state/context'
+import { useLogOutMutation } from '@queries/auth/getAuth'
 import { useSearchParams } from 'react-router-dom'
 
 const ShortcutsContext = createContext()

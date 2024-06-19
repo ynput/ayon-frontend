@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import ThumbnailSimple from '/src/containers/ThumbnailSimple'
+import ThumbnailSimple from '@containers/ThumbnailSimple'
 import { Button, getShimmerStyles } from '@ynput/ayon-react-components'
 
 const showClearButton = css`

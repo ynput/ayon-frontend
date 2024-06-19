@@ -1,7 +1,7 @@
 import React from 'react'
 import * as Styled from './AddonCard.styled'
 import { Icon } from '@ynput/ayon-react-components'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 
 const AddonCard = React.forwardRef(
   ({ name, icon = 'check_circle', isSelected, error, version, title, ...props }, ref) => {

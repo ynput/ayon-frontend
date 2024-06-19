@@ -3,7 +3,7 @@ import { OnBoardingContext } from './OnBoardingContext'
 import * as Styled from './OnBoardingStep.styled'
 import FooterButtons from './FooterButtons'
 import LoadingPage from '../../LoadingPage'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 import { toast } from 'react-toastify'
 
 // this wraps all steps, provides context and makes sure they are rendered in order

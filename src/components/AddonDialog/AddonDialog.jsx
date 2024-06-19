@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Dialog } from '@ynput/ayon-react-components'
-import AddonUpload  from '../../pages/SettingsPage/AddonInstall/AddonUpload'
-
+import AddonUpload from '@pages/SettingsPage/AddonInstall/AddonUpload'
 
 const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
-
   // keep track is an addon was installed
   const [restartRequired, setRestartRequired] = useState(false)
 
@@ -14,20 +12,20 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
   }
   return (
     <Dialog
-        isOpen={!!uploadOpen}
-        style={{ width: 400, height: 400, overflow: 'hidden' }}
-        header={uploadHeader || "Upload addon"}
-        onClose={handleAddonInstallFinish}
-        size="md"
-        >
-        {uploadOpen && (
+      isOpen={!!uploadOpen}
+      style={{ width: 400, height: 400, overflow: 'hidden' }}
+      header={uploadHeader || 'Upload addon'}
+      onClose={handleAddonInstallFinish}
+      size="md"
+    >
+      {uploadOpen && (
         <AddonUpload
           onClose={handleAddonInstallFinish}
           type={uploadOpen}
           onInstall={(uploadOpen) => uploadOpen === 'addon' && setRestartRequired(true)}
         />
-        )}
-      </Dialog>
+      )}
+    </Dialog>
   )
 }
 

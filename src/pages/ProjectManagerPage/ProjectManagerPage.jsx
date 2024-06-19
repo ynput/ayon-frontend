@@ -3,22 +3,19 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
-import AddonSettings from '/src/containers/AddonSettings'
+import AddonSettings from '@containers/AddonSettings'
 
 import ProjectAnatomy from './ProjectAnatomy'
 import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 
-import { selectProject } from '/src/features/context'
-import {
-  useDeleteProjectMutation,
-  useUpdateProjectMutation,
-} from '/src/services/project/updateProject'
+import { selectProject } from '@state/context'
+import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
-import AppNavLinks from '/src/containers/header/AppNavLinks'
-import confirmDelete from '/src/helpers/confirmDelete'
+import AppNavLinks from '@containers/header/AppNavLinks'
+import confirmDelete from '@helpers/confirmDelete'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (

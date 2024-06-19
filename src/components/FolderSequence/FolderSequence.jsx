@@ -7,10 +7,10 @@ import {
   Spacer,
 } from '@ynput/ayon-react-components'
 import * as Styled from './FolderSequence.styled'
-import TypeEditor from '/src/pages/EditorPage/TypeEditor'
+import TypeEditor from '@pages/EditorPage/TypeEditor'
 import { useSelector } from 'react-redux'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import getSequence from '/src/helpers/getSequence'
+import getSequence from '@helpers/getSequence'
 
 function formatSeq(arr, maxLength, prefix = '') {
   if (arr.length <= maxLength) {

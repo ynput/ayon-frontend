@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash'
-import { ayonApi } from '../ayon'
+import { ayonApi } from '@queries/ayon'
 import { taskProvideTags, transformEntityData, transformTasksData } from './userDashboardHelpers'
 import {
   KAN_BAN_ASSIGNEES_QUERY,
@@ -7,7 +7,8 @@ import {
   PROJECT_TASKS_QUERY,
   buildDetailsQuery,
 } from './userDashboardQueries'
-import PubSub from '/src/pubsub'
+import PubSub from '@/pubsub'
+import API from '@api'
 
 const getUserDashboard = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -166,7 +167,7 @@ const getUserDashboard = ayonApi.injectEndpoints({
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
             const response = await dispatch(
-              ayonApi.endpoints.getProjectAnatomy.initiate(
+              API.rest.endpoints.getProjectAnatomy.initiate(
                 { projectName: project },
                 { forceRefetch: false },
               ),

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import UserAccessGroups from './UserAccessGroups/UserAccessGroups'
 import UserAccessGroupsProjects from './UserAccessGroupsProjects/UserAccessGroupsProjects'
-import { useGetAllProjectsQuery } from '/src/services/project/getProject'
+import { useListProjectsQuery } from '@queries/project/getProject'
 import {
   getMixedValuesByProject,
   getProjectsListForSelection,
@@ -30,7 +30,7 @@ const ContainerStyled = styled.div`
 // { userId: { project: [accessGroup] }
 
 const UserAccessGroupsForm = ({ value = {}, options = [], onChange, disableNewGroup }) => {
-  const { data: projectsList = [] } = useGetAllProjectsQuery({ showInactive: false })
+  const { data: projectsList = [] } = useListProjectsQuery({ active: true })
 
   // merge all accessGroups for all users together into one object
   const mergedAccessGroupsProjects = mergeAccessGroups(value)

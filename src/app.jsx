@@ -1,4 +1,4 @@
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useEffect, useState, Suspense, lazy, useMemo } from 'react'
@@ -6,44 +6,55 @@ import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
 import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
+
+// pages
+import LoginPage from '@pages/LoginPage'
+import ErrorPage from '@pages/ErrorPage'
+import LoadingPage from '@pages/LoadingPage'
+import OnBoardingPage from '@pages/OnBoarding'
+const MarketPage = lazy(() => import('@pages/MarketPage'))
+const InboxPage = lazy(() => import('@pages/InboxPage'))
+const ProjectPage = lazy(() => import('@pages/ProjectPage'))
+const ProjectManagerPage = lazy(() => import('@pages/ProjectManagerPage'))
+const ExplorerPage = lazy(() => import('@pages/ExplorerPage'))
+const APIDocsPage = lazy(() => import('@pages/APIDocsPage'))
+const AccountPage = lazy(() => import('@pages/AccountPage'))
+const SettingsPage = lazy(() => import('@pages/SettingsPage'))
+const EventsPage = lazy(() => import('@pages/EventsPage'))
+const ServicesPage = lazy(() => import('@pages/ServicesPage'))
+const UserDashboardPage = lazy(() => import('@pages/UserDashboardPage'))
+const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
+
+// components
+import ShareDialog from '@components/ShareDialog'
+import ErrorFallback from '@components/ErrorFallback'
+import { GlobalContextMenu } from '@components/GlobalContextMenu'
+import Favicon from '@components/Favicon/Favicon'
+import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
-import Header from './containers/header'
-import LoginPage from './pages/LoginPage'
-import ErrorPage from './pages/ErrorPage'
+// context
+import { ContextMenuProvider } from '@context/contextMenuContext'
+import { ShortcutsProvider } from '@context/shortcutsContext'
+import { RestartProvider } from '@context/restartContext'
+import { PasteProvider, PasteModal } from '@context/pasteContext'
+import { URIProvider } from '@context/uriContext'
+import { NotificationsProvider } from '@context/notificationsContext'
 
-const ProjectPage = lazy(() => import('./pages/ProjectPage'))
-const ProjectManagerPage = lazy(() => import('./pages/ProjectManagerPage'))
-const ExplorerPage = lazy(() => import('./pages/ExplorerPage'))
-const APIDocsPage = lazy(() => import('./pages/APIDocsPage'))
-const AccountPage = lazy(() => import('./pages/AccountPage'))
-const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-const EventsPage = lazy(() => import('./pages/EventsPage'))
-const ServicesPage = lazy(() => import('./pages/ServicesPage'))
-const UserDashboardPage = lazy(() => import('./pages/UserDashboardPage'))
-const PasswordResetPage = lazy(() => import('./pages/PasswordResetPage'))
+// containers
+import Header from '@containers/header'
+import ProtectedRoute from '@containers/ProtectedRoute'
+import FileUploadPreview from '@containers/FileUploadPreview/FileUploadPreview'
+import PreviewDialog from '@containers/Preview/PreviewDialog'
 
-import { login } from './features/user'
-import ProtectedRoute from './containers/ProtectedRoute'
-import ShareDialog from './components/ShareDialog'
-import ErrorFallback from './components/ErrorFallback'
-import { useLazyGetInfoQuery } from './services/auth/getAuth'
-import { ContextMenuProvider } from './context/contextMenuContext'
-import { ShortcutsProvider } from './context/shortcutsContext'
-import { GlobalContextMenu } from './components/GlobalContextMenu'
-import LoadingPage from './pages/LoadingPage'
-import { ConfirmDialog } from 'primereact/confirmdialog'
-import OnBoardingPage from './pages/OnBoarding'
-import useTooltip from './hooks/Tooltip/useTooltip'
-import MarketPage from './pages/MarketPage'
-import { RestartProvider } from './context/restartContext'
-import { PasteProvider, PasteModal } from './context/pasteContext'
-import FileUploadPreview from './containers/FileUploadPreview/FileUploadPreview'
-import PreviewDialog from './containers/Preview/PreviewDialog'
-import InboxPage from './pages/InboxPage'
-import { URIProvider } from './context/uriContext'
-import Favicon from './components/Favicon/Favicon'
-import { NotificationsProvider } from './context/notificationsContext'
+// state
+import { login } from '@state/user'
+
+// queries
+import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
+
+// hooks
+import useTooltip from '@hooks/Tooltip/useTooltip'
 
 const App = () => {
   const user = useSelector((state) => state.user)

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 
 import {
   Button,
@@ -15,28 +15,28 @@ import {
 } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-import AddonList from '/src/containers/AddonList'
-import SiteList from '/src/containers/SiteList'
+import AddonList from '@containers/AddonList'
+import SiteList from '@containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
 import VariantSelector from './VariantSelector'
-import CopySettingsDialog from '/src/containers/CopySettings/CopySettingsDialog'
-import RawSettingsDialog from '/src/containers/RawSettingsDialog'
+import CopySettingsDialog from '@containers/CopySettings/CopySettingsDialog'
+import RawSettingsDialog from '@containers/RawSettingsDialog'
 
 import {
   useSetAddonSettingsMutation,
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
-} from '/src/services/addonSettings'
+} from '@queries/addonSettings'
 
-import { usePromoteBundleMutation } from '/src/services/bundles/updateBundles'
+import { usePromoteBundleMutation } from '@queries/bundles/updateBundles'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
-import arrayEquals from '/src/helpers/arrayEquals'
+import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '/src/context/pasteContext'
+import { usePaste } from '@context/pasteContext'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}

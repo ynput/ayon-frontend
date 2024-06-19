@@ -3,10 +3,10 @@
 
 import { isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import DetailsPanel from '/src/containers/DetailsPanel/DetailsPanel'
-import DetailsPanelSlideOut from '/src/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
+import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
+import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 
 const BrowserDetailsPanel = () => {
   const projectName = useSelector((state) => state.project.name)

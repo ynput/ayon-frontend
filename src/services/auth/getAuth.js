@@ -1,6 +1,6 @@
 import { ayonApi } from '../ayon'
-import { onClearDashboard } from '/src/features/dashboard'
-import { logout } from '/src/features/user'
+import { onClearDashboard } from '@state/dashboard'
+import { logout } from '@state/user'
 
 const getAuth = ayonApi.injectEndpoints({
   endpoints: (build) => ({

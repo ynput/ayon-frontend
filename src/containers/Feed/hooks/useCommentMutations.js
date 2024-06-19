@@ -4,10 +4,10 @@ import {
   useCreateEntityActivityMutation,
   useDeleteActivityMutation,
   useUpdateActivityMutation,
-} from '/src/services/activities/updateActivities'
+} from '@queries/activities/updateActivities'
 import { useSelector } from 'react-redux'
-import { ayonApi } from '/src/services/ayon'
-import { filterActivityTypes } from '/src/features/details'
+import { ayonApi } from '@queries/ayon'
+import { filterActivityTypes } from '@state/details'
 
 const useCommentMutations = ({
   projectName,

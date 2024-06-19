@@ -3,18 +3,18 @@
 // get server info
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
-import { useGetYnputConnectionsQuery } from '/src/services/ynputConnect'
+import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import {
   useAbortOnBoardingMutation,
   useGetInstallEventsQuery,
   useGetReleaseQuery,
   useInstallPresetMutation,
   useLazyGetReleaseQuery,
-} from '/src/services/onBoarding/onBoarding'
-import { useGetReleasesQuery } from '/src/services/getRelease'
-import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useLazyGetBundleListQuery } from '/src/services/bundles/getBundles'
-import { useCreateBundleMutation } from '/src/services/bundles/updateBundles'
+} from '@queries/onBoarding/onBoarding'
+import { useGetReleasesQuery } from '@queries/getRelease'
+import useLocalStorage from '@hooks/useLocalStorage'
+import { useLazyGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
 import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
 
 const userFormFields = [

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { onUploadFinished, onUploadProgress } from '../features/context'
+import { onUploadFinished, onUploadProgress } from '@state/context'
 
 const queryUpload = async (arg, api, { endpoint, method = 'put', overwrite = false }) => {
   // isNameEndpoint is used to determine if the endpoint has the name of the file in the url

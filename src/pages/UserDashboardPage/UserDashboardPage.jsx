@@ -1,21 +1,18 @@
 import React, { useMemo, useState } from 'react'
-import AppNavLinks from '/src/containers/header/AppNavLinks'
+import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
-import ProjectList from '/src/containers/projectList'
+import ProjectList from '@containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
-import { onProjectSelected } from '/src/features/dashboard'
-import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
-import { useGetAllProjectsQuery } from '/src/services/project/getProject'
+import { onProjectSelected } from '@state/dashboard'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import { useListProjectsQuery } from '@queries/project/getProject'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
-import {
-  useDeleteProjectMutation,
-  useUpdateProjectMutation,
-} from '/src/services/project/updateProject'
-import confirmDelete from '/src/helpers/confirmDelete'
+import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
+import confirmDelete from '@helpers/confirmDelete'
 
 const UserDashboardPage = () => {
   let { module } = useParams()
@@ -51,9 +48,7 @@ const UserDashboardPage = () => {
   )
 
   // get projects list
-  const { data: projects = [], isLoading: isLoadingProjects } = useGetAllProjectsQuery({
-    showInactive: true,
-  })
+  const { data: projects = [], isLoading: isLoadingProjects } = useListProjectsQuery({})
   // attach projects: ['project_name'] to each projectInfo
   const projectsInfoWithProjects = useMemo(() => {
     const projectsInfoWithProjects = {}

@@ -1,8 +1,8 @@
 // NOTE: THIS DOES NOT RUN WHEN PATCHING THE TASKS
 
 import { upperCase, upperFirst } from 'lodash'
-import { productTypes } from '/src/features/project'
-import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
+import { productTypes } from '@state/project'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {

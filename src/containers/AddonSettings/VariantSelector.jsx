@@ -1,7 +1,7 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
 import { useMemo, useEffect } from 'react'
-import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
+import { useGetBundleListQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
 
 const BundleDropdownItem = styled.div`
@@ -117,7 +117,14 @@ const VariantSelector = ({ variant, setVariant, disabled, style }) => {
   }, [user.attrib.developerMode])
 
   if (user.attrib.developerMode) {
-    return <DevModeSelector variant={variant} setVariant={setVariant} disabled={disabled} style={style} />
+    return (
+      <DevModeSelector
+        variant={variant}
+        setVariant={setVariant}
+        disabled={disabled}
+        style={style}
+      />
+    )
   }
 
   const styleHlProd = {

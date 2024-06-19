@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { Dropdown } from '@ynput/ayon-react-components'
 
-import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
+import { useGetBundleListQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
 
 const BundleDropdownItem = styled.div`

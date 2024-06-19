@@ -1,18 +1,15 @@
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  useGetKanBanQuery,
-  useGetKanBanUsersQuery,
-} from '/src/services/userDashboard/getUserDashboard'
+import { useGetKanBanQuery, useGetKanBanUsersQuery } from '@queries/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '/src/features/dashboard'
+import { onAssigneesChanged } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import DetailsPanel from '../../../containers/DetailsPanel/DetailsPanel'
+import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
-import { setUri } from '/src/features/context'
-import DetailsPanelSlideOut from '../../../containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import EmptyPlaceholder from '/src/components/EmptyPlaceholder/EmptyPlaceholder'
+import { setUri } from '@state/context'
+import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
   // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null

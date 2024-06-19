@@ -9,12 +9,12 @@ import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
 
-import usePubSub from '/src/hooks/usePubSub'
-import { selectProject } from '/src/features/project'
-import { useGetProjectQuery } from '../services/project/getProject'
-import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
+import usePubSub from '@hooks/usePubSub'
+import { selectProject } from '@state/project'
+import { useGetProjectQuery } from '@queries/project/getProject'
+import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
-import AppNavLinks from '../containers/header/AppNavLinks'
+import AppNavLinks from '@containers/header/AppNavLinks'
 
 const ProjectContextInfo = () => {
   /**

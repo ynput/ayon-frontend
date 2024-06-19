@@ -1,6 +1,6 @@
 import { debounce } from 'lodash'
 import { useEffect } from 'react'
-import PubSub from '/src/pubsub'
+import PubSub from '@/pubsub'
 
 const usePubSub = (topic, callback, ids, config = {}) => {
   const { acceptNew = false, disableDebounce = false, deps = [] } = config

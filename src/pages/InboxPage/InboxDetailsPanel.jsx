@@ -1,9 +1,9 @@
 // mainly just a wrapper for data fetching
 
 import { useMemo } from 'react'
-import DetailsPanel from '/src/containers/DetailsPanel/DetailsPanel'
-import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import DetailsPanelSlideOut from '/src/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 
 const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) => {
   const selectedMessage = useMemo(() => {

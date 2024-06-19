@@ -1,26 +1,23 @@
 import React, { useMemo, useRef, useState } from 'react'
-import ActivityItem from '../../components/Feed/ActivityItem'
-import CommentInput from '/src/components/CommentInput/CommentInput'
+import ActivityItem from '@components/Feed/ActivityItem'
+import CommentInput from '@components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import {
-  useGetActivitiesQuery,
-  useLazyGetActivitiesQuery,
-} from '/src/services/activities/getActivities'
+import { useGetActivitiesQuery, useLazyGetActivitiesQuery } from '@queries/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
-import { openSlideOut } from '/src/features/details'
+import { openSlideOut } from '@state/details'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders } from './feedHelpers'
-import { onCommentImageOpen } from '/src/features/context'
+import { onCommentImageOpen } from '@state/context'
 import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
-import ActivityReferenceTooltip from '/src/components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
+import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
 
 // number of activities to get
 export const activitiesLast = 30

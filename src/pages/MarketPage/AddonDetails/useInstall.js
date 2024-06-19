@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { useInstallAddonsMutation } from '/src/services/addons/updateAddons'
-import { useLazyGetMarketAddonVersionQuery } from '/src/services/market/getMarket'
+import { useInstallAddonsMutation } from '@queries/addons/updateAddons'
+import { useLazyMarketAddonVersionDetailQuery } from '@queries/market/getMarket'
 import { toast } from 'react-toastify'
 
 const useInstall = (onInstall) => {
   const [error, setError] = useState(null)
 
   const [installAddons] = useInstallAddonsMutation()
-  const [getAddonVersion] = useLazyGetMarketAddonVersionQuery()
+  const [getAddonVersion] = useLazyMarketAddonVersionDetailQuery()
 
   const installAddon = async (name, version) => {
     try {
@@ -15,7 +15,7 @@ const useInstall = (onInstall) => {
       if (!name) return new Error('No name found')
 
       // first get version to get url
-      const { data, error } = await getAddonVersion({ id: name, version })
+      const { data, error } = await getAddonVersion({ addonName: name, addonVersion: version })
 
       if (error) throw new Error(error.message)
 

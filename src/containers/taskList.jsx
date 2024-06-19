@@ -6,12 +6,12 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import EntityDetail from './DetailsDialog'
-import { CellWithIcon } from '/src/components/icons'
-import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '/src/features/context'
+import { CellWithIcon } from '@components/icons'
+import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@state/context'
 import { toast } from 'react-toastify'
-import { useGetTasksQuery } from '/src/services/getTasks'
-import useCreateContext from '../hooks/useCreateContext'
-import NoEntityFound from '../components/NoEntityFound'
+import { useGetTasksQuery } from '@queries/getTasks'
+import useCreateContext from '@hooks/useCreateContext'
+import NoEntityFound from '@components/NoEntityFound'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)

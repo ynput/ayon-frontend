@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
-import GridLayout from '/src/components/GridLayout'
+import GridLayout from '@components/GridLayout'
 import { Button, EntityCard, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import { classNames } from 'primereact/utils'
-import Shortcuts from '/src/containers/Shortcuts'
+import Shortcuts from '@containers/Shortcuts'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
   padding: 4px 12px;

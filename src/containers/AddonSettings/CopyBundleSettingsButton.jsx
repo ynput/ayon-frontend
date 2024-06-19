@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import CopySettingsDialog from '/src/containers/CopySettings'
-import { useGetAddonSettingsListQuery } from '/src/services/addonSettings'
+import CopySettingsDialog from '@containers/CopySettings'
+import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 
 const CopyBundleSettingsButton = ({
   bundleName,

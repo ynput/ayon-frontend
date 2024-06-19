@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 import { Icon } from '@ynput/ayon-react-components'
 
 export const TileStyled = styled.div`

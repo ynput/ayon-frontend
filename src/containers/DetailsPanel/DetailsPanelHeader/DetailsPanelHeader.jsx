@@ -1,14 +1,14 @@
 import { useMemo } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
+import copyToClipboard from '@helpers/copyToClipboard'
+import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
 import { classNames } from 'primereact/utils'
 import { isEqual, union, upperFirst } from 'lodash'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
-import Actions from '/src/components/Actions/Actions'
+import Actions from '@components/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
-import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
+import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 
 const DetailsPanelHeader = ({
   entityType,

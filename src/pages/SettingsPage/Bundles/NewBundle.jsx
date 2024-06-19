@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
-import {
-  useCreateBundleMutation,
-  useUpdateBundleMutation,
-} from '/src/services/bundles/updateBundles'
+import { useCreateBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 
 import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
@@ -13,8 +10,8 @@ import { isEqual, union } from 'lodash'
 import BundleDeps from './BundleDeps'
 import useAddonSelection from './useAddonSelection'
 import { useSearchParams } from 'react-router-dom'
-import Shortcuts from '/src/containers/Shortcuts'
-import { useCheckBundleQuery } from '/src/services/bundles/getBundles'
+import Shortcuts from '@containers/Shortcuts'
+import { useCheckBundleQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
 
 const removeEmptyDevAddons = (addons = {}) => {
