@@ -406,43 +406,41 @@ const Products = () => {
     return productIds
   }, [listData, focusedVersions])
 
-  // filter by task types
-  let tableData = selectedTaskTypes.length
-    ? filterByFieldsAndValues({
-        filters: selectedTaskTypes,
-        data: listData,
-        fields: ['data.taskType'],
-      })
-    : listData
-
   // Transform the product data into a TreeTable compatible format
   // by grouping the data by the product name
 
-  tableData = useMemo(() => {
-    return groupResult(listData, 'name')
-  }, [listData])
-
-  console.log(tableData, listData)
+  // filter by task types
+  const filteredByFieldsData = selectedTaskTypes.length
+    ? filterByFieldsAndValues({
+        filters: selectedTaskTypes,
+        data: listData,
+        fields: ['taskType'],
+      })
+    : listData
 
   const searchableFields = [
-    'data.versionAuthor',
-    'data.productType',
-    'data.folder',
-    'data.fps',
-    'data.frames',
-    'data.name',
-    'data.resolution',
-    'data.versionStatus',
-    'data.versionName',
-    'data.taskType',
-    'data.taskName',
+    'versionAuthor',
+    'productType',
+    'folder',
+    'fps',
+    'frames',
+    'name',
+    'resolution',
+    'versionStatus',
+    'versionName',
+    'taskType',
+    'taskName',
   ]
 
   let [search, setSearch, filteredBySearchData] = useSearchFilter(
     searchableFields,
-    tableData,
+    filteredByFieldsData,
     'products',
   )
+
+  const tableData = useMemo(() => {
+    return groupResult(filteredBySearchData, 'name')
+  }, [filteredBySearchData])
 
   //
   // Handlers
@@ -553,7 +551,7 @@ const Products = () => {
   // Render
   //
 
-  const isNone = filteredBySearchData.length === 0
+  const isNone = tableData.length === 0
 
   return (
     <Section wrap>
@@ -602,7 +600,7 @@ const Products = () => {
         {viewMode !== 'list' && (
           <ProductsGrid
             isLoading={isLoading || isFetching}
-            data={filteredBySearchData}
+            data={tableData}
             onItemClick={onRowClick}
             onSelectionChange={onSelectionChange}
             onContext={ctxMenuShow}
@@ -618,7 +616,7 @@ const Products = () => {
         )}
         {viewMode === 'list' && (
           <ProductsList
-            data={filteredBySearchData}
+            data={tableData}
             selectedRows={selectedRows}
             onSelectionChange={onSelectionChange}
             onRowClick={onRowClick}

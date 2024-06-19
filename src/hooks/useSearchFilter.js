@@ -15,13 +15,13 @@ export const filterByFieldsAndValues = ({
         if (typeof v === 'string') {
           return v?.toLowerCase()
         } else if (Array.isArray(v)) {
-          return v?.flatMap((v) => v.toLowerCase())
+          return v?.flatMap((v) => v?.toLowerCase())
         } else if (typeof v === 'boolean' && v) {
-          return k.toLowerCase()
+          return k?.toLowerCase()
         } else return []
       } else if (v && typeof v === 'object') {
         return Object.entries(v).flatMap(([k2, v2]) => {
-          return fields.includes(`${k}.${k2}`) && v2 ? v2.toString().toLowerCase() : []
+          return fields.includes(`${k}.${k2}`) && v2 ? v2.toString()?.toLowerCase() : []
         })
       } else return []
     }),
@@ -33,7 +33,7 @@ export const filterByFieldsAndValues = ({
       const inverseMatchingKeys = []
       item.keywords?.forEach((key) => {
         filters.forEach((filter) => {
-          let lowerFilter = filter.toLowerCase()
+          let lowerFilter = filter?.toLowerCase()
           // if lowerFilter has a ! at the start do opposite
           if (lowerFilter[0] === '!') {
             lowerFilter = lowerFilter.slice(1)
@@ -86,7 +86,10 @@ const useSearchFilter = (fields = [], data = [], id) => {
   }, [])
 
   let filteredData = useMemo(
-    () => filterByFieldsAndValues({ filters: searchArray, data, fields, matchesAll: true }),
+    () =>
+      searchString.length
+        ? filterByFieldsAndValues({ filters: searchArray, data, fields, matchesAll: true })
+        : data,
     [searchString, data],
   )
 
