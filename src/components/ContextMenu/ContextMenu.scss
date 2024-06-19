@@ -1,4 +1,4 @@
-.p-contextmenu {
+.p-contextmenu.p-component {
   min-width: 12.5rem;
   width: unset;
   padding: 0;
@@ -6,34 +6,26 @@
   .p-submenu-list {
     padding: 0;
   }
-}
 
-// remove color hover state
-.p-contextmenu .p-menuitem.p-menuitem-active > .p-menuitem-link {
-  &.p-menuitem-icon,
-  &.p-menuitem-text {
-    color: inherit;
+  .p-menuitem.p-menuitem-active > .p-menuitem-link {
+    &.p-menuitem-icon,
+    &.p-menuitem-text {
+      color: inherit;
+    }
   }
-}
 
-.p-menuitem-shortcut {
-  margin-left: auto;
-  padding-left: 32px;
-}
-
-.p-contextmenu .p-menuitem-link:not(.p-disabled):hover {
-  .p-menuitem-icon,
-  .p-menuitem-text {
-    color: inherit;
+  .p-menuitem-link:not(.p-disabled):hover {
+    .p-menuitem-icon,
+    .p-menuitem-text {
+      color: inherit;
+    }
   }
-}
 
-// remove some hover
-.p-contextmenu .p-menuitem-link:not(.p-disabled):hover {
-  background: inherit;
-}
+  // remove some hover
+  .p-menuitem-link:not(.p-disabled):hover {
+    background: inherit;
+  }
 
-.p-contextmenu {
   background-color: var(--md-sys-color-surface-container-lowest);
   border-color: var(--md-sys-color-outline-variant);
   .p-menuitem {
@@ -88,5 +80,10 @@
         }
       }
     }
+  }
+
+  .p-menuitem-shortcut {
+    margin-left: auto;
+    padding-left: 32px;
   }
 }

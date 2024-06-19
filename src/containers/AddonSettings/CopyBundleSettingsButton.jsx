@@ -11,6 +11,7 @@ const CopyBundleSettingsButton = ({
   setLocalData,
   changedKeys,
   setChangedKeys,
+  setUnpinnedKeys,
   originalData,
   setOriginalData,
   projectName,
@@ -71,6 +72,7 @@ const CopyBundleSettingsButton = ({
           setLocalData={setLocalData}
           changedKeys={changedKeys}
           setChangedKeys={setChangedKeys}
+          setUnpinnedKeys={setUnpinnedKeys}
           projectName={projectName}
           onClose={() => setDialogVisible(false)}
           pickByBundle={true}

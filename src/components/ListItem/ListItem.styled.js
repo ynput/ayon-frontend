@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import ThumbnailSimple from '@containers/ThumbnailSimple'
 import StatusSelect from '../status/statusSelect'
-import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
+import { AssigneeSelect } from '@ynput/ayon-react-components'
 import getShimmerStyles from '@/styles/getShimmerStyles'
 
 export const Item = styled.li`
@@ -82,21 +82,6 @@ export const Item = styled.li`
     &:hover {
       background-color: var(--md-sys-color-surface-container-low);
     }
-  }
-`
-
-export const SimpleStatus = styled(Icon)`
-  height: 22px;
-  max-width: 22px;
-  min-width: 22px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &.icon {
-    font-size: 15px;
-    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
   }
 `
 

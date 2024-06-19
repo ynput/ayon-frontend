@@ -39,7 +39,9 @@ const CopySettingsDialog = ({
   localData,
   setLocalData,
   changedKeys,
+  unpinnedKeys,
   setChangedKeys,
+  setUnpinnedKeys,
   projectName,
   onClose,
   pickByBundle = false,
@@ -71,6 +73,7 @@ const CopySettingsDialog = ({
   const doTheMagic = () => {
     const newLocalData = cloneDeep(localData)
     const newChangedKeys = { ...changedKeys }
+    const newUnpinnedKeys = { ...setUnpinnedKeys }
     const newOriginalData = { ...originalData }
     const newSelectedAddons = []
 
@@ -92,6 +95,7 @@ const CopySettingsDialog = ({
       }
 
       const addonOverrides = []
+      const addonUnpins = []
       let addonSettings = cloneDeep(node.targetSettings.data)
       newOriginalData[key] = cloneDeep(node.targetSettings.data)
 
@@ -102,16 +106,27 @@ const CopySettingsDialog = ({
         const value = cloneDeep(change.sourceValue)
         addonSettings = setValueByPath(addonSettings, change.path, value)
         addonOverrides.push(change.path)
+
+        if (change.targetLevel === 'studio' && change.sourceLevel === 'default'){
+          addonUnpins.push(change.path)
+        }
+        if (change.targetLevel === 'project' && ['studio', 'default'].includes(change.sourceLevel)){
+          addonUnpins.push(change.path)
+        }
+
+
       } // for change of node.children
 
       newLocalData[key] = addonSettings
       newChangedKeys[key] = addonOverrides
+      newUnpinnedKeys[key] = addonUnpins
       newSelectedAddons.push(addon)
     } // for node of nodes
 
     setOriginalData(newOriginalData)
     setLocalData(newLocalData)
     setChangedKeys(newChangedKeys)
+    setUnpinnedKeys(newUnpinnedKeys)
     //setSelectedAddons(newSelectedAddons)
     toast.success('Settings copied')
     onClose(false)

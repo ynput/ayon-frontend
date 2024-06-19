@@ -20,12 +20,18 @@ const dashboardSlice = createSlice({
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
       assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
+      assigneesFilter: getInitialStateLocalStorage('dashboard-tasks-assigneesFilter', 'me'),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
     },
   },
   reducers: {
     onProjectSelected: (state, { payload = [] }) => {
       state.selectedProjects = payload
+    },
+    onProjectOpened: (state, { payload }) => {
+      // check if project is already selected
+      if (state.selectedProjects.includes(payload)) return
+      state.selectedProjects = [payload]
     },
     onTaskSelected: (state, { payload = [] }) => {
       state.tasks.selected = payload
@@ -39,9 +45,10 @@ const dashboardSlice = createSlice({
     onTasksFilterChanged: (state, { payload = '' }) => {
       state.tasks.filter = payload
     },
-    onAssigneesChanged: (state, { payload: { assignees = [], assigneesIsMe = false } }) => {
+    onAssigneesChanged: (state, { payload: { assignees = [], filter } }) => {
       state.tasks.assignees = assignees
-      state.tasks.assigneesIsMe = assigneesIsMe
+      state.tasks.assigneesIsMe = filter === 'me'
+      state.tasks.assigneesFilter = filter
     },
     onCollapsedColumnsChanged: (state, { payload }) => {
       state.tasks.collapsedColumns = payload
@@ -58,6 +65,7 @@ const dashboardSlice = createSlice({
       state.tasks.filter = ''
       state.tasks.assignees = []
       state.tasks.assigneesIsMe = true
+      state.tasks.assigneesFilter = 'me'
       state.details.filter = 'activity'
       state.tasks.collapsedColumns = []
     },
@@ -66,6 +74,7 @@ const dashboardSlice = createSlice({
 
 export const {
   onProjectSelected,
+  onProjectOpened,
   onTaskSelected,
   onTasksSortByChanged,
   onTasksGroupByChanged,
@@ -87,6 +96,7 @@ export const dashboardLocalItems = {
   'dashboard/onAssigneesChanged': [
     { key: 'dashboard-tasks-assignees', payload: 'assignees' },
     { key: 'dashboard-tasks-assigneesIsMe', payload: 'assigneesIsMe' },
+    { key: 'dashboard-tasks-assigneesFilter', payload: 'filter' },
   ],
   'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
   'dashboard/onCollapsedColumnsChanged': [{ key: 'dashboard-tasks-collapsedColumns' }],

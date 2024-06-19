@@ -86,7 +86,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       toast.success('User created')
       // set added users to be used for auto selection onHide
       setAddedUsers([...addedUsers, formData.Username])
-      // keep re-usable data in the form
+      // keep reusable data in the form
       setPassword('')
       setPasswordConfirm('')
       setFormData((fd) => {

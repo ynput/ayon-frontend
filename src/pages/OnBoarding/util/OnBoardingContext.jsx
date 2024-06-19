@@ -187,7 +187,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         .filter((addon) => selectedAddons.includes(addon.name) && !!addon.url)
         .map((addon) => ({ url: addon.url }))
 
-      // sources = [{type: url, url: 'https://...'}, {type: file, url: 'filename.exe'}}]
+      // sources = [{type: url, url: 'https://...'}, {type: file, url: 'filename.exe'}]
       // for every installer, get all the sources urls and filter out the ones that are not urls
       const installers = release.installers.reduce((acc, installer) => {
         const sources = installer.sources.filter(({ type, url }) => type === 'http' && !!url)

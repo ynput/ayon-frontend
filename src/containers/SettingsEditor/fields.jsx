@@ -89,7 +89,7 @@ function ObjectFieldTemplate(props) {
     className += ' group-changed'
   }
 
-  // Object descrtiption (from docstrings)
+  // Object description (from docstrings)
 
   const shortDescription = props.schema.description && props.schema.description.split('\n')[0]
 
@@ -474,7 +474,7 @@ const ArrayItemTemplate = (props) => {
 
   if (itemName && (parentSchema.requiredItems || []).includes(itemName)) {
     undeletable = true
-    // TODO: Store this information elsewhere. since swithcing to RTK query
+    // TODO: Store this information elsewhere. since switching to RTK query
     // schema props are immutable! use form context maybe?
 
     //if (children.props.formData.name === itemName)
@@ -535,7 +535,7 @@ const ArrayFieldTemplate = (props) => {
   }
 
   // for some werird reason, the array sorting breaks when ArrayItemTemplate is
-  // not wraped in react fragment. I suspected it was the key, but it was not.
+  // not wrapped in react fragment. I suspected it was the key, but it was not.
   // I have no idea why this works, but it does. Do not touch!
 
   return (

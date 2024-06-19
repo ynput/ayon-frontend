@@ -24,6 +24,7 @@ const ListGroup = ({
   isCollapsed,
   isLoading,
   minWidths,
+  containerRef,
 }) => {
   const dispatch = useDispatch()
   const column = groups[id] || {}
@@ -63,7 +64,7 @@ const ListGroup = ({
       {!isCollapsed && (
         <>
           {column?.tasks?.map((task, i, a) => (
-            <InView key={task.id} rootMargin={'50% 0px 50% 0px'}>
+            <InView key={task.id} root={containerRef?.current} rootMargin={'50% 0px 50% 0px'}>
               {({ inView, ref }) => (
                 <ListItem
                   ref={ref}

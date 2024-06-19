@@ -14,7 +14,7 @@ function NotificationsProvider(props) {
     data: { frontendPreferences: { notifications = false, notificationSound = false } = {} } = {},
   } = useSelector((state) => state.user) || {}
 
-  const getNotificationPermission = async (onGranted) => {
+  const getNotificationPermission = async () => {
     if (!('Notification' in window)) {
       // Check if the browser supports notifications
       alert('This browser does not support desktop notification')
@@ -28,22 +28,25 @@ function NotificationsProvider(props) {
       try {
         const permission = await Notification.requestPermission()
         if (permission === 'granted') {
-          onGranted && onGranted()
+          return true
         } else {
           toast.warn('You just denied notifications. Did you mean to do that?')
+          return false
         }
       } catch (error) {
         console.error(error)
         toast.error('Unable to get notification permission: ' + error.details)
+        return false
       }
     } else {
       toast.warn(
         'Notifications are blocked for this website. Unblock them in your browser settings.',
       )
+      return false
     }
   }
 
-  const sendNotification = ({ title, body, options = {}, link }) => {
+  const sendNotification = async ({ title, body, options = {}, link }) => {
     if (!('Notification' in window)) return
     if (Notification.permission === 'granted') {
       const icon = '/favicon-32x32.png'
@@ -54,13 +57,17 @@ function NotificationsProvider(props) {
         if (link) navigate(link)
       }
     } else {
-      getNotificationPermission(() =>
+      const granted = await getNotificationPermission()
+
+      if (granted) {
         sendNotification({
           title: 'Hi from AYON! 👋',
           body: 'Disable notifications in account settings.',
           link: '/account/profile',
-        }),
-      )
+        })
+      }
+
+      return granted
     }
   }
 

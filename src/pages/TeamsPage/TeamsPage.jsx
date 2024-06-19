@@ -104,7 +104,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   const [selectedTeams = [], setSelectedTeams] = useQueryParam(['teams'], ArrayParam)
 
   // Merge users and teams data
-  // NOTE: there is a usersObject bellow [userList, usersObject]
+  // NOTE: there is a usersObject below [userList, usersObject]
   let [userList] = useMemo(() => {
     const usersObject = {}
     const userList = []

@@ -206,7 +206,18 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
       // if the user has enabled notifications for the first time, ask for permission
       if (preferencesData.notifications && Notification.permission !== 'granted') {
-        sendNotification({ title: 'Notifications already enabled 💪', link: '/account/profile' })
+        const granted = await sendNotification({
+          title: 'Notifications already enabled 💪',
+          link: '/account/profile',
+        })
+
+        if (!granted) {
+          // something went wrong, undo the change to turn notifications off
+          await updatePreferences({
+            name: user.name,
+            preferences: { notifications: false },
+          }).unwrap()
+        }
       }
     } catch (error) {
       console.error(error)
@@ -232,7 +243,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   }
 
   const notificationsDisabled =
-    window.location.protocol !== 'https' && window.location.hostname !== 'localhost' // disable if not on HTTPS or localhost
+    window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' // disable if not on HTTPS or localhost
   const notificationsTooltip = notificationsDisabled
     ? 'Browser notifications only work over HTTPS'
     : 'Get notifications on your device'

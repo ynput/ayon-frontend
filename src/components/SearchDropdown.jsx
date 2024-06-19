@@ -128,7 +128,7 @@ const SearchDropdown = ({
 
   const handleFilterResults = (newSearch) => {
     // console.log('filtering search results by', newSearch)
-    // if there is a fitler use to filter out suggestions
+    // if there is a filter use to filter out suggestions
     if (filter) {
       let newSuggestions = filter(newSearch, [...suggestions])
       setSearchResults(newSuggestions)
@@ -225,7 +225,7 @@ const SearchDropdown = ({
   }
 
   const spliceSuggestionsDown = () => {
-    // only splice if the ammount of suggestions is more than the limit
+    // only splice if the amount of suggestions is more than the limit
     if (suggestionsLimit && searchResults.length > suggestionsLimit) {
       let start = 0
       if (!search) start += 2

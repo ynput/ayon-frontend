@@ -7,9 +7,9 @@ import { onAssigneesChanged } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
-import { Section } from '@ynput/ayon-react-components'
 import { setUri } from '@state/context'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
   // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
@@ -34,9 +34,24 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
-  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+  const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
   // Only admins and managers can see task of other users
-  const assignees = assigneesIsMe || user?.data?.isUser ? [user?.name] : assigneesState || []
+
+  let assignees = []
+  switch (assigneesFilter) {
+    case 'me':
+      assignees = [user.name]
+      break
+    case 'all':
+      assignees = []
+      break
+    case 'users':
+      assignees = assigneesState
+      break
+    default:
+      break
+  }
+
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected) || []
 
   // once user is loaded, set assignees to user
@@ -171,18 +186,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const detailsMaxWidth = '40vw'
   const detailsMaxMaxWidth = 700
 
-  if (isError)
-    return (
-      <Section style={{ textAlign: 'center' }}>
-        <h2>Error: Something went wrong loading your tasks. Try refreshing the page.</h2>
-        <span>assignees: {JSON.stringify(assigneesState)}</span>
-        <span>assigneesIsMe: {JSON.stringify(assigneesIsMe)}</span>
-        <span>selectedProjects: {JSON.stringify(selectedProjects)}</span>
-        <span>selectedTasks: {JSON.stringify(selectedTasks)}</span>
-        <span>userName: {JSON.stringify(user?.name)}</span>
-        <span>error: {JSON.stringify(error)}</span>
-      </Section>
-    )
+  if (isError) return <EmptyPlaceholder error={error} />
 
   return (
     <Splitter
