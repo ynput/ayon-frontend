@@ -27,9 +27,11 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
         intervalToDuration({ start: activityCreatedAt, end: currentCreatedAt })
 
       // If the activity is within 1 min of the current activity
-      const isWithinOneMin = !('minutes' in activityDuration) || activityDuration.minutes <= 1
+      const seconds = 20
+      const isWithinSeconds =
+        !('minutes' in activityDuration) && activityDuration.seconds <= seconds
 
-      if (isSameAuthor && isWithinOneMin) {
+      if (isSameAuthor && isWithinSeconds) {
         // Continue the sequence, update the newValue from the current activity
         currentActivity[oldKey] = activity[oldKey]
         // also update newValue
