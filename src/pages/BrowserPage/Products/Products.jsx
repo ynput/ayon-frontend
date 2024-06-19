@@ -406,15 +406,6 @@ const Products = () => {
     return productIds
   }, [listData, focusedVersions])
 
-  // filter by task types
-  let tableData = selectedTaskTypes.length
-    ? filterByFieldsAndValues({
-        filters: selectedTaskTypes,
-        data: listData,
-        fields: ['data.taskType'],
-      })
-    : listData
-
   // Transform the product data into a TreeTable compatible format
   // by grouping the data by the product name
 
@@ -426,7 +417,6 @@ const Products = () => {
         fields: ['taskType'],
       })
     : listData
-
 
   const searchableFields = [
     'versionAuthor',
@@ -444,7 +434,7 @@ const Products = () => {
 
   let [search, setSearch, filteredBySearchData] = useSearchFilter(
     searchableFields,
-    tableData,
+    filteredByFieldsData,
     'products',
   )
 
