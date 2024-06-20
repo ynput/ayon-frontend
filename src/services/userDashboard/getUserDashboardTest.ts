@@ -3,8 +3,8 @@ import { $Any } from '@/types'
 import api from '@api'
 import PubSub from '@/pubsub'
 
-type KanbanNode = GetKanbanQuery['kanban']['edges'][0]['node']
-type GetKanbanResponse = KanbanNode[]
+export type KanbanNode = GetKanbanQuery['kanban']['edges'][0]['node']
+export type GetKanbanResponse = KanbanNode[]
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { isEqual } from 'lodash'
@@ -23,7 +23,10 @@ const provideKanbanTags = (result: GetKanbanResponse | undefined) =>
     ? [{ type: 'kanBanTask', id: 'LIST' }, ...result.map(({ id }) => ({ type: 'task', id }))]
     : [{ type: 'kanBanTask', id: 'LIST' }]
 
-const enhancedDashboardGraphqlApi = api.graphql.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+export const enhancedDashboardGraphqlApi = api.graphql.enhanceEndpoints<
+  TagTypes,
+  UpdatedDefinitions
+>({
   endpoints: {
     GetKanban: {
       transformResponse: transformKanban,
@@ -134,6 +137,17 @@ const enhancedDashboardGraphqlApi = api.graphql.enhanceEndpoints<TagTypes, Updat
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+      },
+      // there is only one cache for kanban
+      serializeQueryArgs: () => '',
+      // whenever the assignees or projects change, we need to refetch the one query
+      forceRefetch: (params) => {
+        const { currentArg, previousArg } = params
+        // if the assignees are different, we need to refetch the query
+        if (!isEqual(currentArg?.assignees, previousArg?.assignees)) return true
+        // if the projects are different, we need to refetch the query
+        if (!isEqual(currentArg?.projects, previousArg?.projects)) return true
+        return false
       },
     },
     // same query as GetKanban but for specific tasks

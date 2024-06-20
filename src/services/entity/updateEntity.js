@@ -1,5 +1,6 @@
 import { ayonApi } from '../ayon'
 import { toast } from 'react-toastify'
+import { enhancedDashboardGraphqlApi } from '../userDashboard/getUserDashboardTest'
 
 const updateEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -15,33 +16,32 @@ const updateEntity = ayonApi.injectEndpoints({
       ) {
         let patchResult
 
-        // if task, patch the getProjectTasks query
+        // if task, patch the GetKanban query
         if (entityType === 'task') {
           patchResult = dispatch(
-            ayonApi.util.updateQueryData('getProjectTasks', { projectName, assignees }, (draft) => {
-              const taskIndex = draft.findIndex((task) => task.id === entityId)
-              if (taskIndex === -1) {
-                // check if the task has any of the assignees that are selected in kanBan
-                if (assignees.some((assignee) => data.assignees?.includes(assignee))) {
-                  // task should appear in kanBan
-                  // invalidate the kanBan and getProjectTasks query to force refetch
-                  dispatch(
-                    ayonApi.util.invalidateTags([
-                      { type: 'kanBanTask', id: 'TASKS' },
-                      { type: 'kanBanTask', id: 'TASKS' },
-                    ]),
-                  )
+            enhancedDashboardGraphqlApi.util.updateQueryData(
+              'GetKanban',
+              { projectName, assignees },
+              (draft) => {
+                const taskIndex = draft.findIndex((task) => task.id === entityId)
+                if (taskIndex === -1) {
+                  // check if the task has any of the assignees that are selected in kanBan
+                  if (assignees.some((assignee) => data.assignees?.includes(assignee))) {
+                    // task should appear in kanBan
+                    // invalidate the kanBan
+                    dispatch(ayonApi.util.invalidateTags([{ type: 'kanBanTask', id: 'LIST' }]))
+                  } else {
+                    // do nothing, the task should not appear in the kanBan
+                    return
+                  }
+                  // add the task to the cache
                 } else {
-                  // do nothing, the task should not appear in the kanBan
-                  return
+                  // task found: update the task in the cache
+                  const newData = { ...draft[taskIndex], ...data }
+                  draft[taskIndex] = newData
                 }
-                // add the task to the cache
-              } else {
-                // task found: update the task in the cache
-                const newData = { ...draft[taskIndex], ...data }
-                draft[taskIndex] = newData
-              }
-            }),
+              },
+            ),
           )
         }
 
@@ -96,16 +96,6 @@ const updateEntity = ayonApi.injectEndpoints({
               }),
             )
             promises.push(promise)
-          }
-
-          // invalidate task to force refetch of getKanBan query
-          // but because we just updated the tasks cache it should be instant
-          if (entityType === 'task') {
-            dispatch(
-              ayonApi.util.invalidateTags(
-                operations.map((o) => ({ type: 'kanBanTask', id: o.id })),
-              ),
-            )
           }
 
           // invalidate any entities queries (multi entity selection) to force refetch

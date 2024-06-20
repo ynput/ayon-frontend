@@ -72,16 +72,16 @@ ${TASK_FRAGMENT()}
 export const KAN_BAN_ASSIGNEES_QUERY = `
 query KanbanProjectAssignees($projectName: String) {
   users(last: 2000 projectName: $projectName) {
-  edges {
-    node {
-      name
-      accessGroups
-      attrib {
-        fullName
+    edges {
+      node {
+        name
+        accessGroups
+        attrib {
+          fullName
+        }
       }
     }
   }
-}
 }`
 
 export const VERSION_DETAILS_QUERY = (attribs = []) => `

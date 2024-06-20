@@ -37,9 +37,9 @@ const ListItem = forwardRef(
     if (none) return <Styled.Item className="none">No tasks found</Styled.Item>
 
     // path but with last /folderName removed
-    const hoverPath = task.path.split('/').slice(0, -1).join('/')
+    const hoverPath = `${task.projectName}/${task.folderPath.split('/').slice(0, -1).join('/')}`
 
-    const endDateDate = task.endDate && new Date(task.endDate)
+    const endDateDate = task.dueDate && new Date(task.dueDate)
 
     let isToday = '',
       pastEndDate,
