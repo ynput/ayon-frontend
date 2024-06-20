@@ -360,6 +360,7 @@ export type KanbanNode = {
   label?: Maybe<Scalars['String']['output']>;
   lastVersionWithThumbnailId?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  projectCode: Scalars['String']['output'];
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];
   tags: Array<Scalars['String']['output']>;
@@ -806,7 +807,7 @@ export type QueryInboxArgs = {
 
 
 export type QueryKanbanArgs = {
-  assignees?: InputMaybe<Array<Scalars['String']['input']>>;
+  assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   projects?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -843,6 +844,7 @@ export type QueryUsersArgs = {
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   projectName?: InputMaybe<Scalars['String']['input']>;
+  projects?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type RepresentationAttribType = {
@@ -1327,7 +1329,14 @@ export type GetKanbanQueryVariables = Exact<{
 }>;
 
 
-export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null } }> } };
+export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null } }> } };
+
+export type GetKanbanProjectUsersQueryVariables = Exact<{
+  projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type GetKanbanProjectUsersQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, accessGroups: string, isManager: boolean, isAdmin: boolean, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
 
 export type GetKanbanTasksQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1336,9 +1345,9 @@ export type GetKanbanTasksQueryVariables = Exact<{
 }>;
 
 
-export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null } }> } };
+export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null } }> } };
 
-export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null };
+export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null };
 
 export const MessageFragmentFragmentDoc = `
     fragment MessageFragment on ActivityNode {
@@ -1376,6 +1385,7 @@ export const KanbanFragmentFragmentDoc = `
     fragment KanbanFragment on KanbanNode {
   id
   projectName
+  projectCode
   name
   label
   status
@@ -1473,7 +1483,7 @@ export const GetProjectLatestDocument = `
     `;
 export const GetKanbanDocument = `
     query GetKanban($projects: [String!], $assignees: [String!], $last: Int) {
-  kanban(projects: $projects, assignees: $assignees, last: $last) {
+  kanban(projects: $projects, assigneesAny: $assignees, last: $last) {
     edges {
       node {
         ...KanbanFragment
@@ -1482,6 +1492,23 @@ export const GetKanbanDocument = `
   }
 }
     ${KanbanFragmentFragmentDoc}`;
+export const GetKanbanProjectUsersDocument = `
+    query GetKanbanProjectUsers($projects: [String!]) {
+  users(last: 2000, projects: $projects) {
+    edges {
+      node {
+        name
+        accessGroups
+        isManager
+        isAdmin
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetKanbanTasksDocument = `
     query GetKanbanTasks($projects: [String!], $taskIds: [String!], $last: Int) {
   kanban(projects: $projects, taskIds: $taskIds, last: $last) {
@@ -1513,6 +1540,9 @@ const injectedRtkApi = GraphQL.injectEndpoints({
     }),
     GetKanban: build.query<GetKanbanQuery, GetKanbanQueryVariables | void>({
       query: (variables) => ({ document: GetKanbanDocument, variables })
+    }),
+    GetKanbanProjectUsers: build.query<GetKanbanProjectUsersQuery, GetKanbanProjectUsersQueryVariables | void>({
+      query: (variables) => ({ document: GetKanbanProjectUsersDocument, variables })
     }),
     GetKanbanTasks: build.query<GetKanbanTasksQuery, GetKanbanTasksQueryVariables | void>({
       query: (variables) => ({ document: GetKanbanTasksDocument, variables })

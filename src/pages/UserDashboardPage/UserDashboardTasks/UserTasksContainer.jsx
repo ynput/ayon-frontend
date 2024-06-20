@@ -1,6 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { useGetKanBanUsersQuery } from '@queries/userDashboard/getUserDashboard'
-import { useGetKanbanQuery } from '@/services/userDashboard/getUserDashboardTest'
+import {
+  useGetKanbanProjectUsersQuery,
+  useGetKanbanQuery,
+} from '@queries/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
@@ -76,7 +78,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     isError,
     error,
   } = useGetKanbanQuery(
-    { assignees: assignees, projects: selectedProjects, last: 2000 },
+    { assignees: assignees, projects: selectedProjects },
     { skip: !assignees.length || !selectedProjects?.length },
   )
 
@@ -139,17 +141,18 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [projectsInfo, selectedTasksProjects],
   )
 
-  const { data: projectUsers = [] } = useGetKanBanUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
+  const { data: projectUsers = [], isLoading: isLoadingProjectUsers } =
+    useGetKanbanProjectUsersQuery(
+      { projects: selectedProjects },
+      { skip: !selectedProjects?.length },
+    )
 
   // for selected projects, make sure user is on all
   const [activeProjectUsers, disabledProjectUsers] = useMemo(() => {
     if (!selectedTasksProjects?.length) return [projectUsers, []]
     return projectUsers.reduce(
       (acc, user) => {
-        if (selectedTasksProjects.every((p) => user.projects.includes(p))) {
+        if (selectedTasksProjects.every((p) => user.projects?.includes(p))) {
           acc[0].push(user)
         } else {
           acc[1].push(user)
@@ -194,6 +197,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           statusesOptions={statusesOptions}
           disabledStatuses={disabledStatuses}
           disabledProjectUsers={disabledProjectUsers}
+          projectUsers={projectUsers}
+          isLoadingProjectUsers={isLoadingProjectUsers}
         />
       </SplitterPanel>
       {selectedTasksData.length ? (

@@ -254,6 +254,7 @@ const UserDashboardList = ({
         data: {
           [field]: value,
         },
+        currentAssignees: task.users,
       }))
 
       await updateEntities({ operations: tasksOperations, entityType: 'task' })

@@ -1,6 +1,7 @@
 fragment KanbanFragment on KanbanNode {
   id
   projectName
+  projectCode
   name
   label
   status
