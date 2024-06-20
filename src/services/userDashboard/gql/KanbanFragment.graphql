@@ -1,0 +1,20 @@
+fragment KanbanFragment on KanbanNode {
+  id
+  projectName
+  name
+  label
+  status
+  tags
+  taskType
+  assignees
+  updatedAt
+  createdAt
+  dueDate
+  folderId
+  thumbnailId
+  folderId
+  folderLabel
+  folderName
+  folderPath
+  lastVersionWithThumbnailId
+}
