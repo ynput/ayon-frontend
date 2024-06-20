@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import {isEqual} from 'lodash'
+import { isEqual } from 'lodash'
 
 import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 
@@ -218,15 +218,16 @@ const CopySettingsNode = ({
       const path = sourceOverride?.path || targetOverride?.path
 
       // Remove noise
-      if (sourceOverride?.inGroup || sourceOverride?.type === 'branch') {
-        console.debug('Skipping override', path, 'because it is in a group')
+      if (sourceOverride?.inGroup || sourceOverride?.type === 'branch' || targetOverride?.inGroup || targetOverride?.type === 'branch') {
+        console.debug('Skipping override', path, 'because it is', sourceOverride?.inGroup ? 'in a group' : 'a branch')
         continue
       }
+
 
       // do not attempt to copy overrides from default or studio
       // to project level
       if (targetProjectName && ['default', 'studio'].includes(sourceOverride?.level)) {
-        console.debug("Skipping override", path, "because it's from default or studio")
+        console.debug('Skipping override', path, "because it's from default or studio")
         continue
       }
 
@@ -237,11 +238,14 @@ const CopySettingsNode = ({
       // ... or rather do copy it. we want to force pinned overrides
       if (isEqual(sourceValue, targetValue)) {
         if (sourceOverride?.level === targetOverride?.level) {
-          console.debug(`Skipping override ${path} because it's the same:  ${sourceValue} === ${targetValue}`)
+          console.debug(
+            `Skipping override ${path} because it's the same:  ${sourceValue} === ${targetValue}`,
+          )
           continue
         }
       }
-      //   continue
+      console.log('source override', sourceOverride)
+      console.log('target override', targetOverride)
 
       //const compatible = sameKeysStructure(sourceValue, targetValue)
       const compatible = isCompatibleStructure(sourceValue, targetValue)
@@ -251,11 +255,12 @@ const CopySettingsNode = ({
         path: path,
         sourceValue,
         targetValue,
-        sourceLevel: sourceOverride?.level || "default",
-        targetLevel: targetOverride?.level || "default",
+        sourceLevel: sourceOverride?.level || 'default',
+        targetLevel: targetOverride?.level || 'default',
         enabled: !!compatible,
         compatible: !!compatible,
         warnings: compatible || [],
+        inGroup: sourceOverride?.inGroup || targetOverride?.inGroup,
       }
       changes.push(item)
     }
@@ -359,44 +364,48 @@ const CopySettingsNode = ({
           <th className="valpvw">Current&nbsp;value</th>
           <th className="valpvw">New&nbsp;value</th>
         </tr>
-        {(nodeData?.changes || []).map((change) => (
-          <tr key={change.key}>
-            <td>
-              <InputSwitch
-                checked={change.enabled}
-                disabled={!change.compatible}
-                onChange={(e) => {
-                  setNodeData({
-                    ...nodeData,
-                    changes: nodeData.changes.map((c) => {
-                      if (c.key === change.key) {
-                        c.enabled = e.target.checked
-                      }
-                      return c
-                    }),
-                  })
-                }}
-              />
-            </td>
-            <td>
-              <FormattedPath value={change.path} />
-            </td>
-            <td>
-              <FormattedValue value={change.targetValue} level={change.targetLevel} />
-            </td>
-            <td>
-              <FormattedValue value={change.sourceValue} level={change.sourceLevel}/>
-            </td>
+        {(nodeData?.changes || []).map((change) => {
 
-            {/*
+          return (
+            <tr key={change.key}>
+              <td>
+                {change.inGroup && <Icon icon="folder" />}
+                <InputSwitch
+                  checked={change.enabled}
+                  disabled={!change.compatible}
+                  onChange={(e) => {
+                    setNodeData({
+                      ...nodeData,
+                      changes: nodeData.changes.map((c) => {
+                        if (c.key === change.key) {
+                          c.enabled = e.target.checked
+                        }
+                        return c
+                      }),
+                    })
+                  }}
+                />
+              </td>
+              <td>
+                <FormattedPath value={change.path} />
+              </td>
+              <td>
+                <FormattedValue value={change.targetValue} level={change.targetLevel} />
+              </td>
+              <td>
+                <FormattedValue value={change.sourceValue} level={change.sourceLevel} />
+              </td>
+
+              {/*
               <td>
                 &nbsp;
                 {!change.compatible && <Icon icon="warning" style={{ color: 'red' }} />}
                 {change.warnings.length > 0 && <Icon icon="warning" style={{ color: 'yellow' }} />}
               </td>
               */}
-          </tr>
-        ))}
+            </tr>
+          )
+        })}
       </ChangesTable>
     </NodePanelBody>
   )
