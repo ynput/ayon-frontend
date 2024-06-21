@@ -18,7 +18,6 @@ const ListGroup = ({
   disabledStatuses = [],
   disabledProjectUsers = [],
   onUpdate,
-  assigneesIsMe,
   allUsers = [],
   onCollapseChange,
   isCollapsed,
@@ -83,7 +82,7 @@ const ListGroup = ({
                   disabledStatuses={disabledStatuses}
                   disabledProjectUsers={disabledProjectUsers}
                   onUpdate={onUpdate}
-                  allUsers={assigneesIsMe ? [] : allUsers}
+                  allUsers={allUsers}
                   className={'card'}
                   minWidths={minWidths}
                   inView={inView}

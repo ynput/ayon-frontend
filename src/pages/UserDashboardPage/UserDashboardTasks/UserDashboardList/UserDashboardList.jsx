@@ -91,9 +91,6 @@ const UserDashboardList = ({
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
 
-  // Assignees
-  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
-
   const selectedTasksData = useMemo(
     () => tasks.filter((task) => selectedTasks.includes(task.id)),
     [tasks, selectedTasks],
@@ -315,7 +312,6 @@ const UserDashboardList = ({
                     disabledStatuses={disabledStatuses}
                     disabledProjectUsers={disabledProjectUsers}
                     onUpdate={handleUpdate}
-                    assigneesIsMe={assigneesIsMe}
                     isCollapsed={collapsedGroups.includes(id)}
                     onCollapseChange={handleCollapseToggle}
                     minWidths={minWidths}
