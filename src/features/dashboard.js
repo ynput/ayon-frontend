@@ -19,7 +19,6 @@ const dashboardSlice = createSlice({
       groupBy: getInitialStateLocalStorage('dashboard-tasks-groupBy', []),
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
-      assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
       assigneesFilter: getInitialStateLocalStorage('dashboard-tasks-assigneesFilter', 'me'),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
     },
@@ -47,7 +46,6 @@ const dashboardSlice = createSlice({
     },
     onAssigneesChanged: (state, { payload: { assignees = [], filter } }) => {
       state.tasks.assignees = assignees
-      state.tasks.assigneesIsMe = filter === 'me'
       state.tasks.assigneesFilter = filter
     },
     onCollapsedColumnsChanged: (state, { payload }) => {
@@ -64,7 +62,6 @@ const dashboardSlice = createSlice({
       state.tasks.groupBy = []
       state.tasks.filter = ''
       state.tasks.assignees = []
-      state.tasks.assigneesIsMe = true
       state.tasks.assigneesFilter = 'me'
       state.details.filter = 'activity'
       state.tasks.collapsedColumns = []
@@ -95,9 +92,7 @@ export const dashboardLocalItems = {
   'dashboard/onTaskSelected': [{ key: 'dashboard-tasks-selected' }],
   'dashboard/onAssigneesChanged': [
     { key: 'dashboard-tasks-assignees', payload: 'assignees' },
-    { key: 'dashboard-tasks-assigneesIsMe', payload: 'assigneesIsMe' },
     { key: 'dashboard-tasks-assigneesFilter', payload: 'filter' },
   ],
-  'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
   'dashboard/onCollapsedColumnsChanged': [{ key: 'dashboard-tasks-collapsedColumns' }],
 }
