@@ -41,7 +41,7 @@ const useScrollToHighlighted = ({ feedRef, highlighted = [], isLoading, loadMore
     // get the coordinates of the highlighted element
     const top = highlightedElement.offsetTop
     const height = highlightedElement.offsetHeight
-    const feedHeight = feedRef.current.offsetHeight
+    const feedHeight = feedRef.current?.offsetHeight
     const padding = 64
 
     const commentTallerThanFeed = height + padding > feedHeight
@@ -51,7 +51,7 @@ const useScrollToHighlighted = ({ feedRef, highlighted = [], isLoading, loadMore
     console.log('FOUND: scrolling to highlighted...')
 
     // scroll to the highlighted element
-    feedRef.current.scrollTo({ top: scrollTop })
+    feedRef.current?.scrollTo({ top: scrollTop })
   }
 
   useEffect(() => {
