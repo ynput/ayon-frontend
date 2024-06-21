@@ -126,7 +126,7 @@ const DetailsPanelHeader = ({
 
     // if the type is version and the field is status or version, patch products list
     // mainly used in the browser
-    const productsPatch = patchProductsVersions(field, value, entities)
+    const productsPatch = patchProductsVersions(field, value)
     try {
       // build entities operations array
       const operations = entities.map((entity) => ({
@@ -150,7 +150,9 @@ const DetailsPanelHeader = ({
     const newUpdatedAt = new Date().toISOString()
     const entity = entities.find((entity) => entity.id === id)
     const currentAssignees = entity?.users || []
-    const operations = [{ id, projectName, data: { updatedAt: newUpdatedAt }, currentAssignees }]
+    const operations = [
+      { id, projectName, data: { updatedAt: newUpdatedAt, thumbnailId }, currentAssignees },
+    ]
 
     const versionPatch = {
       productId: entity.productId,
