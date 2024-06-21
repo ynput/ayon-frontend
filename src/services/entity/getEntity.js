@@ -98,14 +98,6 @@ export const formatEntityTiles = (project, entities) => {
     allEntities.push(...entities)
   }
 
-  // which entity type to use for thumbnail
-  const thumbnailTypes = {
-    version: 'version',
-    product: 'version',
-    folder: 'folder',
-    task: 'folder',
-  }
-
   // loop through each entity and child and if it is an array or object, use first child value as value
   for (const entity of allEntities) {
     for (const attrib in entity) {
@@ -120,7 +112,12 @@ export const formatEntityTiles = (project, entities) => {
         entity[attrib] = 'v' + entity[attrib].toString().padStart(3, '0')
       }
     }
-    entity.thumbnailEntityType = thumbnailTypes[entity.type]
+    entity.thumbnailEntityType = entity.type
+    if (entity.type === 'product') {
+      entity.thumbnailEntityId = entity.latestVersion.thumbnailEntityId
+      entity.thumbnailId = entity.latestVersion.thumbnailId
+      entity.thumbnailEntityType = 'version'
+    }
   }
 
   return allEntities
