@@ -24,8 +24,8 @@ const addonSettings = ayonApi.injectEndpoints({
     getAddonSettingsList: build.query({
       query: ({ variant, projectName, siteId }) => {
 
-        // this should prevent passing null/undfiend values to the query
-        // params once for all (until we have typescript)
+        // this should prevent passing null/undefined values to the query
+        // params once and for all (until we have typescript)
         const params = {}
         if (variant) params.variant = variant
         if (projectName) params.project_name = projectName
