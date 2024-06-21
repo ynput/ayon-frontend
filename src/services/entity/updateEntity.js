@@ -33,7 +33,9 @@ const updateEntity = ayonApi.injectEndpoints({
           const hasSomeProjects = dashboardProjects.some((project) => project === projectName)
           const currentDashNeedsUpdating = hasSomeAssignees && hasSomeProjects
 
-          let currentKanbanPatched = true
+          let currentKanbanPatched = false
+
+          console.log(cacheUsers, dashboardProjects, dashboardUsers, dashboardAssigneesIsMe)
 
           if (currentDashNeedsUpdating) {
             patchResult = dispatch(
@@ -44,8 +46,9 @@ const updateEntity = ayonApi.injectEndpoints({
                   const taskIndex = draft.findIndex((task) => task.id === entityId)
                   if (taskIndex === -1) {
                     // task not found, assignee must have just been added
-                    currentKanbanPatched = false
                   } else {
+                    currentKanbanPatched = true
+
                     // first check that the task assignees still has a intersection with dashAssignees
                     const hasSomeAssignees = newAssignees?.some((assignee) =>
                       cacheUsers.includes(assignee),
@@ -109,7 +112,7 @@ const updateEntity = ayonApi.injectEndpoints({
           }))
 
           // invalidate the cache
-          dispatch(enhancedDashboardGraphqlApi.util.invalidateTags(invalidationTags))
+          // dispatch(enhancedDashboardGraphqlApi.util.invalidateTags(invalidationTags))
         }
 
         // patch any entity details panels in dashboard

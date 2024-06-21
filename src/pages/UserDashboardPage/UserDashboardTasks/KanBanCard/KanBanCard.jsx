@@ -2,21 +2,7 @@ import { forwardRef } from 'react'
 import * as Styled from './KanBanCard.styled'
 
 const KanBanCard = forwardRef(
-  (
-    {
-      task,
-      onClick,
-      onKeyUp,
-      isActive,
-      style,
-      isOverlay,
-      isDragging,
-      assigneesIsMe,
-      inView,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ task, onClick, onKeyUp, isActive, style, isOverlay, isDragging, inView, ...props }, ref) => {
     if (!inView && inView !== undefined && !props.isLoading)
       return <div style={{ minHeight: 'var(--min-height)' }}></div>
 
@@ -38,7 +24,7 @@ const KanBanCard = forwardRef(
           onKeyUp={onKeyUp}
           $isOverlay={isOverlay}
           isLoading={props.isLoading}
-          assignees={(!assigneesIsMe && !!task.assigneesData?.length && task.assigneesData) || null}
+          assignees={(!!task.assigneesData?.length && task.assigneesData) || null}
           {...props}
         />
       </>
