@@ -16,7 +16,6 @@ import { toast } from 'react-toastify'
 
 import ColumnsWrapper from './ColumnsWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar/DashboardTasksToolbar'
-import { useGetKanBanUsersQuery } from '@queries/userDashboard/getUserDashboard'
 import { onCollapsedColumnsChanged, onTaskSelected } from '@state/dashboard'
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
@@ -30,6 +29,8 @@ const UserDashboardKanBan = ({
   statusesOptions,
   disabledStatuses,
   disabledProjectUsers = [],
+  projectUsers = [],
+  isLoadingProjectUsers,
 }) => {
   const dispatch = useDispatch()
 
@@ -63,19 +64,13 @@ const UserDashboardKanBan = ({
   // FILTER
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
 
-  // GET ALL USERS FOR THE PROJECTS
-  const { data: allUsers = [], isLoading: isLoadingAllUsers } = useGetKanBanUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
-
   // attach assignees data to tasks
   const tasksWithAssignees = useMemo(() => {
     return tasks.map((task) => {
-      const taskAssignees = allUsers.filter((user) => task.assignees.includes(user.name))
+      const taskAssignees = projectUsers.filter((user) => task.assignees.includes(user.name))
       return { ...task, assigneesData: taskAssignees }
     })
-  }, [tasks, allUsers])
+  }, [tasks, projectUsers])
 
   // filter out projects by selected projects and filter value
   const filteredTasks = useMemo(
@@ -100,7 +95,7 @@ const UserDashboardKanBan = ({
   const mergedFields = getMergedFields(projectsInfo, splitByPlural)
 
   const [tasksColumns, fieldsColumns] = useMemo(
-    () => getTasksColumns(sortedTasks, splitBy, mergedFields, allUsers),
+    () => getTasksColumns(sortedTasks, splitBy, mergedFields, projectUsers),
     [sortedTasks, splitBy, mergedFields],
   )
 
@@ -238,6 +233,7 @@ const UserDashboardKanBan = ({
         projectName: task.projectName,
         id: task.id,
         data: newTaskData,
+        currentAssignees: task.assignees,
       }
     })
 
@@ -247,7 +243,10 @@ const UserDashboardKanBan = ({
   return (
     <>
       <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-        <DashboardTasksToolbar {...{ view, setView, allUsers, isLoadingAllUsers }} />
+        <DashboardTasksToolbar
+          {...{ view, setView, isLoadingProjectUsers }}
+          allUsers={projectUsers}
+        />
         {view === 'kanban' && (
           <DndContext
             sensors={sensors}
@@ -260,7 +259,7 @@ const UserDashboardKanBan = ({
               fieldsColumns={groupedOpenFieldColumns}
               groupByValue={groupByValue}
               isLoading={isLoading}
-              allUsers={allUsers}
+              projectUsers={projectUsers}
               disabledStatuses={disabledStatuses}
               onCollapsedColumnsChange={handleCollapseToggle}
               projectsInfo={projectsInfo}
@@ -277,7 +276,7 @@ const UserDashboardKanBan = ({
             groupedFields={fieldsColumns.length ? fieldsColumns : [{ id: 'none' }]}
             groupedTasks={tasksColumns}
             isLoading={isLoading}
-            allUsers={allUsers}
+            allUsers={projectUsers}
             mergedFields={mergedFields}
             groupByValue={groupByValue}
             statusesOptions={statusesOptions}

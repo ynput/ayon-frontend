@@ -34,34 +34,29 @@ const DetailsPanelHeader = ({
   const isLoading = entities.length === 0 || !firstEntity || isFetching
   // placeholder entity
   if (!firstEntity) {
-    entities = [
-      {
-        id: 'placeholder',
-        entityType,
-        icon: 'sync',
-        title: 'loading...',
-        subTitle: 'loading...',
-      },
-    ]
-    firstEntity = entities[0]
+    firstEntity = {
+      id: 'placeholder',
+      entityType,
+      icon: 'sync',
+      title: 'loading...',
+      subTitle: 'loading...',
+    }
   }
   const projectName = entities.length > 1 ? null : firstEntity?.projectName
 
-  const thumbnails = useMemo(
-    () =>
-      entityType !== 'representation'
-        ? entities
-            .filter((entity, i) => i <= 5)
-            .map((entity) => ({
-              src: entity.thumbnailUrl,
-              icon: entity.icon,
-              id: entity.id,
-              type: entityType,
-              updatedAt: entity.updatedAt,
-            }))
-        : [{ icon: 'view_in_ar' }],
-    [entities],
-  )
+  const thumbnails = useMemo(() => {
+    if (!entities[0]) return []
+
+    if (entityType === 'representation') return [{ icon: 'view_in_ar' }]
+
+    return entities.slice(0, 6).map((entity) => ({
+      src: entity.thumbnailUrl,
+      icon: entity.icon,
+      id: entity.id,
+      type: entityType,
+      updatedAt: entity.updatedAt,
+    }))
+  }, [entities, entityType])
 
   // we need to get the intersection of all the statuses of the projects for the selected entities
   // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
@@ -117,6 +112,7 @@ const DetailsPanelHeader = ({
         data: {
           [field]: value,
         },
+        currentAssignees: entity.users,
       }))
 
       await updateEntities({ operations, entityType })

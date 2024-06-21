@@ -33,7 +33,7 @@ const MeOrUserSwitch = ({ value = [], onChange, options = [], filter, ...props }
       <AssigneeSelect
         value={value}
         onChange={(v) => onChange('users', v)}
-        options={[{ name: 'all', fullName: 'All users' }, ...options]}
+        options={options}
         {...props}
         className={filter === 'users' && 'selected'}
         onClick={handleDropdownClick}

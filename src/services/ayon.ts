@@ -53,6 +53,7 @@ const tagTypes = [
   'version',
   'entitiesVersions',
   'workfile',
+  'kanban',
   'kanBanTask',
   'detail',
   'marketAddon',

@@ -3,7 +3,7 @@ import React, { useEffect } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useDispatch, useSelector } from 'react-redux'
 import Feed from '@containers/Feed/Feed'
-import { useGetDashboardEntitiesDetailsQuery } from '@queries/userDashboard/getUserDashboard'
+import { useGetDashboardEntitiesDetailsQuery } from '@queries/entity/getEntityPanel'
 import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
@@ -56,20 +56,23 @@ const DetailsPanel = ({
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
-  // when entities changes, close the slideOutPanel
-  useEffect(() => {
-    if (!isSlideOut) dispatch(closeSlideOut())
-  }, [entitiesToQuery, isSlideOut])
-
   const {
-    data: detailsData = {},
+    data: detailsData = [],
     isFetching: isFetchingEntitiesDetails,
     isSuccess,
     isError,
+    originalArgs,
   } = useGetDashboardEntitiesDetailsQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
     { skip: !entitiesData.length && !entities.length },
   )
+
+  // the entity changes then we close the slide out
+  useEffect(() => {
+    if (!isSlideOut) {
+      dispatch(closeSlideOut())
+    }
+  }, [originalArgs])
 
   let entityDetailsData = []
   // merge current entities data with fresh details data

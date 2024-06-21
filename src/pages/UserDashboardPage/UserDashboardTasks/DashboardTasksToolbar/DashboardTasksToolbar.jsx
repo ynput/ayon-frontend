@@ -11,7 +11,7 @@ import MeOrUserSwitch from '@components/MeOrUserSwitch/MeOrUserSwitch'
 import * as Styled from './DashboardTasksToolbar.styled'
 import sortByOptions from './KanBanSortByOptions'
 
-const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView }) => {
+const DashboardTasksToolbar = ({ allUsers = [], isLoading, view, setView }) => {
   const dispatch = useDispatch()
 
   const user = useSelector((state) => state.user)
@@ -77,7 +77,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
         value={filterValue}
         onChange={(e) => setFilterValue(e.target.value)}
       />
-      {isManager && !isLoadingAllUsers && (
+      {isManager && !isLoading && (
         <MeOrUserSwitch
           value={assignees}
           onChange={(state, v) => handleAssigneesChange(state, v)}

@@ -39,6 +39,7 @@ export const MeOrUserSwitchContainer = styled.div`
       border-radius: 0 var(--border-radius) var(--border-radius) 0;
       outline: none !important;
       padding-left: var(--padding-s);
+      white-space: nowrap;
     }
     &.selected button {
       background-color: var(--md-sys-color-primary);

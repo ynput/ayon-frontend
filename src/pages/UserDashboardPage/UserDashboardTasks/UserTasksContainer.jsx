@@ -1,5 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { useGetKanBanQuery, useGetKanBanUsersQuery } from '@queries/userDashboard/getUserDashboard'
+import {
+  useGetKanbanProjectUsersQuery,
+  useGetKanbanQuery,
+} from '@queries/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
@@ -10,6 +13,7 @@ import { getIntersectionFields, getMergedFields } from '../util'
 import { setUri } from '@state/context'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import transformKanbanTasks from './transformKanbanTasks'
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
   // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
@@ -73,7 +77,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     isFetching: isLoadingTasks,
     isError,
     error,
-  } = useGetKanBanQuery(
+  } = useGetKanbanQuery(
     { assignees: assignees, projects: selectedProjects },
     { skip: !assignees.length || !selectedProjects?.length },
   )
@@ -85,7 +89,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       const task = tasks.find((t) => t.id === selectedTasks[0])
       if (!task) return
       // updates the breadcrumbs
-      let uri = `ayon+entity://${task.path}?task=${task.name}`
+      let uri = `ayon+entity://${task.projectName}/${task.folderPath}?task=${task.name}`
 
       dispatch(setUri(uri))
     } else {
@@ -93,38 +97,15 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     }
   }, [selectedTasks, isLoadingTasks, tasks])
 
-  // filter out tasks that don't have a assignees
-  tasks = tasks.filter((task) => task.assignees?.some((assignee) => assignees.includes(assignee)))
-
-  // add icons to tasks and also add thumbnailUrl
-  const tasksWithIcons = tasks.map((task) => {
-    const thumbnailUrl = getThumbnailUrl({
-      entityId: task.thumbnailEntityId,
-      entityType: task.thumbnailEntityType,
-      thumbnailId: task.thumbnailId,
-      updatedAt: task.thumbnailUpdatedAt,
-      projectName: task.projectName,
-    })
-
-    const updatedTask = { ...task, thumbnailUrl }
-
-    const projectInfo = projectsInfo[task.projectName]
-    if (!projectInfo?.statuses) return updatedTask
-    const findStatus = projectInfo.statuses?.find((status) => status.name === task.status)
-    if (!findStatus) return updatedTask
-    const findTaskIcon = projectInfo.task_types?.find((type) => type.name === task.taskType)
-    if (!findTaskIcon) return updatedTask
-    return {
-      ...updatedTask,
-      statusIcon: findStatus?.icon,
-      statusColor: findStatus?.color,
-      taskIcon: findTaskIcon?.icon,
-    }
-  })
+  // add extra fields to tasks like: icons, thumbnailUrl, shortPath
+  const transformedTasks = useMemo(
+    () => transformKanbanTasks(tasks, projectsInfo, isLoadingTasks),
+    [tasks, projectsInfo, isLoadingTasks],
+  )
 
   const selectedTasksData = useMemo(
-    () => tasksWithIcons.filter((task) => selectedTasks.includes(task.id)),
-    [selectedTasks, tasks],
+    () => transformedTasks.filter((task) => selectedTasks.includes(task.id)),
+    [selectedTasks, transformedTasks],
   )
 
   // for selected tasks, get flat list of projects
@@ -160,17 +141,18 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [projectsInfo, selectedTasksProjects],
   )
 
-  const { data: projectUsers = [] } = useGetKanBanUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
+  const { data: projectUsers = [], isLoading: isLoadingProjectUsers } =
+    useGetKanbanProjectUsersQuery(
+      { projects: selectedProjects },
+      { skip: !selectedProjects?.length },
+    )
 
   // for selected projects, make sure user is on all
   const [activeProjectUsers, disabledProjectUsers] = useMemo(() => {
     if (!selectedTasksProjects?.length) return [projectUsers, []]
     return projectUsers.reduce(
       (acc, user) => {
-        if (selectedTasksProjects.every((p) => user.projects.includes(p))) {
+        if (selectedTasksProjects.every((p) => user.projects?.includes(p))) {
           acc[0].push(user)
         } else {
           acc[1].push(user)
@@ -208,13 +190,15 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
         size={4}
       >
         <UserDashboardKanBan
-          tasks={tasksWithIcons}
+          tasks={transformedTasks}
           isLoading={isLoadingAll}
           projectsInfo={projectsInfo}
           taskFields={taskFields}
           statusesOptions={statusesOptions}
           disabledStatuses={disabledStatuses}
           disabledProjectUsers={disabledProjectUsers}
+          projectUsers={projectUsers}
+          isLoadingProjectUsers={isLoadingProjectUsers}
         />
       </SplitterPanel>
       {selectedTasksData.length ? (
