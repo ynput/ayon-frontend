@@ -209,6 +209,8 @@ const CopySettingsDialog = ({
       )}
     </Toolbar>
   )
+  
+  const dialogHeader = `Copy ${projectName? `${projectName} `:''}${variant} settings from...`
 
   return (
     <Dialog
@@ -217,7 +219,7 @@ const CopySettingsDialog = ({
       variant="dialog"
       size="full"
       style={{ width: '80vw', height: '80vh', zIndex: 999 }}
-      header={`Copy ${projectName? `${projectName} `:''}${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
+      header={dialogHeader}
       footer={footer}
     >
       <div
