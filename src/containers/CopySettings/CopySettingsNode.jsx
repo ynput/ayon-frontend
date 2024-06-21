@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { isEqual } from 'lodash'
 
 import { Icon, InputSwitch } from '@ynput/ayon-react-components'
@@ -128,6 +128,7 @@ const CopySettingsNode = ({
   const [sourceVariant, setSourceVariant] = useState(null)
   const [sourceProjectName, setSourceProjectName] = useState(null)
   const [loading, setLoading] = useState(false)
+  const currentPromiseRef = useRef(null);
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
   const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
@@ -253,10 +254,7 @@ const CopySettingsNode = ({
           continue
         }
       }
-      console.log('source override', sourceOverride)
-      console.log('target override', targetOverride)
 
-      //const compatible = sameKeysStructure(sourceValue, targetValue)
       const compatible = isCompatibleStructure(sourceValue, targetValue)
 
       const item = {
@@ -298,8 +296,26 @@ const CopySettingsNode = ({
   } //loadNodeData
 
   useEffect(() => {
-    //console.log('LOAD', addonName, sourceVersion, sourceVariant, sourceProjectName)
-    loadNodeData()
+    const callLoadNodeData = async () => {
+      // Wait for the current promise to finish if it exists
+      if (currentPromiseRef.current) {
+        await currentPromiseRef.current;
+      }
+      // Create a new promise for the current loadNodeData call
+      const loadPromise = loadNodeData();
+      currentPromiseRef.current = loadPromise;
+
+      try {
+        await loadPromise;
+      } finally {
+        // Clear the reference if the promise is resolved or rejected
+        if (currentPromiseRef.current === loadPromise) {
+          currentPromiseRef.current = null;
+        }
+      }
+    };
+
+    callLoadNodeData();
   }, [sourceVersion, sourceVariant, sourceProjectName])
 
   const expanded = !!(nodeData?.available && nodeData?.enabled)

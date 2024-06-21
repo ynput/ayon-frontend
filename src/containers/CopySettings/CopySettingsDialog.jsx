@@ -217,7 +217,7 @@ const CopySettingsDialog = ({
       variant="dialog"
       size="full"
       style={{ width: '80vw', height: '80vh', zIndex: 999 }}
-      header={`Copy ${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
+      header={`Copy ${projectName? `${projectName} `:''}${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
       footer={footer}
     >
       <div
