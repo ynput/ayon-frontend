@@ -103,7 +103,7 @@ const CopySettingsDialog = ({
 
       for (const change of node.changes) {
         if (!change.enabled) continue
-        const value = cloneDeep(change.sourceValue)
+        const value = cloneDeep(change.copyValue)
         addonSettings = setValueByPath(addonSettings, change.path, value)
         addonOverrides.push(change.path)
 
@@ -209,6 +209,8 @@ const CopySettingsDialog = ({
       )}
     </Toolbar>
   )
+  
+  const dialogHeader = `Copy ${projectName? `${projectName} `:''}${variant} settings from...`
 
   return (
     <Dialog
@@ -217,7 +219,7 @@ const CopySettingsDialog = ({
       variant="dialog"
       size="full"
       style={{ width: '80vw', height: '80vh', zIndex: 999 }}
-      header={`Copy ${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
+      header={dialogHeader}
       footer={footer}
     >
       <div
