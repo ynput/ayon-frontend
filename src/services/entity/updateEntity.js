@@ -22,7 +22,7 @@ const updateEntity = ayonApi.injectEndpoints({
           const state = getState()
           const dashboardProjects = getState().dashboard.selectedProjects
           const dashboardUsers = getState().dashboard.tasks.assignees
-          const dashboardAssigneesIsMe = getState().dashboard.tasks.assigneesIsMe
+          const dashboardAssigneesIsMe = getState().dashboard.tasks.assigneesFilter === 'me'
           const newAssignees = data.assignees
 
           const cacheUsers = dashboardAssigneesIsMe ? [getState().user.name] : dashboardUsers
@@ -112,7 +112,7 @@ const updateEntity = ayonApi.injectEndpoints({
           }))
 
           // invalidate the cache
-          // dispatch(enhancedDashboardGraphqlApi.util.invalidateTags(invalidationTags))
+          dispatch(enhancedDashboardGraphqlApi.util.invalidateTags(invalidationTags))
         }
 
         // patch any entity details panels in dashboard
