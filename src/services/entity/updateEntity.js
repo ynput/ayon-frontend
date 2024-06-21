@@ -3,6 +3,42 @@ import { toast } from 'react-toastify'
 import { enhancedDashboardGraphqlApi } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'
 
+const patchKanban = (
+  { assignees = [], projects = [] },
+  { newAssignees, taskId, data },
+  { dispatch },
+) => {
+  let kanbanPatched = false
+  const patchResult = dispatch(
+    enhancedDashboardGraphqlApi.util.updateQueryData(
+      'GetKanban',
+      { projects: projects, assignees: assignees },
+      (draft) => {
+        const taskIndex = draft.findIndex((task) => task.id === taskId)
+        if (taskIndex === -1) {
+          // task not found, assignee must have just been added
+          kanbanPatched = false
+        } else {
+          kanbanPatched = true
+          // first check that the task assignees still has a intersection with dashAssignees
+          const hasSomeAssignees = newAssignees?.some((assignee) => assignees.includes(assignee))
+
+          if (!hasSomeAssignees && newAssignees) {
+            // remove from cache
+            draft.splice(taskIndex, 1)
+          } else {
+            // task found: update the task in the cache
+            const newData = { ...draft[taskIndex], ...data }
+            draft[taskIndex] = newData
+          }
+        }
+      },
+    ),
+  )
+
+  return [patchResult, kanbanPatched]
+}
+
 const updateEntity = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     updateEntity: build.mutation({
@@ -15,8 +51,9 @@ const updateEntity = ayonApi.injectEndpoints({
         { projectName, entityId, data, currentAssignees, entityType },
         { dispatch, queryFulfilled, getState },
       ) {
-        let patchResult
+        const patchResults = []
 
+        let invalidationTagsAfterComplete = []
         // if task, patch the GetKanban query
         if (entityType === 'task') {
           const state = getState()
@@ -33,39 +70,17 @@ const updateEntity = ayonApi.injectEndpoints({
           const hasSomeProjects = dashboardProjects.some((project) => project === projectName)
           const currentDashNeedsUpdating = hasSomeAssignees && hasSomeProjects
 
-          let currentKanbanPatched = false
-
-          console.log(cacheUsers, dashboardProjects, dashboardUsers, dashboardAssigneesIsMe)
+          let currentKanbanPatched = true
 
           if (currentDashNeedsUpdating) {
-            patchResult = dispatch(
-              enhancedDashboardGraphqlApi.util.updateQueryData(
-                'GetKanban',
-                { projects: dashboardProjects, assignees: cacheUsers },
-                (draft) => {
-                  const taskIndex = draft.findIndex((task) => task.id === entityId)
-                  if (taskIndex === -1) {
-                    // task not found, assignee must have just been added
-                  } else {
-                    currentKanbanPatched = true
-
-                    // first check that the task assignees still has a intersection with dashAssignees
-                    const hasSomeAssignees = newAssignees?.some((assignee) =>
-                      cacheUsers.includes(assignee),
-                    )
-
-                    if (!hasSomeAssignees && newAssignees) {
-                      // remove from cache
-                      draft.splice(taskIndex, 1)
-                    } else {
-                      // task found: update the task in the cache
-                      const newData = { ...draft[taskIndex], ...data }
-                      draft[taskIndex] = newData
-                    }
-                  }
-                },
-              ),
+            const [result, wasPatched] = patchKanban(
+              { assignees: cacheUsers, projects: dashboardProjects },
+              { newAssignees, taskId: entityId, data },
+              { dispatch },
             )
+
+            if (wasPatched) patchResults.push(result)
+            currentKanbanPatched = wasPatched
           }
 
           // always update the kanban if task id matches
@@ -97,11 +112,35 @@ const updateEntity = ayonApi.injectEndpoints({
 
           // invalidate any other caches
           let entries = enhancedDashboardGraphqlApi.util.selectInvalidatedBy(state, tags)
+          let entriesToInvalidate = []
+
+          // for each entry try to patch the data into the cache first
+          for (const entry of entries) {
+            const [patchResult, wasPatched] = patchKanban(
+              {
+                assignees: entry.originalArgs.assignees,
+                projects: entry.originalArgs.projects,
+              },
+              {
+                newAssignees,
+                taskId: entityId,
+                data,
+              },
+              { dispatch },
+            )
+
+            if (wasPatched) {
+              patchResults.push(patchResult)
+            } else {
+              // if we couldn't patch, we need to invalidate the cache
+              entriesToInvalidate.push(entry)
+            }
+          }
 
           // filter out current kanban query if we were able to patch it
           const currentKanbanCacheArgs = { projects: dashboardProjects, assignees: cacheUsers }
           if (currentKanbanPatched)
-            entries = entries.filter(
+            entriesToInvalidate = entriesToInvalidate.filter(
               (entry) => !isEqual(entry.originalArgs, currentKanbanCacheArgs),
             )
 
@@ -111,8 +150,8 @@ const updateEntity = ayonApi.injectEndpoints({
             id: JSON.stringify(entry.originalArgs),
           }))
 
-          // invalidate the cache
-          dispatch(enhancedDashboardGraphqlApi.util.invalidateTags(invalidationTags))
+          // invalidate the tags later, once the query is complete
+          invalidationTagsAfterComplete.push(...invalidationTags)
         }
 
         // patch any entity details panels in dashboard
@@ -133,13 +172,19 @@ const updateEntity = ayonApi.injectEndpoints({
           ),
         )
 
+        patchResults.push(entityDetailsResult)
+
         try {
           await queryFulfilled
+
+          // now invalidate any tags
+          if (invalidationTagsAfterComplete.length) {
+            dispatch(enhancedDashboardGraphqlApi.util.invalidateTags(invalidationTagsAfterComplete))
+          }
         } catch (error) {
           console.error('error updating ' + entityType, error)
           toast.error(error?.error?.data?.detail || 'Failed to update task')
-          patchResult?.undo()
-          entityDetailsResult?.undo()
+          patchResults.forEach((result) => result?.undo())
         }
       },
     }),
