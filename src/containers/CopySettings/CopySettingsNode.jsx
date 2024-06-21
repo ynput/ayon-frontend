@@ -206,6 +206,17 @@ const CopySettingsNode = ({
       projectName: targetProjectName,
     })
 
+    let sourceParentSettings = null
+    if (sourceProjectName) {
+      sourceParentSettings = await triggerGetSettings({
+        addonName,
+        addonVersion: sourceVersion,
+        variant: sourceVariant,
+        projectName: null,
+        asVersion: targetVersion,
+      })
+    }
+
     const allIds = [
       ...new Set([...Object.keys(sourceOverrides.data), ...Object.keys(targetOverrides.data)]),
     ]
@@ -224,15 +235,20 @@ const CopySettingsNode = ({
       }
 
 
+      let sourceValue = getValueByPath(sourceSettings.data, path)
+      let targetValue = getValueByPath(targetSettings.data, path)
+      let copyValue = sourceValue
+
       // do not attempt to copy overrides from default or studio
       // to project level
       if (targetProjectName && ['default', 'studio'].includes(sourceOverride?.level)) {
-        console.debug('Skipping override', path, "because it's from default or studio")
-        continue
+        // console.debug('Skipping override', path, "because it's from default or studio")
+        // console.log('source override', sourceOverride)
+        // continue
+        sourceValue = sourceParentSettings ? getValueByPath(sourceParentSettings.data, path) : null
+        copyValue = null
       }
 
-      const sourceValue = getValueByPath(sourceSettings.data, path)
-      const targetValue = getValueByPath(targetSettings.data, path)
 
       // do not attempt to copy if the values are the same
       // ... or rather do copy it. we want to force pinned overrides
@@ -253,6 +269,7 @@ const CopySettingsNode = ({
       const item = {
         key: id,
         path: path,
+        copyValue,
         sourceValue,
         targetValue,
         sourceLevel: sourceOverride?.level || 'default',

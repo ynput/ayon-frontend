@@ -103,7 +103,7 @@ const CopySettingsDialog = ({
 
       for (const change of node.changes) {
         if (!change.enabled) continue
-        const value = cloneDeep(change.sourceValue)
+        const value = cloneDeep(change.copyValue)
         addonSettings = setValueByPath(addonSettings, change.path, value)
         addonOverrides.push(change.path)
 
