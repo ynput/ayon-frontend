@@ -9,7 +9,7 @@ const usePatchProductsListWithVersions = ({ projectName }) => {
     try {
       return dispatch(
         ayonApi.util.updateQueryData('getProductList', { projectName, folderIds }, (draft) => {
-          console.log('patching getProductList')
+          console.log('patching getProductList:', versions)
           versions.forEach((version) => {
             // find product in product list
             const productIndex = draft.findIndex((product) => product.id === version.productId)

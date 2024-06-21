@@ -10,6 +10,30 @@ import Actions from '@components/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 
+// DUMMY ACTIONS DATA
+const actions = [
+  { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
+  { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
+  { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
+  { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
+  { id: 'photoshop', icon: 'photoshop.png' },
+]
+
+const actionTaskTypes = {
+  actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
+  actions3D: [
+    'modeling',
+    'texture',
+    'lookdev',
+    'rigging',
+    'layout',
+    'setdress',
+    'animation',
+    'fx',
+    'lighting',
+  ],
+}
+
 const DetailsPanelHeader = ({
   entityType,
   entities = [],
@@ -50,7 +74,6 @@ const DetailsPanelHeader = ({
     if (entityType === 'representation') return [{ icon: 'view_in_ar' }]
 
     return entities.slice(0, 6).map((entity) => ({
-      src: entity.thumbnailUrl,
       icon: entity.icon,
       id: entity.id,
       type: entityType,
@@ -122,34 +145,35 @@ const DetailsPanelHeader = ({
     }
   }
 
+  const handleThumbnailUpload = ({ id, thumbnailId }) => {
+    // patching the updatedAt will force a refresh of the thumbnail url
+    const newUpdatedAt = new Date().toISOString()
+    const entity = entities.find((entity) => entity.id === id)
+    const currentAssignees = entity?.users || []
+    const operations = [
+      { id, projectName, data: { updatedAt: newUpdatedAt, thumbnailId }, currentAssignees },
+    ]
+
+    const versionPatch = {
+      productId: entity.productId,
+      versionUpdatedAt: newUpdatedAt,
+      versionThumbnailId: thumbnailId,
+    }
+
+    // update productsList cache with new status
+    let productsPatch = patchProductsListWithVersions([versionPatch])
+    try {
+      updateEntities({ operations, entityType })
+    } catch (error) {
+      productsPatch?.undo()
+      productsPatch?.undo()
+    }
+  }
+
   const fullPath = firstEntity?.path || ''
   const pathArray = fullPath.split('/')
   const handleCopyPath = () => {
     copyToClipboard(fullPath)
-  }
-
-  // DUMMY ACTIONS DATA
-  const actions = [
-    { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
-    { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
-    { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
-    { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
-    { id: 'photoshop', icon: 'photoshop.png' },
-  ]
-
-  const actionTaskTypes = {
-    actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
-    actions3D: [
-      'modeling',
-      'texture',
-      'lookdev',
-      'rigging',
-      'layout',
-      'setdress',
-      'animation',
-      'fx',
-      'lighting',
-    ],
   }
 
   const pinned = actions
@@ -205,7 +229,7 @@ const DetailsPanelHeader = ({
           thumbnails={thumbnails}
           projectName={projectName}
           portalId={portalId}
-          onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
+          onUpload={handleThumbnailUpload}
         />
         <Styled.Content className={classNames({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
