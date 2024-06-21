@@ -22,11 +22,22 @@ const apiSuffix = (projectName, siteId, variant, asVersion) => {
 const addonSettings = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     getAddonSettingsList: build.query({
-      query: ({ variant, projectName, siteId }) => ({
-        url: `/api/settings`,
-        method: 'GET',
-        params: { variant, project_name: projectName, site_id: siteId, summary: true },
-      }),
+      query: ({ variant, projectName, siteId }) => {
+
+        // this should prevent passing null/undfiend values to the query
+        // params once for all (until we have typescript)
+        const params = {}
+        if (variant) params.variant = variant
+        if (projectName) params.project_name = projectName
+        if (siteId) params.site_id = siteId
+        
+        return {
+          url: `/api/settings`,
+          method: 'GET',
+          params
+        }
+      },
+
       // eslint-disable-next-line no-unused-vars
       providesTags: (result, error, arg) => [
         { type: 'addonSettingsList', ...arg },
