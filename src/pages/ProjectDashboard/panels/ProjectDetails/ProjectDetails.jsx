@@ -17,8 +17,8 @@ const ProjectDetails = ({ projectName }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
 
   // GET DATA
-  const { data, isFetching, isError } = useGetProjectQuery({ projectName })
-  const { data: schema } = useGetAnatomySchemaQuery()
+  const { data = {}, isFetching, isError } = useGetProjectQuery({ projectName })
+  const { data: schema = {} } = useGetAnatomySchemaQuery()
   const fields = schema?.definitions?.ProjectAttribModel?.properties
 
   // UPDATE DATA
