@@ -70,8 +70,6 @@ const DetailsPanel = ({
   // the entity changes then we close the slide out
   useEffect(() => {
     if (!isSlideOut) {
-      console.log('closing slide out')
-
       dispatch(closeSlideOut())
     }
   }, [originalArgs])
