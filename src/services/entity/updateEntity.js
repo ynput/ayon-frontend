@@ -1,11 +1,11 @@
 import { ayonApi } from '../ayon'
 import { toast } from 'react-toastify'
-import { enhancedDashboardGraphqlApi } from '../userDashboard/getUserDashboard'
+import { enhancedDashboardGraphqlApi, getKanbanTasks } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'
 
 const patchKanban = (
   { assignees = [], projects = [] },
-  { newAssignees, taskId, data },
+  { newAssignees, taskId, data, taskData },
   { dispatch },
 ) => {
   let kanbanPatched = false
@@ -17,7 +17,14 @@ const patchKanban = (
         const taskIndex = draft.findIndex((task) => task.id === taskId)
         if (taskIndex === -1) {
           // task not found, assignee must have just been added
-          kanbanPatched = false
+          if (taskData) {
+            // add the task to the cache
+            draft.push(taskData)
+          } else {
+            // we don't have the task data, so we can't add it to the cache
+            // we might add it later
+            kanbanPatched = false
+          }
         } else {
           kanbanPatched = true
           // first check that the task assignees still has a intersection with dashAssignees
@@ -64,13 +71,10 @@ const updateEntity = ayonApi.injectEndpoints({
 
           const cacheUsers = dashboardAssigneesIsMe ? [getState().user.name] : dashboardUsers
 
-          const hasSomeAssignees = currentAssignees.some((assignee) =>
-            cacheUsers.includes(assignee),
-          )
+          const entityAssignees = [...new Set([...currentAssignees, ...(newAssignees || [])])]
+          const hasSomeAssignees = entityAssignees.some((assignee) => cacheUsers.includes(assignee))
           const hasSomeProjects = dashboardProjects.some((project) => project === projectName)
           const currentDashNeedsUpdating = hasSomeAssignees && hasSomeProjects
-
-          let currentKanbanPatched = true
 
           if (currentDashNeedsUpdating) {
             const [result, wasPatched] = patchKanban(
@@ -80,7 +84,28 @@ const updateEntity = ayonApi.injectEndpoints({
             )
 
             if (wasPatched) patchResults.push(result)
-            currentKanbanPatched = wasPatched
+
+            if (!wasPatched) {
+              // this means the task is not in the current kanban and it needs to be added
+
+              // get the new task data
+              getKanbanTasks({ projects: [projectName], taskIds: [entityId] }, dispatch).then(
+                // use .then so that the rest of the code can run
+                (response) => {
+                  let newTask = response.find((task) => task.id === entityId)
+                  if (newTask) {
+                    // add newAssignees as the actual DB hasn't been updated yet
+                    newTask = { ...newTask, assignees: newAssignees }
+
+                    patchKanban(
+                      { assignees: cacheUsers, projects: dashboardProjects },
+                      { newAssignees, taskId: entityId, taskData: newTask },
+                      { dispatch },
+                    )
+                  }
+                },
+              )
+            }
           }
 
           // always update the kanban if task id matches
@@ -139,10 +164,9 @@ const updateEntity = ayonApi.injectEndpoints({
 
           // filter out current kanban query if we were able to patch it
           const currentKanbanCacheArgs = { projects: dashboardProjects, assignees: cacheUsers }
-          if (currentKanbanPatched)
-            entriesToInvalidate = entriesToInvalidate.filter(
-              (entry) => !isEqual(entry.originalArgs, currentKanbanCacheArgs),
-            )
+          entriesToInvalidate = entriesToInvalidate.filter(
+            (entry) => !isEqual(entry.originalArgs, currentKanbanCacheArgs),
+          )
 
           // create the invalidation tags from originalArgs
           const invalidationTags = entries.map((entry) => ({
