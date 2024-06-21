@@ -235,6 +235,38 @@ const updateEntity = ayonApi.injectEndpoints({
             ayonApi.util.invalidateTags(operations.map((o) => ({ type: 'entities', id: o.id }))),
           )
 
+          // update the getEntitiesDetails query with new data
+          // this is the current details panel we are looking at right now
+          // other details panel caches are invalidated above
+          const entitiesArg = operations.map((o) => ({
+            id: o.id,
+            projectName: o.projectName,
+          }))
+          dispatch(
+            ayonApi.util.updateQueryData(
+              'getDashboardEntitiesDetails',
+              { entities: entitiesArg, entityType },
+              (draft) => {
+                operations.forEach((operation) => {
+                  // find entity in the cache
+                  const entityIndex = draft.findIndex((entity) => entity.id === operation.id)
+
+                  if (entityIndex === -1) return
+                  const patchData = { ...operation.data }
+                  if (patchData.assignees) {
+                    patchData.users = patchData.assignees
+                    delete patchData.assignees
+                  }
+
+                  // merge the new data into the entity
+                  const newData = { ...draft[entityIndex], ...patchData }
+
+                  draft[entityIndex] = newData
+                })
+              },
+            ),
+          )
+
           // check if any of the requests failed and invalidate the tasks cache again to refetch
           const results = await Promise.allSettled(promises)
           if (results.some((result) => result.value?.error)) {

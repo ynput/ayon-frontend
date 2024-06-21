@@ -6,24 +6,27 @@ const usePatchProductsListWithVersions = ({ projectName }) => {
   const folderIds = useSelector((state) => state.context.focused.folders)
 
   const patchProductsListWithVersions = (versions) => {
-    // patch into productsList cache
-    return dispatch(
-      ayonApi.util.updateQueryData('getProductList', { projectName, folderIds }, (draft) => {
-        console.log('patching getProductList')
-        versions.forEach((version) => {
-          // find product in product list
-          const productIndex = draft.findIndex((product) => product.id === version.productId)
+    try {
+      return dispatch(
+        ayonApi.util.updateQueryData('getProductList', { projectName, folderIds }, (draft) => {
+          console.log('patching getProductList')
+          versions.forEach((version) => {
+            // find product in product list
+            const productIndex = draft.findIndex((product) => product.id === version.productId)
 
-          if (productIndex === -1) return
+            if (productIndex === -1) return
 
-          // merge version data into product
-          draft[productIndex] = {
-            ...draft[productIndex],
-            ...version,
-          }
-        })
-      }),
-    )
+            // merge version data into product
+            draft[productIndex] = {
+              ...draft[productIndex],
+              ...version,
+            }
+          })
+        }),
+      )
+    } catch (error) {
+      return null
+    }
   }
 
   return patchProductsListWithVersions
