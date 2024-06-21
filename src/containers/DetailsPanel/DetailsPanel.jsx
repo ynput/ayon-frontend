@@ -56,20 +56,25 @@ const DetailsPanel = ({
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
-  // when entities changes, close the slideOutPanel
-  useEffect(() => {
-    if (!isSlideOut) dispatch(closeSlideOut())
-  }, [entitiesToQuery, isSlideOut])
-
   const {
-    data: detailsData = {},
+    data: detailsData = [],
     isFetching: isFetchingEntitiesDetails,
     isSuccess,
     isError,
+    originalArgs,
   } = useGetDashboardEntitiesDetailsQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
     { skip: !entitiesData.length && !entities.length },
   )
+
+  // the entity changes then we close the slide out
+  useEffect(() => {
+    if (!isSlideOut) {
+      console.log('closing slide out')
+
+      dispatch(closeSlideOut())
+    }
+  }, [originalArgs])
 
   let entityDetailsData = []
   // merge current entities data with fresh details data
