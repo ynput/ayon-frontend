@@ -239,16 +239,9 @@ const CopySettingsNode = ({
       let targetValue = getValueByPath(targetSettings.data, path)
       let copyValue = sourceValue
 
-      // do not attempt to copy overrides from default or studio
-      // to project level
       if (targetProjectName && ['default', 'studio'].includes(sourceOverride?.level)) {
-        // console.debug('Skipping override', path, "because it's from default or studio")
-        // console.log('source override', sourceOverride)
-        // continue
         sourceValue = sourceParentSettings ? getValueByPath(sourceParentSettings.data, path) : null
-        copyValue = null
       }
-
 
       // do not attempt to copy if the values are the same
       // ... or rather do copy it. we want to force pinned overrides
