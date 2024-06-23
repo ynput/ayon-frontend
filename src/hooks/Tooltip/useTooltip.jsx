@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import * as Styled from './Tooltip.styled'
 import rehypeExternalLinks from 'rehype-external-links'
-import ShortcutWidget from '@components/ShortcutWidget/ShortcutWidget'
+import { ShortcutTag } from '@ynput/ayon-react-components'
 
 const getTooltipId = (tooltip, shortcut, id) => {
   return snakeCase(tooltip + ' ' + shortcut + ' ' + id)
@@ -184,7 +184,7 @@ const useTooltip = () => {
             tooltip?.tooltip
           )}
 
-          {tooltip?.shortcut && <ShortcutWidget>{tooltip?.shortcut}</ShortcutWidget>}
+          {tooltip?.shortcut && <ShortcutTag>{tooltip?.shortcut}</ShortcutTag>}
         </Styled.TooltipInner>
       </Styled.TooltipWidget>
     ),

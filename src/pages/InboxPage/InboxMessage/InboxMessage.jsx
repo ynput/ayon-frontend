@@ -11,7 +11,6 @@ import { useMemo } from 'react'
 import RemoveMarkdown from 'remove-markdown'
 import Typography from '@/theme/typography.module.css'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
-import ShortcutWidget from '@components/ShortcutWidget/ShortcutWidget'
 
 const getMessageBody = (messages = []) => {
   const unreadMessages = messages.filter((m) => !m.isRead)
@@ -157,8 +156,9 @@ const InboxMessage = ({
             className="clear"
             variant="filled"
             onClick={onClear && onClear}
+            shortcut={{ children: 'C' }}
           >
-            {clearLabel} <ShortcutWidget>C</ShortcutWidget>
+            {clearLabel}
           </Styled.ClearButton>
         )}
         <UserImage name={userName} size={20} />

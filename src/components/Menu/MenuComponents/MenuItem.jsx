@@ -1,10 +1,9 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import React, { forwardRef } from 'react'
 import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
-import ShortcutWidget from '@components/ShortcutWidget/ShortcutWidget'
 
 const MenuItem = forwardRef(
   (
@@ -46,7 +45,7 @@ const MenuItem = forwardRef(
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
         ))}
-        {shortcut && <ShortcutWidget align={'right'}>{shortcut}</ShortcutWidget>}
+        {shortcut && <ShortcutTag align={'right'}>{shortcut}</ShortcutTag>}
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>
     )

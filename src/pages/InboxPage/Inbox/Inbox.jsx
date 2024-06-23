@@ -14,8 +14,7 @@ import Typography from '@/theme/typography.module.css'
 import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 // Components
-import { Icon, Spacer } from '@ynput/ayon-react-components'
-import ShortcutWidget from '@components/ShortcutWidget/ShortcutWidget'
+import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
 import EnableNotifications from '@components/EnableNotifications'
 // Hooks
 import useCreateContext from '@hooks/useCreateContext'
@@ -345,18 +344,18 @@ const Inbox = ({ filter }) => {
         <Spacer />
         <EnableNotifications />
         {isActive && (
-          <Styled.ShortcutButton
-            label="Clear all"
+          <Button
             icon="done_all"
             onClick={handleClearAll}
             disabled={!messages.length}
+            shortcut={{ children: 'Shift+C' }}
           >
-            <ShortcutWidget>Shift+C</ShortcutWidget>
-          </Styled.ShortcutButton>
+            Clear all
+          </Button>
         )}
-        <Styled.ShortcutButton label="Refresh" icon="refresh" onClick={refreshInbox}>
-          <ShortcutWidget>R</ShortcutWidget>
-        </Styled.ShortcutButton>
+        <Button icon="refresh" onClick={refreshInbox} shortcut={{ children: 'R' }}>
+          Refresh
+        </Button>
       </Styled.Tools>
       <Styled.InboxSection direction="row">
         <Styled.MessagesList
