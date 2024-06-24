@@ -61,6 +61,7 @@ export const getMixedValuesByProject = (allValues = {}, currentValue = {}) => {
 export const groupByAccessGroups = (accessGroups = {}, projects = []) =>
   Object.entries(accessGroups).reduce((acc, [project, accessGroups]) => {
     accessGroups.forEach((ag) => {
+      // console.log(projects, project)
       if (!acc[ag]) acc[ag] = []
       // check project is in projectsList
       if (projects.find(({ name }) => name === project)) acc[ag].push(project)

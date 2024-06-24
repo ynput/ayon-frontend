@@ -192,7 +192,7 @@ const UserAccessGroupsProjects = ({
         )}
       </Styled.Header>
       <Styled.List>
-        {projectOptions.map(({ name }) => (
+        {projectOptions.map(({ name, active }) => (
           <Styled.ProjectItem
             key={name}
             className={classNames('project-item', {
@@ -206,6 +206,7 @@ const UserAccessGroupsProjects = ({
             tabIndex={0}
           >
             <span className="name">{name}</span>
+            {!active && <span>(archived)</span>}
             <Icon
               icon={
                 values.includes(name) ? (activeValues.includes(name) ? 'check' : 'remove') : 'add'
